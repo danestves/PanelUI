@@ -1131,7 +1131,7 @@ function DetachedSheetDemo() {
       <BottomSheet.Trigger>
         <Button variant="outline">Open detached</Button>
       </BottomSheet.Trigger>
-      <BottomSheet.Content className="mx-4 mb-6 rounded-3xl border-b">
+      <BottomSheet.Content detached>
         <Text size="lg" weight="semibold" className="mb-1">
           Rate your order
         </Text>
@@ -1146,6 +1146,33 @@ function DetachedSheetDemo() {
             Fine
           </Button>
           <Button className="flex-1">Great</Button>
+        </View>
+      </BottomSheet.Content>
+    </BottomSheet>
+  );
+}
+
+/** Frosted backdrop rather than a dim — the screen behind recedes but stays. */
+function BlurredSheetDemo() {
+  return (
+    <BottomSheet>
+      <BottomSheet.Trigger>
+        <Button variant="outline">Open over a frosted screen</Button>
+      </BottomSheet.Trigger>
+      <BottomSheet.Content detached blur>
+        <Text size="lg" weight="semibold" className="mb-1">
+          Move to trash
+        </Text>
+        <Text size="sm" muted className="mb-4">
+          The file stays recoverable for 30 days.
+        </Text>
+        <View className="flex-row gap-2 pb-2">
+          <Button variant="outline" className="flex-1">
+            Cancel
+          </Button>
+          <Button variant="destructive" className="flex-1">
+            Move to trash
+          </Button>
         </View>
       </BottomSheet.Content>
     </BottomSheet>
@@ -4086,6 +4113,7 @@ export const COMPONENTS: ComponentEntry[] = [
         ),
       },
       { label: 'Detached', render: () => <DetachedSheetDemo /> },
+      { label: 'Frosted backdrop', render: () => <BlurredSheetDemo /> },
       { label: 'Full height', render: () => <FullHeightSheetDemo /> },
       { label: 'Form', render: () => <FormSheetDemo /> },
       { label: 'Scrollable list', render: () => <ScrollableSheetDemo /> },

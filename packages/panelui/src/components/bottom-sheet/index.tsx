@@ -24,14 +24,34 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { tv } from 'tailwind-variants';
 import { getNativeUI } from '../../native';
 import { XIcon } from '../../icons';
 import { Portal } from '../../primitives/portal';
+import { Scrim } from '../../primitives/scrim';
 import { cn } from '../../utils/cn';
 
 const SPRING = { damping: 22, stiffness: 280, mass: 0.7 } as const;
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 800;
+
+const sheetVariants = tv({
+  base: 'border border-border bg-popover px-5 pt-2 shadow-lg',
+  variants: {
+    detached: {
+      // Docked: the sheet is continuous with the bottom of the screen, so the
+      // bottom edge is not a real edge and drawing a line along it would be a
+      // rule through the middle of nothing.
+      false: 'rounded-t-3xl border-b-0',
+      // Floating: all four edges are real, so all four are drawn and all four
+      // corners are rounded.
+      true: 'mx-4 mb-6 rounded-3xl',
+    },
+  },
+  defaultVariants: {
+    detached: false,
+  },
+});
 
 interface BottomSheetContextValue {
   open: boolean;
@@ -178,6 +198,20 @@ export interface BottomSheetContentProps extends ViewProps {
    * sheet; ignored by the native sheet, which has its own dismiss affordances.
    */
   showClose?: boolean;
+  /**
+   * Float the sheet clear of the screen edges instead of docking it to the
+   * bottom, so it reads as a card laid over the app rather than a drawer
+   * pulled out of it. All four corners round and the bottom border comes back,
+   * since a floating sheet has four real edges where a docked one has three.
+   * Ignored by the native sheet, which the platform positions itself.
+   */
+  detached?: boolean;
+  /**
+   * Frost the screen behind the sheet instead of dimming it, so what is behind
+   * stays legible as shape and colour while losing its detail. Needs the
+   * optional `expo-blur`; without it this dims, rather than failing.
+   */
+  blur?: boolean;
   children?: ReactNode;
 }
 
@@ -185,6 +219,8 @@ function BottomSheetContent({
   className,
   dismissible = true,
   showClose = true,
+  detached = false,
+  blur = false,
   children,
   ...props
 }: BottomSheetContentProps) {
@@ -275,27 +311,29 @@ function BottomSheetContent({
           subtree — re-provide the context so nested consumers keep working. */}
       <BottomSheetContext.Provider value={context}>
         <View className="absolute inset-0 justify-end">
-        <Animated.View
-          entering={FadeIn.duration(180)}
-          exiting={FadeOut.duration(180)}
-          className="absolute inset-0"
-        >
+        <View className="absolute inset-0">
+          {/* Scrim draws the backdrop and its own fade; the Pressable over it
+              is what closes the sheet, since the scrim takes no touches. */}
+          <Scrim blur={blur} />
           <Pressable
             accessibilityLabel="Close sheet"
-            className="flex-1 bg-black/50"
+            className="flex-1"
             onPress={dismissible ? close : undefined}
           />
-        </Animated.View>
+        </View>
         <GestureDetector gesture={pan}>
           <Animated.View
             entering={SlideInDown.springify().damping(22).stiffness(240).mass(0.8)}
             exiting={SlideOutDown.duration(200)}
-            style={[sheetStyle, { paddingBottom: Math.max(insets.bottom, 16) }]}
+            style={[
+              sheetStyle,
+              // A detached sheet's own bottom margin already clears the home
+              // indicator, so it takes plain padding rather than stacking the
+              // inset on top of the gap.
+              { paddingBottom: detached ? 16 : Math.max(insets.bottom, 16) },
+            ]}
             accessibilityViewIsModal
-            className={cn(
-              'rounded-t-3xl border border-b-0 border-border bg-popover px-5 pt-2 shadow-lg',
-              className
-            )}
+            className={sheetVariants({ detached, className })}
             {...props}
           >
             <View className="mb-3 self-center">
