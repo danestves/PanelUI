@@ -167,8 +167,20 @@ interface HandleEntry {
 }
 
 interface FlowContextValue {
-  /** Every node's box, in graph coordinates. The only copy that exists. */
+  /**
+   * Every node's box in graph coordinates, on the UI thread — what a drag
+   * writes to and what the handle hit-test reads.
+   */
   rects: SharedValue<Record<string, FlowRect>>;
+  /**
+   * The same boxes in React state. Edges are ordinary elements rendered from
+   * this, not animated ones, so they need a copy React can see.
+   */
+  boxes: Record<string, FlowRect>;
+  /** Write a node's box to both copies. */
+  setNodeRect: (id: string, rect: Partial<FlowRect>) => void;
+  /** Forget a node's box, when it unmounts. */
+  dropNodeRect: (id: string) => void;
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
   zoom: SharedValue<number>;
@@ -306,6 +318,42 @@ function FlowRoot({
   const [handles, setHandles] = useState<HandleEntry[]>([]);
   const [edges, setEdges] = useState<{ key: string; props: FlowEdgeProps }[]>([]);
   const [box, setBox] = useState({ width: 0, height: 0 });
+  const [boxes, setBoxes] = useState<Record<string, FlowRect>>({});
+
+  /**
+   * Node geometry is kept twice on purpose: on the UI thread, where a drag
+   * writes it every frame and the node's own transform reads it, and in React
+   * state, where the edges are rendered from it.
+   *
+   * The single-copy version — everything on the UI thread, edges animating
+   * their own path strings — is the tempting one, and it does not draw. An
+   * animated SVG path in React Native only reliably animates its `d`, and only
+   * when nothing else about it is animated; anything more and the update is
+   * dropped with no error, leaving a path that never receives its geometry.
+   * So the edges are plain elements, the way they are in every implementation
+   * of this that works, and they cost a render per drag frame. That is a real
+   * cost and it is the right trade: a graph that redraws is worth more than
+   * one that theoretically would not have to.
+   */
+  const setNodeRect = useCallback(
+    (id: string, rect: Partial<FlowRect>) => {
+      setBoxes((current) => {
+        const existing = current[id] ?? { x: 0, y: 0, width: 0, height: 0 };
+        const next = { ...existing, ...rect };
+        if (
+          existing.x === next.x &&
+          existing.y === next.y &&
+          existing.width === next.width &&
+          existing.height === next.height
+        ) {
+          return current;
+        }
+        rects.value = { ...rects.value, [id]: next };
+        return { ...current, [id]: next };
+      });
+    },
+    [rects]
+  );
 
   /**
    * The node layer is given real extent rather than being left the size of the
@@ -331,6 +379,14 @@ function FlowRoot({
 
   const reportViewport = useCallback((x: number, y: number, z: number) => {
     viewportChangeRef.current?.({ x, y, zoom: z });
+  }, []);
+
+  const dropNodeRect = useCallback((id: string) => {
+    setBoxes((current) => {
+      if (!(id in current)) return current;
+      const { [id]: _removed, ...rest } = current;
+      return rest;
+    });
   }, []);
 
   const registerNode = useCallback((id: string) => {
@@ -516,6 +572,9 @@ function FlowRoot({
   const context = useMemo<FlowContextValue>(
     () => ({
       rects,
+      boxes,
+      setNodeRect,
+      dropNodeRect,
       translateX,
       translateY,
       zoom,
@@ -544,6 +603,9 @@ function FlowRoot({
       zoomBy,
     }),
     [
+      boxes,
+      setNodeRect,
+      dropNodeRect,
       box,
       layer,
       origin,
@@ -605,28 +667,10 @@ function FlowRoot({
                 transformed — the other two do their own mapping, because an
                 SVG large enough to hold a whole graph is larger than the
                 platform will allocate a texture for. */}
-            {/* Two transformed layers with the same style rather than one,
-                because the edges have to be painted between them: the grid
-                belongs to the canvas and rides the transform, while the edges
-                map graph coordinates to screen coordinates themselves. */}
-            <Animated.View
-              pointerEvents="none"
-              collapsable={false}
-              style={[
-                {
-                  position: 'absolute',
-                  left: -origin.x,
-                  top: -origin.y,
-                  width: layer.width,
-                  height: layer.height,
-                  transformOrigin: [origin.x, origin.y, 0],
-                },
-                contentStyle,
-              ]}
-            >
-              {background}
-            </Animated.View>
-            <FlowEdgeLayer />
+            {/* One transformed layer holding the grid, the edges and the
+                nodes, in that paint order. Everything inside it is in graph
+                coordinates and the transform carries the pan and the zoom, so
+                nothing inside does any work when the canvas moves. */}
             <Animated.View
               collapsable={false}
               style={[
@@ -645,6 +689,8 @@ function FlowRoot({
                 contentStyle,
               ]}
             >
+              {background}
+              <FlowEdgeLayer />
               {canvas}
             </Animated.View>
           </View>
@@ -874,7 +920,17 @@ function FlowNode({
 }: FlowNodeProps) {
   const flow = useFlow('Flow.Node');
   const group = useContext(FlowGroupContext);
-  const { rects, zoom, locked, origin, registerNode, unregisterNode, onNodeDragEnd } = flow;
+  const {
+    rects,
+    zoom,
+    locked,
+    origin,
+    setNodeRect,
+    dropNodeRect,
+    registerNode,
+    unregisterNode,
+    onNodeDragEnd,
+  } = flow;
 
   useEffect(() => {
     registerNode(id, group ?? undefined);
@@ -888,46 +944,39 @@ function FlowNode({
     const previous = lastPosition.current;
     if (previous && previous.x === position.x && previous.y === position.y) return;
     lastPosition.current = position;
-    const existing = rects.value[id];
-    rects.value = {
-      ...rects.value,
-      [id]: {
-        x: position.x,
-        y: position.y,
-        width: existing?.width ?? 0,
-        height: existing?.height ?? 0,
-      },
-    };
-  }, [id, position, rects]);
+    setNodeRect(id, { x: position.x, y: position.y });
+  }, [id, position, setNodeRect]);
 
   useEffect(() => {
     return () => {
       const { [id]: _removed, ...rest } = rects.value;
       rects.value = rest;
+      dropNodeRect(id);
     };
-  }, [id, rects]);
+  }, [dropNodeRect, id, rects]);
 
   const onLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
-      const existing = rects.value[id];
-      if (existing && existing.width === width && existing.height === height) return;
-      rects.value = {
-        ...rects.value,
-        [id]: {
-          x: existing?.x ?? position.x,
-          y: existing?.y ?? position.y,
-          width,
-          height,
-        },
-      };
+      setNodeRect(id, { width, height });
     },
-    [id, position.x, position.y, rects]
+    [id, setNodeRect]
   );
 
   const dragEnd = useCallback(
     (x: number, y: number) => onNodeDragEnd?.(id, { x, y }),
     [id, onNodeDragEnd]
+  );
+
+  /**
+   * The node itself moves on the UI thread; this tells React where it got to,
+   * so the edges attached to it redraw. Called every frame of a drag — which
+   * is what it costs to have edges that follow, and what every working
+   * implementation of this pays.
+   */
+  const dragTo = useCallback(
+    (x: number, y: number) => setNodeRect(id, { x, y }),
+    [id, setNodeRect]
   );
 
   const start = useSharedValue({ x: 0, y: 0 });
@@ -951,21 +1000,17 @@ function FlowNode({
           if (!rect) return;
           // Divided by the zoom, so the node keeps up with the finger rather
           // than with the graph coordinate the finger happens to be over.
-          rects.value = {
-            ...rects.value,
-            [id]: {
-              ...rect,
-              x: start.value.x + event.translationX / zoom.value,
-              y: start.value.y + event.translationY / zoom.value,
-            },
-          };
+          const x = start.value.x + event.translationX / zoom.value;
+          const y = start.value.y + event.translationY / zoom.value;
+          rects.value = { ...rects.value, [id]: { ...rect, x, y } };
+          runOnJS(dragTo)(x, y);
         })
         .onEnd(() => {
           'worklet';
           const rect = rects.value[id];
           if (rect) runOnJS(dragEnd)(rect.x, rect.y);
         }),
-    [dragEnd, draggable, id, locked, rects, start, zoom]
+    [dragEnd, dragTo, draggable, id, locked, rects, start, zoom]
   );
 
   // Raced with the drag rather than layered on top of it. A plain touch handler
@@ -1293,69 +1338,42 @@ function FlowEdgePath({
   color,
   width = 2,
   arrow = false,
-  speed = 1.2,
   fromSide,
   toSide,
   radius = 8,
   gap = 20,
   curvature = 0.25,
-}: FlowEdgeProps) {
-  const { rects, handles, translateX, translateY, zoom } = useFlow('Flow.Edge');
-  const token = useCSSVariable('--color-muted-foreground');
-  const tint = color ?? (typeof token === 'string' ? token : '#737373');
+  boxes,
+  handles,
+  tint,
+}: FlowEdgeProps & {
+  boxes: Record<string, FlowRect>;
+  handles: HandleEntry[];
+  tint: string;
+}) {
+  const source = resolveEnd(from, fromSide, handles);
+  const target = resolveEnd(to, toSide, handles);
 
-  const source = useMemo(() => resolveEnd(from, fromSide, handles), [from, fromSide, handles]);
-  const target = useMemo(() => resolveEnd(to, toSide, handles), [handles, to, toSide]);
+  const fromRect = boxes[source.node];
+  const toRect = boxes[target.node];
+  if (!fromRect || !toRect || fromRect.width === 0 || toRect.width === 0) return null;
 
-  // An animated edge is dashed, whether or not it was asked to be: the march
-  // is what carries direction, and a march needs something to march.
+  const auto = autoSides(fromRect, toRect);
+  const sideA: FlowSide = source.side ?? auto.from;
+  const sideB: FlowSide = target.side ?? auto.to;
+  const a = anchorOf(fromRect, sideA, source.offset);
+  const b = anchorOf(toRect, sideB, target.offset);
+
+  // Graph coordinates throughout — the layer this sits in carries the pan and
+  // the zoom, so the path never has to know about either.
+  const d = edgePath(variant, a, sideA, b, sideB, curvature, radius, gap);
   const dash = dashed || animated ? 6 : 0;
 
-  const pathProps = useAnimatedProps(() => {
-    const fromRect = rects.value[source.node];
-    const toRect = rects.value[target.node];
-    if (!fromRect || !toRect || fromRect.width === 0 || toRect.width === 0) {
-      return { d: '', strokeDashoffset: 0, strokeWidth: width };
-    }
-
-    const auto = autoSides(fromRect, toRect);
-    const sideA: FlowSide = source.side ?? auto.from;
-    const sideB: FlowSide = target.side ?? auto.to;
-    const a = anchorOf(fromRect, sideA, source.offset);
-    const b = anchorOf(toRect, sideB, target.offset);
-
-    // Graph coordinates to screen coordinates. The faces were chosen in graph
-    // space, where they mean something; the drawing happens in screen space,
-    // because that is the only space an SVG this size can cover.
-    const z = zoom.value;
-    const tx = translateX.value;
-    const ty = translateY.value;
-    const screenA = { x: tx + a.x * z, y: ty + a.y * z };
-    const screenB = { x: tx + b.x * z, y: ty + b.y * z };
-
-    return {
-      // The step-out and the corner radius are graph-space measurements, so
-      // they scale with everything else rather than growing as you zoom out.
-      d: edgePath(variant, screenA, sideA, screenB, sideB, curvature, radius * z, gap * z),
-    };
-  });
-
-  /*
-   * `d` is the only animated prop, and the path is a direct child of the one
-   * <Svg> with no group and no nested <Defs> around it.
-   *
-   * That is not incidental tidiness. Animating several SVG props at once, or
-   * pointing `markerEnd` at a marker declared inside a nested <Defs>, gets the
-   * whole update dropped by the native side — and dropped silently, so the
-   * path simply never receives its geometry and nothing is drawn. Everything
-   * that can be static is static, and the arrowheads are declared once at the
-   * top of the canvas rather than per edge.
-   */
   return (
-    <AnimatedPath
-      animatedProps={pathProps}
+    <Path
+      d={d}
       fill="none"
-      stroke={tint}
+      stroke={color ?? tint}
       strokeWidth={width}
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -1364,7 +1382,6 @@ function FlowEdgePath({
     />
   );
 }
-FlowEdge.displayName = 'Flow.Edge';
 
 /**
  * Splits `"node"` or `"node.handle"` into the node and, when a handle was
@@ -1389,37 +1406,29 @@ function resolveEnd(
 }
 
 /**
- * The one SVG every edge draws into, plus the line that trails a finger while
- * a connection is being drawn.
- *
- * One `<Svg>` rather than one per edge: each is a native view, and a graph with
- * forty edges would otherwise be forty overlapping full-canvas views for the
- * platform to composite.
+ * The one SVG every edge draws into, sitting inside the transformed layer in
+ * graph coordinates — so panning and zooming the canvas moves the edges with
+ * it, for free, and no edge does any work per frame.
  */
 function FlowEdgeLayer() {
-  const { connection, edges, translateX, translateY, zoom } = useFlow('Flow');
+  const { boxes, edges, handles, connection, layer, origin } = useFlow('Flow');
   const token = useCSSVariable('--color-muted-foreground');
   const tint = typeof token === 'string' ? token : '#878787';
 
   const lineProps = useAnimatedProps(() => {
     const current = connection.value;
-    if (current.active === 0) return { d: '', opacity: 0 };
-    const z = zoom.value;
-    const tx = translateX.value;
-    const ty = translateY.value;
-    return {
-      d:
-        `M${tx + current.x1 * z},${ty + current.y1 * z} ` +
-        `L${tx + current.x2 * z},${ty + current.y2 * z}`,
-      opacity: 1,
-    };
+    if (current.active === 0) return { d: '' };
+    return { d: `M${current.x1},${current.y1} L${current.x2},${current.y2}` };
   });
 
   return (
-    // Sized by the layout rather than by a measured number: an SVG gated on a
-    // measurement that has not arrived renders nothing, and if the measurement
-    // never arrives it renders nothing for ever.
-    <Svg pointerEvents="none" width="100%" height="100%" style={StyleSheet.absoluteFill}>
+    <Svg
+      pointerEvents="none"
+      style={StyleSheet.absoluteFill}
+      width={layer.width}
+      height={layer.height}
+      viewBox={`${-origin.x} ${-origin.y} ${layer.width} ${layer.height}`}
+    >
       <Defs>
         <Marker
           id={ARROW_MARKER}
@@ -1434,8 +1443,17 @@ function FlowEdgeLayer() {
         </Marker>
       </Defs>
       {edges.map((edge) => (
-        <FlowEdgePath key={edge.key} {...edge.props} />
+        <FlowEdgePath
+          key={edge.key}
+          {...edge.props}
+          boxes={boxes}
+          handles={handles}
+          tint={tint}
+        />
       ))}
+      {/* The connection line is the one path that does animate, because it
+          follows a finger and has nothing else to follow. It animates `d` and
+          only `d`, which is the one thing that works. */}
       <AnimatedPath
         animatedProps={lineProps}
         fill="none"
@@ -1484,7 +1502,17 @@ function FlowGroup({
   ...props
 }: FlowGroupProps) {
   const flow = useFlow('Flow.Group');
-  const { rects, zoom, locked, origin, registerNode, unregisterNode, onNodeDragEnd } = flow;
+  const {
+    rects,
+    zoom,
+    locked,
+    origin,
+    setNodeRect,
+    dropNodeRect,
+    registerNode,
+    unregisterNode,
+    onNodeDragEnd,
+  } = flow;
 
   useEffect(() => {
     registerNode(id);
@@ -1492,15 +1520,18 @@ function FlowGroup({
   }, [id, registerNode, unregisterNode]);
 
   useEffect(() => {
-    rects.value = {
-      ...rects.value,
-      [id]: { x: position.x, y: position.y, width: size.width, height: size.height },
-    };
+    setNodeRect(id, {
+      x: position.x,
+      y: position.y,
+      width: size.width,
+      height: size.height,
+    });
     return () => {
       const { [id]: _removed, ...rest } = rects.value;
       rects.value = rest;
+      dropNodeRect(id);
     };
-  }, [id, position.x, position.y, rects, size.height, size.width]);
+  }, [dropNodeRect, id, position.x, position.y, rects, setNodeRect, size.height, size.width]);
 
   // Which nodes travel with the group, captured when they register rather than
   // read per frame.
@@ -1511,6 +1542,14 @@ function FlowGroup({
   const dragEnd = useCallback(
     (x: number, y: number) => onNodeDragEnd?.(id, { x, y }),
     [id, onNodeDragEnd]
+  );
+
+  /** Tells React where the group and everything in it got to. */
+  const dragTo = useCallback(
+    (moved: Record<string, FlowNodePosition>) => {
+      for (const [key, next] of Object.entries(moved)) setNodeRect(key, next);
+    },
+    [setNodeRect]
   );
 
   const drag = useMemo(
@@ -1533,22 +1572,27 @@ function FlowGroup({
           const dx = event.translationX / zoom.value;
           const dy = event.translationY / zoom.value;
           const next = { ...rects.value };
+          const moved: Record<string, FlowNodePosition> = {};
           const ids = Object.keys(start.value);
           for (let i = 0; i < ids.length; i += 1) {
             const key = ids[i]!;
             const rect = next[key];
-            const origin = start.value[key];
-            if (!rect || !origin) continue;
-            next[key] = { ...rect, x: origin.x + dx, y: origin.y + dy };
+            const from = start.value[key];
+            if (!rect || !from) continue;
+            const x = from.x + dx;
+            const y = from.y + dy;
+            next[key] = { ...rect, x, y };
+            moved[key] = { x, y };
           }
           rects.value = next;
+          runOnJS(dragTo)(moved);
         })
         .onEnd(() => {
           'worklet';
           const rect = rects.value[id];
           if (rect) runOnJS(dragEnd)(rect.x, rect.y);
         }),
-    [childIds, dragEnd, draggable, id, locked, rects, start, zoom]
+    [childIds, dragEnd, dragTo, draggable, id, locked, rects, start, zoom]
   );
 
   const style = useAnimatedStyle(() => {

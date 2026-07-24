@@ -99,7 +99,8 @@
     "Pan-and-zoom canvas of draggable nodes joined by animated edges.",
     "react native node graph flow diagram",
     {
-      "addedIn": "0.19.0"
+      "addedIn": "0.19.0",
+      "alpha": true
     }
   ],
   "frame": [

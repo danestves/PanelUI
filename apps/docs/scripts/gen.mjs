@@ -51,7 +51,11 @@ function isRecent(version) {
  * expire on the same schedule — `updatedIn` is bumped by hand when a
  * component's API changes, and forgetting to clear it costs nothing.
  */
-function statusOf({ addedIn, updatedIn }) {
+function statusOf({ alpha, addedIn, updatedIn }) {
+  // `alpha` wins and never expires: it is a statement about how settled the
+  // API is, not about which release it landed in, so it comes off the page
+  // when someone decides it has settled and not a version sooner.
+  if (alpha) return 'alpha';
   if (isRecent(addedIn)) return 'new';
   if (isRecent(updatedIn)) return 'updated';
   return null;

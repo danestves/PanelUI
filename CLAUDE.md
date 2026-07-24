@@ -88,10 +88,10 @@ the library source into `api.json`; `gen.mjs` merges it with the hand-written `u
 `npm run docs:generate --workspace=docs`, which also rebuilds the registry. See
 `apps/docs/scripts/README.md` for what each `usage.json` key becomes.
 
-### meta.json entries: group, addedIn and updatedIn
+### meta.json entries: group, addedIn, updatedIn and alpha
 
 A `scripts/meta.json` entry is `[name, summary, keyword]`, optionally followed by an options
-object. Three keys live there:
+object. Four keys live there:
 
 - **`group`** — which sidebar section the page is filed under. Omit it for `components`; pass
   `"ai-components"` for the AI Components section. The group decides both the folder the MDX is
@@ -99,12 +99,17 @@ object. Three keys live there:
   redirect in `apps/docs/next.config.mjs` when you do.
 - **`addedIn`** — the version the component first ships in. Set it when adding a component, to
   the version you are about to release.
+- **`alpha`** — the component's API is still moving. Unlike the other two this is set and
+  cleared by hand and never expires, because it is a statement about how settled the API is
+  rather than about which release it landed in. It renders as a purple **Alpha** pill and wins
+  over both dots.
 - **`updatedIn`** — the version a component's API last changed in. Set it when a change is worth
   a reader's attention: a new prop, a renamed or removed variant, a changed default, new
   behaviour. Not for a bug fix that leaves the API alone.
 
 ```json
 "section-rail": ["SectionRail", "…", "…", { "addedIn": "0.11.0" }],
+"flow": ["Flow", "…", "…", { "addedIn": "0.19.0", "alpha": true }],
 "slider": ["Slider", "…", "…", { "updatedIn": "0.15.0" }],
 "shimmer": ["Shimmer", "…", "…", { "group": "ai-components" }]
 ```

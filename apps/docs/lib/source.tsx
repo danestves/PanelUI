@@ -16,6 +16,22 @@ const DOTS: Record<string, { label: string; text?: string; className: string }> 
     text: 'Update',
     className: 'border border-fd-border bg-fd-muted text-fd-muted-foreground',
   },
+  /*
+   * Alpha outranks both, and is the only one set by hand: it says the API is
+   * still moving, which is a promise about the future rather than a fact about
+   * a version, so nothing can derive it and nothing should expire it.
+   *
+   * Purple because it has to be distinguishable from the blue "new" dot at a
+   * glance — the two often apply to the same component, and reading one as the
+   * other is the whole failure mode. Light, because a warning that shouts is a
+   * warning people stop seeing.
+   */
+  alpha: {
+    label: 'Alpha — the API may still change',
+    text: 'Alpha',
+    className:
+      'border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:border-purple-400/40 dark:bg-purple-400/15 dark:text-purple-300',
+  },
 };
 
 export const source = loader({

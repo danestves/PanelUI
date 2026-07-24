@@ -1,7 +1,7 @@
 ---
 title: Flow
 description: Pan-and-zoom canvas of draggable nodes joined by animated edges.
-status: new
+status: alpha
 ---
 
 A canvas of nodes joined by edges, that you pan, pinch and rearrange with a finger. Every position lives in a single shared value, so dragging a node moves it, and re-routes every edge attached to it, without React rendering once.
@@ -263,10 +263,10 @@ Two containers that move their contents with them, and an overview of the parts 
 | `variant` | `FlowEdgeVariant` | `'dots'` | How the edge is routed. |
 | `animated` | `boolean` | `false` | March the dashes along the edge, in the direction of travel. |
 | `dashed` | `boolean` | `false` | Draw it broken rather than solid. |
-| `color` | `string` | — | Stroke colour. Defaults to the border token. |
-| `width` | `number` | `1.5` | Stroke width in graph points. |
+| `color` | `string` | — | Stroke colour. Defaults to the muted-foreground token — an edge is content rather than chrome, and the border token it would otherwise share with the nodes is, by design, barely there. |
+| `width` | `number` | `2` | Stroke width in graph points. |
 | `arrow` | `boolean` | `false` | Put an arrowhead on the target end. |
-| `speed` | `number` | `1.2` | Seconds for one dash cycle. Lower is faster. |
+| `speed` | `number` | — | Seconds for one dash cycle. Lower is faster. |
 | `fromSide` | `FlowSide` | — | Override the face it leaves from. Otherwise worked out from the layout. |
 | `toSide` | `FlowSide` | — | Override the face it arrives at. |
 | `radius` | `number` | `8` | Corner radius for `smoothstep`. |
@@ -300,7 +300,7 @@ Two containers that move their contents with them, and an overview of the parts 
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'right'` | Which corner it sits in. |
-| `width` | `number` | `1.5` | Box size in screen points. |
+| `width` | `number` | `2` | Box size in screen points. |
 | `height` | `number` | `84` |  |
 | `nodeColor` | `string` | — | Colour of a node in the map. Defaults to the muted-foreground token. |
 
