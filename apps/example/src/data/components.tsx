@@ -1574,6 +1574,209 @@ function GroupedNode({ icon, title, detail }: { icon: ReactNode; title: string; 
 }
 
 /**
+ * Nodes added at runtime — one button that drops a frame in, another that
+ * drops one in already wired to the last.
+ *
+ * The canvas holds no list of its own: the screen owns the frames and the
+ * links, and adding either is adding to an array.
+ */
+function FlowBuilderVersion() {
+  const [nodes, setNodes] = useState([{ id: 'n1', x: 40, y: 40 }]);
+  const [links, setLinks] = useState<{ from: string; to: string }[]>([]);
+
+  const add = (linked: boolean) => {
+    const previous = nodes[nodes.length - 1];
+    const id = `n${nodes.length + 1}`;
+    // Staggered below and to the side of the last one, so a new frame never
+    // lands on top of the frame it came from.
+    const next = {
+      id,
+      x: (previous?.x ?? 0) + (nodes.length % 2 === 0 ? -70 : 90),
+      y: (previous?.y ?? 0) + 150,
+    };
+    setNodes((current) => [...current, next]);
+    if (linked && previous) {
+      setLinks((current) => [...current, { from: previous.id, to: id }]);
+    }
+  };
+
+  return (
+    <View className="flex-1">
+      <Flow minZoom={0.35}>
+        <Flow.Background variant="dots" />
+
+        {nodes.map((node) => (
+          <Flow.Node key={node.id} id={node.id} position={{ x: node.x, y: node.y }}>
+            <Frame className="w-44">
+              <Frame.Header>
+                <Frame.Title>{node.id}</Frame.Title>
+                <Frame.Action>
+                  <Badge variant="secondary">node</Badge>
+                </Frame.Action>
+              </Frame.Header>
+              <Frame.Panel>
+                <Frame.Row>
+                  <Frame.Content>
+                    <Frame.Description>Drag me anywhere</Frame.Description>
+                  </Frame.Content>
+                </Frame.Row>
+              </Frame.Panel>
+            </Frame>
+          </Flow.Node>
+        ))}
+
+        {links.map((link) => (
+          <Flow.Edge
+            key={`${link.from}-${link.to}`}
+            from={link.from}
+            to={link.to}
+            variant="smoothstep"
+            arrow
+          />
+        ))}
+
+        <Flow.Controls />
+      </Flow>
+
+      <View className="gap-2 border-t border-border px-5 py-4">
+        <View className="flex-row gap-2">
+          <Button variant="outline" className="flex-1" onPress={() => add(false)}>
+            Add a frame
+          </Button>
+          <Button className="flex-1" onPress={() => add(true)}>
+            Add and link
+          </Button>
+        </View>
+        <Text size="xs" muted>
+          {nodes.length} frame{nodes.length === 1 ? '' : 's'}, {links.length} link
+          {links.length === 1 ? '' : 's'} — drag any of them and the edges re-route.
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Edges pinned to named ports rather than routed automatically.
+ *
+ * Both are worth having: automatic routing keeps a graph readable while it is
+ * being rearranged, but a diagram where the sides *mean* something — accepted
+ * out of one port, rejected out of another — has to be able to say so.
+ */
+function FlowPortsVersion() {
+  return (
+    <Flow fitViewOnMount minZoom={0.35}>
+      <Flow.Background variant="cross" gap={26} />
+
+      <Flow.Node id="ingest" position={{ x: 0, y: 0 }}>
+        <Frame className="w-44">
+          <Frame.Header>
+            <Frame.Title>ingest</Frame.Title>
+          </Frame.Header>
+          <Frame.Panel>
+            <Frame.Row>
+              <Frame.Content>
+                <Frame.Description>Two named outputs</Frame.Description>
+              </Frame.Content>
+            </Frame.Row>
+          </Frame.Panel>
+        </Frame>
+        {/* Two ports on one face, kept apart by their offsets. */}
+        <Flow.Handle id="ok" position="right" type="source" offset={0.34} />
+        <Flow.Handle id="fail" position="right" type="source" offset={0.78} />
+      </Flow.Node>
+
+      <Flow.Node id="index" position={{ x: 250, y: -70 }}>
+        <Frame className="w-40">
+          <Frame.Header>
+            <Frame.Title>index</Frame.Title>
+          </Frame.Header>
+          <Frame.Panel>
+            <Frame.Row>
+              <Frame.Content>
+                <Frame.Description>Accepted</Frame.Description>
+              </Frame.Content>
+            </Frame.Row>
+          </Frame.Panel>
+        </Frame>
+        <Flow.Handle id="in" position="left" type="target" />
+        <Flow.Handle id="out" position="right" type="source" />
+      </Flow.Node>
+
+      <Flow.Node id="deadletter" position={{ x: 250, y: 150 }}>
+        <Frame className="w-40">
+          <Frame.Header>
+            <Frame.Title>dead-letter</Frame.Title>
+          </Frame.Header>
+          <Frame.Panel>
+            <Frame.Row>
+              <Frame.Content>
+                <Frame.Description>Rejected</Frame.Description>
+              </Frame.Content>
+            </Frame.Row>
+          </Frame.Panel>
+        </Frame>
+        <Flow.Handle id="in" position="left" type="target" />
+        <Flow.Handle id="out" position="right" type="source" />
+      </Flow.Node>
+
+      {/* A frame with a port on every face. Four ports is where naming them
+          starts to pay: `router.retry` says which one an edge means, and the
+          two that nothing is wired to yet still read as somewhere to wire. */}
+      <Flow.Node id="router" position={{ x: 520, y: 30 }}>
+        <Frame className="w-44">
+          <Frame.Header>
+            <Frame.Title>router</Frame.Title>
+            <Frame.Action>
+              <Badge variant="secondary">4 ports</Badge>
+            </Frame.Action>
+          </Frame.Header>
+          <Frame.Panel>
+            <Frame.Row>
+              <Frame.Content>
+                <Frame.Title>in · retry</Frame.Title>
+                <Frame.Description>Left face, two offsets</Frame.Description>
+              </Frame.Content>
+            </Frame.Row>
+            <Frame.Row>
+              <Frame.Content>
+                <Frame.Title>metrics · logs</Frame.Title>
+                <Frame.Description>Top and bottom, unwired</Frame.Description>
+              </Frame.Content>
+            </Frame.Row>
+          </Frame.Panel>
+        </Frame>
+        <Flow.Handle id="in" position="left" type="target" offset={0.3} />
+        <Flow.Handle id="retry" position="left" type="target" offset={0.78} />
+        <Flow.Handle id="metrics" position="top" type="source" />
+        <Flow.Handle id="logs" position="bottom" type="source" />
+      </Flow.Node>
+
+      {/* `nodeId.handleId` pins each end to a port, so the faces stay put
+          however the frames are dragged. */}
+      <Flow.Edge from="ingest.ok" to="index.in" variant="smoothstep" arrow />
+      <Flow.Edge
+        from="ingest.fail"
+        to="deadletter.in"
+        variant="smoothstep"
+        dashed
+        arrow
+      />
+      <Flow.Edge from="index.out" to="router.in" variant="smoothstep" arrow />
+      <Flow.Edge
+        from="deadletter.out"
+        to="router.retry"
+        variant="smoothstep"
+        dashed
+        arrow
+      />
+
+      <Flow.Controls />
+    </Flow>
+  );
+}
+
+/**
  * Two groups and a minimap.
  *
  * The groups are stacked rather than placed side by side: two 208-wide boxes
@@ -5480,6 +5683,22 @@ export const COMPONENTS: ComponentEntry[] = [
         fullPage: true,
         description: 'Curved edges radiating from a centre, and no fixed sides — drag a branch across and the edge re-routes.',
         render: () => <FlowMindMapVersion />,
+      },
+      {
+        label: 'Building a graph',
+        id: 'builder',
+        fullPage: true,
+        description:
+          'One button adds a frame, the other adds one already wired to the last. The canvas holds no list of its own.',
+        render: () => <FlowBuilderVersion />,
+      },
+      {
+        label: 'Named ports',
+        id: 'ports',
+        fullPage: true,
+        description:
+          'Edges pinned to handles instead of routed automatically, for a diagram where the sides mean something.',
+        render: () => <FlowPortsVersion />,
       },
       {
         label: 'Groups and a minimap',

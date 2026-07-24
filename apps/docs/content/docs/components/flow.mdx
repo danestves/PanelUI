@@ -4,14 +4,14 @@ description: Pan-and-zoom canvas of draggable nodes joined by animated edges.
 status: alpha
 ---
 
-A canvas of nodes joined by edges, that you pan, pinch and rearrange with a finger. Every position lives in a single shared value, so dragging a node moves it, and re-routes every edge attached to it, without React rendering once.
+A canvas of frames joined by edges, that you pan, pinch and rearrange with a finger. An edge names the nodes it joins rather than coordinates, and works out which faces to leave and arrive on from where those nodes currently are — so a graph the user rearranges stays readable without anyone re-specifying anything.
 
 ## Installation
 
 Flow ships with the library — no separate install.
 
 ```tsx
-import { Flow, Frame, Text, type FlowConnection } from 'panelui-native';
+import { Flow, Frame, Badge, Text, Button, type FlowConnection } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -23,17 +23,15 @@ npx panelui-cli@latest add flow
 ## Usage
 
 ```tsx
-<Flow>
+<Flow fitViewOnMount>
   <Flow.Background variant="dots" />
   <Flow.Node id="db" position={{ x: 20, y: 40 }}>
     <Frame>…</Frame>
-    <Flow.Handle id="in" position="bottom" type="target" />
   </Flow.Node>
   <Flow.Node id="web" position={{ x: 120, y: 260 }}>
     <Frame>…</Frame>
-    <Flow.Handle id="out" position="top" type="source" />
   </Flow.Node>
-  <Flow.Edge from="web.out" to="db.in" variant="smoothstep" dashed animated arrow />
+  <Flow.Edge from="web" to="db" variant="smoothstep" dashed arrow />
   <Flow.Controls />
 </Flow>
 ```
@@ -43,34 +41,34 @@ npx panelui-cli@latest add flow
 ```tsx
 <Flow onConnect={…} onNodeDragEnd={…}>
   <Flow.Background />
-  <Flow.Group id="…" position={…} size={…}>
+  <Flow.Group id="…" label="…" position={…} size={…}>
     <Flow.Node id="…" position={…}>
-      …
+      <Frame>…</Frame>
       <Flow.Handle id="out" position="bottom" type="source" />
     </Flow.Node>
   </Flow.Group>
-  <Flow.Edge from="…" to="…" />
+  <Flow.Edge from="…" to="…" arrow />
   <Flow.Controls />
   <Flow.MiniMap />
 </Flow>
 ```
 
-- **`Flow.Background`** — The grid behind everything — dots, lines or crosses. Pans and scales with the graph.
-- **`Flow.Node`** — One box on the canvas. Its content is yours; a `Frame` is the usual answer.
-- **`Flow.Handle`** — A port on a node. Both the point an edge attaches to and the grip a new connection is dragged from.
+- **`Flow.Background`** — The grid behind everything — dots, lines or crosses. Rides the canvas, so it pans and zooms with the graph.
+- **`Flow.Node`** — One frame on the canvas. Its content is yours; a `Frame` is the usual answer.
+- **`Flow.Handle`** — A named port. Both the point an edge can be pinned to and the grip a new connection is dragged from.
 - **`Flow.Edge`** — A line between two nodes, routed as a curve, a stepped run or a straight line.
-- **`Flow.Group`** — A container other nodes sit in and travel with.
+- **`Flow.Group`** — A labelled box drawn around a region of the canvas, that moves the nodes inside it.
 - **`Flow.Controls`** — Zoom, fit and lock buttons. Sits outside the transform, so it stays put.
 - **`Flow.MiniMap`** — An overview of the whole graph with the visible region marked on it.
 
 ## Examples
 
-### Nodes are whatever you put in them
+### A node is a frame
 
 A node positions and drags; what it looks like is yours. A `Frame` is the usual answer, since a node is a titled card of rows more often than it is anything else.
 
 ```tsx
-<Flow.Node id="ghost" position={{ x: 120, y: 260 }}>
+<Flow.Node id="ghost" position={{ x: 96, y: 250 }}>
   <Frame className="w-56">
     <Frame.Header className="flex-row items-center gap-3">
       <Frame.Media><PackageIcon size={20} /></Frame.Media>
@@ -85,23 +83,65 @@ A node positions and drags; what it looks like is yours. A `Frame` is the usual 
       </Frame.Row>
     </Frame.Panel>
   </Frame>
-  <Flow.Handle id="out" position="top" type="source" />
 </Flow.Node>
 ```
 
 ### Edges name nodes, not coordinates
 
-Which face an edge leaves and arrives on is worked out from where the two boxes currently are, so a graph the user rearranges stays readable without anyone re-specifying anything. Name a handle to pin it down.
+With no handle named, an edge picks its two faces from where the boxes currently sit — whichever axis they are further apart on wins — and picks again as they move. Drag a frame and the line leaves from a different side.
 
 ```tsx
-{/* Faces chosen from the layout, and re-chosen as nodes move. */}
+{/* Faces chosen from the layout, and re-chosen as the frames move. */}
 <Flow.Edge from="web" to="db" />
 
-{/* Pinned to two named ports. */}
-<Flow.Edge from="web.out" to="db.in" variant="smoothstep" arrow />
+{/* Stepped wiring with an arrowhead on the target. */}
+<Flow.Edge from="web" to="db" variant="smoothstep" arrow />
 
-{/* Dashes marching in the direction of travel. */}
-<Flow.Edge from="queue" to="worker" dashed animated speed={0.9} />
+{/* Dashed, for a dependency that is live rather than declared. */}
+<Flow.Edge from="queue" to="worker" dashed animated arrow />
+```
+
+### Pinning an edge to a port
+
+For a diagram where the sides mean something — accepted out of one port, rejected out of another. `nodeId.handleId` pins an end, and two handles on the same face are kept apart by their `offset`. Four ports is where naming them starts to pay: `router.retry` says which one an edge means.
+
+```tsx
+<Flow.Node id="router" position={{ x: 520, y: 30 }}>
+  <Frame>…</Frame>
+  <Flow.Handle id="in" position="left" type="target" offset={0.3} />
+  <Flow.Handle id="retry" position="left" type="target" offset={0.78} />
+  <Flow.Handle id="metrics" position="top" type="source" />
+  <Flow.Handle id="logs" position="bottom" type="source" />
+</Flow.Node>
+
+<Flow.Edge from="index.out" to="router.in" variant="smoothstep" arrow />
+<Flow.Edge from="deadletter.out" to="router.retry" dashed arrow />
+```
+
+### Building a graph at runtime
+
+The canvas keeps no list of its own. Adding a frame is adding to an array, and so is linking two of them.
+
+```tsx
+const [nodes, setNodes] = useState([{ id: 'n1', x: 40, y: 40 }]);
+const [links, setLinks] = useState<{ from: string; to: string }[]>([]);
+
+<Flow minZoom={0.35}>
+  {nodes.map((node) => (
+    <Flow.Node key={node.id} id={node.id} position={{ x: node.x, y: node.y }}>
+      <Frame>…</Frame>
+    </Flow.Node>
+  ))}
+  {links.map((link) => (
+    <Flow.Edge
+      key={`${link.from}-${link.to}`}
+      from={link.from}
+      to={link.to}
+      variant="smoothstep"
+      arrow
+    />
+  ))}
+</Flow>
 ```
 
 ### Wiring it up by dragging
@@ -119,8 +159,8 @@ const [edges, setEdges] = useState<FlowConnection[]>([]);
   {edges.map((edge) => (
     <Flow.Edge
       key={`${edge.source}-${edge.target}`}
-      from={`${edge.source}.${edge.sourceHandle}`}
-      to={`${edge.target}.${edge.targetHandle ?? 'in'}`}
+      from={edge.source}
+      to={edge.target}
       arrow
     />
   ))}
@@ -129,7 +169,7 @@ const [edges, setEdges] = useState<FlowConnection[]>([]);
 
 ### Driving positions from outside
 
-Pass `position` once and the canvas takes it from there. Keep it in state and pass it back, and the graph is yours to move — `onNodeDragEnd` is the only time a drag reaches JavaScript.
+Pass `position` once and the canvas takes it from there. Keep it in state and pass it back, and the graph is yours to move — `onNodeDragEnd` reports where a frame was dropped.
 
 ```tsx
 const [positions, setPositions] = useState(initial);
@@ -143,35 +183,25 @@ const [positions, setPositions] = useState(initial);
 </Flow>
 ```
 
-### Groups that move their contents
-
-Dragging a group offsets every node in it inside the same worklet that moves the group, so twenty nodes cost one frame's work rather than twenty.
-
-```tsx
-<Flow.Group id="edge" label="Edge" position={{ x: 0, y: 0 }} size={{ width: 260, height: 300 }}>
-  <Flow.Node id="cdn" position={{ x: 24, y: 56 }}>…</Flow.Node>
-  <Flow.Node id="waf" position={{ x: 24, y: 176 }}>…</Flow.Node>
-</Flow.Group>
-```
-
 ## Versions
 
 ### Infrastructure map
 
-Two services and the dependency between them, on a dotted canvas. Drag a node and the edge follows it in real time.
+Three frames and the dependencies between them. Drag any of them and the edges re-route, leaving from whichever side is now the shorter way round.
 
 ```tsx
-<Flow.Edge from="ghost.out" to="db.in" variant="smoothstep" dashed animated arrow />
+<Flow.Edge from="ghost" to="db" variant="smoothstep" dashed animated arrow />
+<Flow.Edge from="ghost" to="redis" variant="smoothstep" arrow />
 ```
 
 ### Build pipeline
 
-Stages running top to bottom, with only the live edge marching — an animation on every edge says nothing about which one is running.
+Stages running top to bottom, with only the edge into the running stage dashed — marking every edge says nothing about which one is live.
 
 ```tsx
 <Flow.Edge
-  from={`${stage.id}.out`}
-  to={`${next.id}.in`}
+  from={stage.id}
+  to={next.id}
   variant="smoothstep"
   animated={index === running - 1}
   arrow
@@ -194,13 +224,42 @@ Curved edges radiating from a centre, with no fixed sides — drag a branch acro
 <Flow.Edge from="core" to={branch.id} variant="bezier" />
 ```
 
-### Groups and a minimap
+### Building a graph
 
-Two containers that move their contents with them, and an overview of the parts off screen.
+One button adds a frame, the other adds one already wired to the last. Everything the canvas draws comes from two arrays the screen owns.
 
 ```tsx
-<Flow.MiniMap position="bottom-right" />
-<Flow.Controls />
+<Button onPress={() => add(false)}>Add a frame</Button>
+<Button onPress={() => add(true)}>Add and link</Button>
+```
+
+### Named ports
+
+Edges pinned to handles instead of routed automatically, for a diagram where the sides mean something. One frame carries a port on every face, and two of them share a face at different offsets.
+
+```tsx
+<Flow.Node id="router" position={{ x: 520, y: 30 }}>
+  <Frame>…</Frame>
+  <Flow.Handle id="in" position="left" type="target" offset={0.3} />
+  <Flow.Handle id="retry" position="left" type="target" offset={0.78} />
+  <Flow.Handle id="metrics" position="top" type="source" />
+  <Flow.Handle id="logs" position="bottom" type="source" />
+</Flow.Node>
+
+<Flow.Edge from="index.out" to="router.in" variant="smoothstep" arrow />
+<Flow.Edge from="deadletter.out" to="router.retry" dashed arrow />
+```
+
+### Groups and a minimap
+
+Two labelled boxes that move their contents with them, and an overview of the parts off screen. The edges join the frames — a group is a region, not something an edge attaches to.
+
+```tsx
+<Flow.Group id="edge-tier" label="Edge" position={{ x: 0, y: 0 }} size={{ width: 196, height: 178 }}>
+  <Flow.Node id="cdn" position={{ x: 14, y: 34 }}>…</Flow.Node>
+</Flow.Group>
+
+<Flow.Edge from="cdn" to="waf" variant="smoothstep" arrow />
 ```
 
 ## API Reference
@@ -235,8 +294,8 @@ Two containers that move their contents with them, and an overview of the parts 
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `id` | `string` | `'default'` | Identifies the node to edges and to `onNodeDragEnd`. Must be unique. |
-| `position` | `FlowNodePosition` | `'right'` | Where it starts, in graph coordinates. |
+| `id` | `string` | — | Identifies the node to edges and to `onNodeDragEnd`. Must be unique. |
+| `position` | `FlowNodePosition` | — | Where it starts, in graph coordinates. |
 | `className` | `string` | — |  |
 | `draggable` | `boolean` | `true` | Let a finger move it. |
 | `selected` | `boolean` | `false` | Draw the selected ring. |
@@ -260,26 +319,25 @@ Two containers that move their contents with them, and an overview of the parts 
 | --- | --- | --- | --- |
 | `from` | `string` | — | Source, as `"nodeId"` or `"nodeId.handleId"`. |
 | `to` | `string` | — | Target, same shape. |
-| `variant` | `FlowEdgeVariant` | `'dots'` | How the edge is routed. |
-| `animated` | `boolean` | `false` | March the dashes along the edge, in the direction of travel. |
+| `variant` | `FlowEdgeVariant` | `'bezier'` | How the edge is routed. |
+| `animated` | `boolean` | `false` | Mark the edge as carrying something — a request, a build, a dependency that is live rather than declared. Draws it dashed. |
 | `dashed` | `boolean` | `false` | Draw it broken rather than solid. |
 | `color` | `string` | — | Stroke colour. Defaults to the muted-foreground token — an edge is content rather than chrome, and the border token it would otherwise share with the nodes is, by design, barely there. |
 | `width` | `number` | `2` | Stroke width in graph points. |
 | `arrow` | `boolean` | `false` | Put an arrowhead on the target end. |
-| `speed` | `number` | — | Seconds for one dash cycle. Lower is faster. |
 | `fromSide` | `FlowSide` | — | Override the face it leaves from. Otherwise worked out from the layout. |
 | `toSide` | `FlowSide` | — | Override the face it arrives at. |
 | `radius` | `number` | `8` | Corner radius for `smoothstep`. |
-| `gap` | `number` | `24` | How far the edge steps clear of a node before turning. |
+| `gap` | `number` | `20` | How far the edge steps clear of a node before turning. |
 | `curvature` | `number` | `0.25` | Curve strength for `bezier`. |
 
 ### Flow.Group
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `id` | `string` | `'default'` | Identifies the group, the same way a node's id does. |
-| `position` | `FlowNodePosition` | `'right'` | Where the container sits. |
-| `size` | `{ width: number; height: number }` | `1.6` | How big the container is. Children are positioned inside it. |
+| `id` | `string` | — | Identifies the group, the same way a node's id does. |
+| `position` | `FlowNodePosition` | — | Where the container sits. |
+| `size` | `{ width: number; height: number }` | — | How big the container is. Children are positioned inside it. |
 | `label` | `string` | — | Caption drawn along the top edge. |
 | `className` | `string` | — |  |
 | `draggable` | `boolean` | `true` | Move the group, and everything in it, with a finger. |
@@ -299,8 +357,8 @@ Two containers that move their contents with them, and an overview of the parts 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'right'` | Which corner it sits in. |
-| `width` | `number` | `2` | Box size in screen points. |
+| `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-right'` | Which corner it sits in. |
+| `width` | `number` | `120` | Box size in screen points. |
 | `height` | `number` | `84` |  |
 | `nodeColor` | `string` | — | Colour of a node in the map. Defaults to the muted-foreground token. |
 
@@ -308,32 +366,40 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
-### Where the positions live
-
-Every node's box is one entry in a single shared value, and nothing else knows a position. Dragging a node rewrites that entry on the UI thread; the node's transform and every attached edge's path are derived from it in worklets on the same thread. A drag is therefore zero React renders, however many edges are attached — which is the difference between a graph that tracks a finger and one that catches up afterwards.
-
-JavaScript hears about a drag once, when the finger lifts, through `onNodeDragEnd`. Positions are otherwise yours to leave alone: pass `position` once and the canvas takes it from there, or keep it in state and pass it back to drive nodes from outside.
-
 ### Where the edges attach
 
-An edge names nodes rather than coordinates. With no handle named, it picks the two faces from where the boxes currently sit — whichever axis they are further apart on wins — and picks again as they move, so a hand-arranged graph stays readable without anyone re-specifying anything.
+An edge names nodes rather than coordinates. With no handle named it picks the two faces from where the boxes currently sit — whichever axis they are further apart on wins — and picks again as they move, so the attachment point travels around a frame as you drag it and the line leaves from whichever side is now the shorter way round. That is what keeps a hand-arranged graph readable without anyone re-specifying anything.
 
-Name a handle instead (`from="web.out"`) and the edge attaches exactly there. A handle works out its own position from the node's box and the face it names rather than measuring itself: a handle that measured would be a frame behind the node it sits on, and the edge would trail its own port.
+Name a handle instead (`from="ingest.ok"`) and the edge stays pinned to that port however the frames move. Use it when the sides *mean* something — accepted out of one port, rejected out of another — and leave it off otherwise. A handle works out its own position from the node's box and the face it names rather than measuring itself: a handle that measured would be a frame behind the node it sits on, and the edge would trail its own port.
 
 ### Routing
 
 `bezier` is a curve leaving and arriving perpendicular to each face. `smoothstep` is an orthogonal run with rounded corners — the one that reads as wiring — and `step` is the same with hard corners. `straight` is a line, for a graph where the routing is not the point.
 
-`animated` marches the stroke in the direction of travel, and `dashed` breaks it up. They are independent: a solid edge can carry a moving highlight, and a dashed edge can sit still.
+`arrow` puts a head on the target end, drawn as its own small triangle rather than through SVG's `marker-end`. `dashed` breaks the line up, and `animated` marks an edge as carrying something live rather than declared, which also draws it dashed.
+
+### Where the positions live
+
+Every node's box is kept twice: on the UI thread, where a drag writes it every frame and the node's own transform reads it, and in React state, where the edges are rendered from it. A dragged frame therefore never lags the finger moving it, and the edges attached to it redraw as it goes.
+
+The tempting design is one copy — everything on the UI thread, edges animating their own path strings, no renders at all. It does not draw. An animated SVG path in React Native reliably animates its `d` and nothing else, and only while nothing else about it is animated. So the edges are ordinary elements and cost a render per drag frame, which is a real cost and the right trade.
+
+`onNodeDragEnd` reports where a frame was dropped. Positions are otherwise yours to leave alone: pass `position` once and the canvas takes it from there, or keep it in state and pass it back to drive nodes from outside.
 
 ### Three gestures, one canvas
 
 The pane pans and pinches, a node drags, and a handle draws a new connection. They are nested gesture detectors rather than one gesture doing three jobs, so the innermost thing under the finger wins — which is what a finger expects.
 
-`Flow.Controls` is worth having even where pinch works: on a phone, pinching to a particular scale is imprecise, and framing a whole graph by hand is worse. `lock` freezes panning, zooming and dragging together, for a canvas that is being read rather than edited.
+`Flow.Controls` is worth having even where pinch works: on a phone, pinching to a particular scale is imprecise, and framing a whole graph by hand is worse. `fitViewOnMount` does the same job once, for a graph whose positions come from data rather than from a screen you measured. `lock` freezes panning, zooming and dragging together, for a canvas being read rather than edited.
 
 ### Connections are reported, not applied
 
 `onConnect` is handed `{ source, sourceHandle, target, targetHandle }` and nothing else happens. The canvas never adds an edge itself, because the graph is yours and so is what a new connection means — a validation, a request, an undo entry. `isValidConnection` refuses one before `onConnect` sees it.
 
 A drop does not have to land on a handle. The nearest handle within reach wins, and failing that a drop anywhere on a node connects to the node — a finger is blunt, and the strict reading of the gesture is the wrong one on a small screen.
+
+### Groups
+
+A `Flow.Group` is a labelled box drawn around a region of the canvas. Dragging it offsets every node inside it in the same worklet that moves the box, so a group of twenty frames costs one frame's work rather than twenty.
+
+A group is not a coordinate space: a node inside one carries the same graph position as a node outside it, and edges join the *frames* rather than the boxes drawn around them.

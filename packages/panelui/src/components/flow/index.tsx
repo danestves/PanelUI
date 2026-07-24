@@ -18,24 +18,23 @@
  *
  * ## Where the positions live
  *
- * Every node's box is one entry in a single shared value, and nothing else
- * knows a position. Dragging a node rewrites that entry on the UI thread; the
- * node's transform and every edge's `d` string are derived from it in worklets
- * on the same thread. A drag is therefore zero React renders, however many
- * edges are attached — which is the difference between a graph that tracks a
- * finger and one that catches up afterwards.
+ * Every node's box is kept twice: on the UI thread, where a drag writes it
+ * every frame and the node's own transform reads it, and in React state, where
+ * the edges are rendered from it. A dragged node therefore never lags its own
+ * finger, and the edges attached to it redraw as it moves.
  *
- * JavaScript hears about a drag once, when the finger lifts, through
- * `onNodeDragEnd`. Positions are otherwise yours to leave alone: pass
- * `position` once and the canvas takes it from there, or keep it in state and
- * pass it back to drive nodes from outside.
+ * The tempting design is one copy — everything on the UI thread, edges
+ * animating their own path strings, no renders at all. It does not draw. An
+ * animated SVG path in React Native reliably animates its `d` and nothing
+ * else, and only while nothing else about it is animated; anything more is
+ * dropped with no error, leaving a path that never receives its geometry. So
+ * the edges are ordinary elements and cost a render per drag frame. That is a
+ * real cost and it is the right trade.
  *
- * ## Where the edges attach
- *
- * An edge names nodes, not coordinates: `from="web" to="db"`. Which face it
- * leaves and arrives on is worked out from where the two boxes currently are,
- * so a graph the user rearranges stays readable without anyone re-specifying
- * anything. Name a handle instead — `from="web.out"` — and it attaches there.
+ * JavaScript is told a drag has finished through `onNodeDragEnd`. Positions
+ * are otherwise yours to leave alone: pass `position` once and the canvas
+ * takes it from there, or keep it in state and pass it back to drive nodes
+ * from outside.
  *
  * ## Two gestures, one canvas
  *
@@ -1267,7 +1266,10 @@ export interface FlowEdgeProps {
   to: string;
   /** How the edge is routed. */
   variant?: FlowEdgeVariant;
-  /** March the dashes along the edge, in the direction of travel. */
+  /**
+   * Mark the edge as carrying something — a request, a build, a dependency
+   * that is live rather than declared. Draws it dashed.
+   */
   animated?: boolean;
   /** Draw it broken rather than solid. */
   dashed?: boolean;
@@ -1281,8 +1283,6 @@ export interface FlowEdgeProps {
   width?: number;
   /** Put an arrowhead on the target end. */
   arrow?: boolean;
-  /** Seconds for one dash cycle. Lower is faster. */
-  speed?: number;
   /** Override the face it leaves from. Otherwise worked out from the layout. */
   fromSide?: FlowSide;
   /** Override the face it arrives at. */

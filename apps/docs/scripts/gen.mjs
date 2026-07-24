@@ -101,11 +101,22 @@ const demoMedia = (x) =>
 /** Props inherited from React Native, documented once rather than per row. */
 const INHERITED = /^(ViewProps|TextProps|ViewProps, VariantProps|.*VariantProps.*)$/;
 
-function propsTable(iface, defaults) {
+function propsTable(iface, defaults, byInterface = {}, variantDefaults = {}) {
+  /*
+   * Where an interface destructures its own props, that destructuring is the
+   * whole truth: a prop missing from it has no default, and must not inherit
+   * one from a sibling component that happens to use the same prop name. Only
+   * an interface with no block of its own falls back to the file-wide guess.
+   */
+  const own = byInterface[iface.name];
+  const scoped = own !== undefined;
   const rows = iface.fields
     .filter((f) => f.name !== 'children')
     .map((f) => {
-      const def = defaults[f.name] !== undefined ? inlineCode(defaults[f.name]) : '—';
+      const resolved = scoped
+        ? (own[f.name] ?? variantDefaults[f.name])
+        : defaults[f.name];
+      const def = resolved !== undefined ? inlineCode(resolved) : '—';
       return `| ${inlineCode(f.name)} | ${inlineCode(esc(f.type))} | ${def} | ${esc(f.doc || '')} |`;
     });
   if (!rows.length) return null;
@@ -249,7 +260,10 @@ ${variantKeys.map(([k, opts]) => {
   }
 
   const tables = c.interfaces
-    .map((i) => ({ i, t: propsTable(i, c.defaults) }))
+    .map((i) => ({
+      i,
+      t: propsTable(i, c.defaults, c.byInterface ?? {}, c.variantDefaults ?? {}),
+    }))
     .filter((x) => x.t);
   if (tables.length) {
     sections.push(`## API Reference

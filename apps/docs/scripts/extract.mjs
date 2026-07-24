@@ -78,6 +78,23 @@ for (const dir of fs.readdirSync(root).sort()) {
     if (!(dm[1] in destructured)) destructured[dm[1]] = dm[2].trim();
   }
 
+  /*
+   * The same defaults again, but attributed to the interface each destructuring
+   * is annotated with. The file-wide pass above cannot tell two sub-components
+   * apart, so in a file where one destructures `variant = 'dots'` and another
+   * `variant = 'bezier'`, whichever comes first claims the name for the whole
+   * page — and one of the two tables then documents a default that does not
+   * exist. Matching `({ … }: SomeProps` keeps each set with its own interface.
+   */
+  const byInterface = {};
+  for (const bm of src.matchAll(/\(\{([\s\S]*?)\n\}:\s*(\w+)/g)) {
+    const own = {};
+    for (const dm of bm[1].matchAll(/^\s{2,}(\w+) = ([^,\n]+),$/gm)) {
+      own[dm[1]] = dm[2].trim();
+    }
+    byInterface[bm[2]] = { ...(byInterface[bm[2]] ?? {}), ...own };
+  }
+
   // Compound parts.
   const parts = [];
   const oa = src.match(/Object\.assign\(\w+,\s*\{([\s\S]*?)\n\}\)/);
@@ -94,7 +111,18 @@ for (const dir of fs.readdirSync(root).sort()) {
   // destructured value is often just the same string.
   const allDefaults = { ...destructured, ...defaults };
 
-  out[dir] = { interfaces, variants, defaults: allDefaults, parts, summary };
+  out[dir] = {
+    interfaces,
+    variants,
+    defaults: allDefaults,
+    byInterface,
+    // tv()'s own defaults, kept apart so an interface that destructures its
+    // props can still pick up a variant default without also picking up
+    // another sub-component's parameter default.
+    variantDefaults: defaults,
+    parts,
+    summary,
+  };
 }
 
 fs.writeFileSync(path.join(HERE, 'api.json'), JSON.stringify(out, null, 2));
