@@ -4608,29 +4608,27 @@ export const COMPONENTS: ComponentEntry[] = [
                 ['Haiku 4.5', 'On standby', 'Idle', '0s'],
               ].map(([model, task, status, elapsed]) => (
                 <Frame.Row key={task}>
-                  <View className="w-24">
-                    <Text size="sm" weight="medium" numberOfLines={1}>
-                      {model}
+                  <Frame.Content>
+                    <Frame.Title>{model}</Frame.Title>
+                    <Frame.Description>{task}</Frame.Description>
+                  </Frame.Content>
+                  <Frame.Actions>
+                    <Chip
+                      size="sm"
+                      variant={
+                        status === 'Running'
+                          ? 'success'
+                          : status === 'Done'
+                            ? 'outline'
+                            : 'default'
+                      }
+                    >
+                      {status}
+                    </Chip>
+                    <Text size="xs" muted>
+                      {elapsed}
                     </Text>
-                  </View>
-                  <Text size="sm" className="flex-1" numberOfLines={1}>
-                    {task}
-                  </Text>
-                  <Chip
-                    size="sm"
-                    variant={
-                      status === 'Running'
-                        ? 'success'
-                        : status === 'Done'
-                          ? 'outline'
-                          : 'default'
-                    }
-                  >
-                    {status}
-                  </Chip>
-                  <Text size="xs" muted>
-                    {elapsed}
-                  </Text>
+                  </Frame.Actions>
                 </Frame.Row>
               ))}
             </Frame.Panel>
@@ -4648,7 +4646,10 @@ export const COMPONENTS: ComponentEntry[] = [
               <Frame.Action>25% token limit</Frame.Action>
             </Frame.Header>
             <Frame.Panel>
-              <Frame.Row className="gap-2">
+              {/* `wrap` rather than a spacer: five things in one row do not fit
+                  on a narrow screen, and a second line is better than a chip
+                  disappearing off the edge. */}
+              <Frame.Row wrap className="gap-2">
                 <Chip size="sm" variant="success">
                   2 Running
                 </Chip>
@@ -4656,10 +4657,11 @@ export const COMPONENTS: ComponentEntry[] = [
                 <Chip size="sm" variant="outline">
                   1 Done
                 </Chip>
-                <View className="flex-1" />
-                <Text size="xs" muted>
-                  15m12s ago
-                </Text>
+                <Frame.Actions className="ml-auto">
+                  <Text size="xs" muted>
+                    15m12s ago
+                  </Text>
+                </Frame.Actions>
               </Frame.Row>
             </Frame.Panel>
           </Frame>
@@ -4681,9 +4683,15 @@ export const COMPONENTS: ComponentEntry[] = [
                 ['Total Spend', '$149.61', 85],
               ].map(([label, value, pct]) => (
                 <Frame.Row key={label as string}>
-                  <Meter percent={pct as number} />
-                  <Text className="flex-1">{label}</Text>
-                  <Text weight="medium">{value}</Text>
+                  <Frame.Media>
+                    <Meter percent={pct as number} />
+                  </Frame.Media>
+                  <Frame.Content>
+                    <Text numberOfLines={1}>{label}</Text>
+                  </Frame.Content>
+                  <Frame.Actions>
+                    <Text weight="medium">{value}</Text>
+                  </Frame.Actions>
                 </Frame.Row>
               ))}
             </Frame.Panel>
@@ -4707,16 +4715,16 @@ export const COMPONENTS: ComponentEntry[] = [
                 ['SM', 'Sam Miller', 'sam@example.com', 'Viewer'],
               ].map(([initials, name, email, role]) => (
                 <Frame.Row key={email}>
-                  <Avatar size="sm" fallback={initials} />
-                  <View className="flex-1">
-                    <Text size="sm" weight="medium">
-                      {name}
-                    </Text>
-                    <Text size="xs" muted>
-                      {email}
-                    </Text>
-                  </View>
-                  <Badge variant="outline">{role}</Badge>
+                  <Frame.Media>
+                    <Avatar size="sm" fallback={initials} />
+                  </Frame.Media>
+                  <Frame.Content>
+                    <Frame.Title>{name}</Frame.Title>
+                    <Frame.Description>{email}</Frame.Description>
+                  </Frame.Content>
+                  <Frame.Actions>
+                    <Badge variant="outline">{role}</Badge>
+                  </Frame.Actions>
                 </Frame.Row>
               ))}
             </Frame.Panel>
@@ -4746,6 +4754,62 @@ export const COMPONENTS: ComponentEntry[] = [
                   </Text>
                 </Frame.Row>
               ))}
+            </Frame.Panel>
+          </Frame>
+        ),
+      },
+      {
+        label: 'A row that would not fit',
+        render: () => (
+          // Everything here is longer than the room it has. The slots are what
+          // keep it readable: the icon and the trailing chips hold their size,
+          // and the text column shrinks around them instead of pushing them
+          // past the edge, where the frame would clip them away.
+          <Frame className="w-full">
+            <Frame.Header>
+              <Frame.Title>
+                Deployment history for the production environment
+              </Frame.Title>
+              <Frame.Action>Last 7 days</Frame.Action>
+            </Frame.Header>
+            <Frame.Panel>
+              <Frame.Row align="start">
+                <Frame.Media>
+                  <Avatar size="sm" fallback="KA" />
+                </Frame.Media>
+                <Frame.Content>
+                  <Frame.Title>
+                    feat(registry): resolve relative imports through the alias table
+                  </Frame.Title>
+                  <Frame.Description>
+                    Deployed to production from the main branch about two hours
+                    ago, after the full test suite passed on every workspace.
+                  </Frame.Description>
+                </Frame.Content>
+                <Frame.Actions>
+                  <Chip size="sm" variant="success">
+                    Live
+                  </Chip>
+                  <Chip size="sm" variant="outline">
+                    2h
+                  </Chip>
+                </Frame.Actions>
+              </Frame.Row>
+              <Frame.Row align="start">
+                <Frame.Media>
+                  <Avatar size="sm" fallback="JD" />
+                </Frame.Media>
+                <Frame.Content>
+                  <Frame.Title>fix(bottom-sheet): restore the bottom border</Frame.Title>
+                  <Frame.Description>
+                    Rolled back after an hour — the detached sheet lost its
+                    bottom edge on devices without a home indicator.
+                  </Frame.Description>
+                </Frame.Content>
+                <Frame.Actions>
+                  <Chip size="sm">Rolled back</Chip>
+                </Frame.Actions>
+              </Frame.Row>
             </Frame.Panel>
           </Frame>
         ),

@@ -111,6 +111,11 @@ export {
   type FramePanelProps,
   type FrameRowProps,
   type FrameSectionProps,
+  type FrameHeaderProps,
+  type FrameActionProps,
+  type FrameMediaProps,
+  type FrameContentProps,
+  type FrameActionsProps,
   type FrameVariant,
 } from './components/frame';
 export {
