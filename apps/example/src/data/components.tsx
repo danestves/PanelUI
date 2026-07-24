@@ -1325,18 +1325,21 @@ function FlowEdgeShapesDemo() {
   );
 }
 
-/** Two services and the dependency between them, on a dotted canvas. */
+/**
+ * Frames bound together — three service cards and the dependencies between
+ * them. Drag any of them and the edges re-route as they move.
+ */
 function FlowInfrastructureVersion() {
   return (
-    <Flow defaultViewport={{ x: 16, y: 60, zoom: 1 }}>
+    <Flow defaultViewport={{ x: 14, y: 48, zoom: 0.92 }}>
       <Flow.Background variant="dots" gap={22} />
 
-      <Flow.Node id="db" position={{ x: 20, y: 40 }}>
+      <Flow.Node id="db" position={{ x: 10, y: 20 }}>
         <ServiceNode icon={<PackageIcon size={20} />} title="blog-db" status="Online" />
         <Flow.Handle id="in" position="bottom" type="target" />
       </Flow.Node>
 
-      <Flow.Node id="ghost" position={{ x: 120, y: 260 }}>
+      <Flow.Node id="ghost" position={{ x: 96, y: 250 }}>
         <ServiceNode
           icon={<ShareNodesIcon size={20} />}
           title="ghost-image"
@@ -1345,9 +1348,17 @@ function FlowInfrastructureVersion() {
           volume="ghost-content"
         />
         <Flow.Handle id="out" position="top" type="source" />
+        <Flow.Handle id="cache" position="left" type="source" offset={0.8} />
+      </Flow.Node>
+
+      <Flow.Node id="redis" position={{ x: 0, y: 470 }}>
+        <ServiceNode icon={<SendIcon size={20} />} title="redis" status="Online" />
+        <Flow.Handle id="in" position="right" type="target" />
       </Flow.Node>
 
       <Flow.Edge from="ghost.out" to="db.in" variant="smoothstep" dashed animated arrow />
+      <Flow.Edge from="ghost.cache" to="redis.in" variant="smoothstep" arrow />
+
       <Flow.Controls />
     </Flow>
   );

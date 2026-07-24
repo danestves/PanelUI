@@ -615,8 +615,12 @@ function FlowRoot({
                   top: -origin.y,
                   width: layer.width,
                   height: layer.height,
+                  // Pivot on graph (0, 0), not on this layer's own corner.
+                  // The layer starts half its width up and to the left of the
+                  // container, so scaling about its corner would throw the
+                  // graph off screen by half the layer on every zoom.
+                  transformOrigin: [origin.x, origin.y, 0],
                 },
-                TRANSFORM_ORIGIN,
                 contentStyle,
               ]}
             >
@@ -715,70 +719,88 @@ function FlowBackground({
   size = 1.6,
   color,
 }: FlowBackgroundProps) {
-  const { box } = useFlow('Flow.Background');
+  const { box, translateX, translateY, zoom } = useFlow('Flow.Background');
   const token = useCSSVariable('--color-muted-foreground');
   const tint = color ?? (typeof token === 'string' ? token : '#737373');
   // A pattern is referenced by id, and two canvases on one screen would collide.
   const id = useRef(`panelui-flow-${Math.random().toString(36).slice(2, 7)}`).current;
 
+  /*
+   * The grid is a tile that follows the viewport in whole-cell steps.
+   *
+   * It is drawn inside the transformed layer, so panning and zooming it costs
+   * nothing and the dots stay nailed to the canvas — a grid whose pattern is
+   * re-tiled each frame visibly crawls instead of travelling. But a tile fixed
+   * in graph space runs out the moment you pan past its edge, and it cannot
+   * simply be made enormous: an SVG is one texture, and a texture has a size
+   * the platform will not exceed, past which it draws nothing at all.
+   *
+   * So the tile moves with you, rounded to a whole number of cells. Rounding is
+   * what makes the move invisible: shifted by an exact multiple of the grid
+   * spacing, the tile is the same picture it was before.
+   */
+  const follow = useAnimatedStyle(() => {
+    const left = -translateX.value / zoom.value;
+    const top = -translateY.value / zoom.value;
+    return {
+      transform: [
+        { translateX: Math.round(left / gap) * gap },
+        { translateY: Math.round(top / gap) * gap },
+      ],
+    };
+  });
+
   if (variant === 'none') return null;
 
-  /*
-   * Sized as a multiple of the container and drawn *inside* the transformed
-   * layer, so it pans and zooms with the graph for nothing — no per-frame work
-   * and, more importantly, no per-frame change to the pattern itself.
-   *
-   * The alternative is a screen-sized grid whose tile origin is recomputed from
-   * the canvas offset each frame. That re-tiles the pattern on every touch
-   * move, and re-tiling is visible: the dots crawl and shimmer instead of
-   * travelling with the canvas. A grid has to look nailed to the canvas, so it
-   * is nailed to the canvas.
-   */
-  const width = clampCanvas(box.width * GRID_SPAN);
-  const height = clampCanvas(box.height * GRID_SPAN);
+  // Wide enough to cover the container at the furthest zoom out, with a screen
+  // of slack either side so a fling never outruns it between frames.
+  const width = clampCanvas(Math.max(box.width, 320) * GRID_SPAN);
+  const height = clampCanvas(Math.max(box.height, 480) * GRID_SPAN);
   const left = -width / 2;
   const top = -height / 2;
 
   return (
-    <Svg
-      pointerEvents="none"
-      style={{ position: 'absolute', left, top }}
-      width={width}
-      height={height}
-      viewBox={`${left} ${top} ${width} ${height}`}
-    >
-      <Defs>
-        <Pattern
-          id={id}
-          x={0}
-          y={0}
-          width={gap}
-          height={gap}
-          patternUnits="userSpaceOnUse"
-        >
-          {variant === 'dots' ? (
-            <Circle cx={gap / 2} cy={gap / 2} r={size} fill={tint} opacity={0.45} />
-          ) : null}
-          {variant === 'lines' ? (
-            <Path
-              d={`M0,0 L${gap},0 M0,0 L0,${gap}`}
-              stroke={tint}
-              strokeWidth={Math.max(size / 2, 0.4)}
-              opacity={0.28}
-            />
-          ) : null}
-          {variant === 'cross' ? (
-            <Path
-              d={`M${gap / 2 - size * 2},${gap / 2} L${gap / 2 + size * 2},${gap / 2} M${gap / 2},${gap / 2 - size * 2} L${gap / 2},${gap / 2 + size * 2}`}
-              stroke={tint}
-              strokeWidth={Math.max(size / 2, 0.4)}
-              opacity={0.4}
-            />
-          ) : null}
-        </Pattern>
-      </Defs>
-      <Rect x={left} y={top} width={width} height={height} fill={`url(#${id})`} />
-    </Svg>
+    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, follow]}>
+      <Svg
+        pointerEvents="none"
+        style={{ position: 'absolute', left, top }}
+        width={width}
+        height={height}
+        viewBox={`${left} ${top} ${width} ${height}`}
+      >
+        <Defs>
+          <Pattern
+            id={id}
+            x={0}
+            y={0}
+            width={gap}
+            height={gap}
+            patternUnits="userSpaceOnUse"
+          >
+            {variant === 'dots' ? (
+              <Circle cx={gap / 2} cy={gap / 2} r={size} fill={tint} opacity={0.45} />
+            ) : null}
+            {variant === 'lines' ? (
+              <Path
+                d={`M0,0 L${gap},0 M0,0 L0,${gap}`}
+                stroke={tint}
+                strokeWidth={Math.max(size / 2, 0.4)}
+                opacity={0.28}
+              />
+            ) : null}
+            {variant === 'cross' ? (
+              <Path
+                d={`M${gap / 2 - size * 2},${gap / 2} L${gap / 2 + size * 2},${gap / 2} M${gap / 2},${gap / 2 - size * 2} L${gap / 2},${gap / 2 + size * 2}`}
+                stroke={tint}
+                strokeWidth={Math.max(size / 2, 0.4)}
+                opacity={0.4}
+              />
+            ) : null}
+          </Pattern>
+        </Defs>
+        <Rect x={left} y={top} width={width} height={height} fill={`url(#${id})`} />
+      </Svg>
+    </Animated.View>
   );
 }
 FlowBackground.displayName = 'Flow.Background';
