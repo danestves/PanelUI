@@ -319,6 +319,8 @@ function FlowRoot({
   const [edges, setEdges] = useState<{ key: string; props: FlowEdgeProps }[]>([]);
   const [box, setBox] = useState({ width: 0, height: 0 });
   const [boxes, setBoxes] = useState<Record<string, FlowRect>>({});
+  /** The authoritative copy. Both `boxes` and `rects` are written from it. */
+  const boxesRef = useRef<Record<string, FlowRect>>({});
 
   /**
    * Node geometry is kept twice on purpose: on the UI thread, where a drag
@@ -336,21 +338,36 @@ function FlowRoot({
    * one that theoretically would not have to.
    */
   const setNodeRect = useCallback(
-    (id: string, rect: Partial<FlowRect>) => {
-      setBoxes((current) => {
-        const existing = current[id] ?? { x: 0, y: 0, width: 0, height: 0 };
-        const next = { ...existing, ...rect };
-        if (
-          existing.x === next.x &&
-          existing.y === next.y &&
-          existing.width === next.width &&
-          existing.height === next.height
-        ) {
-          return current;
-        }
-        rects.value = { ...rects.value, [id]: next };
-        return { ...current, [id]: next };
-      });
+    (id: string, patch: Partial<FlowRect>) => {
+      const existing = boxesRef.current[id] ?? { x: 0, y: 0, width: 0, height: 0 };
+      const next = { ...existing, ...patch };
+      if (
+        existing.x === next.x &&
+        existing.y === next.y &&
+        existing.width === next.width &&
+        existing.height === next.height
+      ) {
+        return;
+      }
+      // Merged against the ref, never against the state updater's argument.
+      // A state updater runs during render, and touching a shared value there
+      // is both a Reanimated violation and a correctness one: the write can be
+      // replayed or dropped, so the two copies drift and the edges end up
+      // drawn against positions the nodes are not at.
+      boxesRef.current = { ...boxesRef.current, [id]: next };
+      rects.value = boxesRef.current;
+      setBoxes(boxesRef.current);
+    },
+    [rects]
+  );
+
+  const dropNodeRect = useCallback(
+    (id: string) => {
+      if (!(id in boxesRef.current)) return;
+      const { [id]: _removed, ...rest } = boxesRef.current;
+      boxesRef.current = rest;
+      rects.value = rest;
+      setBoxes(rest);
     },
     [rects]
   );
@@ -379,14 +396,6 @@ function FlowRoot({
 
   const reportViewport = useCallback((x: number, y: number, z: number) => {
     viewportChangeRef.current?.({ x, y, zoom: z });
-  }, []);
-
-  const dropNodeRect = useCallback((id: string) => {
-    setBoxes((current) => {
-      if (!(id in current)) return current;
-      const { [id]: _removed, ...rest } = current;
-      return rest;
-    });
   }, []);
 
   const registerNode = useCallback((id: string) => {
@@ -786,7 +795,7 @@ function FlowBackground({
   size = 1.6,
   color,
 }: FlowBackgroundProps) {
-  const { layer, origin, translateX, translateY, zoom } = useFlow('Flow.Background');
+  const { box, layer, origin, translateX, translateY, zoom } = useFlow('Flow.Background');
   const token = useCSSVariable('--color-muted-foreground');
   const tint = color ?? (typeof token === 'string' ? token : '#737373');
   // A pattern is referenced by id, and two canvases on one screen would collide.
@@ -807,12 +816,16 @@ function FlowBackground({
    * spacing, the tile is the same picture it was before.
    */
   const follow = useAnimatedStyle(() => {
-    const left = -translateX.value / zoom.value;
-    const top = -translateY.value / zoom.value;
+    // The graph coordinate at the middle of the container. Following the
+    // middle rather than the left edge is what makes the tile cover the view
+    // at every zoom: centred, it reaches half its width in each direction, and
+    // zooming out grows the visible area in both.
+    const centreX = (-translateX.value + box.width / 2) / zoom.value;
+    const centreY = (-translateY.value + box.height / 2) / zoom.value;
     return {
       transform: [
-        { translateX: Math.round(left / gap) * gap },
-        { translateY: Math.round(top / gap) * gap },
+        { translateX: Math.round(centreX / gap) * gap },
+        { translateY: Math.round(centreY / gap) * gap },
       ],
     };
   });
@@ -831,12 +844,11 @@ function FlowBackground({
 
   return (
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, follow]}>
-      <Svg
-        pointerEvents="none"
-        width={width}
-        height={height}
-        viewBox={`${-origin.x} ${-origin.y} ${width} ${height}`}
-      >
+      {/* No viewBox: it would rescale the tile whenever the viewport and the
+          laid-out size disagreed, and a grid drawn at a different scale from
+          the nodes is worse than no grid. The pattern tiles from the layer's
+          own origin, which only shifts the dots' phase — invisible. */}
+      <Svg pointerEvents="none" width={width} height={height}>
         <Defs>
           <Pattern
             id={id}
@@ -867,13 +879,7 @@ function FlowBackground({
             ) : null}
           </Pattern>
         </Defs>
-        <Rect
-          x={-origin.x}
-          y={-origin.y}
-          width={width}
-          height={height}
-          fill={`url(#${id})`}
-        />
+        <Rect x={0} y={0} width={width} height={height} fill={`url(#${id})`} />
       </Svg>
     </Animated.View>
   );
@@ -948,12 +954,8 @@ function FlowNode({
   }, [id, position, setNodeRect]);
 
   useEffect(() => {
-    return () => {
-      const { [id]: _removed, ...rest } = rects.value;
-      rects.value = rest;
-      dropNodeRect(id);
-    };
-  }, [dropNodeRect, id, rects]);
+    return () => dropNodeRect(id);
+  }, [dropNodeRect, id]);
 
   const onLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -1346,10 +1348,12 @@ function FlowEdgePath({
   boxes,
   handles,
   tint,
+  origin,
 }: FlowEdgeProps & {
   boxes: Record<string, FlowRect>;
   handles: HandleEntry[];
   tint: string;
+  origin: { x: number; y: number };
 }) {
   const source = resolveEnd(from, fromSide, handles);
   const target = resolveEnd(to, toSide, handles);
@@ -1361,11 +1365,18 @@ function FlowEdgePath({
   const auto = autoSides(fromRect, toRect);
   const sideA: FlowSide = source.side ?? auto.from;
   const sideB: FlowSide = target.side ?? auto.to;
-  const a = anchorOf(fromRect, sideA, source.offset);
-  const b = anchorOf(toRect, sideB, target.offset);
+  const rawA = anchorOf(fromRect, sideA, source.offset);
+  const rawB = anchorOf(toRect, sideB, target.offset);
 
-  // Graph coordinates throughout — the layer this sits in carries the pan and
-  // the zoom, so the path never has to know about either.
+  // Shifted into the layer's own coordinates, which is exactly what a node
+  // does with its translate. Both use the same arithmetic on purpose: an SVG
+  // `viewBox` would have done the shift too, but it also rescales its contents
+  // to fit whenever the viewport and the laid-out size disagree, and an edge
+  // drawn at a slightly different scale from the nodes misses them by a little
+  // everywhere — which looks like bad routing rather than a bad transform.
+  const a = { x: rawA.x + origin.x, y: rawA.y + origin.y };
+  const b = { x: rawB.x + origin.x, y: rawB.y + origin.y };
+
   const d = edgePath(variant, a, sideA, b, sideB, curvature, radius, gap);
   const dash = dashed || animated ? 6 : 0;
 
@@ -1418,16 +1429,19 @@ function FlowEdgeLayer() {
   const lineProps = useAnimatedProps(() => {
     const current = connection.value;
     if (current.active === 0) return { d: '' };
-    return { d: `M${current.x1},${current.y1} L${current.x2},${current.y2}` };
+    return {
+      d:
+        `M${current.x1 + origin.x},${current.y1 + origin.y} ` +
+        `L${current.x2 + origin.x},${current.y2 + origin.y}`,
+    };
   });
 
   return (
     <Svg
       pointerEvents="none"
-      style={StyleSheet.absoluteFill}
+      style={{ position: 'absolute', left: 0, top: 0 }}
       width={layer.width}
       height={layer.height}
-      viewBox={`${-origin.x} ${-origin.y} ${layer.width} ${layer.height}`}
     >
       <Defs>
         <Marker
@@ -1449,6 +1463,7 @@ function FlowEdgeLayer() {
           boxes={boxes}
           handles={handles}
           tint={tint}
+          origin={origin}
         />
       ))}
       {/* The connection line is the one path that does animate, because it
@@ -1526,12 +1541,8 @@ function FlowGroup({
       width: size.width,
       height: size.height,
     });
-    return () => {
-      const { [id]: _removed, ...rest } = rects.value;
-      rects.value = rest;
-      dropNodeRect(id);
-    };
-  }, [dropNodeRect, id, position.x, position.y, rects, setNodeRect, size.height, size.width]);
+    return () => dropNodeRect(id);
+  }, [dropNodeRect, id, position.x, position.y, setNodeRect, size.height, size.width]);
 
   // Which nodes travel with the group, captured when they register rather than
   // read per frame.

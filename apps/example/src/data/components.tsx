@@ -1331,7 +1331,9 @@ function FlowEdgeShapesDemo() {
  */
 function FlowInfrastructureVersion() {
   return (
-    <Flow defaultViewport={{ x: 14, y: 48, zoom: 0.92 }}>
+    // `fitViewOnMount` rather than a hand-tuned viewport: three stacked
+    // frames are taller than a phone, and a guessed zoom leaves one off screen.
+    <Flow fitViewOnMount minZoom={0.35}>
       <Flow.Background variant="dots" gap={22} />
 
       <Flow.Node id="db" position={{ x: 10, y: 20 }}>
