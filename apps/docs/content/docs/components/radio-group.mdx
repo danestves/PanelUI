@@ -5,6 +5,14 @@ description: Single-select list of options.
 
 A single-select list of options.
 
+<PreviewVideo
+  src="/previews/radio-group.mp4"
+  poster="/previews/radio-group-poster.jpg"
+  alt="The RadioGroup component, running in the example app."
+  width={720}
+  height={276}
+/>
+
 ## Installation
 
 RadioGroup ships with the library — no separate install.
@@ -59,6 +67,13 @@ const [plan, setPlan] = useState("pro");
 
 The `card` variant makes the whole surface the target and highlights the selected option — for a picker where each choice carries a description. The disc moves to the trailing edge as a confirmation of the row rather than the thing you aim at.
 
+<Preview
+  src="/previews/radio-group-cards.jpg"
+  alt="RadioGroup — Cards."
+  width={1179}
+  height={962}
+/>
+
 ```tsx
 <RadioGroup value={plan} onValueChange={setPlan} variant="card">
   <RadioGroup.Item
@@ -77,6 +92,14 @@ The `card` variant makes the whole surface the target and highlights the selecte
 ### Laying the options out in a row
 
 Short labels stacked one per line read as a longer list than they are. `orientation="horizontal"` wraps them along a row instead — and cards share the width rather than each filling it.
+
+<PreviewVideo
+  src="/previews/radio-group-horizontal.mp4"
+  poster="/previews/radio-group-horizontal-poster.jpg"
+  alt="RadioGroup — Laying the options out in a row."
+  width={720}
+  height={504}
+/>
 
 ```tsx
 <RadioGroup orientation="horizontal" value={size} onValueChange={setSize}>

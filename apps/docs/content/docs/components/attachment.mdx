@@ -7,6 +7,13 @@ A file, with its upload life.
 
 A file in a chat composer or an upload list is the same row shape `Item` already draws — media, a name, a size, a remove button — so this is that row, not a second one. What it adds is the part `Item` has no opinion on: the file's *state*. A file is picked, then uploading, then processing, then done or failed, and each has to look different or the reader cannot tell a stuck upload from a finished one.
 
+<Preview
+  src="/previews/attachment.jpg"
+  alt="The Attachment component, running in the example app."
+  width={1179}
+  height={404}
+/>
+
 ## Installation
 
 Attachment ships with the library — no separate install.
@@ -89,6 +96,14 @@ The default state is `done`. It is an Item underneath, so the media, sizing and 
 
 While `uploading` or `processing` the name shimmers — the same sweep the rest of the library uses for in-progress work. `error` tints the row destructive, which carries the failure without relying on an icon nobody reads.
 
+<PreviewVideo
+  src="/previews/attachment-upload-states.mp4"
+  poster="/previews/attachment-upload-states-poster.jpg"
+  alt="Attachment — Upload states."
+  width={720}
+  height={772}
+/>
+
 ```tsx
 <Attachment state="uploading">…</Attachment>
 <Attachment state="processing">…</Attachment>
@@ -103,6 +118,14 @@ While `uploading` or `processing` the name shimmers — the same sweep the rest 
 ### A live upload
 
 Pass `progress` (0–1) while uploading and a thin bar rides the row's bottom edge, without shifting the layout.
+
+<PreviewVideo
+  src="/previews/attachment-a-live-upload.mp4"
+  poster="/previews/attachment-a-live-upload-poster.jpg"
+  alt="Attachment — A live upload."
+  width={720}
+  height={384}
+/>
 
 ```tsx
 const [progress, setProgress] = useState(0);
@@ -121,6 +144,13 @@ const [progress, setProgress] = useState(0);
 ### A group of thumbnails
 
 Attachment.Group lays out a horizontal row; set each attachment to `orientation="vertical"` so it stacks into a thumbnail card.
+
+<Preview
+  src="/previews/attachment-a-group-of-thumbnails.jpg"
+  alt="Attachment — A group of thumbnails."
+  width={1179}
+  height={557}
+/>
 
 ```tsx
 <Attachment.Group orientation="horizontal">

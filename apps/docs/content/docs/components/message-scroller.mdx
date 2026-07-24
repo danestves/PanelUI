@@ -104,6 +104,14 @@ npx panelui-cli@latest add message-scroller
 
 Prepend older turns and the reader stays on the message they were reading. The shift is measured on a message they can already see rather than taken from the height delta, so it stays correct when a message is prepended and another edits itself in the same commit.
 
+<PreviewVideo
+  src="/previews/message-scroller-loading-history.mp4"
+  poster="/previews/message-scroller-loading-history-poster.jpg"
+  alt="MessageScroller — Loading history without jumping."
+  width={720}
+  height={1454}
+/>
+
 ```tsx
 {/* On by default — pass preserveScrollOnPrepend={false} to opt out. */}
 <MessageScroller className="flex-1">

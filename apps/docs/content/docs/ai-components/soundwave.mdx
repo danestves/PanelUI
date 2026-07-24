@@ -8,6 +8,14 @@ Draws the level of a voice, in four looks: capsules over a microphone button, a 
 
 It draws a level; it does not record one. Your app owns the recorder and hands over a number between 0 and 1 — so there is no audio dependency here, and the same component works against a real meter, a synthesised one, or a remote peer's. With no level at all it animates plausible motion for the current `state`, which is enough to build and review a voice screen before any audio exists.
 
+<PreviewVideo
+  src="/previews/soundwave.mp4"
+  poster="/previews/soundwave-poster.jpg"
+  alt="The Soundwave component, running in the example app."
+  width={720}
+  height={1120}
+/>
+
 ## Installation
 
 Soundwave ships with the library — no separate install.
@@ -74,6 +82,13 @@ useEffect(() => {
 ### A voice note
 
 `levels` is the shape of a finished recording — collect the metering while recording and store the numbers beside the file. Supplying it draws the wave still rather than animated, and stops the engine entirely, so a transcript of twenty notes runs no animation at all until one is played. `progress` is the playhead: bars behind it keep full ink and the rest are dimmed.
+
+<Preview
+  src="/previews/soundwave-voice-notes.jpg"
+  alt="Soundwave — A voice note."
+  width={1179}
+  height={882}
+/>
 
 ```tsx
 const player = useAudioPlayer(note.uri);
@@ -142,6 +157,14 @@ If your app already runs an analysis, hand the bands over directly with `levels`
 
 `color` takes a literal colour or a **theme token name**, which resolves against the active theme and follows it into dark mode. `gradient` paints across the wave instead of one flat ink — left to right for `bars` and `line`, up from the bottom edge for `ambient`. `trackColor` sets the part of a recording that has not played yet, which otherwise draws as the ink turned down.
 
+<PreviewVideo
+  src="/previews/soundwave-colour.mp4"
+  poster="/previews/soundwave-colour-poster.jpg"
+  alt="Soundwave — Colour."
+  width={720}
+  height={876}
+/>
+
 ```tsx
 {/* Follows the theme. */}
 <Soundwave variant="bars" color="--color-info" />
@@ -193,6 +216,14 @@ The same strip in both modes, at the size it is actually used: static bands, a s
 
 One ribbon, tapered to nothing at both ends so it leaves and meets the edges flat instead of stopping at a hard cut. Shown at full size with a state switcher, and again inline under a reply.
 
+<PreviewVideo
+  src="/previews/soundwave-travelling-wave.mp4"
+  poster="/previews/soundwave-travelling-wave-poster.jpg"
+  alt="Soundwave — Travelling wave."
+  width={720}
+  height={1056}
+/>
+
 ```tsx
 <Soundwave variant="line" state="speaking" height={96} />
 
@@ -203,6 +234,14 @@ One ribbon, tapered to nothing at both ends so it leaves and meets the edges fla
 ### Ambient glow
 
 A bloom rising off the bottom edge and a rim of light around the rest, both breathing on the level — a glow that only changes opacity reads as a screen dimming, one that also grows reads as something in the room getting louder.
+
+<PreviewVideo
+  src="/previews/soundwave-ambient-glow.mp4"
+  poster="/previews/soundwave-ambient-glow-poster.jpg"
+  alt="Soundwave — Ambient glow."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Soundwave variant="ambient" state="listening" level={level} radius={40} />
@@ -226,6 +265,14 @@ Recorded waveforms in bubbles, filling as they play. Each note stores forty numb
 ### Recording composer
 
 A composer that turns into a recorder over a live transcript: the last few seconds slide past in `scrolling` mode while a timer runs, cancel throws the recording away, and send appends it to the thread as a note.
+
+<PreviewVideo
+  src="/previews/soundwave-recording-composer.mp4"
+  poster="/previews/soundwave-recording-composer-poster.jpg"
+  alt="Soundwave — Recording composer."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Soundwave

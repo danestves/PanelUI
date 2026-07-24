@@ -8,6 +8,13 @@ Semantic text presets, built on the `Text` primitive.
 
 A preset sets size, weight and tracking together; the marks — `underline`, `italic`, `strike` — and `weight`, `align` and `transform` layer on top of whichever preset is in force. They are props rather than class names so a screen never has to know which utilities add up to "a bolded lead paragraph".
 
+<Preview
+  src="/previews/typography.jpg"
+  alt="The Typography component, running in the example app."
+  width={1179}
+  height={1009}
+/>
+
 ## Installation
 
 Typography ships with the library — no separate install.
@@ -82,6 +89,13 @@ The type scale in one place, so headings stay consistent instead of being rebuil
 
 `underline`, `italic` and `strike` are booleans and stack, and `weight` overrides whatever the preset set — which is how a paragraph gets bolded without becoming a heading.
 
+<Preview
+  src="/previews/typography-marks.jpg"
+  alt="Typography — Marks."
+  width={1179}
+  height={690}
+/>
+
 ```tsx
 <Typography underline>Terms of service</Typography>
 <Typography italic>An aside, in passing.</Typography>
@@ -96,6 +110,13 @@ The type scale in one place, so headings stay consistent instead of being rebuil
 
 `transform` changes how the text is drawn, not the string underneath — so a screen reader still announces the original, and a label copied out of the UI is not shouting.
 
+<Preview
+  src="/previews/typography-alignment-and-case.jpg"
+  alt="Typography — Alignment and case."
+  width={1179}
+  height={468}
+/>
+
 ```tsx
 <Typography align="center">Centred</Typography>
 
@@ -107,6 +128,13 @@ The type scale in one place, so headings stay consistent instead of being rebuil
 ### Quotes and lists
 
 React Native draws no list markers and has no blockquote, so both are built here: a rule down the leading edge for the quote, and a marker beside each row for the list. The bullet is a view rather than the `•` character, whose size and baseline move with the platform font. Both use logical edges, so they mirror under a right-to-left `Direction`.
+
+<Preview
+  src="/previews/typography-quotes-and-lists.jpg"
+  alt="Typography — Quotes and lists."
+  width={1179}
+  height={1215}
+/>
 
 ```tsx
 <Typography.Blockquote>
@@ -129,6 +157,46 @@ React Native draws no list markers and has no blockquote, so both are built here
 ```tsx
 <Typography.Paragraph>
   Run <Typography.Code>npx expo install</Typography.Code> first.
+</Typography.Paragraph>
+```
+
+### Paragraphs
+
+`Typography.Paragraph` for body copy, with `type` and `muted` for emphasis.
+
+<Preview
+  src="/previews/typography-paragraphs.jpg"
+  alt="Typography — Paragraphs."
+  width={1179}
+  height={936}
+/>
+
+```tsx
+<Typography.Paragraph type="lead">
+  A lead paragraph: the sentence under a heading, set larger and quieter than the body it introduces.
+</Typography.Paragraph>
+<Typography.Paragraph>
+  A default body paragraph, at the base size and weight.
+</Typography.Paragraph>
+<Typography.Paragraph type="body-sm" muted>
+  A smaller, muted paragraph for captions and footnotes.
+</Typography.Paragraph>
+```
+
+### A section label
+
+A small, uppercase overline to head a section.
+
+<Preview
+  src="/previews/typography-section-label.jpg"
+  alt="Typography — A section label."
+  width={1179}
+  height={223}
+/>
+
+```tsx
+<Typography.Paragraph type="small" muted className="uppercase tracking-wider">
+  Section label
 </Typography.Paragraph>
 ```
 

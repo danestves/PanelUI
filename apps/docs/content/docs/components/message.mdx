@@ -10,10 +10,9 @@ The pieces are separate because conversations differ in which ones they need. A 
 
 <Preview
   src="/previews/message.jpg"
-  alt="A chat transcript on a dark screen. An incoming bubble with a photo avatar reads How can I help you today?, answered by a white outgoing bubble reading Set a reminder for 9am tomorrow with a Read receipt under it. Below, a turn labelled Olivia carries a timestamp of Yesterday at 18:04, and three consecutive bubbles from one sender share a single avatar."
+  alt="The Message component, running in the example app."
   width={1179}
-  height={1888}
-  caption="Both sides of a conversation, a named turn with a timestamp, and grouped turns."
+  height={562}
 />
 
 ## Installation
@@ -135,6 +134,13 @@ npx panelui-cli@latest add message
 
 Every turn after the first is marked `stacked`: it keeps its avatar slot but empties it, so the bubbles stay in one column.
 
+<Preview
+  src="/previews/message-grouped-turns.jpg"
+  alt="Message — Grouped turns."
+  width={1179}
+  height={609}
+/>
+
 ```tsx
 <Message.Group align="start">
   {turns.map((turn) => (
@@ -153,6 +159,14 @@ Every turn after the first is marked `stacked`: it keeps its avatar slot but emp
 ```
 
 ### A streaming turn
+
+<PreviewVideo
+  src="/previews/message-streaming-and-actions.mp4"
+  poster="/previews/message-streaming-and-actions-poster.jpg"
+  alt="Message — A streaming turn."
+  width={720}
+  height={424}
+/>
 
 ```tsx
 <Message>
@@ -227,6 +241,32 @@ const [open, setOpen] = useState(false);
     {/* copy · reply · forward · delete */}
   </BottomSheet.Content>
 </BottomSheet>
+```
+
+### Header and footer
+
+`Message.Header` names the speaker above the bubble; `Message.Footer` timestamps it below.
+
+<Preview
+  src="/previews/message-header-and-footer.jpg"
+  alt="Message — Header and footer."
+  width={1179}
+  height={528}
+/>
+
+```tsx
+<Message>
+  <Message.Avatar>
+    <Avatar size="sm" source={{ uri: user.avatar }} fallback="OL" />
+  </Message.Avatar>
+  <Message.Content>
+    <Message.Header>Olivia</Message.Header>
+    <Message.Bubble>
+      <Message.BubbleContent>I pushed the fix — can you take another look?</Message.BubbleContent>
+    </Message.Bubble>
+    <Message.Footer>Yesterday at 18:04</Message.Footer>
+  </Message.Content>
+</Message>
 ```
 
 ## Variants

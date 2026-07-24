@@ -6,6 +6,14 @@ status: updated
 
 A checkbox with an animated check. `variant="card"` turns the whole surface into the target, for pickable options where the box confirms a choice rather than being the affordance.
 
+<PreviewVideo
+  src="/previews/checkbox.mp4"
+  poster="/previews/checkbox-poster.jpg"
+  alt="The Checkbox component, running in the example app."
+  width={720}
+  height={314}
+/>
+
 ## Installation
 
 Checkbox ships with the library — no separate install.
@@ -72,6 +80,14 @@ The description sits under the label and stays part of the press target.
 
 A bordered surface that fills its width — for a list of options where each is a real choice rather than a small toggle.
 
+<PreviewVideo
+  src="/previews/checkbox-card.mp4"
+  poster="/previews/checkbox-card-poster.jpg"
+  alt="Checkbox — Card variant."
+  width={720}
+  height={626}
+/>
+
 ```tsx
 <View className="gap-2">
   {plans.map((plan) => (
@@ -90,6 +106,14 @@ A bordered surface that fills its width — for a list of options where each is 
 ### A select-all row
 
 The header is `indeterminate` when the selection is a partial one — some children on, some off — and pressing it turns them all on.
+
+<PreviewVideo
+  src="/previews/checkbox-select-all.mp4"
+  poster="/previews/checkbox-select-all-poster.jpg"
+  alt="Checkbox — A select-all row."
+  width={720}
+  height={348}
+/>
 
 ```tsx
 const all = selected.length === items.length;

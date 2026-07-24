@@ -5,6 +5,13 @@ description: Status message with a built-in icon.
 
 A status message. `Alert.Indicator` resolves both the icon and its colour from the alert's variant, so it follows the active theme without you passing either.
 
+<Preview
+  src="/previews/alert.jpg"
+  alt="The Alert component, running in the example app."
+  width={1179}
+  height={1136}
+/>
+
 ## Installation
 
 Alert ships with the library — no separate install.
@@ -70,6 +77,13 @@ The indicator picks its icon from the variant, so most alerts need no `icon` pro
 
 Drop the description when the title says everything.
 
+<Preview
+  src="/previews/alert-title-only.jpg"
+  alt="Alert — Title only."
+  width={1145}
+  height={315}
+/>
+
 ```tsx
 <Alert variant="success">
   <Alert.Indicator />
@@ -88,6 +102,26 @@ Pass `icon` on the root to replace the variant icon everywhere, or give `Alert.I
   <Alert.Indicator />
   <Alert.Content>
     <Alert.Title>Two-factor authentication is on</Alert.Title>
+  </Alert.Content>
+</Alert>
+```
+
+### No icon
+
+Leave out `Alert.Indicator` for a text-only alert.
+
+<Preview
+  src="/previews/alert-no-icon.jpg"
+  alt="Alert — No icon."
+  width={1167}
+  height={416}
+/>
+
+```tsx
+<Alert>
+  <Alert.Content>
+    <Alert.Title>Plain alert</Alert.Title>
+    <Alert.Description>Omit Alert.Indicator for a text-only alert.</Alert.Description>
   </Alert.Content>
 </Alert>
 ```

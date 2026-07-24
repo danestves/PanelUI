@@ -5,6 +5,13 @@ description: Compact status label, dot, or notification count.
 
 A compact label. Set `count` for a notification bubble, or `shape="dot"` for a bare status dot.
 
+<Preview
+  src="/previews/badge.jpg"
+  alt="The Badge component, running in the example app."
+  width={1179}
+  height={337}
+/>
+
 ## Installation
 
 Badge ships with the library — no separate install.
@@ -62,6 +69,24 @@ No label at all — an unread marker beside a title.
   <Text weight="medium">Inbox</Text>
   <Badge shape="dot" variant="info" />
 </View>
+```
+
+### With a status dot
+
+A small dot inside the badge, for a status row.
+
+<Preview
+  src="/previews/badge-with-status-dot.jpg"
+  alt="Badge — With a status dot."
+  width={1179}
+  height={429}
+/>
+
+```tsx
+<Badge variant="success">
+  <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: '#10b981' }} />
+  Operational
+</Badge>
 ```
 
 ## Variants

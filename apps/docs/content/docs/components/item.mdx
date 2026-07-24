@@ -117,6 +117,13 @@ npx panelui-cli@latest add item
 
 Give a row `onPress` and it becomes a pressable with a press animation and a button role. Leave it off and it stays a plain view.
 
+<Preview
+  src="/previews/item-a-settings-group.jpg"
+  alt="Item — A settings group."
+  width={1179}
+  height={758}
+/>
+
 ```tsx
 <Item.Group>
   {rows.map((row, index) => (
@@ -139,6 +146,13 @@ Give a row `onPress` and it becomes a pressable with a press animation and a but
 ### Media types
 
 `icon` and `image` give the media slot a sized box; the default adds none, so an `Avatar` can style itself.
+
+<Preview
+  src="/previews/item-media-types.jpg"
+  alt="Item — Media types."
+  width={1179}
+  height={991}
+/>
 
 ```tsx
 <Item.Media variant="icon"><BellIcon size={18} /></Item.Media>
@@ -172,6 +186,14 @@ Keep the row non-pressable when the control is the only target — two overlappi
 
 Two independent axes. `orientation` on the group runs the items across the screen instead of down it; `orientation` on each item stacks its own parts into a card. A carousel wants both.
 
+<PreviewVideo
+  src="/previews/item-horizontal-group-of-card.mp4"
+  poster="/previews/item-horizontal-group-of-card-poster.jpg"
+  alt="Item — A horizontal group of cards."
+  width={720}
+  height={370}
+/>
+
 ```tsx
 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
   <Item.Group orientation="horizontal">
@@ -201,6 +223,13 @@ Two independent axes. `orientation` on the group runs the items across the scree
 ### A vertical item
 
 `orientation="vertical"` is also what `Item.Header` and `Item.Footer` need — both are full-width strips, so they only make sense once the item stacks.
+
+<Preview
+  src="/previews/item-a-vertical-item.jpg"
+  alt="Item — A vertical item."
+  width={1179}
+  height={701}
+/>
 
 ```tsx
 <Item orientation="vertical" variant="outline">
@@ -238,6 +267,13 @@ Two independent axes. `orientation` on the group runs the items across the scree
 - `default` *(default)*
 - `sm`
 - `xs`
+
+<Preview
+  src="/previews/item-size.jpg"
+  alt="Item — size."
+  width={1179}
+  height={861}
+/>
 
 ```tsx
 {/* Sets the row padding, and the media, title and description sizes. */}

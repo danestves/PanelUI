@@ -5,6 +5,14 @@ description: Collapsible sections with single or multiple selection.
 
 Collapsible sections for FAQs, settings groups and anything that would otherwise need a long scroll. Expansion animates with a Reanimated layout transition, and the content unmounts when collapsed.
 
+<PreviewVideo
+  src="/previews/accordion.mp4"
+  poster="/previews/accordion-poster.jpg"
+  alt="The Accordion component, running in the example app."
+  width={720}
+  height={480}
+/>
+
 ## Installation
 
 Accordion ships with the library — no separate install.
@@ -89,6 +97,13 @@ The default. Opening one section closes the others — use it when the panels ar
 
 `selectionMode="multiple"` switches `value` from a string to an array.
 
+<Preview
+  src="/previews/accordion-multiple.jpg"
+  alt="Accordion — Several open at once."
+  width={1179}
+  height={1022}
+/>
+
 ```tsx
 <Accordion selectionMode="multiple" defaultValue={['shipping', 'returns']}>
   {/* …items… */}
@@ -136,6 +151,41 @@ A section that exists but cannot be opened yet — an upsell, or a step not reac
 - `separated`
 - `bordered`
 - `ghost`
+
+<PreviewVideo
+  src="/previews/accordion-border.mp4"
+  poster="/previews/accordion-border-poster.jpg"
+  alt="Accordion — variant bordered."
+  width={720}
+  height={618}
+  caption="bordered"
+/>
+
+<Preview
+  src="/previews/accordion-ghost.jpg"
+  alt="Accordion — variant ghost."
+  width={1160}
+  height={695}
+  caption="ghost"
+/>
+
+<PreviewVideo
+  src="/previews/accordion-separated.mp4"
+  poster="/previews/accordion-separated-poster.jpg"
+  alt="Accordion — variant separated."
+  width={720}
+  height={654}
+  caption="separated"
+/>
+
+<PreviewVideo
+  src="/previews/accordion-surface.mp4"
+  poster="/previews/accordion-surface-poster.jpg"
+  alt="Accordion — variant surface."
+  width={720}
+  height={600}
+  caption="surface"
+/>
 
 ```tsx
 <Accordion variant="default">…</Accordion>

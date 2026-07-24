@@ -5,6 +5,14 @@ description: Determinate and indeterminate progress bar.
 
 A progress bar, determinate or indeterminate, animated on the UI thread. Caption it with a label and a value readout when the bar needs a heading.
 
+<PreviewVideo
+  src="/previews/progress.mp4"
+  poster="/previews/progress-poster.jpg"
+  alt="The Progress component, running in the example app."
+  width={720}
+  height={334}
+/>
+
 ## Installation
 
 Progress ships with the library — no separate install.
@@ -43,6 +51,13 @@ npx panelui-cli@latest add progress
 
 `label` captions the bar on the left; `showValueLabel` prints the percentage on the right. `valueLabel` replaces that text for anything that is not a bare percent.
 
+<Preview
+  src="/previews/progress-labelled.jpg"
+  alt="Progress — Labelled."
+  width={1179}
+  height={629}
+/>
+
 ```tsx
 <Progress value={64} label="Downloading" showValueLabel />
 
@@ -63,6 +78,13 @@ For work with no measurable progress. The animation runs on the UI thread and st
 ```
 
 ### Colour by state
+
+<Preview
+  src="/previews/progress-colors.jpg"
+  alt="Progress — Colour by state."
+  width={1179}
+  height={452}
+/>
 
 ```tsx
 <Progress
@@ -94,6 +116,13 @@ For work with no measurable progress. The animation runs on the UI thread and st
 - `sm`
 - `md` *(default)*
 - `lg`
+
+<Preview
+  src="/previews/progress-size.jpg"
+  alt="Progress — size."
+  width={1179}
+  height={344}
+/>
 
 ```tsx
 <Progress size="sm" value={40} />

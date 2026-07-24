@@ -5,6 +5,14 @@ description: Stepper for multi-step flows.
 
 A stepper for multi-step flows. Steps does not own your flow — it reflects whatever step your app says is active.
 
+<PreviewVideo
+  src="/previews/steps.mp4"
+  poster="/previews/steps-poster.jpg"
+  alt="The Steps component, running in the example app."
+  width={720}
+  height={414}
+/>
+
 ## Installation
 
 Steps ships with the library — no separate install.
@@ -92,6 +100,13 @@ const [step, setStep] = useState(1);
 
 ### Vertical, with descriptions
 
+<Preview
+  src="/previews/steps-vertical.jpg"
+  alt="Steps — Vertical, with descriptions."
+  width={1179}
+  height={709}
+/>
+
 ```tsx
 <Steps orientation="vertical" value={step}>
   <Steps.Item step={0}>
@@ -109,6 +124,14 @@ const [step, setStep] = useState(1);
 ```
 
 ### A step that is loading or blocked
+
+<PreviewVideo
+  src="/previews/steps-loading.mp4"
+  poster="/previews/steps-loading-poster.jpg"
+  alt="Steps — A step that is loading or blocked."
+  width={720}
+  height={408}
+/>
 
 ```tsx
 <Steps.Item step={1} loading={isDeploying}>

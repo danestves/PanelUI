@@ -8,10 +8,9 @@ Text that resolves word by word as you scroll past it. The reader's thumb become
 <PreviewVideo
   src="/previews/scroll-text.mp4"
   poster="/previews/scroll-text-poster.jpg"
-  alt="A screen recording of the ScrollText demo on a dark phone screen. As the page scrolls, each word of a sentence resolves from muted grey to full foreground colour, left to right, and unresolves again on the way back up."
+  alt="The ScrollText component, running in the example app."
   width={720}
-  height={1200}
-  caption="The reveal is scrubbed off the scroll position, so it is reversible and lands exactly at both ends."
+  height={1460}
 />
 
 ## Installation
@@ -112,6 +111,14 @@ Each word crossfades from the muted token to the foreground as the line passes. 
 
 Words come up from nearly transparent — not fully, because a word that vanishes takes the line's shape with it and the paragraph reflows as you scroll.
 
+<PreviewVideo
+  src="/previews/scroll-text-fade.mp4"
+  poster="/previews/scroll-text-fade-poster.jpg"
+  alt="ScrollText — Fade."
+  width={720}
+  height={1456}
+/>
+
 ```tsx
 <ScrollText effect="fade" size="2xl" weight="semibold">…</ScrollText>
 ```
@@ -119,6 +126,14 @@ Words come up from nearly transparent — not fully, because a word that vanishe
 ### Rise
 
 Words lift into place. This is the one that lays out as a wrapping row rather than as nested text, because a transform needs a view — it buys the motion and costs real line-breaking.
+
+<PreviewVideo
+  src="/previews/scroll-text-rise.mp4"
+  poster="/previews/scroll-text-rise-poster.jpg"
+  alt="ScrollText — Rise."
+  width={720}
+  height={1448}
+/>
 
 ```tsx
 <ScrollText effect="rise" size="2xl" weight="semibold">…</ScrollText>

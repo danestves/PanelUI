@@ -46,6 +46,14 @@ They are four different jobs. `parallax` drifts the image against the scroll so 
 
 Every frame stays mounted and its opacity is switched, rather than one image whose source is swapped. A swap crosses back into JS at each step and then waits on a decode, so a fast scrub shows the previous frame or nothing at all. Keep it to a couple of dozen frames — each one is a decoded bitmap held for as long as the canvas is mounted.
 
+<PreviewVideo
+  src="/previews/scroll-canvas-sequence.mp4"
+  poster="/previews/scroll-canvas-sequence-poster.jpg"
+  alt="ScrollCanvas — Scrubbing a sequence."
+  width={720}
+  height={1464}
+/>
+
 ```tsx
 <ScrollCanvas
   effect="sequence"
@@ -75,6 +83,14 @@ Every frame stays mounted and its opacity is switched, rather than one image who
 
 The image drifts against the scroll inside a frame that stays put. It is drawn taller than the frame so the drift never exposes an edge.
 
+<PreviewVideo
+  src="/previews/scroll-canvas-parallax.mp4"
+  poster="/previews/scroll-canvas-parallax-poster.jpg"
+  alt="ScrollCanvas — Parallax."
+  width={720}
+  height={1472}
+/>
+
 ```tsx
 <ScrollCanvas source={{ uri }} effect="parallax" />
 ```
@@ -83,6 +99,14 @@ The image drifts against the scroll inside a frame that stays put. It is drawn t
 
 It settles from slightly oversized to its natural size as the frame crosses the viewport.
 
+<PreviewVideo
+  src="/previews/scroll-canvas-zoom.mp4"
+  poster="/previews/scroll-canvas-zoom-poster.jpg"
+  alt="ScrollCanvas — Zoom."
+  width={720}
+  height={1460}
+/>
+
 ```tsx
 <ScrollCanvas source={{ uri }} effect="zoom" />
 ```
@@ -90,6 +114,14 @@ It settles from slightly oversized to its natural size as the frame crosses the 
 ### Reveal
 
 A wipe uncovers it from the bottom edge up. A cover that retreats rather than a height that grows — animating a height relayouts the image inside it every frame.
+
+<PreviewVideo
+  src="/previews/scroll-canvas-reveal.mp4"
+  poster="/previews/scroll-canvas-reveal-poster.jpg"
+  alt="ScrollCanvas — Reveal."
+  width={720}
+  height={1462}
+/>
 
 ```tsx
 <ScrollCanvas source={{ uri }} effect="reveal" />

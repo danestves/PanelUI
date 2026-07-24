@@ -5,6 +5,13 @@ description: Pressable action with variants, sizes, loading state and icon slots
 
 The primary action component. Icons in `startContent` and `endContent` inherit a colour that reads against the button's background, so they follow the theme without a hardcoded hex.
 
+<Preview
+  src="/previews/button.jpg"
+  alt="The Button component, running in the example app."
+  width={1179}
+  height={945}
+/>
+
 ## Installation
 
 Button ships with the library — no separate install.
@@ -43,6 +50,13 @@ npx panelui-cli@latest add button
 
 Icons in `startContent` and `endContent` inherit a colour that reads against the button’s background, so they follow the theme without a hardcoded hex.
 
+<Preview
+  src="/previews/button-with-icons.jpg"
+  alt="Button — With icons."
+  width={1179}
+  height={616}
+/>
+
 ```tsx
 <Button startContent={<SearchIcon size={16} />}>Search</Button>
 
@@ -59,6 +73,14 @@ Icons in `startContent` and `endContent` inherit a colour that reads against the
 ### Loading
 
 `loading` swaps the start content for a variant-matched spinner and blocks presses, so you do not need a separate `disabled`.
+
+<PreviewVideo
+  src="/previews/button-loading.mp4"
+  poster="/previews/button-loading-poster.jpg"
+  alt="Button — Loading."
+  width={720}
+  height={222}
+/>
 
 ```tsx
 const [saving, setSaving] = useState(false);
@@ -80,6 +102,13 @@ async function save() {
 ### A sign-in stack
 
 The `social` variant is a neutral surface sized for a full-width column of providers.
+
+<Preview
+  src="/previews/button-social-login.jpg"
+  alt="Button — A sign-in stack."
+  width={1179}
+  height={655}
+/>
 
 ```tsx
 <View className="gap-2">
@@ -131,6 +160,13 @@ The `social` variant is a neutral surface sized for a full-width column of provi
 - `md` *(default)*
 - `lg`
 - `icon`
+
+<Preview
+  src="/previews/button-size.jpg"
+  alt="Button — size."
+  width={1179}
+  height={762}
+/>
 
 ```tsx
 <Button size="sm">Small</Button>

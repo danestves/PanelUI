@@ -47,6 +47,14 @@ npx panelui-cli@latest add scroll-fade
 
 A horizontal group of vertical items: each entry is a card, and the fade is what tells you there are more of them past the edge.
 
+<PreviewVideo
+  src="/previews/scroll-fade-horizontal.mp4"
+  poster="/previews/scroll-fade-horizontal-poster.jpg"
+  alt="ScrollFade — A horizontal row of cards."
+  width={720}
+  height={326}
+/>
+
 ```tsx
 <ScrollFade size={40}>
   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -68,6 +76,14 @@ A horizontal group of vertical items: each entry is a card, and the fade is what
 ### A vertical list
 
 No `horizontal` on the child, so the fades move to the top and bottom edges.
+
+<PreviewVideo
+  src="/previews/scroll-fade-vertical.mp4"
+  poster="/previews/scroll-fade-vertical-poster.jpg"
+  alt="ScrollFade — A vertical list."
+  width={720}
+  height={646}
+/>
 
 ```tsx
 <ScrollFade size={44} className="h-72">

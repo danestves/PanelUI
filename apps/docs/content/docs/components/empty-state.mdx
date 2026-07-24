@@ -5,6 +5,13 @@ description: Placeholder for a list or screen with no content.
 
 The placeholder for a list or screen with nothing in it. `Media variant="icon"` frames the icon in a small card with two rotated ghost cards fanned behind it.
 
+<Preview
+  src="/previews/empty-state.jpg"
+  alt="The EmptyState component, running in the example app."
+  width={1179}
+  height={1026}
+/>
+
 ## Installation
 
 EmptyState ships with the library — no separate install.
@@ -102,6 +109,24 @@ One `size` scales the padding, media, title and description together.
 <EmptyState size="sm">…</EmptyState>
 <EmptyState size="default">…</EmptyState>
 <EmptyState size="lg">…</EmptyState>
+```
+
+### Text only
+
+A heading and a line, with no icon or action.
+
+<Preview
+  src="/previews/empty-state-with-text.jpg"
+  alt="EmptyState — Text only."
+  width={1179}
+  height={717}
+/>
+
+```tsx
+<EmptyState>
+  <EmptyState.Title>No results</EmptyState.Title>
+  <EmptyState.Description>Try a different search term.</EmptyState.Description>
+</EmptyState>
 ```
 
 ## Variants

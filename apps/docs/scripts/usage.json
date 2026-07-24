@@ -20,7 +20,13 @@
    {
     "title": "Several open at once",
     "description": "`selectionMode=\"multiple\"` switches `value` from a string to an array.",
-    "code": "<Accordion selectionMode=\"multiple\" defaultValue={['shipping', 'returns']}>\n  {/* …items… */}\n</Accordion>"
+    "code": "<Accordion selectionMode=\"multiple\" defaultValue={['shipping', 'returns']}>\n  {/* …items… */}\n</Accordion>",
+    "preview": {
+     "src": "/previews/accordion-multiple.jpg",
+     "alt": "Accordion — Several open at once.",
+     "width": 1179,
+     "height": 1022
+    }
    },
    {
     "title": "Controlled",
@@ -39,7 +45,57 @@
   "extraImports": [
    "Text",
    "Button"
-  ]
+  ],
+  "variantMedia": {
+   "variant": [
+    {
+     "previewVideo": {
+      "src": "/previews/accordion-border.mp4",
+      "poster": "/previews/accordion-border-poster.jpg",
+      "alt": "Accordion — variant bordered.",
+      "width": 720,
+      "height": 618,
+      "caption": "bordered"
+     }
+    },
+    {
+     "preview": {
+      "src": "/previews/accordion-ghost.jpg",
+      "alt": "Accordion — variant ghost.",
+      "width": 1160,
+      "height": 695,
+      "caption": "ghost"
+     }
+    },
+    {
+     "previewVideo": {
+      "src": "/previews/accordion-separated.mp4",
+      "poster": "/previews/accordion-separated-poster.jpg",
+      "alt": "Accordion — variant separated.",
+      "width": 720,
+      "height": 654,
+      "caption": "separated"
+     }
+    },
+    {
+     "previewVideo": {
+      "src": "/previews/accordion-surface.mp4",
+      "poster": "/previews/accordion-surface-poster.jpg",
+      "alt": "Accordion — variant surface.",
+      "width": 720,
+      "height": 600,
+      "caption": "surface"
+     }
+    }
+   ]
+  },
+  "previewVideo": {
+   "src": "/previews/accordion.mp4",
+   "poster": "/previews/accordion-poster.jpg",
+   "alt": "The Accordion component, running in the example app.",
+   "width": 720,
+   "height": 480
+  }
  },
  "alert": {
   "intro": "A status message. `Alert.Indicator` resolves both the icon and its colour from the alert's variant, so it follows the active theme without you passing either.",
@@ -61,12 +117,29 @@
    {
     "title": "Title only",
     "description": "Drop the description when the title says everything.",
-    "code": "<Alert variant=\"success\">\n  <Alert.Indicator />\n  <Alert.Content>\n    <Alert.Title>Changes saved</Alert.Title>\n  </Alert.Content>\n</Alert>"
+    "code": "<Alert variant=\"success\">\n  <Alert.Indicator />\n  <Alert.Content>\n    <Alert.Title>Changes saved</Alert.Title>\n  </Alert.Content>\n</Alert>",
+    "preview": {
+     "src": "/previews/alert-title-only.jpg",
+     "alt": "Alert — Title only.",
+     "width": 1145,
+     "height": 315
+    }
    },
    {
     "title": "A custom icon",
     "description": "Pass `icon` on the root to replace the variant icon everywhere, or give `Alert.Indicator` children to replace it for one alert.",
     "code": "<Alert variant=\"info\" icon={<ShieldCheckIcon size={18} />}>\n  <Alert.Indicator />\n  <Alert.Content>\n    <Alert.Title>Two-factor authentication is on</Alert.Title>\n  </Alert.Content>\n</Alert>"
+   },
+   {
+    "title": "No icon",
+    "description": "Leave out `Alert.Indicator` for a text-only alert.",
+    "preview": {
+     "src": "/previews/alert-no-icon.jpg",
+     "alt": "Alert — No icon.",
+     "width": 1167,
+     "height": 416
+    },
+    "code": "<Alert>\n  <Alert.Content>\n    <Alert.Title>Plain alert</Alert.Title>\n    <Alert.Description>Omit Alert.Indicator for a text-only alert.</Alert.Description>\n  </Alert.Content>\n</Alert>"
    }
   ],
   "variantCode": {
@@ -74,7 +147,13 @@
   },
   "extraImports": [
    "ShieldCheckIcon"
-  ]
+  ],
+  "preview": {
+   "src": "/previews/alert.jpg",
+   "alt": "The Alert component, running in the example app.",
+   "width": 1179,
+   "height": 1136
+  }
  },
  "attachment": {
   "intro": "A file, with its upload life.\n\nA file in a chat composer or an upload list is the same row shape `Item` already draws — media, a name, a size, a remove button — so this is that row, not a second one. What it adds is the part `Item` has no opinion on: the file's *state*. A file is picked, then uploading, then processing, then done or failed, and each has to look different or the reader cannot tell a stuck upload from a finished one.",
@@ -103,20 +182,46 @@
    {
     "title": "Upload states",
     "description": "While `uploading` or `processing` the name shimmers — the same sweep the rest of the library uses for in-progress work. `error` tints the row destructive, which carries the failure without relying on an icon nobody reads.",
-    "code": "<Attachment state=\"uploading\">…</Attachment>\n<Attachment state=\"processing\">…</Attachment>\n<Attachment state=\"error\">\n  <Attachment.Content>\n    <Attachment.Title>report.pdf</Attachment.Title>\n    <Attachment.Description>Upload failed — tap to retry</Attachment.Description>\n  </Attachment.Content>\n</Attachment>"
+    "code": "<Attachment state=\"uploading\">…</Attachment>\n<Attachment state=\"processing\">…</Attachment>\n<Attachment state=\"error\">\n  <Attachment.Content>\n    <Attachment.Title>report.pdf</Attachment.Title>\n    <Attachment.Description>Upload failed — tap to retry</Attachment.Description>\n  </Attachment.Content>\n</Attachment>",
+    "previewVideo": {
+     "src": "/previews/attachment-upload-states.mp4",
+     "poster": "/previews/attachment-upload-states-poster.jpg",
+     "alt": "Attachment — Upload states.",
+     "width": 720,
+     "height": 772
+    }
    },
    {
     "title": "A live upload",
     "description": "Pass `progress` (0–1) while uploading and a thin bar rides the row's bottom edge, without shifting the layout.",
-    "code": "const [progress, setProgress] = useState(0);\n\n<Attachment state={running ? \"uploading\" : \"done\"} progress={progress}>\n  <Attachment.Media>\n    <ImageIcon size={18} />\n  </Attachment.Media>\n  <Attachment.Content>\n    <Attachment.Title>screenshot.png</Attachment.Title>\n    <Attachment.Description>Uploading — {Math.round(progress * 100)}%</Attachment.Description>\n  </Attachment.Content>\n</Attachment>"
+    "code": "const [progress, setProgress] = useState(0);\n\n<Attachment state={running ? \"uploading\" : \"done\"} progress={progress}>\n  <Attachment.Media>\n    <ImageIcon size={18} />\n  </Attachment.Media>\n  <Attachment.Content>\n    <Attachment.Title>screenshot.png</Attachment.Title>\n    <Attachment.Description>Uploading — {Math.round(progress * 100)}%</Attachment.Description>\n  </Attachment.Content>\n</Attachment>",
+    "previewVideo": {
+     "src": "/previews/attachment-a-live-upload.mp4",
+     "poster": "/previews/attachment-a-live-upload-poster.jpg",
+     "alt": "Attachment — A live upload.",
+     "width": 720,
+     "height": 384
+    }
    },
    {
     "title": "A group of thumbnails",
     "description": "Attachment.Group lays out a horizontal row; set each attachment to `orientation=\"vertical\"` so it stacks into a thumbnail card.",
-    "code": "<Attachment.Group orientation=\"horizontal\">\n  {files.map((file) => (\n    <Attachment key={file.name} orientation=\"vertical\" className=\"w-32\">\n      <Attachment.Media variant=\"icon\">\n        <ImageIcon size={18} />\n      </Attachment.Media>\n      <Attachment.Content>\n        <Attachment.Title className=\"text-sm\">{file.name}</Attachment.Title>\n        <Attachment.Description>Image</Attachment.Description>\n      </Attachment.Content>\n    </Attachment>\n  ))}\n</Attachment.Group>"
+    "code": "<Attachment.Group orientation=\"horizontal\">\n  {files.map((file) => (\n    <Attachment key={file.name} orientation=\"vertical\" className=\"w-32\">\n      <Attachment.Media variant=\"icon\">\n        <ImageIcon size={18} />\n      </Attachment.Media>\n      <Attachment.Content>\n        <Attachment.Title className=\"text-sm\">{file.name}</Attachment.Title>\n        <Attachment.Description>Image</Attachment.Description>\n      </Attachment.Content>\n    </Attachment>\n  ))}\n</Attachment.Group>",
+    "preview": {
+     "src": "/previews/attachment-a-group-of-thumbnails.jpg",
+     "alt": "Attachment — A group of thumbnails.",
+     "width": 1179,
+     "height": 557
+    }
    }
   ],
-  "notes": "Attachment is a thin layer over **Item** — every part maps to an Item part, so `size`, `orientation` and the pressable behaviour are Item's, documented there. What Attachment owns is `state`: the shimmer on the title while busy, the destructive tint on error, and the progress bar.\n\n**An icon action needs a label.** `Attachment.Action` requires `accessibilityLabel` — an X on its own tells a screen reader nothing about what it removes."
+  "notes": "Attachment is a thin layer over **Item** — every part maps to an Item part, so `size`, `orientation` and the pressable behaviour are Item's, documented there. What Attachment owns is `state`: the shimmer on the title while busy, the destructive tint on error, and the progress bar.\n\n**An icon action needs a label.** `Attachment.Action` requires `accessibilityLabel` — an X on its own tells a screen reader nothing about what it removes.",
+  "preview": {
+   "src": "/previews/attachment.jpg",
+   "alt": "The Attachment component, running in the example app.",
+   "width": 1179,
+   "height": 404
+  }
  },
  "avatar": {
   "intro": "A user image that falls back to initials when the source is missing or fails to load.",
@@ -130,7 +235,13 @@
    {
     "title": "Image with an initials fallback",
     "description": "The fallback shows while the image is missing **and** if it fails to load, so a dead URL never leaves an empty circle.",
-    "code": "<Avatar source={{ uri: user.avatarUrl }} fallback=\"KA\" />\n\n{/* No source at all — straight to initials. */}\n<Avatar fallback=\"OL\" />"
+    "code": "<Avatar source={{ uri: user.avatarUrl }} fallback=\"KA\" />\n\n{/* No source at all — straight to initials. */}\n<Avatar fallback=\"OL\" />",
+    "preview": {
+     "src": "/previews/avatar-with-image.jpg",
+     "alt": "Avatar — Image with an initials fallback.",
+     "width": 1179,
+     "height": 408
+    }
    },
    {
     "title": "A presence dot",
@@ -140,7 +251,24 @@
    {
     "title": "A stack",
     "description": "Negative margins overlap them; reverse the row so the first is on top.",
-    "code": "<View className=\"flex-row-reverse justify-end\">\n  {members.map((member) => (\n    <Avatar\n      key={member.id}\n      size=\"sm\"\n      source={{ uri: member.avatarUrl }}\n      fallback={member.initials}\n      className=\"-ml-2 border-2 border-background\"\n    />\n  ))}\n</View>"
+    "code": "<View className=\"flex-row-reverse justify-end\">\n  {members.map((member) => (\n    <Avatar\n      key={member.id}\n      size=\"sm\"\n      source={{ uri: member.avatarUrl }}\n      fallback={member.initials}\n      className=\"-ml-2 border-2 border-background\"\n    />\n  ))}\n</View>",
+    "preview": {
+     "src": "/previews/avatar-stacked-group.jpg",
+     "alt": "Avatar — A stack.",
+     "width": 1179,
+     "height": 324
+    }
+   },
+   {
+    "title": "A notification badge",
+    "description": "`Avatar.Badge` overlays a `Badge` in the corner — a count, or a `shape=\"dot\"` presence dot.",
+    "preview": {
+     "src": "/previews/avatar-with-notification-badge.jpg",
+     "alt": "Avatar — A notification badge.",
+     "width": 1179,
+     "height": 401
+    },
+    "code": "<Avatar size=\"lg\" source={{ uri: user.avatar }} fallback=\"AB\">\n  <Avatar.Badge>\n    <Badge variant=\"destructive\" count={5} />\n  </Avatar.Badge>\n</Avatar>"
    }
   ],
   "variantCode": {
@@ -148,11 +276,13 @@
   },
   "preview": {
    "src": "/previews/avatar.jpg",
-   "alt": "Avatars on a dark screen: a row of four initials avatars growing from small to large, a row of three photo avatars, a row showing a red count badge reading 5, a red 99+ badge and a small green presence dot, and a stacked group of three overlapping photos ending in a +5 counter.",
-   "width": 1163,
-   "height": 1891,
-   "caption": "Sizes, images, badges and a stacked group, running in the example app."
-  }
+   "alt": "The Avatar component, running in the example app.",
+   "width": 1166,
+   "height": 448
+  },
+  "extraImports": [
+   "Badge"
+  ]
  },
  "badge": {
   "intro": "A compact label. Set `count` for a notification bubble, or `shape=\"dot\"` for a bare status dot.",
@@ -173,6 +303,17 @@
     "title": "A bare dot",
     "description": "No label at all — an unread marker beside a title.",
     "code": "<View className=\"flex-row items-center gap-2\">\n  <Text weight=\"medium\">Inbox</Text>\n  <Badge shape=\"dot\" variant=\"info\" />\n</View>"
+   },
+   {
+    "title": "With a status dot",
+    "description": "A small dot inside the badge, for a status row.",
+    "preview": {
+     "src": "/previews/badge-with-status-dot.jpg",
+     "alt": "Badge — With a status dot.",
+     "width": 1179,
+     "height": 429
+    },
+    "code": "<Badge variant=\"success\">\n  <View className=\"h-1.5 w-1.5 rounded-full\" style={{ backgroundColor: '#10b981' }} />\n  Operational\n</Badge>"
    }
   ],
   "variantCode": {
@@ -181,7 +322,13 @@
   },
   "extraImports": [
    "Text"
-  ]
+  ],
+  "preview": {
+   "src": "/previews/badge.jpg",
+   "alt": "The Badge component, running in the example app.",
+   "width": 1179,
+   "height": 337
+  }
  },
  "bottom-sheet": {
   "intro": "A sheet anchored to the bottom of the screen, draggable and dismissable by swipe. Mounts through a portal and unmounts after its exit animation.",
@@ -234,17 +381,36 @@
    {
     "title": "With icons",
     "description": "Icons in `startContent` and `endContent` inherit a colour that reads against the button’s background, so they follow the theme without a hardcoded hex.",
-    "code": "<Button startContent={<SearchIcon size={16} />}>Search</Button>\n\n<Button variant=\"outline\" endContent={<ChevronRightIcon size={16} />}>\n  Continue\n</Button>\n\n{/* Icon-only buttons get size=\"icon\" and an accessibility label. */}\n<Button size=\"icon\" variant=\"ghost\" accessibilityLabel=\"Search\">\n  <SearchIcon size={18} />\n</Button>"
+    "code": "<Button startContent={<SearchIcon size={16} />}>Search</Button>\n\n<Button variant=\"outline\" endContent={<ChevronRightIcon size={16} />}>\n  Continue\n</Button>\n\n{/* Icon-only buttons get size=\"icon\" and an accessibility label. */}\n<Button size=\"icon\" variant=\"ghost\" accessibilityLabel=\"Search\">\n  <SearchIcon size={18} />\n</Button>",
+    "preview": {
+     "src": "/previews/button-with-icons.jpg",
+     "alt": "Button — With icons.",
+     "width": 1179,
+     "height": 616
+    }
    },
    {
     "title": "Loading",
     "description": "`loading` swaps the start content for a variant-matched spinner and blocks presses, so you do not need a separate `disabled`.",
-    "code": "const [saving, setSaving] = useState(false);\n\nasync function save() {\n  setSaving(true);\n  try {\n    await api.save(draft);\n  } finally {\n    setSaving(false);\n  }\n}\n\n<Button loading={saving} fullWidth onPress={save}>\n  {saving ? 'Saving…' : 'Save changes'}\n</Button>"
+    "code": "const [saving, setSaving] = useState(false);\n\nasync function save() {\n  setSaving(true);\n  try {\n    await api.save(draft);\n  } finally {\n    setSaving(false);\n  }\n}\n\n<Button loading={saving} fullWidth onPress={save}>\n  {saving ? 'Saving…' : 'Save changes'}\n</Button>",
+    "previewVideo": {
+     "src": "/previews/button-loading.mp4",
+     "poster": "/previews/button-loading-poster.jpg",
+     "alt": "Button — Loading.",
+     "width": 720,
+     "height": 222
+    }
    },
    {
     "title": "A sign-in stack",
     "description": "The `social` variant is a neutral surface sized for a full-width column of providers.",
-    "code": "<View className=\"gap-2\">\n  <Button variant=\"social\" fullWidth startContent={<GoogleIcon size={18} />}>\n    Continue with Google\n  </Button>\n  <Button variant=\"social\" fullWidth startContent={<AppleIcon size={18} />}>\n    Continue with Apple\n  </Button>\n</View>"
+    "code": "<View className=\"gap-2\">\n  <Button variant=\"social\" fullWidth startContent={<GoogleIcon size={18} />}>\n    Continue with Google\n  </Button>\n  <Button variant=\"social\" fullWidth startContent={<AppleIcon size={18} />}>\n    Continue with Apple\n  </Button>\n</View>",
+    "preview": {
+     "src": "/previews/button-social-login.jpg",
+     "alt": "Button — A sign-in stack.",
+     "width": 1179,
+     "height": 655
+    }
    },
    {
     "title": "Destructive confirmation",
@@ -255,6 +421,24 @@
    "variant": "<Button>Primary</Button>\n<Button variant=\"secondary\">Secondary</Button>\n<Button variant=\"outline\">Outline</Button>\n<Button variant=\"ghost\">Ghost</Button>\n<Button variant=\"destructive\">Delete</Button>\n<Button variant=\"social\" startContent={<GoogleIcon size={18} />}>\n  Continue with Google\n</Button>",
    "size": "<Button size=\"sm\">Small</Button>\n<Button size=\"md\">Medium</Button>\n<Button size=\"lg\">Large</Button>\n<Button size=\"icon\" accessibilityLabel=\"Search\">\n  <SearchIcon size={18} />\n</Button>",
    "fullWidth": "<Button fullWidth>Spans its container</Button>"
+  },
+  "variantMedia": {
+   "size": [
+    {
+     "preview": {
+      "src": "/previews/button-size.jpg",
+      "alt": "Button — size.",
+      "width": 1179,
+      "height": 762
+     }
+    }
+   ]
+  },
+  "preview": {
+   "src": "/previews/button.jpg",
+   "alt": "The Button component, running in the example app.",
+   "width": 1179,
+   "height": 945
   }
  },
  "card": {
@@ -262,7 +446,9 @@
   "usage": "<Card>\n  <Card.Header>\n    <Card.Title>Create project</Card.Title>\n    <Card.Description>Deploy your new project in one click.</Card.Description>\n  </Card.Header>\n  <Card.Content className=\"gap-4\">\n    <Input label=\"Name\" placeholder=\"My project\" />\n  </Card.Content>\n  <Card.Footer>\n    <Button size=\"sm\">Deploy</Button>\n  </Card.Footer>\n</Card>",
   "extraImports": [
    "Button",
-   "Text"
+   "Text",
+   "Badge",
+   "Input"
   ],
   "parts": {
    "Header": "Title and description block.",
@@ -288,12 +474,33 @@
     "description": "Clip the card so the image corners follow its radius, and put the image before the header.",
     "code": "<Card className=\"overflow-hidden\">\n  <Image source={{ uri: post.cover }} className=\"h-40 w-full\" />\n  <Card.Header>\n    <Card.Title>{post.title}</Card.Title>\n    <Card.Description>{post.excerpt}</Card.Description>\n  </Card.Header>\n</Card>",
     "preview": {
-     "src": "/previews/card-media.jpg",
-     "alt": "A card whose top half is a photograph of a green velvet sofa in a bright room, bleeding to the card edges. Underneath, a blue $450 price, the title Living room Sofa, the description Perfect for modern tropical spaces and baroque inspired rooms, and a full-width white Buy now button.",
+     "src": "/previews/card-with-image.jpg",
+     "alt": "Card — Media at the top.",
      "width": 1179,
-     "height": 1357,
-     "caption": "Media bleeds to the card edges; the padding starts at the content."
+     "height": 1371
     }
+   },
+   {
+    "title": "Horizontal",
+    "description": "A media tile beside the text instead of above it.",
+    "preview": {
+     "src": "/previews/card-horizontal.jpg",
+     "alt": "Card — Horizontal.",
+     "width": 1179,
+     "height": 479
+    },
+    "code": "<Card className=\"overflow-hidden\">\n  <Card.Content className=\"flex-row items-center gap-4 p-3\">\n    <Image source={{ uri: product.image }} style={{ width: 72, height: 72, borderRadius: 12 }} />\n    <View className=\"flex-1 gap-0.5\">\n      <Text weight=\"semibold\">Accent chair</Text>\n      <Text size=\"sm\" muted>Walnut and boucle</Text>\n      <Badge variant=\"success\">In stock</Badge>\n    </View>\n  </Card.Content>\n</Card>"
+   },
+   {
+    "title": "With a form",
+    "description": "Card as the shell around a short form.",
+    "preview": {
+     "src": "/previews/card-with-form.jpg",
+     "alt": "Card — With a form.",
+     "width": 1179,
+     "height": 1275
+    },
+    "code": "<Card>\n  <Card.Header>\n    <Card.Title>Project settings</Card.Title>\n    <Card.Description>Manage how your project appears to others.</Card.Description>\n  </Card.Header>\n  <Card.Content className=\"gap-4\">\n    <Input label=\"Project name\" placeholder=\"PanelUI\" />\n    <Input label=\"Description\" placeholder=\"A short description\" description=\"Shown on your public profile.\" />\n  </Card.Content>\n  <Card.Footer>\n    <Button size=\"sm\">Save</Button>\n    <Button size=\"sm\" variant=\"ghost\">Cancel</Button>\n  </Card.Footer>\n</Card>"
    }
   ],
   "preview": {
@@ -322,16 +529,37 @@
    {
     "title": "Card variant",
     "description": "A bordered surface that fills its width — for a list of options where each is a real choice rather than a small toggle.",
-    "code": "<View className=\"gap-2\">\n  {plans.map((plan) => (\n    <Checkbox\n      key={plan.id}\n      variant=\"card\"\n      checked={selected.includes(plan.id)}\n      onCheckedChange={() => toggle(plan.id)}\n      label={plan.name}\n      description={plan.summary}\n    />\n  ))}\n</View>"
+    "code": "<View className=\"gap-2\">\n  {plans.map((plan) => (\n    <Checkbox\n      key={plan.id}\n      variant=\"card\"\n      checked={selected.includes(plan.id)}\n      onCheckedChange={() => toggle(plan.id)}\n      label={plan.name}\n      description={plan.summary}\n    />\n  ))}\n</View>",
+    "previewVideo": {
+     "src": "/previews/checkbox-card.mp4",
+     "poster": "/previews/checkbox-card-poster.jpg",
+     "alt": "Checkbox — Card variant.",
+     "width": 720,
+     "height": 626
+    }
    },
    {
     "title": "A select-all row",
     "code": "const all = selected.length === items.length;\nconst some = selected.length > 0 && !all;\n\n<Checkbox\n  checked={all}\n  indeterminate={some}\n  onCheckedChange={(next) => setSelected(next ? items.map((i) => i.id) : [])}\n  label={all ? 'Deselect all' : 'Select all'}\n/>",
-    "description": "The header is `indeterminate` when the selection is a partial one — some children on, some off — and pressing it turns them all on."
+    "description": "The header is `indeterminate` when the selection is a partial one — some children on, some off — and pressing it turns them all on.",
+    "previewVideo": {
+     "src": "/previews/checkbox-select-all.mp4",
+     "poster": "/previews/checkbox-select-all-poster.jpg",
+     "alt": "Checkbox — A select-all row.",
+     "width": 720,
+     "height": 348
+    }
    }
   ],
   "variantCode": {
    "variant": "<Checkbox variant=\"default\" checked={a} onCheckedChange={setA} label=\"Default\" />\n\n{/* A bordered surface that fills its width. */}\n<Checkbox\n  variant=\"card\"\n  checked={b}\n  onCheckedChange={setB}\n  label=\"Card\"\n  description=\"For options that are real choices, not small toggles.\"\n/>"
+  },
+  "previewVideo": {
+   "src": "/previews/checkbox.mp4",
+   "poster": "/previews/checkbox-poster.jpg",
+   "alt": "The Checkbox component, running in the example app.",
+   "width": 720,
+   "height": 314
   }
  },
  "chip": {
@@ -360,24 +588,56 @@
    {
     "title": "A filter bar",
     "description": "`selected` promotes any chip to a loud accent surface, so a row of filters toggles on and off without a second colour. Pair it with `onPress` — setting `selected` makes the chip announce as a toggle.",
-    "code": "const [tags, setTags] = useState<string[]>(['design']);\n\nconst toggle = (id: string) =>\n  setTags((prev) =>\n    prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]\n  );\n\n<View className=\"flex-row flex-wrap gap-2\">\n  {['design', 'code', 'research'].map((id) => (\n    <Chip\n      key={id}\n      selected={tags.includes(id)}\n      onPress={() => toggle(id)}\n    >\n      {id}\n    </Chip>\n  ))}\n</View>"
+    "code": "const [tags, setTags] = useState<string[]>(['design']);\n\nconst toggle = (id: string) =>\n  setTags((prev) =>\n    prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]\n  );\n\n<View className=\"flex-row flex-wrap gap-2\">\n  {['design', 'code', 'research'].map((id) => (\n    <Chip\n      key={id}\n      selected={tags.includes(id)}\n      onPress={() => toggle(id)}\n    >\n      {id}\n    </Chip>\n  ))}\n</View>",
+    "previewVideo": {
+     "src": "/previews/chip-a-filter-bar.mp4",
+     "poster": "/previews/chip-a-filter-bar-poster.jpg",
+     "alt": "Chip — A filter bar.",
+     "width": 720,
+     "height": 202
+    }
    },
    {
     "title": "Removable tokens",
     "description": "`onClose` adds a trailing ✕ that is its own hit target — removing a chip never also fires its `onPress`. Perfect for the recipients in a “To:” field or the applied filters above a list.",
-    "code": "const [people, setPeople] = useState(['Ada', 'Grace', 'Alan']);\n\n<View className=\"flex-row flex-wrap gap-2\">\n  {people.map((name) => (\n    <Chip\n      key={name}\n      variant=\"outline\"\n      onClose={() => setPeople((p) => p.filter((n) => n !== name))}\n    >\n      {name}\n    </Chip>\n  ))}\n</View>"
+    "code": "const [people, setPeople] = useState(['Ada', 'Grace', 'Alan']);\n\n<View className=\"flex-row flex-wrap gap-2\">\n  {people.map((name) => (\n    <Chip\n      key={name}\n      variant=\"outline\"\n      onClose={() => setPeople((p) => p.filter((n) => n !== name))}\n    >\n      {name}\n    </Chip>\n  ))}\n</View>",
+    "previewVideo": {
+     "src": "/previews/chip-removable-tokens.mp4",
+     "poster": "/previews/chip-removable-tokens-poster.jpg",
+     "alt": "Chip — Removable tokens.",
+     "width": 720,
+     "height": 210
+    }
    },
    {
     "title": "With a leading icon",
     "description": "`start` takes an icon or an avatar before the label. Compose with `Chip.Label` and the icon inherits the chip's colour on its own.",
-    "code": "<Chip variant=\"success\" start={<CheckIcon size={13} />}>\n  <Chip.Label>Available</Chip.Label>\n</Chip>"
+    "code": "<Chip variant=\"success\" start={<CheckIcon size={13} />}>\n  <Chip.Label>Available</Chip.Label>\n</Chip>",
+    "preview": {
+     "src": "/previews/chip-with-leading-icon.jpg",
+     "alt": "Chip — With a leading icon.",
+     "width": 1179,
+     "height": 299
+    }
    }
   ],
   "variantCode": {
    "variant": "<Chip variant=\"default\">Default</Chip>\n<Chip variant=\"primary\">Primary</Chip>\n<Chip variant=\"outline\">Outline</Chip>\n<Chip variant=\"success\">Success</Chip>\n<Chip variant=\"warning\">Warning</Chip>\n<Chip variant=\"info\">Info</Chip>\n<Chip variant=\"destructive\">Destructive</Chip>",
    "size": "<Chip size=\"sm\">Small</Chip>\n<Chip size=\"md\">Medium</Chip>\n<Chip size=\"lg\">Large</Chip>"
   },
-  "notes": "A chip is only pressable when you give it an `onPress` or a `selected` state — otherwise it is a plain tag and is not announced as a control. A `selected` chip is read out as checked or unchecked; a plain pressable one as a button.\n\nThe close button carries its own `accessibilityLabel` (“Remove” by default — override with `closeLabel`) and a generous hit slop, since a small pill leaves little room for the finger.\n\nSet `haptics` for a tick under the finger on press or removal. It needs the optional `expo-haptics` and is silent without it."
+  "notes": "A chip is only pressable when you give it an `onPress` or a `selected` state — otherwise it is a plain tag and is not announced as a control. A `selected` chip is read out as checked or unchecked; a plain pressable one as a button.\n\nThe close button carries its own `accessibilityLabel` (“Remove” by default — override with `closeLabel`) and a generous hit slop, since a small pill leaves little room for the finger.\n\nSet `haptics` for a tick under the finger on press or removal. It needs the optional `expo-haptics` and is silent without it.",
+  "variantMedia": {
+   "size": [
+    {
+     "preview": {
+      "src": "/previews/chip-size.jpg",
+      "alt": "Chip — size.",
+      "width": 1179,
+      "height": 341
+     }
+    }
+   ]
+  }
  },
  "dialog": {
   "intro": "A modal dialog. Mounts through a portal and unmounts after its exit animation.",
@@ -408,7 +668,13 @@
    {
     "title": "A blurred background",
     "description": "Pass `blur` to frost the screen behind the dialog instead of dimming it. It uses `expo-blur` when installed and falls back to the dim when it is not.",
-    "code": "<Dialog>\n  <Dialog.Trigger>\n    <Button variant=\"outline\">Discard changes</Button>\n  </Dialog.Trigger>\n  <Dialog.Content blur>\n    <Dialog.Title>Leave without saving?</Dialog.Title>\n    <Dialog.Description>Your changes will be lost.</Dialog.Description>\n    <Dialog.Footer>\n      <Dialog.Close><Button size=\"sm\" variant=\"ghost\">Keep editing</Button></Dialog.Close>\n      <Dialog.Close><Button size=\"sm\" variant=\"destructive\">Discard</Button></Dialog.Close>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>"
+    "code": "<Dialog>\n  <Dialog.Trigger>\n    <Button variant=\"outline\">Discard changes</Button>\n  </Dialog.Trigger>\n  <Dialog.Content blur>\n    <Dialog.Title>Leave without saving?</Dialog.Title>\n    <Dialog.Description>Your changes will be lost.</Dialog.Description>\n    <Dialog.Footer>\n      <Dialog.Close><Button size=\"sm\" variant=\"ghost\">Keep editing</Button></Dialog.Close>\n      <Dialog.Close><Button size=\"sm\" variant=\"destructive\">Discard</Button></Dialog.Close>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
+    "preview": {
+     "src": "/previews/dialog-blurred-background.jpg",
+     "alt": "Dialog — A blurred background.",
+     "width": 1179,
+     "height": 2422
+    }
    }
   ],
   "preview": {
@@ -480,10 +746,27 @@
     "title": "Sizes",
     "description": "One `size` scales the padding, media, title and description together.",
     "code": "<EmptyState size=\"sm\">…</EmptyState>\n<EmptyState size=\"default\">…</EmptyState>\n<EmptyState size=\"lg\">…</EmptyState>"
+   },
+   {
+    "title": "Text only",
+    "description": "A heading and a line, with no icon or action.",
+    "preview": {
+     "src": "/previews/empty-state-with-text.jpg",
+     "alt": "EmptyState — Text only.",
+     "width": 1179,
+     "height": 717
+    },
+    "code": "<EmptyState>\n  <EmptyState.Title>No results</EmptyState.Title>\n  <EmptyState.Description>Try a different search term.</EmptyState.Description>\n</EmptyState>"
    }
   ],
   "variantCode": {
    "variant": "{/* Fills its parent — a whole screen or a flex slot. */}\n<EmptyState variant=\"default\">…</EmptyState>\n\n{/* A bordered block that sits inside content. */}\n<EmptyState variant=\"card\">…</EmptyState>"
+  },
+  "preview": {
+   "src": "/previews/empty-state.jpg",
+   "alt": "The EmptyState component, running in the example app.",
+   "width": 1179,
+   "height": 1026
   }
  },
  "field": {
@@ -529,7 +812,13 @@
     "description": "`disabled` on the root dims the title, description and control together.",
     "code": "<Field orientation=\"horizontal\" disabled={!hasPro}>\n  <Field.Content>\n    <Field.Title>Advanced analytics</Field.Title>\n    <Field.Description>Included with the Pro plan.</Field.Description>\n  </Field.Content>\n  <Switch value={analyticsEnabled} onValueChange={setAnalyticsEnabled} disabled={!hasPro} />\n</Field>"
    }
-  ]
+  ],
+  "preview": {
+   "src": "/previews/field.jpg",
+   "alt": "The Field component, running in the example app.",
+   "width": 1179,
+   "height": 391
+  }
  },
  "form": {
   "intro": "`useForm` holds a form's values, errors, touched state and submission lifecycle — built on `useReducer`, no form library underneath. `Form` and `Form.Field` bind that state to a control without threading `form` through every field by hand.",
@@ -579,7 +868,13 @@
     "description": "The layout kit grouping switches, with no form hook involved — settings that save immediately need no submit step or validation.",
     "code": "<Field.Set>\n  <Field.Legend>Emails</Field.Legend>\n  <Field orientation=\"horizontal\">\n    <Field.Content>\n      <Field.Title>Marketing</Field.Title>\n      <Field.Description>Offers and announcements.</Field.Description>\n    </Field.Content>\n    <Switch value={marketing} onValueChange={setMarketing} />\n  </Field>\n</Field.Set>\n\n<Field.Separator>Profile</Field.Separator>\n\n<Field orientation=\"horizontal\">\n  <Field.Content>\n    <Field.Title>Public profile</Field.Title>\n    <Field.Description>Anyone can see your activity.</Field.Description>\n  </Field.Content>\n  <Switch value={publicProfile} onValueChange={setPublicProfile} />\n</Field>"
    }
-  ]
+  ],
+  "preview": {
+   "src": "/previews/form.jpg",
+   "alt": "The Form component, running in the example app.",
+   "width": 1179,
+   "height": 950
+  }
  },
  "frame": {
   "intro": "A card of rows sitting in a tray. The tray shows along one edge only — the strip left above the card is the header — and the card itself is flush to its left, right and bottom. The panel draws the hairlines between its own rows.",
@@ -666,7 +961,13 @@
    {
     "title": "Filling the width instead",
     "description": "For a short range — a quarter, a sprint — `fill` divides the available width between the columns rather than drawing them at a fixed size, so the chart always meets both edges.",
-    "code": "<HeatmapChart data={weeks.slice(-13)} layout=\"fill\" gap={4}>\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis />\n  <HeatmapChart.Cells cornerRadius={3} />\n  <HeatmapChart.Tooltip />\n  <HeatmapChart.Legend />\n</HeatmapChart>"
+    "code": "<HeatmapChart data={weeks.slice(-13)} layout=\"fill\" gap={4}>\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis />\n  <HeatmapChart.Cells cornerRadius={3} />\n  <HeatmapChart.Tooltip />\n  <HeatmapChart.Legend />\n</HeatmapChart>",
+    "preview": {
+     "src": "/previews/heatmap-chart-filling-the-width.jpg",
+     "alt": "HeatmapChart — Filling the width instead.",
+     "width": 1179,
+     "height": 1118
+    }
    },
    {
     "title": "A grid whose rows are not days",
@@ -693,7 +994,14 @@
    {
     "title": "Quarters",
     "description": "A rule every thirteen columns, and the ramp derived from a colour of your own instead of the chart token. `tickFilter=\"all\"` labels every row, which a narrower axis has room for once the labels are initials.",
-    "code": "<HeatmapChart data={weeks} weekStartDay={1} binSize={11} color={success}>\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis tickFilter=\"all\" labelFormat=\"initial\" width={16} />\n  <HeatmapChart.Separator every=\"quarter\" dashArray=\"2,3\" />\n  <HeatmapChart.Cells />\n  <HeatmapChart.Tooltip />\n</HeatmapChart>"
+    "code": "<HeatmapChart data={weeks} weekStartDay={1} binSize={11} color={success}>\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis tickFilter=\"all\" labelFormat=\"initial\" width={16} />\n  <HeatmapChart.Separator every=\"quarter\" dashArray=\"2,3\" />\n  <HeatmapChart.Cells />\n  <HeatmapChart.Tooltip />\n</HeatmapChart>",
+    "previewVideo": {
+     "src": "/previews/heatmap-chart-quarters.mp4",
+     "poster": "/previews/heatmap-chart-quarters-poster.jpg",
+     "alt": "HeatmapChart — Quarters.",
+     "width": 720,
+     "height": 554
+    }
    },
    {
     "title": "Uptime strip",
@@ -757,6 +1065,35 @@
   "variantCode": {
    "variant": "{/* On the page, where the field draws its own edge. */}\n<Input variant=\"outline\" label=\"Email\" />\n\n{/* Inside a card or a sheet, where a second border reads as a seam. */}\n<Input variant=\"filled\" label=\"Email\" />",
    "size": "<Input size=\"sm\" placeholder=\"40 tall\" />\n<Input size=\"md\" placeholder=\"48 tall\" />\n<Input size=\"lg\" placeholder=\"56 tall\" />"
+  },
+  "variantMedia": {
+   "variant": [
+    {
+     "preview": {
+      "src": "/previews/input-filled.jpg",
+      "alt": "Input — variant filled.",
+      "width": 1179,
+      "height": 928,
+      "caption": "filled"
+     }
+    }
+   ],
+   "size": [
+    {
+     "preview": {
+      "src": "/previews/input-size.jpg",
+      "alt": "Input — size.",
+      "width": 1167,
+      "height": 949
+     }
+    }
+   ]
+  },
+  "preview": {
+   "src": "/previews/input.jpg",
+   "alt": "The Input component, running in the example app.",
+   "width": 1179,
+   "height": 1378
   }
  },
  "input-group": {
@@ -807,25 +1144,62 @@
    {
     "title": "Masked, like a passcode",
     "description": "Each filled cell shows a dot rather than the character.",
-    "code": "<OtpInput length={4} mask type=\"numeric\" />"
+    "code": "<OtpInput length={4} mask type=\"numeric\" />",
+    "previewVideo": {
+     "src": "/previews/otp-input-masked.mp4",
+     "poster": "/previews/otp-input-masked-poster.jpg",
+     "alt": "OtpInput — Masked, like a passcode.",
+     "width": 720,
+     "height": 232
+    }
    },
    {
     "title": "Grouped with a separator",
     "description": "`groupEvery` draws a divider between runs of cells — 3 gives `xxx — xxx`.",
-    "code": "<OtpInput length={6} groupEvery={3} />"
+    "code": "<OtpInput length={6} groupEvery={3} />",
+    "preview": {
+     "src": "/previews/otp-input-grouped.jpg",
+     "alt": "OtpInput — Grouped with a separator.",
+     "width": 1179,
+     "height": 366
+    }
    },
    {
     "title": "Sizes",
-    "code": "<OtpInput size=\"sm\" length={4} />\n<OtpInput size=\"md\" length={4} />\n<OtpInput size=\"lg\" length={4} />"
+    "code": "<OtpInput size=\"sm\" length={4} />\n<OtpInput size=\"md\" length={4} />\n<OtpInput size=\"lg\" length={4} />",
+    "preview": {
+     "src": "/previews/otp-input-size.jpg",
+     "alt": "OtpInput — Sizes.",
+     "width": 1179,
+     "height": 679
+    }
    },
    {
     "title": "Invalid",
     "description": "`errorMessage` tints every cell and prints a line beneath the row.",
     "code": "<OtpInput\n  length={6}\n  value={code}\n  onChangeText={setCode}\n  errorMessage=\"That code didn’t match. Try again.\"\n/>"
+   },
+   {
+    "title": "Letters",
+    "description": "`type=\"text\"` accepts letters as well as digits.",
+    "preview": {
+     "src": "/previews/otp-input-letters.jpg",
+     "alt": "OtpInput — Letters.",
+     "width": 1179,
+     "height": 424
+    },
+    "code": "<OtpInput type=\"text\" length={4} />"
    }
   ],
   "variantCode": {
    "size": "<OtpInput size=\"sm\" length={4} />\n<OtpInput size=\"md\" length={4} />\n<OtpInput size=\"lg\" length={4} />"
+  },
+  "previewVideo": {
+   "src": "/previews/otp-input.mp4",
+   "poster": "/previews/otp-input-poster.jpg",
+   "alt": "The OtpInput component, running in the example app.",
+   "width": 720,
+   "height": 306
   }
  },
  "item": {
@@ -863,12 +1237,24 @@
    {
     "title": "A settings group",
     "description": "Give a row `onPress` and it becomes a pressable with a press animation and a button role. Leave it off and it stays a plain view.",
-    "code": "<Item.Group>\n  {rows.map((row, index) => (\n    <Fragment key={row.id}>\n      {index > 0 && <Item.Separator />}\n      <Item size=\"sm\" onPress={() => router.push(row.href)}>\n        <Item.Content>\n          <Item.Title>{row.title}</Item.Title>\n          <Item.Description>{row.summary}</Item.Description>\n        </Item.Content>\n        <Item.Actions>\n          <ChevronRightIcon size={16} />\n        </Item.Actions>\n      </Item>\n    </Fragment>\n  ))}\n</Item.Group>"
+    "code": "<Item.Group>\n  {rows.map((row, index) => (\n    <Fragment key={row.id}>\n      {index > 0 && <Item.Separator />}\n      <Item size=\"sm\" onPress={() => router.push(row.href)}>\n        <Item.Content>\n          <Item.Title>{row.title}</Item.Title>\n          <Item.Description>{row.summary}</Item.Description>\n        </Item.Content>\n        <Item.Actions>\n          <ChevronRightIcon size={16} />\n        </Item.Actions>\n      </Item>\n    </Fragment>\n  ))}\n</Item.Group>",
+    "preview": {
+     "src": "/previews/item-a-settings-group.jpg",
+     "alt": "Item — A settings group.",
+     "width": 1179,
+     "height": 758
+    }
    },
    {
     "title": "Media types",
     "description": "`icon` and `image` give the media slot a sized box; the default adds none, so an `Avatar` can style itself.",
-    "code": "<Item.Media variant=\"icon\"><BellIcon size={18} /></Item.Media>\n\n<Item.Media variant=\"image\">\n  <Image source={{ uri: product.image }} className=\"h-full w-full\" />\n</Item.Media>\n\n<Item.Media>\n  <Avatar size=\"md\" source={{ uri: user.avatar }} fallback=\"KA\" />\n</Item.Media>"
+    "code": "<Item.Media variant=\"icon\"><BellIcon size={18} /></Item.Media>\n\n<Item.Media variant=\"image\">\n  <Image source={{ uri: product.image }} className=\"h-full w-full\" />\n</Item.Media>\n\n<Item.Media>\n  <Avatar size=\"md\" source={{ uri: user.avatar }} fallback=\"KA\" />\n</Item.Media>",
+    "preview": {
+     "src": "/previews/item-media-types.jpg",
+     "alt": "Item — Media types.",
+     "width": 1179,
+     "height": 991
+    }
    },
    {
     "title": "With a switch",
@@ -878,12 +1264,25 @@
    {
     "title": "A horizontal group of cards",
     "description": "Two independent axes. `orientation` on the group runs the items across the screen instead of down it; `orientation` on each item stacks its own parts into a card. A carousel wants both.",
-    "code": "<ScrollView horizontal showsHorizontalScrollIndicator={false}>\n  <Item.Group orientation=\"horizontal\">\n    {plans.map((plan) => (\n      <Item\n        key={plan.id}\n        orientation=\"vertical\"\n        variant=\"outline\"\n        className=\"w-48\"\n      >\n        <Item.Media variant=\"icon\">\n          <PackageIcon size={18} />\n        </Item.Media>\n        <Item.Content>\n          <Item.Title>{plan.name}</Item.Title>\n          <Item.Description>{plan.summary}</Item.Description>\n        </Item.Content>\n        <Item.Footer>\n          <Text weight=\"semibold\">{plan.price}</Text>\n        </Item.Footer>\n      </Item>\n    ))}\n  </Item.Group>\n</ScrollView>"
+    "code": "<ScrollView horizontal showsHorizontalScrollIndicator={false}>\n  <Item.Group orientation=\"horizontal\">\n    {plans.map((plan) => (\n      <Item\n        key={plan.id}\n        orientation=\"vertical\"\n        variant=\"outline\"\n        className=\"w-48\"\n      >\n        <Item.Media variant=\"icon\">\n          <PackageIcon size={18} />\n        </Item.Media>\n        <Item.Content>\n          <Item.Title>{plan.name}</Item.Title>\n          <Item.Description>{plan.summary}</Item.Description>\n        </Item.Content>\n        <Item.Footer>\n          <Text weight=\"semibold\">{plan.price}</Text>\n        </Item.Footer>\n      </Item>\n    ))}\n  </Item.Group>\n</ScrollView>",
+    "previewVideo": {
+     "src": "/previews/item-horizontal-group-of-card.mp4",
+     "poster": "/previews/item-horizontal-group-of-card-poster.jpg",
+     "alt": "Item — A horizontal group of cards.",
+     "width": 720,
+     "height": 370
+    }
    },
    {
     "title": "A vertical item",
     "description": "`orientation=\"vertical\"` is also what `Item.Header` and `Item.Footer` need — both are full-width strips, so they only make sense once the item stacks.",
-    "code": "<Item orientation=\"vertical\" variant=\"outline\">\n  <Item.Header>\n    <Badge variant=\"secondary\">Draft</Badge>\n    <Text size=\"xs\" muted>Updated 2h ago</Text>\n  </Item.Header>\n  <Item.Content>\n    <Item.Title>Quarterly report</Item.Title>\n    <Item.Description>Revenue, retention and headcount.</Item.Description>\n  </Item.Content>\n  <Item.Footer>\n    <Button size=\"sm\" variant=\"outline\">Preview</Button>\n    <Button size=\"sm\">Publish</Button>\n  </Item.Footer>\n</Item>"
+    "code": "<Item orientation=\"vertical\" variant=\"outline\">\n  <Item.Header>\n    <Badge variant=\"secondary\">Draft</Badge>\n    <Text size=\"xs\" muted>Updated 2h ago</Text>\n  </Item.Header>\n  <Item.Content>\n    <Item.Title>Quarterly report</Item.Title>\n    <Item.Description>Revenue, retention and headcount.</Item.Description>\n  </Item.Content>\n  <Item.Footer>\n    <Button size=\"sm\" variant=\"outline\">Preview</Button>\n    <Button size=\"sm\">Publish</Button>\n  </Item.Footer>\n</Item>",
+    "preview": {
+     "src": "/previews/item-a-vertical-item.jpg",
+     "alt": "Item — A vertical item.",
+     "width": 1179,
+     "height": 701
+    }
    }
   ],
   "variantCode": {
@@ -897,6 +1296,18 @@
    "width": 1179,
    "height": 969,
    "caption": "The three surface variants, running in the example app."
+  },
+  "variantMedia": {
+   "size": [
+    {
+     "preview": {
+      "src": "/previews/item-size.jpg",
+      "alt": "Item — size.",
+      "width": 1179,
+      "height": 861
+     }
+    }
+   ]
   }
  },
  "label": {
@@ -920,7 +1331,13 @@
     "description": "Both are visual and semantic — pair them with the matching state on the field itself.",
     "code": "<Label isInvalid>Card number</Label>\n<Input errorMessage=\"Check the number and try again.\" />\n\n<Label isDisabled>Plan</Label>\n<Input value=\"Premium\" disabled />"
    }
-  ]
+  ],
+  "preview": {
+   "src": "/previews/label.jpg",
+   "alt": "The Label component, running in the example app.",
+   "width": 1179,
+   "height": 1294
+  }
  },
  "line-chart": {
   "intro": "A time series, drawn and animated on the UI thread.\n\nThe chart is composed rather than configured: the grid, each series, the axis and the crosshair are separate children, so a chart that wants no grid simply does not have one. A single component with twenty booleans is how charts end up unreadable at the call site.\n\nColours come from the `--color-chart-1` … `--color-chart-5` tokens, so a chart follows the active theme out of the box and is put on brand by overriding those five. Nothing in it hardcodes a colour.",
@@ -943,7 +1360,14 @@
    {
     "title": "A chart card with a crosshair",
     "description": "Pair it with `Frame`, and add `LineChart.Tooltip`. Dragging across the chart moves a crosshair and floats a small label at the point with the value — the minimal readout a drag wants. The label tracks the finger on the UI thread; only its text crosses back into JS, and only when the active index changes. A stat band above the chart, inside the panel. `Frame.Header` is a caption on the tray the card sits in — one muted line — so a title, a legend, a headline number and a subtitle all crammed into it is four levels of hierarchy in a space with room for one, and the number the card is actually about ends up the hardest part to find.",
-    "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Monthly Revenue</Frame.Title>\n    <Frame.Action>Drag to inspect</Frame.Action>\n  </Frame.Header>\n\n  <Frame.Panel>\n    <View className=\"flex-row items-start justify-between px-4 pb-2 pt-3.5\">\n      <View className=\"gap-0.5\">\n        <Text size=\"2xl\" weight=\"bold\">$317,904</Text>\n        <Text size=\"sm\" muted>Last 12 months</Text>\n      </View>\n    </View>\n\n    <LineChart data={revenue} xDataKey=\"month\">\n      <LineChart.Grid />\n      <LineChart.Area dataKey=\"revenue\" />\n      <LineChart.Line dataKey=\"revenue\" />\n      <LineChart.XAxis ticks={5} />\n      <LineChart.Tooltip formatValue={(v) => `$${v.toLocaleString()}`} />\n    </LineChart>\n  </Frame.Panel>\n</Frame>"
+    "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Monthly Revenue</Frame.Title>\n    <Frame.Action>Drag to inspect</Frame.Action>\n  </Frame.Header>\n\n  <Frame.Panel>\n    <View className=\"flex-row items-start justify-between px-4 pb-2 pt-3.5\">\n      <View className=\"gap-0.5\">\n        <Text size=\"2xl\" weight=\"bold\">$317,904</Text>\n        <Text size=\"sm\" muted>Last 12 months</Text>\n      </View>\n    </View>\n\n    <LineChart data={revenue} xDataKey=\"month\">\n      <LineChart.Grid />\n      <LineChart.Area dataKey=\"revenue\" />\n      <LineChart.Line dataKey=\"revenue\" />\n      <LineChart.XAxis ticks={5} />\n      <LineChart.Tooltip formatValue={(v) => `$${v.toLocaleString()}`} />\n    </LineChart>\n  </Frame.Panel>\n</Frame>",
+    "previewVideo": {
+     "src": "/previews/line-chart-crosshair.mp4",
+     "poster": "/previews/line-chart-crosshair-poster.jpg",
+     "alt": "LineChart — A chart card with a crosshair.",
+     "width": 720,
+     "height": 808
+    }
    },
    {
     "title": "Replay the reveal",
@@ -953,12 +1377,25 @@
    {
     "title": "A sparkline",
     "description": "Set `compact` and drop the grid, axis and crosshair: the line reaches the edges and the shape is the whole point. Sits beside a number in a KPI card.",
-    "code": "<View className=\"h-14 w-32\">\n  <LineChart data={points} xDataKey=\"t\" compact aspectRatio={2.3}>\n    <LineChart.Line dataKey=\"v\" strokeWidth={2} />\n  </LineChart>\n</View>"
+    "code": "<View className=\"h-14 w-32\">\n  <LineChart data={points} xDataKey=\"t\" compact aspectRatio={2.3}>\n    <LineChart.Line dataKey=\"v\" strokeWidth={2} />\n  </LineChart>\n</View>",
+    "preview": {
+     "src": "/previews/line-chart-kpi-sparklines.jpg",
+     "alt": "LineChart — A sparkline.",
+     "width": 1179,
+     "height": 1430
+    }
    },
    {
     "title": "Two series and a dashed comparison",
     "description": "Both series share one y-axis so they stay comparable. Give a target line the next colour token and a dash pattern, so actual and target are told apart by shape as well as by colour.",
-    "code": "<LineChart data={revenue} xDataKey=\"month\">\n  <LineChart.Grid />\n  <LineChart.Line dataKey=\"revenue\" colorIndex={1} />\n  <LineChart.Line dataKey=\"target\" colorIndex={2} dashArray=\"6,5\" />\n  <LineChart.XAxis ticks={5} />\n  <LineChart.Tooltip formatValue={(v) => `$${(v / 1000).toFixed(1)}k`} />\n</LineChart>"
+    "code": "<LineChart data={revenue} xDataKey=\"month\">\n  <LineChart.Grid />\n  <LineChart.Line dataKey=\"revenue\" colorIndex={1} />\n  <LineChart.Line dataKey=\"target\" colorIndex={2} dashArray=\"6,5\" />\n  <LineChart.XAxis ticks={5} />\n  <LineChart.Tooltip formatValue={(v) => `$${(v / 1000).toFixed(1)}k`} />\n</LineChart>",
+    "previewVideo": {
+     "src": "/previews/line-chart-dashed-comparison.mp4",
+     "poster": "/previews/line-chart-dashed-comparison-poster.jpg",
+     "alt": "LineChart — Two series and a dashed comparison.",
+     "width": 720,
+     "height": 654
+    }
    },
    {
     "title": "Loading, and then data",
@@ -975,7 +1412,14 @@
    {
     "title": "With dots",
     "description": "`showMarkers` puts a dot at every point. For a short series where each reading is a fact worth pointing at — on a hundred points it is noise.",
-    "code": "<LineChart data={revenue} xDataKey=\"month\" aspectRatio={1.7}>\n  <LineChart.Grid />\n  <LineChart.Line dataKey=\"revenue\" showMarkers />\n  <LineChart.XAxis ticks={5} />\n  <LineChart.Tooltip formatValue={(v) => `$${(v / 1000).toFixed(1)}k`} />\n</LineChart>"
+    "code": "<LineChart data={revenue} xDataKey=\"month\" aspectRatio={1.7}>\n  <LineChart.Grid />\n  <LineChart.Line dataKey=\"revenue\" showMarkers />\n  <LineChart.XAxis ticks={5} />\n  <LineChart.Tooltip formatValue={(v) => `$${(v / 1000).toFixed(1)}k`} />\n</LineChart>",
+    "previewVideo": {
+     "src": "/previews/line-chart-with-dots.mp4",
+     "poster": "/previews/line-chart-with-dots-poster.jpg",
+     "alt": "LineChart — With dots.",
+     "width": 720,
+     "height": 624
+    }
    },
    {
     "title": "Crosshair",
@@ -985,12 +1429,26 @@
    {
     "title": "Animated line",
     "description": "The reveal plays once on mount; `replay()` on the chart ref runs it again. A data change redraws without replaying — repeating the reveal on every refresh turns an update into an animation.",
-    "code": "const chart = useRef<LineChartHandle>(null);\n\n<Button variant=\"ghost\" size=\"sm\" onPress={() => chart.current?.replay()}>\n  Replay\n</Button>\n\n<LineChart ref={chart} data={revenue} xDataKey=\"month\">\n  <LineChart.Grid />\n  <LineChart.Area dataKey=\"revenue\" />\n  <LineChart.Line dataKey=\"revenue\" />\n</LineChart>"
+    "code": "const chart = useRef<LineChartHandle>(null);\n\n<Button variant=\"ghost\" size=\"sm\" onPress={() => chart.current?.replay()}>\n  Replay\n</Button>\n\n<LineChart ref={chart} data={revenue} xDataKey=\"month\">\n  <LineChart.Grid />\n  <LineChart.Area dataKey=\"revenue\" />\n  <LineChart.Line dataKey=\"revenue\" />\n</LineChart>",
+    "previewVideo": {
+     "src": "/previews/line-chart-animated-line.mp4",
+     "poster": "/previews/line-chart-animated-line-poster.jpg",
+     "alt": "LineChart — Animated line.",
+     "width": 720,
+     "height": 602
+    }
    },
    {
     "title": "Finance",
     "description": "A balance, a delta and a range selector. The delta rides beside the number rather than under it — three stacked lines is what made this header a wall of text. Switching the range tweens the y-domain rather than swapping the path, so a series that grows is redrawn against a moving axis instead of jumping to a new shape.",
-    "code": "const [range, setRange] = useState(\"1M\");\n\n<Frame>\n  <Frame.Header>\n    <Frame.Title>Total balance</Frame.Title>\n    <Frame.Action>{range}</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <ChartStat value={`$${balance.toLocaleString()}`}>\n      <Text size=\"sm\" className=\"text-success\">+{delta}% this period</Text>\n    </ChartStat>\n    <View className=\"gap-3 px-3 pb-3\">\n      <LineChart data={RANGES[range].data} xDataKey=\"t\" aspectRatio={1.9}>\n        <LineChart.Grid rows={3} dashArray=\"\" opacity={0.4} />\n        <LineChart.Area dataKey=\"v\" />\n        <LineChart.Line dataKey=\"v\" />\n      </LineChart>\n      <Tabs value={range} onValueChange={setRange}>\n        <Tabs.List>\n          {Object.keys(RANGES).map((key) => (\n            <Tabs.Trigger key={key} value={key}>{key}</Tabs.Trigger>\n          ))}\n        </Tabs.List>\n      </Tabs>\n    </View>\n  </Frame.Panel>\n</Frame>"
+    "code": "const [range, setRange] = useState(\"1M\");\n\n<Frame>\n  <Frame.Header>\n    <Frame.Title>Total balance</Frame.Title>\n    <Frame.Action>{range}</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <ChartStat value={`$${balance.toLocaleString()}`}>\n      <Text size=\"sm\" className=\"text-success\">+{delta}% this period</Text>\n    </ChartStat>\n    <View className=\"gap-3 px-3 pb-3\">\n      <LineChart data={RANGES[range].data} xDataKey=\"t\" aspectRatio={1.9}>\n        <LineChart.Grid rows={3} dashArray=\"\" opacity={0.4} />\n        <LineChart.Area dataKey=\"v\" />\n        <LineChart.Line dataKey=\"v\" />\n      </LineChart>\n      <Tabs value={range} onValueChange={setRange}>\n        <Tabs.List>\n          {Object.keys(RANGES).map((key) => (\n            <Tabs.Trigger key={key} value={key}>{key}</Tabs.Trigger>\n          ))}\n        </Tabs.List>\n      </Tabs>\n    </View>\n  </Frame.Panel>\n</Frame>",
+    "previewVideo": {
+     "src": "/previews/line-chart-finance.mp4",
+     "poster": "/previews/line-chart-finance-poster.jpg",
+     "alt": "LineChart — Finance.",
+     "width": 720,
+     "height": 702
+    }
    },
    {
     "title": "Dashed comparison",
@@ -1000,7 +1458,14 @@
    {
     "title": "Multi-line",
     "description": "Four series across the chart token ramp. They share one y-domain, so they stay comparable — a per-series scale makes two lines look alike when they are orders of magnitude apart. Four keys wrap onto two rows on a narrow phone, which is another reason the legend belongs in the panel rather than in the header strip.",
-    "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Traffic Sources</Frame.Title>\n    <Frame.Action>Last 12 months</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <ChartLegendRow>\n      <LegendDot colorIndex={1} label=\"Organic\" />\n      <LegendDot colorIndex={2} label=\"Paid Ads\" />\n      <LegendDot colorIndex={3} label=\"Referral\" />\n      <LegendDot colorIndex={4} label=\"Social\" />\n    </ChartLegendRow>\n    <LineChart data={traffic} xDataKey=\"month\" aspectRatio={1.7}>\n      <LineChart.Grid />\n      <LineChart.Line dataKey=\"organic\" colorIndex={1} />\n      <LineChart.Line dataKey=\"paid\" colorIndex={2} />\n      <LineChart.Line dataKey=\"referral\" colorIndex={3} />\n      <LineChart.Line dataKey=\"social\" colorIndex={4} />\n      <LineChart.XAxis ticks={5} />\n    </LineChart>\n  </Frame.Panel>\n</Frame>"
+    "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Traffic Sources</Frame.Title>\n    <Frame.Action>Last 12 months</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <ChartLegendRow>\n      <LegendDot colorIndex={1} label=\"Organic\" />\n      <LegendDot colorIndex={2} label=\"Paid Ads\" />\n      <LegendDot colorIndex={3} label=\"Referral\" />\n      <LegendDot colorIndex={4} label=\"Social\" />\n    </ChartLegendRow>\n    <LineChart data={traffic} xDataKey=\"month\" aspectRatio={1.7}>\n      <LineChart.Grid />\n      <LineChart.Line dataKey=\"organic\" colorIndex={1} />\n      <LineChart.Line dataKey=\"paid\" colorIndex={2} />\n      <LineChart.Line dataKey=\"referral\" colorIndex={3} />\n      <LineChart.Line dataKey=\"social\" colorIndex={4} />\n      <LineChart.XAxis ticks={5} />\n    </LineChart>\n  </Frame.Panel>\n</Frame>",
+    "previewVideo": {
+     "src": "/previews/line-chart-multi-line.mp4",
+     "poster": "/previews/line-chart-multi-line-poster.jpg",
+     "alt": "LineChart — Multi-line.",
+     "width": 720,
+     "height": 670
+    }
    },
    {
     "title": "KPI sparklines",
@@ -1008,7 +1473,14 @@
     "code": "<LineChart data={spark} xDataKey=\"i\" aspectRatio={3} compact>\n  <LineChart.Area dataKey=\"v\" colorIndex={1} />\n  <LineChart.Line dataKey=\"v\" colorIndex={1} />\n</LineChart>"
    }
   ],
-  "notes": "### The two layers\n\nThe geometry is SVG and anything with text or a gesture on it is a React Native view laid over the top. The parts sort themselves into the right layer, so composition stays a flat list of children — but it is why `LineChart.XAxis` renders real text rather than SVG text. SVG text ignores the platform's text scaling and the theme's font, and a gesture handler cannot be attached to an SVG node at all.\n\n### Three animations, three reasons\n\n**The reveal** uncovers the plot left to right on mount, with everything inside sharing one clip — so the line, its fill and its markers arrive together rather than as three separate effects.\n\n**The y-domain** is tweened when the data changes, rather than the path being swapped. A series that grows is redrawn against a moving axis instead of jumping to a new shape. The reveal deliberately does not replay: it happened once, and repeating it on every refresh turns a data update into an animation.\n\n**The crosshair** resolves the nearest index on the UI thread. Only that index crosses back into JS, and only when it changes, so a drag across a hundred points costs a hundred re-renders at most rather than one per frame.\n\nAll three respect the system's reduce-motion setting: the chart renders at its final state instead.\n\n### Reading out the active point\n\n`onActiveIndexChange` fires as the crosshair moves between points, and with `-1`/`null` when the finger lifts. That is the one to use for a readout in the card header, because the header is outside the chart and a hook cannot reach up out of the subtree it is called in. `useLineChart` is for something rendered *inside* the chart, which is the rarer case.\n\n### The crosshair label\n\n`LineChart.Tooltip` floats a small label at the crosshair by default, showing the x-value and each series' value at that point. Turn it off with `showLabel={false}`, or format its numbers with `formatValue`. For a readout in the card *header* instead — outside the plot, where it does not cover the line — use `onActiveIndexChange` on the root.\n\n### The curve\n\n`monotone` is the default and is the right one for a time series. A plain cubic spline overshoots between points, so a series that never goes below zero draws a dip under the axis between two low values — a shape that is not in the data. Use `curve=\"linear\"` when the points are exact readings and the eye should not be given anything between them.\n\n### Sizing\n\nThe chart fills its parent's width and takes its height from `aspectRatio`. Give it a wider ratio for a card and a squarer one for a narrow column; do not set a height directly, as the aspect ratio is what keeps the plot geometry stable while the layout settles.\n\n### Laying out a chart card\n\n`Frame.Header` is a caption on the tray the card sits in — one muted line, a title on the left and a short note or control on the right. The headline reading, the legend and any subtitle belong in the panel, in a band above the chart.\n\nPutting all of them in the header is the usual way a chart card goes wrong: four levels of hierarchy in a strip with room for one, and the number the card is actually about ends up the hardest thing on it to find. A legend of four keys makes it worse, because it wraps onto a second row on a narrow phone and pushes the chart down the card."
+  "notes": "### The two layers\n\nThe geometry is SVG and anything with text or a gesture on it is a React Native view laid over the top. The parts sort themselves into the right layer, so composition stays a flat list of children — but it is why `LineChart.XAxis` renders real text rather than SVG text. SVG text ignores the platform's text scaling and the theme's font, and a gesture handler cannot be attached to an SVG node at all.\n\n### Three animations, three reasons\n\n**The reveal** uncovers the plot left to right on mount, with everything inside sharing one clip — so the line, its fill and its markers arrive together rather than as three separate effects.\n\n**The y-domain** is tweened when the data changes, rather than the path being swapped. A series that grows is redrawn against a moving axis instead of jumping to a new shape. The reveal deliberately does not replay: it happened once, and repeating it on every refresh turns a data update into an animation.\n\n**The crosshair** resolves the nearest index on the UI thread. Only that index crosses back into JS, and only when it changes, so a drag across a hundred points costs a hundred re-renders at most rather than one per frame.\n\nAll three respect the system's reduce-motion setting: the chart renders at its final state instead.\n\n### Reading out the active point\n\n`onActiveIndexChange` fires as the crosshair moves between points, and with `-1`/`null` when the finger lifts. That is the one to use for a readout in the card header, because the header is outside the chart and a hook cannot reach up out of the subtree it is called in. `useLineChart` is for something rendered *inside* the chart, which is the rarer case.\n\n### The crosshair label\n\n`LineChart.Tooltip` floats a small label at the crosshair by default, showing the x-value and each series' value at that point. Turn it off with `showLabel={false}`, or format its numbers with `formatValue`. For a readout in the card *header* instead — outside the plot, where it does not cover the line — use `onActiveIndexChange` on the root.\n\n### The curve\n\n`monotone` is the default and is the right one for a time series. A plain cubic spline overshoots between points, so a series that never goes below zero draws a dip under the axis between two low values — a shape that is not in the data. Use `curve=\"linear\"` when the points are exact readings and the eye should not be given anything between them.\n\n### Sizing\n\nThe chart fills its parent's width and takes its height from `aspectRatio`. Give it a wider ratio for a card and a squarer one for a narrow column; do not set a height directly, as the aspect ratio is what keeps the plot geometry stable while the layout settles.\n\n### Laying out a chart card\n\n`Frame.Header` is a caption on the tray the card sits in — one muted line, a title on the left and a short note or control on the right. The headline reading, the legend and any subtitle belong in the panel, in a band above the chart.\n\nPutting all of them in the header is the usual way a chart card goes wrong: four levels of hierarchy in a strip with room for one, and the number the card is actually about ends up the hardest thing on it to find. A legend of four keys makes it worse, because it wraps onto a second row on a narrow phone and pushes the chart down the card.",
+  "previewVideo": {
+   "src": "/previews/line-chart.mp4",
+   "poster": "/previews/line-chart-poster.jpg",
+   "alt": "The LineChart component, running in the example app.",
+   "width": 720,
+   "height": 680
+  }
  },
  "marker": {
   "intro": "An inline note in a conversation.\n\nTranscripts are not only messages. Between the turns sit things the conversation *did* rather than said: a tool that ran, a file that was read, the point where yesterday ended. None of those have a speaker, so none of them should look like a bubble. A marker is the quieter row that carries them — small, muted, and aligned to the transcript rather than to a side of it.",
@@ -1033,7 +1505,14 @@
    {
     "title": "A step still running",
     "description": "Add `shimmer` to the content while the step is in flight. The sweep is masked to the glyphs, so the text itself catches the light. Drop it the moment the step finishes — a marker that shimmers forever reads as a stuck one.",
-    "code": "<Marker>\n  <Marker.Icon><CheckIcon size={14} /></Marker.Icon>\n  <Marker.Content>Read 12 files</Marker.Content>\n</Marker>\n\n<Marker>\n  <Marker.Icon><SearchIcon size={14} /></Marker.Icon>\n  <Marker.Content shimmer>Searching the codebase…</Marker.Content>\n</Marker>"
+    "code": "<Marker>\n  <Marker.Icon><CheckIcon size={14} /></Marker.Icon>\n  <Marker.Content>Read 12 files</Marker.Content>\n</Marker>\n\n<Marker>\n  <Marker.Icon><SearchIcon size={14} /></Marker.Icon>\n  <Marker.Content shimmer>Searching the codebase…</Marker.Content>\n</Marker>",
+    "previewVideo": {
+     "src": "/previews/marker-a-step-still-running.mp4",
+     "poster": "/previews/marker-a-step-still-running-poster.jpg",
+     "alt": "Marker — A step still running.",
+     "width": 720,
+     "height": 268
+    }
    },
    {
     "title": "A day divider",
@@ -1043,13 +1522,25 @@
    {
     "title": "In a transcript",
     "description": "Markers sit between messages at the same width, so the eye reads them as the same column. Give one an `onPress` and it becomes a button — for expanding the step it summarises.",
-    "code": "<Marker variant=\"separator\">\n  <Marker.Content>Today</Marker.Content>\n</Marker>\n\n<Message align=\"end\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>Where is the invoice total calculated?</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>\n\n<Marker onPress={() => expand(step)}>\n  <Marker.Icon><SearchIcon size={14} /></Marker.Icon>\n  <Marker.Content>Searched 128 files</Marker.Content>\n</Marker>\n\n<Message>\n  <Message.Avatar><Avatar size=\"sm\" fallback=\"AI\" /></Message.Avatar>\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>In billing/total.ts — it sums the line items, then applies tax.</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>"
+    "code": "<Marker variant=\"separator\">\n  <Marker.Content>Today</Marker.Content>\n</Marker>\n\n<Message align=\"end\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>Where is the invoice total calculated?</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>\n\n<Marker onPress={() => expand(step)}>\n  <Marker.Icon><SearchIcon size={14} /></Marker.Icon>\n  <Marker.Content>Searched 128 files</Marker.Content>\n</Marker>\n\n<Message>\n  <Message.Avatar><Avatar size=\"sm\" fallback=\"AI\" /></Message.Avatar>\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>In billing/total.ts — it sums the line items, then applies tax.</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>",
+    "preview": {
+     "src": "/previews/marker-in-a-transcript.jpg",
+     "alt": "Marker — In a transcript.",
+     "width": 1179,
+     "height": 921
+    }
    }
   ],
   "variantCode": {
    "variant": "{/* The plain status row. */}\n<Marker>\n  <Marker.Icon><InfoIcon size={14} /></Marker.Icon>\n  <Marker.Content>Model set to Opus</Marker.Content>\n</Marker>\n\n{/* Closed by a hairline, for a step that ends a section. */}\n<Marker variant=\"border\">\n  <Marker.Icon><CheckIcon size={14} /></Marker.Icon>\n  <Marker.Content>Finished 3 tool calls</Marker.Content>\n</Marker>\n\n{/* Centred label with a rule out to each edge. */}\n<Marker variant=\"separator\">\n  <Marker.Content>Yesterday</Marker.Content>\n</Marker>"
   },
-  "notes": "A marker with no `onPress` renders as a plain view and is not announced as a button — the same rule `Item` follows. Give it an `onPress` and it becomes a pressable with the press feedback every other pressable in the library has.\n\n`Marker.Icon` is hidden from screen readers. It repeats what the content already says, and announcing both is noise. It also picks up the muted foreground automatically, so an icon dropped inside needs no `color`.\n\nThe `separator` variant draws its rules with `Separator`, so they follow the same token and thickness as every other rule in the app."
+  "notes": "A marker with no `onPress` renders as a plain view and is not announced as a button — the same rule `Item` follows. Give it an `onPress` and it becomes a pressable with the press feedback every other pressable in the library has.\n\n`Marker.Icon` is hidden from screen readers. It repeats what the content already says, and announcing both is noise. It also picks up the muted foreground automatically, so an icon dropped inside needs no `color`.\n\nThe `separator` variant draws its rules with `Separator`, so they follow the same token and thickness as every other rule in the app.",
+  "preview": {
+   "src": "/previews/marker.jpg",
+   "alt": "The Marker component, running in the example app.",
+   "width": 1179,
+   "height": 497
+  }
  },
  "message": {
   "intro": "A chat turn: avatar, bubble, and the metadata around it.\n\nThe pieces are separate because conversations differ in which ones they need. A support thread wants a sender name and a read receipt; an assistant transcript wants neither, but does want the bubble to carry tool output and actions.",
@@ -1081,11 +1572,24 @@
    {
     "title": "Grouped turns",
     "description": "Every turn after the first is marked `stacked`: it keeps its avatar slot but empties it, so the bubbles stay in one column.",
-    "code": "<Message.Group align=\"start\">\n  {turns.map((turn) => (\n    <Message key={turn.id}>\n      <Message.Avatar>\n        <Avatar size=\"sm\" fallback=\"AI\" />\n      </Message.Avatar>\n      <Message.Content>\n        <Message.Bubble>\n          <Message.BubbleContent>{turn.text}</Message.BubbleContent>\n        </Message.Bubble>\n      </Message.Content>\n    </Message>\n  ))}\n</Message.Group>"
+    "code": "<Message.Group align=\"start\">\n  {turns.map((turn) => (\n    <Message key={turn.id}>\n      <Message.Avatar>\n        <Avatar size=\"sm\" fallback=\"AI\" />\n      </Message.Avatar>\n      <Message.Content>\n        <Message.Bubble>\n          <Message.BubbleContent>{turn.text}</Message.BubbleContent>\n        </Message.Bubble>\n      </Message.Content>\n    </Message>\n  ))}\n</Message.Group>",
+    "preview": {
+     "src": "/previews/message-grouped-turns.jpg",
+     "alt": "Message — Grouped turns.",
+     "width": 1179,
+     "height": 609
+    }
    },
    {
     "title": "A streaming turn",
-    "code": "<Message>\n  <Message.Avatar><Avatar size=\"sm\" fallback=\"AI\" /></Message.Avatar>\n  <Message.Content>\n    <Message.Bubble>\n      {text ? (\n        <Message.BubbleContent>{text}</Message.BubbleContent>\n      ) : (\n        <Shimmer textClassName=\"text-base\">Thinking…</Shimmer>\n      )}\n    </Message.Bubble>\n  </Message.Content>\n</Message>"
+    "code": "<Message>\n  <Message.Avatar><Avatar size=\"sm\" fallback=\"AI\" /></Message.Avatar>\n  <Message.Content>\n    <Message.Bubble>\n      {text ? (\n        <Message.BubbleContent>{text}</Message.BubbleContent>\n      ) : (\n        <Shimmer textClassName=\"text-base\">Thinking…</Shimmer>\n      )}\n    </Message.Bubble>\n  </Message.Content>\n</Message>",
+    "previewVideo": {
+     "src": "/previews/message-streaming-and-actions.mp4",
+     "poster": "/previews/message-streaming-and-actions-poster.jpg",
+     "alt": "Message — A streaming turn.",
+     "width": 720,
+     "height": 424
+    }
    },
    {
     "title": "Actions under the bubble",
@@ -1101,6 +1605,17 @@
     "title": "Long-press for actions",
     "description": "Give the turn an `onLongPress` and the whole row becomes a long-press target with the library's press feedback — the gesture a chat uses to surface per-message actions. The component only exposes the gesture; open a sheet or a popover from it.",
     "code": "const [open, setOpen] = useState(false);\n\n<Message align=\"end\" onLongPress={() => setOpen(true)}>\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>Long-press me for actions.</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>\n\n<BottomSheet open={open} onOpenChange={setOpen}>\n  <BottomSheet.Content>\n    {/* copy · reply · forward · delete */}\n  </BottomSheet.Content>\n</BottomSheet>"
+   },
+   {
+    "title": "Header and footer",
+    "description": "`Message.Header` names the speaker above the bubble; `Message.Footer` timestamps it below.",
+    "preview": {
+     "src": "/previews/message-header-and-footer.jpg",
+     "alt": "Message — Header and footer.",
+     "width": 1179,
+     "height": 528
+    },
+    "code": "<Message>\n  <Message.Avatar>\n    <Avatar size=\"sm\" source={{ uri: user.avatar }} fallback=\"OL\" />\n  </Message.Avatar>\n  <Message.Content>\n    <Message.Header>Olivia</Message.Header>\n    <Message.Bubble>\n      <Message.BubbleContent>I pushed the fix — can you take another look?</Message.BubbleContent>\n    </Message.Bubble>\n    <Message.Footer>Yesterday at 18:04</Message.Footer>\n  </Message.Content>\n</Message>"
    }
   ],
   "variantCode": {
@@ -1108,10 +1623,9 @@
   },
   "preview": {
    "src": "/previews/message.jpg",
-   "alt": "A chat transcript on a dark screen. An incoming bubble with a photo avatar reads How can I help you today?, answered by a white outgoing bubble reading Set a reminder for 9am tomorrow with a Read receipt under it. Below, a turn labelled Olivia carries a timestamp of Yesterday at 18:04, and three consecutive bubbles from one sender share a single avatar.",
+   "alt": "The Message component, running in the example app.",
    "width": 1179,
-   "height": 1888,
-   "caption": "Both sides of a conversation, a named turn with a timestamp, and grouped turns."
+   "height": 562
   }
  },
  "message-scroller": {
@@ -1148,7 +1662,14 @@
    {
     "title": "Loading history without jumping",
     "description": "Prepend older turns and the reader stays on the message they were reading. The shift is measured on a message they can already see rather than taken from the height delta, so it stays correct when a message is prepended and another edits itself in the same commit.",
-    "code": "{/* On by default — pass preserveScrollOnPrepend={false} to opt out. */}\n<MessageScroller className=\"flex-1\">\n  <MessageScroller.Viewport>\n    <MessageScroller.Content>\n      <Button variant=\"ghost\" size=\"sm\" onPress={loadOlder}>\n        Load older messages\n      </Button>\n\n      {turns.map((turn) => (\n        <MessageScroller.Item key={turn.id} messageId={turn.id}>\n          <Turn turn={turn} />\n        </MessageScroller.Item>\n      ))}\n    </MessageScroller.Content>\n  </MessageScroller.Viewport>\n</MessageScroller>"
+    "code": "{/* On by default — pass preserveScrollOnPrepend={false} to opt out. */}\n<MessageScroller className=\"flex-1\">\n  <MessageScroller.Viewport>\n    <MessageScroller.Content>\n      <Button variant=\"ghost\" size=\"sm\" onPress={loadOlder}>\n        Load older messages\n      </Button>\n\n      {turns.map((turn) => (\n        <MessageScroller.Item key={turn.id} messageId={turn.id}>\n          <Turn turn={turn} />\n        </MessageScroller.Item>\n      ))}\n    </MessageScroller.Content>\n  </MessageScroller.Viewport>\n</MessageScroller>",
+    "previewVideo": {
+     "src": "/previews/message-scroller-loading-history.mp4",
+     "poster": "/previews/message-scroller-loading-history-poster.jpg",
+     "alt": "MessageScroller — Loading history without jumping.",
+     "width": 720,
+     "height": 1454
+    }
    },
    {
     "title": "Opening a saved thread",
@@ -1231,7 +1752,13 @@
     "code": "<Popover presentation=\"bottom-sheet\">\n  <Popover.Trigger>\n    <Button variant=\"outline\">Sort by</Button>\n  </Popover.Trigger>\n  <Popover.Content>\n    <Popover.Title>Sort by</Popover.Title>\n    {options.map((option) => (\n      <Popover.Close key={option}>\n        <Pressable onPress={() => sort(option)} className=\"rounded-xl px-3 py-3 active:bg-accent\">\n          <Text>{option}</Text>\n        </Pressable>\n      </Popover.Close>\n    ))}\n  </Popover.Content>\n</Popover>"
    }
   ],
-  "notes": "**Placement is resolved, not obeyed.** The side is flipped only when the preferred one genuinely has less room than its opposite; after that the panel is slid along the other axis to stay inside the safe area. That order matters — sliding first would let a badly placed panel look like it fits.\n\n**The panel is measured before it is shown.** Its size is not known until it has laid out once, so the first frame is laid out off-screen and the entrance starts from the frame after. That entrance is driven by hand rather than by a preset, because it has to start from whichever side was resolved — a panel that opened upwards should not appear to come from above.\n\n**The arrow points at the trigger, not the panel.** When `align` shifts the panel off-centre or a clamp slides it back on screen, the arrow tracks the trigger's centre rather than the panel's middle.\n\n**The trigger is measured on every open**, not once on layout. A trigger inside a scroll view has moved since it was laid out, and a stale rectangle anchors the panel to where it used to be.\n\n**`Popover.Trigger` wraps its child in a view.** The ref has to survive whatever the child is — a Button, a Pressable, an icon — and only a wrapper the component owns is guaranteed to be measurable.\n\nUse a **BottomSheet** instead when the content is long, needs its own scroll, or is the whole point of the interaction. A popover that fills the screen is a dialog wearing the wrong clothes.\n\n### Sizing the panel\n\n`content-fit` is the default and right for a menu. `trigger` ties the panel to the control that opened it, which reads as one thing rather than two — but only when the trigger is wide enough to hold what goes inside. `minWidth` is the floor, and it never wins past the space that actually exists: a panel wider than the screen is worse than a cramped one."
+  "notes": "**Placement is resolved, not obeyed.** The side is flipped only when the preferred one genuinely has less room than its opposite; after that the panel is slid along the other axis to stay inside the safe area. That order matters — sliding first would let a badly placed panel look like it fits.\n\n**The panel is measured before it is shown.** Its size is not known until it has laid out once, so the first frame is laid out off-screen and the entrance starts from the frame after. That entrance is driven by hand rather than by a preset, because it has to start from whichever side was resolved — a panel that opened upwards should not appear to come from above.\n\n**The arrow points at the trigger, not the panel.** When `align` shifts the panel off-centre or a clamp slides it back on screen, the arrow tracks the trigger's centre rather than the panel's middle.\n\n**The trigger is measured on every open**, not once on layout. A trigger inside a scroll view has moved since it was laid out, and a stale rectangle anchors the panel to where it used to be.\n\n**`Popover.Trigger` wraps its child in a view.** The ref has to survive whatever the child is — a Button, a Pressable, an icon — and only a wrapper the component owns is guaranteed to be measurable.\n\nUse a **BottomSheet** instead when the content is long, needs its own scroll, or is the whole point of the interaction. A popover that fills the screen is a dialog wearing the wrong clothes.\n\n### Sizing the panel\n\n`content-fit` is the default and right for a menu. `trigger` ties the panel to the control that opened it, which reads as one thing rather than two — but only when the trigger is wide enough to hold what goes inside. `minWidth` is the floor, and it never wins past the space that actually exists: a panel wider than the screen is worse than a cramped one.",
+  "preview": {
+   "src": "/previews/popover.jpg",
+   "alt": "The Popover component, running in the example app.",
+   "width": 1179,
+   "height": 1045
+  }
  },
  "progress": {
   "intro": "A progress bar, determinate or indeterminate, animated on the UI thread. Caption it with a label and a value readout when the bar needs a heading.",
@@ -1246,7 +1773,13 @@
    {
     "title": "Labelled",
     "description": "`label` captions the bar on the left; `showValueLabel` prints the percentage on the right. `valueLabel` replaces that text for anything that is not a bare percent.",
-    "code": "<Progress value={64} label=\"Downloading\" showValueLabel />\n\n<Progress\n  value={40}\n  label=\"Storage\"\n  valueLabel=\"8.2 GB of 20 GB\"\n  showValueLabel\n/>"
+    "code": "<Progress value={64} label=\"Downloading\" showValueLabel />\n\n<Progress\n  value={40}\n  label=\"Storage\"\n  valueLabel=\"8.2 GB of 20 GB\"\n  showValueLabel\n/>",
+    "preview": {
+     "src": "/previews/progress-labelled.jpg",
+     "alt": "Progress — Labelled.",
+     "width": 1179,
+     "height": 629
+    }
    },
    {
     "title": "Indeterminate",
@@ -1255,12 +1788,37 @@
    },
    {
     "title": "Colour by state",
-    "code": "<Progress\n  value={usage}\n  color={usage > 90 ? 'destructive' : usage > 70 ? 'warning' : 'primary'}\n/>"
+    "code": "<Progress\n  value={usage}\n  color={usage > 90 ? 'destructive' : usage > 70 ? 'warning' : 'primary'}\n/>",
+    "preview": {
+     "src": "/previews/progress-colors.jpg",
+     "alt": "Progress — Colour by state.",
+     "width": 1179,
+     "height": 452
+    }
    }
   ],
   "variantCode": {
    "size": "<Progress size=\"sm\" value={40} />\n<Progress size=\"md\" value={40} />\n<Progress size=\"lg\" value={40} />",
    "color": "<Progress color=\"primary\" value={40} />\n<Progress color=\"success\" value={40} />\n<Progress color=\"warning\" value={40} />\n<Progress color=\"destructive\" value={40} />\n<Progress color=\"info\" value={40} />"
+  },
+  "variantMedia": {
+   "size": [
+    {
+     "preview": {
+      "src": "/previews/progress-size.jpg",
+      "alt": "Progress — size.",
+      "width": 1179,
+      "height": 344
+     }
+    }
+   ]
+  },
+  "previewVideo": {
+   "src": "/previews/progress.mp4",
+   "poster": "/previews/progress-poster.jpg",
+   "alt": "The Progress component, running in the example app.",
+   "width": 720,
+   "height": 334
   }
  },
  "radio-group": {
@@ -1279,12 +1837,25 @@
    {
     "title": "Cards",
     "description": "The `card` variant makes the whole surface the target and highlights the selected option — for a picker where each choice carries a description. The disc moves to the trailing edge as a confirmation of the row rather than the thing you aim at.",
-    "code": "<RadioGroup value={plan} onValueChange={setPlan} variant=\"card\">\n  <RadioGroup.Item\n    value=\"starter\"\n    label=\"Starter\"\n    description=\"For a side project — one seat, community support.\"\n  />\n  <RadioGroup.Item\n    value=\"pro\"\n    label=\"Pro\"\n    description=\"For growing teams — five seats, priority support.\"\n  />\n</RadioGroup>"
+    "code": "<RadioGroup value={plan} onValueChange={setPlan} variant=\"card\">\n  <RadioGroup.Item\n    value=\"starter\"\n    label=\"Starter\"\n    description=\"For a side project — one seat, community support.\"\n  />\n  <RadioGroup.Item\n    value=\"pro\"\n    label=\"Pro\"\n    description=\"For growing teams — five seats, priority support.\"\n  />\n</RadioGroup>",
+    "preview": {
+     "src": "/previews/radio-group-cards.jpg",
+     "alt": "RadioGroup — Cards.",
+     "width": 1179,
+     "height": 962
+    }
    },
    {
     "title": "Laying the options out in a row",
     "description": "Short labels stacked one per line read as a longer list than they are. `orientation=\"horizontal\"` wraps them along a row instead — and cards share the width rather than each filling it.",
-    "code": "<RadioGroup orientation=\"horizontal\" value={size} onValueChange={setSize}>\n  <RadioGroup.Item value=\"s\" label=\"Small\" />\n  <RadioGroup.Item value=\"m\" label=\"Medium\" />\n  <RadioGroup.Item value=\"l\" label=\"Large\" />\n</RadioGroup>\n\n<RadioGroup\n  orientation=\"horizontal\"\n  variant=\"card\"\n  value={billing}\n  onValueChange={setBilling}\n>\n  <RadioGroup.Item value=\"monthly\" label=\"Monthly\" description=\"$12/mo\" />\n  <RadioGroup.Item value=\"yearly\" label=\"Yearly\" description=\"$120/yr\" />\n</RadioGroup>"
+    "code": "<RadioGroup orientation=\"horizontal\" value={size} onValueChange={setSize}>\n  <RadioGroup.Item value=\"s\" label=\"Small\" />\n  <RadioGroup.Item value=\"m\" label=\"Medium\" />\n  <RadioGroup.Item value=\"l\" label=\"Large\" />\n</RadioGroup>\n\n<RadioGroup\n  orientation=\"horizontal\"\n  variant=\"card\"\n  value={billing}\n  onValueChange={setBilling}\n>\n  <RadioGroup.Item value=\"monthly\" label=\"Monthly\" description=\"$12/mo\" />\n  <RadioGroup.Item value=\"yearly\" label=\"Yearly\" description=\"$120/yr\" />\n</RadioGroup>",
+    "previewVideo": {
+     "src": "/previews/radio-group-horizontal.mp4",
+     "poster": "/previews/radio-group-horizontal-poster.jpg",
+     "alt": "RadioGroup — Laying the options out in a row.",
+     "width": 720,
+     "height": 504
+    }
    }
   ],
   "extraImports": [
@@ -1296,7 +1867,14 @@
   "notes": "The row of a `dot` item is only as wide as its label, so the empty space beside it is not part of the target — pressing nothing selects nothing. A `card` is the opposite on purpose: there the whole surface is what you aim at.\n\nThe options wrap rather than scroll when laid out horizontally. A choice that has run off the edge of the screen is a choice nobody knows is there.",
   "hideVariants": [
    "horizontal"
-  ]
+  ],
+  "previewVideo": {
+   "src": "/previews/radio-group.mp4",
+   "poster": "/previews/radio-group-poster.jpg",
+   "alt": "The RadioGroup component, running in the example app.",
+   "width": 720,
+   "height": 276
+  }
  },
  "scroll-canvas": {
   "intro": "The counterpart to [ScrollText](/docs/components/scroll-text): the same scrubbed reveal applied to a picture. The frame stays where the layout puts it and the image moves *inside* it, which is what separates a parallax from a thing sliding about the page.",
@@ -1313,7 +1891,14 @@
    {
     "title": "Scrubbing a sequence",
     "description": "Every frame stays mounted and its opacity is switched, rather than one image whose source is swapped. A swap crosses back into JS at each step and then waits on a decode, so a fast scrub shows the previous frame or nothing at all. Keep it to a couple of dozen frames — each one is a decoded bitmap held for as long as the canvas is mounted.",
-    "code": "<ScrollCanvas\n  effect=\"sequence\"\n  sources={frames}\n  start={0.95}\n  end={0.1}\n/>"
+    "code": "<ScrollCanvas\n  effect=\"sequence\"\n  sources={frames}\n  start={0.95}\n  end={0.1}\n/>",
+    "previewVideo": {
+     "src": "/previews/scroll-canvas-sequence.mp4",
+     "poster": "/previews/scroll-canvas-sequence-poster.jpg",
+     "alt": "ScrollCanvas — Scrubbing a sequence.",
+     "width": 720,
+     "height": 1464
+    }
    },
    {
     "title": "Shape and travel",
@@ -1325,17 +1910,38 @@
    {
     "title": "Parallax",
     "description": "The image drifts against the scroll inside a frame that stays put. It is drawn taller than the frame so the drift never exposes an edge.",
-    "code": "<ScrollCanvas source={{ uri }} effect=\"parallax\" />"
+    "code": "<ScrollCanvas source={{ uri }} effect=\"parallax\" />",
+    "previewVideo": {
+     "src": "/previews/scroll-canvas-parallax.mp4",
+     "poster": "/previews/scroll-canvas-parallax-poster.jpg",
+     "alt": "ScrollCanvas — Parallax.",
+     "width": 720,
+     "height": 1472
+    }
    },
    {
     "title": "Zoom",
     "description": "It settles from slightly oversized to its natural size as the frame crosses the viewport.",
-    "code": "<ScrollCanvas source={{ uri }} effect=\"zoom\" />"
+    "code": "<ScrollCanvas source={{ uri }} effect=\"zoom\" />",
+    "previewVideo": {
+     "src": "/previews/scroll-canvas-zoom.mp4",
+     "poster": "/previews/scroll-canvas-zoom-poster.jpg",
+     "alt": "ScrollCanvas — Zoom.",
+     "width": 720,
+     "height": 1460
+    }
    },
    {
     "title": "Reveal",
     "description": "A wipe uncovers it from the bottom edge up. A cover that retreats rather than a height that grows — animating a height relayouts the image inside it every frame.",
-    "code": "<ScrollCanvas source={{ uri }} effect=\"reveal\" />"
+    "code": "<ScrollCanvas source={{ uri }} effect=\"reveal\" />",
+    "previewVideo": {
+     "src": "/previews/scroll-canvas-reveal.mp4",
+     "poster": "/previews/scroll-canvas-reveal-poster.jpg",
+     "alt": "ScrollCanvas — Reveal.",
+     "width": 720,
+     "height": 1462
+    }
    },
    {
     "title": "Sequence",
@@ -1358,12 +1964,26 @@
    {
     "title": "A horizontal row of cards",
     "description": "A horizontal group of vertical items: each entry is a card, and the fade is what tells you there are more of them past the edge.",
-    "code": "<ScrollFade size={40}>\n  <ScrollView horizontal showsHorizontalScrollIndicator={false}>\n    <Item.Group orientation=\"horizontal\">\n      {categories.map((category) => (\n        <Item key={category.id} orientation=\"vertical\" variant=\"outline\" size=\"sm\" className=\"w-44\">\n          <Item.Media variant=\"icon\"><PackageIcon size={16} /></Item.Media>\n          <Item.Content>\n            <Item.Title>{category.name}</Item.Title>\n            <Item.Description>{category.summary}</Item.Description>\n          </Item.Content>\n        </Item>\n      ))}\n    </Item.Group>\n  </ScrollView>\n</ScrollFade>"
+    "code": "<ScrollFade size={40}>\n  <ScrollView horizontal showsHorizontalScrollIndicator={false}>\n    <Item.Group orientation=\"horizontal\">\n      {categories.map((category) => (\n        <Item key={category.id} orientation=\"vertical\" variant=\"outline\" size=\"sm\" className=\"w-44\">\n          <Item.Media variant=\"icon\"><PackageIcon size={16} /></Item.Media>\n          <Item.Content>\n            <Item.Title>{category.name}</Item.Title>\n            <Item.Description>{category.summary}</Item.Description>\n          </Item.Content>\n        </Item>\n      ))}\n    </Item.Group>\n  </ScrollView>\n</ScrollFade>",
+    "previewVideo": {
+     "src": "/previews/scroll-fade-horizontal.mp4",
+     "poster": "/previews/scroll-fade-horizontal-poster.jpg",
+     "alt": "ScrollFade — A horizontal row of cards.",
+     "width": 720,
+     "height": 326
+    }
    },
    {
     "title": "A vertical list",
     "description": "No `horizontal` on the child, so the fades move to the top and bottom edges.",
-    "code": "<ScrollFade size={44} className=\"h-72\">\n  <ScrollView showsVerticalScrollIndicator={false}>\n    <Item.Group>\n      {events.map((event, index) => (\n        <Fragment key={event.id}>\n          {index > 0 && <Item.Separator />}\n          <Item size=\"sm\">\n            <Item.Media variant=\"icon\"><CheckIcon size={14} /></Item.Media>\n            <Item.Content>\n              <Item.Title>{event.title}</Item.Title>\n              <Item.Description>{event.when}</Item.Description>\n            </Item.Content>\n          </Item>\n        </Fragment>\n      ))}\n    </Item.Group>\n  </ScrollView>\n</ScrollFade>"
+    "code": "<ScrollFade size={44} className=\"h-72\">\n  <ScrollView showsVerticalScrollIndicator={false}>\n    <Item.Group>\n      {events.map((event, index) => (\n        <Fragment key={event.id}>\n          {index > 0 && <Item.Separator />}\n          <Item size=\"sm\">\n            <Item.Media variant=\"icon\"><CheckIcon size={14} /></Item.Media>\n            <Item.Content>\n              <Item.Title>{event.title}</Item.Title>\n              <Item.Description>{event.when}</Item.Description>\n            </Item.Content>\n          </Item>\n        </Fragment>\n      ))}\n    </Item.Group>\n  </ScrollView>\n</ScrollFade>",
+    "previewVideo": {
+     "src": "/previews/scroll-fade-vertical.mp4",
+     "poster": "/previews/scroll-fade-vertical-poster.jpg",
+     "alt": "ScrollFade — A vertical list.",
+     "width": 720,
+     "height": 646
+    }
    },
    {
     "title": "One edge, on a card",
@@ -1383,14 +2003,6 @@
  },
  "scroll-text": {
   "intro": "Text that resolves word by word as you scroll past it. The reader's thumb becomes the playhead: words arrive left to right as the block crosses the viewport, and scrolling back up unresolves them — the effect is scrubbed rather than triggered, so it is reversible and lands exactly on both ends.",
-  "previewVideo": {
-   "src": "/previews/scroll-text.mp4",
-   "poster": "/previews/scroll-text-poster.jpg",
-   "alt": "A screen recording of the ScrollText demo on a dark phone screen. As the page scrolls, each word of a sentence resolves from muted grey to full foreground colour, left to right, and unresolves again on the way back up.",
-   "width": 720,
-   "height": 1200,
-   "caption": "The reveal is scrubbed off the scroll position, so it is reversible and lands exactly at both ends."
-  },
   "usage": "<ScrollProgress>\n  <ScrollView>\n    <ScrollText size=\"2xl\" weight=\"semibold\">\n      Every control ships with its accessibility wiring already done.\n    </ScrollText>\n  </ScrollView>\n</ScrollProgress>",
   "extraImports": [
    "ScrollProgress"
@@ -1431,12 +2043,26 @@
    {
     "title": "Fade",
     "description": "Words come up from nearly transparent — not fully, because a word that vanishes takes the line's shape with it and the paragraph reflows as you scroll.",
-    "code": "<ScrollText effect=\"fade\" size=\"2xl\" weight=\"semibold\">…</ScrollText>"
+    "code": "<ScrollText effect=\"fade\" size=\"2xl\" weight=\"semibold\">…</ScrollText>",
+    "previewVideo": {
+     "src": "/previews/scroll-text-fade.mp4",
+     "poster": "/previews/scroll-text-fade-poster.jpg",
+     "alt": "ScrollText — Fade.",
+     "width": 720,
+     "height": 1456
+    }
    },
    {
     "title": "Rise",
     "description": "Words lift into place. This is the one that lays out as a wrapping row rather than as nested text, because a transform needs a view — it buys the motion and costs real line-breaking.",
-    "code": "<ScrollText effect=\"rise\" size=\"2xl\" weight=\"semibold\">…</ScrollText>"
+    "code": "<ScrollText effect=\"rise\" size=\"2xl\" weight=\"semibold\">…</ScrollText>",
+    "previewVideo": {
+     "src": "/previews/scroll-text-rise.mp4",
+     "poster": "/previews/scroll-text-rise-poster.jpg",
+     "alt": "ScrollText — Rise.",
+     "width": 720,
+     "height": 1448
+    }
    },
    {
     "title": "Highlight",
@@ -1449,7 +2075,14 @@
     "code": "<ScrollText by=\"character\" stagger={0.12} size=\"3xl\" weight=\"bold\">\n  One character at a time.\n</ScrollText>\n\n<ScrollText stagger={0.9} size=\"3xl\" weight=\"bold\">\n  And one where the whole line arrives at once.\n</ScrollText>"
    }
   ],
-  "notes": "### Two layouts, and why\n\n`color`, `fade` and `highlight` render the words as nested `Text` inside one parent, which is the only way React Native will break them into real lines. Nested text cannot be transformed, though — a `translateY` on it is simply ignored.\n\nSo `rise` lays the words out as a wrapping row of separate views instead. That buys transforms and costs real line-breaking: words wrap on their own boundaries and the spacing is a margin rather than a space. Worth knowing before reaching for it on a paragraph rather than a heading.\n\n### Measurement\n\nThe block is measured on the UI thread whenever the scroll position changes — not every frame, and not once at layout. Once is wrong the moment anything above it resizes; every frame is a measurement pass for a value that only changes when the scroller moves.\n\n`useReducedMotion` renders the text fully resolved, with no effect at all. So does `enabled={false}` — the text is always readable, which is the one thing an effect on text must never take away."
+  "notes": "### Two layouts, and why\n\n`color`, `fade` and `highlight` render the words as nested `Text` inside one parent, which is the only way React Native will break them into real lines. Nested text cannot be transformed, though — a `translateY` on it is simply ignored.\n\nSo `rise` lays the words out as a wrapping row of separate views instead. That buys transforms and costs real line-breaking: words wrap on their own boundaries and the spacing is a margin rather than a space. Worth knowing before reaching for it on a paragraph rather than a heading.\n\n### Measurement\n\nThe block is measured on the UI thread whenever the scroll position changes — not every frame, and not once at layout. Once is wrong the moment anything above it resizes; every frame is a measurement pass for a value that only changes when the scroller moves.\n\n`useReducedMotion` renders the text fully resolved, with no effect at all. So does `enabled={false}` — the text is always readable, which is the one thing an effect on text must never take away.",
+  "previewVideo": {
+   "src": "/previews/scroll-text.mp4",
+   "poster": "/previews/scroll-text-poster.jpg",
+   "alt": "The ScrollText component, running in the example app.",
+   "width": 720,
+   "height": 1460
+  }
  },
  "section-rail": {
   "intro": "A floating navigator for a long screen: a stack of short bars pinned to one edge, one per section, that expands into a labelled panel when you touch it. Collapsed it is a position indicator you can read at a glance without giving up any content width; expanded it is a list you can jump from.",
@@ -1501,12 +2134,26 @@
    {
     "title": "Bottom left",
     "description": "The same corner treatment against the other edge — for a screen whose right-hand corner is already spoken for by a compose button.",
-    "code": "const sections = useScrollSections({ ids: SECTIONS.map((s) => s.id) });\n\n<ScrollView ref={sections.ref} {...sections.scrollProps}>\n  {SECTIONS.map((section) => (\n    <View key={section.id} onLayout={sections.measure(section.id)}>\n      …\n    </View>\n  ))}\n</ScrollView>\n\n<SectionRail\n  placement=\"left\"\n  align=\"bottom\"\n  haptics\n  value={sections.active}\n  onValueChange={sections.scrollTo}\n>\n  <SectionRail.Trigger>\n    {SECTIONS.map((s) => (\n      <SectionRail.Bar key={s.id} value={s.id} level={s.level} />\n    ))}\n  </SectionRail.Trigger>\n  <SectionRail.Content>\n    {SECTIONS.map((s) => (\n      <SectionRail.Item key={s.id} value={s.id} level={s.level}>{s.label}</SectionRail.Item>\n    ))}\n  </SectionRail.Content>\n</SectionRail>"
+    "code": "const sections = useScrollSections({ ids: SECTIONS.map((s) => s.id) });\n\n<ScrollView ref={sections.ref} {...sections.scrollProps}>\n  {SECTIONS.map((section) => (\n    <View key={section.id} onLayout={sections.measure(section.id)}>\n      …\n    </View>\n  ))}\n</ScrollView>\n\n<SectionRail\n  placement=\"left\"\n  align=\"bottom\"\n  haptics\n  value={sections.active}\n  onValueChange={sections.scrollTo}\n>\n  <SectionRail.Trigger>\n    {SECTIONS.map((s) => (\n      <SectionRail.Bar key={s.id} value={s.id} level={s.level} />\n    ))}\n  </SectionRail.Trigger>\n  <SectionRail.Content>\n    {SECTIONS.map((s) => (\n      <SectionRail.Item key={s.id} value={s.id} level={s.level}>{s.label}</SectionRail.Item>\n    ))}\n  </SectionRail.Content>\n</SectionRail>",
+    "previewVideo": {
+     "src": "/previews/section-rail-bottom-left.mp4",
+     "poster": "/previews/section-rail-bottom-left-poster.jpg",
+     "alt": "SectionRail — Bottom left.",
+     "width": 720,
+     "height": 1452
+    }
    },
    {
     "title": "Pager",
     "description": "One section per screen. A pager needs no reading line — the active page *is* the scroll offset over the viewport height — so it drives the rail directly rather than through `useScrollSections`.",
-    "code": "const [page, setPage] = useState(0);\n\n<ScrollView\n  pagingEnabled\n  onScroll={(event) => {\n    const { contentOffset, layoutMeasurement } = event.nativeEvent;\n    setPage(Math.round(contentOffset.y / layoutMeasurement.height));\n  }}\n  scrollEventThrottle={16}\n>\n  {PAGES.map((p) => <Page key={p.id} {...p} />)}\n</ScrollView>\n\n<SectionRail placement=\"left\" align=\"bottom\" value={PAGES[page].id} onValueChange={goTo}>\n  <SectionRail.Trigger>\n    {PAGES.map((p) => <SectionRail.Bar key={p.id} value={p.id} />)}\n  </SectionRail.Trigger>\n</SectionRail>"
+    "code": "const [page, setPage] = useState(0);\n\n<ScrollView\n  pagingEnabled\n  onScroll={(event) => {\n    const { contentOffset, layoutMeasurement } = event.nativeEvent;\n    setPage(Math.round(contentOffset.y / layoutMeasurement.height));\n  }}\n  scrollEventThrottle={16}\n>\n  {PAGES.map((p) => <Page key={p.id} {...p} />)}\n</ScrollView>\n\n<SectionRail placement=\"left\" align=\"bottom\" value={PAGES[page].id} onValueChange={goTo}>\n  <SectionRail.Trigger>\n    {PAGES.map((p) => <SectionRail.Bar key={p.id} value={p.id} />)}\n  </SectionRail.Trigger>\n</SectionRail>",
+    "previewVideo": {
+     "src": "/previews/section-rail-pager.mp4",
+     "poster": "/previews/section-rail-pager-poster.jpg",
+     "alt": "SectionRail — Pager.",
+     "width": 720,
+     "height": 1448
+    }
    },
    {
     "title": "Centred on the edge",
@@ -1514,7 +2161,14 @@
     "code": "const sections = useScrollSections({ ids: SECTIONS.map((s) => s.id) });\n\n<ScrollView ref={sections.ref} {...sections.scrollProps}>\n  {SECTIONS.map((section) => (\n    <View key={section.id} onLayout={sections.measure(section.id)}>\n      …\n    </View>\n  ))}\n</ScrollView>\n\n<SectionRail\n  placement=\"right\"\n  align=\"center\"\n  haptics\n  value={sections.active}\n  onValueChange={sections.scrollTo}\n>\n  <SectionRail.Trigger>\n    {SECTIONS.map((s) => (\n      <SectionRail.Bar key={s.id} value={s.id} level={s.level} />\n    ))}\n  </SectionRail.Trigger>\n  <SectionRail.Content>\n    {SECTIONS.map((s) => (\n      <SectionRail.Item key={s.id} value={s.id} level={s.level}>{s.label}</SectionRail.Item>\n    ))}\n  </SectionRail.Content>\n</SectionRail>"
    }
   ],
-  "notes": "The bars carry no labels, and that is the design rather than an omission. A permanent list of section titles down the side of a phone screen is either too small to read or too wide to keep; the bars carry the two things that survive at that size — which section you are in, and roughly how deep it sits.\n\nThe root is absolutely positioned with `pointerEvents=\"box-none\"`, so the rail takes touches but the empty column around it does not. Without that a strip down the side of the screen would swallow every scroll that started in it.\n\nChoosing a section leaves the panel up for `closeDelay` (300ms) so a mis-tap can be corrected without opening it again. Pass `0` to close immediately.\n\n### Haptics\n\n`haptics` ticks under the finger on every change of section — tapped in the panel or scrolled past, because both are the section changing. It is the light selection tick rather than an impact: anything heavier gets tiring when it can fire on every scroll.\n\nIt needs the optional `expo-haptics` package and does nothing without it, so it is safe to pass either way.\n\n```sh\nnpx expo install expo-haptics\n```"
+  "notes": "The bars carry no labels, and that is the design rather than an omission. A permanent list of section titles down the side of a phone screen is either too small to read or too wide to keep; the bars carry the two things that survive at that size — which section you are in, and roughly how deep it sits.\n\nThe root is absolutely positioned with `pointerEvents=\"box-none\"`, so the rail takes touches but the empty column around it does not. Without that a strip down the side of the screen would swallow every scroll that started in it.\n\nChoosing a section leaves the panel up for `closeDelay` (300ms) so a mis-tap can be corrected without opening it again. Pass `0` to close immediately.\n\n### Haptics\n\n`haptics` ticks under the finger on every change of section — tapped in the panel or scrolled past, because both are the section changing. It is the light selection tick rather than an impact: anything heavier gets tiring when it can fire on every scroll.\n\nIt needs the optional `expo-haptics` package and does nothing without it, so it is safe to pass either way.\n\n```sh\nnpx expo install expo-haptics\n```",
+  "previewVideo": {
+   "src": "/previews/section-rail.mp4",
+   "poster": "/previews/section-rail-poster.jpg",
+   "alt": "The SectionRail component, running in the example app.",
+   "width": 720,
+   "height": 1438
+  }
  },
  "select": {
   "intro": "A picker with one trigger and three ways of showing its options: a bottom sheet, a list expanded in place, or a panel floating over the page. Which is right depends on what surrounds the trigger rather than on what the options are, so it is one prop rather than three components.",
@@ -1556,6 +2210,13 @@
   ],
   "variantCode": {
    "presentation": "{/* Takes the bottom of the screen. The default, and the right one\n    for a long list or a small screen. */}\n<Select presentation=\"sheet\" title=\"Region\" value={region} onValueChange={setRegion}>\n  <Select.Item value=\"us\" label=\"United States\" />\n</Select>\n\n{/* Expands in layout flow — everything below moves down. */}\n<Select presentation=\"inline\" value={region} onValueChange={setRegion}>\n  <Select.Item value=\"us\" label=\"United States\" />\n</Select>\n\n{/* Floats over the page, anchored to the trigger. Nothing else moves. */}\n<Select presentation=\"overlay\" value={region} onValueChange={setRegion}>\n  <Select.Item value=\"us\" label=\"United States\" />\n</Select>"
+  },
+  "previewVideo": {
+   "src": "/previews/select.mp4",
+   "poster": "/previews/select-poster.jpg",
+   "alt": "The Select component, running in the example app.",
+   "width": 720,
+   "height": 494
   }
  },
  "separator": {
@@ -1574,7 +2235,13 @@
    {
     "title": "Custom thickness",
     "description": "When neither variant is right, `thickness` takes a number of pixels and overrides them.",
-    "code": "<Separator thickness={1} />\n<Separator thickness={3} />\n<Separator thickness={6} />"
+    "code": "<Separator thickness={1} />\n<Separator thickness={3} />\n<Separator thickness={6} />",
+    "preview": {
+     "src": "/previews/separator-custom-thickness.jpg",
+     "alt": "Separator — Custom thickness.",
+     "width": 1179,
+     "height": 600
+    }
    },
    {
     "title": "Vertical, stretched by the row",
@@ -1591,7 +2258,26 @@
    "orientation": "<Separator orientation=\"horizontal\" />\n\n{/* Needs a height from the parent. */}\n<View className=\"h-5 flex-row items-center\">\n  <Separator orientation=\"vertical\" />\n</View>",
    "variant": "<Separator variant=\"thin\" />\n<Separator variant=\"thick\" />"
   },
-  "notes": "A horizontal separator fills its parent's width; a vertical one fills its parent's height. The vertical case is the one that catches people out — inside a `flex-row` the row has no intrinsic height, so pair it with `items-stretch` on the row or an explicit `h-*` somewhere.\n\n`thickness` wins over `variant`. Both set the height of a horizontal separator and the width of a vertical one, so the same value reads the same either way round."
+  "notes": "A horizontal separator fills its parent's width; a vertical one fills its parent's height. The vertical case is the one that catches people out — inside a `flex-row` the row has no intrinsic height, so pair it with `items-stretch` on the row or an explicit `h-*` somewhere.\n\n`thickness` wins over `variant`. Both set the height of a horizontal separator and the width of a vertical one, so the same value reads the same either way round.",
+  "preview": {
+   "src": "/previews/separator.jpg",
+   "alt": "The Separator component, running in the example app.",
+   "width": 1179,
+   "height": 378
+  },
+  "variantMedia": {
+   "variant": [
+    {
+     "preview": {
+      "src": "/previews/separator-variants.jpg",
+      "alt": "Separator — variant.",
+      "width": 1179,
+      "height": 528,
+      "caption": "The thin and thick rules"
+     }
+    }
+   ]
+  }
  },
  "shimmer": {
   "intro": "A highlight that sweeps through text and content, for loading, thinking and streaming states.\n\nThe content is used as a mask and a gradient band is swept behind it on the UI thread, so the highlight is clipped to the glyph shapes — the letters themselves catch the light rather than sitting under a passing overlay.",
@@ -1656,7 +2342,14 @@
   "extraImports": [
    "Card",
    "Text"
-  ]
+  ],
+  "previewVideo": {
+   "src": "/previews/skeleton.mp4",
+   "poster": "/previews/skeleton-poster.jpg",
+   "alt": "The Skeleton component, running in the example app.",
+   "width": 720,
+   "height": 478
+  }
  },
  "slider": {
   "intro": "A value picker driven by a single thumb. The thumb is a pill exactly as tall as the track — the two are the same height, so nothing has to escape the track to be drawn whole — with a knob inside it that shrinks while you drag. Position and fill are animated on the UI thread, so dragging never round-trips through React; the picked value bridges back on change and again on release.",
@@ -1733,7 +2426,14 @@
   },
   "extraImports": [
    "Button"
-  ]
+  ],
+  "previewVideo": {
+   "src": "/previews/spinner.mp4",
+   "poster": "/previews/spinner-poster.jpg",
+   "alt": "The Spinner component, running in the example app.",
+   "width": 720,
+   "height": 176
+  }
  },
  "steps": {
   "intro": "A stepper for multi-step flows. Steps does not own your flow — it reflects whatever step your app says is active.",
@@ -1756,11 +2456,24 @@
    },
    {
     "title": "Vertical, with descriptions",
-    "code": "<Steps orientation=\"vertical\" value={step}>\n  <Steps.Item step={0}>\n    <Steps.Trigger>\n      <Steps.Indicator />\n      <View className=\"flex-1\">\n        <Steps.Title>Connect your repo</Steps.Title>\n        <Steps.Description>We only read metadata.</Steps.Description>\n      </View>\n    </Steps.Trigger>\n    <Steps.Separator />\n  </Steps.Item>\n  {/* …more items… */}\n</Steps>"
+    "code": "<Steps orientation=\"vertical\" value={step}>\n  <Steps.Item step={0}>\n    <Steps.Trigger>\n      <Steps.Indicator />\n      <View className=\"flex-1\">\n        <Steps.Title>Connect your repo</Steps.Title>\n        <Steps.Description>We only read metadata.</Steps.Description>\n      </View>\n    </Steps.Trigger>\n    <Steps.Separator />\n  </Steps.Item>\n  {/* …more items… */}\n</Steps>",
+    "preview": {
+     "src": "/previews/steps-vertical.jpg",
+     "alt": "Steps — Vertical, with descriptions.",
+     "width": 1179,
+     "height": 709
+    }
    },
    {
     "title": "A step that is loading or blocked",
-    "code": "<Steps.Item step={1} loading={isDeploying}>\n  {/* … */}\n</Steps.Item>\n\n<Steps.Item step={3} disabled={!hasPaid}>\n  {/* … */}\n</Steps.Item>"
+    "code": "<Steps.Item step={1} loading={isDeploying}>\n  {/* … */}\n</Steps.Item>\n\n<Steps.Item step={3} disabled={!hasPaid}>\n  {/* … */}\n</Steps.Item>",
+    "previewVideo": {
+     "src": "/previews/steps-loading.mp4",
+     "poster": "/previews/steps-loading-poster.jpg",
+     "alt": "Steps — A step that is loading or blocked.",
+     "width": 720,
+     "height": 408
+    }
    }
   ],
   "variantCode": {
@@ -1768,7 +2481,14 @@
   },
   "extraImports": [
    "Text"
-  ]
+  ],
+  "previewVideo": {
+   "src": "/previews/steps.mp4",
+   "poster": "/previews/steps-poster.jpg",
+   "alt": "The Steps component, running in the example app.",
+   "width": 720,
+   "height": 414
+  }
  },
  "surface": {
   "intro": "An elevated container. Nest the variants to build hierarchy — each level sits one step further from the page background than the one around it.\n\nBoth the fill **and the corner radius** follow the active theme: the variants resolve to themed surface tokens, and `rounded-3xl` resolves through the per-theme radius scale. A Surface is tight under Moon and soft under Grass without knowing anything about either.",
@@ -1786,21 +2506,45 @@
    {
     "title": "Bordered and elevated",
     "description": "A surface the same colour as the page needs a hairline to read as its own plane. `elevated` adds a soft shadow that lifts it off the page — off by default, because a nested surface takes its depth from its fill.",
-    "code": "<Surface bordered>…</Surface>\n<Surface elevated>…</Surface>\n<Surface bordered elevated>…</Surface>"
+    "code": "<Surface bordered>…</Surface>\n<Surface elevated>…</Surface>\n<Surface bordered elevated>…</Surface>",
+    "preview": {
+     "src": "/previews/surface-bordered-and-elevated.jpg",
+     "alt": "Surface — Bordered and elevated.",
+     "width": 1179,
+     "height": 750
+    }
    },
    {
     "title": "Padding scale",
     "description": "`padding` scales the inner spacing. `none` is for a surface wrapping a bled image or a chart, where the content reaches the edge.",
-    "code": "<Surface padding=\"none\">…</Surface>\n<Surface padding=\"sm\">…</Surface>\n<Surface padding=\"default\">…</Surface>\n<Surface padding=\"lg\">…</Surface>"
+    "code": "<Surface padding=\"none\">…</Surface>\n<Surface padding=\"sm\">…</Surface>\n<Surface padding=\"default\">…</Surface>\n<Surface padding=\"lg\">…</Surface>",
+    "preview": {
+     "src": "/previews/surface-padding-scale.jpg",
+     "alt": "Surface — Padding scale.",
+     "width": 1179,
+     "height": 902
+    }
    },
    {
     "title": "As a stat card",
     "description": "A bordered surface with generous padding is the whole card for a metric.",
-    "code": "<Surface bordered padding=\"lg\" className=\"flex-1\">\n  <Text size=\"xs\" muted className=\"uppercase tracking-wider\">Revenue</Text>\n  <Text size=\"xl\" weight=\"semibold\" className=\"mt-1\">$24.8k</Text>\n</Surface>"
+    "code": "<Surface bordered padding=\"lg\" className=\"flex-1\">\n  <Text size=\"xs\" muted className=\"uppercase tracking-wider\">Revenue</Text>\n  <Text size=\"xl\" weight=\"semibold\" className=\"mt-1\">$24.8k</Text>\n</Surface>",
+    "preview": {
+     "src": "/previews/surface-as-a-state-card.jpg",
+     "alt": "Surface — As a stat card.",
+     "width": 1179,
+     "height": 521
+    }
    }
   ],
   "variantCode": {
    "variant": "<Surface variant=\"default\" className=\"p-4\">Default</Surface>\n<Surface variant=\"secondary\" className=\"p-4\">Secondary</Surface>\n<Surface variant=\"tertiary\" className=\"p-4\">Tertiary</Surface>\n<Surface variant=\"transparent\" className=\"p-4\">Transparent</Surface>"
+  },
+  "preview": {
+   "src": "/previews/surface.jpg",
+   "alt": "The Surface component, running in the example app.",
+   "width": 1179,
+   "height": 917
   }
  },
  "switch": {
@@ -1827,7 +2571,13 @@
   },
   "extraImports": [
    "Text"
-  ]
+  ],
+  "preview": {
+   "src": "/previews/switch.jpg",
+   "alt": "The Switch component, running in the example app.",
+   "width": 1179,
+   "height": 541
+  }
  },
  "tabs": {
   "intro": "Segmented navigation with one indicator that springs between measured trigger positions. A single thing travelling is what makes a switch two tabs away read as one movement rather than as two states swapping.",
@@ -1852,7 +2602,14 @@
    {
     "title": "More tabs than fit",
     "description": "A fixed row splits its width between the triggers, which crushes every label once there are more than about four. `scrollable` gives each trigger its natural width, puts the row in a horizontal scroller, and scrolls the active tab into view when it changes from elsewhere.",
-    "code": "<Tabs variant=\"underline\" defaultValue=\"overview\">\n  <Tabs.List scrollable>\n    {sections.map((s) => (\n      <Tabs.Trigger key={s.id} value={s.id}>{s.name}</Tabs.Trigger>\n    ))}\n  </Tabs.List>\n\n  {/* …content… */}\n</Tabs>"
+    "code": "<Tabs variant=\"underline\" defaultValue=\"overview\">\n  <Tabs.List scrollable>\n    {sections.map((s) => (\n      <Tabs.Trigger key={s.id} value={s.id}>{s.name}</Tabs.Trigger>\n    ))}\n  </Tabs.List>\n\n  {/* …content… */}\n</Tabs>",
+    "previewVideo": {
+     "src": "/previews/tabs-scrollable.mp4",
+     "poster": "/previews/tabs-scrollable-poster.jpg",
+     "alt": "Tabs — More tabs than fit.",
+     "width": 720,
+     "height": 350
+    }
    },
    {
     "title": "Icons, badges and disabled tabs",
@@ -1862,7 +2619,13 @@
    {
     "title": "Keeping panels mounted",
     "description": "By default a panel is unmounted when you leave it, and a scroll position or a half-filled form goes with it. `keepMounted` renders every panel and hides the inactive ones — out of layout and out of the screen-reader order, but still there. It costs the render of every panel up front, so it is opt-in.",
-    "code": "<Tabs keepMounted defaultValue=\"draft\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"draft\">Draft</Tabs.Trigger>\n    <Tabs.Trigger value=\"preview\">Preview</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"draft\">\n    <Input label=\"Title\" value={title} onChangeText={setTitle} />\n  </Tabs.Content>\n  <Tabs.Content value=\"preview\">…</Tabs.Content>\n</Tabs>"
+    "code": "<Tabs keepMounted defaultValue=\"draft\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"draft\">Draft</Tabs.Trigger>\n    <Tabs.Trigger value=\"preview\">Preview</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"draft\">\n    <Input label=\"Title\" value={title} onChangeText={setTitle} />\n  </Tabs.Content>\n  <Tabs.Content value=\"preview\">…</Tabs.Content>\n</Tabs>",
+    "preview": {
+     "src": "/previews/tabs-keep-panels-mounted.jpg",
+     "alt": "Tabs — Keeping panels mounted.",
+     "width": 1179,
+     "height": 801
+    }
    }
   ],
   "extraImports": [
@@ -1876,7 +2639,37 @@
   },
   "hideVariants": [
    "scrollable"
-  ]
+  ],
+  "variantMedia": {
+   "variant": [
+    {
+     "previewVideo": {
+      "src": "/previews/tabs-pill.mp4",
+      "poster": "/previews/tabs-pill-poster.jpg",
+      "alt": "Tabs — variant pill.",
+      "width": 720,
+      "height": 368,
+      "caption": "pill"
+     }
+    },
+    {
+     "preview": {
+      "src": "/previews/tabs-underline.jpg",
+      "alt": "Tabs — variant underline.",
+      "width": 1179,
+      "height": 639,
+      "caption": "underline"
+     }
+    }
+   ]
+  },
+  "previewVideo": {
+   "src": "/previews/tabs.mp4",
+   "poster": "/previews/tabs-poster.jpg",
+   "alt": "The Tabs component, running in the example app.",
+   "width": 720,
+   "height": 584
+  }
  },
  "timeline": {
   "intro": "A vertical sequence of events. `value` marks how far along the sequence is; `tone` colours an individual event by kind, independently of that progress.\n\nVertical only — a horizontal timeline gives each item roughly a fifth of a phone's width, which will not hold a date and a title.",
@@ -1922,6 +2715,12 @@
   "variantCode": {
    "variant": "<Timeline variant=\"dot\">…</Timeline>\n<Timeline variant=\"icon\">…</Timeline>\n<Timeline variant=\"numbered\">…</Timeline>\n<Timeline variant=\"card\">…</Timeline>\n<Timeline variant=\"compact\">…</Timeline>",
    "tone": "{/* Tone is per entry, not per timeline. */}\n<Timeline.Item step={0} tone=\"default\">…</Timeline.Item>\n<Timeline.Item step={1} tone=\"info\">…</Timeline.Item>\n<Timeline.Item step={2} tone=\"success\">…</Timeline.Item>\n<Timeline.Item step={3} tone=\"warning\">…</Timeline.Item>\n<Timeline.Item step={4} tone=\"danger\">…</Timeline.Item>"
+  },
+  "preview": {
+   "src": "/previews/timeline.jpg",
+   "alt": "The Timeline component, running in the example app.",
+   "width": 1179,
+   "height": 977
   }
  },
  "toast": {
@@ -1982,12 +2781,26 @@
    {
     "title": "A toolbar of independent marks",
     "description": "`selectionMode=\"multiple\"` lets any number be on at once. Inside a group each button needs an `id` — that is the value the group reports — and the group owns the state, so a `selected` prop on the button is ignored.",
-    "code": "const [marks, setMarks] = useState<string[]>([]);\n\n<ToggleButtonGroup\n  selectionMode=\"multiple\"\n  variant=\"ghost\"\n  value={marks}\n  onValueChange={setMarks}\n>\n  <ToggleButton id=\"bold\" iconOnly accessibilityLabel=\"Bold\">\n    <BoldIcon size={18} />\n  </ToggleButton>\n  <ToggleButton id=\"italic\" iconOnly accessibilityLabel=\"Italic\">\n    <ItalicIcon size={18} />\n  </ToggleButton>\n</ToggleButtonGroup>"
+    "code": "const [marks, setMarks] = useState<string[]>([]);\n\n<ToggleButtonGroup\n  selectionMode=\"multiple\"\n  variant=\"ghost\"\n  value={marks}\n  onValueChange={setMarks}\n>\n  <ToggleButton id=\"bold\" iconOnly accessibilityLabel=\"Bold\">\n    <BoldIcon size={18} />\n  </ToggleButton>\n  <ToggleButton id=\"italic\" iconOnly accessibilityLabel=\"Italic\">\n    <ItalicIcon size={18} />\n  </ToggleButton>\n</ToggleButtonGroup>",
+    "previewVideo": {
+     "src": "/previews/toggle-button-a-toolbar-of-marks.mp4",
+     "poster": "/previews/toggle-button-a-toolbar-of-marks-poster.jpg",
+     "alt": "ToggleButton — A toolbar of independent marks.",
+     "width": 720,
+     "height": 256
+    }
    },
    {
     "title": "An either-or choice",
     "description": "`selectionMode=\"single\"` clears the last selection when a new one is made. Pressing the selected button again clears it — a filter you cannot turn off is a trap.",
-    "code": "const [view, setView] = useState(['day']);\n\n<ToggleButtonGroup selectionMode=\"single\" value={view} onValueChange={setView}>\n  <ToggleButton id=\"day\">Day</ToggleButton>\n  <ToggleButton id=\"week\">Week</ToggleButton>\n  <ToggleButton id=\"month\">Month</ToggleButton>\n</ToggleButtonGroup>"
+    "code": "const [view, setView] = useState(['day']);\n\n<ToggleButtonGroup selectionMode=\"single\" value={view} onValueChange={setView}>\n  <ToggleButton id=\"day\">Day</ToggleButton>\n  <ToggleButton id=\"week\">Week</ToggleButton>\n  <ToggleButton id=\"month\">Month</ToggleButton>\n</ToggleButtonGroup>",
+    "previewVideo": {
+     "src": "/previews/toggle-button-an-either-or-choice.mp4",
+     "poster": "/previews/toggle-button-an-either-or-choice-poster.jpg",
+     "alt": "ToggleButton — An either-or choice.",
+     "width": 720,
+     "height": 258
+    }
    },
    {
     "title": "Reading the state further down",
@@ -2005,6 +2818,25 @@
   "notes": "The selected state is announced, not just drawn: every button sets `accessibilityState.checked`, which is what a screen reader reads out as on or off. An `iconOnly` button has no label to read, so give it an `accessibilityLabel`.\n\nA group takes `variant` and `size` and applies them to every button that does not set its own, so a toolbar is styled in one place.\n\nSet `haptics` for a tick under the finger on each press — a toolbar of filters feels more like hardware for it. It needs the optional `expo-haptics` and is silent without it, so it is safe to leave on. A group's `haptics` is inherited by every button that does not set its own.",
   "interfaceNames": {
    "ToggleButtonGroupProps": "ToggleButtonGroup"
+  },
+  "variantMedia": {
+   "size": [
+    {
+     "preview": {
+      "src": "/previews/toggle-button-size.jpg",
+      "alt": "ToggleButton — size.",
+      "width": 1179,
+      "height": 857
+     }
+    }
+   ]
+  },
+  "previewVideo": {
+   "src": "/previews/toggle-button.mp4",
+   "poster": "/previews/toggle-button-poster.jpg",
+   "alt": "The ToggleButton component, running in the example app.",
+   "width": 720,
+   "height": 432
   }
  },
  "typography": {
@@ -2028,21 +2860,61 @@
    {
     "title": "Marks",
     "description": "`underline`, `italic` and `strike` are booleans and stack, and `weight` overrides whatever the preset set — which is how a paragraph gets bolded without becoming a heading.",
-    "code": "<Typography underline>Terms of service</Typography>\n<Typography italic>An aside, in passing.</Typography>\n<Typography strike muted>£24.00</Typography>\n<Typography weight=\"bold\">Total due today</Typography>\n\n{/* They stack. */}\n<Typography italic strike muted>Withdrawn</Typography>"
+    "code": "<Typography underline>Terms of service</Typography>\n<Typography italic>An aside, in passing.</Typography>\n<Typography strike muted>£24.00</Typography>\n<Typography weight=\"bold\">Total due today</Typography>\n\n{/* They stack. */}\n<Typography italic strike muted>Withdrawn</Typography>",
+    "preview": {
+     "src": "/previews/typography-marks.jpg",
+     "alt": "Typography — Marks.",
+     "width": 1179,
+     "height": 690
+    }
    },
    {
     "title": "Alignment and case",
     "description": "`transform` changes how the text is drawn, not the string underneath — so a screen reader still announces the original, and a label copied out of the UI is not shouting.",
-    "code": "<Typography align=\"center\">Centred</Typography>\n\n<Typography type=\"body-xs\" transform=\"uppercase\" muted>\n  Section label\n</Typography>"
+    "code": "<Typography align=\"center\">Centred</Typography>\n\n<Typography type=\"body-xs\" transform=\"uppercase\" muted>\n  Section label\n</Typography>",
+    "preview": {
+     "src": "/previews/typography-alignment-and-case.jpg",
+     "alt": "Typography — Alignment and case.",
+     "width": 1179,
+     "height": 468
+    }
    },
    {
     "title": "Quotes and lists",
     "description": "React Native draws no list markers and has no blockquote, so both are built here: a rule down the leading edge for the quote, and a marker beside each row for the list. The bullet is a view rather than the `•` character, whose size and baseline move with the platform font. Both use logical edges, so they mirror under a right-to-left `Direction`.",
-    "code": "<Typography.Blockquote>\n  A component library is a set of decisions you only have to make once.\n</Typography.Blockquote>\n\n<Typography.List>\n  <Typography.ListItem>Runs in Expo Go</Typography.ListItem>\n  <Typography.ListItem>Animates on the UI thread</Typography.ListItem>\n</Typography.List>\n\n<Typography.List ordered>\n  <Typography.ListItem>Install the package</Typography.ListItem>\n  <Typography.ListItem>Import the stylesheet</Typography.ListItem>\n</Typography.List>"
+    "code": "<Typography.Blockquote>\n  A component library is a set of decisions you only have to make once.\n</Typography.Blockquote>\n\n<Typography.List>\n  <Typography.ListItem>Runs in Expo Go</Typography.ListItem>\n  <Typography.ListItem>Animates on the UI thread</Typography.ListItem>\n</Typography.List>\n\n<Typography.List ordered>\n  <Typography.ListItem>Install the package</Typography.ListItem>\n  <Typography.ListItem>Import the stylesheet</Typography.ListItem>\n</Typography.List>",
+    "preview": {
+     "src": "/previews/typography-quotes-and-lists.jpg",
+     "alt": "Typography — Quotes and lists.",
+     "width": 1179,
+     "height": 1215
+    }
    },
    {
     "title": "Inline and block code",
     "code": "<Typography.Paragraph>\n  Run <Typography.Code>npx expo install</Typography.Code> first.\n</Typography.Paragraph>"
+   },
+   {
+    "title": "Paragraphs",
+    "description": "`Typography.Paragraph` for body copy, with `type` and `muted` for emphasis.",
+    "preview": {
+     "src": "/previews/typography-paragraphs.jpg",
+     "alt": "Typography — Paragraphs.",
+     "width": 1179,
+     "height": 936
+    },
+    "code": "<Typography.Paragraph type=\"lead\">\n  A lead paragraph: the sentence under a heading, set larger and quieter than the body it introduces.\n</Typography.Paragraph>\n<Typography.Paragraph>\n  A default body paragraph, at the base size and weight.\n</Typography.Paragraph>\n<Typography.Paragraph type=\"body-sm\" muted>\n  A smaller, muted paragraph for captions and footnotes.\n</Typography.Paragraph>"
+   },
+   {
+    "title": "A section label",
+    "description": "A small, uppercase overline to head a section.",
+    "preview": {
+     "src": "/previews/typography-section-label.jpg",
+     "alt": "Typography — A section label.",
+     "width": 1179,
+     "height": 223
+    },
+    "code": "<Typography.Paragraph type=\"small\" muted className=\"uppercase tracking-wider\">\n  Section label\n</Typography.Paragraph>"
    }
   ],
   "variantCode": {
@@ -2051,18 +2923,16 @@
    "align": "<Typography align=\"left\">Left</Typography>\n<Typography align=\"center\">Centre</Typography>\n<Typography align=\"right\">Right</Typography>",
    "transform": "<Typography transform=\"uppercase\">shouted</Typography>\n<Typography transform=\"lowercase\">Quietened</Typography>\n<Typography transform=\"capitalize\">title case</Typography>"
   },
-  "notes": "`weight`, `align`, `transform` and the marks apply to every preset and to every part — a heading, a list item and a blockquote all take them.\n\n`Typography.List` draws its own markers because React Native has none. It reads its children to number them, so an ordered list counts correctly however the items were generated, and the marker is a view rather than the `•` character — that character's size and baseline shift with the platform font, and a view does not."
+  "notes": "`weight`, `align`, `transform` and the marks apply to every preset and to every part — a heading, a list item and a blockquote all take them.\n\n`Typography.List` draws its own markers because React Native has none. It reads its children to number them, so an ordered list counts correctly however the items were generated, and the marker is a view rather than the `•` character — that character's size and baseline shift with the platform font, and a view does not.",
+  "preview": {
+   "src": "/previews/typography.jpg",
+   "alt": "The Typography component, running in the example app.",
+   "width": 1179,
+   "height": 1009
+  }
  },
  "thinking-orb": {
   "intro": "A spinner says “busy”. This says *which kind of busy*: particles running tilted orbits for work in flight, a scan meridian sweeping a globe for a search, bands that scramble and click back for a solve. Six states, each a distinct silhouette in motion, so a glance is enough.",
-  "previewVideo": {
-   "src": "/previews/thinking-orb.mp4",
-   "poster": "/previews/thinking-orb-poster.jpg",
-   "alt": "A screen recording of the ThinkingOrb demo on a dark phone screen. Six dotted orbs animate side by side — particles running tilted orbits, a scan meridian sweeping a globe, bands scrambling and clicking back, a waveform rolling through rings, an undulating sash, and an outline morphing between a circle, a triangle and a square.",
-   "width": 720,
-   "height": 684,
-   "caption": "Six states, each a distinct silhouette in motion. Every dot is drawn on the UI thread."
-  },
   "usage": "<ThinkingOrb state=\"searching\" />\n\n// The small tuning, for a line of text.\n<ThinkingOrb state=\"working\" size={20} />",
   "extraImports": [
    "Message",
@@ -2083,7 +2953,14 @@
    {
     "title": "Speed, pause and colour",
     "description": "`speed` multiplies the state's own tuning and can change mid-animation without the orb jumping. `paused` holds the current frame rather than clearing it — a still orb is not an empty one. `color` overrides the ink, which is otherwise `--color-foreground` so the orb inverts with the theme.",
-    "code": "<ThinkingOrb state=\"working\" speed={1.6} />\n\n<ThinkingOrb state=\"working\" paused={busy === false} />\n\n<ThinkingOrb state=\"composing\" color=\"#22c55e\" />"
+    "code": "<ThinkingOrb state=\"working\" speed={1.6} />\n\n<ThinkingOrb state=\"working\" paused={busy === false} />\n\n<ThinkingOrb state=\"composing\" color=\"#22c55e\" />",
+    "previewVideo": {
+     "src": "/previews/thinking-orb-speed-and-pause.mp4",
+     "poster": "/previews/thinking-orb-speed-and-pause-poster.jpg",
+     "alt": "ThinkingOrb — Speed, pause and colour.",
+     "width": 720,
+     "height": 1450
+    }
    }
   ],
   "versions": [
@@ -2095,7 +2972,14 @@
    {
     "title": "Inline in a reply",
     "description": "The small tuning, in a line of chat text beside a `Shimmer`. Below 32px the orb switches to far fewer, much larger dots moving faster — the motion has to read at a size where the dots barely do.",
-    "code": "<Message.Bubble>\n  <View className=\"flex-row items-center gap-2\">\n    <ThinkingOrb state=\"searching\" size={20} />\n    <Shimmer>Searching the docs…</Shimmer>\n  </View>\n</Message.Bubble>"
+    "code": "<Message.Bubble>\n  <View className=\"flex-row items-center gap-2\">\n    <ThinkingOrb state=\"searching\" size={20} />\n    <Shimmer>Searching the docs…</Shimmer>\n  </View>\n</Message.Bubble>",
+    "previewVideo": {
+     "src": "/previews/thinking-orb-inline-in-a-reply.mp4",
+     "poster": "/previews/thinking-orb-inline-in-a-reply-poster.jpg",
+     "alt": "ThinkingOrb — Inline in a reply.",
+     "width": 720,
+     "height": 1456
+    }
    },
    {
     "title": "Speed and pause",
@@ -2103,7 +2987,14 @@
     "code": "const [speed, setSpeed] = useState(1);\nconst [paused, setPaused] = useState(false);\n\n<ThinkingOrb state=\"working\" size={140} speed={speed} paused={paused} />\n\n<Slider min={0.2} max={3} step={0.1} value={speed} onValueChange={setSpeed} />\n<Switch value={paused} onValueChange={setPaused} />"
    }
   ],
-  "notes": "### How it is drawn\n\nThe geometry is honestly three-dimensional — points on a sphere, rotated and tilted, projected orthographically, with depth carried by dot size and ink weight. React Native has no 2D canvas to paint that into, and one animated SVG node per dot would be two hundred native prop writes a frame, which no amount of tuning survives.\n\nSo the dots are quantised into eight ink levels and each level is emitted as a *single* path of circle arcs. Eight animated props a frame whatever the dot count, and depth ordering comes free — depth is what drives the ink in the first place, so painting faint to strong paints far to near. Everything from the trigonometry to the path strings runs in one worklet on the UI thread; React renders once and then never again.\n\n### Size is two designs, not a scale\n\nTwo tunings ship. At or below 32px the orb uses far fewer, proportionally much larger dots moving faster, because the motion has to read at a size where the individual dots barely do. Sizes in between are scaled from the nearer tuning; the dot radii scale sub-linearly, which is what keeps a small orb from becoming a smudge and a large one from becoming beads.\n\n### Motion and accessibility\n\n`role=\"img\"` with a per-state label out of the box; `accessibilityLabel` overrides it with something more specific — “Analysing the repository…” beats “Searching”. Under `prefers-reduced-motion` the orb renders one representative frame and stops, which is why a paused orb still shows a shape."
+  "notes": "### How it is drawn\n\nThe geometry is honestly three-dimensional — points on a sphere, rotated and tilted, projected orthographically, with depth carried by dot size and ink weight. React Native has no 2D canvas to paint that into, and one animated SVG node per dot would be two hundred native prop writes a frame, which no amount of tuning survives.\n\nSo the dots are quantised into eight ink levels and each level is emitted as a *single* path of circle arcs. Eight animated props a frame whatever the dot count, and depth ordering comes free — depth is what drives the ink in the first place, so painting faint to strong paints far to near. Everything from the trigonometry to the path strings runs in one worklet on the UI thread; React renders once and then never again.\n\n### Size is two designs, not a scale\n\nTwo tunings ship. At or below 32px the orb uses far fewer, proportionally much larger dots moving faster, because the motion has to read at a size where the individual dots barely do. Sizes in between are scaled from the nearer tuning; the dot radii scale sub-linearly, which is what keeps a small orb from becoming a smudge and a large one from becoming beads.\n\n### Motion and accessibility\n\n`role=\"img\"` with a per-state label out of the box; `accessibilityLabel` overrides it with something more specific — “Analysing the repository…” beats “Searching”. Under `prefers-reduced-motion` the orb renders one representative frame and stops, which is why a paused orb still shows a shape.",
+  "previewVideo": {
+   "src": "/previews/thinking-orb.mp4",
+   "poster": "/previews/thinking-orb-poster.jpg",
+   "alt": "The ThinkingOrb component, running in the example app.",
+   "width": 720,
+   "height": 1456
+  }
  },
  "soundwave": {
   "intro": "Draws the level of a voice, in four looks: capsules over a microphone button, a metering strip for a transcript, a travelling wave for a reply being spoken, and an ambient glow that fills a screen.\n\nIt draws a level; it does not record one. Your app owns the recorder and hands over a number between 0 and 1 — so there is no audio dependency here, and the same component works against a real meter, a synthesised one, or a remote peer's. With no level at all it animates plausible motion for the current `state`, which is enough to build and review a voice screen before any audio exists.",
@@ -2128,7 +3019,13 @@
    {
     "title": "A voice note",
     "description": "`levels` is the shape of a finished recording — collect the metering while recording and store the numbers beside the file. Supplying it draws the wave still rather than animated, and stops the engine entirely, so a transcript of twenty notes runs no animation at all until one is played. `progress` is the playhead: bars behind it keep full ink and the rest are dimmed.",
-    "code": "const player = useAudioPlayer(note.uri);\nconst status = useAudioPlayerStatus(player);\nconst progress = status.duration ? status.currentTime / status.duration : 0;\n\n<Message align=\"end\">\n  <Message.Content>\n    <Message.Bubble>\n      <View className=\"w-64 flex-row items-center gap-3\">\n        <Pressable onPress={() => player.play()}>\n          <PlayIcon size={16} />\n        </Pressable>\n\n        <View className=\"flex-1\">\n          <Soundwave\n            variant=\"bars\"\n            levels={note.levels}\n            progress={progress}\n            bars={40}\n            barWidth={2}\n            height={28}\n          />\n        </View>\n\n        <Text size=\"xs\" muted>0:12</Text>\n      </View>\n    </Message.Bubble>\n  </Message.Content>\n</Message>"
+    "code": "const player = useAudioPlayer(note.uri);\nconst status = useAudioPlayerStatus(player);\nconst progress = status.duration ? status.currentTime / status.duration : 0;\n\n<Message align=\"end\">\n  <Message.Content>\n    <Message.Bubble>\n      <View className=\"w-64 flex-row items-center gap-3\">\n        <Pressable onPress={() => player.play()}>\n          <PlayIcon size={16} />\n        </Pressable>\n\n        <View className=\"flex-1\">\n          <Soundwave\n            variant=\"bars\"\n            levels={note.levels}\n            progress={progress}\n            bars={40}\n            barWidth={2}\n            height={28}\n          />\n        </View>\n\n        <Text size=\"xs\" muted>0:12</Text>\n      </View>\n    </Message.Bubble>\n  </Message.Content>\n</Message>",
+    "preview": {
+     "src": "/previews/soundwave-voice-notes.jpg",
+     "alt": "Soundwave — A voice note.",
+     "width": 1179,
+     "height": 882
+    }
    },
    {
     "title": "Real frequency bands",
@@ -2148,7 +3045,14 @@
    {
     "title": "Colour",
     "description": "`color` takes a literal colour or a **theme token name**, which resolves against the active theme and follows it into dark mode. `gradient` paints across the wave instead of one flat ink — left to right for `bars` and `line`, up from the bottom edge for `ambient`. `trackColor` sets the part of a recording that has not played yet, which otherwise draws as the ink turned down.",
-    "code": "{/* Follows the theme. */}\n<Soundwave variant=\"bars\" color=\"--color-info\" />\n\n{/* Or a colour of your own. */}\n<Soundwave variant=\"bars\" color=\"#f97316\" />\n\n{/* Across the wave. */}\n<Soundwave variant=\"line\" gradient={['#6366f1', '#ec4899', '#f59e0b']} />\n\n{/* Played and unplayed, separately. */}\n<Soundwave\n  variant=\"bars\"\n  levels={note.levels}\n  progress={progress}\n  color=\"--color-success\"\n  trackColor=\"--color-muted\"\n/>"
+    "code": "{/* Follows the theme. */}\n<Soundwave variant=\"bars\" color=\"--color-info\" />\n\n{/* Or a colour of your own. */}\n<Soundwave variant=\"bars\" color=\"#f97316\" />\n\n{/* Across the wave. */}\n<Soundwave variant=\"line\" gradient={['#6366f1', '#ec4899', '#f59e0b']} />\n\n{/* Played and unplayed, separately. */}\n<Soundwave\n  variant=\"bars\"\n  levels={note.levels}\n  progress={progress}\n  color=\"--color-success\"\n  trackColor=\"--color-muted\"\n/>",
+    "previewVideo": {
+     "src": "/previews/soundwave-colour.mp4",
+     "poster": "/previews/soundwave-colour-poster.jpg",
+     "alt": "Soundwave — Colour.",
+     "width": 720,
+     "height": 876
+    }
    }
   ],
   "versions": [
@@ -2165,12 +3069,26 @@
    {
     "title": "Travelling wave",
     "description": "One ribbon, tapered to nothing at both ends so it leaves and meets the edges flat instead of stopping at a hard cut. Shown at full size with a state switcher, and again inline under a reply.",
-    "code": "<Soundwave variant=\"line\" state=\"speaking\" height={96} />\n\n// Inline in a bubble, where the stroke has to be finer.\n<Soundwave variant=\"line\" state=\"speaking\" height={36} barWidth={2} />"
+    "code": "<Soundwave variant=\"line\" state=\"speaking\" height={96} />\n\n// Inline in a bubble, where the stroke has to be finer.\n<Soundwave variant=\"line\" state=\"speaking\" height={36} barWidth={2} />",
+    "previewVideo": {
+     "src": "/previews/soundwave-travelling-wave.mp4",
+     "poster": "/previews/soundwave-travelling-wave-poster.jpg",
+     "alt": "Soundwave — Travelling wave.",
+     "width": 720,
+     "height": 1056
+    }
    },
    {
     "title": "Ambient glow",
     "description": "A bloom rising off the bottom edge and a rim of light around the rest, both breathing on the level — a glow that only changes opacity reads as a screen dimming, one that also grows reads as something in the room getting louder.",
-    "code": "<Soundwave variant=\"ambient\" state=\"listening\" level={level} radius={40} />"
+    "code": "<Soundwave variant=\"ambient\" state=\"listening\" level={level} radius={40} />",
+    "previewVideo": {
+     "src": "/previews/soundwave-ambient-glow.mp4",
+     "poster": "/previews/soundwave-ambient-glow-poster.jpg",
+     "alt": "Soundwave — Ambient glow.",
+     "width": 720,
+     "height": 1560
+    }
    },
    {
     "title": "Voice notes",
@@ -2180,9 +3098,23 @@
    {
     "title": "Recording composer",
     "description": "A composer that turns into a recorder over a live transcript: the last few seconds slide past in `scrolling` mode while a timer runs, cancel throws the recording away, and send appends it to the thread as a note.",
-    "code": "<Soundwave\n  variant=\"bars\"\n  mode=\"scrolling\"\n  level={level}\n  bars={32}\n  barWidth={3}\n  height={36}\n/>"
+    "code": "<Soundwave\n  variant=\"bars\"\n  mode=\"scrolling\"\n  level={level}\n  bars={32}\n  barWidth={3}\n  height={36}\n/>",
+    "previewVideo": {
+     "src": "/previews/soundwave-recording-composer.mp4",
+     "poster": "/previews/soundwave-recording-composer-poster.jpg",
+     "alt": "Soundwave — Recording composer.",
+     "width": 720,
+     "height": 1560
+    }
    }
   ],
-  "notes": "**Nothing here touches the microphone.** Recording, permissions and the audio session stay in your app; this takes the number that falls out of them. There is a full walkthrough in [Voice](/docs/ai/voice) — metering, an assistant loop, and voice notes.\n\nLevels are smoothed with a fast attack and a slow release, which is what makes a meter read as a meter — it snaps up on a syllable and falls back gently instead of chattering around every sample. `sensitivity` multiplies the incoming value before it is clamped, for a quiet source.\n\n**Ink follows the surface.** A wave inside something that publishes a foreground — a chat bubble, a button — is drawn in that foreground rather than the page's, because a sent bubble is painted in the primary colour and in most themes the primary colour *is* the text colour. `ambient` opts out: it is a glow behind a screen, not ink on a surface.\n\nAnything above that is a prop: `color` (a colour or a theme token name), `gradient` across the wave, and `trackColor` for the unplayed part of a recording. Only `gradient` needs literal colours — resolve tokens with `useCSSVariable` if you want a themed one.\n\n`bars` and `line` are drawn as a single animated SVG path — one segment per bar with a round cap — so forty bars cost one animated prop a frame rather than forty animated views. With `progress` it is two: one for the played part, one for the rest. Both measure their own width, so they need a parent with one.\n\n`paused` and the system's reduced-motion setting both hold a representative frame rather than clearing to a flat line: a stopped wave is not an empty one."
+  "notes": "**Nothing here touches the microphone.** Recording, permissions and the audio session stay in your app; this takes the number that falls out of them. There is a full walkthrough in [Voice](/docs/ai/voice) — metering, an assistant loop, and voice notes.\n\nLevels are smoothed with a fast attack and a slow release, which is what makes a meter read as a meter — it snaps up on a syllable and falls back gently instead of chattering around every sample. `sensitivity` multiplies the incoming value before it is clamped, for a quiet source.\n\n**Ink follows the surface.** A wave inside something that publishes a foreground — a chat bubble, a button — is drawn in that foreground rather than the page's, because a sent bubble is painted in the primary colour and in most themes the primary colour *is* the text colour. `ambient` opts out: it is a glow behind a screen, not ink on a surface.\n\nAnything above that is a prop: `color` (a colour or a theme token name), `gradient` across the wave, and `trackColor` for the unplayed part of a recording. Only `gradient` needs literal colours — resolve tokens with `useCSSVariable` if you want a themed one.\n\n`bars` and `line` are drawn as a single animated SVG path — one segment per bar with a round cap — so forty bars cost one animated prop a frame rather than forty animated views. With `progress` it is two: one for the played part, one for the rest. Both measure their own width, so they need a parent with one.\n\n`paused` and the system's reduced-motion setting both hold a representative frame rather than clearing to a flat line: a stopped wave is not an empty one.",
+  "previewVideo": {
+   "src": "/previews/soundwave.mp4",
+   "poster": "/previews/soundwave-poster.jpg",
+   "alt": "The Soundwave component, running in the example app.",
+   "width": 720,
+   "height": 1120
+  }
  }
 }

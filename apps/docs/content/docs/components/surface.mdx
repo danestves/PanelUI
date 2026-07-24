@@ -7,6 +7,13 @@ An elevated container. Nest the variants to build hierarchy — each level sits 
 
 Both the fill **and the corner radius** follow the active theme: the variants resolve to themed surface tokens, and `rounded-3xl` resolves through the per-theme radius scale. A Surface is tight under Moon and soft under Grass without knowing anything about either.
 
+<Preview
+  src="/previews/surface.jpg"
+  alt="The Surface component, running in the example app."
+  width={1179}
+  height={917}
+/>
+
 ## Installation
 
 Surface ships with the library — no separate install.
@@ -59,6 +66,13 @@ The variants form a ladder, not a palette: each step sits one level further from
 
 A surface the same colour as the page needs a hairline to read as its own plane. `elevated` adds a soft shadow that lifts it off the page — off by default, because a nested surface takes its depth from its fill.
 
+<Preview
+  src="/previews/surface-bordered-and-elevated.jpg"
+  alt="Surface — Bordered and elevated."
+  width={1179}
+  height={750}
+/>
+
 ```tsx
 <Surface bordered>…</Surface>
 <Surface elevated>…</Surface>
@@ -68,6 +82,13 @@ A surface the same colour as the page needs a hairline to read as its own plane.
 ### Padding scale
 
 `padding` scales the inner spacing. `none` is for a surface wrapping a bled image or a chart, where the content reaches the edge.
+
+<Preview
+  src="/previews/surface-padding-scale.jpg"
+  alt="Surface — Padding scale."
+  width={1179}
+  height={902}
+/>
 
 ```tsx
 <Surface padding="none">…</Surface>
@@ -79,6 +100,13 @@ A surface the same colour as the page needs a hairline to read as its own plane.
 ### As a stat card
 
 A bordered surface with generous padding is the whole card for a metric.
+
+<Preview
+  src="/previews/surface-as-a-state-card.jpg"
+  alt="Surface — As a stat card."
+  width={1179}
+  height={521}
+/>
 
 ```tsx
 <Surface bordered padding="lg" className="flex-1">

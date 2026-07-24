@@ -5,6 +5,13 @@ description: Text field with label, description and error message.
 
 A text field with an optional label, description and error message. Its focus border crosses between colours on the UI thread rather than snapping, and it comes in two backgrounds and three heights. Passing `errorMessage` puts the field in its invalid state and replaces the description.
 
+<Preview
+  src="/previews/input.jpg"
+  alt="The Input component, running in the example app."
+  width={1179}
+  height={1378}
+/>
+
 ## Installation
 
 Input ships with the library — no separate install.
@@ -204,6 +211,14 @@ const insets = useSafeAreaInsets();
 - `outline` *(default)*
 - `filled`
 
+<Preview
+  src="/previews/input-filled.jpg"
+  alt="Input — variant filled."
+  width={1179}
+  height={928}
+  caption="filled"
+/>
+
 ```tsx
 {/* On the page, where the field draws its own edge. */}
 <Input variant="outline" label="Email" />
@@ -217,6 +232,13 @@ const insets = useSafeAreaInsets();
 - `sm`
 - `md` *(default)*
 - `lg`
+
+<Preview
+  src="/previews/input-size.jpg"
+  alt="Input — size."
+  width={1167}
+  height={949}
+/>
 
 ```tsx
 <Input size="sm" placeholder="40 tall" />

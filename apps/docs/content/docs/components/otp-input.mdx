@@ -6,6 +6,14 @@ status: new
 
 A one-time-code field drawn as a row of separate cells, so the reader can see at a glance how many digits are left. There is still one text field underneath — a transparent input laid over the whole row — so the keyboard, SMS autofill and paste all behave; the cells are drawn from its value. The active cell's border crosses to the focus colour on the UI thread and a caret blinks in the cell awaiting input.
 
+<PreviewVideo
+  src="/previews/otp-input.mp4"
+  poster="/previews/otp-input-poster.jpg"
+  alt="The OtpInput component, running in the example app."
+  width={720}
+  height={306}
+/>
+
 ## Installation
 
 OtpInput ships with the library — no separate install.
@@ -51,6 +59,14 @@ const [code, setCode] = useState('');
 
 Each filled cell shows a dot rather than the character.
 
+<PreviewVideo
+  src="/previews/otp-input-masked.mp4"
+  poster="/previews/otp-input-masked-poster.jpg"
+  alt="OtpInput — Masked, like a passcode."
+  width={720}
+  height={232}
+/>
+
 ```tsx
 <OtpInput length={4} mask type="numeric" />
 ```
@@ -59,11 +75,25 @@ Each filled cell shows a dot rather than the character.
 
 `groupEvery` draws a divider between runs of cells — 3 gives `xxx — xxx`.
 
+<Preview
+  src="/previews/otp-input-grouped.jpg"
+  alt="OtpInput — Grouped with a separator."
+  width={1179}
+  height={366}
+/>
+
 ```tsx
 <OtpInput length={6} groupEvery={3} />
 ```
 
 ### Sizes
+
+<Preview
+  src="/previews/otp-input-size.jpg"
+  alt="OtpInput — Sizes."
+  width={1179}
+  height={679}
+/>
 
 ```tsx
 <OtpInput size="sm" length={4} />
@@ -82,6 +112,21 @@ Each filled cell shows a dot rather than the character.
   onChangeText={setCode}
   errorMessage="That code didn’t match. Try again."
 />
+```
+
+### Letters
+
+`type="text"` accepts letters as well as digits.
+
+<Preview
+  src="/previews/otp-input-letters.jpg"
+  alt="OtpInput — Letters."
+  width={1179}
+  height={424}
+/>
+
+```tsx
+<OtpInput type="text" length={4} />
 ```
 
 ## Variants

@@ -18,7 +18,7 @@ A content surface. Use the full composition rather than dropping everything into
 Card ships with the library — no separate install.
 
 ```tsx
-import { Card, Button, Text } from 'panelui-native';
+import { Card, Button, Text, Badge, Input } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -103,11 +103,10 @@ Skip the parts you do not need — nothing is required.
 Clip the card so the image corners follow its radius, and put the image before the header.
 
 <Preview
-  src="/previews/card-media.jpg"
-  alt="A card whose top half is a photograph of a green velvet sofa in a bright room, bleeding to the card edges. Underneath, a blue $450 price, the title Living room Sofa, the description Perfect for modern tropical spaces and baroque inspired rooms, and a full-width white Buy now button."
+  src="/previews/card-with-image.jpg"
+  alt="Card — Media at the top."
   width={1179}
-  height={1357}
-  caption="Media bleeds to the card edges; the padding starts at the content."
+  height={1371}
 />
 
 ```tsx
@@ -117,6 +116,58 @@ Clip the card so the image corners follow its radius, and put the image before t
     <Card.Title>{post.title}</Card.Title>
     <Card.Description>{post.excerpt}</Card.Description>
   </Card.Header>
+</Card>
+```
+
+### Horizontal
+
+A media tile beside the text instead of above it.
+
+<Preview
+  src="/previews/card-horizontal.jpg"
+  alt="Card — Horizontal."
+  width={1179}
+  height={479}
+/>
+
+```tsx
+<Card className="overflow-hidden">
+  <Card.Content className="flex-row items-center gap-4 p-3">
+    <Image source={{ uri: product.image }} style={{ width: 72, height: 72, borderRadius: 12 }} />
+    <View className="flex-1 gap-0.5">
+      <Text weight="semibold">Accent chair</Text>
+      <Text size="sm" muted>Walnut and boucle</Text>
+      <Badge variant="success">In stock</Badge>
+    </View>
+  </Card.Content>
+</Card>
+```
+
+### With a form
+
+Card as the shell around a short form.
+
+<Preview
+  src="/previews/card-with-form.jpg"
+  alt="Card — With a form."
+  width={1179}
+  height={1275}
+/>
+
+```tsx
+<Card>
+  <Card.Header>
+    <Card.Title>Project settings</Card.Title>
+    <Card.Description>Manage how your project appears to others.</Card.Description>
+  </Card.Header>
+  <Card.Content className="gap-4">
+    <Input label="Project name" placeholder="PanelUI" />
+    <Input label="Description" placeholder="A short description" description="Shown on your public profile." />
+  </Card.Content>
+  <Card.Footer>
+    <Button size="sm">Save</Button>
+    <Button size="sm" variant="ghost">Cancel</Button>
+  </Card.Footer>
 </Card>
 ```
 

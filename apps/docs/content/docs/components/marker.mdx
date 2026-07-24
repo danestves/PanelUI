@@ -7,6 +7,13 @@ An inline note in a conversation.
 
 Transcripts are not only messages. Between the turns sit things the conversation *did* rather than said: a tool that ran, a file that was read, the point where yesterday ended. None of those have a speaker, so none of them should look like a bubble. A marker is the quieter row that carries them — small, muted, and aligned to the transcript rather than to a side of it.
 
+<Preview
+  src="/previews/marker.jpg"
+  alt="The Marker component, running in the example app."
+  width={1179}
+  height={497}
+/>
+
 ## Installation
 
 Marker ships with the library — no separate install.
@@ -66,6 +73,14 @@ The common case: a short line of what just happened, one row per step.
 
 Add `shimmer` to the content while the step is in flight. The sweep is masked to the glyphs, so the text itself catches the light. Drop it the moment the step finishes — a marker that shimmers forever reads as a stuck one.
 
+<PreviewVideo
+  src="/previews/marker-a-step-still-running.mp4"
+  poster="/previews/marker-a-step-still-running-poster.jpg"
+  alt="Marker — A step still running."
+  width={720}
+  height={268}
+/>
+
 ```tsx
 <Marker>
   <Marker.Icon><CheckIcon size={14} /></Marker.Icon>
@@ -91,6 +106,13 @@ The `separator` variant centres the content between two rules, for the break bet
 ### In a transcript
 
 Markers sit between messages at the same width, so the eye reads them as the same column. Give one an `onPress` and it becomes a button — for expanding the step it summarises.
+
+<Preview
+  src="/previews/marker-in-a-transcript.jpg"
+  alt="Marker — In a transcript."
+  width={1179}
+  height={921}
+/>
 
 ```tsx
 <Marker variant="separator">

@@ -7,10 +7,9 @@ A user image that falls back to initials when the source is missing or fails to 
 
 <Preview
   src="/previews/avatar.jpg"
-  alt="Avatars on a dark screen: a row of four initials avatars growing from small to large, a row of three photo avatars, a row showing a red count badge reading 5, a red 99+ badge and a small green presence dot, and a stacked group of three overlapping photos ending in a +5 counter."
-  width={1163}
-  height={1891}
-  caption="Sizes, images, badges and a stacked group, running in the example app."
+  alt="The Avatar component, running in the example app."
+  width={1166}
+  height={448}
 />
 
 ## Installation
@@ -18,7 +17,7 @@ A user image that falls back to initials when the source is missing or fails to 
 Avatar ships with the library — no separate install.
 
 ```tsx
-import { Avatar } from 'panelui-native';
+import { Avatar, Badge } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -55,6 +54,13 @@ npx panelui-cli@latest add avatar
 
 The fallback shows while the image is missing **and** if it fails to load, so a dead URL never leaves an empty circle.
 
+<Preview
+  src="/previews/avatar-with-image.jpg"
+  alt="Avatar — Image with an initials fallback."
+  width={1179}
+  height={408}
+/>
+
 ```tsx
 <Avatar source={{ uri: user.avatarUrl }} fallback="KA" />
 
@@ -78,6 +84,13 @@ The fallback shows while the image is missing **and** if it fails to load, so a 
 
 Negative margins overlap them; reverse the row so the first is on top.
 
+<Preview
+  src="/previews/avatar-stacked-group.jpg"
+  alt="Avatar — A stack."
+  width={1179}
+  height={324}
+/>
+
 ```tsx
 <View className="flex-row-reverse justify-end">
   {members.map((member) => (
@@ -90,6 +103,25 @@ Negative margins overlap them; reverse the row so the first is on top.
     />
   ))}
 </View>
+```
+
+### A notification badge
+
+`Avatar.Badge` overlays a `Badge` in the corner — a count, or a `shape="dot"` presence dot.
+
+<Preview
+  src="/previews/avatar-with-notification-badge.jpg"
+  alt="Avatar — A notification badge."
+  width={1179}
+  height={401}
+/>
+
+```tsx
+<Avatar size="lg" source={{ uri: user.avatar }} fallback="AB">
+  <Avatar.Badge>
+    <Badge variant="destructive" count={5} />
+  </Avatar.Badge>
+</Avatar>
 ```
 
 ## Variants

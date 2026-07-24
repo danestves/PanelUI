@@ -9,6 +9,14 @@ The chart is composed rather than configured: the grid, each series, the axis an
 
 Colours come from the `--color-chart-1` … `--color-chart-5` tokens, so a chart follows the active theme out of the box and is put on brand by overriding those five. Nothing in it hardcodes a colour.
 
+<PreviewVideo
+  src="/previews/line-chart.mp4"
+  poster="/previews/line-chart-poster.jpg"
+  alt="The LineChart component, running in the example app."
+  width={720}
+  height={680}
+/>
+
 ## Installation
 
 LineChart ships with the library — no separate install.
@@ -63,6 +71,14 @@ npx panelui-cli@latest add line-chart
 
 Pair it with `Frame`, and add `LineChart.Tooltip`. Dragging across the chart moves a crosshair and floats a small label at the point with the value — the minimal readout a drag wants. The label tracks the finger on the UI thread; only its text crosses back into JS, and only when the active index changes. A stat band above the chart, inside the panel. `Frame.Header` is a caption on the tray the card sits in — one muted line — so a title, a legend, a headline number and a subtitle all crammed into it is four levels of hierarchy in a space with room for one, and the number the card is actually about ends up the hardest part to find.
 
+<PreviewVideo
+  src="/previews/line-chart-crosshair.mp4"
+  poster="/previews/line-chart-crosshair-poster.jpg"
+  alt="LineChart — A chart card with a crosshair."
+  width={720}
+  height={808}
+/>
+
 ```tsx
 <Frame>
   <Frame.Header>
@@ -108,6 +124,13 @@ const chart = useRef<LineChartHandle>(null);
 
 Set `compact` and drop the grid, axis and crosshair: the line reaches the edges and the shape is the whole point. Sits beside a number in a KPI card.
 
+<Preview
+  src="/previews/line-chart-kpi-sparklines.jpg"
+  alt="LineChart — A sparkline."
+  width={1179}
+  height={1430}
+/>
+
 ```tsx
 <View className="h-14 w-32">
   <LineChart data={points} xDataKey="t" compact aspectRatio={2.3}>
@@ -119,6 +142,14 @@ Set `compact` and drop the grid, axis and crosshair: the line reaches the edges 
 ### Two series and a dashed comparison
 
 Both series share one y-axis so they stay comparable. Give a target line the next colour token and a dash pattern, so actual and target are told apart by shape as well as by colour.
+
+<PreviewVideo
+  src="/previews/line-chart-dashed-comparison.mp4"
+  poster="/previews/line-chart-dashed-comparison-poster.jpg"
+  alt="LineChart — Two series and a dashed comparison."
+  width={720}
+  height={654}
+/>
 
 ```tsx
 <LineChart data={revenue} xDataKey="month">
@@ -177,6 +208,14 @@ Two series sharing one axis, with the headline reading and the legend in a band 
 
 `showMarkers` puts a dot at every point. For a short series where each reading is a fact worth pointing at — on a hundred points it is noise.
 
+<PreviewVideo
+  src="/previews/line-chart-with-dots.mp4"
+  poster="/previews/line-chart-with-dots-poster.jpg"
+  alt="LineChart — With dots."
+  width={720}
+  height={624}
+/>
+
 ```tsx
 <LineChart data={revenue} xDataKey="month" aspectRatio={1.7}>
   <LineChart.Grid />
@@ -212,6 +251,14 @@ Drag across the chart and a label rides the crosshair. The nearest index is reso
 
 The reveal plays once on mount; `replay()` on the chart ref runs it again. A data change redraws without replaying — repeating the reveal on every refresh turns an update into an animation.
 
+<PreviewVideo
+  src="/previews/line-chart-animated-line.mp4"
+  poster="/previews/line-chart-animated-line-poster.jpg"
+  alt="LineChart — Animated line."
+  width={720}
+  height={602}
+/>
+
 ```tsx
 const chart = useRef<LineChartHandle>(null);
 
@@ -229,6 +276,14 @@ const chart = useRef<LineChartHandle>(null);
 ### Finance
 
 A balance, a delta and a range selector. The delta rides beside the number rather than under it — three stacked lines is what made this header a wall of text. Switching the range tweens the y-domain rather than swapping the path, so a series that grows is redrawn against a moving axis instead of jumping to a new shape.
+
+<PreviewVideo
+  src="/previews/line-chart-finance.mp4"
+  poster="/previews/line-chart-finance-poster.jpg"
+  alt="LineChart — Finance."
+  width={720}
+  height={702}
+/>
 
 ```tsx
 const [range, setRange] = useState("1M");
@@ -288,6 +343,14 @@ An actual against a target. The two are told apart by *shape* as well as colour,
 ### Multi-line
 
 Four series across the chart token ramp. They share one y-domain, so they stay comparable — a per-series scale makes two lines look alike when they are orders of magnitude apart. Four keys wrap onto two rows on a narrow phone, which is another reason the legend belongs in the panel rather than in the header strip.
+
+<PreviewVideo
+  src="/previews/line-chart-multi-line.mp4"
+  poster="/previews/line-chart-multi-line-poster.jpg"
+  alt="LineChart — Multi-line."
+  width={720}
+  height={670}
+/>
 
 ```tsx
 <Frame>

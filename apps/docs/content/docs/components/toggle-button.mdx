@@ -5,6 +5,14 @@ description: A button that stays down, on its own or in a group.
 
 A button that stays down. The difference from Button is the whole point: a button does something and springs back, a toggle button *is* something afterwards — so the selected state is the loud one and the resting state is quiet.
 
+<PreviewVideo
+  src="/previews/toggle-button.mp4"
+  poster="/previews/toggle-button-poster.jpg"
+  alt="The ToggleButton component, running in the example app."
+  width={720}
+  height={432}
+/>
+
 ## Installation
 
 ToggleButton ships with the library — no separate install.
@@ -68,6 +76,14 @@ const [liked, setLiked] = useState(false);
 
 `selectionMode="multiple"` lets any number be on at once. Inside a group each button needs an `id` — that is the value the group reports — and the group owns the state, so a `selected` prop on the button is ignored.
 
+<PreviewVideo
+  src="/previews/toggle-button-a-toolbar-of-marks.mp4"
+  poster="/previews/toggle-button-a-toolbar-of-marks-poster.jpg"
+  alt="ToggleButton — A toolbar of independent marks."
+  width={720}
+  height={256}
+/>
+
 ```tsx
 const [marks, setMarks] = useState<string[]>([]);
 
@@ -89,6 +105,14 @@ const [marks, setMarks] = useState<string[]>([]);
 ### An either-or choice
 
 `selectionMode="single"` clears the last selection when a new one is made. Pressing the selected button again clears it — a filter you cannot turn off is a trap.
+
+<PreviewVideo
+  src="/previews/toggle-button-an-either-or-choice.mp4"
+  poster="/previews/toggle-button-an-either-or-choice-poster.jpg"
+  alt="ToggleButton — An either-or choice."
+  width={720}
+  height={258}
+/>
 
 ```tsx
 const [view, setView] = useState(['day']);
@@ -138,6 +162,13 @@ function Count() {
 - `sm`
 - `md` *(default)*
 - `lg`
+
+<Preview
+  src="/previews/toggle-button-size.jpg"
+  alt="ToggleButton — size."
+  width={1179}
+  height={857}
+/>
 
 ```tsx
 <ToggleButton size="sm">Small</ToggleButton>

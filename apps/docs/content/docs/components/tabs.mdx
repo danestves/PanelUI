@@ -5,6 +5,14 @@ description: Segmented navigation with an animated indicator.
 
 Segmented navigation with one indicator that springs between measured trigger positions. A single thing travelling is what makes a switch two tabs away read as one movement rather than as two states swapping.
 
+<PreviewVideo
+  src="/previews/tabs.mp4"
+  poster="/previews/tabs-poster.jpg"
+  alt="The Tabs component, running in the example app."
+  width={720}
+  height={584}
+/>
+
 ## Installation
 
 Tabs ships with the library — no separate install.
@@ -93,6 +101,14 @@ const [tab, setTab] = useState('overview');
 
 A fixed row splits its width between the triggers, which crushes every label once there are more than about four. `scrollable` gives each trigger its natural width, puts the row in a horizontal scroller, and scrolls the active tab into view when it changes from elsewhere.
 
+<PreviewVideo
+  src="/previews/tabs-scrollable.mp4"
+  poster="/previews/tabs-scrollable-poster.jpg"
+  alt="Tabs — More tabs than fit."
+  width={720}
+  height={350}
+/>
+
 ```tsx
 <Tabs variant="underline" defaultValue="overview">
   <Tabs.List scrollable>
@@ -127,6 +143,13 @@ A count or a status goes in `badge` rather than into the children, so the label 
 
 By default a panel is unmounted when you leave it, and a scroll position or a half-filled form goes with it. `keepMounted` renders every panel and hides the inactive ones — out of layout and out of the screen-reader order, but still there. It costs the render of every panel up front, so it is opt-in.
 
+<Preview
+  src="/previews/tabs-keep-panels-mounted.jpg"
+  alt="Tabs — Keeping panels mounted."
+  width={1179}
+  height={801}
+/>
+
 ```tsx
 <Tabs keepMounted defaultValue="draft">
   <Tabs.List>
@@ -148,6 +171,23 @@ By default a panel is unmounted when you leave it, and a scroll position or a ha
 - `segmented` *(default)*
 - `underline`
 - `pill`
+
+<PreviewVideo
+  src="/previews/tabs-pill.mp4"
+  poster="/previews/tabs-pill-poster.jpg"
+  alt="Tabs — variant pill."
+  width={720}
+  height={368}
+  caption="pill"
+/>
+
+<Preview
+  src="/previews/tabs-underline.jpg"
+  alt="Tabs — variant underline."
+  width={1179}
+  height={639}
+  caption="underline"
+/>
 
 ```tsx
 {/* A chip travelling inside a recessed track — the default. */}

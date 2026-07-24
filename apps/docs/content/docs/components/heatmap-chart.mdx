@@ -101,6 +101,13 @@ Fifty-three weeks do not fit across a phone. `fluid` draws the cells at `binSize
 
 For a short range — a quarter, a sprint — `fill` divides the available width between the columns rather than drawing them at a fixed size, so the chart always meets both edges.
 
+<Preview
+  src="/previews/heatmap-chart-filling-the-width.jpg"
+  alt="HeatmapChart — Filling the width instead."
+  width={1179}
+  height={1118}
+/>
+
 ```tsx
 <HeatmapChart data={weeks.slice(-13)} layout="fill" gap={4}>
   <HeatmapChart.XAxis />
@@ -180,6 +187,14 @@ For a short range, `fill` divides the available width between the columns rather
 ### Quarters
 
 A rule every thirteen columns, and the ramp derived from a colour of your own instead of the chart token. `tickFilter="all"` labels every row, which a narrower axis has room for once the labels are initials.
+
+<PreviewVideo
+  src="/previews/heatmap-chart-quarters.mp4"
+  poster="/previews/heatmap-chart-quarters-poster.jpg"
+  alt="HeatmapChart — Quarters."
+  width={720}
+  height={554}
+/>
 
 ```tsx
 <HeatmapChart data={weeks} weekStartDay={1} binSize={11} color={success}>
