@@ -82,6 +82,18 @@ const previewTag = (p) =>
 const previewVideoTag = (p) =>
   `<PreviewVideo\n  src="${p.src}"${p.poster ? `\n  poster="${p.poster}"` : ''}\n  alt="${p.alt}"\n  width={${p.width}}\n  height={${p.height}}${p.caption ? `\n  caption="${p.caption}"` : ''}\n/>`;
 
+/**
+ * The shot that sits above a worked example or version — a recording when the
+ * demo moves, a screenshot when it doesn't, and nothing when neither is given.
+ * Prefers `previewVideo` so a component can carry both and get the moving one.
+ */
+const demoMedia = (x) =>
+  x.previewVideo
+    ? `\n\n${previewVideoTag(x.previewVideo)}`
+    : x.preview
+      ? `\n\n${previewTag(x.preview)}`
+      : '';
+
 /** Props inherited from React Native, documented once rather than per row. */
 const INHERITED = /^(ViewProps|TextProps|ViewProps, VariantProps|.*VariantProps.*)$/;
 
@@ -177,7 +189,7 @@ ${u.examples.map((ex) => [
   ex.description ? `\n\n${ex.description}` : '',
   // A shot of the example itself, above its code — for the ones where the
   // result is the point and the snippet is just how you get there.
-  ex.preview ? `\n\n${previewTag(ex.preview)}` : '',
+  demoMedia(ex),
   `\n\n\`\`\`tsx\n${ex.code}\n\`\`\``,
 ].join('')).join('\n\n')}`);
   }
@@ -197,6 +209,7 @@ ${u.examples.map((ex) => [
 ${u.versions.map((v) => [
   `### ${v.title}`,
   v.description ? `\n\n${v.description}` : '',
+  demoMedia(v),
   `\n\n\`\`\`tsx\n${v.code}\n\`\`\``,
 ].join('')).join('\n\n')}`);
   }
