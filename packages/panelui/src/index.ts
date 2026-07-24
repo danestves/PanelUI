@@ -105,6 +105,24 @@ export {
   type DirectionValue,
 } from './components/direction';
 export {
+  Flow,
+  type FlowProps,
+  type FlowNodeProps,
+  type FlowHandleProps,
+  type FlowEdgeProps,
+  type FlowGroupProps,
+  type FlowBackgroundProps,
+  type FlowControlsProps,
+  type FlowMiniMapProps,
+  type FlowConnection,
+  type FlowViewport,
+  type FlowNodePosition,
+  type FlowEdgeVariant,
+  type FlowSide,
+  type FlowRect,
+  type FlowPoint,
+} from './components/flow';
+export {
   Frame,
   type FrameProps,
   type FrameRootProps,

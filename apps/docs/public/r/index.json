@@ -151,6 +151,17 @@
     ]
   },
   {
+    "name": "flow",
+    "type": "registry:ui",
+    "description": "Pan-and-zoom canvas of draggable nodes joined by animated edges.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "icons",
+      "text"
+    ]
+  },
+  {
     "name": "form",
     "type": "registry:ui",
     "description": "Form state — values, validation and submission — with no form library underneath.",

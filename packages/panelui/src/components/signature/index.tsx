@@ -49,6 +49,7 @@
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -86,7 +87,11 @@ const FileSystem: {
   Paths?: { document?: { uri?: string } };
   writeAsStringAsync?: (uri: string, contents: string, options?: unknown) => Promise<void>;
   EncodingType?: { Base64?: string; UTF8?: string };
-  File?: new (...args: unknown[]) => { write: (contents: string) => void; uri: string };
+  File?: new (...args: unknown[]) => {
+    create: (options?: { overwrite?: boolean }) => void;
+    write: (contents: string) => void;
+    uri: string;
+  };
 } | null = (() => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -315,12 +320,19 @@ function SignatureRoot(
   const endRef = useRef(onEnd);
   endRef.current = onEnd;
 
+  // `onChange` fires from an effect rather than from inside a state updater.
+  // An updater can be replayed during a render, and calling a parent's setState
+  // from there is the "cannot update a component while rendering a different
+  // component" warning — earned, not spurious.
+  const reported = useRef(0);
+  useEffect(() => {
+    if (reported.current === strokes.length) return;
+    reported.current = strokes.length;
+    changeRef.current?.(strokes.length);
+  }, [strokes.length]);
+
   const commit = useCallback((d: string) => {
-    setStrokes((current) => {
-      const next = [...current, d];
-      changeRef.current?.(next.length);
-      return next;
-    });
+    setStrokes((current) => [...current, d]);
     // Drawing again is a new branch of history, so what was undone is gone.
     setUndone([]);
     endRef.current?.();
@@ -404,32 +416,24 @@ function SignatureRoot(
   useImperativeHandle(
     ref,
     (): SignatureHandle => ({
+      // These read the current arrays and set flat values rather than nesting
+      // one updater inside another — a nested updater runs during the render
+      // pass, which is not a safe place to schedule another component's update.
       clear() {
         setStrokes([]);
         setUndone([]);
-        changeRef.current?.(0);
       },
       undo() {
-        setStrokes((current) => {
-          const last = current[current.length - 1];
-          if (last === undefined) return current;
-          const next = current.slice(0, -1);
-          setUndone((stack) => [...stack, last]);
-          changeRef.current?.(next.length);
-          return next;
-        });
+        const last = strokes[strokes.length - 1];
+        if (last === undefined) return;
+        setUndone((stack) => [...stack, last]);
+        setStrokes(strokes.slice(0, -1));
       },
       redo() {
-        setUndone((stack) => {
-          const restored = stack[stack.length - 1];
-          if (restored === undefined) return stack;
-          setStrokes((current) => {
-            const next = [...current, restored];
-            changeRef.current?.(next.length);
-            return next;
-          });
-          return stack.slice(0, -1);
-        });
+        const restored = undone[undone.length - 1];
+        if (restored === undefined) return;
+        setUndone(undone.slice(0, -1));
+        setStrokes([...strokes, restored]);
       },
       isEmpty: () => strokes.length === 0,
       strokeCount: () => strokes.length,
@@ -492,13 +496,14 @@ function SignatureRoot(
             throw new Error('Signature: `expo-file-system` has no copyAsync.');
           }
           await copy({ from: temporary, to: uri });
+        } else if (FileSystem.File) {
+          // The current file-object API. Tried first: `writeAsStringAsync` is
+          // the legacy one and warns on every call in recent versions.
+          const file = new FileSystem.File(uri);
+          file.create({ overwrite: true });
+          file.write(svgDocument());
         } else if (FileSystem.writeAsStringAsync) {
           await FileSystem.writeAsStringAsync(uri, svgDocument());
-        } else if (FileSystem.File) {
-          // The newer file-object API, for versions that dropped the async
-          // helpers.
-          const file = new FileSystem.File(uri);
-          file.write(svgDocument());
         } else {
           throw new Error(
             'Signature: `expo-file-system` exposes neither writeAsStringAsync nor File.'
@@ -513,7 +518,7 @@ function SignatureRoot(
         };
       },
     }),
-    [layout.height, layout.width, rasterise, strokes, svgDocument]
+    [layout.height, layout.width, rasterise, strokes, undone, svgDocument]
   );
 
   const empty = strokes.length === 0;

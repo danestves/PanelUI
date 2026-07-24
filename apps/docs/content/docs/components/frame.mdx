@@ -1,6 +1,7 @@
 ---
 title: Frame
 description: Widget shell — a card of rows sitting in a titled tray.
+status: updated
 ---
 
 A card of rows sitting in a tray. The tray shows along one edge only — the strip left above the card is the header — and the card itself is flush to its left, right and bottom. The panel draws the hairlines between its own rows.
@@ -10,7 +11,7 @@ A card of rows sitting in a tray. The tray shows along one edge only — the str
 Frame ships with the library — no separate install.
 
 ```tsx
-import { Frame, Button, Switch, Text, Badge, Card } from 'panelui-native';
+import { Frame, Button, Switch, Text, Badge, Card, Chip, Avatar } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -29,12 +30,13 @@ npx panelui-cli@latest add frame
   </Frame.Header>
   <Frame.Panel>
     <Frame.Row>
-      <Text className="flex-1">Total API Requests</Text>
-      <Text weight="medium">33.1K</Text>
-    </Frame.Row>
-    <Frame.Row>
-      <Text className="flex-1">Input Tokens</Text>
-      <Text weight="medium">98.2M</Text>
+      <Frame.Content>
+        <Frame.Title>opus-4.6</Frame.Title>
+        <Frame.Description>Indexing the repository</Frame.Description>
+      </Frame.Content>
+      <Frame.Actions>
+        <Chip size="sm" variant="success">Running</Chip>
+      </Frame.Actions>
     </Frame.Row>
   </Frame.Panel>
 </Frame>
@@ -50,19 +52,29 @@ npx panelui-cli@latest add frame
   </Frame.Header>
   <Frame.Panel>
     <Frame.Section title="…">
-      <Frame.Row>…</Frame.Row>
+      <Frame.Row>
+        <Frame.Media>…</Frame.Media>
+        <Frame.Content>
+          <Frame.Title>…</Frame.Title>
+          <Frame.Description>…</Frame.Description>
+        </Frame.Content>
+        <Frame.Actions>…</Frame.Actions>
+      </Frame.Row>
     </Frame.Section>
   </Frame.Panel>
 </Frame>
 ```
 
 - **`Frame.Header`** — The strip of shell above the panel, holding the title and the action.
-- **`Frame.Title`** — Frame heading. Muted — it captions the tray, it does not head a section.
-- **`Frame.Action`** — Trailing slot — a label, a button, a badge. Strings render muted.
-- **`Frame.Description`** — Secondary line, inside a column-wrapped header.
+- **`Frame.Title`** — Frame heading. Muted in a header; inside a `Frame.Content` it is the row's subject instead, so it takes the foreground colour and truncates to one line.
+- **`Frame.Action`** — Trailing slot on the header — a label, a button, a badge. Strings render muted.
+- **`Frame.Description`** — Secondary line under a title, in a column-wrapped header or inside a `Frame.Content`.
 - **`Frame.Panel`** — The card holding the rows. Divides them for you.
 - **`Frame.Section`** — A labelled cluster of rows, for a panel holding more than one group.
 - **`Frame.Row`** — A row inside the panel. Give it an `onPress` and it becomes a pressable.
+- **`Frame.Media`** — Leading slot on a row — an icon, an avatar, a status dot. Holds its size.
+- **`Frame.Content`** — The flexible middle of a row. Takes what the other two leave and is allowed to shrink past its content.
+- **`Frame.Actions`** — Trailing slot on a row — a chip, a value, a switch, a small button. Holds its size.
 
 ## Examples
 
@@ -91,6 +103,47 @@ Nothing has to say where the hairlines go — the panel puts one above every row
     </Frame.Row>
   </Frame.Panel>
 </Frame>
+```
+
+### A row that would not fit
+
+Everything here is longer than the room it has. The media and the actions hold their size, the content column shrinks around them, and nothing is clipped — at any width, without measuring anything.
+
+```tsx
+<Frame.Panel>
+  {deploys.map((deploy) => (
+    <Frame.Row key={deploy.id} align="start">
+      <Frame.Media>
+        <Avatar size="sm" fallback={deploy.initials} />
+      </Frame.Media>
+      <Frame.Content>
+        <Frame.Title>{deploy.message}</Frame.Title>
+        <Frame.Description>{deploy.detail}</Frame.Description>
+      </Frame.Content>
+      <Frame.Actions>
+        <Chip size="sm" variant="success">Live</Chip>
+        <Chip size="sm" variant="outline">{deploy.age}</Chip>
+      </Frame.Actions>
+    </Frame.Row>
+  ))}
+</Frame.Panel>
+```
+
+### A row of chips that wraps
+
+`wrap` lets the row run onto a second line. For a cluster of tags, a second line beats one of them disappearing off the edge.
+
+```tsx
+<Frame.Panel>
+  <Frame.Row wrap className="gap-2">
+    <Chip size="sm" variant="success">2 Running</Chip>
+    <Chip size="sm">1 Idle</Chip>
+    <Chip size="sm" variant="outline">1 Done</Chip>
+    <Frame.Actions className="ml-auto">
+      <Text size="xs" muted>15m12s ago</Text>
+    </Frame.Actions>
+  </Frame.Row>
+</Frame.Panel>
 ```
 
 ### With a header action and a footer
@@ -201,6 +254,8 @@ For a widget with more than one cluster of rows. Each section labels its group a
 | `className` | `string` | — |  |
 | `divided` | `boolean` | — | Draw a hairline above this row. `Frame.Panel` sets it for you; pass it explicitly to override the panel's decision either way. |
 | `chevron` | `boolean` | — | Trailing chevron marking the row as leading somewhere. |
+| `wrap` | `boolean` | — | Let the row run onto a second line instead of holding one. For a cluster of chips or tags, where the alternative is the last ones being clipped. |
+| `align` | `'center' \| 'start'` | — | Where the row's slots sit against each other. `start` for a row two or three lines tall, where centring an icon against a tall text column leaves it floating in the middle. |
 
 ### Frame.Section
 
@@ -224,3 +279,11 @@ The shell's radius is the larger of the two, and the panel's top corners are tig
 React Native has no `:first-child`, so the hairline between rows cannot be a CSS rule. `Frame.Panel` places them instead — a line above every child but the first. Passing `divided` on a row overrides that either way, and `dividers={false}` on the panel hands the whole job back to you.
 
 `Frame.Section` divides its own rows the same way, so the two nest without either needing to know about the other.
+
+### Why a row has slots
+
+Yoga defaults `flexShrink` to `0`, the opposite of the web. A child that is not told to shrink never does, so a fourth thing in a row pushes the others past the edge — where the frame's `overflow-hidden` cuts them off silently, rather than wrapping or truncating the way a browser would.
+
+`Frame.Media` and `Frame.Actions` hold their size. `Frame.Content` takes what is left and carries `min-w-0`, which is the part that is easy to miss: a flex child's minimum size is its content unless told otherwise, so `flex-1` alone still refuses to go narrower than the longest word inside it.
+
+For a row that genuinely has too much in it — a handful of chips, say — `wrap` lets it take a second line instead. `align="start"` is for a row two or three lines tall, where centring an icon against a tall text column leaves it floating in the middle.

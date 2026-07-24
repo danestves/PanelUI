@@ -48,6 +48,8 @@ import {
   FacebookIcon,
   Field,
   FileIcon,
+  Flow,
+  type FlowConnection,
   Form,
   Frame,
   GoogleIcon,
@@ -1182,6 +1184,455 @@ function BlurredSheetDemo() {
   );
 }
 
+/* Flow */
+
+/** The node shape the canvas is built around: a Frame with a status row. */
+function ServiceNode({
+  title,
+  subtitle,
+  icon,
+  status,
+  volume,
+}: {
+  title: string;
+  subtitle?: string;
+  icon: ReactNode;
+  status: string;
+  volume?: string;
+}) {
+  return (
+    <Frame className="w-56">
+      <Frame.Header className="flex-row items-center gap-3 pb-2 pt-3">
+        <Frame.Media>{icon}</Frame.Media>
+        <Frame.Content>
+          <Text weight="semibold" numberOfLines={1}>
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text size="xs" muted numberOfLines={1}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </Frame.Content>
+      </Frame.Header>
+      <Frame.Panel>
+        <Frame.Row>
+          <Frame.Media>
+            <View className="h-4 w-4 items-center justify-center rounded-full border border-success">
+              <View className="h-1.5 w-1.5 rounded-full bg-success" />
+            </View>
+          </Frame.Media>
+          <Frame.Content>
+            <Text size="sm" muted>
+              {status}
+            </Text>
+          </Frame.Content>
+        </Frame.Row>
+        {volume ? (
+          <Frame.Row>
+            <Frame.Media>
+              <PackageIcon size={16} />
+            </Frame.Media>
+            <Frame.Content>
+              <Text size="sm" muted numberOfLines={1}>
+                {volume}
+              </Text>
+            </Frame.Content>
+          </Frame.Row>
+        ) : null}
+      </Frame.Panel>
+    </Frame>
+  );
+}
+
+/**
+ * The canvas in a fixed box rather than a whole screen. It fills whatever it
+ * is given, so a bounded parent is all it takes — the graph still pans and
+ * zooms inside it.
+ */
+function FlowInlineDemo() {
+  return (
+    <View className="h-64 w-full overflow-hidden rounded-2xl border border-border">
+      <Flow defaultViewport={{ x: 10, y: 16, zoom: 0.78 }}>
+        <Flow.Background variant="dots" gap={20} />
+        <Flow.Node id="queue" position={{ x: 10, y: 10 }}>
+          <View className="rounded-xl border border-border bg-card px-3 py-2">
+            <Text size="sm" weight="medium">
+              queue
+            </Text>
+          </View>
+        </Flow.Node>
+        <Flow.Node id="worker" position={{ x: 190, y: 110 }}>
+          <View className="rounded-xl border border-border bg-card px-3 py-2">
+            <Text size="sm" weight="medium">
+              worker
+            </Text>
+          </View>
+        </Flow.Node>
+        <Flow.Node id="store" position={{ x: 30, y: 210 }}>
+          <View className="rounded-xl border border-border bg-card px-3 py-2">
+            <Text size="sm" weight="medium">
+              store
+            </Text>
+          </View>
+        </Flow.Node>
+        <Flow.Edge from="queue" to="worker" animated arrow />
+        <Flow.Edge from="worker" to="store" dashed animated arrow />
+      </Flow>
+    </View>
+  );
+}
+
+/** The four routings, on the same pair of nodes. */
+function FlowEdgeShapesDemo() {
+  const [variant, setVariant] = useState('bezier');
+
+  return (
+    <View className="w-full gap-3">
+      <View className="h-56 overflow-hidden rounded-2xl border border-border">
+        <Flow defaultViewport={{ x: 20, y: 20, zoom: 0.9 }} panOnDrag={false}>
+          <Flow.Background variant="dots" gap={20} />
+          <Flow.Node id="a" position={{ x: 10, y: 10 }}>
+            <View className="rounded-xl border border-border bg-card px-3 py-2">
+              <Text size="sm">source</Text>
+            </View>
+          </Flow.Node>
+          <Flow.Node id="b" position={{ x: 190, y: 150 }}>
+            <View className="rounded-xl border border-border bg-card px-3 py-2">
+              <Text size="sm">target</Text>
+            </View>
+          </Flow.Node>
+          <Flow.Edge
+            from="a"
+            to="b"
+            variant={variant as 'bezier' | 'smoothstep' | 'step' | 'straight'}
+            arrow
+            animated
+          />
+        </Flow>
+      </View>
+      <ToggleButtonGroup
+        selectionMode="single"
+        value={[variant]}
+        onValueChange={(next) => setVariant(next[0] ?? 'bezier')}
+      >
+        <ToggleButton id="bezier">Bezier</ToggleButton>
+        <ToggleButton id="smoothstep">Smooth</ToggleButton>
+        <ToggleButton id="step">Step</ToggleButton>
+        <ToggleButton id="straight">Line</ToggleButton>
+      </ToggleButtonGroup>
+    </View>
+  );
+}
+
+/** Two services and the dependency between them, on a dotted canvas. */
+function FlowInfrastructureVersion() {
+  return (
+    <Flow defaultViewport={{ x: 16, y: 60, zoom: 1 }}>
+      <Flow.Background variant="dots" gap={22} />
+
+      <Flow.Node id="db" position={{ x: 20, y: 40 }}>
+        <ServiceNode icon={<PackageIcon size={20} />} title="blog-db" status="Online" />
+        <Flow.Handle id="in" position="bottom" type="target" />
+      </Flow.Node>
+
+      <Flow.Node id="ghost" position={{ x: 120, y: 260 }}>
+        <ServiceNode
+          icon={<ShareNodesIcon size={20} />}
+          title="ghost-image"
+          subtitle="blog.temetro.com"
+          status="Online"
+          volume="ghost-content"
+        />
+        <Flow.Handle id="out" position="top" type="source" />
+      </Flow.Node>
+
+      <Flow.Edge from="ghost.out" to="db.in" variant="smoothstep" dashed animated arrow />
+      <Flow.Controls />
+    </Flow>
+  );
+}
+
+/** A pipeline running top to bottom, with the live stage's edges marching. */
+function FlowPipelineVersion() {
+  const [stage, setStage] = useState(1);
+
+  const stages = [
+    { id: 'source', title: 'Source', detail: 'main@6d63e13' },
+    { id: 'build', title: 'Build', detail: 'bob · 76 files' },
+    { id: 'test', title: 'Test', detail: '412 assertions' },
+    { id: 'publish', title: 'Publish', detail: 'npm · panelui-native' },
+  ];
+
+  return (
+    <View className="flex-1">
+      <Flow defaultViewport={{ x: 60, y: 24, zoom: 0.9 }} fitViewOnMount>
+        <Flow.Background variant="lines" gap={28} />
+
+        {stages.map((entry, index) => (
+          <Flow.Node key={entry.id} id={entry.id} position={{ x: 40, y: index * 150 }}>
+            <Frame className="w-52">
+              <Frame.Header>
+                <Frame.Title>{`Stage ${index + 1}`}</Frame.Title>
+                <Frame.Action>
+                  <Chip
+                    size="sm"
+                    variant={
+                      index < stage ? 'success' : index === stage ? 'info' : 'outline'
+                    }
+                  >
+                    {index < stage ? 'Done' : index === stage ? 'Running' : 'Queued'}
+                  </Chip>
+                </Frame.Action>
+              </Frame.Header>
+              <Frame.Panel>
+                <Frame.Row>
+                  <Frame.Content>
+                    <Frame.Title>{entry.title}</Frame.Title>
+                    <Frame.Description>{entry.detail}</Frame.Description>
+                  </Frame.Content>
+                </Frame.Row>
+              </Frame.Panel>
+            </Frame>
+            {index > 0 ? <Flow.Handle id="in" position="top" type="target" hidden /> : null}
+            {index < stages.length - 1 ? (
+              <Flow.Handle id="out" position="bottom" type="source" hidden />
+            ) : null}
+          </Flow.Node>
+        ))}
+
+        {stages.slice(0, -1).map((entry, index) => (
+          <Flow.Edge
+            key={`edge-${entry.id}`}
+            from={`${entry.id}.out`}
+            to={`${stages[index + 1]!.id}.in`}
+            variant="smoothstep"
+            arrow
+            // Only the edge into the stage that is running moves. An animation
+            // on every edge says nothing about which one is live.
+            animated={index === stage - 1}
+            dashed={index === stage - 1}
+          />
+        ))}
+
+        <Flow.Controls />
+      </Flow>
+
+      <View className="flex-row gap-2 border-t border-border px-5 py-4">
+        <Button
+          variant="outline"
+          className="flex-1"
+          disabled={stage === 0}
+          onPress={() => setStage((current) => current - 1)}
+        >
+          Back a stage
+        </Button>
+        <Button
+          className="flex-1"
+          disabled={stage === stages.length}
+          onPress={() => setStage((current) => current + 1)}
+        >
+          Advance
+        </Button>
+      </View>
+    </View>
+  );
+}
+
+/** Drag from one port to another to wire the graph up. */
+function FlowConnectVersion() {
+  const [edges, setEdges] = useState<FlowConnection[]>([]);
+
+  const nodes = [
+    { id: 'webhook', title: 'Webhook', detail: 'POST /orders', x: 20, y: 40 },
+    { id: 'enrich', title: 'Enrich', detail: 'Look up the customer', x: 40, y: 220 },
+    { id: 'notify', title: 'Notify', detail: 'Send to Slack', x: 60, y: 400 },
+  ];
+
+  return (
+    <View className="flex-1">
+      <Flow
+        defaultViewport={{ x: 24, y: 20, zoom: 0.95 }}
+        onConnect={(connection) => {
+          setEdges((current) =>
+            // The canvas never adds the edge itself, so refusing a duplicate is
+            // this screen's decision to make.
+            current.some(
+              (edge) => edge.source === connection.source && edge.target === connection.target
+            )
+              ? current
+              : [...current, connection]
+          );
+        }}
+        isValidConnection={(connection) => connection.source !== connection.target}
+      >
+        <Flow.Background variant="dots" />
+
+        {nodes.map((node) => (
+          <Flow.Node key={node.id} id={node.id} position={{ x: node.x, y: node.y }}>
+            <Frame className="w-48">
+              <Frame.Header>
+                <Frame.Title>{node.title}</Frame.Title>
+              </Frame.Header>
+              <Frame.Panel>
+                <Frame.Row>
+                  <Frame.Content>
+                    <Frame.Description>{node.detail}</Frame.Description>
+                  </Frame.Content>
+                </Frame.Row>
+              </Frame.Panel>
+            </Frame>
+            <Flow.Handle id="in" position="top" type="target" />
+            <Flow.Handle id="out" position="bottom" type="source" />
+          </Flow.Node>
+        ))}
+
+        {edges.map((edge) => (
+          <Flow.Edge
+            key={`${edge.source}-${edge.target}`}
+            from={`${edge.source}.${edge.sourceHandle ?? 'out'}`}
+            to={`${edge.target}.${edge.targetHandle ?? 'in'}`}
+            variant="smoothstep"
+            arrow
+            animated
+          />
+        ))}
+
+        <Flow.Controls />
+      </Flow>
+
+      <View className="border-t border-border px-5 py-4">
+        <Text size="sm" muted>
+          {edges.length === 0
+            ? 'Drag from a node’s bottom port to another node’s top port.'
+            : `${edges.length} connection${edges.length === 1 ? '' : 's'} — drag a node and the edges follow.`}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/** Curved edges radiating from a centre, and a tap that reframes the graph. */
+function FlowMindMapVersion() {
+  const branches = [
+    { id: 'tokens', label: 'Tokens', x: -180, y: -140 },
+    { id: 'motion', label: 'Motion', x: 200, y: -160 },
+    { id: 'a11y', label: 'Accessibility', x: -200, y: 140 },
+    { id: 'docs', label: 'Documentation', x: 210, y: 150 },
+  ];
+
+  return (
+    <Flow defaultViewport={{ x: 180, y: 300, zoom: 0.9 }} minZoom={0.4} maxZoom={2}>
+      <Flow.Background variant="cross" gap={32} />
+
+      <Flow.Node id="core" position={{ x: -60, y: -20 }}>
+        <View className="rounded-2xl border border-border bg-card px-5 py-4">
+          <Text weight="semibold">Design system</Text>
+        </View>
+      </Flow.Node>
+
+      {branches.map((branch) => (
+        <Flow.Node key={branch.id} id={branch.id} position={{ x: branch.x, y: branch.y }}>
+          <View className="rounded-2xl border border-border bg-surface px-4 py-3">
+            <Text size="sm">{branch.label}</Text>
+          </View>
+        </Flow.Node>
+      ))}
+
+      {branches.map((branch) => (
+        <Flow.Edge key={`edge-${branch.id}`} from="core" to={branch.id} variant="bezier" />
+      ))}
+
+      <Flow.Controls zoom={false} />
+    </Flow>
+  );
+}
+
+/** A small service node, sized to sit inside a group without crowding it. */
+function GroupedNode({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
+  return (
+    <View className="w-44 flex-row items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5">
+      <View className="shrink-0">{icon}</View>
+      <View className="min-w-0 flex-1">
+        <Text size="sm" weight="medium" numberOfLines={1}>
+          {title}
+        </Text>
+        <Text size="xs" muted numberOfLines={1}>
+          {detail}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Two groups of nodes, with a minimap for the parts off screen.
+ *
+ * Node positions are in graph coordinates throughout — a group is a box drawn
+ * around a region, not a coordinate space of its own, so a node inside one
+ * carries the same kind of position as a node outside it.
+ */
+function FlowGroupedVersion() {
+  return (
+    <Flow defaultViewport={{ x: 16, y: 40, zoom: 0.85 }} minZoom={0.3}>
+      <Flow.Background variant="dots" gap={26} />
+
+      <Flow.Group
+        id="edge-tier"
+        label="Edge"
+        position={{ x: 0, y: 0 }}
+        size={{ width: 208, height: 190 }}
+      >
+        <Flow.Node id="cdn" position={{ x: 16, y: 36 }}>
+          <GroupedNode
+            icon={<ShareNodesIcon size={16} />}
+            title="cdn"
+            detail="142 locations"
+          />
+          <Flow.Handle id="out" position="bottom" type="source" />
+        </Flow.Node>
+        <Flow.Node id="waf" position={{ x: 16, y: 118 }}>
+          <GroupedNode
+            icon={<ShieldCheckIcon size={16} />}
+            title="waf"
+            detail="Blocking 0.4%"
+          />
+          <Flow.Handle id="in" position="top" type="target" />
+          <Flow.Handle id="out" position="right" type="source" />
+        </Flow.Node>
+      </Flow.Group>
+
+      <Flow.Group
+        id="core-tier"
+        label="Core"
+        position={{ x: 268, y: 96 }}
+        size={{ width: 208, height: 190 }}
+      >
+        <Flow.Node id="api" position={{ x: 284, y: 132 }}>
+          <GroupedNode icon={<SendIcon size={16} />} title="api" detail="p95 84ms" />
+          <Flow.Handle id="in" position="left" type="target" />
+          <Flow.Handle id="out" position="bottom" type="source" />
+        </Flow.Node>
+        <Flow.Node id="pg" position={{ x: 284, y: 214 }}>
+          <GroupedNode
+            icon={<PackageIcon size={16} />}
+            title="postgres"
+            detail="2 replicas"
+          />
+          <Flow.Handle id="in" position="top" type="target" />
+        </Flow.Node>
+      </Flow.Group>
+
+      <Flow.Edge from="cdn.out" to="waf.in" variant="smoothstep" arrow />
+      <Flow.Edge from="waf.out" to="api.in" variant="smoothstep" animated arrow />
+      <Flow.Edge from="api.out" to="pg.in" variant="smoothstep" dashed animated arrow />
+
+      <Flow.MiniMap />
+      <Flow.Controls />
+    </Flow>
+  );
+}
+
 /* Signature */
 
 /** The pad on its own, with the controls it usually travels with. */
@@ -1239,34 +1690,49 @@ function SignatureSheetVersion() {
       </Button>
 
       <BottomSheet open={open} onOpenChange={setOpen}>
-        <BottomSheet.Content detached blur showClose={false}>
-          <View className="flex-row items-center justify-between pb-2 pt-1">
+        {/* The dashed rule around the sheet says the whole panel is the thing
+            being filled in, the way a form field does. */}
+        <BottomSheet.Content
+          detached
+          blur
+          showClose={false}
+          className="rounded-[28px] border-2 border-dashed p-2"
+        >
+          <View className="flex-row items-center justify-between px-2 pb-3 pt-1">
             <Signature.Undo
               accessibilityLabel="Start over"
+              className="bg-transparent"
               disabled={count === 0}
               onPress={() => pad.current?.clear()}
             />
             <Text weight="semibold">Sign</Text>
-            <AnimatedPressableClose onPress={() => setOpen(false)} />
+            <SheetCloseButton onPress={() => setOpen(false)} />
           </View>
+          {/* `bg-background` rather than a literal white: on a dark theme a
+              hardcoded white pad puts light-grey placeholder text on white. */}
           <Signature
             ref={pad}
             size="lg"
             onChange={setCount}
-            className="border-0 bg-white"
-            strokeColor="#0a0a0a"
+            className="rounded-2xl border-0 bg-background"
           />
           <View className="items-center py-4">
+            {/* The label goes through `children` as a string and the icon
+                through `startContent`. Passing both as children skips the
+                button's own label styling, and a `py-` on top of its fixed
+                height pushes the text into the pill's corner radius. */}
             <Button
+              variant="secondary"
+              size="lg"
               disabled={count === 0}
-              className="rounded-full px-6"
+              startContent={<PencilIcon size={18} />}
+              className="rounded-full px-8"
               onPress={() => {
                 setSigned(true);
                 setOpen(false);
               }}
             >
-              <PencilIcon size={16} />
-              <Text weight="semibold">Finish Signing</Text>
+              Finish Signing
             </Button>
           </View>
         </BottomSheet.Content>
@@ -1276,7 +1742,7 @@ function SignatureSheetVersion() {
 }
 
 /** The round X the signing sheet uses in place of the built-in close button. */
-function AnimatedPressableClose({ onPress }: { onPress: () => void }) {
+function SheetCloseButton({ onPress }: { onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -1343,30 +1809,43 @@ function SignatureDocumentVersion() {
       </ScrollView>
 
       <BottomSheet open={open} onOpenChange={setOpen}>
-        <BottomSheet.Content detached blur showClose={false}>
-          <View className="flex-row items-center justify-between pb-2 pt-1">
-            <Signature.Undo disabled={count === 0} onPress={() => pad.current?.undo()} />
+        {/* The same signing sheet as the standalone version — one shape for
+            one job, so signing feels the same wherever it is asked for. */}
+        <BottomSheet.Content
+          detached
+          blur
+          showClose={false}
+          className="rounded-[28px] border-2 border-dashed p-2"
+        >
+          <View className="flex-row items-center justify-between px-2 pb-3 pt-1">
+            <Signature.Undo
+              className="bg-transparent"
+              disabled={count === 0}
+              onPress={() => pad.current?.undo()}
+            />
             <Text weight="semibold">Sign</Text>
-            <AnimatedPressableClose onPress={() => setOpen(false)} />
+            <SheetCloseButton onPress={() => setOpen(false)} />
           </View>
           <Signature
             ref={pad}
             size="lg"
             guideline
             onChange={setCount}
-            className="border-0 bg-white"
-            strokeColor="#0a0a0a"
+            className="rounded-2xl border-0 bg-background"
           />
           <View className="items-center py-4">
             <Button
+              variant="secondary"
+              size="lg"
               disabled={count === 0}
-              className="rounded-full px-6"
+              startContent={<PencilIcon size={18} />}
+              className="rounded-full px-8"
               onPress={() => {
                 setSignature(pad.current?.toSVG() ?? null);
                 setOpen(false);
               }}
             >
-              <Text weight="semibold">Attach signature</Text>
+              Finish Signing
             </Button>
           </View>
         </BottomSheet.Content>
@@ -4971,6 +5450,54 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'flow',
+    name: 'Flow',
+    summary: 'Pan-and-zoom canvas of draggable nodes joined by animated edges',
+    demos: [
+      { label: 'In a box', render: () => <FlowInlineDemo /> },
+      { label: 'Edge shapes', render: () => <FlowEdgeShapesDemo /> },
+      {
+        label: 'Infrastructure map',
+        id: 'infrastructure',
+        fullPage: true,
+        description:
+          'Two services and the dependency between them. Drag a node and the edge follows it in real time.',
+        render: () => <FlowInfrastructureVersion />,
+      },
+      {
+        label: 'Build pipeline',
+        id: 'pipeline',
+        fullPage: true,
+        description:
+          'Stages running top to bottom, with only the live edge marching. Advance it and watch the animation move.',
+        render: () => <FlowPipelineVersion />,
+      },
+      {
+        label: 'Wiring it up',
+        id: 'connect',
+        fullPage: true,
+        description:
+          'Drag from one port to another to create an edge. The canvas reports the connection; the graph stays yours.',
+        render: () => <FlowConnectVersion />,
+      },
+      {
+        label: 'Mind map',
+        id: 'mind-map',
+        fullPage: true,
+        description: 'Curved edges radiating from a centre, and no fixed sides — drag a branch across and the edge re-routes.',
+        render: () => <FlowMindMapVersion />,
+      },
+      {
+        label: 'Groups and a minimap',
+        id: 'grouped',
+        fullPage: true,
+        description:
+          'Two containers that move their contents with them, and an overview of the parts off screen.',
+        render: () => <FlowGroupedVersion />,
+      },
+    ],
+  },
+  {
     slug: 'frame',
     name: 'Frame',
     summary: 'Widget shell with a titled header and a flush inner card',
@@ -6975,7 +7502,6 @@ export const COMPONENTS: ComponentEntry[] = [
         label: 'Full screen',
         id: 'full-screen',
         fullPage: true,
-        fullBleed: true,
         description: 'The whole screen is the pad, for a form that signs and nothing else.',
         render: () => <SignatureFullScreenVersion />,
       },

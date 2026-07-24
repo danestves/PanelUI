@@ -1,0 +1,339 @@
+---
+title: Flow
+description: Pan-and-zoom canvas of draggable nodes joined by animated edges.
+status: new
+---
+
+A canvas of nodes joined by edges, that you pan, pinch and rearrange with a finger. Every position lives in a single shared value, so dragging a node moves it, and re-routes every edge attached to it, without React rendering once.
+
+## Installation
+
+Flow ships with the library — no separate install.
+
+```tsx
+import { Flow, Frame, Text, type FlowConnection } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add flow
+```
+
+## Usage
+
+```tsx
+<Flow>
+  <Flow.Background variant="dots" />
+  <Flow.Node id="db" position={{ x: 20, y: 40 }}>
+    <Frame>…</Frame>
+    <Flow.Handle id="in" position="bottom" type="target" />
+  </Flow.Node>
+  <Flow.Node id="web" position={{ x: 120, y: 260 }}>
+    <Frame>…</Frame>
+    <Flow.Handle id="out" position="top" type="source" />
+  </Flow.Node>
+  <Flow.Edge from="web.out" to="db.in" variant="smoothstep" dashed animated arrow />
+  <Flow.Controls />
+</Flow>
+```
+
+## Composition
+
+```tsx
+<Flow onConnect={…} onNodeDragEnd={…}>
+  <Flow.Background />
+  <Flow.Group id="…" position={…} size={…}>
+    <Flow.Node id="…" position={…}>
+      …
+      <Flow.Handle id="out" position="bottom" type="source" />
+    </Flow.Node>
+  </Flow.Group>
+  <Flow.Edge from="…" to="…" />
+  <Flow.Controls />
+  <Flow.MiniMap />
+</Flow>
+```
+
+- **`Flow.Background`** — The grid behind everything — dots, lines or crosses. Pans and scales with the graph.
+- **`Flow.Node`** — One box on the canvas. Its content is yours; a `Frame` is the usual answer.
+- **`Flow.Handle`** — A port on a node. Both the point an edge attaches to and the grip a new connection is dragged from.
+- **`Flow.Edge`** — A line between two nodes, routed as a curve, a stepped run or a straight line.
+- **`Flow.Group`** — A container other nodes sit in and travel with.
+- **`Flow.Controls`** — Zoom, fit and lock buttons. Sits outside the transform, so it stays put.
+- **`Flow.MiniMap`** — An overview of the whole graph with the visible region marked on it.
+
+## Examples
+
+### Nodes are whatever you put in them
+
+A node positions and drags; what it looks like is yours. A `Frame` is the usual answer, since a node is a titled card of rows more often than it is anything else.
+
+```tsx
+<Flow.Node id="ghost" position={{ x: 120, y: 260 }}>
+  <Frame className="w-56">
+    <Frame.Header className="flex-row items-center gap-3">
+      <Frame.Media><PackageIcon size={20} /></Frame.Media>
+      <Frame.Content>
+        <Text weight="semibold">ghost-image</Text>
+        <Text size="xs" muted>blog.temetro.com</Text>
+      </Frame.Content>
+    </Frame.Header>
+    <Frame.Panel>
+      <Frame.Row>
+        <Frame.Content><Text size="sm" muted>Online</Text></Frame.Content>
+      </Frame.Row>
+    </Frame.Panel>
+  </Frame>
+  <Flow.Handle id="out" position="top" type="source" />
+</Flow.Node>
+```
+
+### Edges name nodes, not coordinates
+
+Which face an edge leaves and arrives on is worked out from where the two boxes currently are, so a graph the user rearranges stays readable without anyone re-specifying anything. Name a handle to pin it down.
+
+```tsx
+{/* Faces chosen from the layout, and re-chosen as nodes move. */}
+<Flow.Edge from="web" to="db" />
+
+{/* Pinned to two named ports. */}
+<Flow.Edge from="web.out" to="db.in" variant="smoothstep" arrow />
+
+{/* Dashes marching in the direction of travel. */}
+<Flow.Edge from="queue" to="worker" dashed animated speed={0.9} />
+```
+
+### Wiring it up by dragging
+
+A drag from a source handle to a target handle reports a connection. The canvas never adds the edge itself — the graph is yours, so what a new connection means is yours too.
+
+```tsx
+const [edges, setEdges] = useState<FlowConnection[]>([]);
+
+<Flow
+  onConnect={(connection) => setEdges((current) => [...current, connection])}
+  isValidConnection={(connection) => connection.source !== connection.target}
+>
+  …
+  {edges.map((edge) => (
+    <Flow.Edge
+      key={`${edge.source}-${edge.target}`}
+      from={`${edge.source}.${edge.sourceHandle}`}
+      to={`${edge.target}.${edge.targetHandle ?? 'in'}`}
+      arrow
+    />
+  ))}
+</Flow>
+```
+
+### Driving positions from outside
+
+Pass `position` once and the canvas takes it from there. Keep it in state and pass it back, and the graph is yours to move — `onNodeDragEnd` is the only time a drag reaches JavaScript.
+
+```tsx
+const [positions, setPositions] = useState(initial);
+
+<Flow onNodeDragEnd={(id, position) =>
+  setPositions((current) => ({ ...current, [id]: position }))
+}>
+  {Object.entries(positions).map(([id, position]) => (
+    <Flow.Node key={id} id={id} position={position}>…</Flow.Node>
+  ))}
+</Flow>
+```
+
+### Groups that move their contents
+
+Dragging a group offsets every node in it inside the same worklet that moves the group, so twenty nodes cost one frame's work rather than twenty.
+
+```tsx
+<Flow.Group id="edge" label="Edge" position={{ x: 0, y: 0 }} size={{ width: 260, height: 300 }}>
+  <Flow.Node id="cdn" position={{ x: 24, y: 56 }}>…</Flow.Node>
+  <Flow.Node id="waf" position={{ x: 24, y: 176 }}>…</Flow.Node>
+</Flow.Group>
+```
+
+## Versions
+
+### Infrastructure map
+
+Two services and the dependency between them, on a dotted canvas. Drag a node and the edge follows it in real time.
+
+```tsx
+<Flow.Edge from="ghost.out" to="db.in" variant="smoothstep" dashed animated arrow />
+```
+
+### Build pipeline
+
+Stages running top to bottom, with only the live edge marching — an animation on every edge says nothing about which one is running.
+
+```tsx
+<Flow.Edge
+  from={`${stage.id}.out`}
+  to={`${next.id}.in`}
+  variant="smoothstep"
+  animated={index === running - 1}
+  arrow
+/>
+```
+
+### Wiring it up
+
+Drag from one port to another to create an edge. The canvas reports the connection; adding it is the screen's decision.
+
+```tsx
+<Flow onConnect={(connection) => setEdges((current) => [...current, connection])}>
+```
+
+### Mind map
+
+Curved edges radiating from a centre, with no fixed sides — drag a branch across and the edge re-routes to the face that now makes sense.
+
+```tsx
+<Flow.Edge from="core" to={branch.id} variant="bezier" />
+```
+
+### Groups and a minimap
+
+Two containers that move their contents with them, and an overview of the parts off screen.
+
+```tsx
+<Flow.MiniMap position="bottom-right" />
+<Flow.Controls />
+```
+
+## API Reference
+
+### Flow
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `defaultViewport` | `FlowViewport` | — | Where the canvas starts. `zoom` of 1 is one graph point per screen point. |
+| `minZoom` | `number` | `0.3` | Closest the canvas will zoom out. |
+| `maxZoom` | `number` | `2.5` | Closest it will zoom in. |
+| `panOnDrag` | `boolean` | `true` | Drag the empty canvas to move it. |
+| `zoomOnPinch` | `boolean` | `true` | Pinch to zoom. |
+| `fitViewOnMount` | `boolean` | `false` | Frame every node once they have all measured themselves. For a graph whose positions come from data and are not laid out against a known screen size. |
+| `fitViewPadding` | `number` | `48` | Padding left around the graph when fitting, in screen points. |
+| `onViewportChange` | `(viewport: FlowViewport) => void` | — | The canvas has moved or zoomed. Fired as it happens, on the JS thread. |
+| `onNodeDragEnd` | `(id: string, position: FlowNodePosition) => void` | — | A node was dropped somewhere new. The only time a drag reaches JavaScript. |
+| `onConnect` | `(connection: FlowConnection) => void` | — | A connection was drawn between two handles. The canvas never adds the edge itself — the graph is yours, so what a new connection means is yours too. |
+| `isValidConnection` | `(connection: FlowConnection) => boolean` | — | Refuse a connection before `onConnect` sees it. |
+
+### Flow.Background
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `'dots' \| 'lines' \| 'cross' \| 'none'` | `'dots'` | The mark repeated across the canvas. |
+| `gap` | `number` | `24` | Points between marks. |
+| `size` | `number` | `1.6` | How big each mark is drawn. |
+| `color` | `string` | — | Mark colour. Defaults to a muted theme token. |
+
+### Flow.Node
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | `'default'` | Identifies the node to edges and to `onNodeDragEnd`. Must be unique. |
+| `position` | `FlowNodePosition` | `'right'` | Where it starts, in graph coordinates. |
+| `className` | `string` | — |  |
+| `draggable` | `boolean` | `true` | Let a finger move it. |
+| `selected` | `boolean` | `false` | Draw the selected ring. |
+| `onPress` | `() => void` | — | Tapping the node — separate from dragging it. |
+| `accessibilityLabel` | `string` | — | Spoken name. Defaults to the node's id. |
+
+### Flow.Handle
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | `'default'` | Names the handle to an edge, as `"nodeId.handleId"`. |
+| `position` | `FlowSide` | `'right'` | Which face it sits on. |
+| `type` | `'source' \| 'target' \| 'both'` | `'both'` | `source` starts connections, `target` receives them, `both` does either. A drag from a source can only land on a target, and the other way round. |
+| `offset` | `number` | `0.5` | Where along the face, 0–1. For more than one handle on a side. |
+| `className` | `string` | — |  |
+| `hidden` | `boolean` | `false` | Draw nothing. The handle still anchors edges and still accepts a drop. |
+
+### Flow.Edge
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `from` | `string` | — | Source, as `"nodeId"` or `"nodeId.handleId"`. |
+| `to` | `string` | — | Target, same shape. |
+| `variant` | `FlowEdgeVariant` | `'dots'` | How the edge is routed. |
+| `animated` | `boolean` | `false` | March the dashes along the edge, in the direction of travel. |
+| `dashed` | `boolean` | `false` | Draw it broken rather than solid. |
+| `color` | `string` | — | Stroke colour. Defaults to the border token. |
+| `width` | `number` | `1.5` | Stroke width in graph points. |
+| `arrow` | `boolean` | `false` | Put an arrowhead on the target end. |
+| `speed` | `number` | `1.2` | Seconds for one dash cycle. Lower is faster. |
+| `fromSide` | `FlowSide` | — | Override the face it leaves from. Otherwise worked out from the layout. |
+| `toSide` | `FlowSide` | — | Override the face it arrives at. |
+| `radius` | `number` | `8` | Corner radius for `smoothstep`. |
+| `gap` | `number` | `24` | How far the edge steps clear of a node before turning. |
+| `curvature` | `number` | `0.25` | Curve strength for `bezier`. |
+
+### Flow.Group
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | `'default'` | Identifies the group, the same way a node's id does. |
+| `position` | `FlowNodePosition` | `'right'` | Where the container sits. |
+| `size` | `{ width: number; height: number }` | `1.6` | How big the container is. Children are positioned inside it. |
+| `label` | `string` | — | Caption drawn along the top edge. |
+| `className` | `string` | — |  |
+| `draggable` | `boolean` | `true` | Move the group, and everything in it, with a finger. |
+
+### Flow.Controls
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `zoom` | `boolean` | — | Show the zoom in and out buttons. |
+| `fit` | `boolean` | `true` | Show the fit-to-graph button. |
+| `lock` | `boolean` | `true` | Show the lock, which freezes panning, zooming and dragging together. |
+| `step` | `number` | `1.3` | How much one press of zoom in multiplies the scale by. |
+
+### Flow.MiniMap
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'right'` | Which corner it sits in. |
+| `width` | `number` | `1.5` | Box size in screen points. |
+| `height` | `number` | `84` |  |
+| `nodeColor` | `string` | — | Colour of a node in the map. Defaults to the muted-foreground token. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Where the positions live
+
+Every node's box is one entry in a single shared value, and nothing else knows a position. Dragging a node rewrites that entry on the UI thread; the node's transform and every attached edge's path are derived from it in worklets on the same thread. A drag is therefore zero React renders, however many edges are attached — which is the difference between a graph that tracks a finger and one that catches up afterwards.
+
+JavaScript hears about a drag once, when the finger lifts, through `onNodeDragEnd`. Positions are otherwise yours to leave alone: pass `position` once and the canvas takes it from there, or keep it in state and pass it back to drive nodes from outside.
+
+### Where the edges attach
+
+An edge names nodes rather than coordinates. With no handle named, it picks the two faces from where the boxes currently sit — whichever axis they are further apart on wins — and picks again as they move, so a hand-arranged graph stays readable without anyone re-specifying anything.
+
+Name a handle instead (`from="web.out"`) and the edge attaches exactly there. A handle works out its own position from the node's box and the face it names rather than measuring itself: a handle that measured would be a frame behind the node it sits on, and the edge would trail its own port.
+
+### Routing
+
+`bezier` is a curve leaving and arriving perpendicular to each face. `smoothstep` is an orthogonal run with rounded corners — the one that reads as wiring — and `step` is the same with hard corners. `straight` is a line, for a graph where the routing is not the point.
+
+`animated` marches the stroke in the direction of travel, and `dashed` breaks it up. They are independent: a solid edge can carry a moving highlight, and a dashed edge can sit still.
+
+### Three gestures, one canvas
+
+The pane pans and pinches, a node drags, and a handle draws a new connection. They are nested gesture detectors rather than one gesture doing three jobs, so the innermost thing under the finger wins — which is what a finger expects.
+
+`Flow.Controls` is worth having even where pinch works: on a phone, pinching to a particular scale is imprecise, and framing a whole graph by hand is worse. `lock` freezes panning, zooming and dragging together, for a canvas that is being read rather than edited.
+
+### Connections are reported, not applied
+
+`onConnect` is handed `{ source, sourceHandle, target, targetHandle }` and nothing else happens. The canvas never adds an edge itself, because the graph is yours and so is what a new connection means — a validation, a request, an undo entry. `isValidConnection` refuses one before `onConnect` sees it.
+
+A drop does not have to land on a handle. The nearest handle within reach wins, and failing that a drop anywhere on a node connects to the node — a finger is blunt, and the strict reading of the gesture is the wrong one on a small screen.

@@ -1,0 +1,254 @@
+---
+title: Signature
+description: Sign with a finger, and get the result back out as SVG or PNG.
+status: new
+---
+
+A surface you sign with a finger, and a handle for getting the result back out. The stroke being drawn is built on the UI thread and never reaches React, so the line keeps up with the fingertip; finished strokes become static paths that never animate again.
+
+## Installation
+
+Signature ships with the library — no separate install.
+
+```tsx
+import { Signature, Button, Text, type SignatureHandle } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add signature
+```
+
+## Usage
+
+```tsx
+const pad = useRef<SignatureHandle>(null);
+
+<Signature ref={pad} guideline guidelineLabel="Sign above the line" />
+<Button onPress={() => pad.current?.save({ filename: 'agreement' })}>
+  Finish signing
+</Button>
+```
+
+## Composition
+
+```tsx
+<Signature ref={pad} />
+<Signature.Toolbar>
+  <Signature.Undo onPress={() => pad.current?.undo()} />
+  <Signature.Clear onPress={() => pad.current?.clear()} />
+</Signature.Toolbar>
+```
+
+- **`Signature.Toolbar`** — A row of controls under or over the pad. Purely layout.
+- **`Signature.Undo`** — Round button for removing the last stroke. Wire it to `ref.current?.undo()`.
+- **`Signature.Clear`** — Round button for dropping every stroke. Wire it to `ref.current?.clear()`.
+
+## Examples
+
+### A pad with its controls
+
+`onChange` reports the stroke count, which is the cheap way to keep a Save button disabled until there is something to save.
+
+```tsx
+const pad = useRef<SignatureHandle>(null);
+const [count, setCount] = useState(0);
+
+<Signature ref={pad} onChange={setCount} />
+<Signature.Toolbar>
+  <View className="flex-row gap-2">
+    <Signature.Undo disabled={count === 0} onPress={() => pad.current?.undo()} />
+    <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />
+  </View>
+  <Button disabled={count === 0} onPress={submit}>Done</Button>
+</Signature.Toolbar>
+```
+
+### Signing in a sheet
+
+Where a signature is usually asked for — floating over the thing being signed rather than on a screen of its own. `detached` and `blur` come from BottomSheet.
+
+```tsx
+<BottomSheet open={open} onOpenChange={setOpen}>
+  <BottomSheet.Content detached blur showClose={false}>
+    <View className="flex-row items-center justify-between pb-2 pt-1">
+      <Signature.Undo onPress={() => pad.current?.clear()} />
+      <Text weight="semibold">Sign</Text>
+    </View>
+    <Signature ref={pad} size="lg" className="border-0 bg-white" />
+    <Button className="rounded-full" onPress={finish}>Finish Signing</Button>
+  </BottomSheet.Content>
+</BottomSheet>
+```
+
+### Saving to a file
+
+`save()` writes the signature and resolves where it went. SVG needs no extra packages; PNG rasterises the pad and needs the optional raster package.
+
+```tsx
+const file = await pad.current?.save({
+  directory: FileSystem.documentDirectory,
+  filename: `agreement-${contractId}`,
+  format: 'svg',
+});
+
+// file.uri  → 'file:///…/agreement-4821.svg'
+// file.width, file.height → the pad's size in points
+```
+
+### Sending it somewhere instead
+
+`toSVG()` is pure string building — no packages, no async, nothing written to disk. For posting the signature to an API or storing it in a record.
+
+```tsx
+await fetch('/api/agreements/4821/sign', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ signature: pad.current?.toSVG() }),
+});
+```
+
+### A baseline to sign above
+
+The ✕ and the rule a paper form has. `guidelineLabel` captions it — a printed name under the line, usually.
+
+```tsx
+<Signature guideline guidelineLabel="Khalid Abdi" size="lg" />
+```
+
+## Versions
+
+### Signing sheet
+
+A floating pad over a frosted screen, with a reset on one side and a close on the other.
+
+```tsx
+<BottomSheet.Content detached blur showClose={false}>
+  <Signature ref={pad} size="lg" className="border-0 bg-white" />
+</BottomSheet.Content>
+```
+
+### Signing a document
+
+An agreement you scroll, with a Frame row that opens the pad and the captured SVG landing back in the document.
+
+```tsx
+<Frame.Row onPress={() => setOpen(true)} chevron>
+  <Frame.Media><PencilIcon size={18} /></Frame.Media>
+  <Frame.Content>
+    <Frame.Title>{signature ? 'Signed' : 'Tap to sign'}</Frame.Title>
+  </Frame.Content>
+</Frame.Row>
+```
+
+### Saving to a file
+
+A format toggle and a Save button, printing the resulting URI — or the name of the package that is missing.
+
+```tsx
+try {
+  const file = await pad.current?.save({ format });
+  setResult(file?.uri ?? null);
+} catch (error) {
+  setResult(error instanceof Error ? error.message : String(error));
+}
+```
+
+### Full screen
+
+`size="full"` fills whatever it is given, with the actions on a bar below it.
+
+```tsx
+<Signature size="full" guideline guidelineLabel="Khalid Abdi" />
+```
+
+### Proof of delivery
+
+Recipient, timestamp and signature on one screen, the shape a courier app asks for.
+
+```tsx
+<Signature ref={pad} guideline onChange={setCount} />
+<Button disabled={count === 0} onPress={confirm}>Confirm delivery</Button>
+```
+
+## Variants
+
+### `size`
+
+- `sm`
+- `md` *(default)*
+- `lg`
+- `full`
+
+```tsx
+<Signature size="sm">…</Signature>
+<Signature size="md">…</Signature>
+<Signature size="lg">…</Signature>
+<Signature size="full">…</Signature>
+```
+
+## API Reference
+
+### Signature
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `size` | `'sm' \| 'md' \| 'lg' \| 'full'` | `md` | How tall the pad is. `full` fills its parent instead. |
+| `strokeColor` | `string` | — | Ink colour. Defaults to the theme's foreground. |
+| `strokeWidth` | `number` | `2.5` | Ink width in points. |
+| `minDistance` | `number` | `1.5` | Points closer together than this are dropped as they arrive, so a finger resting still does not add hundreds of points describing one spot. |
+| `guideline` | `boolean` | `false` | Draw the baseline and its ✕ mark, the way a paper form does. |
+| `guidelineLabel` | `string` | — | Caption beside the baseline. Only shown with `guideline`. |
+| `placeholder` | `ReactNode` | — | Prompt shown over an empty pad. Pass `null` for none. |
+| `disabled` | `boolean` | `false` | Take no input. The strokes already there stay visible. |
+| `onBegin` | `() => void` | — | A stroke has started. |
+| `onEnd` | `() => void` | — | A stroke has finished. |
+| `onChange` | `(strokeCount: number) => void` | — | The number of committed strokes changed — by drawing, undoing, redoing or clearing. The cheap way to enable a Save button only once something is there to save. |
+| `padClassName` | `string` | — | Class on the drawing surface inside the border. |
+| `placeholderClassName` | `string` | — | Class on the empty-pad prompt. |
+| `guideClassName` | `string` | — | Class on the baseline. |
+
+### Signature.Toolbar
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Signature.Button
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `disabled` | `boolean` | `false` | Take no input, and dim to say so. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Why the stroke never reaches React
+
+A finger produces touch events far faster than a component tree can usefully re-render, and a signature is exactly where the lag shows: the line trails the fingertip and drawing feels like moving through syrup.
+
+So the stroke being drawn lives in a shared value and is turned into an SVG path by a worklet on the UI thread — React is not involved in a single frame of it. When the finger lifts, that one finished string crosses to JavaScript once and becomes a static path. Committed strokes never animate again, so the hundredth stroke costs what the first one did.
+
+Points closer together than `minDistance` are dropped as they arrive. A finger resting still otherwise emits a point per frame in the same spot, which is a longer path describing the same shape.
+
+### Smoothing
+
+Raw touch points joined with straight lines look like a seismograph. Each segment is drawn as a quadratic curve through the midpoint between two points instead: the point itself is the control handle, the midpoints are the anchors, and consecutive curves meet with a shared tangent. It needs no lookahead, so a point can be appended to a stroke already on screen without redrawing what came before it differently.
+
+### Getting the signature out
+
+The ref exposes `clear`, `undo`, `redo`, `isEmpty`, `strokeCount`, `toSVG`, `toDataURL` and `save`.
+
+`toSVG()` is pure string building — no packages, no async, nothing written to disk — and returns a standalone document sized to the pad. It is the one to reach for when the signature is going into an API call or a database record.
+
+`save()` writes a file and resolves `{ uri, format, width, height }`. It needs the optional `expo-file-system`. Passing `format: 'png'` rasterises the pad and also needs the optional `react-native-view-shot`. Neither is installed on your behalf, and asking for something a missing package provides throws with that package's name in the message rather than failing somewhere further down.
+
+```tsx
+const file = await pad.current?.save({ filename: 'agreement', format: 'png', scale: 3 });
+```
+
+`directory` defaults to the app's own document directory, which survives restarts and is not visible to the user. Pass one explicitly to write anywhere else.
