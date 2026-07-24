@@ -46,23 +46,24 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 
 | | | |
 | --- | --- | --- |
-| Accordion | Input | Select |
-| Alert | InputGroup | Separator |
-| Attachment | Item | Shimmer |
-| Avatar | Label | Skeleton |
-| Badge | LineChart | Slider |
-| BottomSheet | Marker | Soundwave |
-| Button | Message | Spinner |
-| Card | MessageScroller | Steps |
-| Checkbox | OtpInput | Surface |
-| Chip | Popover | Switch |
-| Dialog | Progress | Tabs |
-| Direction | RadioGroup | ThinkingOrb |
-| EmptyState | ScrollCanvas | Timeline |
-| Field | ScrollFade | Toast |
-| Form | ScrollText | ToggleButton |
-| Frame | SectionRail | Typography |
-| HeatmapChart |  |  |
+| Accordion | Frame | Select |
+| Alert | HeatmapChart | Separator |
+| Attachment | Input | Shimmer |
+| Avatar | InputGroup | Signature |
+| Badge | Item | Skeleton |
+| BottomSheet | Label | Slider |
+| Button | LineChart | Soundwave |
+| Card | Marker | Spinner |
+| Checkbox | Message | Steps |
+| Chip | MessageScroller | Surface |
+| Dialog | OtpInput | Switch |
+| Direction | Popover | Tabs |
+| EmptyState | Progress | ThinkingOrb |
+| Field | RadioGroup | Timeline |
+| Flow | ScrollCanvas | Toast |
+| Form | ScrollFade | ToggleButton |
+|  | ScrollText | Typography |
+|  | SectionRail |  |
 
 `Select` shows its options in a bottom sheet, expanded in place, or floating
 over the page — one `presentation` prop, because which is right depends on what
@@ -77,6 +78,11 @@ hidden field so the keyboard, SMS autofill and paste all still behave.
 and `Soundwave` draws the level of a voice — capsules, metering bars, a
 travelling wave or an ambient glow — from a number your recorder already has.
 `Direction` flips a subtree right to left without restarting the app.
+`Flow` is a canvas of nodes joined by edges that you pan, pinch and rearrange
+with a finger — positions live in a shared value, so dragging a node re-routes
+every edge attached to it without React rendering once.
+`Signature` captures a signature drawn with a finger and hands it back as SVG,
+a data URI, or a file.
 
 Plus primitives: `PanelUIProvider`, `Portal`, `AnimatedPressable`, `useTheme`,
 `useThemeMode`, `useToast`, `cn`.

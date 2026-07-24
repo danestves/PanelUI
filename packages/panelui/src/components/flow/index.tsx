@@ -1202,7 +1202,11 @@ export interface FlowEdgeProps {
   animated?: boolean;
   /** Draw it broken rather than solid. */
   dashed?: boolean;
-  /** Stroke colour. Defaults to the border token. */
+  /**
+   * Stroke colour. Defaults to the muted-foreground token — an edge is content
+   * rather than chrome, and the border token it would otherwise share with the
+   * nodes is, by design, barely there.
+   */
   color?: string;
   /** Stroke width in graph points. */
   width?: number;
@@ -1258,7 +1262,7 @@ function FlowEdgePath({
   animated = false,
   dashed = false,
   color,
-  width = 1.5,
+  width = 2,
   arrow = false,
   speed = 1.2,
   fromSide,
@@ -1268,8 +1272,8 @@ function FlowEdgePath({
   curvature = 0.25,
 }: FlowEdgeProps) {
   const { rects, handles, translateX, translateY, zoom } = useFlow('Flow.Edge');
-  const token = useCSSVariable('--color-border');
-  const tint = color ?? (typeof token === 'string' ? token : '#404040');
+  const token = useCSSVariable('--color-muted-foreground');
+  const tint = color ?? (typeof token === 'string' ? token : '#737373');
 
   const source = useMemo(() => resolveEnd(from, fromSide, handles), [from, fromSide, handles]);
   const target = useMemo(() => resolveEnd(to, toSide, handles), [handles, to, toSide]);
