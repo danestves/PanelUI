@@ -2,10 +2,20 @@ import { docs } from 'collections/server';
 import { loader } from 'fumadocs-core/source';
 import { statusBadgesPlugin } from 'fumadocs-core/source/status-badges';
 
-/** The dots a `status` can resolve to. Anything else renders nothing. */
-const DOTS: Record<string, { label: string; className: string }> = {
+/**
+ * The marks a `status` can resolve to. Anything else renders nothing.
+ *
+ * A `text` turns the mark into a small labelled pill instead of a bare dot —
+ * "updated" carries the word because, unlike a brand-new component, the reader
+ * has to be told *what* the mark means before it is worth acting on.
+ */
+const DOTS: Record<string, { label: string; text?: string; className: string }> = {
   new: { label: 'New', className: 'bg-blue-500' },
-  updated: { label: 'Updated', className: 'bg-fd-muted-foreground/60' },
+  updated: {
+    label: 'Updated',
+    text: 'Update',
+    className: 'border border-fd-border bg-fd-muted text-fd-muted-foreground',
+  },
 };
 
 export const source = loader({
@@ -13,16 +23,15 @@ export const source = loader({
   source: docs.toFumadocsSource(),
   plugins: [
     /*
-     * A dot, not a word. The sidebar is a long list of names and the badge has
-     * to survive being scanned rather than read — a coloured mark beside the
-     * marked entries carries that at a glance, where a "New" pill would compete
-     * with the name it is attached to.
+     * Blue dot for a component that has just arrived, a grey "Update" pill for
+     * one that changed under someone already using it.
      *
-     * Two of them: blue for a component that has just arrived, grey for one
-     * that changed under someone already using it. Grey and not a second hue
-     * because the two are not equals — "new" is worth a look, "updated" is
-     * worth a look *only if you already have it*, and a second saturated colour
-     * would claim otherwise.
+     * The two are not equals, and are marked differently on purpose. "New" is
+     * worth a glance from anyone, so a wordless coloured dot carries it while
+     * the sidebar is being scanned rather than read. "Updated" is worth a look
+     * *only if you already have the component* — a bare grey dot cannot say
+     * that, so it spells the word out, in grey and not a second saturated hue
+     * so it never competes with a genuinely new arrival.
      *
      * The `status` frontmatter is generated from each component's `addedIn` and
      * `updatedIn` versions and disappears three minor releases later, so
@@ -32,6 +41,17 @@ export const source = loader({
       renderBadge: (status) => {
         const dot = DOTS[status];
         if (!dot) return null;
+        if (dot.text) {
+          return (
+            <span
+              role="img"
+              aria-label={dot.label}
+              className={`ms-1.5 inline-flex shrink-0 items-center rounded px-1 py-0.5 align-middle text-[10px] font-medium uppercase leading-none tracking-wide ${dot.className}`}
+            >
+              {dot.text}
+            </span>
+          );
+        }
         return (
           <span
             role="img"
