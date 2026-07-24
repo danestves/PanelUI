@@ -122,6 +122,13 @@ function clampCanvas(value: number): number {
   return Math.max(Math.min(value, 4000), 1);
 }
 
+/**
+ * One arrowhead for the whole canvas. Markers used to be declared per edge in
+ * a nested <Defs>, which the native side would not resolve — and an
+ * unresolvable `markerEnd` takes the path down with it.
+ */
+const ARROW_MARKER = 'panelui-flow-arrow';
+
 /** How close a finger has to get to a handle for a connection to land. */
 const CONNECT_RADIUS = 44;
 
@@ -174,6 +181,8 @@ interface FlowContextValue {
    * per layout, not once per frame.
    */
   box: { width: number; height: number };
+  /** The node and grid layer's size. Both layers share it exactly. */
+  layer: { width: number; height: number };
   /**
    * Half the node layer's extent. The layer is positioned at `-origin` and a
    * node translates by its graph position plus this, so graph (0, 0) still
@@ -513,6 +522,7 @@ function FlowRoot({
       connection,
       size,
       box,
+      layer,
       origin,
       minZoom,
       maxZoom,
@@ -535,6 +545,7 @@ function FlowRoot({
     }),
     [
       box,
+      layer,
       origin,
       connection,
       edges,
@@ -601,7 +612,17 @@ function FlowRoot({
             <Animated.View
               pointerEvents="none"
               collapsable={false}
-              style={[StyleSheet.absoluteFill, TRANSFORM_ORIGIN, contentStyle]}
+              style={[
+                {
+                  position: 'absolute',
+                  left: -origin.x,
+                  top: -origin.y,
+                  width: layer.width,
+                  height: layer.height,
+                  transformOrigin: [origin.x, origin.y, 0],
+                },
+                contentStyle,
+              ]}
             >
               {background}
             </Animated.View>
@@ -719,7 +740,7 @@ function FlowBackground({
   size = 1.6,
   color,
 }: FlowBackgroundProps) {
-  const { box, translateX, translateY, zoom } = useFlow('Flow.Background');
+  const { layer, origin, translateX, translateY, zoom } = useFlow('Flow.Background');
   const token = useCSSVariable('--color-muted-foreground');
   const tint = color ?? (typeof token === 'string' ? token : '#737373');
   // A pattern is referenced by id, and two canvases on one screen would collide.
@@ -752,21 +773,23 @@ function FlowBackground({
 
   if (variant === 'none') return null;
 
-  // Wide enough to cover the container at the furthest zoom out, with a screen
-  // of slack either side so a fling never outruns it between frames.
-  const width = clampCanvas(Math.max(box.width, 320) * GRID_SPAN);
-  const height = clampCanvas(Math.max(box.height, 480) * GRID_SPAN);
-  const left = -width / 2;
-  const top = -height / 2;
+  /*
+   * The grid fills its layer exactly, and the layer is the same box the nodes
+   * live in. It used to be an oversized SVG inside a container-sized parent,
+   * which the canvas's own `overflow-hidden` then clipped back down — so the
+   * dots ran out as soon as you zoomed out far enough to see past the
+   * container, which looked like them disappearing.
+   */
+  const width = layer.width;
+  const height = layer.height;
 
   return (
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, follow]}>
       <Svg
         pointerEvents="none"
-        style={{ position: 'absolute', left, top }}
         width={width}
         height={height}
-        viewBox={`${left} ${top} ${width} ${height}`}
+        viewBox={`${-origin.x} ${-origin.y} ${width} ${height}`}
       >
         <Defs>
           <Pattern
@@ -778,14 +801,14 @@ function FlowBackground({
             patternUnits="userSpaceOnUse"
           >
             {variant === 'dots' ? (
-              <Circle cx={gap / 2} cy={gap / 2} r={size} fill={tint} opacity={0.45} />
+              <Circle cx={gap / 2} cy={gap / 2} r={size} fill={tint} opacity={0.5} />
             ) : null}
             {variant === 'lines' ? (
               <Path
                 d={`M0,0 L${gap},0 M0,0 L0,${gap}`}
                 stroke={tint}
                 strokeWidth={Math.max(size / 2, 0.4)}
-                opacity={0.28}
+                opacity={0.3}
               />
             ) : null}
             {variant === 'cross' ? (
@@ -793,12 +816,18 @@ function FlowBackground({
                 d={`M${gap / 2 - size * 2},${gap / 2} L${gap / 2 + size * 2},${gap / 2} M${gap / 2},${gap / 2 - size * 2} L${gap / 2},${gap / 2 + size * 2}`}
                 stroke={tint}
                 strokeWidth={Math.max(size / 2, 0.4)}
-                opacity={0.4}
+                opacity={0.42}
               />
             ) : null}
           </Pattern>
         </Defs>
-        <Rect x={left} y={top} width={width} height={height} fill={`url(#${id})`} />
+        <Rect
+          x={-origin.x}
+          y={-origin.y}
+          width={width}
+          height={height}
+          fill={`url(#${id})`}
+        />
       </Svg>
     </Animated.View>
   );
@@ -1278,24 +1307,9 @@ function FlowEdgePath({
   const source = useMemo(() => resolveEnd(from, fromSide, handles), [from, fromSide, handles]);
   const target = useMemo(() => resolveEnd(to, toSide, handles), [handles, to, toSide]);
 
-  const dash = dashed ? 6 : 0;
-  const march = useSharedValue(0);
-
-  useEffect(() => {
-    if (!animated) {
-      march.value = 0;
-      return;
-    }
-    // One full dash cycle per repeat, so the pattern lands exactly where it
-    // started and the loop has no visible seam.
-    const cycle = dashed ? 12 : 24;
-    march.value = 0;
-    march.value = withRepeat(
-      withTiming(-cycle, { duration: speed * 1000, easing: Easing.linear }),
-      -1,
-      false
-    );
-  }, [animated, dashed, march, speed]);
+  // An animated edge is dashed, whether or not it was asked to be: the march
+  // is what carries direction, and a march needs something to march.
+  const dash = dashed || animated ? 6 : 0;
 
   const pathProps = useAnimatedProps(() => {
     const fromRect = rects.value[source.node];
@@ -1323,42 +1337,31 @@ function FlowEdgePath({
       // The step-out and the corner radius are graph-space measurements, so
       // they scale with everything else rather than growing as you zoom out.
       d: edgePath(variant, screenA, sideA, screenB, sideB, curvature, radius * z, gap * z),
-      strokeDashoffset: march.value,
-      strokeWidth: width * z,
     };
   });
 
-  const arrowId = useRef(`panelui-arrow-${Math.random().toString(36).slice(2, 7)}`).current;
-
-  // A <G> rather than a fragment: react-native-svg walks its children looking
-  // for SVG elements, and a fragment is not one — its contents are dropped.
+  /*
+   * `d` is the only animated prop, and the path is a direct child of the one
+   * <Svg> with no group and no nested <Defs> around it.
+   *
+   * That is not incidental tidiness. Animating several SVG props at once, or
+   * pointing `markerEnd` at a marker declared inside a nested <Defs>, gets the
+   * whole update dropped by the native side — and dropped silently, so the
+   * path simply never receives its geometry and nothing is drawn. Everything
+   * that can be static is static, and the arrowheads are declared once at the
+   * top of the canvas rather than per edge.
+   */
   return (
-    <G>
-      {arrow ? (
-        <Defs>
-          <Marker
-            id={arrowId}
-            markerWidth={8}
-            markerHeight={8}
-            refX={7}
-            refY={4}
-            orient="auto"
-            markerUnits="strokeWidth"
-          >
-            <Path d="M1,1 L7,4 L1,7 Z" fill={tint} />
-          </Marker>
-        </Defs>
-      ) : null}
-      <AnimatedPath
-        animatedProps={pathProps}
-        fill="none"
-        stroke={tint}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeDasharray={dash ? `${dash} ${dash}` : undefined}
-        markerEnd={arrow ? `url(#${arrowId})` : undefined}
-      />
-    </G>
+    <AnimatedPath
+      animatedProps={pathProps}
+      fill="none"
+      stroke={tint}
+      strokeWidth={width}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeDasharray={dash ? `${dash} ${dash}` : undefined}
+      markerEnd={arrow ? `url(#${ARROW_MARKER})` : undefined}
+    />
   );
 }
 FlowEdge.displayName = 'Flow.Edge';
@@ -1395,8 +1398,8 @@ function resolveEnd(
  */
 function FlowEdgeLayer() {
   const { connection, edges, translateX, translateY, zoom } = useFlow('Flow');
-  const token = useCSSVariable('--color-ring');
-  const tint = typeof token === 'string' ? token : '#737373';
+  const token = useCSSVariable('--color-muted-foreground');
+  const tint = typeof token === 'string' ? token : '#878787';
 
   const lineProps = useAnimatedProps(() => {
     const current = connection.value;
@@ -1417,6 +1420,19 @@ function FlowEdgeLayer() {
     // measurement that has not arrived renders nothing, and if the measurement
     // never arrives it renders nothing for ever.
     <Svg pointerEvents="none" width="100%" height="100%" style={StyleSheet.absoluteFill}>
+      <Defs>
+        <Marker
+          id={ARROW_MARKER}
+          markerWidth={8}
+          markerHeight={8}
+          refX={7}
+          refY={4}
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <Path d="M1,1 L7,4 L1,7 Z" fill={tint} />
+        </Marker>
+      </Defs>
       {edges.map((edge) => (
         <FlowEdgePath key={edge.key} {...edge.props} />
       ))}
@@ -1749,11 +1765,16 @@ function FlowMiniMap({
       return { left: 0, top: 0, scale: 1 };
     }
 
-    const graphWidth = Math.max(right - left, 1);
-    const graphHeight = Math.max(bottom - top, 1);
+    // A floor under the graph's size, and a ceiling over the scale. Before
+    // every node has measured, the bounds can be a single small box — and the
+    // scale that fits one box to the map blows every rectangle up until the
+    // map is a solid block of colour.
+    const graphWidth = Math.max(right - left, 200);
+    const graphHeight = Math.max(bottom - top, 200);
     const scale = Math.min(
       (width - padding * 2) / graphWidth,
-      (height - padding * 2) / graphHeight
+      (height - padding * 2) / graphHeight,
+      1
     );
     return { left, top, scale };
   });
@@ -1763,14 +1784,15 @@ function FlowMiniMap({
     const screen = size.value;
     if (screen.width === 0) return { x: 0, y: 0, width: 0, height: 0 };
 
+
     // The graph rectangle currently on screen, mapped into the map's space.
     const graphX = -translateX.value / zoom.value;
     const graphY = -translateY.value / zoom.value;
     return {
       x: padding + (graphX - left) * scale,
       y: padding + (graphY - top) * scale,
-      width: (screen.width / zoom.value) * scale,
-      height: (screen.height / zoom.value) * scale,
+      width: Math.min((screen.width / zoom.value) * scale, width),
+      height: Math.min((screen.height / zoom.value) * scale, height),
     };
   });
 
@@ -1787,7 +1809,16 @@ function FlowMiniMap({
     >
       <Svg width={width} height={height}>
         {nodeIds.map((id) => (
-          <MiniMapNode key={id} id={id} rects={rects} fit={fit} padding={padding} color={tint} />
+          <MiniMapNode
+            key={id}
+            id={id}
+            rects={rects}
+            fit={fit}
+            padding={padding}
+            color={tint}
+            width={width}
+            height={height}
+          />
         ))}
         <AnimatedRect
           animatedProps={viewportProps}
@@ -1809,12 +1840,16 @@ function MiniMapNode({
   fit,
   padding,
   color,
+  width,
+  height,
 }: {
   id: string;
   rects: SharedValue<Record<string, FlowRect>>;
   fit: SharedValue<{ left: number; top: number; scale: number }>;
   padding: number;
   color: string;
+  width: number;
+  height: number;
 }) {
   const props = useAnimatedProps(() => {
     const rect = rects.value[id];
@@ -1823,8 +1858,8 @@ function MiniMapNode({
     return {
       x: padding + (rect.x - left) * scale,
       y: padding + (rect.y - top) * scale,
-      width: Math.max(rect.width * scale, 2),
-      height: Math.max(rect.height * scale, 2),
+      width: Math.min(Math.max(rect.width * scale, 2), width),
+      height: Math.min(Math.max(rect.height * scale, 2), height),
     };
   });
 

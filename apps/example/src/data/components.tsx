@@ -1562,7 +1562,7 @@ function FlowMindMapVersion() {
 /** A small service node, sized to sit inside a group without crowding it. */
 function GroupedNode({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
   return (
-    <View className="w-44 flex-row items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5">
+    <View className="w-40 flex-row items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5">
       <View className="shrink-0">{icon}</View>
       <View className="min-w-0 flex-1">
         <Text size="sm" weight="medium" numberOfLines={1}>
@@ -1577,66 +1577,55 @@ function GroupedNode({ icon, title, detail }: { icon: ReactNode; title: string; 
 }
 
 /**
- * Two groups of nodes, with a minimap for the parts off screen.
+ * Two groups and a minimap.
  *
- * Node positions are in graph coordinates throughout — a group is a box drawn
- * around a region, not a coordinate space of its own, so a node inside one
- * carries the same kind of position as a node outside it.
+ * The groups are stacked rather than placed side by side: two 208-wide boxes
+ * next to each other need 500 points of graph to breathe, and a phone zoomed
+ * out far enough to show 500 points renders the labels too small to read.
+ * Down the screen, each group gets the full width.
  */
 function FlowGroupedVersion() {
   return (
-    <Flow defaultViewport={{ x: 16, y: 40, zoom: 0.85 }} minZoom={0.3}>
-      <Flow.Background variant="dots" gap={26} />
+    <Flow defaultViewport={{ x: 24, y: 24, zoom: 1 }} minZoom={0.4}>
+      <Flow.Background variant="dots" gap={24} />
 
       <Flow.Group
         id="edge-tier"
         label="Edge"
         position={{ x: 0, y: 0 }}
-        size={{ width: 208, height: 190 }}
+        size={{ width: 196, height: 178 }}
       >
-        <Flow.Node id="cdn" position={{ x: 16, y: 36 }}>
-          <GroupedNode
-            icon={<ShareNodesIcon size={16} />}
-            title="cdn"
-            detail="142 locations"
-          />
+        <Flow.Node id="cdn" position={{ x: 14, y: 34 }}>
+          <GroupedNode icon={<ShareNodesIcon size={16} />} title="cdn" detail="142 locations" />
           <Flow.Handle id="out" position="bottom" type="source" />
         </Flow.Node>
-        <Flow.Node id="waf" position={{ x: 16, y: 118 }}>
-          <GroupedNode
-            icon={<ShieldCheckIcon size={16} />}
-            title="waf"
-            detail="Blocking 0.4%"
-          />
+        <Flow.Node id="waf" position={{ x: 14, y: 110 }}>
+          <GroupedNode icon={<ShieldCheckIcon size={16} />} title="waf" detail="Blocking 0.4%" />
           <Flow.Handle id="in" position="top" type="target" />
-          <Flow.Handle id="out" position="right" type="source" />
+          <Flow.Handle id="out" position="bottom" type="source" />
         </Flow.Node>
       </Flow.Group>
 
       <Flow.Group
         id="core-tier"
         label="Core"
-        position={{ x: 268, y: 96 }}
-        size={{ width: 208, height: 190 }}
+        position={{ x: 0, y: 248 }}
+        size={{ width: 196, height: 178 }}
       >
-        <Flow.Node id="api" position={{ x: 284, y: 132 }}>
+        <Flow.Node id="api" position={{ x: 14, y: 282 }}>
           <GroupedNode icon={<SendIcon size={16} />} title="api" detail="p95 84ms" />
-          <Flow.Handle id="in" position="left" type="target" />
+          <Flow.Handle id="in" position="top" type="target" />
           <Flow.Handle id="out" position="bottom" type="source" />
         </Flow.Node>
-        <Flow.Node id="pg" position={{ x: 284, y: 214 }}>
-          <GroupedNode
-            icon={<PackageIcon size={16} />}
-            title="postgres"
-            detail="2 replicas"
-          />
+        <Flow.Node id="pg" position={{ x: 14, y: 358 }}>
+          <GroupedNode icon={<PackageIcon size={16} />} title="postgres" detail="2 replicas" />
           <Flow.Handle id="in" position="top" type="target" />
         </Flow.Node>
       </Flow.Group>
 
       <Flow.Edge from="cdn.out" to="waf.in" variant="smoothstep" arrow />
       <Flow.Edge from="waf.out" to="api.in" variant="smoothstep" animated arrow />
-      <Flow.Edge from="api.out" to="pg.in" variant="smoothstep" dashed animated arrow />
+      <Flow.Edge from="api.out" to="pg.in" variant="smoothstep" arrow />
 
       <Flow.MiniMap />
       <Flow.Controls />
