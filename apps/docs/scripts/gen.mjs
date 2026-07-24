@@ -105,7 +105,14 @@ for (const [slug, entry] of Object.entries(meta)) {
   const u = usage[slug] ?? {};
 
   const parts = c.parts.length ? c.parts.map((p) => `${name}.${p}`) : [];
-  const imports = [name, ...(u.extraImports ?? [])];
+  // A single string here would spread character by character (`"useState"` →
+  // `u, s, e, …`), so coerce a lone extra import up to a one-element array.
+  const extra = Array.isArray(u.extraImports)
+    ? u.extraImports
+    : u.extraImports
+      ? [u.extraImports]
+      : [];
+  const imports = [name, ...extra];
 
   const sections = [];
 
