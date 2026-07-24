@@ -61,7 +61,8 @@
       "cn",
       "icons",
       "native",
-      "portal"
+      "portal",
+      "scrim"
     ]
   },
   {
@@ -405,6 +406,17 @@
     "description": "Animated highlight sweeping across content.",
     "registryDependencies": [
       "cn",
+      "text"
+    ]
+  },
+  {
+    "name": "signature",
+    "type": "registry:ui",
+    "description": "Sign with a finger, and get the result back out as SVG or PNG.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "icons",
       "text"
     ]
   },

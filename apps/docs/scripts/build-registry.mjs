@@ -31,8 +31,10 @@ const OPTIONAL = new Set([
   '@expo/ui',
   'expo-blur',
   'expo-clipboard',
+  'expo-file-system',
   'expo-haptics',
   'react-native-keyboard-controller',
+  'react-native-view-shot',
 ]);
 
 /** Canonical aliases. The CLI rewrites these if the project uses others. */

@@ -71,6 +71,7 @@ import {
   OtpInput,
   PackageIcon,
   PauseIcon,
+  PencilIcon,
   PlayIcon,
   PlusSquareIcon,
   Popover,
@@ -90,6 +91,8 @@ import {
   SectionRail,
   Separator,
   Shimmer,
+  Signature,
+  type SignatureHandle,
   Skeleton,
   Slider,
   Soundwave,
@@ -1176,6 +1179,358 @@ function BlurredSheetDemo() {
         </View>
       </BottomSheet.Content>
     </BottomSheet>
+  );
+}
+
+/* Signature */
+
+/** The pad on its own, with the controls it usually travels with. */
+function SignatureDemo({ guideline = false }: { guideline?: boolean }) {
+  const pad = useRef<SignatureHandle>(null);
+  const [count, setCount] = useState(0);
+
+  return (
+    <View className="w-full gap-3">
+      <Signature
+        ref={pad}
+        guideline={guideline}
+        guidelineLabel={guideline ? 'Sign above the line' : undefined}
+        onChange={setCount}
+      />
+      <Signature.Toolbar>
+        <View className="flex-row gap-2">
+          <Signature.Undo disabled={count === 0} onPress={() => pad.current?.undo()} />
+          <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />
+        </View>
+        <Text size="xs" muted>
+          {count === 0 ? 'Nothing signed yet' : `${count} strokes`}
+        </Text>
+      </Signature.Toolbar>
+    </View>
+  );
+}
+
+/**
+ * The sheet version: a floating pad over a frosted screen, which is where a
+ * signature is usually asked for — over the thing being signed, not instead
+ * of it.
+ */
+function SignatureSheetVersion() {
+  const pad = useRef<SignatureHandle>(null);
+  const [open, setOpen] = useState(false);
+  const [count, setCount] = useState(0);
+  const [signed, setSigned] = useState(false);
+
+  return (
+    <View className="flex-1 items-center justify-center gap-4 px-6">
+      {signed ? (
+        <Alert variant="success" className="w-full">
+          <Alert.Indicator />
+          <Text size="sm">Signed. The agreement is on its way.</Text>
+        </Alert>
+      ) : (
+        <Text size="sm" muted className="text-center">
+          A signature is asked for over the thing being signed, so the pad comes
+          up as a sheet rather than taking you to another screen.
+        </Text>
+      )}
+      <Button onPress={() => setOpen(true)}>
+        {signed ? 'Sign again' : 'Sign the agreement'}
+      </Button>
+
+      <BottomSheet open={open} onOpenChange={setOpen}>
+        <BottomSheet.Content detached blur showClose={false}>
+          <View className="flex-row items-center justify-between pb-2 pt-1">
+            <Signature.Undo
+              accessibilityLabel="Start over"
+              disabled={count === 0}
+              onPress={() => pad.current?.clear()}
+            />
+            <Text weight="semibold">Sign</Text>
+            <AnimatedPressableClose onPress={() => setOpen(false)} />
+          </View>
+          <Signature
+            ref={pad}
+            size="lg"
+            onChange={setCount}
+            className="border-0 bg-white"
+            strokeColor="#0a0a0a"
+          />
+          <View className="items-center py-4">
+            <Button
+              disabled={count === 0}
+              className="rounded-full px-6"
+              onPress={() => {
+                setSigned(true);
+                setOpen(false);
+              }}
+            >
+              <PencilIcon size={16} />
+              <Text weight="semibold">Finish Signing</Text>
+            </Button>
+          </View>
+        </BottomSheet.Content>
+      </BottomSheet>
+    </View>
+  );
+}
+
+/** The round X the signing sheet uses in place of the built-in close button. */
+function AnimatedPressableClose({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Close"
+      hitSlop={8}
+      onPress={onPress}
+      className="h-9 w-9 items-center justify-center rounded-full bg-muted active:opacity-70"
+    >
+      <XIcon size={16} />
+    </Pressable>
+  );
+}
+
+/** An agreement you scroll, with the signature landing back in the document. */
+function SignatureDocumentVersion() {
+  const pad = useRef<SignatureHandle>(null);
+  const [open, setOpen] = useState(false);
+  const [count, setCount] = useState(0);
+  const [signature, setSignature] = useState<string | null>(null);
+
+  return (
+    <View className="flex-1">
+      <ScrollView contentContainerClassName="gap-4 px-5 pb-10 pt-2">
+        <Text size="lg" weight="semibold">
+          Services agreement
+        </Text>
+        {Array.from({ length: 6 }, (_, index) => (
+          <Text key={index} size="sm" muted>
+            {index + 1}. This clause exists so the agreement is long enough to
+            scroll, which is the point of signing at the bottom of one rather
+            than on a screen of its own.
+          </Text>
+        ))}
+
+        <Frame className="mt-2">
+          <Frame.Header>
+            <Frame.Title>Signature</Frame.Title>
+            <Frame.Action>{signature ? 'Signed' : 'Required'}</Frame.Action>
+          </Frame.Header>
+          <Frame.Panel>
+            <Frame.Row onPress={() => setOpen(true)} chevron>
+              <Frame.Media>
+                <PencilIcon size={18} />
+              </Frame.Media>
+              <Frame.Content>
+                <Frame.Title>
+                  {signature ? 'Signed by Khalid Abdi' : 'Tap to sign'}
+                </Frame.Title>
+                <Frame.Description>
+                  {signature
+                    ? 'Captured as an SVG, stored with the agreement.'
+                    : 'Your signature is captured as vector paths, not a photo.'}
+                </Frame.Description>
+              </Frame.Content>
+            </Frame.Row>
+          </Frame.Panel>
+        </Frame>
+
+        {signature ? (
+          <Text size="xs" muted numberOfLines={3}>
+            {signature.slice(0, 180)}…
+          </Text>
+        ) : null}
+      </ScrollView>
+
+      <BottomSheet open={open} onOpenChange={setOpen}>
+        <BottomSheet.Content detached blur showClose={false}>
+          <View className="flex-row items-center justify-between pb-2 pt-1">
+            <Signature.Undo disabled={count === 0} onPress={() => pad.current?.undo()} />
+            <Text weight="semibold">Sign</Text>
+            <AnimatedPressableClose onPress={() => setOpen(false)} />
+          </View>
+          <Signature
+            ref={pad}
+            size="lg"
+            guideline
+            onChange={setCount}
+            className="border-0 bg-white"
+            strokeColor="#0a0a0a"
+          />
+          <View className="items-center py-4">
+            <Button
+              disabled={count === 0}
+              className="rounded-full px-6"
+              onPress={() => {
+                setSignature(pad.current?.toSVG() ?? null);
+                setOpen(false);
+              }}
+            >
+              <Text weight="semibold">Attach signature</Text>
+            </Button>
+          </View>
+        </BottomSheet.Content>
+      </BottomSheet>
+    </View>
+  );
+}
+
+/** Saving to a file — the part that needs the optional packages. */
+function SignatureExportVersion() {
+  const pad = useRef<SignatureHandle>(null);
+  const [count, setCount] = useState(0);
+  const [format, setFormat] = useState('svg');
+  const [result, setResult] = useState<string | null>(null);
+
+  return (
+    <View className="flex-1 gap-4 px-5 pt-2">
+      <Signature ref={pad} size="lg" guideline onChange={setCount} />
+
+      <ToggleButtonGroup
+        selectionMode="single"
+        value={[format]}
+        onValueChange={(next) => setFormat(next[0] ?? 'svg')}
+      >
+        <ToggleButton id="svg">SVG</ToggleButton>
+        <ToggleButton id="png">PNG</ToggleButton>
+      </ToggleButtonGroup>
+
+      <View className="flex-row gap-2">
+        <Button
+          variant="outline"
+          className="flex-1"
+          disabled={count === 0}
+          onPress={() => pad.current?.clear()}
+        >
+          Clear
+        </Button>
+        <Button
+          className="flex-1"
+          disabled={count === 0}
+          onPress={async () => {
+            try {
+              const file = await pad.current?.save({
+                filename: 'agreement',
+                format: format as 'svg' | 'png',
+              });
+              setResult(file ? `${file.uri} (${file.width}×${file.height})` : null);
+            } catch (error) {
+              // The optional packages report themselves by name, so showing the
+              // message is more useful than a generic failure.
+              setResult(error instanceof Error ? error.message : String(error));
+            }
+          }}
+        >
+          Save
+        </Button>
+      </View>
+
+      {result ? (
+        <Text size="xs" muted>
+          {result}
+        </Text>
+      ) : (
+        <Text size="xs" muted>
+          Saving writes to the app&apos;s document directory. PNG needs the
+          optional raster package; SVG needs nothing.
+        </Text>
+      )}
+    </View>
+  );
+}
+
+/** The whole screen is the pad — for a form that signs and nothing else. */
+function SignatureFullScreenVersion() {
+  const pad = useRef<SignatureHandle>(null);
+  const [count, setCount] = useState(0);
+
+  return (
+    <View className="flex-1">
+      <Signature
+        ref={pad}
+        size="full"
+        guideline
+        guidelineLabel="Khalid Abdi"
+        onChange={setCount}
+        placeholder={
+          <Text size="sm" muted>
+            Turn the device sideways and sign across the screen
+          </Text>
+        }
+      />
+      <View className="flex-row items-center justify-between gap-2 border-t border-border px-5 py-4">
+        <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />
+        <Button disabled={count === 0} className="flex-1">
+          Accept and continue
+        </Button>
+      </View>
+    </View>
+  );
+}
+
+/** Proof of delivery — the shape a courier app actually asks for. */
+function SignatureDeliveryVersion() {
+  const pad = useRef<SignatureHandle>(null);
+  const [count, setCount] = useState(0);
+  const [confirmed, setConfirmed] = useState(false);
+
+  return (
+    <ScrollView contentContainerClassName="gap-4 px-5 pb-10 pt-2">
+      <Frame>
+        <Frame.Header>
+          <Frame.Title>Delivery 4821</Frame.Title>
+          <Frame.Action>
+            <Badge variant="secondary">2 parcels</Badge>
+          </Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <Frame.Row>
+            <Frame.Media>
+              <PackageIcon size={18} />
+            </Frame.Media>
+            <Frame.Content>
+              <Frame.Title>Khalid Abdi</Frame.Title>
+              <Frame.Description>
+                14 Cadogan Street · Handed to the recipient
+              </Frame.Description>
+            </Frame.Content>
+          </Frame.Row>
+          <Frame.Row>
+            <Frame.Content>
+              <Frame.Title>Received at</Frame.Title>
+            </Frame.Content>
+            <Frame.Actions>
+              <Text size="sm" muted>
+                14:32
+              </Text>
+            </Frame.Actions>
+          </Frame.Row>
+        </Frame.Panel>
+      </Frame>
+
+      <Text size="sm" muted>
+        Recipient signature
+      </Text>
+      <Signature ref={pad} guideline onChange={setCount} />
+
+      <View className="flex-row gap-2">
+        <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />
+        <Button
+          className="flex-1"
+          disabled={count === 0 || confirmed}
+          onPress={() => setConfirmed(true)}
+        >
+          {confirmed ? 'Confirmed' : 'Confirm delivery'}
+        </Button>
+      </View>
+
+      {confirmed ? (
+        <Alert variant="success">
+          <Alert.Indicator />
+          <Text size="sm">Delivery confirmed and the signature attached.</Text>
+        </Alert>
+      ) : null}
+    </ScrollView>
   );
 }
 
@@ -6573,6 +6928,63 @@ export const COMPONENTS: ComponentEntry[] = [
             ))}
           </View>
         ),
+      },
+    ],
+  },
+  {
+    slug: 'signature',
+    name: 'Signature',
+    summary: 'Sign with a finger, and get the result back out',
+    demos: [
+      { label: 'Default', render: () => <SignatureDemo /> },
+      { label: 'With a baseline', render: () => <SignatureDemo guideline /> },
+      {
+        label: 'Sizes',
+        render: () => (
+          <View className="w-full gap-4">
+            <Signature size="sm" placeholder={null} />
+            <Signature size="md" placeholder={null} />
+          </View>
+        ),
+      },
+      {
+        label: 'Signing sheet',
+        id: 'sheet',
+        fullPage: true,
+        description:
+          'A floating pad over a frosted screen — the signature is asked for over the thing being signed.',
+        render: () => <SignatureSheetVersion />,
+      },
+      {
+        label: 'Signing a document',
+        id: 'document',
+        fullPage: true,
+        description:
+          'An agreement you scroll, with the captured signature landing back in the document.',
+        render: () => <SignatureDocumentVersion />,
+      },
+      {
+        label: 'Saving to a file',
+        id: 'export',
+        fullPage: true,
+        description:
+          'save() writes SVG or PNG and hands back where it went. The optional packages report themselves by name.',
+        render: () => <SignatureExportVersion />,
+      },
+      {
+        label: 'Full screen',
+        id: 'full-screen',
+        fullPage: true,
+        fullBleed: true,
+        description: 'The whole screen is the pad, for a form that signs and nothing else.',
+        render: () => <SignatureFullScreenVersion />,
+      },
+      {
+        label: 'Proof of delivery',
+        id: 'delivery',
+        fullPage: true,
+        description: 'Recipient, timestamp and signature on one screen, the way a courier app asks.',
+        render: () => <SignatureDeliveryVersion />,
       },
     ],
   },

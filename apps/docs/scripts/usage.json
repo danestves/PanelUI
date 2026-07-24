@@ -375,6 +375,9 @@
     "description": "Cap the height on the scrollable, not the sheet — the sheet should still size to its content when the list is short.",
     "code": "<BottomSheet.Content>\n  <ScrollView className=\"max-h-96\" bounces={false}>\n    {options.map((option) => (\n      <Button key={option.id} variant=\"ghost\" fullWidth>\n        {option.label}\n      </Button>\n    ))}\n  </ScrollView>\n</BottomSheet.Content>"
    }
+  ],
+  "hideVariants": [
+   "detached"
   ]
  },
  "button": {
@@ -2345,6 +2348,76 @@
    "height": 1122,
    "caption": "The sweep is clipped to the glyphs, so the letters catch the light rather than a box over them."
   }
+ },
+ "signature": {
+  "intro": "A surface you sign with a finger, and a handle for getting the result back out. The stroke being drawn is built on the UI thread and never reaches React, so the line keeps up with the fingertip; finished strokes become static paths that never animate again.",
+  "usage": "const pad = useRef<SignatureHandle>(null);\n\n<Signature ref={pad} guideline guidelineLabel=\"Sign above the line\" />\n<Button onPress={() => pad.current?.save({ filename: 'agreement' })}>\n  Finish signing\n</Button>",
+  "extraImports": [
+   "Button",
+   "Text",
+   "type SignatureHandle"
+  ],
+  "parts": {
+   "Toolbar": "A row of controls under or over the pad. Purely layout.",
+   "Undo": "Round button for removing the last stroke. Wire it to `ref.current?.undo()`.",
+   "Clear": "Round button for dropping every stroke. Wire it to `ref.current?.clear()`."
+  },
+  "anatomy": "<Signature ref={pad} />\n<Signature.Toolbar>\n  <Signature.Undo onPress={() => pad.current?.undo()} />\n  <Signature.Clear onPress={() => pad.current?.clear()} />\n</Signature.Toolbar>",
+  "examples": [
+   {
+    "title": "A pad with its controls",
+    "description": "`onChange` reports the stroke count, which is the cheap way to keep a Save button disabled until there is something to save.",
+    "code": "const pad = useRef<SignatureHandle>(null);\nconst [count, setCount] = useState(0);\n\n<Signature ref={pad} onChange={setCount} />\n<Signature.Toolbar>\n  <View className=\"flex-row gap-2\">\n    <Signature.Undo disabled={count === 0} onPress={() => pad.current?.undo()} />\n    <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />\n  </View>\n  <Button disabled={count === 0} onPress={submit}>Done</Button>\n</Signature.Toolbar>"
+   },
+   {
+    "title": "Signing in a sheet",
+    "description": "Where a signature is usually asked for — floating over the thing being signed rather than on a screen of its own. `detached` and `blur` come from BottomSheet.",
+    "code": "<BottomSheet open={open} onOpenChange={setOpen}>\n  <BottomSheet.Content detached blur showClose={false}>\n    <View className=\"flex-row items-center justify-between pb-2 pt-1\">\n      <Signature.Undo onPress={() => pad.current?.clear()} />\n      <Text weight=\"semibold\">Sign</Text>\n    </View>\n    <Signature ref={pad} size=\"lg\" className=\"border-0 bg-white\" />\n    <Button className=\"rounded-full\" onPress={finish}>Finish Signing</Button>\n  </BottomSheet.Content>\n</BottomSheet>"
+   },
+   {
+    "title": "Saving to a file",
+    "description": "`save()` writes the signature and resolves where it went. SVG needs no extra packages; PNG rasterises the pad and needs the optional raster package.",
+    "code": "const file = await pad.current?.save({\n  directory: FileSystem.documentDirectory,\n  filename: `agreement-${contractId}`,\n  format: 'svg',\n});\n\n// file.uri  → 'file:///…/agreement-4821.svg'\n// file.width, file.height → the pad's size in points"
+   },
+   {
+    "title": "Sending it somewhere instead",
+    "description": "`toSVG()` is pure string building — no packages, no async, nothing written to disk. For posting the signature to an API or storing it in a record.",
+    "code": "await fetch('/api/agreements/4821/sign', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ signature: pad.current?.toSVG() }),\n});"
+   },
+   {
+    "title": "A baseline to sign above",
+    "description": "The ✕ and the rule a paper form has. `guidelineLabel` captions it — a printed name under the line, usually.",
+    "code": "<Signature guideline guidelineLabel=\"Khalid Abdi\" size=\"lg\" />"
+   }
+  ],
+  "versions": [
+   {
+    "title": "Signing sheet",
+    "description": "A floating pad over a frosted screen, with a reset on one side and a close on the other.",
+    "code": "<BottomSheet.Content detached blur showClose={false}>\n  <Signature ref={pad} size=\"lg\" className=\"border-0 bg-white\" />\n</BottomSheet.Content>"
+   },
+   {
+    "title": "Signing a document",
+    "description": "An agreement you scroll, with a Frame row that opens the pad and the captured SVG landing back in the document.",
+    "code": "<Frame.Row onPress={() => setOpen(true)} chevron>\n  <Frame.Media><PencilIcon size={18} /></Frame.Media>\n  <Frame.Content>\n    <Frame.Title>{signature ? 'Signed' : 'Tap to sign'}</Frame.Title>\n  </Frame.Content>\n</Frame.Row>"
+   },
+   {
+    "title": "Saving to a file",
+    "description": "A format toggle and a Save button, printing the resulting URI — or the name of the package that is missing.",
+    "code": "try {\n  const file = await pad.current?.save({ format });\n  setResult(file?.uri ?? null);\n} catch (error) {\n  setResult(error instanceof Error ? error.message : String(error));\n}"
+   },
+   {
+    "title": "Full screen",
+    "description": "`size=\"full\"` fills whatever it is given, with the actions on a bar below it.",
+    "code": "<Signature size=\"full\" guideline guidelineLabel=\"Khalid Abdi\" />"
+   },
+   {
+    "title": "Proof of delivery",
+    "description": "Recipient, timestamp and signature on one screen, the shape a courier app asks for.",
+    "code": "<Signature ref={pad} guideline onChange={setCount} />\n<Button disabled={count === 0} onPress={confirm}>Confirm delivery</Button>"
+   }
+  ],
+  "notes": "### Why the stroke never reaches React\n\nA finger produces touch events far faster than a component tree can usefully re-render, and a signature is exactly where the lag shows: the line trails the fingertip and drawing feels like moving through syrup.\n\nSo the stroke being drawn lives in a shared value and is turned into an SVG path by a worklet on the UI thread — React is not involved in a single frame of it. When the finger lifts, that one finished string crosses to JavaScript once and becomes a static path. Committed strokes never animate again, so the hundredth stroke costs what the first one did.\n\nPoints closer together than `minDistance` are dropped as they arrive. A finger resting still otherwise emits a point per frame in the same spot, which is a longer path describing the same shape.\n\n### Smoothing\n\nRaw touch points joined with straight lines look like a seismograph. Each segment is drawn as a quadratic curve through the midpoint between two points instead: the point itself is the control handle, the midpoints are the anchors, and consecutive curves meet with a shared tangent. It needs no lookahead, so a point can be appended to a stroke already on screen without redrawing what came before it differently.\n\n### Getting the signature out\n\nThe ref exposes `clear`, `undo`, `redo`, `isEmpty`, `strokeCount`, `toSVG`, `toDataURL` and `save`.\n\n`toSVG()` is pure string building — no packages, no async, nothing written to disk — and returns a standalone document sized to the pad. It is the one to reach for when the signature is going into an API call or a database record.\n\n`save()` writes a file and resolves `{ uri, format, width, height }`. It needs the optional `expo-file-system`. Passing `format: 'png'` rasterises the pad and also needs the optional `react-native-view-shot`. Neither is installed on your behalf, and asking for something a missing package provides throws with that package's name in the message rather than failing somewhere further down.\n\n```tsx\nconst file = await pad.current?.save({ filename: 'agreement', format: 'png', scale: 3 });\n```\n\n`directory` defaults to the app's own document directory, which survives restarts and is not visible to the user. Pass one explicitly to write anywhere else."
  },
  "skeleton": {
   "intro": "A shimmer placeholder for content that has not loaded. Size it with Tailwind utilities.",

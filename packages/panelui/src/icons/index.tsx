@@ -561,3 +561,147 @@ export function PauseIcon({ size = 16, color, ...props }: IconProps) {
     </Svg>
   );
 }
+
+/** A pencil at an angle — draw, sign, edit by hand. */
+export function PencilIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** An arrow curling anticlockwise — undo, reset, start over. */
+export function RotateCcwIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M3 12a9 9 0 1 0 2.64-6.36L3 8"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M3 3v5h5"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** A bin — discard what is there. */
+export function TrashIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M4 7h16M10 4h4M6 7l1 13h10l1-13"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** An arrow into a tray — save the thing to a file. */
+export function DownloadIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** A cross of two strokes — zoom in, add. Pairs with MinusIcon. */
+export function PlusIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M12 5v14M5 12h14"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+/** Four corners pushing outward — fit everything into view. */
+export function MaximizeIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** A closed padlock — the thing behind it cannot be moved. */
+export function LockIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M5 11h14v10H5z"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M8 11V7a4 4 0 0 1 8 0v4"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+/** The same padlock with its shackle swung open — freely movable. */
+export function UnlockIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M5 11h14v10H5z"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M8 11V7a4 4 0 0 1 7.5-2"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
