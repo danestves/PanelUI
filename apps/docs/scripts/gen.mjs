@@ -237,7 +237,10 @@ ${variantKeys.map(([k, opts]) => {
   // than something you have to translate into JSX yourself.
   const snippet = u.variantCode?.[k]
     ?? opts.map((o) => `<${name} ${k}="${o}">…</${name}>`).join('\n');
-  return `### \`${k}\`\n\n${list}\n\n\`\`\`tsx\n${snippet}\n\`\`\``;
+  // Recordings or shots of individual variant values, each captioned with the
+  // value it shows — for the keys where the difference is easier seen than read.
+  const media = (u.variantMedia?.[k] ?? []).map(demoMedia).join('');
+  return `### \`${k}\`\n\n${list}${media}\n\n\`\`\`tsx\n${snippet}\n\`\`\``;
 }).join('\n\n')}`);
   }
 
