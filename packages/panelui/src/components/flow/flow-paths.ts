@@ -290,3 +290,59 @@ export function edgeSpan(from: FlowPoint, to: FlowPoint): number {
   'worklet';
   return distanceBetween(from, to);
 }
+
+/**
+ * The arrowhead at an edge's target, as its own closed path.
+ *
+ * SVG has `marker-end` for exactly this, and it is the obvious way to do it.
+ * It is not used, because a path carrying a marker reference stops picking up
+ * new geometry on re-render — the arrow-bearing edges freeze where they were
+ * first drawn while arrow-less ones follow their nodes. Drawing the triangle
+ * as an ordinary path costs nine numbers and behaves.
+ *
+ * `dirX`/`dirY` is the unit direction of travel *into* the target.
+ */
+export function arrowHeadPath(
+  tip: FlowPoint,
+  dirX: number,
+  dirY: number,
+  size: number
+): string {
+  'worklet';
+  const length = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+  const ux = dirX / length;
+  const uy = dirY / length;
+  // The perpendicular, for the two back corners.
+  const px = -uy;
+  const py = ux;
+
+  const baseX = tip.x - ux * size;
+  const baseY = tip.y - uy * size;
+  const half = size * 0.45;
+
+  return (
+    `M${tip.x},${tip.y} ` +
+    `L${baseX + px * half},${baseY + py * half} ` +
+    `L${baseX - px * half},${baseY - py * half} Z`
+  );
+}
+
+/**
+ * Which way an edge is travelling as it arrives. Every routing but `straight`
+ * comes in perpendicular to the target's face, so the face decides it; a
+ * straight line comes in along itself.
+ */
+export function arrivalDirection(
+  variant: 'bezier' | 'smoothstep' | 'step' | 'straight',
+  from: FlowPoint,
+  to: FlowPoint,
+  toSide: FlowSide
+): { x: number; y: number } {
+  'worklet';
+  if (variant === 'straight') {
+    return { x: to.x - from.x, y: to.y - from.y };
+  }
+  const normal = sideNormal(toSide);
+  // The face points outward; the edge arrives against it.
+  return { x: -normal.x, y: -normal.y };
+}

@@ -78,8 +78,6 @@ import Animated, {
 import Svg, {
   Circle,
   Defs,
-  G,
-  Marker,
   Path,
   Pattern,
   Rect,
@@ -91,6 +89,8 @@ import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import {
   anchorOf,
+  arrivalDirection,
+  arrowHeadPath,
   autoSides,
   edgePath,
   type FlowPoint,
@@ -121,13 +121,6 @@ const GRID_SPAN = 4;
 function clampCanvas(value: number): number {
   return Math.max(Math.min(value, 4000), 1);
 }
-
-/**
- * One arrowhead for the whole canvas. Markers used to be declared per edge in
- * a nested <Defs>, which the native side would not resolve — and an
- * unresolvable `markerEnd` takes the path down with it.
- */
-const ARROW_MARKER = 'panelui-flow-arrow';
 
 /** How close a finger has to get to a handle for a connection to land. */
 const CONNECT_RADIUS = 44;
@@ -1379,18 +1372,28 @@ function FlowEdgePath({
 
   const d = edgePath(variant, a, sideA, b, sideB, curvature, radius, gap);
   const dash = dashed || animated ? 6 : 0;
+  const stroke = color ?? tint;
+
+  const head = arrow
+    ? (() => {
+        const dir = arrivalDirection(variant, a, b, sideB);
+        return arrowHeadPath(b, dir.x, dir.y, Math.max(width * 3.5, 7));
+      })()
+    : null;
 
   return (
-    <Path
-      d={d}
-      fill="none"
-      stroke={color ?? tint}
-      strokeWidth={width}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeDasharray={dash ? `${dash} ${dash}` : undefined}
-      markerEnd={arrow ? `url(#${ARROW_MARKER})` : undefined}
-    />
+    <>
+      <Path
+        d={d}
+        fill="none"
+        stroke={stroke}
+        strokeWidth={width}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray={dash ? `${dash} ${dash}` : undefined}
+      />
+      {head ? <Path d={head} fill={stroke} /> : null}
+    </>
   );
 }
 
@@ -1443,19 +1446,6 @@ function FlowEdgeLayer() {
       width={layer.width}
       height={layer.height}
     >
-      <Defs>
-        <Marker
-          id={ARROW_MARKER}
-          markerWidth={8}
-          markerHeight={8}
-          refX={7}
-          refY={4}
-          orient="auto"
-          markerUnits="strokeWidth"
-        >
-          <Path d="M1,1 L7,4 L1,7 Z" fill={tint} />
-        </Marker>
-      </Defs>
       {edges.map((edge) => (
         <FlowEdgePath
           key={edge.key}

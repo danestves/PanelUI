@@ -1338,7 +1338,6 @@ function FlowInfrastructureVersion() {
 
       <Flow.Node id="db" position={{ x: 10, y: 20 }}>
         <ServiceNode icon={<PackageIcon size={20} />} title="blog-db" status="Online" />
-        <Flow.Handle id="in" position="bottom" type="target" />
       </Flow.Node>
 
       <Flow.Node id="ghost" position={{ x: 96, y: 250 }}>
@@ -1349,17 +1348,17 @@ function FlowInfrastructureVersion() {
           status="Online"
           volume="ghost-content"
         />
-        <Flow.Handle id="out" position="top" type="source" />
-        <Flow.Handle id="cache" position="left" type="source" offset={0.8} />
       </Flow.Node>
 
       <Flow.Node id="redis" position={{ x: 0, y: 470 }}>
         <ServiceNode icon={<SendIcon size={20} />} title="redis" status="Online" />
-        <Flow.Handle id="in" position="right" type="target" />
       </Flow.Node>
 
-      <Flow.Edge from="ghost.out" to="db.in" variant="smoothstep" dashed animated arrow />
-      <Flow.Edge from="ghost.cache" to="redis.in" variant="smoothstep" arrow />
+      {/* Named nodes rather than handles, so the faces are chosen from where
+          the frames currently are — drag one and the edge picks a different
+          side to leave from. */}
+      <Flow.Edge from="ghost" to="db" variant="smoothstep" dashed animated arrow />
+      <Flow.Edge from="ghost" to="redis" variant="smoothstep" arrow />
 
       <Flow.Controls />
     </Flow>
@@ -1407,18 +1406,14 @@ function FlowPipelineVersion() {
                 </Frame.Row>
               </Frame.Panel>
             </Frame>
-            {index > 0 ? <Flow.Handle id="in" position="top" type="target" hidden /> : null}
-            {index < stages.length - 1 ? (
-              <Flow.Handle id="out" position="bottom" type="source" hidden />
-            ) : null}
           </Flow.Node>
         ))}
 
         {stages.slice(0, -1).map((entry, index) => (
           <Flow.Edge
             key={`edge-${entry.id}`}
-            from={`${entry.id}.out`}
-            to={`${stages[index + 1]!.id}.in`}
+            from={entry.id}
+            to={stages[index + 1]!.id}
             variant="smoothstep"
             arrow
             // Only the edge into the stage that is running moves. An animation
@@ -1503,8 +1498,8 @@ function FlowConnectVersion() {
         {edges.map((edge) => (
           <Flow.Edge
             key={`${edge.source}-${edge.target}`}
-            from={`${edge.source}.${edge.sourceHandle ?? 'out'}`}
-            to={`${edge.target}.${edge.targetHandle ?? 'in'}`}
+            from={edge.source}
+            to={edge.target}
             variant="smoothstep"
             arrow
             animated
@@ -1599,12 +1594,9 @@ function FlowGroupedVersion() {
       >
         <Flow.Node id="cdn" position={{ x: 14, y: 34 }}>
           <GroupedNode icon={<ShareNodesIcon size={16} />} title="cdn" detail="142 locations" />
-          <Flow.Handle id="out" position="bottom" type="source" />
         </Flow.Node>
         <Flow.Node id="waf" position={{ x: 14, y: 110 }}>
           <GroupedNode icon={<ShieldCheckIcon size={16} />} title="waf" detail="Blocking 0.4%" />
-          <Flow.Handle id="in" position="top" type="target" />
-          <Flow.Handle id="out" position="bottom" type="source" />
         </Flow.Node>
       </Flow.Group>
 
@@ -1616,8 +1608,6 @@ function FlowGroupedVersion() {
       >
         <Flow.Node id="api" position={{ x: 14, y: 282 }}>
           <GroupedNode icon={<SendIcon size={16} />} title="api" detail="p95 84ms" />
-          <Flow.Handle id="in" position="top" type="target" />
-          <Flow.Handle id="out" position="bottom" type="source" />
         </Flow.Node>
         <Flow.Node id="pg" position={{ x: 14, y: 358 }}>
           <GroupedNode icon={<PackageIcon size={16} />} title="postgres" detail="2 replicas" />
@@ -1625,9 +1615,11 @@ function FlowGroupedVersion() {
         </Flow.Node>
       </Flow.Group>
 
-      <Flow.Edge from="cdn.out" to="waf.in" variant="smoothstep" arrow />
-      <Flow.Edge from="waf.out" to="api.in" variant="smoothstep" animated arrow />
-      <Flow.Edge from="api.out" to="pg.in" variant="smoothstep" arrow />
+      {/* Node to node. A group is a box drawn around a region, not something
+          an edge can attach to — the frames are what is connected. */}
+      <Flow.Edge from="cdn" to="waf" variant="smoothstep" arrow />
+      <Flow.Edge from="waf" to="api" variant="smoothstep" animated arrow />
+      <Flow.Edge from="api" to="pg" variant="smoothstep" arrow />
 
       <Flow.MiniMap />
       <Flow.Controls />
