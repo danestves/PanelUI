@@ -92,6 +92,7 @@ import {
   arrowHeadPath,
   autoSides,
   edgePath,
+  standOff,
   type FlowPoint,
   type FlowRect,
   type FlowSide,
@@ -112,6 +113,16 @@ const TRANSFORM_ORIGIN = { transformOrigin: 'top left' } as const;
 const GRID_SPAN = 4;
 
 /**
+ * The step the layer grows in once the graph outruns it.
+ *
+ * Quantised because the layer's size is React state on the render path: sized
+ * to the graph exactly, every frame of every drag would resize it and the SVG
+ * drawn at its size. Rounded up to a step, it changes a handful of times over a
+ * session instead.
+ */
+const LAYER_STEP = 600;
+
+/**
  * An SVG is backed by a single texture, and a texture has a maximum size the
  * platform will allocate — past it, nothing is drawn at all rather than
  * something clipped. This keeps the grid comfortably under it at 3× device
@@ -123,6 +134,13 @@ function clampCanvas(value: number): number {
 
 /** How close a finger has to get to a handle for a connection to land. */
 const CONNECT_RADIUS = 44;
+
+/**
+ * How far short of a container an edge stops. A group draws its own border, so
+ * an edge landing exactly on it would run under the stroke; a node has no
+ * border of its own and takes none of this.
+ */
+const GROUP_EDGE_STANDOFF = 5;
 
 export type FlowEdgeVariant = 'bezier' | 'smoothstep' | 'step' | 'straight';
 
@@ -198,10 +216,18 @@ interface FlowContextValue {
   locked: boolean;
   setLocked: (locked: boolean) => void;
   nodeIds: string[];
+  /**
+   * Which of `nodeIds` are containers rather than nodes. A group writes its box
+   * into the same registry — that is what lets an edge name one and the minimap
+   * find it — so the only thing separating the two is this list.
+   */
+  groupIds: string[];
   handles: HandleEntry[];
   edges: { key: string; props: FlowEdgeProps }[];
-  registerNode: (id: string, parent?: string) => void;
+  registerNode: (id: string) => void;
   unregisterNode: (id: string) => void;
+  registerGroup: (id: string) => void;
+  unregisterGroup: (id: string) => void;
   registerHandle: (entry: HandleEntry) => void;
   unregisterHandle: (key: string) => void;
   registerEdge: (key: string, props: FlowEdgeProps) => void;
@@ -307,6 +333,7 @@ function FlowRoot({
 
   const [locked, setLocked] = useState(false);
   const [nodeIds, setNodeIds] = useState<string[]>([]);
+  const [groupIds, setGroupIds] = useState<string[]>([]);
   const [handles, setHandles] = useState<HandleEntry[]>([]);
   const [edges, setEdges] = useState<{ key: string; props: FlowEdgeProps }[]>([]);
   const [box, setBox] = useState({ width: 0, height: 0 });
@@ -371,12 +398,36 @@ function FlowRoot({
    * of the canvas would quietly become unmovable. Sizing the layer to the same
    * span as the grid keeps every node inside its parent, where it can be hit.
    */
+  /**
+   * How far the graph reaches from graph (0, 0), in its worst direction. The
+   * layer is symmetric about the origin, so one number covers all four sides.
+   *
+   * Without this the layer is a fixed multiple of the container, and a graph
+   * that grows past it has its edges clipped by the SVG drawn at that size —
+   * leaving nodes on screen with the lines between them missing, which reads as
+   * the graph having lost its connections rather than as a clipped canvas.
+   */
+  const reach = useMemo(() => {
+    let out = 0;
+    for (const id in boxes) {
+      const rect = boxes[id]!;
+      out = Math.max(
+        out,
+        Math.abs(rect.x),
+        Math.abs(rect.y),
+        Math.abs(rect.x + rect.width),
+        Math.abs(rect.y + rect.height)
+      );
+    }
+    return Math.ceil(out / LAYER_STEP) * LAYER_STEP;
+  }, [boxes]);
+
   const layer = useMemo(
     () => ({
-      width: clampCanvas(Math.max(box.width, 320) * GRID_SPAN),
-      height: clampCanvas(Math.max(box.height, 480) * GRID_SPAN),
+      width: clampCanvas(Math.max(Math.max(box.width, 320) * GRID_SPAN, reach * 2)),
+      height: clampCanvas(Math.max(Math.max(box.height, 480) * GRID_SPAN, reach * 2)),
     }),
-    [box.height, box.width]
+    [box.height, box.width, reach]
   );
   const origin = useMemo(
     () => ({ x: layer.width / 2, y: layer.height / 2 }),
@@ -396,6 +447,14 @@ function FlowRoot({
 
   const unregisterNode = useCallback((id: string) => {
     setNodeIds((current) => current.filter((entry) => entry !== id));
+  }, []);
+
+  const registerGroup = useCallback((id: string) => {
+    setGroupIds((current) => (current.includes(id) ? current : [...current, id]));
+  }, []);
+
+  const unregisterGroup = useCallback((id: string) => {
+    setGroupIds((current) => current.filter((entry) => entry !== id));
   }, []);
 
   const registerHandle = useCallback((entry: HandleEntry) => {
@@ -589,10 +648,13 @@ function FlowRoot({
       locked,
       setLocked,
       nodeIds,
+      groupIds,
       handles,
       edges,
       registerNode,
       unregisterNode,
+      registerGroup,
+      unregisterGroup,
       registerHandle,
       unregisterHandle,
       registerEdge,
@@ -621,14 +683,17 @@ function FlowRoot({
       maxZoom,
       minZoom,
       nodeIds,
+      groupIds,
       onConnect,
       onNodeDragEnd,
       rects,
+      registerGroup,
       registerHandle,
       registerNode,
       size,
       translateX,
       translateY,
+      unregisterGroup,
       unregisterHandle,
       unregisterNode,
       zoom,
@@ -891,6 +956,18 @@ export interface FlowNodeProps extends Omit<ViewProps, 'children'> {
   className?: string;
   /** Let a finger move it. */
   draggable?: boolean;
+  /**
+   * Keep the node inside the `Flow.Group` it is drawn in. A drag stops at the
+   * container's edge instead of leaving it. Ignored outside a group — there is
+   * nothing to be kept inside of.
+   */
+  confine?: boolean;
+  /**
+   * Hold the node still: it takes no drag of its own and moves only when its
+   * container does. For a diagram where the boxes are what you rearrange and
+   * their contents are a fixed part of them.
+   */
+  pinned?: boolean;
   /** Draw the selected ring. */
   selected?: boolean;
   /** Tapping the node — separate from dragging it. */
@@ -910,6 +987,8 @@ function FlowNode({
   position,
   className,
   draggable = true,
+  confine = false,
+  pinned = false,
   selected = false,
   onPress,
   accessibilityLabel,
@@ -927,13 +1006,25 @@ function FlowNode({
     dropNodeRect,
     registerNode,
     unregisterNode,
+    registerGroup,
+    unregisterGroup,
     onNodeDragEnd,
   } = flow;
 
+  /*
+   * Registered twice, on purpose. As a node, because its box belongs in the
+   * same registry every other box lives in — that is what lets an edge name it
+   * and fitView account for it. As a group, because the minimap and the edge
+   * layer both need to know it is a container and not a card.
+   */
   useEffect(() => {
-    registerNode(id, group ?? undefined);
-    return () => unregisterNode(id);
-  }, [group, id, registerNode, unregisterNode]);
+    registerNode(id);
+    registerGroup(id);
+    return () => {
+      unregisterNode(id);
+      unregisterGroup(id);
+    };
+  }, [id, registerGroup, registerNode, unregisterGroup, unregisterNode]);
 
   // Writing on every render would fight the drag, snapping a node back to the
   // position it was first given. Only an actual change to the prop moves it.
@@ -982,7 +1073,9 @@ function FlowNode({
   const drag = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(draggable && !locked)
+        // A pinned node takes no drag at all: it is part of its container, and
+        // the container is what moves.
+        .enabled(draggable && !pinned && !locked)
         .onBegin(() => {
           'worklet';
           const rect = rects.value[id];
@@ -994,8 +1087,24 @@ function FlowNode({
           if (!rect) return;
           // Divided by the zoom, so the node keeps up with the finger rather
           // than with the graph coordinate the finger happens to be over.
-          const x = start.value.x + event.translationX / zoom.value;
-          const y = start.value.y + event.translationY / zoom.value;
+          let x = start.value.x + event.translationX / zoom.value;
+          let y = start.value.y + event.translationY / zoom.value;
+
+          /*
+           * Clamped before anything is written, so the box React is told about
+           * and the box on screen are the same one. Clamping after the write
+           * would leave the edges drawn to a position the node never reached.
+           */
+          if (confine && group) {
+            const box = rects.value[group];
+            if (box) {
+              const maxX = box.x + box.width - rect.width;
+              const maxY = box.y + box.height - rect.height;
+              x = x < box.x ? box.x : x > maxX ? maxX : x;
+              y = y < box.y ? box.y : y > maxY ? maxY : y;
+            }
+          }
+
           rects.value = { ...rects.value, [id]: { ...rect, x, y } };
           runOnJS(dragTo)(x, y);
         })
@@ -1004,7 +1113,7 @@ function FlowNode({
           const rect = rects.value[id];
           if (rect) runOnJS(dragEnd)(rect.x, rect.y);
         }),
-    [dragEnd, dragTo, draggable, id, locked, rects, start, zoom]
+    [confine, dragEnd, dragTo, draggable, group, id, locked, pinned, rects, start, zoom]
   );
 
   // Raced with the drag rather than layered on top of it. A plain touch handler
@@ -1340,11 +1449,13 @@ function FlowEdgePath({
   curvature = 0.25,
   boxes,
   handles,
+  groups,
   tint,
   origin,
 }: FlowEdgeProps & {
   boxes: Record<string, FlowRect>;
   handles: HandleEntry[];
+  groups: Set<string>;
   tint: string;
   origin: { x: number; y: number };
 }) {
@@ -1367,8 +1478,18 @@ function FlowEdgePath({
   // to fit whenever the viewport and the laid-out size disagree, and an edge
   // drawn at a slightly different scale from the nodes misses them by a little
   // everywhere — which looks like bad routing rather than a bad transform.
-  const a = { x: rawA.x + origin.x, y: rawA.y + origin.y };
-  const b = { x: rawB.x + origin.x, y: rawB.y + origin.y };
+  /*
+   * A container's edge is a drawn border rather than the invisible edge of a
+   * card, so an edge that lands exactly on it disappears under the stroke.
+   * Standing a few points off it reads as a line arriving at the box.
+   */
+  const offA = groups.has(source.node) ? GROUP_EDGE_STANDOFF : 0;
+  const offB = groups.has(target.node) ? GROUP_EDGE_STANDOFF : 0;
+  const outA = standOff(rawA, sideA, offA);
+  const outB = standOff(rawB, sideB, offB);
+
+  const a = { x: outA.x + origin.x, y: outA.y + origin.y };
+  const b = { x: outB.x + origin.x, y: outB.y + origin.y };
 
   const d = edgePath(variant, a, sideA, b, sideB, curvature, radius, gap);
   const dash = dashed || animated ? 6 : 0;
@@ -1425,9 +1546,12 @@ function resolveEnd(
  * it, for free, and no edge does any work per frame.
  */
 function FlowEdgeLayer() {
-  const { boxes, edges, handles, connection, layer, origin } = useFlow('Flow');
+  const { boxes, edges, handles, groupIds, connection, layer, origin } = useFlow('Flow');
   const token = useCSSVariable('--color-muted-foreground');
   const tint = typeof token === 'string' ? token : '#878787';
+
+  // A set rather than the array: every edge asks about both of its ends.
+  const groups = useMemo(() => new Set(groupIds), [groupIds]);
 
   const lineProps = useAnimatedProps(() => {
     const current = connection.value;
@@ -1452,6 +1576,7 @@ function FlowEdgeLayer() {
           {...edge.props}
           boxes={boxes}
           handles={handles}
+          groups={groups}
           tint={tint}
           origin={origin}
         />
@@ -1540,9 +1665,16 @@ function FlowGroup({
 
   const start = useSharedValue<Record<string, FlowNodePosition>>({});
 
+  /**
+   * Reports the group *and* everything that travelled with it. Reporting only
+   * the container would leave a graph whose positions are driven from outside
+   * holding stale coordinates for every node in it.
+   */
   const dragEnd = useCallback(
-    (x: number, y: number) => onNodeDragEnd?.(id, { x, y }),
-    [id, onNodeDragEnd]
+    (moved: Record<string, FlowNodePosition>) => {
+      for (const [key, next] of Object.entries(moved)) onNodeDragEnd?.(key, next);
+    },
+    [onNodeDragEnd]
   );
 
   /** Tells React where the group and everything in it got to. */
@@ -1590,8 +1722,14 @@ function FlowGroup({
         })
         .onEnd(() => {
           'worklet';
-          const rect = rects.value[id];
-          if (rect) runOnJS(dragEnd)(rect.x, rect.y);
+          const settled: Record<string, FlowNodePosition> = {};
+          const ids = Object.keys(start.value);
+          for (let i = 0; i < ids.length; i += 1) {
+            const key = ids[i]!;
+            const rect = rects.value[key];
+            if (rect) settled[key] = { x: rect.x, y: rect.y };
+          }
+          runOnJS(dragEnd)(settled);
         }),
     [childIds, dragEnd, dragTo, draggable, id, locked, rects, start, zoom]
   );
@@ -1781,11 +1919,16 @@ function FlowMiniMap({
   height = 84,
   nodeColor,
 }: FlowMiniMapProps) {
-  const { rects, nodeIds, translateX, translateY, zoom, size } = useFlow('Flow.MiniMap');
+  const { rects, nodeIds, groupIds, translateX, translateY, zoom, size } =
+    useFlow('Flow.MiniMap');
   const token = useCSSVariable('--color-muted-foreground');
   const tint = nodeColor ?? (typeof token === 'string' ? token : '#737373');
   const ringToken = useCSSVariable('--color-ring');
   const ring = typeof ringToken === 'string' ? ringToken : '#737373';
+  const borderToken = useCSSVariable('--color-border');
+  const outline = typeof borderToken === 'string' ? borderToken : '#404040';
+
+  const groups = useMemo(() => new Set(groupIds), [groupIds]);
 
   const padding = 6;
 
@@ -1853,18 +1996,25 @@ function FlowMiniMap({
       accessibilityLabel="Graph overview"
     >
       <Svg width={width} height={height}>
-        {nodeIds.map((id) => (
-          <MiniMapNode
-            key={id}
-            id={id}
-            rects={rects}
-            fit={fit}
-            padding={padding}
-            color={tint}
-            width={width}
-            height={height}
-          />
-        ))}
+        {/* Containers first and drawn as outlines, so the map reads the way
+            the canvas does — boxes with things in them, rather than a wash of
+            identical rectangles where the largest happens to be a group. */}
+        {nodeIds.map((id) => {
+          const group = groups.has(id);
+          return (
+            <MiniMapNode
+              key={id}
+              id={id}
+              group={group}
+              rects={rects}
+              fit={fit}
+              padding={padding}
+              color={group ? outline : tint}
+              width={width}
+              height={height}
+            />
+          );
+        })}
         <AnimatedRect
           animatedProps={viewportProps}
           fill="none"
@@ -1881,6 +2031,7 @@ FlowMiniMap.slot = 'overlay' as FlowSlot;
 
 function MiniMapNode({
   id,
+  group = false,
   rects,
   fit,
   padding,
@@ -1889,6 +2040,8 @@ function MiniMapNode({
   height,
 }: {
   id: string;
+  /** Draw it as a container: outlined, not filled. */
+  group?: boolean;
   rects: SharedValue<Record<string, FlowRect>>;
   fit: SharedValue<{ left: number; top: number; scale: number }>;
   padding: number;
@@ -1907,6 +2060,19 @@ function MiniMapNode({
       height: Math.min(Math.max(rect.height * scale, 2), height),
     };
   });
+
+  if (group) {
+    return (
+      <AnimatedRect
+        animatedProps={props}
+        fill="none"
+        stroke={color}
+        strokeWidth={1}
+        opacity={0.9}
+        rx={2}
+      />
+    );
+  }
 
   return <AnimatedRect animatedProps={props} fill={color} opacity={0.55} rx={1.5} />;
 }

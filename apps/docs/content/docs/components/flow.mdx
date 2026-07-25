@@ -65,8 +65,8 @@ npx panelui-cli@latest add flow
 - **`Flow.Background`** — The grid behind everything — dots, lines or crosses. Rides the canvas, so it pans and zooms with the graph.
 - **`Flow.Node`** — One frame on the canvas. Its content is yours; a `Frame` is the usual answer.
 - **`Flow.Handle`** — A named port. Both the point an edge can be pinned to and the grip a new connection is dragged from.
-- **`Flow.Edge`** — A line between two nodes, routed as a curve, a stepped run or a straight line.
-- **`Flow.Group`** — A labelled box drawn around a region of the canvas, that moves the nodes inside it.
+- **`Flow.Edge`** — A line between two nodes — or between two groups, named the same way. Routed as a curve, a stepped run or a straight line.
+- **`Flow.Group`** — A labelled box drawn around a region of the canvas. Moves the nodes inside it, and can be joined to another container by an edge.
 - **`Flow.Controls`** — Zoom, fit and lock buttons. Sits outside the transform, so it stays put.
 - **`Flow.MiniMap`** — An overview of the whole graph with the visible region marked on it.
 
@@ -192,6 +192,20 @@ const [positions, setPositions] = useState(initial);
 </Flow>
 ```
 
+### Holding a node inside its container
+
+`confine` stops a drag at the container's edge; `pinned` takes the drag away entirely, so the node moves only when the container does. Both read the group the node is drawn in, and both do nothing outside one.
+
+```tsx
+<Flow.Group id="core" label="Core" position={{ x: 0, y: 0 }} size={{ width: 196, height: 178 }}>
+  {/* Movable, but never out of the box. */}
+  <Flow.Node id="api" confine position={{ x: 14, y: 34 }}>…</Flow.Node>
+
+  {/* Not movable at all — it travels with the container. */}
+  <Flow.Node id="pg" pinned position={{ x: 14, y: 110 }}>…</Flow.Node>
+</Flow.Group>
+```
+
 ## Versions
 
 ### Infrastructure map
@@ -300,14 +314,31 @@ Edges pinned to handles instead of routed automatically, for a diagram where the
 
 ### Groups and a minimap
 
-Two labelled boxes that move their contents with them, and an overview of the parts off screen. The edges join the frames — a group is a region, not something an edge attaches to.
+Two labelled containers, the dependency between them, and an overview of the parts off screen. The tiers are what is connected here: a dependency between two tiers is a fact about the tiers, and drawing it between two of their contents says something narrower and moves when the contents are rearranged. Inside, `pinned` holds a node still — the containers are what you drag — while `confine` lets one move but never out of its box.
+
+<Preview
+  src="/previews/flow-groups-and-a-minimap.jpg"
+  alt="Two dashed containers on dotted graph paper — Edge, holding cdn and waf, and Core, holding api and postgres — joined by a single stepped dashed edge that leaves the bottom of one, turns, and arrives with an arrow at the top of the other, standing clear of both borders."
+  width={1179}
+  height={1340}
+  caption="One edge between the two containers, standing off each border rather than landing under it."
+/>
 
 ```tsx
 <Flow.Group id="edge-tier" label="Edge" position={{ x: 0, y: 0 }} size={{ width: 196, height: 178 }}>
-  <Flow.Node id="cdn" position={{ x: 14, y: 34 }}>…</Flow.Node>
+  <Flow.Node id="cdn" pinned position={{ x: 14, y: 34 }}>…</Flow.Node>
+  <Flow.Node id="waf" pinned position={{ x: 14, y: 110 }}>…</Flow.Node>
 </Flow.Group>
 
-<Flow.Edge from="cdn" to="waf" variant="smoothstep" arrow />
+<Flow.Group id="core-tier" label="Core" position={{ x: 0, y: 248 }} size={{ width: 196, height: 178 }}>
+  <Flow.Node id="api" pinned position={{ x: 14, y: 282 }}>…</Flow.Node>
+  <Flow.Node id="pg" confine position={{ x: 14, y: 358 }}>…</Flow.Node>
+</Flow.Group>
+
+{/* An edge names a container exactly the way it names a node. */}
+<Flow.Edge from="edge-tier" to="core-tier" variant="smoothstep" animated arrow />
+
+<Flow.MiniMap />
 ```
 
 ## API Reference
@@ -346,6 +377,8 @@ Two labelled boxes that move their contents with them, and an overview of the pa
 | `position` | `FlowNodePosition` | — | Where it starts, in graph coordinates. |
 | `className` | `string` | — |  |
 | `draggable` | `boolean` | `true` | Let a finger move it. |
+| `confine` | `boolean` | `false` | Keep the node inside the `Flow.Group` it is drawn in. A drag stops at the container's edge instead of leaving it. Ignored outside a group — there is nothing to be kept inside of. |
+| `pinned` | `boolean` | `false` | Hold the node still: it takes no drag of its own and moves only when its container does. For a diagram where the boxes are what you rearrange and their contents are a fixed part of them. |
 | `selected` | `boolean` | `false` | Draw the selected ring. |
 | `onPress` | `() => void` | — | Tapping the node — separate from dragging it. |
 | `accessibilityLabel` | `string` | — | Spoken name. Defaults to the node's id. |
@@ -448,6 +481,8 @@ A drop does not have to land on a handle. The nearest handle within reach wins, 
 
 ### Groups
 
-A `Flow.Group` is a labelled box drawn around a region of the canvas. Dragging it offsets every node inside it in the same worklet that moves the box, so a group of twenty frames costs one frame's work rather than twenty.
+A `Flow.Group` is a labelled box drawn around a region of the canvas. Dragging it offsets every node inside it in the same worklet that moves the box, so a group of twenty frames costs one frame's work rather than twenty — and `onNodeDragEnd` is called for the container *and* for everything that travelled with it, so a graph driven from outside is never left holding stale coordinates.
 
-A group is not a coordinate space: a node inside one carries the same graph position as a node outside it, and edges join the *frames* rather than the boxes drawn around them.
+A group is not a coordinate space: a node inside one carries the same graph position as a node outside it. What a group does have is a box in the same registry every node's box lives in, which is what lets an edge name it — `<Flow.Edge from="edge-tier" to="core-tier" />` routes between the two containers off the same automatic sides a node-to-node edge uses, and stops a few points short of the border rather than running under the stroke.
+
+Two node props decide how much of a container a node is. `confine` clamps a drag to the container's box, so the node moves but never leaves. `pinned` takes the drag away, so the node moves only when its container does — for a diagram where the boxes are what you rearrange and their contents are a fixed part of them. Neither does anything to a node that is not inside a `Flow.Group`.

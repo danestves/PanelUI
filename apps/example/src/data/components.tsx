@@ -1593,13 +1593,15 @@ function FlowBuilderVersion() {
 
   const add = (linked: boolean) => {
     const previous = nodes[nodes.length - 1];
-    const id = `n${nodes.length + 1}`;
-    // Staggered below and to the side of the last one, so a new frame never
-    // lands on top of the frame it came from.
+    const index = nodes.length;
+    const id = `n${index + 1}`;
+    // Wrapped into short columns rather than one long march downward. Each
+    // frame offset from the last walks the graph off the canvas after a dozen
+    // presses, and never shows you the first frames alongside the newest.
     const next = {
       id,
-      x: (previous?.x ?? 0) + (nodes.length % 2 === 0 ? -70 : 90),
-      y: (previous?.y ?? 0) + 150,
+      x: 40 + Math.floor(index / 4) * 230,
+      y: 40 + (index % 4) * 150,
     };
     setNodes((current) => [...current, next]);
     if (linked && previous) {
@@ -1784,12 +1786,17 @@ function FlowPortsVersion() {
 }
 
 /**
- * Two groups and a minimap.
+ * Two containers, the line between them, and a minimap.
  *
- * The groups are stacked rather than placed side by side: two 208-wide boxes
- * next to each other need 500 points of graph to breathe, and a phone zoomed
- * out far enough to show 500 points renders the labels too small to read.
- * Down the screen, each group gets the full width.
+ * The containers are stacked rather than placed side by side: two 208-wide
+ * boxes next to each other need 500 points of graph to breathe, and a phone
+ * zoomed out far enough to show 500 points renders the labels too small to
+ * read. Down the screen, each container gets the full width.
+ *
+ * The tiers are what is connected here, not the frames inside them. A
+ * dependency between two tiers is a fact about the tiers — drawing it between
+ * two of their contents says something narrower, and moves when the contents
+ * are rearranged.
  */
 function FlowGroupedVersion() {
   return (
@@ -1802,10 +1809,12 @@ function FlowGroupedVersion() {
         position={{ x: 0, y: 0 }}
         size={{ width: 196, height: 178 }}
       >
-        <Flow.Node id="cdn" position={{ x: 14, y: 34 }}>
+        {/* `pinned`: the tiers are what you rearrange, and what is in a tier is
+            a fact about it rather than something to drag out of it. */}
+        <Flow.Node id="cdn" pinned position={{ x: 14, y: 34 }}>
           <GroupedNode icon={<ShareNodesIcon size={16} />} title="cdn" detail="142 locations" />
         </Flow.Node>
-        <Flow.Node id="waf" position={{ x: 14, y: 110 }}>
+        <Flow.Node id="waf" pinned position={{ x: 14, y: 110 }}>
           <GroupedNode icon={<ShieldCheckIcon size={16} />} title="waf" detail="Blocking 0.4%" />
         </Flow.Node>
       </Flow.Group>
@@ -1816,20 +1825,18 @@ function FlowGroupedVersion() {
         position={{ x: 0, y: 248 }}
         size={{ width: 196, height: 178 }}
       >
-        <Flow.Node id="api" position={{ x: 14, y: 282 }}>
+        <Flow.Node id="api" pinned position={{ x: 14, y: 282 }}>
           <GroupedNode icon={<SendIcon size={16} />} title="api" detail="p95 84ms" />
         </Flow.Node>
-        <Flow.Node id="pg" position={{ x: 14, y: 358 }}>
+        {/* `confine` instead: this one you can move, but not out of its tier. */}
+        <Flow.Node id="pg" confine position={{ x: 14, y: 358 }}>
           <GroupedNode icon={<PackageIcon size={16} />} title="postgres" detail="2 replicas" />
-          <Flow.Handle id="in" position="top" type="target" />
         </Flow.Node>
       </Flow.Group>
 
-      {/* Node to node. A group is a box drawn around a region, not something
-          an edge can attach to — the frames are what is connected. */}
-      <Flow.Edge from="cdn" to="waf" variant="smoothstep" arrow />
-      <Flow.Edge from="waf" to="api" variant="smoothstep" animated arrow />
-      <Flow.Edge from="api" to="pg" variant="smoothstep" arrow />
+      {/* Container to container. An edge names a group the same way it names a
+          node, and stands off the border rather than landing under it. */}
+      <Flow.Edge from="edge-tier" to="core-tier" variant="smoothstep" animated arrow />
 
       <Flow.MiniMap />
       <Flow.Controls />
@@ -5812,7 +5819,7 @@ export const COMPONENTS: ComponentEntry[] = [
         id: 'grouped',
         fullPage: true,
         description:
-          'Two containers that move their contents with them, and an overview of the parts off screen.',
+          'Two containers joined by one edge, holding contents that travel with them, and an overview of the parts off screen.',
         render: () => <FlowGroupedVersion />,
       },
     ],

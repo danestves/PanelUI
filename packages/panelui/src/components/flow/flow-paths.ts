@@ -57,6 +57,20 @@ export function anchorOf(rect: FlowRect, side: FlowSide, offset: number): FlowPo
 }
 
 /**
+ * Pushes an anchor out along its own face's normal.
+ *
+ * For an end attached to something that draws its own border: landing exactly
+ * on the border puts the line under the stroke, where it reads as stopping
+ * short rather than as arriving.
+ */
+export function standOff(point: FlowPoint, side: FlowSide, by: number): FlowPoint {
+  'worklet';
+  if (by === 0) return point;
+  const normal = sideNormal(side);
+  return { x: point.x + normal.x * by, y: point.y + normal.y * by };
+}
+
+/**
  * The faces two nodes should use when nobody has said. Whichever axis they are
  * further apart on wins, so nodes side by side connect left-to-right and nodes
  * stacked connect top-to-bottom — and the edge changes its mind as they are
