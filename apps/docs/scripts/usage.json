@@ -891,6 +891,14 @@
   },
   "flow": {
     "intro": "A canvas of frames joined by edges, that you pan, pinch and rearrange with a finger. An edge names the nodes it joins rather than coordinates, and works out which faces to leave and arrive on from where those nodes currently are — so a graph the user rearranges stays readable without anyone re-specifying anything.",
+    "previewVideo": {
+      "src": "/previews/flow.mp4",
+      "poster": "/previews/flow-poster.jpg",
+      "alt": "A dark canvas of dotted graph paper carrying three titled cards — blog-db, ghost-image and redis — joined top to bottom by edges. A finger drags the middle card and both edges bend to follow it, staying attached at either end.",
+      "width": 720,
+      "height": 1560,
+      "caption": "Dragging a node. The edges are attached to the nodes, not drawn at coordinates, so they re-route as it moves."
+    },
     "usage": "<Flow fitViewOnMount>\n  <Flow.Background variant=\"dots\" />\n  <Flow.Node id=\"db\" position={{ x: 20, y: 40 }}>\n    <Frame>…</Frame>\n  </Flow.Node>\n  <Flow.Node id=\"web\" position={{ x: 120, y: 260 }}>\n    <Frame>…</Frame>\n  </Flow.Node>\n  <Flow.Edge from=\"web\" to=\"db\" variant=\"smoothstep\" dashed arrow />\n  <Flow.Controls />\n</Flow>",
     "extraImports": [
       "Frame",
@@ -950,26 +958,60 @@
       {
         "title": "Build pipeline",
         "description": "Stages running top to bottom, with only the edge into the running stage dashed — marking every edge says nothing about which one is live.",
+        "previewVideo": {
+          "src": "/previews/flow-build-pipeline.mp4",
+          "poster": "/previews/flow-build-pipeline-poster.jpg",
+          "alt": "Four build stages stacked top to bottom. Only the edge into the running stage is dashed and marching; advancing the run moves both the marching edge and the highlight down to the next stage.",
+          "width": 720,
+          "height": 1560
+        },
         "code": "<Flow.Edge\n  from={stage.id}\n  to={next.id}\n  variant=\"smoothstep\"\n  animated={index === running - 1}\n  arrow\n/>"
       },
       {
         "title": "Wiring it up",
         "description": "Drag from one port to another to create an edge. The canvas reports the connection; adding it is the screen's decision.",
+        "previewVideo": {
+          "src": "/previews/flow-wiring-it-up.mp4",
+          "poster": "/previews/flow-wiring-it-up-poster.jpg",
+          "alt": "A finger presses a port on one node and drags; a line follows the finger across the canvas and snaps to a port on a second node, leaving a finished edge between the two.",
+          "width": 720,
+          "height": 1560
+        },
         "code": "<Flow onConnect={(connection) => setEdges((current) => [...current, connection])}>"
       },
       {
         "title": "Mind map",
         "description": "Curved edges radiating from a centre, with no fixed sides — drag a branch across and the edge re-routes to the face that now makes sense.",
+        "previewVideo": {
+          "src": "/previews/flow-mind-map.mp4",
+          "poster": "/previews/flow-mind-map-poster.jpg",
+          "alt": "Curved edges radiating from one centre node to several branches. A branch is dragged from one side of the centre to the other and its edge re-routes to leave from the opposite face.",
+          "width": 720,
+          "height": 1560
+        },
         "code": "<Flow.Edge from=\"core\" to={branch.id} variant=\"bezier\" />"
       },
       {
         "title": "Building a graph",
         "description": "One button adds a frame, the other adds one already wired to the last. Everything the canvas draws comes from two arrays the screen owns.",
+        "previewVideo": {
+          "src": "/previews/flow-building-a-graph.mp4",
+          "poster": "/previews/flow-building-a-graph-poster.jpg",
+          "alt": "An empty canvas with two buttons. Pressing one drops a new frame onto the canvas; pressing the other drops a frame already joined by an edge to the one added before it.",
+          "width": 720,
+          "height": 1560
+        },
         "code": "<Button onPress={() => add(false)}>Add a frame</Button>\n<Button onPress={() => add(true)}>Add and link</Button>"
       },
       {
         "title": "Named ports",
         "description": "Edges pinned to handles instead of routed automatically, for a diagram where the sides mean something. One frame carries a port on every face, and two of them share a face at different offsets.",
+        "preview": {
+          "src": "/previews/flow-named-ports.jpg",
+          "alt": "Four nodes wired through named ports: ingest with two labelled outputs on its right face, index and dead-letter in the middle, and router on the right showing four ports — in and retry on its left face at two offsets, metrics and logs top and bottom.",
+          "width": 1179,
+          "height": 1960
+        },
         "code": "<Flow.Node id=\"router\" position={{ x: 520, y: 30 }}>\n  <Frame>…</Frame>\n  <Flow.Handle id=\"in\" position=\"left\" type=\"target\" offset={0.3} />\n  <Flow.Handle id=\"retry\" position=\"left\" type=\"target\" offset={0.78} />\n  <Flow.Handle id=\"metrics\" position=\"top\" type=\"source\" />\n  <Flow.Handle id=\"logs\" position=\"bottom\" type=\"source\" />\n</Flow.Node>\n\n<Flow.Edge from=\"index.out\" to=\"router.in\" variant=\"smoothstep\" arrow />\n<Flow.Edge from=\"deadletter.out\" to=\"router.retry\" dashed arrow />"
       },
       {
@@ -1997,6 +2039,14 @@
   },
   "rating": {
     "intro": "A row of stars you can read or set. Read-only it shows a score; interactive it is an input — tap a star for a whole value, or with `precision={0.5}` press the left half of a star for a half. Partial fills are drawn by clipping a filled star over an empty one of the same shape, so a half star is exactly half. The fill is animated on the UI thread: setting a value springs the stars to it, and a drag follows the finger without a spring so it never lags.",
+    "previewVideo": {
+      "src": "/previews/rating.mp4",
+      "poster": "/previews/rating-poster.jpg",
+      "alt": "A row of five stars under the label Rate your stay, with a 3 / 5 readout on the right. A finger sweeps across the row and the stars fill and empty under it, the readout counting with them.",
+      "width": 720,
+      "height": 378,
+      "caption": "Sweeping across the row rather than tapping one star — the score follows the finger."
+    },
     "usage": "<Rating defaultValue={3} />\n<Rating value={score} onValueChange={setScore} />\n<Rating value={4.5} precision={0.5} readOnly />\n<Rating label=\"Rate your stay\" showValue defaultValue={0} />",
     "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). `onValueChange` fires live while dragging; `onValueCommit` fires once when the tap or drag ends — reach for it when the change is expensive.\n\n`precision` only constrains what a finger can set; a read value renders at any precision, so a computed 4.3 average shows four-and-a-bit stars even though a tap can only pick whole or half stars. Set `readOnly` for a pure display and the row is announced as an image rather than an adjustable control; set `allowClear` to let a second tap on the current value reset it to zero.",
     "examples": [
@@ -2011,8 +2061,26 @@
         "code": "<Rating precision={0.5} defaultValue={2.5} />"
       },
       {
+        "title": "Colors",
+        "description": "`color` sets the filled star. `warning` is the default, and the rest are the same semantic tokens the other controls take — `primary` is available too.",
+        "preview": {
+          "src": "/previews/rating-colors.jpg",
+          "alt": "Five rows of four filled stars, one per colour: amber, green, red, blue and white, each against an empty fifth star.",
+          "width": 1179,
+          "height": 733
+        },
+        "code": "<Rating color=\"warning\" defaultValue={4} />\n<Rating color=\"success\" defaultValue={4} />\n<Rating color=\"destructive\" defaultValue={4} />\n<Rating color=\"info\" defaultValue={4} />\n<Rating color=\"foreground\" defaultValue={4} />"
+      },
+      {
         "title": "Read-only display",
         "description": "`readOnly` shows any fractional value at full precision and takes no touches, so it reads a computed average as-is. The row is announced as an image.",
+        "preview": {
+          "src": "/previews/rating-read-only-display.jpg",
+          "alt": "Three rows of amber stars: a read-only row showing four and a fraction out of five, a small ten-star row showing seven, and a dimmed disabled row showing three.",
+          "width": 1179,
+          "height": 635,
+          "caption": "Read-only at half precision, a ten-star scale, and a disabled row."
+        },
         "code": "<Rating value={4.3} precision={0.5} readOnly />"
       },
       {
@@ -2038,6 +2106,19 @@
     "variantCode": {
       "size": "<Rating size=\"sm\" defaultValue={3} />\n<Rating size=\"md\" defaultValue={3} />\n<Rating size=\"lg\" defaultValue={3} />",
       "color": "<Rating color=\"warning\" defaultValue={3} />\n<Rating color=\"primary\" defaultValue={3} />\n<Rating color=\"success\" defaultValue={3} />\n<Rating color=\"destructive\" defaultValue={3} />\n<Rating color=\"info\" defaultValue={3} />\n<Rating color=\"foreground\" defaultValue={3} />"
+    },
+    "variantMedia": {
+      "size": [
+        {
+          "preview": {
+            "src": "/previews/rating-sizes.jpg",
+            "alt": "The same three-of-five rating drawn three times, each row of stars larger than the one above it.",
+            "width": 1179,
+            "height": 533,
+            "caption": "sm, md and lg"
+          }
+        }
+      ]
     }
   },
   "scroll-canvas": {

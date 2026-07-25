@@ -6,6 +6,15 @@ status: alpha
 
 A canvas of frames joined by edges, that you pan, pinch and rearrange with a finger. An edge names the nodes it joins rather than coordinates, and works out which faces to leave and arrive on from where those nodes currently are — so a graph the user rearranges stays readable without anyone re-specifying anything.
 
+<PreviewVideo
+  src="/previews/flow.mp4"
+  poster="/previews/flow-poster.jpg"
+  alt="A dark canvas of dotted graph paper carrying three titled cards — blog-db, ghost-image and redis — joined top to bottom by edges. A finger drags the middle card and both edges bend to follow it, staying attached at either end."
+  width={720}
+  height={1560}
+  caption="Dragging a node. The edges are attached to the nodes, not drawn at coordinates, so they re-route as it moves."
+/>
+
 ## Installation
 
 Flow ships with the library — no separate install.
@@ -198,6 +207,14 @@ Three frames and the dependencies between them. Drag any of them and the edges r
 
 Stages running top to bottom, with only the edge into the running stage dashed — marking every edge says nothing about which one is live.
 
+<PreviewVideo
+  src="/previews/flow-build-pipeline.mp4"
+  poster="/previews/flow-build-pipeline-poster.jpg"
+  alt="Four build stages stacked top to bottom. Only the edge into the running stage is dashed and marching; advancing the run moves both the marching edge and the highlight down to the next stage."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Flow.Edge
   from={stage.id}
@@ -212,6 +229,14 @@ Stages running top to bottom, with only the edge into the running stage dashed �
 
 Drag from one port to another to create an edge. The canvas reports the connection; adding it is the screen's decision.
 
+<PreviewVideo
+  src="/previews/flow-wiring-it-up.mp4"
+  poster="/previews/flow-wiring-it-up-poster.jpg"
+  alt="A finger presses a port on one node and drags; a line follows the finger across the canvas and snaps to a port on a second node, leaving a finished edge between the two."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Flow onConnect={(connection) => setEdges((current) => [...current, connection])}>
 ```
@@ -219,6 +244,14 @@ Drag from one port to another to create an edge. The canvas reports the connecti
 ### Mind map
 
 Curved edges radiating from a centre, with no fixed sides — drag a branch across and the edge re-routes to the face that now makes sense.
+
+<PreviewVideo
+  src="/previews/flow-mind-map.mp4"
+  poster="/previews/flow-mind-map-poster.jpg"
+  alt="Curved edges radiating from one centre node to several branches. A branch is dragged from one side of the centre to the other and its edge re-routes to leave from the opposite face."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Flow.Edge from="core" to={branch.id} variant="bezier" />
@@ -228,6 +261,14 @@ Curved edges radiating from a centre, with no fixed sides — drag a branch acro
 
 One button adds a frame, the other adds one already wired to the last. Everything the canvas draws comes from two arrays the screen owns.
 
+<PreviewVideo
+  src="/previews/flow-building-a-graph.mp4"
+  poster="/previews/flow-building-a-graph-poster.jpg"
+  alt="An empty canvas with two buttons. Pressing one drops a new frame onto the canvas; pressing the other drops a frame already joined by an edge to the one added before it."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Button onPress={() => add(false)}>Add a frame</Button>
 <Button onPress={() => add(true)}>Add and link</Button>
@@ -236,6 +277,13 @@ One button adds a frame, the other adds one already wired to the last. Everythin
 ### Named ports
 
 Edges pinned to handles instead of routed automatically, for a diagram where the sides mean something. One frame carries a port on every face, and two of them share a face at different offsets.
+
+<Preview
+  src="/previews/flow-named-ports.jpg"
+  alt="Four nodes wired through named ports: ingest with two labelled outputs on its right face, index and dead-letter in the middle, and router on the right showing four ports — in and retry on its left face at two offsets, metrics and logs top and bottom."
+  width={1179}
+  height={1960}
+/>
 
 ```tsx
 <Flow.Node id="router" position={{ x: 520, y: 30 }}>

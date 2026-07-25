@@ -6,6 +6,15 @@ status: new
 
 A row of stars you can read or set. Read-only it shows a score; interactive it is an input — tap a star for a whole value, or with `precision={0.5}` press the left half of a star for a half. Partial fills are drawn by clipping a filled star over an empty one of the same shape, so a half star is exactly half. The fill is animated on the UI thread: setting a value springs the stars to it, and a drag follows the finger without a spring so it never lags.
 
+<PreviewVideo
+  src="/previews/rating.mp4"
+  poster="/previews/rating-poster.jpg"
+  alt="A row of five stars under the label Rate your stay, with a 3 / 5 readout on the right. A finger sweeps across the row and the stars fill and empty under it, the readout counting with them."
+  width={720}
+  height={378}
+  caption="Sweeping across the row rather than tapping one star — the score follows the finger."
+/>
+
 ## Installation
 
 Rating ships with the library — no separate install.
@@ -49,9 +58,36 @@ const [score, setScore] = useState(3);
 <Rating precision={0.5} defaultValue={2.5} />
 ```
 
+### Colors
+
+`color` sets the filled star. `warning` is the default, and the rest are the same semantic tokens the other controls take — `primary` is available too.
+
+<Preview
+  src="/previews/rating-colors.jpg"
+  alt="Five rows of four filled stars, one per colour: amber, green, red, blue and white, each against an empty fifth star."
+  width={1179}
+  height={733}
+/>
+
+```tsx
+<Rating color="warning" defaultValue={4} />
+<Rating color="success" defaultValue={4} />
+<Rating color="destructive" defaultValue={4} />
+<Rating color="info" defaultValue={4} />
+<Rating color="foreground" defaultValue={4} />
+```
+
 ### Read-only display
 
 `readOnly` shows any fractional value at full precision and takes no touches, so it reads a computed average as-is. The row is announced as an image.
+
+<Preview
+  src="/previews/rating-read-only-display.jpg"
+  alt="Three rows of amber stars: a read-only row showing four and a fraction out of five, a small ten-star row showing seven, and a dimmed disabled row showing three."
+  width={1179}
+  height={635}
+  caption="Read-only at half precision, a ten-star scale, and a disabled row."
+/>
 
 ```tsx
 <Rating value={4.3} precision={0.5} readOnly />
@@ -94,6 +130,14 @@ const [score, setScore] = useState(3);
 - `sm`
 - `md` *(default)*
 - `lg`
+
+<Preview
+  src="/previews/rating-sizes.jpg"
+  alt="The same three-of-five rating drawn three times, each row of stars larger than the one above it."
+  width={1179}
+  height={533}
+  caption="sm, md and lg"
+/>
 
 ```tsx
 <Rating size="sm" defaultValue={3} />
