@@ -60,9 +60,10 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 | Direction | Popover | Tabs |
 | EmptyState | Progress | ThinkingOrb |
 | Field | RadioGroup | Timeline |
-| Flow | ScrollCanvas | Toast |
-| Form | ScrollFade | ToggleButton |
-|  | ScrollText | Typography |
+| Flow | Rating | Toast |
+| Form | ScrollCanvas | ToggleButton |
+|  | ScrollFade | Typography |
+|  | ScrollText |  |
 |  | SectionRail |  |
 
 `Select` shows its options in a bottom sheet, expanded in place, or floating
@@ -83,6 +84,8 @@ with a finger — positions live in a shared value, so dragging a node re-routes
 every edge attached to it without React rendering once.
 `Signature` captures a signature drawn with a finger and hands it back as SVG,
 a data URI, or a file.
+`Rating` is a row of stars you read or set — drag to pick a value, `precision`
+to allow half stars, and any fractional value renders as a partial fill.
 
 Plus primitives: `PanelUIProvider`, `Portal`, `AnimatedPressable`, `useTheme`,
 `useThemeMode`, `useToast`, `cn`.
