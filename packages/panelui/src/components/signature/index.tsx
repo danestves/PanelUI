@@ -68,7 +68,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { tv, type VariantProps } from 'tailwind-variants';
-import { PencilIcon, RotateCcwIcon, TrashIcon, type IconProps } from '../../icons';
+import {
+  PencilIcon,
+  RotateCcwIcon,
+  RotateCwIcon,
+  TrashIcon,
+  type IconProps,
+} from '../../icons';
 import {
   AnimatedPressable,
   type AnimatedPressableProps,
@@ -631,8 +637,8 @@ export interface SignatureButtonProps
 }
 
 /**
- * The two pad controls are the same round button with a different icon and a
- * different spoken name, so they are built rather than written twice.
+ * The pad controls are all the same round button with a different icon and a
+ * different spoken name, so they are built rather than written out each time.
  */
 function circleButton(
   Icon: ComponentType<IconProps>,
@@ -671,11 +677,15 @@ function circleButton(
 /** Removes the last stroke. Wire it to `ref.current?.undo()`. */
 const SignatureUndo = circleButton(RotateCcwIcon, 'Undo last stroke', 'Signature.Undo');
 
+/** Puts back the last undone stroke. Wire it to `ref.current?.redo()`. */
+const SignatureRedo = circleButton(RotateCwIcon, 'Redo last stroke', 'Signature.Redo');
+
 /** Drops every stroke. Wire it to `ref.current?.clear()`. */
 const SignatureClear = circleButton(TrashIcon, 'Clear signature', 'Signature.Clear');
 
 export const Signature = Object.assign(SignatureForwarded, {
   Toolbar: SignatureToolbar,
   Undo: SignatureUndo,
+  Redo: SignatureRedo,
   Clear: SignatureClear,
 });

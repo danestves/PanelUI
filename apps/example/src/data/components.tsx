@@ -9,11 +9,15 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Animated, {
   cancelAnimation,
   Easing,
+  FadeInDown,
+  FadeOutDown,
   runOnJS,
   useAnimatedKeyboard,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
   withTiming,
+  ZoomIn,
 } from 'react-native-reanimated';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { router } from 'expo-router';
@@ -77,10 +81,12 @@ import {
   PlayIcon,
   PlusSquareIcon,
   Popover,
+  Portal,
   Progress,
   RadioGroup,
   Rating,
   ReceiptIcon,
+  Scrim,
   SearchIcon,
   SendIcon,
   ShareNodesIcon,
@@ -1859,15 +1865,22 @@ function SignatureDemo({ guideline = false }: { guideline?: boolean }) {
   );
 }
 
+/** How far the frame lifts to make room for the confirm button. */
+const SIGNING_LIFT = 28;
+
 /**
- * The sheet version: a floating pad over a frosted screen, which is where a
- * signature is usually asked for — over the thing being signed, not instead
- * of it.
+ * The frame version: the pad comes up as a framed panel over a frosted screen,
+ * which is where a signature is usually asked for — over the thing being
+ * signed, not instead of it.
+ *
+ * The confirm button is not in the frame. Inside it, it is a third control
+ * competing with redo and close for a strip of chrome, and it is disabled for
+ * as long as the pad is empty — which is a button asking to be pressed and
+ * refusing. Outside and absent until there is a stroke, it appears exactly when
+ * it means something, and the frame lifts to acknowledge it.
  */
 function SignatureSheetVersion() {
-  const pad = useRef<SignatureHandle>(null);
   const [open, setOpen] = useState(false);
-  const [count, setCount] = useState(0);
   const [signed, setSigned] = useState(false);
 
   return (
@@ -1880,67 +1893,137 @@ function SignatureSheetVersion() {
       ) : (
         <Text size="sm" muted className="text-center">
           A signature is asked for over the thing being signed, so the pad comes
-          up as a sheet rather than taking you to another screen.
+          up over the screen rather than taking you to another one.
         </Text>
       )}
       <Button onPress={() => setOpen(true)}>
         {signed ? 'Sign again' : 'Sign the agreement'}
       </Button>
 
-      <BottomSheet open={open} onOpenChange={setOpen}>
-        {/* The dashed rule around the sheet says the whole panel is the thing
-            being filled in, the way a form field does. */}
-        <BottomSheet.Content
-          detached
-          blur
-          showClose={false}
-          className="rounded-[28px] border-2 border-dashed p-2"
-        >
-          <View className="flex-row items-center justify-between px-2 pb-3 pt-1">
-            <Signature.Undo
+      {/* Mounted only while open, so the pad starts empty every time and the
+          frame plays its entrance rather than being revealed already there. */}
+      {open ? (
+        <Portal>
+          <SigningFrame
+            onClose={() => setOpen(false)}
+            onFinish={() => {
+              setSigned(true);
+              setOpen(false);
+            }}
+          />
+        </Portal>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * The frame itself, and the backdrop it sits over. One shape for one job, so
+ * signing feels the same wherever it is asked for — `onFinish` is handed the
+ * pad so a caller that wants the drawing back can take it before it goes.
+ */
+function SigningFrame({
+  guideline = false,
+  onClose,
+  onFinish,
+}: {
+  guideline?: boolean;
+  onClose: () => void;
+  onFinish: (pad: SignatureHandle | null) => void;
+}) {
+  const pad = useRef<SignatureHandle>(null);
+  const [count, setCount] = useState(0);
+  const lift = useSharedValue(0);
+
+  useEffect(() => {
+    lift.value = withSpring(count > 0 ? -SIGNING_LIFT : 0, {
+      damping: 22,
+      stiffness: 240,
+      mass: 0.8,
+    });
+  }, [count, lift]);
+
+  const rise = useAnimatedStyle(() => ({
+    transform: [{ translateY: lift.value }],
+  }));
+
+  return (
+    <View className="absolute inset-0 items-center justify-center px-6">
+      {/* Scrim frosts the screen and takes no touches of its own, so the
+          dismiss Pressable goes over it rather than around it. */}
+      <Scrim blur />
+      <Pressable
+        accessibilityLabel="Close"
+        className="absolute inset-0"
+        onPress={onClose}
+      />
+
+      <Animated.View
+        entering={ZoomIn.springify().damping(18).stiffness(250).mass(0.6)}
+        style={rise}
+        className="w-full"
+      >
+        {/* The dashed edge says the whole panel is the thing being filled in,
+            the way a form field does. */}
+        <Frame className="rounded-[28px] border-2 border-dashed">
+          <Frame.Header>
+            {/* Clear rather than undo: at the size a signature is drawn, a
+                stroke is rarely the unit you want back — you either keep the
+                signature or start it again. It dims once there is nothing to
+                wipe, which is also when the confirm button is gone. */}
+            <Signature.Clear
               accessibilityLabel="Start over"
               className="bg-transparent"
               disabled={count === 0}
               onPress={() => pad.current?.clear()}
             />
-            <Text weight="semibold">Sign</Text>
-            <SheetCloseButton onPress={() => setOpen(false)} />
-          </View>
-          {/* `bg-background` rather than a literal white: on a dark theme a
-              hardcoded white pad puts light-grey placeholder text on white. */}
-          <Signature
-            ref={pad}
-            size="lg"
-            onChange={setCount}
-            className="rounded-2xl border-0 bg-background"
-          />
-          <View className="items-center py-4">
-            {/* The label goes through `children` as a string and the icon
-                through `startContent`. Passing both as children skips the
-                button's own label styling, and a `py-` on top of its fixed
-                height pushes the text into the pill's corner radius. */}
-            <Button
-              variant="secondary"
+            {/* Two equal-width round buttons on either side, so a flexible
+                centred title lands in the middle of the strip. */}
+            <Frame.Title weight="semibold" className="flex-1 text-center text-foreground">
+              Sign
+            </Frame.Title>
+            <SigningCloseButton onPress={onClose} />
+          </Frame.Header>
+          <Frame.Panel>
+            {/* `bg-background` rather than a literal white: on a dark theme a
+                hardcoded white pad puts light-grey placeholder text on white. */}
+            <Signature
+              ref={pad}
               size="lg"
-              disabled={count === 0}
-              startContent={<PencilIcon size={18} />}
-              className="rounded-full px-8"
-              onPress={() => {
-                setSigned(true);
-                setOpen(false);
-              }}
-            >
-              Finish Signing
-            </Button>
-          </View>
-        </BottomSheet.Content>
-      </BottomSheet>
+              guideline={guideline}
+              onChange={setCount}
+              className="rounded-none border-0 bg-background"
+            />
+          </Frame.Panel>
+        </Frame>
+      </Animated.View>
+
+      {count > 0 ? (
+        <Animated.View
+          entering={FadeInDown.springify().damping(18).stiffness(220).mass(0.6)}
+          exiting={FadeOutDown.duration(150)}
+          className="absolute inset-x-6 bottom-16 items-center"
+        >
+          {/* The label goes through `children` as a string and the icon
+              through `startContent`. Passing both as children skips the
+              button's own label styling, and a `py-` on top of its fixed
+              height pushes the text into the pill's corner radius. */}
+          <Button
+            size="lg"
+            startContent={<PencilIcon size={18} />}
+            className="rounded-full px-8"
+            onPress={() => onFinish(pad.current)}
+          >
+            Finish Signature
+          </Button>
+        </Animated.View>
+      ) : null}
     </View>
   );
 }
 
-/** The round X the signing sheet uses in place of the built-in close button. */
-function SheetCloseButton({ onPress }: { onPress: () => void }) {
+/** The round X in the signing frame's header. */
+function SigningCloseButton({ onPress }: { onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -1956,9 +2039,7 @@ function SheetCloseButton({ onPress }: { onPress: () => void }) {
 
 /** An agreement you scroll, with the signature landing back in the document. */
 function SignatureDocumentVersion() {
-  const pad = useRef<SignatureHandle>(null);
   const [open, setOpen] = useState(false);
-  const [count, setCount] = useState(0);
   const [signature, setSignature] = useState<string | null>(null);
 
   return (
@@ -2006,48 +2087,20 @@ function SignatureDocumentVersion() {
         ) : null}
       </ScrollView>
 
-      <BottomSheet open={open} onOpenChange={setOpen}>
-        {/* The same signing sheet as the standalone version — one shape for
-            one job, so signing feels the same wherever it is asked for. */}
-        <BottomSheet.Content
-          detached
-          blur
-          showClose={false}
-          className="rounded-[28px] border-2 border-dashed p-2"
-        >
-          <View className="flex-row items-center justify-between px-2 pb-3 pt-1">
-            <Signature.Undo
-              className="bg-transparent"
-              disabled={count === 0}
-              onPress={() => pad.current?.undo()}
-            />
-            <Text weight="semibold">Sign</Text>
-            <SheetCloseButton onPress={() => setOpen(false)} />
-          </View>
-          <Signature
-            ref={pad}
-            size="lg"
+      {/* The same signing frame as the standalone version — one shape for one
+          job, so signing feels the same wherever it is asked for. */}
+      {open ? (
+        <Portal>
+          <SigningFrame
             guideline
-            onChange={setCount}
-            className="rounded-2xl border-0 bg-background"
+            onClose={() => setOpen(false)}
+            onFinish={(signed) => {
+              setSignature(signed?.toSVG() ?? null);
+              setOpen(false);
+            }}
           />
-          <View className="items-center py-4">
-            <Button
-              variant="secondary"
-              size="lg"
-              disabled={count === 0}
-              startContent={<PencilIcon size={18} />}
-              className="rounded-full px-8"
-              onPress={() => {
-                setSignature(pad.current?.toSVG() ?? null);
-                setOpen(false);
-              }}
-            >
-              Finish Signing
-            </Button>
-          </View>
-        </BottomSheet.Content>
-      </BottomSheet>
+        </Portal>
+      ) : null}
     </View>
   );
 }
@@ -7792,11 +7845,11 @@ export const COMPONENTS: ComponentEntry[] = [
         ),
       },
       {
-        label: 'Signing sheet',
+        label: 'Signing frame',
         id: 'sheet',
         fullPage: true,
         description:
-          'A floating pad over a frosted screen — the signature is asked for over the thing being signed.',
+          'A framed pad over a frosted screen. Draw a stroke and the frame lifts as the confirm button arrives beneath it.',
         render: () => <SignatureSheetVersion />,
       },
       {

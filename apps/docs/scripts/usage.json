@@ -2571,15 +2571,19 @@
     "usage": "const pad = useRef<SignatureHandle>(null);\n\n<Signature ref={pad} guideline guidelineLabel=\"Sign above the line\" />\n<Button onPress={() => pad.current?.save({ filename: 'agreement' })}>\n  Finish signing\n</Button>",
     "extraImports": [
       "Button",
+      "Frame",
+      "Portal",
+      "Scrim",
       "Text",
       "type SignatureHandle"
     ],
     "parts": {
       "Toolbar": "A row of controls under or over the pad. Purely layout.",
       "Undo": "Round button for removing the last stroke. Wire it to `ref.current?.undo()`.",
+      "Redo": "Round button for putting back the last undone stroke. Wire it to `ref.current?.redo()`.",
       "Clear": "Round button for dropping every stroke. Wire it to `ref.current?.clear()`."
     },
-    "anatomy": "<Signature ref={pad} />\n<Signature.Toolbar>\n  <Signature.Undo onPress={() => pad.current?.undo()} />\n  <Signature.Clear onPress={() => pad.current?.clear()} />\n</Signature.Toolbar>",
+    "anatomy": "<Signature ref={pad} />\n<Signature.Toolbar>\n  <Signature.Undo onPress={() => pad.current?.undo()} />\n  <Signature.Redo onPress={() => pad.current?.redo()} />\n  <Signature.Clear onPress={() => pad.current?.clear()} />\n</Signature.Toolbar>",
     "examples": [
       {
         "title": "A pad with its controls",
@@ -2587,9 +2591,9 @@
         "code": "const pad = useRef<SignatureHandle>(null);\nconst [count, setCount] = useState(0);\n\n<Signature ref={pad} onChange={setCount} />\n<Signature.Toolbar>\n  <View className=\"flex-row gap-2\">\n    <Signature.Undo disabled={count === 0} onPress={() => pad.current?.undo()} />\n    <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />\n  </View>\n  <Button disabled={count === 0} onPress={submit}>Done</Button>\n</Signature.Toolbar>"
       },
       {
-        "title": "Signing in a sheet",
-        "description": "Where a signature is usually asked for — floating over the thing being signed rather than on a screen of its own. `detached` and `blur` come from BottomSheet.",
-        "code": "<BottomSheet open={open} onOpenChange={setOpen}>\n  <BottomSheet.Content detached blur showClose={false}>\n    <View className=\"flex-row items-center justify-between pb-2 pt-1\">\n      <Signature.Undo onPress={() => pad.current?.clear()} />\n      <Text weight=\"semibold\">Sign</Text>\n    </View>\n    <Signature ref={pad} size=\"lg\" className=\"border-0 bg-white\" />\n    <Button className=\"rounded-full\" onPress={finish}>Finish Signing</Button>\n  </BottomSheet.Content>\n</BottomSheet>"
+        "title": "Signing in a frame",
+        "description": "Where a signature is usually asked for — over the thing being signed rather than on a screen of its own. `Portal` puts it above everything and `Scrim` frosts the screen behind it, so the frame is composed rather than borrowed from an overlay that has its own ideas about layout.",
+        "code": "<Portal>\n  <View className=\"absolute inset-0 items-center justify-center px-6\">\n    <Scrim blur />\n    <Pressable className=\"absolute inset-0\" onPress={close} />\n\n    <Animated.View style={rise} className=\"w-full\">\n      <Frame className=\"rounded-[28px] border-2 border-dashed\">\n        <Frame.Header>\n          <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />\n          <Frame.Title weight=\"semibold\" className=\"flex-1 text-center text-foreground\">\n            Sign\n          </Frame.Title>\n          <CloseButton onPress={close} />\n        </Frame.Header>\n        <Frame.Panel>\n          <Signature ref={pad} size=\"lg\" onChange={setCount} className=\"rounded-none border-0 bg-background\" />\n        </Frame.Panel>\n      </Frame>\n    </Animated.View>\n\n    {/* Outside the frame, and absent until there is something to confirm. */}\n    {count > 0 ? (\n      <Animated.View\n        entering={FadeInDown.springify()}\n        exiting={FadeOutDown.duration(150)}\n        className=\"absolute inset-x-6 bottom-16 items-center\"\n      >\n        <Button size=\"lg\" className=\"rounded-full px-8\" onPress={finish}>\n          Finish Signature\n        </Button>\n      </Animated.View>\n    ) : null}\n  </View>\n</Portal>"
       },
       {
         "title": "Saving to a file",
@@ -2609,13 +2613,13 @@
     ],
     "versions": [
       {
-        "title": "Signing sheet",
-        "description": "A floating pad over a frosted screen, with a reset on one side and a close on the other.",
-        "code": "<BottomSheet.Content detached blur showClose={false}>\n  <Signature ref={pad} size=\"lg\" className=\"border-0 bg-white\" />\n</BottomSheet.Content>"
+        "title": "Signing frame",
+        "description": "A framed pad over a frosted screen, with start-over on one side of the header and close on the other. The confirm button is not in the frame: inside, it is a third control competing for a strip of chrome and disabled for as long as the pad is empty. Outside and absent until the first stroke, it arrives exactly when it means something — and the frame lifts to make room for it.",
+        "code": "const lift = useSharedValue(0);\n\nuseEffect(() => {\n  lift.value = withSpring(count > 0 ? -28 : 0, { damping: 22, stiffness: 240, mass: 0.8 });\n}, [count, lift]);\n\nconst rise = useAnimatedStyle(() => ({ transform: [{ translateY: lift.value }] }));"
       },
       {
         "title": "Signing a document",
-        "description": "An agreement you scroll, with a Frame row that opens the pad and the captured SVG landing back in the document.",
+        "description": "An agreement you scroll, with a Frame row that opens the same signing frame and the captured SVG landing back in the document.",
         "code": "<Frame.Row onPress={() => setOpen(true)} chevron>\n  <Frame.Media><PencilIcon size={18} /></Frame.Media>\n  <Frame.Content>\n    <Frame.Title>{signature ? 'Signed' : 'Tap to sign'}</Frame.Title>\n  </Frame.Content>\n</Frame.Row>"
       },
       {

@@ -11,7 +11,7 @@ A surface you sign with a finger, and a handle for getting the result back out. 
 Signature ships with the library — no separate install.
 
 ```tsx
-import { Signature, Button, Text, type SignatureHandle } from 'panelui-native';
+import { Signature, Button, Frame, Portal, Scrim, Text, type SignatureHandle } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -37,12 +37,14 @@ const pad = useRef<SignatureHandle>(null);
 <Signature ref={pad} />
 <Signature.Toolbar>
   <Signature.Undo onPress={() => pad.current?.undo()} />
+  <Signature.Redo onPress={() => pad.current?.redo()} />
   <Signature.Clear onPress={() => pad.current?.clear()} />
 </Signature.Toolbar>
 ```
 
 - **`Signature.Toolbar`** — A row of controls under or over the pad. Purely layout.
 - **`Signature.Undo`** — Round button for removing the last stroke. Wire it to `ref.current?.undo()`.
+- **`Signature.Redo`** — Round button for putting back the last undone stroke. Wire it to `ref.current?.redo()`.
 - **`Signature.Clear`** — Round button for dropping every stroke. Wire it to `ref.current?.clear()`.
 
 ## Examples
@@ -65,21 +67,45 @@ const [count, setCount] = useState(0);
 </Signature.Toolbar>
 ```
 
-### Signing in a sheet
+### Signing in a frame
 
-Where a signature is usually asked for — floating over the thing being signed rather than on a screen of its own. `detached` and `blur` come from BottomSheet.
+Where a signature is usually asked for — over the thing being signed rather than on a screen of its own. `Portal` puts it above everything and `Scrim` frosts the screen behind it, so the frame is composed rather than borrowed from an overlay that has its own ideas about layout.
 
 ```tsx
-<BottomSheet open={open} onOpenChange={setOpen}>
-  <BottomSheet.Content detached blur showClose={false}>
-    <View className="flex-row items-center justify-between pb-2 pt-1">
-      <Signature.Undo onPress={() => pad.current?.clear()} />
-      <Text weight="semibold">Sign</Text>
-    </View>
-    <Signature ref={pad} size="lg" className="border-0 bg-white" />
-    <Button className="rounded-full" onPress={finish}>Finish Signing</Button>
-  </BottomSheet.Content>
-</BottomSheet>
+<Portal>
+  <View className="absolute inset-0 items-center justify-center px-6">
+    <Scrim blur />
+    <Pressable className="absolute inset-0" onPress={close} />
+
+    <Animated.View style={rise} className="w-full">
+      <Frame className="rounded-[28px] border-2 border-dashed">
+        <Frame.Header>
+          <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />
+          <Frame.Title weight="semibold" className="flex-1 text-center text-foreground">
+            Sign
+          </Frame.Title>
+          <CloseButton onPress={close} />
+        </Frame.Header>
+        <Frame.Panel>
+          <Signature ref={pad} size="lg" onChange={setCount} className="rounded-none border-0 bg-background" />
+        </Frame.Panel>
+      </Frame>
+    </Animated.View>
+
+    {/* Outside the frame, and absent until there is something to confirm. */}
+    {count > 0 ? (
+      <Animated.View
+        entering={FadeInDown.springify()}
+        exiting={FadeOutDown.duration(150)}
+        className="absolute inset-x-6 bottom-16 items-center"
+      >
+        <Button size="lg" className="rounded-full px-8" onPress={finish}>
+          Finish Signature
+        </Button>
+      </Animated.View>
+    ) : null}
+  </View>
+</Portal>
 ```
 
 ### Saving to a file
@@ -119,19 +145,23 @@ The ✕ and the rule a paper form has. `guidelineLabel` captions it — a printe
 
 ## Versions
 
-### Signing sheet
+### Signing frame
 
-A floating pad over a frosted screen, with a reset on one side and a close on the other.
+A framed pad over a frosted screen, with start-over on one side of the header and close on the other. The confirm button is not in the frame: inside, it is a third control competing for a strip of chrome and disabled for as long as the pad is empty. Outside and absent until the first stroke, it arrives exactly when it means something — and the frame lifts to make room for it.
 
 ```tsx
-<BottomSheet.Content detached blur showClose={false}>
-  <Signature ref={pad} size="lg" className="border-0 bg-white" />
-</BottomSheet.Content>
+const lift = useSharedValue(0);
+
+useEffect(() => {
+  lift.value = withSpring(count > 0 ? -28 : 0, { damping: 22, stiffness: 240, mass: 0.8 });
+}, [count, lift]);
+
+const rise = useAnimatedStyle(() => ({ transform: [{ translateY: lift.value }] }));
 ```
 
 ### Signing a document
 
-An agreement you scroll, with a Frame row that opens the pad and the captured SVG landing back in the document.
+An agreement you scroll, with a Frame row that opens the same signing frame and the captured SVG landing back in the document.
 
 ```tsx
 <Frame.Row onPress={() => setOpen(true)} chevron>

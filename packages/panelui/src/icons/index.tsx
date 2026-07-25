@@ -627,6 +627,29 @@ export function RotateCcwIcon({ size = 16, color, ...props }: IconProps) {
   );
 }
 
+/** An arrow curling clockwise — redo, put back what was undone. */
+export function RotateCwIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M21 12a9 9 0 1 1-2.64-6.36L21 8"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M21 3v5h-5"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 /** A bin — discard what is there. */
 export function TrashIcon({ size = 16, color, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#737373');

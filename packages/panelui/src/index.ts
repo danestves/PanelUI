@@ -16,6 +16,10 @@ export {
 
 // Primitives
 export { Portal, PortalHost, PortalProvider } from './primitives/portal';
+// The companion to Portal: the layer that makes the screen behind an overlay
+// recede. Public so a custom overlay gets the same backdrop — and the same
+// graceful fall back from blur to dim — as the built-in ones.
+export { Scrim, hasBlur, type ScrimProps } from './primitives/scrim';
 export { Text, type TextProps } from './primitives/text';
 export {
   KeyboardAvoider,
