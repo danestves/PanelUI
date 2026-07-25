@@ -2691,6 +2691,38 @@ function RatingDemo() {
   );
 }
 
+/**
+ * Drag across the row to feel it: a tick fires each time the drag crosses onto
+ * a new star, so the value can be set without watching the stars. Paired with
+ * `allowClear`, which makes a second tap on the current value reset it to zero.
+ */
+function RatingHapticsDemo() {
+  const [score, setScore] = useState(4);
+
+  return (
+    <View className="w-full gap-6">
+      <Rating
+        label="Drag across the stars"
+        showValue
+        haptics
+        allowClear
+        value={score}
+        onValueChange={setScore}
+      />
+      {/* Half steps still tick once per whole star, so the feedback stays
+          countable rather than firing twice as often. */}
+      <Rating
+        label="Half stars, same ticks"
+        showValue
+        haptics
+        precision={0.5}
+        defaultValue={2.5}
+        color="primary"
+      />
+    </View>
+  );
+}
+
 const RAIL_SECTIONS = [
   { id: 'intro', label: 'Introduction', level: 0 },
   { id: 'install', label: 'Installation', level: 0 },
@@ -7011,6 +7043,7 @@ export const COMPONENTS: ComponentEntry[] = [
     summary: 'A row of stars to read or set a score',
     demos: [
       { label: 'Interactive', render: () => <RatingDemo /> },
+      { label: 'Haptics', render: () => <RatingHapticsDemo /> },
       {
         label: 'Half stars',
         render: () => (
