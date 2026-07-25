@@ -169,8 +169,10 @@ function Star({
   fillColor: string;
   emptyColor: string;
 }) {
+  // Clamped inline rather than through a helper: this body runs on the UI
+  // thread, which can only reach worklets, not module-scope functions.
   const clipStyle = useAnimatedStyle(() => ({
-    width: clampJS(display.value - index, 0, 1) * size,
+    width: Math.min(Math.max(display.value - index, 0), 1) * size,
   }));
 
   return (
@@ -282,6 +284,16 @@ export const Rating = forwardRef<View, RatingProps>(
       [valueFromX, allowClear, value, display, haptics, emitChange]
     );
 
+    // Resets the haptic step to where the touch started, then applies the first
+    // position. Runs on JS: a ref cannot be written from a gesture worklet.
+    const begin = useCallback(
+      (x: number, width: number) => {
+        lastStep.current = Math.ceil(value);
+        applyLive(x, width);
+      },
+      [value, applyLive]
+    );
+
     const commit = useCallback(
       (x: number, width: number) => {
         let next = valueFromX(x, width);
@@ -297,8 +309,7 @@ export const Rating = forwardRef<View, RatingProps>(
     const pan = Gesture.Pan()
       .enabled(interactive)
       .onBegin((event) => {
-        lastStep.current = Math.ceil(value);
-        runOnJS(applyLive)(event.x, rowWidth.value);
+        runOnJS(begin)(event.x, rowWidth.value);
       })
       .onUpdate((event) => {
         runOnJS(applyLive)(event.x, rowWidth.value);
