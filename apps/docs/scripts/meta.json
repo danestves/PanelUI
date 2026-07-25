@@ -185,6 +185,14 @@
     "Single-select list of options.",
     "react native radio button"
   ],
+  "rating": [
+    "Rating",
+    "A row of stars to read or set a score.",
+    "react native star rating",
+    {
+      "addedIn": "0.20.0"
+    }
+  ],
   "scroll-canvas": [
     "ScrollCanvas",
     "Image frame whose contents move as you scroll.",
@@ -248,7 +256,10 @@
   "slider": [
     "Slider",
     "Pick a value by dragging a thumb along a track.",
-    "react native slider"
+    "react native slider",
+    {
+      "updatedIn": "0.20.0"
+    }
   ],
   "spinner": [
     "Spinner",

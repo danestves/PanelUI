@@ -347,6 +347,17 @@
     ]
   },
   {
+    "name": "rating",
+    "type": "registry:ui",
+    "description": "A row of stars to read or set a score.",
+    "registryDependencies": [
+      "cn",
+      "haptics",
+      "icons",
+      "text"
+    ]
+  },
+  {
     "name": "scrim",
     "type": "registry:ui",
     "description": "The backdrop behind an overlay — a dim, or a blur when expo-blur is installed.",
@@ -444,6 +455,7 @@
     "type": "registry:ui",
     "description": "Pick a value by dragging a thumb along a track.",
     "registryDependencies": [
+      "haptics",
       "native",
       "text"
     ]
