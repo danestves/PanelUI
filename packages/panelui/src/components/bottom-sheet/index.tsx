@@ -4,6 +4,7 @@ import {
   isValidElement,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactElement,
@@ -234,24 +235,49 @@ function BottomSheetContent({
 
   const close = useCallback(() => setOpen(false), [setOpen]);
 
-  const pan = Gesture.Pan()
-    .onChange((event) => {
-      // Rubber-band when dragging upward, follow the finger downward.
-      const next = translateY.value + event.changeY;
-      translateY.value = next > 0 ? next : next / 3;
-    })
-    .onEnd((event) => {
-      if (
-        translateY.value > DISMISS_DISTANCE ||
-        event.velocityY > DISMISS_VELOCITY
-      ) {
-        translateY.value = withTiming(screenHeight, { duration: 200 }, () => {
-          runOnJS(close)();
-        });
-      } else {
-        translateY.value = withSpring(0, SPRING);
-      }
-    });
+  /*
+   * The offset survives a close — the early return below sits after every
+   * hook, so this component keeps its state while the sheet is hidden. A
+   * swipe-dismiss leaves it parked a screen height down, and without this the
+   * next open would draw the sheet below the fold behind a full backdrop:
+   * a dimmed screen with nothing on it and no reachable close button.
+   */
+  useEffect(() => {
+    if (open) translateY.value = 0;
+  }, [open, translateY]);
+
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        /*
+         * A drag has to travel before it takes the touch. This detector wraps
+         * the whole sheet, close button included, and an unqualified Pan
+         * activates on a few pixels of drift — cancelling the press the button
+         * is in the middle of, so a tap with any finger travel does nothing.
+         */
+        .activeOffsetY([-12, 12])
+        .onChange((event) => {
+          // Rubber-band when dragging upward, follow the finger downward.
+          const next = translateY.value + event.changeY;
+          translateY.value = next > 0 ? next : next / 3;
+        })
+        .onEnd((event) => {
+          if (
+            translateY.value > DISMISS_DISTANCE ||
+            event.velocityY > DISMISS_VELOCITY
+          ) {
+            translateY.value = withTiming(screenHeight, { duration: 200 }, () => {
+              runOnJS(close)();
+            });
+          } else {
+            translateY.value = withSpring(0, SPRING);
+          }
+        }),
+    // Rebuilt only when one of these changes. Built inline it would be a new
+    // gesture on every render — and the sheet re-renders while it is being
+    // used, each time re-attaching the handler and dropping the live touch.
+    [close, screenHeight, translateY]
+  );
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -325,16 +351,21 @@ function BottomSheetContent({
           <Animated.View
             entering={SlideInDown.springify().damping(22).stiffness(240).mass(0.8)}
             exiting={SlideOutDown.duration(200)}
+            accessibilityViewIsModal
+            className={sheetVariants({ detached, className })}
+            {...props}
+            // After the spread, and with the caller's own style folded in
+            // rather than replacing the array: spread last, a caller passing
+            // `style` for a height would silently drop the drag transform and
+            // the safe-area padding with it.
             style={[
               sheetStyle,
               // A detached sheet's own bottom margin already clears the home
               // indicator, so it takes plain padding rather than stacking the
               // inset on top of the gap.
               { paddingBottom: detached ? 16 : Math.max(insets.bottom, 16) },
+              props.style,
             ]}
-            accessibilityViewIsModal
-            className={sheetVariants({ detached, className })}
-            {...props}
           >
             <View className="mb-3 self-center">
               <View className="h-1 w-10 rounded-full bg-muted-foreground/30" />
