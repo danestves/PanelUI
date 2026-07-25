@@ -562,6 +562,32 @@ export function PauseIcon({ size = 16, color, ...props }: IconProps) {
   );
 }
 
+/**
+ * A five-pointed star — the mark of a Rating. `filled` paints the interior;
+ * left hollow it is the outline of an unearned star. Both share the same
+ * geometry, so a filled star clipped over an empty one lines up to the pixel.
+ */
+export function StarIcon({
+  size = 20,
+  color,
+  filled = false,
+  ...props
+}: IconProps & { filled?: boolean }) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.82 6.2 20.86l1.11-6.46-4.7-4.58 6.49-.94z"
+        fill={filled ? resolved : 'none'}
+        stroke={resolved}
+        strokeWidth={1.6}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 /** A pencil at an angle — draw, sign, edit by hand. */
 export function PencilIcon({ size = 16, color, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#737373');

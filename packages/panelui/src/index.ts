@@ -303,6 +303,12 @@ export {
   type RadioGroupItemProps,
 } from './components/radio-group';
 export {
+  Rating,
+  type RatingProps,
+  type RatingColor,
+  type RatingSize,
+} from './components/rating';
+export {
   ScrollFade,
   type ScrollFadeProps,
 } from './components/scroll-fade';

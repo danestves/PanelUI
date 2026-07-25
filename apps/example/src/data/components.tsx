@@ -79,6 +79,7 @@ import {
   Popover,
   Progress,
   RadioGroup,
+  Rating,
   ReceiptIcon,
   SearchIcon,
   SendIcon,
@@ -2665,6 +2666,27 @@ function SliderDemo() {
       <Slider defaultValue={70} color="success" size="sm" />
       <Slider defaultValue={5} min={0} max={10} step={1} color="warning" size="lg" />
       <Slider label="Locked" showValue defaultValue={30} disabled />
+    </View>
+  );
+}
+
+function RatingDemo() {
+  const [score, setScore] = useState(3);
+
+  return (
+    <View className="w-full gap-6">
+      {/* Controlled, with the caption row showing what the taps have set. */}
+      <Rating
+        label="Rate your stay"
+        showValue
+        formatValue={(v) => `${v} / 5`}
+        value={score}
+        onValueChange={setScore}
+      />
+      {/* precision={0.5} lets the left half of a star mean a half. */}
+      <Rating precision={0.5} defaultValue={2.5} color="primary" />
+      {/* A read-only average renders any fraction at full precision. */}
+      <Rating value={4.3} precision={0.5} readOnly size="sm" />
     </View>
   );
 }
@@ -6979,6 +7001,55 @@ export const COMPONENTS: ComponentEntry[] = [
               <RadioGroupDemo />
             </Card.Content>
           </Card>
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'rating',
+    name: 'Rating',
+    summary: 'A row of stars to read or set a score',
+    demos: [
+      { label: 'Interactive', render: () => <RatingDemo /> },
+      {
+        label: 'Half stars',
+        render: () => (
+          <View className="w-full gap-5">
+            <Rating precision={0.5} defaultValue={3.5} />
+            <Rating precision={0.5} defaultValue={2.5} color="primary" />
+          </View>
+        ),
+      },
+      {
+        label: 'Colors',
+        render: () => (
+          <View className="w-full gap-4">
+            <Rating defaultValue={4} color="warning" />
+            <Rating defaultValue={4} color="success" />
+            <Rating defaultValue={4} color="destructive" />
+            <Rating defaultValue={4} color="info" />
+            <Rating defaultValue={4} color="foreground" />
+          </View>
+        ),
+      },
+      {
+        label: 'Sizes',
+        render: () => (
+          <View className="w-full gap-4">
+            <Rating defaultValue={3} size="sm" />
+            <Rating defaultValue={3} size="md" />
+            <Rating defaultValue={3} size="lg" />
+          </View>
+        ),
+      },
+      {
+        label: 'Read-only & disabled',
+        render: () => (
+          <View className="w-full gap-4">
+            <Rating value={4.3} precision={0.5} readOnly />
+            <Rating max={10} defaultValue={7} size="sm" />
+            <Rating defaultValue={3} disabled />
+          </View>
         ),
       },
     ],
