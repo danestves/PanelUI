@@ -23,6 +23,13 @@ const config = {
         destination: '/docs/ai-components/soundwave',
         permanent: true,
       },
+      // Field moved out of Form: it is a layout kit every control composes
+      // into, not a piece of form state.
+      {
+        source: '/docs/form/field',
+        destination: '/docs/components/field',
+        permanent: true,
+      },
     ];
   },
 };

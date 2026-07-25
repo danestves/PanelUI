@@ -81,7 +81,6 @@
     "Layout and validation-state kit a form control composes into.",
     "react native form field",
     {
-      "group": "form",
       "addedIn": "0.17.0"
     }
   ],
