@@ -36,6 +36,7 @@ import Animated, {
 import { tv, type VariantProps } from 'tailwind-variants';
 import { getNativeUI } from '../../native';
 import { Text } from '../../primitives/text';
+import { selectionTick } from '../../utils/haptics';
 
 /**
  * Springs the thumb onto its resting step after a drag or a track tap. Drags
@@ -127,6 +128,12 @@ export interface SliderProps extends Omit<SliderVariantProps, 'disabled'> {
   showValue?: boolean;
   /** Format the shown value. Defaults to the rounded number. */
   formatValue?: (value: number) => string;
+  /**
+   * A tick under the finger each time a drag crosses onto a new step, and once
+   * more when the drag ends. Off by default — needs the optional `expo-haptics`,
+   * and is silent without it.
+   */
+  haptics?: boolean;
   /** Extra classes for the caption row. */
   headerClassName?: string;
   /** Extra classes for the unfilled track. */
@@ -170,6 +177,7 @@ export const Slider = forwardRef<View, SliderProps>(
       label,
       showValue = false,
       formatValue,
+      haptics = false,
       color = 'primary',
       size = 'md',
     },
@@ -197,6 +205,9 @@ export const Slider = forwardRef<View, SliderProps>(
     changeRef.current = onValueChange;
     const commitRef = useRef(onValueCommit);
     commitRef.current = onValueCommit;
+    // The last step a drag ticked on, so haptics fire once per step, not per
+    // pixel of movement within it.
+    const lastTick = useRef(value);
 
     const emitChange = useCallback(
       (next: number) => {
@@ -223,10 +234,14 @@ export const Slider = forwardRef<View, SliderProps>(
       (p: number, commit: boolean) => {
         const raw = min + p * (max - min);
         const snapped = snap(raw, min, max, step);
+        if (haptics && snapped !== lastTick.current) {
+          lastTick.current = snapped;
+          selectionTick();
+        }
         emitChange(snapped);
         if (commit) emitCommit(snapped);
       },
-      [min, max, step, emitChange, emitCommit]
+      [min, max, step, haptics, emitChange, emitCommit]
     );
 
     const pan = Gesture.Pan()
@@ -280,6 +295,10 @@ export const Slider = forwardRef<View, SliderProps>(
     const nudge = (dir: 1 | -1) => {
       const next = snap(value + dir * (step || 1), min, max, step);
       if (next === value) return;
+      if (haptics) {
+        lastTick.current = next;
+        selectionTick();
+      }
       progress.value = withSpring(max > min ? (next - min) / (max - min) : 0, SPRING);
       emitChange(next);
       emitCommit(next);

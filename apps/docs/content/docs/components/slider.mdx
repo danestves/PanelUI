@@ -1,6 +1,7 @@
 ---
 title: Slider
 description: Pick a value by dragging a thumb along a track.
+status: updated
 ---
 
 A value picker driven by a single thumb. The thumb is a pill exactly as tall as the track — the two are the same height, so nothing has to escape the track to be drawn whole — with a knob inside it that shrinks while you drag. Position and fill are animated on the UI thread, so dragging never round-trips through React; the picked value bridges back on change and again on release.
@@ -101,6 +102,14 @@ The thumb is two elements — the coloured pill and the knob inside it — and e
 />
 ```
 
+### Haptic detents
+
+`haptics` ticks under the finger each time the drag crosses onto a new step, and once more on release — the value feels like it clicks into place. It needs the optional `expo-haptics`, and is silent without it.
+
+```tsx
+<Slider label="Zoom" showValue min={0} max={10} step={1} defaultValue={4} haptics />
+```
+
 ### Disabled
 
 ```tsx
@@ -171,6 +180,7 @@ Passing `native` hands the track and thumb to SwiftUI or Jetpack Compose. The ca
 | `label` | `string` | — | Caption above the track. Also becomes the accessibility label. |
 | `showValue` | `boolean` | `false` | Show the current value on the caption row, opposite the label. |
 | `formatValue` | `(value: number) => string` | — | Format the shown value. Defaults to the rounded number. |
+| `haptics` | `boolean` | `false` | A tick under the finger each time a drag crosses onto a new step, and once more when the drag ends. Off by default — needs the optional `expo-haptics`, and is silent without it. |
 | `headerClassName` | `string` | — | Extra classes for the caption row. |
 | `trackClassName` | `string` | — | Extra classes for the unfilled track. |
 | `fillClassName` | `string` | — | Extra classes for the filled portion. |
