@@ -84,17 +84,24 @@ const { withUniwindConfig } = require('uniwind/metro');
 const config = getDefaultConfig(__dirname);
 
 module.exports = withUniwindConfig(config, {
-  // The path to your CSS entry — see step 3. In an app made by
-  // `create-expo-app` this is './src/global.css'.
-  cssEntryFile: './global.css',
+  cssEntryFile: './src/global.css',
   dtsFile: './uniwind-types.d.ts',
   // Only needed to switch to the Moon or Grass themes at runtime.
   extraThemes: ['moon', 'moon-dark', 'grass', 'grass-dark'],
 });
 ```
 
-`cssEntryFile` and `dtsFile` are relative to **this file**, wherever your CSS entry turns out to
-live — step 3 covers finding it.
+<Callout type="warn" title="`cssEntryFile` must be the real path to your CSS file">
+  `./src/global.css` above is where `create-expo-app` puts it, which is why it is what this snippet
+  says. If yours is at the project root, change it to `'./global.css'`.
+
+  Nothing checks this path. Point it at a file that does not exist and Metro still bundles, the app
+  still launches, and **not one class resolves** — no `flex-1`, so views collapse to nothing and you
+  get a blank screen, with Uniwind warning that it cannot find `--color-background`. Step 3 ends by
+  asking you to check this line against the file you actually edited; it is worth doing.
+</Callout>
+
+`cssEntryFile` and `dtsFile` are relative to **this file**.
 
 <Callout title="In a monorepo">
   `metro.config.js` belongs in the *app's* folder — the one with the app's own `package.json`, not
@@ -139,8 +146,9 @@ The first three lines bring in Tailwind, Uniwind's native layer, and PanelUI's d
 `@source` line tells Tailwind to scan PanelUI's own class names so its styles end up in your
 bundle — without it your classes work and PanelUI's components come out unstyled.
 
-Whichever file you used, its path is what `cssEntryFile` in step 2 has to point at:
-`'./src/global.css'` for the file above.
+**Now go back and check `cssEntryFile` in step 2 names this exact file.** `'./src/global.css'` for
+the file above — the default in the snippet, since that is where `create-expo-app` puts it. If you
+kept your CSS somewhere else, this is the line that has to change, and a mismatch is silent.
 
 <Callout type="warn" title="`@source` is relative to the CSS file, not to the project">
   This is the single most common mistake, and the reason the example above says `../`. Whatever the
@@ -331,6 +339,19 @@ long as it is covered by your `tsconfig.json` `include`.
 A required package is missing. Run the [install command](#1-install-the-packages) again — all of
 it, not just the package named in the error. Metro resolves every import in the library, so this
 happens even for components you do not use.
+
+### `Uniwind - We couldn't find your variable --color-background`
+
+Your `cssEntryFile` does not point at the CSS file you edited, so Uniwind compiled nothing. In an
+app from `create-expo-app` the file is `src/global.css`, so the line reads:
+
+```js title="metro.config.js"
+cssEntryFile: './src/global.css',
+```
+
+The warning names a variable, which makes it look like a token problem, but no token in the file was
+compiled — and no class either, which is the same reason the screen is blank: without `flex-1` the
+views have no height. Fix the path and restart the dev server.
 
 ### Nothing is styled — `className` does nothing at all
 

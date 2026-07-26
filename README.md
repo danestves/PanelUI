@@ -115,17 +115,20 @@ const { withUniwindConfig } = require('uniwind/metro');
 const config = getDefaultConfig(__dirname);
 
 module.exports = withUniwindConfig(config, {
-  // In an app made by create-expo-app this is './src/global.css' — see below.
-  cssEntryFile: './global.css',
+  cssEntryFile: './src/global.css',
   dtsFile: './uniwind-types.d.ts',
   // Only needed to switch to the Moon or Grass themes at runtime.
   extraThemes: ['moon', 'moon-dark', 'grass', 'grass-dark'],
 });
 ```
 
-`cssEntryFile` and `dtsFile` are relative to this file. In a monorepo it belongs in the app's own
-folder, with `watchFolders` pointing at the workspace root — see
-[`apps/example/metro.config.js`](apps/example/metro.config.js).
+`cssEntryFile` and `dtsFile` are relative to this file. `./src/global.css` is where
+`create-expo-app` puts the CSS — if yours is at the project root, change it to `'./global.css'`.
+Nothing validates the path: name a file that does not exist and Metro still bundles, while not one
+class resolves — a blank screen and `Uniwind - We couldn't find your variable --color-background`.
+
+In a monorepo this file belongs in the app's own folder, with `watchFolders` pointing at the
+workspace root — see [`apps/example/metro.config.js`](apps/example/metro.config.js).
 
 ### 2. `global.css`
 

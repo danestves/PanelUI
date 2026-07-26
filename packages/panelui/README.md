@@ -62,15 +62,19 @@ const { withUniwindConfig } = require('uniwind/metro');
 const config = getDefaultConfig(__dirname);
 
 module.exports = withUniwindConfig(config, {
-  // In an app made by create-expo-app this is './src/global.css' — see step 3.
-  cssEntryFile: './global.css',
+  cssEntryFile: './src/global.css',
   dtsFile: './uniwind-types.d.ts',
   // Only needed to switch to the Moon or Grass themes at runtime.
   extraThemes: ['moon', 'moon-dark', 'grass', 'grass-dark'],
 });
 ```
 
-`cssEntryFile` and `dtsFile` are relative to this file.
+`cssEntryFile` and `dtsFile` are relative to this file. `./src/global.css` is where
+`create-expo-app` puts the CSS — if yours is at the project root, change it to `'./global.css'`.
+
+**Nothing validates that path.** Point it at a file that does not exist and Metro still bundles, the
+app still launches, and not one class resolves — no `flex-1`, so views collapse and you get a blank
+screen with `Uniwind - We couldn't find your variable --color-background`.
 
 ### 3. Add the imports to `global.css`
 
