@@ -59,9 +59,9 @@ const numberInputVariants = tv({
       filled: { control: 'border-transparent bg-muted' },
     },
     size: {
-      sm: { control: 'h-10', button: 'w-10', field: 'text-sm' },
-      md: { control: 'h-12', button: 'w-12', field: 'text-base' },
-      lg: { control: 'h-14', button: 'w-14', field: 'text-base' },
+      sm: { control: 'h-10', button: 'w-10' },
+      md: { control: 'h-12', button: 'w-12' },
+      lg: { control: 'h-14', button: 'w-14' },
     },
     invalid: {
       true: { control: 'border-destructive' },
@@ -91,12 +91,26 @@ const ICON_SIZE: Record<'sm' | 'md' | 'lg', number> = { sm: 16, md: 18, lg: 20 }
  * while the value counts — a 1 that is narrower than a 7 makes a centred
  * number appear to shuffle sideways as it steps.
  */
-const FIELD_STYLE: TextStyle = {
+const FIELD_BASE: TextStyle = {
   paddingVertical: 0,
   paddingHorizontal: 0,
   includeFontPadding: false,
   textAlignVertical: 'center',
   fontVariant: ['tabular-nums'],
+};
+
+/**
+ * Font size is set here rather than by a text class because those bring a line
+ * height with them: a 16px number in a 24px line box. The extra leading is
+ * added above the digits, so centring that box leaves the number sitting a
+ * couple of pixels below the − and the + it is meant to line up with — close
+ * enough to look like a mistake rather than a difference. Sized this way the
+ * line box is the font's own, and centring it centres the digits.
+ */
+const FIELD_STYLE: Record<'sm' | 'md' | 'lg', TextStyle> = {
+  sm: { ...FIELD_BASE, fontSize: 14 },
+  md: { ...FIELD_BASE, fontSize: 16 },
+  lg: { ...FIELD_BASE, fontSize: 16 },
 };
 
 type NumberInputVariantProps = VariantProps<typeof numberInputVariants>;
@@ -327,7 +341,7 @@ export const NumberInput = forwardRef<TextInput, NumberInputProps>(
             aria-required={isRequired}
             aria-invalid={invalid}
             className={slots.field()}
-            style={FIELD_STYLE}
+            style={FIELD_STYLE[size]}
           />
 
           <AnimatedPressable
