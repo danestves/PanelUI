@@ -293,6 +293,18 @@
     "registryDependencies": []
   },
   {
+    "name": "number-input",
+    "type": "registry:ui",
+    "description": "Numeric field stepped by buttons or typed by hand.",
+    "registryDependencies": [
+      "animated-pressable",
+      "haptics",
+      "icons",
+      "label",
+      "text"
+    ]
+  },
+  {
     "name": "otp-input",
     "type": "registry:ui",
     "description": "One-time-code field drawn as a row of separate cells.",
@@ -496,6 +508,7 @@
     "type": "registry:ui",
     "description": "Animated on/off toggle.",
     "registryDependencies": [
+      "haptics",
       "native"
     ]
   },

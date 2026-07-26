@@ -46,25 +46,24 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 
 | | | |
 | --- | --- | --- |
-| Accordion | Frame | Select |
-| Alert | HeatmapChart | Separator |
-| Attachment | Input | Shimmer |
-| Avatar | InputGroup | Signature |
-| Badge | Item | Skeleton |
-| BottomSheet | Label | Slider |
-| Button | LineChart | Soundwave |
-| Card | Marker | Spinner |
-| Checkbox | Message | Steps |
-| Chip | MessageScroller | Surface |
-| Dialog | OtpInput | Switch |
-| Direction | Popover | Tabs |
-| EmptyState | Progress | ThinkingOrb |
-| Field | RadioGroup | Timeline |
-| Flow | Rating | Toast |
-| Form | ScrollCanvas | ToggleButton |
-|  | ScrollFade | Typography |
-|  | ScrollText |  |
-|  | SectionRail |  |
+| Accordion | Input | Select |
+| Alert | InputGroup | Separator |
+| Attachment | Item | Shimmer |
+| Avatar | Label | Signature |
+| Badge | LineChart | Skeleton |
+| BottomSheet | Marker | Slider |
+| Button | Message | Soundwave |
+| Card | MessageScroller | Spinner |
+| Checkbox | NumberInput | Steps |
+| Chip | OtpInput | Surface |
+| Dialog | Popover | Switch |
+| Direction | Progress | Tabs |
+| EmptyState | RadioGroup | ThinkingOrb |
+| Field | Rating | Timeline |
+| Flow | ScrollCanvas | Toast |
+| Form | ScrollFade | ToggleButton |
+| Frame | ScrollText | Typography |
+| HeatmapChart | SectionRail |  |
 
 `Select` shows its options in a bottom sheet, expanded in place, or floating
 over the page — one `presentation` prop, because which is right depends on what
