@@ -1,0 +1,169 @@
+---
+title: NumberInput
+description: Numeric field stepped by buttons or typed by hand.
+status: new
+---
+
+A number stepped by a − and a + at the ends, or typed straight into the field in the middle — because past a handful of steps, tapping to a value is worse than typing it, and a good numeric control keeps both doors open. The two ends repeat when held, after a short delay and then faster, so walking from 0 to 200 is a press rather than two hundred of them. Everything reconciles through a single value that is clamped to `min`/`max` and snapped to `step`.
+
+## Installation
+
+NumberInput ships with the library — no separate install.
+
+```tsx
+import { NumberInput, useState } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add number-input
+```
+
+## Usage
+
+```tsx
+<NumberInput defaultValue={1} min={0} max={10} />
+
+const [qty, setQty] = useState(1);
+<NumberInput label="Quantity" value={qty} onValueChange={setQty} min={1} />
+```
+
+## Examples
+
+### Controlled
+
+Hold the value in state and read it back. Every commit — a tap, a hold, or a typed entry — arrives already clamped and snapped.
+
+```tsx
+const [qty, setQty] = useState(1);
+
+<NumberInput value={qty} onValueChange={setQty} min={1} max={99} />
+```
+
+### Bounds and step
+
+`min` and `max` bound the value and disable the button that would cross them; `step` is both the nudge and the granularity the value snaps to.
+
+```tsx
+<NumberInput defaultValue={0} min={0} max={1} step={0.1} />
+```
+
+### Formatted display
+
+`formatValue` owns how the number reads — units, currency, grouping — while typing still reads a bare number back.
+
+```tsx
+<NumberInput
+  label="Budget"
+  defaultValue={40}
+  min={0}
+  max={1000}
+  step={10}
+  formatValue={(v) => `$${v}`}
+/>
+```
+
+### As a form field
+
+`label`, `description` and `errorMessage` make it a first-class field, with the label doubling as the accessibility label and an asterisk from `isRequired`.
+
+```tsx
+<NumberInput
+  label="Guests"
+  description="Up to eight per reservation."
+  isRequired
+  defaultValue={2}
+  min={1}
+  max={8}
+/>
+```
+
+### Display-only stepper
+
+`editable={false}` keeps the buttons but closes the keyboard, for a value that should only ever move one step at a time.
+
+```tsx
+<NumberInput editable={false} defaultValue={1} min={0} max={5} />
+```
+
+### Haptic steps
+
+`haptics` ticks the engine on each step — the value feels like it clicks. It needs the optional `expo-haptics`, and is silent without it.
+
+```tsx
+<NumberInput haptics defaultValue={5} min={0} max={20} />
+```
+
+### Disabled
+
+```tsx
+<NumberInput defaultValue={3} disabled />
+```
+
+## Variants
+
+### `variant`
+
+- `outline` *(default)*
+- `filled`
+
+```tsx
+<NumberInput variant="outline" defaultValue={1} />
+<NumberInput variant="filled" defaultValue={1} />
+```
+
+### `size`
+
+- `sm`
+- `md` *(default)*
+- `lg`
+
+```tsx
+<NumberInput size="sm" defaultValue={1} />
+<NumberInput size="md" defaultValue={1} />
+<NumberInput size="lg" defaultValue={1} />
+```
+
+### `invalid`
+
+- `true`
+
+```tsx
+<NumberInput invalid="true">…</NumberInput>
+```
+
+## API Reference
+
+### NumberInput
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `containerClassName` | `string` | — |  |
+| `value` | `number` | — | Controlled value. Leave unset and pass `defaultValue` to run uncontrolled. |
+| `defaultValue` | `number` | — | Starting value when uncontrolled. Defaults to `min`, or 0. |
+| `min` | `number` | `-Infinity` | Lower bound. The decrement button disables here. |
+| `max` | `number` | `Infinity` | Upper bound. The increment button disables here. |
+| `step` | `number` | `1` | Nudge per press, and the granularity the value snaps to. |
+| `onValueChange` | `(value: number) => void` | — | Fires whenever the committed value changes. |
+| `formatValue` | `(value: number) => string` | — | Format the displayed number — units, currency, grouping. The field shows this string; typing still reads a bare number back. Defaults to the value rounded to `step`'s precision. |
+| `editable` | `boolean` | `true` | Let the middle field be typed into. When false it is display-only. |
+| `disabled` | `boolean` | — |  |
+| `label` | `string` | — | A label above the control. Doubles as the accessibility label. |
+| `description` | `string` | — | Helper text below the control. Hidden while an error shows. |
+| `errorMessage` | `string` | — | Error message. When set, the control renders in its invalid state. |
+| `isRequired` | `boolean` | — | Marks the field required — an asterisk on the label, and the a11y state. |
+| `haptics` | `boolean` | — | Tick the haptic engine on each step. Needs the optional `expo-haptics`, and is silent without it. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). The value is always clamped to `[min, max]` and snapped to the nearest `step`; the display rounds to `step`'s precision, so `0.1 + 0.2` settles on `0.3` rather than drifting.
+
+Typing is allowed to be briefly invalid — an empty field, a lone `-`, a trailing `.` — because clamping every keystroke fights the person mid-number. The field commits on blur or submit, and reverts to the last good value when what is left cannot be read as a number.
+
+The buttons repeat when held, and read the live value from a ref so a hold never strides off a stale number. Each is a separately labelled accessibility button that disables at its bound, so a screen reader is told when a direction is exhausted.
+
+Pass `haptics` to tick on each step; it needs the optional `expo-haptics` and is silent without it.

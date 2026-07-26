@@ -229,6 +229,10 @@ export {
   type InputGroupInputProps,
   type InputGroupDecoratorProps,
 } from './components/input-group';
+export {
+  NumberInput,
+  type NumberInputProps,
+} from './components/number-input';
 export { OtpInput, type OtpInputProps } from './components/otp-input';
 export {
   Item,

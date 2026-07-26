@@ -129,6 +129,14 @@
     "Input with leading and trailing decorators.",
     "react native input group"
   ],
+  "number-input": [
+    "NumberInput",
+    "Numeric field stepped by buttons or typed by hand.",
+    "react native number input stepper",
+    {
+      "addedIn": "0.22.0"
+    }
+  ],
   "otp-input": [
     "OtpInput",
     "One-time-code field drawn as a row of separate cells.",
@@ -280,7 +288,8 @@
   "switch": [
     "Switch",
     "Animated on/off toggle.",
-    "react native switch"
+    "react native switch",
+    { "updatedIn": "0.22.0" }
   ],
   "tabs": [
     "Tabs",
