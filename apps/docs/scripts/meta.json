@@ -280,7 +280,8 @@
   "switch": [
     "Switch",
     "Animated on/off toggle.",
-    "react native switch"
+    "react native switch",
+    { "updatedIn": "0.22.0" }
   ],
   "tabs": [
     "Tabs",

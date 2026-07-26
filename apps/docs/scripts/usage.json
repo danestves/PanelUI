@@ -2886,7 +2886,7 @@
   "switch": {
     "intro": "An on/off toggle, animated on the UI thread.",
     "usage": "<Switch value={enabled} onValueChange={setEnabled} />",
-    "notes": "### Native rendering\n\nPass `native` to render the platform's own switch instead — SwiftUI on iOS, Jetpack Compose on Android. It needs the optional `@expo/ui` package and is a silent no-op without it.\n\n**Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className` and most styling props are ignored. The native switch gains a `label` prop the styled one does not have.\n\nSee [Native rendering](/docs/native) for the full prop-by-prop breakdown.",
+    "notes": "Pass `haptics` to tick the platform's haptic engine each time the switch is flipped — the toggle clicks under the thumb rather than merely sliding. It needs the optional `expo-haptics` and is silent without it, and it is ignored in `native` mode, where the platform control owns its own feedback.\n\n### Native rendering\n\nPass `native` to render the platform's own switch instead — SwiftUI on iOS, Jetpack Compose on Android. It needs the optional `@expo/ui` package and is a silent no-op without it.\n\n**Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className` and most styling props are ignored. The native switch gains a `label` prop the styled one does not have.\n\nSee [Native rendering](/docs/native) for the full prop-by-prop breakdown.",
     "examples": [
       {
         "title": "In a settings row",
@@ -2895,6 +2895,11 @@
       {
         "title": "Sizes and disabled",
         "code": "<Switch size=\"sm\" value={compact} onValueChange={setCompact} />\n<Switch value={enabled} onValueChange={setEnabled} />\n<Switch value disabled onValueChange={() => {}} />"
+      },
+      {
+        "title": "Haptic toggle",
+        "description": "`haptics` fires a light tick each time the switch flips, so the toggle feels like it clicks into place. It needs the optional `expo-haptics`, and is silent without it.",
+        "code": "<Switch haptics value={enabled} onValueChange={setEnabled} />"
       },
       {
         "title": "Native",

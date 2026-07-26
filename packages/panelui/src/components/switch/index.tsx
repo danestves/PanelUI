@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { getNativeUI } from '../../native';
+import { selectionTick } from '../../utils/haptics';
 
 const SPRING = { damping: 18, stiffness: 250, mass: 0.5 } as const;
 
@@ -48,6 +49,13 @@ export interface SwitchProps extends VariantProps<typeof switchVariants> {
   native?: boolean;
   /** Text label drawn beside the control. Native mode only. */
   label?: string;
+  /**
+   * Tick the haptic engine each time the switch is flipped — a toggle you feel
+   * click rather than one that merely slides. Needs the optional
+   * `expo-haptics`, and is silent without it. Ignored in `native` mode, where
+   * the platform control owns its own feedback.
+   */
+  haptics?: boolean;
 }
 
 /**
@@ -55,7 +63,10 @@ export interface SwitchProps extends VariantProps<typeof switchVariants> {
  * UI thread; toggling never re-renders beyond the value change itself.
  */
 export const Switch = forwardRef<View, SwitchProps>(
-  ({ className, value, onValueChange, disabled, size = 'md', native, label }, ref) => {
+  (
+    { className, value, onValueChange, disabled, size = 'md', native, label, haptics },
+    ref
+  ) => {
     const progress = useSharedValue(value ? 1 : 0);
     const nativeUI = native ? getNativeUI() : null;
     const slots = switchVariants({ size, disabled: !!disabled });
@@ -98,7 +109,10 @@ export const Switch = forwardRef<View, SwitchProps>(
         accessibilityRole="switch"
         accessibilityState={{ checked: value, disabled: !!disabled }}
         disabled={disabled}
-        onPress={() => onValueChange?.(!value)}
+        onPress={() => {
+          if (haptics) selectionTick();
+          onValueChange?.(!value);
+        }}
         hitSlop={8}
       >
         <View className={slots.track({ className })}>

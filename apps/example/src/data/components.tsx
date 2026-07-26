@@ -208,6 +208,29 @@ function SwitchDemo() {
   );
 }
 
+function HapticSwitchDemo() {
+  const [wifi, setWifi] = useState(true);
+  const [bluetooth, setBluetooth] = useState(false);
+
+  return (
+    <Card className="w-full">
+      <Card.Content className="gap-5 p-4">
+        <Text size="sm" muted>
+          Each flip fires a light tick — install expo-haptics to feel it on a device.
+        </Text>
+        <View className="flex-row items-center justify-between gap-4">
+          <Text weight="medium">Wi-Fi</Text>
+          <Switch haptics value={wifi} onValueChange={setWifi} />
+        </View>
+        <View className="flex-row items-center justify-between gap-4">
+          <Text weight="medium">Bluetooth</Text>
+          <Switch haptics value={bluetooth} onValueChange={setBluetooth} />
+        </View>
+      </Card.Content>
+    </Card>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /* LineChart                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -8085,6 +8108,7 @@ export const COMPONENTS: ComponentEntry[] = [
           </View>
         ),
       },
+      { label: 'Haptics', render: () => <HapticSwitchDemo /> },
       { label: 'Native', render: () => <NativeSwitchDemo /> },
     ],
   },
