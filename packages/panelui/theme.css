@@ -16,6 +16,28 @@
  *   @source './node_modules/panelui-native/src';
  */
 
+/*
+ * The named themes declare their own variants, so this file compiles on its
+ * own terms.
+ *
+ * `light` and `dark` exist wherever Uniwind does. The other four are extra
+ * themes, and their variants are otherwise only defined in the artifact
+ * Uniwind generates from the theme list in a project's Metro config — which
+ * that generation step has to compile *this file* to produce. A fresh install
+ * therefore had nothing defining `moon` at the moment it was first used: the
+ * dev server got away with it because it registers the themes in memory, while
+ * a production bundle failed with `Cannot use @variant with unknown variant`.
+ *
+ * Declared here, the cycle does not exist and neither does the difference
+ * between the two. Registering a theme in `extraThemes` is then only about
+ * being able to switch to it at runtime, which is what that option reads like
+ * it is for.
+ */
+@custom-variant moon (&:where(.moon, .moon *));
+@custom-variant moon-dark (&:where(.moon-dark, .moon-dark *));
+@custom-variant grass (&:where(.grass, .grass *));
+@custom-variant grass-dark (&:where(.grass-dark, .grass-dark *));
+
 @theme {
   --color-background: unset;
   --color-foreground: unset;
