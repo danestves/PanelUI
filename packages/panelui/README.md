@@ -62,50 +62,67 @@ const { withUniwindConfig } = require('uniwind/metro');
 const config = getDefaultConfig(__dirname);
 
 module.exports = withUniwindConfig(config, {
+  // In an app made by create-expo-app this is './src/global.css' — see step 3.
   cssEntryFile: './global.css',
   dtsFile: './uniwind-types.d.ts',
-  // Only needed if you use the Moon or Grass themes.
+  // Only needed to switch to the Moon or Grass themes at runtime.
   extraThemes: ['moon', 'moon-dark', 'grass', 'grass-dark'],
 });
 ```
 
 `cssEntryFile` and `dtsFile` are relative to this file.
 
-### 3. Create `global.css`
+### 3. Add the imports to `global.css`
 
-Next to `metro.config.js`, matching the `cssEntryFile` path above:
+**Look for this file before you create one** — an app made by `create-expo-app` already has
+`src/global.css`. Add these lines at the top of it and leave the rest below. A second CSS file at
+the project root gives you two entries, only one of which is compiled, and nothing gets styled.
 
 ```css
+/* src/global.css */
 @import 'tailwindcss';
 @import 'uniwind';
 @import 'panelui-native/theme.css';
 
-@source './node_modules/panelui-native/src';
+@source '../node_modules/panelui-native/src';
 ```
 
-`@source` is relative to **the CSS file**, and has to land on `node_modules/panelui-native/src`.
-From `src/styles/global.css` it is `'../../node_modules/panelui-native/src'`. Get it wrong and
-your own classes work while PanelUI's components come out unstyled.
+`@source` is relative to **the CSS file**, and has to land on `node_modules/panelui-native/src` —
+hence the `../` above, from `src/`. From the project root it is `'./node_modules/…'`, from
+`src/styles/` it is `'../../node_modules/…'`. Get it wrong and your own classes work while
+PanelUI's components come out unstyled. Whichever file you used is what `cssEntryFile` must name.
 
 ### 4. Import the CSS and add the provider
 
-At the top of your app's entry file. The default Expo template uses Expo Router, so there is no
-`App.tsx` — the entry is `app/_layout.tsx`:
+At the top of your app's entry file. The default template uses Expo Router with routes under
+`src/`, so there is usually no `App.tsx` — the entry is `src/app/_layout.tsx`, and it already
+returns a navigation `ThemeProvider` to wrap rather than replace:
 
 ```tsx
-// app/_layout.tsx
-import './global.css';
-import { Stack } from 'expo-router';
+// src/app/_layout.tsx
+import '../global.css';
+
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { useColorScheme } from 'react-native';
 import { PanelUIProvider } from 'panelui-native';
 
+import AppTabs from '@/components/app-tabs';
+
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
+
   return (
     <PanelUIProvider>
-      <Stack />
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <AppTabs />
+      </ThemeProvider>
     </PanelUIProvider>
   );
 }
 ```
+
+That navigation theme paints over PanelUI's background once you switch themes — see
+[Using Expo Router?](#using-expo-router-read-this) below for the version fed from live tokens.
 
 `PanelUIProvider` sets up the gesture root, the themed page background, the portal host used by
 overlays, and the toast viewport. One at the root is enough — don't nest a second.
@@ -305,6 +322,12 @@ the named themes, which the OS `Appearance` API knows nothing about. For the sam
 A required package is missing. Run the [install command](#1-install-the-packages) again — all of
 it, not just the package named in the error. Metro resolves every import in the library, so this
 happens even for components you never use.
+
+### `Cannot use @variant with unknown variant: moon` when building
+
+Fixed in 0.22.5 — upgrade with `npx expo install panelui-native`. Before that release the Moon and
+Grass token blocks leaned on variants that only existed in the artifact Uniwind generates from your
+Metro config, so the dev server worked while `npx expo export` and EAS builds failed.
 
 ### None of my classes do anything
 

@@ -115,9 +115,10 @@ const { withUniwindConfig } = require('uniwind/metro');
 const config = getDefaultConfig(__dirname);
 
 module.exports = withUniwindConfig(config, {
+  // In an app made by create-expo-app this is './src/global.css' — see below.
   cssEntryFile: './global.css',
   dtsFile: './uniwind-types.d.ts',
-  // Only needed if you use the Moon or Grass themes.
+  // Only needed to switch to the Moon or Grass themes at runtime.
   extraThemes: ['moon', 'moon-dark', 'grass', 'grass-dark'],
 });
 ```
@@ -128,35 +129,47 @@ folder, with `watchFolders` pointing at the workspace root — see
 
 ### 2. `global.css`
 
-Next to `metro.config.js`, matching the `cssEntryFile` path above:
+**Look for this file before you create one** — an app made by `create-expo-app` already has
+`src/global.css`. Add these lines at the top of it and leave the rest below; a second CSS file at
+the project root gives you two entries, only one of which is compiled.
 
 ```css
+/* src/global.css */
 @import 'tailwindcss';
 @import 'uniwind';
 @import 'panelui-native/theme.css';
 
-@source './node_modules/panelui-native/src';
+@source '../node_modules/panelui-native/src';
 ```
 
-`@source` is relative to **the CSS file**, and has to land on `node_modules/panelui-native/src`.
-From `src/styles/global.css` that is `'../../node_modules/panelui-native/src'`. Get it wrong and
-your own classes work while PanelUI's components come out unstyled.
+`@source` is relative to **the CSS file**, and has to land on `node_modules/panelui-native/src` —
+hence the `../` above, from `src/`. From `src/styles/global.css` it is `'../../node_modules/…'`.
+Get it wrong and your own classes work while PanelUI's components come out unstyled.
 
 ### 3. The entry file
 
-Import the CSS at the top, and wrap the app in the provider. The default Expo template uses Expo
-Router, so there is no `App.tsx` — the entry is `app/_layout.tsx`:
+Import the CSS at the top, and wrap the app in the provider. The default template uses Expo Router
+with routes under `src/`, so there is usually no `App.tsx` — the entry is `src/app/_layout.tsx`,
+which already returns a navigation `ThemeProvider` to wrap rather than replace:
 
 ```tsx
-// app/_layout.tsx
-import './global.css';
-import { Stack } from 'expo-router';
+// src/app/_layout.tsx
+import '../global.css';
+
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { useColorScheme } from 'react-native';
 import { PanelUIProvider } from 'panelui-native';
 
+import AppTabs from '@/components/app-tabs';
+
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
+
   return (
     <PanelUIProvider>
-      <Stack />
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <AppTabs />
+      </ThemeProvider>
     </PanelUIProvider>
   );
 }

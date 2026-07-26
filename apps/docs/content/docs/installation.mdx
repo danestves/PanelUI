@@ -84,15 +84,17 @@ const { withUniwindConfig } = require('uniwind/metro');
 const config = getDefaultConfig(__dirname);
 
 module.exports = withUniwindConfig(config, {
+  // The path to your CSS entry — see step 3. In an app made by
+  // `create-expo-app` this is './src/global.css'.
   cssEntryFile: './global.css',
   dtsFile: './uniwind-types.d.ts',
-  // Only needed if you use the Moon or Grass themes.
+  // Only needed to switch to the Moon or Grass themes at runtime.
   extraThemes: ['moon', 'moon-dark', 'grass', 'grass-dark'],
 });
 ```
 
-`cssEntryFile` and `dtsFile` are relative to **this file**. Keeping all three at the project root,
-as above, is the arrangement with the fewest ways to go wrong.
+`cssEntryFile` and `dtsFile` are relative to **this file**, wherever your CSS entry turns out to
+live — step 3 covers finding it.
 
 <Callout title="In a monorepo">
   `metro.config.js` belongs in the *app's* folder — the one with the app's own `package.json`, not
@@ -114,30 +116,40 @@ config.resolver.nodeModulesPaths = [
 
 </Callout>
 
-## 3. Create `global.css`
+## 3. Add the imports to `global.css`
 
-Next to `metro.config.js`, matching the `cssEntryFile` path you set above:
+<Callout type="warn" title="Look for this file before you create one">
+  An app made by `create-expo-app` **already has `src/global.css`** — a handful of web font
+  variables, imported from `src/constants/theme.ts`. Add PanelUI's imports to the top of that file
+  and leave what is already in it below. Creating a second `global.css` at the project root gives
+  you two CSS entries, one of which Uniwind never compiles, and nothing will be styled.
+</Callout>
 
-```css title="global.css"
+```css title="src/global.css"
 @import 'tailwindcss';
 @import 'uniwind';
 @import 'panelui-native/theme.css';
 
-@source './node_modules/panelui-native/src';
+@source '../node_modules/panelui-native/src';
+
+/* whatever was already in the file stays here */
 ```
 
 The first three lines bring in Tailwind, Uniwind's native layer, and PanelUI's design tokens. The
 `@source` line tells Tailwind to scan PanelUI's own class names so its styles end up in your
 bundle — without it your classes work and PanelUI's components come out unstyled.
 
-<Callout type="warn" title="`@source` is relative to this CSS file, not to the project">
-  This is the single most common mistake. Whatever the path, it has to land on
-  `node_modules/panelui-native/src`:
+Whichever file you used, its path is what `cssEntryFile` in step 2 has to point at:
+`'./src/global.css'` for the file above.
 
-| `global.css` lives in | `@source` |
+<Callout type="warn" title="`@source` is relative to the CSS file, not to the project">
+  This is the single most common mistake, and the reason the example above says `../`. Whatever the
+  path, it has to land on `node_modules/panelui-native/src`:
+
+| The CSS file lives in | `@source` |
 | --- | --- |
+| `src/` — where `create-expo-app` puts it | `'../node_modules/panelui-native/src'` |
 | the project root | `'./node_modules/panelui-native/src'` |
-| `src/` | `'../node_modules/panelui-native/src'` |
 | `src/styles/` | `'../../node_modules/panelui-native/src'` |
 | `apps/mobile/` in a monorepo, hoisted install | `'../../node_modules/panelui-native/src'` |
 
@@ -148,29 +160,46 @@ bundle — without it your classes work and PanelUI's components come out unstyl
 The import goes in your app's entry file, once, at the top — it is what pulls the compiled styles
 into the bundle. `PanelUIProvider` wraps everything below it.
 
+<Callout type="warn" title="There is probably no `App.tsx`">
+  The default template uses Expo Router with the routes under `src/`, so the entry is
+  **`src/app/_layout.tsx`**. `npx expo customize` prints which folder it is using — *Using src/app
+  as the root directory for Expo Router* — if you want to check. Older templates keep routes in
+  `app/`, and a non-router app has `App.tsx`; the file to edit is whichever of those you have.
+</Callout>
+
 <Tabs items={['Expo Router', 'App.tsx']}>
 
 <Tab value="Expo Router">
 
-The default Expo template uses Expo Router, so **there is no `App.tsx`** — the entry is
-`app/_layout.tsx`:
+The template's `_layout.tsx` already returns a navigation `ThemeProvider`, so wrap what is there
+rather than replacing it — and note the CSS import is `'../global.css'`, since the file sits one
+level above `src/app/`:
 
-```tsx title="app/_layout.tsx"
-import './global.css';
-import { Stack } from 'expo-router';
+```tsx title="src/app/_layout.tsx"
+import '../global.css';
+
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { useColorScheme } from 'react-native';
 import { PanelUIProvider } from 'panelui-native';
 
+import AppTabs from '@/components/app-tabs';
+
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
+
   return (
     <PanelUIProvider>
-      <Stack />
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <AppTabs />
+      </ThemeProvider>
     </PanelUIProvider>
   );
 }
 ```
 
-If `global.css` is not at the project root, adjust the import to match — `'../global.css'` from
-`app/_layout.tsx` when the file sits one level up.
+That navigation theme paints its own background over every screen, which will fight PanelUI's once
+you start switching themes — [Using Expo Router](#using-expo-router) below replaces it with one fed
+from the live tokens. Worth doing straight away if you plan to offer dark mode.
 
 </Tab>
 
@@ -204,7 +233,7 @@ Metro reads its config once, at startup, so start it fresh:
 npx expo start --clear
 ```
 
-Then drop this on a screen:
+Then drop this on a screen — `src/app/index.tsx` in a fresh app:
 
 ```tsx
 import { Button, Card } from 'panelui-native';
@@ -245,8 +274,9 @@ React Navigation paints its own theme background over every screen, and it defau
 light grey. That sits on top of `PanelUIProvider`'s background and makes theme switching look
 like it does nothing. Feed it the live PanelUI tokens instead:
 
-```tsx title="app/_layout.tsx"
-import './global.css';
+```tsx title="src/app/_layout.tsx"
+import '../global.css';
+
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useCSSVariable } from 'uniwind';
 import { PanelUIProvider, useThemeMode } from 'panelui-native';
@@ -308,18 +338,33 @@ Work down this list; it is almost always the first item:
 
 1. `metro.config.js` is not in the project root, next to `package.json`.
 2. It does not wrap the config in `withUniwindConfig`, or does not export the wrapped result.
-3. `cssEntryFile` does not point at your CSS file, relative to `metro.config.js`.
-4. `import './global.css'` is missing from the app's entry file, or points at the wrong path.
-5. The dev server was running when you changed one of those. Stop it and run
+3. `cssEntryFile` does not point at your CSS file, relative to `metro.config.js`. In a fresh app
+   that file is `src/global.css`, not `global.css`.
+4. There are **two** CSS files — the one the template shipped in `src/` and one you created at the
+   root. Only the one named by `cssEntryFile` is compiled. Keep a single file.
+5. `import './global.css'` is missing from the app's entry file, or points at the wrong path. From
+   `src/app/_layout.tsx` it is `'../global.css'`.
+6. The dev server was running when you changed one of those. Stop it and run
    `npx expo start --clear`.
+
+### `Cannot use @variant with unknown variant: moon` when building
+
+Fixed in **0.22.5** — upgrade with `npx expo install panelui-native`.
+
+Before that release the Moon and Grass token blocks relied on variants that only existed in the
+artifact Uniwind generates from your Metro config, which produced a build that worked in the dev
+server and failed in `npx expo export` and on EAS. The theme file now declares those variants
+itself, so both paths compile the same way and `extraThemes` is only about switching themes at
+runtime.
 
 ### My own classes work, but PanelUI's components are unstyled
 
 The `@source` line in `global.css` is missing, or its relative path does not land on
-`node_modules/panelui-native/src`. See [the table in step 3](#3-create-globalcss) — the path is
-relative to the CSS file, not to the project root.
+`node_modules/panelui-native/src`. See
+[the table in step 3](#3-add-the-imports-to-globalcss) — the path is relative to the CSS file, not
+to the project root.
 
-### `Theme … is missing variable …` or `Cannot use @variant with unknown variant`
+### `Theme … is missing variable …`
 
 A stale dev server rewrote Uniwind's generated CSS using the old `extraThemes` list. Stop it
 completely and start it again with `--clear`.
