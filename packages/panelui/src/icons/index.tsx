@@ -80,14 +80,21 @@ export function CheckIcon({ size = 14, color, ...props }: IconProps) {
   );
 }
 
-export function MinusIcon({ size = 14, color, ...props }: IconProps) {
+/**
+ * A single bar. Its weight is a prop because it has two jobs: it is the
+ * indeterminate mark inside a checkbox, where it has to carry the same weight
+ * as the check it stands in for, and it is the decrement half of a stepper,
+ * where it has to match the plus beside it. Those are different weights, and a
+ * bar that is heavier than the + it pairs with reads as a different glyph.
+ */
+export function MinusIcon({ size = 14, color, strokeWidth = 3, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#fff');
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
       <Path
         d="M5 12h14"
         stroke={resolved}
-        strokeWidth={3}
+        strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
