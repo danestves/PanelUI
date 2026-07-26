@@ -29,9 +29,16 @@
 
 ## Install
 
+Needs an Expo SDK 57+ app and Node 20+. No `prebuild`, no Xcode, no Android Studio — PanelUI has
+no native modules, so it runs in Expo Go.
+
 ```bash
-npx expo install panelui-native
+npx expo install panelui-native uniwind tailwindcss @react-native-masked-view/masked-view expo-linear-gradient react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-svg react-native-worklets
 ```
+
+Then three files: [Metro config, CSS entry, provider](#installation) — or follow the
+**[full walkthrough](https://panelui.dev/docs/installation)**, which explains where each file goes
+and lists a fix for every error people hit.
 
 Or copy a single component's source into your project, to own and edit it:
 
@@ -91,11 +98,14 @@ Plus primitives: `PanelUIProvider`, `Portal`, `AnimatedPressable`, `useTheme`,
 
 ## Installation
 
-```sh
-npx expo install panelui-native uniwind tailwindcss react-native-reanimated react-native-gesture-handler react-native-safe-area-context react-native-svg react-native-worklets
-```
+After the [install command above](#install), three files. Full walkthrough with troubleshooting:
+[panelui.dev/docs/installation](https://panelui.dev/docs/installation).
 
-### 1. Configure Metro
+### 1. `metro.config.js`
+
+**In the root of your project, next to `package.json`** — not in `app/`, not in `src/`. A Metro
+config anywhere else is silently ignored and none of your classes will do anything. A fresh Expo
+app has no such file; `npx expo customize metro.config.js` writes one.
 
 ```js
 // metro.config.js
@@ -112,7 +122,13 @@ module.exports = withUniwindConfig(config, {
 });
 ```
 
-### 2. Create `global.css`
+`cssEntryFile` and `dtsFile` are relative to this file. In a monorepo it belongs in the app's own
+folder, with `watchFolders` pointing at the workspace root — see
+[`apps/example/metro.config.js`](apps/example/metro.config.js).
+
+### 2. `global.css`
+
+Next to `metro.config.js`, matching the `cssEntryFile` path above:
 
 ```css
 @import 'tailwindcss';
@@ -122,21 +138,37 @@ module.exports = withUniwindConfig(config, {
 @source './node_modules/panelui-native/src';
 ```
 
-### 3. Import the CSS and wrap your app
+`@source` is relative to **the CSS file**, and has to land on `node_modules/panelui-native/src`.
+From `src/styles/global.css` that is `'../../node_modules/panelui-native/src'`. Get it wrong and
+your own classes work while PanelUI's components come out unstyled.
+
+### 3. The entry file
+
+Import the CSS at the top, and wrap the app in the provider. The default Expo template uses Expo
+Router, so there is no `App.tsx` — the entry is `app/_layout.tsx`:
 
 ```tsx
-// App.tsx
+// app/_layout.tsx
 import './global.css';
+import { Stack } from 'expo-router';
 import { PanelUIProvider } from 'panelui-native';
 
-export default function App() {
+export default function RootLayout() {
   return (
     <PanelUIProvider>
-      {/* your app */}
+      <Stack />
     </PanelUIProvider>
   );
 }
 ```
+
+`PanelUIProvider` owns the gesture root, the themed page background, the portal host used by
+overlays, and the toast viewport. One at the root is enough. No `babel.config.js` is needed —
+Expo's default preset already wires the worklets plugin Reanimated needs.
+
+Then `npx expo start --clear`. Metro reads all three of `metro.config.js`, `global.css` and
+`extraThemes` once at startup, so restart the dev server after changing any of them; `--clear` on a
+running one is not enough.
 
 ## Usage
 

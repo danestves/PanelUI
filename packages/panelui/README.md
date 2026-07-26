@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 29 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 53 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -24,15 +24,35 @@ Zero native code, so it runs in Expo Go.
   state and labels.
 - 📦 **TypeScript, tree-shakeable, zero native modules** — works in Expo Go, no prebuild needed.
 
-## Install
-
-```sh
-npx expo install panelui-native uniwind tailwindcss react-native-reanimated react-native-gesture-handler react-native-safe-area-context react-native-svg react-native-worklets
-```
-
 ## Quick start
 
-**1. Configure Metro**
+Needs an Expo SDK 57+ app and Node 20+. No Xcode, no Android Studio, no `prebuild` — PanelUI has
+no native modules, so it runs in Expo Go. No app yet? `npx create-expo-app@latest my-app`.
+
+Five steps. The full walkthrough, with a fix for every error people hit, is at
+**[panelui.dev/docs/installation](https://panelui.dev/docs/installation)**.
+
+### 1. Install the packages
+
+```sh
+npx expo install panelui-native uniwind tailwindcss @react-native-masked-view/masked-view expo-linear-gradient react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-svg react-native-worklets
+```
+
+Install all of them, including the ones you think you don't need. Metro resolves every import in
+the library when it builds your bundle, so leaving one out fails the **first** bundle with
+`Unable to resolve module …` — for a component you may never use. `npx expo install` (rather than
+`npm install`) picks the versions that match your SDK.
+
+Optional, each behind a guarded import: `expo-haptics` (the `haptics` prop), `expo-blur` (blurred
+overlay backdrops), `expo-clipboard` (`useCopyToClipboard`), `react-native-keyboard-controller`
+(keyboard avoidance on Android), `expo-file-system` + `react-native-view-shot` (Signature export),
+`@expo/ui` (native platform controls).
+
+### 2. Add `metro.config.js`
+
+**In the root of your project, next to `package.json`** — not in `app/`, not in `src/`. A Metro
+config anywhere else is silently ignored and none of your classes will do anything. A fresh Expo
+app has no such file; `npx expo customize metro.config.js` writes one.
 
 ```js
 // metro.config.js
@@ -49,7 +69,11 @@ module.exports = withUniwindConfig(config, {
 });
 ```
 
-**2. Create `global.css`**
+`cssEntryFile` and `dtsFile` are relative to this file.
+
+### 3. Create `global.css`
+
+Next to `metro.config.js`, matching the `cssEntryFile` path above:
 
 ```css
 @import 'tailwindcss';
@@ -59,32 +83,62 @@ module.exports = withUniwindConfig(config, {
 @source './node_modules/panelui-native/src';
 ```
 
-**3. Wrap your app**
+`@source` is relative to **the CSS file**, and has to land on `node_modules/panelui-native/src`.
+From `src/styles/global.css` it is `'../../node_modules/panelui-native/src'`. Get it wrong and
+your own classes work while PanelUI's components come out unstyled.
+
+### 4. Import the CSS and add the provider
+
+At the top of your app's entry file. The default Expo template uses Expo Router, so there is no
+`App.tsx` — the entry is `app/_layout.tsx`:
 
 ```tsx
-// App.tsx
+// app/_layout.tsx
 import './global.css';
-import { PanelUIProvider, Button, Card } from 'panelui-native';
+import { Stack } from 'expo-router';
+import { PanelUIProvider } from 'panelui-native';
 
-export default function App() {
+export default function RootLayout() {
   return (
     <PanelUIProvider>
-      <Card>
-        <Card.Header>
-          <Card.Title>Create project</Card.Title>
-          <Card.Description>Deploy your new project in one click.</Card.Description>
-        </Card.Header>
-        <Card.Footer>
-          <Button>Deploy</Button>
-        </Card.Footer>
-      </Card>
+      <Stack />
     </PanelUIProvider>
   );
 }
 ```
 
 `PanelUIProvider` sets up the gesture root, the themed page background, the portal host used by
-overlays, and the toast viewport.
+overlays, and the toast viewport. One at the root is enough — don't nest a second.
+
+You do **not** need a `babel.config.js`; Expo's default preset already wires the worklets plugin
+Reanimated needs.
+
+### 5. Restart
+
+```sh
+npx expo start --clear
+```
+
+Metro reads `metro.config.js`, `global.css` and `extraThemes` once, at startup. After changing any
+of them, stop the dev server and start it again — `--clear` on a running one is not enough.
+
+```tsx
+import { Button, Card } from 'panelui-native';
+
+<Card>
+  <Card.Header>
+    <Card.Title>It works</Card.Title>
+    <Card.Description>PanelUI is installed and themed.</Card.Description>
+  </Card.Header>
+  <Card.Footer>
+    <Button>Deploy</Button>
+  </Card.Footer>
+</Card>;
+```
+
+A themed background, a card with a border and radius, and a button that dips when pressed means
+you are done. Unstyled text on a white screen means the styles are not reaching the bundle — see
+[Troubleshooting](https://panelui.dev/docs/installation#troubleshooting).
 
 ## Components
 
@@ -245,6 +299,19 @@ the named themes, which the OS `Appearance` API knows nothing about. For the sam
 `<StatusBar>` from `mode` rather than `style="auto"`.
 
 ## FAQ
+
+### The first bundle fails with `Unable to resolve module …`
+
+A required package is missing. Run the [install command](#1-install-the-packages) again — all of
+it, not just the package named in the error. Metro resolves every import in the library, so this
+happens even for components you never use.
+
+### None of my classes do anything
+
+In order of likelihood: `metro.config.js` is not in the project root; it does not wrap the config
+in `withUniwindConfig`; `cssEntryFile` does not point at your CSS file; `import './global.css'` is
+missing from the entry file; or the dev server was running when you changed one of those. Full
+list at [Troubleshooting](https://panelui.dev/docs/installation#troubleshooting).
 
 ### How is PanelUI different from NativeWind?
 
