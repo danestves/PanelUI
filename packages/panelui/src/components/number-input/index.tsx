@@ -26,7 +26,7 @@
  * Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`).
  */
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
-import { TextInput, View, type TextInputProps } from 'react-native';
+import { TextInput, View, type TextInputProps, type TextStyle } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { MinusIcon, PlusIcon } from '../../icons';
@@ -45,7 +45,9 @@ const numberInputVariants = tv({
     container: 'w-full gap-1.5',
     control: 'w-full flex-row items-center overflow-hidden rounded-lg border',
     button: 'h-full items-center justify-center',
-    field: 'flex-1 text-center font-medium text-foreground',
+    // The field takes the full height so the digits centre against the same
+    // box the two glyphs do, rather than against their own line's height.
+    field: 'h-full flex-1 text-center font-medium text-foreground',
     description: 'text-sm text-muted-foreground',
     error: 'text-sm text-destructive',
   },
@@ -76,6 +78,26 @@ const numberInputVariants = tv({
 
 /** Icon size per control size — the glyph scales with its target. */
 const ICON_SIZE: Record<'sm' | 'md' | 'lg', number> = { sm: 16, md: 18, lg: 20 };
+
+/**
+ * The field's job is not to be a box of its own: it has to put the number on
+ * exactly the axis the − and the + sit on, and in the exact middle between
+ * them. An editable field does not do that unhelped — it arrives with padding
+ * and, on Android, with font padding above and below the line, all of which
+ * shift the digits off centre. Zeroing both and centring the line in the full
+ * height leaves geometry as the only thing placing the number.
+ *
+ * Tabular figures on top of that, so the digits keep the same advance widths
+ * while the value counts — a 1 that is narrower than a 7 makes a centred
+ * number appear to shuffle sideways as it steps.
+ */
+const FIELD_STYLE: TextStyle = {
+  paddingVertical: 0,
+  paddingHorizontal: 0,
+  includeFontPadding: false,
+  textAlignVertical: 'center',
+  fontVariant: ['tabular-nums'],
+};
 
 type NumberInputVariantProps = VariantProps<typeof numberInputVariants>;
 
@@ -278,7 +300,8 @@ export const NumberInput = forwardRef<TextInput, NumberInputProps>(
             accessibilityState={{ disabled: disabled || atMin }}
             style={atMin ? { opacity: 0.4 } : undefined}
           >
-            <MinusIcon size={ICON_SIZE[size]} color={iconColor} />
+            {/* Same weight as the +, or the two ends read as different glyphs. */}
+            <MinusIcon size={ICON_SIZE[size]} color={iconColor} strokeWidth={2} />
           </AnimatedPressable>
 
           <TextInput
@@ -304,6 +327,7 @@ export const NumberInput = forwardRef<TextInput, NumberInputProps>(
             aria-required={isRequired}
             aria-invalid={invalid}
             className={slots.field()}
+            style={FIELD_STYLE}
           />
 
           <AnimatedPressable
