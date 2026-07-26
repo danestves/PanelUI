@@ -52,14 +52,24 @@ const inputVariants = tv({
       filled: { field: 'bg-muted' },
     },
     size: {
-      sm: { field: 'h-10 px-3 text-sm' },
-      md: { field: 'h-12 px-3.5 text-base' },
-      lg: { field: 'h-14 px-4 text-base' },
+      /*
+       * The font size is given as a length rather than through a `text-*`
+       * step, because those set a size and a line height together — 16px text
+       * in a 24px line box. The extra leading lands above the glyphs, so in a
+       * field of fixed height the text and the placeholder end up sitting
+       * below the middle of the box, a few pixels off whatever is beside them.
+       * A length sets the size alone and leaves the line box the font's own.
+       */
+      sm: { field: 'h-10 px-3 text-[14px]' },
+      md: { field: 'h-12 px-3.5 text-[16px]' },
+      lg: { field: 'h-14 px-4 text-[16px]' },
     },
     multiline: {
       // A multiline field grows, so a fixed height would crop it. Text starts
-      // at the top rather than floating in the middle of an empty box.
-      true: { field: 'h-auto min-h-24 py-3' },
+      // at the top rather than floating in the middle of an empty box — and
+      // once there are several lines the leading is wanted back, since here it
+      // separates the lines instead of pushing one off centre.
+      true: { field: 'h-auto min-h-24 py-3 leading-normal' },
     },
     disabled: {
       true: { field: 'opacity-[0.64]' },
