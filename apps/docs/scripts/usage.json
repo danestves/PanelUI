@@ -405,19 +405,43 @@
       {
         "title": "Custom separator",
         "description": "`separator` on the root swaps the chevron for any node — a slash, a dot — across every gap at once.",
-        "code": "<Breadcrumb separator={<Text size=\"sm\" muted>/</Text>}>\n  <Breadcrumb.List>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Docs</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Guides</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>Theming</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>"
+        "code": "<Breadcrumb separator={<Text size=\"sm\" muted>/</Text>}>\n  <Breadcrumb.List>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Docs</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Guides</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>Theming</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>",
+        "preview": {
+          "src": "/previews/breadcrumb-custom-separator.jpg",
+          "alt": "The same trail — Docs, Guides, Theming — with a forward slash in place of each chevron.",
+          "width": 1179,
+          "height": 236
+        }
       },
       {
         "title": "Collapsed",
         "description": "`maxItems` folds the middle of a deep trail into an ellipsis, keeping the first and last crumbs. Pass `onEllipsisPress` to make the ellipsis open a menu of the hidden steps.",
-        "code": "<Breadcrumb>\n  <Breadcrumb.List maxItems={3} onEllipsisPress={() => {}}>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Home</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Library</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Components</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>Breadcrumb</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>"
+        "code": "<Breadcrumb>\n  <Breadcrumb.List maxItems={3} onEllipsisPress={() => {}}>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Home</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Library</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Components</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>Breadcrumb</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>",
+        "preview": {
+          "src": "/previews/breadcrumb-collapsed.jpg",
+          "alt": "A long trail shortened to Home, an ellipsis, and Breadcrumb, so a deep path still fits one line.",
+          "width": 1179,
+          "height": 262
+        }
       },
       {
         "title": "Dense header",
         "description": "`size=\"sm\"` tightens the type for a crumb trail sitting in a header bar.",
-        "code": "<Breadcrumb size=\"sm\">\n  <Breadcrumb.List>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Settings</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>Billing</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>"
+        "code": "<Breadcrumb size=\"sm\">\n  <Breadcrumb.List>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Settings</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>Billing</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>",
+        "preview": {
+          "src": "/previews/breadcrumb-dense-header.jpg",
+          "alt": "A two-crumb trail, Settings then Billing, at the tighter size a screen header uses.",
+          "width": 1179,
+          "height": 310
+        }
       }
-    ]
+    ],
+    "preview": {
+      "src": "/previews/breadcrumb.jpg",
+      "alt": "A three-step trail reading Home, Components, Breadcrumb, separated by chevrons. The first two are muted links; the last is white and unlinked, because it is the page you are already on.",
+      "width": 1179,
+      "height": 243
+    }
   },
   "button": {
     "intro": "The primary action component. Icons in `startContent` and `endContent` inherit a colour that reads against the button's background, so they follow the theme without a hardcoded hex.",
@@ -2675,7 +2699,13 @@
       {
         "title": "Labelled divider",
         "description": "Passing children breaks the rule around a centred label — the \"or continue with\" split in a sign-in form. The label is always announced; the flanking rules never are.",
-        "code": "<View className=\"gap-4\">\n  <Button variant=\"outline\">Continue with email</Button>\n  <Separator>or</Separator>\n  <Button variant=\"outline\">Continue as guest</Button>\n</View>"
+        "code": "<View className=\"gap-4\">\n  <Button variant=\"outline\">Continue with email</Button>\n  <Separator>or</Separator>\n  <Button variant=\"outline\">Continue as guest</Button>\n</View>",
+        "preview": {
+          "src": "/previews/separator-labelled-divider.jpg",
+          "alt": "Two full-width buttons, Continue with email and Continue as guest, split by a rule with the word or centred in a gap in the line.",
+          "width": 1179,
+          "height": 630
+        }
       },
       {
         "title": "Custom thickness",
@@ -2820,25 +2850,60 @@
       {
         "title": "Signing a document",
         "description": "An agreement you scroll, with a Frame row that opens the same signing frame and the captured SVG landing back in the document.",
-        "code": "<Frame.Row onPress={() => setOpen(true)} chevron>\n  <Frame.Media><PencilIcon size={18} /></Frame.Media>\n  <Frame.Content>\n    <Frame.Title>{signature ? 'Signed' : 'Tap to sign'}</Frame.Title>\n  </Frame.Content>\n</Frame.Row>"
+        "code": "<Frame.Row onPress={() => setOpen(true)} chevron>\n  <Frame.Media><PencilIcon size={18} /></Frame.Media>\n  <Frame.Content>\n    <Frame.Title>{signature ? 'Signed' : 'Tap to sign'}</Frame.Title>\n  </Frame.Content>\n</Frame.Row>",
+        "previewVideo": {
+          "src": "/previews/signature-signing-a-document.mp4",
+          "poster": "/previews/signature-signing-a-document-poster.jpg",
+          "alt": "A services agreement scrolled to the bottom, where a Tap to sign row opens the pad. The captured signature lands back in the document.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Saving to a file",
         "description": "A format toggle and a Save button, printing the resulting URI — or the name of the package that is missing.",
-        "code": "try {\n  const file = await pad.current?.save({ format });\n  setResult(file?.uri ?? null);\n} catch (error) {\n  setResult(error instanceof Error ? error.message : String(error));\n}"
+        "code": "try {\n  const file = await pad.current?.save({ format });\n  setResult(file?.uri ?? null);\n} catch (error) {\n  setResult(error instanceof Error ? error.message : String(error));\n}",
+        "previewVideo": {
+          "src": "/previews/signature-saving-to-a-file.mp4",
+          "poster": "/previews/signature-saving-to-a-file-poster.jpg",
+          "alt": "A pad with an SVG/PNG toggle and Clear and Save buttons. Saving writes the stroke to the app directory and reports the path back.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Full screen",
         "description": "`size=\"full\"` fills whatever it is given, with the actions on a bar below it.",
-        "code": "<Signature size=\"full\" guideline guidelineLabel=\"Khalid Abdi\" />"
+        "code": "<Signature size=\"full\" guideline guidelineLabel=\"Khalid Abdi\" />",
+        "previewVideo": {
+          "src": "/previews/signature-full-screen.mp4",
+          "poster": "/previews/signature-full-screen-poster.jpg",
+          "alt": "The whole screen as the pad, with a baseline and a name beneath it. A signature is drawn across it and accepted from the bar below.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Proof of delivery",
         "description": "Recipient, timestamp and signature on one screen, the shape a courier app asks for.",
-        "code": "<Signature ref={pad} guideline onChange={setCount} />\n<Button disabled={count === 0} onPress={confirm}>Confirm delivery</Button>"
+        "code": "<Signature ref={pad} guideline onChange={setCount} />\n<Button disabled={count === 0} onPress={confirm}>Confirm delivery</Button>",
+        "previewVideo": {
+          "src": "/previews/signature-proof-of-delivery.mp4",
+          "poster": "/previews/signature-proof-of-delivery-poster.jpg",
+          "alt": "A delivery card showing recipient, address and time, with a signature pad below it and a Confirm delivery button.",
+          "width": 720,
+          "height": 1560
+        }
       }
     ],
-    "notes": "### Why the stroke never reaches React\n\nA finger produces touch events far faster than a component tree can usefully re-render, and a signature is exactly where the lag shows: the line trails the fingertip and drawing feels like moving through syrup.\n\nSo the stroke being drawn lives in a shared value and is turned into an SVG path by a worklet on the UI thread — React is not involved in a single frame of it. When the finger lifts, that one finished string crosses to JavaScript once and becomes a static path. Committed strokes never animate again, so the hundredth stroke costs what the first one did.\n\nPoints closer together than `minDistance` are dropped as they arrive. A finger resting still otherwise emits a point per frame in the same spot, which is a longer path describing the same shape.\n\n### Smoothing\n\nRaw touch points joined with straight lines look like a seismograph. Each segment is drawn as a quadratic curve through the midpoint between two points instead: the point itself is the control handle, the midpoints are the anchors, and consecutive curves meet with a shared tangent. It needs no lookahead, so a point can be appended to a stroke already on screen without redrawing what came before it differently.\n\n### Getting the signature out\n\nThe ref exposes `clear`, `undo`, `redo`, `isEmpty`, `strokeCount`, `toSVG`, `toDataURL` and `save`.\n\n`toSVG()` is pure string building — no packages, no async, nothing written to disk — and returns a standalone document sized to the pad. It is the one to reach for when the signature is going into an API call or a database record.\n\n`save()` writes a file and resolves `{ uri, format, width, height }`. It needs the optional `expo-file-system`. Passing `format: 'png'` rasterises the pad and also needs the optional `react-native-view-shot`. Neither is installed on your behalf, and asking for something a missing package provides throws with that package's name in the message rather than failing somewhere further down.\n\n```tsx\nconst file = await pad.current?.save({ filename: 'agreement', format: 'png', scale: 3 });\n```\n\n`directory` defaults to the app's own document directory, which survives restarts and is not visible to the user. Pass one explicitly to write anywhere else."
+    "notes": "### Why the stroke never reaches React\n\nA finger produces touch events far faster than a component tree can usefully re-render, and a signature is exactly where the lag shows: the line trails the fingertip and drawing feels like moving through syrup.\n\nSo the stroke being drawn lives in a shared value and is turned into an SVG path by a worklet on the UI thread — React is not involved in a single frame of it. When the finger lifts, that one finished string crosses to JavaScript once and becomes a static path. Committed strokes never animate again, so the hundredth stroke costs what the first one did.\n\nPoints closer together than `minDistance` are dropped as they arrive. A finger resting still otherwise emits a point per frame in the same spot, which is a longer path describing the same shape.\n\n### Smoothing\n\nRaw touch points joined with straight lines look like a seismograph. Each segment is drawn as a quadratic curve through the midpoint between two points instead: the point itself is the control handle, the midpoints are the anchors, and consecutive curves meet with a shared tangent. It needs no lookahead, so a point can be appended to a stroke already on screen without redrawing what came before it differently.\n\n### Getting the signature out\n\nThe ref exposes `clear`, `undo`, `redo`, `isEmpty`, `strokeCount`, `toSVG`, `toDataURL` and `save`.\n\n`toSVG()` is pure string building — no packages, no async, nothing written to disk — and returns a standalone document sized to the pad. It is the one to reach for when the signature is going into an API call or a database record.\n\n`save()` writes a file and resolves `{ uri, format, width, height }`. It needs the optional `expo-file-system`. Passing `format: 'png'` rasterises the pad and also needs the optional `react-native-view-shot`. Neither is installed on your behalf, and asking for something a missing package provides throws with that package's name in the message rather than failing somewhere further down.\n\n```tsx\nconst file = await pad.current?.save({ filename: 'agreement', format: 'png', scale: 3 });\n```\n\n`directory` defaults to the app's own document directory, which survives restarts and is not visible to the user. Pass one explicitly to write anywhere else.",
+    "previewVideo": {
+      "src": "/previews/signature.mp4",
+      "poster": "/previews/signature-poster.jpg",
+      "alt": "A framed signature pad opening over a frosted screen. A stroke is drawn with a finger, and the frame lifts as a confirm button arrives beneath it.",
+      "width": 720,
+      "height": 1560
+    }
   },
   "skeleton": {
     "intro": "A shimmer placeholder for content that has not loaded. Size it with Tailwind utilities.",

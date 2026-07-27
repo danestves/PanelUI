@@ -5,6 +5,14 @@ description: Sign with a finger, and get the result back out as SVG or PNG.
 
 A surface you sign with a finger, and a handle for getting the result back out. The stroke being drawn is built on the UI thread and never reaches React, so the line keeps up with the fingertip; finished strokes become static paths that never animate again.
 
+<PreviewVideo
+  src="/previews/signature.mp4"
+  poster="/previews/signature-poster.jpg"
+  alt="A framed signature pad opening over a frosted screen. A stroke is drawn with a finger, and the frame lifts as a confirm button arrives beneath it."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Signature ships with the library — no separate install.
@@ -164,6 +172,14 @@ const rise = useAnimatedStyle(() => ({ transform: [{ translateY: lift.value }] }
 
 An agreement you scroll, with a Frame row that opens the same signing frame and the captured SVG landing back in the document.
 
+<PreviewVideo
+  src="/previews/signature-signing-a-document.mp4"
+  poster="/previews/signature-signing-a-document-poster.jpg"
+  alt="A services agreement scrolled to the bottom, where a Tap to sign row opens the pad. The captured signature lands back in the document."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Frame.Row onPress={() => setOpen(true)} chevron>
   <Frame.Media><PencilIcon size={18} /></Frame.Media>
@@ -176,6 +192,14 @@ An agreement you scroll, with a Frame row that opens the same signing frame and 
 ### Saving to a file
 
 A format toggle and a Save button, printing the resulting URI — or the name of the package that is missing.
+
+<PreviewVideo
+  src="/previews/signature-saving-to-a-file.mp4"
+  poster="/previews/signature-saving-to-a-file-poster.jpg"
+  alt="A pad with an SVG/PNG toggle and Clear and Save buttons. Saving writes the stroke to the app directory and reports the path back."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 try {
@@ -190,6 +214,14 @@ try {
 
 `size="full"` fills whatever it is given, with the actions on a bar below it.
 
+<PreviewVideo
+  src="/previews/signature-full-screen.mp4"
+  poster="/previews/signature-full-screen-poster.jpg"
+  alt="The whole screen as the pad, with a baseline and a name beneath it. A signature is drawn across it and accepted from the bar below."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Signature size="full" guideline guidelineLabel="Khalid Abdi" />
 ```
@@ -197,6 +229,14 @@ try {
 ### Proof of delivery
 
 Recipient, timestamp and signature on one screen, the shape a courier app asks for.
+
+<PreviewVideo
+  src="/previews/signature-proof-of-delivery.mp4"
+  poster="/previews/signature-proof-of-delivery-poster.jpg"
+  alt="A delivery card showing recipient, address and time, with a signature pad below it and a Confirm delivery button."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Signature ref={pad} guideline onChange={setCount} />
