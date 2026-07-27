@@ -265,6 +265,15 @@
     ]
   },
   {
+    "name": "loader",
+    "type": "registry:ui",
+    "description": "Nine loading animations behind one variant prop.",
+    "registryDependencies": [
+      "cn",
+      "icons"
+    ]
+  },
+  {
     "name": "map",
     "type": "registry:ui",
     "description": "Vector map whose basemap is drawn from your theme tokens.",

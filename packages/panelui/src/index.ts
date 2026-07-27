@@ -302,6 +302,12 @@ export {
   type LineChartCurve,
 } from './components/line-chart';
 export {
+  Loader,
+  type LoaderProps,
+  type LoaderVariant,
+  type LoaderSize,
+} from './components/loader';
+export {
   Marker,
   type MarkerProps,
   type MarkerIconProps,

@@ -53,24 +53,25 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 
 | | | |
 | --- | --- | --- |
-| Accordion | HeatmapChart | SectionRail |
-| Alert | Input | Select |
-| Attachment | InputGroup | Separator |
-| Avatar | Item | Shimmer |
-| Badge | Label | Signature |
-| BottomSheet | LineChart | Skeleton |
-| Breadcrumb | Marker | Slider |
-| Button | Message | Soundwave |
-| Card | MessageScroller | Spinner |
-| Checkbox | NumberInput | Steps |
-| Chip | OtpInput | Surface |
-| Dialog | Popover | Switch |
-| Direction | Progress | Tabs |
-| EmptyState | RadioGroup | ThinkingOrb |
-| Field | Rating | Timeline |
-| Flow | ScrollCanvas | Toast |
-| Form | ScrollFade | ToggleButton |
-| Frame | ScrollText | Typography |
+| Accordion | Input | SectionRail |
+| Alert | InputGroup | Select |
+| Attachment | Item | Separator |
+| Avatar | Label | Shimmer |
+| Badge | LineChart | Signature |
+| BottomSheet | Loader | Skeleton |
+| Breadcrumb | Map | Slider |
+| Button | Marker | Soundwave |
+| Card | Message | Spinner |
+| Checkbox | MessageScroller | Steps |
+| Chip | NumberInput | Surface |
+| Dialog | OtpInput | Switch |
+| Direction | Popover | Tabs |
+| EmptyState | Progress | ThinkingOrb |
+| Field | RadioGroup | Timeline |
+| Flow | Rating | Toast |
+| Form | ScrollCanvas | ToggleButton |
+| Frame | ScrollFade | Typography |
+| HeatmapChart | ScrollText |  |
 
 `Select` shows its options in a bottom sheet, expanded in place, or floating
 over the page — one `presentation` prop, because which is right depends on what
@@ -92,6 +93,11 @@ every edge attached to it without React rendering once.
 a data URI, or a file.
 `Rating` is a row of stars you read or set — drag to pick a value, `precision`
 to allow half stars, and any fractional value renders as a partial fill.
+`Map` draws its basemap from your theme tokens, so a map matches the app it is
+in rather than the tile server it came from.
+`Loader` is nine loading animations behind one `variant` prop — dots, bars, a
+morphing ring and a ball bouncing along a row of them — all on the UI thread,
+and all drawing in the foreground of whatever surface they land on.
 
 Plus primitives: `PanelUIProvider`, `Portal`, `AnimatedPressable`, `useTheme`,
 `useThemeMode`, `useToast`, `cn`.

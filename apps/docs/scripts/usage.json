@@ -3731,5 +3731,59 @@
       "width": 1179,
       "height": 1009
     }
+  },
+  "loader": {
+    "intro": "A loading animation, in nine flavours. They are interchangeable — pick one for the character it gives a screen, then use the same one everywhere — so the thing that varies is a value rather than a component. Every variant takes the same colour, the same tempo and the same treatment under reduced motion, which means swapping one for another is a one-word change.\n\nAll of it runs on the UI thread, and none of it re-renders anything while it runs.",
+    "usage": "<Loader variant=\"wave-physics\" />",
+    "extraImports": [
+      "Button",
+      "Card",
+      "Text"
+    ],
+    "examples": [
+      {
+        "title": "Choosing a variant",
+        "description": "Nine of them. The dot and bar variants are the quiet ones, for a loader sitting inside something else; `liquid-dots`, `morph-ring` and `wave-physics` have more character, and earn their place on a screen that is otherwise empty.",
+        "code": "<Loader variant=\"pulse-dots\" />      {/* the default */}\n<Loader variant=\"bounce-dots\" />\n<Loader variant=\"pulsating-dots\" />\n<Loader variant=\"liquid-dots\" />\n<Loader variant=\"bar-cascade\" />\n<Loader variant=\"bouncing-bars\" />\n<Loader variant=\"symmetric-wave\" />\n<Loader variant=\"morph-ring\" />\n<Loader variant=\"wave-physics\" />"
+      },
+      {
+        "title": "Colour",
+        "description": "`color` takes a theme token by name as readily as a literal, and the token is nearly always what you want — a literal is a colour frozen at the moment it was written, and it cannot follow the theme into dark mode.",
+        "code": "<Loader variant=\"bar-cascade\" color=\"--color-info\" />\n<Loader variant=\"symmetric-wave\" color=\"--color-success\" />\n\n{/* A literal, for a colour that is not in the theme. */}\n<Loader variant=\"morph-ring\" color=\"#2dd4bf\" />"
+      },
+      {
+        "title": "Inside a button",
+        "description": "With no colour of its own the loader draws in the readable foreground of the surface it is on. That matters most exactly here: a filled button is usually painted in the primary colour, and in most themes the primary colour *is* the page’s foreground — so a loader that resolved the page’s ink for itself would be invisible on the one surface it appears on most.",
+        "code": "<Button disabled={saving} onPress={save}>\n  {saving ? <Loader variant=\"pulse-dots\" size=\"sm\" /> : 'Save changes'}\n</Button>"
+      },
+      {
+        "title": "Size and tempo",
+        "description": "`size` scales the whole drawing rather than cropping it, so the proportions hold. `speed` multiplies the tempo — below `1` for a loader that should feel unhurried, above it for one covering something that is nearly done.",
+        "code": "<Loader size=\"sm\" />\n<Loader size=\"md\" />   {/* the default */}\n<Loader size=\"lg\" />\n\n<Loader variant=\"wave-physics\" speed={0.6} />\n<Loader variant=\"wave-physics\" speed={1.8} />"
+      },
+      {
+        "title": "What a screen reader hears",
+        "description": "The loader announces itself as a progress indicator, labelled “Loading” by default. Say what is loading when the loader is the only thing on the screen — “Loading” on its own tells someone nothing they did not already know from the wait.",
+        "code": "<Loader variant=\"wave-physics\" label=\"Loading your reports\" />"
+      }
+    ],
+    "versions": [
+      {
+        "title": "The nine",
+        "description": "All of them side by side at the same size and colour, which is the only way to actually choose between them.",
+        "code": "{VARIANTS.map((variant) => (\n  <Card key={variant}>\n    <Card.Content className=\"flex-row items-center gap-4 py-5\">\n      <View className=\"w-32 items-center\">\n        <Loader variant={variant} />\n      </View>\n      <Text size=\"sm\" muted className=\"flex-1\">{label(variant)}</Text>\n    </Card.Content>\n  </Card>\n))}"
+      },
+      {
+        "title": "Waiting for a screen",
+        "description": "Where a loader usually goes: standing in for content that has not arrived, and gone the moment it has.",
+        "code": "{loading ? (\n  <Loader variant={variant} size=\"lg\" label=\"Loading your reports\" />\n) : (\n  <Text size=\"lg\" weight=\"semibold\">12 reports</Text>\n)}"
+      },
+      {
+        "title": "In place",
+        "description": "Inside buttons and cards, taking its ink from the surface it landed on rather than from the page.",
+        "code": "<Button disabled={busy} onPress={save}>\n  {busy ? <Loader variant=\"pulse-dots\" size=\"sm\" /> : 'Save changes'}\n</Button>"
+      }
+    ],
+    "notes": "### Choosing one\n\nThe three dot variants and the three bar variants are quiet enough to sit inside something else — a button, a row, a card header. `liquid-dots`, `morph-ring` and `wave-physics` have more character and want a screen that is otherwise empty; used in a button they draw attention to the wait rather than away from it.\n\nWhichever you pick, pick one. A loader is part of an app’s voice, and an app that uses a different one on every screen reads as several apps.\n\n### How they are drawn\n\nAnything with a small, fixed number of moving pieces is a view per piece with its own animated style: three dots is three transforms a frame, which is cheaper than rebuilding a path string.\n\nAnything whose count is high, or whose shape is derived rather than declared, is a single SVG path rebuilt on the UI thread. `wave-physics` is fifteen bars responding to a bouncing ball — one animated prop drawn that way, fifteen drawn the other, and the fifteen would not stay in step with each other for free.\n\n`liquid-dots` is the odd one. The merge where the two blobs meet is normally a blur-and-threshold filter pass, and SVG filters do not render on native at all — so the two circles and the neck between them are three subpaths of one path, unioned by the non-zero fill rule. It costs one animated prop a frame and gives a crisper edge than a threshold does.\n\n### Reduced motion\n\nEvery variant draws a representative still frame rather than freezing wherever it happened to be. A stopped animation should look like a shape someone drew, not like a bug caught mid-cycle — so the dots hold an uneven set of opacities, the bars hold the shape of their wave, and the ball rests at the top of a hop.\n\n`speed={0}` does the same thing deliberately, for a loader that should be present but still."
   }
 }
