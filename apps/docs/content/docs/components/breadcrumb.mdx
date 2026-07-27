@@ -1,0 +1,216 @@
+---
+title: Breadcrumb
+description: The trail of links back up the hierarchy to the current page.
+status: new
+---
+
+The trail of where you are in a hierarchy: a row of links back up the tree, ending in the page you are on.
+
+The last crumb is not a link — you cannot navigate to where you already are — so it renders as a plain, current-marked label rather than a dead tappable target. The separators are the component's job: `Breadcrumb.List` drops a chevron between each crumb it holds, so a trail is just its items, with no separator to forget or leave dangling at the end.
+
+## Installation
+
+Breadcrumb ships with the library — no separate install.
+
+```tsx
+import { Breadcrumb, Text } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add breadcrumb
+```
+
+## Usage
+
+```tsx
+<Breadcrumb>
+  <Breadcrumb.List>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link onPress={goHome}>Home</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link onPress={goProjects}>Projects</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Page>PanelUI</Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb.List>
+</Breadcrumb>
+```
+
+## Composition
+
+```tsx
+<Breadcrumb>
+  <Breadcrumb.List>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link>…</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Page>…</Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb.List>
+</Breadcrumb>
+```
+
+- **`Breadcrumb.List`** — The crumb row. Owns the separators — one between every pair of crumbs, none at the ends — and the collapsing, so you only ever list items.
+- **`Breadcrumb.Item`** — One crumb: wraps a link or the current page.
+- **`Breadcrumb.Link`** — A navigable crumb — an ancestor to jump back to. Muted until pressed, and carries the link role.
+- **`Breadcrumb.Page`** — The trailing crumb: where you are now. Not a link, marked `aria-current="page"`, painted in full foreground so the trail resolves to it.
+- **`Breadcrumb.Separator`** — The glyph between crumbs. `List` inserts it for you and hides it from screen readers; public only for a hand-assembled trail.
+- **`Breadcrumb.Ellipsis`** — Stands in for the crumbs a collapsed trail hides. Static by default; give the list an `onEllipsisPress` and it becomes the trigger for a menu of the hidden steps.
+
+## Examples
+
+### A trail
+
+Links back up the tree, then the current page. The chevrons between them are the list's doing, not yours.
+
+```tsx
+<Breadcrumb>
+  <Breadcrumb.List>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link onPress={() => {}}>Home</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link onPress={() => {}}>Components</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Page>Breadcrumb</Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb.List>
+</Breadcrumb>
+```
+
+### Custom separator
+
+`separator` on the root swaps the chevron for any node — a slash, a dot — across every gap at once.
+
+```tsx
+<Breadcrumb separator={<Text size="sm" muted>/</Text>}>
+  <Breadcrumb.List>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link onPress={() => {}}>Docs</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link onPress={() => {}}>Guides</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Page>Theming</Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb.List>
+</Breadcrumb>
+```
+
+### Collapsed
+
+`maxItems` folds the middle of a deep trail into an ellipsis, keeping the first and last crumbs. Pass `onEllipsisPress` to make the ellipsis open a menu of the hidden steps.
+
+```tsx
+<Breadcrumb>
+  <Breadcrumb.List maxItems={3} onEllipsisPress={() => {}}>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link onPress={() => {}}>Home</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link onPress={() => {}}>Library</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link onPress={() => {}}>Components</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Page>Breadcrumb</Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb.List>
+</Breadcrumb>
+```
+
+### Dense header
+
+`size="sm"` tightens the type for a crumb trail sitting in a header bar.
+
+```tsx
+<Breadcrumb size="sm">
+  <Breadcrumb.List>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link onPress={() => {}}>Settings</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Page>Billing</Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb.List>
+</Breadcrumb>
+```
+
+## Variants
+
+### `size`
+
+- `sm`
+- `default` *(default)*
+
+```tsx
+<Breadcrumb size="sm">…</Breadcrumb>
+<Breadcrumb size="default">…</Breadcrumb>
+```
+
+## API Reference
+
+### Breadcrumb
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `size` | `BreadcrumbSize` | `default` | Text density for every crumb. `sm` for a dense header bar. |
+| `separator` | `ReactNode` | — | The glyph `Breadcrumb.List` places between crumbs. Defaults to a chevron; pass a `<Text>/</Text>`, a slash, or any node to change every gap at once. |
+
+### Breadcrumb.List
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `maxItems` | `number` | — | Collapse the trail once it holds more than this many crumbs, so a deep path never wraps into a block of text on a narrow screen. The first `itemsBeforeCollapse` and last `itemsAfterCollapse` survive; the middle folds into a single ellipsis. |
+| `itemsBeforeCollapse` | `number` | `1` | How many leading crumbs to keep when collapsing. Default 1. |
+| `itemsAfterCollapse` | `number` | `1` | How many trailing crumbs to keep when collapsing. Default 1. |
+| `onEllipsisPress` | `() => void` | — | Makes the collapsed ellipsis pressable — the handle for a menu listing the hidden steps. Without it the ellipsis is a static marker. |
+
+### Breadcrumb.Item
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Breadcrumb.Link
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `textClassName` | `string` | — | Text style for the crumb's label. |
+
+### Breadcrumb.Page
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Breadcrumb.Separator
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Breadcrumb.Ellipsis
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+You never write separators — `Breadcrumb.List` inserts a chevron between each crumb. Change the glyph for the whole trail with `separator` on the root, or for one gap by passing children to a hand-placed `Breadcrumb.Separator`.
+
+A deep trail on a narrow phone should not wrap into a paragraph. Give the list a `maxItems` and it keeps the first `itemsBeforeCollapse` and last `itemsAfterCollapse` crumbs (both default to 1), folding the middle into a single ellipsis. Hand the list an `onEllipsisPress` and the ellipsis becomes the handle for a menu of the hidden steps.
