@@ -35,6 +35,13 @@
         {
           "microphonePermission": "PanelUI uses the microphone so the Soundwave demos can react to your voice."
         }
+      ],
+      "@maplibre/maplibre-react-native",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "PanelUI uses your location so the Map demos can recentre on where you are."
+        }
       ]
     ],
     "experiments": {
