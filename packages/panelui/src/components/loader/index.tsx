@@ -222,6 +222,7 @@ const Bar = memo(function Bar({
   from,
   to,
   mode,
+  barHeight,
   still,
   animate,
 }: {
@@ -229,10 +230,18 @@ const Bar = memo(function Bar({
   color: string;
   delay: number;
   duration: number;
+  /*
+   * In `height` mode these are pixels; in `scale` mode they are multipliers of
+   * `barHeight`. Keeping the box separate from the range is the whole reason
+   * `barHeight` exists — conflated, a scale target reads as a height and the
+   * bar grows to thirty times its size.
+   */
   from: number;
   to: number;
   /** `height` grows the bar from its baseline; `scale` squashes a fixed one. */
   mode: 'height' | 'scale';
+  /** The bar's laid-out height. Only used by `scale`. */
+  barHeight?: number;
   still: number;
   animate: boolean;
 }) {
@@ -268,7 +277,7 @@ const Bar = memo(function Bar({
           width,
           borderRadius: width / 2,
           backgroundColor: color,
-          ...(mode === 'scale' ? { height: to } : null),
+          ...(mode === 'scale' ? { height: barHeight } : null),
         },
         style,
       ]}
@@ -548,13 +557,22 @@ function MorphRing({
     transform: [{ rotate: `${progress.value * 180}deg` }],
   }));
 
+  /*
+   * The padding is the rotation's. A square turned 45° needs its diagonal, so
+   * it sweeps past its own box by nearly half its width on each side — laid
+   * out flush, the corners spill over whatever is next to it.
+   */
+  const overhang = (box * Math.SQRT2 - box) / 2;
+
   return (
-    <Animated.View
-      style={[
-        { width: box, height: box, borderWidth: border, borderColor: color },
-        style,
-      ]}
-    />
+    <View style={{ padding: overhang }}>
+      <Animated.View
+        style={[
+          { width: box, height: box, borderWidth: border, borderColor: color },
+          style,
+        ]}
+      />
+    </View>
   );
 }
 
@@ -679,7 +697,10 @@ export const Loader = memo(function Loader({
     return frame(
       <View
         className="flex-row items-center"
-        style={{ gap: g.gap * scale, padding: g.dot * scale * 0.25 }}
+        // A dot at its largest is half again its laid-out size, and it grows
+        // about its centre — so a quarter of a dot on each side is the room
+        // the scale needs, plus a little for the rounding.
+        style={{ gap: g.gap * scale, padding: g.dot * scale * 0.3 }}
       >
         {Array.from({ length: g.count }, (_unused, i) => (
           <Dot
@@ -741,7 +762,8 @@ export const Loader = memo(function Loader({
             delay={(i * 200) / rate}
             duration={500 / rate}
             from={0.3}
-            to={g.height * scale}
+            to={1}
+            barHeight={g.height * scale}
             still={0.4 + i * 0.25}
             mode="scale"
             animate={animate}
