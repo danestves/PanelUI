@@ -350,12 +350,18 @@ function LiquidDots({
 
     /*
      * The neck only exists while the blobs are close enough to be pulling on
-     * each other. `1` when they are concentric, `0` at two diameters apart,
-     * squared so it thins out quickly rather than trailing a thread.
+     * each other: `1` when they are concentric, and gone by the time they are
+     * a radius apart. Squared, so it thins out quickly rather than trailing.
+     *
+     * The thickness is what the cutoff is really on. A falloff that only
+     * approaches zero leaves a hairline spanning the gap for the whole of the
+     * rest of the travel, and a one-pixel bar between two circles reads as a
+     * drawing mistake rather than as a thinning neck — so below the point
+     * where it is still legibly a neck, it is not drawn at all.
      */
-    const pull = Math.max(0, 1 - gap / (r * 4));
-    if (pull > 0.01 && gap > 1) {
-      const half = r * pull * pull * 0.92;
+    const pull = Math.max(0, 1 - gap / (r * 2.2));
+    const half = r * pull * pull * 0.95;
+    if (half > r * 0.12 && gap > 1) {
       // Pinched at the middle: the control point sits inside the straight
       // line between the two, which is what makes the join read as surface
       // tension rather than as a rectangle.
