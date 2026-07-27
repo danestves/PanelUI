@@ -147,6 +147,17 @@ export function ChevronRightIcon({ size = 16, color, ...props }: IconProps) {
   );
 }
 
+export function EllipsisIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Circle cx={5} cy={12} r={1.6} fill={resolved} />
+      <Circle cx={12} cy={12} r={1.6} fill={resolved} />
+      <Circle cx={19} cy={12} r={1.6} fill={resolved} />
+    </Svg>
+  );
+}
+
 export function XIcon({ size = 16, color, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#737373');
   return (
