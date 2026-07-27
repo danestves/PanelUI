@@ -100,7 +100,7 @@ const AvatarBadge = forwardRef<View, AvatarBadgeProps>(
     <View
       ref={ref}
       className={cn(
-        'absolute -right-1 -top-1 rounded-full border-2 border-background',
+        'absolute -end-1 -top-1 rounded-full border-2 border-background',
         className
       )}
       {...props}

@@ -53,7 +53,7 @@ const stepsVariants = tv({
       vertical: {
         root: 'flex-col',
         item: 'flex-col items-start',
-        separator: 'ml-3.5 h-8 w-0.5',
+        separator: 'ms-3.5 h-8 w-0.5',
       },
     },
     state: {

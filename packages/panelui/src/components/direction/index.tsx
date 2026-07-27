@@ -33,16 +33,18 @@
  * comes from the device — so an app that did force RTL the old way still reads
  * back the truth.
  */
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { I18nManager, View, type ViewProps } from 'react-native';
-import { cn } from '../../utils/cn';
+import { useContext, useMemo, type ReactNode } from 'react';
+import { View, type ViewProps } from 'react-native';
+import {
+  DirectionContext,
+  deviceDirection,
+  useDirection,
+  useDirectionSign,
+  type DirectionValue,
+} from '../../hooks/use-direction';
 
-export type DirectionValue = 'ltr' | 'rtl';
-
-/** What the device is set to, for anything outside a provider. */
-const deviceDirection = (): DirectionValue => (I18nManager.isRTL ? 'rtl' : 'ltr');
-
-const DirectionContext = createContext<DirectionValue | null>(null);
+export { useDirection, useDirectionSign };
+export type { DirectionValue };
 
 export interface DirectionProps extends ViewProps {
   className?: string;
@@ -56,9 +58,14 @@ export interface DirectionProps extends ViewProps {
 }
 
 /**
- * Provider. Renders one `View` — it has to, since the flip is a style — which
- * fills its parent by default so it can wrap an app. Pass `className` to change
- * that: `flex-none` or a width class both win over the default.
+ * Provider. Renders one `View` — it has to, since the flip is a style.
+ *
+ * The view takes no layout of its own: it is as big as what is inside it, and
+ * `className` says otherwise. Wrapping a whole app therefore wants `flex-1`
+ * explicitly. It used to carry that by default, and every use inside a screen
+ * had to undo it with `flex-none` — a default that is wrong for one of its two
+ * uses is worse than no default, because the wrong one fails silently by
+ * swallowing the rest of the screen.
  */
 export function Direction({ className, children, dir, style, ...props }: DirectionProps) {
   const inherited = useContext(DirectionContext);
@@ -71,7 +78,7 @@ export function Direction({ className, children, dir, style, ...props }: Directi
 
   return (
     <DirectionContext.Provider value={value}>
-      <View className={cn('flex-1', className)} style={[directionStyle, style]} {...props}>
+      <View className={className} style={[directionStyle, style]} {...props}>
         {children}
       </View>
     </DirectionContext.Provider>
@@ -80,11 +87,3 @@ export function Direction({ className, children, dir, style, ...props }: Directi
 
 Direction.displayName = 'Direction';
 
-/**
- * The reading direction in force, for a component that has to flip maths Yoga
- * cannot flip for it. Safe with no provider mounted: it falls back to the
- * device's own setting.
- */
-export function useDirection(): DirectionValue {
-  return useContext(DirectionContext) ?? deviceDirection();
-}

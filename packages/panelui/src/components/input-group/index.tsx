@@ -26,8 +26,8 @@ import { Input, type InputProps } from '../input';
 const inputGroupVariants = tv({
   slots: {
     root: 'w-full',
-    prefix: 'absolute bottom-0 left-0 top-0 z-10 flex-row items-center justify-center gap-2 px-3',
-    suffix: 'absolute bottom-0 right-0 top-0 z-10 flex-row items-center justify-center gap-2 px-3',
+    prefix: 'absolute bottom-0 start-0 top-0 z-10 flex-row items-center justify-center gap-2 px-3',
+    suffix: 'absolute bottom-0 end-0 top-0 z-10 flex-row items-center justify-center gap-2 px-3',
   },
   variants: {
     isDisabled: {

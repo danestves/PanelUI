@@ -54,19 +54,20 @@ const messageVariants = tv({
         root: 'flex-row justify-start',
         content: 'items-start',
         // A squared corner on the side the message comes from points the
-        // bubble back at its sender.
-        bubble: 'rounded-bl-md bg-muted',
+        // bubble back at its sender. Logical, so "the side it comes from"
+        // stays true when the script runs the other way.
+        bubble: 'rounded-es-md bg-muted',
         bubbleContent: 'text-foreground',
-        header: 'text-left',
-        footer: 'text-left',
+        header: 'text-start',
+        footer: 'text-start',
       },
       end: {
         root: 'flex-row-reverse justify-start',
         content: 'items-end',
-        bubble: 'rounded-br-md bg-primary',
+        bubble: 'rounded-ee-md bg-primary',
         bubbleContent: 'text-primary-foreground',
-        header: 'text-right',
-        footer: 'text-right',
+        header: 'text-end',
+        footer: 'text-end',
       },
     },
   },

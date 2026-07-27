@@ -217,8 +217,10 @@ export interface BottomSheetContentProps extends ViewProps {
   /** Tap on the backdrop closes the sheet. Default true. */
   dismissible?: boolean;
   /**
-   * Show a close button in the top-right corner. On by default for the styled
-   * sheet; ignored by the native sheet, which has its own dismiss affordances.
+   * Show a close button in the top trailing corner — the right in a
+   * left-to-right app, the left in a right-to-left one. On by default for the
+   * styled sheet; ignored by the native sheet, which has its own dismiss
+   * affordances.
    */
   showClose?: boolean;
   /**
@@ -487,7 +489,7 @@ function BottomSheetContent({
                   accessibilityLabel="Close"
                   onPress={close}
                   hitSlop={8}
-                  className="absolute right-4 top-3 z-10 h-8 w-8 items-center justify-center rounded-full bg-muted active:opacity-70"
+                  className="absolute end-4 top-3 z-10 h-8 w-8 items-center justify-center rounded-full bg-muted active:opacity-70"
                 >
                   <XIcon
                     size={16}

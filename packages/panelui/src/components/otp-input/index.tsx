@@ -323,7 +323,7 @@ export const OtpInput = forwardRef<TextInput, OtpInputProps>(
                   placeholder={placeholder}
                   invalid={invalid}
                   className={slots.cell({
-                    className: `${i > 0 ? 'ml-2' : ''} ${cellClassName ?? ''}`,
+                    className: `${i > 0 ? 'ms-2' : ''} ${cellClassName ?? ''}`,
                   })}
                   charClassName={slots.char()}
                   caretClassName={slots.caret()}
@@ -331,7 +331,7 @@ export const OtpInput = forwardRef<TextInput, OtpInputProps>(
                 {groupEvery > 0 &&
                 (i + 1) % groupEvery === 0 &&
                 i < length - 1 ? (
-                  <View className={`${slots.separator()} ml-2`} />
+                  <View className={`${slots.separator()} ms-2`} />
                 ) : null}
               </View>
             ))}

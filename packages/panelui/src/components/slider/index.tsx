@@ -34,6 +34,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
+import { useDirectionSign } from '../../hooks/use-direction';
 import { getNativeUI } from '../../native';
 import { Text } from '../../primitives/text';
 import { selectionTick } from '../../utils/haptics';
@@ -60,8 +61,8 @@ const sliderVariants = tv({
     // The track is the full height of the control, so the thumb has somewhere
     // to sit rather than somewhere to stick out of.
     track: 'w-full justify-center rounded-full bg-muted',
-    fill: 'absolute bottom-0 left-0 top-0 rounded-full',
-    thumb: 'absolute left-0 rounded-full p-0.5',
+    fill: 'absolute bottom-0 start-0 top-0 rounded-full',
+    thumb: 'absolute start-0 rounded-full p-0.5',
     // `background`, not a per-colour on-token: the status foregrounds are the
     // darker text hues meant for soft fills, so a green-700 knob on a green-500
     // pill would barely show. The page background reads against every fill in
@@ -193,6 +194,9 @@ export const Slider = forwardRef<View, SliderProps>(
 
     // Measured on layout; the thumb travels across (trackWidth - thumbWidth) so
     // it stays inside the track at both ends.
+    // `1` left to right, `-1` right to left. Everything below that is a raw
+    // pixel offset rather than a laid-out box multiplies through it.
+    const sign = useDirectionSign();
     const trackWidth = useSharedValue(0);
     // Fraction 0..1 that drives the fill and the thumb, animated on the UI thread.
     const progress = useSharedValue(max > min ? (value - min) / (max - min) : 0);
@@ -253,7 +257,12 @@ export const Slider = forwardRef<View, SliderProps>(
       })
       .onUpdate((event) => {
         const travel = Math.max(trackWidth.value - thumbWidth, 1);
-        const delta = event.translationX / travel;
+        /*
+         * Yoga mirrors the track but not a translation: a finger moving right
+         * in a right-to-left subtree is moving *back* along the scale, and
+         * without the sign the thumb runs away from the finger.
+         */
+        const delta = (event.translationX * sign) / travel;
         const next = Math.min(Math.max(startProgress.value + delta, 0), 1);
         progress.value = next;
         runOnJS(commitFromProgress)(next, false);
@@ -268,7 +277,11 @@ export const Slider = forwardRef<View, SliderProps>(
       .maxDuration(250)
       .onEnd((event) => {
         const travel = Math.max(trackWidth.value - thumbWidth, 1);
-        const next = Math.min(Math.max((event.x - thumbWidth / 2) / travel, 0), 1);
+        // `event.x` is measured from the physical left edge either way, so
+        // right-to-left counts back from the far end of the track.
+        const along =
+          sign === 1 ? event.x : trackWidth.value - event.x;
+        const next = Math.min(Math.max((along - thumbWidth / 2) / travel, 0), 1);
         progress.value = withSpring(next, SPRING);
         runOnJS(commitFromProgress)(next, true);
       });
@@ -284,7 +297,9 @@ export const Slider = forwardRef<View, SliderProps>(
 
     const thumbStyle = useAnimatedStyle(() => {
       const travel = Math.max(trackWidth.value - thumbWidth, 0);
-      return { transform: [{ translateX: progress.value * travel }] };
+      // A transform is not laid out, so Yoga does not mirror it — the thumb
+      // has to travel the other way itself.
+      return { transform: [{ translateX: progress.value * travel * sign }] };
     });
 
     const knobStyle = useAnimatedStyle(() => ({

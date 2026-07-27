@@ -271,7 +271,7 @@ function SectionRailTrigger({ className, children, ...props }: SectionRailTrigge
       hitSlop={8}
       className={cn(
         'gap-2 py-3',
-        placement === 'right' ? 'items-end pl-6 pr-2' : 'items-start pl-2 pr-6',
+        placement === 'right' ? 'items-end ps-6 pe-2' : 'items-start ps-2 pe-6',
         className
       )}
       {...props}
@@ -434,7 +434,7 @@ function SectionRailItem({ className, value, level = 0, children }: SectionRailI
       onPress={() => onValueChange?.(value)}
       style={{ paddingLeft: 12 + level * ITEM_INDENT }}
       className={cn(
-        'rounded-lg py-2 pr-3 active:bg-accent',
+        'rounded-lg py-2 pe-3 active:bg-accent',
         selected && 'bg-accent',
         className
       )}

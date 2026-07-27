@@ -1,0 +1,15 @@
+{
+  "name": "use-direction",
+  "type": "registry:hook",
+  "description": "use-direction.",
+  "registryDependencies": [],
+  "dependencies": [],
+  "optionalDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-direction.ts",
+      "type": "registry:hook",
+      "content": "/**\n * The reading direction in force.\n *\n * The context lives here rather than beside the `Direction` component so that\n * anything can read it cheaply. `Text` in particular has to: `direction` is a\n * Yoga *layout* property, and React Native resolves a paragraph's alignment\n * from the process-wide `I18nManager.isRTL` instead — so without this, an\n * Arabic paragraph inside `<Direction dir=\"rtl\">` mirrors the furniture around\n * it and then sits left-aligned inside it.\n *\n * Keeping it in a hook also keeps the dependency the right way round: a\n * component that only needs to know the direction pulls in a hook, not the\n * whole provider.\n */\nimport { createContext, useContext } from 'react';\nimport { I18nManager } from 'react-native';\n\nexport type DirectionValue = 'ltr' | 'rtl';\n\n/** What the device is set to, for anything outside a provider. */\nexport const deviceDirection = (): DirectionValue =>\n  I18nManager.isRTL ? 'rtl' : 'ltr';\n\nexport const DirectionContext = createContext<DirectionValue | null>(null);\n\n/**\n * The reading direction in force, for a component that has to flip maths Yoga\n * cannot flip for it. Safe with no provider mounted: it falls back to the\n * device's own setting.\n */\nexport function useDirection(): DirectionValue {\n  return useContext(DirectionContext) ?? deviceDirection();\n}\n\n/**\n * `-1` in a right-to-left subtree, `1` otherwise.\n *\n * The form most of the pixel maths actually wants. A drag translation, an\n * indicator offset and a sweep are all a number that has to change sign, and\n * writing `dir === 'rtl' ? -x : x` at every one of them is where the sign\n * errors live.\n */\nexport function useDirectionSign(): 1 | -1 {\n  return useDirection() === 'rtl' ? -1 : 1;\n}\n"
+    }
+  ]
+}

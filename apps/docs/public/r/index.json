@@ -167,7 +167,7 @@
     "type": "registry:ui",
     "description": "Reading direction for everything below it.",
     "registryDependencies": [
-      "cn"
+      "use-direction"
     ]
   },
   {
@@ -234,7 +234,9 @@
     "name": "icons",
     "type": "registry:ui",
     "description": "The icon set, plus the colour context components use to tint them.",
-    "registryDependencies": []
+    "registryDependencies": [
+      "use-direction"
+    ]
   },
   {
     "name": "input",
@@ -404,7 +406,8 @@
     "description": "Determinate and indeterminate progress bar.",
     "registryDependencies": [
       "cn",
-      "text"
+      "text",
+      "use-direction"
     ]
   },
   {
@@ -511,7 +514,8 @@
     "description": "Animated highlight sweeping across content.",
     "registryDependencies": [
       "cn",
-      "text"
+      "text",
+      "use-direction"
     ]
   },
   {
@@ -540,7 +544,8 @@
     "registryDependencies": [
       "haptics",
       "native",
-      "text"
+      "text",
+      "use-direction"
     ]
   },
   {
@@ -580,7 +585,8 @@
     "description": "Animated on/off toggle.",
     "registryDependencies": [
       "haptics",
-      "native"
+      "native",
+      "use-direction"
     ]
   },
   {
@@ -596,7 +602,9 @@
     "name": "text",
     "type": "registry:ui",
     "description": "Themed text with a size, weight and muted scale. Most components build on it.",
-    "registryDependencies": []
+    "registryDependencies": [
+      "use-direction"
+    ]
   },
   {
     "name": "theme",
@@ -670,6 +678,12 @@
     "name": "use-debounced-value",
     "type": "registry:hook",
     "description": "A copy of a value that settles after changes stop.",
+    "registryDependencies": []
+  },
+  {
+    "name": "use-direction",
+    "type": "registry:hook",
+    "description": "use-direction.",
     "registryDependencies": []
   },
   {

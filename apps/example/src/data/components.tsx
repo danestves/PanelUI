@@ -51,6 +51,7 @@ import {
   Chip,
   Dialog,
   Direction,
+  type DirectionValue,
   EmptyState,
   FacebookIcon,
   Field,
@@ -4069,9 +4070,8 @@ function DirectionFlipDemo() {
         <ToggleButton id="ltr">ltr</ToggleButton>
         <ToggleButton id="rtl">rtl</ToggleButton>
       </ToggleButtonGroup>
-      {/* `flex-none` because the default fills its parent — that default is for
-          wrapping an app, not for sitting in a section. */}
-      <Direction dir={value} className="w-full flex-none">
+      {/* It takes no layout of its own, so it is as tall as the rows in it. */}
+      <Direction dir={value} className="w-full">
         <DirectionRows />
       </Direction>
     </View>
@@ -4094,7 +4094,7 @@ function DirectionReadout() {
 
 function DirectionNestedDemo() {
   return (
-    <Direction dir="rtl" className="w-full flex-none gap-3">
+    <Direction dir="rtl" className="w-full gap-3">
       <Surface variant="secondary" className="w-full p-4">
         <Text weight="medium">حساب المستخدم</Text>
         <Text size="sm" muted>
@@ -4105,7 +4105,7 @@ function DirectionNestedDemo() {
         <DirectionReadout />
         {/* An island that must not flip: an identifier reads the same way in
             every locale, and mirroring it makes it wrong rather than localised. */}
-        <Direction dir="ltr" className="flex-none border-t border-border">
+        <Direction dir="ltr" className="border-t border-border">
           <View className="px-4 pt-3">
             <Text size="sm">+1 (555) 010-4477</Text>
           </View>
@@ -4113,6 +4113,107 @@ function DirectionNestedDemo() {
         </Direction>
       </Surface>
     </Direction>
+  );
+}
+
+/**
+ * A whole screen run through both directions.
+ *
+ * The point is the things Yoga cannot flip on its own: a slider's drag, a
+ * switch's thumb, a shimmer's sweep, a chevron's glyph and a paragraph's
+ * alignment are all pixel maths or text metrics rather than layout, and each
+ * one had to be taught to read the direction. Side by side is the only way to
+ * see whether they actually did.
+ */
+function DirectionScreenVersion() {
+  const [selection, setSelection] = useState<string[]>(['rtl']);
+  const dir: DirectionValue = selection[0] === 'ltr' ? 'ltr' : 'rtl';
+  const [volume, setVolume] = useState(65);
+  const [sync, setSync] = useState(true);
+
+  return (
+    <View className="flex-1">
+      <View className="items-center p-4">
+        <ToggleButtonGroup
+          selectionMode="single"
+          value={selection}
+          onValueChange={setSelection}
+        >
+          <ToggleButton id="ltr">ltr</ToggleButton>
+          <ToggleButton id="rtl">rtl</ToggleButton>
+        </ToggleButtonGroup>
+      </View>
+
+      <Direction dir={dir} className="flex-1">
+        <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
+          <View className="gap-1">
+            <Text size="lg" weight="semibold">
+              {dir === 'rtl' ? 'الإعدادات' : 'Settings'}
+            </Text>
+            <Text size="sm" muted>
+              {dir === 'rtl'
+                ? 'تتبع المحاذاة اتجاه القراءة، وليس إعداد الجهاز.'
+                : 'Alignment follows the reading direction, not the device setting.'}
+            </Text>
+          </View>
+
+          <Surface variant="secondary">
+            <Item>
+              <Item.Media>
+                <BellIcon size={18} />
+              </Item.Media>
+              <Item.Content>
+                <Item.Title>{dir === 'rtl' ? 'الإشعارات' : 'Notifications'}</Item.Title>
+                <Item.Description>
+                  {dir === 'rtl' ? 'يتبع الشيفرون الاتجاه' : 'The chevron follows the direction'}
+                </Item.Description>
+              </Item.Content>
+              <Item.Actions>
+                <ChevronRightIcon size={16} />
+              </Item.Actions>
+            </Item>
+            <Separator />
+            <Item>
+              <Item.Content>
+                <Item.Title>{dir === 'rtl' ? 'المزامنة' : 'Sync'}</Item.Title>
+                <Item.Description>
+                  {dir === 'rtl' ? 'يتحرك المفتاح للجهة الصحيحة' : 'The thumb travels the right way'}
+                </Item.Description>
+              </Item.Content>
+              <Item.Actions>
+                <Switch value={sync} onValueChange={setSync} />
+              </Item.Actions>
+            </Item>
+          </Surface>
+
+          <Card>
+            <Card.Header>
+              <Card.Title>{dir === 'rtl' ? 'مستوى الصوت' : 'Volume'}</Card.Title>
+              <Card.Description>
+                {dir === 'rtl'
+                  ? 'اسحب: يتبع الإبهام إصبعك في كلا الاتجاهين.'
+                  : 'Drag it — the thumb follows your finger in both directions.'}
+              </Card.Description>
+            </Card.Header>
+            <Card.Content className="gap-4">
+              <Slider value={volume} onValueChange={setVolume} min={0} max={100} />
+              <Progress value={volume} />
+              <Shimmer>
+                <Text size="sm" muted>
+                  {dir === 'rtl' ? 'يمسح مع النص' : 'The sweep runs with the script'}
+                </Text>
+              </Shimmer>
+            </Card.Content>
+          </Card>
+
+          <Message align="start">
+            <Message.Bubble>
+              {dir === 'rtl' ? 'يشير الركن المربع إلى المرسل.' : 'The squared corner points back at its sender.'}
+            </Message.Bubble>
+          </Message>
+        </ScrollView>
+      </Direction>
+    </View>
   );
 }
 
@@ -6399,12 +6500,19 @@ export const COMPONENTS: ComponentEntry[] = [
     name: 'Direction',
     summary: 'Reading direction for everything below it',
     demos: [
+      {
+        label: 'A whole screen, both ways',
+        id: 'screen',
+        fullPage: true,
+        description: 'The parts Yoga cannot flip on its own — a drag, a thumb, a sweep, a glyph.',
+        render: () => <DirectionScreenVersion />,
+      },
       { label: 'Flip it live', render: () => <DirectionFlipDemo /> },
       { label: 'Nested, with an island', render: () => <DirectionNestedDemo /> },
       {
         label: 'Right to left',
         render: () => (
-          <Direction dir="rtl" className="w-full flex-none">
+          <Direction dir="rtl" className="w-full">
             <DirectionRows />
           </Direction>
         ),

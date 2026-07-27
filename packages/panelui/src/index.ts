@@ -147,6 +147,7 @@ export {
 export {
   Direction,
   useDirection,
+  useDirectionSign,
   type DirectionProps,
   type DirectionValue,
 } from './components/direction';

@@ -34,6 +34,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
+import { useDirectionSign } from '../../hooks/use-direction';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
@@ -97,6 +98,8 @@ export function Shimmer({
   const [width, setWidth] = useState(0);
   const progress = useSharedValue(0);
   const reducedMotion = useReducedMotion();
+  // The sweep follows the reading direction; `reverse` then flips it again.
+  const sign = useDirectionSign();
 
   const themeMuted = useCSSVariable('--color-muted-foreground');
   const themeForeground = useCSSVariable('--color-foreground');
@@ -134,7 +137,13 @@ export function Shimmer({
     // Travel from fully off one edge to fully off the other.
     const from = -bandWidth;
     const to = width;
-    const x = reverse
+    /*
+     * The sweep follows the reading direction. It is standing in for text
+     * arriving, and text arrives from the side you start reading on — a band
+     * travelling against the script reads as something leaving.
+     */
+    const backwards = reverse !== (sign === -1);
+    const x = backwards
       ? to - progress.value * (to - from)
       : from + progress.value * (to - from);
     return { transform: [{ translateX: x }] };

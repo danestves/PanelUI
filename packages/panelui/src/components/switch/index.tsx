@@ -7,6 +7,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
+import { useDirectionSign } from '../../hooks/use-direction';
 import { getNativeUI } from '../../native';
 import { selectionTick } from '../../utils/haptics';
 
@@ -68,6 +69,10 @@ export const Switch = forwardRef<View, SwitchProps>(
     ref
   ) => {
     const progress = useSharedValue(value ? 1 : 0);
+    // The track is mirrored by Yoga, but a transform is not — so "on" would
+    // otherwise still be on the right in a right-to-left subtree, which reads
+    // as the toggle running backwards.
+    const sign = useDirectionSign();
     const nativeUI = native ? getNativeUI() : null;
     const slots = switchVariants({ size, disabled: !!disabled });
 
@@ -77,7 +82,7 @@ export const Switch = forwardRef<View, SwitchProps>(
 
     const thumbStyle = useAnimatedStyle(() => ({
       transform: [
-        { translateX: interpolate(progress.value, [0, 1], [0, TRAVEL[size]]) },
+        { translateX: interpolate(progress.value, [0, 1], [0, TRAVEL[size] * sign]) },
       ],
     }));
 

@@ -47,7 +47,7 @@ const chipVariants = tv({
     root: 'flex-row items-center self-start rounded-full border border-transparent',
     label: 'font-medium',
     close:
-      'items-center justify-center rounded-full -mr-1 aspect-square opacity-70',
+      'items-center justify-center rounded-full -me-1 aspect-square opacity-70',
   },
   variants: {
     variant: {
@@ -88,7 +88,7 @@ const chipVariants = tv({
     },
     /** Trims the trailing padding so the close target hugs the right edge. */
     closable: {
-      true: { root: 'pr-1' },
+      true: { root: 'pe-1' },
     },
     disabled: {
       true: { root: 'opacity-[0.56]' },

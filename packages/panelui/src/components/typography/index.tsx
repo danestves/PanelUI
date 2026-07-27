@@ -57,6 +57,11 @@ const typographyVariants = tv({
       bold: 'font-bold',
     },
     align: {
+      // `start` and `end` follow the reading direction; `left` and `right`
+      // are the physical edges, for the rare line that has to stay put
+      // whichever way the script runs — a figure in a table, a code caption.
+      start: 'text-start',
+      end: 'text-end',
       left: 'text-left',
       center: 'text-center',
       right: 'text-right',

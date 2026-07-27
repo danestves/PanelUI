@@ -92,7 +92,8 @@
     "Reading direction for everything below it.",
     "react native rtl support",
     {
-      "addedIn": "0.15.0"
+      "addedIn": "0.15.0",
+      "updatedIn": "0.25.0"
     }
   ],
   "empty-state": [

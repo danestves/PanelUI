@@ -18,6 +18,7 @@
  */
 import { createContext, useContext, type ReactNode } from 'react';
 import Svg, { Circle, G, Path, type SvgProps } from 'react-native-svg';
+import { useDirection } from '../hooks/use-direction';
 
 export interface IconProps extends SvgProps {
   size?: number;
@@ -117,8 +118,26 @@ export function ChevronDownIcon({ size = 16, color, ...props }: IconProps) {
   );
 }
 
+/**
+ * Mirrors a directional glyph in a right-to-left subtree.
+ *
+ * Yoga moves a chevron to the other end of its row, but it cannot turn the
+ * glyph around — so an RTL list row ends up with a right-pointing chevron on
+ * its left edge, pointing back at the text. These arrows mean "onward" and
+ * "back", and which way that is depends on which way you read.
+ *
+ * Only for glyphs whose meaning *is* a direction. An icon that happens to be
+ * asymmetric — a pencil, a magnifier — means the same thing either way round,
+ * and flipping it is just a wrong drawing.
+ */
+function useFlip(): { transform?: string } {
+  const rtl = useDirection() === 'rtl';
+  return rtl ? { transform: 'scale(-1 1) translate(-24 0)' } : {};
+}
+
 export function ChevronLeftIcon({ size = 16, color, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#737373');
+  const flip = useFlip();
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
       <Path
@@ -127,6 +146,7 @@ export function ChevronLeftIcon({ size = 16, color, ...props }: IconProps) {
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
+        {...flip}
       />
     </Svg>
   );
@@ -134,6 +154,7 @@ export function ChevronLeftIcon({ size = 16, color, ...props }: IconProps) {
 
 export function ChevronRightIcon({ size = 16, color, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#737373');
+  const flip = useFlip();
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
       <Path
@@ -142,6 +163,7 @@ export function ChevronRightIcon({ size = 16, color, ...props }: IconProps) {
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
+        {...flip}
       />
     </Svg>
   );

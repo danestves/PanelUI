@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { Text as RNText, type Text as RNTextType, type TextProps as RNTextProps } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
+import { useDirection } from '../hooks/use-direction';
 
 const textVariants = tv({
   base: 'text-foreground',
@@ -35,13 +36,30 @@ export interface TextProps extends RNTextProps, VariantProps<typeof textVariants
 }
 
 export const Text = forwardRef<RNTextType, TextProps>(
-  ({ className, size, weight, muted, ...props }, ref) => (
-    <RNText
-      ref={ref}
-      className={textVariants({ size, weight, muted, className })}
-      {...props}
-    />
-  )
+  ({ className, size, weight, muted, style, ...props }, ref) => {
+    /*
+     * `direction` is a Yoga *layout* property, and React Native resolves a
+     * paragraph's own alignment from the process-wide `I18nManager.isRTL`
+     * instead — so a `<Direction dir="rtl">` mirrors the furniture around this
+     * text and leaves the text itself left-aligned inside it. Setting
+     * `writingDirection` is what closes that gap, and it also puts bidi
+     * punctuation on the correct end of a mixed line.
+     *
+     * Only the direction, not the alignment: `textAlign` stays whatever the
+     * caller asked for, or unset. A component that centres its label means it
+     * in both directions.
+     */
+    const direction = useDirection();
+
+    return (
+      <RNText
+        ref={ref}
+        className={textVariants({ size, weight, muted, className })}
+        style={[{ writingDirection: direction }, style]}
+        {...props}
+      />
+    );
+  }
 );
 
 Text.displayName = 'Text';

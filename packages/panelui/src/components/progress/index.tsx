@@ -11,6 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
+import { useDirectionSign } from '../../hooks/use-direction';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
@@ -135,6 +136,9 @@ export const Progress = forwardRef<View, ProgressProps>(
   ) => {
     const slots = progressVariants({ color, size });
     const trackWidth = useSharedValue(0);
+    // Yoga mirrors the track; the bar sliding along it is a transform, so it
+    // has to be turned around itself.
+    const sign = useDirectionSign();
     const progress = useSharedValue(clamp(value) / 100);
     const slide = useSharedValue(0);
 
@@ -167,10 +171,14 @@ export const Progress = forwardRef<View, ProgressProps>(
         width: barWidth,
         transform: [
           {
+            // The loop travels the way the text does. Yoga mirrors the track
+            // but not the transform sliding along it.
             translateX: interpolate(
               slide.value,
               [0, 1],
-              [-barWidth, trackWidth.value]
+              sign === 1
+                ? [-barWidth, trackWidth.value]
+                : [trackWidth.value, -barWidth]
             ),
           },
         ],
@@ -213,7 +221,7 @@ export const Progress = forwardRef<View, ProgressProps>(
             <View />
           )}
           {showValue ? (
-            <Text size="sm" muted className={cn(label == null && 'ml-auto')}>
+            <Text size="sm" muted className={cn(label == null && 'ms-auto')}>
               {formatValue(clamp(value), valueLabel, formatOptions)}
             </Text>
           ) : null}
