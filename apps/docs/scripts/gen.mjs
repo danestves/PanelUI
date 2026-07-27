@@ -51,11 +51,13 @@ function isRecent(version) {
  * expire on the same schedule — `updatedIn` is bumped by hand when a
  * component's API changes, and forgetting to clear it costs nothing.
  */
-function statusOf({ alpha, addedIn, updatedIn }) {
-  // `alpha` wins and never expires: it is a statement about how settled the
-  // API is, not about which release it landed in, so it comes off the page
-  // when someone decides it has settled and not a version sooner.
+function statusOf({ alpha, beta, addedIn, updatedIn }) {
+  // `alpha` and `beta` win and never expire: they state how settled the API
+  // is, not which release it landed in, so they come off the page when someone
+  // decides it has settled and not a version sooner. Alpha outranks beta so a
+  // half-finished promotion reads as the more cautious of the two.
   if (alpha) return 'alpha';
+  if (beta) return 'beta';
   if (isRecent(addedIn)) return 'new';
   if (isRecent(updatedIn)) return 'updated';
   return null;

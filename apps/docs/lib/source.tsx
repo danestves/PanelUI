@@ -32,6 +32,22 @@ const DOTS: Record<string, { label: string; text?: string; className: string }> 
     className:
       'border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:border-purple-400/40 dark:bg-purple-400/15 dark:text-purple-300',
   },
+  /*
+   * Beta is where a component goes once its API has stopped moving but has not
+   * been through enough use to promise it never will. It ranks below alpha and
+   * above the derived dots, and is set and cleared by hand for the same reason.
+   *
+   * Amber rather than a second purple: alpha and beta are the two marks most
+   * likely to be confused, and a component only ever carries one of them, so
+   * they gain nothing from looking related and lose the distinction that
+   * matters — whether the API is still moving under you.
+   */
+  beta: {
+    label: 'Beta — the API is settling but not final',
+    text: 'Beta',
+    className:
+      'border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:border-amber-400/40 dark:bg-amber-400/15 dark:text-amber-300',
+  },
 };
 
 export const source = loader({

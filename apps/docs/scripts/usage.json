@@ -872,62 +872,6 @@
       "height": 391
     }
   },
-  "form": {
-    "intro": "`useForm` holds a form's values, errors, touched state and submission lifecycle — built on `useReducer`, no form library underneath. `Form` and `Form.Field` bind that state to a control without threading `form` through every field by hand.",
-    "usage": "const form = useForm({\n  defaultValues: { email: '', password: '' },\n  onSubmit: async (values) => {\n    await signIn(values);\n  },\n});\n\n<Form form={form}>\n  <Form.Field\n    name=\"email\"\n    validate={(value) => (value.includes('@') ? undefined : 'Enter a valid email')}\n  >\n    {(field) => (\n      <Input\n        label=\"Email\"\n        value={field.value}\n        onChangeText={field.onChange}\n        onBlur={field.onBlur}\n        errorMessage={field.error}\n      />\n    )}\n  </Form.Field>\n\n  <Form.Field\n    name=\"password\"\n    validate={(value) => (value.length >= 8 ? undefined : 'At least 8 characters')}\n  >\n    {(field) => (\n      <Input\n        label=\"Password\"\n        secureTextEntry\n        value={field.value}\n        onChangeText={field.onChange}\n        onBlur={field.onBlur}\n        errorMessage={field.error}\n      />\n    )}\n  </Form.Field>\n\n  <Button loading={form.isSubmitting} onPress={form.handleSubmit}>\n    Sign in\n  </Button>\n</Form>",
-    "extraImports": [
-      "useForm",
-      "useField",
-      "Input",
-      "Button",
-      "Checkbox"
-    ],
-    "anatomy": "<Form form={form}>\n  <Form.Field name=\"…\">\n    {(field) => (\n      <Input\n        value={field.value}\n        onChangeText={field.onChange}\n        onBlur={field.onBlur}\n        errorMessage={field.error}\n      />\n    )}\n  </Form.Field>\n</Form>",
-    "parts": {
-      "Field": "Binds one field's state (`value`, `error`, `touched`) to a render prop, and validates it on blur — or on every change, with `validateOn=\"change\"`."
-    },
-    "notes": "### `useForm`\n\n| Option | Type | Description |\n| --- | --- | --- |\n| `defaultValues` | `T` | Read once, on the first render. |\n| `validate` | `(values: T) => FieldErrors<T> \\| Promise<FieldErrors<T>>` | Whole-form validation — a rule that compares two fields. Runs on submit. |\n| `onSubmit` | `(values: T) => void \\| Promise<void>` | Called with the current values once every field, and the whole form, pass validation. |\n\n| Returns | Type | Description |\n| --- | --- | --- |\n| `values` / `errors` / `touched` | | Current state. |\n| `isSubmitting` | `boolean` | True for the duration of an async `onSubmit`. |\n| `isValid` | `boolean` | No field currently carries a recorded error. Validation runs on blur and submit, so this does not guarantee an untouched field would pass. |\n| `isDirty` | `boolean` | `values` differs from `defaultValues`, compared as JSON. |\n| `setFieldValue`, `setFieldTouched`, `setFieldError` | | Update one field directly — what `useField`'s `onChange`/`onBlur` call underneath. |\n| `handleSubmit` | `() => Promise<void>` | Touches every field, runs every registered validator plus `validate`, and calls `onSubmit` only if none of them produced an error. |\n| `reset` | `(values?: T) => void` | Clears errors and touched state, and restores `values` — `defaultValues` if none given. |\n\n### `useField` and `Form.Field`\n\nEach field registers its `validate` function with the form on mount, so `handleSubmit` can run every field's rule even for a field the user never touched. `useField(form, name, options)` returns `{ value, error, touched, onChange, onBlur }` — spread the pieces a control needs onto its own props. Which prop that is (`onChangeText`, `onCheckedChange`, `onValueChange`, …) is the reason this is a hook rather than a component that clones its child: only the caller knows which one a given control takes.\n\n`Form`/`Form.Field` trade some type precision for that JSX convenience — a field's `name` isn't checked against `keyof YourValues` there, because a value's shape can't flow through React Context generically. Reach for `useField(form, name)` directly, outside `<Form>`, when a field's name should be checked against the form's own value type.\n\n### Scope\n\nValues are flat and JSON-serializable — string, number, boolean, and plain arrays/objects of those. There is no field-array helper in this version; model a repeating group with your own `useState` array of row ids and one `useForm` per row, or key a field's name with an index (`\"emails.0\"`) and treat it as an opaque string.\n\nSee [Field](/docs/components/field) for the layout primitives — `Field.Label`, `Field.Error` and the rest — used to lay a field out when a control's own `label`/`description`/`errorMessage` props aren't enough.",
-    "examples": [
-      {
-        "title": "Cross-field validation",
-        "description": "`validate` on `useForm` is for rules that compare two fields — a single field's own rule belongs on its `Form.Field` instead.",
-        "code": "const form = useForm({\n  defaultValues: { password: '', confirmPassword: '' },\n  validate: (values) =>\n    values.password !== values.confirmPassword\n      ? { confirmPassword: 'Passwords must match' }\n      : {},\n  onSubmit: async (values) => {\n    await changePassword(values);\n  },\n});"
-      },
-      {
-        "title": "A field with its own change prop",
-        "description": "`Form.Field` hands back `{ value, onChange, onBlur, error }` and leaves wiring them up to you — `Checkbox` takes `checked`/`onCheckedChange`, not `value`/`onChange`.",
-        "code": "<Form.Field name=\"acceptedTerms\" validate={(value) => (value ? undefined : 'Required')}>\n  {(field) => (\n    <Checkbox\n      checked={field.value}\n      onCheckedChange={field.onChange}\n      label=\"I accept the terms\"\n    />\n  )}\n</Form.Field>"
-      },
-      {
-        "title": "Validating as you type",
-        "description": "`validateOn=\"change\"` runs the field's rule on every edit instead of on blur.",
-        "code": "<Form.Field\n  name=\"password\"\n  validateOn=\"change\"\n  validate={(value) => (value.length >= 8 ? undefined : 'At least 8 characters')}\n>\n  {(field) => (\n    <Input\n      label=\"Password\"\n      secureTextEntry\n      value={field.value}\n      onChangeText={field.onChange}\n      onBlur={field.onBlur}\n      errorMessage={field.error}\n    />\n  )}\n</Form.Field>"
-      },
-      {
-        "title": "Using `useField` directly",
-        "description": "`useField` is what `Form.Field` calls internally — reach for it in a field pulled out into its own component, where `name` is checked against `keyof YourValues`.",
-        "code": "function EmailField({ form }: { form: FormApi<{ email: string }> }) {\n  const field = useField(form, 'email', {\n    validate: (value) => (value.includes('@') ? undefined : 'Enter a valid email'),\n  });\n\n  return (\n    <Input\n      label=\"Email\"\n      value={field.value}\n      onChangeText={field.onChange}\n      onBlur={field.onBlur}\n      errorMessage={field.error}\n    />\n  );\n}"
-      }
-    ],
-    "versions": [
-      {
-        "title": "Sign up form",
-        "description": "Cross-field validation (`confirmPassword` against `password`), a checkbox field whose control takes a differently-shaped change prop, and a submit that only fires once every field passes.",
-        "code": "const form = useForm({\n  defaultValues: { name: '', email: '', password: '', confirmPassword: '', acceptedTerms: false },\n  validate: (values) =>\n    values.password !== values.confirmPassword\n      ? { confirmPassword: 'Passwords must match' }\n      : {},\n  onSubmit: async (values) => {\n    await createAccount(values);\n  },\n});\n\n<Form form={form}>\n  <Form.Field name=\"acceptedTerms\" validate={(value) => (value ? undefined : 'Required to continue')}>\n    {(field) => (\n      <Field invalid={!!field.error}>\n        <Checkbox checked={field.value} onCheckedChange={field.onChange} label=\"I accept the terms\" />\n        <Field.Error>{field.error}</Field.Error>\n      </Field>\n    )}\n  </Form.Field>\n  <Button loading={form.isSubmitting} onPress={form.handleSubmit}>Create account</Button>\n</Form>"
-      },
-      {
-        "title": "Preferences",
-        "description": "The layout kit grouping switches, with no form hook involved — settings that save immediately need no submit step or validation.",
-        "code": "<Field.Set>\n  <Field.Legend>Emails</Field.Legend>\n  <Field orientation=\"horizontal\">\n    <Field.Content>\n      <Field.Title>Marketing</Field.Title>\n      <Field.Description>Offers and announcements.</Field.Description>\n    </Field.Content>\n    <Switch value={marketing} onValueChange={setMarketing} />\n  </Field>\n</Field.Set>\n\n<Field.Separator>Profile</Field.Separator>\n\n<Field orientation=\"horizontal\">\n  <Field.Content>\n    <Field.Title>Public profile</Field.Title>\n    <Field.Description>Anyone can see your activity.</Field.Description>\n  </Field.Content>\n  <Switch value={publicProfile} onValueChange={setPublicProfile} />\n</Field>"
-      }
-    ],
-    "preview": {
-      "src": "/previews/form.jpg",
-      "alt": "The Form component, running in the example app.",
-      "width": 1179,
-      "height": 950
-    }
-  },
   "flow": {
     "intro": "A canvas of frames joined by edges, that you pan, pinch and rearrange with a finger. An edge names the nodes it joins rather than coordinates, and works out which faces to leave and arrive on from where those nodes currently are — so a graph the user rearranges stays readable without anyone re-specifying anything.",
     "previewVideo": {
@@ -1072,6 +1016,62 @@
       }
     ],
     "notes": "### Where the edges attach\n\nAn edge names nodes rather than coordinates. With no handle named it picks the two faces from where the boxes currently sit — whichever axis they are further apart on wins — and picks again as they move, so the attachment point travels around a frame as you drag it and the line leaves from whichever side is now the shorter way round. That is what keeps a hand-arranged graph readable without anyone re-specifying anything.\n\nName a handle instead (`from=\"ingest.ok\"`) and the edge stays pinned to that port however the frames move. Use it when the sides *mean* something — accepted out of one port, rejected out of another — and leave it off otherwise. A handle works out its own position from the node's box and the face it names rather than measuring itself: a handle that measured would be a frame behind the node it sits on, and the edge would trail its own port.\n\n### Routing\n\n`bezier` is a curve leaving and arriving perpendicular to each face. `smoothstep` is an orthogonal run with rounded corners — the one that reads as wiring — and `step` is the same with hard corners. `straight` is a line, for a graph where the routing is not the point.\n\n`arrow` puts a head on the target end, drawn as its own small triangle rather than through SVG's `marker-end`. `dashed` breaks the line up, and `animated` marks an edge as carrying something live rather than declared, which also draws it dashed.\n\n### Where the positions live\n\nEvery node's box is kept twice: on the UI thread, where a drag writes it every frame and the node's own transform reads it, and in React state, where the edges are rendered from it. A dragged frame therefore never lags the finger moving it, and the edges attached to it redraw as it goes.\n\nThe tempting design is one copy — everything on the UI thread, edges animating their own path strings, no renders at all. It does not draw. An animated SVG path in React Native reliably animates its `d` and nothing else, and only while nothing else about it is animated. So the edges are ordinary elements and cost a render per drag frame, which is a real cost and the right trade.\n\n`onNodeDragEnd` reports where a frame was dropped. Positions are otherwise yours to leave alone: pass `position` once and the canvas takes it from there, or keep it in state and pass it back to drive nodes from outside.\n\n### Three gestures, one canvas\n\nThe pane pans and pinches, a node drags, and a handle draws a new connection. They are nested gesture detectors rather than one gesture doing three jobs, so the innermost thing under the finger wins — which is what a finger expects.\n\n`Flow.Controls` is worth having even where pinch works: on a phone, pinching to a particular scale is imprecise, and framing a whole graph by hand is worse. `fitViewOnMount` does the same job once, for a graph whose positions come from data rather than from a screen you measured. `lock` freezes panning, zooming and dragging together, for a canvas being read rather than edited.\n\n### Connections are reported, not applied\n\n`onConnect` is handed `{ source, sourceHandle, target, targetHandle }` and nothing else happens. The canvas never adds an edge itself, because the graph is yours and so is what a new connection means — a validation, a request, an undo entry. `isValidConnection` refuses one before `onConnect` sees it.\n\nA drop does not have to land on a handle. The nearest handle within reach wins, and failing that a drop anywhere on a node connects to the node — a finger is blunt, and the strict reading of the gesture is the wrong one on a small screen.\n\n### Groups\n\nA `Flow.Group` is a labelled box drawn around a region of the canvas. Dragging it offsets every node inside it in the same worklet that moves the box, so a group of twenty frames costs one frame's work rather than twenty — and `onNodeDragEnd` is called for the container *and* for everything that travelled with it, so a graph driven from outside is never left holding stale coordinates.\n\nA group is not a coordinate space: a node inside one carries the same graph position as a node outside it. What a group does have is a box in the same registry every node's box lives in, which is what lets an edge name it — `<Flow.Edge from=\"edge-tier\" to=\"core-tier\" />` routes between the two containers off the same automatic sides a node-to-node edge uses, and stops a few points short of the border rather than running under the stroke.\n\nTwo node props decide how much of a container a node is. `confine` clamps a drag to the container's box, so the node moves but never leaves. `pinned` takes the drag away, so the node moves only when its container does — for a diagram where the boxes are what you rearrange and their contents are a fixed part of them. Neither does anything to a node that is not inside a `Flow.Group`."
+  },
+  "form": {
+    "intro": "`useForm` holds a form's values, errors, touched state and submission lifecycle — built on `useReducer`, no form library underneath. `Form` and `Form.Field` bind that state to a control without threading `form` through every field by hand.",
+    "usage": "const form = useForm({\n  defaultValues: { email: '', password: '' },\n  onSubmit: async (values) => {\n    await signIn(values);\n  },\n});\n\n<Form form={form}>\n  <Form.Field\n    name=\"email\"\n    validate={(value) => (value.includes('@') ? undefined : 'Enter a valid email')}\n  >\n    {(field) => (\n      <Input\n        label=\"Email\"\n        value={field.value}\n        onChangeText={field.onChange}\n        onBlur={field.onBlur}\n        errorMessage={field.error}\n      />\n    )}\n  </Form.Field>\n\n  <Form.Field\n    name=\"password\"\n    validate={(value) => (value.length >= 8 ? undefined : 'At least 8 characters')}\n  >\n    {(field) => (\n      <Input\n        label=\"Password\"\n        secureTextEntry\n        value={field.value}\n        onChangeText={field.onChange}\n        onBlur={field.onBlur}\n        errorMessage={field.error}\n      />\n    )}\n  </Form.Field>\n\n  <Button loading={form.isSubmitting} onPress={form.handleSubmit}>\n    Sign in\n  </Button>\n</Form>",
+    "extraImports": [
+      "useForm",
+      "useField",
+      "Input",
+      "Button",
+      "Checkbox"
+    ],
+    "anatomy": "<Form form={form}>\n  <Form.Field name=\"…\">\n    {(field) => (\n      <Input\n        value={field.value}\n        onChangeText={field.onChange}\n        onBlur={field.onBlur}\n        errorMessage={field.error}\n      />\n    )}\n  </Form.Field>\n</Form>",
+    "parts": {
+      "Field": "Binds one field's state (`value`, `error`, `touched`) to a render prop, and validates it on blur — or on every change, with `validateOn=\"change\"`."
+    },
+    "notes": "### `useForm`\n\n| Option | Type | Description |\n| --- | --- | --- |\n| `defaultValues` | `T` | Read once, on the first render. |\n| `validate` | `(values: T) => FieldErrors<T> \\| Promise<FieldErrors<T>>` | Whole-form validation — a rule that compares two fields. Runs on submit. |\n| `onSubmit` | `(values: T) => void \\| Promise<void>` | Called with the current values once every field, and the whole form, pass validation. |\n\n| Returns | Type | Description |\n| --- | --- | --- |\n| `values` / `errors` / `touched` | | Current state. |\n| `isSubmitting` | `boolean` | True for the duration of an async `onSubmit`. |\n| `isValid` | `boolean` | No field currently carries a recorded error. Validation runs on blur and submit, so this does not guarantee an untouched field would pass. |\n| `isDirty` | `boolean` | `values` differs from `defaultValues`, compared as JSON. |\n| `setFieldValue`, `setFieldTouched`, `setFieldError` | | Update one field directly — what `useField`'s `onChange`/`onBlur` call underneath. |\n| `handleSubmit` | `() => Promise<void>` | Touches every field, runs every registered validator plus `validate`, and calls `onSubmit` only if none of them produced an error. |\n| `reset` | `(values?: T) => void` | Clears errors and touched state, and restores `values` — `defaultValues` if none given. |\n\n### `useField` and `Form.Field`\n\nEach field registers its `validate` function with the form on mount, so `handleSubmit` can run every field's rule even for a field the user never touched. `useField(form, name, options)` returns `{ value, error, touched, onChange, onBlur }` — spread the pieces a control needs onto its own props. Which prop that is (`onChangeText`, `onCheckedChange`, `onValueChange`, …) is the reason this is a hook rather than a component that clones its child: only the caller knows which one a given control takes.\n\n`Form`/`Form.Field` trade some type precision for that JSX convenience — a field's `name` isn't checked against `keyof YourValues` there, because a value's shape can't flow through React Context generically. Reach for `useField(form, name)` directly, outside `<Form>`, when a field's name should be checked against the form's own value type.\n\n### Scope\n\nValues are flat and JSON-serializable — string, number, boolean, and plain arrays/objects of those. There is no field-array helper in this version; model a repeating group with your own `useState` array of row ids and one `useForm` per row, or key a field's name with an index (`\"emails.0\"`) and treat it as an opaque string.\n\nSee [Field](/docs/components/field) for the layout primitives — `Field.Label`, `Field.Error` and the rest — used to lay a field out when a control's own `label`/`description`/`errorMessage` props aren't enough.",
+    "examples": [
+      {
+        "title": "Cross-field validation",
+        "description": "`validate` on `useForm` is for rules that compare two fields — a single field's own rule belongs on its `Form.Field` instead.",
+        "code": "const form = useForm({\n  defaultValues: { password: '', confirmPassword: '' },\n  validate: (values) =>\n    values.password !== values.confirmPassword\n      ? { confirmPassword: 'Passwords must match' }\n      : {},\n  onSubmit: async (values) => {\n    await changePassword(values);\n  },\n});"
+      },
+      {
+        "title": "A field with its own change prop",
+        "description": "`Form.Field` hands back `{ value, onChange, onBlur, error }` and leaves wiring them up to you — `Checkbox` takes `checked`/`onCheckedChange`, not `value`/`onChange`.",
+        "code": "<Form.Field name=\"acceptedTerms\" validate={(value) => (value ? undefined : 'Required')}>\n  {(field) => (\n    <Checkbox\n      checked={field.value}\n      onCheckedChange={field.onChange}\n      label=\"I accept the terms\"\n    />\n  )}\n</Form.Field>"
+      },
+      {
+        "title": "Validating as you type",
+        "description": "`validateOn=\"change\"` runs the field's rule on every edit instead of on blur.",
+        "code": "<Form.Field\n  name=\"password\"\n  validateOn=\"change\"\n  validate={(value) => (value.length >= 8 ? undefined : 'At least 8 characters')}\n>\n  {(field) => (\n    <Input\n      label=\"Password\"\n      secureTextEntry\n      value={field.value}\n      onChangeText={field.onChange}\n      onBlur={field.onBlur}\n      errorMessage={field.error}\n    />\n  )}\n</Form.Field>"
+      },
+      {
+        "title": "Using `useField` directly",
+        "description": "`useField` is what `Form.Field` calls internally — reach for it in a field pulled out into its own component, where `name` is checked against `keyof YourValues`.",
+        "code": "function EmailField({ form }: { form: FormApi<{ email: string }> }) {\n  const field = useField(form, 'email', {\n    validate: (value) => (value.includes('@') ? undefined : 'Enter a valid email'),\n  });\n\n  return (\n    <Input\n      label=\"Email\"\n      value={field.value}\n      onChangeText={field.onChange}\n      onBlur={field.onBlur}\n      errorMessage={field.error}\n    />\n  );\n}"
+      }
+    ],
+    "versions": [
+      {
+        "title": "Sign up form",
+        "description": "Cross-field validation (`confirmPassword` against `password`), a checkbox field whose control takes a differently-shaped change prop, and a submit that only fires once every field passes.",
+        "code": "const form = useForm({\n  defaultValues: { name: '', email: '', password: '', confirmPassword: '', acceptedTerms: false },\n  validate: (values) =>\n    values.password !== values.confirmPassword\n      ? { confirmPassword: 'Passwords must match' }\n      : {},\n  onSubmit: async (values) => {\n    await createAccount(values);\n  },\n});\n\n<Form form={form}>\n  <Form.Field name=\"acceptedTerms\" validate={(value) => (value ? undefined : 'Required to continue')}>\n    {(field) => (\n      <Field invalid={!!field.error}>\n        <Checkbox checked={field.value} onCheckedChange={field.onChange} label=\"I accept the terms\" />\n        <Field.Error>{field.error}</Field.Error>\n      </Field>\n    )}\n  </Form.Field>\n  <Button loading={form.isSubmitting} onPress={form.handleSubmit}>Create account</Button>\n</Form>"
+      },
+      {
+        "title": "Preferences",
+        "description": "The layout kit grouping switches, with no form hook involved — settings that save immediately need no submit step or validation.",
+        "code": "<Field.Set>\n  <Field.Legend>Emails</Field.Legend>\n  <Field orientation=\"horizontal\">\n    <Field.Content>\n      <Field.Title>Marketing</Field.Title>\n      <Field.Description>Offers and announcements.</Field.Description>\n    </Field.Content>\n    <Switch value={marketing} onValueChange={setMarketing} />\n  </Field>\n</Field.Set>\n\n<Field.Separator>Profile</Field.Separator>\n\n<Field orientation=\"horizontal\">\n  <Field.Content>\n    <Field.Title>Public profile</Field.Title>\n    <Field.Description>Anyone can see your activity.</Field.Description>\n  </Field.Content>\n  <Switch value={publicProfile} onValueChange={setPublicProfile} />\n</Field>"
+      }
+    ],
+    "preview": {
+      "src": "/previews/form.jpg",
+      "alt": "The Form component, running in the example app.",
+      "width": 1179,
+      "height": 950
+    }
   },
   "frame": {
     "intro": "A card of rows sitting in a tray. The tray shows along one edge only — the strip left above the card is the header — and the card itself is flush to its left, right and bottom. The panel draws the hairlines between its own rows.",
@@ -1339,128 +1339,6 @@
         "code": "<InputGroup>\n  <InputGroup.Input secureTextEntry={hidden} placeholder=\"Password\" />\n  <InputGroup.Suffix>\n    <Button size=\"icon\" variant=\"ghost\" onPress={() => setHidden(!hidden)}>\n      <Text size=\"sm\" muted>{hidden ? 'Show' : 'Hide'}</Text>\n    </Button>\n  </InputGroup.Suffix>\n</InputGroup>"
       }
     ]
-  },
-  "number-input": {
-    "intro": "A number stepped by a − and a + at the ends, or typed straight into the field in the middle — because past a handful of steps, tapping to a value is worse than typing it, and a good numeric control keeps both doors open. The two ends repeat when held, after a short delay and then faster, so walking from 0 to 200 is a press rather than two hundred of them. Everything reconciles through a single value that is clamped to `min`/`max` and snapped to `step`.",
-    "extraImports": [
-      "useState"
-    ],
-    "usage": "<NumberInput defaultValue={1} min={0} max={10} />\n\nconst [qty, setQty] = useState(1);\n<NumberInput label=\"Quantity\" value={qty} onValueChange={setQty} min={1} />",
-    "examples": [
-      {
-        "title": "Controlled",
-        "description": "Hold the value in state and read it back. Every commit — a tap, a hold, or a typed entry — arrives already clamped and snapped.",
-        "code": "const [qty, setQty] = useState(1);\n\n<NumberInput value={qty} onValueChange={setQty} min={1} max={99} />"
-      },
-      {
-        "title": "Bounds and step",
-        "description": "`min` and `max` bound the value and disable the button that would cross them; `step` is both the nudge and the granularity the value snaps to.",
-        "code": "<NumberInput defaultValue={0} min={0} max={1} step={0.1} />"
-      },
-      {
-        "title": "Formatted display",
-        "description": "`formatValue` owns how the number reads — units, currency, grouping — while typing still reads a bare number back.",
-        "code": "<NumberInput\n  label=\"Budget\"\n  defaultValue={40}\n  min={0}\n  max={1000}\n  step={10}\n  formatValue={(v) => `$${v}`}\n/>"
-      },
-      {
-        "title": "As a form field",
-        "description": "`label`, `description` and `errorMessage` make it a first-class field, with the label doubling as the accessibility label and an asterisk from `isRequired`.",
-        "code": "<NumberInput\n  label=\"Guests\"\n  description=\"Up to eight per reservation.\"\n  isRequired\n  defaultValue={2}\n  min={1}\n  max={8}\n/>"
-      },
-      {
-        "title": "Display-only stepper",
-        "description": "`editable={false}` keeps the buttons but closes the keyboard, for a value that should only ever move one step at a time.",
-        "code": "<NumberInput editable={false} defaultValue={1} min={0} max={5} />"
-      },
-      {
-        "title": "Haptic steps",
-        "description": "`haptics` ticks the engine on each step — the value feels like it clicks. It needs the optional `expo-haptics`, and is silent without it.",
-        "code": "<NumberInput haptics defaultValue={5} min={0} max={20} />"
-      },
-      {
-        "title": "Disabled",
-        "code": "<NumberInput defaultValue={3} disabled />"
-      }
-    ],
-    "variantCode": {
-      "variant": "<NumberInput variant=\"outline\" defaultValue={1} />\n<NumberInput variant=\"filled\" defaultValue={1} />",
-      "size": "<NumberInput size=\"sm\" defaultValue={1} />\n<NumberInput size=\"md\" defaultValue={1} />\n<NumberInput size=\"lg\" defaultValue={1} />"
-    },
-    "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). The value is always clamped to `[min, max]` and snapped to the nearest `step`; the display rounds to `step`'s precision, so `0.1 + 0.2` settles on `0.3` rather than drifting.\n\nTyping is allowed to be briefly invalid — an empty field, a lone `-`, a trailing `.` — because clamping every keystroke fights the person mid-number. The field commits on blur or submit, and reverts to the last good value when what is left cannot be read as a number.\n\nThe buttons repeat when held, and read the live value from a ref so a hold never strides off a stale number. Each is a separately labelled accessibility button that disables at its bound, so a screen reader is told when a direction is exhausted.\n\nPass `haptics` to tick on each step; it needs the optional `expo-haptics` and is silent without it."
-  },
-  "otp-input": {
-    "intro": "A one-time-code field drawn as a row of separate cells, so the reader can see at a glance how many digits are left. There is still one text field underneath — a transparent input laid over the whole row — so the keyboard, SMS autofill and paste all behave; the cells are drawn from its value. The active cell's border crosses to the focus colour on the UI thread and a caret blinks in the cell awaiting input.",
-    "extraImports": [
-      "useState"
-    ],
-    "usage": "const [code, setCode] = useState('');\n\n<OtpInput value={code} onChangeText={setCode} onComplete={submit} />\n\n// Four masked cells, grouped two and two, letters allowed.\n<OtpInput length={4} mask groupEvery={2} type=\"text\" />",
-    "notes": "Accepts most `TextInputProps` — they land on the hidden field — except the ones `OtpInput` owns: `value`, `defaultValue`, `onChangeText`, `maxLength` and `children`.\n\nThe field is controlled when you pass `value`, and manages its own state otherwise (seed it with `defaultValue`). Either way the string is trimmed to `length` and, when `type=\"numeric\"`, filtered to digits, so an over-long paste or a stray character can never put the cells and the value out of step.\n\n`onComplete` fires once, on the transition to a full code — not on every keystroke that leaves it full — which is the right moment to submit or verify. The hidden input carries `textContentType=\"oneTimeCode\"` and the matching `autoComplete`, so iOS offers the SMS code above the keyboard and Android autofills it.",
-    "examples": [
-      {
-        "title": "Controlled",
-        "description": "Hold the value yourself and act on it when the code completes.",
-        "code": "const [code, setCode] = useState('');\n\n<OtpInput\n  value={code}\n  onChangeText={setCode}\n  onComplete={(value) => verify(value)}\n/>"
-      },
-      {
-        "title": "Masked, like a passcode",
-        "description": "Each filled cell shows a dot rather than the character.",
-        "code": "<OtpInput length={4} mask type=\"numeric\" />",
-        "previewVideo": {
-          "src": "/previews/otp-input-masked.mp4",
-          "poster": "/previews/otp-input-masked-poster.jpg",
-          "alt": "OtpInput — Masked, like a passcode.",
-          "width": 720,
-          "height": 232
-        }
-      },
-      {
-        "title": "Grouped with a separator",
-        "description": "`groupEvery` draws a divider between runs of cells — 3 gives `xxx — xxx`.",
-        "code": "<OtpInput length={6} groupEvery={3} />",
-        "preview": {
-          "src": "/previews/otp-input-grouped.jpg",
-          "alt": "OtpInput — Grouped with a separator.",
-          "width": 1179,
-          "height": 366
-        }
-      },
-      {
-        "title": "Sizes",
-        "code": "<OtpInput size=\"sm\" length={4} />\n<OtpInput size=\"md\" length={4} />\n<OtpInput size=\"lg\" length={4} />",
-        "preview": {
-          "src": "/previews/otp-input-size.jpg",
-          "alt": "OtpInput — Sizes.",
-          "width": 1179,
-          "height": 679
-        }
-      },
-      {
-        "title": "Invalid",
-        "description": "`errorMessage` tints every cell and prints a line beneath the row.",
-        "code": "<OtpInput\n  length={6}\n  value={code}\n  onChangeText={setCode}\n  errorMessage=\"That code didn’t match. Try again.\"\n/>"
-      },
-      {
-        "title": "Letters",
-        "description": "`type=\"text\"` accepts letters as well as digits.",
-        "preview": {
-          "src": "/previews/otp-input-letters.jpg",
-          "alt": "OtpInput — Letters.",
-          "width": 1179,
-          "height": 424
-        },
-        "code": "<OtpInput type=\"text\" length={4} />"
-      }
-    ],
-    "variantCode": {
-      "size": "<OtpInput size=\"sm\" length={4} />\n<OtpInput size=\"md\" length={4} />\n<OtpInput size=\"lg\" length={4} />"
-    },
-    "previewVideo": {
-      "src": "/previews/otp-input.mp4",
-      "poster": "/previews/otp-input-poster.jpg",
-      "alt": "The OtpInput component, running in the example app.",
-      "width": 720,
-      "height": 306
-    }
   },
   "item": {
     "intro": "A row of content: media on one side, a title and description in the middle, actions on the other.\n\nIt is the shape almost every list in an app already has — a settings row, a file in a picker, a member in a team list, a tool call in a transcript — so it exists as one composable primitive instead of being rebuilt per screen with slightly different padding each time.",
@@ -1742,6 +1620,55 @@
       "height": 680
     }
   },
+  "map": {
+    "intro": "A vector map whose basemap is built from your theme tokens rather than shipped as a finished style. A hosted style gives you two maps, a light one and a dark one; PanelUI has six themes, and a map that stays grey while the rest of the screen turns green is the one rectangle on the page that visibly does not belong to it. The tiles still come from a provider — that is the part worth paying for — but every colour in the style is a token your theme already resolved, so a new theme gets a matching basemap without anyone drawing one.\n\n<Callout type=\"warn\" title=\"Map needs a development build\">\nThe renderer is native code and is not part of the Expo SDK, so **`Map` cannot run in Expo Go**. Install `@maplibre/maplibre-react-native`, add its config plugin to your app config, and rebuild:\n\n```bash\nnpx expo install @maplibre/maplibre-react-native expo-dev-client\nnpx expo prebuild --clean\nnpx expo run:ios   # or: eas build --profile development --platform ios\n```\n\n```json title=\"app.json\"\n{ \"expo\": { \"plugins\": [\"@maplibre/maplibre-react-native\"] } }\n```\n\nWithout it `Map` renders a message saying so rather than throwing, so a screen that embeds one still loads. Check `hasMapLibre` before routing somewhere whose whole content is a map.\n</Callout>",
+    "usage": "<Map center={[-0.118, 51.509]} zoom={11}>\n  <Map.Marker lngLat={[-0.118, 51.509]}>\n    <Map.Popup title=\"Charing Cross\">\n      <Text size=\"xs\" muted>The point every distance to London is measured from.</Text>\n    </Map.Popup>\n  </Map.Marker>\n  <Map.Controls locate />\n</Map>",
+    "extraImports": [
+      "Text",
+      "type LngLat",
+      "hasMapLibre"
+    ],
+    "anatomy": "<Map>\n  <Map.Marker lngLat={[…]}>\n    <Map.Label>…</Map.Label>\n    <Map.Popup>…</Map.Popup>\n  </Map.Marker>\n  <Map.Route coordinates={[…]} />\n  <Map.Arc from={[…]} to={[…]} />\n  <Map.GeoJSON data={…} />\n  <Map.Cluster data={…} />\n  <Map.UserLocation />\n  <Map.Controls />\n</Map>",
+    "parts": {
+      "Marker": "A point drawn as React views, so it can hold anything the rest of the library can draw.",
+      "Label": "A caption pinned to a marker and always visible, unlike a popup.",
+      "Popup": "A card anchored to a point — to the marker it sits inside, or to a coordinate of its own.",
+      "Controls": "Zoom, compass and locate, as themed views rather than the renderer's own ornaments.",
+      "Route": "A path across the map, drawn as a style layer so its cost does not grow with its length.",
+      "Arc": "A curved connection between two points, bowed so arcs sharing an endpoint stay tellable apart.",
+      "GeoJSON": "Arbitrary geography as a themed layer. `fill` takes a style expression, which is what makes a choropleth one layer instead of one per bucket.",
+      "Cluster": "Dense points merged as they get too close to tell apart — the layer to reach for past a few dozen.",
+      "UserLocation": "The device's own position, drawn by the renderer."
+    },
+    "examples": [
+      {
+        "title": "Markers and popups",
+        "description": "A popup inside a marker anchors to it and opens when it is pressed. Given a `lngLat` of its own it stands alone at that coordinate instead — the same component either way, because the difference is where it hangs rather than what it is.",
+        "code": "<Map center={[-74.006, 40.713]} zoom={11}>\n  {offices.map((office) => (\n    <Map.Marker key={office.id} lngLat={office.lngLat}>\n      <Map.Popup title={office.name}>\n        <Text size=\"xs\" muted>{office.headcount} people</Text>\n      </Map.Popup>\n    </Map.Marker>\n  ))}\n</Map>"
+      },
+      {
+        "title": "A blank canvas for data",
+        "description": "`blank` drops the basemap and keeps only the ground colour, for data that carries its own geography. Street detail under a choropleth is noise rather than context.",
+        "code": "<Map blank bounds={[-125, 24, -66, 50]}>\n  <Map.GeoJSON\n    data={states}\n    fill={['interpolate', ['linear'], ['get', 'share'], 0, muted, 1, primary]}\n  />\n</Map>"
+      },
+      {
+        "title": "Clustering dense points",
+        "description": "`Map.Marker` mounts a React view each, which a thousand points cannot afford — and a thousand overlapping pins would be unreadable even if it could. `Map.Cluster` does it in a style layer, merging points as they get too close to tell apart.",
+        "code": "<Map center={[10, 50]} zoom={3}>\n  <Map.Cluster data={sightings} radius={60} onPress={inspect} />\n</Map>"
+      },
+      {
+        "title": "Routes and arcs",
+        "description": "A route follows the ground; an arc does not pretend to. The bow on an arc is not geography — it is there so two connections sharing an endpoint stay tellable apart, which a bundle of straight lines through one city does not.",
+        "code": "<Map blank bounds={[-130, 20, 30, 60]}>\n  <Map.Route id=\"leg\" coordinates={delivered} />\n  <Map.Route id=\"remaining\" coordinates={planned} dashed opacity={0.6} />\n  {links.map((link) => (\n    <Map.Arc key={link.id} id={link.id} from={link.from} to={link.to} />\n  ))}\n</Map>"
+      },
+      {
+        "title": "Bringing your own tiles",
+        "description": "The tiles are the one part of the style that is somebody else's to license. `source` swaps the provider while keeping the token-built layers, so the map still follows your theme. The default is CARTO, which is free for non-commercial use and needs a licence for everything else.",
+        "code": "<Map\n  source={{\n    url: 'https://example.com/tiles.json',\n    glyphs: 'https://example.com/fonts/{fontstack}/{range}.pbf',\n    fonts: ['Inter Regular'],\n    attribution: '© OpenStreetMap contributors',\n  }}\n/>"
+      }
+    ],
+    "notes": "### Why the basemap is assembled rather than downloaded\n\nA hosted style ships its colours baked in, which gives you exactly two maps. Everything here is built from the same tokens as the rest of the library, so `moon`, `grass` and anything you add later get a basemap that matches them without a designer redrawing one per theme.\n\nThe layer list is deliberately short. A full street style runs to ninety-odd layers separating tunnel casings from bridge casings across eleven zoom stops; almost none of that survives being recoloured down to five greys, and every layer is another thing to keep in step with the tokens. What is there is the set that still reads as a map at any zoom: ground, water, green space, buildings, roads, boundaries, and the labels that make them findable.\n\nPass `mapStyle` to skip all of it and use a style wholesale — the escape hatch for a map that has to match something outside the app.\n\n### Tile licensing\n\n`Map` defaults to CARTO's street tiles, which are free for non-commercial use and require a licence from CARTO for commercial use. That is a decision about your project rather than about this component, so `source` takes any provider serving the OpenMapTiles schema.\n\n### Markers or clusters\n\n`Map.Marker` is a React view, which is what lets it hold an avatar, a chip, or anything else the library draws. That also means a marker costs what a view costs. Past a few dozen points use `Map.Cluster`, which draws in a style layer and merges points as they crowd — by the time markers become expensive they have also become unreadable, so the two limits arrive together."
+  },
   "marker": {
     "intro": "An inline note in a conversation.\n\nTranscripts are not only messages. Between the turns sit things the conversation *did* rather than said: a tool that ran, a file that was read, the point where yesterday ended. None of those have a speaker, so none of them should look like a bubble. A marker is the quieter row that carries them — small, muted, and aligned to the transcript rather than to a side of it.",
     "usage": "<Marker>\n  <Marker.Icon>\n    <CheckIcon size={14} />\n  </Marker.Icon>\n  <Marker.Content>Explored 4 files</Marker.Content>\n</Marker>",
@@ -1960,6 +1887,128 @@
       }
     ],
     "notes": "**It needs a bounded height.** From `flex-1` in a column, or an explicit one. Given an unbounded parent it grows to fit its content and never scrolls at all.\n\n**Follow-output is conditional, not automatic.** `autoScroll` means *follow the bottom while the reader is at the bottom* — never *drag them to the bottom*. Being pulled away from a message you were half way through reading is the behaviour this exists to avoid.\n\n**The scroll position is not React state.** The at-end test runs per frame on the UI thread and only crosses into JS when the boolean flips, and the button fades from that same shared value. A transcript scrolls constantly; re-rendering on every frame of it would be the most expensive thing on the screen.\n\n**Every turn needs a stable `messageId`.** It is the key for the offset the component measures, so an id derived from the array index breaks scrolling the moment anything is prepended.\n\n**The four scroll events are owned.** `onScroll`, `onScrollEndDrag`, `onMomentumScrollEnd` and `onContentSizeChange` are taken off `MessageScroller.Viewport`'s props type. They are not decoration on a scroll view — they *are* the behaviour, and a call site that quietly replaced one would look like a bug in the scrolling."
+  },
+  "number-input": {
+    "intro": "A number stepped by a − and a + at the ends, or typed straight into the field in the middle — because past a handful of steps, tapping to a value is worse than typing it, and a good numeric control keeps both doors open. The two ends repeat when held, after a short delay and then faster, so walking from 0 to 200 is a press rather than two hundred of them. Everything reconciles through a single value that is clamped to `min`/`max` and snapped to `step`.",
+    "extraImports": [
+      "useState"
+    ],
+    "usage": "<NumberInput defaultValue={1} min={0} max={10} />\n\nconst [qty, setQty] = useState(1);\n<NumberInput label=\"Quantity\" value={qty} onValueChange={setQty} min={1} />",
+    "examples": [
+      {
+        "title": "Controlled",
+        "description": "Hold the value in state and read it back. Every commit — a tap, a hold, or a typed entry — arrives already clamped and snapped.",
+        "code": "const [qty, setQty] = useState(1);\n\n<NumberInput value={qty} onValueChange={setQty} min={1} max={99} />"
+      },
+      {
+        "title": "Bounds and step",
+        "description": "`min` and `max` bound the value and disable the button that would cross them; `step` is both the nudge and the granularity the value snaps to.",
+        "code": "<NumberInput defaultValue={0} min={0} max={1} step={0.1} />"
+      },
+      {
+        "title": "Formatted display",
+        "description": "`formatValue` owns how the number reads — units, currency, grouping — while typing still reads a bare number back.",
+        "code": "<NumberInput\n  label=\"Budget\"\n  defaultValue={40}\n  min={0}\n  max={1000}\n  step={10}\n  formatValue={(v) => `$${v}`}\n/>"
+      },
+      {
+        "title": "As a form field",
+        "description": "`label`, `description` and `errorMessage` make it a first-class field, with the label doubling as the accessibility label and an asterisk from `isRequired`.",
+        "code": "<NumberInput\n  label=\"Guests\"\n  description=\"Up to eight per reservation.\"\n  isRequired\n  defaultValue={2}\n  min={1}\n  max={8}\n/>"
+      },
+      {
+        "title": "Display-only stepper",
+        "description": "`editable={false}` keeps the buttons but closes the keyboard, for a value that should only ever move one step at a time.",
+        "code": "<NumberInput editable={false} defaultValue={1} min={0} max={5} />"
+      },
+      {
+        "title": "Haptic steps",
+        "description": "`haptics` ticks the engine on each step — the value feels like it clicks. It needs the optional `expo-haptics`, and is silent without it.",
+        "code": "<NumberInput haptics defaultValue={5} min={0} max={20} />"
+      },
+      {
+        "title": "Disabled",
+        "code": "<NumberInput defaultValue={3} disabled />"
+      }
+    ],
+    "variantCode": {
+      "variant": "<NumberInput variant=\"outline\" defaultValue={1} />\n<NumberInput variant=\"filled\" defaultValue={1} />",
+      "size": "<NumberInput size=\"sm\" defaultValue={1} />\n<NumberInput size=\"md\" defaultValue={1} />\n<NumberInput size=\"lg\" defaultValue={1} />"
+    },
+    "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). The value is always clamped to `[min, max]` and snapped to the nearest `step`; the display rounds to `step`'s precision, so `0.1 + 0.2` settles on `0.3` rather than drifting.\n\nTyping is allowed to be briefly invalid — an empty field, a lone `-`, a trailing `.` — because clamping every keystroke fights the person mid-number. The field commits on blur or submit, and reverts to the last good value when what is left cannot be read as a number.\n\nThe buttons repeat when held, and read the live value from a ref so a hold never strides off a stale number. Each is a separately labelled accessibility button that disables at its bound, so a screen reader is told when a direction is exhausted.\n\nPass `haptics` to tick on each step; it needs the optional `expo-haptics` and is silent without it."
+  },
+  "otp-input": {
+    "intro": "A one-time-code field drawn as a row of separate cells, so the reader can see at a glance how many digits are left. There is still one text field underneath — a transparent input laid over the whole row — so the keyboard, SMS autofill and paste all behave; the cells are drawn from its value. The active cell's border crosses to the focus colour on the UI thread and a caret blinks in the cell awaiting input.",
+    "extraImports": [
+      "useState"
+    ],
+    "usage": "const [code, setCode] = useState('');\n\n<OtpInput value={code} onChangeText={setCode} onComplete={submit} />\n\n// Four masked cells, grouped two and two, letters allowed.\n<OtpInput length={4} mask groupEvery={2} type=\"text\" />",
+    "notes": "Accepts most `TextInputProps` — they land on the hidden field — except the ones `OtpInput` owns: `value`, `defaultValue`, `onChangeText`, `maxLength` and `children`.\n\nThe field is controlled when you pass `value`, and manages its own state otherwise (seed it with `defaultValue`). Either way the string is trimmed to `length` and, when `type=\"numeric\"`, filtered to digits, so an over-long paste or a stray character can never put the cells and the value out of step.\n\n`onComplete` fires once, on the transition to a full code — not on every keystroke that leaves it full — which is the right moment to submit or verify. The hidden input carries `textContentType=\"oneTimeCode\"` and the matching `autoComplete`, so iOS offers the SMS code above the keyboard and Android autofills it.",
+    "examples": [
+      {
+        "title": "Controlled",
+        "description": "Hold the value yourself and act on it when the code completes.",
+        "code": "const [code, setCode] = useState('');\n\n<OtpInput\n  value={code}\n  onChangeText={setCode}\n  onComplete={(value) => verify(value)}\n/>"
+      },
+      {
+        "title": "Masked, like a passcode",
+        "description": "Each filled cell shows a dot rather than the character.",
+        "code": "<OtpInput length={4} mask type=\"numeric\" />",
+        "previewVideo": {
+          "src": "/previews/otp-input-masked.mp4",
+          "poster": "/previews/otp-input-masked-poster.jpg",
+          "alt": "OtpInput — Masked, like a passcode.",
+          "width": 720,
+          "height": 232
+        }
+      },
+      {
+        "title": "Grouped with a separator",
+        "description": "`groupEvery` draws a divider between runs of cells — 3 gives `xxx — xxx`.",
+        "code": "<OtpInput length={6} groupEvery={3} />",
+        "preview": {
+          "src": "/previews/otp-input-grouped.jpg",
+          "alt": "OtpInput — Grouped with a separator.",
+          "width": 1179,
+          "height": 366
+        }
+      },
+      {
+        "title": "Sizes",
+        "code": "<OtpInput size=\"sm\" length={4} />\n<OtpInput size=\"md\" length={4} />\n<OtpInput size=\"lg\" length={4} />",
+        "preview": {
+          "src": "/previews/otp-input-size.jpg",
+          "alt": "OtpInput — Sizes.",
+          "width": 1179,
+          "height": 679
+        }
+      },
+      {
+        "title": "Invalid",
+        "description": "`errorMessage` tints every cell and prints a line beneath the row.",
+        "code": "<OtpInput\n  length={6}\n  value={code}\n  onChangeText={setCode}\n  errorMessage=\"That code didn’t match. Try again.\"\n/>"
+      },
+      {
+        "title": "Letters",
+        "description": "`type=\"text\"` accepts letters as well as digits.",
+        "preview": {
+          "src": "/previews/otp-input-letters.jpg",
+          "alt": "OtpInput — Letters.",
+          "width": 1179,
+          "height": 424
+        },
+        "code": "<OtpInput type=\"text\" length={4} />"
+      }
+    ],
+    "variantCode": {
+      "size": "<OtpInput size=\"sm\" length={4} />\n<OtpInput size=\"md\" length={4} />\n<OtpInput size=\"lg\" length={4} />"
+    },
+    "previewVideo": {
+      "src": "/previews/otp-input.mp4",
+      "poster": "/previews/otp-input-poster.jpg",
+      "alt": "The OtpInput component, running in the example app.",
+      "width": 720,
+      "height": 306
+    }
   },
   "popover": {
     "intro": "A panel anchored to the thing that opened it.\n\nA dialog takes the screen and asks to be dealt with; a popover stays next to its trigger and keeps the context around it visible. That difference is the whole reason both exist, and it is why this one is positioned rather than centred.\n\nPlacement is a preference, not a promise. The trigger is measured in window coordinates when it is pressed, the panel measures itself on its first layout, and the two are reconciled against the safe area — so `placement=\"bottom\"` means *below, if below fits*. A trigger near the bottom of the screen opens upwards instead of off the edge.",
@@ -2832,6 +2881,127 @@
       "caption": "The pill thumb at three sizes and colours, running in the example app."
     }
   },
+  "soundwave": {
+    "intro": "Draws the level of a voice, in four looks: capsules over a microphone button, a metering strip for a transcript, a travelling wave for a reply being spoken, and an ambient glow that fills a screen.\n\nIt draws a level; it does not record one. Your app owns the recorder and hands over a number between 0 and 1 — so there is no audio dependency here, and the same component works against a real meter, a synthesised one, or a remote peer's. With no level at all it animates plausible motion for the current `state`, which is enough to build and review a voice screen before any audio exists.",
+    "usage": "<Soundwave variant=\"pills\" state=\"listening\" level={level} />",
+    "extraImports": [
+      "Card",
+      "Message",
+      "MicIcon",
+      "Text"
+    ],
+    "examples": [
+      {
+        "title": "Driving it from a recorder",
+        "description": "A recorder reports every 30–60ms. Putting that in React state is dozens of renders a second for a number that only moves pixels, so `level` also takes a `SharedValue` — write metering straight into it and nothing above the wave re-renders. A plain number is accepted too, and smoothed identically; it is the right choice for something slow, like a server-side speaking flag.",
+        "code": "const level = useSharedValue(0);\n\nuseEffect(() => {\n  recorder.onMetering(({ db }) => {\n    // dBFS is negative and logarithmic; the wave wants 0–1.\n    level.value = Math.max(0, (db + 60) / 60);\n  });\n}, [level]);\n\n<Soundwave variant=\"pills\" level={level} />"
+      },
+      {
+        "title": "A metering strip in a transcript",
+        "description": "`static` gives every bar a band of the current level, for a live meter. `scrolling` keeps a history that slides across with the newest sample at the trailing edge, for a recording in progress. `centered` decides whether bars grow from the middle out or up from a baseline.",
+        "code": "<Card>\n  <Card.Content className=\"flex-row items-center gap-3 p-4\">\n    <MicIcon size={18} />\n    <View className=\"flex-1\">\n      <Soundwave\n        variant=\"bars\"\n        mode=\"scrolling\"\n        centered={false}\n        bars={28}\n        barWidth={5}\n        height={40}\n        level={level}\n      />\n    </View>\n    <Text size=\"sm\" muted>0:12</Text>\n  </Card.Content>\n</Card>"
+      },
+      {
+        "title": "A voice note",
+        "description": "`levels` is the shape of a finished recording — collect the metering while recording and store the numbers beside the file. Supplying it draws the wave still rather than animated, and stops the engine entirely, so a transcript of twenty notes runs no animation at all until one is played. `progress` is the playhead: bars behind it keep full ink and the rest are dimmed.",
+        "code": "const player = useAudioPlayer(note.uri);\nconst status = useAudioPlayerStatus(player);\nconst progress = status.duration ? status.currentTime / status.duration : 0;\n\n<Message align=\"end\">\n  <Message.Content>\n    <Message.Bubble>\n      <View className=\"w-64 flex-row items-center gap-3\">\n        <Pressable onPress={() => player.play()}>\n          <PlayIcon size={16} />\n        </Pressable>\n\n        <View className=\"flex-1\">\n          <Soundwave\n            variant=\"bars\"\n            levels={note.levels}\n            progress={progress}\n            bars={40}\n            barWidth={2}\n            height={28}\n          />\n        </View>\n\n        <Text size=\"xs\" muted>0:12</Text>\n      </View>\n    </Message.Bubble>\n  </Message.Content>\n</Message>",
+        "preview": {
+          "src": "/previews/soundwave-voice-notes.jpg",
+          "alt": "Soundwave — A voice note.",
+          "width": 1179,
+          "height": 882
+        }
+      },
+      {
+        "title": "Real frequency bands",
+        "description": "If your app already runs an analysis, hand the bands over directly with `levels` and `bars` in `static` mode draws them instead of synthesising a shape. They are resampled to the bar count, so the two numbers do not have to match.",
+        "code": "<Soundwave variant=\"bars\" levels={bands} bars={24} />"
+      },
+      {
+        "title": "The state, when there is no level yet",
+        "description": "`state` always sets what a screen reader announces. With no `level` supplied it also picks the motion: `idle` barely breathes, `listening` and `speaking` run layered waves at unrelated tempi so neither repeats on a beat, and `thinking` is slower and shallower than both.",
+        "code": "<Soundwave variant=\"line\" state=\"speaking\" />\n<Soundwave variant=\"line\" state=\"thinking\" />\n<Soundwave variant=\"line\" state=\"idle\" />"
+      },
+      {
+        "title": "Ambient, over a whole screen",
+        "description": "`ambient` positions itself absolutely and takes no touches, so it goes behind a screen's content rather than wrapping it. `radius` traces the screen's own corners. It takes its colour from `--color-info` rather than the foreground, since a bloom in the text colour reads as a shadow.",
+        "code": "<View className=\"flex-1\">\n  <Soundwave variant=\"ambient\" state=\"listening\" level={level} radius={40} />\n\n  <View className=\"flex-1 items-center justify-center\">\n    <Text size=\"xl\">Start chatting anytime</Text>\n  </View>\n</View>"
+      },
+      {
+        "title": "Colour",
+        "description": "`color` takes a literal colour or a **theme token name**, which resolves against the active theme and follows it into dark mode. `gradient` paints across the wave instead of one flat ink — left to right for `bars` and `line`, up from the bottom edge for `ambient`. `trackColor` sets the part of a recording that has not played yet, which otherwise draws as the ink turned down.",
+        "code": "{/* Follows the theme. */}\n<Soundwave variant=\"bars\" color=\"--color-info\" />\n\n{/* Or a colour of your own. */}\n<Soundwave variant=\"bars\" color=\"#f97316\" />\n\n{/* Across the wave. */}\n<Soundwave variant=\"line\" gradient={['#6366f1', '#ec4899', '#f59e0b']} />\n\n{/* Played and unplayed, separately. */}\n<Soundwave\n  variant=\"bars\"\n  levels={note.levels}\n  progress={progress}\n  color=\"--color-success\"\n  trackColor=\"--color-muted\"\n/>",
+        "previewVideo": {
+          "src": "/previews/soundwave-colour.mp4",
+          "poster": "/previews/soundwave-colour-poster.jpg",
+          "alt": "Soundwave — Colour.",
+          "width": 720,
+          "height": 876
+        }
+      }
+    ],
+    "versions": [
+      {
+        "title": "Capsules",
+        "description": "The voice-mode screen: a few big capsules over a microphone button. Each capsule runs at its own hashed tempo and phase, so the group responds to one level without moving as a block, and the middle ones lead — a flat profile reads as a progress bar.",
+        "code": "<Soundwave\n  variant=\"pills\"\n  state=\"listening\"\n  level={level}\n  height={120}\n  barWidth={34}\n  barGap={12}\n/>"
+      },
+      {
+        "title": "Metering bars",
+        "description": "The same strip in both modes, at the size it is actually used: static bands, a scrolling history, and a compact recording row with a duration beside it.",
+        "code": "<Soundwave variant=\"bars\" mode=\"static\" level={level} height={64} />\n\n<Soundwave variant=\"bars\" mode=\"scrolling\" level={level} height={64} />"
+      },
+      {
+        "title": "Travelling wave",
+        "description": "One ribbon, tapered to nothing at both ends so it leaves and meets the edges flat instead of stopping at a hard cut. Shown at full size with a state switcher, and again inline under a reply.",
+        "code": "<Soundwave variant=\"line\" state=\"speaking\" height={96} />\n\n// Inline in a bubble, where the stroke has to be finer.\n<Soundwave variant=\"line\" state=\"speaking\" height={36} barWidth={2} />",
+        "previewVideo": {
+          "src": "/previews/soundwave-travelling-wave.mp4",
+          "poster": "/previews/soundwave-travelling-wave-poster.jpg",
+          "alt": "Soundwave — Travelling wave.",
+          "width": 720,
+          "height": 1056
+        }
+      },
+      {
+        "title": "Ambient glow",
+        "description": "A bloom rising off the bottom edge and a rim of light around the rest, both breathing on the level — a glow that only changes opacity reads as a screen dimming, one that also grows reads as something in the room getting louder.",
+        "code": "<Soundwave variant=\"ambient\" state=\"listening\" level={level} radius={40} />",
+        "previewVideo": {
+          "src": "/previews/soundwave-ambient-glow.mp4",
+          "poster": "/previews/soundwave-ambient-glow-poster.jpg",
+          "alt": "Soundwave — Ambient glow.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "Voice notes",
+        "description": "Recorded waveforms in bubbles, filling as they play. Each note stores forty numbers rather than the audio, so the wave draws instantly on scroll — decoding a file to work out a bar chart is work no phone should repeat.",
+        "code": "<Soundwave\n  variant=\"bars\"\n  levels={note.levels}\n  progress={progress}\n  bars={40}\n  barWidth={2}\n  height={28}\n/>"
+      },
+      {
+        "title": "Recording composer",
+        "description": "A composer that turns into a recorder over a live transcript: the last few seconds slide past in `scrolling` mode while a timer runs, cancel throws the recording away, and send appends it to the thread as a note.",
+        "code": "<Soundwave\n  variant=\"bars\"\n  mode=\"scrolling\"\n  level={level}\n  bars={32}\n  barWidth={3}\n  height={36}\n/>",
+        "previewVideo": {
+          "src": "/previews/soundwave-recording-composer.mp4",
+          "poster": "/previews/soundwave-recording-composer-poster.jpg",
+          "alt": "Soundwave — Recording composer.",
+          "width": 720,
+          "height": 1560
+        }
+      }
+    ],
+    "notes": "**Nothing here touches the microphone.** Recording, permissions and the audio session stay in your app; this takes the number that falls out of them. There is a full walkthrough in [Voice](/docs/ai/voice) — metering, an assistant loop, and voice notes.\n\nLevels are smoothed with a fast attack and a slow release, which is what makes a meter read as a meter — it snaps up on a syllable and falls back gently instead of chattering around every sample. `sensitivity` multiplies the incoming value before it is clamped, for a quiet source.\n\n**Ink follows the surface.** A wave inside something that publishes a foreground — a chat bubble, a button — is drawn in that foreground rather than the page's, because a sent bubble is painted in the primary colour and in most themes the primary colour *is* the text colour. `ambient` opts out: it is a glow behind a screen, not ink on a surface.\n\nAnything above that is a prop: `color` (a colour or a theme token name), `gradient` across the wave, and `trackColor` for the unplayed part of a recording. Only `gradient` needs literal colours — resolve tokens with `useCSSVariable` if you want a themed one.\n\n`bars` and `line` are drawn as a single animated SVG path — one segment per bar with a round cap — so forty bars cost one animated prop a frame rather than forty animated views. With `progress` it is two: one for the played part, one for the rest. Both measure their own width, so they need a parent with one.\n\n`paused` and the system's reduced-motion setting both hold a representative frame rather than clearing to a flat line: a stopped wave is not an empty one.",
+    "previewVideo": {
+      "src": "/previews/soundwave.mp4",
+      "poster": "/previews/soundwave-poster.jpg",
+      "alt": "The Soundwave component, running in the example app.",
+      "width": 720,
+      "height": 1120
+    }
+  },
   "spinner": {
     "intro": "An indeterminate loading indicator. `Button` renders one for you when `loading` is set.",
     "usage": "<Spinner />\n<Spinner size=\"lg\" />",
@@ -3105,6 +3275,71 @@
       "height": 584
     }
   },
+  "thinking-orb": {
+    "intro": "A spinner says “busy”. This says *which kind of busy*: particles running tilted orbits for work in flight, a scan meridian sweeping a globe for a search, bands that scramble and click back for a solve. Six states, each a distinct silhouette in motion, so a glance is enough.",
+    "usage": "<ThinkingOrb state=\"searching\" />\n\n// The small tuning, for a line of text.\n<ThinkingOrb state=\"working\" size={20} />",
+    "extraImports": [
+      "Message",
+      "Shimmer",
+      "Text"
+    ],
+    "examples": [
+      {
+        "title": "The six states",
+        "description": "Pick the one that matches what is actually happening. The states are not interchangeable decoration — the whole reason to use this instead of a spinner is that the shape in motion tells the reader something, and a `solving` orb over a network request is a lie.",
+        "code": "<ThinkingOrb state=\"working\" />     {/* running a task */}\n<ThinkingOrb state=\"searching\" />   {/* looking something up */}\n<ThinkingOrb state=\"solving\" />     {/* working a problem out */}\n<ThinkingOrb state=\"listening\" />   {/* taking input */}\n<ThinkingOrb state=\"composing\" />   {/* writing a reply */}\n<ThinkingOrb state=\"shaping\" />     {/* forming a structure */}"
+      },
+      {
+        "title": "Inline in a streaming reply",
+        "description": "At or below 32px the orb switches to a different tuning — far fewer, proportionally much larger dots, moving faster. It is a separate design, not the large one scaled down, because a faithful lattice at that size is grey mush. Pair it with `Shimmer` and the two say the same thing in two registers.",
+        "code": "<Message>\n  <Message.Avatar>\n    <Avatar size=\"sm\" fallback=\"AI\" />\n  </Message.Avatar>\n  <Message.Content>\n    <Message.Bubble>\n      <View className=\"flex-row items-center gap-2\">\n        <ThinkingOrb state=\"searching\" size={20} />\n        <Shimmer>Searching the docs…</Shimmer>\n      </View>\n    </Message.Bubble>\n  </Message.Content>\n</Message>"
+      },
+      {
+        "title": "Speed, pause and colour",
+        "description": "`speed` multiplies the state's own tuning and can change mid-animation without the orb jumping. `paused` holds the current frame rather than clearing it — a still orb is not an empty one. `color` overrides the ink, which is otherwise `--color-foreground` so the orb inverts with the theme.",
+        "code": "<ThinkingOrb state=\"working\" speed={1.6} />\n\n<ThinkingOrb state=\"working\" paused={busy === false} />\n\n<ThinkingOrb state=\"composing\" color=\"#22c55e\" />",
+        "previewVideo": {
+          "src": "/previews/thinking-orb-speed-and-pause.mp4",
+          "poster": "/previews/thinking-orb-speed-and-pause-poster.jpg",
+          "alt": "ThinkingOrb — Speed, pause and colour.",
+          "width": 720,
+          "height": 1450
+        }
+      }
+    ],
+    "versions": [
+      {
+        "title": "The six states",
+        "description": "Each one side by side at the large tuning, so the silhouettes can be compared. They are not interchangeable decoration — the shape in motion is the message.",
+        "code": "{[\"working\", \"searching\", \"solving\", \"listening\", \"composing\", \"shaping\"].map((state) => (\n  <Item key={state}>\n    <Item.Media>\n      <ThinkingOrb state={state} size={56} />\n    </Item.Media>\n    <Item.Content>\n      <Item.Title>{state}</Item.Title>\n    </Item.Content>\n  </Item>\n))}"
+      },
+      {
+        "title": "Inline in a reply",
+        "description": "The small tuning, in a line of chat text beside a `Shimmer`. Below 32px the orb switches to far fewer, much larger dots moving faster — the motion has to read at a size where the dots barely do.",
+        "code": "<Message.Bubble>\n  <View className=\"flex-row items-center gap-2\">\n    <ThinkingOrb state=\"searching\" size={20} />\n    <Shimmer>Searching the docs…</Shimmer>\n  </View>\n</Message.Bubble>",
+        "previewVideo": {
+          "src": "/previews/thinking-orb-inline-in-a-reply.mp4",
+          "poster": "/previews/thinking-orb-inline-in-a-reply-poster.jpg",
+          "alt": "ThinkingOrb — Inline in a reply.",
+          "width": 720,
+          "height": 1456
+        }
+      },
+      {
+        "title": "Speed and pause",
+        "description": "`speed` multiplies the state's own tuning and can change mid-animation without the orb jumping. `paused` holds the current frame rather than clearing it — a still orb is not an empty one.",
+        "code": "const [speed, setSpeed] = useState(1);\nconst [paused, setPaused] = useState(false);\n\n<ThinkingOrb state=\"working\" size={140} speed={speed} paused={paused} />\n\n<Slider min={0.2} max={3} step={0.1} value={speed} onValueChange={setSpeed} />\n<Switch value={paused} onValueChange={setPaused} />"
+      }
+    ],
+    "notes": "### How it is drawn\n\nThe geometry is honestly three-dimensional — points on a sphere, rotated and tilted, projected orthographically, with depth carried by dot size and ink weight. React Native has no 2D canvas to paint that into, and one animated SVG node per dot would be two hundred native prop writes a frame, which no amount of tuning survives.\n\nSo the dots are quantised into eight ink levels and each level is emitted as a *single* path of circle arcs. Eight animated props a frame whatever the dot count, and depth ordering comes free — depth is what drives the ink in the first place, so painting faint to strong paints far to near. Everything from the trigonometry to the path strings runs in one worklet on the UI thread; React renders once and then never again.\n\n### Size is two designs, not a scale\n\nTwo tunings ship. At or below 32px the orb uses far fewer, proportionally much larger dots moving faster, because the motion has to read at a size where the individual dots barely do. Sizes in between are scaled from the nearer tuning; the dot radii scale sub-linearly, which is what keeps a small orb from becoming a smudge and a large one from becoming beads.\n\n### Motion and accessibility\n\n`role=\"img\"` with a per-state label out of the box; `accessibilityLabel` overrides it with something more specific — “Analysing the repository…” beats “Searching”. Under `prefers-reduced-motion` the orb renders one representative frame and stops, which is why a paused orb still shows a shape.",
+    "previewVideo": {
+      "src": "/previews/thinking-orb.mp4",
+      "poster": "/previews/thinking-orb-poster.jpg",
+      "alt": "The ThinkingOrb component, running in the example app.",
+      "width": 720,
+      "height": 1456
+    }
+  },
   "timeline": {
     "intro": "A vertical sequence of events. `value` marks how far along the sequence is; `tone` colours an individual event by kind, independently of that progress.\n\nVertical only — a horizontal timeline gives each item roughly a fifth of a phone's width, which will not hold a date and a title.",
     "usage": "<Timeline variant=\"icon\" value={2}>\n  {events.map((event, index) => (\n    <Timeline.Item\n      key={event.title}\n      step={index}\n      tone={event.tone}\n      last={index === events.length - 1}\n    >\n      <Timeline.Aside>\n        <Timeline.Date>{event.time}</Timeline.Date>\n        <Timeline.Label>{event.team}</Timeline.Label>\n      </Timeline.Aside>\n      <Timeline.Indicator>\n        <ShieldCheckIcon size={15} />\n      </Timeline.Indicator>\n      <Timeline.Content>\n        <Timeline.Header>\n          <Timeline.Title>{event.title}</Timeline.Title>\n          <Timeline.Trailing>{event.at}</Timeline.Trailing>\n        </Timeline.Header>\n        <Timeline.Description>{event.body}</Timeline.Description>\n      </Timeline.Content>\n    </Timeline.Item>\n  ))}\n</Timeline>",
@@ -3363,192 +3598,6 @@
       "alt": "The Typography component, running in the example app.",
       "width": 1179,
       "height": 1009
-    }
-  },
-  "thinking-orb": {
-    "intro": "A spinner says “busy”. This says *which kind of busy*: particles running tilted orbits for work in flight, a scan meridian sweeping a globe for a search, bands that scramble and click back for a solve. Six states, each a distinct silhouette in motion, so a glance is enough.",
-    "usage": "<ThinkingOrb state=\"searching\" />\n\n// The small tuning, for a line of text.\n<ThinkingOrb state=\"working\" size={20} />",
-    "extraImports": [
-      "Message",
-      "Shimmer",
-      "Text"
-    ],
-    "examples": [
-      {
-        "title": "The six states",
-        "description": "Pick the one that matches what is actually happening. The states are not interchangeable decoration — the whole reason to use this instead of a spinner is that the shape in motion tells the reader something, and a `solving` orb over a network request is a lie.",
-        "code": "<ThinkingOrb state=\"working\" />     {/* running a task */}\n<ThinkingOrb state=\"searching\" />   {/* looking something up */}\n<ThinkingOrb state=\"solving\" />     {/* working a problem out */}\n<ThinkingOrb state=\"listening\" />   {/* taking input */}\n<ThinkingOrb state=\"composing\" />   {/* writing a reply */}\n<ThinkingOrb state=\"shaping\" />     {/* forming a structure */}"
-      },
-      {
-        "title": "Inline in a streaming reply",
-        "description": "At or below 32px the orb switches to a different tuning — far fewer, proportionally much larger dots, moving faster. It is a separate design, not the large one scaled down, because a faithful lattice at that size is grey mush. Pair it with `Shimmer` and the two say the same thing in two registers.",
-        "code": "<Message>\n  <Message.Avatar>\n    <Avatar size=\"sm\" fallback=\"AI\" />\n  </Message.Avatar>\n  <Message.Content>\n    <Message.Bubble>\n      <View className=\"flex-row items-center gap-2\">\n        <ThinkingOrb state=\"searching\" size={20} />\n        <Shimmer>Searching the docs…</Shimmer>\n      </View>\n    </Message.Bubble>\n  </Message.Content>\n</Message>"
-      },
-      {
-        "title": "Speed, pause and colour",
-        "description": "`speed` multiplies the state's own tuning and can change mid-animation without the orb jumping. `paused` holds the current frame rather than clearing it — a still orb is not an empty one. `color` overrides the ink, which is otherwise `--color-foreground` so the orb inverts with the theme.",
-        "code": "<ThinkingOrb state=\"working\" speed={1.6} />\n\n<ThinkingOrb state=\"working\" paused={busy === false} />\n\n<ThinkingOrb state=\"composing\" color=\"#22c55e\" />",
-        "previewVideo": {
-          "src": "/previews/thinking-orb-speed-and-pause.mp4",
-          "poster": "/previews/thinking-orb-speed-and-pause-poster.jpg",
-          "alt": "ThinkingOrb — Speed, pause and colour.",
-          "width": 720,
-          "height": 1450
-        }
-      }
-    ],
-    "versions": [
-      {
-        "title": "The six states",
-        "description": "Each one side by side at the large tuning, so the silhouettes can be compared. They are not interchangeable decoration — the shape in motion is the message.",
-        "code": "{[\"working\", \"searching\", \"solving\", \"listening\", \"composing\", \"shaping\"].map((state) => (\n  <Item key={state}>\n    <Item.Media>\n      <ThinkingOrb state={state} size={56} />\n    </Item.Media>\n    <Item.Content>\n      <Item.Title>{state}</Item.Title>\n    </Item.Content>\n  </Item>\n))}"
-      },
-      {
-        "title": "Inline in a reply",
-        "description": "The small tuning, in a line of chat text beside a `Shimmer`. Below 32px the orb switches to far fewer, much larger dots moving faster — the motion has to read at a size where the dots barely do.",
-        "code": "<Message.Bubble>\n  <View className=\"flex-row items-center gap-2\">\n    <ThinkingOrb state=\"searching\" size={20} />\n    <Shimmer>Searching the docs…</Shimmer>\n  </View>\n</Message.Bubble>",
-        "previewVideo": {
-          "src": "/previews/thinking-orb-inline-in-a-reply.mp4",
-          "poster": "/previews/thinking-orb-inline-in-a-reply-poster.jpg",
-          "alt": "ThinkingOrb — Inline in a reply.",
-          "width": 720,
-          "height": 1456
-        }
-      },
-      {
-        "title": "Speed and pause",
-        "description": "`speed` multiplies the state's own tuning and can change mid-animation without the orb jumping. `paused` holds the current frame rather than clearing it — a still orb is not an empty one.",
-        "code": "const [speed, setSpeed] = useState(1);\nconst [paused, setPaused] = useState(false);\n\n<ThinkingOrb state=\"working\" size={140} speed={speed} paused={paused} />\n\n<Slider min={0.2} max={3} step={0.1} value={speed} onValueChange={setSpeed} />\n<Switch value={paused} onValueChange={setPaused} />"
-      }
-    ],
-    "notes": "### How it is drawn\n\nThe geometry is honestly three-dimensional — points on a sphere, rotated and tilted, projected orthographically, with depth carried by dot size and ink weight. React Native has no 2D canvas to paint that into, and one animated SVG node per dot would be two hundred native prop writes a frame, which no amount of tuning survives.\n\nSo the dots are quantised into eight ink levels and each level is emitted as a *single* path of circle arcs. Eight animated props a frame whatever the dot count, and depth ordering comes free — depth is what drives the ink in the first place, so painting faint to strong paints far to near. Everything from the trigonometry to the path strings runs in one worklet on the UI thread; React renders once and then never again.\n\n### Size is two designs, not a scale\n\nTwo tunings ship. At or below 32px the orb uses far fewer, proportionally much larger dots moving faster, because the motion has to read at a size where the individual dots barely do. Sizes in between are scaled from the nearer tuning; the dot radii scale sub-linearly, which is what keeps a small orb from becoming a smudge and a large one from becoming beads.\n\n### Motion and accessibility\n\n`role=\"img\"` with a per-state label out of the box; `accessibilityLabel` overrides it with something more specific — “Analysing the repository…” beats “Searching”. Under `prefers-reduced-motion` the orb renders one representative frame and stops, which is why a paused orb still shows a shape.",
-    "previewVideo": {
-      "src": "/previews/thinking-orb.mp4",
-      "poster": "/previews/thinking-orb-poster.jpg",
-      "alt": "The ThinkingOrb component, running in the example app.",
-      "width": 720,
-      "height": 1456
-    }
-  },
-  "soundwave": {
-    "intro": "Draws the level of a voice, in four looks: capsules over a microphone button, a metering strip for a transcript, a travelling wave for a reply being spoken, and an ambient glow that fills a screen.\n\nIt draws a level; it does not record one. Your app owns the recorder and hands over a number between 0 and 1 — so there is no audio dependency here, and the same component works against a real meter, a synthesised one, or a remote peer's. With no level at all it animates plausible motion for the current `state`, which is enough to build and review a voice screen before any audio exists.",
-    "usage": "<Soundwave variant=\"pills\" state=\"listening\" level={level} />",
-    "extraImports": [
-      "Card",
-      "Message",
-      "MicIcon",
-      "Text"
-    ],
-    "examples": [
-      {
-        "title": "Driving it from a recorder",
-        "description": "A recorder reports every 30–60ms. Putting that in React state is dozens of renders a second for a number that only moves pixels, so `level` also takes a `SharedValue` — write metering straight into it and nothing above the wave re-renders. A plain number is accepted too, and smoothed identically; it is the right choice for something slow, like a server-side speaking flag.",
-        "code": "const level = useSharedValue(0);\n\nuseEffect(() => {\n  recorder.onMetering(({ db }) => {\n    // dBFS is negative and logarithmic; the wave wants 0–1.\n    level.value = Math.max(0, (db + 60) / 60);\n  });\n}, [level]);\n\n<Soundwave variant=\"pills\" level={level} />"
-      },
-      {
-        "title": "A metering strip in a transcript",
-        "description": "`static` gives every bar a band of the current level, for a live meter. `scrolling` keeps a history that slides across with the newest sample at the trailing edge, for a recording in progress. `centered` decides whether bars grow from the middle out or up from a baseline.",
-        "code": "<Card>\n  <Card.Content className=\"flex-row items-center gap-3 p-4\">\n    <MicIcon size={18} />\n    <View className=\"flex-1\">\n      <Soundwave\n        variant=\"bars\"\n        mode=\"scrolling\"\n        centered={false}\n        bars={28}\n        barWidth={5}\n        height={40}\n        level={level}\n      />\n    </View>\n    <Text size=\"sm\" muted>0:12</Text>\n  </Card.Content>\n</Card>"
-      },
-      {
-        "title": "A voice note",
-        "description": "`levels` is the shape of a finished recording — collect the metering while recording and store the numbers beside the file. Supplying it draws the wave still rather than animated, and stops the engine entirely, so a transcript of twenty notes runs no animation at all until one is played. `progress` is the playhead: bars behind it keep full ink and the rest are dimmed.",
-        "code": "const player = useAudioPlayer(note.uri);\nconst status = useAudioPlayerStatus(player);\nconst progress = status.duration ? status.currentTime / status.duration : 0;\n\n<Message align=\"end\">\n  <Message.Content>\n    <Message.Bubble>\n      <View className=\"w-64 flex-row items-center gap-3\">\n        <Pressable onPress={() => player.play()}>\n          <PlayIcon size={16} />\n        </Pressable>\n\n        <View className=\"flex-1\">\n          <Soundwave\n            variant=\"bars\"\n            levels={note.levels}\n            progress={progress}\n            bars={40}\n            barWidth={2}\n            height={28}\n          />\n        </View>\n\n        <Text size=\"xs\" muted>0:12</Text>\n      </View>\n    </Message.Bubble>\n  </Message.Content>\n</Message>",
-        "preview": {
-          "src": "/previews/soundwave-voice-notes.jpg",
-          "alt": "Soundwave — A voice note.",
-          "width": 1179,
-          "height": 882
-        }
-      },
-      {
-        "title": "Real frequency bands",
-        "description": "If your app already runs an analysis, hand the bands over directly with `levels` and `bars` in `static` mode draws them instead of synthesising a shape. They are resampled to the bar count, so the two numbers do not have to match.",
-        "code": "<Soundwave variant=\"bars\" levels={bands} bars={24} />"
-      },
-      {
-        "title": "The state, when there is no level yet",
-        "description": "`state` always sets what a screen reader announces. With no `level` supplied it also picks the motion: `idle` barely breathes, `listening` and `speaking` run layered waves at unrelated tempi so neither repeats on a beat, and `thinking` is slower and shallower than both.",
-        "code": "<Soundwave variant=\"line\" state=\"speaking\" />\n<Soundwave variant=\"line\" state=\"thinking\" />\n<Soundwave variant=\"line\" state=\"idle\" />"
-      },
-      {
-        "title": "Ambient, over a whole screen",
-        "description": "`ambient` positions itself absolutely and takes no touches, so it goes behind a screen's content rather than wrapping it. `radius` traces the screen's own corners. It takes its colour from `--color-info` rather than the foreground, since a bloom in the text colour reads as a shadow.",
-        "code": "<View className=\"flex-1\">\n  <Soundwave variant=\"ambient\" state=\"listening\" level={level} radius={40} />\n\n  <View className=\"flex-1 items-center justify-center\">\n    <Text size=\"xl\">Start chatting anytime</Text>\n  </View>\n</View>"
-      },
-      {
-        "title": "Colour",
-        "description": "`color` takes a literal colour or a **theme token name**, which resolves against the active theme and follows it into dark mode. `gradient` paints across the wave instead of one flat ink — left to right for `bars` and `line`, up from the bottom edge for `ambient`. `trackColor` sets the part of a recording that has not played yet, which otherwise draws as the ink turned down.",
-        "code": "{/* Follows the theme. */}\n<Soundwave variant=\"bars\" color=\"--color-info\" />\n\n{/* Or a colour of your own. */}\n<Soundwave variant=\"bars\" color=\"#f97316\" />\n\n{/* Across the wave. */}\n<Soundwave variant=\"line\" gradient={['#6366f1', '#ec4899', '#f59e0b']} />\n\n{/* Played and unplayed, separately. */}\n<Soundwave\n  variant=\"bars\"\n  levels={note.levels}\n  progress={progress}\n  color=\"--color-success\"\n  trackColor=\"--color-muted\"\n/>",
-        "previewVideo": {
-          "src": "/previews/soundwave-colour.mp4",
-          "poster": "/previews/soundwave-colour-poster.jpg",
-          "alt": "Soundwave — Colour.",
-          "width": 720,
-          "height": 876
-        }
-      }
-    ],
-    "versions": [
-      {
-        "title": "Capsules",
-        "description": "The voice-mode screen: a few big capsules over a microphone button. Each capsule runs at its own hashed tempo and phase, so the group responds to one level without moving as a block, and the middle ones lead — a flat profile reads as a progress bar.",
-        "code": "<Soundwave\n  variant=\"pills\"\n  state=\"listening\"\n  level={level}\n  height={120}\n  barWidth={34}\n  barGap={12}\n/>"
-      },
-      {
-        "title": "Metering bars",
-        "description": "The same strip in both modes, at the size it is actually used: static bands, a scrolling history, and a compact recording row with a duration beside it.",
-        "code": "<Soundwave variant=\"bars\" mode=\"static\" level={level} height={64} />\n\n<Soundwave variant=\"bars\" mode=\"scrolling\" level={level} height={64} />"
-      },
-      {
-        "title": "Travelling wave",
-        "description": "One ribbon, tapered to nothing at both ends so it leaves and meets the edges flat instead of stopping at a hard cut. Shown at full size with a state switcher, and again inline under a reply.",
-        "code": "<Soundwave variant=\"line\" state=\"speaking\" height={96} />\n\n// Inline in a bubble, where the stroke has to be finer.\n<Soundwave variant=\"line\" state=\"speaking\" height={36} barWidth={2} />",
-        "previewVideo": {
-          "src": "/previews/soundwave-travelling-wave.mp4",
-          "poster": "/previews/soundwave-travelling-wave-poster.jpg",
-          "alt": "Soundwave — Travelling wave.",
-          "width": 720,
-          "height": 1056
-        }
-      },
-      {
-        "title": "Ambient glow",
-        "description": "A bloom rising off the bottom edge and a rim of light around the rest, both breathing on the level — a glow that only changes opacity reads as a screen dimming, one that also grows reads as something in the room getting louder.",
-        "code": "<Soundwave variant=\"ambient\" state=\"listening\" level={level} radius={40} />",
-        "previewVideo": {
-          "src": "/previews/soundwave-ambient-glow.mp4",
-          "poster": "/previews/soundwave-ambient-glow-poster.jpg",
-          "alt": "Soundwave — Ambient glow.",
-          "width": 720,
-          "height": 1560
-        }
-      },
-      {
-        "title": "Voice notes",
-        "description": "Recorded waveforms in bubbles, filling as they play. Each note stores forty numbers rather than the audio, so the wave draws instantly on scroll — decoding a file to work out a bar chart is work no phone should repeat.",
-        "code": "<Soundwave\n  variant=\"bars\"\n  levels={note.levels}\n  progress={progress}\n  bars={40}\n  barWidth={2}\n  height={28}\n/>"
-      },
-      {
-        "title": "Recording composer",
-        "description": "A composer that turns into a recorder over a live transcript: the last few seconds slide past in `scrolling` mode while a timer runs, cancel throws the recording away, and send appends it to the thread as a note.",
-        "code": "<Soundwave\n  variant=\"bars\"\n  mode=\"scrolling\"\n  level={level}\n  bars={32}\n  barWidth={3}\n  height={36}\n/>",
-        "previewVideo": {
-          "src": "/previews/soundwave-recording-composer.mp4",
-          "poster": "/previews/soundwave-recording-composer-poster.jpg",
-          "alt": "Soundwave — Recording composer.",
-          "width": 720,
-          "height": 1560
-        }
-      }
-    ],
-    "notes": "**Nothing here touches the microphone.** Recording, permissions and the audio session stay in your app; this takes the number that falls out of them. There is a full walkthrough in [Voice](/docs/ai/voice) — metering, an assistant loop, and voice notes.\n\nLevels are smoothed with a fast attack and a slow release, which is what makes a meter read as a meter — it snaps up on a syllable and falls back gently instead of chattering around every sample. `sensitivity` multiplies the incoming value before it is clamped, for a quiet source.\n\n**Ink follows the surface.** A wave inside something that publishes a foreground — a chat bubble, a button — is drawn in that foreground rather than the page's, because a sent bubble is painted in the primary colour and in most themes the primary colour *is* the text colour. `ambient` opts out: it is a glow behind a screen, not ink on a surface.\n\nAnything above that is a prop: `color` (a colour or a theme token name), `gradient` across the wave, and `trackColor` for the unplayed part of a recording. Only `gradient` needs literal colours — resolve tokens with `useCSSVariable` if you want a themed one.\n\n`bars` and `line` are drawn as a single animated SVG path — one segment per bar with a round cap — so forty bars cost one animated prop a frame rather than forty animated views. With `progress` it is two: one for the played part, one for the rest. Both measure their own width, so they need a parent with one.\n\n`paused` and the system's reduced-motion setting both hold a representative frame rather than clearing to a flat line: a stopped wave is not an empty one.",
-    "previewVideo": {
-      "src": "/previews/soundwave.mp4",
-      "poster": "/previews/soundwave-poster.jpg",
-      "alt": "The Soundwave component, running in the example app.",
-      "width": 720,
-      "height": 1120
     }
   }
 }

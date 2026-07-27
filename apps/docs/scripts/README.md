@@ -34,6 +34,11 @@ S=./scripts node scripts/gen.mjs       # api.json + usage.json -> MDX
   its API last changed in — grey dot). Both dots expire three minor releases later, so neither
   has to be cleared by hand, and neither `status` field is ever written into an MDX file
   directly.
+
+  `alpha` and `beta` are the exceptions: they are set and cleared by hand and never expire,
+  because they state how settled the API is rather than which release it landed in. `alpha`
+  means it is still moving, `beta` that it has stopped but has not been used enough to promise
+  it will not move again. A component carries at most one, and either outranks both dots.
 - `gen.mjs` merges the two and writes the MDX.
 
 Every component page must carry worked `examples` — a props table says a prop exists, an

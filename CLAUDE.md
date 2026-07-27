@@ -99,10 +99,12 @@ object. Four keys live there:
   redirect in `apps/docs/next.config.mjs` when you do.
 - **`addedIn`** — the version the component first ships in. Set it when adding a component, to
   the version you are about to release.
-- **`alpha`** — the component's API is still moving. Unlike the other two this is set and
-  cleared by hand and never expires, because it is a statement about how settled the API is
-  rather than about which release it landed in. It renders as a purple **Alpha** pill and wins
-  over both dots.
+- **`alpha`** / **`beta`** — how settled the API is. Unlike the other two these are set and
+  cleared by hand and never expire, because they are statements about how settled the API is
+  rather than about which release it landed in. `alpha` means it is still moving; `beta` that
+  it has stopped but has not seen enough use to promise it will not move again. They render as
+  a purple **Alpha** pill and an amber **Beta** pill, a component carries at most one, and
+  either wins over both dots.
 - **`updatedIn`** — the version a component's API last changed in. Set it when a change is worth
   a reader's attention: a new prop, a renamed or removed variant, a changed default, new
   behaviour. Not for a bug fix that leaves the API alone.

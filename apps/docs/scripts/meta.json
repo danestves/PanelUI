@@ -108,7 +108,7 @@
     {
       "addedIn": "0.19.0",
       "updatedIn": "0.21.0",
-      "alpha": true
+      "beta": true
     }
   ],
   "frame": [
@@ -167,6 +167,15 @@
     "LineChart",
     "Animated time series, drawn on the UI thread.",
     "react native line chart"
+  ],
+  "map": [
+    "Map",
+    "Vector map whose basemap is drawn from your theme tokens.",
+    "react native map maplibre markers clusters",
+    {
+      "addedIn": "0.24.0",
+      "alpha": true
+    }
   ],
   "marker": [
     "Marker",

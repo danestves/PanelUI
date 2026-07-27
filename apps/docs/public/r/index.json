@@ -266,7 +266,7 @@
   {
     "name": "map",
     "type": "registry:ui",
-    "description": "map.",
+    "description": "Vector map whose basemap is drawn from your theme tokens.",
     "registryDependencies": [
       "cn",
       "icons",
