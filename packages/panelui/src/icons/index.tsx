@@ -731,6 +731,39 @@ export function MaximizeIcon({ size = 16, color, ...props }: IconProps) {
   );
 }
 
+/** Crosshairs on a centre dot — put me where I actually am. */
+export function CrosshairIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Circle cx={12} cy={12} r={7} stroke={resolved} strokeWidth={2} />
+      <Path
+        d="M12 2v3M12 19v3M2 12h3M19 12h3"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+      />
+      <Circle cx={12} cy={12} r={1.5} fill={resolved} />
+    </Svg>
+  );
+}
+
+/** A compass needle — which way is north. */
+export function CompassIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Circle cx={12} cy={12} r={9} stroke={resolved} strokeWidth={2} />
+      <Path
+        d="M15.5 8.5l-2 5-5 2 2-5 5-2z"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 /** A closed padlock — the thing behind it cannot be moved. */
 export function LockIcon({ size = 16, color, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#737373');

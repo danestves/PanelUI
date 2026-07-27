@@ -264,6 +264,16 @@
     ]
   },
   {
+    "name": "map",
+    "type": "registry:ui",
+    "description": "map.",
+    "registryDependencies": [
+      "cn",
+      "icons",
+      "text"
+    ]
+  },
+  {
     "name": "marker",
     "type": "registry:ui",
     "description": "Inline note between conversation turns.",

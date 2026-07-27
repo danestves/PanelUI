@@ -64,12 +64,14 @@
   "homepage": "https://github.com/panel-ui/PanelUI#readme",
   "peerDependencies": {
     "@expo/ui": "*",
+    "@maplibre/maplibre-react-native": ">=11.0.0",
     "@react-native-masked-view/masked-view": ">=0.3.0",
     "expo-blur": ">=13.0.0",
     "expo-clipboard": ">=7.0.0",
     "expo-file-system": ">=17.0.0",
     "expo-haptics": ">=13.0.0",
     "expo-linear-gradient": ">=13.0.0",
+    "expo-location": ">=18.0.0",
     "react": "*",
     "react-native": "*",
     "react-native-gesture-handler": ">=2.0.0",
@@ -106,6 +108,9 @@
     "@expo/ui": {
       "optional": true
     },
+    "@maplibre/maplibre-react-native": {
+      "optional": true
+    },
     "expo-blur": {
       "optional": true
     },
@@ -116,6 +121,9 @@
       "optional": true
     },
     "expo-haptics": {
+      "optional": true
+    },
+    "expo-location": {
       "optional": true
     },
     "react-native-keyboard-controller": {

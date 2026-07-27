@@ -29,10 +29,12 @@ const PROVIDED = new Set(['react', 'react-native']);
  */
 const OPTIONAL = new Set([
   '@expo/ui',
+  '@maplibre/maplibre-react-native',
   'expo-blur',
   'expo-clipboard',
   'expo-file-system',
   'expo-haptics',
+  'expo-location',
   'react-native-keyboard-controller',
   'react-native-view-shot',
 ]);
