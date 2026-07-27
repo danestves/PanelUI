@@ -1628,7 +1628,7 @@
       "type LngLat",
       "hasMapLibre"
     ],
-    "anatomy": "<Map>\n  <Map.Marker lngLat={[…]}>\n    <Map.Label>…</Map.Label>\n    <Map.Popup>…</Map.Popup>\n  </Map.Marker>\n  <Map.Route coordinates={[…]} />\n  <Map.Arc from={[…]} to={[…]} />\n  <Map.GeoJSON data={…} />\n  <Map.Cluster data={…} />\n  <Map.UserLocation />\n  <Map.Controls />\n</Map>",
+    "anatomy": "<Map>\n  <Map.Marker lngLat={[…]}>\n    <Map.Label>…</Map.Label>\n    <Map.Popup>…</Map.Popup>\n  </Map.Marker>\n  <Map.Route coordinates={[…]} />\n  <Map.Arc from={[…]} to={[…]} />\n  <Map.GeoJSON data={…} />\n  <Map.Cluster data={…} />\n  <Map.Heatmap data={…} />\n  <Map.UserLocation />\n  <Map.Controls />\n</Map>",
     "parts": {
       "Marker": "A point drawn as React views, so it can hold anything the rest of the library can draw.",
       "Label": "A caption pinned to a marker and always visible, unlike a popup.",
@@ -1638,7 +1638,8 @@
       "Arc": "A curved connection between two points, bowed so arcs sharing an endpoint stay tellable apart.",
       "GeoJSON": "Arbitrary geography as a themed layer. `fill` takes a style expression, which is what makes a choropleth one layer instead of one per bucket.",
       "Cluster": "Dense points merged as they get too close to tell apart — the layer to reach for past a few dozen.",
-      "UserLocation": "The device's own position, drawn by the renderer."
+      "UserLocation": "The device's own position, drawn by the renderer.",
+      "Heatmap": "Point density as a continuous field — the layer for *where*, once the points are too many to count."
     },
     "examples": [
       {
@@ -1696,12 +1697,12 @@
       {
         "title": "Logistics network",
         "description": "Arcs between sites. The bow is not geography — it is there so two lanes sharing a hub stay tellable apart, which a bundle of straight lines through one city does not.",
-        "code": "<Map blank bounds={[-12, 36, 26, 60]}>\n  {lanes.map((lane) => (\n    <Map.Arc\n      key={lane.id}\n      id={lane.id}\n      from={byId[lane.from].lngLat}\n      to={byId[lane.to].lngLat}\n      curvature={0.18}\n    />\n  ))}\n</Map>"
+        "code": "<Map bounds={[-12, 36, 26, 60]}>\n  {lanes.map((lane) => (\n    <Map.Arc\n      key={lane.id}\n      id={lane.id}\n      from={byId[lane.from].lngLat}\n      to={byId[lane.to].lngLat}\n      curvature={0.18}\n    />\n  ))}\n</Map>"
       },
       {
         "title": "Uptime monitor",
-        "description": "Edge nodes coloured by state over a blank world. A marker is a React view, so the status dot is the same one the rest of the app uses.",
-        "code": "<Map blank center={[0, 25]} zoom={1.1}>\n  {nodes.map((node) => (\n    <Map.Marker key={node.id} lngLat={node.lngLat}>\n      <View className=\"items-center\">\n        <View className={dotFor(node.state)} />\n        <Map.Label>{node.id.toUpperCase()}</Map.Label>\n      </View>\n    </Map.Marker>\n  ))}\n</Map>"
+        "description": "Edge nodes coloured by state, spread across the world. A marker is a React view, so the status dot is the same one the rest of the app uses.",
+        "code": "<Map center={[0, 25]} zoom={1.1}>\n  {nodes.map((node) => (\n    <Map.Marker key={node.id} lngLat={node.lngLat}>\n      <View className=\"items-center\">\n        <View className={dotFor(node.state)} />\n        <Map.Label>{node.id.toUpperCase()}</Map.Label>\n      </View>\n    </Map.Marker>\n  ))}\n</Map>"
       },
       {
         "title": "Analytics card",
@@ -1709,7 +1710,10 @@
         "code": "<Card className=\"overflow-hidden\">\n  <LineChart data={week} xDataKey=\"day\" aspectRatio={3}>\n    <LineChart.Area dataKey=\"value\" />\n    <LineChart.Line dataKey=\"value\" />\n  </LineChart>\n  <View className=\"h-44\">\n    <Map blank interactive={false} bounds={[-11, 35, 31, 63]}>\n      <Map.GeoJSON data={countries} fill={ramp} />\n    </Map>\n  </View>\n</Card>"
       }
     ],
-    "notes": "### Why the basemap is assembled rather than downloaded\n\nA hosted style ships its colours baked in, which gives you exactly two maps. Everything here is built from the same tokens as the rest of the library, so `moon`, `grass` and anything you add later get a basemap that matches them without a designer redrawing one per theme.\n\nThe layer list is deliberately short. A full street style runs to ninety-odd layers separating tunnel casings from bridge casings across eleven zoom stops; almost none of that survives being recoloured down to five greys, and every layer is another thing to keep in step with the tokens. What is there is the set that still reads as a map at any zoom: ground, water, green space, buildings, roads, boundaries, and the labels that make them findable.\n\nPass `mapStyle` to skip all of it and use a style wholesale — the escape hatch for a map that has to match something outside the app.\n\n### Tile licensing\n\n`Map` defaults to CARTO's street tiles, which are free for non-commercial use and require a licence from CARTO for commercial use. That is a decision about your project rather than about this component, so `source` takes any provider serving the OpenMapTiles schema.\n\n### Markers or clusters\n\n`Map.Marker` is a React view, which is what lets it hold an avatar, a chip, or anything else the library draws. That also means a marker costs what a view costs. Past a few dozen points use `Map.Cluster`, which draws in a style layer and merges points as they crowd — by the time markers become expensive they have also become unreadable, so the two limits arrive together."
+    "notes": "### Why the basemap is assembled rather than downloaded\n\nA hosted style ships its colours baked in, which gives you exactly two maps. Everything here is built from the same tokens as the rest of the library, so `moon`, `grass` and anything you add later get a basemap that matches them without a designer redrawing one per theme.\n\nThe layer list is deliberately short. A full street style runs to ninety-odd layers separating tunnel casings from bridge casings across eleven zoom stops; almost none of that survives being recoloured down to five greys, and every layer is another thing to keep in step with the tokens. What is there is the set that still reads as a map at any zoom: ground, water, green space, buildings, roads, boundaries, and the labels that make them findable.\n\nPass `mapStyle` to skip all of it and use a style wholesale — the escape hatch for a map that has to match something outside the app.\n\n### Tile licensing\n\n`Map` defaults to CARTO's street tiles, which are free for non-commercial use and require a licence from CARTO for commercial use. That is a decision about your project rather than about this component, so `source` takes any provider serving the OpenMapTiles schema.\n\n### Markers or clusters\n\n`Map.Marker` is a React view, which is what lets it hold an avatar, a chip, or anything else the library draws. That also means a marker costs what a view costs. Past a few dozen points use `Map.Cluster`, which draws in a style layer and merges points as they crowd — by the time markers become expensive they have also become unreadable, so the two limits arrive together.",
+    "hideVariants": [
+      "position"
+    ]
   },
   "marker": {
     "intro": "An inline note in a conversation.\n\nTranscripts are not only messages. Between the turns sit things the conversation *did* rather than said: a tool that ran, a file that was read, the point where yesterday ended. None of those have a speaker, so none of them should look like a bubble. A marker is the quieter row that carries them — small, muted, and aligned to the transcript rather than to a side of it.",

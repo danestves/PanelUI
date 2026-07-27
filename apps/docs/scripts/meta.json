@@ -60,7 +60,7 @@
   ],
   "chip": [
     "Chip",
-    "Interactive pill \u2014 a filter, a tag, or a removable token.",
+    "Interactive pill — a filter, a tag, or a removable token.",
     "react native chip",
     {
       "addedIn": "0.13.0"
@@ -94,7 +94,7 @@
   ],
   "form": [
     "Form",
-    "Form state \u2014 values, validation and submission \u2014 with no form library underneath.",
+    "Form state — values, validation and submission — with no form library underneath.",
     "react native form hook",
     {
       "group": "form",
@@ -113,7 +113,7 @@
   ],
   "frame": [
     "Frame",
-    "Widget shell \u2014 a card of rows sitting in a titled tray.",
+    "Widget shell — a card of rows sitting in a titled tray.",
     "react native list section",
     {
       "updatedIn": "0.19.0"
@@ -174,6 +174,7 @@
     "react native map maplibre markers clusters",
     {
       "addedIn": "0.24.0",
+      "updatedIn": "0.25.0",
       "alpha": true
     }
   ],
@@ -309,7 +310,9 @@
     "Switch",
     "Animated on/off toggle.",
     "react native switch",
-    { "updatedIn": "0.22.0" }
+    {
+      "updatedIn": "0.22.0"
+    }
   ],
   "tabs": [
     "Tabs",

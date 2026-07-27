@@ -61,6 +61,7 @@ npx panelui-cli@latest add map
   <Map.Arc from={[…]} to={[…]} />
   <Map.GeoJSON data={…} />
   <Map.Cluster data={…} />
+  <Map.Heatmap data={…} />
   <Map.UserLocation />
   <Map.Controls />
 </Map>
@@ -74,7 +75,7 @@ npx panelui-cli@latest add map
 - **`Map.Arc`** — A curved connection between two points, bowed so arcs sharing an endpoint stay tellable apart.
 - **`Map.GeoJSON`** — Arbitrary geography as a themed layer. `fill` takes a style expression, which is what makes a choropleth one layer instead of one per bucket.
 - **`Map.Cluster`** — Dense points merged as they get too close to tell apart — the layer to reach for past a few dozen.
-- **`Map.Heatmap`** — See props below.
+- **`Map.Heatmap`** — Point density as a continuous field — the layer for *where*, once the points are too many to count.
 - **`Map.UserLocation`** — The device's own position, drawn by the renderer.
 
 ## Examples
@@ -222,7 +223,7 @@ A list and a map on one selection, so pressing either moves the other.
 Arcs between sites. The bow is not geography — it is there so two lanes sharing a hub stay tellable apart, which a bundle of straight lines through one city does not.
 
 ```tsx
-<Map blank bounds={[-12, 36, 26, 60]}>
+<Map bounds={[-12, 36, 26, 60]}>
   {lanes.map((lane) => (
     <Map.Arc
       key={lane.id}
@@ -237,10 +238,10 @@ Arcs between sites. The bow is not geography — it is there so two lanes sharin
 
 ### Uptime monitor
 
-Edge nodes coloured by state over a blank world. A marker is a React view, so the status dot is the same one the rest of the app uses.
+Edge nodes coloured by state, spread across the world. A marker is a React view, so the status dot is the same one the rest of the app uses.
 
 ```tsx
-<Map blank center={[0, 25]} zoom={1.1}>
+<Map center={[0, 25]} zoom={1.1}>
   {nodes.map((node) => (
     <Map.Marker key={node.id} lngLat={node.lngLat}>
       <View className="items-center">
@@ -268,22 +269,6 @@ The small end of the range — a map as one element inside a card. `interactive=
     </Map>
   </View>
 </Card>
-```
-
-## Variants
-
-### `position`
-
-- `top-left`
-- `top-right`
-- `bottom-left`
-- `bottom-right` *(default)*
-
-```tsx
-<Map position="top-left">…</Map>
-<Map position="top-right">…</Map>
-<Map position="bottom-left">…</Map>
-<Map position="bottom-right">…</Map>
 ```
 
 ## API Reference
@@ -394,7 +379,7 @@ The small end of the range — a map as one element inside a card. `interactive=
 | --- | --- | --- | --- |
 | `data` | `unknown` | — | Point features to spread. |
 | `weight` | `string` | — | Feature property to weight each point by. Unweighted when omitted. |
-| `radius` | `number` | `24` | Spread of a single point, in points. Larger blurs more. |
+| `radius` | `number` | `24` | Spread of a single point, in points, at street zoom. Larger blurs more. The drawn radius shrinks as the map zooms out, so a point keeps covering roughly the same ground rather than the same screen area. |
 | `intensity` | `number` | `1` | Overall strength. Raise it when the data is sparse. |
 | `opacity` | `number` | `0.85` | 0 is invisible, 1 is solid. |
 | `maxZoom` | `number` | `15` | Above this zoom the layer fades out — see the note on the component. |
@@ -404,7 +389,8 @@ The small end of the range — a map as one element inside a card. `interactive=
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `heading` | `boolean` | — | Show which way the device is facing, not just where it is. |
+| `heading` | `boolean` | `false` | Show which way the device is facing, not just where it is. |
+| `accuracy` | `boolean` | `false` | Draw the ring showing how confident the fix is. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 

@@ -267,12 +267,15 @@ const MapRoot = forwardRef<MapHandle, MapProps>(function MapRoot(
       flyTo: ({ center: to, zoom: z, duration = 900 }) =>
         cameraRef.current?.flyTo({ center: to, zoom: z, duration }),
       fitBounds: (box, padding = 48) =>
-        cameraRef.current?.fitBounds(
-          [box[2], box[3]],
-          [box[0], box[1]],
-          padding,
-          900
-        ),
+        cameraRef.current?.fitBounds(box, {
+          padding: {
+            top: padding,
+            right: padding,
+            bottom: padding,
+            left: padding,
+          },
+          duration: 900,
+        }),
       getViewState: async () => (await mapRef.current?.getViewState()) ?? null,
     }),
     []
@@ -321,7 +324,11 @@ const MapRoot = forwardRef<MapHandle, MapProps>(function MapRoot(
         >
           <Camera
             ref={cameraRef}
-            defaultSettings={
+            // The opening position, and only that: this is applied on the
+            // first frame and never again, so a re-render cannot pull the map
+            // back to its starting point mid-gesture. Everything afterwards
+            // goes through the ref.
+            initialViewState={
               bounds
                 ? { bounds }
                 : { center: center ?? [0, 20], zoom, bearing, pitch }
@@ -375,18 +382,36 @@ function MapMarker({
    * well above the coordinate it is meant to mark.
    */
   const popups: ReactNode[] = [];
+  const labels: ReactNode[] = [];
   const content: ReactNode[] = [];
   Children.forEach(children, (child) => {
-    if (isValidElement(child) && child.type === MapPopup) popups.push(child);
-    else content.push(child);
+    if (!isValidElement(child)) {
+      content.push(child);
+    } else if (child.type === MapPopup) {
+      popups.push(child);
+    } else if (child.type === MapLabel) {
+      labels.push(child);
+    } else {
+      content.push(child);
+    }
   });
 
   if (!MapLibre) return null;
   const { Marker } = MapLibre;
 
+  /*
+   * Labels are counted separately from the rest of the children because they
+   * are absolutely positioned, and so contribute nothing to the marker's box.
+   * A marker whose only child is a label would otherwise measure 0×0 — and the
+   * renderer cannot place a zero-sized annotation, so it parks it in the
+   * top-left corner of the map instead of on its coordinate. Falling back to
+   * the default pin keeps the box real, which is also the right drawing: a
+   * label with nothing to label is a caption floating on its own.
+   */
   const body = (
     <View className={cn('items-center', className)}>
       {content.length > 0 ? content : <View className={slots.pin()} />}
+      {labels}
     </View>
   );
 
@@ -953,7 +978,11 @@ export interface MapHeatmapProps {
   data: unknown;
   /** Feature property to weight each point by. Unweighted when omitted. */
   weight?: string;
-  /** Spread of a single point, in points. Larger blurs more. */
+  /**
+   * Spread of a single point, in points, at street zoom. Larger blurs more.
+   * The drawn radius shrinks as the map zooms out, so a point keeps covering
+   * roughly the same ground rather than the same screen area.
+   */
   radius?: number;
   /** Overall strength. Raise it when the data is sparse. */
   intensity?: number;
@@ -975,6 +1004,12 @@ export interface MapHeatmapProps {
  * It fades out past `maxZoom` on purpose. Zoomed far enough in, every point is
  * its own island and the blur says less than the points would — so the layer
  * gets out of the way rather than smearing five records across a street.
+ *
+ * The radius is tied to zoom for the mirror-image reason. Left as a fixed
+ * number of screen points it would mean a different distance at every zoom:
+ * a blur that reads as a city at street level covers half a continent once
+ * the map is pulled out, and a field measured over land ends up sitting in
+ * the sea. Scaling it with the projection keeps the claim the same one.
  */
 function MapHeatmap({
   data,
@@ -1003,7 +1038,22 @@ function MapHeatmap({
             ? ['interpolate', ['linear'], ['get', weight], 0, 0, 1, 1]
             : 1,
           heatmapIntensity: intensity,
-          heatmapRadius: radius,
+          // `radius` is the spread at street zoom; below that it is scaled
+          // down so it keeps covering the same ground rather than the same
+          // number of pixels. The stops are the projection: each zoom level
+          // halves the ground a pixel covers, so the radius halves with it,
+          // floored so the field stays visible at world zoom.
+          heatmapRadius: [
+            'interpolate',
+            ['exponential', 2],
+            ['zoom'],
+            0,
+            Math.max(2, radius / 10),
+            8,
+            Math.max(6, radius / 1.8),
+            14,
+            radius,
+          ],
           // Transparent at zero rather than the coolest colour, so the map
           // shows through everywhere nothing was measured instead of the whole
           // viewport being tinted by the absence of data.
@@ -1039,13 +1089,18 @@ MapHeatmap.displayName = 'Map.Heatmap';
 export interface MapUserLocationProps {
   /** Show which way the device is facing, not just where it is. */
   heading?: boolean;
+  /** Draw the ring showing how confident the fix is. */
+  accuracy?: boolean;
 }
 
 /** The device's own position, drawn by the renderer. */
-function MapUserLocation({ heading = false }: MapUserLocationProps) {
+function MapUserLocation({
+  heading = false,
+  accuracy = false,
+}: MapUserLocationProps) {
   if (!MapLibre) return null;
   const { UserLocation } = MapLibre;
-  return <UserLocation visible showsUserHeadingIndicator={heading} />;
+  return <UserLocation heading={heading} accuracy={accuracy} />;
 }
 MapUserLocation.displayName = 'Map.UserLocation';
 

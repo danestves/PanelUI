@@ -6877,7 +6877,7 @@ export const COMPONENTS: ComponentEntry[] = [
         label: 'Uptime monitor',
         id: 'uptime',
         fullPage: true,
-        description: 'Edge nodes coloured by state, over a blank world.',
+        description: 'Edge nodes coloured by state, spread across the world.',
         render: () => <UptimeMonitorBlock />,
       },
       {

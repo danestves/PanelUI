@@ -19,6 +19,12 @@
  * in the library's published type surface, so anyone installing PanelUI would
  * have to install a map renderer to typecheck their project, whether or not
  * they ever draw a map.
+ *
+ * The cost of that choice is that nothing checks these declarations against the
+ * renderer, and React Native drops props it does not recognise without a word —
+ * so a renamed prop is silently ignored rather than caught. They track the
+ * renderer's **v11** API. When the peer range widens, re-read the props used
+ * below against the package rather than assuming they survived.
  */
 import type { ComponentType, ReactElement, ReactNode, Ref } from 'react';
 
@@ -53,15 +59,45 @@ export interface MapRef {
   getViewState(): Promise<ViewState>;
 }
 
+/** Pixel insets held off the edges of the viewport. */
+export interface ViewPadding {
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+}
+
+/** Zoom, tilt and rotation — everything about the camera except where it sits. */
+export interface CameraOptions {
+  zoom?: number;
+  bearing?: number;
+  pitch?: number;
+  padding?: ViewPadding;
+}
+
+/** How the camera gets there. */
+export interface CameraAnimationOptions {
+  duration?: number;
+  easing?: 'linear' | 'ease' | 'fly';
+}
+
+/**
+ * Where the camera starts. Either a centre or a box, never both — the renderer
+ * types them as a union for the same reason: a camera framing a box has no
+ * separate centre to honour.
+ */
+export type InitialViewState =
+  | (CameraOptions & { center?: never; bounds?: never })
+  | (CameraOptions & { center: LngLat; bounds?: never })
+  | (CameraOptions & { bounds: LngLatBounds; center?: never });
+
 export interface CameraRef {
-  jumpTo(options: Record<string, unknown>): void;
-  easeTo(options: Record<string, unknown>): void;
-  flyTo(options: Record<string, unknown>): void;
+  jumpTo(options: { center: LngLat } & CameraOptions): void;
+  easeTo(options: { center?: LngLat } & CameraOptions & CameraAnimationOptions): void;
+  flyTo(options: { center?: LngLat } & CameraOptions & CameraAnimationOptions): void;
   fitBounds(
-    northEast: LngLat,
-    southWest: LngLat,
-    padding?: number | number[],
-    duration?: number
+    bounds: LngLatBounds,
+    options?: CameraOptions & CameraAnimationOptions
   ): void;
 }
 
@@ -90,15 +126,21 @@ interface MapLibreModule {
   }>;
   Camera: ComponentType<{
     ref?: Ref<CameraRef>;
-    defaultSettings?: Record<string, unknown>;
+    /**
+     * The camera's opening position. Applied once, on the first frame — every
+     * move after this one goes through the ref, so a re-render never yanks the
+     * map back out from under a gesture.
+     */
+    initialViewState?: InitialViewState;
     center?: LngLat;
     bounds?: LngLatBounds;
     zoom?: number;
     bearing?: number;
     pitch?: number;
-    padding?: Record<string, number>;
-    animationDuration?: number;
-    animationMode?: 'linear' | 'ease' | 'fly';
+    minZoom?: number;
+    maxZoom?: number;
+    maxBounds?: LngLatBounds;
+    padding?: ViewPadding;
   }>;
   Marker: ComponentType<{
     id?: string;
@@ -118,7 +160,14 @@ interface MapLibreModule {
     children?: ReactNode;
   }>;
   Layer: ComponentType<Record<string, unknown>>;
-  UserLocation: ComponentType<{ visible?: boolean; showsUserHeadingIndicator?: boolean }>;
+  UserLocation: ComponentType<{
+    animated?: boolean;
+    accuracy?: boolean;
+    heading?: boolean;
+    minDisplacement?: number;
+    onPress?: () => void;
+    children?: ReactNode;
+  }>;
 }
 
 /**

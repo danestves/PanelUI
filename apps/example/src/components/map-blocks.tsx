@@ -432,7 +432,7 @@ export function StoreLocatorBlock() {
       {/* Split by ratio rather than letting the list size itself: a list that
           grows with its content eventually pushes the map off the screen. */}
       <View className="flex-[3]">
-        <Map ref={map} center={selected.lngLat} zoom={13}>
+        <Map ref={map} center={selected.lngLat} zoom={14}>
           {STORES.map((store) => (
             <Map.Marker
               key={store.id}
@@ -530,7 +530,7 @@ export function LogisticsNetworkBlock() {
       </View>
 
       <View className="flex-1">
-        <Map blank bounds={[-12, 36, 26, 60]}>
+        <Map bounds={[-12, 36, 26, 60]}>
           {lanes.map((lane) => (
             <Map.Arc
               key={`${lane.from}-${lane.to}`}
@@ -586,7 +586,7 @@ export function UptimeMonitorBlock() {
   return (
     <View className="flex-1">
       <View className="flex-1">
-        <Map blank center={[0, 25]} zoom={1.1}>
+        <Map center={[0, 25]} zoom={1.1}>
           {NODES.map((node) => (
             <Map.Marker key={node.id} lngLat={node.lngLat}>
               <View
