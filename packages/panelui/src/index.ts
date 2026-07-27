@@ -78,6 +78,9 @@ export {
   BottomSheet,
   type BottomSheetProps,
   type BottomSheetContentProps,
+  type BottomSheetHeaderProps,
+  type BottomSheetBodyProps,
+  type BottomSheetFooterProps,
 } from './components/bottom-sheet';
 export {
   Breadcrumb,

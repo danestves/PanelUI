@@ -1,6 +1,7 @@
 ---
 title: BottomSheet
 description: Draggable sheet anchored to the bottom of the screen.
+status: updated
 ---
 
 A sheet anchored to the bottom of the screen, draggable and dismissable by swipe. Mounts through a portal and unmounts after its exit animation.
@@ -10,7 +11,7 @@ A sheet anchored to the bottom of the screen, draggable and dismissable by swipe
 BottomSheet ships with the library — no separate install.
 
 ```tsx
-import { BottomSheet, Button, Input, Text } from 'panelui-native';
+import { BottomSheet, Button, Input, Item, Label, RadioGroup, Separator, Slider, Switch, Text } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -39,12 +40,19 @@ npx panelui-cli@latest add bottom-sheet
 ```tsx
 <BottomSheet>
   <BottomSheet.Trigger>…</BottomSheet.Trigger>
-  <BottomSheet.Content>…</BottomSheet.Content>
+  <BottomSheet.Content>
+    <BottomSheet.Header title="…" />   {/* stays put, and clears the close button */}
+    <BottomSheet.Body>…</BottomSheet.Body>     {/* scrolls */}
+    <BottomSheet.Footer>…</BottomSheet.Footer> {/* pinned */}
+  </BottomSheet.Content>
 </BottomSheet>
 ```
 
 - **`BottomSheet.Trigger`** — Clones its child and opens the sheet on press.
 - **`BottomSheet.Content`** — The sheet surface. Renders through a portal above everything else.
+- **`BottomSheet.Header`** — A heading that stays put while the body scrolls. Reserves the corner the close button sits in.
+- **`BottomSheet.Body`** — The scrolling part. Hands the sheet its scroll position, which is what lets the two gestures share a drag.
+- **`BottomSheet.Footer`** — A row pinned below the body, for the action the sheet is asking about.
 
 ## Examples
 
@@ -138,19 +146,77 @@ Floated clear of all four screen edges. For a short, decisive sheet — a confir
 </BottomSheet.Content>
 ```
 
-### A scrollable sheet
+### A sheet that is given its height
 
-Cap the height on the scrollable, not the sheet — the sheet should still size to its content when the list is short.
+A sheet of a handful of rows should size to them. Past that, `size` fixes the height instead, and the sheet is clamped to leave the status bar clear rather than running under it.
 
 ```tsx
-<BottomSheet.Content>
-  <ScrollView className="max-h-96" bounces={false}>
-    {options.map((option) => (
-      <Button key={option.id} variant="ghost" fullWidth>
-        {option.label}
-      </Button>
+<BottomSheet.Content size="full">
+  <BottomSheet.Header title="Filters" description="3 applied · 384 results" />
+
+  <BottomSheet.Body contentContainerClassName="gap-6 pb-6">
+    {brands.map((brand) => (
+      <Item key={brand.id} onPress={() => toggle(brand.id)}>
+        <Item.Content>
+          <Item.Title>{brand.name}</Item.Title>
+        </Item.Content>
+      </Item>
     ))}
-  </ScrollView>
+  </BottomSheet.Body>
+
+  <BottomSheet.Footer className="flex-row">
+    <Button variant="outline" className="flex-1" onPress={reset}>Reset</Button>
+    <Button className="flex-[2]">Show 384 results</Button>
+  </BottomSheet.Footer>
+</BottomSheet.Content>
+```
+
+### A list that scrolls without dismissing the sheet
+
+A plain `ScrollView` and the sheet’s drag are strangers, so the first to activate takes the touch and every downward swipe is a coin toss. `BottomSheet.Body` reports where it is scrolled to, so the list keeps the drag until it reaches its top and the sheet takes over from there.
+
+```tsx
+<BottomSheet.Content size="half">
+  <BottomSheet.Header title="Choose a country" />
+  <BottomSheet.Body contentContainerClassName="pb-4">
+    {countries.map((country) => (
+      <Item key={country}>
+        <Item.Content>
+          <Item.Title>{country}</Item.Title>
+        </Item.Content>
+      </Item>
+    ))}
+  </BottomSheet.Body>
+</BottomSheet.Content>
+```
+
+## Versions
+
+### Full height
+
+Filters are the honest case for the height: there are more of them than fits, and the button you came to press is the last thing you want to have to scroll to.
+
+```tsx
+<BottomSheet.Content size="full">
+  <BottomSheet.Header title="Filters" description="3 applied · 384 results" />
+
+  <BottomSheet.Body contentContainerClassName="gap-6 pb-6">
+    <RadioGroup value={sort} onValueChange={setSort}>…</RadioGroup>
+    <Separator />
+    <Slider value={budget} onValueChange={setBudget} min={20} max={500} step={10} />
+    <Separator />
+    <Item>
+      <Item.Content><Item.Title>In stock only</Item.Title></Item.Content>
+      <Item.Actions>
+        <Switch value={inStock} onValueChange={setInStock} />
+      </Item.Actions>
+    </Item>
+  </BottomSheet.Body>
+
+  <BottomSheet.Footer className="flex-row">
+    <Button variant="outline" className="flex-1" onPress={reset}>Reset</Button>
+    <Button className="flex-[2]">Show 384 results</Button>
+  </BottomSheet.Footer>
 </BottomSheet.Content>
 ```
 
@@ -175,6 +241,27 @@ Cap the height on the scrollable, not the sheet — the sheet should still size 
 | `showClose` | `boolean` | `true` | Show a close button in the top-right corner. On by default for the styled sheet; ignored by the native sheet, which has its own dismiss affordances. |
 | `detached` | `boolean` | `false` | Float the sheet clear of the screen edges instead of docking it to the bottom, so it reads as a card laid over the app rather than a drawer pulled out of it. All four corners round and the bottom border comes back, since a floating sheet has four real edges where a docked one has three. Ignored by the native sheet, which the platform positions itself. |
 | `blur` | `boolean` | `false` | Frost the screen behind the sheet instead of dimming it, so what is behind stays legible as shape and colour while losing its detail. Needs the optional `expo-blur`; without it this dims, rather than failing. |
+| `size` | `'auto' \| 'half' \| 'full'` | `'auto'` | How tall the sheet opens. `auto` sizes to the content, which is right for a sheet that is a handful of rows. `half` and `full` fix the height instead, for content that has to be given the room rather than allowed to ask for it — a list, a form, a document. Either way the sheet is clamped to leave the status bar clear, so `full` is as tall as the screen allows rather than as tall as the screen. On the native sheet this maps onto the platform's detents. |
+
+### BottomSheet.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `ReactNode` | — | Heading for the sheet. Strings are wrapped; anything else is drawn as given. |
+| `description` | `ReactNode` | — | A line under the title, for what the sheet is asking. |
+
+### BottomSheet.Body
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### BottomSheet.Footer
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -186,7 +273,17 @@ Control it with `open` / `onOpenChange`, or leave it uncontrolled with `defaultO
 
 A docked sheet is continuous with the bottom of the screen — three real edges, and no line along a fourth that is not there. `detached` lifts it clear of all four instead, so it reads as a card laid over the app rather than a drawer pulled out of it: every corner rounds and the bottom border comes back. The gap it leaves already clears the home indicator, so it takes plain padding rather than stacking the safe-area inset on top of the margin.
 
-For a full-height sheet, give `BottomSheet.Content` a `height` style.
+### How tall the sheet is
+
+`size` decides. `auto`, the default, sizes to the content, which is right for a sheet of a handful of rows. `half` and `full` fix the height instead, for content that has to be given the room rather than allowed to ask for it — a list, a form, a document.
+
+Either way the sheet is clamped to leave the status bar and the notch clear, so `full` is as tall as the screen allows rather than as tall as the screen. It is not the whole screen by design: a sheet reaching the top has nothing behind it to read as laid *over*, and the gap is what says the app is still there underneath.
+
+On the native sheet `size` maps onto the platform’s own detents, so it keeps the system’s snapping. An explicit `snapPoints` on the root is the finer control and wins.
+
+### Scrolling inside a sheet
+
+Use `BottomSheet.Body` rather than a bare `ScrollView`. Both gestures want the same downward drag, and with no relationship between them whichever activates first takes the touch outright — so either the list never scrolls or the sheet never drags. `Body` reports its scroll position to the sheet, which holds off until the list has run out: pull down on a list at its top and the sheet comes with you, pull down anywhere else and the list scrolls.
 
 ### The backdrop
 
@@ -201,5 +298,7 @@ Pass `native` to render the platform's own sheet instead — SwiftUI on iOS, Jet
 See [Native rendering](/docs/native) for the full prop-by-prop breakdown.
 
 **A close button sits in the top-right by default.** Drop it with `showClose={false}` when the sheet is already dismissible by drag or backdrop and the corner X would be clutter. The native sheet ignores it — the platform provides its own affordances.
+
+It is drawn above the content, so anything full-width at the top of a sheet passes underneath it rather than over it. `BottomSheet.Header` already leaves the corner free; a heading written by hand should keep clear of it too.
 
 In native mode the sheet content is given a minimum height matching its first detent. A hosted box shorter than the sheet is centred in it by the platform, which is why short content would otherwise float in the middle of a half-height sheet instead of starting at the top.

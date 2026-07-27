@@ -2344,29 +2344,143 @@ function SignatureDeliveryVersion() {
   );
 }
 
-/** Near-full-screen sheet, for content that needs the room. */
+const SORT_OPTIONS = [
+  { value: 'relevance', label: 'Most relevant' },
+  { value: 'recent', label: 'Newest first' },
+  { value: 'price-low', label: 'Price: low to high' },
+  { value: 'price-high', label: 'Price: high to low' },
+];
+
+const BRANDS = [
+  { id: 'aurora', name: 'Aurora', count: 128 },
+  { id: 'basin', name: 'Basin', count: 94 },
+  { id: 'cadence', name: 'Cadence', count: 61 },
+  { id: 'dovetail', name: 'Dovetail', count: 47 },
+  { id: 'ember', name: 'Ember', count: 33 },
+  { id: 'fathom', name: 'Fathom', count: 21 },
+];
+
+/**
+ * A full-height sheet, which is a shape rather than just a size: a heading
+ * that stays put, a body that scrolls under it, and the action pinned where
+ * it can always be reached. Filters are the honest example — there is more of
+ * them than fits, and the thing you came to press is the last thing you want
+ * to have to scroll to.
+ */
 function FullHeightSheetDemo() {
-  const { height } = useWindowDimensions();
+  const [sort, setSort] = useState('relevance');
+  const [budget, setBudget] = useState(240);
+  const [inStock, setInStock] = useState(true);
+  const [freeReturns, setFreeReturns] = useState(false);
+  const [brands, setBrands] = useState<string[]>(['aurora']);
+
+  const toggleBrand = (id: string) =>
+    setBrands((was) =>
+      was.includes(id) ? was.filter((b) => b !== id) : [...was, id]
+    );
+
+  const active = brands.length + (inStock ? 1 : 0) + (freeReturns ? 1 : 0);
 
   return (
     <BottomSheet>
       <BottomSheet.Trigger>
-        <Button variant="outline">Open full height</Button>
+        <Button variant="outline">Open filters</Button>
       </BottomSheet.Trigger>
-      <BottomSheet.Content style={{ height: height * 0.9 }}>
-        <Text size="lg" weight="semibold" className="mb-1">
-          Terms of service
-        </Text>
-        <ScrollView showsVerticalScrollIndicator={false} className="mt-2">
-          <View className="gap-4 pb-8">
-            {Array.from({ length: 12 }, (_, index) => (
-              <Text key={index} size="sm" muted>
-                {index + 1}. This paragraph exists so the sheet has enough
-                content to scroll, which is the point of a full-height sheet.
+
+      <BottomSheet.Content size="full">
+        <BottomSheet.Header
+          title="Filters"
+          description={`${active} applied · 384 results`}
+        />
+
+        <BottomSheet.Body contentContainerClassName="gap-6 pb-6">
+          <View className="gap-2">
+            <Label>Sort by</Label>
+            <RadioGroup value={sort} onValueChange={setSort}>
+              {SORT_OPTIONS.map((option) => (
+                <RadioGroup.Item key={option.value} value={option.value}>
+                  {option.label}
+                </RadioGroup.Item>
+              ))}
+            </RadioGroup>
+          </View>
+
+          <Separator />
+
+          <View className="gap-3">
+            <View className="flex-row items-center justify-between">
+              <Label>Budget</Label>
+              <Text size="sm" muted>
+                Up to ${budget}
               </Text>
+            </View>
+            <Slider
+              value={budget}
+              onValueChange={setBudget}
+              min={20}
+              max={500}
+              step={10}
+            />
+          </View>
+
+          <Separator />
+
+          <View className="gap-2">
+            <Label>Brand</Label>
+            {BRANDS.map((brand) => (
+              <Item key={brand.id} onPress={() => toggleBrand(brand.id)}>
+                <Item.Content>
+                  <Item.Title>{brand.name}</Item.Title>
+                  <Item.Description>{brand.count} items</Item.Description>
+                </Item.Content>
+                <Item.Actions>
+                  <Checkbox checked={brands.includes(brand.id)} />
+                </Item.Actions>
+              </Item>
             ))}
           </View>
-        </ScrollView>
+
+          <Separator />
+
+          <View className="gap-2">
+            <Label>Availability</Label>
+            <Item>
+              <Item.Content>
+                <Item.Title>In stock only</Item.Title>
+                <Item.Description>Hide anything on backorder</Item.Description>
+              </Item.Content>
+              <Item.Actions>
+                <Switch value={inStock} onValueChange={setInStock} />
+              </Item.Actions>
+            </Item>
+            <Item>
+              <Item.Content>
+                <Item.Title>Free returns</Item.Title>
+                <Item.Description>Within 30 days of delivery</Item.Description>
+              </Item.Content>
+              <Item.Actions>
+                <Switch value={freeReturns} onValueChange={setFreeReturns} />
+              </Item.Actions>
+            </Item>
+          </View>
+        </BottomSheet.Body>
+
+        <BottomSheet.Footer className="flex-row">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onPress={() => {
+              setSort('relevance');
+              setBudget(240);
+              setInStock(true);
+              setFreeReturns(false);
+              setBrands([]);
+            }}
+          >
+            Reset
+          </Button>
+          <Button className="flex-[2]">Show 384 results</Button>
+        </BottomSheet.Footer>
       </BottomSheet.Content>
     </BottomSheet>
   );
@@ -2411,26 +2525,22 @@ function ScrollableSheetDemo() {
         <Button variant="outline">Open list</Button>
       </BottomSheet.Trigger>
       <BottomSheet.Content style={{ maxHeight: 420 }}>
-        <Text size="lg" weight="semibold" className="mb-3">
-          Choose a country
-        </Text>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View className="pb-4">
-            {COUNTRIES.map((country, index) => (
-              <View
-                key={country}
-                className={
-                  index > 0
-                    ? 'flex-row items-center border-t border-border py-3.5'
-                    : 'flex-row items-center py-3.5'
-                }
-              >
-                <Text className="flex-1">{country}</Text>
-                <ChevronRightIcon size={16} />
-              </View>
-            ))}
-          </View>
-        </ScrollView>
+        <BottomSheet.Header title="Choose a country" />
+        <BottomSheet.Body contentContainerClassName="pb-4">
+          {COUNTRIES.map((country, index) => (
+            <View
+              key={country}
+              className={
+                index > 0
+                  ? 'flex-row items-center border-t border-border py-3.5'
+                  : 'flex-row items-center py-3.5'
+              }
+            >
+              <Text className="flex-1">{country}</Text>
+              <ChevronRightIcon size={16} />
+            </View>
+          ))}
+        </BottomSheet.Body>
       </BottomSheet.Content>
     </BottomSheet>
   );
@@ -5332,7 +5442,18 @@ export const COMPONENTS: ComponentEntry[] = [
       },
       { label: 'Detached', render: () => <DetachedSheetDemo /> },
       { label: 'Frosted backdrop', render: () => <BlurredSheetDemo /> },
-      { label: 'Full height', render: () => <FullHeightSheetDemo /> },
+      {
+        label: 'Full height',
+        id: 'full-height',
+        fullPage: true,
+        description:
+          'A heading that stays put, a body that scrolls under it, and the action pinned within reach.',
+        render: () => (
+          <View className="flex-1 items-center justify-center p-5">
+            <FullHeightSheetDemo />
+          </View>
+        ),
+      },
       { label: 'Form', render: () => <FormSheetDemo /> },
       { label: 'Scrollable list', render: () => <ScrollableSheetDemo /> },
       {

@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  type ComponentProps,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -19,10 +20,12 @@ import Animated, {
   SlideInDown,
   SlideOutDown,
   runOnJS,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tv } from 'tailwind-variants';
@@ -30,6 +33,7 @@ import { getNativeUI } from '../../native';
 import { XIcon } from '../../icons';
 import { Portal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
+import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 const SPRING = { damping: 22, stiffness: 280, mass: 0.7 } as const;
@@ -134,6 +138,24 @@ const NativeSheetContext = createContext<{
   snapPoints: BottomSheetProps['snapPoints'];
 } | null>(null);
 
+/**
+ * The wiring between the sheet's drag and a scrolling body inside it. Set by
+ * `Content`, filled in by `Body` — the two gestures have to agree on where the
+ * list is scrolled to before either can decide whose drag it is.
+ */
+/*
+ * Taken off the factory rather than imported by name: the package exports two
+ * different `NativeGesture` types, and the one reachable from its entry point
+ * is not the one `Gesture.Native()` returns.
+ */
+type ScrollGesture = ReturnType<typeof Gesture.Native>;
+
+const SheetSurfaceContext = createContext<{
+  scrollGesture: ScrollGesture;
+  scrollOffset: SharedValue<number>;
+  hasScrollable: SharedValue<boolean>;
+} | null>(null);
+
 function BottomSheetRoot({
   children,
   open,
@@ -213,8 +235,27 @@ export interface BottomSheetContentProps extends ViewProps {
    * optional `expo-blur`; without it this dims, rather than failing.
    */
   blur?: boolean;
+  /**
+   * How tall the sheet opens.
+   *
+   * `auto` sizes to the content, which is right for a sheet that is a handful
+   * of rows. `half` and `full` fix the height instead, for content that has to
+   * be given the room rather than allowed to ask for it — a list, a form, a
+   * document. Either way the sheet is clamped to leave the status bar clear,
+   * so `full` is as tall as the screen allows rather than as tall as the screen.
+   *
+   * On the native sheet this maps onto the platform's detents.
+   */
+  size?: 'auto' | 'half' | 'full';
   children?: ReactNode;
 }
+
+/**
+ * Fractions of the screen the sized sheets aim for. `full` is not 1: a sheet
+ * that reached the top would have nothing behind it to read as laid *over*,
+ * and the gap is what says the app is still there underneath.
+ */
+const SIZE_FRACTION = { half: 0.5, full: 0.94 } as const;
 
 function BottomSheetContent({
   className,
@@ -222,6 +263,7 @@ function BottomSheetContent({
   showClose = true,
   detached = false,
   blur = false,
+  size = 'auto',
   children,
   ...props
 }: BottomSheetContentProps) {
@@ -232,6 +274,17 @@ function BottomSheetContent({
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(0);
   const closeTint = useCSSVariable('--color-muted-foreground');
+
+  /*
+   * The scrolling body's gesture, if there is one. It is built here rather
+   * than in `BottomSheet.Body` because the drag below has to name it, and a
+   * gesture is composed before its children have mounted. `Body` attaches it
+   * to its own scroll view; with no `Body` it is simply never attached, and
+   * the drag reverts to owning every touch.
+   */
+  const scrollGesture = useMemo(() => Gesture.Native(), []);
+  const scrollOffset = useSharedValue(0);
+  const hasScrollable = useSharedValue(false);
 
   const close = useCallback(() => setOpen(false), [setOpen]);
 
@@ -256,7 +309,25 @@ function BottomSheetContent({
          * is in the middle of, so a tap with any finger travel does nothing.
          */
         .activeOffsetY([-12, 12])
+        /*
+         * A scrolling body runs its own gesture, and without this the two
+         * compete: whichever wins takes the touch outright, so either the
+         * list never scrolls or the sheet never drags. Running them together
+         * lets the rule below decide which one a given drag belongs to.
+         */
+        .simultaneousWithExternalGesture(scrollGesture)
         .onChange((event) => {
+          /*
+           * The list gets the drag until it has nothing left to scroll. Once
+           * it is at the top the sheet takes over, which is the gesture people
+           * already expect: pulling down on a list that cannot go further
+           * pulls the sheet instead. The second clause keeps a sheet that is
+           * already part-way dragged following the finger, so releasing the
+           * drag halfway does not strand it.
+           */
+          if (hasScrollable.value && scrollOffset.value > 0 && translateY.value <= 0) {
+            return;
+          }
           // Rubber-band when dragging upward, follow the finger downward.
           const next = translateY.value + event.changeY;
           translateY.value = next > 0 ? next : next / 3;
@@ -276,15 +347,40 @@ function BottomSheetContent({
     // Rebuilt only when one of these changes. Built inline it would be a new
     // gesture on every render — and the sheet re-renders while it is being
     // used, each time re-attaching the handler and dropping the live touch.
-    [close, screenHeight, translateY]
+    [close, screenHeight, translateY, scrollGesture, scrollOffset, hasScrollable]
   );
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
   }));
 
+  /*
+   * A sized sheet is clamped rather than handed its fraction outright.
+   * `insets.top` is the status bar and the notch, and content that runs under
+   * those is unreadable at exactly the moment the sheet is at its tallest.
+   */
+  const sizedHeight =
+    size === 'auto'
+      ? undefined
+      : Math.min(
+          screenHeight * SIZE_FRACTION[size],
+          screenHeight - insets.top - (detached ? 24 : 8)
+        );
+
+  const surface = useMemo(
+    () => ({ scrollGesture, scrollOffset, hasScrollable }),
+    [scrollGesture, scrollOffset, hasScrollable]
+  );
+
   if (nativeSheet) {
     const { Host, BottomSheet: NativeBottomSheet, RNHostView } = nativeSheet.nativeUI;
+    /*
+     * `snapPoints` on the root is the finer control and wins; `size` is the
+     * shorthand, and maps onto the platform's own detents rather than a
+     * height, so a native sheet keeps the system's snapping.
+     */
+    const snapPoints =
+      nativeSheet.snapPoints ?? (size === 'auto' ? undefined : [size]);
     // The platform owns presentation, so this stays mounted and toggles
     // isPresented rather than unmounting on close.
     //
@@ -296,7 +392,7 @@ function BottomSheetContent({
         <NativeBottomSheet
           isPresented={open}
           onDismiss={dismissible ? close : () => {}}
-          snapPoints={nativeSheet.snapPoints}
+          snapPoints={snapPoints}
         >
           <RNHostView matchContents>
             <BottomSheetContext.Provider value={context}>
@@ -316,7 +412,7 @@ function BottomSheetContent({
                   // against, so `100%` measures against nothing and the
                   // content lays out wider than the sheet it sits in.
                   width: screenWidth,
-                  minHeight: detentFloor(nativeSheet.snapPoints, screenHeight),
+                  minHeight: detentFloor(snapPoints, screenHeight),
                   paddingBottom: Math.max(insets.bottom, 16),
                 }}
               >
@@ -364,24 +460,42 @@ function BottomSheetContent({
               // indicator, so it takes plain padding rather than stacking the
               // inset on top of the gap.
               { paddingBottom: detached ? 16 : Math.max(insets.bottom, 16) },
+              sizedHeight === undefined ? null : { height: sizedHeight },
               props.style,
             ]}
           >
-            <View className="mb-3 self-center">
-              <View className="h-1 w-10 rounded-full bg-muted-foreground/30" />
-            </View>
-            {showClose ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-                onPress={close}
-                hitSlop={8}
-                className="absolute right-4 top-3 h-8 w-8 items-center justify-center rounded-full bg-muted active:opacity-70"
-              >
-                <XIcon size={16} color={typeof closeTint === 'string' ? closeTint : undefined} />
-              </Pressable>
-            ) : null}
-            {children}
+            <SheetSurfaceContext.Provider value={surface}>
+              <View className="mb-3 self-center">
+                <View className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+              </View>
+              {children}
+              {/*
+                * Last, and lifted above the content.
+                *
+                * Drawn before the children it was covered by whichever of them
+                * reached the top-right corner — a title spanning the sheet's
+                * width is enough — and in React Native a later sibling wins
+                * the touch. The button still looked untouched, so the failure
+                * read as intermittent: taps landing on the sliver above the
+                * title worked, taps anywhere else went to the title and did
+                * nothing. `hitSlop` made it worse by growing the part of the
+                * target that was already buried.
+                */}
+              {showClose ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Close"
+                  onPress={close}
+                  hitSlop={8}
+                  className="absolute right-4 top-3 z-10 h-8 w-8 items-center justify-center rounded-full bg-muted active:opacity-70"
+                >
+                  <XIcon
+                    size={16}
+                    color={typeof closeTint === 'string' ? closeTint : undefined}
+                  />
+                </Pressable>
+              ) : null}
+            </SheetSurfaceContext.Provider>
           </Animated.View>
         </GestureDetector>
         </View>
@@ -390,7 +504,143 @@ function BottomSheetContent({
   );
 }
 
+export interface BottomSheetHeaderProps extends ViewProps {
+  className?: string;
+  /** Heading for the sheet. Strings are wrapped; anything else is drawn as given. */
+  title?: ReactNode;
+  /** A line under the title, for what the sheet is asking. */
+  description?: ReactNode;
+  children?: ReactNode;
+}
+
+/**
+ * A fixed heading above the sheet's body.
+ *
+ * It exists mostly to reserve the top-right corner. The close button is
+ * absolutely positioned there, so anything full-width at the top of a sheet
+ * sits under it — a title is exactly that shape, and the end padding here is
+ * what keeps the two from meeting. Being outside `Body` is the other half:
+ * it stays put while the content scrolls under it, so the sheet still says
+ * what it is once the list has moved.
+ */
+function BottomSheetHeader({
+  className,
+  title,
+  description,
+  children,
+  ...props
+}: BottomSheetHeaderProps) {
+  return (
+    <View className={cn('gap-1 pb-3 pe-12', className)} {...props}>
+      {typeof title === 'string' ? (
+        <Text size="lg" weight="semibold">
+          {title}
+        </Text>
+      ) : (
+        title
+      )}
+      {typeof description === 'string' ? (
+        <Text size="sm" muted>
+          {description}
+        </Text>
+      ) : (
+        description
+      )}
+      {children}
+    </View>
+  );
+}
+BottomSheetHeader.displayName = 'BottomSheet.Header';
+
+export interface BottomSheetBodyProps
+  extends Omit<ComponentProps<typeof Animated.ScrollView>, 'ref'> {
+  className?: string;
+  children?: ReactNode;
+}
+
+/**
+ * The scrolling part of a sized sheet.
+ *
+ * A plain `ScrollView` works here too, but only one of the two gestures can
+ * win a given drag and neither knows about the other, so the list and the
+ * sheet fight over every downward swipe. This one reports where it is
+ * scrolled to, which is what lets the sheet hold off until the list has run
+ * out — pull down on a list at its top and the sheet comes with you, pull
+ * down anywhere else and the list scrolls.
+ */
+function BottomSheetBody({
+  className,
+  children,
+  onScroll,
+  ...props
+}: BottomSheetBodyProps) {
+  const surface = useContext(SheetSurfaceContext);
+
+  useEffect(() => {
+    if (!surface) return;
+    surface.hasScrollable.value = true;
+    return () => {
+      surface.hasScrollable.value = false;
+      surface.scrollOffset.value = 0;
+    };
+  }, [surface]);
+
+  const handler = useAnimatedScrollHandler((event) => {
+    if (surface) surface.scrollOffset.value = event.contentOffset.y;
+  });
+
+  const body = (
+    <Animated.ScrollView
+      onScroll={handler}
+      scrollEventThrottle={16}
+      showsVerticalScrollIndicator={false}
+      className={cn('flex-1', className)}
+      {...props}
+    >
+      {children}
+    </Animated.ScrollView>
+  );
+
+  /*
+   * The detector is what gives the scroll a handler the sheet's drag can name.
+   * Without one the two are strangers, and the first to activate takes the
+   * touch outright — which is the whole bug this part exists to solve.
+   */
+  if (!surface) return body;
+  return <GestureDetector gesture={surface.scrollGesture}>{body}</GestureDetector>;
+}
+BottomSheetBody.displayName = 'BottomSheet.Body';
+
+export interface BottomSheetFooterProps extends ViewProps {
+  className?: string;
+  children?: ReactNode;
+}
+
+/**
+ * A row pinned below the body, for whatever the sheet is asking to be decided.
+ * Outside `Body` so it stays reachable however far the content scrolls — an
+ * action that has to be scrolled to is one people do not find.
+ */
+function BottomSheetFooter({
+  className,
+  children,
+  ...props
+}: BottomSheetFooterProps) {
+  return (
+    <View
+      className={cn('gap-2 border-t border-border pt-3', className)}
+      {...props}
+    >
+      {children}
+    </View>
+  );
+}
+BottomSheetFooter.displayName = 'BottomSheet.Footer';
+
 export const BottomSheet = Object.assign(BottomSheetRoot, {
   Trigger: BottomSheetTrigger,
   Content: BottomSheetContent,
+  Header: BottomSheetHeader,
+  Body: BottomSheetBody,
+  Footer: BottomSheetFooter,
 });

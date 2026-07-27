@@ -336,14 +336,23 @@
     "extraImports": [
       "Button",
       "Input",
+      "Item",
+      "Label",
+      "RadioGroup",
+      "Separator",
+      "Slider",
+      "Switch",
       "Text"
     ],
     "parts": {
       "Trigger": "Clones its child and opens the sheet on press.",
-      "Content": "The sheet surface. Renders through a portal above everything else."
+      "Content": "The sheet surface. Renders through a portal above everything else.",
+      "Header": "A heading that stays put while the body scrolls. Reserves the corner the close button sits in.",
+      "Body": "The scrolling part. Hands the sheet its scroll position, which is what lets the two gestures share a drag.",
+      "Footer": "A row pinned below the body, for the action the sheet is asking about."
     },
-    "notes": "Control it with `open` / `onOpenChange`, or leave it uncontrolled with `defaultOpen`.\n\n### Detached and docked\n\nA docked sheet is continuous with the bottom of the screen — three real edges, and no line along a fourth that is not there. `detached` lifts it clear of all four instead, so it reads as a card laid over the app rather than a drawer pulled out of it: every corner rounds and the bottom border comes back. The gap it leaves already clears the home indicator, so it takes plain padding rather than stacking the safe-area inset on top of the margin.\n\nFor a full-height sheet, give `BottomSheet.Content` a `height` style.\n\n### The backdrop\n\nThe screen behind dims by default. `blur` frosts it instead, which keeps what is behind legible as shape and colour while losing its detail. It needs the optional `expo-blur`; without it the sheet dims, rather than failing — a blur you cannot draw is better shown as a darkened screen than as a crash.\n\n### Native rendering\n\nPass `native` to render the platform's own sheet instead — SwiftUI on iOS, Jetpack Compose on Android. It needs the optional `@expo/ui` package and is a silent no-op without it.\n\n**Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className` and most styling props are ignored. Only the chrome is the platform's — the content inside stays yours and stays themed. Adds a `snapPoints` prop for the detents the sheet rests at.\n\nSee [Native rendering](/docs/native) for the full prop-by-prop breakdown.\n\n**A close button sits in the top-right by default.** Drop it with `showClose={false}` when the sheet is already dismissible by drag or backdrop and the corner X would be clutter. The native sheet ignores it — the platform provides its own affordances.\n\nIn native mode the sheet content is given a minimum height matching its first detent. A hosted box shorter than the sheet is centred in it by the platform, which is why short content would otherwise float in the middle of a half-height sheet instead of starting at the top.",
-    "anatomy": "<BottomSheet>\n  <BottomSheet.Trigger>…</BottomSheet.Trigger>\n  <BottomSheet.Content>…</BottomSheet.Content>\n</BottomSheet>",
+    "notes": "Control it with `open` / `onOpenChange`, or leave it uncontrolled with `defaultOpen`.\n\n### Detached and docked\n\nA docked sheet is continuous with the bottom of the screen — three real edges, and no line along a fourth that is not there. `detached` lifts it clear of all four instead, so it reads as a card laid over the app rather than a drawer pulled out of it: every corner rounds and the bottom border comes back. The gap it leaves already clears the home indicator, so it takes plain padding rather than stacking the safe-area inset on top of the margin.\n\n### How tall the sheet is\n\n`size` decides. `auto`, the default, sizes to the content, which is right for a sheet of a handful of rows. `half` and `full` fix the height instead, for content that has to be given the room rather than allowed to ask for it — a list, a form, a document.\n\nEither way the sheet is clamped to leave the status bar and the notch clear, so `full` is as tall as the screen allows rather than as tall as the screen. It is not the whole screen by design: a sheet reaching the top has nothing behind it to read as laid *over*, and the gap is what says the app is still there underneath.\n\nOn the native sheet `size` maps onto the platform’s own detents, so it keeps the system’s snapping. An explicit `snapPoints` on the root is the finer control and wins.\n\n### Scrolling inside a sheet\n\nUse `BottomSheet.Body` rather than a bare `ScrollView`. Both gestures want the same downward drag, and with no relationship between them whichever activates first takes the touch outright — so either the list never scrolls or the sheet never drags. `Body` reports its scroll position to the sheet, which holds off until the list has run out: pull down on a list at its top and the sheet comes with you, pull down anywhere else and the list scrolls.\n\n### The backdrop\n\nThe screen behind dims by default. `blur` frosts it instead, which keeps what is behind legible as shape and colour while losing its detail. It needs the optional `expo-blur`; without it the sheet dims, rather than failing — a blur you cannot draw is better shown as a darkened screen than as a crash.\n\n### Native rendering\n\nPass `native` to render the platform's own sheet instead — SwiftUI on iOS, Jetpack Compose on Android. It needs the optional `@expo/ui` package and is a silent no-op without it.\n\n**Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className` and most styling props are ignored. Only the chrome is the platform's — the content inside stays yours and stays themed. Adds a `snapPoints` prop for the detents the sheet rests at.\n\nSee [Native rendering](/docs/native) for the full prop-by-prop breakdown.\n\n**A close button sits in the top-right by default.** Drop it with `showClose={false}` when the sheet is already dismissible by drag or backdrop and the corner X would be clutter. The native sheet ignores it — the platform provides its own affordances.\n\nIt is drawn above the content, so anything full-width at the top of a sheet passes underneath it rather than over it. `BottomSheet.Header` already leaves the corner free; a heading written by hand should keep clear of it too.\n\nIn native mode the sheet content is given a minimum height matching its first detent. A hosted box shorter than the sheet is centred in it by the platform, which is why short content would otherwise float in the middle of a half-height sheet instead of starting at the top.",
+    "anatomy": "<BottomSheet>\n  <BottomSheet.Trigger>…</BottomSheet.Trigger>\n  <BottomSheet.Content>\n    <BottomSheet.Header title=\"…\" />   {/* stays put, and clears the close button */}\n    <BottomSheet.Body>…</BottomSheet.Body>     {/* scrolls */}\n    <BottomSheet.Footer>…</BottomSheet.Footer> {/* pinned */}\n  </BottomSheet.Content>\n</BottomSheet>",
     "examples": [
       {
         "title": "Uncontrolled, with a trigger",
@@ -371,13 +380,25 @@
         "code": "<BottomSheet.Content dismissible={false}>\n  <Text size=\"lg\" weight=\"semibold\">Finish setting up</Text>\n  <Button className=\"mt-4\" onPress={complete}>Continue</Button>\n</BottomSheet.Content>"
       },
       {
-        "title": "A scrollable sheet",
-        "description": "Cap the height on the scrollable, not the sheet — the sheet should still size to its content when the list is short.",
-        "code": "<BottomSheet.Content>\n  <ScrollView className=\"max-h-96\" bounces={false}>\n    {options.map((option) => (\n      <Button key={option.id} variant=\"ghost\" fullWidth>\n        {option.label}\n      </Button>\n    ))}\n  </ScrollView>\n</BottomSheet.Content>"
+        "title": "A sheet that is given its height",
+        "description": "A sheet of a handful of rows should size to them. Past that, `size` fixes the height instead, and the sheet is clamped to leave the status bar clear rather than running under it.",
+        "code": "<BottomSheet.Content size=\"full\">\n  <BottomSheet.Header title=\"Filters\" description=\"3 applied · 384 results\" />\n\n  <BottomSheet.Body contentContainerClassName=\"gap-6 pb-6\">\n    {brands.map((brand) => (\n      <Item key={brand.id} onPress={() => toggle(brand.id)}>\n        <Item.Content>\n          <Item.Title>{brand.name}</Item.Title>\n        </Item.Content>\n      </Item>\n    ))}\n  </BottomSheet.Body>\n\n  <BottomSheet.Footer className=\"flex-row\">\n    <Button variant=\"outline\" className=\"flex-1\" onPress={reset}>Reset</Button>\n    <Button className=\"flex-[2]\">Show 384 results</Button>\n  </BottomSheet.Footer>\n</BottomSheet.Content>"
+      },
+      {
+        "title": "A list that scrolls without dismissing the sheet",
+        "description": "A plain `ScrollView` and the sheet’s drag are strangers, so the first to activate takes the touch and every downward swipe is a coin toss. `BottomSheet.Body` reports where it is scrolled to, so the list keeps the drag until it reaches its top and the sheet takes over from there.",
+        "code": "<BottomSheet.Content size=\"half\">\n  <BottomSheet.Header title=\"Choose a country\" />\n  <BottomSheet.Body contentContainerClassName=\"pb-4\">\n    {countries.map((country) => (\n      <Item key={country}>\n        <Item.Content>\n          <Item.Title>{country}</Item.Title>\n        </Item.Content>\n      </Item>\n    ))}\n  </BottomSheet.Body>\n</BottomSheet.Content>"
       }
     ],
     "hideVariants": [
       "detached"
+    ],
+    "versions": [
+      {
+        "title": "Full height",
+        "description": "Filters are the honest case for the height: there are more of them than fits, and the button you came to press is the last thing you want to have to scroll to.",
+        "code": "<BottomSheet.Content size=\"full\">\n  <BottomSheet.Header title=\"Filters\" description=\"3 applied · 384 results\" />\n\n  <BottomSheet.Body contentContainerClassName=\"gap-6 pb-6\">\n    <RadioGroup value={sort} onValueChange={setSort}>…</RadioGroup>\n    <Separator />\n    <Slider value={budget} onValueChange={setBudget} min={20} max={500} step={10} />\n    <Separator />\n    <Item>\n      <Item.Content><Item.Title>In stock only</Item.Title></Item.Content>\n      <Item.Actions>\n        <Switch value={inStock} onValueChange={setInStock} />\n      </Item.Actions>\n    </Item>\n  </BottomSheet.Body>\n\n  <BottomSheet.Footer className=\"flex-row\">\n    <Button variant=\"outline\" className=\"flex-1\" onPress={reset}>Reset</Button>\n    <Button className=\"flex-[2]\">Show 384 results</Button>\n  </BottomSheet.Footer>\n</BottomSheet.Content>"
+      }
     ]
   },
   "breadcrumb": {
