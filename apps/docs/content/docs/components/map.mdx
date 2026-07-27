@@ -257,7 +257,7 @@ Edge nodes coloured by state over a blank world. A marker is a React view, so th
 The small end of the range — a map as one element inside a card. `interactive={false}` because at this size a stray pan is an accident: the card scrolls, the map does not.
 
 ```tsx
-<Card className="overflow-hidden p-0">
+<Card className="overflow-hidden">
   <LineChart data={week} xDataKey="day" aspectRatio={3}>
     <LineChart.Area dataKey="value" />
     <LineChart.Line dataKey="value" />

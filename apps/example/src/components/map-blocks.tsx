@@ -97,7 +97,7 @@ export function AnalyticsMapBlock() {
         </Text>
       </View>
 
-      <Card className="overflow-hidden p-0">
+      <Card className="overflow-hidden">
         <View className="h-72">
           {/* Blank: a choropleth supplies its own geography, and streets under
               it are noise rather than context. */}
@@ -125,28 +125,32 @@ export function AnalyticsMapBlock() {
       </Card>
 
       <View className="flex-row gap-3">
-        <Card className="flex-1 gap-1">
-          <Text size="xs" muted>Sessions</Text>
-          <Text size="xl" weight="semibold">128k</Text>
-          <Badge variant="outline">+12.4%</Badge>
+        <Card className="flex-1">
+          <Card.Content className="items-start gap-1 p-4">
+            <Text size="xs" muted>Sessions</Text>
+            <Text size="xl" weight="semibold">128k</Text>
+            <Badge variant="outline">+12.4%</Badge>
+          </Card.Content>
         </Card>
-        <Card className="flex-1 gap-1">
-          <Text size="xs" muted>Countries</Text>
-          <Text size="xl" weight="semibold">{TRAFFIC.length}</Text>
-          <Badge variant="outline">+3</Badge>
+        <Card className="flex-1">
+          <Card.Content className="items-start gap-1 p-4">
+            <Text size="xs" muted>Countries</Text>
+            <Text size="xl" weight="semibold">{TRAFFIC.length}</Text>
+            <Badge variant="outline">+3</Badge>
+          </Card.Content>
         </Card>
       </View>
 
-      <Card className="gap-3 p-0 pt-4">
-        <Text size="sm" weight="medium" className="px-4">By hour</Text>
-        <View className="px-2">
+      <Card className="overflow-hidden">
+        <Card.Content className="gap-3 p-4">
+          <Text size="sm" weight="medium">By hour</Text>
           <LineChart data={SESSIONS} xDataKey="hour" aspectRatio={2.6}>
             <LineChart.Grid rows={3} opacity={0.4} />
             <LineChart.Area dataKey="value" />
             <LineChart.Line dataKey="value" />
             <LineChart.XAxis />
           </LineChart>
-        </View>
+        </Card.Content>
       </Card>
 
       <Frame>
@@ -355,41 +359,43 @@ export function DeliveryTrackerBlock() {
         </Map>
       </View>
 
-      <Card className="max-h-[62%] gap-4 rounded-b-none">
-        <View className="flex-row items-center gap-3">
-          <Avatar size="sm" fallback="RA" />
-          <View className="flex-1">
-            <Text weight="medium">Rana A.</Text>
-            <Text size="xs" muted>Van 12 · LX21 KTF</Text>
-          </View>
-          <Badge>ETA 11:50</Badge>
-        </View>
-
-        <View className="gap-1.5">
-          <View className="flex-row justify-between">
-            <Text size="xs" muted>{done} of {STOPS.length} stops</Text>
-            <Text size="xs" muted>{Math.round((done / STOPS.length) * 100)}%</Text>
-          </View>
-          <Progress value={(done / STOPS.length) * 100} />
-        </View>
-
-        <Separator />
-
-        <ScrollView contentContainerClassName="gap-2">
-          {STOPS.map((stop) => (
-            <View key={stop.id} className="flex-row items-center gap-3">
-              <View
-                className={
-                  stop.done ? 'h-2 w-2 rounded-full bg-primary' : 'h-2 w-2 rounded-full bg-border'
-                }
-              />
-              <Text size="sm" className="flex-1" muted={!stop.done}>
-                {stop.name}
-              </Text>
-              <Text size="xs" muted>{stop.time}</Text>
+      <Card className="max-h-[62%] rounded-b-none">
+        <Card.Content className="gap-4 p-4">
+          <View className="flex-row items-center gap-3">
+            <Avatar size="sm" fallback="RA" />
+            <View className="min-w-0 flex-1">
+              <Text weight="medium" numberOfLines={1}>Rana A.</Text>
+              <Text size="xs" muted numberOfLines={1}>Van 12 · LX21 KTF</Text>
             </View>
-          ))}
-        </ScrollView>
+            <Badge>ETA 11:50</Badge>
+          </View>
+
+          <View className="gap-1.5">
+            <View className="flex-row justify-between">
+              <Text size="xs" muted>{done} of {STOPS.length} stops</Text>
+              <Text size="xs" muted>{Math.round((done / STOPS.length) * 100)}%</Text>
+            </View>
+            <Progress value={(done / STOPS.length) * 100} />
+          </View>
+
+          <Separator />
+
+          <ScrollView contentContainerClassName="gap-2">
+            {STOPS.map((stop) => (
+              <View key={stop.id} className="flex-row items-center gap-3">
+                <View
+                  className={
+                    stop.done ? 'h-2 w-2 rounded-full bg-primary' : 'h-2 w-2 rounded-full bg-border'
+                  }
+                />
+                <Text size="sm" className="min-w-0 flex-1" muted={!stop.done} numberOfLines={1}>
+                  {stop.name}
+                </Text>
+                <Text size="xs" muted>{stop.time}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </Card.Content>
       </Card>
     </View>
   );
@@ -654,7 +660,7 @@ export function AnalyticsCardBlock() {
 
   return (
     <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
-      <Card className="gap-0 overflow-hidden p-0">
+      <Card className="overflow-hidden">
         <View className="gap-1 p-4">
           <Text size="sm" muted>Weekly active</Text>
           <View className="flex-row items-end gap-2">
@@ -690,9 +696,13 @@ export function AnalyticsCardBlock() {
           { label: 'Bounce', value: '32%' },
           { label: 'Avg. time', value: '4m 12s' },
         ].map((stat) => (
-          <Card key={stat.label} className="flex-1 gap-1">
-            <Text size="xs" muted>{stat.label}</Text>
-            <Text weight="semibold">{stat.value}</Text>
+          // Three across a phone leaves ~80pt of content each, so these are
+          // tighter than the two-up cards and hold one line apiece.
+          <Card key={stat.label} className="flex-1">
+            <Card.Content className="gap-1 p-3">
+              <Text size="xs" muted numberOfLines={1}>{stat.label}</Text>
+              <Text size="sm" weight="semibold" numberOfLines={1}>{stat.value}</Text>
+            </Card.Content>
           </Card>
         ))}
       </View>
