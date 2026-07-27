@@ -30,8 +30,10 @@
  * attached to a pin and the one floating over a place with no pin at all.
  */
 import {
+  Children,
   createContext,
   forwardRef,
+  isValidElement,
   useCallback,
   useContext,
   useImperativeHandle,
@@ -362,27 +364,52 @@ function MapMarker({
   children,
 }: MapMarkerProps) {
   const slots = mapVariants();
+  const [open, setOpen] = useState(false);
+
+  /*
+   * Popups are pulled out of the marker's own children rather than drawn
+   * inside it. Left in place a popup would be laid out under the pin, which
+   * costs twice: it would be permanently visible instead of opening on press,
+   * and — because the marker is anchored by the centre of its box — a card
+   * below the pin would drag that centre downward and leave the pin sitting
+   * well above the coordinate it is meant to mark.
+   */
+  const popups: ReactNode[] = [];
+  const content: ReactNode[] = [];
+  Children.forEach(children, (child) => {
+    if (isValidElement(child) && child.type === MapPopup) popups.push(child);
+    else content.push(child);
+  });
 
   if (!MapLibre) return null;
   const { Marker } = MapLibre;
 
   const body = (
     <View className={cn('items-center', className)}>
-      {children ?? <View className={slots.pin()} />}
+      {content.length > 0 ? content : <View className={slots.pin()} />}
     </View>
   );
+
+  const pressable = onPress || popups.length > 0;
 
   return (
     <MarkerContext.Provider value={lngLat}>
       <Marker lngLat={lngLat} anchor={anchor}>
-        {onPress ? (
-          <Pressable accessibilityRole="button" onPress={onPress}>
+        {pressable ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              if (popups.length > 0) setOpen((was) => !was);
+              onPress?.();
+            }}
+          >
             {body}
           </Pressable>
         ) : (
           body
         )}
       </Marker>
+      {open ? popups : null}
     </MarkerContext.Provider>
   );
 }
@@ -398,23 +425,35 @@ export interface MapLabelProps {
 /**
  * A caption pinned to a marker. Always visible, unlike a popup — for the
  * handful of places whose names are the point of the map.
+ *
+ * It is taken out of the marker's layout flow, which matters more than it
+ * sounds: a marker sits on its coordinate by the centre of its box, so a label
+ * in flow underneath the pin would pull that centre down and lift every pin
+ * off the place it marks. Absolute keeps the box the size of the pin.
+ *
+ * The overhang on each side is what lets a long name stay centred on the pin
+ * without widening the marker — a name is usually far wider than the dot it
+ * belongs to, and a box sized to the name would be anchored by the name.
  */
 function MapLabel({ children, className, side = 'bottom' }: MapLabelProps) {
   return (
     <View
+      pointerEvents="none"
       className={cn(
-        'rounded-md bg-background/85 px-1.5 py-0.5',
-        side === 'top' ? 'mb-1' : 'mt-1',
-        className
+        'absolute items-center',
+        side === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
       )}
+      style={{ left: -120, right: -120 }}
     >
-      {typeof children === 'string' ? (
-        <Text size="xs" weight="medium">
-          {children}
-        </Text>
-      ) : (
-        children
-      )}
+      <View className={cn('rounded-md bg-background/85 px-1.5 py-0.5', className)}>
+        {typeof children === 'string' ? (
+          <Text size="xs" weight="medium" numberOfLines={1}>
+            {children}
+          </Text>
+        ) : (
+          children
+        )}
+      </View>
     </View>
   );
 }
@@ -435,39 +474,34 @@ export interface MapPopupProps {
 /**
  * A card anchored to a point.
  *
- * Inside a `Map.Marker` it attaches to that marker and opens when it is
- * pressed. Given a `lngLat` it stands alone at that coordinate — the same
- * component either way, because the difference is where it is anchored rather
- * than what it is.
+ * Inside a `Map.Marker` it takes that marker's coordinate and opens when the
+ * marker is pressed. Given a `lngLat` it stands alone at that coordinate — the
+ * same component either way, because the difference is where it is anchored
+ * rather than what it is.
+ *
+ * Either way it is its own annotation rather than something drawn inside the
+ * marker, which is what keeps a card from dragging the pin off its coordinate.
+ * Anchored by its bottom edge, so it floats above the point it describes
+ * instead of covering it.
  */
 function MapPopup({ children, className, title, lngLat }: MapPopupProps) {
   const slots = mapVariants();
   const markerLngLat = useContext(MarkerContext);
   const coordinate = lngLat ?? markerLngLat;
 
-  if (!MapLibre) return null;
-  const { Callout, Marker } = MapLibre;
-
-  const body = (
-    <View className={slots.popup({ className })}>
-      {title ? (
-        <Text size="sm" weight="medium">
-          {title}
-        </Text>
-      ) : null}
-      {children}
-    </View>
-  );
-
-  // Inside a marker the renderer owns the show/hide, so this is a Callout.
-  // Standalone it is its own marker, because a callout with nothing to hang
-  // off has nowhere to be.
-  if (markerLngLat && !lngLat) return <Callout>{body}</Callout>;
-  if (!coordinate) return null;
+  if (!MapLibre || !coordinate) return null;
+  const { Marker } = MapLibre;
 
   return (
     <Marker lngLat={coordinate} anchor="bottom">
-      {body}
+      <View className={cn('mb-2 items-center', slots.popup({ className }))}>
+        {title ? (
+          <Text size="sm" weight="medium">
+            {title}
+          </Text>
+        ) : null}
+        {children}
+      </View>
     </Marker>
   );
 }

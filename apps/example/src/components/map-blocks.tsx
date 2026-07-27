@@ -11,7 +11,7 @@
  * is no map-specific styling anywhere below — the point of a token-built
  * basemap is that the map and the cards over it are already the same material.
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import {
   Avatar,
@@ -26,6 +26,7 @@ import {
   Separator,
   Text,
   type LngLat,
+  type MapHandle,
 } from 'panelui-native';
 import { useCSSVariable } from 'uniwind';
 import { EUROPE_CODES, europeFeatures } from '../data/europe-outlines';
@@ -319,12 +320,15 @@ const LEG_LEFT: LngLat[] = [
   [0.09, 51.56], [0.22, 51.575], [0.36, 51.585],
 ];
 
-const STOPS = [
-  { id: '1', name: 'Depot — Southwark', time: '08:12', done: true },
-  { id: '2', name: 'Shoreditch High St', time: '09:40', done: true },
-  { id: '3', name: 'Hackney Wick', time: '10:25', done: true },
-  { id: '4', name: 'Stratford', time: '11:05', done: false },
-  { id: '5', name: 'Ilford', time: '11:50', done: false },
+/** Each stop sits on the route rather than near it — the line joins them. */
+const STOPS: {
+  id: string; name: string; time: string; done: boolean; lngLat: LngLat;
+}[] = [
+  { id: '1', name: 'Depot — Southwark', time: '08:12', done: true, lngLat: [-0.128, 51.507] },
+  { id: '2', name: 'Shoreditch High St', time: '09:40', done: true, lngLat: [-0.02, 51.54] },
+  { id: '3', name: 'Hackney Wick', time: '10:25', done: true, lngLat: [0.09, 51.56] },
+  { id: '4', name: 'Stratford', time: '11:05', done: false, lngLat: [0.22, 51.575] },
+  { id: '5', name: 'Ilford', time: '11:50', done: false, lngLat: [0.36, 51.585] },
 ];
 
 export function DeliveryTrackerBlock() {
@@ -332,15 +336,12 @@ export function DeliveryTrackerBlock() {
 
   return (
     <View className="flex-1">
-      <View className="flex-1">
+      <View className="flex-[3]">
         <Map center={[0.02, 51.545]} zoom={10.5}>
           <Map.Route id="done" coordinates={LEG_DONE} width={4} />
           <Map.Route id="left" coordinates={LEG_LEFT} width={4} dashed opacity={0.5} />
-          {STOPS.map((stop, i) => (
-            <Map.Marker
-              key={stop.id}
-              lngLat={[-0.128 + i * 0.12, 51.507 + i * 0.014]}
-            >
+          {STOPS.map((stop) => (
+            <Map.Marker key={stop.id} lngLat={stop.lngLat}>
               <View
                 className={
                   stop.done
@@ -354,7 +355,7 @@ export function DeliveryTrackerBlock() {
         </Map>
       </View>
 
-      <Card className="gap-4 rounded-b-none">
+      <Card className="max-h-[62%] gap-4 rounded-b-none">
         <View className="flex-row items-center gap-3">
           <Avatar size="sm" fallback="RA" />
           <View className="flex-1">
@@ -374,7 +375,7 @@ export function DeliveryTrackerBlock() {
 
         <Separator />
 
-        <View className="gap-2">
+        <ScrollView contentContainerClassName="gap-2">
           {STOPS.map((stop) => (
             <View key={stop.id} className="flex-row items-center gap-3">
               <View
@@ -388,7 +389,7 @@ export function DeliveryTrackerBlock() {
               <Text size="xs" muted>{stop.time}</Text>
             </View>
           ))}
-        </View>
+        </ScrollView>
       </Card>
     </View>
   );
@@ -407,18 +408,30 @@ const STORES = [
 
 export function StoreLocatorBlock() {
   const [selected, setSelected] = useState(STORES[0]);
+  const map = useRef<MapHandle>(null);
+
+  /*
+   * `center` only seeds the camera — driving it from state would fight the
+   * user's own panning, since every gesture would be undone on the next
+   * render. Selecting a store is an explicit request to go somewhere, so it
+   * goes through the ref instead.
+   */
+  const select = (store: (typeof STORES)[number]) => {
+    setSelected(store);
+    map.current?.flyTo({ center: store.lngLat, zoom: 14 });
+  };
 
   return (
     <View className="flex-1">
-      <View className="flex-1">
-        {/* Re-centring by remounting the camera would fight the user's own
-            panning, so the selection drives `center` and the map eases there. */}
-        <Map center={selected.lngLat} zoom={13}>
+      {/* Split by ratio rather than letting the list size itself: a list that
+          grows with its content eventually pushes the map off the screen. */}
+      <View className="flex-[3]">
+        <Map ref={map} center={selected.lngLat} zoom={13}>
           {STORES.map((store) => (
             <Map.Marker
               key={store.id}
               lngLat={store.lngLat}
-              onPress={() => setSelected(store)}
+              onPress={() => select(store)}
             >
               <View
                 className={
@@ -433,12 +446,12 @@ export function StoreLocatorBlock() {
         </Map>
       </View>
 
-      <View className="max-h-[46%]">
+      <View className="flex-[2]">
         <ScrollView contentContainerClassName="gap-2 p-4">
           {STORES.map((store) => (
             <Item
               key={store.id}
-              onPress={() => setSelected(store)}
+              onPress={() => select(store)}
               className={store.id === selected.id ? 'border-primary' : undefined}
             >
               <Item.Content>
@@ -524,16 +537,14 @@ export function LogisticsNetworkBlock() {
           ))}
           {HUBS.map((site) => (
             <Map.Marker key={site.id} lngLat={site.lngLat}>
-              <View className="items-center">
-                <View
-                  className={
-                    site.tier === 'hub'
-                      ? 'h-3.5 w-3.5 rounded-full border-2 border-background bg-primary'
-                      : 'h-2.5 w-2.5 rounded-full border-2 border-background bg-muted-foreground'
-                  }
-                />
-                <Map.Label>{site.name}</Map.Label>
-              </View>
+              <View
+                className={
+                  site.tier === 'hub'
+                    ? 'h-3.5 w-3.5 rounded-full border-2 border-background bg-primary'
+                    : 'h-2.5 w-2.5 rounded-full border-2 border-background bg-muted-foreground'
+                }
+              />
+              <Map.Label>{site.name}</Map.Label>
             </Map.Marker>
           ))}
         </Map>
@@ -572,18 +583,16 @@ export function UptimeMonitorBlock() {
         <Map blank center={[0, 25]} zoom={1.1}>
           {NODES.map((node) => (
             <Map.Marker key={node.id} lngLat={node.lngLat}>
-              <View className="items-center">
-                <View
-                  className={
-                    node.state === 'up'
-                      ? 'h-3 w-3 rounded-full border-2 border-background bg-success'
-                      : node.state === 'slow'
-                        ? 'h-3 w-3 rounded-full border-2 border-background bg-warning'
-                        : 'h-3 w-3 rounded-full border-2 border-background bg-destructive'
-                  }
-                />
-                <Map.Label>{node.id.toUpperCase()}</Map.Label>
-              </View>
+              <View
+                className={
+                  node.state === 'up'
+                    ? 'h-3 w-3 rounded-full border-2 border-background bg-success'
+                    : node.state === 'slow'
+                      ? 'h-3 w-3 rounded-full border-2 border-background bg-warning'
+                      : 'h-3 w-3 rounded-full border-2 border-background bg-destructive'
+                }
+              />
+              <Map.Label>{node.id.toUpperCase()}</Map.Label>
             </Map.Marker>
           ))}
         </Map>
