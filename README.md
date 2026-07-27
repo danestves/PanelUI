@@ -53,12 +53,13 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 
 | | | |
 | --- | --- | --- |
-| Accordion | Input | Select |
-| Alert | InputGroup | Separator |
-| Attachment | Item | Shimmer |
-| Avatar | Label | Signature |
-| Badge | LineChart | Skeleton |
-| BottomSheet | Marker | Slider |
+| Accordion | HeatmapChart | SectionRail |
+| Alert | Input | Select |
+| Attachment | InputGroup | Separator |
+| Avatar | Item | Shimmer |
+| Badge | Label | Signature |
+| BottomSheet | LineChart | Skeleton |
+| Breadcrumb | Marker | Slider |
 | Button | Message | Soundwave |
 | Card | MessageScroller | Spinner |
 | Checkbox | NumberInput | Steps |
@@ -70,7 +71,6 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 | Flow | ScrollCanvas | Toast |
 | Form | ScrollFade | ToggleButton |
 | Frame | ScrollText | Typography |
-| HeatmapChart | SectionRail |  |
 
 `Select` shows its options in a bottom sheet, expanded in place, or floating
 over the page — one `presentation` prop, because which is right depends on what

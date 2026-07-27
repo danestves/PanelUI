@@ -1,6 +1,7 @@
 ---
 title: Separator
-description: Horizontal or vertical rule between content.
+description: Horizontal or vertical rule between content, optionally labelled.
+status: updated
 ---
 
 A rule between content.
@@ -19,7 +20,7 @@ React Native has no `<hr>`, so a separator is a view sized on one axis and stret
 Separator ships with the library — no separate install.
 
 ```tsx
-import { Separator, Surface, Text } from 'panelui-native';
+import { Separator, Surface, Text, Button } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -62,6 +63,18 @@ The common pair: a horizontal rule splitting a card, and vertical rules between 
     <Text size="sm">Examples</Text>
   </View>
 </Surface>
+```
+
+### Labelled divider
+
+Passing children breaks the rule around a centred label — the "or continue with" split in a sign-in form. The label is always announced; the flanking rules never are.
+
+```tsx
+<View className="gap-4">
+  <Button variant="outline">Continue with email</Button>
+  <Separator>or</Separator>
+  <Button variant="outline">Continue as guest</Button>
+</View>
 ```
 
 ### Custom thickness
@@ -151,7 +164,8 @@ Separators are skipped by screen readers by default. Set `decorative={false}` wh
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `thickness` | `number` | — | Thickness in pixels, overriding the variant. Sets the height of a horizontal separator and the width of a vertical one. |
-| `decorative` | `boolean` | `true` | Whether the separator is only visual. A decorative separator is skipped by screen readers; set false when the split itself carries meaning — between two groups of menu items, say — and it is announced instead. |
+| `decorative` | `boolean` | `true` | Whether the separator is only visual. A decorative separator is skipped by screen readers; set false when the split itself carries meaning — between two groups of menu items, say — and it is announced instead. A labelled separator is never decorative: its label is content, so it is always read. |
+| `labelClassName` | `string` | — | Styles the label text of a labelled separator. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -160,3 +174,5 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 A horizontal separator fills its parent's width; a vertical one fills its parent's height. The vertical case is the one that catches people out — inside a `flex-row` the row has no intrinsic height, so pair it with `items-stretch` on the row or an explicit `h-*` somewhere.
 
 `thickness` wins over `variant`. Both set the height of a horizontal separator and the width of a vertical one, so the same value reads the same either way round.
+
+Pass children to make a labelled separator: the rule splits around the content, so a divider can carry an "or" without a second element. Only the horizontal axis takes a label — a stacked word is not a divider, so a vertical separator ignores its children.

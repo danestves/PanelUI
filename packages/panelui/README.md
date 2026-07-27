@@ -171,6 +171,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Avatar` | User image with an initials fallback and an optional badge overlay |
 | `Badge` | Compact status label, dot, or notification count |
 | `BottomSheet` | Draggable sheet anchored to the bottom of the screen |
+| `Breadcrumb` | The trail of links back up the hierarchy to the current page |
 | `Button` | Pressable action with variants, sizes, loading state and icon slots |
 | `Card` | Content surface with header, body and footer |
 | `Checkbox` | Animated checkbox, as a row or a selectable card |

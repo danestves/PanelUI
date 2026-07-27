@@ -38,6 +38,7 @@ import {
   Badge,
   BellIcon,
   BottomSheet,
+  Breadcrumb,
   Button,
   Card,
   CardIcon,
@@ -5341,6 +5342,89 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'breadcrumb',
+    name: 'Breadcrumb',
+    summary: 'The trail back up to the current page',
+    demos: [
+      {
+        label: 'A trail',
+        render: () => (
+          <Breadcrumb>
+            <Breadcrumb.List>
+              <Breadcrumb.Item>
+                <Breadcrumb.Link onPress={() => {}}>Home</Breadcrumb.Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <Breadcrumb.Link onPress={() => {}}>Components</Breadcrumb.Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <Breadcrumb.Page>Breadcrumb</Breadcrumb.Page>
+              </Breadcrumb.Item>
+            </Breadcrumb.List>
+          </Breadcrumb>
+        ),
+      },
+      {
+        label: 'Custom separator',
+        render: () => (
+          // The chevron is the default; `separator` swaps it for any node
+          // across every gap at once.
+          <Breadcrumb separator={<Text size="sm" muted>/</Text>}>
+            <Breadcrumb.List>
+              <Breadcrumb.Item>
+                <Breadcrumb.Link onPress={() => {}}>Docs</Breadcrumb.Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <Breadcrumb.Link onPress={() => {}}>Guides</Breadcrumb.Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <Breadcrumb.Page>Theming</Breadcrumb.Page>
+              </Breadcrumb.Item>
+            </Breadcrumb.List>
+          </Breadcrumb>
+        ),
+      },
+      {
+        label: 'Collapsed',
+        render: () => (
+          // maxItems folds the middle into an ellipsis, keeping the first and
+          // last crumbs. onEllipsisPress makes it a handle for a hidden-steps menu.
+          <Breadcrumb>
+            <Breadcrumb.List maxItems={3} onEllipsisPress={() => {}}>
+              <Breadcrumb.Item>
+                <Breadcrumb.Link onPress={() => {}}>Home</Breadcrumb.Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <Breadcrumb.Link onPress={() => {}}>Library</Breadcrumb.Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <Breadcrumb.Link onPress={() => {}}>Components</Breadcrumb.Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <Breadcrumb.Page>Breadcrumb</Breadcrumb.Page>
+              </Breadcrumb.Item>
+            </Breadcrumb.List>
+          </Breadcrumb>
+        ),
+      },
+      {
+        label: 'Dense header',
+        render: () => (
+          <Breadcrumb size="sm">
+            <Breadcrumb.List>
+              <Breadcrumb.Item>
+                <Breadcrumb.Link onPress={() => {}}>Settings</Breadcrumb.Link>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <Breadcrumb.Page>Billing</Breadcrumb.Page>
+              </Breadcrumb.Item>
+            </Breadcrumb.List>
+          </Breadcrumb>
+        ),
+      },
+    ],
+  },
+  {
     slug: 'button',
     name: 'Button',
     summary: 'Pressable action with variants and loading',
@@ -7873,6 +7957,22 @@ export const COMPONENTS: ComponentEntry[] = [
               <Text size="sm">Examples</Text>
             </View>
           </Surface>
+        ),
+      },
+      {
+        label: 'Labelled',
+        render: () => (
+          // Children break the rule around a centred label — the "or" divider
+          // in a sign-in form. Only the horizontal axis carries a label.
+          <View className="w-full gap-4">
+            <Button variant="outline" fullWidth>
+              Continue with email
+            </Button>
+            <Separator>or</Separator>
+            <Button variant="outline" fullWidth>
+              Continue as guest
+            </Button>
+          </View>
         ),
       },
       {

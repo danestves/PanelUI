@@ -79,6 +79,16 @@ export {
   type BottomSheetProps,
   type BottomSheetContentProps,
 } from './components/bottom-sheet';
+export {
+  Breadcrumb,
+  type BreadcrumbProps,
+  type BreadcrumbListProps,
+  type BreadcrumbItemProps,
+  type BreadcrumbLinkProps,
+  type BreadcrumbPageProps,
+  type BreadcrumbSeparatorProps,
+  type BreadcrumbEllipsisProps,
+} from './components/breadcrumb';
 export { Button, type ButtonProps } from './components/button';
 export {
   ToggleButton,
@@ -409,6 +419,7 @@ export {
   ChevronLeftIcon,
   ChevronRightIcon,
   DownloadIcon,
+  EllipsisIcon,
   FacebookIcon,
   FileIcon,
   GoogleIcon,

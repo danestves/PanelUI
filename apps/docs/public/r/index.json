@@ -66,6 +66,17 @@
     ]
   },
   {
+    "name": "breadcrumb",
+    "type": "registry:ui",
+    "description": "The trail of links back up the hierarchy to the current page.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "icons",
+      "text"
+    ]
+  },
+  {
     "name": "button",
     "type": "registry:ui",
     "description": "Pressable action with variants, sizes, loading state and icon slots.",
@@ -431,8 +442,11 @@
   {
     "name": "separator",
     "type": "registry:ui",
-    "description": "Horizontal or vertical rule between content.",
-    "registryDependencies": []
+    "description": "Horizontal or vertical rule between content, optionally labelled.",
+    "registryDependencies": [
+      "cn",
+      "text"
+    ]
   },
   {
     "name": "shimmer",
