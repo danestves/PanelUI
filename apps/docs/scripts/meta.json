@@ -32,6 +32,14 @@
       "updatedIn": "0.19.0"
     }
   ],
+  "breadcrumb": [
+    "Breadcrumb",
+    "The trail of links back up the hierarchy to the current page.",
+    "react native breadcrumb navigation",
+    {
+      "addedIn": "0.23.0"
+    }
+  ],
   "button": [
     "Button",
     "Pressable action with variants, sizes, loading state and icon slots.",
@@ -237,8 +245,11 @@
   ],
   "separator": [
     "Separator",
-    "Horizontal or vertical rule between content.",
-    "react native separator"
+    "Horizontal or vertical rule between content, optionally labelled.",
+    "react native separator",
+    {
+      "updatedIn": "0.23.0"
+    }
   ],
   "shimmer": [
     "Shimmer",
