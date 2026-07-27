@@ -14,6 +14,23 @@
  * surfaces read as one misdrawn shape. The panel's bottom corners are not set
  * at all — the shell clips them, so they take its radius exactly.
  *
+ * That clip follows the shell's *border box*, not the box inside its border.
+ * Along the straight edges the panel is held off by the border width and the
+ * edge shows through, but at the corner arcs the panel's square corner is
+ * clipped to the outer radius and paints across the border. At the default
+ * hairline that is a sliver nobody sees. Give the shell a thicker border and
+ * the corners visibly eat it, so a Frame with `border-2` or more needs the
+ * panel told where to stop:
+ *
+ * ```tsx
+ * <Frame className="rounded-[28px] border-2 border-dashed">
+ *   <Frame.Panel className="rounded-b-[26px]">…</Frame.Panel>
+ * </Frame>
+ * ```
+ *
+ * The radius to use is the shell's less its border width. It is on the caller
+ * because both arrive as `className` strings, which the component cannot read.
+ *
  * ```tsx
  * <Frame>
  *   <Frame.Header>

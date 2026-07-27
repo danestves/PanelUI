@@ -273,6 +273,18 @@ The two surfaces are nested rather than stacked, and only one edge of the outer 
 
 The shell's radius is the larger of the two, and the panel's top corners are tighter. That is the reverse of the usual nested-radius rule, and it is deliberate: with only the top corners free, matching them would make the two surfaces read as one misdrawn shape. The panel's bottom corners are not set at all — the shell clips them, so they take its radius exactly, which is what `overflow-hidden` on the root is doing.
 
+### Thickening the shell's border
+
+That clip follows the shell's *border box*, not the box inside its border. Along the straight edges the panel is held off by the border width and the edge shows through, but at the corner arcs the panel's square corner is clipped to the outer radius and paints across the border. At the default hairline that is a sliver nobody sees. Give the shell a thicker border and the corners visibly eat it, so tell the panel where to stop:
+
+```tsx
+<Frame className="rounded-[28px] border-2 border-dashed">
+  <Frame.Panel className="rounded-b-[26px]">…</Frame.Panel>
+</Frame>
+```
+
+The radius to use is the shell's less its border width. It is on you rather than on the component because both arrive as `className` strings, which `Frame` cannot read.
+
 ### Dividers
 
 React Native has no `:first-child`, so the hairline between rows cannot be a CSS rule. `Frame.Panel` places them instead — a line above every child but the first. Passing `divided` on a row overrides that either way, and `dividers={false}` on the panel hands the whole job back to you.

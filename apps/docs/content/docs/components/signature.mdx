@@ -86,7 +86,9 @@ Where a signature is usually asked for — over the thing being signed rather th
           </Frame.Title>
           <CloseButton onPress={close} />
         </Frame.Header>
-        <Frame.Panel>
+        {/* The shell's radius less its 2px border, so the panel's opaque
+            corners stop short of the dashed edge instead of covering it. */}
+        <Frame.Panel className="rounded-b-[26px]">
           <Signature ref={pad} size="lg" onChange={setCount} className="rounded-none border-0 bg-background" />
         </Frame.Panel>
       </Frame>

@@ -2020,44 +2020,52 @@ function SigningFrame({
         onPress={onClose}
       />
 
+      {/* The entry animation and the lift are on separate views on purpose.
+          A layout animation owns the transform of the view it is applied to,
+          so an animated `translateY` on the same view is fought over and
+          Reanimated warns about it — the wrapper enters, the child lifts. */}
       <Animated.View
         entering={ZoomIn.springify().damping(18).stiffness(250).mass(0.6)}
-        style={rise}
         className="w-full"
       >
-        {/* The dashed edge says the whole panel is the thing being filled in,
-            the way a form field does. */}
-        <Frame className="rounded-[28px] border-2 border-dashed">
-          <Frame.Header>
-            {/* Clear rather than undo: at the size a signature is drawn, a
-                stroke is rarely the unit you want back — you either keep the
-                signature or start it again. It dims once there is nothing to
-                wipe, which is also when the confirm button is gone. */}
-            <Signature.Clear
-              accessibilityLabel="Start over"
-              className="bg-transparent"
-              disabled={count === 0}
-              onPress={() => pad.current?.clear()}
-            />
-            {/* Two equal-width round buttons on either side, so a flexible
-                centred title lands in the middle of the strip. */}
-            <Frame.Title weight="semibold" className="flex-1 text-center text-foreground">
-              Sign
-            </Frame.Title>
-            <SigningCloseButton onPress={onClose} />
-          </Frame.Header>
-          <Frame.Panel>
-            {/* `bg-background` rather than a literal white: on a dark theme a
-                hardcoded white pad puts light-grey placeholder text on white. */}
-            <Signature
-              ref={pad}
-              size="lg"
-              guideline={guideline}
-              onChange={setCount}
-              className="rounded-none border-0 bg-background"
-            />
-          </Frame.Panel>
-        </Frame>
+        <Animated.View style={rise}>
+          {/* The dashed edge says the whole panel is the thing being filled in,
+              the way a form field does. */}
+          <Frame className="rounded-[28px] border-2 border-dashed">
+            <Frame.Header>
+              {/* Clear rather than undo: at the size a signature is drawn, a
+                  stroke is rarely the unit you want back — you either keep the
+                  signature or start it again. It dims once there is nothing to
+                  wipe, which is also when the confirm button is gone. */}
+              <Signature.Clear
+                accessibilityLabel="Start over"
+                className="bg-transparent"
+                disabled={count === 0}
+                onPress={() => pad.current?.clear()}
+              />
+              {/* Two equal-width round buttons on either side, so a flexible
+                  centred title lands in the middle of the strip. */}
+              <Frame.Title weight="semibold" className="flex-1 text-center text-foreground">
+                Sign
+              </Frame.Title>
+              <SigningCloseButton onPress={onClose} />
+            </Frame.Header>
+            {/* The shell's radius less its 2px border. The panel is clipped to
+                the shell's *outer* rounded rect, so without its own bottom
+                radius its opaque corners paint straight over the dashed edge. */}
+            <Frame.Panel className="rounded-b-[26px]">
+              {/* `bg-background` rather than a literal white: on a dark theme a
+                  hardcoded white pad puts light-grey placeholder text on white. */}
+              <Signature
+                ref={pad}
+                size="lg"
+                guideline={guideline}
+                onChange={setCount}
+                className="rounded-none border-0 bg-background"
+              />
+            </Frame.Panel>
+          </Frame>
+        </Animated.View>
       </Animated.View>
 
       {count > 0 ? (
