@@ -124,7 +124,8 @@
     "Contribution grid with a themed colour ramp and a readout.",
     "react native heatmap chart",
     {
-      "addedIn": "0.14.0"
+      "addedIn": "0.14.0",
+      "updatedIn": "0.25.0"
     }
   ],
   "input": [

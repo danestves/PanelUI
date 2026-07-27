@@ -1,6 +1,7 @@
 ---
 title: HeatmapChart
 description: Contribution grid with a themed colour ramp and a readout.
+status: updated
 ---
 
 A calendar of bins shaded by how much happened in each — one column per period, one row per bin inside it. It answers “when was this busy” at a glance, which no line can: a year of daily numbers plotted as a series is a hairball, and as a grid it is a pattern.
@@ -118,19 +119,35 @@ For a short range — a quarter, a sprint — `fill` divides the available width
 </HeatmapChart>
 ```
 
-### A grid whose rows are not days
+### Changing the colour
 
-`rows` is the only thing that makes this a calendar. Set it to one for an uptime band, or to twenty-four for an hour-by-hour chart, and pass the row names to the axis.
+Name a theme token and the ramp follows it through light and dark. `emptyColor` is the cell with nothing in it, and `levelOpacity` retunes the contrast between the four busy levels without having to name five colours. `levelColors` is still there for a ramp that is not one colour at all.
 
 ```tsx
-<HeatmapChart data={days} rows={1} layout="fill">
-  <HeatmapChart.Cells />
-  <HeatmapChart.Tooltip formatLabel={(cell) => `${cell.count} incidents`} />
-</HeatmapChart>
+{/* A token, so the ramp still follows the theme. */}
+<HeatmapChart data={weeks} color="--color-chart-3" />
 
-<HeatmapChart data={days} rows={24} layout="fill">
-  <HeatmapChart.YAxis labels={HOURS} tickFilter="all" />
+{/* A literal works too, for a colour that is not in the theme. */}
+<HeatmapChart data={weeks} color="#2dd4bf" emptyColor="--color-surface-secondary" />
+
+{/* Flatter contrast between the busy levels. */}
+<HeatmapChart data={weeks} levelOpacity={[1, 0.45, 0.62, 0.8, 1]} />
+
+{/* Five colours outright, when the ramp is not one colour fading. */}
+<HeatmapChart
+  data={weeks}
+  levelColors={['#1c1c1c', '#0e4429', '#006d32', '#26a641', '#39d353']}
+/>
+```
+
+### A grid whose rows are not days
+
+Seven rows is a calendar week, but the grid does not care. Twenty-four gives a day of hours, with the columns as dates — the cells, the ramp and the readout all work the same way.
+
+```tsx
+<HeatmapChart data={hours} rows={24} binSize={9}>
   <HeatmapChart.Cells />
+  <HeatmapChart.Tooltip formatLabel={(cell) => `${cell.count} requests`} />
 </HeatmapChart>
 ```
 
@@ -206,21 +223,6 @@ A rule every thirteen columns, and the ramp derived from a colour of your own in
 </HeatmapChart>
 ```
 
-### Uptime strip
-
-`rows={1}` turns the calendar into a band, and nothing else changes. The same grid does an hourly chart at `rows={24}` with the hour names passed to the axis.
-
-```tsx
-<HeatmapChart data={days} rows={1} layout="fill" gap={3}>
-  <HeatmapChart.Cells />
-  {/* Nothing scrolls here, so the readout need not wait for a hold. */}
-  <HeatmapChart.Tooltip
-    activateAfterLongPress={0}
-    formatLabel={(cell) => `${cell.count} incidents`}
-  />
-</HeatmapChart>
-```
-
 ## API Reference
 
 ### HeatmapChart
@@ -234,10 +236,12 @@ A rule every thirteen columns, and the ramp derived from a colour of your own in
 | `gap` | `number` | `3` | Space between cells, in pixels. |
 | `cornerRadius` | `number` | `2` | Corner radius of a cell. |
 | `weekStartDay` | `number` | `0` | Which weekday is the top row. `0` is Sunday. Labels follow it. |
-| `rows` | `number` | `DAYS_IN_WEEK` | Rows per column. Seven for a calendar; use another number for a band that is not a week — twenty-four for hours, one for an uptime strip. |
+| `rows` | `number` | `DAYS_IN_WEEK` | Rows per column. Seven for a calendar; use another number when the bins are not weekdays — twenty-four for a grid of hours. |
 | `levels` | `number[]` | — | The four counts at which the ramp steps up. Derived from the data's own quartiles when omitted, so a chart of single digits and a chart of thousands both use the whole ramp. |
 | `levelColors` | `string[]` | — | Five colours — empty, then the four activity levels. Replaces the derived ramp outright. Omit it and the ramp is `--color-chart-1` at five opacities, which follows the theme. |
-| `color` | `string` | — | Base colour for the derived ramp. Defaults to the `--color-chart-1` token. |
+| `color` | `string` | — | Base colour for the derived ramp — the colour the busiest cells are drawn in, with the quieter levels the same colour at lower opacity. Takes a theme token by name as well as a literal, so `"--color-chart-3"` recolours the chart and keeps following the theme through light and dark. Defaults to `--color-chart-1`. |
+| `emptyColor` | `string` | — | Colour of a cell with nothing in it. Takes a token name too. Defaults to `--color-muted`, which is the right weight for "measured, and empty" — override it for a chart that should read as denser or fainter than that. |
+| `levelOpacity` | `number[]` | — | Opacity of the base colour at each of the five levels, quietest first. The way to retune the ramp's contrast without having to name five colours. Ignored when `levelColors` is given, which sets the colours outright. |
 | `animationDuration` | `number` | `900` | Milliseconds for the reveal on mount. |
 | `inactiveOpacity` | `number` | `1` | Opacity of every cell that is not the one under the finger. |
 | `onActiveCellChange` | `(cell: HeatmapCell \| null) => void` | — | The cell under the finger as it moves, and `null` when it lifts. This is how a readout above the chart gets its value — that readout is outside the chart, so it cannot use `useHeatmapChart`. |
@@ -296,7 +300,14 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ### The colour ramp
 
-One colour at five opacities, not five colours. A heatmap reads as *more* and *less* of one thing, and five distinct hues read as five different things — which is what the `--color-chart-*` tokens are for, and why only the first of them is used here. The base is `--color-chart-1`, so the ramp follows the active theme; `color` swaps the base for one of your own, and `levelColors` replaces all five outright (the opacities are dropped then, since dimming a colour someone chose on purpose is not a ramp).
+One colour at five opacities, not five colours. A heatmap reads as *more* and *less* of one thing, and five distinct hues read as five different things — which is what the `--color-chart-*` tokens are for, and why only the first of them is used here. The base is `--color-chart-1`, so the ramp follows the active theme.
+
+There are four ways to change it, in rough order of how often you want them:
+
+- **`color`** swaps the base. It takes a token by name — `color="--color-chart-3"` — as readily as a literal, and naming the token is almost always what you meant: a literal is a colour frozen at the moment it was written, and it cannot follow the theme into dark mode.
+- **`emptyColor`** is the cell with nothing in it, `--color-muted` by default. Take it lighter or darker when "measured, and empty" should read differently from the surface around it.
+- **`levelOpacity`** retunes the contrast between the five steps without naming five colours.
+- **`levelColors`** replaces all five outright, for a ramp that is not one colour fading. The opacities are dropped then, since dimming a colour someone chose on purpose is not a ramp.
 
 The four thresholds are the data's own quartiles by default, so a chart of single-digit counts and a chart of thousands both use the whole ramp. Zero is its own level and is left out of the quartiles — counting it drags every threshold to nothing on a sparse chart. Pass `levels` to fix them yourself.
 
@@ -308,7 +319,7 @@ The parts sit in a real layout rather than stacking over the plot: the labels ar
 
 `HeatmapChart.Tooltip` waits for the press to be *held* before it claims the touch. It has to: a full year of columns lives inside a horizontal scroller, and a readout that takes over on the first pixel of movement means the chart can never be scrolled at all. Holding first is what separates “I am moving the chart” from “I am reading it”, and dragging from there moves the readout as usual.
 
-`activateAfterLongPress={0}` gives the touch back immediately, for a chart that is not inside a scroll view — the uptime strip below is one.
+`activateAfterLongPress={0}` gives the touch back immediately, for a chart that is not inside a scroll view and so has no scroll to protect.
 
 The cell is resolved on the UI thread and only crosses into JS when it *changes*, so a drag across a year costs a handful of re-renders rather than one per frame.
 

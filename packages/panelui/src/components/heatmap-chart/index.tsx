@@ -65,13 +65,22 @@ const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 /**
  * Rows in a week — the default, and what the calendar helper and the weekday
- * labels assume. The grid itself takes a `rows` prop, so an hourly band or a
- * single-row uptime strip is the same component with a different number.
+ * labels assume. The grid itself takes a `rows` prop, so a grid whose bins are
+ * hours rather than days is the same component with a different number.
  */
 const DAYS_IN_WEEK = 7;
 
 /** Opacity of the base colour at each activity level. Index 0 is "nothing". */
 const LEVEL_OPACITY = [1, 0.28, 0.5, 0.74, 1] as const;
+
+/**
+ * A theme token rather than a colour. Tokens are named, not written, so the
+ * leading `--` tells the two apart without the caller having to say which
+ * kind they passed.
+ */
+function isToken(value: string | undefined): value is string {
+  return typeof value === 'string' && value.startsWith('--');
+}
 
 /** Room left for the weekday labels when the y-axis does not ask for its own. */
 const DEFAULT_AXIS_WIDTH = 26;
@@ -317,8 +326,8 @@ export interface HeatmapChartProps extends ViewProps {
   /** Which weekday is the top row. `0` is Sunday. Labels follow it. */
   weekStartDay?: number;
   /**
-   * Rows per column. Seven for a calendar; use another number for a band that
-   * is not a week — twenty-four for hours, one for an uptime strip.
+   * Rows per column. Seven for a calendar; use another number when the bins
+   * are not weekdays — twenty-four for a grid of hours.
    */
   rows?: number;
   /**
@@ -333,8 +342,27 @@ export interface HeatmapChartProps extends ViewProps {
    * opacities, which follows the theme.
    */
   levelColors?: string[];
-  /** Base colour for the derived ramp. Defaults to the `--color-chart-1` token. */
+  /**
+   * Base colour for the derived ramp — the colour the busiest cells are drawn
+   * in, with the quieter levels the same colour at lower opacity.
+   *
+   * Takes a theme token by name as well as a literal, so `"--color-chart-3"`
+   * recolours the chart and keeps following the theme through light and dark.
+   * Defaults to `--color-chart-1`.
+   */
   color?: string;
+  /**
+   * Colour of a cell with nothing in it. Takes a token name too. Defaults to
+   * `--color-muted`, which is the right weight for "measured, and empty" —
+   * override it for a chart that should read as denser or fainter than that.
+   */
+  emptyColor?: string;
+  /**
+   * Opacity of the base colour at each of the five levels, quietest first.
+   * The way to retune the ramp's contrast without having to name five colours.
+   * Ignored when `levelColors` is given, which sets the colours outright.
+   */
+  levelOpacity?: number[];
   /** Milliseconds for the reveal on mount. */
   animationDuration?: number;
   /** Opacity of every cell that is not the one under the finger. */
@@ -361,6 +389,8 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
     levels,
     levelColors,
     color,
+    emptyColor,
+    levelOpacity,
     animationDuration = 900,
     inactiveOpacity = 1,
     onActiveCellChange,
@@ -378,10 +408,24 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
   const reveal = useSharedValue(0);
   const reducedMotion = useReducedMotion();
 
-  const baseToken = useCSSVariable('--color-chart-1');
-  const emptyToken = useCSSVariable('--color-muted');
-  const base = color ?? (typeof baseToken === 'string' ? baseToken : '#262626');
-  const empty = typeof emptyToken === 'string' ? emptyToken : 'rgba(128,128,128,0.16)';
+  /*
+   * `color` and `emptyColor` take a token name as readily as a literal. A
+   * literal is a colour frozen at the moment it was written — it cannot follow
+   * the theme into dark mode — so naming the token is almost always what the
+   * caller meant, and having to resolve it themselves is the reason they did
+   * not. The hooks run unconditionally; which of the two answers is used is
+   * decided after.
+   */
+  const baseToken = useCSSVariable(isToken(color) ? color : '--color-chart-1');
+  const emptyToken = useCSSVariable(
+    isToken(emptyColor) ? emptyColor : '--color-muted'
+  );
+  const base =
+    (isToken(color) ? undefined : color) ??
+    (typeof baseToken === 'string' ? baseToken : '#262626');
+  const empty =
+    (isToken(emptyColor) ? undefined : emptyColor) ??
+    (typeof emptyToken === 'string' ? emptyToken : 'rgba(128,128,128,0.16)');
 
   const parts = useMemo(() => splitParts(children), [children]);
   // The y-axis is laid out beside the grid rather than over it, so its width
@@ -419,8 +463,11 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
     () =>
       levelColors
         ? { ramp: levelColors, opacities: levelColors.map(() => 1) }
-        : { ramp: [empty, base, base, base, base], opacities: [...LEVEL_OPACITY] },
-    [levelColors, empty, base]
+        : {
+            ramp: [empty, base, base, base, base],
+            opacities: levelOpacity ?? [...LEVEL_OPACITY],
+          },
+    [levelColors, levelOpacity, empty, base]
   );
 
   const levelOf = useMemo(

@@ -4261,42 +4261,6 @@ function HeatmapQuartersVersion() {
   );
 }
 
-/** One row per column: the same grid, used as an uptime strip. */
-function HeatmapUptimeVersion() {
-  const data = useMemo(
-    () =>
-      HEATMAP_YEAR.slice(-45).map((column, index) => ({
-        bin: index,
-        bins: [{ bin: 0, count: column.bins[3]?.count ?? 0, date: column.bins[3]?.date }],
-      })),
-    []
-  );
-
-  return (
-    <View className="flex-1 justify-center px-5">
-      <Card>
-        <Card.Header>
-          <Card.Title>Uptime</Card.Title>
-          <Card.Description>
-            `rows={1}` turns the calendar into a band. Nothing else changes.
-          </Card.Description>
-        </Card.Header>
-        <Card.Content>
-          <HeatmapChart data={data} rows={1} layout="fill" gap={3} cornerRadius={2}>
-            <HeatmapChart.Cells />
-            {/* Nothing scrolls here, so the readout can claim the touch
-                straight away instead of waiting for a hold. */}
-            <HeatmapChart.Tooltip
-              activateAfterLongPress={0}
-              formatLabel={(cell) => `${cell.count} incidents`}
-            />
-          </HeatmapChart>
-        </Card.Content>
-      </Card>
-    </View>
-  );
-}
-
 /**
  * A field that has to get out of the keyboard's way inside a scroll view —
  * the case a fixed-height box cannot show.
@@ -6441,13 +6405,6 @@ export const COMPONENTS: ComponentEntry[] = [
         fullPage: true,
         description: 'Rules grouping the columns, and a ramp off a colour of your own.',
         render: () => <HeatmapQuartersVersion />,
-      },
-      {
-        label: 'Uptime strip',
-        id: 'uptime',
-        fullPage: true,
-        description: 'One row per column — the same grid used as a band.',
-        render: () => <HeatmapUptimeVersion />,
       },
     ],
   },
