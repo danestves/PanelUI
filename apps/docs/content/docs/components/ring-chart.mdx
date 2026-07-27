@@ -1,0 +1,200 @@
+---
+title: RingChart
+description: Concentric arcs, each measured against its own target.
+status: new
+---
+
+Progress towards several targets, as concentric arcs.
+
+It is not a pie, and the difference matters. A pie divides one whole between its slices, so the angles have to add to a full turn. A ring here is a value against *its own* target — three rings can all sit at ninety percent of three unrelated numbers, and that is the reading. Nothing is normalised across rings, and nothing has to add up.
+
+## Installation
+
+RingChart ships with the library — no separate install.
+
+```tsx
+import { RingChart, type RingDatum, Card, Text } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add ring-chart
+```
+
+## Usage
+
+```tsx
+<RingChart data={goals}>
+  {goals.map((goal, index) => (
+    <RingChart.Ring key={goal.label} index={index} />
+  ))}
+  <RingChart.Center />
+</RingChart>
+```
+
+## Composition
+
+```tsx
+<RingChart data={…}>
+  <RingChart.Ring index={0} />          {/* one per entry, outermost first */}
+  <RingChart.Ring index={1} />
+  <RingChart.Center />                  {/* the readout in the hole */}
+  <RingChart.Legend />
+</RingChart>
+```
+
+- **`RingChart.Ring`** — One ring: a full-circle track, and the arc showing how far along it the value has got.
+- **`RingChart.Center`** — The readout in the hole. Shows the outermost ring until one is selected, then that ring’s own figures.
+- **`RingChart.Legend`** — A swatch, a name and a percentage per ring — pressable in the same way the rings are, and usually the easier target of the two.
+
+## Examples
+
+### The data
+
+Each ring carries its own target. `maxValue` is what makes an arc mean something: without it the arc shows how far something went, and with it, how far it went *of what it was aiming at*.
+
+```tsx
+const goals: RingDatum[] = [
+  { label: 'Move', value: 486, maxValue: 600 },
+  { label: 'Exercise', value: 24, maxValue: 30 },
+  { label: 'Stand', value: 9, maxValue: 12 },
+];
+```
+
+### Selecting a ring
+
+Press a ring, or its row in the legend, and the centre swaps to that ring’s figures. Pressing it again clears the selection. Control it from outside with `activeIndex` and `onActiveIndexChange` when something else on the screen has to stay in step.
+
+```tsx
+const [active, setActive] = useState(-1);
+
+<RingChart data={goals} activeIndex={active} onActiveIndexChange={setActive}>
+  {goals.map((goal, index) => (
+    <RingChart.Ring key={goal.label} index={index} />
+  ))}
+  <RingChart.Center />
+  <RingChart.Legend />
+</RingChart>
+```
+
+### Drawing the middle yourself
+
+`Center` takes a render function instead of its default layout. It is given the selected ring, or `null` when nothing is selected.
+
+```tsx
+<RingChart.Center>
+  {(ring) => (
+    <>
+      <Text size="xs" muted>{ring ? ring.label : 'Today'}</Text>
+      <Text size="xl" weight="semibold">
+        {ring ? `${Math.round((ring.value / ring.maxValue) * 100)}%` : '3 goals'}
+      </Text>
+    </>
+  )}
+</RingChart.Center>
+```
+
+### Sizing it
+
+The chart measures its container and stays square. `strokeWidth` and `ringGap` decide how much of it the rings take and how much hole is left — and the hole is what the centre readout has to fit inside, so a chart of many thick rings has room for a number and not much else.
+
+```tsx
+{/* Fills its container. */}
+<RingChart data={goals} strokeWidth={18} ringGap={6}>…</RingChart>
+
+{/* Or a fixed size, for a ring inside a row. */}
+<RingChart data={usage} size={96} strokeWidth={10} ringGap={4}>…</RingChart>
+```
+
+## Versions
+
+### Today's goals
+
+Three targets, each read against its own rather than against each other — and a list beside them that selects the same rings.
+
+```tsx
+<RingChart data={goals} strokeWidth={18} ringGap={6} activeIndex={active} onActiveIndexChange={setActive}>
+  {goals.map((goal, index) => (
+    <RingChart.Ring key={goal.label} index={index} />
+  ))}
+  <RingChart.Center />
+</RingChart>
+```
+
+### Inside a card
+
+The small end — a share of something, sitting in a row, with no axis needed to say what it is.
+
+```tsx
+<View className="w-28">
+  <RingChart data={usage} strokeWidth={12} ringGap={5}>
+    {usage.map((ring, index) => (
+      <RingChart.Ring key={ring.label} index={index} />
+    ))}
+    <RingChart.Center formatValue={(value) => `${value}%`} />
+  </RingChart>
+</View>
+```
+
+## API Reference
+
+### RingChart
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `data` | `RingDatum[]` | — | One entry per ring, outermost first. |
+| `size` | `number` | — | Fixed diameter in points. Measured from the container when omitted. |
+| `strokeWidth` | `number` | `12` | Thickness of each ring. |
+| `ringGap` | `number` | `6` | Gap between one ring and the next. |
+| `animationDuration` | `number` | `1100` | Milliseconds for the arcs to sweep in. |
+| `activeIndex` | `number` | — | Selected ring. Leave unset to let the chart track it. |
+| `onActiveIndexChange` | `(index: number) => void` | — | Fires with the selected ring, or `-1` when the selection is cleared. |
+
+### RingChart.Ring
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `index` | `number` | — | Which entry in `data` this ring draws. |
+| `color` | `string` | — | Explicit colour, overriding the datum's and the token. |
+| `colorIndex` | `SeriesColorIndex` | — | Which of the five chart tokens to take, when the datum names no colour. |
+| `lineCap` | `'round' \| 'butt'` | `'round'` | Rounded ends, or square ones. |
+| `trackOpacity` | `number` | `0.15` | Opacity of the track behind the arc. |
+
+### RingChart.Center
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `defaultLabel` | `string` | — | Heading shown when no ring is selected. Defaults to the outermost ring's own name, which is what the centre shows when nothing has been picked. |
+| `formatValue` | `(value: number, ring: RingDatum \| null) => string` | — | Format the number under the label. Defaults to a compact number. |
+| `className` | `string` | — |  |
+
+### RingChart.Legend
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `showValue` | `boolean` | — | Show each ring's percentage of its own target beside its name. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Why every ring has a track
+
+An arc drawn on nothing shows how far something went. An arc drawn on a full circle shows how far it went *of what it was aiming at*, which is the entire question a ring chart is asked. The track is the target made visible.
+
+A value past its target fills the ring and stops there. Going round twice would draw 110% as 10%, which is the wrong answer told confidently.
+
+### What the centre shows
+
+The outermost ring, until one is selected. Not a total: the rings measure different things against different targets, so their values do not add up and their percentages do not average — a total in the middle would be a confident number about nothing. Pass a render function to `Center` when your rings *do* share a unit and a total is honest.
+
+### Touch, not hover
+
+Rings are selected by pressing them. There is no equivalent here of a pointer resting somewhere without committing, so a chart that only revealed its numbers on hover would never reveal them at all — and because a twelve-point band is below the size a finger reliably hits, the touch target is widened well past the ring it belongs to.
+
+### Reduced motion
+
+The sweep is skipped and the arcs draw at their final length.

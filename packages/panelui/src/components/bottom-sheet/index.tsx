@@ -585,8 +585,16 @@ function BottomSheetBody({
     };
   }, [surface]);
 
+  /*
+   * Pulled out before the handler rather than read off `surface` inside it.
+   * A scroll handler is a worklet, and everything it closes over is copied to
+   * the UI thread — closing over the context object would drag the gesture
+   * along with it, and a gesture is not a value that can be copied.
+   */
+  const scrollOffset = surface?.scrollOffset;
+
   const handler = useAnimatedScrollHandler((event) => {
-    if (surface) surface.scrollOffset.value = event.contentOffset.y;
+    if (scrollOffset) scrollOffset.value = event.contentOffset.y;
   });
 
   const body = (

@@ -25,6 +25,16 @@
     "registryDependencies": []
   },
   {
+    "name": "area-chart",
+    "type": "registry:ui",
+    "description": "Filled bands over time, stacked or overlaid.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "attachment",
     "type": "registry:ui",
     "description": "File row with upload states, built on Item.",
@@ -50,6 +60,16 @@
     "type": "registry:ui",
     "description": "Compact status label, dot, or notification count.",
     "registryDependencies": [
+      "text"
+    ]
+  },
+  {
+    "name": "bar-chart",
+    "type": "registry:ui",
+    "description": "Categories compared by length, grouped or stacked.",
+    "registryDependencies": [
+      "chart",
+      "cn",
       "text"
     ]
   },
@@ -97,6 +117,12 @@
       "cn",
       "text"
     ]
+  },
+  {
+    "name": "chart",
+    "type": "registry:lib",
+    "description": "Scales, monotone curves and path building. Shared by every chart.",
+    "registryDependencies": []
   },
   {
     "name": "checkbox",
@@ -260,6 +286,7 @@
     "type": "registry:ui",
     "description": "Animated time series, drawn on the UI thread.",
     "registryDependencies": [
+      "chart",
       "cn",
       "text"
     ]
@@ -397,6 +424,16 @@
       "cn",
       "haptics",
       "icons",
+      "text"
+    ]
+  },
+  {
+    "name": "ring-chart",
+    "type": "registry:ui",
+    "description": "Concentric arcs, each measured against its own target.",
+    "registryDependencies": [
+      "chart",
+      "cn",
       "text"
     ]
   },

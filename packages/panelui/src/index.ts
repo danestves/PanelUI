@@ -73,7 +73,36 @@ export {
   type AttachmentActionProps,
   type AttachmentState,
 } from './components/attachment';
+export {
+  AreaChart,
+  useAreaChart,
+  type AreaChartProps,
+  type AreaChartHandle,
+  type AreaChartGridProps,
+  type AreaChartAreaProps,
+  type AreaChartXAxisProps,
+  type AreaChartYAxisProps,
+  type AreaChartTooltipProps,
+  type AreaChartLegendProps,
+  type AreaChartDatum,
+  type AreaChartStatus,
+} from './components/area-chart';
 export { Badge, type BadgeProps } from './components/badge';
+export {
+  BarChart,
+  useBarChart,
+  type BarChartProps,
+  type BarChartHandle,
+  type BarChartGridProps,
+  type BarChartBarProps,
+  type BarChartXAxisProps,
+  type BarChartYAxisProps,
+  type BarChartTooltipProps,
+  type BarChartLegendProps,
+  type BarChartDatum,
+  type BarChartStatus,
+  type BarChartOrientation,
+} from './components/bar-chart';
 export {
   BottomSheet,
   type BottomSheetProps,
@@ -359,6 +388,16 @@ export {
   type RatingColor,
   type RatingSize,
 } from './components/rating';
+export {
+  RingChart,
+  useRingChart,
+  type RingChartProps,
+  type RingChartHandle,
+  type RingChartRingProps,
+  type RingChartCenterProps,
+  type RingChartLegendProps,
+  type RingDatum,
+} from './components/ring-chart';
 export {
   ScrollFade,
   type ScrollFadeProps,

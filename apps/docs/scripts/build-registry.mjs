@@ -60,6 +60,7 @@ const SUPPORT_DESCRIPTIONS = {
   'panel-ui-provider': 'Root provider: gesture root, themed background, portal host, toasts.',
   icons: 'The icon set, plus the colour context components use to tint them.',
   cn: 'Merges Tailwind class names, with later classes winning conflicts.',
+  chart: 'Scales, monotone curves and path building. Shared by every chart.',
   native: 'Optional bridge to the platform UI toolkit, behind the `native` prop.',
   haptics: 'Optional bridge to the platform haptic engine, behind the `haptics` prop.',
   'use-theme': 'Read and change the active theme.',
@@ -139,6 +140,14 @@ register(
   [path.join(SRC, 'utils/cn.ts')],
   () => 'lib/cn.ts',
   () => `${ALIAS.lib}/cn`
+);
+
+register(
+  'chart',
+  'registry:lib',
+  [path.join(SRC, 'utils/chart.ts')],
+  () => 'lib/chart.ts',
+  () => `${ALIAS.lib}/chart`
 );
 
 register(

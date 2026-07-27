@@ -9,6 +9,14 @@
     "Status message with a built-in icon.",
     "react native alert component"
   ],
+  "area-chart": [
+    "AreaChart",
+    "Filled bands over time, stacked or overlaid.",
+    "react native area chart stacked",
+    {
+      "addedIn": "0.25.0"
+    }
+  ],
   "attachment": [
     "Attachment",
     "File row with upload states, built on Item.",
@@ -23,6 +31,14 @@
     "Badge",
     "Compact status label, dot, or notification count.",
     "react native badge"
+  ],
+  "bar-chart": [
+    "BarChart",
+    "Categories compared by length, grouped or stacked.",
+    "react native bar chart",
+    {
+      "addedIn": "0.25.0"
+    }
   ],
   "bottom-sheet": [
     "BottomSheet",
@@ -226,6 +242,14 @@
     "react native star rating",
     {
       "addedIn": "0.20.0"
+    }
+  ],
+  "ring-chart": [
+    "RingChart",
+    "Concentric arcs, each measured against its own target.",
+    "react native ring chart radial progress",
+    {
+      "addedIn": "0.25.0"
     }
   ],
   "scroll-canvas": [

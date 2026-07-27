@@ -81,6 +81,16 @@ import Svg, {
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
+import {
+  areaPath,
+  columnValues,
+  compactNumber,
+  linePath,
+  useSeriesColor,
+  xOf,
+  yOf,
+  type Plot,
+} from '../../utils/chart';
 import { cn } from '../../utils/cn';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -101,13 +111,6 @@ type Layer = 'svg' | 'overlay';
 export type LineChartStatus = 'loading' | 'ready';
 export type LineChartCurve = 'monotone' | 'linear';
 export type LineChartDatum = Record<string, string | number | null | undefined>;
-
-interface Plot {
-  width: number;
-  height: number;
-  left: number;
-  top: number;
-}
 
 interface LineChartContextValue {
   data: LineChartDatum[];
@@ -524,7 +527,7 @@ function LineChartLine({
     return () => unregisterSeries(dataKey);
   }, [dataKey, stroke, registerSeries, unregisterSeries]);
 
-  const values = useMemo(() => numbersOf(data, dataKey), [data, dataKey]);
+  const values = useMemo(() => columnValues(data, dataKey), [data, dataKey]);
   const loading = status === 'loading';
 
   const animatedProps = useAnimatedProps(() => ({
@@ -609,7 +612,7 @@ function LineChartArea({ dataKey, color, colorIndex = 1, opacity = 0.18 }: LineC
   const fill = useSeriesColor(color, colorIndex);
   const gradientId = useRef(`panelui-area-${Math.random().toString(36).slice(2, 9)}`).current;
 
-  const values = useMemo(() => numbersOf(data, dataKey), [data, dataKey]);
+  const values = useMemo(() => columnValues(data, dataKey), [data, dataKey]);
   const loading = status === 'loading';
 
   const animatedProps = useAnimatedProps(() => ({
@@ -893,7 +896,7 @@ function LineChartTooltip({ color, showLabel = true, formatValue, formatX }: Lin
         {series.map(([key, seriesColor]) => (
           <TooltipDot
             key={key}
-            values={numbersOf(data, key)}
+            values={columnValues(data, key)}
             plot={plot}
             domainMin={domainMin}
             domainMax={domainMax}
@@ -953,13 +956,6 @@ LineChartTooltip.layer = 'overlay' as Layer;
 const LABEL_WIDTH = 112;
 
 /** A compact number for the crosshair label: 1204 → "1.2k", 24801 → "24.8k". */
-function compactNumber(value: number): string {
-  const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
-  return `${Math.round(value)}`;
-}
-
 const DOT = 9;
 
 /** The dot riding one series under the crosshair. */
@@ -1048,170 +1044,6 @@ LineChartLegend.layer = 'overlay' as Layer;
 /* -------------------------------------------------------------------------- */
 
 /** Only reached if the theme CSS was never imported. */
-const FALLBACK_SERIES = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-
-/** Series colour: an explicit one, else the `--color-chart-*` token. */
-function useSeriesColor(explicit: string | undefined, index: 1 | 2 | 3 | 4 | 5): string {
-  const token = useCSSVariable(`--color-chart-${index}`);
-  return explicit ?? (typeof token === 'string' ? token : FALLBACK_SERIES[index - 1]!);
-}
-
-function numbersOf(data: LineChartDatum[], key: string): (number | null)[] {
-  return data.map((row) => {
-    const value = row[key];
-    return typeof value === 'number' && !Number.isNaN(value) ? value : null;
-  });
-}
-
-function xOf(index: number, total: number, plot: Plot): number {
-  'worklet';
-  if (total <= 1) return plot.left + plot.width / 2;
-  return plot.left + (plot.width * index) / (total - 1);
-}
-
-function yOf(value: number, plot: Plot, min: number, max: number): number {
-  'worklet';
-  const span = max - min || 1;
-  return plot.top + plot.height - ((value - min) / span) * plot.height;
-}
-
-/**
- * Monotone cubic tangents.
- *
- * Written out rather than taken from a charting dependency, because it is forty
- * lines and it has to run inside a worklet — the path is rebuilt on the UI
- * thread on every frame the y-domain is tweening.
- *
- * Monotone is the right default for a time series. A plain cubic spline
- * overshoots between points, so a series that never goes below zero draws a dip
- * under the axis between two low values — a shape that is not in the data. This
- * one cannot, because the tangent at each point is clamped against the slopes
- * either side of it, and a local peak or trough is given a flat one.
- */
-function tangents(xs: number[], ys: number[]): number[] {
-  'worklet';
-  const n = xs.length;
-  const slopes: number[] = [];
-  for (let i = 0; i < n - 1; i += 1) {
-    slopes.push((ys[i + 1]! - ys[i]!) / (xs[i + 1]! - xs[i]! || 1));
-  }
-
-  const result: number[] = new Array(n).fill(0);
-  result[0] = slopes[0] ?? 0;
-  result[n - 1] = slopes[n - 2] ?? 0;
-
-  for (let i = 1; i < n - 1; i += 1) {
-    const previous = slopes[i - 1]!;
-    const next = slopes[i]!;
-    result[i] = previous * next <= 0 ? 0 : (previous + next) / 2;
-  }
-
-  // Fritsch–Carlson: pull any tangent back inside the circle of radius 3, which
-  // is the condition for the segment to stay monotone.
-  for (let i = 0; i < n - 1; i += 1) {
-    const slope = slopes[i]!;
-    if (slope === 0) {
-      result[i] = 0;
-      result[i + 1] = 0;
-      continue;
-    }
-    const a = result[i]! / slope;
-    const b = result[i + 1]! / slope;
-    const magnitude = Math.sqrt(a * a + b * b);
-    if (magnitude > 3) {
-      result[i] = (3 / magnitude) * a * slope;
-      result[i + 1] = (3 / magnitude) * b * slope;
-    }
-  }
-
-  return result;
-}
-
-/** Points, split at the gaps — a null breaks the series rather than crossing it. */
-function runsOf(
-  values: (number | null)[],
-  plot: Plot,
-  min: number,
-  max: number
-): { x: number; y: number }[][] {
-  'worklet';
-  const runs: { x: number; y: number }[][] = [];
-  let run: { x: number; y: number }[] = [];
-
-  for (let i = 0; i < values.length; i += 1) {
-    const value = values[i];
-    if (value === null || value === undefined) {
-      if (run.length) runs.push(run);
-      run = [];
-      continue;
-    }
-    run.push({ x: xOf(i, values.length, plot), y: yOf(value, plot, min, max) });
-  }
-  if (run.length) runs.push(run);
-  return runs;
-}
-
-function segment(points: { x: number; y: number }[], curve: LineChartCurve): string {
-  'worklet';
-  if (!points.length) return '';
-  if (points.length < 3 || curve === 'linear') {
-    return points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
-  }
-
-  const xs = points.map((p) => p.x);
-  const ys = points.map((p) => p.y);
-  const ms = tangents(xs, ys);
-
-  let d = `M${xs[0]},${ys[0]}`;
-  for (let i = 0; i < points.length - 1; i += 1) {
-    const dx = (xs[i + 1]! - xs[i]!) / 3;
-    d += ` C${xs[i]! + dx},${ys[i]! + ms[i]! * dx} ${xs[i + 1]! - dx},${ys[i + 1]! - ms[i + 1]! * dx} ${xs[i + 1]},${ys[i + 1]}`;
-  }
-  return d;
-}
-
-function linePath(
-  values: (number | null)[],
-  plot: Plot,
-  min: number,
-  max: number,
-  curve: LineChartCurve,
-  loading: boolean
-): string {
-  'worklet';
-  if (loading || plot.width <= 0) {
-    // Flat down the middle: the shape the skeleton holds, and the shape the
-    // real series grows out of once the data arrives.
-    const y = plot.top + plot.height / 2;
-    return `M${plot.left},${y} L${plot.left + plot.width},${y}`;
-  }
-  return runsOf(values, plot, min, max)
-    .map((run) => segment(run, curve))
-    .join(' ');
-}
-
-function areaPath(
-  values: (number | null)[],
-  plot: Plot,
-  min: number,
-  max: number,
-  curve: LineChartCurve,
-  loading: boolean
-): string {
-  'worklet';
-  if (loading || plot.width <= 0) return '';
-
-  const baseline = plot.top + plot.height;
-  return runsOf(values, plot, min, max)
-    .map((run) => {
-      const top = segment(run, curve);
-      if (!top) return '';
-      const first = run[0]!;
-      const last = run[run.length - 1]!;
-      return `${top} L${last.x},${baseline} L${first.x},${baseline} Z`;
-    })
-    .join(' ');
-}
 
 export const LineChart = Object.assign(LineChartRoot, {
   Grid: LineChartGrid,

@@ -35,7 +35,9 @@ import {
   AppleIcon,
   Attachment,
   Avatar,
+  AreaChart,
   Badge,
+  BarChart,
   BellIcon,
   BottomSheet,
   Breadcrumb,
@@ -89,6 +91,8 @@ import {
   Progress,
   RadioGroup,
   Rating,
+  RingChart,
+  type RingDatum,
   ReceiptIcon,
   Scrim,
   SearchIcon,
@@ -5117,6 +5121,306 @@ function PreferencesVersion() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Bar, area and ring charts                                                  */
+/* -------------------------------------------------------------------------- */
+
+const BAR_REVENUE = [
+  { month: 'Jan', revenue: 12000, costs: 7400 },
+  { month: 'Feb', revenue: 15500, costs: 8100 },
+  { month: 'Mar', revenue: 14200, costs: 8800 },
+  { month: 'Apr', revenue: 18900, costs: 9200 },
+  { month: 'May', revenue: 21400, costs: 10100 },
+  { month: 'Jun', revenue: 19800, costs: 11300 },
+  { month: 'Jul', revenue: 24600, costs: 11900 },
+  { month: 'Aug', revenue: 26100, costs: 12400 },
+];
+
+const AREA_TRAFFIC = Array.from({ length: 24 }, (_unused, hour) => {
+  const shape = Math.sin(((hour - 4) / 24) * Math.PI * 2) * 0.5 + 0.5;
+  return {
+    hour: `${String(hour).padStart(2, '0')}:00`,
+    direct: Math.round(120 + shape * 380),
+    search: Math.round(80 + shape * 520),
+    social: Math.round(40 + shape * 190),
+  };
+});
+
+const CHANNELS = [
+  { name: 'Email', sent: 4820 },
+  { name: 'Push', sent: 3140 },
+  { name: 'SMS', sent: 1960 },
+  { name: 'In-app', sent: 1420 },
+  { name: 'Web', sent: 880 },
+];
+
+const GOALS: RingDatum[] = [
+  { label: 'Move', value: 486, maxValue: 600 },
+  { label: 'Exercise', value: 24, maxValue: 30 },
+  { label: 'Stand', value: 9, maxValue: 12 },
+];
+
+/** Two series side by side, which is what a bar chart is for. */
+function BarChartGroupedVersion() {
+  const [active, setActive] = useState<(typeof BAR_REVENUE)[number] | null>(null);
+
+  return (
+    <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
+      <View className="gap-1">
+        <Text size="lg" weight="semibold">
+          Revenue and costs
+        </Text>
+        <Text size="sm" muted>
+          {active
+            ? `${active.month} · £${active.revenue.toLocaleString()} in, £${active.costs.toLocaleString()} out`
+            : 'Drag across the chart to read a month.'}
+        </Text>
+      </View>
+
+      <Card>
+        <Card.Content>
+          <BarChart
+            data={BAR_REVENUE}
+            xDataKey="month"
+            aspectRatio={1.5}
+            onActiveIndexChange={(_index, datum) =>
+              setActive(datum as (typeof BAR_REVENUE)[number] | null)
+            }
+          >
+            <BarChart.Grid />
+            <BarChart.Bar dataKey="revenue" />
+            <BarChart.Bar dataKey="costs" colorIndex={2} />
+            <BarChart.XAxis />
+            <BarChart.Legend labels={{ revenue: 'Revenue', costs: 'Costs' }} />
+            <BarChart.Tooltip formatValue={(value) => `£${value.toLocaleString()}`} />
+          </BarChart>
+        </Card.Content>
+      </Card>
+
+      <Card>
+        <Card.Header>
+          <Card.Title>Stacked</Card.Title>
+          <Card.Description>
+            The same two series read as a total instead of as a comparison.
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          <BarChart data={BAR_REVENUE} xDataKey="month" stacked stackGap={2} aspectRatio={2}>
+            <BarChart.Grid />
+            <BarChart.Bar dataKey="costs" colorIndex={2} />
+            <BarChart.Bar dataKey="revenue" />
+            <BarChart.XAxis />
+          </BarChart>
+        </Card.Content>
+      </Card>
+    </ScrollView>
+  );
+}
+
+/** Sideways, which is what long category names need. */
+function BarChartHorizontalVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Card>
+        <Card.Header>
+          <Card.Title>Messages sent</Card.Title>
+          <Card.Description>
+            Sideways, so the category names have room to be read.
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          <BarChart
+            data={CHANNELS}
+            xDataKey="name"
+            orientation="horizontal"
+            aspectRatio={1.4}
+            barGap={0.35}
+          >
+            <BarChart.Grid />
+            <BarChart.Bar dataKey="sent" colorIndex={3} />
+            <BarChart.YAxis />
+            <BarChart.Tooltip />
+          </BarChart>
+        </Card.Content>
+      </Card>
+    </View>
+  );
+}
+
+/** Stacked areas, where the top edge is the whole and each band is a share. */
+function AreaChartStackedVersion() {
+  const [active, setActive] = useState<(typeof AREA_TRAFFIC)[number] | null>(null);
+  const total = active ? active.direct + active.search + active.social : null;
+
+  return (
+    <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
+      <View className="gap-1">
+        <Text size="lg" weight="semibold">
+          Sessions by channel
+        </Text>
+        <Text size="sm" muted>
+          {active
+            ? `${active.hour} · ${total?.toLocaleString()} sessions`
+            : 'Stacked, so the top edge is the total and each band is its share.'}
+        </Text>
+      </View>
+
+      <Card>
+        <Card.Content>
+          <AreaChart
+            data={AREA_TRAFFIC}
+            xDataKey="hour"
+            stacked
+            aspectRatio={1.6}
+            onActiveIndexChange={(_index, datum) =>
+              setActive(datum as (typeof AREA_TRAFFIC)[number] | null)
+            }
+          >
+            <AreaChart.Grid />
+            <AreaChart.Area dataKey="direct" />
+            <AreaChart.Area dataKey="search" colorIndex={2} />
+            <AreaChart.Area dataKey="social" colorIndex={3} />
+            <AreaChart.XAxis ticks={5} />
+            <AreaChart.Legend
+              labels={{ direct: 'Direct', search: 'Search', social: 'Social' }}
+            />
+            <AreaChart.Tooltip />
+          </AreaChart>
+        </Card.Content>
+      </Card>
+    </ScrollView>
+  );
+}
+
+/** Overlaid instead, for series that are alternatives rather than parts. */
+function AreaChartOverlaidVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Card>
+        <Card.Header>
+          <Card.Title>Two plans compared</Card.Title>
+          <Card.Description>
+            Unstacked, the bands overlay and their fills go translucent — these are
+            alternatives, not parts of a total.
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          <AreaChart data={AREA_TRAFFIC} xDataKey="hour" aspectRatio={1.6}>
+            <AreaChart.Grid />
+            <AreaChart.Area dataKey="search" colorIndex={2} />
+            <AreaChart.Area dataKey="direct" />
+            <AreaChart.XAxis ticks={5} />
+            <AreaChart.YAxis />
+            <AreaChart.Tooltip />
+          </AreaChart>
+        </Card.Content>
+      </Card>
+    </View>
+  );
+}
+
+/** Three targets, each read against its own. */
+function RingChartGoalsVersion() {
+  const [active, setActive] = useState(-1);
+
+  return (
+    <View className="flex-1 items-center justify-center gap-6 p-6">
+      <View className="items-center gap-1">
+        <Text size="lg" weight="semibold">
+          Today
+        </Text>
+        <Text size="sm" muted className="text-center">
+          Each ring is a value against its own target, so nothing has to add up.
+        </Text>
+      </View>
+
+      <View className="w-full max-w-[280px]">
+        <RingChart
+          data={GOALS}
+          strokeWidth={18}
+          ringGap={6}
+          activeIndex={active}
+          onActiveIndexChange={setActive}
+        >
+          {GOALS.map((goal, index) => (
+            <RingChart.Ring key={goal.label} index={index} />
+          ))}
+          <RingChart.Center defaultLabel="Move" />
+        </RingChart>
+      </View>
+
+      <View className="w-full max-w-[280px] gap-2">
+        {GOALS.map((goal, index) => (
+          <Item
+            key={goal.label}
+            onPress={() => setActive(active === index ? -1 : index)}
+            className={index === active ? 'border-primary' : undefined}
+          >
+            <Item.Content>
+              <Item.Title>{goal.label}</Item.Title>
+              <Item.Description>
+                {goal.value} of {goal.maxValue}
+              </Item.Description>
+            </Item.Content>
+            <Item.Actions>
+              <Badge>{`${Math.round((goal.value / goal.maxValue) * 100)}%`}</Badge>
+            </Item.Actions>
+          </Item>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** The small end — a ring as one element inside a card. */
+function RingChartCompactVersion() {
+  const usage: RingDatum[] = useMemo(
+    () => [
+      { label: 'Storage', value: 68, maxValue: 100 },
+      { label: 'Bandwidth', value: 41, maxValue: 100 },
+    ],
+    []
+  );
+
+  return (
+    <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
+      <View className="gap-1">
+        <Text size="lg" weight="semibold">
+          Plan usage
+        </Text>
+        <Text size="sm" muted>
+          A ring reads as a share of something without needing an axis.
+        </Text>
+      </View>
+
+      <Card>
+        <Card.Content className="flex-row items-center gap-5 py-6">
+          <View className="w-28">
+            <RingChart data={usage} strokeWidth={12} ringGap={5}>
+              {usage.map((ring, index) => (
+                <RingChart.Ring key={ring.label} index={index} />
+              ))}
+              <RingChart.Center formatValue={(value) => `${value}%`} />
+            </RingChart>
+          </View>
+          <View className="flex-1 gap-2">
+            {usage.map((ring) => (
+              <View key={ring.label} className="gap-1">
+                <Text size="sm" weight="medium">
+                  {ring.label}
+                </Text>
+                <Text size="xs" muted>
+                  {ring.value}% of your allowance
+                </Text>
+              </View>
+            ))}
+          </View>
+        </Card.Content>
+      </Card>
+    </ScrollView>
+  );
+}
+
 const LOADER_VARIANTS: { variant: LoaderVariant; label: string }[] = [
   { variant: 'pulse-dots', label: 'Pulse dots' },
   { variant: 'bounce-dots', label: 'Bounce dots' },
@@ -5370,6 +5674,27 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'area-chart',
+    name: 'AreaChart',
+    summary: 'Filled bands over time, stacked or overlaid',
+    demos: [
+      {
+        label: 'Stacked',
+        id: 'stacked',
+        fullPage: true,
+        description: 'The top edge is the total; each band is its share of it.',
+        render: () => <AreaChartStackedVersion />,
+      },
+      {
+        label: 'Overlaid',
+        id: 'overlaid',
+        fullPage: true,
+        description: 'Alternatives rather than parts, so the fills go translucent.',
+        render: () => <AreaChartOverlaidVersion />,
+      },
+    ],
+  },
+  {
     slug: 'avatar',
     name: 'Avatar',
     summary: 'User image with initials fallback',
@@ -5524,6 +5849,27 @@ export const COMPONENTS: ComponentEntry[] = [
             ))}
           </View>
         ),
+      },
+    ],
+  },
+  {
+    slug: 'bar-chart',
+    name: 'BarChart',
+    summary: 'Categories compared by length, grouped or stacked',
+    demos: [
+      {
+        label: 'Grouped and stacked',
+        id: 'grouped',
+        fullPage: true,
+        description: 'Two series side by side, then the same two as a total.',
+        render: () => <BarChartGroupedVersion />,
+      },
+      {
+        label: 'Sideways',
+        id: 'horizontal',
+        fullPage: true,
+        description: 'Horizontal bars, for category names that need the room.',
+        render: () => <BarChartHorizontalVersion />,
       },
     ],
   },
@@ -7999,6 +8345,27 @@ export const COMPONENTS: ComponentEntry[] = [
         fullPage: true,
         description: 'By character, and with a stagger wide enough to arrive all at once.',
         render: () => <ScrollTextCharactersVersion />,
+      },
+    ],
+  },
+  {
+    slug: 'ring-chart',
+    name: 'RingChart',
+    summary: 'Concentric arcs, each against its own target',
+    demos: [
+      {
+        label: "Today's goals",
+        id: 'goals',
+        fullPage: true,
+        description: 'Three targets, each read against its own rather than each other.',
+        render: () => <RingChartGoalsVersion />,
+      },
+      {
+        label: 'Inside a card',
+        id: 'compact',
+        fullPage: true,
+        description: 'The small end — a share of something, with no axis needed.',
+        render: () => <RingChartCompactVersion />,
       },
     ],
   },

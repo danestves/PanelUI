@@ -1,0 +1,244 @@
+---
+title: AreaChart
+description: Filled bands over time, stacked or overlaid.
+status: new
+---
+
+Filled bands over time, stacked or overlaid.
+
+This is not `LineChart.Area`. Shading under a line is one series saying *this is the shape of the thing*; an area chart answers *what is it made of* — and that needs stacking, where each band sits on the running total of the ones below it, so the top edge is the whole and each thickness is a share.
+
+## Installation
+
+AreaChart ships with the library — no separate install.
+
+```tsx
+import { AreaChart, Card, Text } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add area-chart
+```
+
+## Usage
+
+```tsx
+<AreaChart data={traffic} xDataKey="hour" stacked>
+  <AreaChart.Grid />
+  <AreaChart.Area dataKey="direct" />
+  <AreaChart.Area dataKey="search" colorIndex={2} />
+  <AreaChart.XAxis />
+  <AreaChart.Tooltip />
+</AreaChart>
+```
+
+## Composition
+
+```tsx
+<AreaChart>
+  <AreaChart.Grid />
+  <AreaChart.Area dataKey="…" />        {/* one per series, bottom first */}
+  <AreaChart.XAxis />
+  <AreaChart.YAxis />
+  <AreaChart.Legend />
+  <AreaChart.Tooltip />                 {/* crosshair, dots and readout */}
+</AreaChart>
+```
+
+- **`AreaChart.Grid`** — Horizontal rules, so a band can be read against a number.
+- **`AreaChart.Area`** — One filled band, with the line along its top edge. The fill is a downward gradient by default, so the top edge stays the darkest thing in the band.
+- **`AreaChart.XAxis`** — The x labels. Real text, so they follow the theme’s font and the platform’s text scaling.
+- **`AreaChart.YAxis`** — Value labels down the side. The chart reserves a gutter for them rather than drawing them over the plot.
+- **`AreaChart.Tooltip`** — The crosshair, the drag that drives it, and a dot riding the top edge of every band.
+- **`AreaChart.Legend`** — A swatch and a name per series, reversed for a stack so the key reads in the order the bands appear.
+
+## Examples
+
+### Stacked
+
+The first `Area` declared is the bottom of the stack. Order is load-bearing here in a way it is not on a line chart — it decides what sits on what.
+
+```tsx
+<AreaChart data={traffic} xDataKey="hour" stacked>
+  <AreaChart.Grid />
+  <AreaChart.Area dataKey="direct" />
+  <AreaChart.Area dataKey="search" colorIndex={2} />
+  <AreaChart.Area dataKey="social" colorIndex={3} />
+  <AreaChart.XAxis ticks={5} />
+</AreaChart>
+```
+
+### Overlaid instead
+
+Without `stacked` the bands overlay each other and their fills go translucent, which is the right reading when the series are alternatives rather than parts — two plans compared, not two slices of one total.
+
+```tsx
+<AreaChart data={plans} xDataKey="hour">
+  <AreaChart.Grid />
+  <AreaChart.Area dataKey="premium" colorIndex={2} />
+  <AreaChart.Area dataKey="standard" />
+  <AreaChart.XAxis />
+  <AreaChart.YAxis />
+</AreaChart>
+```
+
+### Tuning the fill
+
+`fillOpacity` is the weight at the top of the band and `gradientToOpacity` the weight at the bottom. Matching them gives a flat fill; leaving the bottom at zero fades the band out, which keeps the line legible over a busy grid.
+
+```tsx
+<AreaChart.Area dataKey="sessions" fillOpacity={0.5} gradientToOpacity={0.05} />
+
+{/* A flat fill, for a band that has to hold a solid colour. */}
+<AreaChart.Area dataKey="sessions" fillOpacity={0.4} gradientToOpacity={0.4} />
+
+{/* Fill only — no line along the top. */}
+<AreaChart.Area dataKey="sessions" showLine={false} />
+```
+
+### Reading the total above the chart
+
+A stack’s headline number is the sum of its bands at that point, which the chart does not compute for you — it is your data, and only you know whether the sum means anything.
+
+```tsx
+const [active, setActive] = useState(null);
+const total = active ? active.direct + active.search + active.social : null;
+
+<Text size="sm" muted>
+  {active ? `${active.hour} · ${total.toLocaleString()} sessions` : 'Drag to read an hour.'}
+</Text>
+
+<AreaChart data={traffic} xDataKey="hour" stacked onActiveIndexChange={(i, d) => setActive(d)}>
+  <AreaChart.Area dataKey="direct" />
+  <AreaChart.Tooltip />
+</AreaChart>
+```
+
+## Versions
+
+### Stacked
+
+The top edge is the total; each band is its share of it. Sessions by channel across a day.
+
+```tsx
+<AreaChart data={traffic} xDataKey="hour" stacked onActiveIndexChange={(i, d) => setActive(d)}>
+  <AreaChart.Grid />
+  <AreaChart.Area dataKey="direct" />
+  <AreaChart.Area dataKey="search" colorIndex={2} />
+  <AreaChart.Area dataKey="social" colorIndex={3} />
+  <AreaChart.XAxis ticks={5} />
+  <AreaChart.Legend labels={{ direct: 'Direct', search: 'Search', social: 'Social' }} />
+  <AreaChart.Tooltip />
+</AreaChart>
+```
+
+### Overlaid
+
+Alternatives rather than parts, so the fills go translucent and both bands stay readable.
+
+```tsx
+<AreaChart data={traffic} xDataKey="hour">
+  <AreaChart.Grid />
+  <AreaChart.Area dataKey="search" colorIndex={2} />
+  <AreaChart.Area dataKey="direct" />
+  <AreaChart.XAxis ticks={5} />
+  <AreaChart.YAxis />
+  <AreaChart.Tooltip />
+</AreaChart>
+```
+
+## API Reference
+
+### AreaChart
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `data` | `AreaChartDatum[]` | — | The rows. Each one is a point along the x-axis. |
+| `xDataKey` | `string` | `'date'` | Key holding the x label. Used by the axis and the crosshair readout. |
+| `status` | `AreaChartStatus` | `'ready'` | `loading` draws a flat skeleton and grows into the real bands on `ready`. |
+| `aspectRatio` | `number` | `2` | Width ÷ height. `2` is the wide card shape. |
+| `animationDuration` | `number` | `1100` | Milliseconds for the reveal on mount. |
+| `domainDuration` | `number` | `500` | Milliseconds for the y-axis to settle after the data changes. |
+| `yDomain` | `[number, number]` | — | Fix the y-axis instead of deriving it from the data. |
+| `stacked` | `boolean` | `false` | Sit each band on the running total of the ones below it, so the top edge is the whole and each thickness is a share. The order the `Area` children are declared in is the stacking order, bottom first. Unstacked, the bands overlay and their fills are translucent — the right reading when the series are alternatives rather than parts of a total. |
+| `curve` | `ChartCurve` | `'monotone'` | `monotone` never overshoots between points; `linear` joins them straight. |
+| `onActiveIndexChange` | `(index: number, datum: AreaChartDatum \| null) => void` | — | The point under the crosshair as it moves, and `-1`/`null` when it lifts. Fires when the index changes, not per frame. |
+| `compact` | `boolean` | `false` | Drop the axis padding so the bands reach the edges, for a sparkline. |
+
+### AreaChart.Grid
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rows` | `number` | — |  |
+| `color` | `string` | — |  |
+| `dashArray` | `string` | — |  |
+| `opacity` | `number` | — |  |
+
+### AreaChart.Area
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string` | — | Column in the data holding this series' values. |
+| `color` | `string` | — | Explicit colour. Defaults to the `--color-chart-*` token for `colorIndex`. |
+| `colorIndex` | `SeriesColorIndex` | `1` | Which of the five chart tokens to take. |
+| `fillOpacity` | `number` | — | Opacity of the fill at the top of the band. |
+| `gradientToOpacity` | `number` | `0` | Opacity at the bottom. `0` fades the band out; match `fillOpacity` for a flat fill. |
+| `showLine` | `boolean` | `true` | Draw the line along the top edge of the band. |
+| `strokeWidth` | `number` | `2` | Thickness of that line. |
+
+### AreaChart.XAxis
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `ticks` | `number` | — |  |
+| `format` | `(datum: AreaChartDatum, index: number) => string` | — |  |
+| `className` | `string` | — |  |
+
+### AreaChart.YAxis
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `ticks` | `number` | — |  |
+| `format` | `(value: number) => string` | — |  |
+| `className` | `string` | — |  |
+
+### AreaChart.Tooltip
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `color` | `string` | — |  |
+| `formatValue` | `(value: number, key: string) => string` | — | Format one series' value. Defaults to a compact number. |
+| `formatX` | `(datum: AreaChartDatum) => string` | — | Format the readout's heading from the row. Defaults to the value at xDataKey. |
+| `className` | `string` | — |  |
+
+### AreaChart.Legend
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `labels` | `Record<string, string>` | — | Prettier names for the series keys. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Stacked or overlaid
+
+Stack when the series are parts of one thing and the total means something: channels making up your traffic, plan tiers making up your revenue. Overlay when they are alternatives being compared, where a total would be a number nobody asked for.
+
+The two are drawn differently on purpose. Stacked bands touch, so their fills are nearly opaque — a translucent band would show the one beneath through it and the pair would read as a third colour. Overlaid bands must be translucent, or the one in front hides the ones behind entirely.
+
+### Why the fill starts at zero
+
+An area is a filled region, and a region floating above the bottom of the plot reads as a shape rather than as a quantity. A series that never goes below zero is therefore drawn from zero, and only the top of the domain gets headroom.
+
+### Why this is a separate component
+
+Stacking is not a flag that could have been added to `LineChart.Area`. It changes the y-domain from the largest single series to the largest sum, it makes each area's baseline a curve rather than the axis, and it makes declaration order load-bearing. A chart where all of that was true of some children and not others would be a chart nobody could read.
+
+### Reduced motion
+
+The reveal and the domain tween are both skipped, and the chart draws straight to its final shape.

@@ -69,7 +69,8 @@ const FEATURES = [
 
 const COMPONENTS = [
   ['Accordion', 'accordion'], ['Alert', 'alert'], ['Attachment', 'attachment'],
-  ['Avatar', 'avatar'], ['Badge', 'badge'], ['BottomSheet', 'bottom-sheet'], ['Button', 'button'],
+  ['AreaChart', 'area-chart'], ['Avatar', 'avatar'], ['Badge', 'badge'],
+  ['BarChart', 'bar-chart'], ['BottomSheet', 'bottom-sheet'], ['Button', 'button'],
   ['Card', 'card'], ['Checkbox', 'checkbox'], ['Dialog', 'dialog'],
   ['Direction', 'direction'],
   ['EmptyState', 'empty-state'], ['Frame', 'frame'],
@@ -77,7 +78,8 @@ const COMPONENTS = [
   ['Label', 'label'], ['LineChart', 'line-chart'], ['Loader', 'loader'],
   ['Marker', 'marker'],
   ['Message', 'message'], ['MessageScroller', 'message-scroller'], ['Popover', 'popover'],
-  ['Progress', 'progress'], ['RadioGroup', 'radio-group'], ['ScrollFade', 'scroll-fade'],
+  ['Progress', 'progress'], ['RadioGroup', 'radio-group'], ['RingChart', 'ring-chart'],
+  ['ScrollFade', 'scroll-fade'],
   ['SectionRail', 'section-rail'], ['Select', 'select'], ['Separator', 'separator'],
   ['Shimmer', 'shimmer'],
   ['Skeleton', 'skeleton'], ['Slider', 'slider'], ['Soundwave', 'soundwave'],

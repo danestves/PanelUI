@@ -53,25 +53,26 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 
 | | | |
 | --- | --- | --- |
-| Accordion | Input | SectionRail |
-| Alert | InputGroup | Select |
+| Accordion | HeatmapChart | ScrollText |
+| Alert | Input | SectionRail |
+| AreaChart | InputGroup | Select |
 | Attachment | Item | Separator |
 | Avatar | Label | Shimmer |
 | Badge | LineChart | Signature |
-| BottomSheet | Loader | Skeleton |
-| Breadcrumb | Map | Slider |
-| Button | Marker | Soundwave |
-| Card | Message | Spinner |
-| Checkbox | MessageScroller | Steps |
-| Chip | NumberInput | Surface |
-| Dialog | OtpInput | Switch |
-| Direction | Popover | Tabs |
-| EmptyState | Progress | ThinkingOrb |
-| Field | RadioGroup | Timeline |
-| Flow | Rating | Toast |
-| Form | ScrollCanvas | ToggleButton |
-| Frame | ScrollFade | Typography |
-| HeatmapChart | ScrollText |  |
+| BarChart | Loader | Skeleton |
+| BottomSheet | Map | Slider |
+| Breadcrumb | Marker | Soundwave |
+| Button | Message | Spinner |
+| Card | MessageScroller | Steps |
+| Checkbox | NumberInput | Surface |
+| Chip | OtpInput | Switch |
+| Dialog | Popover | Tabs |
+| Direction | Progress | ThinkingOrb |
+| EmptyState | RadioGroup | Timeline |
+| Field | Rating | Toast |
+| Flow | RingChart | ToggleButton |
+| Form | ScrollCanvas | Typography |
+| Frame | ScrollFade |  |
 
 `Select` shows its options in a bottom sheet, expanded in place, or floating
 over the page — one `presentation` prop, because which is right depends on what
@@ -98,6 +99,11 @@ in rather than the tile server it came from.
 `Loader` is nine loading animations behind one `variant` prop — dots, bars, a
 morphing ring and a ball bouncing along a row of them — all on the UI thread,
 and all drawing in the foreground of whatever surface they land on.
+The four charts share their scales and path building, so a line and an area
+drawn from the same data lie exactly on top of each other. `LineChart` is
+change over time, `AreaChart` is what a total is made of, `BarChart` compares
+categories by length, and `RingChart` measures each ring against its own
+target rather than against the others.
 
 Plus primitives: `PanelUIProvider`, `Portal`, `AnimatedPressable`, `useTheme`,
 `useThemeMode`, `useToast`, `cn`.

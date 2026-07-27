@@ -18,6 +18,7 @@
     "expo-location": "~57.0.6",
     "expo-router": "^57.0.7",
     "expo-status-bar": "~57.0.1",
+    "expo-updates": "~57.0.10",
     "panelui-native": "*",
     "react": "19.2.3",
     "react-native": "0.86.0",
