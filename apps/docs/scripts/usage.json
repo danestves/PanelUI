@@ -1667,6 +1667,48 @@
         "code": "<Map\n  source={{\n    url: 'https://example.com/tiles.json',\n    glyphs: 'https://example.com/fonts/{fontstack}/{range}.pbf',\n    fonts: ['Inter Regular'],\n    attribution: '© OpenStreetMap contributors',\n  }}\n/>"
       }
     ],
+    "versions": [
+      {
+        "title": "Analytics map",
+        "description": "Sessions by country, over a basemap dropped for the data. The shading and the cards above it come from the same tokens, so the map is part of the dashboard rather than an image pasted into it.",
+        "code": "<Map blank bounds={[-11, 35, 31, 63]}>\n  <Map.GeoJSON\n    data={countries}\n    fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}\n  />\n</Map>"
+      },
+      {
+        "title": "Choropleth",
+        "description": "One layer shaded by a style expression rather than one layer per bucket — which is what lets the metric switch without rebuilding the map.",
+        "code": "<Map blank bounds={[-11, 35, 31, 63]}>\n  <Map.GeoJSON\n    data={europeFeatures(values)}\n    fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}\n    fillOpacity={0.9}\n  />\n  <Map.Controls position=\"top-right\" />\n</Map>"
+      },
+      {
+        "title": "Heatmap",
+        "description": "Density as a continuous field. It fades out past `maxZoom` on purpose: zoomed far enough in, every point is its own island and the blur says less than the points would.",
+        "code": "<Map bounds={[-10, 38, 20, 56]}>\n  <Map.Heatmap data={reports} weight=\"weight\" radius={28} />\n</Map>"
+      },
+      {
+        "title": "Delivery tracker",
+        "description": "A driven leg and a planned one, told apart by dash rather than by colour — the two mean different things, and colour is already carrying the theme.",
+        "code": "<Map center={[0.02, 51.545]} zoom={10.5}>\n  <Map.Route id=\"done\" coordinates={driven} width={4} />\n  <Map.Route id=\"left\" coordinates={planned} width={4} dashed opacity={0.5} />\n</Map>"
+      },
+      {
+        "title": "Store locator",
+        "description": "A list and a map on one selection, so pressing either moves the other.",
+        "code": "<Map center={selected.lngLat} zoom={13}>\n  {stores.map((store) => (\n    <Map.Marker\n      key={store.id}\n      lngLat={store.lngLat}\n      onPress={() => setSelected(store)}\n    >\n      <View className={store.id === selected.id ? activePin : pin} />\n    </Map.Marker>\n  ))}\n  <Map.Controls locate position=\"top-right\" />\n</Map>"
+      },
+      {
+        "title": "Logistics network",
+        "description": "Arcs between sites. The bow is not geography — it is there so two lanes sharing a hub stay tellable apart, which a bundle of straight lines through one city does not.",
+        "code": "<Map blank bounds={[-12, 36, 26, 60]}>\n  {lanes.map((lane) => (\n    <Map.Arc\n      key={lane.id}\n      id={lane.id}\n      from={byId[lane.from].lngLat}\n      to={byId[lane.to].lngLat}\n      curvature={0.18}\n    />\n  ))}\n</Map>"
+      },
+      {
+        "title": "Uptime monitor",
+        "description": "Edge nodes coloured by state over a blank world. A marker is a React view, so the status dot is the same one the rest of the app uses.",
+        "code": "<Map blank center={[0, 25]} zoom={1.1}>\n  {nodes.map((node) => (\n    <Map.Marker key={node.id} lngLat={node.lngLat}>\n      <View className=\"items-center\">\n        <View className={dotFor(node.state)} />\n        <Map.Label>{node.id.toUpperCase()}</Map.Label>\n      </View>\n    </Map.Marker>\n  ))}\n</Map>"
+      },
+      {
+        "title": "Analytics card",
+        "description": "The small end of the range — a map as one element inside a card. `interactive={false}` because at this size a stray pan is an accident: the card scrolls, the map does not.",
+        "code": "<Card className=\"overflow-hidden p-0\">\n  <LineChart data={week} xDataKey=\"day\" aspectRatio={3}>\n    <LineChart.Area dataKey=\"value\" />\n    <LineChart.Line dataKey=\"value\" />\n  </LineChart>\n  <View className=\"h-44\">\n    <Map blank interactive={false} bounds={[-11, 35, 31, 63]}>\n      <Map.GeoJSON data={countries} fill={ramp} />\n    </Map>\n  </View>\n</Card>"
+      }
+    ],
     "notes": "### Why the basemap is assembled rather than downloaded\n\nA hosted style ships its colours baked in, which gives you exactly two maps. Everything here is built from the same tokens as the rest of the library, so `moon`, `grass` and anything you add later get a basemap that matches them without a designer redrawing one per theme.\n\nThe layer list is deliberately short. A full street style runs to ninety-odd layers separating tunnel casings from bridge casings across eleven zoom stops; almost none of that survives being recoloured down to five greys, and every layer is another thing to keep in step with the tokens. What is there is the set that still reads as a map at any zoom: ground, water, green space, buildings, roads, boundaries, and the labels that make them findable.\n\nPass `mapStyle` to skip all of it and use a style wholesale — the escape hatch for a map that has to match something outside the app.\n\n### Tile licensing\n\n`Map` defaults to CARTO's street tiles, which are free for non-commercial use and require a licence from CARTO for commercial use. That is a decision about your project rather than about this component, so `source` takes any provider serving the OpenMapTiles schema.\n\n### Markers or clusters\n\n`Map.Marker` is a React view, which is what lets it hold an avatar, a chip, or anything else the library draws. That also means a marker costs what a view costs. Past a few dozen points use `Map.Cluster`, which draws in a style layer and merges points as they crowd — by the time markers become expensive they have also become unreadable, so the two limits arrive together."
   },
   "marker": {

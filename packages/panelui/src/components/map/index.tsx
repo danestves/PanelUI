@@ -914,6 +914,94 @@ function MapCluster({
 }
 MapCluster.displayName = 'Map.Cluster';
 
+export interface MapHeatmapProps {
+  /** Point features to spread. */
+  data: unknown;
+  /** Feature property to weight each point by. Unweighted when omitted. */
+  weight?: string;
+  /** Spread of a single point, in points. Larger blurs more. */
+  radius?: number;
+  /** Overall strength. Raise it when the data is sparse. */
+  intensity?: number;
+  /** 0 is invisible, 1 is solid. */
+  opacity?: number;
+  /** Above this zoom the layer fades out — see the note on the component. */
+  maxZoom?: number;
+  id?: string;
+}
+
+/**
+ * Point density as a continuous field.
+ *
+ * The opposite trade to `Map.Cluster`: a cluster keeps every point countable
+ * and tells you nothing about the space between them, while a heatmap shows
+ * the shape of the distribution and no longer lets you count anything. Reach
+ * for it when the question is *where* rather than *how many*.
+ *
+ * It fades out past `maxZoom` on purpose. Zoomed far enough in, every point is
+ * its own island and the blur says less than the points would — so the layer
+ * gets out of the way rather than smearing five records across a street.
+ */
+function MapHeatmap({
+  data,
+  weight,
+  radius = 24,
+  intensity = 1,
+  opacity = 0.85,
+  maxZoom = 15,
+  id = 'heatmap',
+}: MapHeatmapProps) {
+  const cool = useToken('--color-muted', 'rgba(0,0,0,0.06)');
+  const warm = useToken('--color-chart-1', '#262626');
+  const hot = useToken('--color-chart-2', '#666666');
+
+  if (!MapLibre) return null;
+  const { GeoJSONSource, Layer } = MapLibre;
+
+  return (
+    <GeoJSONSource id={`${id}-source`} data={data}>
+      <Layer
+        id={id}
+        type="heatmap"
+        maxzoom={maxZoom}
+        style={{
+          heatmapWeight: weight
+            ? ['interpolate', ['linear'], ['get', weight], 0, 0, 1, 1]
+            : 1,
+          heatmapIntensity: intensity,
+          heatmapRadius: radius,
+          // Transparent at zero rather than the coolest colour, so the map
+          // shows through everywhere nothing was measured instead of the whole
+          // viewport being tinted by the absence of data.
+          heatmapColor: [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0,
+            'rgba(0,0,0,0)',
+            0.2,
+            cool,
+            0.6,
+            warm,
+            1,
+            hot,
+          ],
+          heatmapOpacity: [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            maxZoom - 2,
+            opacity,
+            maxZoom,
+            0,
+          ],
+        }}
+      />
+    </GeoJSONSource>
+  );
+}
+MapHeatmap.displayName = 'Map.Heatmap';
+
 export interface MapUserLocationProps {
   /** Show which way the device is facing, not just where it is. */
   heading?: boolean;
@@ -936,5 +1024,6 @@ export const Map = Object.assign(MapRoot, {
   Arc: MapArc,
   GeoJSON: MapGeoJSON,
   Cluster: MapCluster,
+  Heatmap: MapHeatmap,
   UserLocation: MapUserLocation,
 });

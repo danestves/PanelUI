@@ -134,6 +134,16 @@ import {
   useVoiceRecorder,
   VoiceControls,
 } from '../components/voice';
+import {
+  AnalyticsCardBlock,
+  AnalyticsMapBlock,
+  ChoroplethBlock,
+  DeliveryTrackerBlock,
+  HeatmapBlock,
+  LogisticsNetworkBlock,
+  StoreLocatorBlock,
+  UptimeMonitorBlock,
+} from '../components/map-blocks';
 
 const PHOTO = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=60';
 
@@ -6811,6 +6821,71 @@ export const COMPONENTS: ComponentEntry[] = [
         fullPage: true,
         description: 'Compact lines beside a headline number — no grid, no axis.',
         render: () => <ChartKpiVersion />,
+      },
+    ],
+  },
+  {
+    slug: 'map',
+    name: 'Map',
+    summary: 'Vector map drawn from your theme tokens',
+    // Every one of these is a whole screen. A map squeezed into a section
+    // between two dividers demonstrates nothing except that it does not fit.
+    demos: [
+      {
+        label: 'Analytics map',
+        id: 'analytics',
+        fullPage: true,
+        description: 'Sessions by country, over a basemap dropped for the data.',
+        render: () => <AnalyticsMapBlock />,
+      },
+      {
+        label: 'Choropleth',
+        id: 'choropleth',
+        fullPage: true,
+        description: 'One layer shaded by a style expression — switch the metric.',
+        render: () => <ChoroplethBlock />,
+      },
+      {
+        label: 'Heatmap',
+        id: 'heatmap',
+        fullPage: true,
+        description: 'Density as a field, fading out once points can be counted.',
+        render: () => <HeatmapBlock />,
+      },
+      {
+        label: 'Delivery tracker',
+        id: 'delivery',
+        fullPage: true,
+        description: 'A driven leg and a planned one, told apart by dash.',
+        render: () => <DeliveryTrackerBlock />,
+      },
+      {
+        label: 'Store locator',
+        id: 'stores',
+        fullPage: true,
+        description: 'A list and a map on one selection.',
+        render: () => <StoreLocatorBlock />,
+      },
+      {
+        label: 'Logistics network',
+        id: 'network',
+        fullPage: true,
+        description: 'Arcs between sites, bowed so lanes sharing a hub stay legible.',
+        render: () => <LogisticsNetworkBlock />,
+      },
+      {
+        label: 'Uptime monitor',
+        id: 'uptime',
+        fullPage: true,
+        description: 'Edge nodes coloured by state, over a blank world.',
+        render: () => <UptimeMonitorBlock />,
+      },
+      {
+        label: 'Analytics card',
+        id: 'card',
+        fullPage: true,
+        description: 'The small end — a map as one element inside a card.',
+        render: () => <AnalyticsCardBlock />,
       },
     ],
   },

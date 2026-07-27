@@ -182,6 +182,7 @@ export {
   type MapArcProps,
   type MapGeoJSONProps,
   type MapClusterProps,
+  type MapHeatmapProps,
   type MapUserLocationProps,
   type BasemapSource,
   type BasemapTokens,

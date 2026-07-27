@@ -74,6 +74,7 @@ npx panelui-cli@latest add map
 - **`Map.Arc`** — A curved connection between two points, bowed so arcs sharing an endpoint stay tellable apart.
 - **`Map.GeoJSON`** — Arbitrary geography as a themed layer. `fill` takes a style expression, which is what makes a choropleth one layer instead of one per bucket.
 - **`Map.Cluster`** — Dense points merged as they get too close to tell apart — the layer to reach for past a few dozen.
+- **`Map.Heatmap`** — See props below.
 - **`Map.UserLocation`** — The device's own position, drawn by the renderer.
 
 ## Examples
@@ -144,6 +145,129 @@ The tiles are the one part of the style that is somebody else's to license. `sou
     attribution: '© OpenStreetMap contributors',
   }}
 />
+```
+
+## Versions
+
+### Analytics map
+
+Sessions by country, over a basemap dropped for the data. The shading and the cards above it come from the same tokens, so the map is part of the dashboard rather than an image pasted into it.
+
+```tsx
+<Map blank bounds={[-11, 35, 31, 63]}>
+  <Map.GeoJSON
+    data={countries}
+    fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}
+  />
+</Map>
+```
+
+### Choropleth
+
+One layer shaded by a style expression rather than one layer per bucket — which is what lets the metric switch without rebuilding the map.
+
+```tsx
+<Map blank bounds={[-11, 35, 31, 63]}>
+  <Map.GeoJSON
+    data={europeFeatures(values)}
+    fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}
+    fillOpacity={0.9}
+  />
+  <Map.Controls position="top-right" />
+</Map>
+```
+
+### Heatmap
+
+Density as a continuous field. It fades out past `maxZoom` on purpose: zoomed far enough in, every point is its own island and the blur says less than the points would.
+
+```tsx
+<Map bounds={[-10, 38, 20, 56]}>
+  <Map.Heatmap data={reports} weight="weight" radius={28} />
+</Map>
+```
+
+### Delivery tracker
+
+A driven leg and a planned one, told apart by dash rather than by colour — the two mean different things, and colour is already carrying the theme.
+
+```tsx
+<Map center={[0.02, 51.545]} zoom={10.5}>
+  <Map.Route id="done" coordinates={driven} width={4} />
+  <Map.Route id="left" coordinates={planned} width={4} dashed opacity={0.5} />
+</Map>
+```
+
+### Store locator
+
+A list and a map on one selection, so pressing either moves the other.
+
+```tsx
+<Map center={selected.lngLat} zoom={13}>
+  {stores.map((store) => (
+    <Map.Marker
+      key={store.id}
+      lngLat={store.lngLat}
+      onPress={() => setSelected(store)}
+    >
+      <View className={store.id === selected.id ? activePin : pin} />
+    </Map.Marker>
+  ))}
+  <Map.Controls locate position="top-right" />
+</Map>
+```
+
+### Logistics network
+
+Arcs between sites. The bow is not geography — it is there so two lanes sharing a hub stay tellable apart, which a bundle of straight lines through one city does not.
+
+```tsx
+<Map blank bounds={[-12, 36, 26, 60]}>
+  {lanes.map((lane) => (
+    <Map.Arc
+      key={lane.id}
+      id={lane.id}
+      from={byId[lane.from].lngLat}
+      to={byId[lane.to].lngLat}
+      curvature={0.18}
+    />
+  ))}
+</Map>
+```
+
+### Uptime monitor
+
+Edge nodes coloured by state over a blank world. A marker is a React view, so the status dot is the same one the rest of the app uses.
+
+```tsx
+<Map blank center={[0, 25]} zoom={1.1}>
+  {nodes.map((node) => (
+    <Map.Marker key={node.id} lngLat={node.lngLat}>
+      <View className="items-center">
+        <View className={dotFor(node.state)} />
+        <Map.Label>{node.id.toUpperCase()}</Map.Label>
+      </View>
+    </Map.Marker>
+  ))}
+</Map>
+```
+
+### Analytics card
+
+The small end of the range — a map as one element inside a card. `interactive={false}` because at this size a stray pan is an accident: the card scrolls, the map does not.
+
+```tsx
+<Card className="overflow-hidden p-0">
+  <LineChart data={week} xDataKey="day" aspectRatio={3}>
+    <LineChart.Area dataKey="value" />
+    <LineChart.Line dataKey="value" />
+  </LineChart>
+  <View className="h-44">
+    <Map blank interactive={false} bounds={[-11, 35, 31, 63]}>
+      <Map.GeoJSON data={countries} fill={ramp} />
+    </Map>
+  </View>
+</Card>
 ```
 
 ## Variants
@@ -263,6 +387,18 @@ The tiles are the one part of the style that is somebody else's to license. `sou
 | `maxZoom` | `number` | `14` | Above this zoom every point stands alone. |
 | `onPress` | `(feature: unknown) => void` | — | Fires with the pressed cluster or point. |
 | `id` | `string` | `'cluster'` |  |
+
+### Map.Heatmap
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `unknown` | — | Point features to spread. |
+| `weight` | `string` | — | Feature property to weight each point by. Unweighted when omitted. |
+| `radius` | `number` | `24` | Spread of a single point, in points. Larger blurs more. |
+| `intensity` | `number` | `1` | Overall strength. Raise it when the data is sparse. |
+| `opacity` | `number` | `0.85` | 0 is invisible, 1 is solid. |
+| `maxZoom` | `number` | `15` | Above this zoom the layer fades out — see the note on the component. |
+| `id` | `string` | `'heatmap'` |  |
 
 ### Map.UserLocation
 
