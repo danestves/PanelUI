@@ -32,7 +32,7 @@ import { View } from 'react-native';
 import { CalendarIcon } from '../../icons';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
-import { shortDate } from '../../utils/date';
+import { calendarShortDate, resolveCalendar, type CalendarSystem } from '../../utils/date';
 import { Button } from '../button';
 import {
   Calendar,
@@ -59,26 +59,26 @@ const DEFAULT_PLACEHOLDER = 'Pick a date';
 function describe<Mode extends DatePickerMode>(
   mode: Mode,
   value: CalendarSelection[Mode] | undefined,
-  locale: string | undefined
+  locale: string | undefined,
+  system: 'gregory' | 'islamic'
 ): string | null {
   if (!value) return null;
+  const write = (date: Date) => calendarShortDate(date, system, locale);
 
   if (mode === 'range') {
     const range = value as DateRange;
     if (!range.from) return null;
-    return range.to
-      ? `${shortDate(range.from, locale)} – ${shortDate(range.to, locale)}`
-      : `${shortDate(range.from, locale)} –`;
+    return range.to ? `${write(range.from)} – ${write(range.to)}` : `${write(range.from)} –`;
   }
 
   if (mode === 'multiple') {
     const days = value as Date[];
     if (!days.length) return null;
-    if (days.length === 1) return shortDate(days[0]!, locale);
+    if (days.length === 1) return write(days[0]!);
     return `${days.length} dates`;
   }
 
-  return shortDate(value as Date, locale);
+  return write(value as Date);
 }
 
 export interface DatePickerProps<Mode extends DatePickerMode = 'single'> {
@@ -114,6 +114,11 @@ export interface DatePickerProps<Mode extends DatePickerMode = 'single'> {
   weekStartsOn?: number;
   /** BCP 47 tag for the month and weekday names, and for the trigger's text. */
   locale?: string;
+  /**
+   * Which calendar the months and day numbers are counted in. Forwarded to the
+   * grid, and used for the trigger's own text so the two always agree.
+   */
+  calendar?: CalendarSystem;
   className?: string;
   /**
    * A trigger of your own. Given one, it is cloned with an `onPress` that opens
@@ -141,9 +146,13 @@ function DatePickerRoot<Mode extends DatePickerMode = 'single'>({
   captionLayout = 'label',
   weekStartsOn = 0,
   locale,
+  calendar = 'gregory',
   className,
   children,
 }: DatePickerProps<Mode>) {
+  // Resolved here as well as in the grid, because the trigger's text has to be
+  // written in the same calendar the cells were tapped in.
+  const system = useMemo(() => resolveCalendar(calendar, locale), [calendar, locale]);
   const [internalOpen, setInternalOpen] = useState(false);
   const [internalSelected, setInternalSelected] = useState<CalendarSelection[Mode] | undefined>(
     defaultSelected
@@ -178,8 +187,8 @@ function DatePickerRoot<Mode extends DatePickerMode = 'single'>({
 
   const label = useMemo(() => {
     if (format && value) return format(value);
-    return describe(mode, value, locale);
-  }, [format, value, mode, locale]);
+    return describe(mode, value, locale, system);
+  }, [format, value, mode, locale, system]);
 
   const trigger = children ?? (
     <Button
@@ -197,8 +206,12 @@ function DatePickerRoot<Mode extends DatePickerMode = 'single'>({
   return (
     <Popover open={open} onOpenChange={setOpen} presentation={presentation}>
       <Popover.Trigger>{trigger as ReactElement<{ onPress?: () => void }>}</Popover.Trigger>
-      <Popover.Content className="p-3" width="content-fit">
-        <View className="w-[300px]">
+      {/* The padding is on the inner view, not the panel: in sheet mode a
+          className on the panel is merged into the sheet's own padding and
+          would replace it. `self-center` for the same reason — the panel does
+          not have to know which presentation it ended up in. */}
+      <Popover.Content width="content-fit">
+        <View className="w-[300px] max-w-full self-center p-3">
           <Calendar
             mode={mode}
             selected={value}
@@ -210,6 +223,7 @@ function DatePickerRoot<Mode extends DatePickerMode = 'single'>({
             captionLayout={captionLayout}
             weekStartsOn={weekStartsOn}
             locale={locale}
+            calendar={calendar}
           />
         </View>
       </Popover.Content>

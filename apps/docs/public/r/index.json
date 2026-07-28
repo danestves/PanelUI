@@ -210,6 +210,7 @@
     "type": "registry:ui",
     "description": "Reading direction for everything below it.",
     "registryDependencies": [
+      "text",
       "use-direction"
     ]
   },
@@ -297,7 +298,8 @@
     "type": "registry:ui",
     "description": "Input with leading and trailing decorators.",
     "registryDependencies": [
-      "input"
+      "input",
+      "text"
     ]
   },
   {
@@ -315,6 +317,7 @@
     "type": "registry:ui",
     "description": "View that lifts itself clear of the software keyboard.",
     "registryDependencies": [
+      "text",
       "use-keyboard-avoidance"
     ]
   },
@@ -386,7 +389,8 @@
     "registryDependencies": [
       "animated-pressable",
       "cn",
-      "icons"
+      "icons",
+      "text"
     ]
   },
   {

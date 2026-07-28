@@ -101,6 +101,14 @@ Pass a child and it is cloned with an `onPress` that opens the panel, so a field
 </DatePicker>
 ```
 
+### A Hijri date
+
+`calendar` is forwarded to the grid and used for the trigger's own text, so the date on the closed field is written in the calendar the cell was tapped in.
+
+```tsx
+<DatePicker selected={day} onSelect={setDay} calendar="islamic" />
+```
+
 ## API Reference
 
 ### DatePicker
@@ -124,6 +132,7 @@ Pass a child and it is cloned with an `onPress` that opens the panel, so a field
 | `captionLayout` | `CalendarCaptionLayout` | `'label'` | `dropdown` swaps the month caption for month and year pickers. |
 | `weekStartsOn` | `number` | `0` | `0` is Sunday. |
 | `locale` | `string` | — | BCP 47 tag for the month and weekday names, and for the trigger's text. |
+| `calendar` | `CalendarSystem` | `'gregory'` | Which calendar the months and day numbers are counted in. Forwarded to the grid, and used for the trigger's own text so the two always agree. |
 | `className` | `string` | — |  |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
@@ -134,6 +143,10 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 **The trigger's text is derived, not stored.** Pass `format` to write it yourself; otherwise it is the short date, both ends of a range, or a count once more than one date is picked.
 
+**`calendar` is forwarded, and used for the trigger too** — a field reading a Gregorian date over a Hijri grid is the bug this exists to prevent.
+
 **Everything the calendar takes is forwarded** — `minDate`, `maxDate`, `disabledDates`, `numberOfMonths`, `captionLayout`, `weekStartsOn` and `locale`.
 
 Reach for **Calendar** on its own when the grid should be on the page rather than behind a control — a booking screen where the month is the screen.
+
+**In a sheet the panel is centred.** A sheet is the full width of the screen and lays its children in a column, so a panel sized to its content would take the cross-axis start and sit flush against one edge — the right-hand one under RTL, directly below the close button.

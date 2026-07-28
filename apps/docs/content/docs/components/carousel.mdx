@@ -101,6 +101,23 @@ The run fans out around the middle slide and tilts away on both sides, opening w
 </Carousel>
 ```
 
+### Interactive, with nothing under it
+
+The same fan with no arrows and no dots — dragged and nothing else. The right shape when the pictures are the whole point and a control bar would be the only chrome on the screen.
+
+```tsx
+<Carousel variant="interactive" itemSize={160} defaultIndex={2}>
+  <Carousel.Content className="h-56">
+    {scenes.map((scene) => (
+      <Carousel.Item key={scene.title} className="items-center gap-2">
+        <Carousel.Caption>{scene.title}</Carousel.Caption>
+        <Image source={{ uri: scene.uri }} className="h-28 w-28 rounded-xl" />
+      </Carousel.Item>
+    ))}
+  </Carousel.Content>
+</Carousel>
+```
+
 ### Coverflow
 
 The neighbours turn away from you in perspective. Best with art — covers, posters, photographs — where the turned edge reads as a shelf rather than as a glitch.
@@ -255,3 +272,5 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 **`stack` is always dealt sideways**, whatever `orientation` says. A deck has no track to travel along.
 
 **In the piled layouts, only the top slide takes touches.** `zIndex` reorders what is drawn but not, on iOS, what is hit — hit testing walks subviews in the order they were added, so without this the last slide rendered would sit in front of every gesture regardless of its z-order. In a deck that slide is the one at the bottom of the pile, drawn at zero opacity.
+
+**The middle slide rests at exactly 1.** In `interactive` the fan's depth comes from the others shrinking rather than from the active one growing, because text is rasterised at its layout size and then scaled — a caption on a slide held above 1 is drawn at the wrong raster size for the whole time it is readable. `Carousel.Caption` fades but never scales, for the same reason: inside the slide, the two would compound.

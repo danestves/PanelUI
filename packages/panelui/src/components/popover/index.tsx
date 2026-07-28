@@ -357,14 +357,42 @@ function PopoverContent({
     ],
   }));
 
-  // The sheet presentation hands off entirely to BottomSheet — it owns its own
-  // portal, backdrop and dismiss gesture, so there is nothing to anchor here.
-  // The context is re-provided inside so Popover.Close keeps closing it.
+  /*
+   * The sheet presentation hands off entirely to BottomSheet — it owns its own
+   * portal, backdrop and dismiss gesture, so there is nothing to anchor here.
+   * The context is re-provided inside so Popover.Close keeps closing it.
+   *
+   * `width` still means something, though. A sheet is the full width of the
+   * screen and lays its children out in a column, so a panel sized to its
+   * content takes the cross-axis *start* and ends up flush against one edge —
+   * the right-hand one under RTL, directly below the close button. Centring it
+   * is what makes `width="content-fit"` mean the same thing in both
+   * presentations.
+   *
+   * The className goes on an inner view rather than on the sheet: passed to
+   * the surface it is merged into the sheet's own padding classes and replaces
+   * them, so a panel asking for `p-3` silently strips the sheet's `px-5 pt-2`.
+   */
   if (presentation === 'bottom-sheet') {
     return (
       <BottomSheet open={open} onOpenChange={setOpen}>
-        <BottomSheet.Content dismissible={dismissible} className={className}>
-          <PopoverContext.Provider value={context}>{children}</PopoverContext.Provider>
+        <BottomSheet.Content dismissible={dismissible}>
+          <PopoverContext.Provider value={context}>
+            <View
+              className={cn(width === 'content-fit' && 'self-center', className)}
+              style={[
+                width === 'full' || width === 'trigger' ? { width: '100%' } : null,
+                typeof width === 'number' ? { width } : null,
+                minWidth === undefined ? null : { minWidth },
+                // Clear of the close button, which floats over the top-end
+                // corner of the sheet rather than sitting in the flow.
+                { paddingTop: 8 },
+                style,
+              ]}
+            >
+              {children}
+            </View>
+          </PopoverContext.Provider>
         </BottomSheet.Content>
       </BottomSheet>
     );

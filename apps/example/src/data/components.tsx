@@ -728,6 +728,44 @@ function CalendarDropdownDemo() {
   );
 }
 
+/**
+ * The same grid counted two ways.
+ *
+ * The calendar system is what the months and the day numbers are counted in,
+ * and it moves the grid rather than only its labels — a Hijri month starts on
+ * a different day and runs 29 or 30. The value picked is a plain `Date` either
+ * way, so the choice is a presentation one and nothing downstream has to know.
+ */
+function CalendarSystemDemo() {
+  const [system, setSystem] = useState<'gregory' | 'islamic'>('islamic');
+  const [day, setDay] = useState<Date>();
+
+  return (
+    <View className="w-full gap-4">
+      <Tabs
+        defaultValue="islamic"
+        value={system}
+        onValueChange={(next) => setSystem(next as typeof system)}
+      >
+        <Tabs.List>
+          <Tabs.Trigger value="gregory">Gregorian</Tabs.Trigger>
+          <Tabs.Trigger value="islamic">Hijri</Tabs.Trigger>
+        </Tabs.List>
+      </Tabs>
+
+      <Card>
+        <Card.Content className="p-3">
+          <Calendar selected={day} onSelect={setDay} calendar={system} />
+        </Card.Content>
+      </Card>
+
+      <Text size="sm" muted className="text-center">
+        {day ? day.toDateString() : 'The value is a plain Date whichever is on screen.'}
+      </Text>
+    </View>
+  );
+}
+
 function DatePickerDemo() {
   const [day, setDay] = useState<Date>();
   const [range, setRange] = useState<DateRange>();
@@ -6790,6 +6828,7 @@ export const COMPONENTS: ComponentEntry[] = [
       { label: 'Several days', render: () => <CalendarMultipleDemo /> },
       { label: 'Days ruled out', render: () => <CalendarDisabledDemo /> },
       { label: 'Month and year pickers', render: () => <CalendarDropdownDemo /> },
+      { label: 'Hijri or Gregorian', render: () => <CalendarSystemDemo /> },
     ],
   },
   {

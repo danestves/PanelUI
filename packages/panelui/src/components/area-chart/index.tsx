@@ -673,7 +673,17 @@ function AreaChartXAxis({ ticks = 4, format, className }: AreaChartXAxisProps) {
           style={{
             position: 'absolute',
             bottom: 0,
-            left: xOf(label.key, data.length, plot) - POINT_LABEL_WIDTH / 2,
+            // Centred on its point, then held inside the chart. The first and
+            // last points sit on the plot's own edges, so a box centred on
+            // them hangs half its width off the side — the clamp slides those
+            // two back in rather than letting the numbers leave the frame.
+            left: Math.max(
+              0,
+              Math.min(
+                xOf(label.key, data.length, plot) - POINT_LABEL_WIDTH / 2,
+                plot.left + plot.width + PADDING.right - POINT_LABEL_WIDTH
+              )
+            ),
             width: POINT_LABEL_WIDTH,
             textAlign: 'center',
           }}

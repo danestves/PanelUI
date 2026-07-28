@@ -114,6 +114,18 @@ What picking a range across a month boundary wants. The arrows split across the 
 <Calendar mode="range" numberOfMonths={2} selected={range} onSelect={setRange} />
 ```
 
+### Hijri or Gregorian
+
+`calendar` moves the grid, not only the labels — a Hijri month starts on a different day and runs 29 or 30. The value stays a plain `Date` either way, so the choice is a presentation one and nothing downstream has to know which was on screen.
+
+```tsx
+<Calendar selected={day} onSelect={setDay} calendar="islamic" />
+
+{/* Or follow the device, for an app whose language and calendar are the
+    same question. */}
+<Calendar selected={day} onSelect={setDay} calendar="auto" />
+```
+
 ## API Reference
 
 ### Calendar
@@ -136,6 +148,7 @@ What picking a range across a month boundary wants. The arrows split across the 
 | `weekStartsOn` | `number` | `0` | `0` is Sunday. |
 | `showOutsideDays` | `boolean` | `true` | Draw the neighbouring months' days rather than leaving the cells blank. |
 | `locale` | `DateLocale` | — | BCP 47 tag for the month and weekday names. The device's own by default. |
+| `calendar` | `CalendarSystem` | `'gregory'` | Which calendar the months and the day numbers are counted in. `gregory` by default rather than `auto`: a grid whose month boundaries move with the device's language is a surprise, and it is the caller — not the locale — who knows whether the dates being picked are Hijri ones. `auto` follows the locale for the cases where they are the same question. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -150,3 +163,9 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 **It opens on the selection, not on today.** A picker reopened on a date chosen last year lands on that month — otherwise it opens on today and the choice looks lost.
 
 **`minDate` and `maxDate` bound the paging too**, not only the selection: an arrow that pages to a month where every day is dead is an arrow that should have been off.
+
+**`calendar` goes all the way down.** It is `gregory` by default rather than `auto`, because a grid whose month boundaries move with the device's language is a surprise — and it is the caller, not the locale, who knows whether the dates being picked are Hijri ones. Set `islamic` and the month anchoring, the paging, the outside-day dimming and the day numbers all count in it, so the caption and the cells can never disagree. Month lengths are asked of the platform's own calendar data a day at a time rather than read from a table, which is what keeps a 29-day month 29 days in the years it is one.
+
+**Digits are pinned to Latin.** The cells render numbers, so a caption in Arabic-Indic over cells in Latin would be two scripts for one date; both are Latin instead.
+
+**Without islamic data in the build, it falls back to Gregorian** rather than throwing — wrong, but coherent, which is the same posture the month names already take.

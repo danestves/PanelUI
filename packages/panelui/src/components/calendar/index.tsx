@@ -41,20 +41,23 @@ import { ChevronLeftIcon, ChevronRightIcon } from '../../icons';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import {
-  addMonths,
-  clampDate,
+  addCalendarMonths,
+  addDays,
+  calendarDayNumber,
+  calendarLongDate,
+  calendarMonthLabel,
+  calendarMonthNames,
+  calendarParts,
   isAfter,
   isBefore,
+  isSameCalendarMonth,
   isSameDay,
-  isSameMonth,
   isWithin,
-  longDate,
-  monthGrid,
-  monthLabel,
-  monthNames,
+  resolveCalendar,
+  startOfCalendarMonth,
   startOfDay,
-  startOfMonth,
   weekdayNames,
+  type CalendarSystem,
   type DateLocale,
 } from '../../utils/date';
 
@@ -114,6 +117,8 @@ interface CalendarContextValue {
   month: Date;
   setMonth: (month: Date) => void;
   locale: DateLocale;
+  /** Already resolved — `auto` is settled once, at the root. */
+  system: 'gregory' | 'islamic';
   minDate?: Date;
   maxDate?: Date;
   captionLayout: CalendarCaptionLayout;
@@ -178,6 +183,15 @@ export interface CalendarProps<Mode extends CalendarMode = 'single'>
   showOutsideDays?: boolean;
   /** BCP 47 tag for the month and weekday names. The device's own by default. */
   locale?: DateLocale;
+  /**
+   * Which calendar the months and the day numbers are counted in.
+   *
+   * `gregory` by default rather than `auto`: a grid whose month boundaries move
+   * with the device's language is a surprise, and it is the caller — not the
+   * locale — who knows whether the dates being picked are Hijri ones. `auto`
+   * follows the locale for the cases where they are the same question.
+   */
+  calendar?: CalendarSystem;
 }
 
 function CalendarRoot<Mode extends CalendarMode = 'single'>({
@@ -197,8 +211,12 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
   weekStartsOn = 0,
   showOutsideDays = true,
   locale,
+  calendar = 'gregory',
   ...props
 }: CalendarProps<Mode>) {
+  // Settled once here rather than at each call site, so every part of the
+  // grid is certainly reading the same calendar.
+  const system = useMemo(() => resolveCalendar(calendar, locale), [calendar, locale]);
   const [internalSelected, setInternalSelected] = useState<CalendarSelection[Mode] | undefined>(
     defaultSelected
   );
@@ -210,7 +228,7 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
    * chosen last year does not land on today and make it look unselected.
    */
   const initialMonth = useMemo(() => {
-    if (defaultMonth) return startOfMonth(defaultMonth);
+    if (defaultMonth) return startOfCalendarMonth(defaultMonth, system, locale);
     const first =
       value instanceof Date
         ? value
@@ -219,21 +237,21 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
           : value && typeof value === 'object' && 'from' in value
             ? (value as DateRange).from
             : undefined;
-    return startOfMonth(first ?? new Date());
+    return startOfCalendarMonth(first ?? new Date(), system, locale);
     // Only the first render decides this; after that the month is its own state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [internalMonth, setInternalMonth] = useState(initialMonth);
-  const month = monthProp ? startOfMonth(monthProp) : internalMonth;
+  const month = monthProp ? startOfCalendarMonth(monthProp, system, locale) : internalMonth;
 
   const setMonth = useCallback(
     (next: Date) => {
-      const settled = startOfMonth(next);
+      const settled = startOfCalendarMonth(next, system, locale);
       if (!monthProp) setInternalMonth(settled);
       onMonthChange?.(settled);
     },
-    [monthProp, onMonthChange]
+    [monthProp, onMonthChange, system, locale]
   );
 
   const commit = useCallback(
@@ -280,8 +298,8 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
   );
 
   const context = useMemo(
-    () => ({ month, setMonth, locale, minDate, maxDate, captionLayout }),
-    [month, setMonth, locale, minDate, maxDate, captionLayout]
+    () => ({ month, setMonth, locale, system, minDate, maxDate, captionLayout }),
+    [month, setMonth, locale, system, minDate, maxDate, captionLayout]
   );
 
   return (
@@ -291,7 +309,7 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
           <View key={offset} className="gap-2">
             <CalendarCaption offset={offset} lastOffset={numberOfMonths - 1} />
             <CalendarGrid
-              month={addMonths(month, offset)}
+              month={addCalendarMonths(month, offset, system, locale)}
               mode={mode}
               value={value}
               onSelect={select}
@@ -301,6 +319,7 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
               weekStartsOn={weekStartsOn}
               showOutsideDays={showOutsideDays}
               locale={locale}
+              system={system}
             />
           </View>
         ))}
@@ -322,12 +341,14 @@ CalendarRoot.displayName = 'Calendar';
  * the whole run and give two ways to do one thing.
  */
 function CalendarCaption({ offset, lastOffset }: { offset: number; lastOffset: number }) {
-  const { month, setMonth, locale, minDate, maxDate, captionLayout } =
+  const { month, setMonth, locale, system, minDate, maxDate, captionLayout } =
     useCalendar('Calendar.Caption');
-  const shown = addMonths(month, offset);
+  const shown = addCalendarMonths(month, offset, system, locale);
 
-  const canGoBack = !minDate || isBefore(startOfMonth(minDate), startOfMonth(month));
-  const canGoForward = !maxDate || isAfter(startOfMonth(maxDate), startOfMonth(shown));
+  const canGoBack =
+    !minDate || isBefore(startOfCalendarMonth(minDate, system, locale), month);
+  const canGoForward =
+    !maxDate || isAfter(startOfCalendarMonth(maxDate, system, locale), shown);
 
   return (
     <View className="h-9 flex-row items-center justify-between">
@@ -335,7 +356,7 @@ function CalendarCaption({ offset, lastOffset }: { offset: number; lastOffset: n
         <CalendarNav
           direction="previous"
           disabled={!canGoBack}
-          onPress={() => setMonth(addMonths(month, -1))}
+          onPress={() => setMonth(addCalendarMonths(month, -1, system, locale))}
         />
       ) : (
         <View className="h-7 w-7" />
@@ -344,14 +365,14 @@ function CalendarCaption({ offset, lastOffset }: { offset: number; lastOffset: n
       {captionLayout === 'dropdown' ? (
         <CalendarDropdowns month={shown} offset={offset} />
       ) : (
-        <Text weight="semibold">{monthLabel(shown, locale)}</Text>
+        <Text weight="semibold">{calendarMonthLabel(shown, system, locale)}</Text>
       )}
 
       {offset === lastOffset ? (
         <CalendarNav
           direction="next"
           disabled={!canGoForward}
-          onPress={() => setMonth(addMonths(month, 1))}
+          onPress={() => setMonth(addCalendarMonths(month, 1, system, locale))}
         />
       ) : (
         <View className="h-7 w-7" />
@@ -395,17 +416,36 @@ function CalendarNav({
  * number. Chips stay on the surface the choice is being made on.
  */
 function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
-  const { setMonth, locale, minDate, maxDate } = useCalendar('Calendar.Caption');
+  const { setMonth, locale, system, minDate, maxDate } = useCalendar('Calendar.Caption');
   const [open, setOpen] = useState<'month' | 'year' | null>(null);
 
-  const months = monthNames(locale, 'short');
-  const thisYear = new Date().getFullYear();
-  const firstYear = minDate?.getFullYear() ?? thisYear - 100;
-  const lastYear = maxDate?.getFullYear() ?? thisYear + 10;
-  const years = Array.from({ length: lastYear - firstYear + 1 }, (_unused, i) => firstYear + i);
+  /*
+   * Everything here counts in the calendar on screen, not in the platform's.
+   * The names come from a real year of that calendar rather than from twelve
+   * Gregorian firsts, and the year list is that calendar's years — a Hijri
+   * caption offering Gregorian years is choosing from the wrong set.
+   */
+  const months = useMemo(
+    () => calendarMonthNames(month, system, locale, 'short'),
+    [month, system, locale]
+  );
+  const current = calendarParts(month, system, locale);
+  const bounds = {
+    from: minDate ? calendarParts(minDate, system, locale).year : current.year - 100,
+    to: maxDate ? calendarParts(maxDate, system, locale).year : current.year + 10,
+  };
+  const years = Array.from(
+    { length: Math.max(1, bounds.to - bounds.from + 1) },
+    (_unused, index) => bounds.from + index
+  );
 
-  const choose = (next: Date) => {
-    setMonth(addMonths(next, -offset));
+  /*
+   * Navigated by months rather than by building a date, because there is no
+   * `new Date(hijriYear, hijriMonth)`. A Hijri year is always twelve months,
+   * so a year jump is twelve of them.
+   */
+  const choose = (months_: number) => {
+    setMonth(addCalendarMonths(month, months_ - offset, system, locale));
     setOpen(null);
   };
 
@@ -413,12 +453,12 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
     <View className="flex-1 items-center">
       <View className="flex-row items-center gap-1">
         <CaptionChip
-          label={months[month.getMonth()]!}
+          label={months[current.month - 1] ?? String(current.month)}
           expanded={open === 'month'}
           onPress={() => setOpen(open === 'month' ? null : 'month')}
         />
         <CaptionChip
-          label={String(month.getFullYear())}
+          label={String(current.year)}
           expanded={open === 'year'}
           onPress={() => setOpen(open === 'year' ? null : 'year')}
         />
@@ -429,16 +469,16 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
           {(open === 'month' ? months : years.map(String)).map((option, index) => {
             const active =
               open === 'month'
-                ? index === month.getMonth()
-                : years[index] === month.getFullYear();
+                ? index === current.month - 1
+                : years[index] === current.year;
             return (
               <Pressable
                 key={option}
                 onPress={() =>
                   choose(
                     open === 'month'
-                      ? new Date(month.getFullYear(), index, 1)
-                      : new Date(years[index]!, month.getMonth(), 1)
+                      ? index - (current.month - 1)
+                      : (years[index]! - current.year) * 12
                   )
                 }
                 accessibilityRole="button"
@@ -496,6 +536,7 @@ interface GridProps {
   weekStartsOn: number;
   showOutsideDays: boolean;
   locale: DateLocale;
+  system: 'gregory' | 'islamic';
 }
 
 function CalendarGrid({
@@ -509,8 +550,22 @@ function CalendarGrid({
   weekStartsOn,
   showOutsideDays,
   locale,
+  system,
 }: GridProps) {
-  const weeks = useMemo(() => monthGrid(month, weekStartsOn), [month, weekStartsOn]);
+  /*
+   * Six rows of consecutive days, anchored on the first of *this* calendar's
+   * month. Weekdays are shared between the two calendars — only the month
+   * boundaries and the day numbers differ — so the walk itself is the same
+   * either way and only where it starts moves.
+   */
+  const weeks = useMemo(() => {
+    const first = startOfCalendarMonth(month, system, locale);
+    const lead = (first.getDay() - weekStartsOn + 7) % 7;
+    const start = addDays(first, -lead);
+    return Array.from({ length: 6 }, (_unusedWeek, week) =>
+      Array.from({ length: 7 }, (_unusedDay, day) => addDays(start, week * 7 + day))
+    );
+  }, [month, weekStartsOn, system, locale]);
   const headings = useMemo(() => weekdayNames(locale, weekStartsOn), [locale, weekStartsOn]);
   const today = startOfDay(new Date());
 
@@ -533,7 +588,7 @@ function CalendarGrid({
       {weeks.map((week, weekIndex) => (
         <View key={weekIndex} className="flex-row">
           {week.map((date, dayIndex) => {
-            const outside = !isSameMonth(date, month);
+            const outside = !isSameCalendarMonth(date, month, system, locale);
             if (outside && !showOutsideDays) {
               // A spacer, not nothing: the row has to stay seven wide or the
               // columns stop lining up with their headings.
@@ -565,6 +620,7 @@ function CalendarGrid({
                 openStart={inRange && dayIndex > 0}
                 openEnd={inRange && dayIndex < 6}
                 locale={locale}
+                system={system}
                 onPress={() => onSelect(date)}
               />
             );
@@ -585,6 +641,7 @@ interface DayProps {
   openStart: boolean;
   openEnd: boolean;
   locale: DateLocale;
+  system: 'gregory' | 'islamic';
   onPress: () => void;
 }
 
@@ -598,6 +655,7 @@ function CalendarDay({
   openStart,
   openEnd,
   locale,
+  system,
   onPress,
 }: DayProps) {
   const styles = dayVariants({
@@ -613,7 +671,7 @@ function CalendarDay({
       disabled={disabled}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={longDate(date, locale)}
+      accessibilityLabel={calendarLongDate(date, system, locale)}
       accessibilityState={{ selected, disabled }}
       className={cn(styles.cell(), 'h-10')}
     >
@@ -632,7 +690,7 @@ function CalendarDay({
       ) : null}
       <View className={cn(styles.disc())}>
         <Text size="sm" className={cn(styles.label())}>
-          {date.getDate()}
+          {calendarDayNumber(date, system, locale)}
         </Text>
       </View>
     </Pressable>

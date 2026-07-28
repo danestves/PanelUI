@@ -254,3 +254,7 @@ Stacking is not a flag that could have been added to `LineChart.Area`. It change
 ### Reduced motion
 
 The reveal and the domain tween are both skipped, and the chart draws straight to its final shape.
+
+**`aspectRatio` measures the plot, not the whole chart.** The header sits above the drawing area rather than inside it, so a chart with a readout is taller than its ratio alone suggests — measure the box and the header would eat into the plot while still claiming the shape you asked for.
+
+**Labels sit on what they name.** Each x label is placed on its own point, and each y label is centred on the grid line it belongs to. `Grid`'s `rows` and `YAxis`'s `ticks` have to match for the numbers to line up; both default to `4`.

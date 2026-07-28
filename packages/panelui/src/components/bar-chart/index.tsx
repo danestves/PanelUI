@@ -93,13 +93,6 @@ const LABEL_WIDTH = 132;
 /** Left gutter reserved when a `YAxis` is present, for its labels to sit in. */
 const Y_AXIS_WIDTH = 40;
 
-/**
- * Box each category label is centred in. Wide enough for a short name to sit
- * over its band without the neighbours colliding; a longer one is ellipsised
- * rather than allowed to push the others out of place.
- */
-const BAND_LABEL_WIDTH = 56;
-
 /** Line height of an `xs` label, for centring one on the grid line it names. */
 const AXIS_LABEL_HEIGHT = 16;
 
@@ -746,8 +739,18 @@ BarChartBar.layer = 'svg' as Layer;
 /* Overlay layer                                                              */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Narrowest a category label may be drawn before the axis starts dropping
+ * some. Roughly three characters at `xs`, which is what a month abbreviation
+ * or a short name needs.
+ */
+const MIN_BAND_LABEL = 34;
+
 export interface BarChartXAxisProps {
-  /** How many labels to show. The rest are dropped, evenly. */
+  /**
+   * How many labels to show. Every category by default, thinned only when the
+   * bands get too narrow to read — pass a number to force it lower.
+   */
   ticks?: number;
   /** Turn a row into its label. Defaults to the value at `xDataKey`. */
   format?: (datum: BarChartDatum, index: number) => string;
@@ -759,23 +762,36 @@ export interface BarChartXAxisProps {
  * than SVG text, so they follow the theme's font and the platform's text
  * scaling — SVG text does neither.
  */
-function BarChartXAxis({ ticks = 6, format, className }: BarChartXAxisProps) {
+function BarChartXAxis({ ticks, format, className }: BarChartXAxisProps) {
   const { data, xDataKey, plot, orientation } = useChart('BarChart.XAxis');
 
   const labels = useMemo(() => {
     if (!data.length) return [];
-    const count = Math.min(ticks, data.length);
-    const step = count > 1 ? (data.length - 1) / (count - 1) : 0;
-    return Array.from({ length: count }, (_unused, index) => {
-      const dataIndex = Math.round(index * step);
-      const datum = data[dataIndex];
-      if (!datum) return null;
-      return {
-        key: dataIndex,
-        text: format ? format(datum, dataIndex) : String(datum[xDataKey] ?? ''),
-      };
-    }).filter((label): label is { key: number; text: string } => label !== null);
-  }, [data, ticks, format, xDataKey]);
+
+    /*
+     * Every category, unless they will not fit. A fixed tick count dropped
+     * names that had room to be drawn — eight months at six ticks lost March
+     * and June for no reason anyone looking at the chart could see. The axis
+     * asks the plot how much room there is instead, and only thins when the
+     * answer is not enough.
+     */
+    const room = Math.max(1, Math.floor(plot.width / MIN_BAND_LABEL));
+    const count = Math.max(1, Math.min(ticks ?? room, data.length));
+
+    // Every nth band, rather than a fractional step rounded to the nearest
+    // index — rounding lands on the same band twice and skips its neighbour.
+    const stride = Math.ceil(data.length / count);
+    const picked: { key: number; text: string }[] = [];
+    for (let index = 0; index < data.length; index += stride) {
+      const datum = data[index];
+      if (!datum) continue;
+      picked.push({
+        key: index,
+        text: format ? format(datum, index) : String(datum[xDataKey] ?? ''),
+      });
+    }
+    return picked;
+  }, [data, ticks, format, xDataKey, plot.width]);
 
   if (orientation === 'horizontal') return null;
 
@@ -790,6 +806,14 @@ function BarChartXAxis({ ticks = 6, format, className }: BarChartXAxisProps) {
    * The box is backed off by half its own width rather than translated by
    * `-50%`, which is not reliable across React Native versions.
    */
+  /*
+   * One box per band, exactly the band's width. Tiling them rather than giving
+   * each a fixed width means they can never overlap each other and the first
+   * and last can never hang off the ends of the plot — the row of labels
+   * occupies precisely the space the bars do.
+   */
+  const bandWidth = data.length > 0 ? plot.width / data.length : 0;
+
   return (
     <View
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
@@ -804,8 +828,8 @@ function BarChartXAxis({ ticks = 6, format, className }: BarChartXAxisProps) {
           style={{
             position: 'absolute',
             bottom: 0,
-            left: bandOf(label.key, data.length, plot) - BAND_LABEL_WIDTH / 2,
-            width: BAND_LABEL_WIDTH,
+            left: bandOf(label.key, data.length, plot) - bandWidth / 2,
+            width: bandWidth,
             textAlign: 'center',
           }}
         >
