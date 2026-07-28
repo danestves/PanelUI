@@ -390,7 +390,7 @@ function PopoverContent({
                 style,
               ]}
             >
-              {children}
+              {textChildren(children)}
             </View>
           </PopoverContext.Provider>
         </BottomSheet.Content>

@@ -91,7 +91,10 @@ const PADDING_SIDEWAYS = { top: 6, right: 10, bottom: 6, left: 68 };
 const LABEL_WIDTH = 132;
 
 /** Left gutter reserved when a `YAxis` is present, for its labels to sit in. */
-const Y_AXIS_WIDTH = 40;
+const Y_AXIS_WIDTH = 44;
+
+/** Gap between the value labels and the plot they sit beside. */
+const Y_AXIS_GUTTER = 6;
 
 /** Line height of an `xs` label, for centring one on the grid line it names. */
 const AXIS_LABEL_HEIGHT = 16;

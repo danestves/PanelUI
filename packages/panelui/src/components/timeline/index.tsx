@@ -357,7 +357,7 @@ const TimelineContent = forwardRef<View, ViewProps & { className?: string }>(
 
     return (
       <View ref={ref} className={body({ className })} {...props}>
-        {variant === 'card' ? <View className={panel()}>{children}</View> : children}
+        {variant === 'card' ? <View className={panel()}>{textChildren(children)}</View> : children}
       </View>
     );
   }

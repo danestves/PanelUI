@@ -111,21 +111,32 @@ function SectionsLayout({
 function PagerLayout({
   entry,
   versions,
-  inline,
+  demos,
+  index: showIndex,
+  fills = false,
 }: {
   entry: ComponentEntry;
   versions: Demo[];
-  inline: Demo[];
+  /** The demos that become pages, in order. */
+  demos: Demo[];
+  /** Put the Versions list on a page of its own in front of them. */
+  index: boolean;
+  /**
+   * Let each demo have the page's remaining height instead of sitting centred
+   * at its own size, and drop the horizontal padding — a demo written to own a
+   * screen brings its own.
+   */
+  fills?: boolean;
 }) {
   const [page, setPage] = useState(0);
   const [pageHeight, setPageHeight] = useState(0);
   const scroller = useRef<ScrollView>(null);
 
-  // The versions list, if there is one, is the first page: it is the index to
-  // the screens that are too big to be pages themselves.
+  // The versions list leads, where there is one to show: it is the index to
+  // the screens that are not pages themselves.
   const pages: { id: string; label: string; demo?: Demo }[] = [
-    ...(versions.length ? [{ id: 'versions', label: 'Versions' }] : []),
-    ...inline.map((demo) => ({ id: demo.label, label: demo.label, demo })),
+    ...(showIndex ? [{ id: 'versions', label: 'Versions' }] : []),
+    ...demos.map((demo) => ({ id: demo.id ?? demo.label, label: demo.label, demo })),
   ];
 
   const scrollToPage = (index: number) => {
@@ -159,14 +170,25 @@ function PagerLayout({
             // Nothing to lay out until the viewport has been measured; a page
             // of the wrong height would scroll to the wrong place first.
             style={{ height: pageHeight || undefined }}
-            className="justify-center px-5"
+            className={fills ? 'pt-1' : 'justify-center px-5'}
           >
-            <Text size="xs" muted className="mb-2">
-              {index + 1} of {pages.length}
-            </Text>
-            <DemoLabel>{entryPage.label}</DemoLabel>
+            <View className={fills ? 'px-5' : undefined}>
+              <Text size="xs" muted className="mb-2">
+                {index + 1} of {pages.length}
+              </Text>
+              <DemoLabel>{entryPage.label}</DemoLabel>
+            </View>
             {entryPage.demo ? (
-              <View className="w-full items-center">{entryPage.demo.render()}</View>
+              <>
+                {entryPage.demo.description ? (
+                  <Text size="sm" muted className={fills ? '-mt-2 mb-3 px-5' : '-mt-2 mb-4'}>
+                    {entryPage.demo.description}
+                  </Text>
+                ) : null}
+                <View className={fills ? 'flex-1' : 'w-full items-center'}>
+                  {entryPage.demo.render()}
+                </View>
+              </>
             ) : (
               <VersionList entry={entry} versions={versions} />
             )}
@@ -222,19 +244,41 @@ export default function ComponentDetailScreen() {
   const inline = entry.demos.filter((demo) => !demo.fullPage);
 
   /*
-   * Paged by default, with two cases that fall back however the entry is
-   * marked. A component whose demos are all full-screen has nothing to page
-   * but its own Versions list, and a component with one inline demo would get
-   * a single page and a rail that does nothing — both are the sections layout
-   * with extra steps.
+   * What becomes a page.
+   *
+   * Normally the inline demos, with the Versions list in front of them as an
+   * index. A component whose demos are *all* full-screen has nothing to page
+   * that way — the charts are the case, eight versions and no inline demo —
+   * so asking for `pager` explicitly pages the versions themselves instead. A
+   * page is already full height, which is the only thing those demos wanted.
+   *
+   * Full-bleed demos never become pages: they drop the header and draw their
+   * own way back, so they need the screen and a route to themselves.
    */
-  const paged = entry.layout !== 'sections' && inline.length > 1;
+  const asked = entry.layout === 'pager';
+  const pagingVersions = inline.length === 0 && asked;
+  const pageable = pagingVersions ? versions.filter((demo) => !demo.fullBleed) : inline;
+
+  // One page and a rail that does nothing is the sections layout with extra
+  // steps, so a single demo falls back however the entry is marked.
+  const paged = entry.layout !== 'sections' && pageable.length > 1;
 
   return (
     <View className="flex-1">
       <ScreenHeader title={entry.name} showBack />
       {paged ? (
-        <PagerLayout entry={entry} versions={versions} inline={inline} />
+        <PagerLayout
+          entry={entry}
+          versions={versions}
+          demos={pageable}
+          // Only when the pages are the inline demos and the versions are
+          // somewhere else. When the versions *are* the pages, a list of links
+          // to them in front is a table of contents for the next swipe.
+          index={!pagingVersions && versions.length > 0}
+          // A demo marked full-page was written to own a screen, and a page is
+          // one — so it gets the height rather than being centred in it.
+          fills={pagingVersions}
+        />
       ) : (
         <SectionsLayout entry={entry} versions={versions} inline={inline} />
       )}

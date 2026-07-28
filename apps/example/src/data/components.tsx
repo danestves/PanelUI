@@ -740,13 +740,13 @@ function CalendarDropdownDemo() {
  * way, so the choice is a presentation one and nothing downstream has to know.
  */
 function CalendarSystemDemo() {
-  const [system, setSystem] = useState<'gregory' | 'islamic'>('islamic');
+  const [system, setSystem] = useState<'gregory' | 'islamic'>('gregory');
   const [day, setDay] = useState<Date>();
 
   return (
     <View className="w-full gap-4">
       <Tabs
-        defaultValue="islamic"
+        defaultValue="gregory"
         value={system}
         onValueChange={(next) => setSystem(next as typeof system)}
       >
@@ -5718,11 +5718,18 @@ const BAR_TOTALS = BAR_REVENUE.reduce(
 
 const money = (value: number) => `£${value.toLocaleString()}`;
 
+/*
+ * One chart per version, not two in a scroller.
+ *
+ * These are pages now, and a page is a fixed height — a demo that brought its
+ * own vertical ScrollView both fought the pager for the drag and stacked its
+ * two charts into the space meant for one.
+ */
 function BarChartGroupedVersion() {
   const [active, setActive] = useState<(typeof BAR_REVENUE)[number] | null>(null);
 
   return (
-    <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
+    <View className="flex-1 justify-center p-4">
       <Frame className="w-full">
         <Frame.Header>
           <Frame.Title>Revenue and costs</Frame.Title>
@@ -5732,7 +5739,7 @@ function BarChartGroupedVersion() {
           <BarChart
             data={BAR_REVENUE}
             xDataKey="month"
-            aspectRatio={2.1}
+            aspectRatio={2}
             onActiveIndexChange={(_index, datum) =>
               setActive(datum as (typeof BAR_REVENUE)[number] | null)
             }
@@ -5758,14 +5765,21 @@ function BarChartGroupedVersion() {
           </BarChart>
         </Frame.Panel>
       </Frame>
+    </View>
+  );
+}
 
+/** The same two series read as a total instead of as a comparison. */
+function BarChartStackedVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
       <Frame className="w-full">
         <Frame.Header>
           <Frame.Title>Stacked</Frame.Title>
           <Frame.Action>Same two series</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
-          <BarChart data={BAR_REVENUE} xDataKey="month" stacked stackGap={2} aspectRatio={2.2}>
+          <BarChart data={BAR_REVENUE} xDataKey="month" stacked stackGap={2} aspectRatio={2}>
             <BarChart.Header
               className={CHART_HEADER}
               value={money(BAR_TOTALS.revenue + BAR_TOTALS.costs)}
@@ -5780,7 +5794,7 @@ function BarChartGroupedVersion() {
           </BarChart>
         </Frame.Panel>
       </Frame>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -5800,7 +5814,7 @@ function BarChartHorizontalVersion() {
             data={CHANNELS}
             xDataKey="name"
             orientation="horizontal"
-            aspectRatio={1.9}
+            aspectRatio={1.7}
             barGap={0.35}
           >
             <BarChart.Header
@@ -5829,7 +5843,7 @@ function AreaChartStackedVersion() {
   const total = active ? active.direct + active.search + active.social : day;
 
   return (
-    <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
+    <View className="flex-1 justify-center p-4">
       <Frame className="w-full">
         <Frame.Header>
           <Frame.Title>Sessions by channel</Frame.Title>
@@ -5840,7 +5854,7 @@ function AreaChartStackedVersion() {
             data={AREA_TRAFFIC}
             xDataKey="hour"
             stacked
-            aspectRatio={2.1}
+            aspectRatio={1.9}
             onActiveIndexChange={(_index, datum) =>
               setActive(datum as (typeof AREA_TRAFFIC)[number] | null)
             }
@@ -5865,7 +5879,7 @@ function AreaChartStackedVersion() {
           </AreaChart>
         </Frame.Panel>
       </Frame>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -5879,7 +5893,7 @@ function AreaChartOverlaidVersion() {
           <Frame.Action>Peak hour</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
-          <AreaChart data={AREA_TRAFFIC} xDataKey="hour" aspectRatio={2.1}>
+          <AreaChart data={AREA_TRAFFIC} xDataKey="hour" aspectRatio={1.9}>
             <AreaChart.Header
               className={CHART_HEADER}
               value="600"
@@ -6258,6 +6272,7 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'area-chart',
     name: 'AreaChart',
     summary: 'Filled bands over time, stacked or overlaid',
+    layout: 'pager',
     demos: [
       {
         label: 'Stacked',
@@ -6437,13 +6452,21 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'bar-chart',
     name: 'BarChart',
     summary: 'Categories compared by length, grouped or stacked',
+    layout: 'pager',
     demos: [
       {
-        label: 'Grouped and stacked',
+        label: 'Grouped',
         id: 'grouped',
         fullPage: true,
-        description: 'Two series side by side, then the same two as a total.',
+        description: 'Two series side by side, compared by length.',
         render: () => <BarChartGroupedVersion />,
+      },
+      {
+        label: 'Stacked',
+        id: 'stacked',
+        fullPage: true,
+        description: 'The same two series read as a total instead of as a comparison.',
+        render: () => <BarChartStackedVersion />,
       },
       {
         label: 'Sideways',
@@ -7523,6 +7546,7 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'heatmap-chart',
     name: 'HeatmapChart',
     summary: 'Contribution grid with a themed colour ramp',
+    layout: 'pager',
     demos: [
       {
         label: 'Contribution grid',
@@ -7983,6 +8007,7 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'line-chart',
     name: 'LineChart',
     summary: 'Animated time series, drawn on the UI thread',
+    layout: 'pager',
     demos: [
       {
         label: 'Basic',
@@ -8977,6 +9002,7 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'ring-chart',
     name: 'RingChart',
     summary: 'Concentric arcs, each against its own target',
+    layout: 'pager',
     demos: [
       {
         label: "Today's goals",

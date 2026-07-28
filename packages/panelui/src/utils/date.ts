@@ -128,20 +128,40 @@ function format(date: Date, locale: DateLocale, options: Intl.DateTimeFormatOpti
 }
 
 /**
+ * A locale tag carrying an explicit calendar and Latin digits.
+ *
+ * The calendar has to go in the *tag*, not in the options bag. Hermes builds
+ * its `Intl` on the platform's own date formatter, which reads the Unicode
+ * extension on a locale identifier but does not reliably honour `calendar` as
+ * an option — so `{ calendar: 'gregory' }` was quietly ignored and an Arabic
+ * device kept answering in Hijri. Any extension already on the tag is dropped
+ * first, so a caller passing `ar-u-ca-islamic` cannot end up with two.
+ */
+function withCalendar(locale: DateLocale, calendar: 'gregory' | 'islamic'): string {
+  const base = (locale ?? 'en').split('-u-')[0] || 'en';
+  return `${base}-u-ca-${calendar}-nu-latn`;
+}
+
+/**
  * Gregorian formatting, pinned.
  *
  * Asking for a month name in Arabic without saying which calendar gets a Hijri
- * one back, because that is what the locale resolves to — which is right for
- * the language and wrong for a grid whose cells are counting Gregorian days.
- * The digits are pinned too, so the caption and the numbers under it are in
- * one set.
+ * one back, because that is what the locale resolves to — right for the
+ * language, wrong for a grid whose cells are counting Gregorian days. The
+ * digits are pinned too, so the caption and the numbers under it are in one
+ * set.
  */
 function formatGregory(
   date: Date,
   locale: DateLocale,
   options: Intl.DateTimeFormatOptions
 ): string | null {
-  return format(date, locale, { ...options, calendar: 'gregory', numberingSystem: 'latn' });
+  return (
+    format(date, withCalendar(locale, 'gregory'), options) ??
+    // A build that cannot parse the extension at all still gets asked, in the
+    // hope that it honours the option instead.
+    format(date, locale, { ...options, calendar: 'gregory', numberingSystem: 'latn' })
+  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -194,7 +214,7 @@ export function calendarParts(
     return { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
   }
   try {
-    const parts = new Intl.DateTimeFormat(`${locale ?? 'en'}-u-ca-islamic-nu-latn`, {
+    const parts = new Intl.DateTimeFormat(withCalendar(locale, 'islamic'), {
       year: 'numeric',
       month: 'numeric',
       day: 'numeric',
@@ -300,7 +320,7 @@ export function calendarMonthLabel(
 ): string {
   if (system === 'gregory') return monthLabel(date, locale);
   return (
-    format(date, `${locale ?? 'en'}-u-ca-islamic-nu-latn`, { month: 'long', year: 'numeric' }) ??
+    format(date, withCalendar(locale, 'islamic'), { month: 'long', year: 'numeric' }) ??
     monthLabel(date, locale)
   );
 }
@@ -326,7 +346,7 @@ export function calendarMonthNames(
   cursor = addCalendarMonths(cursor, -(calendarParts(cursor, system, locale).month - 1), system, locale);
   for (let month = 0; month < 12; month += 1) {
     names.push(
-      format(cursor, `${locale ?? 'en'}-u-ca-islamic-nu-latn`, { month: style }) ?? String(month + 1)
+      format(cursor, withCalendar(locale, 'islamic'), { month: style }) ?? String(month + 1)
     );
     cursor = addCalendarMonths(cursor, 1, system, locale);
   }
@@ -341,7 +361,7 @@ export function calendarLongDate(
 ): string {
   if (system === 'gregory') return longDate(date, locale);
   return (
-    format(date, `${locale ?? 'en'}-u-ca-islamic-nu-latn`, {
+    format(date, withCalendar(locale, 'islamic'), {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -358,7 +378,7 @@ export function calendarShortDate(
 ): string {
   if (system === 'gregory') return shortDate(date, locale);
   return (
-    format(date, `${locale ?? 'en'}-u-ca-islamic-nu-latn`, {
+    format(date, withCalendar(locale, 'islamic'), {
       day: 'numeric',
       month: 'short',
       year: 'numeric',

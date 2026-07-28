@@ -101,7 +101,10 @@ const AXIS_LABEL_HEIGHT = 16;
 const DOT = 9;
 
 /** Left gutter reserved when a `YAxis` is present, for its labels to sit in. */
-const Y_AXIS_WIDTH = 40;
+const Y_AXIS_WIDTH = 44;
+
+/** Gap between the value labels and the plot they sit beside. */
+const Y_AXIS_GUTTER = 6;
 
 type Layer = 'svg' | 'overlay' | 'header';
 
@@ -728,8 +731,11 @@ function AreaChartYAxis({ ticks = 4, format, className }: AreaChartYAxisProps) {
         // and its bottom edge on the last.
         top: plot.top - AXIS_LABEL_HEIGHT / 2,
         height: plot.height + AXIS_LABEL_HEIGHT,
+        // The gutter the root reserved, less a little breathing room, so the
+        // numbers sit clear of the plot instead of against it.
+        width: Math.max(plot.left - Y_AXIS_GUTTER, 0),
       }}
-      className={cn('justify-between', className)}
+      className={cn('items-end justify-between', className)}
     >
       {labels.map((label) => (
         <Text key={label.key} size="xs" muted numberOfLines={1}>

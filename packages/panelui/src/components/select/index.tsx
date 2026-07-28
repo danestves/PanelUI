@@ -339,7 +339,7 @@ function SelectRoot({
                 </Text>
               ) : null}
               <ScrollView bounces={false} className="max-h-96">
-                <View className="gap-1 pb-2">{children}</View>
+                <View className="gap-1 pb-2">{textChildren(children)}</View>
               </ScrollView>
             </SelectContext.Provider>
           </BottomSheet.Content>

@@ -90,7 +90,7 @@ const MarkerRoot = forwardRef<View, MarkerProps>(
       variant === 'separator' ? (
         <>
           <Separator className="flex-1" />
-          {children}
+          {textChildren(children)}
           <Separator className="flex-1" />
         </>
       ) : (

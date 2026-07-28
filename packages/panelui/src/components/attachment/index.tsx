@@ -31,7 +31,7 @@ import { View, type ViewProps } from 'react-native';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { AnimatedPressable, type AnimatedPressableProps } from '../../primitives/animated-pressable';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { Item } from '../item';
 import { Shimmer } from '../shimmer';
@@ -262,7 +262,7 @@ const AttachmentAction = forwardRef<View, AttachmentActionProps>(
       )}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </AnimatedPressable>
   )
 );

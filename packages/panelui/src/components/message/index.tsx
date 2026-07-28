@@ -207,7 +207,7 @@ const MessageAvatar = forwardRef<View, MessageAvatarProps>(
 
     return (
       <View ref={ref} className={avatar({ className })} {...props}>
-        {stacked ? <View className="opacity-0">{children}</View> : children}
+        {stacked ? <View className="opacity-0">{textChildren(children)}</View> : children}
       </View>
     );
   }
