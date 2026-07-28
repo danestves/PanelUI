@@ -71,12 +71,18 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 | EmptyState | RadioGroup | Timeline |
 | Field | Rating | Toast |
 | Flow | RingChart | ToggleButton |
-| Form | ScrollCanvas | Typography |
-| Frame | ScrollFade |  |
+| Form | ScrollCanvas | Tooltip |
+| Frame | ScrollFade | Typography |
 
 `Select` shows its options in a bottom sheet, expanded in place, or floating
 over the page — one `presentation` prop, because which is right depends on what
 surrounds the trigger rather than on what the options are.
+`Tooltip` is a small inverted label that names the control under your finger:
+a long press reveals it, it points at its trigger, and it hides itself after a
+beat rather than waiting to be dismissed.
+`Dialog`, `BottomSheet`, `Popover` and `Select` each own the Android hardware
+back button while they are open, closing themselves instead of letting the
+press pop the screen behind them.
 `Frame` is a widget shell: a card of rows sitting in a tray, with the strip of
 tray left showing above it carrying the title.
 `InputGroup` measures its prefix/suffix and pads the input to match.

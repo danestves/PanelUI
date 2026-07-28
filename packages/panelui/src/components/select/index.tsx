@@ -52,6 +52,7 @@ import { CheckIcon, ChevronDownIcon } from '../../icons';
 import { getNativeUI } from '../../native';
 import { Portal } from '../../primitives/portal';
 import { Text } from '../../primitives/text';
+import { useBackHandler } from '../../hooks/use-back-handler';
 import { BottomSheet } from '../bottom-sheet';
 
 const selectVariants = tv({
@@ -222,6 +223,11 @@ function SelectRoot({
     setOpen(false);
     onOpenChange?.(false);
   }, [chevron, onOpenChange]);
+
+  // An open overlay list catches the Android back button, closing itself
+  // instead of popping the screen behind it. The `sheet` presentation gets the
+  // same behaviour from its BottomSheet; the native picker owns its own back.
+  useBackHandler(open && presentation === 'overlay' && !nativeUI, close);
 
   const toggle = useCallback(() => {
     if (open) {

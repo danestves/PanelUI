@@ -3648,6 +3648,41 @@
       "height": 432
     }
   },
+  "tooltip": {
+    "intro": "A small label that names the thing under your finger.\n\nA popover is a panel you open and deal with; a tooltip is a whisper. It carries a word or two about what a control does, appears without taking the screen, and goes away on its own. That is why it is inverted rather than surface-coloured, why it is not dismissed with a scrim, and why it hides itself after a beat instead of waiting to be told.\n\nOn touch there is no hover to open it, so the gesture is a long press by default — the platform's own \"tell me more\" — with `openOn=\"press\"` for the cases where a tap should reveal it instead. Placement is a preference, not a promise: `placement=\"top\"` means *above, if above fits*, and a trigger near the top edge shows its tooltip below.",
+    "usage": "<Tooltip label=\"Copy link\">\n  <Tooltip.Trigger>\n    <Button variant=\"outline\">Press and hold</Button>\n  </Tooltip.Trigger>\n  <Tooltip.Content>\n    <Tooltip.Arrow />\n    Copy link\n  </Tooltip.Content>\n</Tooltip>",
+    "extraImports": ["Button", "Text", "InfoIcon"],
+    "anatomy": "<Tooltip>\n  <Tooltip.Trigger>…</Tooltip.Trigger>\n  <Tooltip.Content>\n    <Tooltip.Arrow />\n    <Tooltip.Text>…</Tooltip.Text>\n  </Tooltip.Content>\n</Tooltip>",
+    "parts": {
+      "Trigger": "Wraps a single child and reveals the label on it — a long press by default, a press when the root asks for one. It is also what gets measured, so the label knows where to sit.",
+      "Content": "The label. Portaled above everything else, positioned against the trigger, and flipped or slid to stay inside the safe area. A string child is wrapped in `Tooltip.Text` for you.",
+      "Arrow": "Optional point towards the trigger. Follows the resolved side, so it stays correct after a flip.",
+      "Text": "The label's default text, sized and inverted against the dark surface. Compose it yourself when the label holds more than a single run of text."
+    },
+    "examples": [
+      {
+        "title": "Naming an icon-only control",
+        "description": "An icon button has no text for a screen reader to read. Pass `label` on the root and it becomes the trigger's accessibility label, so the control is announced without anyone having to open the tooltip. `openOn=\"press\"` reveals it on a tap here, since the icon has no other press to protect.",
+        "code": "<Tooltip openOn=\"press\" label=\"More information\">\n  <Tooltip.Trigger>\n    <Button variant=\"ghost\" size=\"icon\" accessibilityLabel=\"Info\">\n      <InfoIcon size={20} />\n    </Button>\n  </Tooltip.Trigger>\n  <Tooltip.Content>\n    <Tooltip.Arrow />\n    Syncs every 15 minutes\n  </Tooltip.Content>\n</Tooltip>"
+      },
+      {
+        "title": "Choosing a side",
+        "description": "`placement` picks the preferred side; it is flipped only when that side genuinely has less room than its opposite. `align` and `alignOffset` move the label along the other axis, and `offset` changes the gap to the trigger.",
+        "code": "<Tooltip.Content placement=\"right\" align=\"start\">\n  <Tooltip.Arrow />\n  Opens to the right\n</Tooltip.Content>"
+      },
+      {
+        "title": "Staying up until dismissed",
+        "description": "The label hides itself after `duration` milliseconds. Pass `duration={0}` to keep it up until a tap outside — or the trigger again — dismisses it, which is what you want when it carries something worth reading twice.",
+        "code": "<Tooltip openOn=\"press\" duration={0}>\n  <Tooltip.Trigger>\n    <Button variant=\"secondary\">Keyboard shortcut</Button>\n  </Tooltip.Trigger>\n  <Tooltip.Content className=\"flex-row items-center gap-2\">\n    <Tooltip.Arrow />\n    <Tooltip.Text>Save</Tooltip.Text>\n    <View className=\"rounded bg-background/20 px-1.5 py-0.5\">\n      <Text size=\"xs\" weight=\"semibold\" className=\"text-background\">⌘S</Text>\n    </View>\n  </Tooltip.Content>\n</Tooltip>"
+      },
+      {
+        "title": "Controlled",
+        "description": "Drive it yourself with `open` and `onOpenChange` — to reveal a hint from somewhere other than its trigger, or to coordinate it with the rest of a screen.",
+        "code": "const [open, setOpen] = useState(false);\n\n<Tooltip open={open} onOpenChange={setOpen}>\n  <Tooltip.Trigger>\n    <Button variant=\"outline\">Save</Button>\n  </Tooltip.Trigger>\n  <Tooltip.Content>\n    <Tooltip.Arrow />\n    Saved just now\n  </Tooltip.Content>\n</Tooltip>"
+      }
+    ],
+    "notes": "**Placement is resolved, not obeyed.** The side is flipped only when the preferred one genuinely has less room than its opposite; after that the label is slid along the other axis to stay inside the safe area. That order matters — sliding first would let a badly placed label look like it fits.\n\n**The label is measured before it is shown.** Its size is not known until it has laid out once, so the first frame is laid out off-screen and the entrance starts from the frame after. That entrance is driven by hand rather than by a preset, because it has to start from whichever side was resolved.\n\n**The arrow points at the trigger, not the label.** When `align` shifts the label off-centre, or a clamp slides it back on screen, the arrow tracks the trigger's centre rather than the label's middle.\n\n**The trigger is measured on every open**, not once on layout — a trigger inside a scroll view has moved since it was laid out, and a stale rectangle anchors the label to where it used to be.\n\n**Long press is the default gesture.** It does not steal a tappable control's own press, so a button under a tooltip still works as a button. Use `openOn=\"press\"` only when the trigger has no press of its own to protect, such as an icon that exists to be explained.\n\nReach for a **Popover** instead when the content is interactive — a menu, a form, anything with its own controls. A tooltip is a label, not a surface, and it dismisses itself out from under a tap."
+  },
   "typography": {
     "intro": "Semantic text presets, built on the `Text` primitive.\n\nA preset sets size, weight and tracking together; the marks — `underline`, `italic`, `strike` — and `weight`, `align` and `transform` layer on top of whichever preset is in force. They are props rather than class names so a screen never has to know which utilities add up to \"a bolded lead paragraph\".",
     "usage": "<Typography type=\"h1\">Heading 1</Typography>\n<Typography type=\"body-sm\" muted>Small body text</Typography>\n<Typography underline>Terms of service</Typography>\n\n<Typography.Heading type=\"h2\">Section title</Typography.Heading>\n<Typography.Paragraph>Body copy.</Typography.Paragraph>\n<Typography.Code>npm i panelui-native</Typography.Code>",

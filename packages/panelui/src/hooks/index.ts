@@ -31,5 +31,6 @@ export {
   type UseScrollSectionsOptions,
   type UseScrollSectionsResult,
 } from './use-scroll-sections';
+export { useBackHandler } from './use-back-handler';
 export { useDebouncedValue } from './use-debounced-value';
 export { usePrevious } from './use-previous';

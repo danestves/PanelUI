@@ -471,6 +471,16 @@ export {
   type ToastCloseProps,
 } from './components/toast';
 export {
+  Tooltip,
+  type TooltipProps,
+  type TooltipTriggerProps,
+  type TooltipContentProps,
+  type TooltipArrowProps,
+  type TooltipPlacement,
+  type TooltipAlign,
+  type TooltipOpenOn,
+} from './components/tooltip';
+export {
   Typography,
   type TypographyProps,
   type TypographyType,

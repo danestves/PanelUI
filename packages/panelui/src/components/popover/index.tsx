@@ -60,6 +60,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Portal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
+import { useBackHandler } from '../../hooks/use-back-handler';
 import { BottomSheet } from '../bottom-sheet';
 import { Text, type TextProps } from '../../primitives/text';
 import { cn } from '../../utils/cn';
@@ -255,6 +256,13 @@ function PopoverContent({
 }: PopoverContentProps) {
   const context = usePopover('Popover.Content');
   const { open, setOpen, trigger, setPlacement, setArrowOffset, presentation } = context;
+
+  // The anchored panel owns the Android back button while it is up. The sheet
+  // presentation is left alone — BottomSheet installs its own handler.
+  useBackHandler(open && dismissible && presentation !== 'bottom-sheet', () =>
+    setOpen(false)
+  );
+
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);

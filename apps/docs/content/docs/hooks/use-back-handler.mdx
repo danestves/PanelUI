@@ -1,0 +1,70 @@
+---
+title: useBackHandler
+description: Run a handler when the Android hardware back button is pressed.
+---
+
+Calls a handler on the Android hardware back press, and tells the platform the
+press was consumed so it does not also pop the screen behind.
+
+An open overlay owns the back button while it is up: pressing back should
+dismiss the overlay, not navigate away. `Dialog`, `BottomSheet`, `Popover` and
+`Select` already wire this for you — reach for the hook directly only for a
+custom overlay of your own.
+
+<Callout>
+  The listener is **Android-only** and does nothing on iOS, which has no
+  hardware back button. It is safe to call unconditionally.
+</Callout>
+
+## Usage
+
+```tsx
+import { useBackHandler } from 'panelui-native';
+
+function Sheet({ open, dismissible, onClose }) {
+  // While the sheet is up and dismissible, back closes it instead of
+  // popping the screen behind.
+  useBackHandler(open && dismissible, onClose);
+
+  return open ? <Portal>{/* … */}</Portal> : null;
+}
+```
+
+## Examples
+
+### Gating on open state
+
+Pass `false` while the overlay is closed so nothing intercepts the press —
+otherwise a hidden overlay would swallow the back button and trap the user on
+the screen.
+
+```tsx
+const [open, setOpen] = useState(false);
+
+useBackHandler(open, () => setOpen(false));
+```
+
+### Confirming before leaving
+
+The handler is not limited to dismissing an overlay. Return the same intent —
+"I handled this" — from anything that should catch the press.
+
+```tsx
+useBackHandler(hasUnsavedChanges, () => {
+  showDiscardDialog();
+});
+```
+
+## API Reference
+
+### Parameters
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `enabled` | `boolean` | Whether the listener is active. Subscribed only while `true`, and only on Android. |
+| `onBack` | `() => void` | Called on a back press. Held in a ref, so an inline closure does not resubscribe the listener every render. |
+
+The registered handler always returns `true`, which is what stops the platform
+from running its own back navigation. That means while `enabled` is `true` the
+back button does nothing except call `onBack` — so keep it gated on the state
+that should be catching the press, not left on for the life of the screen.
