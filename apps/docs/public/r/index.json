@@ -83,7 +83,8 @@
       "native",
       "portal",
       "scrim",
-      "text"
+      "text",
+      "use-back-handler"
     ]
   },
   {
@@ -159,7 +160,8 @@
       "cn",
       "portal",
       "scrim",
-      "text"
+      "text",
+      "use-back-handler"
     ]
   },
   {
@@ -391,7 +393,8 @@
       "cn",
       "portal",
       "scrim",
-      "text"
+      "text",
+      "use-back-handler"
     ]
   },
   {
@@ -496,7 +499,8 @@
       "icons",
       "native",
       "portal",
-      "text"
+      "text",
+      "use-back-handler"
     ]
   },
   {
@@ -654,6 +658,16 @@
     ]
   },
   {
+    "name": "tooltip",
+    "type": "registry:ui",
+    "description": "A small label that names the control under your finger.",
+    "registryDependencies": [
+      "cn",
+      "portal",
+      "text"
+    ]
+  },
+  {
     "name": "typography",
     "type": "registry:ui",
     "description": "Semantic text presets.",
@@ -661,6 +675,12 @@
       "cn",
       "text"
     ]
+  },
+  {
+    "name": "use-back-handler",
+    "type": "registry:hook",
+    "description": "use-back-handler.",
+    "registryDependencies": []
   },
   {
     "name": "use-breakpoint",

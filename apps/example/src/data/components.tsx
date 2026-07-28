@@ -127,6 +127,7 @@ import {
   Toast,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
   hasNativeUI,
   useDirection,
@@ -1021,6 +1022,26 @@ function PlacementPopover({
         <Popover.Description>Opens {placement} of the trigger.</Popover.Description>
       </Popover.Content>
     </Popover>
+  );
+}
+
+function PlacementTooltip({
+  placement,
+}: {
+  placement: 'top' | 'bottom' | 'left' | 'right';
+}) {
+  return (
+    <Tooltip openOn="press" duration={0}>
+      <Tooltip.Trigger>
+        <Button variant="secondary" size="sm">
+          {placement}
+        </Button>
+      </Tooltip.Trigger>
+      <Tooltip.Content placement={placement}>
+        <Tooltip.Arrow />
+        Opens {placement}
+      </Tooltip.Content>
+    </Tooltip>
   );
 }
 
@@ -9352,6 +9373,87 @@ export const COMPONENTS: ComponentEntry[] = [
               <Toast.Action>Upgrade</Toast.Action>
             </Toast>
           </View>
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'tooltip',
+    name: 'Tooltip',
+    summary: 'A small label that names the thing under your finger',
+    demos: [
+      {
+        label: 'Long press',
+        render: () => (
+          <Tooltip label="Copy link">
+            <Tooltip.Trigger>
+              <Button variant="outline">Press and hold</Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              <Tooltip.Arrow />
+              Copy link
+            </Tooltip.Content>
+          </Tooltip>
+        ),
+      },
+      {
+        label: 'On press',
+        render: () => (
+          <View className="flex-row items-center gap-3">
+            <Tooltip openOn="press" label="More information">
+              <Tooltip.Trigger>
+                <Button variant="ghost" size="icon" accessibilityLabel="Info">
+                  <InfoIcon size={20} />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                <Tooltip.Arrow />
+                Syncs every 15 minutes
+              </Tooltip.Content>
+            </Tooltip>
+            <Text size="sm" muted>
+              Tap the icon
+            </Text>
+          </View>
+        ),
+      },
+      {
+        label: 'Placement',
+        render: () => (
+          // Each trigger is pinned to the side that leaves room for the label
+          // to open the way its label says, so all four sides are distinct
+          // rather than flipping inward near an edge.
+          <View className="h-64 w-full justify-between py-4">
+            <View className="flex-row justify-center">
+              <PlacementTooltip placement="bottom" />
+            </View>
+            <View className="flex-row justify-between px-2">
+              <PlacementTooltip placement="right" />
+              <PlacementTooltip placement="left" />
+            </View>
+            <View className="flex-row justify-center">
+              <PlacementTooltip placement="top" />
+            </View>
+          </View>
+        ),
+      },
+      {
+        label: 'Rich content',
+        render: () => (
+          <Tooltip openOn="press" duration={0}>
+            <Tooltip.Trigger>
+              <Button variant="secondary">Keyboard shortcut</Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content className="flex-row items-center gap-2">
+              <Tooltip.Arrow />
+              <Tooltip.Text>Save</Tooltip.Text>
+              <View className="rounded bg-background/20 px-1.5 py-0.5">
+                <Text size="xs" weight="semibold" className="text-background">
+                  ⌘S
+                </Text>
+              </View>
+            </Tooltip.Content>
+          </Tooltip>
         ),
       },
     ],

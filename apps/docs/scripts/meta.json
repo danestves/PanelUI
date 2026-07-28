@@ -45,7 +45,7 @@
     "Draggable sheet anchored to the bottom of the screen.",
     "react native bottom sheet",
     {
-      "updatedIn": "0.25.0"
+      "updatedIn": "0.26.0"
     }
   ],
   "breadcrumb": [
@@ -85,7 +85,10 @@
   "dialog": [
     "Dialog",
     "Modal dialog with a backdrop and footer actions.",
-    "react native modal dialog"
+    "react native modal dialog",
+    {
+      "updatedIn": "0.26.0"
+    }
   ],
   "direction": [
     "Direction",
@@ -225,7 +228,10 @@
   "popover": [
     "Popover",
     "Panel anchored to the element that opened it.",
-    "react native popover"
+    "react native popover",
+    {
+      "updatedIn": "0.26.0"
+    }
   ],
   "progress": [
     "Progress",
@@ -285,7 +291,10 @@
   "select": [
     "Select",
     "Picker shown in a bottom sheet, expanded in place, or floating over the page.",
-    "expo select component"
+    "expo select component",
+    {
+      "updatedIn": "0.26.0"
+    }
   ],
   "separator": [
     "Separator",
@@ -369,6 +378,14 @@
     "react native toggle button",
     {
       "addedIn": "0.11.0"
+    }
+  ],
+  "tooltip": [
+    "Tooltip",
+    "A small label that names the control under your finger.",
+    "react native tooltip",
+    {
+      "addedIn": "0.26.0"
     }
   ],
   "typography": [
