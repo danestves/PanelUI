@@ -6,7 +6,7 @@ import {
   AnimatedPressable,
   type AnimatedPressableProps,
 } from '../../primitives/animated-pressable';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { IconColorProvider } from '../../icons';
 import { getNativeUI } from '../../native';
 import { Spinner } from '../spinner';
@@ -210,10 +210,16 @@ export const Button = forwardRef<View, ButtonProps>(
           >
             {/* Non-string children are React Native views, and the native
                 button cannot measure those directly — they have to be hosted
-                or they render outside the button's bounds. */}
+                or they render outside the button's bounds. An icon beside a
+                label is the common case, and the label half of it is still
+                bare text once it is in there. */}
             {isStringLabel ? undefined : (
               <RNHostView matchContents>
-                <>{children}</>
+                <>
+                  {textChildren(children, (text) => (
+                    <Text className={label({ className: labelClassName })}>{text}</Text>
+                  ))}
+                </>
               </RNHostView>
             )}
           </NativeButton>
@@ -236,11 +242,9 @@ export const Button = forwardRef<View, ButtonProps>(
           ) : (
             startContent
           )}
-          {typeof children === 'string' ? (
-            <Text className={label({ className: labelClassName })}>{children}</Text>
-          ) : (
-            children
-          )}
+          {textChildren(children, (text) => (
+            <Text className={label({ className: labelClassName })}>{text}</Text>
+          ))}
           {endContent}
         </AnimatedPressable>
       </IconColorProvider>

@@ -16,7 +16,7 @@ import {
 } from 'react';
 import { View, type Text as RNText, type ViewProps } from 'react-native';
 import { tv } from 'tailwind-variants';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 
 const labelVariants = tv({
   slots: {
@@ -86,7 +86,7 @@ const LabelRoot = forwardRef<View, LabelProps>(
           {...props}
         >
           {/* Bare strings are the common case — wrap them so callers don't have to. */}
-          {typeof children === 'string' ? <LabelText>{children}</LabelText> : children}
+          {textChildren(children, (text) => <LabelText>{text}</LabelText>)}
         </View>
       </LabelContext.Provider>
     );

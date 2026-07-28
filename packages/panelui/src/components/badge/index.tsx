@@ -1,7 +1,7 @@
 import { forwardRef, type ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 
 const badgeVariants = tv({
   slots: {
@@ -67,11 +67,11 @@ export const Badge = forwardRef<View, BadgeProps>(
         className={root({ className })}
         {...props}
       >
-        {resolvedShape === 'dot' ? null : typeof content === 'string' ? (
-          <Text className={label({ className: labelClassName })}>{content}</Text>
-        ) : (
-          content
-        )}
+        {resolvedShape === 'dot'
+          ? null
+          : textChildren(content, (text) => (
+              <Text className={label({ className: labelClassName })}>{text}</Text>
+            ))}
       </View>
     );
   }

@@ -39,7 +39,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { Portal } from '../../primitives/portal';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { AlertTriangleIcon, CheckCircleIcon, InfoIcon, XIcon } from '../../icons';
 import { Button, type ButtonProps } from '../button';
@@ -171,7 +171,7 @@ const ToastRoot = ({ className, variant = 'default', onHide, children, ...props 
   return (
     <ToastContext.Provider value={context}>
       <View accessibilityRole="alert" accessibilityLiveRegion="polite" className={root({ className })} {...props}>
-        {children}
+        {textChildren(children)}
       </View>
     </ToastContext.Provider>
   );

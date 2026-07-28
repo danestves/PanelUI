@@ -72,7 +72,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { ChevronLeftIcon, ChevronRightIcon } from '../../icons';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 /** Settles the run onto a whole index. Tuned to stop rather than to bounce. */
@@ -410,7 +410,7 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
           onLayout={onLayout}
           className={cn('w-full', className)}
         >
-          {children}
+          {textChildren(children)}
         </View>
       </GestureDetector>
     </CarouselContext.Provider>
@@ -586,7 +586,7 @@ function CarouselItem({ className, children, style, ...props }: CarouselItemProp
       ]}
       className={cn(className)}
     >
-      {children}
+      {textChildren(children)}
     </Animated.View>
   );
 }
@@ -628,13 +628,11 @@ function CarouselCaption({ className, children, ...props }: CarouselCaptionProps
 
   return (
     <Animated.View {...props} style={[animated, props.style]} className={cn(className)}>
-      {typeof children === 'string' || typeof children === 'number' ? (
+      {textChildren(children, (text) => (
         <Text size="xs" weight="semibold" className="text-center">
-          {children}
+          {text}
         </Text>
-      ) : (
-        children
-      )}
+      ))}
     </Animated.View>
   );
 }

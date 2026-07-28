@@ -31,7 +31,7 @@ import {
 } from 'react';
 import { View, type Text as RNText, type ViewProps } from 'react-native';
 import { tv } from 'tailwind-variants';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { Label, type LabelProps } from '../label';
 import { Separator } from '../separator';
 
@@ -121,7 +121,7 @@ const FieldRoot = forwardRef<View, FieldProps>(
           className={root({ className })}
           {...props}
         >
-          {children}
+          {textChildren(children)}
         </View>
       </FieldContext.Provider>
     );
@@ -227,10 +227,8 @@ const FieldError = forwardRef<View, FieldErrorProps>(
               </View>
             ))
           )
-        ) : typeof children === 'string' ? (
-          <Text className={errorText()}>{children}</Text>
         ) : (
-          children
+          textChildren(children, (text) => <Text className={errorText()}>{text}</Text>)
         )}
       </View>
     );

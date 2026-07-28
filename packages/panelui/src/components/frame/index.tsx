@@ -80,7 +80,7 @@ import {
 } from 'react-native';
 import { tv } from 'tailwind-variants';
 import { ChevronRightIcon } from '../../icons';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 const frameVariants = tv({
@@ -208,13 +208,11 @@ const FrameAction = forwardRef<View, FrameActionProps>(
       className={cn('shrink-0 flex-row items-center gap-2', className)}
       {...props}
     >
-      {typeof children === 'string' ? (
+      {textChildren(children, (text) => (
         <Text size="sm" muted>
-          {children}
+          {text}
         </Text>
-      ) : (
-        children
-      )}
+      ))}
     </View>
   )
 );
@@ -393,7 +391,7 @@ const FrameRow = forwardRef<View, FrameRowProps>(
 
     const body = (
       <>
-        {children}
+        {textChildren(children)}
         {chevron ? <ChevronRightIcon size={16} /> : null}
       </>
     );

@@ -28,7 +28,7 @@ import { createContext, forwardRef, useContext, type ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { AnimatedPressable, type AnimatedPressableProps } from '../../primitives/animated-pressable';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 type ItemSize = 'default' | 'sm' | 'xs';
@@ -152,7 +152,7 @@ const ItemRoot = forwardRef<View, ItemProps>(
         className={root({ className })}
         {...(props as ViewProps)}
       >
-        {children}
+        {textChildren(children)}
       </View>
     ) : (
       <AnimatedPressable
@@ -164,7 +164,7 @@ const ItemRoot = forwardRef<View, ItemProps>(
         className={root({ className })}
         {...props}
       >
-        {children}
+        {textChildren(children)}
       </AnimatedPressable>
     );
 
@@ -200,7 +200,7 @@ const ItemGroup = forwardRef<View, ItemGroupProps>(
       )}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </View>
   )
 );
@@ -246,7 +246,7 @@ const ItemMedia = forwardRef<View, ItemMediaProps>(
         className={mediaVariants({ variant, size: size ?? item.size, className })}
         {...props}
       >
-        {children}
+        {textChildren(children)}
       </View>
     );
   }
@@ -277,7 +277,7 @@ const ItemContent = forwardRef<View, ItemContentProps>(
         )}
         {...props}
       >
-        {children}
+        {textChildren(children)}
       </View>
     );
   }
@@ -326,7 +326,7 @@ const ItemActions = forwardRef<View, ItemActionsProps>(
       className={cn('shrink-0 flex-row items-center gap-1.5', className)}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </View>
   )
 );
@@ -349,7 +349,7 @@ const ItemHeader = forwardRef<View, ItemHeaderProps>(
       className={cn('w-full flex-row items-center justify-between gap-2', className)}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </View>
   )
 );
@@ -368,7 +368,7 @@ const ItemFooter = forwardRef<View, ItemFooterProps>(
       className={cn('w-full flex-row items-center gap-2', className)}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </View>
   )
 );

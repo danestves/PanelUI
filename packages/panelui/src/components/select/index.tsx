@@ -51,7 +51,7 @@ import { useCSSVariable } from 'uniwind';
 import { CheckIcon, ChevronDownIcon } from '../../icons';
 import { getNativeUI } from '../../native';
 import { Portal } from '../../primitives/portal';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { BottomSheet } from '../bottom-sheet';
 
@@ -359,7 +359,7 @@ function SelectRoot({
               exiting={FadeOut.duration(120)}
               className={slots.list()}
             >
-              {children}
+              {textChildren(children)}
             </Animated.View>
           ) : null}
         </View>
@@ -416,7 +416,7 @@ function SelectRoot({
               className={slots.list()}
             >
               <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-                {children}
+                {textChildren(children)}
               </ScrollView>
             </Animated.View>
           </SelectContext.Provider>

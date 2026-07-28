@@ -25,7 +25,7 @@
 import { Children, forwardRef, type ReactNode } from 'react';
 import { View, type Text as RNText, type ViewProps } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 const typographyVariants = tv({
@@ -300,7 +300,7 @@ const TypographyList = forwardRef<View, TypographyListProps>(
             // platform font, and a view does not.
             <View className="mt-2.5 size-1.5 shrink-0 rounded-full bg-muted-foreground" />
           )}
-          <View className="flex-1">{child}</View>
+          <View className="flex-1">{textChildren(child)}</View>
         </View>
       ))}
     </View>

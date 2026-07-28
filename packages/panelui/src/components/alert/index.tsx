@@ -10,7 +10,7 @@ import { View, type Text as RNText, type ViewProps } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { cn } from '../../utils/cn';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { AlertTriangleIcon, CheckCircleIcon, InfoIcon } from '../../icons';
 
 const alertVariants = tv({
@@ -98,7 +98,7 @@ const AlertRoot = forwardRef<View, AlertProps>(
           {icon ? (
             <>
               <View className={indicator()}>{icon}</View>
-              <View className={content()}>{children}</View>
+              <View className={content()}>{textChildren(children)}</View>
             </>
           ) : (
             children

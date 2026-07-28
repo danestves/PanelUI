@@ -7,7 +7,7 @@ import {
   type ViewProps,
 } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 const avatarVariants = tv({
@@ -77,7 +77,7 @@ const AvatarRoot = forwardRef<View, AvatarProps>(
         <View accessibilityRole="image" className={root()}>
           {face}
         </View>
-        {children}
+        {textChildren(children)}
       </View>
     );
   }
@@ -105,7 +105,7 @@ const AvatarBadge = forwardRef<View, AvatarBadgeProps>(
       )}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </View>
   )
 );

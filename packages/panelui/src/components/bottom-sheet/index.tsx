@@ -33,7 +33,7 @@ import { getNativeUI } from '../../native';
 import { XIcon } from '../../icons';
 import { Portal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { cn } from '../../utils/cn';
 
@@ -423,7 +423,7 @@ function BottomSheetContent({
                   paddingBottom: Math.max(insets.bottom, 16),
                 }}
               >
-                {children}
+                {textChildren(children)}
               </View>
             </BottomSheetContext.Provider>
           </RNHostView>
@@ -475,7 +475,7 @@ function BottomSheetContent({
               <View className="mb-3 self-center">
                 <View className="h-1 w-10 rounded-full bg-muted-foreground/30" />
               </View>
-              {children}
+              {textChildren(children)}
               {/*
                 * Last, and lifted above the content.
                 *
@@ -539,21 +539,17 @@ function BottomSheetHeader({
 }: BottomSheetHeaderProps) {
   return (
     <View className={cn('gap-1 pb-3 pe-12', className)} {...props}>
-      {typeof title === 'string' ? (
+      {textChildren(title, (text) => (
         <Text size="lg" weight="semibold">
-          {title}
+          {text}
         </Text>
-      ) : (
-        title
-      )}
-      {typeof description === 'string' ? (
+      ))}
+      {textChildren(description, (text) => (
         <Text size="sm" muted>
-          {description}
+          {text}
         </Text>
-      ) : (
-        description
-      )}
-      {children}
+      ))}
+      {textChildren(children)}
     </View>
   );
 }
@@ -612,7 +608,7 @@ function BottomSheetBody({
       className={cn('flex-1', className)}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </Animated.ScrollView>
   );
 
@@ -646,7 +642,7 @@ function BottomSheetFooter({
       className={cn('gap-2 border-t border-border pt-3', className)}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </View>
   );
 }

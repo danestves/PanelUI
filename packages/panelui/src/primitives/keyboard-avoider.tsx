@@ -27,6 +27,7 @@ import {
   useKeyboardAvoidance,
   type KeyboardAvoidanceMode,
 } from '../hooks/use-keyboard-avoidance';
+import { textChildren } from './text';
 
 export interface KeyboardAvoiderProps extends ViewProps {
   className?: string;
@@ -86,7 +87,7 @@ export function KeyboardAvoider({
       className={className}
       style={[style, avoidance.animatedStyle]}
     >
-      {children}
+      {textChildren(children)}
     </Animated.View>
   );
 }

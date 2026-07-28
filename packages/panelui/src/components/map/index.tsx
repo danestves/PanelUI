@@ -46,7 +46,7 @@ import { Pressable, View, type ViewProps } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { tv } from 'tailwind-variants';
 import { CompassIcon, CrosshairIcon, MinusIcon, PlusIcon } from '../../icons';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import {
   buildBasemapStyle,
@@ -334,7 +334,7 @@ const MapRoot = forwardRef<MapHandle, MapProps>(function MapRoot(
                 : { center: center ?? [0, 20], zoom, bearing, pitch }
             }
           />
-          {children}
+          {textChildren(children)}
         </MapLibreMap>
       </MapContext.Provider>
     </View>
@@ -471,13 +471,11 @@ function MapLabel({ children, className, side = 'bottom' }: MapLabelProps) {
       style={{ left: -120, right: -120 }}
     >
       <View className={cn('rounded-md bg-background/85 px-1.5 py-0.5', className)}>
-        {typeof children === 'string' ? (
+        {textChildren(children, (text) => (
           <Text size="xs" weight="medium" numberOfLines={1}>
-            {children}
+            {text}
           </Text>
-        ) : (
-          children
-        )}
+        ))}
       </View>
     </View>
   );
@@ -525,7 +523,7 @@ function MapPopup({ children, className, title, lngLat }: MapPopupProps) {
             {title}
           </Text>
         ) : null}
-        {children}
+        {textChildren(children)}
       </View>
     </Marker>
   );
@@ -563,7 +561,7 @@ function ControlButton({
       className={slots.control()}
       onPress={onPress}
     >
-      {children}
+      {textChildren(children)}
     </Pressable>
   );
 }

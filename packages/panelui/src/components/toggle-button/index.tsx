@@ -42,7 +42,7 @@ import {
   AnimatedPressable,
   type AnimatedPressableProps,
 } from '../../primitives/animated-pressable';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
 
@@ -196,7 +196,7 @@ const ToggleButtonGroup = forwardRef<View, ToggleButtonGroupProps>(
           className={cn('flex-row items-center gap-1.5', className)}
           {...props}
         >
-          {children}
+          {textChildren(children)}
         </View>
       </ToggleGroupContext.Provider>
     );
@@ -347,13 +347,11 @@ const ToggleButtonRoot = forwardRef<View, ToggleButtonProps>(
             )}
             {...props}
           >
-            {typeof children === 'string' ? (
+            {textChildren(children, (text) => (
               <Text className={slots.label({ className: labelClassName })}>
-                {children}
+                {text}
               </Text>
-            ) : (
-              children
-            )}
+            ))}
           </AnimatedPressable>
         </IconColorProvider>
       </ToggleStateContext.Provider>

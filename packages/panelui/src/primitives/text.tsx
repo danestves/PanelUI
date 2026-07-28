@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { Children, forwardRef, type ReactElement, type ReactNode } from 'react';
 import { Text as RNText, type Text as RNTextType, type TextProps as RNTextProps } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useDirection } from '../hooks/use-direction';
@@ -63,3 +63,30 @@ export const Text = forwardRef<RNTextType, TextProps>(
 );
 
 Text.displayName = 'Text';
+
+/**
+ * Wraps the bare text among `children` so it can live in a plain view.
+ *
+ * React Native will not render a string outside a `<Text>`, and a component
+ * that takes `children` has no say in whether it is handed one — so anything
+ * putting `children` into a `View`, a `Pressable` or a scroller has to allow
+ * for it. Every part in the library that does runs its children through here.
+ *
+ * Per child, and not all-or-nothing. A part is nearly always given an element
+ * and some text together — an icon and a label, an arrow and a line of text —
+ * which makes `children` an *array*, so a `typeof children === 'string'` check
+ * never matches and the text underneath reaches the view bare. That is the
+ * shape this exists to make impossible.
+ *
+ * `render` is there because the wrapper is rarely the plain default: a button
+ * wants its own label variant, a sheet header wants a heading. Pass one, and
+ * the text arrives dressed the way the part would have dressed it anyway.
+ */
+export function textChildren(
+  children: ReactNode,
+  render: (text: string | number) => ReactElement = (text) => <Text>{text}</Text>
+): ReactNode {
+  return Children.map(children, (child) =>
+    typeof child === 'string' || typeof child === 'number' ? render(child) : child
+  );
+}

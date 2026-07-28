@@ -26,7 +26,7 @@ import { Pressable, View, type Text as RNText, type ViewProps } from 'react-nati
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { CheckIcon } from '../../icons';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { Spinner } from '../spinner';
 
 export type StepState = 'active' | 'completed' | 'inactive' | 'loading';
@@ -163,7 +163,7 @@ const StepsRoot = forwardRef<View, StepsProps>(
     return (
       <StepsContext.Provider value={context}>
         <View ref={ref} className={root({ className })} {...props}>
-          {children}
+          {textChildren(children)}
         </View>
       </StepsContext.Provider>
     );
@@ -210,7 +210,7 @@ const StepsItem = forwardRef<View, StepsItemProps>(
     return (
       <StepItemContext.Provider value={context}>
         <View ref={ref} className={item({ className })} {...props}>
-          {children}
+          {textChildren(children)}
         </View>
       </StepItemContext.Provider>
     );
@@ -240,7 +240,7 @@ const StepsTrigger = forwardRef<View, StepsTriggerProps>(
         className={trigger({ className })}
         {...props}
       >
-        {children}
+        {textChildren(children)}
       </Pressable>
     );
   }

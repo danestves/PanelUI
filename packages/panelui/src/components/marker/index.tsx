@@ -25,7 +25,7 @@ import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
 import { AnimatedPressable, type AnimatedPressableProps } from '../../primitives/animated-pressable';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { Separator } from '../separator';
 import { Shimmer } from '../shimmer';
@@ -149,7 +149,7 @@ const MarkerIcon = forwardRef<View, MarkerIconProps>(
         {...props}
       >
         <IconColorProvider color={typeof muted === 'string' ? muted : undefined}>
-          {children}
+          {textChildren(children)}
         </IconColorProvider>
       </View>
     );

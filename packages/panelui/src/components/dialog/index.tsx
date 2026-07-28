@@ -14,7 +14,7 @@ import { Pressable, View, type ViewProps } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 import { Portal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { cn } from '../../utils/cn';
 
@@ -135,7 +135,7 @@ function DialogContent({
           )}
           {...props}
           >
-            {children}
+            {textChildren(children)}
           </Animated.View>
         </Animated.View>
       </DialogContext.Provider>

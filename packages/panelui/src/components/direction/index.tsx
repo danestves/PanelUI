@@ -42,6 +42,7 @@ import {
   useDirectionSign,
   type DirectionValue,
 } from '../../hooks/use-direction';
+import { textChildren } from '../../primitives/text';
 
 export { useDirection, useDirectionSign };
 export type { DirectionValue };
@@ -79,7 +80,7 @@ export function Direction({ className, children, dir, style, ...props }: Directi
   return (
     <DirectionContext.Provider value={value}>
       <View className={className} style={[directionStyle, style]} {...props}>
-        {children}
+        {textChildren(children)}
       </View>
     </DirectionContext.Provider>
   );

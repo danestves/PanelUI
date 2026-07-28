@@ -34,7 +34,7 @@ import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 const messageVariants = tv({
@@ -137,11 +137,11 @@ const MessageRoot = forwardRef<View, MessageProps>(
         className={root({ className })}
         {...props}
       >
-        {children}
+        {textChildren(children)}
       </AnimatedPressable>
     ) : (
       <View ref={ref} className={root({ className })} {...props}>
-        {children}
+        {textChildren(children)}
       </View>
     );
 
@@ -227,7 +227,7 @@ const MessageContent = forwardRef<View, MessageContentProps>(
 
     return (
       <View ref={ref} className={content({ className })} {...props}>
-        {children}
+        {textChildren(children)}
       </View>
     );
   }
@@ -275,7 +275,7 @@ const MessageBubble = forwardRef<View, MessageBubbleProps>(
     return (
       <View ref={ref} className={bubble({ className })} {...props}>
         <IconColorProvider color={typeof foreground === 'string' ? foreground : undefined}>
-          {children}
+          {textChildren(children)}
         </IconColorProvider>
       </View>
     );
@@ -334,7 +334,7 @@ const MessageActions = forwardRef<View, MessageActionsProps>(
         )}
         {...props}
       >
-        {children}
+        {textChildren(children)}
       </View>
     );
   }

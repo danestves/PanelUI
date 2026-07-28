@@ -40,7 +40,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 const SPRING = { damping: 24, stiffness: 300, mass: 0.7 } as const;
@@ -197,7 +197,7 @@ function TabsRoot({
   return (
     <TabsContext.Provider value={context}>
       <View className={cn('gap-3', className)} {...props}>
-        {children}
+        {textChildren(children)}
       </View>
     </TabsContext.Provider>
   );
@@ -274,7 +274,7 @@ function TabsList({ className, scrollable = false, children, ...props }: TabsLis
   const row = (
     <View accessibilityRole="tablist" className={cn(list(), className)} {...props}>
       <TabsIndicator />
-      {children}
+      {textChildren(children)}
     </View>
   );
 
@@ -341,13 +341,11 @@ function TabsTrigger({
       className={cn(slots.trigger(), (icon || badge) && 'flex-row gap-1.5', className)}
     >
       {icon}
-      {typeof children === 'string' ? (
+      {textChildren(children, (text) => (
         <Text size="sm" weight="medium" className={slots.label()}>
-          {children}
+          {text}
         </Text>
-      ) : (
-        children
-      )}
+      ))}
       {badge}
     </Pressable>
   );
@@ -384,7 +382,7 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
       className={className}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </Animated.View>
   );
 }

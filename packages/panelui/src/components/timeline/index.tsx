@@ -43,7 +43,7 @@ import { View, type Text as RNText, type ViewProps } from 'react-native';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 
 export type TimelineVariant = 'dot' | 'icon' | 'numbered' | 'card' | 'compact';
 /** Semantic colour for a single event, independent of progress. */
@@ -209,7 +209,7 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
     return (
       <TimelineContext.Provider value={context}>
         <View ref={ref} className={root({ className })} {...props}>
-          {children}
+          {textChildren(children)}
         </View>
       </TimelineContext.Provider>
     );
@@ -247,7 +247,7 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     return (
       <TimelineItemContext.Provider value={context}>
         <View ref={ref} className={item({ className })} {...props}>
-          {children}
+          {textChildren(children)}
         </View>
       </TimelineItemContext.Provider>
     );

@@ -9,7 +9,7 @@
 import { createContext, forwardRef, useContext, type ReactNode } from 'react';
 import { View, type Text as RNText, type ViewProps } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 
 type EmptyStateSize = 'sm' | 'default' | 'lg';
 
@@ -140,7 +140,7 @@ const EmptyStateMedia = forwardRef<View, EmptyStateMediaProps>(
             />
           </>
         ) : null}
-        <View className={card()}>{children}</View>
+        <View className={card()}>{textChildren(children)}</View>
       </View>
     );
   }

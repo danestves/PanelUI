@@ -47,7 +47,7 @@ import {
   AnimatedPressable,
   type AnimatedPressableProps,
 } from '../../primitives/animated-pressable';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 type BreadcrumbSize = 'sm' | 'default';
@@ -102,7 +102,7 @@ const BreadcrumbRoot = forwardRef<View, BreadcrumbProps>(
         className={cn('w-full', className)}
         {...props}
       >
-        {children}
+        {textChildren(children)}
       </View>
     </BreadcrumbContext.Provider>
   )
@@ -202,7 +202,7 @@ const BreadcrumbItem = forwardRef<View, BreadcrumbItemProps>(
       className={cn('flex-row items-center', className)}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </View>
   )
 );
@@ -235,13 +235,11 @@ const BreadcrumbLink = forwardRef<View, BreadcrumbLinkProps>(
         className={cn('flex-row items-center', className)}
         {...props}
       >
-        {typeof children === 'string' ? (
+        {textChildren(children, (text) => (
           <Text className={crumbText({ size, className: cn('text-muted-foreground', textClassName) })}>
-            {children}
+            {text}
           </Text>
-        ) : (
-          children
-        )}
+        ))}
       </AnimatedPressable>
     );
   }

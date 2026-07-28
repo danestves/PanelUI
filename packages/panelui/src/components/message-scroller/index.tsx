@@ -56,6 +56,7 @@ import { useCSSVariable } from 'uniwind';
 import { ChevronDownIcon } from '../../icons';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
 import { cn } from '../../utils/cn';
+import { textChildren } from '../../primitives/text';
 
 /** Within this many pixels of the bottom still counts as being at the bottom. */
 const END_THRESHOLD = 24;
@@ -233,7 +234,7 @@ function MessageScrollerRoot({
   return (
     <MessageScrollerContext.Provider value={context}>
       <View className={cn('relative overflow-hidden', className)} {...props}>
-        {children}
+        {textChildren(children)}
       </View>
     </MessageScrollerContext.Provider>
   );
@@ -404,7 +405,7 @@ function MessageScrollerViewport({
       onMomentumScrollEnd={settleAnchor}
       onContentSizeChange={onContentSizeChange}
     >
-      {children}
+      {textChildren(children)}
     </Animated.ScrollView>
   );
 }
@@ -445,7 +446,7 @@ function MessageScrollerContent({
       className={cn('gap-3 p-4 pb-16', className)}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </View>
   );
 }
@@ -487,7 +488,7 @@ function MessageScrollerItem({
 
   return (
     <View className={className} {...props} onLayout={onLayout}>
-      {children}
+      {textChildren(children)}
     </View>
   );
 }

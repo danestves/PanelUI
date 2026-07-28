@@ -84,7 +84,7 @@ import Svg, {
 import { tv } from 'tailwind-variants';
 import { LockIcon, MaximizeIcon, MinusIcon, PlusIcon, UnlockIcon } from '../../icons';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import {
   anchorOf,
@@ -1160,7 +1160,7 @@ function FlowNode({
           accessibilityState={{ selected }}
           {...props}
         >
-          {children}
+          {textChildren(children)}
         </Animated.View>
       </GestureDetector>
     </FlowNodeContext.Provider>
@@ -1772,7 +1772,7 @@ function FlowGroup({
           inside an absolutely-positioned box would be positioned against that
           box, and every graph coordinate would mean something different
           depending on which group it happened to be in. */}
-      {children}
+      {textChildren(children)}
     </FlowGroupContext.Provider>
   );
 }

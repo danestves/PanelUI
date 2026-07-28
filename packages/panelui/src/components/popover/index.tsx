@@ -62,7 +62,7 @@ import { Portal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { BottomSheet } from '../bottom-sheet';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 /** Gap between the trigger and the panel. */
@@ -418,7 +418,7 @@ function PopoverContent({
               )}
               {...props}
             >
-              {children}
+              {textChildren(children)}
             </Animated.View>
           </Animated.View>
         </View>

@@ -50,7 +50,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
 import { Portal } from '../../primitives/portal';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
 
@@ -242,7 +242,7 @@ function SectionRailRoot({
         }}
         {...props}
       >
-        {children}
+        {textChildren(children)}
       </View>
     </SectionRailContext.Provider>
   );
@@ -276,7 +276,7 @@ function SectionRailTrigger({ className, children, ...props }: SectionRailTrigge
       )}
       {...props}
     >
-      {children}
+      {textChildren(children)}
     </Pressable>
   );
 }
@@ -407,7 +407,7 @@ function SectionRailPanel({ className, children, ...props }: SectionRailContentP
       {...props}
     >
       <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-        {children}
+        {textChildren(children)}
       </ScrollView>
     </Animated.View>
   );

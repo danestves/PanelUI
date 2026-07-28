@@ -38,7 +38,7 @@ import {
   AnimatedPressable,
   type AnimatedPressableProps,
 } from '../../primitives/animated-pressable';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
 
@@ -246,13 +246,11 @@ const ChipRoot = forwardRef<View, ChipProps>(
     const body = (
       <>
         {start}
-        {typeof children === 'string' ? (
+        {textChildren(children, (text) => (
           <Text className={slots.label({ className: labelClassName })}>
-            {children}
+            {text}
           </Text>
-        ) : (
-          children
-        )}
+        ))}
         {closable ? (
           <Pressable
             accessibilityRole="button"

@@ -22,6 +22,7 @@ import {
 } from 'react-native';
 import { tv } from 'tailwind-variants';
 import { Input, type InputProps } from '../input';
+import { textChildren } from '../../primitives/text';
 
 const inputGroupVariants = tv({
   slots: {
@@ -71,7 +72,7 @@ const InputGroupRoot = forwardRef<View, InputGroupProps>(
     return (
       <InputGroupContext.Provider value={value}>
         <View ref={ref} className={root({ className })} {...props}>
-          {children}
+          {textChildren(children)}
         </View>
       </InputGroupContext.Provider>
     );
@@ -116,7 +117,7 @@ function createDecorator(side: 'prefix' | 'suffix') {
           className={slots[side]({ className })}
           {...props}
         >
-          {children}
+          {textChildren(children)}
         </View>
       );
     }

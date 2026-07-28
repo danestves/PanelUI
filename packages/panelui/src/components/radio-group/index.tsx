@@ -35,7 +35,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { cn } from '../../utils/cn';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 
 type RadioVariant = 'dot' | 'card';
 type RadioOrientation = 'vertical' | 'horizontal';
@@ -152,7 +152,7 @@ const RadioGroupRoot = forwardRef<View, RadioGroupProps>(
           )}
           {...props}
         >
-          {children}
+          {textChildren(children)}
         </View>
       </RadioGroupContext.Provider>
     );

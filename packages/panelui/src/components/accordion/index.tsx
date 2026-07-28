@@ -30,7 +30,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
 import { ChevronDownIcon } from '../../icons';
-import { Text, type TextProps } from '../../primitives/text';
+import { Text, type TextProps, textChildren } from '../../primitives/text';
 
 export type AccordionVariant =
   | 'default'
@@ -226,7 +226,7 @@ const AccordionItem = forwardRef<View, AccordionItemProps>(
           className={item({ className })}
           {...props}
         >
-          {children}
+          {textChildren(children)}
         </Animated.View>
       </AccordionItemContext.Provider>
     );
@@ -256,11 +256,9 @@ const AccordionTrigger = forwardRef<View, AccordionTriggerProps>(
         className={trigger({ className })}
         {...props}
       >
-        {typeof children === 'string' ? (
-          <Text className={title()}>{children}</Text>
-        ) : (
-          children
-        )}
+        {textChildren(children, (text) => (
+          <Text className={title()}>{text}</Text>
+        ))}
       </Pressable>
     );
   }
@@ -319,11 +317,9 @@ const AccordionContent = forwardRef<View, AccordionContentProps>(
 
     return (
       <View ref={ref} className={content({ className })} {...props}>
-        {typeof children === 'string' ? (
-          <Text className={contentText()}>{children}</Text>
-        ) : (
-          children
-        )}
+        {textChildren(children, (text) => (
+          <Text className={contentText()}>{text}</Text>
+        ))}
       </View>
     );
   }
