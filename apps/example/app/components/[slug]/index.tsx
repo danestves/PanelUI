@@ -221,10 +221,19 @@ export default function ComponentDetailScreen() {
   const versions = entry.demos.filter((demo) => demo.fullPage);
   const inline = entry.demos.filter((demo) => !demo.fullPage);
 
+  /*
+   * Paged by default, with two cases that fall back however the entry is
+   * marked. A component whose demos are all full-screen has nothing to page
+   * but its own Versions list, and a component with one inline demo would get
+   * a single page and a rail that does nothing — both are the sections layout
+   * with extra steps.
+   */
+  const paged = entry.layout !== 'sections' && inline.length > 1;
+
   return (
     <View className="flex-1">
       <ScreenHeader title={entry.name} showBack />
-      {entry.layout === 'pager' ? (
+      {paged ? (
         <PagerLayout entry={entry} versions={versions} inline={inline} />
       ) : (
         <SectionsLayout entry={entry} versions={versions} inline={inline} />

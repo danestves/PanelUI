@@ -194,10 +194,13 @@ export interface Demo {
 /**
  * How a component's detail screen lays its demos out.
  *
- * `sections` stacks them down one scroll behind hairlines — right when the
- * variants are meant to be compared side by side, and a burial when they are
- * not. `pager` gives each one the screen instead, swiped vertically, with a
+ * `pager` is the default: each demo gets the screen, swiped vertically, with a
  * rail in the corner standing in for the scrollbar and naming what is where.
+ *
+ * `sections` stacks them down one scroll behind hairlines instead. It is worth
+ * asking for when a demo brings its own vertical scroller — two of those
+ * nested fight over the same drag — or when one is tall enough that a fixed
+ * page would clip it.
  */
 export type ComponentLayout = 'sections' | 'pager';
 
@@ -206,7 +209,7 @@ export interface ComponentEntry {
   name: string;
   /** One-line summary, shown under the name in the list. */
   summary: string;
-  /** Defaults to `sections`. */
+  /** Defaults to `pager`, and falls back to `sections` when there is one demo. */
   layout?: ComponentLayout;
   demos: Demo[];
 }
@@ -6821,7 +6824,6 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'calendar',
     name: 'Calendar',
     summary: 'A month of days, for picking one, several, or a range',
-    layout: 'pager',
     demos: [
       { label: 'A single day', render: () => <CalendarSingleDemo /> },
       { label: 'A range', render: () => <CalendarRangeDemo /> },
@@ -6835,7 +6837,6 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'carousel',
     name: 'Carousel',
     summary: 'A run of slides, one at a time, dragged with a finger',
-    layout: 'pager',
     demos: [
       { label: 'A track', render: () => <CarouselTrackDemo /> },
       { label: 'Interactive', render: () => <CarouselInteractiveDemo /> },
@@ -7207,6 +7208,7 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'frame',
     name: 'Frame',
     summary: 'Widget shell with a titled header and a flush inner card',
+    layout: 'sections',
     demos: [
       {
         label: 'Agent monitor',
@@ -7754,7 +7756,6 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'item',
     name: 'Item',
     summary: 'Row of media, text and actions',
-    layout: 'pager',
     demos: [
       {
         label: 'Variants',
@@ -8422,6 +8423,7 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'popover',
     name: 'Popover',
     summary: 'Panel anchored to the thing that opened it',
+    layout: 'sections',
     demos: [
       {
         label: 'Menu of actions',
@@ -9151,6 +9153,7 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'scroll-fade',
     name: 'ScrollFade',
     summary: 'Fades the edges of a scroll container',
+    layout: 'sections',
     demos: [
       {
         label: 'Horizontal cards',
@@ -9875,6 +9878,7 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'tooltip',
     name: 'Tooltip',
     summary: 'A small label that names the thing under your finger',
+    layout: 'sections',
     demos: [
       {
         label: 'Long press',
