@@ -34,6 +34,7 @@ import { XIcon } from '../../icons';
 import { Portal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { Text } from '../../primitives/text';
+import { useBackHandler } from '../../hooks/use-back-handler';
 import { cn } from '../../utils/cn';
 
 const SPRING = { damping: 22, stiffness: 280, mass: 0.7 } as const;
@@ -289,6 +290,10 @@ function BottomSheetContent({
   const hasScrollable = useSharedValue(false);
 
   const close = useCallback(() => setOpen(false), [setOpen]);
+
+  // The sheet closes on the Android back button while it is up, the same as a
+  // backdrop tap — but only when it is dismissible.
+  useBackHandler(open && dismissible, close);
 
   /*
    * The offset survives a close — the early return below sits after every

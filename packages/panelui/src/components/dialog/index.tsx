@@ -15,6 +15,7 @@ import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 import { Portal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { Text, type TextProps } from '../../primitives/text';
+import { useBackHandler } from '../../hooks/use-back-handler';
 import { cn } from '../../utils/cn';
 
 interface DialogContextValue {
@@ -101,6 +102,10 @@ function DialogContent({
 }: DialogContentProps) {
   const context = useDialog('Dialog.Content');
   const { open, setOpen } = context;
+
+  // While the dialog is up, the Android back button closes it rather than
+  // popping the screen behind — but only when tapping outside would too.
+  useBackHandler(open && dismissible, () => setOpen(false));
 
   if (!open) return null;
 
