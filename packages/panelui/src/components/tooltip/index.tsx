@@ -29,6 +29,7 @@
  * above fits*, and a trigger near the top edge shows its tooltip below instead.
  */
 import {
+  Children,
   cloneElement,
   createContext,
   isValidElement,
@@ -193,6 +194,12 @@ function TooltipRoot({
 }
 
 export interface TooltipTriggerProps {
+  /**
+   * Classes on the wrapper the child is measured through. It shrinks to the
+   * child by default; widen it only if the label should be anchored to
+   * something bigger than the control.
+   */
+  className?: string;
   children: ReactElement<{
     onPress?: (...args: unknown[]) => void;
     onLongPress?: (...args: unknown[]) => void;
@@ -209,8 +216,13 @@ export interface TooltipTriggerProps {
  * The child is wrapped in a view rather than handed a ref: the ref has to
  * survive whatever the child is — a button, a plain Pressable, an icon — and
  * only a wrapper we own is guaranteed to be measurable.
+ *
+ * That wrapper shrinks to its child on purpose. A view stretches to its parent
+ * by default, and a wrapper that filled the row would be measured as the whole
+ * row — putting a centred label over the middle of the screen rather than over
+ * the control it names.
  */
-function TooltipTrigger({ children }: TooltipTriggerProps) {
+function TooltipTrigger({ className, children }: TooltipTriggerProps) {
   const { open, show, hide, setTrigger, openOn, label } = useTooltip('Tooltip.Trigger');
   const ref = useRef<View>(null);
 
@@ -236,10 +248,19 @@ function TooltipTrigger({ children }: TooltipTriggerProps) {
     else measureThenShow();
   };
 
-  if (!isValidElement(children)) return <>{children}</>;
+  // A trigger that is not an element has nothing to clone handlers onto, so it
+  // is passed through — wrapped, if it is bare text, since a string cannot be
+  // a child of a view.
+  if (!isValidElement(children)) {
+    return typeof children === 'string' || typeof children === 'number' ? (
+      <Text>{children}</Text>
+    ) : (
+      <>{children}</>
+    );
+  }
 
   return (
-    <View ref={ref} collapsable={false}>
+    <View ref={ref} collapsable={false} className={cn('self-start', className)}>
       {cloneElement(children, {
         onPress: handlePress,
         onLongPress: handleLongPress,
@@ -292,6 +313,17 @@ function TooltipContent({
     );
     onLayoutProp?.(event);
   };
+
+  /*
+   * Forgetting the size on close is what makes the second open behave like the
+   * first. Held, it would place the reopened label using the last label's
+   * dimensions for a frame — and, because the entrance is driven off whether a
+   * position exists at all, a size that never went away means a tooltip that
+   * animates in once and afterwards just appears.
+   */
+  useEffect(() => {
+    if (!open) setSize(null);
+  }, [open]);
 
   const bounds = {
     left: insets.left + SCREEN_MARGIN,
@@ -379,9 +411,9 @@ function TooltipContent({
           <Animated.View
             exiting={FadeOut.duration(100)}
             onLayout={onLayout}
-            pointerEvents="box-none"
             style={{
               position: 'absolute',
+              pointerEvents: 'box-none',
               // Until it has measured itself the label has no honest position,
               // so it is laid out off-screen rather than at the origin.
               top: position?.top ?? -9999,
@@ -398,10 +430,20 @@ function TooltipContent({
               )}
               {...props}
             >
-              {typeof children === 'string' ? (
-                <TooltipText>{children}</TooltipText>
-              ) : (
-                children
+              {/*
+                Wrapped one child at a time, not all-or-nothing. The label is
+                almost always written as an arrow followed by its text, which
+                makes `children` an array — so a check against the whole of it
+                is never a string, and the text underneath would reach this
+                view bare. Only the text nodes need the treatment; an element
+                is already responsible for itself.
+              */}
+              {Children.map(children, (child) =>
+                typeof child === 'string' || typeof child === 'number' ? (
+                  <TooltipText>{child}</TooltipText>
+                ) : (
+                  child
+                )
               )}
             </Animated.View>
           </Animated.View>
@@ -439,12 +481,12 @@ function TooltipArrow({ className, style, ...props }: TooltipArrowProps) {
 
   return (
     <View
-      pointerEvents="none"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       style={[
         {
           position: 'absolute',
+          pointerEvents: 'none',
           [edge]: -ARROW_SIZE / 2,
           width: ARROW_SIZE,
           height: ARROW_SIZE,
