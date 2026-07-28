@@ -64,6 +64,7 @@ import Svg, { G, Line as SvgLine, Path } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
 import {
+  bandOf,
   barPath,
   columnValues,
   compactNumber,
@@ -91,6 +92,16 @@ const LABEL_WIDTH = 132;
 
 /** Left gutter reserved when a `YAxis` is present, for its labels to sit in. */
 const Y_AXIS_WIDTH = 40;
+
+/**
+ * Box each category label is centred in. Wide enough for a short name to sit
+ * over its band without the neighbours colliding; a longer one is ellipsised
+ * rather than allowed to push the others out of place.
+ */
+const BAND_LABEL_WIDTH = 56;
+
+/** Line height of an `xs` label, for centring one on the grid line it names. */
+const AXIS_LABEL_HEIGHT = 16;
 
 type Layer = 'svg' | 'overlay' | 'header';
 
@@ -768,20 +779,36 @@ function BarChartXAxis({ ticks = 6, format, className }: BarChartXAxisProps) {
 
   if (orientation === 'horizontal') return null;
 
+  /*
+   * Each label is placed on its own band's centre, not spaced evenly along the
+   * axis. Two things went wrong when they were spread with `justify-between`:
+   * a bar owns a *band* rather than sitting on a point, so the first and last
+   * labels were half a band out at the edges; and the indices `ticks` picks
+   * are not evenly spaced (eight months shown six at a time gives 0,1,3,4,6,7),
+   * so the ones between were spread evenly over gaps that are not.
+   *
+   * The box is backed off by half its own width rather than translated by
+   * `-50%`, which is not reliable across React Native versions.
+   */
   return (
     <View
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        left: plot.left,
-        right: PADDING.right,
-        bottom: 0,
-        height: PADDING.bottom,
-      }}
-      className={cn('flex-row items-center justify-between', className)}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+      className={cn(className)}
     >
       {labels.map((label) => (
-        <Text key={label.key} size="xs" muted numberOfLines={1}>
+        <Text
+          key={label.key}
+          size="xs"
+          muted
+          numberOfLines={1}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: bandOf(label.key, data.length, plot) - BAND_LABEL_WIDTH / 2,
+            width: BAND_LABEL_WIDTH,
+            textAlign: 'center',
+          }}
+        >
           {label.text}
         </Text>
       ))}
@@ -839,8 +866,12 @@ function BarChartYAxis({ ticks = 4, format, className }: BarChartYAxisProps) {
       style={{
         position: 'absolute',
         left: 0,
-        top: plot.top,
-        height: plot.height,
+        // Upright, each label is centred on the grid line it names: the strip
+        // is lifted half a label and grown by a whole one, so `justify-between`
+        // lands the text's middle on the line rather than its top edge on the
+        // first and its bottom edge on the last.
+        top: horizontal ? plot.top : plot.top - AXIS_LABEL_HEIGHT / 2,
+        height: horizontal ? plot.height : plot.height + AXIS_LABEL_HEIGHT,
         width: horizontal ? Math.max(plot.left - 8, 0) : undefined,
       }}
       className={cn(horizontal ? 'items-end' : 'justify-between', className)}

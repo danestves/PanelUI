@@ -5663,7 +5663,7 @@ function BarChartGroupedVersion() {
           <BarChart
             data={BAR_REVENUE}
             xDataKey="month"
-            aspectRatio={1.5}
+            aspectRatio={2.1}
             onActiveIndexChange={(_index, datum) =>
               setActive(datum as (typeof BAR_REVENUE)[number] | null)
             }
@@ -5696,7 +5696,7 @@ function BarChartGroupedVersion() {
           <Frame.Action>Same two series</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
-          <BarChart data={BAR_REVENUE} xDataKey="month" stacked stackGap={2} aspectRatio={2}>
+          <BarChart data={BAR_REVENUE} xDataKey="month" stacked stackGap={2} aspectRatio={2.2}>
             <BarChart.Header
               className={CHART_HEADER}
               value={money(BAR_TOTALS.revenue + BAR_TOTALS.costs)}
@@ -5731,7 +5731,7 @@ function BarChartHorizontalVersion() {
             data={CHANNELS}
             xDataKey="name"
             orientation="horizontal"
-            aspectRatio={1.4}
+            aspectRatio={1.9}
             barGap={0.35}
           >
             <BarChart.Header
@@ -5771,7 +5771,7 @@ function AreaChartStackedVersion() {
             data={AREA_TRAFFIC}
             xDataKey="hour"
             stacked
-            aspectRatio={1.6}
+            aspectRatio={2.1}
             onActiveIndexChange={(_index, datum) =>
               setActive(datum as (typeof AREA_TRAFFIC)[number] | null)
             }
@@ -5810,7 +5810,7 @@ function AreaChartOverlaidVersion() {
           <Frame.Action>Peak hour</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
-          <AreaChart data={AREA_TRAFFIC} xDataKey="hour" aspectRatio={1.6}>
+          <AreaChart data={AREA_TRAFFIC} xDataKey="hour" aspectRatio={2.1}>
             <AreaChart.Header
               className={CHART_HEADER}
               value="600"

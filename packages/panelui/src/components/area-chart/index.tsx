@@ -88,6 +88,16 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const PADDING = { top: 12, right: 10, bottom: 22, left: 10 };
 const LABEL_WIDTH = 132;
+
+/**
+ * Box each x label is centred in. Wide enough for a short label to sit over
+ * its point without the neighbours colliding; a longer one is ellipsised
+ * rather than allowed to push the others out of place.
+ */
+const POINT_LABEL_WIDTH = 56;
+
+/** Line height of an `xs` label, for centring one on the grid line it names. */
+const AXIS_LABEL_HEIGHT = 16;
 const DOT = 9;
 
 /** Left gutter reserved when a `YAxis` is present, for its labels to sit in. */
@@ -640,20 +650,34 @@ function AreaChartXAxis({ ticks = 4, format, className }: AreaChartXAxisProps) {
     }).filter((label): label is { key: number; text: string } => label !== null);
   }, [data, ticks, format, xDataKey]);
 
+  /*
+   * Each label sits on its own point rather than being spread along the axis.
+   * The indices `ticks` picks are not evenly spaced — twelve months shown five
+   * at a time gives 0,3,6,8,11 — so spreading them evenly put the ones in
+   * between over the wrong part of the line.
+   *
+   * The box is backed off by half its own width rather than translated by
+   * `-50%`, which is not reliable across React Native versions.
+   */
   return (
     <View
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        left: plot.left,
-        right: PADDING.right,
-        bottom: 0,
-        height: PADDING.bottom,
-      }}
-      className={cn('flex-row items-center justify-between', className)}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+      className={cn(className)}
     >
       {labels.map((label) => (
-        <Text key={label.key} size="xs" muted>
+        <Text
+          key={label.key}
+          size="xs"
+          muted
+          numberOfLines={1}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: xOf(label.key, data.length, plot) - POINT_LABEL_WIDTH / 2,
+            width: POINT_LABEL_WIDTH,
+            textAlign: 'center',
+          }}
+        >
           {label.text}
         </Text>
       ))}
@@ -685,7 +709,16 @@ function AreaChartYAxis({ ticks = 4, format, className }: AreaChartYAxisProps) {
   return (
     <View
       pointerEvents="none"
-      style={{ position: 'absolute', left: 0, top: plot.top, height: plot.height }}
+      style={{
+        position: 'absolute',
+        left: 0,
+        // Centred on the grid line each label names: the strip is lifted half
+        // a label and grown by a whole one, so `justify-between` lands the
+        // text's middle on the line rather than its top edge on the first line
+        // and its bottom edge on the last.
+        top: plot.top - AXIS_LABEL_HEIGHT / 2,
+        height: plot.height + AXIS_LABEL_HEIGHT,
+      }}
       className={cn('justify-between', className)}
     >
       {labels.map((label) => (
