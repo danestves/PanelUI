@@ -677,7 +677,7 @@ function CarouselInteractiveDemo() {
 function CarouselCoverflowDemo() {
   return (
     <View className="w-full gap-4">
-      <Carousel variant="coverflow" itemSize={110} defaultIndex={2}>
+      <Carousel variant="coverflow" itemSize={150} defaultIndex={2}>
         <Carousel.Content className="h-48">
           {SCENES.map((scene) => (
             <Carousel.Item key={scene.title}>

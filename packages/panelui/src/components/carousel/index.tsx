@@ -94,6 +94,15 @@ const RUBBER = 0.35;
 /** Slides either side of the active one that `coverflow` still draws. */
 const COVERFLOW_DEPTH = 2;
 
+/**
+ * Gap between coverflow's slides, as a fraction of one slide's length.
+ *
+ * Proportional rather than a fixed number of points: the neighbours have to
+ * clear the middle slide by enough to be read as separate cards, and how much
+ * that is depends entirely on how wide the cards are.
+ */
+const COVERFLOW_SPREAD = 0.55;
+
 /** Cards behind the top one in `stack`. Two is a pile; five is a mess. */
 const STACK_DEPTH = 2;
 
@@ -470,10 +479,23 @@ export interface CarouselItemProps extends ViewProps {
 
 /** One slide. Its transform is whatever the root's `variant` asks for. */
 function CarouselItem({ className, children, style, ...props }: CarouselItemProps) {
-  const { progress, engaged, count, variant, orientation, loop, itemSize } =
+  const { progress, engaged, count, index: active, variant, orientation, loop, itemSize } =
     useCarousel('Carousel.Item');
   const index = useContext(ItemIndexContext);
   const horizontal = orientation === 'horizontal';
+
+  /*
+   * In the layouts that pile slides on top of each other, only the one on top
+   * takes touches.
+   *
+   * `zIndex` reorders what is *drawn* but, on iOS, not what is *hit*: hit
+   * testing walks the subviews in the order they were added, so the last slide
+   * rendered sits in front of every gesture regardless of its z-order — and in
+   * a deck that slide is the one at the bottom of the pile, drawn at zero
+   * opacity. An invisible card was swallowing every drag.
+   */
+  const stacked = variant === 'coverflow' || variant === 'stack';
+  const inert = stacked && index !== active;
 
   const animated = useAnimatedStyle(() => {
     const d = distance(index, progress.value, count, loop);
@@ -485,7 +507,7 @@ function CarouselItem({ className, children, style, ...props }: CarouselItemProp
         zIndex: Math.round(100 - a * 10),
         transform: [
           { perspective: 1000 },
-          { translateX: d * 32 },
+          { translateX: d * itemSize * COVERFLOW_SPREAD },
           // Turned away from the middle and back towards it as it arrives.
           // Interpolated rather than switched, or a slide would snap flat.
           { rotateY: `${interpolate(d, [-1, 0, 1], [38, 0, -38], Extrapolation.CLAMP)}deg` },
@@ -552,9 +574,13 @@ function CarouselItem({ className, children, style, ...props }: CarouselItemProp
     <Animated.View
       {...props}
       style={[
-        { position: 'absolute' },
+        { position: 'absolute', pointerEvents: inert ? 'none' : 'auto' },
         sized ? (horizontal ? { width: itemSize } : { height: itemSize }) : null,
-        sized && variant === 'default' ? (horizontal ? { height: '100%' } : { width: '100%' }) : null,
+        sized && variant === 'default'
+          ? horizontal
+            ? { height: '100%' }
+            : { width: '100%' }
+          : null,
         animated,
         style,
       ]}
@@ -585,10 +611,17 @@ function CarouselCaption({ className, children, ...props }: CarouselCaptionProps
   const { progress, count, loop } = useCarousel('Carousel.Caption');
   const index = useContext(ItemIndexContext);
 
+  /*
+   * Gone well before the next slide arrives, rather than fading across the
+   * whole step. The layouts that use a caption overlap their slides, so a
+   * caption still at a third of its opacity halfway through a drag is a line
+   * of grey text sitting on top of the neighbouring picture — which reads as a
+   * rendering fault rather than as a transition.
+   */
   const animated = useAnimatedStyle(() => {
     const a = Math.abs(distance(index, progress.value, count, loop));
     return {
-      opacity: interpolate(a, [0, 0.6], [1, 0], Extrapolation.CLAMP),
+      opacity: interpolate(a, [0, 0.3], [1, 0], Extrapolation.CLAMP),
       transform: [{ scale: interpolate(a, [0, 1], [1, 0.75], Extrapolation.CLAMP) }],
     };
   });
