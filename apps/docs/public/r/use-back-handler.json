@@ -1,0 +1,15 @@
+{
+  "name": "use-back-handler",
+  "type": "registry:hook",
+  "description": "use-back-handler.",
+  "registryDependencies": [],
+  "dependencies": [],
+  "optionalDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-back-handler.ts",
+      "type": "registry:hook",
+      "content": "import { useEffect, useRef } from 'react';\nimport { BackHandler, Platform } from 'react-native';\n\n/**\n * Runs a handler when the Android hardware back button is pressed.\n *\n * An open overlay owns the back button while it is up: pressing back should\n * dismiss the overlay, not pop the screen behind it. Without this, the back\n * gesture navigates away and the overlay is orphaned — the same mistake as a\n * modal that stays put when you tap outside it.\n *\n * The listener is Android-only and gated on `enabled`, so an overlay wires it\n * to `open && dismissible` and nothing runs while the overlay is closed or\n * pinned. Returning `true` from the handler tells the platform the press was\n * consumed, which is what stops the navigation.\n *\n * ```tsx\n * useBackHandler(open && dismissible, () => setOpen(false));\n * ```\n */\nexport function useBackHandler(enabled: boolean, onBack: () => void): void {\n  // Held in a ref so a caller passing an inline `() => setOpen(false)` does not\n  // resubscribe the listener on every render — only a change in `enabled` does.\n  const onBackRef = useRef(onBack);\n  onBackRef.current = onBack;\n\n  useEffect(() => {\n    if (Platform.OS !== 'android' || !enabled) return;\n\n    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {\n      onBackRef.current();\n      return true;\n    });\n\n    return () => subscription.remove();\n  }, [enabled]);\n}\n"
+    }
+  ]
+}
