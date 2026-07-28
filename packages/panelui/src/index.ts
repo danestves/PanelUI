@@ -136,6 +136,11 @@ export {
   type ToggleSelectionMode,
 } from './components/toggle-button';
 export {
+  DatePicker,
+  type DatePickerProps,
+  type DatePickerMode,
+} from './components/date-picker';
+export {
   Dialog,
   type DialogProps,
   type DialogContentProps,
@@ -263,6 +268,15 @@ export {
   type CarouselOrientation,
   type CarouselAlign,
 } from './components/carousel';
+export {
+  Calendar,
+  type CalendarProps,
+  type CalendarMode,
+  type CalendarCaptionLayout,
+  type CalendarDisabled,
+  type CalendarSelection,
+  type DateRange,
+} from './components/calendar';
 export { Card, type CardProps } from './components/card';
 export { Checkbox, type CheckboxProps } from './components/checkbox';
 export {

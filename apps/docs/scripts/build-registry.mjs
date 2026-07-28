@@ -151,6 +151,14 @@ register(
 );
 
 register(
+  'date',
+  'registry:lib',
+  [path.join(SRC, 'utils/date.ts')],
+  () => 'lib/date.ts',
+  () => `${ALIAS.lib}/date`
+);
+
+register(
   'haptics',
   'registry:lib',
   [path.join(SRC, 'utils/haptics.ts')],

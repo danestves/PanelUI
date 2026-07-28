@@ -43,6 +43,7 @@ import {
   BottomSheet,
   Breadcrumb,
   Button,
+  Calendar,
   Card,
   Carousel,
   CardIcon,
@@ -51,6 +52,8 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   Chip,
+  DatePicker,
+  type DateRange,
   Dialog,
   Direction,
   type DirectionValue,
@@ -613,6 +616,173 @@ function ChartKpiVersion() {
         />
       </View>
     </ChartScreen>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Calendar and DatePicker                                                    */
+/* -------------------------------------------------------------------------- */
+
+const addDemoDays = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date;
+};
+
+function CalendarSingleDemo() {
+  const [day, setDay] = useState<Date | undefined>(new Date());
+  return (
+    <View className="w-full gap-4">
+      <Card>
+        <Card.Content className="p-3">
+          <Calendar selected={day} onSelect={setDay} />
+        </Card.Content>
+      </Card>
+      <Text size="sm" muted className="text-center">
+        {day ? day.toDateString() : 'Nothing picked — tap the same day again to clear it.'}
+      </Text>
+    </View>
+  );
+}
+
+function CalendarRangeDemo() {
+  const [range, setRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDemoDays(9),
+  });
+  return (
+    <View className="w-full gap-4">
+      <Card>
+        <Card.Content className="p-3">
+          <Calendar mode="range" selected={range} onSelect={setRange} />
+        </Card.Content>
+      </Card>
+      <Text size="sm" muted className="text-center">
+        {range?.to
+          ? `${range.from.toDateString()} → ${range.to.toDateString()}`
+          : 'Pick the other end.'}
+      </Text>
+    </View>
+  );
+}
+
+function CalendarMultipleDemo() {
+  const [days, setDays] = useState<Date[]>([new Date(), addDemoDays(3), addDemoDays(4)]);
+  return (
+    <View className="w-full gap-4">
+      <Card>
+        <Card.Content className="p-3">
+          <Calendar mode="multiple" selected={days} onSelect={setDays} />
+        </Card.Content>
+      </Card>
+      <Text size="sm" muted className="text-center">
+        {days.length} {days.length === 1 ? 'date' : 'dates'} picked
+      </Text>
+    </View>
+  );
+}
+
+/** Weekends and the past ruled out, which is what a booking screen needs. */
+function CalendarDisabledDemo() {
+  const [day, setDay] = useState<Date>();
+  return (
+    <View className="w-full gap-4">
+      <Card>
+        <Card.Content className="p-3">
+          <Calendar
+            selected={day}
+            onSelect={setDay}
+            minDate={new Date()}
+            maxDate={addDemoDays(60)}
+            disabled={(date) => date.getDay() === 0 || date.getDay() === 6}
+          />
+        </Card.Content>
+      </Card>
+      <Text size="sm" muted className="text-center">
+        Weekdays only, and nothing before today or more than two months out.
+      </Text>
+    </View>
+  );
+}
+
+/** The caption as month and year pickers — four taps to a birthday. */
+function CalendarDropdownDemo() {
+  const [day, setDay] = useState<Date>();
+  return (
+    <View className="w-full gap-4">
+      <Card>
+        <Card.Content className="p-3">
+          <Calendar
+            selected={day}
+            onSelect={setDay}
+            captionLayout="dropdown"
+            maxDate={new Date()}
+            defaultMonth={new Date(1996, 5, 1)}
+          />
+        </Card.Content>
+      </Card>
+      <Text size="sm" muted className="text-center">
+        Tap the month or the year to jump rather than paging.
+      </Text>
+    </View>
+  );
+}
+
+function DatePickerDemo() {
+  const [day, setDay] = useState<Date>();
+  const [range, setRange] = useState<DateRange>();
+  const [birthday, setBirthday] = useState<Date>();
+
+  return (
+    <View className="w-full gap-6">
+      <View className="gap-2">
+        <Label>Date</Label>
+        <DatePicker selected={day} onSelect={setDay} />
+      </View>
+
+      <View className="gap-2">
+        <Label>Stay</Label>
+        {/* A range waits for its second end before it closes — shutting on the
+            first tap would leave half a range on screen and no way back to it. */}
+        <DatePicker
+          mode="range"
+          selected={range}
+          onSelect={setRange}
+          placeholder="Check in — check out"
+          minDate={new Date()}
+        />
+      </View>
+
+      <View className="gap-2">
+        <Label>Date of birth</Label>
+        <DatePicker
+          selected={birthday}
+          onSelect={setBirthday}
+          captionLayout="dropdown"
+          maxDate={new Date()}
+          placeholder="Choose a date"
+        />
+      </View>
+    </View>
+  );
+}
+
+/** In a sheet instead, for a form with the keyboard already up. */
+function DatePickerSheetDemo() {
+  const [day, setDay] = useState<Date>();
+  return (
+    <View className="w-full gap-4">
+      <DatePicker
+        selected={day}
+        onSelect={setDay}
+        presentation="bottom-sheet"
+        placeholder="Pick a date in a sheet"
+      />
+      <Text size="sm" muted>
+        The anchored panel is the default: a month grid is a fixed size and fits
+        beside its trigger. A sheet earns its place when the screen is busy.
+      </Text>
+    </View>
   );
 }
 
@@ -6582,6 +6752,19 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'calendar',
+    name: 'Calendar',
+    summary: 'A month of days, for picking one, several, or a range',
+    layout: 'pager',
+    demos: [
+      { label: 'A single day', render: () => <CalendarSingleDemo /> },
+      { label: 'A range', render: () => <CalendarRangeDemo /> },
+      { label: 'Several days', render: () => <CalendarMultipleDemo /> },
+      { label: 'Days ruled out', render: () => <CalendarDisabledDemo /> },
+      { label: 'Month and year pickers', render: () => <CalendarDropdownDemo /> },
+    ],
+  },
+  {
     slug: 'carousel',
     name: 'Carousel',
     summary: 'A run of slides, one at a time, dragged with a finger',
@@ -6658,6 +6841,15 @@ export const COMPONENTS: ComponentEntry[] = [
       },
       { label: 'A filter bar', render: () => <ChipFilterDemo /> },
       { label: 'Removable tokens', render: () => <ChipRemovableDemo /> },
+    ],
+  },
+  {
+    slug: 'date-picker',
+    name: 'DatePicker',
+    summary: 'A calendar behind a button',
+    demos: [
+      { label: 'Single, range and birthday', render: () => <DatePickerDemo /> },
+      { label: 'In a sheet', render: () => <DatePickerSheetDemo /> },
     ],
   },
   {

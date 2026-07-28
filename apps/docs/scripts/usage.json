@@ -608,6 +608,51 @@
       "caption": "Header, content and footer, running in the example app."
     }
   },
+  "calendar": {
+    "intro": "A month of days, for picking one, several, or a span with two ends.\n\nIt carries no date library. Everything a month grid needs is arithmetic on the platform's own `Date`, and shipping a timezone database to render seven columns is a poor trade in a library whose entire runtime is three small packages. Month and weekday names come from `Intl`, guarded — builds without the full locale data fall back to English rather than taking the screen down over a month name.",
+    "usage": "const [day, setDay] = useState<Date>();\n\n<Calendar selected={day} onSelect={setDay} />\n\n// A span, which takes two taps to complete.\nconst [range, setRange] = useState<DateRange>();\n\n<Calendar mode=\"range\" selected={range} onSelect={setRange} />",
+    "extraImports": [
+      "Card",
+      "Text"
+    ],
+    "parts": {
+      "Grid": "One month: the weekday headings and six rows of days. Rendered for you per `numberOfMonths`; exported for a layout that needs the grid without the caption.",
+      "Day": "One cell — the number, the disc when it is selected, and the band when it is inside a range."
+    },
+    "examples": [
+      {
+        "title": "A single day",
+        "description": "Tapping the selected day again clears it, so there is a way back to nothing without a separate control.",
+        "code": "const [day, setDay] = useState<Date>();\n\n<Calendar selected={day} onSelect={setDay} />"
+      },
+      {
+        "title": "A range",
+        "description": "Two taps. A third starts again, and a tap that lands before the open end becomes the new start rather than being refused — someone who picked the wrong month first should not have to undo before retrying.",
+        "code": "const [range, setRange] = useState<DateRange>();\n\n<Calendar mode=\"range\" selected={range} onSelect={setRange} />"
+      },
+      {
+        "title": "Several days",
+        "description": "`multiple` collects a set. Tapping a day already in it takes it out.",
+        "code": "const [days, setDays] = useState<Date[]>([]);\n\n<Calendar mode=\"multiple\" selected={days} onSelect={setDays} />"
+      },
+      {
+        "title": "Days ruled out",
+        "description": "`disabled` takes a list, a span, or a rule. A rule, because \"no weekends\" and \"nothing in the past\" are the two common cases and neither can be written as a list that is still right tomorrow.",
+        "code": "<Calendar\n  selected={day}\n  onSelect={setDay}\n  minDate={new Date()}\n  disabled={(date) => date.getDay() === 0 || date.getDay() === 6}\n/>"
+      },
+      {
+        "title": "Month and year pickers",
+        "description": "`captionLayout=\"dropdown\"` is the difference between choosing a birthday in four taps and in four hundred.",
+        "code": "<Calendar\n  selected={day}\n  onSelect={setDay}\n  captionLayout=\"dropdown\"\n  maxDate={new Date()}\n  defaultMonth={new Date(1996, 5, 1)}\n/>"
+      },
+      {
+        "title": "Two months at once",
+        "description": "What picking a range across a month boundary wants. The arrows split across the row — back on the first caption, forward on the last — so there is one way to page rather than two.",
+        "code": "<Calendar mode=\"range\" numberOfMonths={2} selected={range} onSelect={setRange} />"
+      }
+    ],
+    "notes": "**The grid is always six weeks.** A month needs five rows or six depending on the day it starts on, and drawing only the rows it uses makes the calendar change height as it is paged — everything below jumps, and the days themselves appear to shift between months. The spare cells hold the neighbouring months' days, or are left blank with `showOutsideDays={false}`. Blank, not absent: the row has to stay seven wide or the columns stop lining up with their headings.\n\n**A range is drawn in three pieces.** On the web the band under a range is one background with its ends rounded by `:first-child` and `:last-child`. There are no pseudo-classes here, so each day works out whether it is a start, a middle or an end — and, separately, whether it is at the edge of its own row, because a range running over a weekend has to close off on Saturday and open again on Sunday rather than trailing into the gap. The band is drawn behind the number rather than as the cell's own background, which is what lets it run from cell to cell.\n\n**Days are compared at local midnight.** A `Date` carries a time, and two values on the same day are not equal until it is stripped.\n\n**It opens on the selection, not on today.** A picker reopened on a date chosen last year lands on that month — otherwise it opens on today and the choice looks lost.\n\n**`minDate` and `maxDate` bound the paging too**, not only the selection: an arrow that pages to a month where every day is dead is an arrow that should have been off."
+  },
   "carousel": {
     "intro": "A run of slides, shown one at a time and moved with a finger.\n\nEverything is driven from one value: the position in the run, as a fractional index. `2.4` is two-fifths of the way from the third slide to the fourth, and every slide places itself from its own distance to that number. A drag writes to it, a spring settles it onto a whole slide, and the dots read it.\n\nThat is why the track is a gesture rather than a paging scroll view. A scroll view would serve the plain track well enough, but `coverflow` and `stack` do not lay their slides along a track at all — they hold them in one place and pull them apart with transforms, so there would be nothing to scroll. One mechanism all four layouts read beats a native scroller for one of them and something else for the rest.",
     "usage": "<Carousel loop>\n  <Carousel.Content className=\"h-56\">\n    {photos.map((photo) => (\n      <Carousel.Item key={photo.id} className=\"px-2\">\n        <Image source={{ uri: photo.uri }} className=\"h-full w-full rounded-2xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n  <Carousel.Controls className=\"mt-4\" />\n</Carousel>",
@@ -789,6 +834,45 @@
         }
       ]
     }
+  },
+  "date-picker": {
+    "intro": "A calendar behind a button.\n\nIt is `Calendar` inside a `Popover` with a trigger that reads back what was chosen, and it is a separate component for the same reason `Select` is separate from a list: the hard parts are the ones around the grid — what a closed field says, when the panel closes, and what a range shows while only half of it has been picked.",
+    "usage": "const [day, setDay] = useState<Date>();\n\n<DatePicker selected={day} onSelect={setDay} placeholder=\"Pick a date\" />",
+    "extraImports": [
+      "Label",
+      "Text"
+    ],
+    "parts": {
+      "Trigger": "Wraps a trigger of your own and opens the panel on press. Pass a child to the picker instead and it is wrapped for you."
+    },
+    "examples": [
+      {
+        "title": "A date",
+        "description": "The trigger reads the chosen date and falls back to the placeholder. One tap finishes it, so the panel closes on the tap.",
+        "code": "const [day, setDay] = useState<Date>();\n\n<DatePicker selected={day} onSelect={setDay} />"
+      },
+      {
+        "title": "A range",
+        "description": "It stays open until the second end is picked. A half-picked range reads as its start followed by a dash — the dash is what says the picker is still waiting, and without it half a range looks like a finished date.",
+        "code": "const [range, setRange] = useState<DateRange>();\n\n<DatePicker\n  mode=\"range\"\n  selected={range}\n  onSelect={setRange}\n  placeholder=\"Check in — check out\"\n  minDate={new Date()}\n/>"
+      },
+      {
+        "title": "A date of birth",
+        "description": "`captionLayout=\"dropdown\"` with `maxDate` set to today — paging back thirty years one month at a time is not a date picker.",
+        "code": "<DatePicker\n  selected={birthday}\n  onSelect={setBirthday}\n  captionLayout=\"dropdown\"\n  maxDate={new Date()}\n/>"
+      },
+      {
+        "title": "In a sheet",
+        "description": "The anchored panel is the default: a month grid is a fixed size and fits beside its trigger on any phone. A sheet earns its place when the screen is busy — a form with the keyboard up is the usual case.",
+        "code": "<DatePicker selected={day} onSelect={setDay} presentation=\"bottom-sheet\" />"
+      },
+      {
+        "title": "Your own trigger",
+        "description": "Pass a child and it is cloned with an `onPress` that opens the panel, so a field row or an icon button can stand in for the default button.",
+        "code": "<DatePicker selected={day} onSelect={setDay}>\n  <Button variant=\"ghost\" size=\"icon\" accessibilityLabel=\"Choose a date\">\n    <CalendarIcon size={18} />\n  </Button>\n</DatePicker>"
+      }
+    ],
+    "notes": "**It closes when the selection is finished, not when it changes.** A single date is done in one tap, so the panel closes on it. A range needs two and stays open until the second — closing on the first would leave half a range on screen and put someone back where they started. `multiple` never closes on its own; only the caller knows when a set is complete.\n\n**The trigger's text is derived, not stored.** Pass `format` to write it yourself; otherwise it is the short date, both ends of a range, or a count once more than one date is picked.\n\n**Everything the calendar takes is forwarded** — `minDate`, `maxDate`, `disabledDates`, `numberOfMonths`, `captionLayout`, `weekStartsOn` and `locale`.\n\nReach for **Calendar** on its own when the grid should be on the page rather than behind a control — a booking screen where the month is the screen."
   },
   "dialog": {
     "intro": "A modal dialog. Mounts through a portal and unmounts after its exit animation.",

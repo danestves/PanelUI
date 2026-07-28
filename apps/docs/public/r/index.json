@@ -111,6 +111,17 @@
     ]
   },
   {
+    "name": "calendar",
+    "type": "registry:ui",
+    "description": "A month of days, for picking one, several, or a range.",
+    "registryDependencies": [
+      "cn",
+      "date",
+      "icons",
+      "text"
+    ]
+  },
+  {
     "name": "card",
     "type": "registry:ui",
     "description": "Content surface with header, body and footer.",
@@ -161,6 +172,26 @@
     "type": "registry:lib",
     "description": "Merges Tailwind class names, with later classes winning conflicts.",
     "registryDependencies": []
+  },
+  {
+    "name": "date",
+    "type": "registry:lib",
+    "description": "date.",
+    "registryDependencies": []
+  },
+  {
+    "name": "date-picker",
+    "type": "registry:ui",
+    "description": "A calendar behind a button.",
+    "registryDependencies": [
+      "button",
+      "calendar",
+      "cn",
+      "date",
+      "icons",
+      "popover",
+      "text"
+    ]
   },
   {
     "name": "dialog",

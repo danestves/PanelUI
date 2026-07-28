@@ -1,0 +1,139 @@
+---
+title: DatePicker
+description: A calendar behind a button.
+status: new
+---
+
+A calendar behind a button.
+
+It is `Calendar` inside a `Popover` with a trigger that reads back what was chosen, and it is a separate component for the same reason `Select` is separate from a list: the hard parts are the ones around the grid — what a closed field says, when the panel closes, and what a range shows while only half of it has been picked.
+
+## Installation
+
+DatePicker ships with the library — no separate install.
+
+```tsx
+import { DatePicker, Label, Text } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add date-picker
+```
+
+## Usage
+
+```tsx
+const [day, setDay] = useState<Date>();
+
+<DatePicker selected={day} onSelect={setDay} placeholder="Pick a date" />
+```
+
+## Composition
+
+```tsx
+<DatePicker>
+  <DatePicker.Trigger>…</DatePicker.Trigger>
+</DatePicker>
+```
+
+- **`DatePicker.Trigger`** — Wraps a trigger of your own and opens the panel on press. Pass a child to the picker instead and it is wrapped for you.
+
+## Examples
+
+### A date
+
+The trigger reads the chosen date and falls back to the placeholder. One tap finishes it, so the panel closes on the tap.
+
+```tsx
+const [day, setDay] = useState<Date>();
+
+<DatePicker selected={day} onSelect={setDay} />
+```
+
+### A range
+
+It stays open until the second end is picked. A half-picked range reads as its start followed by a dash — the dash is what says the picker is still waiting, and without it half a range looks like a finished date.
+
+```tsx
+const [range, setRange] = useState<DateRange>();
+
+<DatePicker
+  mode="range"
+  selected={range}
+  onSelect={setRange}
+  placeholder="Check in — check out"
+  minDate={new Date()}
+/>
+```
+
+### A date of birth
+
+`captionLayout="dropdown"` with `maxDate` set to today — paging back thirty years one month at a time is not a date picker.
+
+```tsx
+<DatePicker
+  selected={birthday}
+  onSelect={setBirthday}
+  captionLayout="dropdown"
+  maxDate={new Date()}
+/>
+```
+
+### In a sheet
+
+The anchored panel is the default: a month grid is a fixed size and fits beside its trigger on any phone. A sheet earns its place when the screen is busy — a form with the keyboard up is the usual case.
+
+```tsx
+<DatePicker selected={day} onSelect={setDay} presentation="bottom-sheet" />
+```
+
+### Your own trigger
+
+Pass a child and it is cloned with an `onPress` that opens the panel, so a field row or an icon button can stand in for the default button.
+
+```tsx
+<DatePicker selected={day} onSelect={setDay}>
+  <Button variant="ghost" size="icon" accessibilityLabel="Choose a date">
+    <CalendarIcon size={18} />
+  </Button>
+</DatePicker>
+```
+
+## API Reference
+
+### DatePicker
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mode` | `Mode` | `'single' as Mode` | One day, several, or a span with two ends. |
+| `selected` | `CalendarSelection[Mode]` | — | Controlled selection. Its shape follows `mode`. |
+| `defaultSelected` | `CalendarSelection[Mode]` | — | Starting selection when uncontrolled. |
+| `onSelect` | `(selected: CalendarSelection[Mode]) => void` | — |  |
+| `open` | `boolean` | — | Controlled open state of the panel. |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
+| `placeholder` | `string` | `DEFAULT_PLACEHOLDER` | What the trigger reads when nothing has been chosen. |
+| `format` | `(selected: CalendarSelection[Mode]) => string` | — | Override how the chosen value is written on the trigger. |
+| `presentation` | `PopoverPresentation` | `'popover'` | Anchored panel, or a sheet from the bottom of the screen. |
+| `disabled` | `boolean` | `false` | Stop the trigger opening it. |
+| `disabledDates` | `CalendarDisabled` | — | Days that cannot be picked: a list, a span, or a rule. |
+| `minDate` | `Date` | — | Earliest selectable day. |
+| `maxDate` | `Date` | — | Latest selectable day. |
+| `numberOfMonths` | `number` | `1` | Months side by side inside the panel. |
+| `captionLayout` | `CalendarCaptionLayout` | `'label'` | `dropdown` swaps the month caption for month and year pickers. |
+| `weekStartsOn` | `number` | `0` | `0` is Sunday. |
+| `locale` | `string` | — | BCP 47 tag for the month and weekday names, and for the trigger's text. |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+**It closes when the selection is finished, not when it changes.** A single date is done in one tap, so the panel closes on it. A range needs two and stays open until the second — closing on the first would leave half a range on screen and put someone back where they started. `multiple` never closes on its own; only the caller knows when a set is complete.
+
+**The trigger's text is derived, not stored.** Pass `format` to write it yourself; otherwise it is the short date, both ends of a range, or a count once more than one date is picked.
+
+**Everything the calendar takes is forwarded** — `minDate`, `maxDate`, `disabledDates`, `numberOfMonths`, `captionLayout`, `weekStartsOn` and `locale`.
+
+Reach for **Calendar** on its own when the grid should be on the page rather than behind a control — a booking screen where the month is the screen.

@@ -66,6 +66,14 @@
     "Content surface with header, body and footer.",
     "react native card"
   ],
+  "calendar": [
+    "Calendar",
+    "A month of days, for picking one, several, or a range.",
+    "react native calendar component",
+    {
+      "addedIn": "0.27.0"
+    }
+  ],
   "carousel": [
     "Carousel",
     "A run of slides, one at a time, dragged with a finger.",
@@ -89,6 +97,14 @@
     "react native chip",
     {
       "addedIn": "0.13.0"
+    }
+  ],
+  "date-picker": [
+    "DatePicker",
+    "A calendar behind a button.",
+    "react native date picker",
+    {
+      "addedIn": "0.27.0"
     }
   ],
   "dialog": [
