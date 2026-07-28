@@ -47,6 +47,7 @@ npx panelui-cli@latest add line-chart
 
 ```tsx
 <LineChart>
+  <LineChart.Header>…</LineChart.Header>
   <LineChart.Grid>…</LineChart.Grid>
   <LineChart.Area>…</LineChart.Area>
   <LineChart.Line>…</LineChart.Line>
@@ -57,6 +58,7 @@ npx panelui-cli@latest add line-chart
 </LineChart>
 ```
 
+- **`LineChart.Header`** — See props below.
 - **`LineChart.Grid`** — Horizontal reference lines, under everything and outside the reveal.
 - **`LineChart.Area`** — The gradient fill under a series. Separate from the line, because a two-series chart usually wants it on only one of them.
 - **`LineChart.Line`** — One series. Takes its colour from a `--color-chart-*` token unless given one.
@@ -465,6 +467,17 @@ Four series across the chart token ramp. They share one y-domain, so they stay c
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `labels` | `Record<string, string>` | — | Label per series key. A key with no label falls back to the key itself. |
+
+### LineChart.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | — | Small line above the value — what the chart is of. |
+| `value` | `string` | — | The readout. The largest thing on the card, and the first thing read. |
+| `caption` | `string` | — | One muted line under the value — a period, a comparison, a total. |
+| `labels` | `Record<string, string>` | — | Prettier names for the series keys, as the legend takes. |
+| `legend` | `boolean` | `false` | Draw a swatch and a name per series along the trailing edge. Prefer this to `LineChart.Legend` on a chart that has a header: the legend floats over the plot, where it competes with the lines for the same corner. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 

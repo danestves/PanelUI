@@ -37,12 +37,14 @@ import {
   Avatar,
   AreaChart,
   Badge,
+  BookmarkIcon,
   BarChart,
   BellIcon,
   BottomSheet,
   Breadcrumb,
   Button,
   Card,
+  Carousel,
   CardIcon,
   CheckIcon,
   Checkbox,
@@ -611,6 +613,175 @@ function ChartKpiVersion() {
         />
       </View>
     </ChartScreen>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Carousel                                                                   */
+/* -------------------------------------------------------------------------- */
+
+const SCENES = [
+  { title: 'Sunset beach', uri: 'photo-1507525428034-b723cf961d3e' },
+  { title: 'Misty mountains', uri: 'photo-1470071459604-3b5ec3a7fe05' },
+  { title: 'Forest trail', uri: 'photo-1447752875215-b2761acb3c5d' },
+  { title: 'Sunlight in woods', uri: 'photo-1441974231531-c6227db76b6e' },
+  { title: 'Green hills', uri: 'photo-1501854140801-50d01698950b' },
+].map((scene) => ({
+  ...scene,
+  uri: `https://images.unsplash.com/${scene.uri}?auto=format&fit=crop&w=600&q=70`,
+}));
+
+/** A full-width run of cards — the layout for content that is read. */
+function CarouselTrackDemo() {
+  return (
+    <View className="w-full gap-4">
+      <Carousel loop>
+        <Carousel.Content className="h-56">
+          {SCENES.map((scene) => (
+            <Carousel.Item key={scene.title} className="px-2">
+              <View className="h-full w-full overflow-hidden rounded-2xl">
+                <Image source={{ uri: scene.uri }} className="h-full w-full" />
+              </View>
+            </Carousel.Item>
+          ))}
+        </Carousel.Content>
+        <Carousel.Controls className="mt-4" />
+      </Carousel>
+    </View>
+  );
+}
+
+/** The fan. It opens wider while a finger is down, and settles when it lifts. */
+function CarouselInteractiveDemo() {
+  return (
+    <View className="w-full gap-4">
+      <Carousel variant="interactive" itemSize={160} defaultIndex={2}>
+        <Carousel.Content className="h-56">
+          {SCENES.map((scene) => (
+            <Carousel.Item key={scene.title} className="items-center gap-2">
+              <Carousel.Caption>{scene.title}</Carousel.Caption>
+              <Image
+                source={{ uri: scene.uri }}
+                className="h-28 w-28 rounded-xl"
+              />
+            </Carousel.Item>
+          ))}
+        </Carousel.Content>
+        <Carousel.Controls className="mt-2" />
+      </Carousel>
+    </View>
+  );
+}
+
+/** Neighbours turned away in perspective — the layout art wants. */
+function CarouselCoverflowDemo() {
+  return (
+    <View className="w-full gap-4">
+      <Carousel variant="coverflow" itemSize={110} defaultIndex={2}>
+        <Carousel.Content className="h-48">
+          {SCENES.map((scene) => (
+            <Carousel.Item key={scene.title}>
+              <Image
+                source={{ uri: scene.uri }}
+                className="h-32 w-24 rounded-xl"
+              />
+            </Carousel.Item>
+          ))}
+        </Carousel.Content>
+        <Carousel.Controls className="mt-4" />
+      </Carousel>
+    </View>
+  );
+}
+
+const ROLES = [
+  { title: 'Prompt Engineer', rate: '$120/hr', company: 'Northwind', field: 'AI Research' },
+  { title: 'Design Engineer', rate: '$95/hr', company: 'Beacon', field: 'Product' },
+  { title: 'Systems Architect', rate: '$140/hr', company: 'Halcyon', field: 'Infrastructure' },
+  { title: 'Motion Designer', rate: '$88/hr', company: 'Fieldnote', field: 'Brand' },
+];
+
+/**
+ * A deck. Dragging the top card takes it away and reveals the next.
+ *
+ * The pile is the point, so the cards are sized rather than full-width — a card
+ * as wide as the screen has nothing to stack behind it.
+ */
+function CarouselStackDemo() {
+  return (
+    <View className="w-full items-center gap-6">
+      <Carousel variant="stack" itemSize={260}>
+        <Carousel.Content className="h-72">
+          {ROLES.map((role) => (
+            <Carousel.Item key={role.title}>
+              <Card className="w-64 gap-0 overflow-hidden">
+                <Card.Content className="gap-6 pb-4 pt-4">
+                  <View className="flex-row items-start justify-between">
+                    <Text size="sm" muted>
+                      {role.rate}
+                    </Text>
+                    <BookmarkIcon size={16} />
+                  </View>
+
+                  <View className="flex-row items-end justify-between gap-3">
+                    <Text size="2xl" weight="bold" className="flex-1">
+                      {role.title}
+                    </Text>
+                    {/* The rail down the card's edge, standing in for a
+                        scrollbar: the deck's own position, on the deck. */}
+                    <Carousel.Dots orientation="vertical" className="pb-1" />
+                  </View>
+                </Card.Content>
+
+                <Separator />
+
+                <Card.Content className="flex-row items-center justify-between gap-3 py-3">
+                  <View className="flex-1">
+                    <Text size="sm" weight="semibold" numberOfLines={1}>
+                      {role.company}
+                    </Text>
+                    <Text size="xs" muted numberOfLines={1}>
+                      {role.field}
+                    </Text>
+                  </View>
+                  <Button size="sm" className="rounded-full">
+                    View
+                  </Button>
+                </Card.Content>
+              </Card>
+            </Carousel.Item>
+          ))}
+        </Carousel.Content>
+      </Carousel>
+
+      <Text size="sm" muted className="text-center">
+        Drag the top card away to deal the next one.
+      </Text>
+    </View>
+  );
+}
+
+/** Advancing on its own — until a finger lands, after which it stays put. */
+function CarouselAutoplayDemo() {
+  return (
+    <View className="w-full gap-4">
+      <Carousel loop autoplay autoplayInterval={2200}>
+        <Carousel.Content className="h-40">
+          {SCENES.map((scene) => (
+            <Carousel.Item key={scene.title} className="px-2">
+              <View className="h-full w-full overflow-hidden rounded-2xl">
+                <Image source={{ uri: scene.uri }} className="h-full w-full" />
+              </View>
+            </Carousel.Item>
+          ))}
+        </Carousel.Content>
+        <Carousel.Dots className="mt-4 self-center" />
+      </Carousel>
+      <Text size="sm" muted className="text-center">
+        It stops for good once you take hold of it, rather than starting again a
+        moment later.
+      </Text>
+    </View>
   );
 }
 
@@ -6408,6 +6579,19 @@ export const COMPONENTS: ComponentEntry[] = [
           </Card>
         ),
       },
+    ],
+  },
+  {
+    slug: 'carousel',
+    name: 'Carousel',
+    summary: 'A run of slides, one at a time, dragged with a finger',
+    layout: 'pager',
+    demos: [
+      { label: 'A track', render: () => <CarouselTrackDemo /> },
+      { label: 'Interactive', render: () => <CarouselInteractiveDemo /> },
+      { label: 'Coverflow', render: () => <CarouselCoverflowDemo /> },
+      { label: 'A deck of cards', render: () => <CarouselStackDemo /> },
+      { label: 'Autoplay, looping', render: () => <CarouselAutoplayDemo /> },
     ],
   },
   {

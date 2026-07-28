@@ -248,6 +248,21 @@ export {
   type TabsTriggerProps,
   type TabsContentProps,
 } from './components/tabs';
+export {
+  Carousel,
+  useCarouselState,
+  type CarouselProps,
+  type CarouselHandle,
+  type CarouselContentProps,
+  type CarouselItemProps,
+  type CarouselCaptionProps,
+  type CarouselDotsProps,
+  type CarouselArrowProps,
+  type CarouselControlsProps,
+  type CarouselVariant,
+  type CarouselOrientation,
+  type CarouselAlign,
+} from './components/carousel';
 export { Card, type CardProps } from './components/card';
 export { Checkbox, type CheckboxProps } from './components/checkbox';
 export {
@@ -498,12 +513,15 @@ export {
   AppleIcon,
   ArrowUpRightIcon,
   BellIcon,
+  BookmarkIcon,
+  CalendarIcon,
   CardIcon,
   CheckCircleIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChevronUpIcon,
   DownloadIcon,
   EllipsisIcon,
   FacebookIcon,

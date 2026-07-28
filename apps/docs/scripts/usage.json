@@ -608,6 +608,60 @@
       "caption": "Header, content and footer, running in the example app."
     }
   },
+  "carousel": {
+    "intro": "A run of slides, shown one at a time and moved with a finger.\n\nEverything is driven from one value: the position in the run, as a fractional index. `2.4` is two-fifths of the way from the third slide to the fourth, and every slide places itself from its own distance to that number. A drag writes to it, a spring settles it onto a whole slide, and the dots read it.\n\nThat is why the track is a gesture rather than a paging scroll view. A scroll view would serve the plain track well enough, but `coverflow` and `stack` do not lay their slides along a track at all — they hold them in one place and pull them apart with transforms, so there would be nothing to scroll. One mechanism all four layouts read beats a native scroller for one of them and something else for the rest.",
+    "usage": "<Carousel loop>\n  <Carousel.Content className=\"h-56\">\n    {photos.map((photo) => (\n      <Carousel.Item key={photo.id} className=\"px-2\">\n        <Image source={{ uri: photo.uri }} className=\"h-full w-full rounded-2xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n  <Carousel.Controls className=\"mt-4\" />\n</Carousel>",
+    "extraImports": [
+      "Text",
+      "Card",
+      "Button",
+      "Separator",
+      "BookmarkIcon"
+    ],
+    "anatomy": "<Carousel>\n  <Carousel.Content>\n    <Carousel.Item>\n      <Carousel.Caption>…</Carousel.Caption>\n    </Carousel.Item>\n  </Carousel.Content>\n  <Carousel.Controls>\n    <Carousel.Previous />\n    <Carousel.Dots />\n    <Carousel.Next />\n  </Carousel.Controls>\n</Carousel>",
+    "parts": {
+      "Content": "The box the slides live in. Give it a height — nothing inside it is in the layout flow, so it has no height of its own to take. Its alignment is the resting place every slide is offset from.",
+      "Item": "One slide. It reads its own position from the run and takes whatever transform the root's `variant` asks for.",
+      "Caption": "A label shown only while its slide is the active one. It lives inside the slide so it travels with what it names.",
+      "Dots": "One dot per slide, the active one drawn as a bar. Length rather than colour alone carries the position. `orientation=\"vertical\"` runs them down an edge.",
+      "Previous": "Step back. Goes dim and stops responding at the start of a run that does not loop.",
+      "Next": "Step forward. Goes dim and stops responding at the end of a run that does not loop.",
+      "Controls": "The arrows and the dots in one pill, for sitting over the content rather than taking a strip of the layout."
+    },
+    "examples": [
+      {
+        "title": "A track",
+        "description": "The plain layout, and the honest choice for content that is read rather than admired. `loop` runs past the last slide back to the first.",
+        "code": "<Carousel loop>\n  <Carousel.Content className=\"h-56\">\n    {scenes.map((scene) => (\n      <Carousel.Item key={scene.title} className=\"px-2\">\n        <Image source={{ uri: scene.uri }} className=\"h-full w-full rounded-2xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n  <Carousel.Controls className=\"mt-4\" />\n</Carousel>"
+      },
+      {
+        "title": "Interactive",
+        "description": "The run fans out around the middle slide and tilts away on both sides, opening wider while a finger is down and settling when it lifts. Set `itemSize` so the slides overlap.",
+        "code": "<Carousel variant=\"interactive\" itemSize={160} defaultIndex={2}>\n  <Carousel.Content className=\"h-56\">\n    {scenes.map((scene) => (\n      <Carousel.Item key={scene.title} className=\"items-center gap-2\">\n        <Carousel.Caption>{scene.title}</Carousel.Caption>\n        <Image source={{ uri: scene.uri }} className=\"h-28 w-28 rounded-xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n  <Carousel.Controls className=\"mt-2\" />\n</Carousel>"
+      },
+      {
+        "title": "Coverflow",
+        "description": "The neighbours turn away from you in perspective. Best with art — covers, posters, photographs — where the turned edge reads as a shelf rather than as a glitch.",
+        "code": "<Carousel variant=\"coverflow\" itemSize={110} defaultIndex={2}>\n  <Carousel.Content className=\"h-48\">\n    {scenes.map((scene) => (\n      <Carousel.Item key={scene.title}>\n        <Image source={{ uri: scene.uri }} className=\"h-32 w-24 rounded-xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n  <Carousel.Controls className=\"mt-4\" />\n</Carousel>"
+      },
+      {
+        "title": "A deck of cards",
+        "description": "The active card on top, the next two peeking out behind it, and a drag that takes the top one away. Size the cards — a card as wide as the screen has nothing to stack behind it. `Carousel.Dots` turned vertical becomes the rail down the card's edge.",
+        "code": "<Carousel variant=\"stack\" itemSize={260}>\n  <Carousel.Content className=\"h-72\">\n    {roles.map((role) => (\n      <Carousel.Item key={role.title}>\n        <Card className=\"w-64 gap-0 overflow-hidden\">\n          <Card.Content className=\"gap-6 py-4\">\n            <View className=\"flex-row items-start justify-between\">\n              <Text size=\"sm\" muted>{role.rate}</Text>\n              <BookmarkIcon size={16} />\n            </View>\n            <View className=\"flex-row items-end justify-between gap-3\">\n              <Text size=\"2xl\" weight=\"bold\" className=\"flex-1\">{role.title}</Text>\n              <Carousel.Dots orientation=\"vertical\" className=\"pb-1\" />\n            </View>\n          </Card.Content>\n          <Separator />\n          <Card.Content className=\"flex-row items-center justify-between gap-3 py-3\">\n            <View className=\"flex-1\">\n              <Text size=\"sm\" weight=\"semibold\">{role.company}</Text>\n              <Text size=\"xs\" muted>{role.field}</Text>\n            </View>\n            <Button size=\"sm\" className=\"rounded-full\">View</Button>\n          </Card.Content>\n        </Card>\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n</Carousel>"
+      },
+      {
+        "title": "Autoplay",
+        "description": "Advancing on a timer. It stops for good the first time a finger lands rather than pausing — someone who has taken hold of the run is reading it, and having it move again a few seconds later is the behaviour everybody hates.",
+        "code": "<Carousel loop autoplay autoplayInterval={2200}>\n  <Carousel.Content className=\"h-40\">…</Carousel.Content>\n  <Carousel.Dots className=\"mt-4 self-center\" />\n</Carousel>"
+      },
+      {
+        "title": "Controlled",
+        "description": "Pass `index` to drive the run from your own state, or take a ref for `next`, `previous` and `scrollTo` without holding the index yourself.",
+        "code": "const carousel = useRef<CarouselHandle>(null);\nconst [index, setIndex] = useState(0);\n\n<Carousel index={index} onIndexChange={setIndex} ref={carousel}>\n  …\n</Carousel>\n\n<Button onPress={() => carousel.current?.next()}>Skip</Button>"
+      }
+    ],
+    "notes": "**One value drives all four layouts.** The position in the run is a fractional index on the UI thread, and each slide styles itself from its distance to it — so `default` and `coverflow` are the same component with different arithmetic rather than two different trees.\n\n**Give `Carousel.Content` a height.** Every slide is absolutely positioned, so nothing inside it is in the layout flow and it has no height of its own to take.\n\n**`itemSize` is the length along the direction of travel.** It defaults to the carousel's own box, which is what a full-width slide wants. Set it smaller for a run that shows more than one slide at a time, and for `interactive`, where the overlap is the effect.\n\n**Depth is faked, deliberately.** React Native's transform has `perspective` and `rotateY` but no `translateZ`, so a slide in `coverflow` is made to look further away with scale, opacity and z-order rather than actually being moved back.\n\n**A short flick and a long drag both move one slide.** Either passing a fraction of a slide or exceeding a velocity counts as a move, and the step is measured from the slide the drag started on — rounding the current position would let a slow drag that never reached the threshold still count.\n\n**Autoplay does not resume.** The first touch ends it for the session.\n\n**`stack` is always dealt sideways**, whatever `orientation` says. A deck has no track to travel along."
+  },
   "checkbox": {
     "intro": "A checkbox with an animated check. `variant=\"card\"` turns the whole surface into the target, for pickable options where the box confirms a choice rather than being the affordance.",
     "usage": "<Checkbox\n  checked={accepted}\n  onCheckedChange={setAccepted}\n  label=\"Marketing & promotions\"\n  description=\"Special offers and exclusive deals\"\n/>\n\n<Checkbox\n  variant=\"card\"\n  checked={plan === 'pro'}\n  onCheckedChange={() => setPlan('pro')}\n  label=\"Pro\"\n  description=\"Advanced analytics and priority support.\"\n/>",

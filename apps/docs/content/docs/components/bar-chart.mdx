@@ -46,6 +46,7 @@ npx panelui-cli@latest add bar-chart
 </BarChart>
 ```
 
+- **`BarChart.Header`** — See props below.
 - **`BarChart.Grid`** — Lines across the value axis, so a bar can be read against a number and not only against the bar beside it.
 - **`BarChart.Bar`** — One series. Every bar in it is a subpath of a single animated path, split in two so the band under the finger keeps full ink while the rest fade.
 - **`BarChart.XAxis`** — Category labels under the bands. Real text, so they follow the theme’s font and the platform’s text scaling.
@@ -229,6 +230,17 @@ Horizontal bars, for category names that need the room.
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `labels` | `Record<string, string>` | — | Prettier names for the series keys. |
+
+### BarChart.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | — | Small line above the value — what the chart is of. |
+| `value` | `string` | — | The readout. The largest thing on the card, and the first thing read. |
+| `caption` | `string` | — | One muted line under the value — a period, a comparison, a total. |
+| `labels` | `Record<string, string>` | — | Prettier names for the series keys, as the legend takes. |
+| `legend` | `boolean` | `false` | Draw a swatch and a name per series along the trailing edge. Prefer this to `BarChart.Legend` on a chart that has a header: the legend floats over the plot, where it competes with the bars for the same corner. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 

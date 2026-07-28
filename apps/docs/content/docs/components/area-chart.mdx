@@ -47,6 +47,7 @@ npx panelui-cli@latest add area-chart
 </AreaChart>
 ```
 
+- **`AreaChart.Header`** — See props below.
 - **`AreaChart.Grid`** — Horizontal rules, so a band can be read against a number.
 - **`AreaChart.Area`** — One filled band, with the line along its top edge. The fill is a downward gradient by default, so the top edge stays the darkest thing in the band.
 - **`AreaChart.XAxis`** — The x labels. Real text, so they follow the theme’s font and the platform’s text scaling.
@@ -220,6 +221,17 @@ Alternatives rather than parts, so the fills go translucent and both bands stay 
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `labels` | `Record<string, string>` | — | Prettier names for the series keys. |
+
+### AreaChart.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | — | Small line above the value — what the chart is of. |
+| `value` | `string` | — | The readout. The largest thing on the card, and the first thing read. |
+| `caption` | `string` | — | One muted line under the value — a period, a comparison, a total. |
+| `labels` | `Record<string, string>` | — | Prettier names for the series keys, as the legend takes. |
+| `legend` | `boolean` | `false` | Draw a swatch and a name per series along the trailing edge, in the order the bands appear on a stack. Prefer this to `AreaChart.Legend` on a chart that has a header: the legend floats over the plot, where a tall band and a key end up in the same corner. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 

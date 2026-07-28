@@ -66,6 +66,15 @@
     "Content surface with header, body and footer.",
     "react native card"
   ],
+  "carousel": [
+    "Carousel",
+    "A run of slides, one at a time, dragged with a finger.",
+    "react native carousel",
+    {
+      "addedIn": "0.27.0",
+      "alpha": true
+    }
+  ],
   "checkbox": [
     "Checkbox",
     "Animated checkbox, as a row or a selectable card.",

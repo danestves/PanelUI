@@ -120,6 +120,16 @@
     ]
   },
   {
+    "name": "carousel",
+    "type": "registry:ui",
+    "description": "A run of slides, one at a time, dragged with a finger.",
+    "registryDependencies": [
+      "cn",
+      "icons",
+      "text"
+    ]
+  },
+  {
     "name": "chart",
     "type": "registry:lib",
     "description": "Scales, monotone curves and path building. Shared by every chart.",

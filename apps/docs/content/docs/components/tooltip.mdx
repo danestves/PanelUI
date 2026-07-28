@@ -50,8 +50,8 @@ npx panelui-cli@latest add tooltip
 </Tooltip>
 ```
 
-- **`Tooltip.Trigger`** — Wraps a single child and reveals the label on it — a long press by default, a press when the root asks for one. It is also what gets measured, so the label knows where to sit.
-- **`Tooltip.Content`** — The label. Portaled above everything else, positioned against the trigger, and flipped or slid to stay inside the safe area. A string child is wrapped in `Tooltip.Text` for you.
+- **`Tooltip.Trigger`** — Wraps a single child and reveals the label on it — a long press by default, a press when the root asks for one. It is also what gets measured, so the label knows where to sit; the wrapper shrinks to the child rather than filling the row, so the label is anchored to the control.
+- **`Tooltip.Content`** — The label. Portaled above everything else, positioned against the trigger, and flipped or slid to stay inside the safe area. Text written directly inside it is wrapped in `Tooltip.Text` for you, so an arrow followed by a line of text needs no ceremony.
 - **`Tooltip.Arrow`** — Optional point towards the trigger. Follows the resolved side, so it stays correct after a flip.
 - **`Tooltip.Text`** — The label's default text, sized and inverted against the dark surface. Compose it yourself when the label holds more than a single run of text.
 
@@ -140,6 +140,7 @@ const [open, setOpen] = useState(false);
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `className` | `string` | — | Classes on the wrapper the child is measured through. It shrinks to the child by default; widen it only if the label should be anchored to something bigger than the control. |
 | `onPress` | `(...args: unknown[]) => void` | — |  |
 | `onLongPress` | `(...args: unknown[]) => void` | — |  |
 | `accessibilityLabel` | `string` | — |  |
@@ -170,6 +171,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 **The label is measured before it is shown.** Its size is not known until it has laid out once, so the first frame is laid out off-screen and the entrance starts from the frame after. That entrance is driven by hand rather than by a preset, because it has to start from whichever side was resolved.
 
 **The arrow points at the trigger, not the label.** When `align` shifts the label off-centre, or a clamp slides it back on screen, the arrow tracks the trigger's centre rather than the label's middle.
+
+**The trigger wrapper shrinks to its child.** A view fills its parent by default, and a wrapper that filled the row would be measured as the whole row — putting a centred label over the middle of the screen instead of over the control. Pass `className` to `Tooltip.Trigger` if you want it anchored to something wider.
 
 **The trigger is measured on every open**, not once on layout — a trigger inside a scroll view has moved since it was laid out, and a stale rectangle anchors the label to where it used to be.
 
