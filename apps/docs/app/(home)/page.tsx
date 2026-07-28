@@ -25,6 +25,10 @@ import {
 } from '@/components/ui/card';
 import { CopyInstall } from '@/components/copy-install';
 import { absoluteUrl, site } from '@/lib/site';
+import meta from '@/scripts/meta.json';
+
+/** `[name, summary, keyword]`, optionally followed by an options object. */
+type MetaEntry = [string, string, string, { group?: string }?];
 
 export const metadata: Metadata = {
   title: `${site.name} — ${site.tagline}`,
@@ -67,33 +71,28 @@ const FEATURES = [
   },
 ];
 
-const COMPONENTS = [
-  ['Accordion', 'accordion'], ['Alert', 'alert'], ['Attachment', 'attachment'],
-  ['AreaChart', 'area-chart'], ['Avatar', 'avatar'], ['Badge', 'badge'],
-  ['BarChart', 'bar-chart'], ['BottomSheet', 'bottom-sheet'], ['Button', 'button'],
-  ['Card', 'card'], ['Checkbox', 'checkbox'], ['Dialog', 'dialog'],
-  ['Direction', 'direction'],
-  ['EmptyState', 'empty-state'], ['Frame', 'frame'],
-  ['Input', 'input'], ['InputGroup', 'input-group'], ['Item', 'item'],
-  ['Label', 'label'], ['LineChart', 'line-chart'], ['Loader', 'loader'],
-  ['Marker', 'marker'],
-  ['Message', 'message'], ['MessageScroller', 'message-scroller'], ['Popover', 'popover'],
-  ['Progress', 'progress'], ['RadioGroup', 'radio-group'], ['RingChart', 'ring-chart'],
-  ['ScrollFade', 'scroll-fade'],
-  ['SectionRail', 'section-rail'], ['Select', 'select'], ['Separator', 'separator'],
-  ['Shimmer', 'shimmer'],
-  ['Skeleton', 'skeleton'], ['Slider', 'slider'], ['Soundwave', 'soundwave'],
-  ['Spinner', 'spinner'],
-  ['Steps', 'steps'],
-  ['Surface', 'surface'], ['Switch', 'switch'], ['Tabs', 'tabs'],
-  ['Timeline', 'timeline'], ['Toast', 'toast'], ['ToggleButton', 'toggle-button'],
-  ['Typography', 'typography'],
-] as const;
-
 /**
- * Derived, not written down. The count appeared in three places and had
- * already drifted apart in two of them.
+ * Read from the same file the documentation is generated from, rather than
+ * listed here.
+ *
+ * The count was already derived from this list, which only moved the problem:
+ * the list itself was written by hand, so it went stale every time a component
+ * shipped and quietly took the headline number down with it. A component now
+ * appears here because it has a page, which is the thing the number is
+ * actually claiming.
+ *
+ * The group decides the URL as well as the sidebar section, so it is read
+ * rather than assumed — an entry filed under `ai-components` does not live at
+ * `/docs/components/…`.
  */
+const COMPONENTS = Object.entries(meta as unknown as Record<string, MetaEntry>)
+  .map(([slug, [name, , , options]]) => ({
+    slug,
+    name,
+    href: `/docs/${options?.group ?? 'components'}/${slug}`,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
 const COMPONENT_COUNT = COMPONENTS.length;
 
 const THEMES = [
@@ -228,10 +227,10 @@ export default function HomePage() {
           </div>
 
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            {COMPONENTS.map(([name, slug]) => (
+            {COMPONENTS.map(({ name, slug, href }) => (
               <li key={slug}>
                 <Link
-                  href={`/docs/components/${slug}`}
+                  href={href}
                   className="flex items-center justify-between rounded-lg border bg-card px-4 py-3 text-sm transition-colors hover:bg-accent"
                 >
                   {name}
