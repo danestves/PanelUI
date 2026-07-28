@@ -543,7 +543,7 @@ function CarouselItem({ className, children, style, ...props }: CarouselItemProp
       const open = engaged.value;
       const spread = d * itemSize;
       const lift = d * 24 * open;
-      const inactive = 0.8 - open * 0.15;
+      const inactive = 0.78 - open * 0.15;
       return {
         opacity: a > 3 ? 0 : 1,
         zIndex: Math.round(100 - a * 10),
@@ -551,7 +551,17 @@ function CarouselItem({ className, children, style, ...props }: CarouselItemProp
           { translateX: horizontal ? spread : lift },
           { translateY: horizontal ? lift : spread },
           { rotate: `${d * (5 + open * 15)}deg` },
-          { scale: interpolate(a, [0, 1], [1.05, inactive], Extrapolation.CLAMP) },
+          /*
+           * The slide in the middle rests at exactly 1, and the fan's depth
+           * comes from the others shrinking rather than from it growing.
+           *
+           * Scaling it up instead is what made its caption soft. Text is
+           * rasterised at its layout size and then scaled by the compositor,
+           * so a label on a slide held at 1.05 is drawn at the wrong raster
+           * size for as long as it is the active one — which is the whole time
+           * it is readable, since every other caption has faded out.
+           */
+          { scale: interpolate(a, [0, 1], [1, inactive], Extrapolation.CLAMP) },
         ],
       };
     }
@@ -618,12 +628,15 @@ function CarouselCaption({ className, children, ...props }: CarouselCaptionProps
    * of grey text sitting on top of the neighbouring picture — which reads as a
    * rendering fault rather than as a transition.
    */
+  /*
+   * Opacity only. A scale here would compound with the slide's own — the
+   * caption is inside it — and the text would be resampled twice, once for
+   * each. The slide already carries all the movement this needs to read as
+   * belonging to the picture.
+   */
   const animated = useAnimatedStyle(() => {
     const a = Math.abs(distance(index, progress.value, count, loop));
-    return {
-      opacity: interpolate(a, [0, 0.3], [1, 0], Extrapolation.CLAMP),
-      transform: [{ scale: interpolate(a, [0, 1], [1, 0.75], Extrapolation.CLAMP) }],
-    };
+    return { opacity: interpolate(a, [0, 0.3], [1, 0], Extrapolation.CLAMP) };
   });
 
   return (

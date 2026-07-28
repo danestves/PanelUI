@@ -791,11 +791,12 @@ function DatePickerSheetDemo() {
 /* -------------------------------------------------------------------------- */
 
 const SCENES = [
-  { title: 'Sunset beach', uri: 'photo-1507525428034-b723cf961d3e' },
-  { title: 'Misty mountains', uri: 'photo-1470071459604-3b5ec3a7fe05' },
-  { title: 'Forest trail', uri: 'photo-1447752875215-b2761acb3c5d' },
-  { title: 'Sunlight in woods', uri: 'photo-1441974231531-c6227db76b6e' },
-  { title: 'Green hills', uri: 'photo-1501854140801-50d01698950b' },
+  { title: 'Desert dunes', uri: 'photo-1509316785289-025f5b846b35' },
+  { title: 'Northern lights', uri: 'photo-1483347756197-71ef80e95f73' },
+  { title: 'Still harbour', uri: 'photo-1502082553048-f009c37129b9' },
+  { title: 'Canyon road', uri: 'photo-1469854523086-cc02fe5d8800' },
+  { title: 'Alpine lake', uri: 'photo-1454391304352-2bf4678b1a7a' },
+  { title: 'City at dusk', uri: 'photo-1493246507139-91e8fad9978e' },
 ].map((scene) => ({
   ...scene,
   uri: `https://images.unsplash.com/${scene.uri}?auto=format&fit=crop&w=600&q=70`,
@@ -839,6 +840,33 @@ function CarouselInteractiveDemo() {
         </Carousel.Content>
         <Carousel.Controls className="mt-2" />
       </Carousel>
+    </View>
+  );
+}
+
+/**
+ * The same fan with nothing under it.
+ *
+ * No arrows and no dots — the run is dragged and nothing else, which is the
+ * right shape when the pictures are the whole point and a control bar would be
+ * the only chrome on the screen.
+ */
+function CarouselBareDemo() {
+  return (
+    <View className="w-full gap-4">
+      <Carousel variant="interactive" itemSize={160} defaultIndex={2}>
+        <Carousel.Content className="h-56">
+          {SCENES.map((scene) => (
+            <Carousel.Item key={scene.title} className="items-center gap-2">
+              <Carousel.Caption>{scene.title}</Carousel.Caption>
+              <Image source={{ uri: scene.uri }} className="h-28 w-28 rounded-xl" />
+            </Carousel.Item>
+          ))}
+        </Carousel.Content>
+      </Carousel>
+      <Text size="sm" muted className="text-center">
+        Drag it. There is nothing else to press.
+      </Text>
     </View>
   );
 }
@@ -6772,6 +6800,7 @@ export const COMPONENTS: ComponentEntry[] = [
     demos: [
       { label: 'A track', render: () => <CarouselTrackDemo /> },
       { label: 'Interactive', render: () => <CarouselInteractiveDemo /> },
+      { label: 'Interactive, bare', render: () => <CarouselBareDemo /> },
       { label: 'Coverflow', render: () => <CarouselCoverflowDemo /> },
       { label: 'A deck of cards', render: () => <CarouselStackDemo /> },
       { label: 'Autoplay, looping', render: () => <CarouselAutoplayDemo /> },
