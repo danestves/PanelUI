@@ -1110,26 +1110,29 @@ function BarChartHeader({
   return (
     <View
       {...props}
-      className={cn('flex-row items-start justify-between gap-3 pb-2', className)}
+      className={cn('flex-row items-start justify-between gap-3 pb-3', className)}
     >
-      <View className="shrink gap-0.5">
+      <View className="flex-1 gap-0.5">
         {title ? (
           <Text size="xs" muted>
             {title}
           </Text>
         ) : null}
         {value ? (
-          <Text size="2xl" weight="bold">
+          <Text size="xl" weight="bold">
             {value}
           </Text>
         ) : null}
         {caption ? (
-          <Text size="sm" muted>
+          <Text size="xs" muted>
             {caption}
           </Text>
         ) : null}
       </View>
-      {trailing ? <View className="shrink-0 pt-1">{trailing}</View> : null}
+      {/* Shrinkable, unlike a view's default in React Native. Held rigid, a
+          three-series key takes the width it wants and the caption underneath
+          the value wraps to two lines to make room for it. */}
+      {trailing ? <View className="shrink pt-1">{trailing}</View> : null}
     </View>
   );
 }

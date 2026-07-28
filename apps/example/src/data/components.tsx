@@ -186,11 +186,23 @@ export interface Demo {
   fullBleed?: boolean;
 }
 
+/**
+ * How a component's detail screen lays its demos out.
+ *
+ * `sections` stacks them down one scroll behind hairlines — right when the
+ * variants are meant to be compared side by side, and a burial when they are
+ * not. `pager` gives each one the screen instead, swiped vertically, with a
+ * rail in the corner standing in for the scrollbar and naming what is where.
+ */
+export type ComponentLayout = 'sections' | 'pager';
+
 export interface ComponentEntry {
   slug: string;
   name: string;
   /** One-line summary, shown under the name in the list. */
   summary: string;
+  /** Defaults to `sections`. */
+  layout?: ComponentLayout;
   demos: Demo[];
 }
 
@@ -5323,7 +5335,7 @@ function BarChartGroupedVersion() {
               caption={
                 active
                   ? `${active.month} · ${money(active.costs)} out`
-                  : `Eight months · ${money(BAR_TOTALS.costs)} out`
+                  : `8 months · ${money(BAR_TOTALS.costs)} out`
               }
               labels={{ revenue: 'Revenue', costs: 'Costs' }}
               legend
@@ -5347,7 +5359,7 @@ function BarChartGroupedVersion() {
             <BarChart.Header
               className={CHART_HEADER}
               value={money(BAR_TOTALS.revenue + BAR_TOTALS.costs)}
-              caption="Read as a total rather than as a comparison"
+              caption="A total, not a comparison"
               labels={{ revenue: 'Revenue', costs: 'Costs' }}
               legend
             />
@@ -5384,7 +5396,7 @@ function BarChartHorizontalVersion() {
             <BarChart.Header
               className={CHART_HEADER}
               value={sent.toLocaleString()}
-              caption="Sideways, so the channel names have room to be read"
+              caption="Sideways · names have room"
             />
             <BarChart.Grid />
             <BarChart.Bar dataKey="sent" colorIndex={3} />
@@ -5428,8 +5440,8 @@ function AreaChartStackedVersion() {
               value={total.toLocaleString()}
               caption={
                 active
-                  ? `${active.hour} · sessions this hour`
-                  : 'Across the day · the top edge is the total'
+                  ? `${active.hour} · this hour`
+                  : 'Across the day'
               }
               labels={{ direct: 'Direct', search: 'Search', social: 'Social' }}
               legend
@@ -5461,7 +5473,7 @@ function AreaChartOverlaidVersion() {
             <AreaChart.Header
               className={CHART_HEADER}
               value="600"
-              caption="Unstacked, the bands overlay and their fills go translucent"
+              caption="Unstacked · bands overlay"
               labels={{ direct: 'Direct', search: 'Search' }}
               legend
             />
@@ -7298,6 +7310,7 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'item',
     name: 'Item',
     summary: 'Row of media, text and actions',
+    layout: 'pager',
     demos: [
       {
         label: 'Variants',
