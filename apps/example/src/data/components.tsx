@@ -5283,24 +5283,30 @@ const GOALS: RingDatum[] = [
 ];
 
 /** Two series side by side, which is what a bar chart is for. */
+/** Padding the header needs to line up inside a `Frame.Panel`, which has none. */
+const CHART_HEADER = 'px-4 pt-3.5';
+
+const BAR_TOTALS = BAR_REVENUE.reduce(
+  (running, month) => ({
+    revenue: running.revenue + month.revenue,
+    costs: running.costs + month.costs,
+  }),
+  { revenue: 0, costs: 0 }
+);
+
+const money = (value: number) => `£${value.toLocaleString()}`;
+
 function BarChartGroupedVersion() {
   const [active, setActive] = useState<(typeof BAR_REVENUE)[number] | null>(null);
 
   return (
     <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
-      <View className="gap-1">
-        <Text size="lg" weight="semibold">
-          Revenue and costs
-        </Text>
-        <Text size="sm" muted>
-          {active
-            ? `${active.month} · £${active.revenue.toLocaleString()} in, £${active.costs.toLocaleString()} out`
-            : 'Drag across the chart to read a month.'}
-        </Text>
-      </View>
-
-      <Card>
-        <Card.Content>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Revenue and costs</Frame.Title>
+          <Frame.Action>Drag to inspect</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
           <BarChart
             data={BAR_REVENUE}
             xDataKey="month"
@@ -5309,48 +5315,65 @@ function BarChartGroupedVersion() {
               setActive(datum as (typeof BAR_REVENUE)[number] | null)
             }
           >
+            {/* The value follows the finger and falls back to the total, which
+                is why it is passed in rather than derived by the header. */}
+            <BarChart.Header
+              className={CHART_HEADER}
+              value={money(active ? active.revenue : BAR_TOTALS.revenue)}
+              caption={
+                active
+                  ? `${active.month} · ${money(active.costs)} out`
+                  : `Eight months · ${money(BAR_TOTALS.costs)} out`
+              }
+              labels={{ revenue: 'Revenue', costs: 'Costs' }}
+              legend
+            />
             <BarChart.Grid />
             <BarChart.Bar dataKey="revenue" />
             <BarChart.Bar dataKey="costs" colorIndex={2} />
             <BarChart.XAxis />
-            <BarChart.Legend labels={{ revenue: 'Revenue', costs: 'Costs' }} />
-            <BarChart.Tooltip formatValue={(value) => `£${value.toLocaleString()}`} />
+            <BarChart.Tooltip formatValue={money} />
           </BarChart>
-        </Card.Content>
-      </Card>
+        </Frame.Panel>
+      </Frame>
 
-      <Card>
-        <Card.Header>
-          <Card.Title>Stacked</Card.Title>
-          <Card.Description>
-            The same two series read as a total instead of as a comparison.
-          </Card.Description>
-        </Card.Header>
-        <Card.Content>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Stacked</Frame.Title>
+          <Frame.Action>Same two series</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
           <BarChart data={BAR_REVENUE} xDataKey="month" stacked stackGap={2} aspectRatio={2}>
+            <BarChart.Header
+              className={CHART_HEADER}
+              value={money(BAR_TOTALS.revenue + BAR_TOTALS.costs)}
+              caption="Read as a total rather than as a comparison"
+              labels={{ revenue: 'Revenue', costs: 'Costs' }}
+              legend
+            />
             <BarChart.Grid />
             <BarChart.Bar dataKey="costs" colorIndex={2} />
             <BarChart.Bar dataKey="revenue" />
             <BarChart.XAxis />
           </BarChart>
-        </Card.Content>
-      </Card>
+        </Frame.Panel>
+      </Frame>
     </ScrollView>
   );
 }
 
 /** Sideways, which is what long category names need. */
 function BarChartHorizontalVersion() {
+  const sent = CHANNELS.reduce((total, channel) => total + channel.sent, 0);
+
   return (
     <View className="flex-1 justify-center p-4">
-      <Card>
-        <Card.Header>
-          <Card.Title>Messages sent</Card.Title>
-          <Card.Description>
-            Sideways, so the category names have room to be read.
-          </Card.Description>
-        </Card.Header>
-        <Card.Content>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Messages sent</Frame.Title>
+          <Frame.Action>Last 30 days</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
           <BarChart
             data={CHANNELS}
             xDataKey="name"
@@ -5358,13 +5381,18 @@ function BarChartHorizontalVersion() {
             aspectRatio={1.4}
             barGap={0.35}
           >
+            <BarChart.Header
+              className={CHART_HEADER}
+              value={sent.toLocaleString()}
+              caption="Sideways, so the channel names have room to be read"
+            />
             <BarChart.Grid />
             <BarChart.Bar dataKey="sent" colorIndex={3} />
             <BarChart.YAxis />
             <BarChart.Tooltip />
           </BarChart>
-        </Card.Content>
-      </Card>
+        </Frame.Panel>
+      </Frame>
     </View>
   );
 }
@@ -5372,23 +5400,20 @@ function BarChartHorizontalVersion() {
 /** Stacked areas, where the top edge is the whole and each band is a share. */
 function AreaChartStackedVersion() {
   const [active, setActive] = useState<(typeof AREA_TRAFFIC)[number] | null>(null);
-  const total = active ? active.direct + active.search + active.social : null;
+  const day = AREA_TRAFFIC.reduce(
+    (total, hour) => total + hour.direct + hour.search + hour.social,
+    0
+  );
+  const total = active ? active.direct + active.search + active.social : day;
 
   return (
     <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
-      <View className="gap-1">
-        <Text size="lg" weight="semibold">
-          Sessions by channel
-        </Text>
-        <Text size="sm" muted>
-          {active
-            ? `${active.hour} · ${total?.toLocaleString()} sessions`
-            : 'Stacked, so the top edge is the total and each band is its share.'}
-        </Text>
-      </View>
-
-      <Card>
-        <Card.Content>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Sessions by channel</Frame.Title>
+          <Frame.Action>Drag to inspect</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
           <AreaChart
             data={AREA_TRAFFIC}
             xDataKey="hour"
@@ -5398,18 +5423,26 @@ function AreaChartStackedVersion() {
               setActive(datum as (typeof AREA_TRAFFIC)[number] | null)
             }
           >
+            <AreaChart.Header
+              className={CHART_HEADER}
+              value={total.toLocaleString()}
+              caption={
+                active
+                  ? `${active.hour} · sessions this hour`
+                  : 'Across the day · the top edge is the total'
+              }
+              labels={{ direct: 'Direct', search: 'Search', social: 'Social' }}
+              legend
+            />
             <AreaChart.Grid />
             <AreaChart.Area dataKey="direct" />
             <AreaChart.Area dataKey="search" colorIndex={2} />
             <AreaChart.Area dataKey="social" colorIndex={3} />
             <AreaChart.XAxis ticks={5} />
-            <AreaChart.Legend
-              labels={{ direct: 'Direct', search: 'Search', social: 'Social' }}
-            />
             <AreaChart.Tooltip />
           </AreaChart>
-        </Card.Content>
-      </Card>
+        </Frame.Panel>
+      </Frame>
     </ScrollView>
   );
 }
@@ -5418,16 +5451,20 @@ function AreaChartStackedVersion() {
 function AreaChartOverlaidVersion() {
   return (
     <View className="flex-1 justify-center p-4">
-      <Card>
-        <Card.Header>
-          <Card.Title>Two plans compared</Card.Title>
-          <Card.Description>
-            Unstacked, the bands overlay and their fills go translucent — these are
-            alternatives, not parts of a total.
-          </Card.Description>
-        </Card.Header>
-        <Card.Content>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Two plans compared</Frame.Title>
+          <Frame.Action>Peak hour</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
           <AreaChart data={AREA_TRAFFIC} xDataKey="hour" aspectRatio={1.6}>
+            <AreaChart.Header
+              className={CHART_HEADER}
+              value="600"
+              caption="Unstacked, the bands overlay and their fills go translucent"
+              labels={{ direct: 'Direct', search: 'Search' }}
+              legend
+            />
             <AreaChart.Grid />
             <AreaChart.Area dataKey="search" colorIndex={2} />
             <AreaChart.Area dataKey="direct" />
@@ -5435,8 +5472,8 @@ function AreaChartOverlaidVersion() {
             <AreaChart.YAxis />
             <AreaChart.Tooltip />
           </AreaChart>
-        </Card.Content>
-      </Card>
+        </Frame.Panel>
+      </Frame>
     </View>
   );
 }

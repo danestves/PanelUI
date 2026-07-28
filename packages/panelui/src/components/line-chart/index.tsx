@@ -106,7 +106,7 @@ const PADDING = { top: 12, right: 10, bottom: 22, left: 10 };
  * stays a flat list of children instead of two nested slots the caller has to
  * remember the order of.
  */
-type Layer = 'svg' | 'overlay';
+type Layer = 'svg' | 'overlay' | 'header';
 
 export type LineChartStatus = 'loading' | 'ready';
 export type LineChartCurve = 'monotone' | 'linear';
@@ -388,39 +388,43 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
     ]
   );
 
-  const { svg, overlay } = partition(children);
+  const { svg, overlay, header } = partition(children);
 
+  /*
+   * Two views, because the header is not part of the plot. `aspectRatio` and
+   * the layout measurement belong to the drawing area alone — measured on the
+   * outer view they would take in the header too, and the plot would lose as
+   * much height as the readout took while still claiming the shape asked for.
+   */
   return (
     <LineChartContext.Provider value={context}>
-      <View
-        {...props}
-        onLayout={onLayout}
-        style={[{ aspectRatio }, props.style]}
-        className={cn('w-full', className)}
-      >
-        {plot.width > 0 ? (
-          <>
-            <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-              <Defs>
-                {/*
-                 * One clip for everything in the plot. Sharing it is what makes
-                 * the reveal read as the chart arriving, rather than as three
-                 * separate things animating in at once.
-                 */}
-                <ClipPath id={clipId}>
-                  <AnimatedRect
-                    x={plot.left}
-                    y={0}
-                    height={size.height}
-                    animatedProps={clipProps}
-                  />
-                </ClipPath>
-              </Defs>
-              {svg}
-            </Svg>
-            {overlay}
-          </>
-        ) : null}
+      <View {...props} style={props.style} className={cn('w-full', className)}>
+        {header}
+        <View onLayout={onLayout} style={{ aspectRatio }} className="w-full">
+          {plot.width > 0 ? (
+            <>
+              <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+                <Defs>
+                  {/*
+                   * One clip for everything in the plot. Sharing it is what
+                   * makes the reveal read as the chart arriving, rather than as
+                   * three separate things animating in at once.
+                   */}
+                  <ClipPath id={clipId}>
+                    <AnimatedRect
+                      x={plot.left}
+                      y={0}
+                      height={size.height}
+                      animatedProps={clipProps}
+                    />
+                  </ClipPath>
+                </Defs>
+                {svg}
+              </Svg>
+              {overlay}
+            </>
+          ) : null}
+        </View>
       </View>
     </LineChartContext.Provider>
   );
@@ -431,18 +435,19 @@ LineChartRoot.displayName = 'LineChart';
 function partition(children: ReactNode) {
   const svg: ReactNode[] = [];
   const overlay: ReactNode[] = [];
+  const header: ReactNode[] = [];
 
   Children.forEach(children, (child, index) => {
     if (!isValidElement(child)) return;
     const layer = (child.type as { layer?: Layer }).layer ?? 'svg';
-    (layer === 'overlay' ? overlay : svg).push(
+    (layer === 'header' ? header : layer === 'overlay' ? overlay : svg).push(
       // Children of a `Children.forEach` need keys of their own once they are
       // put into a new array.
       <ChildSlot key={index}>{child}</ChildSlot>
     );
   });
 
-  return { svg, overlay };
+  return { svg, overlay, header };
 }
 
 /** Identity wrapper, purely so the partitioned arrays can carry keys. */
@@ -1018,26 +1023,122 @@ export interface LineChartLegendProps extends ViewProps {
  */
 function LineChartLegend({ className, labels, ...props }: LineChartLegendProps) {
   const { series } = useChart('LineChart.Legend');
+  if (!series.length) return null;
 
   return (
     <View
-      pointerEvents="none"
       className={cn('absolute left-2.5 top-0 flex-row flex-wrap items-center gap-4', className)}
       {...props}
+      style={[{ pointerEvents: 'none' }, props.style]}
     >
       {series.map(([key, color]) => (
-        <View key={key} className="flex-row items-center gap-1.5">
-          <View style={{ backgroundColor: color }} className="h-2 w-2 rounded-full" />
-          <Text size="xs" muted>
-            {labels?.[key] ?? key}
-          </Text>
-        </View>
+        <SeriesSwatch key={key} color={color} label={labels?.[key] ?? key} />
       ))}
     </View>
   );
 }
 LineChartLegend.displayName = 'LineChart.Legend';
 LineChartLegend.layer = 'overlay' as Layer;
+
+/** One series' colour and name. Shared by the legend and the header. */
+function SeriesSwatch({ color, label }: { color: string; label: string }) {
+  return (
+    <View className="flex-row items-center gap-1.5">
+      <View style={{ backgroundColor: color }} className="h-2 w-2 rounded-full" />
+      <Text size="xs" muted>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Header layer                                                               */
+/* -------------------------------------------------------------------------- */
+
+export interface LineChartHeaderProps extends ViewProps {
+  className?: string;
+  /** Small line above the value — what the chart is of. */
+  title?: string;
+  /** The readout. The largest thing on the card, and the first thing read. */
+  value?: string;
+  /** One muted line under the value — a period, a comparison, a total. */
+  caption?: string;
+  /** Prettier names for the series keys, as the legend takes. */
+  labels?: Record<string, string>;
+  /**
+   * Draw a swatch and a name per series along the trailing edge. Prefer this to
+   * `LineChart.Legend` on a chart that has a header: the legend floats over the
+   * plot, where it competes with the lines for the same corner.
+   */
+  legend?: boolean;
+  /** Trailing slot — a control, a badge, a range picker. Wins over `legend`. */
+  children?: ReactNode;
+}
+
+/**
+ * The strip above the plot: what the chart is of, what it currently reads, and
+ * what the colours mean.
+ *
+ * It belongs to the chart rather than to the card around it because it is about
+ * the *plot* — the number changes as a finger moves along the line, and the
+ * legend is the series list the chart itself is holding. The card's header is a
+ * caption on the tray the chart sits in; this is the chart introducing itself.
+ *
+ * The value is not derived here. A readout that follows the finger belongs to
+ * whoever owns the data — take it from `onActiveIndexChange` and pass the
+ * formatted string down, so one header can show a total when nothing is pressed
+ * and a point's value when something is.
+ */
+function LineChartHeader({
+  className,
+  title,
+  value,
+  caption,
+  labels,
+  legend = false,
+  children,
+  ...props
+}: LineChartHeaderProps) {
+  const { series } = useChart('LineChart.Header');
+  const trailing =
+    children ??
+    (legend && series.length ? (
+      <View className="flex-row flex-wrap items-center justify-end gap-x-3 gap-y-1">
+        {series.map(([key, color]) => (
+          <SeriesSwatch key={key} color={color} label={labels?.[key] ?? key} />
+        ))}
+      </View>
+    ) : null);
+
+  return (
+    <View
+      {...props}
+      className={cn('flex-row items-start justify-between gap-3 pb-2', className)}
+    >
+      <View className="shrink gap-0.5">
+        {title ? (
+          <Text size="xs" muted>
+            {title}
+          </Text>
+        ) : null}
+        {value ? (
+          <Text size="2xl" weight="bold">
+            {value}
+          </Text>
+        ) : null}
+        {caption ? (
+          <Text size="sm" muted>
+            {caption}
+          </Text>
+        ) : null}
+      </View>
+      {trailing ? <View className="shrink-0 pt-1">{trailing}</View> : null}
+    </View>
+  );
+}
+LineChartHeader.displayName = 'LineChart.Header';
+LineChartHeader.layer = 'header' as Layer;
 
 /* -------------------------------------------------------------------------- */
 /* Scales and paths                                                           */
@@ -1046,6 +1147,7 @@ LineChartLegend.layer = 'overlay' as Layer;
 /** Only reached if the theme CSS was never imported. */
 
 export const LineChart = Object.assign(LineChartRoot, {
+  Header: LineChartHeader,
   Grid: LineChartGrid,
   Area: LineChartArea,
   Line: LineChartLine,
