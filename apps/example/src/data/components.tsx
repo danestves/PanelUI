@@ -7255,6 +7255,10 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'flow',
     name: 'Flow',
     summary: 'Pan-and-zoom canvas of draggable nodes joined by animated edges',
+    // A canvas that pans has no drag left to give a pager: a vertical swipe
+    // over it is contested, and whichever wins is the one the user did not
+    // mean. Stacked instead, where the only scroller is the page's own.
+    layout: 'sections',
     demos: [
       { label: 'In a box', render: () => <FlowInlineDemo /> },
       { label: 'Edge shapes', render: () => <FlowEdgeShapesDemo /> },
@@ -9198,7 +9202,10 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'ring-chart',
     name: 'RingChart',
     summary: 'Concentric arcs, each against its own target',
-    layout: 'pager',
+    // Two versions, one of which brings its own vertical scroller — paged,
+    // the two fight over the same drag and the rail is left floating over
+    // both. Listed instead, each opening on the screen it was written for.
+    layout: 'sections',
     demos: [
       {
         label: "Today's goals",
