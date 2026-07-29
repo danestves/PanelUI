@@ -2934,9 +2934,11 @@ function FullHeightSheetDemo() {
             <Label>Sort by</Label>
             <RadioGroup value={sort} onValueChange={setSort}>
               {SORT_OPTIONS.map((option) => (
-                <RadioGroup.Item key={option.value} value={option.value}>
-                  {option.label}
-                </RadioGroup.Item>
+                <RadioGroup.Item
+                  key={option.value}
+                  value={option.value}
+                  label={option.label}
+                />
               ))}
             </RadioGroup>
           </View>

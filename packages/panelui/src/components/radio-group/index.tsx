@@ -211,13 +211,22 @@ const RadioGroupItem = forwardRef<View, RadioGroupItemProps>(
       </View>
     );
 
+    // Either way the label is a string in a row that is otherwise all views,
+    // so children given instead of the prop are dressed the same way rather
+    // than reaching the pressable bare.
+    const labelled = label ? (
+      <Text className={slots.label()}>{label}</Text>
+    ) : (
+      textChildren(children, (text) => <Text className={slots.label()}>{text}</Text>)
+    );
+
     // The card lays its text out first so the disc sits at the trailing edge;
     // the dot row keeps the classic disc-then-label order.
     const body =
       variant === 'card' ? (
         <>
           <View className="flex-1 gap-1">
-            {label ? <Text className={slots.label()}>{label}</Text> : children}
+            {labelled}
             {description ? (
               <Text className={slots.description()}>{description}</Text>
             ) : null}
@@ -227,7 +236,7 @@ const RadioGroupItem = forwardRef<View, RadioGroupItemProps>(
       ) : (
         <>
           {indicator}
-          {label ? <Text className={slots.label()}>{label}</Text> : children}
+          {labelled}
         </>
       );
 
