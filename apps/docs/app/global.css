@@ -41,6 +41,17 @@
   --overlay: var(--color-white);
   --overlay-foreground: var(--color-neutral-800);
 
+  /* syntax colours */
+  --code-keyword: #8250df;
+  --code-string: #0a7d55;
+  --code-number: #0550ae;
+  --code-comment: #8b949e;
+  --code-function: #6639ba;
+  --code-property: #953800;
+  --code-punctuation: #57606a;
+  --code-inserted: #0a7d55;
+  --code-deleted: #cf222e;
+
   --primary: var(--color-neutral-800);
   --primary-foreground: var(--color-neutral-50);
 
@@ -101,6 +112,17 @@
 
   --overlay: color-mix(in srgb, var(--background) 92%, var(--color-white));
   --overlay-foreground: var(--color-neutral-100);
+
+  /* syntax colours */
+  --code-keyword: #d2a8ff;
+  --code-string: #7ee787;
+  --code-number: #79c0ff;
+  --code-comment: #8b949e;
+  --code-function: #d2a8ff;
+  --code-property: #ffa657;
+  --code-punctuation: #8b949e;
+  --code-inserted: #7ee787;
+  --code-deleted: #ff7b72;
 
   --primary: var(--color-neutral-100);
   --primary-foreground: var(--color-neutral-800);
@@ -164,6 +186,15 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-overlay: var(--overlay);
   --color-overlay-foreground: var(--overlay-foreground);
+  --color-code-keyword: var(--code-keyword);
+  --color-code-string: var(--code-string);
+  --color-code-number: var(--code-number);
+  --color-code-comment: var(--code-comment);
+  --color-code-function: var(--code-function);
+  --color-code-property: var(--code-property);
+  --color-code-punctuation: var(--code-punctuation);
+  --color-code-inserted: var(--code-inserted);
+  --color-code-deleted: var(--code-deleted);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);

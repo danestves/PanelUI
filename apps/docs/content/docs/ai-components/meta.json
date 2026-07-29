@@ -3,6 +3,11 @@
   "pages": [
     "shimmer",
     "thinking-orb",
-    "soundwave"
+    "soundwave",
+    "reasoning",
+    "sources",
+    "task",
+    "code-block",
+    "plan"
   ]
 }

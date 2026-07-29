@@ -1,0 +1,19 @@
+{
+  "name": "collapse",
+  "type": "registry:ui",
+  "description": "collapse.",
+  "registryDependencies": [
+    "cn"
+  ],
+  "dependencies": [
+    "react-native-reanimated"
+  ],
+  "optionalDependencies": [],
+  "files": [
+    {
+      "path": "ui/collapse.tsx",
+      "type": "registry:ui",
+      "content": "/**\n * Collapse — a body that opens and closes by animating its own height.\n *\n * Height cannot be animated from `auto`, so the content is measured first and\n * the measurement is what gets animated to. The measured copy is absolutely\n * positioned, which is the part that is easy to get wrong: a child of a view\n * whose height is mid-animation reports that animated height back, so the\n * panel settles at whatever it happened to measure on the first frame. Taken\n * out of the flow it always lays out at its natural size.\n *\n * ```tsx\n * <Collapse open={open}>\n *   <Text>Anything, of any height.</Text>\n * </Collapse>\n * ```\n *\n * The alternative — unmounting the body and letting a layout transition on the\n * parent carry the change — is what `Accordion` does, and it is right when the\n * closed state should cost nothing. This is for a body that opens and closes\n * repeatedly and often while its content is still arriving, where remounting\n * would throw away scroll position and restart every animation inside it.\n */\nimport { useEffect, useState, type ReactNode } from 'react';\nimport { View, type LayoutChangeEvent, type ViewProps } from 'react-native';\nimport Animated, {\n  useAnimatedStyle,\n  useReducedMotion,\n  useSharedValue,\n  withTiming,\n} from 'react-native-reanimated';\nimport { cn } from '@/lib/cn';\n\n/** Long enough to read as the panel opening, short enough not to be waited on. */\nexport const COLLAPSE_DURATION = 200;\n\nexport interface CollapseProps extends Omit<ViewProps, 'children'> {\n  open: boolean;\n  /** Classes on the measured content, not on the clipping frame. */\n  className?: string;\n  duration?: number;\n  children?: ReactNode;\n}\n\nexport function Collapse({\n  open,\n  className,\n  duration = COLLAPSE_DURATION,\n  children,\n  ...props\n}: CollapseProps) {\n  const reducedMotion = useReducedMotion();\n  const [height, setHeight] = useState(0);\n  const progress = useSharedValue(open ? 1 : 0);\n\n  useEffect(() => {\n    progress.value = reducedMotion\n      ? open\n        ? 1\n        : 0\n      : withTiming(open ? 1 : 0, { duration });\n  }, [open, reducedMotion, duration, progress]);\n\n  const style = useAnimatedStyle(() => ({\n    height: progress.value * height,\n    opacity: progress.value,\n  }));\n\n  // Re-measured rather than measured once: a body whose content is still\n  // streaming in grows, and a height captured on the first frame would crop it.\n  const onLayout = (event: LayoutChangeEvent) => {\n    const next = event.nativeEvent.layout.height;\n    setHeight((current) => (Math.abs(current - next) < 1 ? current : next));\n  };\n\n  return (\n    <Animated.View style={style} className=\"overflow-hidden\">\n      <View\n        onLayout={onLayout}\n        style={{ position: 'absolute', left: 0, right: 0, top: 0 }}\n        className={cn(className)}\n        {...props}\n      >\n        {children}\n      </View>\n    </Animated.View>\n  );\n}\nCollapse.displayName = 'Collapse';\n"
+    }
+  ]
+}

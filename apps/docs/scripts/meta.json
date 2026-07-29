@@ -459,5 +459,50 @@
       "addedIn": "0.15.0",
       "updatedIn": "0.16.0"
     }
+  ],
+  "reasoning": [
+    "Reasoning",
+    "The model's working, shown while it happens and folded away after.",
+    "react native ai reasoning trace",
+    {
+      "group": "ai-components",
+      "addedIn": "0.30.0"
+    }
+  ],
+  "sources": [
+    "Sources",
+    "Where an answer came from, folded under a count.",
+    "react native ai citations sources",
+    {
+      "group": "ai-components",
+      "addedIn": "0.30.0"
+    }
+  ],
+  "task": [
+    "Task",
+    "One step an agent took, and what it did while it was there.",
+    "react native ai agent task steps",
+    {
+      "group": "ai-components",
+      "addedIn": "0.30.0"
+    }
+  ],
+  "code-block": [
+    "CodeBlock",
+    "A fenced snippet, syntax-coloured and scrolled sideways.",
+    "react native code block syntax highlighting",
+    {
+      "group": "ai-components",
+      "addedIn": "0.30.0"
+    }
+  ],
+  "plan": [
+    "Plan",
+    "What an agent intends to do, before it does it.",
+    "react native ai plan card",
+    {
+      "group": "ai-components",
+      "addedIn": "0.30.0"
+    }
   ]
 }

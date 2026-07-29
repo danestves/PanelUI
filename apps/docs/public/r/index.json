@@ -175,6 +175,26 @@
     "registryDependencies": []
   },
   {
+    "name": "code-block",
+    "type": "registry:ui",
+    "description": "A fenced snippet, syntax-coloured and scrolled sideways.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "icons",
+      "text",
+      "use-copy-to-clipboard"
+    ]
+  },
+  {
+    "name": "collapse",
+    "type": "registry:ui",
+    "description": "collapse.",
+    "registryDependencies": [
+      "cn"
+    ]
+  },
+  {
     "name": "date",
     "type": "registry:lib",
     "description": "date.",
@@ -444,6 +464,18 @@
     ]
   },
   {
+    "name": "plan",
+    "type": "registry:ui",
+    "description": "What an agent intends to do, before it does it.",
+    "registryDependencies": [
+      "cn",
+      "collapse",
+      "icons",
+      "shimmer",
+      "text"
+    ]
+  },
+  {
     "name": "popover",
     "type": "registry:ui",
     "description": "Panel anchored to the element that opened it.",
@@ -489,6 +521,18 @@
       "cn",
       "haptics",
       "icons",
+      "text"
+    ]
+  },
+  {
+    "name": "reasoning",
+    "type": "registry:ui",
+    "description": "The model's working, shown while it happens and folded away after.",
+    "registryDependencies": [
+      "cn",
+      "collapse",
+      "icons",
+      "shimmer",
       "text"
     ]
   },
@@ -621,6 +665,17 @@
     ]
   },
   {
+    "name": "sources",
+    "type": "registry:ui",
+    "description": "Where an answer came from, folded under a count.",
+    "registryDependencies": [
+      "cn",
+      "collapse",
+      "icons",
+      "text"
+    ]
+  },
+  {
     "name": "spinner",
     "type": "registry:ui",
     "description": "Indeterminate loading indicator.",
@@ -658,6 +713,18 @@
     "description": "Segmented navigation with an animated indicator.",
     "registryDependencies": [
       "cn",
+      "text"
+    ]
+  },
+  {
+    "name": "task",
+    "type": "registry:ui",
+    "description": "One step an agent took, and what it did while it was there.",
+    "registryDependencies": [
+      "cn",
+      "collapse",
+      "icons",
+      "shimmer",
       "text"
     ]
   },

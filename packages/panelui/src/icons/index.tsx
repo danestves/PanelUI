@@ -872,3 +872,105 @@ export function UnlockIcon({ size = 16, color, ...props }: IconProps) {
     </Svg>
   );
 }
+
+/**
+ * Four-pointed sparkles. The mark for a model doing something on your behalf —
+ * a reasoning step, a generated plan — where a gear or a brain reads as
+ * machinery rather than as assistance.
+ */
+export function SparklesIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M11 3 12.6 8.4 18 10l-5.4 1.6L11 17l-1.6-5.4L4 10l5.4-1.6z"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M18 15.5 18.7 18l2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7z"
+        stroke={resolved}
+        strokeWidth={1.6}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** Two stacked sheets — the copy action, paired with CheckIcon once it has run. */
+export function CopyIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M9 9h10v12H9z"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M15 5H5v12h2"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** Two links of a chain, for a row that opens somewhere outside the app. */
+export function LinkIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** A list with its items ticked off — a plan, or a run of steps. */
+export function ListChecksIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="m3 6 1.8 1.8L8 4.5M3 16l1.8 1.8L8 14.5"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M12 6.5h9M12 17.5h9"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+/** A hollow ring, for a step that has not started. */
+export function CircleIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Circle cx={12} cy={12} r={8} stroke={resolved} strokeWidth={2} />
+    </Svg>
+  );
+}

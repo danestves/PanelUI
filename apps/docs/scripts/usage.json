@@ -4626,5 +4626,214 @@
       }
     ],
     "notes": "Every row carries the `menuitem` role, and a checkbox, radio or submenu row publishes its state alongside it — checked, selected or expanded — so a screen reader announces what the row *is* as well as what it says.\n\n`Menu.Content` is capped to the room inside the safe area and scrolls, so the last row of a long menu is always reachable. Pass `maxHeight` to cap it lower than that, or `scrollable={false}` when the rows are written out by hand and known to fit.\n\n### The panel's surface\n\nThe surface is a layer of its own — `Menu.Background`, an absolute fill behind the rows — rather than a background colour on the panel. A background cannot be got behind, and a menu that wants to be frosted or gradient-filled needs something under the rows and over nothing.\n\nIt draws on `--color-overlay`, which is a step further from the page than `--color-popover`. A menu is usually the thing furthest forward on the screen and often the thing on top of a popover; sharing one token with the panel underneath would make it disappear into it.\n\nThe layer is rendered outside the panel's scroller, so a surface stays put while the rows move over it. That is also why `Menu.Background` is lifted out of `Menu.Content`'s children rather than simply rendered among them.\n\n### Press feedback\n\nA pressed row fades its fill in over 90ms and back out over 160ms, and shrinks by 2% while it is held. `active:` could only swap the fill wholesale — in and out in a single frame each way, which on a row this size reads as a flash rather than as a press — and could not express the shrink at all. Both run on the UI thread off one shared value, and both are skipped when the system asks for reduced motion.\n\nA blur belongs in the same slot: put an `expo-blur` `BlurView` inside `Menu.Background` and give the layer a semi-transparent tint (`bg-overlay/70`) so the blur shows through it."
+  },
+  "reasoning": {
+    "intro": "The model's working, shown while it happens and folded away after. A reasoning trace is interesting for exactly as long as it is the only thing arriving; once the answer starts it is a wall of text above the thing the reader asked for.\n\nSo it opens itself when the trace starts streaming and closes itself a beat after it stops — once, and only if it ever streamed, because a trace that arrives complete was never a live thing to watch and should not perform. The trigger shimmers \"Thinking…\" while the tokens come and settles into \"Thought for 8 seconds\" afterwards, timed from the first streaming frame rather than taken on trust.",
+    "usage": "<Reasoning isStreaming={isStreaming}>\n  <Reasoning.Trigger />\n  <Reasoning.Content>{trace}</Reasoning.Content>\n</Reasoning>",
+    "extraImports": [
+      "Message",
+      "MessageScroller",
+      "Shimmer",
+      "Text",
+      "Plan",
+      "CodeBlock",
+      "Sources"
+    ],
+    "parts": {
+      "Trigger": "The row that says how long it thought, and folds the trace away. Shimmers while streaming; pass `label` to put your own words to both states.",
+      "Content": "The trace. Collapses to nothing rather than unmounting, because it is usually still growing while it is folded."
+    },
+    "examples": [
+      {
+        "title": "A live trace",
+        "description": "`isStreaming` is the only thing that has to be driven. The panel opens on the way in, the duration is measured across it, and it folds itself away about a second after the trace stops.",
+        "code": "<Reasoning isStreaming={status === 'streaming'}>\n  <Reasoning.Trigger />\n  <Reasoning.Content>{trace}</Reasoning.Content>\n</Reasoning>"
+      },
+      {
+        "title": "Reading message parts",
+        "description": "With the AI SDK a trace is every `reasoning` part of a message, joined. Joined, not one component each: some models emit a run of separate reasoning parts for a single thought, and one component per part is a column of \"Thinking…\" rows.\n\n`isStreaming` is whether the *last* part of the *last* message is a reasoning part while the request is still going — which is what distinguishes a trace still arriving from one that finished before the answer started.",
+        "code": "const parts = message.parts.filter((part) => part.type === 'reasoning');\nconst trace = parts.map((part) => part.text).join('\\n\\n');\n\nconst isLast = message.id === messages.at(-1)?.id;\nconst streaming =\n  isLast &&\n  status === 'streaming' &&\n  message.parts.at(-1)?.type === 'reasoning';\n\n{parts.length > 0 && (\n  <Reasoning isStreaming={streaming}>\n    <Reasoning.Trigger />\n    <Reasoning.Content>{trace}</Reasoning.Content>\n  </Reasoning>\n)}"
+      },
+      {
+        "title": "Words of your own",
+        "description": "`label` is handed the streaming state and the measured duration, so a caller can change the wording without reimplementing the timing.",
+        "code": "<Reasoning isStreaming={streaming}>\n  <Reasoning.Trigger\n    label={(isStreaming, duration) =>\n      isStreaming ? (\n        <Shimmer>Working through it…</Shimmer>\n      ) : (\n        <Text size=\"sm\" muted>Reasoned for {duration}s</Text>\n      )\n    }\n  />\n  <Reasoning.Content>{trace}</Reasoning.Content>\n</Reasoning>"
+      },
+      {
+        "title": "Arriving folded",
+        "description": "`defaultOpen={false}` also opts out of the auto-open, so a trace loaded with a finished transcript stays where it was put. Without that, replaying history would spring every panel open at once.",
+        "code": "<Reasoning defaultOpen={false} duration={12}>\n  <Reasoning.Trigger />\n  <Reasoning.Content>{trace}</Reasoning.Content>\n</Reasoning>"
+      },
+      {
+        "title": "In a turn",
+        "description": "Above the bubble, not inside it: the trace is about the answer rather than part of it, and a reasoning block in a coloured bubble reads as something the model said.",
+        "code": "<Message align=\"start\">\n  <Message.Content>\n    <Reasoning isStreaming={streaming}>\n      <Reasoning.Trigger />\n      <Reasoning.Content>{trace}</Reasoning.Content>\n    </Reasoning>\n    <Message.Bubble>\n      <Message.BubbleContent>{answer}</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>"
+      }
+    ],
+    "notes": "**It closes once.** The auto-close is latched, so reopening a finished trace by hand sticks. Without the latch the same effect would fold it away a second later, and the panel would refuse to stay open for the one reader who wanted to read it.\n\n**The duration is measured, not declared.** `duration` is optional; left off, the component times the wall clock between the first streaming frame and the last. That is the number worth showing — it is what the reader actually waited, rather than what the provider reports.\n\n**The body collapses rather than unmounting.** A trace is usually still growing while it is folded, and a body that remounted on every open would restart every animation inside it and drop whatever had been scrolled to.\n\n**Nothing here depends on the AI SDK.** The props are plain — a boolean, a string, a number — and they line up with what `message.parts` gives you. See [AI](/docs/ai) for the whole loop.",
+    "versions": [
+      {
+        "title": "The whole turn",
+        "description": "A plan, its steps, the reasoning behind the answer, the answer, its code and its sources — the only arrangement in which any one of these five components means anything. On its own a reasoning panel is a collapsible; in a turn it is the model thinking out loud before it answers.",
+        "code": "<MessageScroller className=\"flex-1\">\n  <MessageScroller.Viewport>\n    <MessageScroller.Content className=\"gap-4 px-5 py-6\">\n      <MessageScroller.Item messageId=\"plan\">\n        <Plan>…</Plan>\n      </MessageScroller.Item>\n\n      <MessageScroller.Item messageId=\"answer\">\n        <Message align=\"start\">\n          <Message.Content>\n            <Reasoning defaultOpen={false} duration={6}>\n              <Reasoning.Trigger />\n              <Reasoning.Content>{trace}</Reasoning.Content>\n            </Reasoning>\n            <Message.Bubble>\n              <Message.BubbleContent>{answer}</Message.BubbleContent>\n            </Message.Bubble>\n            <CodeBlock code={patch} language=\"diff\">\n              <CodeBlock.Header>\n                <CodeBlock.Language>diff</CodeBlock.Language>\n                <CodeBlock.CopyButton />\n              </CodeBlock.Header>\n            </CodeBlock>\n            <Sources>\n              <Sources.Trigger count={sources.length} />\n              <Sources.Content>\n                {sources.map((source) => (\n                  <Sources.Source key={source.url} href={source.url} title={source.title} />\n                ))}\n              </Sources.Content>\n            </Sources>\n          </Message.Content>\n        </Message>\n      </MessageScroller.Item>\n    </MessageScroller.Content>\n  </MessageScroller.Viewport>\n</MessageScroller>"
+      }
+    ]
+  },
+  "sources": {
+    "intro": "Where an answer came from, folded under a count. A cited answer usually cites more places than anyone wants listed above it, so the list opens from a single line: \"Used 6 sources\".\n\nFolded is the resting state, unlike [Reasoning](/docs/ai-components/reasoning) — a citation list is a thing you go and check rather than a thing you watch arrive.",
+    "usage": "<Sources>\n  <Sources.Trigger count={sources.length} />\n  <Sources.Content>\n    {sources.map((source) => (\n      <Sources.Source\n        key={source.url}\n        href={source.url}\n        title={source.title}\n      />\n    ))}\n  </Sources.Content>\n</Sources>",
+    "extraImports": [
+      "Message",
+      "Avatar"
+    ],
+    "parts": {
+      "Trigger": "The line that opens the list. `count` reads \"Used 6 sources\".",
+      "Content": "The list, collapsed until the trigger is pressed.",
+      "Source": "One citation. Opens `href` with the platform's own handler, and falls back to the URL's host when there is no `title`."
+    },
+    "examples": [
+      {
+        "title": "A list of citations",
+        "description": "`title` is what the row says and `href` is where it goes. With no title the host stands in — which is a better label than a hundred characters of path, and models often send no title at all.",
+        "code": "<Sources>\n  <Sources.Trigger count={3} />\n  <Sources.Content>\n    <Sources.Source href=\"https://expo.dev/changelog\" title=\"Expo SDK 57\" />\n    <Sources.Source href=\"https://reactnative.dev/blog\" title=\"New Architecture\" />\n    <Sources.Source href=\"https://docs.swmansion.com/react-native-reanimated/\" />\n  </Sources.Content>\n</Sources>"
+      },
+      {
+        "title": "Reading message parts",
+        "description": "With the AI SDK these are the `source-url` parts of an assistant message. Filter once for the count and map the same array, so the number on the trigger cannot disagree with the list under it.",
+        "code": "const sources = message.parts.filter(\n  (part) => part.type === 'source-url'\n);\n\n{sources.length > 0 && (\n  <Sources>\n    <Sources.Trigger count={sources.length} />\n    <Sources.Content>\n      {sources.map((part) => (\n        <Sources.Source\n          key={part.sourceId}\n          href={part.url}\n          title={part.title}\n        />\n      ))}\n    </Sources.Content>\n  </Sources>\n)}"
+      },
+      {
+        "title": "Favicons instead of the link glyph",
+        "description": "`icon` replaces the leading glyph on a row. A favicon is worth the request in a real citation list: it is what a reader recognises a source by before they have read the title.",
+        "code": "<Sources.Source\n  href={part.url}\n  title={part.title}\n  icon={\n    <Avatar size=\"xs\" className=\"h-4 w-4\">\n      <Avatar.Image\n        source={{ uri: `https://icons.duckduckgo.com/ip3/${host}.ico` }}\n      />\n    </Avatar>\n  }\n/>"
+      },
+      {
+        "title": "Under a turn",
+        "description": "Below the bubble rather than above it: the citations are what the answer rests on, and they are read after it.",
+        "code": "<Message align=\"start\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>{answer}</Message.BubbleContent>\n    </Message.Bubble>\n    <Sources>\n      <Sources.Trigger count={sources.length} />\n      <Sources.Content>\n        {sources.map((source) => (\n          <Sources.Source key={source.url} href={source.url} title={source.title} />\n        ))}\n      </Sources.Content>\n    </Sources>\n  </Message.Content>\n</Message>"
+      }
+    ],
+    "notes": "**A row is a link, and says so.** Each carries the `link` role and its title as the accessibility label, so a screen reader announces where it goes rather than reading the URL out character by character.\n\n**The host is parsed with a regex, not `URL`.** `URL` exists in Hermes but throws on anything malformed, and a model's citation is not a thing to trust with an exception. A label is worth having even when the string it came from is not a URL at all.\n\n**`Linking.openURL` is called without a `canOpenURL` guard.** That check needs the scheme declared up front on iOS, and a source is always http(s), which is always openable — the guard would only add a way to fail.\n\n**Nothing here depends on the AI SDK.** `href` and `title` are strings; they happen to be the shape of a `source-url` part."
+  },
+  "task": {
+    "intro": "One step an agent took, and what it did while it was there. The header is the step; the body is the detail nobody reads unless something went wrong.\n\nOpen by default, and it stays open — unlike a reasoning trace, the steps *are* the record of what happened and are worth scrolling back through. `status` moves the leading glyph through pending, running, complete and error, and shimmers the title while it runs.",
+    "usage": "<Task status=\"running\">\n  <Task.Trigger title=\"Searching the codebase\" />\n  <Task.Content>\n    <Task.Item>\n      Read <Task.File>calendar/index.tsx</Task.File>\n    </Task.Item>\n  </Task.Content>\n</Task>",
+    "extraImports": [
+      "Marker",
+      "FileIcon"
+    ],
+    "parts": {
+      "Trigger": "The step. Shimmers its title while the status is `running`, and folds the body away.",
+      "Content": "What the step did, indented behind a rule so the lines read as belonging to the step above them.",
+      "Item": "One line of that.",
+      "File": "A filename inside a line, drawn as a bordered chip — a path in the middle of a sentence is otherwise indistinguishable from the sentence."
+    },
+    "examples": [
+      {
+        "title": "A step and its detail",
+        "description": "`status` is the whole state: it picks the glyph, tints the title on an error, and puts a shimmer on the title while the step is running.",
+        "code": "<Task status=\"complete\">\n  <Task.Trigger title=\"Read 4 files\" />\n  <Task.Content>\n    <Task.Item>\n      Opened <Task.File>calendar/index.tsx</Task.File>\n    </Task.Item>\n    <Task.Item>\n      Opened <Task.File>date-picker/index.tsx</Task.File>\n    </Task.Item>\n  </Task.Content>\n</Task>"
+      },
+      {
+        "title": "Every status",
+        "description": "`pending` is a step that has not started, `running` shimmers, `complete` ticks, and `error` tints the title. A run of tasks in those four states is what an agent transcript looks like partway through.",
+        "code": "<Task status=\"complete\">\n  <Task.Trigger title=\"Read the component\" />\n  <Task.Content>…</Task.Content>\n</Task>\n\n<Task status=\"running\">\n  <Task.Trigger title=\"Editing the range band\" />\n  <Task.Content>…</Task.Content>\n</Task>\n\n<Task status=\"error\">\n  <Task.Trigger title=\"Typecheck failed\" />\n  <Task.Content>…</Task.Content>\n</Task>\n\n<Task status=\"pending\" defaultOpen={false}>\n  <Task.Trigger title=\"Regenerate the docs\" />\n  <Task.Content>…</Task.Content>\n</Task>"
+      },
+      {
+        "title": "Reading tool-call parts",
+        "description": "With the AI SDK a task is a tool-call part. `part.type` is `tool-<name>`, and `part.state` runs `input-streaming` → `input-available` → `output-available` or `output-error` — which maps onto `status` directly.",
+        "code": "const STATUS = {\n  'input-streaming': 'pending',\n  'input-available': 'running',\n  'output-available': 'complete',\n  'output-error': 'error',\n} as const;\n\n{message.parts.map((part, i) =>\n  part.type.startsWith('tool-') ? (\n    <Task key={i} status={STATUS[part.state]}>\n      <Task.Trigger title={part.type.replace('tool-', '')} />\n      <Task.Content>\n        <Task.Item>{JSON.stringify(part.input)}</Task.Item>\n      </Task.Content>\n    </Task>\n  ) : null\n)}"
+      },
+      {
+        "title": "A glyph for the file's kind",
+        "description": "`icon` on a `Task.File` sits before the name, which is what makes a long list of paths scannable by kind rather than by reading each one.",
+        "code": "<Task.Item>\n  Wrote{' '}\n  <Task.File icon={<FileIcon size={12} />}>\n    theme.css\n  </Task.File>\n</Task.Item>"
+      },
+      {
+        "title": "Between the turns",
+        "description": "A run of steps belongs between two messages rather than inside either, which is what [Marker](/docs/components/marker) is for — it draws the rule that separates the work from the conversation.",
+        "code": "<Marker variant=\"separator\">\n  <Marker.Content>Ran 3 tools</Marker.Content>\n</Marker>\n\n<Task status=\"complete\">\n  <Task.Trigger title=\"Read 4 files\" />\n  <Task.Content>\n    <Task.Item>\n      Opened <Task.File>calendar/index.tsx</Task.File>\n    </Task.Item>\n  </Task.Content>\n</Task>"
+      }
+    ],
+    "notes": "**It stays open.** A reasoning trace folds itself away because it stops being interesting once the answer starts; a task does not, because the steps are the record. Pass `defaultOpen={false}` for a step whose detail is noise — a pending one, usually.\n\n**The body is indented behind a rule, not merely padded.** The rule is what says the lines belong to the step above them rather than being the next few steps, which matters the moment there is more than one task in a row.\n\n**`Task.File` is bordered on purpose.** A path in the middle of a sentence set only in monospace still reads as part of the sentence, and the paths are the part of a task line anyone actually scans for.\n\n**Nothing here depends on the AI SDK.** `status` is a string union that happens to line up with a tool part's `state`."
+  },
+  "code-block": {
+    "intro": "A fenced snippet, syntax-coloured and scrolled sideways. Code does not wrap: wrapping a line puts the continuation under the indentation and the two stop meaning different things, so the body scrolls horizontally instead — which on a phone is the only honest way to show a ninety-column line.\n\nThe highlighter ships inside the component: a single pass of regex over the languages a chat actually streams, with no grammar, no worker and no dependency. Colours come from the theme's `--color-code-*` tokens, so a snippet follows light and dark like everything else.",
+    "usage": "<CodeBlock code={code} language=\"tsx\">\n  <CodeBlock.Header>\n    <CodeBlock.Filename>calendar.tsx</CodeBlock.Filename>\n    <CodeBlock.CopyButton />\n  </CodeBlock.Header>\n</CodeBlock>",
+    "extraImports": [
+      "Message"
+    ],
+    "parts": {
+      "Header": "The bar above the code: what the file is, and what can be done with it.",
+      "Filename": "The file's name, in monospace.",
+      "Language": "The language, for a block with no filename to name it by.",
+      "Actions": "A row for the buttons at the trailing edge of the header.",
+      "CopyButton": "Copies the block's code and ticks for two seconds. Needs `expo-clipboard`."
+    },
+    "examples": [
+      {
+        "title": "A snippet with a header",
+        "description": "`code` and `language` are the whole of it; everything in `children` is drawn above the code. A block with no children is just the code.",
+        "code": "<CodeBlock code={snippet} language=\"tsx\">\n  <CodeBlock.Header>\n    <CodeBlock.Filename>calendar.tsx</CodeBlock.Filename>\n    <CodeBlock.Actions>\n      <CodeBlock.CopyButton />\n    </CodeBlock.Actions>\n  </CodeBlock.Header>\n</CodeBlock>"
+      },
+      {
+        "title": "Numbered lines",
+        "description": "`showLineNumbers` puts a gutter down the leading edge, sized to the longest line number so the code does not shift as the block passes ten or a hundred lines.",
+        "code": "<CodeBlock showLineNumbers code={snippet} language=\"ts\" />"
+      },
+      {
+        "title": "The languages it colours",
+        "description": "`ts`, `tsx`, `js`, `jsx`, `json`, `bash`, `python`, `css`, `html`, `sql`, `markdown` and `diff`, along with the usual spellings of each — `typescript`, `sh`, `py`, `md`. Anything else renders as clean monospace rather than as a guess.",
+        "code": "<CodeBlock code={json} language=\"json\" />\n<CodeBlock code={install} language=\"bash\" />\n<CodeBlock code={patch} language=\"diff\" />\n\n{/* Not recognised — plain monospace, and no guessing. */}\n<CodeBlock code={config} language=\"nginx\" />"
+      },
+      {
+        "title": "In a turn",
+        "description": "Inside the bubble's content rather than beside it: a snippet is something the model said. Give the bubble no padding of its own where a code block is the whole of the turn, or the block ends up inset twice.",
+        "code": "<Message align=\"start\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>\n        Here is the fix:\n      </Message.BubbleContent>\n    </Message.Bubble>\n    <CodeBlock code={patch} language=\"diff\">\n      <CodeBlock.Header>\n        <CodeBlock.Language>diff</CodeBlock.Language>\n        <CodeBlock.CopyButton />\n      </CodeBlock.Header>\n    </CodeBlock>\n  </Message.Content>\n</Message>"
+      }
+    ],
+    "notes": "**The highlighter is deliberately small.** A real tokenizer is a grammar per language, which is megabytes and a worker — the wrong shape twice over here, because a chat renders fragments rather than files and the fragments arrive a token at a time, so whatever runs has to run again on every frame of a stream.\n\nWhat it therefore does not do: nested languages, template-literal interpolation, or anything needing a parser to know. A block comment spanning several lines is coloured only on its first, because each line is tokenized on its own so that a stream which has just gained a character does not re-tokenize the whole block. What it does do is make a keyword look like a keyword, which is the whole of the value in a twelve-line snippet.\n\n**A line is one `Text` with coloured runs inside it**, not a row of views. Only inside a single `Text` do the runs share a baseline and keep the spaces between them; a row of views gives every token its own box and the line comes apart at the seams.\n\n**Colours are theme tokens.** `--color-code-keyword`, `-string`, `-number`, `-comment`, `-function`, `-property`, `-punctuation`, `-inserted` and `-deleted` are declared per theme and per light/dark. Override them after the theme import to put a snippet on your own palette.\n\n**Copying needs `expo-clipboard`.** It is an optional peer, and the button is silent without it:\n\n```sh\nnpx expo install expo-clipboard\n```"
+  },
+  "plan": {
+    "intro": "What an agent intends to do, before it does it. A card rather than a run of rows, because a plan is a thing the reader is being asked to approve: it needs an edge around it so that where it starts and stops is not a matter of interpretation, and a footer that can hold the button that approves it.\n\n`isStreaming` puts a shimmer on the title and the description, which is the honest way to render a heading that is still arriving — the alternative is a title that grows a word at a time and reads as finished at every intermediate length.",
+    "usage": "<Plan isStreaming={isLoading}>\n  <Plan.Header>\n    <Plan.Title>{plan.title}</Plan.Title>\n    <Plan.Description>{plan.summary}</Plan.Description>\n    <Plan.Action>\n      <Plan.Trigger />\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>\n    {plan.steps.map((step) => (\n      <Text key={step} size=\"sm\" muted>{step}</Text>\n    ))}\n  </Plan.Content>\n  <Plan.Footer>\n    <Button size=\"sm\">Approve</Button>\n  </Plan.Footer>\n</Plan>",
+    "extraImports": [
+      "Button",
+      "Text",
+      "Task",
+      "Badge"
+    ],
+    "parts": {
+      "Header": "The title, the description and whatever acts on them. The heading gets a column of its own so an action stays pinned to the trailing edge as the title wraps.",
+      "Title": "The plan's name. Shimmers while `isStreaming`.",
+      "Description": "A line under it. Shimmers too.",
+      "Action": "Pinned to the header's trailing edge — the toggle, a badge, a menu.",
+      "Trigger": "Folds the body away. Its chevron turns to point at the state it will reach.",
+      "Content": "The steps. Collapses rather than unmounting, so it can still be growing.",
+      "Footer": "Where the button that approves the plan goes."
+    },
+    "examples": [
+      {
+        "title": "A plan with steps",
+        "description": "`Plan.Action` is lifted out of the header's heading column, so the toggle stays at the trailing edge however long the title runs.",
+        "code": "<Plan>\n  <Plan.Header>\n    <Plan.Title>Fix the calendar range</Plan.Title>\n    <Plan.Description>Four files, no API change.</Plan.Description>\n    <Plan.Action>\n      <Plan.Trigger />\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>\n    <Text size=\"sm\" muted>1. Compute the band inclusively.</Text>\n    <Text size=\"sm\" muted>2. Round only where it stops.</Text>\n    <Text size=\"sm\" muted>3. Regenerate the docs.</Text>\n  </Plan.Content>\n</Plan>"
+      },
+      {
+        "title": "Streaming in",
+        "description": "With `experimental_useObject` the fields arrive one at a time — a title before there is anything else — which is exactly what the shimmer is for. Only string children shimmer; an element is left alone, because it may already be animating.",
+        "code": "const { object, submit, isLoading } = useObject({\n  api: '/api/plan',\n  schema: planSchema,\n});\n\n<Plan isStreaming={isLoading}>\n  <Plan.Header>\n    <Plan.Title>{object?.title ?? 'Planning…'}</Plan.Title>\n    <Plan.Description>{object?.summary ?? ''}</Plan.Description>\n  </Plan.Header>\n  <Plan.Content>\n    {object?.steps?.map((step, i) => (\n      <Text key={i} size=\"sm\" muted>{step}</Text>\n    ))}\n  </Plan.Content>\n</Plan>"
+      },
+      {
+        "title": "Approving it",
+        "description": "The footer is the reason this is a card. A plan the reader has to agree to needs somewhere unambiguous for the agreement to live, separated from the steps by a rule.",
+        "code": "<Plan>\n  <Plan.Header>\n    <Plan.Title>Migrate 4 components</Plan.Title>\n    <Plan.Description>Reversible. Nothing is published.</Plan.Description>\n    <Plan.Action>\n      <Badge variant=\"secondary\">3 steps</Badge>\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>…</Plan.Content>\n  <Plan.Footer>\n    <Button size=\"sm\" variant=\"ghost\">Revise</Button>\n    <Button size=\"sm\">Approve</Button>\n  </Plan.Footer>\n</Plan>"
+      },
+      {
+        "title": "Steps that are tasks",
+        "description": "A plan being carried out is a plan whose steps have statuses — so the body holds [Task](/docs/ai-components/task) rows and the card becomes a live account of the work rather than a static list.",
+        "code": "<Plan>\n  <Plan.Header>\n    <Plan.Title>Fix the calendar range</Plan.Title>\n    <Plan.Action>\n      <Plan.Trigger />\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>\n    <Task status=\"complete\">\n      <Task.Trigger title=\"Compute the band inclusively\" />\n      <Task.Content>\n        <Task.Item>\n          Edited <Task.File>calendar/index.tsx</Task.File>\n        </Task.Item>\n      </Task.Content>\n    </Task>\n    <Task status=\"running\">\n      <Task.Trigger title=\"Regenerate the docs\" />\n      <Task.Content>\n        <Task.Item>Running docs:generate…</Task.Item>\n      </Task.Content>\n    </Task>\n  </Plan.Content>\n</Plan>"
+      }
+    ],
+    "notes": "**Only string children shimmer.** `Plan.Title` and `Plan.Description` wrap text in a shimmer while `isStreaming`, and leave an element alone — an element may already be animating, and two animations over one heading is a mess rather than an emphasis.\n\n**`Plan.Action` is lifted out of the heading column** by the header, so the toggle stays pinned to the trailing edge as the title wraps to a second line rather than riding down with it.\n\n**The body collapses rather than unmounting**, for the same reason as everywhere else here: a streaming plan is still growing while it is folded.\n\n**Nothing here depends on the AI SDK.** `isStreaming` is a boolean; it happens to be `useObject`'s `isLoading`."
   }
 }

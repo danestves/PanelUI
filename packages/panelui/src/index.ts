@@ -21,6 +21,7 @@ export { Portal, PortalHost, PortalProvider } from './primitives/portal';
 // graceful fall back from blur to dim — as the built-in ones.
 export { Scrim, hasBlur, type ScrimProps } from './primitives/scrim';
 export { Text, type TextProps } from './primitives/text';
+export { Collapse, type CollapseProps } from './primitives/collapse';
 export {
   KeyboardAvoider,
   type KeyboardAvoiderProps,
@@ -469,6 +470,52 @@ export {
   type SignatureButtonProps,
 } from './components/signature';
 export { Shimmer, type ShimmerProps } from './components/shimmer';
+export {
+  Reasoning,
+  type ReasoningProps,
+  type ReasoningTriggerProps,
+  type ReasoningContentProps,
+} from './components/reasoning';
+export {
+  Sources,
+  type SourcesProps,
+  type SourcesTriggerProps,
+  type SourcesContentProps,
+  type SourcesSourceProps,
+} from './components/sources';
+export {
+  Task,
+  type TaskProps,
+  type TaskTriggerProps,
+  type TaskContentProps,
+  type TaskItemProps,
+  type TaskFileProps,
+  type TaskStatus,
+} from './components/task';
+export {
+  CodeBlock,
+  resolveLanguage,
+  type CodeBlockProps,
+  type CodeBlockHeaderProps,
+  type CodeBlockFilenameProps,
+  type CodeBlockLanguageProps,
+  type CodeBlockActionsProps,
+  type CodeBlockCopyButtonProps,
+  type CodeLanguage,
+  type Token,
+  type TokenKind,
+} from './components/code-block';
+export {
+  Plan,
+  type PlanProps,
+  type PlanHeaderProps,
+  type PlanTitleProps,
+  type PlanDescriptionProps,
+  type PlanActionProps,
+  type PlanTriggerProps,
+  type PlanContentProps,
+  type PlanFooterProps,
+} from './components/plan';
 export {
   ScrollText,
   type ScrollTextProps,

@@ -1,0 +1,213 @@
+---
+title: Reasoning
+description: The model's working, shown while it happens and folded away after.
+status: new
+---
+
+The model's working, shown while it happens and folded away after. A reasoning trace is interesting for exactly as long as it is the only thing arriving; once the answer starts it is a wall of text above the thing the reader asked for.
+
+So it opens itself when the trace starts streaming and closes itself a beat after it stops — once, and only if it ever streamed, because a trace that arrives complete was never a live thing to watch and should not perform. The trigger shimmers "Thinking…" while the tokens come and settles into "Thought for 8 seconds" afterwards, timed from the first streaming frame rather than taken on trust.
+
+## Installation
+
+Reasoning ships with the library — no separate install.
+
+```tsx
+import { Reasoning, Message, MessageScroller, Shimmer, Text, Plan, CodeBlock, Sources } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add reasoning
+```
+
+## Usage
+
+```tsx
+<Reasoning isStreaming={isStreaming}>
+  <Reasoning.Trigger />
+  <Reasoning.Content>{trace}</Reasoning.Content>
+</Reasoning>
+```
+
+## Composition
+
+```tsx
+<Reasoning>
+  <Reasoning.Trigger>…</Reasoning.Trigger>
+  <Reasoning.Content>…</Reasoning.Content>
+</Reasoning>
+```
+
+- **`Reasoning.Trigger`** — The row that says how long it thought, and folds the trace away. Shimmers while streaming; pass `label` to put your own words to both states.
+- **`Reasoning.Content`** — The trace. Collapses to nothing rather than unmounting, because it is usually still growing while it is folded.
+
+## Examples
+
+### A live trace
+
+`isStreaming` is the only thing that has to be driven. The panel opens on the way in, the duration is measured across it, and it folds itself away about a second after the trace stops.
+
+```tsx
+<Reasoning isStreaming={status === 'streaming'}>
+  <Reasoning.Trigger />
+  <Reasoning.Content>{trace}</Reasoning.Content>
+</Reasoning>
+```
+
+### Reading message parts
+
+With the AI SDK a trace is every `reasoning` part of a message, joined. Joined, not one component each: some models emit a run of separate reasoning parts for a single thought, and one component per part is a column of "Thinking…" rows.
+
+`isStreaming` is whether the *last* part of the *last* message is a reasoning part while the request is still going — which is what distinguishes a trace still arriving from one that finished before the answer started.
+
+```tsx
+const parts = message.parts.filter((part) => part.type === 'reasoning');
+const trace = parts.map((part) => part.text).join('\n\n');
+
+const isLast = message.id === messages.at(-1)?.id;
+const streaming =
+  isLast &&
+  status === 'streaming' &&
+  message.parts.at(-1)?.type === 'reasoning';
+
+{parts.length > 0 && (
+  <Reasoning isStreaming={streaming}>
+    <Reasoning.Trigger />
+    <Reasoning.Content>{trace}</Reasoning.Content>
+  </Reasoning>
+)}
+```
+
+### Words of your own
+
+`label` is handed the streaming state and the measured duration, so a caller can change the wording without reimplementing the timing.
+
+```tsx
+<Reasoning isStreaming={streaming}>
+  <Reasoning.Trigger
+    label={(isStreaming, duration) =>
+      isStreaming ? (
+        <Shimmer>Working through it…</Shimmer>
+      ) : (
+        <Text size="sm" muted>Reasoned for {duration}s</Text>
+      )
+    }
+  />
+  <Reasoning.Content>{trace}</Reasoning.Content>
+</Reasoning>
+```
+
+### Arriving folded
+
+`defaultOpen={false}` also opts out of the auto-open, so a trace loaded with a finished transcript stays where it was put. Without that, replaying history would spring every panel open at once.
+
+```tsx
+<Reasoning defaultOpen={false} duration={12}>
+  <Reasoning.Trigger />
+  <Reasoning.Content>{trace}</Reasoning.Content>
+</Reasoning>
+```
+
+### In a turn
+
+Above the bubble, not inside it: the trace is about the answer rather than part of it, and a reasoning block in a coloured bubble reads as something the model said.
+
+```tsx
+<Message align="start">
+  <Message.Content>
+    <Reasoning isStreaming={streaming}>
+      <Reasoning.Trigger />
+      <Reasoning.Content>{trace}</Reasoning.Content>
+    </Reasoning>
+    <Message.Bubble>
+      <Message.BubbleContent>{answer}</Message.BubbleContent>
+    </Message.Bubble>
+  </Message.Content>
+</Message>
+```
+
+## Versions
+
+### The whole turn
+
+A plan, its steps, the reasoning behind the answer, the answer, its code and its sources — the only arrangement in which any one of these five components means anything. On its own a reasoning panel is a collapsible; in a turn it is the model thinking out loud before it answers.
+
+```tsx
+<MessageScroller className="flex-1">
+  <MessageScroller.Viewport>
+    <MessageScroller.Content className="gap-4 px-5 py-6">
+      <MessageScroller.Item messageId="plan">
+        <Plan>…</Plan>
+      </MessageScroller.Item>
+
+      <MessageScroller.Item messageId="answer">
+        <Message align="start">
+          <Message.Content>
+            <Reasoning defaultOpen={false} duration={6}>
+              <Reasoning.Trigger />
+              <Reasoning.Content>{trace}</Reasoning.Content>
+            </Reasoning>
+            <Message.Bubble>
+              <Message.BubbleContent>{answer}</Message.BubbleContent>
+            </Message.Bubble>
+            <CodeBlock code={patch} language="diff">
+              <CodeBlock.Header>
+                <CodeBlock.Language>diff</CodeBlock.Language>
+                <CodeBlock.CopyButton />
+              </CodeBlock.Header>
+            </CodeBlock>
+            <Sources>
+              <Sources.Trigger count={sources.length} />
+              <Sources.Content>
+                {sources.map((source) => (
+                  <Sources.Source key={source.url} href={source.url} title={source.title} />
+                ))}
+              </Sources.Content>
+            </Sources>
+          </Message.Content>
+        </Message>
+      </MessageScroller.Item>
+    </MessageScroller.Content>
+  </MessageScroller.Viewport>
+</MessageScroller>
+```
+
+## API Reference
+
+### Reasoning
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `isStreaming` | `boolean` | `false` | Whether the trace is still arriving. Drives the shimmer on the trigger, opens the panel on the way in and closes it a beat after it goes false. |
+| `duration` | `number` | — | How long the trace took, in seconds. Measured from the first streaming frame when it is not given, which is the number worth showing — it is what the reader actually waited. |
+| `open` | `boolean` | — | Controlled open state. |
+| `defaultOpen` | `boolean` | — | Initial state when uncontrolled. Defaults to whether it is streaming, so a live trace is open and a finished one arrives folded. Passing `false` explicitly also opts out of the auto-open. |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
+
+### Reasoning.Trigger
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `label` | `(isStreaming: boolean, duration?: number) => ReactNode` | — | What the row says. Given the streaming state and the measured duration, so a caller can put its own words to both without reimplementing the timing. |
+
+### Reasoning.Content
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+**It closes once.** The auto-close is latched, so reopening a finished trace by hand sticks. Without the latch the same effect would fold it away a second later, and the panel would refuse to stay open for the one reader who wanted to read it.
+
+**The duration is measured, not declared.** `duration` is optional; left off, the component times the wall clock between the first streaming frame and the last. That is the number worth showing — it is what the reader actually waited, rather than what the provider reports.
+
+**The body collapses rather than unmounting.** A trace is usually still growing while it is folded, and a body that remounted on every open would restart every animation inside it and drop whatever had been scrolled to.
+
+**Nothing here depends on the AI SDK.** The props are plain — a boolean, a string, a number — and they line up with what `message.parts` gives you. See [AI](/docs/ai) for the whole loop.

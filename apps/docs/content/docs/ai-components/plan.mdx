@@ -1,0 +1,231 @@
+---
+title: Plan
+description: What an agent intends to do, before it does it.
+status: new
+---
+
+What an agent intends to do, before it does it. A card rather than a run of rows, because a plan is a thing the reader is being asked to approve: it needs an edge around it so that where it starts and stops is not a matter of interpretation, and a footer that can hold the button that approves it.
+
+`isStreaming` puts a shimmer on the title and the description, which is the honest way to render a heading that is still arriving — the alternative is a title that grows a word at a time and reads as finished at every intermediate length.
+
+## Installation
+
+Plan ships with the library — no separate install.
+
+```tsx
+import { Plan, Button, Text, Task, Badge } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add plan
+```
+
+## Usage
+
+```tsx
+<Plan isStreaming={isLoading}>
+  <Plan.Header>
+    <Plan.Title>{plan.title}</Plan.Title>
+    <Plan.Description>{plan.summary}</Plan.Description>
+    <Plan.Action>
+      <Plan.Trigger />
+    </Plan.Action>
+  </Plan.Header>
+  <Plan.Content>
+    {plan.steps.map((step) => (
+      <Text key={step} size="sm" muted>{step}</Text>
+    ))}
+  </Plan.Content>
+  <Plan.Footer>
+    <Button size="sm">Approve</Button>
+  </Plan.Footer>
+</Plan>
+```
+
+## Composition
+
+```tsx
+<Plan>
+  <Plan.Header>…</Plan.Header>
+  <Plan.Title>…</Plan.Title>
+  <Plan.Description>…</Plan.Description>
+  <Plan.Action>…</Plan.Action>
+  <Plan.Trigger>…</Plan.Trigger>
+  <Plan.Content>…</Plan.Content>
+  <Plan.Footer>…</Plan.Footer>
+</Plan>
+```
+
+- **`Plan.Header`** — The title, the description and whatever acts on them. The heading gets a column of its own so an action stays pinned to the trailing edge as the title wraps.
+- **`Plan.Title`** — The plan's name. Shimmers while `isStreaming`.
+- **`Plan.Description`** — A line under it. Shimmers too.
+- **`Plan.Action`** — Pinned to the header's trailing edge — the toggle, a badge, a menu.
+- **`Plan.Trigger`** — Folds the body away. Its chevron turns to point at the state it will reach.
+- **`Plan.Content`** — The steps. Collapses rather than unmounting, so it can still be growing.
+- **`Plan.Footer`** — Where the button that approves the plan goes.
+
+## Examples
+
+### A plan with steps
+
+`Plan.Action` is lifted out of the header's heading column, so the toggle stays at the trailing edge however long the title runs.
+
+```tsx
+<Plan>
+  <Plan.Header>
+    <Plan.Title>Fix the calendar range</Plan.Title>
+    <Plan.Description>Four files, no API change.</Plan.Description>
+    <Plan.Action>
+      <Plan.Trigger />
+    </Plan.Action>
+  </Plan.Header>
+  <Plan.Content>
+    <Text size="sm" muted>1. Compute the band inclusively.</Text>
+    <Text size="sm" muted>2. Round only where it stops.</Text>
+    <Text size="sm" muted>3. Regenerate the docs.</Text>
+  </Plan.Content>
+</Plan>
+```
+
+### Streaming in
+
+With `experimental_useObject` the fields arrive one at a time — a title before there is anything else — which is exactly what the shimmer is for. Only string children shimmer; an element is left alone, because it may already be animating.
+
+```tsx
+const { object, submit, isLoading } = useObject({
+  api: '/api/plan',
+  schema: planSchema,
+});
+
+<Plan isStreaming={isLoading}>
+  <Plan.Header>
+    <Plan.Title>{object?.title ?? 'Planning…'}</Plan.Title>
+    <Plan.Description>{object?.summary ?? ''}</Plan.Description>
+  </Plan.Header>
+  <Plan.Content>
+    {object?.steps?.map((step, i) => (
+      <Text key={i} size="sm" muted>{step}</Text>
+    ))}
+  </Plan.Content>
+</Plan>
+```
+
+### Approving it
+
+The footer is the reason this is a card. A plan the reader has to agree to needs somewhere unambiguous for the agreement to live, separated from the steps by a rule.
+
+```tsx
+<Plan>
+  <Plan.Header>
+    <Plan.Title>Migrate 4 components</Plan.Title>
+    <Plan.Description>Reversible. Nothing is published.</Plan.Description>
+    <Plan.Action>
+      <Badge variant="secondary">3 steps</Badge>
+    </Plan.Action>
+  </Plan.Header>
+  <Plan.Content>…</Plan.Content>
+  <Plan.Footer>
+    <Button size="sm" variant="ghost">Revise</Button>
+    <Button size="sm">Approve</Button>
+  </Plan.Footer>
+</Plan>
+```
+
+### Steps that are tasks
+
+A plan being carried out is a plan whose steps have statuses — so the body holds [Task](/docs/ai-components/task) rows and the card becomes a live account of the work rather than a static list.
+
+```tsx
+<Plan>
+  <Plan.Header>
+    <Plan.Title>Fix the calendar range</Plan.Title>
+    <Plan.Action>
+      <Plan.Trigger />
+    </Plan.Action>
+  </Plan.Header>
+  <Plan.Content>
+    <Task status="complete">
+      <Task.Trigger title="Compute the band inclusively" />
+      <Task.Content>
+        <Task.Item>
+          Edited <Task.File>calendar/index.tsx</Task.File>
+        </Task.Item>
+      </Task.Content>
+    </Task>
+    <Task status="running">
+      <Task.Trigger title="Regenerate the docs" />
+      <Task.Content>
+        <Task.Item>Running docs:generate…</Task.Item>
+      </Task.Content>
+    </Task>
+  </Plan.Content>
+</Plan>
+```
+
+## API Reference
+
+### Plan
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `isStreaming` | `boolean` | `false` | Whether the plan is still being written. Shimmers the title and description. |
+| `open` | `boolean` | — | Controlled open state of the body. |
+| `defaultOpen` | `boolean` | `true` | Initial state when uncontrolled. |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
+
+### Plan.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Plan.Title
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Plan.Description
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Plan.Action
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Plan.Trigger
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Plan.Content
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Plan.Footer
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+**Only string children shimmer.** `Plan.Title` and `Plan.Description` wrap text in a shimmer while `isStreaming`, and leave an element alone — an element may already be animating, and two animations over one heading is a mess rather than an emphasis.
+
+**`Plan.Action` is lifted out of the heading column** by the header, so the toggle stays pinned to the trailing edge as the title wraps to a second line rather than riding down with it.
+
+**The body collapses rather than unmounting**, for the same reason as everywhere else here: a streaming plan is still growing while it is folded.
+
+**Nothing here depends on the AI SDK.** `isStreaming` is a boolean; it happens to be `useObject`'s `isLoading`.

@@ -110,6 +110,22 @@
    * These are the tokens to override in your app's global.css, after the
    * `panelui-native/theme.css` import, to put a chart on brand.
    */
+  /*
+   * Syntax colours, for CodeBlock. A ramp of their own rather than the chart
+   * series: those only have to be told apart from one another, while these
+   * have to be legible as small monospace on a muted panel and to keep their
+   * conventional associations — a string is warm, a comment recedes.
+   */
+  --color-code-keyword: unset;
+  --color-code-string: unset;
+  --color-code-number: unset;
+  --color-code-comment: unset;
+  --color-code-function: unset;
+  --color-code-property: unset;
+  --color-code-punctuation: unset;
+  --color-code-inserted: unset;
+  --color-code-deleted: unset;
+
   --color-chart-1: unset;
   --color-chart-2: unset;
   --color-chart-3: unset;
@@ -195,6 +211,17 @@
       --color-warning-subtle: rgba(245, 158, 11, 0.08);
       --color-destructive-soft: rgba(239, 68, 68, 0.1);
       --color-destructive-subtle: rgba(239, 68, 68, 0.08);
+
+      /* syntax colours */
+      --color-code-keyword: #8250df;
+      --color-code-string: #0a7d55;
+      --color-code-number: #0550ae;
+      --color-code-comment: #8b949e;
+      --color-code-function: #6639ba;
+      --color-code-property: #953800;
+      --color-code-punctuation: #57606a;
+      --color-code-inserted: #0a7d55;
+      --color-code-deleted: #cf222e;
 
       /* chart series, in order of prominence */
       --color-chart-1: #262626;
@@ -283,6 +310,17 @@
       --color-warning-subtle: rgba(245, 158, 11, 0.16);
       --color-destructive-soft: rgba(241, 87, 87, 0.06);
       --color-destructive-subtle: rgba(241, 87, 87, 0.16);
+
+      /* syntax colours */
+      --color-code-keyword: #d2a8ff;
+      --color-code-string: #7ee787;
+      --color-code-number: #79c0ff;
+      --color-code-comment: #8b949e;
+      --color-code-function: #d2a8ff;
+      --color-code-property: #ffa657;
+      --color-code-punctuation: #8b949e;
+      --color-code-inserted: #7ee787;
+      --color-code-deleted: #ff7b72;
 
       /* chart series, in order of prominence */
       --color-chart-1: #fafafa;
@@ -376,6 +414,17 @@
       --color-destructive-soft: rgba(229, 72, 77, 0.1);
       --color-destructive-subtle: rgba(229, 72, 77, 0.08);
 
+      /* syntax colours */
+      --color-code-keyword: #8250df;
+      --color-code-string: #0a7d55;
+      --color-code-number: #0550ae;
+      --color-code-comment: #8b949e;
+      --color-code-function: #6639ba;
+      --color-code-property: #953800;
+      --color-code-punctuation: #57606a;
+      --color-code-inserted: #0a7d55;
+      --color-code-deleted: #cf222e;
+
       /* chart series, in order of prominence */
       --color-chart-1: #0070f3;
       --color-chart-2: #171717;
@@ -447,6 +496,17 @@
       --color-warning-subtle: rgba(245, 166, 35, 0.16);
       --color-destructive-soft: rgba(229, 72, 77, 0.1);
       --color-destructive-subtle: rgba(229, 72, 77, 0.16);
+
+      /* syntax colours */
+      --color-code-keyword: #d2a8ff;
+      --color-code-string: #7ee787;
+      --color-code-number: #79c0ff;
+      --color-code-comment: #8b949e;
+      --color-code-function: #d2a8ff;
+      --color-code-property: #ffa657;
+      --color-code-punctuation: #8b949e;
+      --color-code-inserted: #7ee787;
+      --color-code-deleted: #ff7b72;
 
       /* chart series, in order of prominence */
       --color-chart-1: #3291ff;
@@ -523,6 +583,17 @@
       --color-destructive-soft: rgba(239, 68, 68, 0.1);
       --color-destructive-subtle: rgba(239, 68, 68, 0.08);
 
+      /* syntax colours */
+      --color-code-keyword: #8250df;
+      --color-code-string: #0a7d55;
+      --color-code-number: #0550ae;
+      --color-code-comment: #8b949e;
+      --color-code-function: #6639ba;
+      --color-code-property: #953800;
+      --color-code-punctuation: #57606a;
+      --color-code-inserted: #0a7d55;
+      --color-code-deleted: #cf222e;
+
       /* chart series, in order of prominence */
       --color-chart-1: #24b47e;
       --color-chart-2: #1f2937;
@@ -594,6 +665,17 @@
       --color-warning-subtle: rgba(245, 158, 11, 0.16);
       --color-destructive-soft: rgba(241, 87, 87, 0.08);
       --color-destructive-subtle: rgba(241, 87, 87, 0.16);
+
+      /* syntax colours */
+      --color-code-keyword: #d2a8ff;
+      --color-code-string: #7ee787;
+      --color-code-number: #79c0ff;
+      --color-code-comment: #8b949e;
+      --color-code-function: #d2a8ff;
+      --color-code-property: #ffa657;
+      --color-code-punctuation: #8b949e;
+      --color-code-inserted: #7ee787;
+      --color-code-deleted: #ff7b72;
 
       /* chart series, in order of prominence */
       --color-chart-1: #3ecf8e;

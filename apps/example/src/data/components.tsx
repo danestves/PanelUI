@@ -44,6 +44,7 @@ import {
   Breadcrumb,
   Button,
   Calendar,
+  CodeBlock,
   Card,
   Carousel,
   CardIcon,
@@ -87,6 +88,8 @@ import {
   Menu,
   Message,
   MessageScroller,
+  Plan,
+  Reasoning,
   MicIcon,
   MoonIcon,
   NumberInput,
@@ -118,6 +121,7 @@ import {
   SectionRail,
   Separator,
   Shimmer,
+  Sources,
   Signature,
   type SignatureHandle,
   Skeleton,
@@ -129,6 +133,7 @@ import {
   Surface,
   Switch,
   Tabs,
+  Task,
   Text,
   Textarea,
   ThinkingOrb,
@@ -5111,6 +5116,329 @@ function Meter({ percent }: { percent: number }) {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* AI components                                                              */
+/* -------------------------------------------------------------------------- */
+
+const REASONING_TRACE = `The band is drawn per cell, so each one has to know whether the range carries on past its own edge.
+
+The old rule only asked "am I between the two ends", which leaves the ends themselves with no band at all — hence the gap on either side of the disc.
+
+Making the test inclusive and giving each end half a cell should close it.`;
+
+const AI_SNIPPET = `const inRange = !!range?.to && isWithin(date, range.from, range.to);
+
+// The band carries on past this cell's edge unless it stops here.
+const openStart = inRange && !isStart && dayIndex > 0;
+const openEnd = inRange && !isEnd && dayIndex < 6;`;
+
+const AI_PATCH = `@@ calendar/index.tsx
+-  const inRange = !!range?.to && isWithin(date, range.from, range.to) && !selected;
++  const inRange = !!range?.to && isWithin(date, range.from, range.to);`;
+
+/**
+ * A trace that actually streams, because the whole of Reasoning is what it does
+ * over time — it opens itself on the way in, times the wait, and folds away a
+ * beat after the tokens stop.
+ */
+function ReasoningStreamDemo() {
+  const [text, setText] = useState('');
+  const [streaming, setStreaming] = useState(false);
+
+  const run = () => {
+    setText('');
+    setStreaming(true);
+    let cursor = 0;
+    const timer = setInterval(() => {
+      cursor += 12;
+      setText(REASONING_TRACE.slice(0, cursor));
+      if (cursor >= REASONING_TRACE.length) {
+        clearInterval(timer);
+        setStreaming(false);
+      }
+    }, 60);
+  };
+
+  return (
+    <View className="w-full gap-4">
+      <Reasoning isStreaming={streaming}>
+        <Reasoning.Trigger />
+        <Reasoning.Content>{text || REASONING_TRACE}</Reasoning.Content>
+      </Reasoning>
+      <Button variant="outline" onPress={run} disabled={streaming}>
+        {streaming ? 'Thinking…' : 'Stream a trace'}
+      </Button>
+    </View>
+  );
+}
+
+/** The trace above the answer, which is where it belongs in a real turn. */
+function ReasoningInTurnDemo() {
+  return (
+    <Message align="start">
+      <Message.Content>
+        <Reasoning defaultOpen={false} duration={6}>
+          <Reasoning.Trigger />
+          <Reasoning.Content>{REASONING_TRACE}</Reasoning.Content>
+        </Reasoning>
+        <Message.Bubble>
+          <Message.BubbleContent>
+            The gap was the inclusive test — both ends were excluded from the
+            band, so neither carried its half of it.
+          </Message.BubbleContent>
+        </Message.Bubble>
+      </Message.Content>
+    </Message>
+  );
+}
+
+const AI_SOURCES = [
+  { url: 'https://expo.dev/changelog/sdk-57', title: 'Expo SDK 57' },
+  { url: 'https://reactnative.dev/blog/new-architecture', title: 'The New Architecture' },
+  { url: 'https://docs.swmansion.com/react-native-reanimated/', title: undefined },
+];
+
+/** Citations under a turn — read after the answer, not before it. */
+function SourcesInTurnDemo() {
+  return (
+    <Message align="start">
+      <Message.Content>
+        <Message.Bubble>
+          <Message.BubbleContent>
+            SDK 57 ships the New Architecture by default, and Reanimated 4
+            requires it.
+          </Message.BubbleContent>
+        </Message.Bubble>
+        <Sources>
+          <Sources.Trigger count={AI_SOURCES.length} />
+          <Sources.Content>
+            {AI_SOURCES.map((source) => (
+              <Sources.Source
+                key={source.url}
+                href={source.url}
+                title={source.title}
+              />
+            ))}
+          </Sources.Content>
+        </Sources>
+      </Message.Content>
+    </Message>
+  );
+}
+
+/** The four statuses in the order a run of work actually passes through them. */
+function TaskRunDemo() {
+  return (
+    <View className="w-full gap-3">
+      <Marker variant="separator">
+        <Marker.Content>Ran 4 tools</Marker.Content>
+      </Marker>
+      <Task status="complete">
+        <Task.Trigger title="Read 2 files" />
+        <Task.Content>
+          <Task.Item>
+            Opened <Task.File icon={<FileIcon size={12} />}>calendar/index.tsx</Task.File>
+          </Task.Item>
+          <Task.Item>
+            Opened <Task.File icon={<FileIcon size={12} />}>utils/date.ts</Task.File>
+          </Task.Item>
+        </Task.Content>
+      </Task>
+      <Task status="running">
+        <Task.Trigger title="Editing the range band" />
+        <Task.Content>
+          <Task.Item>
+            Rewriting the band computation in{' '}
+            <Task.File>CalendarGrid</Task.File>
+          </Task.Item>
+        </Task.Content>
+      </Task>
+      <Task status="error">
+        <Task.Trigger title="Typecheck failed" />
+        <Task.Content>
+          <Task.Item>openStart is declared but never read.</Task.Item>
+        </Task.Content>
+      </Task>
+      <Task status="pending" defaultOpen={false}>
+        <Task.Trigger title="Regenerate the docs" />
+        <Task.Content>
+          <Task.Item>Waiting on the typecheck.</Task.Item>
+        </Task.Content>
+      </Task>
+    </View>
+  );
+}
+
+/** A plan whose fields arrive one at a time, which is what the shimmer is for. */
+function PlanStreamDemo() {
+  const [streaming, setStreaming] = useState(false);
+
+  useEffect(() => {
+    if (!streaming) return;
+    const timer = setTimeout(() => setStreaming(false), 2600);
+    return () => clearTimeout(timer);
+  }, [streaming]);
+
+  return (
+    <View className="w-full gap-4">
+      <Plan isStreaming={streaming}>
+        <Plan.Header>
+          <Plan.Title>Fix the calendar range</Plan.Title>
+          <Plan.Description>Four files, and no API change.</Plan.Description>
+          <Plan.Action>
+            <Plan.Trigger />
+          </Plan.Action>
+        </Plan.Header>
+        <Plan.Content>
+          <Text size="sm" muted>
+            1. Make the in-range test inclusive of both ends.
+          </Text>
+          <Text size="sm" muted>
+            2. Round the band only where it genuinely stops.
+          </Text>
+          <Text size="sm" muted>
+            3. Square the discs so they meet the band along an edge.
+          </Text>
+        </Plan.Content>
+        <Plan.Footer>
+          <Button size="sm" variant="ghost">
+            Revise
+          </Button>
+          <Button size="sm">Approve</Button>
+        </Plan.Footer>
+      </Plan>
+      <Button variant="outline" onPress={() => setStreaming(true)} disabled={streaming}>
+        {streaming ? 'Writing…' : 'Stream it in'}
+      </Button>
+    </View>
+  );
+}
+
+/** A plan being carried out: the steps have statuses, so they are tasks. */
+function PlanWithTasksDemo() {
+  return (
+    <Plan>
+      <Plan.Header>
+        <Plan.Title>Fix the calendar range</Plan.Title>
+        <Plan.Action>
+          <Badge variant="secondary">2 of 3</Badge>
+        </Plan.Action>
+      </Plan.Header>
+      <Plan.Content>
+        <Task status="complete">
+          <Task.Trigger title="Make the test inclusive" />
+          <Task.Content>
+            <Task.Item>
+              Edited <Task.File>calendar/index.tsx</Task.File>
+            </Task.Item>
+          </Task.Content>
+        </Task>
+        <Task status="complete">
+          <Task.Trigger title="Round only where it stops" />
+          <Task.Content>
+            <Task.Item>Four corners, from openStart and openEnd.</Task.Item>
+          </Task.Content>
+        </Task>
+        <Task status="running">
+          <Task.Trigger title="Regenerate the docs" />
+          <Task.Content>
+            <Task.Item>Running docs:generate…</Task.Item>
+          </Task.Content>
+        </Task>
+      </Plan.Content>
+    </Plan>
+  );
+}
+
+/** A snippet where one actually turns up: inside a turn. */
+function CodeBlockInTurnDemo() {
+  return (
+    <Message align="start">
+      <Message.Content>
+        <Message.Bubble>
+          <Message.BubbleContent>Here is the fix:</Message.BubbleContent>
+        </Message.Bubble>
+        <CodeBlock code={AI_SNIPPET} language="ts">
+          <CodeBlock.Header>
+            <CodeBlock.Filename>calendar/index.tsx</CodeBlock.Filename>
+            <CodeBlock.Actions>
+              <CodeBlock.CopyButton />
+            </CodeBlock.Actions>
+          </CodeBlock.Header>
+        </CodeBlock>
+      </Message.Content>
+    </Message>
+  );
+}
+
+/**
+ * The whole shape of an agent turn, which is the only way any of these five
+ * components makes sense: a plan, the steps that carried it out, the reasoning
+ * behind the answer, the answer, its code, and where it came from.
+ */
+function AgentTranscriptDemo() {
+  return (
+    <MessageScroller className="flex-1">
+      <MessageScroller.Viewport>
+        <MessageScroller.Content className="gap-4 px-5 py-6">
+          <MessageScroller.Item messageId="ask">
+            <Message align="end">
+              <Message.Content>
+                <Message.Bubble>
+                  <Message.BubbleContent>
+                    The calendar range has a gap at each end. Can you fix it?
+                  </Message.BubbleContent>
+                </Message.Bubble>
+              </Message.Content>
+            </Message>
+          </MessageScroller.Item>
+
+          <MessageScroller.Item messageId="plan">
+            <PlanWithTasksDemo />
+          </MessageScroller.Item>
+
+          <MessageScroller.Item messageId="answer">
+            <Message align="start">
+              <Message.Content>
+                <Reasoning defaultOpen={false} duration={6}>
+                  <Reasoning.Trigger />
+                  <Reasoning.Content>{REASONING_TRACE}</Reasoning.Content>
+                </Reasoning>
+                <Message.Bubble>
+                  <Message.BubbleContent>
+                    Both ends were excluded from the band, so neither carried its
+                    half of it. One character:
+                  </Message.BubbleContent>
+                </Message.Bubble>
+                <CodeBlock code={AI_PATCH} language="diff">
+                  <CodeBlock.Header>
+                    <CodeBlock.Language>diff</CodeBlock.Language>
+                    <CodeBlock.Actions>
+                      <CodeBlock.CopyButton />
+                    </CodeBlock.Actions>
+                  </CodeBlock.Header>
+                </CodeBlock>
+                <Sources>
+                  <Sources.Trigger count={AI_SOURCES.length} />
+                  <Sources.Content>
+                    {AI_SOURCES.map((source) => (
+                      <Sources.Source
+                        key={source.url}
+                        href={source.url}
+                        title={source.title}
+                      />
+                    ))}
+                  </Sources.Content>
+                </Sources>
+              </Message.Content>
+            </Message>
+          </MessageScroller.Item>
+        </MessageScroller.Content>
+      </MessageScroller.Viewport>
+    </MessageScroller>
+  );
+}
+
 const DEPLOY_LOG = [
   {
     time: '09:12',
@@ -9417,6 +9745,128 @@ export const COMPONENTS: ComponentEntry[] = [
         description: 'What `speed` and `paused` do to a running orb.',
         render: () => <ThinkingOrbControlsVersion />,
       },
+    ],
+  },
+  {
+    slug: 'reasoning',
+    name: 'Reasoning',
+    summary: "The model's working, shown while it happens",
+    demos: [
+      { label: 'A live trace', render: () => <ReasoningStreamDemo /> },
+      { label: 'In a turn', render: () => <ReasoningInTurnDemo /> },
+      {
+        label: 'Words of your own',
+        render: () => (
+          <Reasoning defaultOpen duration={9}>
+            <Reasoning.Trigger
+              label={(streaming, duration) =>
+                streaming ? (
+                  <Shimmer>Working through it…</Shimmer>
+                ) : (
+                  <Text size="sm" muted>
+                    Reasoned for {duration}s
+                  </Text>
+                )
+              }
+            />
+            <Reasoning.Content>{REASONING_TRACE}</Reasoning.Content>
+          </Reasoning>
+        ),
+      },
+      {
+        label: 'The whole turn',
+        id: 'transcript',
+        fullPage: true,
+        description:
+          'A plan, its steps, the reasoning, the answer, its code and its sources.',
+        render: () => <AgentTranscriptDemo />,
+      },
+    ],
+  },
+  {
+    slug: 'sources',
+    name: 'Sources',
+    summary: 'Where an answer came from, folded under a count',
+    demos: [
+      { label: 'Under a turn', render: () => <SourcesInTurnDemo /> },
+      {
+        label: 'On its own',
+        render: () => (
+          <Sources defaultOpen>
+            <Sources.Trigger count={AI_SOURCES.length} />
+            <Sources.Content>
+              {AI_SOURCES.map((source) => (
+                <Sources.Source key={source.url} href={source.url} title={source.title} />
+              ))}
+            </Sources.Content>
+          </Sources>
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'task',
+    name: 'Task',
+    summary: 'One step an agent took, and what it did there',
+    demos: [
+      { label: 'A run of steps', render: () => <TaskRunDemo /> },
+      {
+        label: 'One step',
+        render: () => (
+          <Task status="complete">
+            <Task.Trigger title="Read 2 files" />
+            <Task.Content>
+              <Task.Item>
+                Opened <Task.File icon={<FileIcon size={12} />}>theme.css</Task.File>
+              </Task.Item>
+              <Task.Item>Found 9 syntax tokens to add.</Task.Item>
+            </Task.Content>
+          </Task>
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'code-block',
+    name: 'CodeBlock',
+    summary: 'A fenced snippet, coloured and scrolled sideways',
+    demos: [
+      { label: 'In a turn', render: () => <CodeBlockInTurnDemo /> },
+      {
+        label: 'Numbered lines',
+        render: () => (
+          <CodeBlock showLineNumbers code={AI_SNIPPET} language="ts">
+            <CodeBlock.Header>
+              <CodeBlock.Filename>calendar/index.tsx</CodeBlock.Filename>
+              <CodeBlock.Actions>
+                <CodeBlock.CopyButton />
+              </CodeBlock.Actions>
+            </CodeBlock.Header>
+          </CodeBlock>
+        ),
+      },
+      {
+        label: 'Languages',
+        render: () => (
+          <View className="w-full gap-4">
+            <CodeBlock
+              code={'{\n  "addedIn": "0.30.0",\n  "group": "ai-components"\n}'}
+              language="json"
+            />
+            <CodeBlock code={'npx expo install expo-clipboard'} language="bash" />
+            <CodeBlock code={AI_PATCH} language="diff" />
+          </View>
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'plan',
+    name: 'Plan',
+    summary: 'What an agent intends to do, before it does it',
+    demos: [
+      { label: 'Streaming in', render: () => <PlanStreamDemo /> },
+      { label: 'Steps that are tasks', render: () => <PlanWithTasksDemo /> },
     ],
   },
   {
