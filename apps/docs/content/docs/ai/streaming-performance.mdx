@@ -100,6 +100,18 @@ frame rate no matter what React is doing. If you add your own animation, use
 `useSharedValue` and `useAnimatedStyle`, not `setState` in a loop and never
 React Native's core `Animated`.
 
+The same goes for the collapsing panels. [Reasoning](/docs/ai-components/reasoning),
+[Task](/docs/ai-components/task) and [Plan](/docs/ai-components/plan) animate
+their height off a shared value, and their bodies collapse rather than
+unmounting — which matters here more than it looks. A body that unmounted on
+close and remounted on open would remount mid-stream, at the exact moment the
+JS thread has least to spare, and would throw away everything inside it.
+
+`Reasoning` is also the one component whose *timing* is worth knowing about
+during a stream: it opens itself when the trace starts, and closes itself about
+a second after it stops. Both are driven by the `isStreaming` boolean you
+already have, so neither costs a render of its own.
+
 <Callout type="warn">
   **Measure in a release build.** Debug builds inflate Reanimated's per-frame
   cost by roughly two to three times, so an animation that looks like it blows

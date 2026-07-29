@@ -54,7 +54,51 @@ Tool parts arrive as `tool-<name>` with a `state` that moves through
 `output-error`. Rendering the intermediate states is what makes a slow tool feel
 like progress instead of a hang.
 
-`Item` is the right shape for this — media, title, description, in a row.
+[Task](/docs/ai-components/task) is built for exactly this shape: a header that
+says what the step is, a body for what it did, and four statuses that line up
+with the four states one-for-one.
+
+```tsx
+import { Task } from 'panelui-native';
+
+const TASK_STATUS = {
+  'input-streaming': 'pending',
+  'input-available': 'running',
+  'output-available': 'complete',
+  'output-error': 'error',
+} as const;
+
+function ToolCall({ part }) {
+  return (
+    <Task status={TASK_STATUS[part.state]}>
+      <Task.Trigger title={title(part)} />
+      <Task.Content>
+        {part.state === 'output-error' ? (
+          <Task.Item>{part.errorText}</Task.Item>
+        ) : part.state === 'output-available' ? (
+          <Task.Item>
+            {part.output.temperature}° · {part.output.conditions} in{' '}
+            <Task.File>{part.output.city}</Task.File>
+          </Task.Item>
+        ) : (
+          <Task.Item>Checking {part.input?.city ?? '…'}</Task.Item>
+        )}
+      </Task.Content>
+    </Task>
+  );
+}
+```
+
+`running` shimmers the title on its own, so a slow tool reads as working
+without a spinner beside it — and because the body collapses rather than
+unmounting, the detail can keep arriving while the row is folded.
+
+### Or build the row by hand
+
+`Item` is the more general shape — media, title, description, in a row — and is
+worth reaching for when a tool's result is a *thing* rather than a step: a
+weather reading, a search result, a file. `Task` is for the work; `Item` is for
+what the work returned.
 
 ```tsx
 import { Item, Shimmer, Spinner, SearchIcon, CheckCircleIcon, AlertTriangleIcon } from 'panelui-native';

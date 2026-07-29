@@ -155,3 +155,32 @@ useEffect(() => {
 
 You should see the last message's text part grow across many logs. If it
 appears once, fully formed, `expoFetch` is not wired into the transport.
+
+## Which component renders which part
+
+Every message's content is an ordered array of parts, and each kind has a
+component that already knows what to do with it. None of them imports the AI
+SDK — the props are plain, and shaped so that the mapping is one line.
+
+| `part.type` | Component | What it takes |
+| --- | --- | --- |
+| `text` | [Message](/docs/components/message) | `part.text` inside a `Message.Bubble` |
+| a fenced block in `text` | [CodeBlock](/docs/ai-components/code-block) | the fence's language, and the body as `code` |
+| `reasoning` | [Reasoning](/docs/ai-components/reasoning) | every reasoning part joined, plus `isStreaming` |
+| `source-url` | [Sources](/docs/ai-components/sources) | `part.url` and `part.title`, and the count |
+| `tool-*` | [Task](/docs/ai-components/task) | `part.state` as `status`, `part.input` as the body |
+| `file` | [Attachment](/docs/components/attachment) | the name, the size and the upload state |
+| a streamed object | [Plan](/docs/ai-components/plan) | `isLoading` as `isStreaming` |
+
+The tool part's `state` maps onto `Task`'s `status` directly:
+
+```tsx
+const TASK_STATUS = {
+  'input-streaming': 'pending',
+  'input-available': 'running',
+  'output-available': 'complete',
+  'output-error': 'error',
+} as const;
+```
+
+[Chat UI](/docs/ai/chat-ui) puts the whole switch together in one `Turn`.
