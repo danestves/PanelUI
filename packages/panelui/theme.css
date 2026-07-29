@@ -45,6 +45,17 @@
   --color-card-foreground: unset;
   --color-popover: unset;
   --color-popover-foreground: unset;
+  /*
+   * The floating-panel surface, one notch further from the page than
+   * `--color-popover`. A menu is the thing furthest forward on the screen and
+   * usually the thing on top of a popover, so it needs a step of its own —
+   * without one a menu opened over a popover disappears into it.
+   *
+   * Kept separate from the `--color-surface-*` ladder because that ladder
+   * describes depth *within* the page, and this describes leaving it.
+   */
+  --color-overlay: unset;
+  --color-overlay-foreground: unset;
   --color-primary: unset;
   --color-primary-foreground: unset;
   --color-secondary: unset;
@@ -133,6 +144,9 @@
       --color-popover: #ffffff;
       --color-popover-foreground: #262626;
 
+      --color-overlay: #ffffff;
+      --color-overlay-foreground: #262626;
+
       --color-primary: #262626;
       --color-primary-foreground: #fafafa;
 
@@ -212,6 +226,10 @@
       /* color-mix(background 96%, white) */
       --color-popover: #1d1d1d;
       --color-popover-foreground: #f5f5f5;
+
+      /* color-mix(background 92%, white) — one step past the popover */
+      --color-overlay: #232323;
+      --color-overlay-foreground: #f5f5f5;
 
       --color-primary: #f5f5f5;
       --color-primary-foreground: #262626;
@@ -313,6 +331,9 @@
       --color-popover: #ffffff;
       --color-popover-foreground: #171717;
 
+      --color-overlay: #ffffff;
+      --color-overlay-foreground: #171717;
+
       --color-primary: #171717;
       --color-primary-foreground: #ffffff;
 
@@ -381,6 +402,9 @@
 
       --color-popover: #101010;
       --color-popover-foreground: #ededed;
+
+      --color-overlay: #191919;
+      --color-overlay-foreground: #ededed;
 
       --color-primary: #ededed;
       --color-primary-foreground: #0a0a0a;
@@ -452,6 +476,9 @@
       --color-popover: #ffffff;
       --color-popover-foreground: #171717;
 
+      --color-overlay: #ffffff;
+      --color-overlay-foreground: #171717;
+
       /* Brand green is too light for white text; light mode uses the
          darker ramp step so the contrast ratio holds. */
       --color-primary: #24b47e;
@@ -522,6 +549,9 @@
 
       --color-popover: #232323;
       --color-popover-foreground: #ededed;
+
+      --color-overlay: #2a2a2a;
+      --color-overlay-foreground: #ededed;
 
       --color-primary: #3ecf8e;
       --color-primary-foreground: #052e1b;

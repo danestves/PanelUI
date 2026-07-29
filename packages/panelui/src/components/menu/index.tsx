@@ -37,7 +37,9 @@
  * thumb that opened it.
  */
 import {
+  Children,
   createContext,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -77,27 +79,41 @@ function useTint(variable: string): string | undefined {
   return typeof raw === 'string' ? raw : undefined;
 }
 
+/** How long a row takes to light up under a finger, and to let go again. */
+const PRESS_IN_DURATION = 90;
+const PRESS_OUT_DURATION = 160;
+
+/** How far a pressed row shrinks. Enough to feel, not enough to see move. */
+const PRESS_SCALE = 0.98;
+
 const menuVariants = tv({
   slots: {
-    content: 'gap-0.5 rounded-2xl p-1.5',
-    label: 'px-2.5 pb-1 pt-1.5',
-    item: 'w-full flex-row items-center gap-2.5 rounded-xl px-2.5 py-2.5',
-    itemLabel: 'text-sm font-medium text-popover-foreground',
-    itemDescription: 'text-xs',
+    /*
+     * No background here: the panel's surface is a layer of its own, drawn by
+     * `Menu.Background` behind the rows, so that a caller can replace it with
+     * a gradient or a blur without also having to redraw the rows.
+     */
+    content: 'gap-0.5 rounded-3xl p-1.5',
+    background: 'absolute inset-0 rounded-3xl bg-overlay',
+    label: 'px-3 pb-1 pt-2',
+    item: 'w-full flex-row items-center gap-2.5 rounded-2xl px-2.5 py-2.5',
+    itemLabel: 'text-base font-medium text-overlay-foreground',
+    itemDescription: 'text-sm',
     shortcut: 'text-xs tracking-widest',
     separator: 'my-1 h-px bg-border',
     indicator: 'items-center justify-center',
   },
   variants: {
     variant: {
-      default: { item: 'active:bg-accent' },
+      // The pressed fill is animated rather than switched, so it is not a
+      // class here — only what the animation cannot carry.
+      default: {},
       /*
        * The row is tinted rather than only recoloured. A red word on an
        * otherwise ordinary row is easy to read past at a glance, and this is
        * the one row in the menu where reading past it is expensive.
        */
       destructive: {
-        item: 'active:bg-destructive-subtle',
         itemLabel: 'text-destructive',
       },
     },
@@ -117,6 +133,51 @@ const menuVariants = tv({
 });
 
 export type MenuItemVariant = 'default' | 'destructive';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+/**
+ * The pressed state of a row, animated rather than switched.
+ *
+ * `active:` swaps a class wholesale, which lands the fill in one frame and
+ * takes it away in one frame — on a row the size of a menu item that reads as
+ * a flash rather than as a press. Interpolating a shared value fades it in and
+ * back out on the UI thread, and carries a shrink along with it that a class
+ * cannot express at all.
+ */
+function useMenuPress(variant: MenuItemVariant) {
+  const reduced = useReducedMotion();
+  const pressed = useSharedValue(0);
+
+  const accent = useTint('--color-accent');
+  const destructive = useTint('--color-destructive-subtle');
+  const fill = variant === 'destructive' ? destructive : accent;
+
+  /*
+   * The fill is a layer with an animated opacity rather than an animated
+   * `backgroundColor`, because crossing *from* transparent needs a colour to
+   * cross from and the row has none of its own — what is behind it is whatever
+   * the panel's background layer happens to be. Fading the row itself would
+   * take the label with it, so only the fill fades.
+   */
+  const fillStyle = useAnimatedStyle(() => ({ opacity: pressed.value }));
+
+  const rowStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 - (1 - PRESS_SCALE) * pressed.value }],
+  }));
+
+  return {
+    rowStyle,
+    fillStyle,
+    fill,
+    onPressIn: () => {
+      pressed.value = reduced ? 1 : withTiming(1, { duration: PRESS_IN_DURATION });
+    },
+    onPressOut: () => {
+      pressed.value = reduced ? 0 : withTiming(0, { duration: PRESS_OUT_DURATION });
+    },
+  };
+}
 
 interface MenuContextValue {
   close: () => void;
@@ -204,16 +265,38 @@ export interface MenuContentProps
  * Its padding is the row gutter rather than the popover's content padding —
  * rows run to the panel's inner edge so that a pressed row's highlight reads
  * as part of the panel instead of a floating chip inside it.
+ *
+ * The surface is a layer rather than a background on the panel itself, so that
+ * a caller can put something *behind* the rows. Pass a `Menu.Background` of
+ * your own with a gradient, an image or a blur inside it and it replaces the
+ * default one; pass nothing and the default is drawn for you.
  */
 function MenuContent({ className, children, scrollable = true, ...props }: MenuContentProps) {
   const { content } = menuVariants();
   const context = useMenu('Menu.Content');
 
+  /*
+   * A caller's own background replaces the default rather than stacking on top
+   * of it, and it is lifted out of the children so that it lands outside the
+   * scroller — a surface inside one scrolls away with the rows sitting on it.
+   */
+  const items: ReactNode[] = [];
+  let background: ReactNode = null;
+  for (const child of Children.toArray(children)) {
+    if (isValidElement(child) && child.type === MenuBackground) {
+      background = child;
+    } else {
+      items.push(child);
+    }
+  }
+
   return (
     <Popover.Content
       accessibilityRole="menu"
       scrollable={scrollable}
-      className={cn(content(), className)}
+      unstyled
+      background={background ?? <MenuBackground />}
+      className={cn(content(), 'shadow-lg', className)}
       {...props}
     >
       {/*
@@ -222,8 +305,42 @@ function MenuContent({ className, children, scrollable = true, ...props }: MenuC
         the root never reaches the rows. Re-provide it here, where the rows
         actually mount, and Menu.Item keeps working in both presentations.
       */}
-      <MenuContext.Provider value={context}>{textChildren(children)}</MenuContext.Provider>
+      <MenuContext.Provider value={context}>{textChildren(items)}</MenuContext.Provider>
     </Popover.Content>
+  );
+}
+
+export interface MenuBackgroundProps extends ViewProps {
+  className?: string;
+  /**
+   * What the panel is made of. A gradient, an image, a blur view — anything
+   * that fills. Left empty it is the plain overlay surface.
+   */
+  children?: ReactNode;
+}
+
+/**
+ * The panel's surface, drawn behind every row.
+ *
+ * It exists as a part rather than as a background on the panel because a
+ * background cannot be got behind. A menu that wants to be frosted, tinted or
+ * gradient-filled needs something under the rows and over nothing, and
+ * `overflow-hidden` on the panel is what keeps whatever that is inside the
+ * corner radius.
+ */
+function MenuBackground({ className, children, ...props }: MenuBackgroundProps) {
+  const { background } = menuVariants();
+
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      pointerEvents="none"
+      className={cn(background(), className)}
+      {...props}
+    >
+      {children}
+    </View>
   );
 }
 
@@ -322,6 +439,7 @@ function MenuItem({
 }: MenuItemProps) {
   const { close, haptics } = useMenu('Menu.Item');
   const slots = menuVariants({ variant, disabled, inset: inset && !icon });
+  const press = useMenuPress(variant);
 
   const handlePress = (...args: Parameters<NonNullable<PressableProps['onPress']>>) => {
     if (disabled) return;
@@ -332,14 +450,22 @@ function MenuItem({
   };
 
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="menuitem"
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={handlePress}
-      className={cn(slots.item(), className)}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={press.rowStyle}
+      className={cn(slots.item(), 'overflow-hidden', className)}
       {...props}
     >
+      <Animated.View
+        pointerEvents="none"
+        className="absolute inset-0"
+        style={[press.fillStyle, { backgroundColor: press.fill }]}
+      />
       {icon ? <MenuIndicatorSlot>{icon}</MenuIndicatorSlot> : null}
       <View className="flex-1">
         {textChildren(children, (text) => (
@@ -357,7 +483,7 @@ function MenuItem({
         </Text>
       ) : null}
       {trailing}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -659,6 +785,7 @@ function MenuSubContent({ className, children, ...props }: MenuSubContentProps) 
 
 MenuTrigger.displayName = 'Menu.Trigger';
 MenuContent.displayName = 'Menu.Content';
+MenuBackground.displayName = 'Menu.Background';
 MenuLabel.displayName = 'Menu.Label';
 MenuItem.displayName = 'Menu.Item';
 MenuCheckboxItem.displayName = 'Menu.CheckboxItem';
@@ -672,6 +799,7 @@ MenuSubContent.displayName = 'Menu.SubContent';
 export const Menu = Object.assign(MenuRoot, {
   Trigger: MenuTrigger,
   Content: MenuContent,
+  Background: MenuBackground,
   Label: MenuLabel,
   Item: MenuItem,
   CheckboxItem: MenuCheckboxItem,

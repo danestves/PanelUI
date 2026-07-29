@@ -190,6 +190,26 @@ Set `presentation="bottom-sheet"` on the root and the same content opens in a dr
 </Popover>
 ```
 
+### Owning the panel's surface
+
+`unstyled` drops the panel's background, border, padding and shadow and keeps only its position and its size, so the surface can be drawn by the caller. `background` then takes a layer rendered behind the content and — importantly — outside the scroller, so a surface stays put while the content moves over it.
+
+```tsx
+<Popover>
+  <Popover.Trigger>
+    <Button variant="outline">Open</Button>
+  </Popover.Trigger>
+  <Popover.Content
+    unstyled
+    scrollable
+    className="p-3"
+    background={<View className="absolute inset-0 bg-overlay" />}
+  >
+    <Text>Drawn on a surface of your own.</Text>
+  </Popover.Content>
+</Popover>
+```
+
 ## API Reference
 
 ### Popover
@@ -214,6 +234,8 @@ Set `presentation="bottom-sheet"` on the root and the same content opens in a dr
 | `minWidth` | `number` | — | Floor for the panel's width, in pixels. Worth setting with `width="trigger"`, where a narrow trigger would otherwise squeeze the content into a column. |
 | `maxHeight` | `number` | — | Ceiling for the panel's height, in pixels. Always clamped to the room inside the safe area, which is also the default — a panel is never positioned so that part of it falls off the screen, because the part that falls off cannot be scrolled back into view. |
 | `scrollable` | `boolean` | `false` | Scroll the panel's body when it is taller than `maxHeight`. Off by default, because a popover is usually a paragraph or a short form and a scroller around either one only adds a bounce. Worth turning on for a list of unknown length, which is the case where the cap actually bites. The spacing between children moves to the scroller's content when this is set; `className` still dresses the panel itself. |
+| `unstyled` | `boolean` | `false` | Drop the panel's own surface — its background, border, radius, padding and shadow — and keep only its position and its size. For a caller that draws the surface itself, so that something can be put *behind* the content rather than layered on top of a background that is already painted. The panel is still clipped to a rounded rectangle, because a surface drawn inside it has to have something to be clipped by. |
+| `background` | `ReactNode` | — | A layer drawn inside the panel, behind its content — and, crucially, outside its scroller, so that a surface does not scroll away with the rows on top of it. Pair it with `unstyled` to own the panel's appearance. |
 | `dismissible` | `boolean` | `true` | Tap outside the panel closes it. Default true. |
 | `blur` | `boolean` | `false` | Frost the background behind the panel instead of dimming it. Uses `expo-blur` when installed and falls back to the dimmed scrim when it is not, so it is safe to pass either way. |
 
@@ -246,3 +268,9 @@ Use a **BottomSheet** instead when the content is long, needs its own scroll, or
 **A panel is never taller than the screen.** `place` slides the panel to keep it inside the safe area, but a panel taller than that area has nowhere to slide to — it ends up pinned to the top edge with the rest of it off the bottom, where there is no way to get at it. The height is capped first so the slide always has a solution, and `scrollable` makes the overflow reachable.
 
 **A column of actions is a `Menu`.** A popover will hold one, but the rows then need their roles, their dismiss-on-select behaviour and their destructive colour written out by hand every time. `Menu` is this component with all of that already on it.
+
+### Drawing the surface yourself
+
+`unstyled` keeps the panel's position, its size cap and its rounded clip, and drops everything that paints: the background, the border, the padding and the shadow. It is for the case where something has to go *behind* the content — a gradient, an image, a blur — which a background colour cannot accommodate, because a background cannot be got behind.
+
+`background` is where that layer goes. It renders inside the panel but outside the scroller, which matters as soon as `scrollable` is set: a surface among the children would be inside the scroll body and would scroll away underneath the content sitting on it. [Menu](/docs/components/menu) is built on exactly this pair — its `Menu.Background` is a `Popover.Content` background.

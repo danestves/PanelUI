@@ -49,6 +49,7 @@ npx panelui-cli@latest add menu
 <Menu>
   <Menu.Trigger>…</Menu.Trigger>
   <Menu.Content>
+    <Menu.Background />
     <Menu.Label>…</Menu.Label>
     <Menu.Item>…</Menu.Item>
     <Menu.CheckboxItem>…</Menu.CheckboxItem>
@@ -66,6 +67,7 @@ npx panelui-cli@latest add menu
 
 - **`Menu.Trigger`** — Wraps a single child and opens the menu on press. It is also what gets measured, so the panel knows where to sit.
 - **`Menu.Content`** — The panel, and what a screen reader announces as a menu. Portaled above everything else, positioned against the trigger, capped to the safe area and scrolled.
+- **`Menu.Background`** — The panel's surface, drawn behind every row and outside its scroller. Rendered for you when you do not pass one; pass your own to put a gradient, an image or a blur under the rows.
 - **`Menu.Label`** — Non-interactive heading over a run of rows.
 - **`Menu.Item`** — One row. Dismisses the menu once it has run, unless `closeOnSelect` says otherwise.
 - **`Menu.CheckboxItem`** — A row carrying a state rather than an action. Keeps the menu open by default.
@@ -211,6 +213,27 @@ The same rows, moved into a draggable sheet — better on a small screen than a 
 </Menu>
 ```
 
+### Putting something behind the panel
+
+The panel's surface is a layer rather than a background, so it can be replaced. `Menu.Background` fills the panel behind the rows and inside its corner radius — pass one with a tint, a gradient, an image or a blur view inside it and it stands in for the default. Anything you put there is clipped to the panel and never scrolls with the rows.
+
+```tsx
+<Menu>
+  <Menu.Trigger>
+    <Button variant="outline">Options</Button>
+  </Menu.Trigger>
+  <Menu.Content>
+    {/* A tint over the overlay surface. Put a BlurView or a gradient in
+        here instead and it fills the panel the same way. */}
+    <Menu.Background className="bg-overlay">
+      <View className="flex-1 bg-info/10" />
+    </Menu.Background>
+    <Menu.Item icon={<PencilIcon size={16} />}>Rename</Menu.Item>
+    <Menu.Item icon={<ShareNodesIcon size={16} />}>Share</Menu.Item>
+  </Menu.Content>
+</Menu>
+```
+
 ## Variants
 
 ### `variant`
@@ -244,6 +267,12 @@ The same rows, moved into a draggable sheet — better on a small screen than a 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `scrollable` | `boolean` | — | Scroll the rows when there are more of them than fit on screen. On by default, unlike the popover it is built on: a menu is a list, its length is usually a `map` over data rather than something written out by hand, and a row that cannot be reached is a row that may as well not exist. |
+
+### Menu.Background
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
 
 ### Menu.Label
 
@@ -322,3 +351,17 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 Every row carries the `menuitem` role, and a checkbox, radio or submenu row publishes its state alongside it — checked, selected or expanded — so a screen reader announces what the row *is* as well as what it says.
 
 `Menu.Content` is capped to the room inside the safe area and scrolls, so the last row of a long menu is always reachable. Pass `maxHeight` to cap it lower than that, or `scrollable={false}` when the rows are written out by hand and known to fit.
+
+### The panel's surface
+
+The surface is a layer of its own — `Menu.Background`, an absolute fill behind the rows — rather than a background colour on the panel. A background cannot be got behind, and a menu that wants to be frosted or gradient-filled needs something under the rows and over nothing.
+
+It draws on `--color-overlay`, which is a step further from the page than `--color-popover`. A menu is usually the thing furthest forward on the screen and often the thing on top of a popover; sharing one token with the panel underneath would make it disappear into it.
+
+The layer is rendered outside the panel's scroller, so a surface stays put while the rows move over it. That is also why `Menu.Background` is lifted out of `Menu.Content`'s children rather than simply rendered among them.
+
+### Press feedback
+
+A pressed row fades its fill in over 90ms and back out over 160ms, and shrinks by 2% while it is held. `active:` could only swap the fill wholesale — in and out in a single frame each way, which on a row this size reads as a flash rather than as a press — and could not express the shrink at all. Both run on the UI thread off one shared value, and both are skipped when the system asks for reduced motion.
+
+A blur belongs in the same slot: put an `expo-blur` `BlurView` inside `Menu.Background` and give the layer a semi-transparent tint (`bg-overlay/70`) so the blur shows through it.

@@ -247,6 +247,22 @@ export interface PopoverContentProps extends ViewProps {
    * set; `className` still dresses the panel itself.
    */
   scrollable?: boolean;
+  /**
+   * Drop the panel's own surface — its background, border, radius, padding and
+   * shadow — and keep only its position and its size. For a caller that draws
+   * the surface itself, so that something can be put *behind* the content
+   * rather than layered on top of a background that is already painted.
+   *
+   * The panel is still clipped to a rounded rectangle, because a surface drawn
+   * inside it has to have something to be clipped by.
+   */
+  unstyled?: boolean;
+  /**
+   * A layer drawn inside the panel, behind its content — and, crucially,
+   * outside its scroller, so that a surface does not scroll away with the rows
+   * on top of it. Pair it with `unstyled` to own the panel's appearance.
+   */
+  background?: ReactNode;
   /** Tap outside the panel closes it. Default true. */
   dismissible?: boolean;
   /**
@@ -268,6 +284,8 @@ function PopoverContent({
   minWidth,
   maxHeight,
   scrollable = false,
+  unstyled = false,
+  background,
   dismissible = true,
   blur = false,
   children,
@@ -474,7 +492,11 @@ function PopoverContent({
               accessibilityViewIsModal
               style={[panelStyle, style]}
               className={cn(
-                'rounded-2xl border border-border bg-popover p-4 shadow-lg',
+                // `unstyled` keeps the clip and drops everything that paints,
+                // so a caller can put its own layer underneath the content.
+                unstyled
+                  ? 'overflow-hidden rounded-2xl'
+                  : 'rounded-2xl border border-border bg-popover p-4 shadow-lg',
                 // The gap belongs to whichever view actually holds the
                 // children — on the panel normally, on the scroller's content
                 // when there is one, since the scroller is then the panel's
@@ -484,6 +506,7 @@ function PopoverContent({
               )}
               {...props}
             >
+              {background}
               {scrollable ? (
                 <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
                   <View className="gap-1.5">{textChildren(children)}</View>

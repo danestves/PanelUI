@@ -8485,8 +8485,32 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'menu',
     name: 'Menu',
     summary: 'The list of things you can do to something',
-    layout: 'sections',
     demos: [
+      {
+        label: 'Putting something behind the panel',
+        render: () => (
+          <View className="w-full items-center py-4">
+            <Menu>
+              <Menu.Trigger>
+                <Button variant="outline">Tinted panel</Button>
+              </Menu.Trigger>
+              <Menu.Content align="start" width={224}>
+                {/* The surface is a layer, so it can be replaced. A BlurView or
+                    a gradient goes in the same slot. */}
+                <Menu.Background className="bg-overlay">
+                  <View className="flex-1 bg-info/10" />
+                </Menu.Background>
+                <Menu.Item icon={<PencilIcon size={16} />}>Rename</Menu.Item>
+                <Menu.Item icon={<ShareNodesIcon size={16} />}>Share</Menu.Item>
+                <Menu.Separator />
+                <Menu.Item variant="destructive" icon={<TrashIcon size={16} />}>
+                  Delete
+                </Menu.Item>
+              </Menu.Content>
+            </Menu>
+          </View>
+        ),
+      },
       {
         label: 'A menu of actions',
         render: () => (

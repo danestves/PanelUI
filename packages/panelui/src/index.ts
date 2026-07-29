@@ -381,6 +381,7 @@ export {
   type MenuProps,
   type MenuTriggerProps,
   type MenuContentProps,
+  type MenuBackgroundProps,
   type MenuLabelProps,
   type MenuItemProps,
   type MenuCheckboxItemProps,
