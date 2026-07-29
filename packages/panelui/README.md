@@ -167,18 +167,26 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | --- | --- |
 | `Accordion` | Collapsible sections with single or multiple selection |
 | `Alert` | Status message with a built-in icon |
+| `AreaChart` | Filled bands over time, stacked or overlaid |
 | `Attachment` | File row with upload states, built on Item |
 | `Avatar` | User image with an initials fallback and an optional badge overlay |
 | `Badge` | Compact status label, dot, or notification count |
+| `BarChart` | Categories compared by length, grouped or stacked |
 | `BottomSheet` | Draggable sheet anchored to the bottom of the screen |
 | `Breadcrumb` | The trail of links back up the hierarchy to the current page |
 | `Button` | Pressable action with variants, sizes, loading state and icon slots |
+| `Calendar` | A month of days, for picking one, several, or a range |
 | `Card` | Content surface with header, body and footer |
+| `Carousel` | A run of slides, one at a time, dragged with a finger |
 | `Checkbox` | Animated checkbox, as a row or a selectable card |
 | `Chip` | Interactive pill — a filter, a tag, or a removable token |
+| `DatePicker` | A calendar behind a button |
 | `Dialog` | Modal dialog with a backdrop and footer actions |
 | `Direction` | Reading direction for everything below it |
 | `EmptyState` | Placeholder for a list or screen with no content |
+| `Field` | Layout and validation-state kit a form control composes into |
+| `Flow` | Pan-and-zoom canvas of draggable nodes joined by animated edges |
+| `Form` | Form state — values, validation and submission — with no form library underneath |
 | `Frame` | Widget shell — a card of rows sitting in a titled tray |
 | `HeatmapChart` | Contribution grid with a themed colour ramp and a readout |
 | `Input` | Text field with label, description and error message |
@@ -186,19 +194,27 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Item` | Row of media, text and actions for lists and settings |
 | `Label` | Form field label with required, invalid and disabled states |
 | `LineChart` | Animated time series, drawn on the UI thread |
+| `Loader` | Nine loading animations behind one variant prop |
+| `Map` | Vector map whose basemap is drawn from your theme tokens |
 | `Marker` | Inline note between conversation turns |
+| `Menu` | The list of things you can do to something |
 | `Message` | Chat turn with avatar, bubble, header and footer |
 | `MessageScroller` | Scroll behaviour a chat transcript needs |
+| `NumberInput` | Numeric field stepped by buttons or typed by hand |
+| `OtpInput` | One-time-code field drawn as a row of separate cells |
 | `Popover` | Panel anchored to the element that opened it |
 | `Progress` | Determinate and indeterminate progress bar |
 | `RadioGroup` | Single-select list of options |
+| `Rating` | A row of stars to read or set a score |
+| `RingChart` | Concentric arcs, each measured against its own target |
 | `ScrollCanvas` | Image frame whose contents move as you scroll |
 | `ScrollFade` | Fades the edges of a scroll container |
 | `ScrollText` | Text that resolves word by word as you scroll |
 | `SectionRail` | Floating section navigator for a long screen |
 | `Select` | Picker shown in a bottom sheet, expanded in place, or floating over the page |
-| `Separator` | Horizontal or vertical rule between content |
+| `Separator` | Horizontal or vertical rule between content, optionally labelled |
 | `Shimmer` | Animated highlight sweeping across content |
+| `Signature` | Sign with a finger, and get the result back out as SVG or PNG |
 | `Skeleton` | Shimmer placeholder for loading content |
 | `Slider` | Pick a value by dragging a thumb along a track |
 | `Soundwave` | What a voice looks like while an app listens |
@@ -211,6 +227,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Timeline` | Vertical sequence of events |
 | `Toast` | Transient notification queue with swipe to dismiss |
 | `ToggleButton` | A button that stays down, on its own or in a group |
+| `Tooltip` | A small label that names the control under your finger |
 | `Typography` | Semantic text presets |
 
 Plus `PanelUIProvider`, `Portal`, `AnimatedPressable`, `KeyboardAvoider`, `ScrollProgress`,

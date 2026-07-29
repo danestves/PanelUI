@@ -2283,9 +2283,9 @@
     },
     "examples": [
       {
-        "title": "A menu of actions",
-        "description": "Wrap each row in `Popover.Close` and it dismisses the panel as well as running its own `onPress`. Drop the panel padding to `p-1.5` so the rows can carry their own.",
-        "code": "<Popover>\n  <Popover.Trigger>\n    <Button variant=\"outline\">Options</Button>\n  </Popover.Trigger>\n  <Popover.Content align=\"start\" className=\"w-52 gap-0 p-1.5\">\n    {actions.map((action) => (\n      <Popover.Close key={action.label}>\n        <Pressable\n          accessibilityRole=\"menuitem\"\n          onPress={action.run}\n          className=\"flex-row items-center gap-3 rounded-xl px-3 py-2.5 active:bg-accent\"\n        >\n          {action.icon}\n          <Text size=\"sm\">{action.label}</Text>\n        </Pressable>\n      </Popover.Close>\n    ))}\n  </Popover.Content>\n</Popover>"
+        "title": "A long panel, scrolled",
+        "description": "The panel is capped to the room inside the safe area whatever you do, because a panel positioned past the edge of the screen cannot be scrolled back into view. `maxHeight` caps it lower than that, and `scrollable` hands the overflow back to the finger.",
+        "code": "<Popover>\n  <Popover.Trigger>\n    <Button variant=\"outline\">Release notes</Button>\n  </Popover.Trigger>\n  <Popover.Content scrollable maxHeight={280} align=\"start\" className=\"w-72\">\n    <Popover.Title>What changed</Popover.Title>\n    {notes.map((note) => (\n      <Popover.Description key={note.id}>{note.body}</Popover.Description>\n    ))}\n  </Popover.Content>\n</Popover>"
       },
       {
         "title": "With an arrow",
@@ -2313,7 +2313,7 @@
         "code": "<Popover presentation=\"bottom-sheet\">\n  <Popover.Trigger>\n    <Button variant=\"outline\">Sort by</Button>\n  </Popover.Trigger>\n  <Popover.Content>\n    <Popover.Title>Sort by</Popover.Title>\n    {options.map((option) => (\n      <Popover.Close key={option}>\n        <Pressable onPress={() => sort(option)} className=\"rounded-xl px-3 py-3 active:bg-accent\">\n          <Text>{option}</Text>\n        </Pressable>\n      </Popover.Close>\n    ))}\n  </Popover.Content>\n</Popover>"
       }
     ],
-    "notes": "**Placement is resolved, not obeyed.** The side is flipped only when the preferred one genuinely has less room than its opposite; after that the panel is slid along the other axis to stay inside the safe area. That order matters — sliding first would let a badly placed panel look like it fits.\n\n**The panel is measured before it is shown.** Its size is not known until it has laid out once, so the first frame is laid out off-screen and the entrance starts from the frame after. That entrance is driven by hand rather than by a preset, because it has to start from whichever side was resolved — a panel that opened upwards should not appear to come from above.\n\n**The arrow points at the trigger, not the panel.** When `align` shifts the panel off-centre or a clamp slides it back on screen, the arrow tracks the trigger's centre rather than the panel's middle.\n\n**The trigger is measured on every open**, not once on layout. A trigger inside a scroll view has moved since it was laid out, and a stale rectangle anchors the panel to where it used to be.\n\n**`Popover.Trigger` wraps its child in a view.** The ref has to survive whatever the child is — a Button, a Pressable, an icon — and only a wrapper the component owns is guaranteed to be measurable.\n\nUse a **BottomSheet** instead when the content is long, needs its own scroll, or is the whole point of the interaction. A popover that fills the screen is a dialog wearing the wrong clothes.\n\n### Sizing the panel\n\n`content-fit` is the default and right for a menu. `trigger` ties the panel to the control that opened it, which reads as one thing rather than two — but only when the trigger is wide enough to hold what goes inside. `minWidth` is the floor, and it never wins past the space that actually exists: a panel wider than the screen is worse than a cramped one.",
+    "notes": "**Placement is resolved, not obeyed.** The side is flipped only when the preferred one genuinely has less room than its opposite; after that the panel is slid along the other axis to stay inside the safe area. That order matters — sliding first would let a badly placed panel look like it fits.\n\n**The panel is measured before it is shown.** Its size is not known until it has laid out once, so the first frame is laid out off-screen and the entrance starts from the frame after. That entrance is driven by hand rather than by a preset, because it has to start from whichever side was resolved — a panel that opened upwards should not appear to come from above.\n\n**The arrow points at the trigger, not the panel.** When `align` shifts the panel off-centre or a clamp slides it back on screen, the arrow tracks the trigger's centre rather than the panel's middle.\n\n**The trigger is measured on every open**, not once on layout. A trigger inside a scroll view has moved since it was laid out, and a stale rectangle anchors the panel to where it used to be.\n\n**`Popover.Trigger` wraps its child in a view.** The ref has to survive whatever the child is — a Button, a Pressable, an icon — and only a wrapper the component owns is guaranteed to be measurable.\n\nUse a **BottomSheet** instead when the content is long, needs its own scroll, or is the whole point of the interaction. A popover that fills the screen is a dialog wearing the wrong clothes.\n\n### Sizing the panel\n\n`content-fit` is the default and right for a menu. `trigger` ties the panel to the control that opened it, which reads as one thing rather than two — but only when the trigger is wide enough to hold what goes inside. `minWidth` is the floor, and it never wins past the space that actually exists: a panel wider than the screen is worse than a cramped one.\n\n**A panel is never taller than the screen.** `place` slides the panel to keep it inside the safe area, but a panel taller than that area has nowhere to slide to — it ends up pinned to the top edge with the rest of it off the bottom, where there is no way to get at it. The height is capped first so the slide always has a solution, and `scrollable` makes the overflow reachable.\n\n**A column of actions is a `Menu`.** A popover will hold one, but the rows then need their roles, their dismiss-on-select behaviour and their destructive colour written out by hand every time. `Menu` is this component with all of that already on it.",
     "preview": {
       "src": "/previews/popover.jpg",
       "alt": "The Popover component, running in the example app.",
@@ -4144,5 +4144,62 @@
       }
     ],
     "notes": "### Why every ring has a track\n\nAn arc drawn on nothing shows how far something went. An arc drawn on a full circle shows how far it went *of what it was aiming at*, which is the entire question a ring chart is asked. The track is the target made visible.\n\nA value past its target fills the ring and stops there. Going round twice would draw 110% as 10%, which is the wrong answer told confidently.\n\n### What the centre shows\n\nThe outermost ring, until one is selected. Not a total: the rings measure different things against different targets, so their values do not add up and their percentages do not average — a total in the middle would be a confident number about nothing. Pass a render function to `Center` when your rings *do* share a unit and a total is honest.\n\n### Touch, not hover\n\nRings are selected by pressing them. There is no equivalent here of a pointer resting somewhere without committing, so a chart that only revealed its numbers on hover would never reveal them at all — and because a twelve-point band is below the size a finger reliably hits, the touch target is widened well past the ring it belongs to.\n\n### Reduced motion\n\nThe sweep is skipped and the arcs draw at their final length."
+  },
+  "menu": {
+    "intro": "The list of things you can do to something.\n\nA menu is not a select, and the difference is what the rows *are*. A select's rows are values: picking one answers a question the form asked, and the trigger then shows the answer. A menu's rows are verbs — rename, duplicate, delete — and the trigger goes on saying the same thing afterwards, because nothing about it was chosen.\n\nThe panel is a `Popover` underneath, so a menu inherits its measuring, flipping and edge-clamping rather than owning a second copy of them. A menu near the bottom of the screen opens upwards, and `presentation=\"bottom-sheet\"` moves the same rows into a sheet.",
+    "usage": "<Menu>\n  <Menu.Trigger>\n    <Button variant=\"outline\">Options</Button>\n  </Menu.Trigger>\n  <Menu.Content align=\"start\" width={224}>\n    <Menu.Item icon={<PencilIcon size={16} />} shortcut=\"⌘R\">\n      Rename\n    </Menu.Item>\n    <Menu.Separator />\n    <Menu.Item variant=\"destructive\" icon={<TrashIcon size={16} />}>\n      Delete\n    </Menu.Item>\n  </Menu.Content>\n</Menu>",
+    "extraImports": [
+      "Button",
+      "PencilIcon",
+      "TrashIcon",
+      "PackageIcon",
+      "ShareNodesIcon",
+      "PlusSquareIcon",
+      "DownloadIcon",
+      "LockIcon",
+      "EllipsisIcon"
+    ],
+    "anatomy": "<Menu>\n  <Menu.Trigger>…</Menu.Trigger>\n  <Menu.Content>\n    <Menu.Label>…</Menu.Label>\n    <Menu.Item>…</Menu.Item>\n    <Menu.CheckboxItem>…</Menu.CheckboxItem>\n    <Menu.RadioGroup>\n      <Menu.RadioItem>…</Menu.RadioItem>\n    </Menu.RadioGroup>\n    <Menu.Separator />\n    <Menu.Sub>\n      <Menu.SubTrigger>…</Menu.SubTrigger>\n      <Menu.SubContent>…</Menu.SubContent>\n    </Menu.Sub>\n  </Menu.Content>\n</Menu>",
+    "parts": {
+      "Trigger": "Wraps a single child and opens the menu on press. It is also what gets measured, so the panel knows where to sit.",
+      "Content": "The panel, and what a screen reader announces as a menu. Portaled above everything else, positioned against the trigger, capped to the safe area and scrolled.",
+      "Label": "Non-interactive heading over a run of rows.",
+      "Item": "One row. Dismisses the menu once it has run, unless `closeOnSelect` says otherwise.",
+      "CheckboxItem": "A row carrying a state rather than an action. Keeps the menu open by default.",
+      "RadioGroup": "A run of rows of which exactly one is chosen.",
+      "RadioItem": "One option inside a `Menu.RadioGroup`.",
+      "Separator": "Hairline between two runs of rows.",
+      "Sub": "Groups a `Menu.SubTrigger` with the rows it reveals.",
+      "SubTrigger": "The row that opens a submenu. Its chevron turns to point down once open.",
+      "SubContent": "The rows a submenu reveals, opening in place rather than flying out sideways."
+    },
+    "examples": [
+      {
+        "title": "A menu of actions",
+        "description": "Rows dismiss the panel as they run — that is what separates a menu of verbs from a picker of values. `variant=\"destructive\"` tints the row as well as recolouring the label, because this is the one row where reading past it is expensive.",
+        "code": "<Menu>\n  <Menu.Trigger>\n    <Button variant=\"outline\">Options</Button>\n  </Menu.Trigger>\n  <Menu.Content align=\"start\" width={224}>\n    <Menu.Item icon={<ShareNodesIcon size={16} />} shortcut=\"⌘S\">\n      Share\n    </Menu.Item>\n    <Menu.Item icon={<PlusSquareIcon size={16} />}>Add to list</Menu.Item>\n    <Menu.Item icon={<DownloadIcon size={16} />} disabled>\n      Download\n    </Menu.Item>\n    <Menu.Separator />\n    <Menu.Item variant=\"destructive\" icon={<TrashIcon size={16} />}>\n      Delete\n    </Menu.Item>\n  </Menu.Content>\n</Menu>"
+      },
+      {
+        "title": "Checkboxes and a radio group",
+        "description": "Checkbox rows keep the menu open, because a set of filters is nearly always changed more than one at a time; radio rows close, because the question has been answered. `indicator=\"dot\"` is quieter than a tick beside a list of nouns.",
+        "code": "const [density, setDensity] = useState('comfortable');\nconst [showDone, setShowDone] = useState(true);\n\n<Menu haptics>\n  <Menu.Trigger>\n    <Button variant=\"outline\">View options</Button>\n  </Menu.Trigger>\n  <Menu.Content align=\"start\" width={248}>\n    <Menu.Label>Density</Menu.Label>\n    <Menu.RadioGroup value={density} onValueChange={setDensity}>\n      <Menu.RadioItem value=\"comfortable\" indicator=\"dot\">\n        Comfortable\n      </Menu.RadioItem>\n      <Menu.RadioItem value=\"compact\" indicator=\"dot\">\n        Compact\n      </Menu.RadioItem>\n    </Menu.RadioGroup>\n    <Menu.Separator />\n    <Menu.Label>Show</Menu.Label>\n    <Menu.CheckboxItem checked={showDone} onCheckedChange={setShowDone}>\n      Completed\n    </Menu.CheckboxItem>\n  </Menu.Content>\n</Menu>"
+      },
+      {
+        "title": "A submenu",
+        "description": "Submenus expand in place. A flyout needs a pointer to travel from the parent row to the child panel without crossing anything that would close it, and a finger has no such path — so the rows open downwards into the panel, under the thumb that opened them.",
+        "code": "<Menu>\n  <Menu.Trigger>\n    <Button variant=\"outline\">File actions</Button>\n  </Menu.Trigger>\n  <Menu.Content align=\"start\" width={244}>\n    <Menu.Item icon={<PencilIcon size={16} />} shortcut=\"⌘R\">\n      Rename\n    </Menu.Item>\n    <Menu.Sub>\n      <Menu.SubTrigger icon={<PackageIcon size={16} />}>Move to</Menu.SubTrigger>\n      <Menu.SubContent>\n        {['Inbox', 'Projects', 'Archive'].map((folder) => (\n          <Menu.Item key={folder} onSelect={() => move(folder)}>\n            {folder}\n          </Menu.Item>\n        ))}\n      </Menu.SubContent>\n    </Menu.Sub>\n    <Menu.Separator />\n    <Menu.Item\n      variant=\"destructive\"\n      icon={<TrashIcon size={16} />}\n      description=\"This cannot be undone\"\n    >\n      Delete\n    </Menu.Item>\n  </Menu.Content>\n</Menu>"
+      },
+      {
+        "title": "Rows that line up without an icon",
+        "description": "`inset` reserves the icon column on a row that has no icon, so its label starts where the others' labels do. It works on `Menu.Label` too, which is what keeps a heading over the same line as the rows beneath it.",
+        "code": "<Menu>\n  <Menu.Trigger>\n    <Button variant=\"ghost\" size=\"icon\" accessibilityLabel=\"More\">\n      <EllipsisIcon size={18} />\n    </Button>\n  </Menu.Trigger>\n  <Menu.Content align=\"end\" width={232}>\n    <Menu.Label inset>Account</Menu.Label>\n    <Menu.Item inset>Profile</Menu.Item>\n    <Menu.Item inset shortcut=\"⌘,\">\n      Settings\n    </Menu.Item>\n    <Menu.Separator />\n    <Menu.Item icon={<LockIcon size={16} />}>Lock screen</Menu.Item>\n  </Menu.Content>\n</Menu>"
+      },
+      {
+        "title": "As a bottom sheet",
+        "description": "The same rows, moved into a draggable sheet — better on a small screen than a panel floating over the thing being acted on. Placement and width do not apply to a sheet.",
+        "code": "<Menu presentation=\"bottom-sheet\">\n  <Menu.Trigger>\n    <Button variant=\"outline\">Open as a sheet</Button>\n  </Menu.Trigger>\n  <Menu.Content>\n    <Menu.Item icon={<ShareNodesIcon size={16} />}>Share</Menu.Item>\n    <Menu.Separator />\n    <Menu.Item variant=\"destructive\" icon={<TrashIcon size={16} />}>\n      Delete\n    </Menu.Item>\n  </Menu.Content>\n</Menu>"
+      }
+    ],
+    "notes": "Every row carries the `menuitem` role, and a checkbox, radio or submenu row publishes its state alongside it — checked, selected or expanded — so a screen reader announces what the row *is* as well as what it says.\n\n`Menu.Content` is capped to the room inside the safe area and scrolls, so the last row of a long menu is always reachable. Pass `maxHeight` to cap it lower than that, or `scrollable={false}` when the rows are written out by hand and known to fit."
   }
 }

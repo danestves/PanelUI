@@ -232,6 +232,14 @@
       "alpha": true
     }
   ],
+  "menu": [
+    "Menu",
+    "The list of things you can do to something.",
+    "react native dropdown menu",
+    {
+      "addedIn": "0.29.0"
+    }
+  ],
   "marker": [
     "Marker",
     "Inline note between conversation turns.",
@@ -255,7 +263,7 @@
     "Panel anchored to the element that opened it.",
     "react native popover",
     {
-      "updatedIn": "0.26.0"
+      "updatedIn": "0.29.0"
     }
   ],
   "progress": [

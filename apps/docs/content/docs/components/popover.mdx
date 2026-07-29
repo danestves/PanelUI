@@ -68,27 +68,19 @@ npx panelui-cli@latest add popover
 
 ## Examples
 
-### A menu of actions
+### A long panel, scrolled
 
-Wrap each row in `Popover.Close` and it dismisses the panel as well as running its own `onPress`. Drop the panel padding to `p-1.5` so the rows can carry their own.
+The panel is capped to the room inside the safe area whatever you do, because a panel positioned past the edge of the screen cannot be scrolled back into view. `maxHeight` caps it lower than that, and `scrollable` hands the overflow back to the finger.
 
 ```tsx
 <Popover>
   <Popover.Trigger>
-    <Button variant="outline">Options</Button>
+    <Button variant="outline">Release notes</Button>
   </Popover.Trigger>
-  <Popover.Content align="start" className="w-52 gap-0 p-1.5">
-    {actions.map((action) => (
-      <Popover.Close key={action.label}>
-        <Pressable
-          accessibilityRole="menuitem"
-          onPress={action.run}
-          className="flex-row items-center gap-3 rounded-xl px-3 py-2.5 active:bg-accent"
-        >
-          {action.icon}
-          <Text size="sm">{action.label}</Text>
-        </Pressable>
-      </Popover.Close>
+  <Popover.Content scrollable maxHeight={280} align="start" className="w-72">
+    <Popover.Title>What changed</Popover.Title>
+    {notes.map((note) => (
+      <Popover.Description key={note.id}>{note.body}</Popover.Description>
     ))}
   </Popover.Content>
 </Popover>
@@ -220,6 +212,8 @@ Set `presentation="bottom-sheet"` on the root and the same content opens in a dr
 | `alignOffset` | `number` | `0` | Nudge along the alignment axis, in pixels. |
 | `width` | `number \| 'trigger' \| 'full' \| 'content-fit'` | `'content-fit'` | `content-fit` sizes to the content, `trigger` matches the trigger's width, `full` spans the safe area, and a number is that many pixels. |
 | `minWidth` | `number` | — | Floor for the panel's width, in pixels. Worth setting with `width="trigger"`, where a narrow trigger would otherwise squeeze the content into a column. |
+| `maxHeight` | `number` | — | Ceiling for the panel's height, in pixels. Always clamped to the room inside the safe area, which is also the default — a panel is never positioned so that part of it falls off the screen, because the part that falls off cannot be scrolled back into view. |
+| `scrollable` | `boolean` | `false` | Scroll the panel's body when it is taller than `maxHeight`. Off by default, because a popover is usually a paragraph or a short form and a scroller around either one only adds a bounce. Worth turning on for a list of unknown length, which is the case where the cap actually bites. The spacing between children moves to the scroller's content when this is set; `className` still dresses the panel itself. |
 | `dismissible` | `boolean` | `true` | Tap outside the panel closes it. Default true. |
 | `blur` | `boolean` | `false` | Frost the background behind the panel instead of dimming it. Uses `expo-blur` when installed and falls back to the dimmed scrim when it is not, so it is safe to pass either way. |
 
@@ -248,3 +242,7 @@ Use a **BottomSheet** instead when the content is long, needs its own scroll, or
 ### Sizing the panel
 
 `content-fit` is the default and right for a menu. `trigger` ties the panel to the control that opened it, which reads as one thing rather than two — but only when the trigger is wide enough to hold what goes inside. `minWidth` is the floor, and it never wins past the space that actually exists: a panel wider than the screen is worse than a cramped one.
+
+**A panel is never taller than the screen.** `place` slides the panel to keep it inside the safe area, but a panel taller than that area has nowhere to slide to — it ends up pinned to the top edge with the rest of it off the bottom, where there is no way to get at it. The height is capped first so the slide always has a solution, and `scrollable` makes the overflow reachable.
+
+**A column of actions is a `Menu`.** A popover will hold one, but the rows then need their roles, their dismiss-on-select behaviour and their destructive colour written out by hand every time. `Menu` is this component with all of that already on it.

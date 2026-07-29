@@ -372,6 +372,19 @@
     ]
   },
   {
+    "name": "menu",
+    "type": "registry:ui",
+    "description": "The list of things you can do to something.",
+    "registryDependencies": [
+      "cn",
+      "haptics",
+      "icons",
+      "popover",
+      "text",
+      "use-direction"
+    ]
+  },
+  {
     "name": "message",
     "type": "registry:ui",
     "description": "Chat turn with avatar, bubble, header and footer.",
