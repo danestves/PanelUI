@@ -9,7 +9,7 @@ A form field label. String children are wrapped in `Label.Text` for you.
   src="/previews/label.jpg"
   alt="The Label component, running in the example app."
   width={1179}
-  height={1294}
+  height={1246}
 />
 
 ## Installation
@@ -70,6 +70,26 @@ Both are visual and semantic — pair them with the matching state on the field 
 
 <Label isDisabled>Plan</Label>
 <Input value="Premium" disabled />
+```
+
+### Custom layout
+
+Passing `Label.Text` instead of the `children` string is what lets the text be styled on its own — the required mark stays the label's, positioned the same way.
+
+<Preview
+  src="/previews/label-custom-layout.jpg"
+  alt="Label — Custom layout."
+  width={1179}
+  height={287}
+/>
+
+```tsx
+<View className="w-full gap-1.5">
+  <Label isRequired>
+    <Label.Text className="text-base font-semibold">API key</Label.Text>
+  </Label>
+  <Input placeholder="sk-…" />
+</View>
 ```
 
 ## API Reference

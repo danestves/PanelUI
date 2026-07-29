@@ -40,6 +40,7 @@ import { tv } from 'tailwind-variants';
 import { ChevronLeftIcon, ChevronRightIcon } from '../../icons';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
+import { Popover } from '../popover';
 import {
   addCalendarMonths,
   addDays,
@@ -409,15 +410,19 @@ function CalendarNav({
 }
 
 /**
- * Month and year as two rows of chips rather than as native pickers.
+ * Month and year as chips that open a panel of options.
  *
- * A picker is a platform overlay, and putting one on top of a calendar that is
- * itself already inside a popover is two floating layers deep for choosing a
- * number. Chips stay on the surface the choice is being made on.
+ * The panel floats rather than opening in place, and the caption is the reason:
+ * it is a fixed-height row, so a list opened inside it has nowhere to go and
+ * spills over the grid below. A popover is laid out against the chip and
+ * clamped to the screen, which is the behaviour this needs and already has.
+ *
+ * Native pickers are still the wrong tool — a platform overlay on top of a
+ * calendar that is itself already in a popover is two floating layers deep for
+ * choosing a number, and it cannot show a Hijri year at all.
  */
 function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
   const { setMonth, locale, system, minDate, maxDate } = useCalendar('Calendar.Caption');
-  const [open, setOpen] = useState<'month' | 'year' | null>(null);
 
   /*
    * Everything here counts in the calendar on screen, not in the platform's.
@@ -434,9 +439,16 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
     from: minDate ? calendarParts(minDate, system, locale).year : current.year - 100,
     to: maxDate ? calendarParts(maxDate, system, locale).year : current.year + 10,
   };
+  /*
+   * Newest first, because the list is long — a century by default, and longer
+   * against a `minDate` — and a list that opens at its far end is showing the
+   * one year nobody came to pick. Counting down puts the years in reach at the
+   * top, which for the case this exists for, a birthday against a `maxDate` of
+   * today, is exactly where the wanted one is.
+   */
   const years = Array.from(
     { length: Math.max(1, bounds.to - bounds.from + 1) },
-    (_unused, index) => bounds.from + index
+    (_unused, index) => bounds.to - index
   );
 
   /*
@@ -446,57 +458,90 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
    */
   const choose = (months_: number) => {
     setMonth(addCalendarMonths(month, months_ - offset, system, locale));
-    setOpen(null);
   };
 
   return (
-    <View className="flex-1 items-center">
-      <View className="flex-row items-center gap-1">
-        <CaptionChip
-          label={months[current.month - 1] ?? String(current.month)}
-          expanded={open === 'month'}
-          onPress={() => setOpen(open === 'month' ? null : 'month')}
-        />
-        <CaptionChip
-          label={String(current.year)}
-          expanded={open === 'year'}
-          onPress={() => setOpen(open === 'year' ? null : 'year')}
-        />
-      </View>
+    <View className="flex-1 flex-row items-center justify-center gap-1">
+      <CaptionDropdown
+        label={months[current.month - 1] ?? String(current.month)}
+        options={months}
+        active={current.month - 1}
+        onSelect={(index) => choose(index - (current.month - 1))}
+      />
+      <CaptionDropdown
+        label={String(current.year)}
+        options={years.map(String)}
+        active={years.indexOf(current.year)}
+        onSelect={(index) => choose((years[index]! - current.year) * 12)}
+        // Twelve months fit in the panel; a century of years does not.
+        scrollable
+      />
+    </View>
+  );
+}
 
-      {open ? (
-        <View className="mt-2 max-h-40 w-full flex-row flex-wrap justify-center gap-1 rounded-lg border border-border bg-popover p-2">
-          {(open === 'month' ? months : years.map(String)).map((option, index) => {
-            const active =
-              open === 'month'
-                ? index === current.month - 1
-                : years[index] === current.year;
+/** The panel's width, and so how many chips a row of it holds. */
+const DROPDOWN_WIDTH = 264;
+
+/** One chip and the options it opens. */
+function CaptionDropdown({
+  label,
+  options,
+  active,
+  onSelect,
+  scrollable = false,
+}: {
+  label: string;
+  options: string[];
+  /** Index of the option currently in the caption, or -1 for none. */
+  active: number;
+  onSelect: (index: number) => void;
+  scrollable?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <Popover.Trigger>
+        <CaptionChip label={label} expanded={open} />
+      </Popover.Trigger>
+      {/*
+        The panel is capped and scrolled by the popover itself, against the room
+        actually on screen rather than a fixed number — the cap has to be the
+        one that knows where the chip ended up.
+      */}
+      <Popover.Content
+        align="center"
+        width={DROPDOWN_WIDTH}
+        scrollable={scrollable}
+        className="p-2"
+      >
+        <View className="flex-row flex-wrap justify-center gap-1">
+          {options.map((option, index) => {
+            const selected = index === active;
             return (
               <Pressable
                 key={option}
-                onPress={() =>
-                  choose(
-                    open === 'month'
-                      ? index - (current.month - 1)
-                      : (years[index]! - current.year) * 12
-                  )
-                }
+                onPress={() => {
+                  onSelect(index);
+                  setOpen(false);
+                }}
                 accessibilityRole="button"
-                accessibilityState={{ selected: active }}
+                accessibilityState={{ selected }}
                 className={cn(
                   'rounded-md px-2.5 py-1.5',
-                  active ? 'bg-primary' : 'active:bg-accent'
+                  selected ? 'bg-primary' : 'active:bg-accent'
                 )}
               >
-                <Text size="sm" className={active ? 'text-primary-foreground' : undefined}>
+                <Text size="sm" className={selected ? 'text-primary-foreground' : undefined}>
                   {option}
                 </Text>
               </Pressable>
             );
           })}
         </View>
-      ) : null}
-    </View>
+      </Popover.Content>
+    </Popover>
   );
 }
 
@@ -507,7 +552,8 @@ function CaptionChip({
 }: {
   label: string;
   expanded: boolean;
-  onPress: () => void;
+  /** Supplied by `Popover.Trigger`, which clones this to open the panel. */
+  onPress?: (...args: unknown[]) => void;
 }) {
   return (
     <Pressable

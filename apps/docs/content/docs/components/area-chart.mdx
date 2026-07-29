@@ -7,6 +7,14 @@ Filled bands over time, stacked or overlaid.
 
 This is not `LineChart.Area`. Shading under a line is one series saying *this is the shape of the thing*; an area chart answers *what is it made of* — and that needs stacking, where each band sits on the running total of the ones below it, so the top edge is the whole and each thickness is a share.
 
+<PreviewVideo
+  src="/previews/area-chart.mp4"
+  poster="/previews/area-chart-poster.jpg"
+  alt="The AreaChart component, running in the example app."
+  width={720}
+  height={718}
+/>
+
 ## Installation
 
 AreaChart ships with the library — no separate install.
@@ -137,6 +145,14 @@ The top edge is the total; each band is its share of it. Sessions by channel acr
 ### Overlaid
 
 Alternatives rather than parts, so the fills go translucent and both bands stay readable.
+
+<PreviewVideo
+  src="/previews/area-chart-overlaid.mp4"
+  poster="/previews/area-chart-overlaid-poster.jpg"
+  alt="AreaChart — Overlaid."
+  width={720}
+  height={768}
+/>
 
 ```tsx
 <AreaChart data={traffic} xDataKey="hour">

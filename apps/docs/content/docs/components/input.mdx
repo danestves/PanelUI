@@ -9,7 +9,7 @@ A text field with an optional label, description and error message. Its focus bo
   src="/previews/input.jpg"
   alt="The Input component, running in the example app."
   width={1179}
-  height={1378}
+  height={1282}
 />
 
 ## Installation
@@ -17,7 +17,7 @@ A text field with an optional label, description and error message. Its focus bo
 Input ships with the library — no separate install.
 
 ```tsx
-import { Input } from 'panelui-native';
+import { Input, Card, Button } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -160,6 +160,33 @@ Anything `TextInput` accepts works here.
 />
 ```
 
+### In a form
+
+Nothing special is needed to put fields in a card — `label` and `isRequired` carry the whole field, so the form is the fields and the button under them.
+
+<Preview
+  src="/previews/input-in-a-form.jpg"
+  alt="Input — In a form."
+  width={1179}
+  height={1247}
+/>
+
+```tsx
+<Card className="w-full">
+  <Card.Header>
+    <Card.Title>Sign in</Card.Title>
+    <Card.Description>Welcome back.</Card.Description>
+  </Card.Header>
+  <Card.Content className="gap-4">
+    <Input label="Email" placeholder="you@example.com" isRequired />
+    <Input label="Password" secureTextEntry placeholder="••••••••" isRequired />
+  </Card.Content>
+  <Card.Footer>
+    <Button fullWidth>Continue</Button>
+  </Card.Footer>
+</Card>
+```
+
 ## Versions
 
 ### Lifting in a scroll view
@@ -183,6 +210,14 @@ A field partway down a long form. Focus it and it lifts by exactly its overlap w
 ### Docked composer
 
 A bar pinned above the home indicator that rides the keyboard up and back down. Nothing is measured — `dock` travels by the keyboard height less the inset the bar already sits above.
+
+<PreviewVideo
+  src="/previews/input-docked-composer.mp4"
+  poster="/previews/input-docked-composer-poster.jpg"
+  alt="Input — Docked composer."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const insets = useSafeAreaInsets();
@@ -215,7 +250,7 @@ const insets = useSafeAreaInsets();
   src="/previews/input-filled.jpg"
   alt="Input — variant filled."
   width={1179}
-  height={928}
+  height={886}
   caption="filled"
 />
 
@@ -236,8 +271,8 @@ const insets = useSafeAreaInsets();
 <Preview
   src="/previews/input-size.jpg"
   alt="Input — size."
-  width={1167}
-  height={949}
+  width={1179}
+  height={853}
 />
 
 ```tsx

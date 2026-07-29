@@ -26,6 +26,8 @@ S=./scripts node scripts/gen.mjs       # api.json + usage.json -> MDX
   | `examples` | `## Examples` — an array of `{ title, description?, code }` |
   | `versions` | `## Versions` — an array of `{ title, description?, code }`, one per `fullPage` demo in `apps/example/src/data/components.tsx`. Only for components that have them |
   | `variantCode` | Per-variant snippet, keyed by variant name. Overrides the generic `<Name variant="x">…</Name>` fallback, which is wrong for components that take no children |
+  | `variantMedia` | Shots or recordings of individual variant values, keyed by variant name: `{ variant: [{ preview }, { previewVideo }] }`. Each takes a `caption` naming the value it shows |
+  | `extraVariants` | Variant values the `tv()` does not carry, keyed by variant name — for a prop that selects behaviour rather than classes, like Loader's animation. Merged in with the parsed keys |
   | `notes` | The `## Notes` section |
 
 - `meta.json` maps each slug to its display name, one-line summary and primary search keyword,

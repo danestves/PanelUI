@@ -7,6 +7,14 @@ A loading animation, in nine flavours. They are interchangeable — pick one for
 
 All of it runs on the UI thread, and none of it re-renders anything while it runs.
 
+<PreviewVideo
+  src="/previews/loader.mp4"
+  poster="/previews/loader-poster.jpg"
+  alt="The Loader component, running in the example app."
+  width={720}
+  height={208}
+/>
+
 ## Installation
 
 Loader ships with the library — no separate install.
@@ -127,6 +135,113 @@ Inside buttons and cards, taking its ink from the surface it landed on rather th
 <Button disabled={busy} onPress={save}>
   {busy ? <Loader variant="pulse-dots" size="sm" /> : 'Save changes'}
 </Button>
+```
+
+## Variants
+
+### `variant`
+
+- `pulse-dots` *(default)*
+- `bounce-dots`
+- `pulsating-dots`
+- `liquid-dots`
+- `bar-cascade`
+- `bouncing-bars`
+- `symmetric-wave`
+- `morph-ring`
+- `wave-physics`
+
+<PreviewVideo
+  src="/previews/loader-pulse-dots.mp4"
+  poster="/previews/loader-pulse-dots-poster.jpg"
+  alt="Loader — variant pulse-dots."
+  width={720}
+  height={138}
+  caption="pulse-dots"
+/>
+
+<PreviewVideo
+  src="/previews/loader-bounce-dots.mp4"
+  poster="/previews/loader-bounce-dots-poster.jpg"
+  alt="Loader — variant bounce-dots."
+  width={720}
+  height={144}
+  caption="bounce-dots"
+/>
+
+<PreviewVideo
+  src="/previews/loader-pulsating-dots.mp4"
+  poster="/previews/loader-pulsating-dots-poster.jpg"
+  alt="Loader — variant pulsating-dots."
+  width={720}
+  height={152}
+  caption="pulsating-dots"
+/>
+
+<PreviewVideo
+  src="/previews/loader-liquid-dots.mp4"
+  poster="/previews/loader-liquid-dots-poster.jpg"
+  alt="Loader — variant liquid-dots."
+  width={720}
+  height={164}
+  caption="liquid-dots"
+/>
+
+<PreviewVideo
+  src="/previews/loader-bar-cascade.mp4"
+  poster="/previews/loader-bar-cascade-poster.jpg"
+  alt="Loader — variant bar-cascade."
+  width={720}
+  height={154}
+  caption="bar-cascade"
+/>
+
+<PreviewVideo
+  src="/previews/loader-bouncing-bars.mp4"
+  poster="/previews/loader-bouncing-bars-poster.jpg"
+  alt="Loader — variant bouncing-bars."
+  width={720}
+  height={174}
+  caption="bouncing-bars"
+/>
+
+<PreviewVideo
+  src="/previews/loader-symmetric-wave.mp4"
+  poster="/previews/loader-symmetric-wave-poster.jpg"
+  alt="Loader — variant symmetric-wave."
+  width={720}
+  height={156}
+  caption="symmetric-wave"
+/>
+
+<PreviewVideo
+  src="/previews/loader-morph-ring.mp4"
+  poster="/previews/loader-morph-ring-poster.jpg"
+  alt="Loader — variant morph-ring."
+  width={720}
+  height={204}
+  caption="morph-ring"
+/>
+
+<PreviewVideo
+  src="/previews/loader-wave-physics.mp4"
+  poster="/previews/loader-wave-physics-poster.jpg"
+  alt="Loader — variant wave-physics."
+  width={720}
+  height={252}
+  caption="wave-physics"
+/>
+
+```tsx
+<Loader variant="pulse-dots" />      {/* the default */}
+<Loader variant="bounce-dots" />
+<Loader variant="pulsating-dots" />
+<Loader variant="liquid-dots" />
+<Loader variant="bar-cascade" />
+<Loader variant="bouncing-bars" />
+<Loader variant="symmetric-wave" />
+<Loader variant="morph-ring" />
+<Loader variant="wave-physics" />
 ```
 
 ## API Reference

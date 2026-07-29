@@ -7,6 +7,14 @@ Categories compared by length, drawn and animated on the UI thread. Composed the
 
 The baseline is zero and stays zero. A line may crop its axis to the range the data occupies, because its job is to show change; a bar’s job is to compare lengths, and a bar cropped at the bottom is a length that lies — twice as tall no longer means twice as much.
 
+<PreviewVideo
+  src="/previews/bar-chart.mp4"
+  poster="/previews/bar-chart-poster.jpg"
+  alt="The BarChart component, running in the example app."
+  width={720}
+  height={688}
+/>
+
 ## Installation
 
 BarChart ships with the library — no separate install.
@@ -72,6 +80,13 @@ Declare a `Bar` per series. They stand in one band, sharing the width `barGap` l
 ### Stacked instead
 
 The same two series read as a total rather than as a comparison. `stackGap` puts a hairline between the segments, which is what stops a stack of similar colours reading as one bar.
+
+<Preview
+  src="/previews/bar-chart-stacked-instead.jpg"
+  alt="BarChart — Stacked instead."
+  width={1179}
+  height={1151}
+/>
 
 ```tsx
 <BarChart data={revenue} xDataKey="month" stacked stackGap={2}>
@@ -146,6 +161,14 @@ Two series side by side, then the same two as a total — the same data answerin
 ### Sideways
 
 Horizontal bars, for category names that need the room.
+
+<PreviewVideo
+  src="/previews/bar-chart-sideways.mp4"
+  poster="/previews/bar-chart-sideways-poster.jpg"
+  alt="BarChart — Sideways."
+  width={720}
+  height={782}
+/>
 
 ```tsx
 <BarChart data={channels} xDataKey="name" orientation="horizontal" barGap={0.35}>

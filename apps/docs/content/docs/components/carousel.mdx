@@ -10,6 +10,14 @@ Everything is driven from one value: the position in the run, as a fractional in
 
 That is why the track is a gesture rather than a paging scroll view. A scroll view would serve the plain track well enough, but `coverflow` and `stack` do not lay their slides along a track at all — they hold them in one place and pull them apart with transforms, so there would be nothing to scroll. One mechanism all four layouts read beats a native scroller for one of them and something else for the rest.
 
+<PreviewVideo
+  src="/previews/carousel.mp4"
+  poster="/previews/carousel-poster.jpg"
+  alt="The Carousel component, running in the example app."
+  width={720}
+  height={544}
+/>
+
 ## Installation
 
 Carousel ships with the library — no separate install.
@@ -87,6 +95,14 @@ The plain layout, and the honest choice for content that is read rather than adm
 
 The run fans out around the middle slide and tilts away on both sides, opening wider while a finger is down and settling when it lifts. Set `itemSize` so the slides overlap.
 
+<PreviewVideo
+  src="/previews/carousel-interactive.mp4"
+  poster="/previews/carousel-interactive-poster.jpg"
+  alt="Carousel — Interactive."
+  width={720}
+  height={524}
+/>
+
 ```tsx
 <Carousel variant="interactive" itemSize={160} defaultIndex={2}>
   <Carousel.Content className="h-56">
@@ -105,6 +121,13 @@ The run fans out around the middle slide and tilts away on both sides, opening w
 
 The same fan with no arrows and no dots — dragged and nothing else. The right shape when the pictures are the whole point and a control bar would be the only chrome on the screen.
 
+<Preview
+  src="/previews/carousel-interactive-with-nothing-under-it.jpg"
+  alt="Carousel — Interactive, with nothing under it."
+  width={1179}
+  height={832}
+/>
+
 ```tsx
 <Carousel variant="interactive" itemSize={160} defaultIndex={2}>
   <Carousel.Content className="h-56">
@@ -122,6 +145,14 @@ The same fan with no arrows and no dots — dragged and nothing else. The right 
 
 The neighbours turn away from you in perspective. Best with art — covers, posters, photographs — where the turned edge reads as a shelf rather than as a glitch.
 
+<PreviewVideo
+  src="/previews/carousel-coverflow.mp4"
+  poster="/previews/carousel-coverflow-poster.jpg"
+  alt="Carousel — Coverflow."
+  width={720}
+  height={470}
+/>
+
 ```tsx
 <Carousel variant="coverflow" itemSize={150} defaultIndex={2}>
   <Carousel.Content className="h-48">
@@ -138,6 +169,14 @@ The neighbours turn away from you in perspective. Best with art — covers, post
 ### A deck of cards
 
 The active card on top, the next two peeking out behind it, and a drag that takes the top one away. Size the cards — a card as wide as the screen has nothing to stack behind it. `Carousel.Dots` turned vertical becomes the rail down the card's edge.
+
+<PreviewVideo
+  src="/previews/carousel-a-deck-of-cards.mp4"
+  poster="/previews/carousel-a-deck-of-cards-poster.jpg"
+  alt="Carousel — A deck of cards."
+  width={720}
+  height={550}
+/>
 
 ```tsx
 <Carousel variant="stack" itemSize={260}>
@@ -173,6 +212,14 @@ The active card on top, the next two peeking out behind it, and a drag that take
 ### Autoplay
 
 Advancing on a timer. It stops for good the first time a finger lands rather than pausing — someone who has taken hold of the run is reading it, and having it move again a few seconds later is the behaviour everybody hates.
+
+<PreviewVideo
+  src="/previews/carousel-autoplay.mp4"
+  poster="/previews/carousel-autoplay-poster.jpg"
+  alt="Carousel — Autoplay."
+  width={720}
+  height={474}
+/>
 
 ```tsx
 <Carousel loop autoplay autoplayInterval={2200}>

@@ -5,6 +5,13 @@ description: Numeric field stepped by buttons or typed by hand.
 
 A number stepped by a − and a + at the ends, or typed straight into the field in the middle — because past a handful of steps, tapping to a value is worse than typing it, and a good numeric control keeps both doors open. The two ends repeat when held, after a short delay and then faster, so walking from 0 to 200 is a press rather than two hundred of them. Everything reconciles through a single value that is clamped to `min`/`max` and snapped to `step`.
 
+<Preview
+  src="/previews/number-input.jpg"
+  alt="The NumberInput component, running in the example app."
+  width={1179}
+  height={850}
+/>
+
 ## Installation
 
 NumberInput ships with the library — no separate install.
@@ -107,6 +114,13 @@ const [qty, setQty] = useState(1);
 - `outline` *(default)*
 - `filled`
 
+<Preview
+  src="/previews/number-input-variant.jpg"
+  alt="NumberInput — variant."
+  width={1179}
+  height={706}
+/>
+
 ```tsx
 <NumberInput variant="outline" defaultValue={1} />
 <NumberInput variant="filled" defaultValue={1} />
@@ -117,6 +131,13 @@ const [qty, setQty] = useState(1);
 - `sm`
 - `md` *(default)*
 - `lg`
+
+<Preview
+  src="/previews/number-input-size.jpg"
+  alt="NumberInput — size."
+  width={1179}
+  height={699}
+/>
 
 ```tsx
 <NumberInput size="sm" defaultValue={1} />
