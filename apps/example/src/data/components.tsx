@@ -8451,31 +8451,26 @@ export const COMPONENTS: ComponentEntry[] = [
     layout: 'sections',
     demos: [
       {
-        label: 'Menu of actions',
+        label: 'A long panel, scrolled',
         render: () => (
-          <Popover>
-            <Popover.Trigger>
-              <Button variant="outline">Options</Button>
-            </Popover.Trigger>
-            <Popover.Content align="start" className="w-52 gap-0 p-1.5">
-              {[
-                { label: 'Share', icon: <ShareNodesIcon size={16} /> },
-                { label: 'Add to list', icon: <PlusSquareIcon size={16} /> },
-                { label: 'Download', icon: <PackageIcon size={16} /> },
-              ].map((action) => (
-                <Popover.Close key={action.label}>
-                  <Pressable
-                    accessibilityRole="menuitem"
-                    onPress={() => {}}
-                    className="flex-row items-center gap-3 rounded-xl px-3 py-2.5 active:bg-accent"
-                  >
-                    {action.icon}
-                    <Text size="sm">{action.label}</Text>
-                  </Pressable>
-                </Popover.Close>
-              ))}
-            </Popover.Content>
-          </Popover>
+          <View className="w-full items-center py-4">
+            <Popover>
+              <Popover.Trigger>
+                <Button variant="outline">Release notes</Button>
+              </Popover.Trigger>
+              {/* Capped below the safe area and scrolled, so the last line is
+                  reachable however many there are. */}
+              <Popover.Content scrollable maxHeight={260} align="start" className="w-72">
+                <Popover.Title>What changed</Popover.Title>
+                {Array.from({ length: 8 }, (_, index) => (
+                  <Popover.Description key={index}>
+                    {`Release note ${index + 1} — a line of detail long enough to
+                      take a couple of rows on a phone.`}
+                  </Popover.Description>
+                ))}
+              </Popover.Content>
+            </Popover>
+          </View>
         ),
       },
       {

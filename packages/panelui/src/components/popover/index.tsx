@@ -44,6 +44,7 @@ import {
 } from 'react';
 import {
   Pressable,
+  ScrollView,
   useWindowDimensions,
   View,
   type LayoutChangeEvent,
@@ -228,6 +229,24 @@ export interface PopoverContentProps extends ViewProps {
    * content into a column.
    */
   minWidth?: number;
+  /**
+   * Ceiling for the panel's height, in pixels. Always clamped to the room
+   * inside the safe area, which is also the default — a panel is never
+   * positioned so that part of it falls off the screen, because the part that
+   * falls off cannot be scrolled back into view.
+   */
+  maxHeight?: number;
+  /**
+   * Scroll the panel's body when it is taller than `maxHeight`.
+   *
+   * Off by default, because a popover is usually a paragraph or a short form
+   * and a scroller around either one only adds a bounce. Worth turning on for
+   * a list of unknown length, which is the case where the cap actually bites.
+   *
+   * The spacing between children moves to the scroller's content when this is
+   * set; `className` still dresses the panel itself.
+   */
+  scrollable?: boolean;
   /** Tap outside the panel closes it. Default true. */
   dismissible?: boolean;
   /**
@@ -247,6 +266,8 @@ function PopoverContent({
   alignOffset = 0,
   width = 'content-fit',
   minWidth,
+  maxHeight,
+  scrollable = false,
   dismissible = true,
   blur = false,
   children,
@@ -302,6 +323,17 @@ function PopoverContent({
     minWidth !== undefined && requestedWidth !== undefined
       ? Math.min(Math.max(requestedWidth, minWidth), available)
       : requestedWidth;
+
+  /*
+   * The cap is what keeps a tall panel reachable. `place` clamps the panel
+   * inside the bounds, but a panel taller than the bounds cannot be clamped
+   * into them — it gets pinned to the top edge and the rest runs off the
+   * bottom of the screen, where there is no way to get at it. Capping the
+   * height first means the clamp always has a solution, and `scrollable`
+   * hands the overflow back to the finger.
+   */
+  const room = bounds.bottom - bounds.top;
+  const resolvedMaxHeight = maxHeight === undefined ? room : Math.min(maxHeight, room);
 
   const position =
     trigger && size
@@ -434,6 +466,7 @@ function PopoverContent({
               top: position?.top ?? -9999,
               left: position?.left ?? -9999,
               maxWidth: bounds.right - bounds.left,
+              maxHeight: resolvedMaxHeight,
               width: resolvedWidth,
             }}
           >
@@ -441,12 +474,23 @@ function PopoverContent({
               accessibilityViewIsModal
               style={[panelStyle, style]}
               className={cn(
-                'gap-1.5 rounded-2xl border border-border bg-popover p-4 shadow-lg',
+                'rounded-2xl border border-border bg-popover p-4 shadow-lg',
+                // The gap belongs to whichever view actually holds the
+                // children — on the panel normally, on the scroller's content
+                // when there is one, since the scroller is then the panel's
+                // only child and a gap around it spaces nothing.
+                scrollable ? 'overflow-hidden' : 'gap-1.5',
                 className
               )}
               {...props}
             >
-              {textChildren(children)}
+              {scrollable ? (
+                <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+                  <View className="gap-1.5">{textChildren(children)}</View>
+                </ScrollView>
+              ) : (
+                textChildren(children)
+              )}
             </Animated.View>
           </Animated.View>
         </View>
