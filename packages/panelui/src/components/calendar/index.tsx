@@ -45,6 +45,7 @@ import {
 } from 'react';
 import { Pressable, ScrollView, View, type ViewProps } from 'react-native';
 import { tv } from 'tailwind-variants';
+import { useCSSVariable } from 'uniwind';
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -652,6 +653,12 @@ function CaptionDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const list = useRef<ScrollView>(null);
+  /*
+   * The check is given a colour rather than left to its own fallback, which is
+   * white — right inside a filled control, invisible on this panel.
+   */
+  const rawTick = useCSSVariable('--color-foreground');
+  const tick = typeof rawTick === 'string' ? rawTick : undefined;
 
   /*
    * Opened on the option already in the caption, centred in the panel rather
@@ -700,7 +707,7 @@ function CaptionDropdown({
                 <Text size="sm" weight={selected ? 'semibold' : 'normal'}>
                   {option}
                 </Text>
-                {selected ? <CheckIcon size={16} /> : null}
+                {selected ? <CheckIcon size={16} color={tick} /> : null}
               </Pressable>
             );
           })}

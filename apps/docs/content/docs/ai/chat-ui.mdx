@@ -20,9 +20,13 @@ import {
   Avatar,
   Button,
   Input,
+  CodeBlock,
   Message,
+  Reasoning,
   SendIcon,
   Shimmer,
+  Sources,
+  Task,
   Text,
 } from 'panelui-native';
 import { apiBaseUrl } from '../lib/api';
@@ -46,9 +50,17 @@ export default function Chat() {
     sendMessage({ text });
   }, [input, isBusy, sendMessage]);
 
+  const lastId = messages.at(-1)?.id;
   const renderItem = useCallback(
-    ({ item }: { item: UIMessage }) => <Turn message={item} />,
-    []
+    ({ item }: { item: UIMessage }) => (
+      <Turn
+        message={item}
+        // Only the turn actually arriving is told it is streaming, so the
+        // rest of the transcript is not re-rendered by the same flag.
+        isStreaming={item.id === lastId && status === 'streaming'}
+      />
+    ),
+    [lastId, status]
   );
 
   return (
@@ -110,13 +122,51 @@ reversed copy in a `useMemo` keyed on `messages`.
 ## One turn
 
 Each message's content lives in `parts`, an ordered array — the model may
-produce text, then a tool call, then more text, and the order is meaningful.
+produce text, then a tool call, then more text, and the order is meaningful. A
+turn is a `switch` over that array.
+
+Two of the part kinds are gathered rather than mapped. Reasoning parts are
+joined into one block, because some models emit a run of them for a single
+thought and one component per part is a column of "Thinking…" rows. Source parts
+are collected into one list, because the trigger has to know how many there are
+before the list is drawn.
 
 ```tsx
 import { memo } from 'react';
+import {
+  CodeBlock,
+  Message,
+  Reasoning,
+  Sources,
+  Task,
+} from 'panelui-native';
 
-const Turn = memo(function Turn({ message }: { message: UIMessage }) {
+/** A tool part's `state`, as the status a Task draws. */
+const TASK_STATUS = {
+  'input-streaming': 'pending',
+  'input-available': 'running',
+  'output-available': 'complete',
+  'output-error': 'error',
+} as const;
+
+const Turn = memo(function Turn({
+  message,
+  isStreaming,
+}: {
+  message: UIMessage;
+  isStreaming: boolean;
+}) {
   const isUser = message.role === 'user';
+
+  // Gathered, not mapped — see above.
+  const reasoning = message.parts.filter((part) => part.type === 'reasoning');
+  const sources = message.parts.filter((part) => part.type === 'source-url');
+  const trace = reasoning.map((part) => part.text).join('\n\n');
+
+  // Still arriving only if the *last* part is the reasoning one; otherwise the
+  // trace finished before the answer started and should not shimmer.
+  const tracing =
+    isStreaming && message.parts.at(-1)?.type === 'reasoning';
 
   return (
     <Message align={isUser ? 'end' : 'start'}>
@@ -126,23 +176,88 @@ const Turn = memo(function Turn({ message }: { message: UIMessage }) {
         </Message.Avatar>
       )}
       <Message.Content>
-        <Message.Bubble>
-          {message.parts.map((part, index) => {
-            if (part.type === 'text') {
-              return (
-                <Message.BubbleContent key={index}>
-                  {part.text}
-                </Message.BubbleContent>
-              );
-            }
-            return null; // tool parts — see the Tools page
-          })}
-        </Message.Bubble>
+        {reasoning.length > 0 && (
+          <Reasoning isStreaming={tracing}>
+            <Reasoning.Trigger />
+            <Reasoning.Content>{trace}</Reasoning.Content>
+          </Reasoning>
+        )}
+
+        {message.parts.map((part, index) => {
+          const key = `${message.id}-${index}`;
+
+          if (part.type === 'text') {
+            return (
+              <Message.Bubble key={key}>
+                <Message.BubbleContent>{part.text}</Message.BubbleContent>
+              </Message.Bubble>
+            );
+          }
+
+          if (part.type.startsWith('tool-')) {
+            return (
+              <Task key={key} status={TASK_STATUS[part.state]}>
+                <Task.Trigger title={part.type.replace('tool-', '')} />
+                <Task.Content>
+                  <Task.Item>{JSON.stringify(part.input)}</Task.Item>
+                </Task.Content>
+              </Task>
+            );
+          }
+
+          // Reasoning and sources are handled above; everything else is
+          // deliberately not rendered rather than rendered badly.
+          return null;
+        })}
+
+        {sources.length > 0 && (
+          <Sources>
+            <Sources.Trigger count={sources.length} />
+            <Sources.Content>
+              {sources.map((part) => (
+                <Sources.Source
+                  key={part.sourceId}
+                  href={part.url}
+                  title={part.title}
+                />
+              ))}
+            </Sources.Content>
+          </Sources>
+        )}
       </Message.Content>
     </Message>
   );
 });
 ```
+
+Where each piece goes is not arbitrary. The reasoning sits **above** the bubble
+because it is about the answer rather than part of it; the sources sit **below**
+because they are what the answer rests on and are read after it. A code block
+goes beside the bubble rather than inside it — a snippet in a coloured bubble
+inherits the bubble's foreground and stops being legible.
+
+```tsx
+if (part.type === 'text' && part.text.startsWith('```')) {
+  const [fence, ...rest] = part.text.split('\n');
+  return (
+    <CodeBlock
+      key={key}
+      language={fence.replace('```', '')}
+      code={rest.join('\n').replace(/```$/, '')}
+    >
+      <CodeBlock.Header>
+        <CodeBlock.Language>{fence.replace('```', '')}</CodeBlock.Language>
+        <CodeBlock.Actions>
+          <CodeBlock.CopyButton />
+        </CodeBlock.Actions>
+      </CodeBlock.Header>
+    </CodeBlock>
+  );
+}
+```
+
+Pass `isStreaming` as `message.id === messages.at(-1)?.id && status === 'streaming'`
+so only the turn that is actually arriving is told it is.
 
 `memo` matters here. Without it, every message in the transcript re-renders on
 every token of the one still streaming. With it, only the streaming turn does —
@@ -173,6 +288,12 @@ function Thinking() {
 
 Drop it the moment `status` becomes `streaming` — once text is arriving, the
 text *is* the progress indicator.
+
+For a reasoning model there is usually something better to show than a shimmer,
+because the wait is not empty: the trace is arriving. [Reasoning](/docs/ai-components/reasoning)
+carries its own shimmering "Thinking…" while it streams and settles into
+"Thought for 8 seconds" afterwards, so the gap before the answer becomes the
+model's working rather than a placeholder.
 
 ## The composer
 

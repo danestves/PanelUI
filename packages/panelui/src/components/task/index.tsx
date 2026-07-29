@@ -42,6 +42,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
+import { useCSSVariable } from 'uniwind';
 import {
   AlertTriangleIcon,
   CheckCircleIcon,
@@ -216,18 +217,42 @@ function TaskTrigger({
   );
 }
 
-/** The glyph for each status. A magnifier while running: a step is a search. */
+/**
+ * The glyph for each status. A magnifier while running: a step is a search.
+ *
+ * Every one is given an explicit colour. The filled status icons fall back to
+ * `currentColor`, which React Native's SVG does not resolve — it paints black,
+ * which on a dark theme is a black disc floating in the row. They are built to
+ * take their colour from an enclosing `IconColorProvider`, and a task row is
+ * not one, so the tint is resolved here.
+ */
 function TaskStatusIcon({ status }: { status: TaskStatus }) {
+  const muted = useTint('--color-muted-foreground');
+  const success = useTint('--color-success');
+  const destructive = useTint('--color-destructive');
+
   switch (status) {
     case 'pending':
-      return <CircleIcon size={16} />;
+      return <CircleIcon size={16} color={muted} />;
     case 'error':
-      return <AlertTriangleIcon size={16} />;
+      return <AlertTriangleIcon size={16} color={destructive} />;
     case 'complete':
-      return <CheckCircleIcon size={16} />;
+      return <CheckCircleIcon size={16} color={success} />;
     default:
-      return <SearchIcon size={16} />;
+      return <SearchIcon size={16} color={muted} />;
   }
+}
+
+/**
+ * A theme token as a colour an icon will accept.
+ *
+ * `useCSSVariable` answers with whatever the token holds, which for a length or
+ * a number is not a colour at all — so anything that is not a string is dropped
+ * and the icon falls back to what it would have used anyway.
+ */
+function useTint(variable: string): string | undefined {
+  const raw = useCSSVariable(variable);
+  return typeof raw === 'string' ? raw : undefined;
 }
 
 export interface TaskContentProps extends Omit<ViewProps, 'children'> {

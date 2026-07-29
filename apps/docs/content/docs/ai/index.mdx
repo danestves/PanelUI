@@ -5,9 +5,15 @@ description: Building AI chat interfaces in React Native with PanelUI.
 
 <Callout type="warn">
   **Beta.** These pages describe patterns rather than a stable API surface, and
-  they move with the AI SDK. Nothing here ships as a component yet — if a
-  pattern below earns its keep, it graduates into the library.
+  they move with the AI SDK.
 </Callout>
+
+Five of the patterns that were once only described here now ship as components:
+[Reasoning](/docs/ai-components/reasoning), [Sources](/docs/ai-components/sources),
+[Task](/docs/ai-components/task), [CodeBlock](/docs/ai-components/code-block) and
+[Plan](/docs/ai-components/plan). None of them depends on the AI SDK — their props
+are plain, and shaped to line up with what `message.parts` hands you, which is
+what the pages below show.
 
 Most AI chat guides are written for the web, where a `div` re-rendering sixty
 times a second is free, `EventSource` exists, and the keyboard is not a thing.

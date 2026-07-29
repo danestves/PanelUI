@@ -300,6 +300,12 @@ function CodeBlockCopyButton({ className, timeout = 2000, onCopy }: CodeBlockCop
   const { code } = useCodeBlock('CodeBlock.CopyButton');
   const { action } = codeBlockVariants();
   const { copy, copied } = useCopyToClipboard({ timeout });
+  // Both glyphs are given a colour: the check's own fallback is white, which is
+  // invisible on this header in a light theme.
+  const rawTick = useCSSVariable('--color-success');
+  const rawIdle = useCSSVariable('--color-muted-foreground');
+  const tick = typeof rawTick === 'string' ? rawTick : undefined;
+  const idle = typeof rawIdle === 'string' ? rawIdle : undefined;
 
   return (
     <AnimatedPressable
@@ -313,7 +319,7 @@ function CodeBlockCopyButton({ className, timeout = 2000, onCopy }: CodeBlockCop
       }}
       className={cn(action(), className)}
     >
-      {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+      {copied ? <CheckIcon size={14} color={tick} /> : <CopyIcon size={14} color={idle} />}
     </AnimatedPressable>
   );
 }
