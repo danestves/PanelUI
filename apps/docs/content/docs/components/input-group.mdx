@@ -5,6 +5,13 @@ description: Input with leading and trailing decorators.
 
 An input with leading or trailing decorators. The prefix and suffix are measured and their widths applied as padding on the input, so text never runs underneath them however wide they turn out to be.
 
+<Preview
+  src="/previews/input-group.jpg"
+  alt="The InputGroup component, running in the example app."
+  width={1179}
+  height={297}
+/>
+
 ## Installation
 
 InputGroup ships with the library — no separate install.
@@ -91,6 +98,13 @@ The decorators are measured, and the field is padded around them — so text nev
 
 Leave `isDecorative` off when the decorator is pressable, so it stays in the touch path.
 
+<Preview
+  src="/previews/input-group-an-interactive-suffix.jpg"
+  alt="InputGroup — An interactive suffix."
+  width={1179}
+  height={401}
+/>
+
 ```tsx
 <InputGroup>
   <InputGroup.Input secureTextEntry={hidden} placeholder="Password" />
@@ -99,6 +113,26 @@ Leave `isDecorative` off when the decorator is pressable, so it stays in the tou
       <Text size="sm" muted>{hidden ? 'Show' : 'Hide'}</Text>
     </Button>
   </InputGroup.Suffix>
+</InputGroup>
+```
+
+### Disabled
+
+`isDisabled` on the group dims the decorators along with the field, so the whole control reads as off rather than a live input with grey furniture around it.
+
+<Preview
+  src="/previews/input-group-disabled.jpg"
+  alt="InputGroup — Disabled."
+  width={1179}
+  height={299}
+/>
+
+```tsx
+<InputGroup isDisabled className="w-full">
+  <InputGroup.Prefix isDecorative>
+    <SearchIcon size={16} />
+  </InputGroup.Prefix>
+  <InputGroup.Input placeholder="Disabled input" />
 </InputGroup>
 ```
 

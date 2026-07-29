@@ -628,17 +628,35 @@
       {
         "title": "A range",
         "description": "Two taps. A third starts again, and a tap that lands before the open end becomes the new start rather than being refused — someone who picked the wrong month first should not have to undo before retrying.",
-        "code": "const [range, setRange] = useState<DateRange>();\n\n<Calendar mode=\"range\" selected={range} onSelect={setRange} />"
+        "code": "const [range, setRange] = useState<DateRange>();\n\n<Calendar mode=\"range\" selected={range} onSelect={setRange} />",
+        "preview": {
+          "src": "/previews/calendar-a-range.jpg",
+          "alt": "Calendar — A range.",
+          "width": 1179,
+          "height": 1221
+        }
       },
       {
         "title": "Several days",
         "description": "`multiple` collects a set. Tapping a day already in it takes it out.",
-        "code": "const [days, setDays] = useState<Date[]>([]);\n\n<Calendar mode=\"multiple\" selected={days} onSelect={setDays} />"
+        "code": "const [days, setDays] = useState<Date[]>([]);\n\n<Calendar mode=\"multiple\" selected={days} onSelect={setDays} />",
+        "preview": {
+          "src": "/previews/calendar-several-days.jpg",
+          "alt": "Calendar — Several days.",
+          "width": 1179,
+          "height": 1212
+        }
       },
       {
         "title": "Days ruled out",
         "description": "`disabled` takes a list, a span, or a rule. A rule, because \"no weekends\" and \"nothing in the past\" are the two common cases and neither can be written as a list that is still right tomorrow.",
-        "code": "<Calendar\n  selected={day}\n  onSelect={setDay}\n  minDate={new Date()}\n  disabled={(date) => date.getDay() === 0 || date.getDay() === 6}\n/>"
+        "code": "<Calendar\n  selected={day}\n  onSelect={setDay}\n  minDate={new Date()}\n  disabled={(date) => date.getDay() === 0 || date.getDay() === 6}\n/>",
+        "preview": {
+          "src": "/previews/calendar-days-ruled-out.jpg",
+          "alt": "Calendar — Days ruled out.",
+          "width": 1179,
+          "height": 1266
+        }
       },
       {
         "title": "Month and year pickers",
@@ -656,7 +674,13 @@
         "code": "<Calendar selected={day} onSelect={setDay} calendar=\"islamic\" />\n\n{/* Or follow the device, for an app whose language and calendar are the\n    same question. */}\n<Calendar selected={day} onSelect={setDay} calendar=\"auto\" />"
       }
     ],
-    "notes": "**The grid is always six weeks.** A month needs five rows or six depending on the day it starts on, and drawing only the rows it uses makes the calendar change height as it is paged — everything below jumps, and the days themselves appear to shift between months. The spare cells hold the neighbouring months' days, or are left blank with `showOutsideDays={false}`. Blank, not absent: the row has to stay seven wide or the columns stop lining up with their headings.\n\n**A range is drawn in three pieces.** On the web the band under a range is one background with its ends rounded by `:first-child` and `:last-child`. There are no pseudo-classes here, so each day works out whether it is a start, a middle or an end — and, separately, whether it is at the edge of its own row, because a range running over a weekend has to close off on Saturday and open again on Sunday rather than trailing into the gap. The band is drawn behind the number rather than as the cell's own background, which is what lets it run from cell to cell.\n\n**Days are compared at local midnight.** A `Date` carries a time, and two values on the same day are not equal until it is stripped.\n\n**It opens on the selection, not on today.** A picker reopened on a date chosen last year lands on that month — otherwise it opens on today and the choice looks lost.\n\n**`minDate` and `maxDate` bound the paging too**, not only the selection: an arrow that pages to a month where every day is dead is an arrow that should have been off.\n\n**`calendar` goes all the way down.** It is `gregory` by default rather than `auto`, because a grid whose month boundaries move with the device's language is a surprise — and it is the caller, not the locale, who knows whether the dates being picked are Hijri ones. Set `islamic` and the month anchoring, the paging, the outside-day dimming and the day numbers all count in it, so the caption and the cells can never disagree. Month lengths are asked of the platform's own calendar data a day at a time rather than read from a table, which is what keeps a 29-day month 29 days in the years it is one.\n\n**Digits are pinned to Latin.** The cells render numbers, so a caption in Arabic-Indic over cells in Latin would be two scripts for one date; both are Latin instead.\n\n**Without islamic data in the build, it falls back to Gregorian** rather than throwing — wrong, but coherent, which is the same posture the month names already take."
+    "notes": "**The grid is always six weeks.** A month needs five rows or six depending on the day it starts on, and drawing only the rows it uses makes the calendar change height as it is paged — everything below jumps, and the days themselves appear to shift between months. The spare cells hold the neighbouring months' days, or are left blank with `showOutsideDays={false}`. Blank, not absent: the row has to stay seven wide or the columns stop lining up with their headings.\n\n**A range is drawn in three pieces.** On the web the band under a range is one background with its ends rounded by `:first-child` and `:last-child`. There are no pseudo-classes here, so each day works out whether it is a start, a middle or an end — and, separately, whether it is at the edge of its own row, because a range running over a weekend has to close off on Saturday and open again on Sunday rather than trailing into the gap. The band is drawn behind the number rather than as the cell's own background, which is what lets it run from cell to cell.\n\n**Days are compared at local midnight.** A `Date` carries a time, and two values on the same day are not equal until it is stripped.\n\n**It opens on the selection, not on today.** A picker reopened on a date chosen last year lands on that month — otherwise it opens on today and the choice looks lost.\n\n**`minDate` and `maxDate` bound the paging too**, not only the selection: an arrow that pages to a month where every day is dead is an arrow that should have been off.\n\n**`calendar` goes all the way down.** It is `gregory` by default rather than `auto`, because a grid whose month boundaries move with the device's language is a surprise — and it is the caller, not the locale, who knows whether the dates being picked are Hijri ones. Set `islamic` and the month anchoring, the paging, the outside-day dimming and the day numbers all count in it, so the caption and the cells can never disagree. Month lengths are asked of the platform's own calendar data a day at a time rather than read from a table, which is what keeps a 29-day month 29 days in the years it is one.\n\n**Digits are pinned to Latin.** The cells render numbers, so a caption in Arabic-Indic over cells in Latin would be two scripts for one date; both are Latin instead.\n\n**Without islamic data in the build, it falls back to Gregorian** rather than throwing — wrong, but coherent, which is the same posture the month names already take.",
+    "preview": {
+      "src": "/previews/calendar.jpg",
+      "alt": "The Calendar component, running in the example app.",
+      "width": 1179,
+      "height": 1215
+    }
   },
   "carousel": {
     "intro": "A run of slides, shown one at a time and moved with a finger.\n\nEverything is driven from one value: the position in the run, as a fractional index. `2.4` is two-fifths of the way from the third slide to the fourth, and every slide places itself from its own distance to that number. A drag writes to it, a spring settles it onto a whole slide, and the dots read it.\n\nThat is why the track is a gesture rather than a paging scroll view. A scroll view would serve the plain track well enough, but `coverflow` and `stack` do not lay their slides along a track at all — they hold them in one place and pull them apart with transforms, so there would be nothing to scroll. One mechanism all four layouts read beats a native scroller for one of them and something else for the rest.",
@@ -687,27 +711,61 @@
       {
         "title": "Interactive",
         "description": "The run fans out around the middle slide and tilts away on both sides, opening wider while a finger is down and settling when it lifts. Set `itemSize` so the slides overlap.",
-        "code": "<Carousel variant=\"interactive\" itemSize={160} defaultIndex={2}>\n  <Carousel.Content className=\"h-56\">\n    {scenes.map((scene) => (\n      <Carousel.Item key={scene.title} className=\"items-center gap-2\">\n        <Carousel.Caption>{scene.title}</Carousel.Caption>\n        <Image source={{ uri: scene.uri }} className=\"h-28 w-28 rounded-xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n  <Carousel.Controls className=\"mt-2\" />\n</Carousel>"
+        "code": "<Carousel variant=\"interactive\" itemSize={160} defaultIndex={2}>\n  <Carousel.Content className=\"h-56\">\n    {scenes.map((scene) => (\n      <Carousel.Item key={scene.title} className=\"items-center gap-2\">\n        <Carousel.Caption>{scene.title}</Carousel.Caption>\n        <Image source={{ uri: scene.uri }} className=\"h-28 w-28 rounded-xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n  <Carousel.Controls className=\"mt-2\" />\n</Carousel>",
+        "previewVideo": {
+          "src": "/previews/carousel-interactive.mp4",
+          "poster": "/previews/carousel-interactive-poster.jpg",
+          "alt": "Carousel — Interactive.",
+          "width": 720,
+          "height": 524
+        }
       },
       {
         "title": "Interactive, with nothing under it",
         "description": "The same fan with no arrows and no dots — dragged and nothing else. The right shape when the pictures are the whole point and a control bar would be the only chrome on the screen.",
-        "code": "<Carousel variant=\"interactive\" itemSize={160} defaultIndex={2}>\n  <Carousel.Content className=\"h-56\">\n    {scenes.map((scene) => (\n      <Carousel.Item key={scene.title} className=\"items-center gap-2\">\n        <Carousel.Caption>{scene.title}</Carousel.Caption>\n        <Image source={{ uri: scene.uri }} className=\"h-28 w-28 rounded-xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n</Carousel>"
+        "code": "<Carousel variant=\"interactive\" itemSize={160} defaultIndex={2}>\n  <Carousel.Content className=\"h-56\">\n    {scenes.map((scene) => (\n      <Carousel.Item key={scene.title} className=\"items-center gap-2\">\n        <Carousel.Caption>{scene.title}</Carousel.Caption>\n        <Image source={{ uri: scene.uri }} className=\"h-28 w-28 rounded-xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n</Carousel>",
+        "preview": {
+          "src": "/previews/carousel-interactive-with-nothing-under-it.jpg",
+          "alt": "Carousel — Interactive, with nothing under it.",
+          "width": 1179,
+          "height": 832
+        }
       },
       {
         "title": "Coverflow",
         "description": "The neighbours turn away from you in perspective. Best with art — covers, posters, photographs — where the turned edge reads as a shelf rather than as a glitch.",
-        "code": "<Carousel variant=\"coverflow\" itemSize={150} defaultIndex={2}>\n  <Carousel.Content className=\"h-48\">\n    {scenes.map((scene) => (\n      <Carousel.Item key={scene.title}>\n        <Image source={{ uri: scene.uri }} className=\"h-32 w-24 rounded-xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n  <Carousel.Controls className=\"mt-4\" />\n</Carousel>"
+        "code": "<Carousel variant=\"coverflow\" itemSize={150} defaultIndex={2}>\n  <Carousel.Content className=\"h-48\">\n    {scenes.map((scene) => (\n      <Carousel.Item key={scene.title}>\n        <Image source={{ uri: scene.uri }} className=\"h-32 w-24 rounded-xl\" />\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n  <Carousel.Controls className=\"mt-4\" />\n</Carousel>",
+        "previewVideo": {
+          "src": "/previews/carousel-coverflow.mp4",
+          "poster": "/previews/carousel-coverflow-poster.jpg",
+          "alt": "Carousel — Coverflow.",
+          "width": 720,
+          "height": 470
+        }
       },
       {
         "title": "A deck of cards",
         "description": "The active card on top, the next two peeking out behind it, and a drag that takes the top one away. Size the cards — a card as wide as the screen has nothing to stack behind it. `Carousel.Dots` turned vertical becomes the rail down the card's edge.",
-        "code": "<Carousel variant=\"stack\" itemSize={260}>\n  <Carousel.Content className=\"h-72\">\n    {roles.map((role) => (\n      <Carousel.Item key={role.title}>\n        <Card className=\"w-64 gap-0 overflow-hidden\">\n          <Card.Content className=\"gap-6 py-4\">\n            <View className=\"flex-row items-start justify-between\">\n              <Text size=\"sm\" muted>{role.rate}</Text>\n              <BookmarkIcon size={16} />\n            </View>\n            <View className=\"flex-row items-end justify-between gap-3\">\n              <Text size=\"2xl\" weight=\"bold\" className=\"flex-1\">{role.title}</Text>\n              <Carousel.Dots orientation=\"vertical\" className=\"pb-1\" />\n            </View>\n          </Card.Content>\n          <Separator />\n          <Card.Content className=\"flex-row items-center justify-between gap-3 py-3\">\n            <View className=\"flex-1\">\n              <Text size=\"sm\" weight=\"semibold\">{role.company}</Text>\n              <Text size=\"xs\" muted>{role.field}</Text>\n            </View>\n            <Button size=\"sm\" className=\"rounded-full\">View</Button>\n          </Card.Content>\n        </Card>\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n</Carousel>"
+        "code": "<Carousel variant=\"stack\" itemSize={260}>\n  <Carousel.Content className=\"h-72\">\n    {roles.map((role) => (\n      <Carousel.Item key={role.title}>\n        <Card className=\"w-64 gap-0 overflow-hidden\">\n          <Card.Content className=\"gap-6 py-4\">\n            <View className=\"flex-row items-start justify-between\">\n              <Text size=\"sm\" muted>{role.rate}</Text>\n              <BookmarkIcon size={16} />\n            </View>\n            <View className=\"flex-row items-end justify-between gap-3\">\n              <Text size=\"2xl\" weight=\"bold\" className=\"flex-1\">{role.title}</Text>\n              <Carousel.Dots orientation=\"vertical\" className=\"pb-1\" />\n            </View>\n          </Card.Content>\n          <Separator />\n          <Card.Content className=\"flex-row items-center justify-between gap-3 py-3\">\n            <View className=\"flex-1\">\n              <Text size=\"sm\" weight=\"semibold\">{role.company}</Text>\n              <Text size=\"xs\" muted>{role.field}</Text>\n            </View>\n            <Button size=\"sm\" className=\"rounded-full\">View</Button>\n          </Card.Content>\n        </Card>\n      </Carousel.Item>\n    ))}\n  </Carousel.Content>\n</Carousel>",
+        "previewVideo": {
+          "src": "/previews/carousel-a-deck-of-cards.mp4",
+          "poster": "/previews/carousel-a-deck-of-cards-poster.jpg",
+          "alt": "Carousel — A deck of cards.",
+          "width": 720,
+          "height": 550
+        }
       },
       {
         "title": "Autoplay",
         "description": "Advancing on a timer. It stops for good the first time a finger lands rather than pausing — someone who has taken hold of the run is reading it, and having it move again a few seconds later is the behaviour everybody hates.",
-        "code": "<Carousel loop autoplay autoplayInterval={2200}>\n  <Carousel.Content className=\"h-40\">…</Carousel.Content>\n  <Carousel.Dots className=\"mt-4 self-center\" />\n</Carousel>"
+        "code": "<Carousel loop autoplay autoplayInterval={2200}>\n  <Carousel.Content className=\"h-40\">…</Carousel.Content>\n  <Carousel.Dots className=\"mt-4 self-center\" />\n</Carousel>",
+        "previewVideo": {
+          "src": "/previews/carousel-autoplay.mp4",
+          "poster": "/previews/carousel-autoplay-poster.jpg",
+          "alt": "Carousel — Autoplay.",
+          "width": 720,
+          "height": 474
+        }
       },
       {
         "title": "Controlled",
@@ -715,7 +773,14 @@
         "code": "const carousel = useRef<CarouselHandle>(null);\nconst [index, setIndex] = useState(0);\n\n<Carousel index={index} onIndexChange={setIndex} ref={carousel}>\n  …\n</Carousel>\n\n<Button onPress={() => carousel.current?.next()}>Skip</Button>"
       }
     ],
-    "notes": "**One value drives all four layouts.** The position in the run is a fractional index on the UI thread, and each slide styles itself from its distance to it — so `default` and `coverflow` are the same component with different arithmetic rather than two different trees.\n\n**Give `Carousel.Content` a height.** Every slide is absolutely positioned, so nothing inside it is in the layout flow and it has no height of its own to take.\n\n**`itemSize` is the length along the direction of travel.** It defaults to the carousel's own box, which is what a full-width slide wants. Set it smaller for a run that shows more than one slide at a time, and for `interactive`, where the overlap is the effect.\n\n**Depth is faked, deliberately.** React Native's transform has `perspective` and `rotateY` but no `translateZ`, so a slide in `coverflow` is made to look further away with scale, opacity and z-order rather than actually being moved back.\n\n**A short flick and a long drag both move one slide.** Either passing a fraction of a slide or exceeding a velocity counts as a move, and the step is measured from the slide the drag started on — rounding the current position would let a slow drag that never reached the threshold still count.\n\n**Autoplay does not resume.** The first touch ends it for the session.\n\n**`stack` is always dealt sideways**, whatever `orientation` says. A deck has no track to travel along.\n\n**In the piled layouts, only the top slide takes touches.** `zIndex` reorders what is drawn but not, on iOS, what is hit — hit testing walks subviews in the order they were added, so without this the last slide rendered would sit in front of every gesture regardless of its z-order. In a deck that slide is the one at the bottom of the pile, drawn at zero opacity.\n\n**The middle slide rests at exactly 1.** In `interactive` the fan's depth comes from the others shrinking rather than from the active one growing, because text is rasterised at its layout size and then scaled — a caption on a slide held above 1 is drawn at the wrong raster size for the whole time it is readable. `Carousel.Caption` fades but never scales, for the same reason: inside the slide, the two would compound."
+    "notes": "**One value drives all four layouts.** The position in the run is a fractional index on the UI thread, and each slide styles itself from its distance to it — so `default` and `coverflow` are the same component with different arithmetic rather than two different trees.\n\n**Give `Carousel.Content` a height.** Every slide is absolutely positioned, so nothing inside it is in the layout flow and it has no height of its own to take.\n\n**`itemSize` is the length along the direction of travel.** It defaults to the carousel's own box, which is what a full-width slide wants. Set it smaller for a run that shows more than one slide at a time, and for `interactive`, where the overlap is the effect.\n\n**Depth is faked, deliberately.** React Native's transform has `perspective` and `rotateY` but no `translateZ`, so a slide in `coverflow` is made to look further away with scale, opacity and z-order rather than actually being moved back.\n\n**A short flick and a long drag both move one slide.** Either passing a fraction of a slide or exceeding a velocity counts as a move, and the step is measured from the slide the drag started on — rounding the current position would let a slow drag that never reached the threshold still count.\n\n**Autoplay does not resume.** The first touch ends it for the session.\n\n**`stack` is always dealt sideways**, whatever `orientation` says. A deck has no track to travel along.\n\n**In the piled layouts, only the top slide takes touches.** `zIndex` reorders what is drawn but not, on iOS, what is hit — hit testing walks subviews in the order they were added, so without this the last slide rendered would sit in front of every gesture regardless of its z-order. In a deck that slide is the one at the bottom of the pile, drawn at zero opacity.\n\n**The middle slide rests at exactly 1.** In `interactive` the fan's depth comes from the others shrinking rather than from the active one growing, because text is rasterised at its layout size and then scaled — a caption on a slide held above 1 is drawn at the wrong raster size for the whole time it is readable. `Carousel.Caption` fades but never scales, for the same reason: inside the slide, the two would compound.",
+    "previewVideo": {
+      "src": "/previews/carousel.mp4",
+      "poster": "/previews/carousel-poster.jpg",
+      "alt": "The Carousel component, running in the example app.",
+      "width": 720,
+      "height": 544
+    }
   },
   "checkbox": {
     "intro": "A checkbox with an animated check. `variant=\"card\"` turns the whole surface into the target, for pickable options where the box confirms a choice rather than being the affordance.",
@@ -874,7 +939,14 @@
       {
         "title": "In a sheet",
         "description": "The anchored panel is the default: a month grid is a fixed size and fits beside its trigger on any phone. A sheet earns its place when the screen is busy — a form with the keyboard up is the usual case.",
-        "code": "<DatePicker selected={day} onSelect={setDay} presentation=\"bottom-sheet\" />"
+        "code": "<DatePicker selected={day} onSelect={setDay} presentation=\"bottom-sheet\" />",
+        "previewVideo": {
+          "src": "/previews/date-picker-in-a-sheet.mp4",
+          "poster": "/previews/date-picker-in-a-sheet-poster.jpg",
+          "alt": "DatePicker — In a sheet.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Your own trigger",
@@ -887,7 +959,14 @@
         "code": "<DatePicker selected={day} onSelect={setDay} calendar=\"islamic\" />"
       }
     ],
-    "notes": "**It closes when the selection is finished, not when it changes.** A single date is done in one tap, so the panel closes on it. A range needs two and stays open until the second — closing on the first would leave half a range on screen and put someone back where they started. `multiple` never closes on its own; only the caller knows when a set is complete.\n\n**The trigger's text is derived, not stored.** Pass `format` to write it yourself; otherwise it is the short date, both ends of a range, or a count once more than one date is picked.\n\n**`calendar` is forwarded, and used for the trigger too** — a field reading a Gregorian date over a Hijri grid is the bug this exists to prevent.\n\n**Everything the calendar takes is forwarded** — `minDate`, `maxDate`, `disabledDates`, `numberOfMonths`, `captionLayout`, `weekStartsOn` and `locale`.\n\nReach for **Calendar** on its own when the grid should be on the page rather than behind a control — a booking screen where the month is the screen.\n\n**In a sheet the panel is centred.** A sheet is the full width of the screen and lays its children in a column, so a panel sized to its content would take the cross-axis start and sit flush against one edge — the right-hand one under RTL, directly below the close button."
+    "notes": "**It closes when the selection is finished, not when it changes.** A single date is done in one tap, so the panel closes on it. A range needs two and stays open until the second — closing on the first would leave half a range on screen and put someone back where they started. `multiple` never closes on its own; only the caller knows when a set is complete.\n\n**The trigger's text is derived, not stored.** Pass `format` to write it yourself; otherwise it is the short date, both ends of a range, or a count once more than one date is picked.\n\n**`calendar` is forwarded, and used for the trigger too** — a field reading a Gregorian date over a Hijri grid is the bug this exists to prevent.\n\n**Everything the calendar takes is forwarded** — `minDate`, `maxDate`, `disabledDates`, `numberOfMonths`, `captionLayout`, `weekStartsOn` and `locale`.\n\nReach for **Calendar** on its own when the grid should be on the page rather than behind a control — a booking screen where the month is the screen.\n\n**In a sheet the panel is centred.** A sheet is the full width of the screen and lays its children in a column, so a panel sized to its content would take the cross-axis start and sit flush against one edge — the right-hand one under RTL, directly below the close button.",
+    "previewVideo": {
+      "src": "/previews/date-picker.mp4",
+      "poster": "/previews/date-picker-poster.jpg",
+      "alt": "The DatePicker component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
   },
   "dialog": {
     "intro": "A modal dialog. Mounts through a portal and unmounts after its exit animation.",
@@ -971,7 +1050,14 @@
         "description": "The parts Yoga cannot flip on its own, side by side: a slider’s drag, a switch’s thumb, a shimmer’s sweep, a chevron’s glyph and a paragraph’s alignment.",
         "code": "<Direction dir={dir} className=\"flex-1\">\n  <ScrollView contentContainerClassName=\"gap-4 p-4\">\n    <Item>\n      <Item.Content>\n        <Item.Title>Notifications</Item.Title>\n      </Item.Content>\n      <Item.Actions>\n        <ChevronRightIcon size={16} />\n      </Item.Actions>\n    </Item>\n\n    <Slider value={volume} onValueChange={setVolume} />\n    <Switch value={sync} onValueChange={setSync} />\n  </ScrollView>\n</Direction>"
       }
-    ]
+    ],
+    "previewVideo": {
+      "src": "/previews/direction.mp4",
+      "poster": "/previews/direction-poster.jpg",
+      "alt": "The Direction component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
   },
   "empty-state": {
     "intro": "The placeholder for a list or screen with nothing in it. `Media variant=\"icon\"` frames the icon in a small card with two rotated ghost cards fanned behind it.",
@@ -1463,6 +1549,17 @@
         "title": "Styling the field and the container separately",
         "description": "`className` goes on the text field; `containerClassName` goes on the wrapper that holds the label, field and message.",
         "code": "<Input\n  containerClassName=\"flex-1\"\n  className=\"h-12 rounded-full px-4\"\n  placeholder=\"Search components\"\n/>"
+      },
+      {
+        "title": "In a form",
+        "description": "Nothing special is needed to put fields in a card — `label` and `isRequired` carry the whole field, so the form is the fields and the button under them.",
+        "code": "<Card className=\"w-full\">\n  <Card.Header>\n    <Card.Title>Sign in</Card.Title>\n    <Card.Description>Welcome back.</Card.Description>\n  </Card.Header>\n  <Card.Content className=\"gap-4\">\n    <Input label=\"Email\" placeholder=\"you@example.com\" isRequired />\n    <Input label=\"Password\" secureTextEntry placeholder=\"••••••••\" isRequired />\n  </Card.Content>\n  <Card.Footer>\n    <Button fullWidth>Continue</Button>\n  </Card.Footer>\n</Card>",
+        "preview": {
+          "src": "/previews/input-in-a-form.jpg",
+          "alt": "Input — In a form.",
+          "width": 1179,
+          "height": 1247
+        }
       }
     ],
     "versions": [
@@ -1474,7 +1571,14 @@
       {
         "title": "Docked composer",
         "description": "A bar pinned above the home indicator that rides the keyboard up and back down. Nothing is measured — `dock` travels by the keyboard height less the inset the bar already sits above.",
-        "code": "const insets = useSafeAreaInsets();\n\n<KeyboardAvoider\n  mode=\"dock\"\n  bottomInset={insets.bottom}\n  className=\"absolute left-0 right-0 px-5\"\n  style={{ bottom: insets.bottom + 16 }}\n>\n  <View className=\"flex-row items-center gap-2 rounded-full border border-border bg-surface px-4\">\n    <Input\n      placeholder=\"Message\"\n      className=\"flex-1 border-0 bg-transparent px-0\"\n      containerClassName=\"flex-1\"\n    />\n    <SendIcon size={18} />\n  </View>\n</KeyboardAvoider>"
+        "code": "const insets = useSafeAreaInsets();\n\n<KeyboardAvoider\n  mode=\"dock\"\n  bottomInset={insets.bottom}\n  className=\"absolute left-0 right-0 px-5\"\n  style={{ bottom: insets.bottom + 16 }}\n>\n  <View className=\"flex-row items-center gap-2 rounded-full border border-border bg-surface px-4\">\n    <Input\n      placeholder=\"Message\"\n      className=\"flex-1 border-0 bg-transparent px-0\"\n      containerClassName=\"flex-1\"\n    />\n    <SendIcon size={18} />\n  </View>\n</KeyboardAvoider>",
+        "previewVideo": {
+          "src": "/previews/input-docked-composer.mp4",
+          "poster": "/previews/input-docked-composer-poster.jpg",
+          "alt": "Input — Docked composer.",
+          "width": 720,
+          "height": 1560
+        }
       }
     ],
     "hideVariants": [
@@ -1491,7 +1595,7 @@
             "src": "/previews/input-filled.jpg",
             "alt": "Input — variant filled.",
             "width": 1179,
-            "height": 928,
+            "height": 886,
             "caption": "filled"
           }
         }
@@ -1501,8 +1605,8 @@
           "preview": {
             "src": "/previews/input-size.jpg",
             "alt": "Input — size.",
-            "width": 1167,
-            "height": 949
+            "width": 1179,
+            "height": 853
           }
         }
       ]
@@ -1511,8 +1615,12 @@
       "src": "/previews/input.jpg",
       "alt": "The Input component, running in the example app.",
       "width": 1179,
-      "height": 1378
-    }
+      "height": 1282
+    },
+    "extraImports": [
+      "Card",
+      "Button"
+    ]
   },
   "input-group": {
     "intro": "An input with leading or trailing decorators. The prefix and suffix are measured and their widths applied as padding on the input, so text never runs underneath them however wide they turn out to be.",
@@ -1542,9 +1650,32 @@
       {
         "title": "An interactive suffix",
         "description": "Leave `isDecorative` off when the decorator is pressable, so it stays in the touch path.",
-        "code": "<InputGroup>\n  <InputGroup.Input secureTextEntry={hidden} placeholder=\"Password\" />\n  <InputGroup.Suffix>\n    <Button size=\"icon\" variant=\"ghost\" onPress={() => setHidden(!hidden)}>\n      <Text size=\"sm\" muted>{hidden ? 'Show' : 'Hide'}</Text>\n    </Button>\n  </InputGroup.Suffix>\n</InputGroup>"
+        "code": "<InputGroup>\n  <InputGroup.Input secureTextEntry={hidden} placeholder=\"Password\" />\n  <InputGroup.Suffix>\n    <Button size=\"icon\" variant=\"ghost\" onPress={() => setHidden(!hidden)}>\n      <Text size=\"sm\" muted>{hidden ? 'Show' : 'Hide'}</Text>\n    </Button>\n  </InputGroup.Suffix>\n</InputGroup>",
+        "preview": {
+          "src": "/previews/input-group-an-interactive-suffix.jpg",
+          "alt": "InputGroup — An interactive suffix.",
+          "width": 1179,
+          "height": 401
+        }
+      },
+      {
+        "title": "Disabled",
+        "description": "`isDisabled` on the group dims the decorators along with the field, so the whole control reads as off rather than a live input with grey furniture around it.",
+        "code": "<InputGroup isDisabled className=\"w-full\">\n  <InputGroup.Prefix isDecorative>\n    <SearchIcon size={16} />\n  </InputGroup.Prefix>\n  <InputGroup.Input placeholder=\"Disabled input\" />\n</InputGroup>",
+        "preview": {
+          "src": "/previews/input-group-disabled.jpg",
+          "alt": "InputGroup — Disabled.",
+          "width": 1179,
+          "height": 299
+        }
       }
-    ]
+    ],
+    "preview": {
+      "src": "/previews/input-group.jpg",
+      "alt": "The InputGroup component, running in the example app.",
+      "width": 1179,
+      "height": 297
+    }
   },
   "item": {
     "intro": "A row of content: media on one side, a title and description in the middle, actions on the other.\n\nIt is the shape almost every list in an app already has — a settings row, a file in a picker, a member in a team list, a tool call in a transcript — so it exists as one composable primitive instead of being rebuilt per screen with slightly different padding each time.",
@@ -1674,13 +1805,24 @@
         "title": "Invalid and disabled",
         "description": "Both are visual and semantic — pair them with the matching state on the field itself.",
         "code": "<Label isInvalid>Card number</Label>\n<Input errorMessage=\"Check the number and try again.\" />\n\n<Label isDisabled>Plan</Label>\n<Input value=\"Premium\" disabled />"
+      },
+      {
+        "title": "Custom layout",
+        "description": "Passing `Label.Text` instead of the `children` string is what lets the text be styled on its own — the required mark stays the label's, positioned the same way.",
+        "code": "<View className=\"w-full gap-1.5\">\n  <Label isRequired>\n    <Label.Text className=\"text-base font-semibold\">API key</Label.Text>\n  </Label>\n  <Input placeholder=\"sk-…\" />\n</View>",
+        "preview": {
+          "src": "/previews/label-custom-layout.jpg",
+          "alt": "Label — Custom layout.",
+          "width": 1179,
+          "height": 287
+        }
       }
     ],
     "preview": {
       "src": "/previews/label.jpg",
       "alt": "The Label component, running in the example app.",
       "width": 1179,
-      "height": 1294
+      "height": 1246
     }
   },
   "line-chart": {
@@ -2186,7 +2328,35 @@
       "variant": "<NumberInput variant=\"outline\" defaultValue={1} />\n<NumberInput variant=\"filled\" defaultValue={1} />",
       "size": "<NumberInput size=\"sm\" defaultValue={1} />\n<NumberInput size=\"md\" defaultValue={1} />\n<NumberInput size=\"lg\" defaultValue={1} />"
     },
-    "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). The value is always clamped to `[min, max]` and snapped to the nearest `step`; the display rounds to `step`'s precision, so `0.1 + 0.2` settles on `0.3` rather than drifting.\n\nTyping is allowed to be briefly invalid — an empty field, a lone `-`, a trailing `.` — because clamping every keystroke fights the person mid-number. The field commits on blur or submit, and reverts to the last good value when what is left cannot be read as a number.\n\nThe buttons repeat when held, and read the live value from a ref so a hold never strides off a stale number. Each is a separately labelled accessibility button that disables at its bound, so a screen reader is told when a direction is exhausted.\n\nPass `haptics` to tick on each step; it needs the optional `expo-haptics` and is silent without it."
+    "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). The value is always clamped to `[min, max]` and snapped to the nearest `step`; the display rounds to `step`'s precision, so `0.1 + 0.2` settles on `0.3` rather than drifting.\n\nTyping is allowed to be briefly invalid — an empty field, a lone `-`, a trailing `.` — because clamping every keystroke fights the person mid-number. The field commits on blur or submit, and reverts to the last good value when what is left cannot be read as a number.\n\nThe buttons repeat when held, and read the live value from a ref so a hold never strides off a stale number. Each is a separately labelled accessibility button that disables at its bound, so a screen reader is told when a direction is exhausted.\n\nPass `haptics` to tick on each step; it needs the optional `expo-haptics` and is silent without it.",
+    "preview": {
+      "src": "/previews/number-input.jpg",
+      "alt": "The NumberInput component, running in the example app.",
+      "width": 1179,
+      "height": 850
+    },
+    "variantMedia": {
+      "variant": [
+        {
+          "preview": {
+            "src": "/previews/number-input-variant.jpg",
+            "alt": "NumberInput — variant.",
+            "width": 1179,
+            "height": 706
+          }
+        }
+      ],
+      "size": [
+        {
+          "preview": {
+            "src": "/previews/number-input-size.jpg",
+            "alt": "NumberInput — size.",
+            "width": 1179,
+            "height": 699
+          }
+        }
+      ]
+    }
   },
   "otp-input": {
     "intro": "A one-time-code field drawn as a row of separate cells, so the reader can see at a glance how many digits are left. There is still one text field underneath — a transparent input laid over the whole row — so the keyboard, SMS autofill and paste all behave; the cells are drawn from its value. The active cell's border crosses to the focus colour on the UI thread and a caret blinks in the cell awaiting input.",
@@ -3838,7 +4008,13 @@
         "code": "const [open, setOpen] = useState(false);\n\n<Tooltip open={open} onOpenChange={setOpen}>\n  <Tooltip.Trigger>\n    <Button variant=\"outline\">Save</Button>\n  </Tooltip.Trigger>\n  <Tooltip.Content>\n    <Tooltip.Arrow />\n    Saved just now\n  </Tooltip.Content>\n</Tooltip>"
       }
     ],
-    "notes": "**Placement is resolved, not obeyed.** The side is flipped only when the preferred one genuinely has less room than its opposite; after that the label is slid along the other axis to stay inside the safe area. That order matters — sliding first would let a badly placed label look like it fits.\n\n**The label is measured before it is shown.** Its size is not known until it has laid out once, so the first frame is laid out off-screen and the entrance starts from the frame after. That entrance is driven by hand rather than by a preset, because it has to start from whichever side was resolved.\n\n**The arrow points at the trigger, not the label.** When `align` shifts the label off-centre, or a clamp slides it back on screen, the arrow tracks the trigger's centre rather than the label's middle.\n\n**The trigger wrapper shrinks to its child.** A view fills its parent by default, and a wrapper that filled the row would be measured as the whole row — putting a centred label over the middle of the screen instead of over the control. Pass `className` to `Tooltip.Trigger` if you want it anchored to something wider.\n\n**The trigger is measured on every open**, not once on layout — a trigger inside a scroll view has moved since it was laid out, and a stale rectangle anchors the label to where it used to be.\n\n**Long press is the default gesture.** It does not steal a tappable control's own press, so a button under a tooltip still works as a button. Use `openOn=\"press\"` only when the trigger has no press of its own to protect, such as an icon that exists to be explained.\n\nReach for a **Popover** instead when the content is interactive — a menu, a form, anything with its own controls. A tooltip is a label, not a surface, and it dismisses itself out from under a tap."
+    "notes": "**Placement is resolved, not obeyed.** The side is flipped only when the preferred one genuinely has less room than its opposite; after that the label is slid along the other axis to stay inside the safe area. That order matters — sliding first would let a badly placed label look like it fits.\n\n**The label is measured before it is shown.** Its size is not known until it has laid out once, so the first frame is laid out off-screen and the entrance starts from the frame after. That entrance is driven by hand rather than by a preset, because it has to start from whichever side was resolved.\n\n**The arrow points at the trigger, not the label.** When `align` shifts the label off-centre, or a clamp slides it back on screen, the arrow tracks the trigger's centre rather than the label's middle.\n\n**The trigger wrapper shrinks to its child.** A view fills its parent by default, and a wrapper that filled the row would be measured as the whole row — putting a centred label over the middle of the screen instead of over the control. Pass `className` to `Tooltip.Trigger` if you want it anchored to something wider.\n\n**The trigger is measured on every open**, not once on layout — a trigger inside a scroll view has moved since it was laid out, and a stale rectangle anchors the label to where it used to be.\n\n**Long press is the default gesture.** It does not steal a tappable control's own press, so a button under a tooltip still works as a button. Use `openOn=\"press\"` only when the trigger has no press of its own to protect, such as an icon that exists to be explained.\n\nReach for a **Popover** instead when the content is interactive — a menu, a form, anything with its own controls. A tooltip is a label, not a surface, and it dismisses itself out from under a tap.",
+    "preview": {
+      "src": "/previews/tooltip.jpg",
+      "alt": "The Tooltip component, running in the example app.",
+      "width": 1179,
+      "height": 809
+    }
   },
   "typography": {
     "intro": "Semantic text presets, built on the `Text` primitive.\n\nA preset sets size, weight and tracking together; the marks — `underline`, `italic`, `strike` — and `weight`, `align` and `transform` layer on top of whichever preset is in force. They are props rather than class names so a screen never has to know which utilities add up to \"a bolded lead paragraph\".",
@@ -3984,7 +4160,124 @@
         "code": "<Button disabled={busy} onPress={save}>\n  {busy ? <Loader variant=\"pulse-dots\" size=\"sm\" /> : 'Save changes'}\n</Button>"
       }
     ],
-    "notes": "### Choosing one\n\nThe three dot variants and the three bar variants are quiet enough to sit inside something else — a button, a row, a card header. `liquid-dots`, `morph-ring` and `wave-physics` have more character and want a screen that is otherwise empty; used in a button they draw attention to the wait rather than away from it.\n\nWhichever you pick, pick one. A loader is part of an app’s voice, and an app that uses a different one on every screen reads as several apps.\n\n### How they are drawn\n\nAnything with a small, fixed number of moving pieces is a view per piece with its own animated style: three dots is three transforms a frame, which is cheaper than rebuilding a path string.\n\nAnything whose count is high, or whose shape is derived rather than declared, is a single SVG path rebuilt on the UI thread. `wave-physics` is fifteen bars responding to a bouncing ball — one animated prop drawn that way, fifteen drawn the other, and the fifteen would not stay in step with each other for free.\n\n`liquid-dots` is the odd one. The merge where the two blobs meet is normally a blur-and-threshold filter pass, and SVG filters do not render on native at all — so the two circles and the neck between them are three subpaths of one path, unioned by the non-zero fill rule. It costs one animated prop a frame and gives a crisper edge than a threshold does.\n\n### Reduced motion\n\nEvery variant draws a representative still frame rather than freezing wherever it happened to be. A stopped animation should look like a shape someone drew, not like a bug caught mid-cycle — so the dots hold an uneven set of opacities, the bars hold the shape of their wave, and the ball rests at the top of a hop.\n\n`speed={0}` does the same thing deliberately, for a loader that should be present but still."
+    "notes": "### Choosing one\n\nThe three dot variants and the three bar variants are quiet enough to sit inside something else — a button, a row, a card header. `liquid-dots`, `morph-ring` and `wave-physics` have more character and want a screen that is otherwise empty; used in a button they draw attention to the wait rather than away from it.\n\nWhichever you pick, pick one. A loader is part of an app’s voice, and an app that uses a different one on every screen reads as several apps.\n\n### How they are drawn\n\nAnything with a small, fixed number of moving pieces is a view per piece with its own animated style: three dots is three transforms a frame, which is cheaper than rebuilding a path string.\n\nAnything whose count is high, or whose shape is derived rather than declared, is a single SVG path rebuilt on the UI thread. `wave-physics` is fifteen bars responding to a bouncing ball — one animated prop drawn that way, fifteen drawn the other, and the fifteen would not stay in step with each other for free.\n\n`liquid-dots` is the odd one. The merge where the two blobs meet is normally a blur-and-threshold filter pass, and SVG filters do not render on native at all — so the two circles and the neck between them are three subpaths of one path, unioned by the non-zero fill rule. It costs one animated prop a frame and gives a crisper edge than a threshold does.\n\n### Reduced motion\n\nEvery variant draws a representative still frame rather than freezing wherever it happened to be. A stopped animation should look like a shape someone drew, not like a bug caught mid-cycle — so the dots hold an uneven set of opacities, the bars hold the shape of their wave, and the ball rests at the top of a hop.\n\n`speed={0}` does the same thing deliberately, for a loader that should be present but still.",
+    "previewVideo": {
+      "src": "/previews/loader.mp4",
+      "poster": "/previews/loader-poster.jpg",
+      "alt": "The Loader component, running in the example app.",
+      "width": 720,
+      "height": 208
+    },
+    "variantMedia": {
+      "variant": [
+        {
+          "previewVideo": {
+            "src": "/previews/loader-pulse-dots.mp4",
+            "poster": "/previews/loader-pulse-dots-poster.jpg",
+            "alt": "Loader — variant pulse-dots.",
+            "width": 720,
+            "height": 138,
+            "caption": "pulse-dots"
+          }
+        },
+        {
+          "previewVideo": {
+            "src": "/previews/loader-bounce-dots.mp4",
+            "poster": "/previews/loader-bounce-dots-poster.jpg",
+            "alt": "Loader — variant bounce-dots.",
+            "width": 720,
+            "height": 144,
+            "caption": "bounce-dots"
+          }
+        },
+        {
+          "previewVideo": {
+            "src": "/previews/loader-pulsating-dots.mp4",
+            "poster": "/previews/loader-pulsating-dots-poster.jpg",
+            "alt": "Loader — variant pulsating-dots.",
+            "width": 720,
+            "height": 152,
+            "caption": "pulsating-dots"
+          }
+        },
+        {
+          "previewVideo": {
+            "src": "/previews/loader-liquid-dots.mp4",
+            "poster": "/previews/loader-liquid-dots-poster.jpg",
+            "alt": "Loader — variant liquid-dots.",
+            "width": 720,
+            "height": 164,
+            "caption": "liquid-dots"
+          }
+        },
+        {
+          "previewVideo": {
+            "src": "/previews/loader-bar-cascade.mp4",
+            "poster": "/previews/loader-bar-cascade-poster.jpg",
+            "alt": "Loader — variant bar-cascade.",
+            "width": 720,
+            "height": 154,
+            "caption": "bar-cascade"
+          }
+        },
+        {
+          "previewVideo": {
+            "src": "/previews/loader-bouncing-bars.mp4",
+            "poster": "/previews/loader-bouncing-bars-poster.jpg",
+            "alt": "Loader — variant bouncing-bars.",
+            "width": 720,
+            "height": 174,
+            "caption": "bouncing-bars"
+          }
+        },
+        {
+          "previewVideo": {
+            "src": "/previews/loader-symmetric-wave.mp4",
+            "poster": "/previews/loader-symmetric-wave-poster.jpg",
+            "alt": "Loader — variant symmetric-wave.",
+            "width": 720,
+            "height": 156,
+            "caption": "symmetric-wave"
+          }
+        },
+        {
+          "previewVideo": {
+            "src": "/previews/loader-morph-ring.mp4",
+            "poster": "/previews/loader-morph-ring-poster.jpg",
+            "alt": "Loader — variant morph-ring.",
+            "width": 720,
+            "height": 204,
+            "caption": "morph-ring"
+          }
+        },
+        {
+          "previewVideo": {
+            "src": "/previews/loader-wave-physics.mp4",
+            "poster": "/previews/loader-wave-physics-poster.jpg",
+            "alt": "Loader — variant wave-physics.",
+            "width": 720,
+            "height": 252,
+            "caption": "wave-physics"
+          }
+        }
+      ]
+    },
+    "extraVariants": {
+      "variant": [
+        "pulse-dots",
+        "bounce-dots",
+        "pulsating-dots",
+        "liquid-dots",
+        "bar-cascade",
+        "bouncing-bars",
+        "symmetric-wave",
+        "morph-ring",
+        "wave-physics"
+      ]
+    },
+    "variantCode": {
+      "variant": "<Loader variant=\"pulse-dots\" />      {/* the default */}\n<Loader variant=\"bounce-dots\" />\n<Loader variant=\"pulsating-dots\" />\n<Loader variant=\"liquid-dots\" />\n<Loader variant=\"bar-cascade\" />\n<Loader variant=\"bouncing-bars\" />\n<Loader variant=\"symmetric-wave\" />\n<Loader variant=\"morph-ring\" />\n<Loader variant=\"wave-physics\" />"
+    }
   },
   "bar-chart": {
     "intro": "Categories compared by length, drawn and animated on the UI thread. Composed the way every chart here is: the grid, each series, the axes and the readout are separate children, so a chart that wants no grid simply does not have one.\n\nThe baseline is zero and stays zero. A line may crop its axis to the range the data occupies, because its job is to show change; a bar’s job is to compare lengths, and a bar cropped at the bottom is a length that lies — twice as tall no longer means twice as much.",
@@ -4011,7 +4304,13 @@
       {
         "title": "Stacked instead",
         "description": "The same two series read as a total rather than as a comparison. `stackGap` puts a hairline between the segments, which is what stops a stack of similar colours reading as one bar.",
-        "code": "<BarChart data={revenue} xDataKey=\"month\" stacked stackGap={2}>\n  <BarChart.Grid />\n  <BarChart.Bar dataKey=\"costs\" colorIndex={2} />\n  <BarChart.Bar dataKey=\"revenue\" />\n  <BarChart.XAxis />\n</BarChart>"
+        "code": "<BarChart data={revenue} xDataKey=\"month\" stacked stackGap={2}>\n  <BarChart.Grid />\n  <BarChart.Bar dataKey=\"costs\" colorIndex={2} />\n  <BarChart.Bar dataKey=\"revenue\" />\n  <BarChart.XAxis />\n</BarChart>",
+        "preview": {
+          "src": "/previews/bar-chart-stacked-instead.jpg",
+          "alt": "BarChart — Stacked instead.",
+          "width": 1179,
+          "height": 1151
+        }
       },
       {
         "title": "Sideways",
@@ -4038,10 +4337,24 @@
       {
         "title": "Sideways",
         "description": "Horizontal bars, for category names that need the room.",
-        "code": "<BarChart data={channels} xDataKey=\"name\" orientation=\"horizontal\" barGap={0.35}>\n  <BarChart.Grid />\n  <BarChart.Bar dataKey=\"sent\" colorIndex={3} />\n  <BarChart.YAxis />\n  <BarChart.Tooltip />\n</BarChart>"
+        "code": "<BarChart data={channels} xDataKey=\"name\" orientation=\"horizontal\" barGap={0.35}>\n  <BarChart.Grid />\n  <BarChart.Bar dataKey=\"sent\" colorIndex={3} />\n  <BarChart.YAxis />\n  <BarChart.Tooltip />\n</BarChart>",
+        "previewVideo": {
+          "src": "/previews/bar-chart-sideways.mp4",
+          "poster": "/previews/bar-chart-sideways-poster.jpg",
+          "alt": "BarChart — Sideways.",
+          "width": 720,
+          "height": 782
+        }
       }
     ],
-    "notes": "### Why the axis always reaches zero\n\nA bar is read by its length, so the axis it is measured against has to start at nothing. Cropped at the bottom — the trick that makes a line chart's changes legible — a bar twice as tall no longer means twice as much, and the chart quietly exaggerates every difference in it. The derived domain therefore always includes zero. `yDomain` overrides it, and doing so is opting into a chart that misreads.\n\n### Bands, not points\n\nA line has a point at each x; a bar owns a slice of width around it. `barGap` is the fraction of that slice left empty and `barWidth` caps the thickness, so a chart of six bars and a chart of sixty both stay proportional without either being told a pixel size.\n\n### What it costs to draw\n\nEach series is two animated paths a frame — the band under the finger, and everything else — rather than one animated node per bar. Fifty bars is four animated props, not fifty, and the split is what lets the rest dim without giving every bar its own opacity.\n\nThe corners are drawn as a path rather than with `rx`, because a bar is rounded on the end it grows towards and square on the end it grows from. `rx` rounds all four corners or none, and a bar rounded at the axis reads as floating above it.\n\n### Reduced motion\n\nThe grow-in and the domain tween are both skipped, and the chart draws straight to its final shape.\n\n**`aspectRatio` measures the plot, not the whole chart.** The header sits above the drawing area rather than inside it, so a chart with a readout is taller than its ratio alone suggests — measure the box and the header would eat into the plot while still claiming the shape you asked for.\n\n**Labels sit on what they name.** Each x label is placed on its own band, and each y label is centred on the grid line it belongs to. `Grid`'s `rows` and `YAxis`'s `ticks` have to match for the numbers to line up; both default to `4`."
+    "notes": "### Why the axis always reaches zero\n\nA bar is read by its length, so the axis it is measured against has to start at nothing. Cropped at the bottom — the trick that makes a line chart's changes legible — a bar twice as tall no longer means twice as much, and the chart quietly exaggerates every difference in it. The derived domain therefore always includes zero. `yDomain` overrides it, and doing so is opting into a chart that misreads.\n\n### Bands, not points\n\nA line has a point at each x; a bar owns a slice of width around it. `barGap` is the fraction of that slice left empty and `barWidth` caps the thickness, so a chart of six bars and a chart of sixty both stay proportional without either being told a pixel size.\n\n### What it costs to draw\n\nEach series is two animated paths a frame — the band under the finger, and everything else — rather than one animated node per bar. Fifty bars is four animated props, not fifty, and the split is what lets the rest dim without giving every bar its own opacity.\n\nThe corners are drawn as a path rather than with `rx`, because a bar is rounded on the end it grows towards and square on the end it grows from. `rx` rounds all four corners or none, and a bar rounded at the axis reads as floating above it.\n\n### Reduced motion\n\nThe grow-in and the domain tween are both skipped, and the chart draws straight to its final shape.\n\n**`aspectRatio` measures the plot, not the whole chart.** The header sits above the drawing area rather than inside it, so a chart with a readout is taller than its ratio alone suggests — measure the box and the header would eat into the plot while still claiming the shape you asked for.\n\n**Labels sit on what they name.** Each x label is placed on its own band, and each y label is centred on the grid line it belongs to. `Grid`'s `rows` and `YAxis`'s `ticks` have to match for the numbers to line up; both default to `4`.",
+    "previewVideo": {
+      "src": "/previews/bar-chart.mp4",
+      "poster": "/previews/bar-chart-poster.jpg",
+      "alt": "The BarChart component, running in the example app.",
+      "width": 720,
+      "height": 688
+    }
   },
   "area-chart": {
     "intro": "Filled bands over time, stacked or overlaid.\n\nThis is not `LineChart.Area`. Shading under a line is one series saying *this is the shape of the thing*; an area chart answers *what is it made of* — and that needs stacking, where each band sits on the running total of the ones below it, so the top edge is the whole and each thickness is a share.",
@@ -4090,10 +4403,24 @@
       {
         "title": "Overlaid",
         "description": "Alternatives rather than parts, so the fills go translucent and both bands stay readable.",
-        "code": "<AreaChart data={traffic} xDataKey=\"hour\">\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"search\" colorIndex={2} />\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.XAxis ticks={5} />\n  <AreaChart.YAxis />\n  <AreaChart.Tooltip />\n</AreaChart>"
+        "code": "<AreaChart data={traffic} xDataKey=\"hour\">\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"search\" colorIndex={2} />\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.XAxis ticks={5} />\n  <AreaChart.YAxis />\n  <AreaChart.Tooltip />\n</AreaChart>",
+        "previewVideo": {
+          "src": "/previews/area-chart-overlaid.mp4",
+          "poster": "/previews/area-chart-overlaid-poster.jpg",
+          "alt": "AreaChart — Overlaid.",
+          "width": 720,
+          "height": 768
+        }
       }
     ],
-    "notes": "### Stacked or overlaid\n\nStack when the series are parts of one thing and the total means something: channels making up your traffic, plan tiers making up your revenue. Overlay when they are alternatives being compared, where a total would be a number nobody asked for.\n\nThe two are drawn differently on purpose. Stacked bands touch, so their fills are nearly opaque — a translucent band would show the one beneath through it and the pair would read as a third colour. Overlaid bands must be translucent, or the one in front hides the ones behind entirely.\n\n### Why the fill starts at zero\n\nAn area is a filled region, and a region floating above the bottom of the plot reads as a shape rather than as a quantity. A series that never goes below zero is therefore drawn from zero, and only the top of the domain gets headroom.\n\n### Why this is a separate component\n\nStacking is not a flag that could have been added to `LineChart.Area`. It changes the y-domain from the largest single series to the largest sum, it makes each area's baseline a curve rather than the axis, and it makes declaration order load-bearing. A chart where all of that was true of some children and not others would be a chart nobody could read.\n\n### Reduced motion\n\nThe reveal and the domain tween are both skipped, and the chart draws straight to its final shape.\n\n**`aspectRatio` measures the plot, not the whole chart.** The header sits above the drawing area rather than inside it, so a chart with a readout is taller than its ratio alone suggests — measure the box and the header would eat into the plot while still claiming the shape you asked for.\n\n**Labels sit on what they name.** Each x label is placed on its own point, and each y label is centred on the grid line it belongs to. `Grid`'s `rows` and `YAxis`'s `ticks` have to match for the numbers to line up; both default to `4`."
+    "notes": "### Stacked or overlaid\n\nStack when the series are parts of one thing and the total means something: channels making up your traffic, plan tiers making up your revenue. Overlay when they are alternatives being compared, where a total would be a number nobody asked for.\n\nThe two are drawn differently on purpose. Stacked bands touch, so their fills are nearly opaque — a translucent band would show the one beneath through it and the pair would read as a third colour. Overlaid bands must be translucent, or the one in front hides the ones behind entirely.\n\n### Why the fill starts at zero\n\nAn area is a filled region, and a region floating above the bottom of the plot reads as a shape rather than as a quantity. A series that never goes below zero is therefore drawn from zero, and only the top of the domain gets headroom.\n\n### Why this is a separate component\n\nStacking is not a flag that could have been added to `LineChart.Area`. It changes the y-domain from the largest single series to the largest sum, it makes each area's baseline a curve rather than the axis, and it makes declaration order load-bearing. A chart where all of that was true of some children and not others would be a chart nobody could read.\n\n### Reduced motion\n\nThe reveal and the domain tween are both skipped, and the chart draws straight to its final shape.\n\n**`aspectRatio` measures the plot, not the whole chart.** The header sits above the drawing area rather than inside it, so a chart with a readout is taller than its ratio alone suggests — measure the box and the header would eat into the plot while still claiming the shape you asked for.\n\n**Labels sit on what they name.** Each x label is placed on its own point, and each y label is centred on the grid line it belongs to. `Grid`'s `rows` and `YAxis`'s `ticks` have to match for the numbers to line up; both default to `4`.",
+    "previewVideo": {
+      "src": "/previews/area-chart.mp4",
+      "poster": "/previews/area-chart-poster.jpg",
+      "alt": "The AreaChart component, running in the example app.",
+      "width": 720,
+      "height": 718
+    }
   },
   "ring-chart": {
     "intro": "Progress towards several targets, as concentric arcs.\n\nIt is not a pie, and the difference matters. A pie divides one whole between its slices, so the angles have to add to a full turn. A ring here is a value against *its own* target — three rings can all sit at ninety percent of three unrelated numbers, and that is the reading. Nothing is normalised across rings, and nothing has to add up.",
@@ -4143,7 +4470,14 @@
         "code": "<View className=\"w-28\">\n  <RingChart data={usage} strokeWidth={12} ringGap={5}>\n    {usage.map((ring, index) => (\n      <RingChart.Ring key={ring.label} index={index} />\n    ))}\n    <RingChart.Center formatValue={(value) => `${value}%`} />\n  </RingChart>\n</View>"
       }
     ],
-    "notes": "### Why every ring has a track\n\nAn arc drawn on nothing shows how far something went. An arc drawn on a full circle shows how far it went *of what it was aiming at*, which is the entire question a ring chart is asked. The track is the target made visible.\n\nA value past its target fills the ring and stops there. Going round twice would draw 110% as 10%, which is the wrong answer told confidently.\n\n### What the centre shows\n\nThe outermost ring, until one is selected. Not a total: the rings measure different things against different targets, so their values do not add up and their percentages do not average — a total in the middle would be a confident number about nothing. Pass a render function to `Center` when your rings *do* share a unit and a total is honest.\n\n### Touch, not hover\n\nRings are selected by pressing them. There is no equivalent here of a pointer resting somewhere without committing, so a chart that only revealed its numbers on hover would never reveal them at all — and because a twelve-point band is below the size a finger reliably hits, the touch target is widened well past the ring it belongs to.\n\n### Reduced motion\n\nThe sweep is skipped and the arcs draw at their final length."
+    "notes": "### Why every ring has a track\n\nAn arc drawn on nothing shows how far something went. An arc drawn on a full circle shows how far it went *of what it was aiming at*, which is the entire question a ring chart is asked. The track is the target made visible.\n\nA value past its target fills the ring and stops there. Going round twice would draw 110% as 10%, which is the wrong answer told confidently.\n\n### What the centre shows\n\nThe outermost ring, until one is selected. Not a total: the rings measure different things against different targets, so their values do not add up and their percentages do not average — a total in the middle would be a confident number about nothing. Pass a render function to `Center` when your rings *do* share a unit and a total is honest.\n\n### Touch, not hover\n\nRings are selected by pressing them. There is no equivalent here of a pointer resting somewhere without committing, so a chart that only revealed its numbers on hover would never reveal them at all — and because a twelve-point band is below the size a finger reliably hits, the touch target is widened well past the ring it belongs to.\n\n### Reduced motion\n\nThe sweep is skipped and the arcs draw at their final length.",
+    "previewVideo": {
+      "src": "/previews/ring-chart.mp4",
+      "poster": "/previews/ring-chart-poster.jpg",
+      "alt": "The RingChart component, running in the example app.",
+      "width": 720,
+      "height": 1232
+    }
   },
   "menu": {
     "intro": "The list of things you can do to something.\n\nA menu is not a select, and the difference is what the rows *are*. A select's rows are values: picking one answers a question the form asked, and the trigger then shows the answer. A menu's rows are verbs — rename, duplicate, delete — and the trigger goes on saying the same thing afterwards, because nothing about it was chosen.\n\nThe panel is a `Popover` underneath, so a menu inherits its measuring, flipping and edge-clamping rather than owning a second copy of them. A menu near the bottom of the screen opens upwards, and `presentation=\"bottom-sheet\"` moves the same rows into a sheet.",

@@ -8,6 +8,13 @@ A month of days, for picking one, several, or a span with two ends.
 
 It carries no date library. Everything a month grid needs is arithmetic on the platform's own `Date`, and shipping a timezone database to render seven columns is a poor trade in a library whose entire runtime is three small packages. Month and weekday names come from `Intl`, guarded — builds without the full locale data fall back to English rather than taking the screen down over a month name.
 
+<Preview
+  src="/previews/calendar.jpg"
+  alt="The Calendar component, running in the example app."
+  width={1179}
+  height={1215}
+/>
+
 ## Installation
 
 Calendar ships with the library — no separate install.
@@ -63,6 +70,13 @@ const [day, setDay] = useState<Date>();
 
 Two taps. A third starts again, and a tap that lands before the open end becomes the new start rather than being refused — someone who picked the wrong month first should not have to undo before retrying.
 
+<Preview
+  src="/previews/calendar-a-range.jpg"
+  alt="Calendar — A range."
+  width={1179}
+  height={1221}
+/>
+
 ```tsx
 const [range, setRange] = useState<DateRange>();
 
@@ -73,6 +87,13 @@ const [range, setRange] = useState<DateRange>();
 
 `multiple` collects a set. Tapping a day already in it takes it out.
 
+<Preview
+  src="/previews/calendar-several-days.jpg"
+  alt="Calendar — Several days."
+  width={1179}
+  height={1212}
+/>
+
 ```tsx
 const [days, setDays] = useState<Date[]>([]);
 
@@ -82,6 +103,13 @@ const [days, setDays] = useState<Date[]>([]);
 ### Days ruled out
 
 `disabled` takes a list, a span, or a rule. A rule, because "no weekends" and "nothing in the past" are the two common cases and neither can be written as a list that is still right tomorrow.
+
+<Preview
+  src="/previews/calendar-days-ruled-out.jpg"
+  alt="Calendar — Days ruled out."
+  width={1179}
+  height={1266}
+/>
 
 ```tsx
 <Calendar

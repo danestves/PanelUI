@@ -8,6 +8,14 @@ A calendar behind a button.
 
 It is `Calendar` inside a `Popover` with a trigger that reads back what was chosen, and it is a separate component for the same reason `Select` is separate from a list: the hard parts are the ones around the grid — what a closed field says, when the panel closes, and what a range shows while only half of it has been picked.
 
+<PreviewVideo
+  src="/previews/date-picker.mp4"
+  poster="/previews/date-picker-poster.jpg"
+  alt="The DatePicker component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 DatePicker ships with the library — no separate install.
@@ -84,6 +92,14 @@ const [range, setRange] = useState<DateRange>();
 ### In a sheet
 
 The anchored panel is the default: a month grid is a fixed size and fits beside its trigger on any phone. A sheet earns its place when the screen is busy — a form with the keyboard up is the usual case.
+
+<PreviewVideo
+  src="/previews/date-picker-in-a-sheet.mp4"
+  poster="/previews/date-picker-in-a-sheet-poster.jpg"
+  alt="DatePicker — In a sheet."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <DatePicker selected={day} onSelect={setDay} presentation="bottom-sheet" />
