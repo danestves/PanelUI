@@ -241,14 +241,24 @@ ${u.versions.map((v) => [
    */
   const STATE_KEYS = ['checked', 'disabled', 'completed', 'isDisabled', 'active', 'selected'];
   const hidden = new Set([...STATE_KEYS, ...(u.hideVariants ?? [])]);
-  const variantKeys = Object.entries(c.variants).filter(
+  /*
+   * The other direction: a variant prop the `tv()` does not carry. Loader
+   * picks an animation from `variant`, and not one of the nine values is a
+   * class name — so there is nothing for the parser to find, and the values a
+   * reader most needs listed are the ones it cannot list. `extraVariants`
+   * declares them by hand, after which they behave like any other key.
+   */
+  const declared = { ...c.variants, ...(u.extraVariants ?? {}) };
+  const variantKeys = Object.entries(declared).filter(
     ([k]) => !['true', 'false'].includes(k) && !hidden.has(k)
   );
   if (variantKeys.length) {
     sections.push(`## Variants
 
 ${variantKeys.map(([k, opts]) => {
-  const def = c.defaults[k];
+  // A `tv()` default arrives bare; one read off the component's own
+  // destructuring still has the quotes it was written with.
+  const def = String(c.defaults[k] ?? '').replace(/^'(.*)'$/, '$1');
   const list = opts.map((o) => `- \`${o}\`${def === o ? ' *(default)*' : ''}`).join('\n');
   // A snippet under every variant key, so the list is copy-pasteable rather
   // than something you have to translate into JSX yourself.
