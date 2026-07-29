@@ -57,6 +57,8 @@ import {
   Dialog,
   Direction,
   type DirectionValue,
+  DownloadIcon,
+  EllipsisIcon,
   EmptyState,
   FacebookIcon,
   Field,
@@ -76,11 +78,13 @@ import {
   Item,
   KeyboardAvoider,
   Label,
+  LockIcon,
   LineChart,
   type LineChartHandle,
   Loader,
   type LoaderVariant,
   Marker,
+  Menu,
   Message,
   MessageScroller,
   MicIcon,
@@ -133,6 +137,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
+  TrashIcon,
   Typography,
   hasNativeUI,
   useDirection,
@@ -1505,6 +1510,87 @@ function PopoverFormDemo() {
           </View>
         </Popover.Content>
       </Popover>
+    </View>
+  );
+}
+
+function MenuViewOptionsDemo() {
+  const [density, setDensity] = useState('comfortable');
+  const [showDone, setShowDone] = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
+
+  return (
+    <View className="w-full items-center py-4">
+      <Menu haptics>
+        <Menu.Trigger>
+          <Button variant="outline">View options</Button>
+        </Menu.Trigger>
+        <Menu.Content align="start" width={248}>
+          <Menu.Label>Density</Menu.Label>
+          {/* One of these is always chosen, so the row states which — and a
+              dot says so more quietly than a tick beside a list of nouns. */}
+          <Menu.RadioGroup value={density} onValueChange={setDensity}>
+            <Menu.RadioItem value="comfortable" indicator="dot">
+              Comfortable
+            </Menu.RadioItem>
+            <Menu.RadioItem value="compact" indicator="dot">
+              Compact
+            </Menu.RadioItem>
+          </Menu.RadioGroup>
+          <Menu.Separator />
+          <Menu.Label>Show</Menu.Label>
+          {/* Checkbox rows keep the menu open, because a set of filters is
+              nearly always changed more than one at a time. */}
+          <Menu.CheckboxItem checked={showDone} onCheckedChange={setShowDone}>
+            Completed
+          </Menu.CheckboxItem>
+          <Menu.CheckboxItem checked={showArchived} onCheckedChange={setShowArchived}>
+            Archived
+          </Menu.CheckboxItem>
+        </Menu.Content>
+      </Menu>
+    </View>
+  );
+}
+
+function MenuSubmenuDemo() {
+  const [moved, setMoved] = useState<string | null>(null);
+
+  return (
+    <View className="w-full items-center gap-3 py-4">
+      <Menu>
+        <Menu.Trigger>
+          <Button variant="outline">File actions</Button>
+        </Menu.Trigger>
+        <Menu.Content align="start" width={244}>
+          <Menu.Item icon={<PencilIcon size={16} />} shortcut="⌘R">
+            Rename
+          </Menu.Item>
+          {/* The submenu opens downwards into the panel rather than flying out
+              sideways — a finger has no path across to a second panel. */}
+          <Menu.Sub>
+            <Menu.SubTrigger icon={<PackageIcon size={16} />}>Move to</Menu.SubTrigger>
+            <Menu.SubContent>
+              {['Inbox', 'Projects', 'Archive'].map((folder) => (
+                <Menu.Item key={folder} onSelect={() => setMoved(folder)}>
+                  {folder}
+                </Menu.Item>
+              ))}
+            </Menu.SubContent>
+          </Menu.Sub>
+          <Menu.Separator />
+          <Menu.Item
+            variant="destructive"
+            icon={<TrashIcon size={16} />}
+            description="This cannot be undone"
+          >
+            Delete
+          </Menu.Item>
+        </Menu.Content>
+      </Menu>
+      <Text size="sm" muted>
+        {moved ? `Moved to ${moved}` : 'Nothing moved yet'}
+      </Text>
     </View>
   );
 }
@@ -8292,6 +8378,117 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'menu',
+    name: 'Menu',
+    summary: 'The list of things you can do to something',
+    layout: 'sections',
+    demos: [
+      {
+        label: 'A menu of actions',
+        render: () => (
+          <View className="w-full items-center py-4">
+            <Menu>
+              <Menu.Trigger>
+                <Button variant="outline">Options</Button>
+              </Menu.Trigger>
+              {/* Rows dismiss the panel as they run, which is what separates a
+                  menu of verbs from a picker of values. */}
+              <Menu.Content align="start" width={224}>
+                <Menu.Item icon={<ShareNodesIcon size={16} />} shortcut="⌘S">
+                  Share
+                </Menu.Item>
+                <Menu.Item icon={<PlusSquareIcon size={16} />}>Add to list</Menu.Item>
+                <Menu.Item icon={<DownloadIcon size={16} />} disabled>
+                  Download
+                </Menu.Item>
+                <Menu.Separator />
+                <Menu.Item variant="destructive" icon={<TrashIcon size={16} />}>
+                  Delete
+                </Menu.Item>
+              </Menu.Content>
+            </Menu>
+          </View>
+        ),
+      },
+      {
+        label: 'Checkboxes and a radio group',
+        render: () => <MenuViewOptionsDemo />,
+      },
+      {
+        label: 'A submenu, and a row that explains itself',
+        render: () => <MenuSubmenuDemo />,
+      },
+      {
+        label: 'Labels, and rows that line up without an icon',
+        render: () => (
+          <View className="w-full items-center py-4">
+            <Menu>
+              <Menu.Trigger>
+                <Button variant="ghost" size="icon" accessibilityLabel="More">
+                  <EllipsisIcon size={18} />
+                </Button>
+              </Menu.Trigger>
+              <Menu.Content align="end" width={232}>
+                <Menu.Label inset>Account</Menu.Label>
+                {/* `inset` reserves the icon column on a row that has no icon,
+                    so its label starts where the others' labels do. */}
+                <Menu.Item inset>Profile</Menu.Item>
+                <Menu.Item inset shortcut="⌘,">
+                  Settings
+                </Menu.Item>
+                <Menu.Separator />
+                <Menu.Item icon={<LockIcon size={16} />}>Lock screen</Menu.Item>
+              </Menu.Content>
+            </Menu>
+          </View>
+        ),
+      },
+      {
+        label: 'A long menu, scrolled',
+        render: () => (
+          <View className="w-full items-center py-4">
+            <Menu>
+              <Menu.Trigger>
+                <Button variant="outline">Jump to section</Button>
+              </Menu.Trigger>
+              {/* Capped at the room inside the safe area and scrolled, so the
+                  last row is reachable however many there turn out to be. */}
+              <Menu.Content align="start" width={230} maxHeight={260}>
+                {Array.from({ length: 14 }, (_, index) => (
+                  <Menu.Item key={index} inset>
+                    {`Section ${index + 1}`}
+                  </Menu.Item>
+                ))}
+              </Menu.Content>
+            </Menu>
+          </View>
+        ),
+      },
+      {
+        label: 'As a bottom sheet',
+        render: () => (
+          <View className="w-full items-center py-4">
+            {/* The same rows, moved into a sheet — better on a small screen
+                than a panel floating over the thing being acted on. */}
+            <Menu presentation="bottom-sheet">
+              <Menu.Trigger>
+                <Button variant="outline">Open as a sheet</Button>
+              </Menu.Trigger>
+              <Menu.Content>
+                <Menu.Item icon={<ShareNodesIcon size={16} />}>Share</Menu.Item>
+                <Menu.Item icon={<BookmarkIcon size={16} />}>Save for later</Menu.Item>
+                <Menu.Separator />
+                <Menu.Item variant="destructive" icon={<TrashIcon size={16} />}>
+                  Delete
+                </Menu.Item>
+              </Menu.Content>
+            </Menu>
+          </View>
+        ),
+      },
+    ],
+  },
+  {
     slug: 'message-scroller',
     name: 'MessageScroller',
     summary: 'Scroll behaviour a chat transcript needs',
@@ -8451,6 +8648,8 @@ export const COMPONENTS: ComponentEntry[] = [
     layout: 'sections',
     demos: [
       {
+        // A column of actions belongs in Menu now — what this shows instead is
+        // the cap, which is the thing a hand-built panel gets wrong.
         label: 'A long panel, scrolled',
         render: () => (
           <View className="w-full items-center py-4">

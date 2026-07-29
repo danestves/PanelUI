@@ -376,6 +376,23 @@ export {
   type MarkerContentProps,
 } from './components/marker';
 export {
+  Menu,
+  type MenuProps,
+  type MenuTriggerProps,
+  type MenuContentProps,
+  type MenuLabelProps,
+  type MenuItemProps,
+  type MenuCheckboxItemProps,
+  type MenuRadioGroupProps,
+  type MenuRadioItemProps,
+  type MenuSeparatorProps,
+  type MenuSubProps,
+  type MenuSubTriggerProps,
+  type MenuSubContentProps,
+  type MenuItemVariant,
+  type MenuRadioIndicator,
+} from './components/menu';
+export {
   MessageScroller,
   useMessageScroller,
   useMessageScrollerVisibility,

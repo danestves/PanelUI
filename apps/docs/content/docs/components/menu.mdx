@@ -1,0 +1,324 @@
+---
+title: Menu
+description: The list of things you can do to something.
+status: new
+---
+
+The list of things you can do to something.
+
+A menu is not a select, and the difference is what the rows *are*. A select's rows are values: picking one answers a question the form asked, and the trigger then shows the answer. A menu's rows are verbs — rename, duplicate, delete — and the trigger goes on saying the same thing afterwards, because nothing about it was chosen.
+
+The panel is a `Popover` underneath, so a menu inherits its measuring, flipping and edge-clamping rather than owning a second copy of them. A menu near the bottom of the screen opens upwards, and `presentation="bottom-sheet"` moves the same rows into a sheet.
+
+## Installation
+
+Menu ships with the library — no separate install.
+
+```tsx
+import { Menu, Button, PencilIcon, TrashIcon, PackageIcon, ShareNodesIcon, PlusSquareIcon, DownloadIcon, LockIcon, EllipsisIcon } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add menu
+```
+
+## Usage
+
+```tsx
+<Menu>
+  <Menu.Trigger>
+    <Button variant="outline">Options</Button>
+  </Menu.Trigger>
+  <Menu.Content align="start" width={224}>
+    <Menu.Item icon={<PencilIcon size={16} />} shortcut="⌘R">
+      Rename
+    </Menu.Item>
+    <Menu.Separator />
+    <Menu.Item variant="destructive" icon={<TrashIcon size={16} />}>
+      Delete
+    </Menu.Item>
+  </Menu.Content>
+</Menu>
+```
+
+## Composition
+
+```tsx
+<Menu>
+  <Menu.Trigger>…</Menu.Trigger>
+  <Menu.Content>
+    <Menu.Label>…</Menu.Label>
+    <Menu.Item>…</Menu.Item>
+    <Menu.CheckboxItem>…</Menu.CheckboxItem>
+    <Menu.RadioGroup>
+      <Menu.RadioItem>…</Menu.RadioItem>
+    </Menu.RadioGroup>
+    <Menu.Separator />
+    <Menu.Sub>
+      <Menu.SubTrigger>…</Menu.SubTrigger>
+      <Menu.SubContent>…</Menu.SubContent>
+    </Menu.Sub>
+  </Menu.Content>
+</Menu>
+```
+
+- **`Menu.Trigger`** — Wraps a single child and opens the menu on press. It is also what gets measured, so the panel knows where to sit.
+- **`Menu.Content`** — The panel, and what a screen reader announces as a menu. Portaled above everything else, positioned against the trigger, capped to the safe area and scrolled.
+- **`Menu.Label`** — Non-interactive heading over a run of rows.
+- **`Menu.Item`** — One row. Dismisses the menu once it has run, unless `closeOnSelect` says otherwise.
+- **`Menu.CheckboxItem`** — A row carrying a state rather than an action. Keeps the menu open by default.
+- **`Menu.RadioGroup`** — A run of rows of which exactly one is chosen.
+- **`Menu.RadioItem`** — One option inside a `Menu.RadioGroup`.
+- **`Menu.Separator`** — Hairline between two runs of rows.
+- **`Menu.Sub`** — Groups a `Menu.SubTrigger` with the rows it reveals.
+- **`Menu.SubTrigger`** — The row that opens a submenu. Its chevron turns to point down once open.
+- **`Menu.SubContent`** — The rows a submenu reveals, opening in place rather than flying out sideways.
+
+## Examples
+
+### A menu of actions
+
+Rows dismiss the panel as they run — that is what separates a menu of verbs from a picker of values. `variant="destructive"` tints the row as well as recolouring the label, because this is the one row where reading past it is expensive.
+
+```tsx
+<Menu>
+  <Menu.Trigger>
+    <Button variant="outline">Options</Button>
+  </Menu.Trigger>
+  <Menu.Content align="start" width={224}>
+    <Menu.Item icon={<ShareNodesIcon size={16} />} shortcut="⌘S">
+      Share
+    </Menu.Item>
+    <Menu.Item icon={<PlusSquareIcon size={16} />}>Add to list</Menu.Item>
+    <Menu.Item icon={<DownloadIcon size={16} />} disabled>
+      Download
+    </Menu.Item>
+    <Menu.Separator />
+    <Menu.Item variant="destructive" icon={<TrashIcon size={16} />}>
+      Delete
+    </Menu.Item>
+  </Menu.Content>
+</Menu>
+```
+
+### Checkboxes and a radio group
+
+Checkbox rows keep the menu open, because a set of filters is nearly always changed more than one at a time; radio rows close, because the question has been answered. `indicator="dot"` is quieter than a tick beside a list of nouns.
+
+```tsx
+const [density, setDensity] = useState('comfortable');
+const [showDone, setShowDone] = useState(true);
+
+<Menu haptics>
+  <Menu.Trigger>
+    <Button variant="outline">View options</Button>
+  </Menu.Trigger>
+  <Menu.Content align="start" width={248}>
+    <Menu.Label>Density</Menu.Label>
+    <Menu.RadioGroup value={density} onValueChange={setDensity}>
+      <Menu.RadioItem value="comfortable" indicator="dot">
+        Comfortable
+      </Menu.RadioItem>
+      <Menu.RadioItem value="compact" indicator="dot">
+        Compact
+      </Menu.RadioItem>
+    </Menu.RadioGroup>
+    <Menu.Separator />
+    <Menu.Label>Show</Menu.Label>
+    <Menu.CheckboxItem checked={showDone} onCheckedChange={setShowDone}>
+      Completed
+    </Menu.CheckboxItem>
+  </Menu.Content>
+</Menu>
+```
+
+### A submenu
+
+Submenus expand in place. A flyout needs a pointer to travel from the parent row to the child panel without crossing anything that would close it, and a finger has no such path — so the rows open downwards into the panel, under the thumb that opened them.
+
+```tsx
+<Menu>
+  <Menu.Trigger>
+    <Button variant="outline">File actions</Button>
+  </Menu.Trigger>
+  <Menu.Content align="start" width={244}>
+    <Menu.Item icon={<PencilIcon size={16} />} shortcut="⌘R">
+      Rename
+    </Menu.Item>
+    <Menu.Sub>
+      <Menu.SubTrigger icon={<PackageIcon size={16} />}>Move to</Menu.SubTrigger>
+      <Menu.SubContent>
+        {['Inbox', 'Projects', 'Archive'].map((folder) => (
+          <Menu.Item key={folder} onSelect={() => move(folder)}>
+            {folder}
+          </Menu.Item>
+        ))}
+      </Menu.SubContent>
+    </Menu.Sub>
+    <Menu.Separator />
+    <Menu.Item
+      variant="destructive"
+      icon={<TrashIcon size={16} />}
+      description="This cannot be undone"
+    >
+      Delete
+    </Menu.Item>
+  </Menu.Content>
+</Menu>
+```
+
+### Rows that line up without an icon
+
+`inset` reserves the icon column on a row that has no icon, so its label starts where the others' labels do. It works on `Menu.Label` too, which is what keeps a heading over the same line as the rows beneath it.
+
+```tsx
+<Menu>
+  <Menu.Trigger>
+    <Button variant="ghost" size="icon" accessibilityLabel="More">
+      <EllipsisIcon size={18} />
+    </Button>
+  </Menu.Trigger>
+  <Menu.Content align="end" width={232}>
+    <Menu.Label inset>Account</Menu.Label>
+    <Menu.Item inset>Profile</Menu.Item>
+    <Menu.Item inset shortcut="⌘,">
+      Settings
+    </Menu.Item>
+    <Menu.Separator />
+    <Menu.Item icon={<LockIcon size={16} />}>Lock screen</Menu.Item>
+  </Menu.Content>
+</Menu>
+```
+
+### As a bottom sheet
+
+The same rows, moved into a draggable sheet — better on a small screen than a panel floating over the thing being acted on. Placement and width do not apply to a sheet.
+
+```tsx
+<Menu presentation="bottom-sheet">
+  <Menu.Trigger>
+    <Button variant="outline">Open as a sheet</Button>
+  </Menu.Trigger>
+  <Menu.Content>
+    <Menu.Item icon={<ShareNodesIcon size={16} />}>Share</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item variant="destructive" icon={<TrashIcon size={16} />}>
+      Delete
+    </Menu.Item>
+  </Menu.Content>
+</Menu>
+```
+
+## Variants
+
+### `variant`
+
+- `default` *(default)*
+- `destructive`
+
+```tsx
+<Menu variant="default">…</Menu>
+<Menu variant="destructive">…</Menu>
+```
+
+### `inset`
+
+- `true`
+
+```tsx
+<Menu inset="true">…</Menu>
+```
+
+## API Reference
+
+### Menu
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `haptics` | `boolean` | — | Tick the haptic engine as a row is chosen. Needs the optional `expo-haptics`, and is silent without it. |
+
+### Menu.Content
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `scrollable` | `boolean` | — | Scroll the rows when there are more of them than fit on screen. On by default, unlike the popover it is built on: a menu is a list, its length is usually a `map` over data rather than something written out by hand, and a row that cannot be reached is a row that may as well not exist. |
+
+### Menu.Label
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `inset` | `boolean` | `false` | Line the text up with rows that carry an icon or an indicator. |
+
+### Menu.Separator
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Menu.Item
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `icon` | `ReactNode` | — | Leading glyph, drawn in the indicator column. |
+| `description` | `string` | — | Second line under the label, for a row whose effect needs a sentence. |
+| `shortcut` | `string` | — | Right-aligned hint, for a row that also has a keyboard or gesture shortcut. |
+| `trailing` | `ReactNode` | — | Element pinned to the row's trailing edge, after the shortcut. For the things a shortcut string cannot be — a chevron, a badge, a small avatar. |
+| `variant` | `MenuItemVariant` | `'default'` | `destructive` colours the row for an action that removes something. |
+| `inset` | `boolean` | `false` | Line the label up with rows that carry an icon, without drawing one. |
+| `disabled` | `boolean` | `false` |  |
+| `closeOnSelect` | `boolean` | `true` | Dismiss the menu once the row has run. Default true — a menu of verbs has done its job the moment one is chosen. Turn it off for a row that toggles something the user is likely to toggle twice. |
+| `onSelect` | `() => void` | — |  |
+
+### Menu.CheckboxItem
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `checked` | `boolean` | `false` |  |
+| `onCheckedChange` | `(checked: boolean) => void` | — |  |
+
+### Menu.RadioGroup
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `string` | — |  |
+| `onValueChange` | `(value: string) => void` | — |  |
+
+### Menu.RadioItem
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | — |  |
+| `indicator` | `MenuRadioIndicator` | `'check'` | `check` marks the chosen row, `dot` is quieter beside a list of nouns. |
+
+### Menu.Sub
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `defaultOpen` | `boolean` | — |  |
+| `open` | `boolean` | — |  |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
+
+### Menu.SubTrigger
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `transform` | `[{ rotate: ${progress.value * 90 * sign}deg }],` | — |  |
+
+### Menu.SubContent
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+Every row carries the `menuitem` role, and a checkbox, radio or submenu row publishes its state alongside it — checked, selected or expanded — so a screen reader announces what the row *is* as well as what it says.
+
+`Menu.Content` is capped to the room inside the safe area and scrolls, so the last row of a long menu is always reachable. Pass `maxHeight` to cap it lower than that, or `scrollable={false}` when the rows are written out by hand and known to fit.
