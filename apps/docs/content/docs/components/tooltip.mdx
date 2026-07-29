@@ -1,6 +1,7 @@
 ---
 title: Tooltip
 description: A small label that names the control under your finger.
+status: updated
 ---
 
 A small label that names the thing under your finger.
@@ -51,6 +52,8 @@ npx panelui-cli@latest add tooltip
   <Tooltip.Trigger>…</Tooltip.Trigger>
   <Tooltip.Content>
     <Tooltip.Arrow />
+    <Tooltip.Title>…</Tooltip.Title>
+    <Tooltip.Description>…</Tooltip.Description>
     <Tooltip.Text>…</Tooltip.Text>
   </Tooltip.Content>
 </Tooltip>
@@ -59,7 +62,9 @@ npx panelui-cli@latest add tooltip
 - **`Tooltip.Trigger`** — Wraps a single child and reveals the label on it — a long press by default, a press when the root asks for one. It is also what gets measured, so the label knows where to sit; the wrapper shrinks to the child rather than filling the row, so the label is anchored to the control.
 - **`Tooltip.Content`** — The label. Portaled above everything else, positioned against the trigger, and flipped or slid to stay inside the safe area. Text written directly inside it is wrapped in `Tooltip.Text` for you, so an arrow followed by a line of text needs no ceremony.
 - **`Tooltip.Arrow`** — Optional point towards the trigger. Follows the resolved side, so it stays correct after a flip.
-- **`Tooltip.Text`** — The label's default text, sized and inverted against the dark surface. Compose it yourself when the label holds more than a single run of text.
+- **`Tooltip.Title`** — A heading, for a tooltip carrying more than a label.
+- **`Tooltip.Description`** — The sentence under a `Tooltip.Title`, in the panel's secondary colour.
+- **`Tooltip.Text`** — The label's default text, coloured to whatever the panel is made of. Compose it yourself when the label holds more than a single run of text.
 
 ## Examples
 
@@ -129,6 +134,70 @@ const [open, setOpen] = useState(false);
 </Tooltip>
 ```
 
+### A panel, not a label
+
+Past a line of text the inversion stops reading as a whisper and starts reading as a panel with the wrong colours — so `variant="surface"` makes it a real one, on the same tokens the popover uses. Give it a `width` too: without one the panel runs to whatever width the sentence happens to want.
+
+```tsx
+<Tooltip openOn="press" duration={0}>
+  <Tooltip.Trigger>
+    <Button variant="outline">What is streaming?</Button>
+  </Tooltip.Trigger>
+  <Tooltip.Content variant="surface" width={264} className="gap-1 p-3">
+    <Tooltip.Arrow />
+    <Tooltip.Title>Streaming</Tooltip.Title>
+    <Tooltip.Description>
+      Tokens are rendered as they arrive rather than waiting for the whole
+      reply, so the first words appear in a few hundred milliseconds.
+    </Tooltip.Description>
+  </Tooltip.Content>
+</Tooltip>
+```
+
+### Scrolled, when it has to be
+
+`maxHeight` caps the panel and `scrollable` makes the overflow reachable — the same pair the popover has, and worth reaching for only when the content is genuinely longer than a tooltip should be. The cap is always clamped to the room inside the safe area as well.
+
+```tsx
+<Tooltip openOn="press" duration={0}>
+  <Tooltip.Trigger>
+    <Button variant="outline">Release notes</Button>
+  </Tooltip.Trigger>
+  <Tooltip.Content
+    variant="surface"
+    width={280}
+    maxHeight={220}
+    scrollable
+    className="p-3"
+  >
+    <View className="gap-2">
+      <Tooltip.Title>What changed</Tooltip.Title>
+      {notes.map((line) => (
+        <Tooltip.Description key={line}>{line}</Tooltip.Description>
+      ))}
+    </View>
+  </Tooltip.Content>
+</Tooltip>
+```
+
+## Variants
+
+### `variant`
+
+- `inverted` *(default)*
+- `surface`
+
+```tsx
+{/* The default. A whisper over the page, reading as a different layer. */}
+<Tooltip.Content variant="inverted">Copy link</Tooltip.Content>
+
+{/* On the popover's own tokens, for a panel's worth of content. */}
+<Tooltip.Content variant="surface" width={240}>
+  <Tooltip.Title>Streaming</Tooltip.Title>
+  <Tooltip.Description>Tokens arrive as they are generated.</Tooltip.Description>
+</Tooltip.Content>
+```
+
 ## API Reference
 
 ### Tooltip
@@ -161,6 +230,23 @@ const [open, setOpen] = useState(false);
 | `align` | `TooltipAlign` | `'center'` | Where the label sits along the trigger's other axis. |
 | `offset` | `number` | `DEFAULT_OFFSET` | Gap between the trigger and the label, in pixels. |
 | `alignOffset` | `number` | `0` | Nudge along the alignment axis, in pixels. |
+| `variant` | `TooltipVariant` | `'inverted'` | Which set of colours the panel, its arrow and its text draw from. `inverted` is the default and right for a label: a whisper over the page should read as a different layer rather than as another panel of it. `surface` matches the popover — reach for it once the tooltip carries a heading and a sentence, where the inversion stops reading as a whisper. |
+| `width` | `number \| 'trigger' \| 'full' \| 'content-fit'` | `'content-fit'` | `content-fit` sizes to the content, `trigger` matches the trigger's width, `full` spans the safe area, and a number is that many pixels. Worth setting for anything longer than a label, which would otherwise run to whatever width the sentence happens to want. |
+| `minWidth` | `number` | — | Floor for the panel's width, in pixels. |
+| `maxHeight` | `number` | — | Ceiling for the panel's height, in pixels. Always clamped to the room inside the safe area, which is also the default. |
+| `scrollable` | `boolean` | `false` | Scroll the body when it is taller than `maxHeight`. Off by default — a label has nothing to scroll, and a scroller around one only adds a bounce. |
+
+### Tooltip.Title
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Tooltip.Description
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
 
 ### Tooltip.Arrow
 
@@ -183,5 +269,21 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 **The trigger is measured on every open**, not once on layout — a trigger inside a scroll view has moved since it was laid out, and a stale rectangle anchors the label to where it used to be.
 
 **Long press is the default gesture.** It does not steal a tappable control's own press, so a button under a tooltip still works as a button. Use `openOn="press"` only when the trigger has no press of its own to protect, such as an icon that exists to be explained.
+
+### Colours
+
+Every colour the tooltip has — the panel, the arrow and the default text — comes from one `variant` on `Tooltip.Content`. It used to be three literals at three call sites, which meant retheming a tooltip took three separate `className` overrides that each had to be kept in step with the others.
+
+`inverted` is the default: `--color-foreground` behind `--color-background` text. It is deliberately not a surface colour, because a one-line label over the page should read as a different layer rather than as another panel of it. Note what that means in a dark theme — `--color-foreground` is near-white there, so the label is a light slab with dark text. That is the intent, not a bug.
+
+`surface` is the other reading, on `--color-popover` with a border, matching the popover exactly. Reach for it as soon as the tooltip carries a heading and a sentence.
+
+The chosen variant is published on the tooltip's context, so `Tooltip.Arrow`, `Tooltip.Title`, `Tooltip.Description` and `Tooltip.Text` all follow it without being told again.
+
+### Sizing
+
+`width`, `minWidth`, `maxHeight` and `scrollable` behave exactly as they do on [Popover](/docs/components/popover): `content-fit` is the default, `trigger` matches the control that opened it, `full` spans the safe area, and a number is pixels. The height is always clamped to the room inside the safe area whether or not you cap it, because a panel taller than the screen has nowhere to slide to.
+
+A label needs none of them. They exist for the `surface` case, where a sentence with no width runs to whatever the text wants and a paragraph with no cap runs off the screen.
 
 Reach for a **Popover** instead when the content is interactive — a menu, a form, anything with its own controls. A tooltip is a label, not a surface, and it dismisses itself out from under a tap.

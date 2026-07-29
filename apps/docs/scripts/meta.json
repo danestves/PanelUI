@@ -427,7 +427,8 @@
     "A small label that names the control under your finger.",
     "react native tooltip",
     {
-      "addedIn": "0.26.0"
+      "addedIn": "0.26.0",
+      "updatedIn": "0.30.0"
     }
   ],
   "typography": [

@@ -3,9 +3,15 @@
  *
  * A popover is a panel you open and deal with; a tooltip is a whisper. It
  * carries a word or two about what a control does, appears without taking the
- * screen, and goes away on its own. That is why it is inverted rather than
- * surface-coloured, why it is not dismissible with a scrim, and why it closes
- * after a beat instead of waiting to be told.
+ * screen, and goes away on its own. That is why it is inverted by default, why
+ * it is not dismissible with a scrim, and why it closes after a beat instead of
+ * waiting to be told.
+ *
+ * The inversion is a default rather than a rule, because the whisper has a
+ * larger sibling: a tooltip that carries a heading and a sentence stops reading
+ * as a different layer and starts reading as a panel with the wrong colours.
+ * `variant="surface"` makes it one, and the sizing props — `width`,
+ * `minWidth`, `maxHeight`, `scrollable` — are what let it hold that much.
  *
  * On touch there is no hover to open it, so the gesture is a long press by
  * default — the platform's own "tell me more" gesture — with `openOn="press"`
@@ -44,6 +50,7 @@ import {
 } from 'react';
 import {
   Pressable,
+  ScrollView,
   useWindowDimensions,
   View,
   type LayoutChangeEvent,
@@ -58,6 +65,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { tv } from 'tailwind-variants';
 import { Portal } from '../../primitives/portal';
 import { Text, type TextProps } from '../../primitives/text';
 import { cn } from '../../utils/cn';
@@ -73,6 +81,57 @@ const DEFAULT_DURATION = 1500;
 
 export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right';
 export type TooltipAlign = 'start' | 'center' | 'end';
+export type TooltipVariant = 'inverted' | 'surface';
+
+/**
+ * Every colour the tooltip has, in one place.
+ *
+ * They were three literals at three call sites — the panel, the arrow and the
+ * default text — which meant retheming a tooltip took three `className`
+ * overrides that each had to be kept in step with the others. As a variant it
+ * is one prop, and the arrow and the text read it off the context rather than
+ * being told again.
+ */
+const tooltipVariants = tv({
+  slots: {
+    content: 'rounded-lg px-2.5 py-1.5 shadow-md',
+    text: 'text-sm font-medium',
+    title: 'text-sm font-semibold',
+    description: 'text-sm',
+    arrow: 'rounded-[1px]',
+  },
+  variants: {
+    variant: {
+      /*
+       * The default, and deliberately not a surface colour: a whisper over the
+       * page should read as a different layer rather than as another panel of
+       * it. It is the treatment a one-line label wants.
+       */
+      inverted: {
+        content: 'bg-foreground',
+        text: 'text-background',
+        title: 'text-background',
+        description: 'text-background/70',
+        arrow: 'bg-foreground',
+      },
+      /*
+       * For a tooltip carrying more than a label — a heading, a sentence, a row
+       * of controls. At that size the inversion stops reading as a whisper and
+       * starts reading as a panel with the wrong colours, so it becomes one.
+       */
+      surface: {
+        content: 'border border-border bg-popover',
+        text: 'text-popover-foreground',
+        title: 'text-popover-foreground',
+        description: 'text-muted-foreground',
+        arrow: 'border-border bg-popover',
+      },
+    },
+  },
+  defaultVariants: {
+    variant: 'inverted',
+  },
+});
 
 interface TriggerRect {
   x: number;
@@ -97,6 +156,9 @@ interface TooltipContextValue {
   openOn: TooltipOpenOn;
   /** Accessibility label carried onto the trigger. */
   label?: string;
+  /** Which set of colours the panel, arrow and text draw from. */
+  variant: TooltipVariant;
+  setVariant: (variant: TooltipVariant) => void;
 }
 
 export type TooltipOpenOn = 'longPress' | 'press';
@@ -149,6 +211,12 @@ function TooltipRoot({
   const [trigger, setTrigger] = useState<TriggerRect | null>(null);
   const [placement, setPlacement] = useState<TooltipPlacement>('top');
   const [arrowOffset, setArrowOffset] = useState(0);
+  /*
+   * Published by Content rather than passed to it, because the arrow and the
+   * text sit beside the panel in the tree and would otherwise each have to be
+   * told which colours to use.
+   */
+  const [variant, setVariant] = useState<TooltipVariant>('inverted');
 
   const isControlled = open !== undefined;
   const resolvedOpen = isControlled ? open : internalOpen;
@@ -186,8 +254,10 @@ function TooltipRoot({
       setArrowOffset,
       openOn,
       label,
+      variant,
+      setVariant,
     }),
-    [resolvedOpen, show, hide, trigger, placement, arrowOffset, openOn, label]
+    [resolvedOpen, show, hide, trigger, placement, arrowOffset, openOn, label, variant]
   );
 
   return <TooltipContext.Provider value={context}>{children}</TooltipContext.Provider>;
@@ -282,6 +352,34 @@ export interface TooltipContentProps extends ViewProps {
   offset?: number;
   /** Nudge along the alignment axis, in pixels. */
   alignOffset?: number;
+  /**
+   * Which set of colours the panel, its arrow and its text draw from.
+   *
+   * `inverted` is the default and right for a label: a whisper over the page
+   * should read as a different layer rather than as another panel of it.
+   * `surface` matches the popover — reach for it once the tooltip carries a
+   * heading and a sentence, where the inversion stops reading as a whisper.
+   */
+  variant?: TooltipVariant;
+  /**
+   * `content-fit` sizes to the content, `trigger` matches the trigger's width,
+   * `full` spans the safe area, and a number is that many pixels. Worth setting
+   * for anything longer than a label, which would otherwise run to whatever
+   * width the sentence happens to want.
+   */
+  width?: number | 'trigger' | 'full' | 'content-fit';
+  /** Floor for the panel's width, in pixels. */
+  minWidth?: number;
+  /**
+   * Ceiling for the panel's height, in pixels. Always clamped to the room
+   * inside the safe area, which is also the default.
+   */
+  maxHeight?: number;
+  /**
+   * Scroll the body when it is taller than `maxHeight`. Off by default — a
+   * label has nothing to scroll, and a scroller around one only adds a bounce.
+   */
+  scrollable?: boolean;
   children?: ReactNode;
 }
 
@@ -291,13 +389,25 @@ function TooltipContent({
   align = 'center',
   offset = DEFAULT_OFFSET,
   alignOffset = 0,
+  variant = 'inverted',
+  width = 'content-fit',
+  minWidth,
+  maxHeight,
+  scrollable = false,
   children,
   onLayout: onLayoutProp,
   style,
   ...props
 }: TooltipContentProps) {
   const context = useTooltip('Tooltip.Content');
-  const { open, hide, trigger, setPlacement, setArrowOffset } = context;
+  const { open, hide, trigger, setPlacement, setArrowOffset, setVariant } = context;
+  const slots = tooltipVariants({ variant });
+
+  // The arrow and the text sit beside this panel in the tree, so the chosen
+  // colours are published rather than passed down.
+  useEffect(() => {
+    setVariant(variant);
+  }, [variant, setVariant]);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
@@ -331,6 +441,28 @@ function TooltipContent({
     top: insets.top + SCREEN_MARGIN,
     bottom: screenHeight - insets.bottom - SCREEN_MARGIN,
   };
+
+  const available = bounds.right - bounds.left;
+  const requestedWidth =
+    width === 'content-fit'
+      ? undefined
+      : width === 'trigger'
+        ? trigger?.width
+        : width === 'full'
+          ? available
+          : width;
+
+  // The floor never wins past the space there actually is — a panel wider than
+  // the screen is worse than a cramped one.
+  const resolvedWidth =
+    requestedWidth === undefined
+      ? minWidth === undefined
+        ? undefined
+        : Math.min(minWidth, available)
+      : Math.min(Math.max(requestedWidth, minWidth ?? 0), available);
+
+  const room = bounds.bottom - bounds.top;
+  const resolvedMaxHeight = Math.min(maxHeight ?? room, room);
 
   const position =
     trigger && size
@@ -418,14 +550,20 @@ function TooltipContent({
               // so it is laid out off-screen rather than at the origin.
               top: position?.top ?? -9999,
               left: position?.left ?? -9999,
-              maxWidth: bounds.right - bounds.left,
+              maxWidth: available,
+              maxHeight: resolvedMaxHeight,
+              width: resolvedWidth,
             }}
           >
             <Animated.View
-              accessibilityRole="text"
+              // A panel with a heading and a paragraph is a group, not a run of
+              // text — the flat role would have a screen reader read it as one
+              // string with no structure.
+              accessibilityRole={scrollable || width !== 'content-fit' ? undefined : 'text'}
               style={[labelStyle, style]}
               className={cn(
-                'rounded-lg bg-foreground px-2.5 py-1.5 shadow-md',
+                slots.content(),
+                scrollable ? 'overflow-hidden' : undefined,
                 className
               )}
               {...props}
@@ -438,12 +576,12 @@ function TooltipContent({
                 view bare. Only the text nodes need the treatment; an element
                 is already responsible for itself.
               */}
-              {Children.map(children, (child) =>
-                typeof child === 'string' || typeof child === 'number' ? (
-                  <TooltipText>{child}</TooltipText>
-                ) : (
-                  child
-                )
+              {scrollable ? (
+                <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+                  {wrapTooltipText(children)}
+                </ScrollView>
+              ) : (
+                wrapTooltipText(children)
               )}
             </Animated.View>
           </Animated.View>
@@ -453,11 +591,53 @@ function TooltipContent({
   );
 }
 
-/** The label's default text: small and inverted against the dark surface. */
-const TooltipText = ({ className, ...props }: TextProps) => (
-  <Text size="sm" weight="medium" className={cn('text-background', className)} {...props} />
-);
+/** Bare strings become the label's default text; elements speak for themselves. */
+function wrapTooltipText(children: ReactNode) {
+  return Children.map(children, (child) =>
+    typeof child === 'string' || typeof child === 'number' ? (
+      <TooltipText>{child}</TooltipText>
+    ) : (
+      child
+    )
+  );
+}
+
+/** The label's default text, coloured to whatever the panel is made of. */
+function TooltipText({ className, ...props }: TextProps) {
+  const { variant } = useTooltip('Tooltip.Text');
+  const { text } = tooltipVariants({ variant });
+
+  return <Text className={cn(text(), className)} {...props} />;
+}
 TooltipText.displayName = 'Tooltip.Text';
+TooltipTitle.displayName = 'Tooltip.Title';
+TooltipDescription.displayName = 'Tooltip.Description';
+
+export interface TooltipTitleProps extends TextProps {
+  className?: string;
+}
+
+/** A heading, for a tooltip carrying more than a label. */
+function TooltipTitle({ className, ...props }: TooltipTitleProps) {
+  const { variant } = useTooltip('Tooltip.Title');
+  const { title } = tooltipVariants({ variant });
+
+  return (
+    <Text accessibilityRole="header" className={cn(title(), className)} {...props} />
+  );
+}
+
+export interface TooltipDescriptionProps extends TextProps {
+  className?: string;
+}
+
+/** The sentence under a `Tooltip.Title`, in the panel's secondary colour. */
+function TooltipDescription({ className, ...props }: TooltipDescriptionProps) {
+  const { variant } = useTooltip('Tooltip.Description');
+  const { description } = tooltipVariants({ variant });
+
+  return <Text className={cn(description(), className)} {...props} />;
+}
 
 export interface TooltipArrowProps extends ViewProps {
   className?: string;
@@ -471,7 +651,8 @@ export interface TooltipArrowProps extends ViewProps {
  * the trigger rather than over the label's middle.
  */
 function TooltipArrow({ className, style, ...props }: TooltipArrowProps) {
-  const { trigger, placement, arrowOffset } = useTooltip('Tooltip.Arrow');
+  const { trigger, placement, arrowOffset, variant } = useTooltip('Tooltip.Arrow');
+  const { arrow } = tooltipVariants({ variant });
   if (!trigger) return null;
 
   const vertical = placement === 'top' || placement === 'bottom';
@@ -499,7 +680,7 @@ function TooltipArrow({ className, style, ...props }: TooltipArrowProps) {
         },
         style,
       ]}
-      className={cn('rounded-[1px] bg-foreground', className)}
+      className={cn(arrow(), className)}
       {...props}
     />
   );
@@ -606,5 +787,7 @@ export const Tooltip = Object.assign(TooltipRoot, {
   Trigger: TooltipTrigger,
   Content: TooltipContent,
   Arrow: TooltipArrow,
+  Title: TooltipTitle,
+  Description: TooltipDescription,
   Text: TooltipText,
 });

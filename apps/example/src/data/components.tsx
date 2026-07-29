@@ -10293,7 +10293,6 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'tooltip',
     name: 'Tooltip',
     summary: 'A small label that names the thing under your finger',
-    layout: 'sections',
     demos: [
       {
         label: 'Long press',
@@ -10364,6 +10363,63 @@ export const COMPONENTS: ComponentEntry[] = [
                 <Text size="xs" weight="semibold" className="text-background">
                   ⌘S
                 </Text>
+              </View>
+            </Tooltip.Content>
+          </Tooltip>
+        ),
+      },
+      {
+        label: 'A panel, not a label',
+        render: () => (
+          // Past a line of text the inversion stops reading as a whisper and
+          // starts reading as a panel with the wrong colours — so it becomes
+          // one, and takes a width rather than running to whatever the
+          // sentence happens to want.
+          <Tooltip openOn="press" duration={0}>
+            <Tooltip.Trigger>
+              <Button variant="outline">What is streaming?</Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content
+              variant="surface"
+              width={264}
+              className="gap-1 p-3"
+            >
+              <Tooltip.Arrow />
+              <Tooltip.Title>Streaming</Tooltip.Title>
+              <Tooltip.Description>
+                Tokens are rendered as they arrive rather than waiting for the
+                whole reply, so the first words appear in a few hundred
+                milliseconds.
+              </Tooltip.Description>
+            </Tooltip.Content>
+          </Tooltip>
+        ),
+      },
+      {
+        label: 'Scrolled, when it has to be',
+        render: () => (
+          <Tooltip openOn="press" duration={0}>
+            <Tooltip.Trigger>
+              <Button variant="outline">Release notes</Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content
+              variant="surface"
+              width={280}
+              maxHeight={220}
+              scrollable
+              className="p-3"
+            >
+              <View className="gap-2">
+                <Tooltip.Title>What changed in 0.30</Tooltip.Title>
+                {[
+                  'Textarea, sized in rows rather than pixels.',
+                  'The menu panel draws on a replaceable background layer.',
+                  'Tooltips follow the theme, and hold a panel of content.',
+                  'The calendar frames itself and draws a continuous range.',
+                  'Reasoning, Sources, Task, CodeBlock and Plan.',
+                ].map((line) => (
+                  <Tooltip.Description key={line}>{line}</Tooltip.Description>
+                ))}
               </View>
             </Tooltip.Content>
           </Tooltip>

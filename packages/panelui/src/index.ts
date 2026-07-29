@@ -527,9 +527,12 @@ export {
   type TooltipTriggerProps,
   type TooltipContentProps,
   type TooltipArrowProps,
+  type TooltipTitleProps,
+  type TooltipDescriptionProps,
   type TooltipPlacement,
   type TooltipAlign,
   type TooltipOpenOn,
+  type TooltipVariant,
 } from './components/tooltip';
 export {
   Typography,
