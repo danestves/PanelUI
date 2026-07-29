@@ -53,30 +53,36 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 
 | | | |
 | --- | --- | --- |
-| Accordion | HeatmapChart | ScrollText |
-| Alert | Input | SectionRail |
-| AreaChart | InputGroup | Select |
-| Attachment | Item | Separator |
-| Avatar | Label | Shimmer |
-| Badge | LineChart | Signature |
-| BarChart | Loader | Skeleton |
-| BottomSheet | Map | Slider |
-| Breadcrumb | Marker | Soundwave |
-| Button | Message | Spinner |
-| Card | MessageScroller | Steps |
-| Checkbox | NumberInput | Surface |
-| Chip | OtpInput | Switch |
-| Dialog | Popover | Tabs |
-| Direction | Progress | ThinkingOrb |
-| EmptyState | RadioGroup | Timeline |
-| Field | Rating | Toast |
-| Flow | RingChart | ToggleButton |
-| Form | ScrollCanvas | Tooltip |
-| Frame | ScrollFade | Typography |
+| Accordion | Frame | ScrollText |
+| Alert | HeatmapChart | SectionRail |
+| AreaChart | Input | Select |
+| Attachment | InputGroup | Separator |
+| Avatar | Item | Shimmer |
+| Badge | Label | Signature |
+| BarChart | LineChart | Skeleton |
+| BottomSheet | Loader | Slider |
+| Breadcrumb | Map | Soundwave |
+| Button | Marker | Spinner |
+| Calendar | Menu | Steps |
+| Card | Message | Surface |
+| Carousel | MessageScroller | Switch |
+| Checkbox | NumberInput | Tabs |
+| Chip | OtpInput | ThinkingOrb |
+| DatePicker | Popover | Timeline |
+| Dialog | Progress | Toast |
+| Direction | RadioGroup | ToggleButton |
+| EmptyState | Rating | Tooltip |
+| Field | RingChart | Typography |
+| Flow | ScrollCanvas |  |
+| Form | ScrollFade |  |
 
 `Select` shows its options in a bottom sheet, expanded in place, or floating
 over the page — one `presentation` prop, because which is right depends on what
 surrounds the trigger rather than on what the options are.
+`Menu` is the list of things you can do to something — rows that are verbs
+rather than values, carrying their own roles, their dismiss-on-select rule and
+a destructive tint. Submenus expand in place rather than flying out sideways,
+because a finger has no path across to a second panel.
 `Tooltip` is a small inverted label that names the control under your finger:
 a long press reveals it, it points at its trigger, and it hides itself after a
 beat rather than waiting to be dismissed.
