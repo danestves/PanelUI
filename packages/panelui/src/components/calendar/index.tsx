@@ -15,29 +15,42 @@
  * between months. So the grid is six rows always, and the spare cells hold the
  * neighbouring months' days.
  *
- * ## Why a range is drawn in three pieces
+ * ## How a range is drawn
  *
  * On the web the band under a selected range is one background with the ends
  * rounded by `:first-child` and `:last-child`. There are no pseudo-classes
- * here, so each day works out for itself whether it is a start, a middle or an
- * end — and, separately, whether it is at the edge of its own row, because a
- * range that runs over a weekend has to close off on Saturday and open again
- * on Sunday rather than trailing into the gap.
+ * here, so each cell draws its own piece of the band as a view *behind* the
+ * number, and works out for itself where that piece has to stop.
  *
- * Every cell therefore draws its band as a view *behind* the number, sized and
- * rounded from those flags, rather than as a background on the cell itself.
+ * Two questions, and they are not the same one:
+ *
+ * - **How wide.** A day between the two ends fills its cell, so the pieces meet
+ *   and the band reads as continuous. An end fills half its cell, from the
+ *   centre outwards towards the middle of the range — the half that is not
+ *   covered by the disc, so the disc appears to sit *on* the band rather than
+ *   beside it. That is the join the old three-piece version never made, which
+ *   is why a range used to read as two discs with a gap and a stripe.
+ * - **Where it is rounded.** Only where it genuinely stops: at an end of the
+ *   range, or at the edge of a row, because a range running over a weekend has
+ *   to close off on Saturday and open again on Sunday rather than trailing into
+ *   the gap between the two.
  */
 import {
   createContext,
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
-  type ReactNode,
 } from 'react';
-import { Pressable, View, type ViewProps } from 'react-native';
+import { Pressable, ScrollView, View, type ViewProps } from 'react-native';
 import { tv } from 'tailwind-variants';
-import { ChevronLeftIcon, ChevronRightIcon } from '../../icons';
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from '../../icons';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { Popover } from '../popover';
@@ -91,24 +104,56 @@ export type CalendarDisabled =
   | { from: Date; to: Date }
   | ((date: Date) => boolean);
 
+/**
+ * The corner radius of a day, and so of the band that runs between days.
+ *
+ * A number rather than a class because the band's four corners are set
+ * independently from the flags below, which no single `rounded-*` can express.
+ */
+const DAY_RADIUS = 8;
+
+const calendarVariants = tv({
+  slots: {
+    root: 'gap-3',
+    header: 'h-10 flex-row items-center justify-between gap-2',
+    nav: 'h-8 w-8 items-center justify-center rounded-full',
+    caption: 'flex-1 flex-row items-center justify-center gap-1',
+  },
+  variants: {
+    /** Draw the calendar's own panel, for one standing on the page. */
+    bordered: {
+      true: { root: 'rounded-3xl border border-border bg-card p-3' },
+    },
+  },
+  defaultVariants: {
+    bordered: true,
+  },
+});
+
 const dayVariants = tv({
   slots: {
-    cell: 'flex-1 items-center justify-center',
+    cell: 'h-10 flex-1 items-center justify-center',
     /** The range band, drawn behind the number so it can run cell to cell. */
-    band: 'absolute inset-y-1',
-    /** The circle on a selected day, or the ring on today. */
-    disc: 'h-9 w-9 items-center justify-center rounded-full',
-    label: '',
+    band: 'absolute inset-y-0.5 bg-accent',
+    /**
+     * The fill on a selected day, or the ring on today. Square-ish rather than
+     * round: a circle has one point of contact with the band beside it, so a
+     * range reads as beads on a string. A rounded rectangle meets the band
+     * along its whole edge and the two become one shape.
+     */
+    disc: 'h-9 w-9 items-center justify-center rounded-lg',
+    label: 'text-sm',
   },
   variants: {
     selected: { true: { disc: 'bg-primary', label: 'text-primary-foreground' } },
     today: { true: { disc: 'border border-primary', label: 'text-primary' } },
     outside: { true: { label: 'text-muted-foreground/40' } },
     disabled: { true: { label: 'text-muted-foreground/30' } },
-    inRange: { true: { band: 'bg-accent' } },
+    /** A ruled-out day inside a range still sits on it, but faintly. */
+    fadedBand: { true: { band: 'opacity-40' } },
   },
   compoundVariants: [
-    // A selected day inside a range keeps the solid disc; the band passes
+    // A selected day inside a range keeps the solid fill; the band passes
     // under it rather than the disc losing to it.
     { selected: true, today: true, class: { label: 'text-primary-foreground' } },
   ],
@@ -122,6 +167,9 @@ interface CalendarContextValue {
   system: 'gregory' | 'islamic';
   minDate?: Date;
   maxDate?: Date;
+  /** Bounds for the caption's pickers, which are not the selectable bounds. */
+  startMonth?: Date;
+  endMonth?: Date;
   captionLayout: CalendarCaptionLayout;
 }
 
@@ -142,8 +190,14 @@ function isDisabled(
   minDate: Date | undefined,
   maxDate: Date | undefined
 ): boolean {
-  if (minDate && isBefore(date, minDate)) return true;
-  if (maxDate && isAfter(date, maxDate)) return true;
+  /*
+   * Both bounds are compared at local midnight, because they are about days
+   * and the caller almost always hands over a moment. `minDate={new Date()}`
+   * means "from today", and against a raw timestamp that would rule out every
+   * hour of today that has already passed — which is to say, today.
+   */
+  if (minDate && isBefore(date, startOfDay(minDate))) return true;
+  if (maxDate && isAfter(date, startOfDay(maxDate))) return true;
   if (!disabled) return false;
   if (typeof disabled === 'function') return disabled(date);
   if (Array.isArray(disabled)) return disabled.some((day) => isSameDay(day, date));
@@ -178,10 +232,35 @@ export interface CalendarProps<Mode extends CalendarMode = 'single'>
   minDate?: Date;
   /** Latest selectable day. */
   maxDate?: Date;
+  /**
+   * Earliest month the caption's pickers offer. Defaults to `minDate`, and to
+   * a hundred years back when there is none.
+   *
+   * Separate from `minDate` because they answer different questions: `minDate`
+   * is about which days can be picked, this is about how far the month and year
+   * lists reach. A birthday picker wants a century of years on offer and no
+   * bound at all on the days inside them.
+   */
+  startMonth?: Date;
+  /** Latest month the caption's pickers offer. Defaults to `maxDate`, else ten years on. */
+  endMonth?: Date;
   /** `0` is Sunday. */
   weekStartsOn?: number;
   /** Draw the neighbouring months' days rather than leaving the cells blank. */
   showOutsideDays?: boolean;
+  /**
+   * Let a tap on a neighbouring month's day select it. Off by default: those
+   * cells exist to keep the grid six rows tall, and a tap on one is far more
+   * often a misfire than an attempt to reach into July from June. Paging to the
+   * month is the way to pick a day in it.
+   */
+  selectOutsideDays?: boolean;
+  /**
+   * Draw the calendar's own panel — a rounded, bordered card. On by default,
+   * for a calendar standing on a page. Turn it off when it is already inside
+   * something that draws one, which is what `DatePicker` does.
+   */
+  bordered?: boolean;
   /** BCP 47 tag for the month and weekday names. The device's own by default. */
   locale?: DateLocale;
   /**
@@ -209,8 +288,12 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
   disabled,
   minDate,
   maxDate,
+  startMonth,
+  endMonth,
   weekStartsOn = 0,
   showOutsideDays = true,
+  selectOutsideDays = false,
+  bordered = true,
   locale,
   calendar = 'gregory',
   ...props
@@ -299,16 +382,29 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
   );
 
   const context = useMemo(
-    () => ({ month, setMonth, locale, system, minDate, maxDate, captionLayout }),
-    [month, setMonth, locale, system, minDate, maxDate, captionLayout]
+    () => ({
+      month,
+      setMonth,
+      locale,
+      system,
+      minDate,
+      maxDate,
+      startMonth,
+      endMonth,
+      captionLayout,
+    }),
+    [month, setMonth, locale, system, minDate, maxDate, startMonth, endMonth, captionLayout]
   );
+
+  const { root } = calendarVariants({ bordered });
+  const months = Math.max(1, numberOfMonths);
 
   return (
     <CalendarContext.Provider value={context}>
-      <View {...props} className={cn('gap-4', className)}>
-        {Array.from({ length: Math.max(1, numberOfMonths) }, (_unused, offset) => (
+      <View {...props} className={cn(root(), className)}>
+        {Array.from({ length: months }, (_unused, offset) => (
           <View key={offset} className="gap-2">
-            <CalendarCaption offset={offset} lastOffset={numberOfMonths - 1} />
+            <CalendarHeader offset={offset} lastOffset={months - 1} />
             <CalendarGrid
               month={addCalendarMonths(month, offset, system, locale)}
               mode={mode}
@@ -319,6 +415,7 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
               maxDate={maxDate}
               weekStartsOn={weekStartsOn}
               showOutsideDays={showOutsideDays}
+              selectOutsideDays={selectOutsideDays}
               locale={locale}
               system={system}
             />
@@ -334,16 +431,29 @@ CalendarRoot.displayName = 'Calendar';
 /* Caption                                                                    */
 /* -------------------------------------------------------------------------- */
 
+export interface CalendarHeaderProps {
+  /** Which month of the run this header sits over. `0` is the first. */
+  offset?: number;
+  /** The last offset in the run, so the header knows whether it owns the arrow. */
+  lastOffset?: number;
+}
+
 /**
- * The month name and the arrows, or the month and year pickers.
+ * The row over a month: an arrow at each edge and the month's name between
+ * them.
  *
- * With several months shown the arrows are split across the row — back on the
- * first, forward on the last — because both sets on both captions would page
- * the whole run and give two ways to do one thing.
+ * The arrows are pinned to the edges of the calendar rather than packed around
+ * the label, so the two targets are as far apart as the panel allows and the
+ * name sits centred over its own grid. With several months shown they are split
+ * across the run — back on the first, forward on the last — because both sets
+ * on both headers would page the whole run and give two ways to do one thing.
+ * The month that owns neither still lays out a spacer, or its name would slide
+ * off centre.
  */
-function CalendarCaption({ offset, lastOffset }: { offset: number; lastOffset: number }) {
+function CalendarHeader({ offset = 0, lastOffset = 0 }: CalendarHeaderProps) {
   const { month, setMonth, locale, system, minDate, maxDate, captionLayout } =
-    useCalendar('Calendar.Caption');
+    useCalendar('Calendar.Header');
+  const { header, caption } = calendarVariants();
   const shown = addCalendarMonths(month, offset, system, locale);
 
   const canGoBack =
@@ -352,7 +462,7 @@ function CalendarCaption({ offset, lastOffset }: { offset: number; lastOffset: n
     !maxDate || isAfter(startOfCalendarMonth(maxDate, system, locale), shown);
 
   return (
-    <View className="h-9 flex-row items-center justify-between">
+    <View className={header()}>
       {offset === 0 ? (
         <CalendarNav
           direction="previous"
@@ -360,14 +470,18 @@ function CalendarCaption({ offset, lastOffset }: { offset: number; lastOffset: n
           onPress={() => setMonth(addCalendarMonths(month, -1, system, locale))}
         />
       ) : (
-        <View className="h-7 w-7" />
+        <View className="h-8 w-8" />
       )}
 
-      {captionLayout === 'dropdown' ? (
-        <CalendarDropdowns month={shown} offset={offset} />
-      ) : (
-        <Text weight="semibold">{calendarMonthLabel(shown, system, locale)}</Text>
-      )}
+      <View className={caption()}>
+        {captionLayout === 'dropdown' ? (
+          <CalendarDropdowns month={shown} offset={offset} />
+        ) : (
+          <Text weight="semibold" className="text-base">
+            {calendarMonthLabel(shown, system, locale)}
+          </Text>
+        )}
+      </View>
 
       {offset === lastOffset ? (
         <CalendarNav
@@ -376,21 +490,28 @@ function CalendarCaption({ offset, lastOffset }: { offset: number; lastOffset: n
           onPress={() => setMonth(addCalendarMonths(month, 1, system, locale))}
         />
       ) : (
-        <View className="h-7 w-7" />
+        <View className="h-8 w-8" />
       )}
     </View>
   );
 }
 
-function CalendarNav({
-  direction,
-  disabled,
-  onPress,
-}: {
+export interface CalendarNavProps {
   direction: 'previous' | 'next';
-  disabled: boolean;
-  onPress: () => void;
-}) {
+  disabled?: boolean;
+  onPress?: () => void;
+}
+
+/**
+ * One paging arrow.
+ *
+ * Borderless: two bordered squares at the ends of a bordered panel read as a
+ * row of boxes rather than as controls, and the chevron is legible enough on
+ * its own. The target is still 32px with another 8 of slop around it.
+ */
+function CalendarNav({ direction, disabled = false, onPress }: CalendarNavProps) {
+  const { nav } = calendarVariants();
+
   return (
     <Pressable
       disabled={disabled}
@@ -399,12 +520,9 @@ function CalendarNav({
       accessibilityRole="button"
       accessibilityLabel={direction === 'next' ? 'Next month' : 'Previous month'}
       accessibilityState={{ disabled }}
-      className={cn(
-        'h-7 w-7 items-center justify-center rounded-md border border-border',
-        disabled ? 'opacity-40' : 'active:bg-accent'
-      )}
+      className={cn(nav(), disabled ? 'opacity-30' : 'active:bg-accent')}
     >
-      {direction === 'next' ? <ChevronRightIcon size={16} /> : <ChevronLeftIcon size={16} />}
+      {direction === 'next' ? <ChevronRightIcon size={18} /> : <ChevronLeftIcon size={18} />}
     </Pressable>
   );
 }
@@ -422,7 +540,8 @@ function CalendarNav({
  * choosing a number, and it cannot show a Hijri year at all.
  */
 function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
-  const { setMonth, locale, system, minDate, maxDate } = useCalendar('Calendar.Caption');
+  const { setMonth, locale, system, minDate, maxDate, startMonth, endMonth } =
+    useCalendar('Calendar.Caption');
 
   /*
    * Everything here counts in the calendar on screen, not in the platform's.
@@ -435,20 +554,29 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
     [month, system, locale]
   );
   const current = calendarParts(month, system, locale);
+  /*
+   * `startMonth`/`endMonth` bound the lists, falling back to the selectable
+   * bounds and then to a century back and a decade on. They are separate props
+   * because the two questions are different: a birthday picker wants a hundred
+   * years on offer and no bound at all on the days inside them.
+   */
+  const first = startMonth ?? minDate;
+  const last = endMonth ?? maxDate;
   const bounds = {
-    from: minDate ? calendarParts(minDate, system, locale).year : current.year - 100,
-    to: maxDate ? calendarParts(maxDate, system, locale).year : current.year + 10,
+    from: first ? calendarParts(first, system, locale).year : current.year - 100,
+    to: last ? calendarParts(last, system, locale).year : current.year + 10,
   };
   /*
-   * Newest first, because the list is long — a century by default, and longer
-   * against a `minDate` — and a list that opens at its far end is showing the
-   * one year nobody came to pick. Counting down puts the years in reach at the
-   * top, which for the case this exists for, a birthday against a `maxDate` of
-   * today, is exactly where the wanted one is.
+   * Oldest first, the way a year runs. The list is long — a century by default
+   * — so it is opened scrolled to the year already in the caption rather than
+   * to either end, which is what makes the natural order affordable. Counting
+   * backwards was a way of putting the likely years at the top of a list that
+   * always opened at the top; it is not needed once the list opens in the right
+   * place, and it made every other use of the picker read upside down.
    */
   const years = Array.from(
     { length: Math.max(1, bounds.to - bounds.from + 1) },
-    (_unused, index) => bounds.to - index
+    (_unused, index) => bounds.from + index
   );
 
   /*
@@ -461,62 +589,97 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
   };
 
   return (
-    <View className="flex-1 flex-row items-center justify-center gap-1">
+    <>
       <CaptionDropdown
         label={months[current.month - 1] ?? String(current.month)}
+        accessibilityLabel="Month"
         options={months}
         active={current.month - 1}
+        width={MONTH_LIST_WIDTH}
         onSelect={(index) => choose(index - (current.month - 1))}
       />
       <CaptionDropdown
         label={String(current.year)}
+        accessibilityLabel="Year"
         options={years.map(String)}
         active={years.indexOf(current.year)}
+        width={YEAR_LIST_WIDTH}
         onSelect={(index) => choose((years[index]! - current.year) * 12)}
-        // Twelve months fit in the panel; a century of years does not.
-        scrollable
       />
-    </View>
+    </>
   );
 }
 
-/** The panel's width, and so how many chips a row of it holds. */
-const DROPDOWN_WIDTH = 264;
+/** Panel widths. A month name needs the room; a four-digit year does not. */
+const MONTH_LIST_WIDTH = 176;
+const YEAR_LIST_WIDTH = 132;
 
-/** One chip and the options it opens. */
+/**
+ * Height of one option row, and the tallest the list is allowed to be.
+ *
+ * The row height is a constant rather than a measurement because it is what
+ * turns "the twenty-ninth option" into a scroll offset, and that has to be
+ * known before the list has laid out — the whole point is that it opens in the
+ * right place rather than scrolling there afterwards.
+ */
+const OPTION_HEIGHT = 40;
+const LIST_MAX_HEIGHT = OPTION_HEIGHT * 6.5;
+
+/**
+ * One chip and the list of options it opens.
+ *
+ * A list, not a grid of chips. Twelve months tile into a panel well enough, but
+ * the same treatment applied to a century of years is a wall of four-digit
+ * numbers with no order the eye can follow — and it opened at whichever end
+ * happened to be first. Rows in a column read as a list, take a checkmark, and
+ * can be scrolled to a particular one.
+ */
 function CaptionDropdown({
   label,
+  accessibilityLabel,
   options,
   active,
+  width,
   onSelect,
-  scrollable = false,
 }: {
   label: string;
+  accessibilityLabel: string;
   options: string[];
   /** Index of the option currently in the caption, or -1 for none. */
   active: number;
+  width: number;
   onSelect: (index: number) => void;
-  scrollable?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const list = useRef<ScrollView>(null);
+
+  /*
+   * Opened on the option already in the caption, centred in the panel rather
+   * than pinned to an edge so the years either side of it are in view too. A
+   * hundred-item list that opens at the top is showing the one year nobody came
+   * to pick, and asks for a flick through a century to reach the one they did.
+   */
+  const scrollToActive = useCallback(() => {
+    if (active < 0) return;
+    const centred = active * OPTION_HEIGHT - LIST_MAX_HEIGHT / 2 + OPTION_HEIGHT / 2;
+    list.current?.scrollTo({ y: Math.max(0, centred), animated: false });
+  }, [active]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <Popover.Trigger>
-        <CaptionChip label={label} expanded={open} />
+        <CaptionChip label={label} expanded={open} accessibilityLabel={accessibilityLabel} />
       </Popover.Trigger>
-      {/*
-        The panel is capped and scrolled by the popover itself, against the room
-        actually on screen rather than a fixed number — the cap has to be the
-        one that knows where the chip ended up.
-      */}
-      <Popover.Content
-        align="center"
-        width={DROPDOWN_WIDTH}
-        scrollable={scrollable}
-        className="p-2"
-      >
-        <View className="flex-row flex-wrap justify-center gap-1">
+      <Popover.Content align="center" width={width} className="p-1.5">
+        <ScrollView
+          ref={list}
+          bounces={false}
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: LIST_MAX_HEIGHT }}
+          // Fires once the rows exist, which is the first moment there is
+          // anything to scroll. Doing it on mount would scroll an empty list.
+          onContentSizeChange={scrollToActive}
+        >
           {options.map((option, index) => {
             const selected = index === active;
             return (
@@ -528,18 +691,20 @@ function CaptionDropdown({
                 }}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
+                style={{ height: OPTION_HEIGHT }}
                 className={cn(
-                  'rounded-md px-2.5 py-1.5',
-                  selected ? 'bg-primary' : 'active:bg-accent'
+                  'flex-row items-center justify-between gap-2 rounded-xl px-3',
+                  selected ? 'bg-accent' : 'active:bg-accent'
                 )}
               >
-                <Text size="sm" className={selected ? 'text-primary-foreground' : undefined}>
+                <Text size="sm" weight={selected ? 'semibold' : 'normal'}>
                   {option}
                 </Text>
+                {selected ? <CheckIcon size={16} /> : null}
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
       </Popover.Content>
     </Popover>
   );
@@ -548,10 +713,12 @@ function CaptionDropdown({
 function CaptionChip({
   label,
   expanded,
+  accessibilityLabel,
   onPress,
 }: {
   label: string;
   expanded: boolean;
+  accessibilityLabel: string;
   /** Supplied by `Popover.Trigger`, which clones this to open the panel. */
   onPress?: (...args: unknown[]) => void;
 }) {
@@ -559,10 +726,17 @@ function CaptionChip({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ expanded }}
-      className="flex-row items-center gap-1 rounded-md px-2 py-1 active:bg-accent"
+      className="flex-row items-center gap-1 rounded-lg px-2 py-1.5 active:bg-accent"
     >
       <Text weight="semibold">{label}</Text>
+      {/*
+        The chevron says the chip opens something. Without it a bold word in the
+        middle of a header is indistinguishable from the plain caption layout,
+        and nobody thinks to press it.
+      */}
+      <ChevronDownIcon size={14} />
     </Pressable>
   );
 }
@@ -581,6 +755,7 @@ interface GridProps {
   maxDate?: Date;
   weekStartsOn: number;
   showOutsideDays: boolean;
+  selectOutsideDays?: boolean;
   locale: DateLocale;
   system: 'gregory' | 'islamic';
 }
@@ -595,6 +770,7 @@ function CalendarGrid({
   maxDate,
   weekStartsOn,
   showOutsideDays,
+  selectOutsideDays = false,
   locale,
   system,
 }: GridProps) {
@@ -641,16 +817,38 @@ function CalendarGrid({
               return <View key={dayIndex} className="h-10 flex-1" />;
             }
 
+            const isStart = mode === 'range' && isSameDay(date, range?.from);
+            const isEnd = mode === 'range' && isSameDay(date, range?.to);
+
             const selected =
               mode === 'range'
-                ? isSameDay(date, range?.from) || isSameDay(date, range?.to)
+                ? isStart || isEnd
                 : mode === 'multiple'
                   ? multiple.some((picked) => isSameDay(picked, date))
                   : isSameDay(date, single);
 
-            // Between the ends, but not an end itself — the band, not the disc.
-            const inRange =
-              !!range?.to && isWithin(date, range.from, range.to) && !selected;
+            /*
+             * Inclusive of both ends, unlike the old middles-only rule. An end
+             * has to carry its half of the band or there is a gap between the
+             * disc and the run beside it — which is precisely what made a range
+             * read as two discs with a stripe floating between them.
+             */
+            const inRange = !!range?.to && isWithin(date, range.from, range.to);
+
+            /*
+             * Whether the band carries on past this cell's edge into the one
+             * beside it. It stops at an end of the range, and at the edge of a
+             * row — a range over a weekend closes on Saturday and opens again
+             * on Sunday rather than trailing into the gap between the rows.
+             */
+            const openStart = inRange && !isStart && dayIndex > 0;
+            const openEnd = inRange && !isEnd && dayIndex < 6;
+
+            // A neighbouring month's day is drawn, not offered. Reaching into
+            // July from June is what the arrows are for.
+            const ruledOut =
+              isDisabled(date, disabled, minDate, maxDate) ||
+              (outside && !selectOutsideDays);
 
             return (
               <CalendarDay
@@ -659,12 +857,12 @@ function CalendarGrid({
                 outside={outside}
                 selected={selected}
                 inRange={inRange}
+                rangeStart={isStart}
+                rangeEnd={isEnd}
                 today={isSameDay(date, today)}
-                disabled={isDisabled(date, disabled, minDate, maxDate)}
-                // The band closes off at the edges of a row rather than
-                // trailing into the gap between weeks.
-                openStart={inRange && dayIndex > 0}
-                openEnd={inRange && dayIndex < 6}
+                disabled={ruledOut}
+                openStart={openStart}
+                openEnd={openEnd}
                 locale={locale}
                 system={system}
                 onPress={() => onSelect(date)}
@@ -681,10 +879,15 @@ interface DayProps {
   date: Date;
   outside: boolean;
   selected: boolean;
+  /** Anywhere inside the range, ends included. */
   inRange: boolean;
+  rangeStart?: boolean;
+  rangeEnd?: boolean;
   today: boolean;
   disabled: boolean;
+  /** The band carries on past this cell's leading edge. */
   openStart: boolean;
+  /** The band carries on past this cell's trailing edge. */
   openEnd: boolean;
   locale: DateLocale;
   system: 'gregory' | 'islamic';
@@ -696,6 +899,8 @@ function CalendarDay({
   outside,
   selected,
   inRange,
+  rangeStart = false,
+  rangeEnd = false,
   today,
   disabled,
   openStart,
@@ -709,8 +914,27 @@ function CalendarDay({
     today: today && !selected,
     outside,
     disabled,
-    inRange,
+    fadedBand: disabled && inRange,
   });
+
+  /*
+   * An end of the range fills half its cell, from the centre outwards towards
+   * the rest of the range; every other day in it fills the whole cell. Half a
+   * cell is what puts the band underneath the disc rather than beside it — the
+   * disc is centred, so a band starting at the centre emerges from behind it
+   * and the two read as one shape. A range of one day gets both halves and so
+   * no band at all, which is right: there is nothing to span.
+   */
+  const bandStyle = inRange
+    ? {
+        left: rangeStart ? ('50%' as const) : 0,
+        right: rangeEnd ? ('50%' as const) : 0,
+        borderTopLeftRadius: openStart ? 0 : DAY_RADIUS,
+        borderBottomLeftRadius: openStart ? 0 : DAY_RADIUS,
+        borderTopRightRadius: openEnd ? 0 : DAY_RADIUS,
+        borderBottomRightRadius: openEnd ? 0 : DAY_RADIUS,
+      }
+    : null;
 
   return (
     <Pressable
@@ -719,23 +943,11 @@ function CalendarDay({
       accessibilityRole="button"
       accessibilityLabel={calendarLongDate(date, system, locale)}
       accessibilityState={{ selected, disabled }}
-      className={cn(styles.cell(), 'h-10')}
+      className={styles.cell()}
     >
-      {inRange ? (
-        <View
-          className={cn(styles.band())}
-          style={{
-            left: openStart ? 0 : '10%',
-            right: openEnd ? 0 : '10%',
-            borderTopLeftRadius: openStart ? 0 : 999,
-            borderBottomLeftRadius: openStart ? 0 : 999,
-            borderTopRightRadius: openEnd ? 0 : 999,
-            borderBottomRightRadius: openEnd ? 0 : 999,
-          }}
-        />
-      ) : null}
-      <View className={cn(styles.disc())}>
-        <Text size="sm" className={cn(styles.label())}>
+      {bandStyle ? <View className={styles.band()} style={bandStyle} /> : null}
+      <View className={styles.disc()}>
+        <Text className={styles.label()}>
           {calendarDayNumber(date, system, locale)}
         </Text>
       </View>
@@ -744,6 +956,8 @@ function CalendarDay({
 }
 
 export const Calendar = Object.assign(CalendarRoot, {
+  Header: CalendarHeader,
+  Nav: CalendarNav,
   Grid: CalendarGrid,
   Day: CalendarDay,
 });

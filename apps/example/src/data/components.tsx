@@ -642,11 +642,7 @@ function CalendarSingleDemo() {
   const [day, setDay] = useState<Date | undefined>(new Date());
   return (
     <View className="w-full gap-4">
-      <Card>
-        <Card.Content className="p-3">
-          <Calendar selected={day} onSelect={setDay} />
-        </Card.Content>
-      </Card>
+      <Calendar selected={day} onSelect={setDay} />
       <Text size="sm" muted className="text-center">
         {day ? day.toDateString() : 'Nothing picked — tap the same day again to clear it.'}
       </Text>
@@ -661,11 +657,7 @@ function CalendarRangeDemo() {
   });
   return (
     <View className="w-full gap-4">
-      <Card>
-        <Card.Content className="p-3">
-          <Calendar mode="range" selected={range} onSelect={setRange} />
-        </Card.Content>
-      </Card>
+      <Calendar mode="range" selected={range} onSelect={setRange} />
       <Text size="sm" muted className="text-center">
         {range?.to
           ? `${range.from.toDateString()} → ${range.to.toDateString()}`
@@ -679,11 +671,7 @@ function CalendarMultipleDemo() {
   const [days, setDays] = useState<Date[]>([new Date(), addDemoDays(3), addDemoDays(4)]);
   return (
     <View className="w-full gap-4">
-      <Card>
-        <Card.Content className="p-3">
-          <Calendar mode="multiple" selected={days} onSelect={setDays} />
-        </Card.Content>
-      </Card>
+      <Calendar mode="multiple" selected={days} onSelect={setDays} />
       <Text size="sm" muted className="text-center">
         {days.length} {days.length === 1 ? 'date' : 'dates'} picked
       </Text>
@@ -696,17 +684,13 @@ function CalendarDisabledDemo() {
   const [day, setDay] = useState<Date>();
   return (
     <View className="w-full gap-4">
-      <Card>
-        <Card.Content className="p-3">
-          <Calendar
-            selected={day}
-            onSelect={setDay}
-            minDate={new Date()}
-            maxDate={addDemoDays(60)}
-            disabled={(date) => date.getDay() === 0 || date.getDay() === 6}
-          />
-        </Card.Content>
-      </Card>
+      <Calendar
+        selected={day}
+        onSelect={setDay}
+        minDate={new Date()}
+        maxDate={addDemoDays(60)}
+        disabled={(date) => date.getDay() === 0 || date.getDay() === 6}
+      />
       <Text size="sm" muted className="text-center">
         Weekdays only, and nothing before today or more than two months out.
       </Text>
@@ -719,20 +703,50 @@ function CalendarDropdownDemo() {
   const [day, setDay] = useState<Date>();
   return (
     <View className="w-full gap-4">
-      <Card>
-        <Card.Content className="p-3">
-          <Calendar
-            selected={day}
-            onSelect={setDay}
-            captionLayout="dropdown"
-            maxDate={new Date()}
-            defaultMonth={new Date(1996, 5, 1)}
-          />
-        </Card.Content>
-      </Card>
+      {/* A century of years on offer, and nothing after today selectable —
+          the two bounds are separate questions. */}
+      <Calendar
+        selected={day}
+        onSelect={setDay}
+        captionLayout="dropdown"
+        maxDate={new Date()}
+        startMonth={new Date(1925, 0, 1)}
+        endMonth={new Date()}
+        defaultMonth={new Date(1996, 5, 1)}
+      />
       <Text size="sm" muted className="text-center">
         Tap the month or the year to jump rather than paging.
       </Text>
+    </View>
+  );
+}
+
+/**
+ * The cells at the ends of the grid belong to the months either side.
+ *
+ * They are drawn so the grid keeps its six rows and the columns stay under
+ * their headings, but a tap on one is far more often a misfire than a real
+ * attempt to reach into next month — so by default they do not answer.
+ */
+function CalendarOutsideDaysDemo() {
+  const [day, setDay] = useState<Date | undefined>(new Date());
+  const [reachable, setReachable] = useState(false);
+
+  return (
+    <View className="w-full gap-4">
+      <Calendar
+        selected={day}
+        onSelect={setDay}
+        selectOutsideDays={reachable}
+      />
+      <View className="flex-row items-center justify-between gap-3">
+        <Text size="sm" muted className="flex-1">
+          {reachable
+            ? 'The greyed days at either end answer a tap.'
+            : 'The greyed days at either end ignore a tap. Page to the month instead.'}
+        </Text>
+        <Switch value={reachable} onValueChange={setReachable} />
+      </View>
     </View>
   );
 }
@@ -762,11 +776,7 @@ function CalendarSystemDemo() {
         </Tabs.List>
       </Tabs>
 
-      <Card>
-        <Card.Content className="p-3">
-          <Calendar selected={day} onSelect={setDay} calendar={system} />
-        </Card.Content>
-      </Card>
+      <Calendar selected={day} onSelect={setDay} calendar={system} />
 
       <Text size="sm" muted className="text-center">
         {day ? day.toDateString() : 'The value is a plain Date whichever is on screen.'}
@@ -7038,6 +7048,7 @@ export const COMPONENTS: ComponentEntry[] = [
       { label: 'A range', render: () => <CalendarRangeDemo /> },
       { label: 'Several days', render: () => <CalendarMultipleDemo /> },
       { label: 'Days ruled out', render: () => <CalendarDisabledDemo /> },
+      { label: 'The months either side', render: () => <CalendarOutsideDaysDemo /> },
       { label: 'Month and year pickers', render: () => <CalendarDropdownDemo /> },
       { label: 'Hijri or Gregorian', render: () => <CalendarSystemDemo /> },
     ],

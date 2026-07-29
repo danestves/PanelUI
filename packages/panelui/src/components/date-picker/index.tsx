@@ -106,12 +106,18 @@ export interface DatePickerProps<Mode extends DatePickerMode = 'single'> {
   minDate?: Date;
   /** Latest selectable day. */
   maxDate?: Date;
+  /** Earliest month the `dropdown` caption offers. Defaults to `minDate`. */
+  startMonth?: Date;
+  /** Latest month the `dropdown` caption offers. Defaults to `maxDate`. */
+  endMonth?: Date;
   /** Months side by side inside the panel. */
   numberOfMonths?: number;
   /** `dropdown` swaps the month caption for month and year pickers. */
   captionLayout?: CalendarCaptionLayout;
   /** `0` is Sunday. */
   weekStartsOn?: number;
+  /** Let a tap on a neighbouring month's day select it. Off by default. */
+  selectOutsideDays?: boolean;
   /** BCP 47 tag for the month and weekday names, and for the trigger's text. */
   locale?: string;
   /**
@@ -142,9 +148,12 @@ function DatePickerRoot<Mode extends DatePickerMode = 'single'>({
   disabledDates,
   minDate,
   maxDate,
+  startMonth,
+  endMonth,
   numberOfMonths = 1,
   captionLayout = 'label',
   weekStartsOn = 0,
+  selectOutsideDays = false,
   locale,
   calendar = 'gregory',
   className,
@@ -211,17 +220,26 @@ function DatePickerRoot<Mode extends DatePickerMode = 'single'>({
           would replace it. `self-center` for the same reason — the panel does
           not have to know which presentation it ended up in. */}
       <Popover.Content width="content-fit">
-        <View className="w-[300px] max-w-full self-center p-3">
+        <View className="w-[308px] max-w-full self-center p-3">
+          {/*
+            Unbordered: the panel around it already draws one, and a card
+            inside a card is a seam. The calendar frames itself only when it is
+            standing on a page.
+          */}
           <Calendar
+            bordered={false}
             mode={mode}
             selected={value}
             onSelect={handleSelect}
             disabled={disabledDates}
             minDate={minDate}
             maxDate={maxDate}
+            startMonth={startMonth}
+            endMonth={endMonth}
             numberOfMonths={numberOfMonths}
             captionLayout={captionLayout}
             weekStartsOn={weekStartsOn}
+            selectOutsideDays={selectOutsideDays}
             locale={locale}
             calendar={calendar}
           />

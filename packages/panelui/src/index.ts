@@ -271,6 +271,8 @@ export {
 export {
   Calendar,
   type CalendarProps,
+  type CalendarHeaderProps,
+  type CalendarNavProps,
   type CalendarMode,
   type CalendarCaptionLayout,
   type CalendarDisabled,

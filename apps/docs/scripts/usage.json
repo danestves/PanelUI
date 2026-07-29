@@ -609,15 +609,18 @@
     }
   },
   "calendar": {
-    "intro": "A month of days, for picking one, several, or a span with two ends.\n\nIt carries no date library. Everything a month grid needs is arithmetic on the platform's own `Date`, and shipping a timezone database to render seven columns is a poor trade in a library whose entire runtime is three small packages. Month and weekday names come from `Intl`, guarded — builds without the full locale data fall back to English rather than taking the screen down over a month name.",
+    "intro": "A month of days, for picking one, several, or a span with two ends. It draws its own panel — a rounded, bordered card — so it can stand on a page without being wrapped in one; `bordered={false}` turns that off for a calendar already inside something that frames it.\n\nIt carries no date library. Month names, weekday names and day numbers come from `Intl`, and the arithmetic is a handful of guarded helpers, so a calendar costs no dependency.",
     "usage": "const [day, setDay] = useState<Date>();\n\n<Calendar selected={day} onSelect={setDay} />\n\n// A span, which takes two taps to complete.\nconst [range, setRange] = useState<DateRange>();\n\n<Calendar mode=\"range\" selected={range} onSelect={setRange} />",
     "extraImports": [
       "Card",
-      "Text"
+      "Text",
+      "Switch"
     ],
     "parts": {
-      "Grid": "One month: the weekday headings and six rows of days. Rendered for you per `numberOfMonths`; exported for a layout that needs the grid without the caption.",
-      "Day": "One cell — the number, the disc when it is selected, and the band when it is inside a range."
+      "Header": "The row over a month: an arrow at each edge and the month's name, or the month and year pickers, between them. Rendered for you; exported for a header of your own.",
+      "Nav": "One paging arrow. Borderless, 32px, with another 8 of slop around it.",
+      "Grid": "One month: the weekday headings and six rows of days. Rendered for you per `numberOfMonths`; exported for a layout that needs the grid without the header.",
+      "Day": "One cell — the number, the fill when it is selected, and its piece of the band when it is inside a range."
     },
     "examples": [
       {
@@ -627,7 +630,7 @@
       },
       {
         "title": "A range",
-        "description": "Two taps. A third starts again, and a tap that lands before the open end becomes the new start rather than being refused — someone who picked the wrong month first should not have to undo before retrying.",
+        "description": "Two taps: the first opens the range, the second closes it. A tap before the open end becomes the new start rather than an error, so picking the wrong month first costs nothing.\n\nThe band runs cell to cell with no break in it. Each end fills half its own cell, from the centre outwards towards the rest of the range, so the fill on the end sits *on* the band rather than beside it.",
         "code": "const [range, setRange] = useState<DateRange>();\n\n<Calendar mode=\"range\" selected={range} onSelect={setRange} />",
         "preview": {
           "src": "/previews/calendar-a-range.jpg",
@@ -659,28 +662,36 @@
         }
       },
       {
-        "title": "Month and year pickers",
-        "description": "`captionLayout=\"dropdown\"` is the difference between choosing a birthday in four taps and in four hundred.",
-        "code": "<Calendar\n  selected={day}\n  onSelect={setDay}\n  captionLayout=\"dropdown\"\n  maxDate={new Date()}\n  defaultMonth={new Date(1996, 5, 1)}\n/>"
+        "title": "The months either side",
+        "description": "The cells at the ends of the grid belong to the neighbouring months. They are drawn so the grid keeps its six rows and the columns stay under their headings — but they do not answer a tap, because at the edge of a grid one is far more often a misfire than a real attempt to reach into next month. Page to the month instead, or pass `selectOutsideDays` if reaching in is what you want.\n\n`showOutsideDays={false}` is the separate question of whether they are drawn at all.",
+        "code": "{/* The default: drawn, dimmed, and not selectable. */}\n<Calendar selected={day} onSelect={setDay} />\n\n{/* Selectable from either side. */}\n<Calendar selectOutsideDays selected={day} onSelect={setDay} />\n\n{/* Not drawn at all — the cells are left blank. */}\n<Calendar showOutsideDays={false} selected={day} onSelect={setDay} />"
       },
       {
-        "title": "Two months at once",
-        "description": "What picking a range across a month boundary wants. The arrows split across the row — back on the first caption, forward on the last — so there is one way to page rather than two.",
-        "code": "<Calendar mode=\"range\" numberOfMonths={2} selected={range} onSelect={setRange} />"
+        "title": "Month and year pickers",
+        "description": "`captionLayout=\"dropdown\"` swaps the month's name for two chips, each opening a scrolled list of options that starts at the one already in the caption rather than at either end.\n\n`startMonth` and `endMonth` bound those lists, and they are not `minDate`/`maxDate`: this is a birthday, so a century of years should be *on offer* while nothing after today is *selectable*. Left unset the lists run from a hundred years back to ten years on.",
+        "code": "<Calendar\n  selected={day}\n  onSelect={setDay}\n  captionLayout=\"dropdown\"\n  maxDate={new Date()}\n  startMonth={new Date(1925, 0, 1)}\n  endMonth={new Date()}\n  defaultMonth={new Date(1996, 5, 1)}\n/>"
       },
       {
         "title": "Hijri or Gregorian",
         "description": "`calendar` moves the grid, not only the labels — a Hijri month starts on a different day and runs 29 or 30. The value stays a plain `Date` either way, so the choice is a presentation one and nothing downstream has to know which was on screen.",
         "code": "<Calendar selected={day} onSelect={setDay} calendar=\"islamic\" />\n\n{/* Or follow the device, for an app whose language and calendar are the\n    same question. */}\n<Calendar selected={day} onSelect={setDay} calendar=\"auto\" />"
+      },
+      {
+        "title": "Without its own panel",
+        "description": "`bordered={false}` drops the card and leaves the header and the grid. For a calendar inside something that already draws a surface — which is exactly what [DatePicker](/docs/components/date-picker) does with it.",
+        "code": "<Card>\n  <Card.Content className=\"p-3\">\n    <Calendar bordered={false} selected={day} onSelect={setDay} />\n  </Card.Content>\n</Card>"
       }
     ],
-    "notes": "**The grid is always six weeks.** A month needs five rows or six depending on the day it starts on, and drawing only the rows it uses makes the calendar change height as it is paged — everything below jumps, and the days themselves appear to shift between months. The spare cells hold the neighbouring months' days, or are left blank with `showOutsideDays={false}`. Blank, not absent: the row has to stay seven wide or the columns stop lining up with their headings.\n\n**A range is drawn in three pieces.** On the web the band under a range is one background with its ends rounded by `:first-child` and `:last-child`. There are no pseudo-classes here, so each day works out whether it is a start, a middle or an end — and, separately, whether it is at the edge of its own row, because a range running over a weekend has to close off on Saturday and open again on Sunday rather than trailing into the gap. The band is drawn behind the number rather than as the cell's own background, which is what lets it run from cell to cell.\n\n**Days are compared at local midnight.** A `Date` carries a time, and two values on the same day are not equal until it is stripped.\n\n**It opens on the selection, not on today.** A picker reopened on a date chosen last year lands on that month — otherwise it opens on today and the choice looks lost.\n\n**`minDate` and `maxDate` bound the paging too**, not only the selection: an arrow that pages to a month where every day is dead is an arrow that should have been off.\n\n**`calendar` goes all the way down.** It is `gregory` by default rather than `auto`, because a grid whose month boundaries move with the device's language is a surprise — and it is the caller, not the locale, who knows whether the dates being picked are Hijri ones. Set `islamic` and the month anchoring, the paging, the outside-day dimming and the day numbers all count in it, so the caption and the cells can never disagree. Month lengths are asked of the platform's own calendar data a day at a time rather than read from a table, which is what keeps a 29-day month 29 days in the years it is one.\n\n**Digits are pinned to Latin.** The cells render numbers, so a caption in Arabic-Indic over cells in Latin would be two scripts for one date; both are Latin instead.\n\n**Without islamic data in the build, it falls back to Gregorian** rather than throwing — wrong, but coherent, which is the same posture the month names already take.",
+    "notes": "**The grid is always six weeks.** A month needs five rows or six depending on the day it starts on, and drawing only the rows it uses makes the calendar change height as it is paged — everything below jumps, and the days themselves appear to shift between months. The spare cells hold the neighbouring months' days, or are left blank with `showOutsideDays={false}`. Blank, not absent: the row has to stay seven wide or the columns stop lining up with their headings.\n\n**A range is drawn cell by cell.** On the web the band under a range is one background with its ends rounded by `:first-child` and `:last-child`. There are no pseudo-classes here, so each cell draws its own piece behind the number — behind, rather than as the cell's own background, which is what lets the pieces meet.\n\nEach cell answers two questions, and they are not the same one. *How wide*: a day between the ends fills its cell, and an end fills half of one, from the centre outwards towards the rest of the range — the half the fill does not cover, so the two read as one shape instead of a disc sitting next to a stripe. *Where it is rounded*: only where the band genuinely stops, which is at an end of the range or at the edge of a row, because a range running over a weekend has to close off on Saturday and open again on Sunday rather than trailing into the gap between the rows.\n\nDays are square-ish rather than round for the same reason. A circle touches the band beside it at one point, so a range reads as beads on a string; a rounded rectangle meets it along a whole edge.\n\n**Days are compared at local midnight.** A `Date` carries a time, and two values on the same day are not equal until it is stripped.\n\n**It opens on the selection, not on today.** A picker reopened on a date chosen last year lands on that month — otherwise it opens on today and the choice looks lost.\n\n**`minDate` and `maxDate` bound the paging too**, not only the selection: an arrow that pages to a month where every day is dead is an arrow that should have been off. Both are compared at local midnight, so `minDate={new Date()}` means *from today* and does not rule today out.\n\n**`startMonth` and `endMonth` are a different bound.** They say how far the caption's month and year lists reach, not which days can be picked. A birthday picker wants a century on offer and no bound at all on the days inside it, which is one prop pair for each half of that sentence.\n\n**`calendar` goes all the way down.** It is `gregory` by default rather than `auto`, because a grid whose month boundaries move with the device's language is a surprise — and it is the caller, not the locale, who knows whether the dates being picked are Hijri ones. Set `islamic` and the month anchoring, the paging, the outside-day dimming and the day numbers all count in it, so the caption and the cells can never disagree. Month lengths are asked of the platform's own calendar data a day at a time rather than read from a table, which is what keeps a 29-day month 29 days in the years it is one.\n\n**Digits are pinned to Latin.** The cells render numbers, so a caption in Arabic-Indic over cells in Latin would be two scripts for one date; both are Latin instead.\n\n**Without islamic data in the build, it falls back to Gregorian** rather than throwing — wrong, but coherent, which is the same posture the month names already take.",
     "preview": {
       "src": "/previews/calendar.jpg",
       "alt": "The Calendar component, running in the example app.",
       "width": 1179,
       "height": 1215
-    }
+    },
+    "hideVariants": [
+      "bordered"
+    ]
   },
   "carousel": {
     "intro": "A run of slides, shown one at a time and moved with a finger.\n\nEverything is driven from one value: the position in the run, as a fractional index. `2.4` is two-fifths of the way from the third slide to the fourth, and every slide places itself from its own distance to that number. A drag writes to it, a spring settles it onto a whole slide, and the dots read it.\n\nThat is why the track is a gesture rather than a paging scroll view. A scroll view would serve the plain track well enough, but `coverflow` and `stack` do not lay their slides along a track at all — they hold them in one place and pull them apart with transforms, so there would be nothing to scroll. One mechanism all four layouts read beats a native scroller for one of them and something else for the rest.",
@@ -959,7 +970,7 @@
         "code": "<DatePicker selected={day} onSelect={setDay} calendar=\"islamic\" />"
       }
     ],
-    "notes": "**It closes when the selection is finished, not when it changes.** A single date is done in one tap, so the panel closes on it. A range needs two and stays open until the second — closing on the first would leave half a range on screen and put someone back where they started. `multiple` never closes on its own; only the caller knows when a set is complete.\n\n**The trigger's text is derived, not stored.** Pass `format` to write it yourself; otherwise it is the short date, both ends of a range, or a count once more than one date is picked.\n\n**`calendar` is forwarded, and used for the trigger too** — a field reading a Gregorian date over a Hijri grid is the bug this exists to prevent.\n\n**Everything the calendar takes is forwarded** — `minDate`, `maxDate`, `disabledDates`, `numberOfMonths`, `captionLayout`, `weekStartsOn` and `locale`.\n\nReach for **Calendar** on its own when the grid should be on the page rather than behind a control — a booking screen where the month is the screen.\n\n**In a sheet the panel is centred.** A sheet is the full width of the screen and lays its children in a column, so a panel sized to its content would take the cross-axis start and sit flush against one edge — the right-hand one under RTL, directly below the close button.",
+    "notes": "**It closes when the selection is finished, not when it changes.** A single date is done in one tap, so the panel closes on it. A range needs two and stays open until the second — closing on the first would leave half a range on screen and put someone back where they started. `multiple` never closes on its own; only the caller knows when a set is complete.\n\n**The trigger's text is derived, not stored.** Pass `format` to write it yourself; otherwise it is the short date, both ends of a range, or a count once more than one date is picked.\n\n**`calendar` is forwarded, and used for the trigger too** — a field reading a Gregorian date over a Hijri grid is the bug this exists to prevent.\n\n**Everything the calendar takes is forwarded** — `minDate`, `maxDate`, `disabledDates`, `numberOfMonths`, `captionLayout`, `weekStartsOn` and `locale`.\n\nReach for **Calendar** on its own when the grid should be on the page rather than behind a control — a booking screen where the month is the screen.\n\n**In a sheet the panel is centred.** A sheet is the full width of the screen and lays its children in a column, so a panel sized to its content would take the cross-axis start and sit flush against one edge — the right-hand one under RTL, directly below the close button.\n\nThe calendar inside the panel is unbordered — the panel already draws a surface, and a card inside a card is a seam. `startMonth`, `endMonth` and `selectOutsideDays` are forwarded to it; see [Calendar](/docs/components/calendar) for what each one bounds.",
     "previewVideo": {
       "src": "/previews/date-picker.mp4",
       "poster": "/previews/date-picker-poster.jpg",

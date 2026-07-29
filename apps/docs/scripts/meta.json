@@ -71,7 +71,8 @@
     "A month of days, for picking one, several, or a range.",
     "react native calendar component",
     {
-      "addedIn": "0.27.0"
+      "addedIn": "0.27.0",
+      "updatedIn": "0.30.0"
     }
   ],
   "carousel": [
@@ -104,7 +105,8 @@
     "A calendar behind a button.",
     "react native date picker",
     {
-      "addedIn": "0.27.0"
+      "addedIn": "0.27.0",
+      "updatedIn": "0.30.0"
     }
   ],
   "dialog": [
