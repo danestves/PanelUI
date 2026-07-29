@@ -207,6 +207,7 @@ export interface MenuContentProps
  */
 function MenuContent({ className, children, scrollable = true, ...props }: MenuContentProps) {
   const { content } = menuVariants();
+  const context = useMenu('Menu.Content');
 
   return (
     <Popover.Content
@@ -215,7 +216,13 @@ function MenuContent({ className, children, scrollable = true, ...props }: MenuC
       className={cn(content(), className)}
       {...props}
     >
-      {children}
+      {/*
+        The panel is portalled out of this subtree, and context follows the
+        render tree rather than the call site — so the value provided around
+        the root never reaches the rows. Re-provide it here, where the rows
+        actually mount, and Menu.Item keeps working in both presentations.
+      */}
+      <MenuContext.Provider value={context}>{textChildren(children)}</MenuContext.Provider>
     </Popover.Content>
   );
 }
