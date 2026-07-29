@@ -395,6 +395,14 @@
     "Segmented navigation with an animated indicator.",
     "react native tabs"
   ],
+  "textarea": [
+    "Textarea",
+    "Text field that runs to several lines, sized in rows.",
+    "react native textarea",
+    {
+      "addedIn": "0.30.0"
+    }
+  ],
   "timeline": [
     "Timeline",
     "Vertical sequence of events.",

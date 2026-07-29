@@ -670,6 +670,17 @@
     ]
   },
   {
+    "name": "textarea",
+    "type": "registry:ui",
+    "description": "Text field that runs to several lines, sized in rows.",
+    "registryDependencies": [
+      "keyboard-avoider",
+      "label",
+      "text",
+      "use-keyboard-avoidance"
+    ]
+  },
+  {
     "name": "theme",
     "type": "registry:theme",
     "description": "Design tokens for every theme, in light and dark.",

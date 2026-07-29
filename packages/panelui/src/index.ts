@@ -332,6 +332,7 @@ export {
   type NumberInputProps,
 } from './components/number-input';
 export { OtpInput, type OtpInputProps } from './components/otp-input';
+export { Textarea, type TextareaProps } from './components/textarea';
 export {
   Item,
   type ItemProps,
