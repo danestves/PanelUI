@@ -32,10 +32,11 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
-import { Pressable, View, type ViewProps } from 'react-native';
+import { Pressable, ScrollView, View, type ViewProps } from 'react-native';
 import { tv } from 'tailwind-variants';
 import { ChevronLeftIcon, ChevronRightIcon } from '../../icons';
 import { Text } from '../../primitives/text';
@@ -418,6 +419,8 @@ function CalendarNav({
 function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
   const { setMonth, locale, system, minDate, maxDate } = useCalendar('Calendar.Caption');
   const [open, setOpen] = useState<'month' | 'year' | null>(null);
+  const scroller = useRef<ScrollView>(null);
+  const activeTop = useRef(0);
 
   /*
    * Everything here counts in the calendar on screen, not in the platform's.
@@ -449,23 +452,53 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
     setOpen(null);
   };
 
+  // The two lists are different lengths, so the offset measured for one means
+  // nothing in the other. Cleared as the panel changes what it is showing.
+  const toggle = (which: 'month' | 'year') => {
+    activeTop.current = 0;
+    setOpen(open === which ? null : which);
+  };
+
   return (
     <View className="flex-1 items-center">
       <View className="flex-row items-center gap-1">
         <CaptionChip
           label={months[current.month - 1] ?? String(current.month)}
           expanded={open === 'month'}
-          onPress={() => setOpen(open === 'month' ? null : 'month')}
+          onPress={() => toggle('month')}
         />
         <CaptionChip
           label={String(current.year)}
           expanded={open === 'year'}
-          onPress={() => setOpen(open === 'year' ? null : 'year')}
+          onPress={() => toggle('year')}
         />
       </View>
 
       {open ? (
-        <View className="mt-2 max-h-40 w-full flex-row flex-wrap justify-center gap-1 rounded-lg border border-border bg-popover p-2">
+        /*
+         * A scroller rather than a capped view. The year list is a century by
+         * default, which is far more than the cap — and a height cap does not
+         * clip, it only stops the box growing, so the overflowing chips paint
+         * over the rest of the screen instead of being cut off. The cap has to
+         * belong to something that can scroll what does not fit.
+         */
+        <ScrollView
+          // A fresh scroller per list, so the one being opened measures and
+          // positions itself from scratch rather than inheriting the other's
+          // scroll position.
+          key={open}
+          ref={scroller}
+          // The chosen option is what the list is *for*, and a century-long
+          // list opened at its first year is showing the one year nobody came
+          // to pick. Held until the content is measured, or there is nothing
+          // to scroll within yet.
+          onContentSizeChange={() =>
+            scroller.current?.scrollTo({ y: activeTop.current, animated: false })
+          }
+          showsVerticalScrollIndicator={false}
+          className="mt-2 max-h-40 w-full rounded-lg border border-border bg-popover"
+          contentContainerClassName="flex-row flex-wrap justify-center gap-1 p-2"
+        >
           {(open === 'month' ? months : years.map(String)).map((option, index) => {
             const active =
               open === 'month'
@@ -481,6 +514,16 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
                       : (years[index]! - current.year) * 12
                   )
                 }
+                // Its own row, less the padding above it, so the chosen option
+                // opens a little inside the panel rather than flush at its top
+                // edge — which reads as the top of the list.
+                onLayout={
+                  active
+                    ? (event) => {
+                        activeTop.current = Math.max(0, event.nativeEvent.layout.y - 8);
+                      }
+                    : undefined
+                }
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
                 className={cn(
@@ -494,7 +537,7 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
       ) : null}
     </View>
   );
