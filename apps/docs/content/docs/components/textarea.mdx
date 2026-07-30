@@ -8,6 +8,13 @@ A field for text that runs to several lines. Its height is given in `rows` rathe
 
 `autoGrow` then lets the field follow its content up to `maxRows` and scroll past that, which is what a composer wants: it starts small, opens up as you write, and stops before it eats the screen. Everything else it shares with [Input](/docs/components/input) — the animated focus border, the label, description and error line, and the keyboard avoidance.
 
+<Preview
+  src="/previews/textarea.jpg"
+  alt="The Textarea component, running in the example app."
+  width={1179}
+  height={1118}
+/>
+
 ## Installation
 
 Textarea ships with the library — no separate install.
@@ -55,6 +62,13 @@ npx panelui-cli@latest add textarea
 
 `rows` is how many lines of text the field is tall before it scrolls. It composes with `size`, so a small three-row field and a large three-row field are both three rows.
 
+<Preview
+  src="/previews/textarea.jpg"
+  alt="Textarea — Rows, not pixels."
+  width={1179}
+  height={1118}
+/>
+
 ```tsx
 <Textarea rows={2} placeholder="Two rows" />
 <Textarea rows={4} placeholder="Four rows" />
@@ -64,6 +78,13 @@ npx panelui-cli@latest add textarea
 ### Growing with the text
 
 `autoGrow` starts the field at `rows` and lets it follow the text up to `maxRows`, after which it holds its height and scrolls. It never shrinks below `rows`, so clearing the field returns it to where it started rather than collapsing it to one line.
+
+<Preview
+  src="/previews/textarea-growing-with-the-text.jpg"
+  alt="Textarea — Growing with the text."
+  width={1179}
+  height={692}
+/>
 
 ```tsx
 <Textarea
@@ -79,6 +100,13 @@ npx panelui-cli@latest add textarea
 ### Label, description and error
 
 Setting `errorMessage` also puts the field into its invalid state — you do not need a separate flag. The description is replaced by the error while one is present.
+
+<Preview
+  src="/previews/textarea-label-description-and-error.jpg"
+  alt="Textarea — Label, description and error."
+  width={1179}
+  height={993}
+/>
 
 ```tsx
 <Textarea
@@ -100,6 +128,13 @@ Setting `errorMessage` also puts the field into its invalid state — you do not
 
 `showCount` needs `maxLength` to count towards. The counter sits beside the description and turns `destructive` at the limit.
 
+<Preview
+  src="/previews/textarea-counting-characters.jpg"
+  alt="Textarea — Counting characters."
+  width={1179}
+  height={496}
+/>
+
 ```tsx
 <Textarea
   label="Status"
@@ -115,6 +150,13 @@ Setting `errorMessage` also puts the field into its invalid state — you do not
 ### Choosing a background
 
 Use `outline` on the page, where the field draws its own edge. Use `filled` inside a card or a sheet, where a second border beside the container’s own reads as a seam.
+
+<Preview
+  src="/previews/textarea-choosing-a-background.jpg"
+  alt="Textarea — Choosing a background."
+  width={1179}
+  height={527}
+/>
 
 ```tsx
 <Textarea label="Notes" placeholder="On the page" />

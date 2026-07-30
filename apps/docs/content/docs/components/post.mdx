@@ -10,6 +10,14 @@ Four shapes, because a feed is not one thing. `feed` is the full card — author
 
 What they share is the anatomy. The same parts appear in every variant, so moving between them is a prop rather than a rewrite: the variant decides padding, media shape and where the author sits, not which parts exist.
 
+<PreviewVideo
+  src="/previews/post.mp4"
+  poster="/previews/post-poster.jpg"
+  alt="The Post component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Post ships with the library — no separate install.
@@ -92,6 +100,13 @@ Every part reads the variant from the root, so `size` and `variant` are set once
 
 The full shape. Every count in the footer is live: `active` fills the icon and takes the tone colour, and passing the changed `value` alongside it is what makes the number move. `tone` is which colour lit means — a like is red, a save the accent, a repost green.
 
+<Preview
+  src="/previews/post-feed-card.jpg"
+  alt="Post — Feed card."
+  width={1179}
+  height={1408}
+/>
+
 ```tsx
 <Post variant="feed">
   <Post.Header>
@@ -124,6 +139,14 @@ The full shape. Every count in the footer is live: `active` fills the icon and t
 
 A score with two arrows. Both fill and take a colour when cast and the pill tints with them, because an arrow alone is 17pt of a card and not enough to notice from arm’s length. Pressing the arrow already cast clears the vote — `onVote` receives `null` — which is not a nicety: a vote that cannot be withdrawn is one people hesitate to cast.
 
+<PreviewVideo
+  src="/previews/post-votes.mp4"
+  poster="/previews/post-votes-poster.jpg"
+  alt="Post — Votes."
+  width={720}
+  height={478}
+/>
+
 ```tsx
 const [vote, setVote] = useState<PostVote>(null);
 const score = 1240 + (vote === 'up' ? 1 : vote === 'down' ? -1 : 0);
@@ -149,6 +172,13 @@ const score = 1240 + (vote === 'up' ? 1 : vote === 'down' ? -1 : 0);
 
 For a dense timeline. The handle and the timestamp join the name on one line instead of taking a second, and there is no media — which is the whole difference between a row and a card.
 
+<Preview
+  src="/previews/post-compact.jpg"
+  alt="Post — Compact."
+  width={1179}
+  height={573}
+/>
+
 ```tsx
 <Post variant="compact">
   <Post.Header>
@@ -172,6 +202,13 @@ For a dense timeline. The handle and the timestamp join the name on one line ins
 ### Media first
 
 The image is the card and the author is laid over it. The `media` variant switches `Post.Media`’s scrim on by default — a gradient over the top 112 points, which is the only reason white type stays legible over a photograph. A flat panel would do the same job and bring an edge of its own, and that edge reads as a bar covering the picture.
+
+<Preview
+  src="/previews/post-media-first.jpg"
+  alt="Post — Media first."
+  width={1179}
+  height={1216}
+/>
 
 ```tsx
 <Post variant="media">

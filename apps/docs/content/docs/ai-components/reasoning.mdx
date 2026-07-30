@@ -8,6 +8,14 @@ The model's working, shown while it happens and folded away after. A reasoning t
 
 So it opens itself when the trace starts streaming and closes itself a beat after it stops — once, and only if it ever streamed, because a trace that arrives complete was never a live thing to watch and should not perform. The trigger shimmers "Thinking…" while the tokens come and settles into "Thought for 8 seconds" afterwards, timed from the first streaming frame rather than taken on trust.
 
+<PreviewVideo
+  src="/previews/reasoning.mp4"
+  poster="/previews/reasoning-poster.jpg"
+  alt="The Reasoning component, running in the example app."
+  width={720}
+  height={558}
+/>
+
 ## Installation
 
 Reasoning ships with the library — no separate install.
@@ -49,6 +57,14 @@ npx panelui-cli@latest add reasoning
 
 `isStreaming` is the only thing that has to be driven. The panel opens on the way in, the duration is measured across it, and it folds itself away about a second after the trace stops.
 
+<PreviewVideo
+  src="/previews/reasoning.mp4"
+  poster="/previews/reasoning-poster.jpg"
+  alt="Reasoning — A live trace."
+  width={720}
+  height={558}
+/>
+
 ```tsx
 <Reasoning isStreaming={status === 'streaming'}>
   <Reasoning.Trigger />
@@ -84,6 +100,14 @@ const streaming =
 
 `label` is handed the streaming state and the measured duration, so a caller can change the wording without reimplementing the timing.
 
+<PreviewVideo
+  src="/previews/reasoning-words-of-your-own.mp4"
+  poster="/previews/reasoning-words-of-your-own-poster.jpg"
+  alt="Reasoning — Words of your own."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Reasoning isStreaming={streaming}>
   <Reasoning.Trigger
@@ -113,6 +137,14 @@ const streaming =
 ### In a turn
 
 Above the bubble, not inside it: the trace is about the answer rather than part of it, and a reasoning block in a coloured bubble reads as something the model said.
+
+<PreviewVideo
+  src="/previews/reasoning-in-a-turn.mp4"
+  poster="/previews/reasoning-in-a-turn-poster.jpg"
+  alt="Reasoning — In a turn."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Message align="start">

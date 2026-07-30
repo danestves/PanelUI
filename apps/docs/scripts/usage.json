@@ -634,9 +634,9 @@
         "code": "const [range, setRange] = useState<DateRange>();\n\n<Calendar mode=\"range\" selected={range} onSelect={setRange} />",
         "preview": {
           "src": "/previews/calendar-a-range.jpg",
-          "alt": "Calendar — A range.",
           "width": 1179,
-          "height": 1221
+          "height": 1232,
+          "alt": "Calendar — A range."
         }
       },
       {
@@ -2031,7 +2031,14 @@
       {
         "title": "Analytics map",
         "description": "Sessions by country, over a basemap dropped for the data. The shading and the cards above it come from the same tokens, so the map is part of the dashboard rather than an image pasted into it. Eight `Map.Label`s name the countries at `size=\"sm\" tone=\"muted\"` — they are the index to the shading, not the subject of the map.",
-        "code": "<Map blank bounds={[-11, 35, 31, 63]}>\n  <Map.GeoJSON\n    data={countries}\n    fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}\n  />\n  {Object.entries(capitals).map(([code, lngLat]) => (\n    <Map.Marker key={code} lngLat={lngLat}>\n      <Map.Label size=\"sm\" tone=\"muted\">{code}</Map.Label>\n    </Map.Marker>\n  ))}\n</Map>"
+        "code": "<Map blank bounds={[-11, 35, 31, 63]}>\n  <Map.GeoJSON\n    data={countries}\n    fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}\n  />\n  {Object.entries(capitals).map(([code, lngLat]) => (\n    <Map.Marker key={code} lngLat={lngLat}>\n      <Map.Label size=\"sm\" tone=\"muted\">{code}</Map.Label>\n    </Map.Marker>\n  ))}\n</Map>",
+        "previewVideo": {
+          "src": "/previews/map-analytics-map.mp4",
+          "poster": "/previews/map-analytics-map-poster.jpg",
+          "width": 720,
+          "height": 1560,
+          "alt": "Map — Analytics map."
+        }
       },
       {
         "title": "Choropleth",
@@ -2046,22 +2053,50 @@
       {
         "title": "Delivery tracker",
         "description": "A driven leg and a planned one, told apart by dash rather than by colour — the two mean different things, and colour is already carrying the theme.",
-        "code": "<Map center={[0.02, 51.545]} zoom={10.5}>\n  <Map.Route id=\"done\" coordinates={driven} width={4} />\n  <Map.Route id=\"left\" coordinates={planned} width={4} dashed opacity={0.5} />\n</Map>"
+        "code": "<Map center={[0.02, 51.545]} zoom={10.5}>\n  <Map.Route id=\"done\" coordinates={driven} width={4} />\n  <Map.Route id=\"left\" coordinates={planned} width={4} dashed opacity={0.5} />\n</Map>",
+        "previewVideo": {
+          "src": "/previews/map-delivery-tracker.mp4",
+          "poster": "/previews/map-delivery-tracker-poster.jpg",
+          "width": 720,
+          "height": 1560,
+          "alt": "Map — Delivery tracker."
+        }
       },
       {
         "title": "Store locator",
         "description": "A list and a map on one selection, so pressing either moves the other.",
-        "code": "<Map center={selected.lngLat} zoom={13}>\n  {stores.map((store) => (\n    <Map.Marker\n      key={store.id}\n      lngLat={store.lngLat}\n      onPress={() => setSelected(store)}\n    >\n      <View className={store.id === selected.id ? activePin : pin} />\n    </Map.Marker>\n  ))}\n  <Map.Controls locate position=\"top-right\" />\n</Map>"
+        "code": "<Map center={selected.lngLat} zoom={13}>\n  {stores.map((store) => (\n    <Map.Marker\n      key={store.id}\n      lngLat={store.lngLat}\n      onPress={() => setSelected(store)}\n    >\n      <View className={store.id === selected.id ? activePin : pin} />\n    </Map.Marker>\n  ))}\n  <Map.Controls locate position=\"top-right\" />\n</Map>",
+        "previewVideo": {
+          "src": "/previews/map.mp4",
+          "poster": "/previews/map-poster.jpg",
+          "width": 720,
+          "height": 1560,
+          "alt": "Map — Store locator."
+        }
       },
       {
         "title": "Logistics network",
         "description": "Arcs between sites. The bow is not geography — it is there so two lanes sharing a hub stay tellable apart, which a bundle of straight lines through one city does not.",
-        "code": "<Map bounds={[-12, 36, 26, 60]}>\n  {lanes.map((lane) => (\n    <Map.Arc\n      key={lane.id}\n      id={lane.id}\n      from={byId[lane.from].lngLat}\n      to={byId[lane.to].lngLat}\n      curvature={0.18}\n    />\n  ))}\n</Map>"
+        "code": "<Map bounds={[-12, 36, 26, 60]}>\n  {lanes.map((lane) => (\n    <Map.Arc\n      key={lane.id}\n      id={lane.id}\n      from={byId[lane.from].lngLat}\n      to={byId[lane.to].lngLat}\n      curvature={0.18}\n    />\n  ))}\n</Map>",
+        "previewVideo": {
+          "src": "/previews/map-logistics-network.mp4",
+          "poster": "/previews/map-logistics-network-poster.jpg",
+          "width": 720,
+          "height": 1560,
+          "alt": "Map — Logistics network."
+        }
       },
       {
         "title": "Uptime monitor",
         "description": "Edge nodes coloured by state, spread across the world. A marker is a React view, so the status dot is the same one the rest of the app uses.",
-        "code": "<Map center={[0, 25]} zoom={1.1}>\n  {nodes.map((node) => (\n    <Map.Marker key={node.id} lngLat={node.lngLat}>\n      <View className=\"items-center\">\n        <View className={dotFor(node.state)} />\n        <Map.Label>{node.id.toUpperCase()}</Map.Label>\n      </View>\n    </Map.Marker>\n  ))}\n</Map>"
+        "code": "<Map center={[0, 25]} zoom={1.1}>\n  {nodes.map((node) => (\n    <Map.Marker key={node.id} lngLat={node.lngLat}>\n      <View className=\"items-center\">\n        <View className={dotFor(node.state)} />\n        <Map.Label>{node.id.toUpperCase()}</Map.Label>\n      </View>\n    </Map.Marker>\n  ))}\n</Map>",
+        "previewVideo": {
+          "src": "/previews/map-uptime-monitor.mp4",
+          "poster": "/previews/map-uptime-monitor-poster.jpg",
+          "width": 720,
+          "height": 1560,
+          "alt": "Map — Uptime monitor."
+        }
       },
       {
         "title": "Analytics card",
@@ -2072,7 +2107,14 @@
     "notes": "### Why the basemap is assembled rather than downloaded\n\nA hosted style ships its colours baked in, which gives you exactly two maps. Everything here is built from the same tokens as the rest of the library, so `moon`, `grass` and anything you add later get a basemap that matches them without a designer redrawing one per theme.\n\nThe layer list is deliberately short. A full street style runs to ninety-odd layers separating tunnel casings from bridge casings across eleven zoom stops; almost none of that survives being recoloured down to five greys, and every layer is another thing to keep in step with the tokens. What is there is the set that still reads as a map at any zoom: ground, water, green space, buildings, roads, boundaries, and the labels that make them findable.\n\nPass `mapStyle` to skip all of it and use a style wholesale — the escape hatch for a map that has to match something outside the app.\n\n### Tile licensing\n\n`Map` defaults to CARTO's street tiles, which are free for non-commercial use and require a licence from CARTO for commercial use. That is a decision about your project rather than about this component, so `source` takes any provider serving the OpenMapTiles schema.\n\n### Markers or clusters\n\n`Map.Marker` is a React view, which is what lets it hold an avatar, a chip, or anything else the library draws. That also means a marker costs what a view costs. Past a few dozen points use `Map.Cluster`, which draws in a style layer and merges points as they crowd — by the time markers become expensive they have also become unreadable, so the two limits arrive together.\n\n### Labels on a crowded map\n\n`Map.Label` is out of the marker's layout flow, and deliberately so: a marker sits on its coordinate by the centre of its box, so a label in flow beneath the pin would drag that centre down and lift every pin off the place it marks. The pill overhangs the marker by a wide margin on both sides, which is what lets a long name stay centred over a small dot without the marker being anchored by the name instead.\n\nWhat that does not solve is a map with a dozen of them. `size=\"sm\"` tightens the pill, and `tone=\"muted\"` drops the text to the muted colour — together they are the difference between a network map and a wall of chips. The rule of thumb: label at `default` only the places the map is *about*, and let everything else support at `muted`. `tone=\"primary\"` inverts the pill for the single place being pointed at.",
     "hideVariants": [
       "position"
-    ]
+    ],
+    "previewVideo": {
+      "src": "/previews/map.mp4",
+      "poster": "/previews/map-poster.jpg",
+      "width": 720,
+      "height": 1560,
+      "alt": "The Map component, running in the example app."
+    }
   },
   "marker": {
     "intro": "An inline note in a conversation.\n\nTranscripts are not only messages. Between the turns sit things the conversation *did* rather than said: a tool that ran, a file that was read, the point where yesterday ended. None of those have a speaker, so none of them should look like a bubble. A marker is the quieter row that carries them — small, muted, and aligned to the transcript rather than to a side of it.",
@@ -3704,7 +3746,13 @@
       {
         "title": "Striped",
         "description": "Tints every other body row, which helps the eye track across a wide one. Leave it off for a short table, where the stripes are louder than the data.",
-        "code": "<Table variant=\"outline\" striped>\n  {/* …header and body… */}\n</Table>"
+        "code": "<Table variant=\"outline\" striped>\n  {/* …header and body… */}\n</Table>",
+        "preview": {
+          "src": "/previews/table-striped.jpg",
+          "width": 1179,
+          "height": 1089,
+          "alt": "Table — Striped."
+        }
       },
       {
         "title": "In a frame",
@@ -3714,25 +3762,82 @@
       {
         "title": "Sortable columns",
         "description": "A header given `onPress` is the handle for sorting by its column. Pass `sortDirection` to the column being sorted by and leave it off the others: that column takes a full-strength arrow and a foreground label, while the rest keep a dimmed arrow saying they could be sorted too. The arrow rotates between the two directions rather than being replaced, so it stays the same arrow pointing the other way.",
-        "code": "const [column, setColumn] = useState<'id' | 'amount'>('amount');\nconst [direction, setDirection] = useState<'asc' | 'desc'>('desc');\n\nconst sortBy = (next: 'id' | 'amount') => {\n  if (next === column) {\n    setDirection((d) => (d === 'asc' ? 'desc' : 'asc'));\n    return;\n  }\n  setColumn(next);\n  setDirection('asc');\n};\n\n<Table.Head\n  flex={2}\n  sortable\n  sortDirection={column === 'id' ? direction : undefined}\n  onPress={() => sortBy('id')}\n>\n  Invoice\n</Table.Head>"
+        "code": "const [column, setColumn] = useState<'id' | 'amount'>('amount');\nconst [direction, setDirection] = useState<'asc' | 'desc'>('desc');\n\nconst sortBy = (next: 'id' | 'amount') => {\n  if (next === column) {\n    setDirection((d) => (d === 'asc' ? 'desc' : 'asc'));\n    return;\n  }\n  setColumn(next);\n  setDirection('asc');\n};\n\n<Table.Head\n  flex={2}\n  sortable\n  sortDirection={column === 'id' ? direction : undefined}\n  onPress={() => sortBy('id')}\n>\n  Invoice\n</Table.Head>",
+        "previewVideo": {
+          "src": "/previews/table-sortable-columns.mp4",
+          "poster": "/previews/table-sortable-columns-poster.jpg",
+          "width": 720,
+          "height": 584,
+          "alt": "Table — Sortable columns."
+        }
       },
       {
         "title": "Selectable rows",
         "description": "A row with an `onPress` announces itself as a button rather than as a row, since being tappable is the more useful fact. `selected` lights the chosen one.",
-        "code": "const [picked, setPicked] = useState('INV-002');\n\n<Table.Body>\n  {invoices.map((invoice) => (\n    <Table.Row\n      key={invoice.id}\n      selected={picked === invoice.id}\n      onPress={() => setPicked(invoice.id)}\n    >\n      <Table.Cell flex={2}>{invoice.id}</Table.Cell>\n      <Table.Cell>\n        <Badge variant=\"success\">{invoice.status}</Badge>\n      </Table.Cell>\n    </Table.Row>\n  ))}\n</Table.Body>"
+        "code": "const [picked, setPicked] = useState('INV-002');\n\n<Table.Body>\n  {invoices.map((invoice) => (\n    <Table.Row\n      key={invoice.id}\n      selected={picked === invoice.id}\n      onPress={() => setPicked(invoice.id)}\n    >\n      <Table.Cell flex={2}>{invoice.id}</Table.Cell>\n      <Table.Cell>\n        <Badge variant=\"success\">{invoice.status}</Badge>\n      </Table.Cell>\n    </Table.Row>\n  ))}\n</Table.Body>",
+        "previewVideo": {
+          "src": "/previews/table-selectable-rows.mp4",
+          "poster": "/previews/table-selectable-rows-poster.jpg",
+          "width": 720,
+          "height": 628,
+          "alt": "Table — Selectable rows."
+        }
       },
       {
         "title": "Wider than the screen",
         "description": "More columns than a phone is wide belong in a horizontal scroller, not squeezed until the columns are unreadable. Give the table a `minWidth` and a fixed `width` per column, and wrap it in `ScrollFade` so the fading edge says there is more to the right. The `w-full` on the wrapper is load-bearing — without a width of its own it shrink-wraps to the scroller’s content and the table runs off the screen instead of clipping.",
-        "code": "<ScrollFade size={24} className=\"w-full self-start\">\n  <ScrollView horizontal showsHorizontalScrollIndicator={false}>\n    <Table variant=\"outline\" size=\"sm\" striped style={{ minWidth: 440 }}>\n      <Table.Header>\n        <Table.Row>\n          <Table.Head width={86}>Invoice</Table.Head>\n          <Table.Head width={100}>Customer</Table.Head>\n          <Table.Head width={82}>Status</Table.Head>\n          <Table.Head width={92} align=\"end\">Amount</Table.Head>\n        </Table.Row>\n      </Table.Header>\n      {/* …body, with the same widths… */}\n    </Table>\n  </ScrollView>\n</ScrollFade>"
+        "code": "<ScrollFade size={24} className=\"w-full self-start\">\n  <ScrollView horizontal showsHorizontalScrollIndicator={false}>\n    <Table variant=\"outline\" size=\"sm\" striped style={{ minWidth: 440 }}>\n      <Table.Header>\n        <Table.Row>\n          <Table.Head width={86}>Invoice</Table.Head>\n          <Table.Head width={100}>Customer</Table.Head>\n          <Table.Head width={82}>Status</Table.Head>\n          <Table.Head width={92} align=\"end\">Amount</Table.Head>\n        </Table.Row>\n      </Table.Header>\n      {/* …body, with the same widths… */}\n    </Table>\n  </ScrollView>\n</ScrollFade>",
+        "previewVideo": {
+          "src": "/previews/table-wider-than-the-screen.mp4",
+          "poster": "/previews/table-wider-than-the-screen-poster.jpg",
+          "width": 720,
+          "height": 440,
+          "alt": "Table — Wider than the screen."
+        }
       },
       {
         "title": "Nothing to show",
         "description": "A header with no rows under it looks broken rather than empty. `Table.Empty` replaces the body and keeps the header, which is worth keeping: it says what would be there.",
-        "code": "<Table variant=\"outline\">\n  <Table.Header>\n    <Table.Row>\n      <Table.Head flex={2}>Invoice</Table.Head>\n      <Table.Head align=\"end\">Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Empty>No invoices yet</Table.Empty>\n</Table>"
+        "code": "<Table variant=\"outline\">\n  <Table.Header>\n    <Table.Row>\n      <Table.Head flex={2}>Invoice</Table.Head>\n      <Table.Head align=\"end\">Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Empty>No invoices yet</Table.Empty>\n</Table>",
+        "preview": {
+          "src": "/previews/table-nothing-to-show.jpg",
+          "width": 1179,
+          "height": 495,
+          "alt": "Table — Nothing to show."
+        }
+      },
+      {
+        "title": "With a caption",
+        "description": "A line about the table as a whole — what it counts, when it was last read. Place it after the body: a caption read before the columns is a heading, and a heading is not this component's job.",
+        "code": "<Table variant=\"outline\">\n  <Table.Header>…</Table.Header>\n  <Table.Body>…</Table.Body>\n  <Table.Caption className=\"px-4 py-3\">\n    Five most recent invoices.\n  </Table.Caption>\n</Table>",
+        "preview": {
+          "src": "/previews/table-with-a-caption.jpg",
+          "width": 1179,
+          "height": 1193,
+          "alt": "Table — With a caption."
+        }
       }
     ],
-    "notes": "### Columns are a convention, not a mechanism\n\nThere is no column model. A column exists because every row divides its width the same way, so `flex` and `width` on a `Table.Head` and on the `Table.Cell`s beneath it have to agree. `flex` is a share of the leftover width — the default of 1 makes columns even — and `width` pins a column that must not move, such as an icon or a state dot.\n\n### Sorting is yours\n\nThe table renders a sort direction; it never sorts. `sortDirection` says which way the arrow points and `onPress` reports the tap — reordering the rows stays with you, because the data being reordered is yours and only you know whether that means a comparator, a refetch or a new query.\n\nWhat the component does own is making the press land. The sorted column takes a full-strength arrow *and* a foreground label at a heavier weight, because one signal at the size of a sort arrow is too quiet: a press that only nudges a dim chevron reads as a press that did nothing, even when the rows behind it did move.\n\n### Long tables\n\n`Table.Body` renders every row it is given, so a table of thousands belongs in a `FlatList` instead. `Table.Row` takes `index` and `last` directly for that case: a virtualised row has no `Table.Body` above it to read its position from, and without them a striped table would tint nothing and every row would keep its hairline.\n\n```tsx\n<FlatList\n  data={invoices}\n  renderItem={({ item, index }) => (\n    <Table.Row index={index} last={index === invoices.length - 1}>\n      <Table.Cell flex={2}>{item.id}</Table.Cell>\n      <Table.Cell align=\"end\">{item.amount}</Table.Cell>\n    </Table.Row>\n  )}\n/>\n```\n\nWrap the list in a `Table` so the rows still read the density and striping, and put the header row above the list rather than inside it.\n\n### Accessibility\n\nThe root, the bands, the rows and the cells carry `table`, `rowgroup`, `row`, `columnheader` and `cell` roles, so a screen reader walks the table as a table. A row given `onPress` is the exception: it announces itself as a button, because being able to act on it is the more useful fact about it."
+    "notes": "### Columns are a convention, not a mechanism\n\nThere is no column model. A column exists because every row divides its width the same way, so `flex` and `width` on a `Table.Head` and on the `Table.Cell`s beneath it have to agree. `flex` is a share of the leftover width — the default of 1 makes columns even — and `width` pins a column that must not move, such as an icon or a state dot.\n\n### Sorting is yours\n\nThe table renders a sort direction; it never sorts. `sortDirection` says which way the arrow points and `onPress` reports the tap — reordering the rows stays with you, because the data being reordered is yours and only you know whether that means a comparator, a refetch or a new query.\n\nWhat the component does own is making the press land. The sorted column takes a full-strength arrow *and* a foreground label at a heavier weight, because one signal at the size of a sort arrow is too quiet: a press that only nudges a dim chevron reads as a press that did nothing, even when the rows behind it did move.\n\n### Long tables\n\n`Table.Body` renders every row it is given, so a table of thousands belongs in a `FlatList` instead. `Table.Row` takes `index` and `last` directly for that case: a virtualised row has no `Table.Body` above it to read its position from, and without them a striped table would tint nothing and every row would keep its hairline.\n\n```tsx\n<FlatList\n  data={invoices}\n  renderItem={({ item, index }) => (\n    <Table.Row index={index} last={index === invoices.length - 1}>\n      <Table.Cell flex={2}>{item.id}</Table.Cell>\n      <Table.Cell align=\"end\">{item.amount}</Table.Cell>\n    </Table.Row>\n  )}\n/>\n```\n\nWrap the list in a `Table` so the rows still read the density and striping, and put the header row above the list rather than inside it.\n\n### Accessibility\n\nThe root, the bands, the rows and the cells carry `table`, `rowgroup`, `row`, `columnheader` and `cell` roles, so a screen reader walks the table as a table. A row given `onPress` is the exception: it announces itself as a button, because being able to act on it is the more useful fact about it.",
+    "preview": {
+      "src": "/previews/table.jpg",
+      "width": 1179,
+      "height": 1023,
+      "alt": "The Table component, running in the example app."
+    },
+    "variantMedia": {
+      "variant": [
+        {
+          "preview": {
+            "src": "/previews/table-variant-outline.jpg",
+            "width": 1179,
+            "height": 1102,
+            "alt": "Table — variant=outline.",
+            "caption": "outline"
+          }
+        }
+      ]
+    }
   },
   "tabs": {
     "intro": "Segmented navigation with one indicator that springs between measured trigger positions. A single thing travelling is what makes a switch two tabs away read as one movement rather than as two states swapping.",
@@ -3899,27 +4004,57 @@
       {
         "title": "Rows, not pixels",
         "description": "`rows` is how many lines of text the field is tall before it scrolls. It composes with `size`, so a small three-row field and a large three-row field are both three rows.",
-        "code": "<Textarea rows={2} placeholder=\"Two rows\" />\n<Textarea rows={4} placeholder=\"Four rows\" />\n<Textarea size=\"sm\" rows={4} placeholder=\"Four smaller rows\" />"
+        "code": "<Textarea rows={2} placeholder=\"Two rows\" />\n<Textarea rows={4} placeholder=\"Four rows\" />\n<Textarea size=\"sm\" rows={4} placeholder=\"Four smaller rows\" />",
+        "preview": {
+          "src": "/previews/textarea.jpg",
+          "width": 1179,
+          "height": 1118,
+          "alt": "Textarea — Rows, not pixels."
+        }
       },
       {
         "title": "Growing with the text",
         "description": "`autoGrow` starts the field at `rows` and lets it follow the text up to `maxRows`, after which it holds its height and scrolls. It never shrinks below `rows`, so clearing the field returns it to where it started rather than collapsing it to one line.",
-        "code": "<Textarea\n  autoGrow\n  rows={2}\n  maxRows={6}\n  placeholder=\"Type a few lines…\"\n  value={message}\n  onChangeText={setMessage}\n/>"
+        "code": "<Textarea\n  autoGrow\n  rows={2}\n  maxRows={6}\n  placeholder=\"Type a few lines…\"\n  value={message}\n  onChangeText={setMessage}\n/>",
+        "preview": {
+          "src": "/previews/textarea-growing-with-the-text.jpg",
+          "width": 1179,
+          "height": 692,
+          "alt": "Textarea — Growing with the text."
+        }
       },
       {
         "title": "Label, description and error",
         "description": "Setting `errorMessage` also puts the field into its invalid state — you do not need a separate flag. The description is replaced by the error while one is present.",
-        "code": "<Textarea\n  label=\"Bio\"\n  placeholder=\"A short bio\"\n  description=\"Shown on your public profile.\"\n/>\n\n<Textarea\n  label=\"Feedback\"\n  isRequired\n  value={feedback}\n  onChangeText={setFeedback}\n  errorMessage=\"Tell us a little more.\"\n/>"
+        "code": "<Textarea\n  label=\"Bio\"\n  placeholder=\"A short bio\"\n  description=\"Shown on your public profile.\"\n/>\n\n<Textarea\n  label=\"Feedback\"\n  isRequired\n  value={feedback}\n  onChangeText={setFeedback}\n  errorMessage=\"Tell us a little more.\"\n/>",
+        "preview": {
+          "src": "/previews/textarea-label-description-and-error.jpg",
+          "width": 1179,
+          "height": 993,
+          "alt": "Textarea — Label, description and error."
+        }
       },
       {
         "title": "Counting characters",
         "description": "`showCount` needs `maxLength` to count towards. The counter sits beside the description and turns `destructive` at the limit.",
-        "code": "<Textarea\n  label=\"Status\"\n  maxLength={280}\n  showCount\n  rows={3}\n  description=\"Keep it short.\"\n  value={status}\n  onChangeText={setStatus}\n/>"
+        "code": "<Textarea\n  label=\"Status\"\n  maxLength={280}\n  showCount\n  rows={3}\n  description=\"Keep it short.\"\n  value={status}\n  onChangeText={setStatus}\n/>",
+        "preview": {
+          "src": "/previews/textarea-counting-characters.jpg",
+          "width": 1179,
+          "height": 496,
+          "alt": "Textarea — Counting characters."
+        }
       },
       {
         "title": "Choosing a background",
         "description": "Use `outline` on the page, where the field draws its own edge. Use `filled` inside a card or a sheet, where a second border beside the container’s own reads as a seam.",
-        "code": "<Textarea label=\"Notes\" placeholder=\"On the page\" />\n\n<Card>\n  <Card.Content className=\"gap-4 p-4\">\n    <Textarea variant=\"filled\" label=\"Notes\" placeholder=\"In a card\" />\n  </Card.Content>\n</Card>"
+        "code": "<Textarea label=\"Notes\" placeholder=\"On the page\" />\n\n<Card>\n  <Card.Content className=\"gap-4 p-4\">\n    <Textarea variant=\"filled\" label=\"Notes\" placeholder=\"In a card\" />\n  </Card.Content>\n</Card>",
+        "preview": {
+          "src": "/previews/textarea-choosing-a-background.jpg",
+          "width": 1179,
+          "height": 527,
+          "alt": "Textarea — Choosing a background."
+        }
       },
       {
         "title": "Passing through TextInput props",
@@ -3943,7 +4078,13 @@
     },
     "extraImports": [
       "Card"
-    ]
+    ],
+    "preview": {
+      "src": "/previews/textarea.jpg",
+      "width": 1179,
+      "height": 1118,
+      "alt": "The Textarea component, running in the example app."
+    }
   },
   "timeline": {
     "intro": "A vertical sequence of events. `value` marks how far along the sequence is; `tone` colours an individual event by kind, independently of that progress.\n\nVertical only — a horizontal timeline gives each item roughly a fifth of a phone's width, which will not hold a date and a title.",
@@ -4719,7 +4860,14 @@
       {
         "title": "A live trace",
         "description": "`isStreaming` is the only thing that has to be driven. The panel opens on the way in, the duration is measured across it, and it folds itself away about a second after the trace stops.",
-        "code": "<Reasoning isStreaming={status === 'streaming'}>\n  <Reasoning.Trigger />\n  <Reasoning.Content>{trace}</Reasoning.Content>\n</Reasoning>"
+        "code": "<Reasoning isStreaming={status === 'streaming'}>\n  <Reasoning.Trigger />\n  <Reasoning.Content>{trace}</Reasoning.Content>\n</Reasoning>",
+        "previewVideo": {
+          "src": "/previews/reasoning.mp4",
+          "poster": "/previews/reasoning-poster.jpg",
+          "width": 720,
+          "height": 558,
+          "alt": "Reasoning — A live trace."
+        }
       },
       {
         "title": "Reading message parts",
@@ -4729,7 +4877,14 @@
       {
         "title": "Words of your own",
         "description": "`label` is handed the streaming state and the measured duration, so a caller can change the wording without reimplementing the timing.",
-        "code": "<Reasoning isStreaming={streaming}>\n  <Reasoning.Trigger\n    label={(isStreaming, duration) =>\n      isStreaming ? (\n        <Shimmer>Working through it…</Shimmer>\n      ) : (\n        <Text size=\"sm\" muted>Reasoned for {duration}s</Text>\n      )\n    }\n  />\n  <Reasoning.Content>{trace}</Reasoning.Content>\n</Reasoning>"
+        "code": "<Reasoning isStreaming={streaming}>\n  <Reasoning.Trigger\n    label={(isStreaming, duration) =>\n      isStreaming ? (\n        <Shimmer>Working through it…</Shimmer>\n      ) : (\n        <Text size=\"sm\" muted>Reasoned for {duration}s</Text>\n      )\n    }\n  />\n  <Reasoning.Content>{trace}</Reasoning.Content>\n</Reasoning>",
+        "previewVideo": {
+          "src": "/previews/reasoning-words-of-your-own.mp4",
+          "poster": "/previews/reasoning-words-of-your-own-poster.jpg",
+          "width": 720,
+          "height": 1560,
+          "alt": "Reasoning — Words of your own."
+        }
       },
       {
         "title": "Arriving folded",
@@ -4739,7 +4894,14 @@
       {
         "title": "In a turn",
         "description": "Above the bubble, not inside it: the trace is about the answer rather than part of it, and a reasoning block in a coloured bubble reads as something the model said.",
-        "code": "<Message align=\"start\">\n  <Message.Content>\n    <Reasoning isStreaming={streaming}>\n      <Reasoning.Trigger />\n      <Reasoning.Content>{trace}</Reasoning.Content>\n    </Reasoning>\n    <Message.Bubble>\n      <Message.BubbleContent>{answer}</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>"
+        "code": "<Message align=\"start\">\n  <Message.Content>\n    <Reasoning isStreaming={streaming}>\n      <Reasoning.Trigger />\n      <Reasoning.Content>{trace}</Reasoning.Content>\n    </Reasoning>\n    <Message.Bubble>\n      <Message.BubbleContent>{answer}</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>",
+        "previewVideo": {
+          "src": "/previews/reasoning-in-a-turn.mp4",
+          "poster": "/previews/reasoning-in-a-turn-poster.jpg",
+          "width": 720,
+          "height": 1560,
+          "alt": "Reasoning — In a turn."
+        }
       }
     ],
     "notes": "**It closes once.** The auto-close is latched, so reopening a finished trace by hand sticks. Without the latch the same effect would fold it away a second later, and the panel would refuse to stay open for the one reader who wanted to read it.\n\n**The duration is measured, not declared.** `duration` is optional; left off, the component times the wall clock between the first streaming frame and the last. That is the number worth showing — it is what the reader actually waited, rather than what the provider reports.\n\n**The body collapses rather than unmounting.** A trace is usually still growing while it is folded, and a body that remounted on every open would restart every animation inside it and drop whatever had been scrolled to.\n\n**Nothing here depends on the AI SDK.** The props are plain — a boolean, a string, a number — and they line up with what `message.parts` gives you. See [AI](/docs/ai) for the whole loop.",
@@ -4749,7 +4911,14 @@
         "description": "A plan, its steps, the reasoning behind the answer, the answer, its code and its sources — the only arrangement in which any one of these five components means anything. On its own a reasoning panel is a collapsible; in a turn it is the model thinking out loud before it answers.",
         "code": "<MessageScroller className=\"flex-1\">\n  <MessageScroller.Viewport>\n    <MessageScroller.Content className=\"gap-4 px-5 py-6\">\n      <MessageScroller.Item messageId=\"plan\">\n        <Plan>…</Plan>\n      </MessageScroller.Item>\n\n      <MessageScroller.Item messageId=\"answer\">\n        <Message align=\"start\">\n          <Message.Content>\n            <Reasoning defaultOpen={false} duration={6}>\n              <Reasoning.Trigger />\n              <Reasoning.Content>{trace}</Reasoning.Content>\n            </Reasoning>\n            <Message.Bubble>\n              <Message.BubbleContent>{answer}</Message.BubbleContent>\n            </Message.Bubble>\n            <CodeBlock code={patch} language=\"diff\">\n              <CodeBlock.Header>\n                <CodeBlock.Language>diff</CodeBlock.Language>\n                <CodeBlock.CopyButton />\n              </CodeBlock.Header>\n            </CodeBlock>\n            <Sources>\n              <Sources.Trigger count={sources.length} />\n              <Sources.Content>\n                {sources.map((source) => (\n                  <Sources.Source key={source.url} href={source.url} title={source.title} />\n                ))}\n              </Sources.Content>\n            </Sources>\n          </Message.Content>\n        </Message>\n      </MessageScroller.Item>\n    </MessageScroller.Content>\n  </MessageScroller.Viewport>\n</MessageScroller>"
       }
-    ]
+    ],
+    "previewVideo": {
+      "src": "/previews/reasoning.mp4",
+      "poster": "/previews/reasoning-poster.jpg",
+      "width": 720,
+      "height": 558,
+      "alt": "The Reasoning component, running in the example app."
+    }
   },
   "sources": {
     "intro": "Where an answer came from, folded under a count. A cited answer usually cites more places than anyone wants listed above it, so the list opens from a single line: \"Used 6 sources\".\n\nFolded is the resting state, unlike [Reasoning](/docs/ai-components/reasoning) — a citation list is a thing you go and check rather than a thing you watch arrive.",
@@ -4767,7 +4936,13 @@
       {
         "title": "A list of citations",
         "description": "`title` is what the row says and `href` is where it goes. With no title the host stands in — which is a better label than a hundred characters of path, and models often send no title at all.",
-        "code": "<Sources>\n  <Sources.Trigger count={3} />\n  <Sources.Content>\n    <Sources.Source href=\"https://expo.dev/changelog\" title=\"Expo SDK 57\" />\n    <Sources.Source href=\"https://reactnative.dev/blog\" title=\"New Architecture\" />\n    <Sources.Source href=\"https://docs.swmansion.com/react-native-reanimated/\" />\n  </Sources.Content>\n</Sources>"
+        "code": "<Sources>\n  <Sources.Trigger count={3} />\n  <Sources.Content>\n    <Sources.Source href=\"https://expo.dev/changelog\" title=\"Expo SDK 57\" />\n    <Sources.Source href=\"https://reactnative.dev/blog\" title=\"New Architecture\" />\n    <Sources.Source href=\"https://docs.swmansion.com/react-native-reanimated/\" />\n  </Sources.Content>\n</Sources>",
+        "preview": {
+          "src": "/previews/sources-a-list-of-citations.jpg",
+          "width": 1179,
+          "height": 553,
+          "alt": "Sources — A list of citations."
+        }
       },
       {
         "title": "Reading message parts",
@@ -4782,10 +4957,24 @@
       {
         "title": "Under a turn",
         "description": "Below the bubble rather than above it: the citations are what the answer rests on, and they are read after it.",
-        "code": "<Message align=\"start\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>{answer}</Message.BubbleContent>\n    </Message.Bubble>\n    <Sources>\n      <Sources.Trigger count={sources.length} />\n      <Sources.Content>\n        {sources.map((source) => (\n          <Sources.Source key={source.url} href={source.url} title={source.title} />\n        ))}\n      </Sources.Content>\n    </Sources>\n  </Message.Content>\n</Message>"
+        "code": "<Message align=\"start\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>{answer}</Message.BubbleContent>\n    </Message.Bubble>\n    <Sources>\n      <Sources.Trigger count={sources.length} />\n      <Sources.Content>\n        {sources.map((source) => (\n          <Sources.Source key={source.url} href={source.url} title={source.title} />\n        ))}\n      </Sources.Content>\n    </Sources>\n  </Message.Content>\n</Message>",
+        "previewVideo": {
+          "src": "/previews/sources.mp4",
+          "poster": "/previews/sources-poster.jpg",
+          "width": 720,
+          "height": 612,
+          "alt": "Sources — Under a turn."
+        }
       }
     ],
-    "notes": "**A row is a link, and says so.** Each carries the `link` role and its title as the accessibility label, so a screen reader announces where it goes rather than reading the URL out character by character.\n\n**The host is parsed with a regex, not `URL`.** `URL` exists in Hermes but throws on anything malformed, and a model's citation is not a thing to trust with an exception. A label is worth having even when the string it came from is not a URL at all.\n\n**`Linking.openURL` is called without a `canOpenURL` guard.** That check needs the scheme declared up front on iOS, and a source is always http(s), which is always openable — the guard would only add a way to fail.\n\n**Nothing here depends on the AI SDK.** `href` and `title` are strings; they happen to be the shape of a `source-url` part."
+    "notes": "**A row is a link, and says so.** Each carries the `link` role and its title as the accessibility label, so a screen reader announces where it goes rather than reading the URL out character by character.\n\n**The host is parsed with a regex, not `URL`.** `URL` exists in Hermes but throws on anything malformed, and a model's citation is not a thing to trust with an exception. A label is worth having even when the string it came from is not a URL at all.\n\n**`Linking.openURL` is called without a `canOpenURL` guard.** That check needs the scheme declared up front on iOS, and a source is always http(s), which is always openable — the guard would only add a way to fail.\n\n**Nothing here depends on the AI SDK.** `href` and `title` are strings; they happen to be the shape of a `source-url` part.",
+    "previewVideo": {
+      "src": "/previews/sources.mp4",
+      "poster": "/previews/sources-poster.jpg",
+      "width": 720,
+      "height": 612,
+      "alt": "The Sources component, running in the example app."
+    }
   },
   "task": {
     "intro": "One step an agent took, and what it did while it was there. The header is the step; the body is the detail nobody reads unless something went wrong.\n\nOpen by default, and it stays open — unlike a reasoning trace, the steps *are* the record of what happened and are worth scrolling back through. `status` moves the leading glyph through pending, running, complete and error, and shimmers the title while it runs.",
@@ -4804,7 +4993,13 @@
       {
         "title": "A step and its detail",
         "description": "`status` is the whole state: it picks the glyph, tints the title on an error, and puts a shimmer on the title while the step is running.",
-        "code": "<Task status=\"complete\">\n  <Task.Trigger title=\"Read 4 files\" />\n  <Task.Content>\n    <Task.Item>\n      Opened <Task.File>calendar/index.tsx</Task.File>\n    </Task.Item>\n    <Task.Item>\n      Opened <Task.File>date-picker/index.tsx</Task.File>\n    </Task.Item>\n  </Task.Content>\n</Task>"
+        "code": "<Task status=\"complete\">\n  <Task.Trigger title=\"Read 4 files\" />\n  <Task.Content>\n    <Task.Item>\n      Opened <Task.File>calendar/index.tsx</Task.File>\n    </Task.Item>\n    <Task.Item>\n      Opened <Task.File>date-picker/index.tsx</Task.File>\n    </Task.Item>\n  </Task.Content>\n</Task>",
+        "preview": {
+          "src": "/previews/task-a-step-and-its-detail.jpg",
+          "width": 1179,
+          "height": 296,
+          "alt": "Task — A step and its detail."
+        }
       },
       {
         "title": "Every status",
@@ -4824,10 +5019,22 @@
       {
         "title": "Between the turns",
         "description": "A run of steps belongs between two messages rather than inside either, which is what [Marker](/docs/components/marker) is for — it draws the rule that separates the work from the conversation.",
-        "code": "<Marker variant=\"separator\">\n  <Marker.Content>Ran 3 tools</Marker.Content>\n</Marker>\n\n<Task status=\"complete\">\n  <Task.Trigger title=\"Read 4 files\" />\n  <Task.Content>\n    <Task.Item>\n      Opened <Task.File>calendar/index.tsx</Task.File>\n    </Task.Item>\n  </Task.Content>\n</Task>"
+        "code": "<Marker variant=\"separator\">\n  <Marker.Content>Ran 3 tools</Marker.Content>\n</Marker>\n\n<Task status=\"complete\">\n  <Task.Trigger title=\"Read 4 files\" />\n  <Task.Content>\n    <Task.Item>\n      Opened <Task.File>calendar/index.tsx</Task.File>\n    </Task.Item>\n  </Task.Content>\n</Task>",
+        "preview": {
+          "src": "/previews/task.jpg",
+          "width": 1179,
+          "height": 953,
+          "alt": "Task — Between the turns."
+        }
       }
     ],
-    "notes": "**It stays open.** A reasoning trace folds itself away because it stops being interesting once the answer starts; a task does not, because the steps are the record. Pass `defaultOpen={false}` for a step whose detail is noise — a pending one, usually.\n\n**The body is indented behind a rule, not merely padded.** The rule is what says the lines belong to the step above them rather than being the next few steps, which matters the moment there is more than one task in a row.\n\n**`Task.File` is bordered on purpose.** A path in the middle of a sentence set only in monospace still reads as part of the sentence, and the paths are the part of a task line anyone actually scans for.\n\n**Nothing here depends on the AI SDK.** `status` is a string union that happens to line up with a tool part's `state`."
+    "notes": "**It stays open.** A reasoning trace folds itself away because it stops being interesting once the answer starts; a task does not, because the steps are the record. Pass `defaultOpen={false}` for a step whose detail is noise — a pending one, usually.\n\n**The body is indented behind a rule, not merely padded.** The rule is what says the lines belong to the step above them rather than being the next few steps, which matters the moment there is more than one task in a row.\n\n**`Task.File` is bordered on purpose.** A path in the middle of a sentence set only in monospace still reads as part of the sentence, and the paths are the part of a task line anyone actually scans for.\n\n**Nothing here depends on the AI SDK.** `status` is a string union that happens to line up with a tool part's `state`.",
+    "preview": {
+      "src": "/previews/task.jpg",
+      "width": 1179,
+      "height": 953,
+      "alt": "The Task component, running in the example app."
+    }
   },
   "code-block": {
     "intro": "A fenced snippet, syntax-coloured and scrolled sideways. Code does not wrap: wrapping a line puts the continuation under the indentation and the two stop meaning different things, so the body scrolls horizontally instead — which on a phone is the only honest way to show a ninety-column line.\n\nThe highlighter ships inside the component: a single pass of regex over the languages a chat actually streams, with no grammar, no worker and no dependency. Colours come from the theme's `--color-code-*` tokens, so a snippet follows light and dark like everything else.",
@@ -4851,20 +5058,46 @@
       {
         "title": "Numbered lines",
         "description": "`showLineNumbers` puts a gutter down the leading edge, sized to the longest line number so the code does not shift as the block passes ten or a hundred lines.",
-        "code": "<CodeBlock showLineNumbers code={snippet} language=\"ts\" />"
+        "code": "<CodeBlock showLineNumbers code={snippet} language=\"ts\" />",
+        "preview": {
+          "src": "/previews/code-block-numbered-lines.jpg",
+          "width": 1179,
+          "height": 575,
+          "alt": "CodeBlock — Numbered lines."
+        }
       },
       {
         "title": "The languages it colours",
         "description": "`ts`, `tsx`, `js`, `jsx`, `json`, `bash`, `python`, `css`, `html`, `sql`, `markdown` and `diff`, along with the usual spellings of each — `typescript`, `sh`, `py`, `md`. Anything else renders as clean monospace rather than as a guess.",
-        "code": "<CodeBlock code={json} language=\"json\" />\n<CodeBlock code={install} language=\"bash\" />\n<CodeBlock code={patch} language=\"diff\" />\n\n{/* Not recognised — plain monospace, and no guessing. */}\n<CodeBlock code={config} language=\"nginx\" />"
+        "code": "<CodeBlock code={json} language=\"json\" />\n<CodeBlock code={install} language=\"bash\" />\n<CodeBlock code={patch} language=\"diff\" />\n\n{/* Not recognised — plain monospace, and no guessing. */}\n<CodeBlock code={config} language=\"nginx\" />",
+        "preview": {
+          "src": "/previews/code-block-the-languages-it-colours.jpg",
+          "width": 1179,
+          "height": 899,
+          "alt": "CodeBlock — The languages it colours."
+        }
       },
       {
         "title": "In a turn",
         "description": "Inside the bubble's content rather than beside it: a snippet is something the model said. Give the bubble no padding of its own where a code block is the whole of the turn, or the block ends up inset twice.",
-        "code": "<Message align=\"start\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>\n        Here is the fix:\n      </Message.BubbleContent>\n    </Message.Bubble>\n    <CodeBlock code={patch} language=\"diff\">\n      <CodeBlock.Header>\n        <CodeBlock.Language>diff</CodeBlock.Language>\n        <CodeBlock.CopyButton />\n      </CodeBlock.Header>\n    </CodeBlock>\n  </Message.Content>\n</Message>"
+        "code": "<Message align=\"start\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>\n        Here is the fix:\n      </Message.BubbleContent>\n    </Message.Bubble>\n    <CodeBlock code={patch} language=\"diff\">\n      <CodeBlock.Header>\n        <CodeBlock.Language>diff</CodeBlock.Language>\n        <CodeBlock.CopyButton />\n      </CodeBlock.Header>\n    </CodeBlock>\n  </Message.Content>\n</Message>",
+        "previewVideo": {
+          "src": "/previews/code-block.mp4",
+          "poster": "/previews/code-block-poster.jpg",
+          "width": 720,
+          "height": 484,
+          "alt": "CodeBlock — In a turn."
+        }
       }
     ],
-    "notes": "**The highlighter is deliberately small.** A real tokenizer is a grammar per language, which is megabytes and a worker — the wrong shape twice over here, because a chat renders fragments rather than files and the fragments arrive a token at a time, so whatever runs has to run again on every frame of a stream.\n\nWhat it therefore does not do: nested languages, template-literal interpolation, or anything needing a parser to know. A block comment spanning several lines is coloured only on its first, because each line is tokenized on its own so that a stream which has just gained a character does not re-tokenize the whole block. What it does do is make a keyword look like a keyword, which is the whole of the value in a twelve-line snippet.\n\n**A line is one `Text` with coloured runs inside it**, not a row of views. Only inside a single `Text` do the runs share a baseline and keep the spaces between them; a row of views gives every token its own box and the line comes apart at the seams.\n\n**Colours are theme tokens.** `--color-code-keyword`, `-string`, `-number`, `-comment`, `-function`, `-property`, `-punctuation`, `-inserted` and `-deleted` are declared per theme and per light/dark. Override them after the theme import to put a snippet on your own palette.\n\n**Copying needs `expo-clipboard`.** It is an optional peer, and the button is silent without it:\n\n```sh\nnpx expo install expo-clipboard\n```"
+    "notes": "**The highlighter is deliberately small.** A real tokenizer is a grammar per language, which is megabytes and a worker — the wrong shape twice over here, because a chat renders fragments rather than files and the fragments arrive a token at a time, so whatever runs has to run again on every frame of a stream.\n\nWhat it therefore does not do: nested languages, template-literal interpolation, or anything needing a parser to know. A block comment spanning several lines is coloured only on its first, because each line is tokenized on its own so that a stream which has just gained a character does not re-tokenize the whole block. What it does do is make a keyword look like a keyword, which is the whole of the value in a twelve-line snippet.\n\n**A line is one `Text` with coloured runs inside it**, not a row of views. Only inside a single `Text` do the runs share a baseline and keep the spaces between them; a row of views gives every token its own box and the line comes apart at the seams.\n\n**Colours are theme tokens.** `--color-code-keyword`, `-string`, `-number`, `-comment`, `-function`, `-property`, `-punctuation`, `-inserted` and `-deleted` are declared per theme and per light/dark. Override them after the theme import to put a snippet on your own palette.\n\n**Copying needs `expo-clipboard`.** It is an optional peer, and the button is silent without it:\n\n```sh\nnpx expo install expo-clipboard\n```",
+    "previewVideo": {
+      "src": "/previews/code-block.mp4",
+      "poster": "/previews/code-block-poster.jpg",
+      "width": 720,
+      "height": 484,
+      "alt": "The CodeBlock component, running in the example app."
+    }
   },
   "plan": {
     "intro": "What an agent intends to do, before it does it. A card rather than a run of rows, because a plan is a thing the reader is being asked to approve: it needs an edge around it so that where it starts and stops is not a matter of interpretation, and a footer that can hold the button that approves it.\n\nThe body is a rail of steps rather than prose, because a plan is an ordered list of things that will happen and the reader’s question is always *which one is running*. A paragraph describing the same four steps cannot be glanced at to answer that; a column of markers can. The rail fills in behind the steps that are done, so progress is legible from its left edge alone.\n\n`isStreaming` puts a shimmer on the title, the description and the one step that is running, which is the honest way to render text that is still arriving — the alternative is a title that grows a word at a time and reads as finished at every intermediate length.",
@@ -4893,12 +5126,26 @@
       {
         "title": "A rail of steps",
         "description": "The four statuses are `pending`, `active`, `done` and `skipped`. Only one step is usually `active`; the rail behind the finished ones is filled, which is what makes progress readable without counting. `meta` takes the file the step touches and renders it as a small mono chip.",
-        "code": "<Plan>\n  <Plan.Header>\n    <Plan.Icon>\n      <ListChecksIcon size={16} />\n    </Plan.Icon>\n    <Plan.Title>Fix the calendar range</Plan.Title>\n    <Plan.Description>Four files, no API change.</Plan.Description>\n    <Plan.Action>\n      <Plan.Progress />\n      <Plan.Trigger />\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>\n    <Plan.Steps>\n      <Plan.Step status=\"done\" meta=\"utils/date.ts\">\n        Make the in-range test inclusive\n      </Plan.Step>\n      <Plan.Step status=\"done\" meta=\"calendar/index.tsx\">\n        Round the band only where it stops\n      </Plan.Step>\n      <Plan.Step status=\"active\">Square the discs against the band</Plan.Step>\n      <Plan.Step meta=\"scripts/gen.mjs\">Regenerate the docs page</Plan.Step>\n    </Plan.Steps>\n  </Plan.Content>\n  <Plan.Footer>\n    <Button variant=\"outline\">Revise</Button>\n    <Button>Approve</Button>\n  </Plan.Footer>\n</Plan>"
+        "code": "<Plan>\n  <Plan.Header>\n    <Plan.Icon>\n      <ListChecksIcon size={16} />\n    </Plan.Icon>\n    <Plan.Title>Fix the calendar range</Plan.Title>\n    <Plan.Description>Four files, no API change.</Plan.Description>\n    <Plan.Action>\n      <Plan.Progress />\n      <Plan.Trigger />\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>\n    <Plan.Steps>\n      <Plan.Step status=\"done\" meta=\"utils/date.ts\">\n        Make the in-range test inclusive\n      </Plan.Step>\n      <Plan.Step status=\"done\" meta=\"calendar/index.tsx\">\n        Round the band only where it stops\n      </Plan.Step>\n      <Plan.Step status=\"active\">Square the discs against the band</Plan.Step>\n      <Plan.Step meta=\"scripts/gen.mjs\">Regenerate the docs page</Plan.Step>\n    </Plan.Steps>\n  </Plan.Content>\n  <Plan.Footer>\n    <Button variant=\"outline\">Revise</Button>\n    <Button>Approve</Button>\n  </Plan.Footer>\n</Plan>",
+        "previewVideo": {
+          "src": "/previews/plan.mp4",
+          "poster": "/previews/plan-poster.jpg",
+          "width": 720,
+          "height": 1560,
+          "alt": "Plan — A rail of steps."
+        }
       },
       {
         "title": "Streaming in",
         "description": "With `experimental_useObject` the fields arrive one at a time — a title before there is anything else — which is exactly what the shimmer is for. Only the `active` step shimmers: a finished one is not still being written, and shimmering the whole rail would say nothing at all.",
-        "code": "const { object, isLoading } = useObject({\n  api: '/api/plan',\n  schema: planSchema,\n});\n\n<Plan isStreaming={isLoading}>\n  <Plan.Header>\n    <Plan.Title>{object?.title ?? 'Planning…'}</Plan.Title>\n    <Plan.Description>{object?.summary ?? ''}</Plan.Description>\n    <Plan.Action>\n      <Plan.Progress />\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>\n    <Plan.Steps>\n      {object?.steps?.map((step, i) => (\n        <Plan.Step key={i} status={step?.status ?? 'pending'}>\n          {step?.title ?? ''}\n        </Plan.Step>\n      ))}\n    </Plan.Steps>\n  </Plan.Content>\n</Plan>"
+        "code": "const { object, isLoading } = useObject({\n  api: '/api/plan',\n  schema: planSchema,\n});\n\n<Plan isStreaming={isLoading}>\n  <Plan.Header>\n    <Plan.Title>{object?.title ?? 'Planning…'}</Plan.Title>\n    <Plan.Description>{object?.summary ?? ''}</Plan.Description>\n    <Plan.Action>\n      <Plan.Progress />\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>\n    <Plan.Steps>\n      {object?.steps?.map((step, i) => (\n        <Plan.Step key={i} status={step?.status ?? 'pending'}>\n          {step?.title ?? ''}\n        </Plan.Step>\n      ))}\n    </Plan.Steps>\n  </Plan.Content>\n</Plan>",
+        "previewVideo": {
+          "src": "/previews/plan-streaming-in.mp4",
+          "poster": "/previews/plan-streaming-in-poster.jpg",
+          "width": 720,
+          "height": 674,
+          "alt": "Plan — Streaming in."
+        }
       },
       {
         "title": "Approving it",
@@ -4908,12 +5155,26 @@
       {
         "title": "Steps that are tasks",
         "description": "A step that has a story of its own — files read, commands run — outgrows the rail. Put [Task](/docs/ai-components/task) rows in `Plan.Content` instead and the card becomes a live account of the work rather than a list of intentions.",
-        "code": "<Plan>\n  <Plan.Header>\n    <Plan.Title>Fix the calendar range</Plan.Title>\n    <Plan.Action>\n      <Badge variant=\"secondary\">2 of 3</Badge>\n      <Plan.Trigger />\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>\n    <Task status=\"complete\">\n      <Task.Trigger title=\"Compute the band inclusively\" />\n      <Task.Content>\n        <Task.Item>\n          Edited <Task.File>calendar/index.tsx</Task.File>\n        </Task.Item>\n      </Task.Content>\n    </Task>\n    <Task status=\"running\">\n      <Task.Trigger title=\"Regenerate the docs\" />\n      <Task.Content>\n        <Task.Item>Running docs:generate…</Task.Item>\n      </Task.Content>\n    </Task>\n  </Plan.Content>\n</Plan>"
+        "code": "<Plan>\n  <Plan.Header>\n    <Plan.Title>Fix the calendar range</Plan.Title>\n    <Plan.Action>\n      <Badge variant=\"secondary\">2 of 3</Badge>\n      <Plan.Trigger />\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>\n    <Task status=\"complete\">\n      <Task.Trigger title=\"Compute the band inclusively\" />\n      <Task.Content>\n        <Task.Item>\n          Edited <Task.File>calendar/index.tsx</Task.File>\n        </Task.Item>\n      </Task.Content>\n    </Task>\n    <Task status=\"running\">\n      <Task.Trigger title=\"Regenerate the docs\" />\n      <Task.Content>\n        <Task.Item>Running docs:generate…</Task.Item>\n      </Task.Content>\n    </Task>\n  </Plan.Content>\n</Plan>",
+        "previewVideo": {
+          "src": "/previews/plan-steps-that-are-tasks.mp4",
+          "poster": "/previews/plan-steps-that-are-tasks-poster.jpg",
+          "width": 720,
+          "height": 1560,
+          "alt": "Plan — Steps that are tasks."
+        }
       }
     ],
     "notes": "**The rail counts itself.** `Plan.Steps` reports how many of its steps are settled, which is what lets `Plan.Progress` sit up in the header — above the rail, with no way to reach it — without the total being stated twice. `done` and `skipped` both count as settled: a plan reporting *2 of 4* while two more were deliberately passed over is reporting the wrong thing. Pass `value` and `total` to `Plan.Progress` to override the count entirely.\n\n**Only string children shimmer.** `Plan.Title`, `Plan.Description` and the `active` `Plan.Step` wrap text in a shimmer while `isStreaming`, and leave an element alone — an element may already be animating, and two animations over one heading is a mess rather than an emphasis.\n\n**`Plan.Icon` and `Plan.Action` are lifted out of the heading column** by the header, to the leading and trailing edges respectively, so neither rides down with a title that wraps to a second line.\n\n**The footer stretches its actions.** A pair of small buttons hugging the trailing corner is a pointer-and-cursor shape; here each action takes an equal share of the row so both clear a thumb. `layout=\"end\"` gives you the packed arrangement for a plan sitting inside something denser.\n\n**The body collapses rather than unmounting**, for the same reason as everywhere else here: a streaming plan is still growing while it is folded.\n\n**Nothing here depends on the AI SDK.** `isStreaming` is a boolean; it happens to be `useObject`’s `isLoading`.",
     "anatomy": "<Plan>\n  <Plan.Header>\n    <Plan.Icon />\n    <Plan.Title />\n    <Plan.Description />\n    <Plan.Action>\n      <Plan.Progress />\n      <Plan.Trigger />\n    </Plan.Action>\n  </Plan.Header>\n  <Plan.Content>\n    <Plan.Steps>\n      <Plan.Step />\n    </Plan.Steps>\n  </Plan.Content>\n  <Plan.Footer />\n</Plan>",
-    "partNotes": "`Plan.Step` takes its position from `Plan.Steps` rather than from a prop, so steps produced by a `.map()` through a component of your own still know which one is last and drop the connector. Pass `last` yourself only for a step rendered outside `Plan.Steps`."
+    "partNotes": "`Plan.Step` takes its position from `Plan.Steps` rather than from a prop, so steps produced by a `.map()` through a component of your own still know which one is last and drop the connector. Pass `last` yourself only for a step rendered outside `Plan.Steps`.",
+    "previewVideo": {
+      "src": "/previews/plan.mp4",
+      "poster": "/previews/plan-poster.jpg",
+      "width": 720,
+      "height": 1560,
+      "alt": "The Plan component, running in the example app."
+    }
   },
   "post": {
     "intro": "A card carrying something somebody said, and what everyone did about it.\n\nFour shapes, because a feed is not one thing. `feed` is the full card — author, body, media and a row of counts. `vote` puts a score pill beside a headline, the way a ranked community reads. `compact` drops the media and puts the name and handle on one line, for a dense timeline. `media` gives the image the whole card and lays the author over it.\n\nWhat they share is the anatomy. The same parts appear in every variant, so moving between them is a prop rather than a rewrite: the variant decides padding, media shape and where the author sits, not which parts exist.",
@@ -4945,22 +5206,47 @@
       {
         "title": "Feed card",
         "description": "The full shape. Every count in the footer is live: `active` fills the icon and takes the tone colour, and passing the changed `value` alongside it is what makes the number move. `tone` is which colour lit means — a like is red, a save the accent, a repost green.",
-        "code": "<Post variant=\"feed\">\n  <Post.Header>\n    <Post.Author name=\"Dwayne F. White\" verified timestamp=\"Posted 3m ago\" avatar={face} />\n    <Post.Action><EllipsisIcon size={18} /></Post.Action>\n  </Post.Header>\n\n  <Post.Body>\n    What debt strategies have you found effective? #FinancialFreedom\n  </Post.Body>\n\n  <Post.Media source={photo} alt=\"A coin going into a piggy bank\" />\n\n  <Post.Footer>\n    <Post.Stat icon={EyeIcon} value=\"5,874\" />\n    <Post.Stat\n      icon={HeartIcon}\n      tone=\"like\"\n      active={liked}\n      value={liked ? 216 : 215}\n      onPress={() => setLiked((on) => !on)}\n    />\n    <Post.Stat icon={MessageCircleIcon} value=\"11\" onPress={openReplies} />\n    <Post.Stat icon={BookmarkIcon} tone=\"save\" align=\"end\" value=\"Save\" onPress={save} />\n  </Post.Footer>\n</Post>"
+        "code": "<Post variant=\"feed\">\n  <Post.Header>\n    <Post.Author name=\"Dwayne F. White\" verified timestamp=\"Posted 3m ago\" avatar={face} />\n    <Post.Action><EllipsisIcon size={18} /></Post.Action>\n  </Post.Header>\n\n  <Post.Body>\n    What debt strategies have you found effective? #FinancialFreedom\n  </Post.Body>\n\n  <Post.Media source={photo} alt=\"A coin going into a piggy bank\" />\n\n  <Post.Footer>\n    <Post.Stat icon={EyeIcon} value=\"5,874\" />\n    <Post.Stat\n      icon={HeartIcon}\n      tone=\"like\"\n      active={liked}\n      value={liked ? 216 : 215}\n      onPress={() => setLiked((on) => !on)}\n    />\n    <Post.Stat icon={MessageCircleIcon} value=\"11\" onPress={openReplies} />\n    <Post.Stat icon={BookmarkIcon} tone=\"save\" align=\"end\" value=\"Save\" onPress={save} />\n  </Post.Footer>\n</Post>",
+        "preview": {
+          "src": "/previews/post-feed-card.jpg",
+          "width": 1179,
+          "height": 1408,
+          "alt": "Post — Feed card."
+        }
       },
       {
         "title": "Votes",
         "description": "A score with two arrows. Both fill and take a colour when cast and the pill tints with them, because an arrow alone is 17pt of a card and not enough to notice from arm’s length. Pressing the arrow already cast clears the vote — `onVote` receives `null` — which is not a nicety: a vote that cannot be withdrawn is one people hesitate to cast.",
-        "code": "const [vote, setVote] = useState<PostVote>(null);\nconst score = 1240 + (vote === 'up' ? 1 : vote === 'down' ? -1 : 0);\n\n<Post variant=\"vote\">\n  <Post.Header>\n    <Post.Community name=\"r/reactnative\" avatar={groupAvatar} meta=\"5h ago\" />\n    <Post.Action><EllipsisIcon size={18} /></Post.Action>\n  </Post.Header>\n\n  <Post.Title>Reanimated 4 shipped — what actually changed?</Post.Title>\n  <Post.Body numberOfLines={3}>{body}</Post.Body>\n\n  <Post.Footer>\n    <Post.Votes score={score.toLocaleString()} vote={vote} onVote={setVote} />\n    <Post.Stat icon={MessageCircleIcon} value=\"184\" onPress={openReplies} />\n    <Post.Stat icon={ShareNodesIcon} value=\"Share\" align=\"end\" onPress={share} />\n  </Post.Footer>\n</Post>"
+        "code": "const [vote, setVote] = useState<PostVote>(null);\nconst score = 1240 + (vote === 'up' ? 1 : vote === 'down' ? -1 : 0);\n\n<Post variant=\"vote\">\n  <Post.Header>\n    <Post.Community name=\"r/reactnative\" avatar={groupAvatar} meta=\"5h ago\" />\n    <Post.Action><EllipsisIcon size={18} /></Post.Action>\n  </Post.Header>\n\n  <Post.Title>Reanimated 4 shipped — what actually changed?</Post.Title>\n  <Post.Body numberOfLines={3}>{body}</Post.Body>\n\n  <Post.Footer>\n    <Post.Votes score={score.toLocaleString()} vote={vote} onVote={setVote} />\n    <Post.Stat icon={MessageCircleIcon} value=\"184\" onPress={openReplies} />\n    <Post.Stat icon={ShareNodesIcon} value=\"Share\" align=\"end\" onPress={share} />\n  </Post.Footer>\n</Post>",
+        "previewVideo": {
+          "src": "/previews/post-votes.mp4",
+          "poster": "/previews/post-votes-poster.jpg",
+          "width": 720,
+          "height": 478,
+          "alt": "Post — Votes."
+        }
       },
       {
         "title": "Compact",
         "description": "For a dense timeline. The handle and the timestamp join the name on one line instead of taking a second, and there is no media — which is the whole difference between a row and a card.",
-        "code": "<Post variant=\"compact\">\n  <Post.Header>\n    <Post.Author name=\"Ada Okonkwo\" handle=\"@ada\" timestamp=\"12m\" avatar={face} />\n    <Post.Action><EllipsisIcon size={16} /></Post.Action>\n  </Post.Header>\n\n  <Post.Body onMentionPress={openProfile}>\n    Deleted a caching layer nobody had touched in a year. cc @dwayne\n  </Post.Body>\n\n  <Post.Footer>\n    <Post.Stat icon={MessageCircleIcon} value=\"8\" onPress={openReplies} />\n    <Post.Stat icon={RepeatIcon} tone=\"repost\" active={reposted} value={40} onPress={repost} />\n    <Post.Stat icon={HeartIcon} tone=\"like\" active={liked} value={311} onPress={like} />\n    <Post.Stat icon={EyeIcon} value=\"9.1k\" align=\"end\" />\n  </Post.Footer>\n</Post>"
+        "code": "<Post variant=\"compact\">\n  <Post.Header>\n    <Post.Author name=\"Ada Okonkwo\" handle=\"@ada\" timestamp=\"12m\" avatar={face} />\n    <Post.Action><EllipsisIcon size={16} /></Post.Action>\n  </Post.Header>\n\n  <Post.Body onMentionPress={openProfile}>\n    Deleted a caching layer nobody had touched in a year. cc @dwayne\n  </Post.Body>\n\n  <Post.Footer>\n    <Post.Stat icon={MessageCircleIcon} value=\"8\" onPress={openReplies} />\n    <Post.Stat icon={RepeatIcon} tone=\"repost\" active={reposted} value={40} onPress={repost} />\n    <Post.Stat icon={HeartIcon} tone=\"like\" active={liked} value={311} onPress={like} />\n    <Post.Stat icon={EyeIcon} value=\"9.1k\" align=\"end\" />\n  </Post.Footer>\n</Post>",
+        "preview": {
+          "src": "/previews/post-compact.jpg",
+          "width": 1179,
+          "height": 573,
+          "alt": "Post — Compact."
+        }
       },
       {
         "title": "Media first",
         "description": "The image is the card and the author is laid over it. The `media` variant switches `Post.Media`’s scrim on by default — a gradient over the top 112 points, which is the only reason white type stays legible over a photograph. A flat panel would do the same job and bring an edge of its own, and that edge reads as a bar covering the picture.",
-        "code": "<Post variant=\"media\">\n  <Post.Media\n    source={photo}\n    aspectRatio={4 / 3}\n    alt=\"A coastline at dusk\"\n  />\n  <Post.Header>\n    <Post.Author name=\"Marta Lindqvist\" verified timestamp=\"Yesterday\" avatar={face} />\n  </Post.Header>\n\n  <Post.Body onTagPress={openTag}>\n    Four hours of walking for eleven minutes of light. #goldenhour\n  </Post.Body>\n\n  <Post.Footer>\n    <Post.Stat icon={HeartIcon} tone=\"like\" active={liked} value=\"2,040\" onPress={like} />\n    <Post.Stat icon={MessageCircleIcon} value=\"63\" onPress={openReplies} />\n    <Post.Stat icon={BookmarkIcon} tone=\"save\" align=\"end\" active={saved} onPress={save} />\n  </Post.Footer>\n</Post>"
+        "code": "<Post variant=\"media\">\n  <Post.Media\n    source={photo}\n    aspectRatio={4 / 3}\n    alt=\"A coastline at dusk\"\n  />\n  <Post.Header>\n    <Post.Author name=\"Marta Lindqvist\" verified timestamp=\"Yesterday\" avatar={face} />\n  </Post.Header>\n\n  <Post.Body onTagPress={openTag}>\n    Four hours of walking for eleven minutes of light. #goldenhour\n  </Post.Body>\n\n  <Post.Footer>\n    <Post.Stat icon={HeartIcon} tone=\"like\" active={liked} value=\"2,040\" onPress={like} />\n    <Post.Stat icon={MessageCircleIcon} value=\"63\" onPress={openReplies} />\n    <Post.Stat icon={BookmarkIcon} tone=\"save\" align=\"end\" active={saved} onPress={save} />\n  </Post.Footer>\n</Post>",
+        "preview": {
+          "src": "/previews/post-media-first.jpg",
+          "width": 1179,
+          "height": 1216,
+          "alt": "Post — Media first."
+        }
       },
       {
         "title": "Hashtags and mentions",
@@ -4968,7 +5254,14 @@
         "code": "<Post.Body onTagPress={(tag) => router.push(`/tag/${tag}`)} onMentionPress={openProfile}>\n  Shipped it. #FinancialFreedom #DebtSnowball — thanks @ada for the review.\n</Post.Body>"
       }
     ],
-    "notes": "### The number is the point\n\nEvery control in the footer is a toggle over a count, and a like that lights up while `215` sits there has not told you it counted. So a value that changes animates: the new number arrives from the direction the count travelled — rising into place when it went up, dropping in when it came down — while the old one fades.\n\nOnly the arriving half carries the direction. The number leaving was rendered before anyone knew which way the count would go, so asking it to animate knowingly would mean knowing the future.\n\nA value that is not a number cross-fades instead, since there is no direction for the word \"Save\" to travel in. All of it is skipped under Reduce Motion, where the value simply changes.\n\n### State stays with you\n\nNothing here keeps a count. `active`, `value`, `vote` and `score` are all yours, because the moment a like is optimistic — and it always is — the component's copy and the server's answer are two different things and only you know how to reconcile them. What the component owns is what a press *looks* like.\n\n### Toggles fill rather than swap\n\nThe like, save, repost and vote icons take a `filled` prop and are the same shape in both states. Drawn as two different icons they would change shape under the finger; drawn as one that fills, the shape stays put and only the inside changes.\n\n### Media has a fixed aspect ratio\n\n`Post.Media` crops to `aspectRatio` — `16 / 10` by default — rather than following the image's own proportions. A feed whose card heights are decided by whatever was uploaded scrolls like a broken staircase, and a reader who has learnt where the like button sits loses it on every card.\n\nKeep it wide. A portrait ratio makes one card most of a screen, and a feed you can only see one item of is a feed nobody scrolls — `4 / 3` is about as tall as a card should get before the next one stops hinting that it exists.\n\n### The scrim is a gradient, not a panel\n\n`scrim` darkens an edge of the image so type laid over it stays legible. It is on by default in the `media` variant, where the author sits over the picture, and off everywhere else.\n\nIt is a gradient over a fixed 112 points rather than a flat rectangle, and rather than a fraction of the image. A flat panel has an edge of its own, and that edge reads as a bar covering the photograph rather than as shading; a fraction of a tall portrait shades half the picture to do a job that needs its top inch.\n\n### The overflow menu sits on the name\n\n`Post.Action` is as tall as the name's own line box and the author block is top-aligned, so the menu lands on the username's line in all four variants rather than drifting between the two lines of the author block as the variant changes what is underneath the name.\n\n### Accessibility\n\nEach stat is a button carrying its selected state, and every target has `hitSlop` around it — the footer is dense enough that spacing the controls far enough apart to be hit reliably would make it twice as wide as the numbers in it. `Post.Votes` announces itself as adjustable with the score as its value, and each arrow is a button of its own. `Post.Media` is only described to a screen reader when you pass `alt`; an image with nothing to say is decorative and better skipped."
+    "notes": "### The number is the point\n\nEvery control in the footer is a toggle over a count, and a like that lights up while `215` sits there has not told you it counted. So a value that changes animates: the new number arrives from the direction the count travelled — rising into place when it went up, dropping in when it came down — while the old one fades.\n\nOnly the arriving half carries the direction. The number leaving was rendered before anyone knew which way the count would go, so asking it to animate knowingly would mean knowing the future.\n\nA value that is not a number cross-fades instead, since there is no direction for the word \"Save\" to travel in. All of it is skipped under Reduce Motion, where the value simply changes.\n\n### State stays with you\n\nNothing here keeps a count. `active`, `value`, `vote` and `score` are all yours, because the moment a like is optimistic — and it always is — the component's copy and the server's answer are two different things and only you know how to reconcile them. What the component owns is what a press *looks* like.\n\n### Toggles fill rather than swap\n\nThe like, save, repost and vote icons take a `filled` prop and are the same shape in both states. Drawn as two different icons they would change shape under the finger; drawn as one that fills, the shape stays put and only the inside changes.\n\n### Media has a fixed aspect ratio\n\n`Post.Media` crops to `aspectRatio` — `16 / 10` by default — rather than following the image's own proportions. A feed whose card heights are decided by whatever was uploaded scrolls like a broken staircase, and a reader who has learnt where the like button sits loses it on every card.\n\nKeep it wide. A portrait ratio makes one card most of a screen, and a feed you can only see one item of is a feed nobody scrolls — `4 / 3` is about as tall as a card should get before the next one stops hinting that it exists.\n\n### The scrim is a gradient, not a panel\n\n`scrim` darkens an edge of the image so type laid over it stays legible. It is on by default in the `media` variant, where the author sits over the picture, and off everywhere else.\n\nIt is a gradient over a fixed 112 points rather than a flat rectangle, and rather than a fraction of the image. A flat panel has an edge of its own, and that edge reads as a bar covering the photograph rather than as shading; a fraction of a tall portrait shades half the picture to do a job that needs its top inch.\n\n### The overflow menu sits on the name\n\n`Post.Action` is as tall as the name's own line box and the author block is top-aligned, so the menu lands on the username's line in all four variants rather than drifting between the two lines of the author block as the variant changes what is underneath the name.\n\n### Accessibility\n\nEach stat is a button carrying its selected state, and every target has `hitSlop` around it — the footer is dense enough that spacing the controls far enough apart to be hit reliably would make it twice as wide as the numbers in it. `Post.Votes` announces itself as adjustable with the score as its value, and each arrow is a button of its own. `Post.Media` is only described to a screen reader when you pass `alt`; an image with nothing to say is decorative and better skipped.",
+    "previewVideo": {
+      "src": "/previews/post.mp4",
+      "poster": "/previews/post-poster.jpg",
+      "width": 720,
+      "height": 1560,
+      "alt": "The Post component, running in the example app."
+    }
   },
   "response": {
     "intro": "A model's answer, rendered as it arrives.\n\nAn answer is markdown. It has headings and lists and fenced code in it, because that is what a model writes, and rendering it as one run of plain text throws away the structure the model went to the trouble of producing.\n\nSo this reads the markdown and renders it through the library's own parts — [Typography](/docs/components/typography) for prose, [CodeBlock](/docs/ai-components/code-block) for fences, [Table](/docs/components/table) for tables. Nothing here draws its own type or its own colours: an answer inside a message bubble should look like the app it is in, not like a document viewer someone embedded. It brings no new dependencies with it.",
@@ -5012,6 +5305,13 @@
         "description": "The same answer arriving a few characters at a time. Watch the fence and the bold runs: they resolve without the text under them flickering.",
         "code": "const [shown, setShown] = useState(0);\nconst streaming = shown < answer.length;\n\nuseEffect(() => {\n  if (!streaming) return;\n  const timer = setInterval(() => {\n    setShown((count) => Math.min(count + 4, answer.length));\n  }, 24);\n  return () => clearInterval(timer);\n}, [streaming]);\n\n<Response isStreaming={streaming}>{answer.slice(0, shown)}</Response>"
       }
-    ]
+    ],
+    "previewVideo": {
+      "src": "/previews/response.mp4",
+      "poster": "/previews/response-poster.jpg",
+      "width": 720,
+      "height": 1142,
+      "alt": "The Response component, running in the example app."
+    }
   }
 }

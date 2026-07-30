@@ -8,6 +8,14 @@ A fenced snippet, syntax-coloured and scrolled sideways. Code does not wrap: wra
 
 The highlighter ships inside the component: a single pass of regex over the languages a chat actually streams, with no grammar, no worker and no dependency. Colours come from the theme's `--color-code-*` tokens, so a snippet follows light and dark like everything else.
 
+<PreviewVideo
+  src="/previews/code-block.mp4"
+  poster="/previews/code-block-poster.jpg"
+  alt="The CodeBlock component, running in the example app."
+  width={720}
+  height={484}
+/>
+
 ## Installation
 
 CodeBlock ships with the library — no separate install.
@@ -72,6 +80,13 @@ npx panelui-cli@latest add code-block
 
 `showLineNumbers` puts a gutter down the leading edge, sized to the longest line number so the code does not shift as the block passes ten or a hundred lines.
 
+<Preview
+  src="/previews/code-block-numbered-lines.jpg"
+  alt="CodeBlock — Numbered lines."
+  width={1179}
+  height={575}
+/>
+
 ```tsx
 <CodeBlock showLineNumbers code={snippet} language="ts" />
 ```
@@ -79,6 +94,13 @@ npx panelui-cli@latest add code-block
 ### The languages it colours
 
 `ts`, `tsx`, `js`, `jsx`, `json`, `bash`, `python`, `css`, `html`, `sql`, `markdown` and `diff`, along with the usual spellings of each — `typescript`, `sh`, `py`, `md`. Anything else renders as clean monospace rather than as a guess.
+
+<Preview
+  src="/previews/code-block-the-languages-it-colours.jpg"
+  alt="CodeBlock — The languages it colours."
+  width={1179}
+  height={899}
+/>
 
 ```tsx
 <CodeBlock code={json} language="json" />
@@ -92,6 +114,14 @@ npx panelui-cli@latest add code-block
 ### In a turn
 
 Inside the bubble's content rather than beside it: a snippet is something the model said. Give the bubble no padding of its own where a code block is the whole of the turn, or the block ends up inset twice.
+
+<PreviewVideo
+  src="/previews/code-block.mp4"
+  poster="/previews/code-block-poster.jpg"
+  alt="CodeBlock — In a turn."
+  width={720}
+  height={484}
+/>
 
 ```tsx
 <Message align="start">

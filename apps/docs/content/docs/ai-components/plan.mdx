@@ -10,6 +10,14 @@ The body is a rail of steps rather than prose, because a plan is an ordered list
 
 `isStreaming` puts a shimmer on the title, the description and the one step that is running, which is the honest way to render text that is still arriving — the alternative is a title that grows a word at a time and reads as finished at every intermediate length.
 
+<PreviewVideo
+  src="/previews/plan.mp4"
+  poster="/previews/plan-poster.jpg"
+  alt="The Plan component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Plan ships with the library — no separate install.
@@ -85,6 +93,14 @@ npx panelui-cli@latest add plan
 
 The four statuses are `pending`, `active`, `done` and `skipped`. Only one step is usually `active`; the rail behind the finished ones is filled, which is what makes progress readable without counting. `meta` takes the file the step touches and renders it as a small mono chip.
 
+<PreviewVideo
+  src="/previews/plan.mp4"
+  poster="/previews/plan-poster.jpg"
+  alt="Plan — A rail of steps."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Plan>
   <Plan.Header>
@@ -120,6 +136,14 @@ The four statuses are `pending`, `active`, `done` and `skipped`. Only one step i
 ### Streaming in
 
 With `experimental_useObject` the fields arrive one at a time — a title before there is anything else — which is exactly what the shimmer is for. Only the `active` step shimmers: a finished one is not still being written, and shimmering the whole rail would say nothing at all.
+
+<PreviewVideo
+  src="/previews/plan-streaming-in.mp4"
+  poster="/previews/plan-streaming-in-poster.jpg"
+  alt="Plan — Streaming in."
+  width={720}
+  height={674}
+/>
 
 ```tsx
 const { object, isLoading } = useObject({
@@ -172,6 +196,14 @@ The footer is the reason this is a card. A plan the reader has to agree to needs
 ### Steps that are tasks
 
 A step that has a story of its own — files read, commands run — outgrows the rail. Put [Task](/docs/ai-components/task) rows in `Plan.Content` instead and the card becomes a live account of the work rather than a list of intentions.
+
+<PreviewVideo
+  src="/previews/plan-steps-that-are-tasks.mp4"
+  poster="/previews/plan-steps-that-are-tasks-poster.jpg"
+  alt="Plan — Steps that are tasks."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Plan>

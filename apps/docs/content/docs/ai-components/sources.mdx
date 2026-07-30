@@ -8,6 +8,14 @@ Where an answer came from, folded under a count. A cited answer usually cites mo
 
 Folded is the resting state, unlike [Reasoning](/docs/ai-components/reasoning) — a citation list is a thing you go and check rather than a thing you watch arrive.
 
+<PreviewVideo
+  src="/previews/sources.mp4"
+  poster="/previews/sources-poster.jpg"
+  alt="The Sources component, running in the example app."
+  width={720}
+  height={612}
+/>
+
 ## Installation
 
 Sources ships with the library — no separate install.
@@ -58,6 +66,13 @@ npx panelui-cli@latest add sources
 ### A list of citations
 
 `title` is what the row says and `href` is where it goes. With no title the host stands in — which is a better label than a hundred characters of path, and models often send no title at all.
+
+<Preview
+  src="/previews/sources-a-list-of-citations.jpg"
+  alt="Sources — A list of citations."
+  width={1179}
+  height={553}
+/>
 
 ```tsx
 <Sources>
@@ -116,6 +131,14 @@ const sources = message.parts.filter(
 ### Under a turn
 
 Below the bubble rather than above it: the citations are what the answer rests on, and they are read after it.
+
+<PreviewVideo
+  src="/previews/sources.mp4"
+  poster="/previews/sources-poster.jpg"
+  alt="Sources — Under a turn."
+  width={720}
+  height={612}
+/>
 
 ```tsx
 <Message align="start">

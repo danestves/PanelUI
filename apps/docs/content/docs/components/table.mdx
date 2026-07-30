@@ -6,6 +6,13 @@ status: new
 
 Rows and columns that stay lined up. React Native has no table layout, so a table here is a stack of flex rows whose cells divide the width the same way — and the component owns everything that is not that: the hairlines between rows, the muted header and footer bands, optional striping, per-column alignment, and a sort arrow that turns over rather than being swapped.
 
+<Preview
+  src="/previews/table.jpg"
+  alt="The Table component, running in the example app."
+  width={1179}
+  height={1023}
+/>
+
 ## Installation
 
 Table ships with the library — no separate install.
@@ -110,6 +117,13 @@ Cells divide the row evenly unless told otherwise. `flex={2}` gives a column twi
 
 Tints every other body row, which helps the eye track across a wide one. Leave it off for a short table, where the stripes are louder than the data.
 
+<Preview
+  src="/previews/table-striped.jpg"
+  alt="Table — Striped."
+  width={1179}
+  height={1089}
+/>
+
 ```tsx
 <Table variant="outline" striped>
   {/* …header and body… */}
@@ -149,6 +163,14 @@ Column headings are not data. `Table.Frame` puts them on the tray above the card
 
 A header given `onPress` is the handle for sorting by its column. Pass `sortDirection` to the column being sorted by and leave it off the others: that column takes a full-strength arrow and a foreground label, while the rest keep a dimmed arrow saying they could be sorted too. The arrow rotates between the two directions rather than being replaced, so it stays the same arrow pointing the other way.
 
+<PreviewVideo
+  src="/previews/table-sortable-columns.mp4"
+  poster="/previews/table-sortable-columns-poster.jpg"
+  alt="Table — Sortable columns."
+  width={720}
+  height={584}
+/>
+
 ```tsx
 const [column, setColumn] = useState<'id' | 'amount'>('amount');
 const [direction, setDirection] = useState<'asc' | 'desc'>('desc');
@@ -176,6 +198,14 @@ const sortBy = (next: 'id' | 'amount') => {
 
 A row with an `onPress` announces itself as a button rather than as a row, since being tappable is the more useful fact. `selected` lights the chosen one.
 
+<PreviewVideo
+  src="/previews/table-selectable-rows.mp4"
+  poster="/previews/table-selectable-rows-poster.jpg"
+  alt="Table — Selectable rows."
+  width={720}
+  height={628}
+/>
+
 ```tsx
 const [picked, setPicked] = useState('INV-002');
 
@@ -199,6 +229,14 @@ const [picked, setPicked] = useState('INV-002');
 
 More columns than a phone is wide belong in a horizontal scroller, not squeezed until the columns are unreadable. Give the table a `minWidth` and a fixed `width` per column, and wrap it in `ScrollFade` so the fading edge says there is more to the right. The `w-full` on the wrapper is load-bearing — without a width of its own it shrink-wraps to the scroller’s content and the table runs off the screen instead of clipping.
 
+<PreviewVideo
+  src="/previews/table-wider-than-the-screen.mp4"
+  poster="/previews/table-wider-than-the-screen-poster.jpg"
+  alt="Table — Wider than the screen."
+  width={720}
+  height={440}
+/>
+
 ```tsx
 <ScrollFade size={24} className="w-full self-start">
   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -221,6 +259,13 @@ More columns than a phone is wide belong in a horizontal scroller, not squeezed 
 
 A header with no rows under it looks broken rather than empty. `Table.Empty` replaces the body and keeps the header, which is worth keeping: it says what would be there.
 
+<Preview
+  src="/previews/table-nothing-to-show.jpg"
+  alt="Table — Nothing to show."
+  width={1179}
+  height={495}
+/>
+
 ```tsx
 <Table variant="outline">
   <Table.Header>
@@ -233,12 +278,41 @@ A header with no rows under it looks broken rather than empty. `Table.Empty` rep
 </Table>
 ```
 
+### With a caption
+
+A line about the table as a whole — what it counts, when it was last read. Place it after the body: a caption read before the columns is a heading, and a heading is not this component's job.
+
+<Preview
+  src="/previews/table-with-a-caption.jpg"
+  alt="Table — With a caption."
+  width={1179}
+  height={1193}
+/>
+
+```tsx
+<Table variant="outline">
+  <Table.Header>…</Table.Header>
+  <Table.Body>…</Table.Body>
+  <Table.Caption className="px-4 py-3">
+    Five most recent invoices.
+  </Table.Caption>
+</Table>
+```
+
 ## Variants
 
 ### `variant`
 
 - `default` *(default)*
 - `outline`
+
+<Preview
+  src="/previews/table-variant-outline.jpg"
+  alt="Table — variant=outline."
+  width={1179}
+  height={1102}
+  caption="outline"
+/>
 
 ```tsx
 <Table variant="default">…</Table>

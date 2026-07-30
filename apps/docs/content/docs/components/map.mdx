@@ -22,6 +22,14 @@ npx expo run:ios   # or: eas build --profile development --platform ios
 Without it `Map` renders a message saying so rather than throwing, so a screen that embeds one still loads. Check `hasMapLibre` before routing somewhere whose whole content is a map.
 </Callout>
 
+<PreviewVideo
+  src="/previews/map.mp4"
+  poster="/previews/map-poster.jpg"
+  alt="The Map component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Map ships with the library — no separate install.
@@ -154,6 +162,14 @@ The tiles are the one part of the style that is somebody else's to license. `sou
 
 Sessions by country, over a basemap dropped for the data. The shading and the cards above it come from the same tokens, so the map is part of the dashboard rather than an image pasted into it. Eight `Map.Label`s name the countries at `size="sm" tone="muted"` — they are the index to the shading, not the subject of the map.
 
+<PreviewVideo
+  src="/previews/map-analytics-map.mp4"
+  poster="/previews/map-analytics-map-poster.jpg"
+  alt="Map — Analytics map."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Map blank bounds={[-11, 35, 31, 63]}>
   <Map.GeoJSON
@@ -197,6 +213,14 @@ Density as a continuous field. It fades out past `maxZoom` on purpose: zoomed fa
 
 A driven leg and a planned one, told apart by dash rather than by colour — the two mean different things, and colour is already carrying the theme.
 
+<PreviewVideo
+  src="/previews/map-delivery-tracker.mp4"
+  poster="/previews/map-delivery-tracker-poster.jpg"
+  alt="Map — Delivery tracker."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Map center={[0.02, 51.545]} zoom={10.5}>
   <Map.Route id="done" coordinates={driven} width={4} />
@@ -207,6 +231,14 @@ A driven leg and a planned one, told apart by dash rather than by colour — the
 ### Store locator
 
 A list and a map on one selection, so pressing either moves the other.
+
+<PreviewVideo
+  src="/previews/map.mp4"
+  poster="/previews/map-poster.jpg"
+  alt="Map — Store locator."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Map center={selected.lngLat} zoom={13}>
@@ -227,6 +259,14 @@ A list and a map on one selection, so pressing either moves the other.
 
 Arcs between sites. The bow is not geography — it is there so two lanes sharing a hub stay tellable apart, which a bundle of straight lines through one city does not.
 
+<PreviewVideo
+  src="/previews/map-logistics-network.mp4"
+  poster="/previews/map-logistics-network-poster.jpg"
+  alt="Map — Logistics network."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Map bounds={[-12, 36, 26, 60]}>
   {lanes.map((lane) => (
@@ -244,6 +284,14 @@ Arcs between sites. The bow is not geography — it is there so two lanes sharin
 ### Uptime monitor
 
 Edge nodes coloured by state, spread across the world. A marker is a React view, so the status dot is the same one the rest of the app uses.
+
+<PreviewVideo
+  src="/previews/map-uptime-monitor.mp4"
+  poster="/previews/map-uptime-monitor-poster.jpg"
+  alt="Map — Uptime monitor."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Map center={[0, 25]} zoom={1.1}>

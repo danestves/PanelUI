@@ -8,6 +8,13 @@ One step an agent took, and what it did while it was there. The header is the st
 
 Open by default, and it stays open — unlike a reasoning trace, the steps *are* the record of what happened and are worth scrolling back through. `status` moves the leading glyph through pending, running, complete and error, and shimmers the title while it runs.
 
+<Preview
+  src="/previews/task.jpg"
+  alt="The Task component, running in the example app."
+  width={1179}
+  height={953}
+/>
+
 ## Installation
 
 Task ships with the library — no separate install.
@@ -56,6 +63,13 @@ npx panelui-cli@latest add task
 ### A step and its detail
 
 `status` is the whole state: it picks the glyph, tints the title on an error, and puts a shimmer on the title while the step is running.
+
+<Preview
+  src="/previews/task-a-step-and-its-detail.jpg"
+  alt="Task — A step and its detail."
+  width={1179}
+  height={296}
+/>
 
 ```tsx
 <Task status="complete">
@@ -137,6 +151,13 @@ const STATUS = {
 ### Between the turns
 
 A run of steps belongs between two messages rather than inside either, which is what [Marker](/docs/components/marker) is for — it draws the rule that separates the work from the conversation.
+
+<Preview
+  src="/previews/task.jpg"
+  alt="Task — Between the turns."
+  width={1179}
+  height={953}
+/>
 
 ```tsx
 <Marker variant="separator">
