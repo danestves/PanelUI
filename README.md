@@ -66,19 +66,24 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 | Calendar | Menu | Steps |
 | Card | Message | Surface |
 | Carousel | MessageScroller | Switch |
-| Checkbox | NumberInput | Tabs |
-| Chip | OtpInput | ThinkingOrb |
-| DatePicker | Popover | Timeline |
-| Dialog | Progress | Toast |
-| Direction | RadioGroup | ToggleButton |
-| EmptyState | Rating | Tooltip |
-| Field | RingChart | Typography |
-| Flow | ScrollCanvas |  |
+| Checkbox | NumberInput | Table |
+| Chip | OtpInput | Tabs |
+| DatePicker | Popover | ThinkingOrb |
+| Dialog | Progress | Timeline |
+| Direction | RadioGroup | Toast |
+| EmptyState | Rating | ToggleButton |
+| Field | RingChart | Tooltip |
+| Flow | ScrollCanvas | Typography |
 | Form | ScrollFade |  |
 
 `Select` shows its options in a bottom sheet, expanded in place, or floating
 over the page — one `presentation` prop, because which is right depends on what
-surrounds the trigger rather than on what the options are.
+surrounds the trigger rather than on what the options are. Past a couple of
+dozen options, `searchable` puts a filter above the list.
+`Table` keeps rows and columns lined up in a runtime that has no table layout:
+a stack of flex rows dividing their width the same way, with the hairlines, the
+muted header and footer bands, the striping and a sort arrow that turns over
+rather than being swapped.
 `Menu` is the list of things you can do to something — rows that are verbs
 rather than values, carrying their own roles, their dismiss-on-select rule and
 a destructive tint. Submenus expand in place rather than flying out sideways,
