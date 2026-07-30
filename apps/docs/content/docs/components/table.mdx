@@ -1,0 +1,322 @@
+---
+title: Table
+description: Rows and columns that stay lined up, with sortable headers.
+status: new
+---
+
+Rows and columns that stay lined up. React Native has no table layout, so a table here is a stack of flex rows whose cells divide the width the same way — and the component owns everything that is not that: the hairlines between rows, the muted header and footer bands, optional striping, per-column alignment, and a sort arrow that turns over rather than being swapped.
+
+## Installation
+
+Table ships with the library — no separate install.
+
+```tsx
+import { Table, Badge, ScrollFade } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add table
+```
+
+## Usage
+
+```tsx
+<Table variant="outline">
+  <Table.Header>
+    <Table.Row>
+      <Table.Head flex={2}>Invoice</Table.Head>
+      <Table.Head align="end">Amount</Table.Head>
+    </Table.Row>
+  </Table.Header>
+  <Table.Body>
+    <Table.Row>
+      <Table.Cell flex={2}>INV-001</Table.Cell>
+      <Table.Cell align="end">$250.00</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table>
+```
+
+## Composition
+
+```tsx
+<Table>
+  <Table.Header>
+    <Table.Row>
+      <Table.Head />
+    </Table.Row>
+  </Table.Header>
+  <Table.Body>
+    <Table.Row>
+      <Table.Cell />
+    </Table.Row>
+  </Table.Body>
+  <Table.Footer>
+    <Table.Row>
+      <Table.Cell />
+    </Table.Row>
+  </Table.Footer>
+  <Table.Empty />
+  <Table.Caption />
+</Table>
+```
+
+A `Table.Head` and the `Table.Cell`s beneath it must be given the same `flex` or `width`, or the column drifts. That is the one rule the component cannot enforce for you: nothing in React Native connects the third cell of one row to the third cell of the next except both of them dividing the row the same way.
+
+## Examples
+
+### Basic
+
+Cells divide the row evenly unless told otherwise. `flex={2}` gives a column twice the share of the leftover width, and `align="end"` puts a money column’s digits against the same edge so they read as a column.
+
+```tsx
+<Table variant="outline">
+  <Table.Header>
+    <Table.Row>
+      <Table.Head flex={2}>Invoice</Table.Head>
+      <Table.Head>Method</Table.Head>
+      <Table.Head align="end">Amount</Table.Head>
+    </Table.Row>
+  </Table.Header>
+  <Table.Body>
+    {invoices.map((invoice) => (
+      <Table.Row key={invoice.id}>
+        <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+        <Table.Cell>{invoice.method}</Table.Cell>
+        <Table.Cell align="end">{invoice.amount}</Table.Cell>
+      </Table.Row>
+    ))}
+  </Table.Body>
+  <Table.Footer>
+    <Table.Row>
+      <Table.Cell flex={2} labelClassName="font-medium">Total</Table.Cell>
+      <Table.Cell />
+      <Table.Cell align="end" labelClassName="font-medium">$1,750.00</Table.Cell>
+    </Table.Row>
+  </Table.Footer>
+</Table>
+```
+
+### Striped
+
+Tints every other body row, which helps the eye track across a wide one. Leave it off for a short table, where the stripes are louder than the data.
+
+```tsx
+<Table variant="outline" striped>
+  {/* …header and body… */}
+</Table>
+```
+
+### Sortable columns
+
+A header given `onPress` is the handle for sorting by its column. Pass `sortDirection` to the column being sorted by and leave it off the others; the arrow rotates between the two directions rather than being replaced, and sits dimmed on the columns that could be sorted but are not.
+
+```tsx
+const [column, setColumn] = useState<'id' | 'amount'>('amount');
+const [direction, setDirection] = useState<'asc' | 'desc'>('desc');
+
+const sortBy = (next: 'id' | 'amount') => {
+  if (next === column) {
+    setDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+    return;
+  }
+  setColumn(next);
+  setDirection('asc');
+};
+
+<Table.Head
+  flex={2}
+  sortable
+  sortDirection={column === 'id' ? direction : undefined}
+  onPress={() => sortBy('id')}
+>
+  Invoice
+</Table.Head>
+```
+
+### Selectable rows
+
+A row with an `onPress` announces itself as a button rather than as a row, since being tappable is the more useful fact. `selected` lights the chosen one.
+
+```tsx
+const [picked, setPicked] = useState('INV-002');
+
+<Table.Body>
+  {invoices.map((invoice) => (
+    <Table.Row
+      key={invoice.id}
+      selected={picked === invoice.id}
+      onPress={() => setPicked(invoice.id)}
+    >
+      <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+      <Table.Cell>
+        <Badge variant="success">{invoice.status}</Badge>
+      </Table.Cell>
+    </Table.Row>
+  ))}
+</Table.Body>
+```
+
+### Wider than the screen
+
+More columns than a phone is wide belong in a horizontal scroller, not squeezed until the columns are unreadable. Give the table a `minWidth` and fixed `width` per column, and wrap it in `ScrollFade` so the fading edge says there is more to the right.
+
+```tsx
+<ScrollFade size={24}>
+  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+    <Table variant="outline" size="sm" striped style={{ minWidth: 560 }}>
+      <Table.Header>
+        <Table.Row>
+          <Table.Head width={96}>Invoice</Table.Head>
+          <Table.Head width={110}>Customer</Table.Head>
+          <Table.Head width={110} align="end">Amount</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      {/* …body, with the same widths… */}
+    </Table>
+  </ScrollView>
+</ScrollFade>
+```
+
+### Nothing to show
+
+A header with no rows under it looks broken rather than empty. `Table.Empty` replaces the body and keeps the header, which is worth keeping: it says what would be there.
+
+```tsx
+<Table variant="outline">
+  <Table.Header>
+    <Table.Row>
+      <Table.Head flex={2}>Invoice</Table.Head>
+      <Table.Head align="end">Amount</Table.Head>
+    </Table.Row>
+  </Table.Header>
+  <Table.Empty>No invoices yet</Table.Empty>
+</Table>
+```
+
+## Variants
+
+### `variant`
+
+- `default` *(default)*
+- `outline`
+
+```tsx
+<Table variant="default">…</Table>
+<Table variant="outline">…</Table>
+```
+
+### `size`
+
+- `default` *(default)*
+- `sm`
+
+```tsx
+<Table size="default">…</Table>
+<Table size="sm">…</Table>
+```
+
+## API Reference
+
+### Table
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `size` | `TableSize` | `default` | Row density. `Table.Row`, `Table.Head` and `Table.Cell` follow it, so it only needs setting here. |
+| `striped` | `boolean` | — | Tint every other body row. Helps the eye track across a wide row; drop it for a short table, where the stripes are louder than the data. |
+
+### Table.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Table.Body
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Table.Footer
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Table.Row
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `selected` | `boolean` | — | Marks the row as the chosen one — for a table you pick from. |
+| `disabled` | `boolean` | — |  |
+| `index` | `number` | — | Position in the section, for a row rendered outside `Table.Body` — a `FlatList` item, say. Decides which rows a striped table tints. |
+| `last` | `boolean` | — | Whether this is the section's final row, for a row rendered outside `Table.Body`. The last row drops its hairline so it does not double up with the table's own bottom edge. |
+
+### Table.Head
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `flex` | `number` | — | Share of the leftover width, relative to the other cells in the row. Defaults to 1, so columns divide the row evenly. Must match the `flex` on the cells beneath it. |
+| `width` | `number` | — | Fixed width in pixels, for a column that must not move — an icon, a state dot. Must match the `width` on the cells beneath it. |
+| `align` | `CellAlign` | `'start'` | Which edge the column's content sits against. Use `end` for numbers: a money column reads as a column only when the digits line up. |
+| `sortable` | `boolean` | — | Show the sort arrow without committing to a direction — the column can be sorted, but is not the one being sorted by. Implied by `sortDirection`. |
+| `sortDirection` | `TableSortDirection` | — | The direction this column is currently sorted in. Turns the arrow over. |
+| `onPress` | `AnimatedPressableProps['onPress']` | — | Called on a tap. Supplying it makes the header a button. |
+| `labelClassName` | `string` | — | Styles the header's text. |
+
+### Table.Cell
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `flex` | `number` | — | Share of the leftover width, relative to the other cells in the row. Defaults to 1. Must match the `flex` on the head above it. |
+| `width` | `number` | — | Fixed width in pixels, for a column that must not move. Must match the `width` on the head above it. |
+| `align` | `CellAlign` | `'start'` | Which edge the cell's content sits against. Match the head above it. |
+| `labelClassName` | `string` | — | Styles the cell's text. |
+
+### Table.Caption
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Table.Empty
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Columns are a convention, not a mechanism
+
+There is no column model. A column exists because every row divides its width the same way, so `flex` and `width` on a `Table.Head` and on the `Table.Cell`s beneath it have to agree. `flex` is a share of the leftover width — the default of 1 makes columns even — and `width` pins a column that must not move, such as an icon or a state dot.
+
+### Long tables
+
+`Table.Body` renders every row it is given, so a table of thousands belongs in a `FlatList` instead. `Table.Row` takes `index` and `last` directly for that case: a virtualised row has no `Table.Body` above it to read its position from, and without them a striped table would tint nothing and every row would keep its hairline.
+
+```tsx
+<FlatList
+  data={invoices}
+  renderItem={({ item, index }) => (
+    <Table.Row index={index} last={index === invoices.length - 1}>
+      <Table.Cell flex={2}>{item.id}</Table.Cell>
+      <Table.Cell align="end">{item.amount}</Table.Cell>
+    </Table.Row>
+  )}
+/>
+```
+
+Wrap the list in a `Table` so the rows still read the density and striping, and put the header row above the list rather than inside it.
+
+### Accessibility
+
+The root, the bands, the rows and the cells carry `table`, `rowgroup`, `row`, `columnheader` and `cell` roles, so a screen reader walks the table as a table. A row given `onPress` is the exception: it announces itself as a button, because being able to act on it is the more useful fact about it.
