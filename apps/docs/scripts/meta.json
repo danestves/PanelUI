@@ -329,7 +329,7 @@
     "Picker shown in a bottom sheet, expanded in place, or floating over the page.",
     "expo select component",
     {
-      "updatedIn": "0.26.0"
+      "updatedIn": "0.31.0"
     }
   ],
   "separator": [
@@ -391,6 +391,14 @@
     "react native switch",
     {
       "updatedIn": "0.22.0"
+    }
+  ],
+  "table": [
+    "Table",
+    "Rows and columns that stay lined up, with sortable headers.",
+    "react native table component",
+    {
+      "addedIn": "0.31.0"
     }
   ],
   "tabs": [

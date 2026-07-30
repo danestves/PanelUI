@@ -1,6 +1,7 @@
 ---
 title: Select
 description: Picker shown in a bottom sheet, expanded in place, or floating over the page.
+status: updated
 ---
 
 A picker with one trigger and three ways of showing its options: a bottom sheet, a list expanded in place, or a panel floating over the page. Which is right depends on what surrounds the trigger rather than on what the options are, so it is one prop rather than three components.
@@ -49,7 +50,7 @@ npx panelui-cli@latest add select
 </Select>
 ```
 
-- **`Select.Item`** — One option. `value` identifies it, `label` is what is shown.
+- **`Select.Item`** — One option. `value` identifies it, `label` is what is shown, and `disabled` keeps it listed but unselectable.
 
 ## Examples
 
@@ -131,6 +132,38 @@ Anchored to the trigger, flipped above it when there is no room below, and clamp
 </Select>
 ```
 
+### Filtering a long list
+
+Past a couple of dozen options, scrolling is not a way of finding anything. `searchable` puts a filter above the list, matching case-insensitively on any part of a label — so “lo” finds both London and Los Angeles. The field is never focused on open: on a phone that would throw the keyboard over the very list you are trying to read.
+
+```tsx
+<Select
+  searchable
+  searchPlaceholder="Search cities"
+  emptyMessage="No city by that name"
+  value={zone}
+  onValueChange={setZone}
+  placeholder="Select a time zone"
+  title="Time zone"
+>
+  {timezones.map((tz) => (
+    <Select.Item key={tz.value} value={tz.value} label={tz.label} />
+  ))}
+</Select>
+```
+
+### An option you cannot pick
+
+A plan above the current tier, a region with nothing in stock. Keep it in the list rather than dropping it: an option that disappears reads as one that was never offered.
+
+```tsx
+<Select value={plan} onValueChange={setPlan} title="Plan">
+  <Select.Item value="starter" label="Starter" />
+  <Select.Item value="team" label="Team" />
+  <Select.Item value="enterprise" label="Enterprise — contact sales" disabled />
+</Select>
+```
+
 ## Variants
 
 ### `presentation`
@@ -165,6 +198,7 @@ Anchored to the trigger, flipped above it when there is no room below, and clamp
 | --- | --- | --- | --- |
 | `value` | `string` | — |  |
 | `label` | `string` | — |  |
+| `disabled` | `boolean` | — | Shows the option but refuses it — a plan above the current tier, a region with nothing in stock. Kept in the list rather than dropped from it, because an option that vanishes reads as one that never existed. |
 
 ### Select
 
@@ -180,6 +214,9 @@ Anchored to the trigger, flipped above it when there is no room below, and clamp
 | `contentWidth` | `'trigger' \| 'content' \| number` | `'trigger'` | Width of the floating list. `trigger` matches the trigger, `content` sizes to the longest option, or pass a pixel value. `overlay` only. |
 | `offset` | `number` | `8` | Gap between the trigger and the floating list. `overlay` only. |
 | `onOpenChange` | `(open: boolean) => void` | — | Called when the options open or close. |
+| `searchable` | `boolean` | `false` | Put a filter above the options, matching case-insensitively on any part of an option's label. For a list long enough that scrolling it is not finding anything — countries, currencies, a repository's branches. The field is not focused on open: on a phone that would throw the keyboard over the very list you are trying to look at. |
+| `searchPlaceholder` | `string` | `'Search'` | Placeholder for the filter field. `searchable` only. |
+| `emptyMessage` | `string` | `'No matches'` | Shown in place of the list when the filter matches nothing. |
 | `native` | `boolean` | — | Render the platform's own picker instead of the trigger-and-list pair. Requires the optional `@expo/ui` package; without it this prop does nothing. **Theme tokens do not apply** — the platform draws the picker, so `className`, `title` and `presentation` are ignored. `Select.Item` children still declare the options. |
 | `nativeAppearance` | `'menu' \| 'wheel'` | `'menu'` | Native picker style. `menu` is a compact button opening a dropdown; `wheel` is an always-visible rotor (iOS; falls back to `menu` elsewhere). |
 
@@ -202,3 +239,9 @@ Pass `native` to render the platform’s own picker instead — SwiftUI on iOS, 
 **Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className`, `presentation` and most styling props are ignored. A native picker always has a selection, so an unset `value` shows the first option rather than the placeholder — set an initial value or add an explicit "None" item.
 
 See [Native rendering](/docs/native) for the full prop-by-prop breakdown.
+
+### Filtering a long list
+
+`searchable` puts a filter above the options in every presentation, matching case-insensitively on any part of an option's label. It narrows what is *shown* rather than what is declared, so the options stay where they are and nothing has to be lifted into state; `searchPlaceholder` names the field and `emptyMessage` replaces the list when nothing matches. The filter clears itself when the list closes, so it is never waiting there the next time with most of the options missing.
+
+The field is deliberately not focused on open — on a phone that throws the keyboard over the list you are trying to look at — and the option scrollers dismiss the keyboard on a drag, so you can get back to reading without first tapping somewhere neutral.

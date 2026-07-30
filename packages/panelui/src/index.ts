@@ -255,6 +255,19 @@ export {
   type TabsContentProps,
 } from './components/tabs';
 export {
+  Table,
+  type TableProps,
+  type TableHeaderProps,
+  type TableBodyProps,
+  type TableFooterProps,
+  type TableRowProps,
+  type TableHeadProps,
+  type TableCellProps,
+  type TableCaptionProps,
+  type TableEmptyProps,
+  type TableSortDirection,
+} from './components/table';
+export {
   Carousel,
   useCarouselState,
   type CarouselProps,

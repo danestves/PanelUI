@@ -600,6 +600,7 @@
     "registryDependencies": [
       "bottom-sheet",
       "icons",
+      "input-group",
       "native",
       "portal",
       "text",
@@ -705,6 +706,17 @@
       "haptics",
       "native",
       "use-direction"
+    ]
+  },
+  {
+    "name": "table",
+    "type": "registry:ui",
+    "description": "Rows and columns that stay lined up, with sortable headers.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "icons",
+      "text"
     ]
   },
   {

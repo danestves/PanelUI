@@ -132,6 +132,7 @@ import {
   SunIcon,
   Surface,
   Switch,
+  Table,
   Tabs,
   Task,
   Text,
@@ -3230,6 +3231,75 @@ function SelectDemo() {
   );
 }
 
+/** Long enough that scrolling it is not a way of finding anything. */
+const TIMEZONES = [
+  { value: 'utc', label: 'UTC' },
+  { value: 'europe/london', label: 'London' },
+  { value: 'europe/paris', label: 'Paris' },
+  { value: 'europe/berlin', label: 'Berlin' },
+  { value: 'europe/madrid', label: 'Madrid' },
+  { value: 'europe/istanbul', label: 'Istanbul' },
+  { value: 'africa/cairo', label: 'Cairo' },
+  { value: 'africa/lagos', label: 'Lagos' },
+  { value: 'africa/nairobi', label: 'Nairobi' },
+  { value: 'asia/dubai', label: 'Dubai' },
+  { value: 'asia/karachi', label: 'Karachi' },
+  { value: 'asia/kolkata', label: 'Kolkata' },
+  { value: 'asia/singapore', label: 'Singapore' },
+  { value: 'asia/tokyo', label: 'Tokyo' },
+  { value: 'australia/sydney', label: 'Sydney' },
+  { value: 'america/sao_paulo', label: 'São Paulo' },
+  { value: 'america/new_york', label: 'New York' },
+  { value: 'america/chicago', label: 'Chicago' },
+  { value: 'america/denver', label: 'Denver' },
+  { value: 'america/los_angeles', label: 'Los Angeles' },
+];
+
+function SearchableSelectDemo({
+  presentation = 'sheet',
+}: {
+  presentation?: 'sheet' | 'inline' | 'overlay';
+}) {
+  const [zone, setZone] = useState<string>();
+
+  return (
+    <View className="w-full gap-1.5">
+      <Label>Time zone</Label>
+      <Select
+        searchable
+        searchPlaceholder="Search cities"
+        emptyMessage="No city by that name"
+        presentation={presentation}
+        value={zone}
+        onValueChange={setZone}
+        placeholder="Select a time zone"
+        title="Time zone"
+      >
+        {TIMEZONES.map((tz) => (
+          <Select.Item key={tz.value} value={tz.value} label={tz.label} />
+        ))}
+      </Select>
+    </View>
+  );
+}
+
+function DisabledOptionSelectDemo() {
+  const [plan, setPlan] = useState<string>('starter');
+
+  return (
+    <View className="w-full gap-1.5">
+      <Label>Plan</Label>
+      <Select value={plan} onValueChange={setPlan} title="Plan">
+        <Select.Item value="starter" label="Starter" />
+        <Select.Item value="team" label="Team" />
+        {/* Still listed, because an option that disappears reads as one that
+            was never offered. */}
+        <Select.Item value="enterprise" label="Enterprise — contact sales" disabled />
+      </Select>
+    </View>
+  );
+}
+
 /**
  * Wraps a native-mode demo with a note about what is actually on screen —
  * without @expo/ui installed the `native` prop is a silent no-op, which is
@@ -5004,6 +5074,204 @@ function KeyboardDockDemo() {
         </View>
       </KeyboardAvoider>
     </View>
+  );
+}
+
+const INVOICES = [
+  { id: 'INV-001', status: 'Paid', method: 'Card', amount: 250 },
+  { id: 'INV-002', status: 'Pending', method: 'Transfer', amount: 150 },
+  { id: 'INV-003', status: 'Unpaid', method: 'Card', amount: 350 },
+  { id: 'INV-004', status: 'Paid', method: 'Card', amount: 450 },
+  { id: 'INV-005', status: 'Paid', method: 'Transfer', amount: 550 },
+];
+
+const invoiceAmount = (value: number) => `$${value.toFixed(2)}`;
+
+function TableDemo({
+  variant,
+  striped,
+  caption,
+}: {
+  variant?: 'default' | 'outline';
+  striped?: boolean;
+  caption?: string;
+}) {
+  return (
+    <Table variant={variant} striped={striped} className="w-full">
+      <Table.Header>
+        <Table.Row>
+          <Table.Head flex={2}>Invoice</Table.Head>
+          <Table.Head>Method</Table.Head>
+          <Table.Head align="end">Amount</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {INVOICES.map((invoice) => (
+          <Table.Row key={invoice.id}>
+            <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+            <Table.Cell>{invoice.method}</Table.Cell>
+            <Table.Cell align="end">{invoiceAmount(invoice.amount)}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+      <Table.Footer>
+        <Table.Row>
+          <Table.Cell flex={2} labelClassName="font-medium">
+            Total
+          </Table.Cell>
+          <Table.Cell />
+          <Table.Cell align="end" labelClassName="font-medium">
+            {invoiceAmount(INVOICES.reduce((sum, i) => sum + i.amount, 0))}
+          </Table.Cell>
+        </Table.Row>
+      </Table.Footer>
+      {caption ? (
+        <Table.Caption className="px-4 py-3">{caption}</Table.Caption>
+      ) : null}
+    </Table>
+  );
+}
+
+/** A column header is the handle for sorting by it; the arrow turns over. */
+function SortableTableDemo() {
+  const [column, setColumn] = useState<'id' | 'amount'>('amount');
+  const [direction, setDirection] = useState<'asc' | 'desc'>('desc');
+
+  const sortBy = (next: 'id' | 'amount') => {
+    if (next === column) {
+      setDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setColumn(next);
+    setDirection('asc');
+  };
+
+  const rows = useMemo(() => {
+    const sign = direction === 'asc' ? 1 : -1;
+    return [...INVOICES].sort((a, b) =>
+      column === 'amount'
+        ? (a.amount - b.amount) * sign
+        : a.id.localeCompare(b.id) * sign
+    );
+  }, [column, direction]);
+
+  return (
+    <Table variant="outline">
+      <Table.Header>
+        <Table.Row>
+          <Table.Head
+            flex={2}
+            sortDirection={column === 'id' ? direction : undefined}
+            sortable
+            onPress={() => sortBy('id')}
+          >
+            Invoice
+          </Table.Head>
+          <Table.Head
+            align="end"
+            sortDirection={column === 'amount' ? direction : undefined}
+            sortable
+            onPress={() => sortBy('amount')}
+          >
+            Amount
+          </Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {rows.map((invoice) => (
+          <Table.Row key={invoice.id}>
+            <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+            <Table.Cell align="end">{invoiceAmount(invoice.amount)}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table>
+  );
+}
+
+/** Rows given an `onPress` become buttons, and the chosen one stays lit. */
+function SelectableTableDemo() {
+  const [picked, setPicked] = useState('INV-002');
+
+  return (
+    <View className="w-full gap-3">
+      <Table variant="outline">
+        <Table.Header>
+          <Table.Row>
+            <Table.Head flex={2}>Invoice</Table.Head>
+            <Table.Head>Status</Table.Head>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {INVOICES.map((invoice) => (
+            <Table.Row
+              key={invoice.id}
+              selected={picked === invoice.id}
+              onPress={() => setPicked(invoice.id)}
+            >
+              <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+              <Table.Cell>
+                <Badge
+                  variant={
+                    invoice.status === 'Paid'
+                      ? 'success'
+                      : invoice.status === 'Pending'
+                        ? 'warning'
+                        : 'destructive'
+                  }
+                >
+                  {invoice.status}
+                </Badge>
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table>
+      <Text size="sm" muted>
+        Selected {picked}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * More columns than a phone is wide. The table keeps a `minWidth` and scrolls
+ * sideways rather than crushing the columns; the fade says there is more.
+ */
+function WideTableDemo() {
+  return (
+    <ScrollFade size={24}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <Table variant="outline" size="sm" striped style={{ minWidth: 560 }}>
+          <Table.Header>
+            <Table.Row>
+              <Table.Head width={96}>Invoice</Table.Head>
+              <Table.Head width={110}>Customer</Table.Head>
+              <Table.Head width={96}>Method</Table.Head>
+              <Table.Head width={96}>Status</Table.Head>
+              <Table.Head width={110} align="end">
+                Amount
+              </Table.Head>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {INVOICES.map((invoice, index) => (
+              <Table.Row key={invoice.id}>
+                <Table.Cell width={96}>{invoice.id}</Table.Cell>
+                <Table.Cell width={110}>
+                  {['Acme', 'Globex', 'Initech', 'Umbrella', 'Soylent'][index]}
+                </Table.Cell>
+                <Table.Cell width={96}>{invoice.method}</Table.Cell>
+                <Table.Cell width={96}>{invoice.status}</Table.Cell>
+                <Table.Cell width={110} align="end">
+                  {invoiceAmount(invoice.amount)}
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
+      </ScrollView>
+    </ScrollFade>
   );
 }
 
@@ -9455,6 +9723,23 @@ export const COMPONENTS: ComponentEntry[] = [
           </Card>
         ),
       },
+      {
+        label: 'Searchable',
+        render: () => (
+          <View className="w-full gap-4">
+            <SearchableSelectDemo />
+            <Text size="sm" muted>
+              Twenty cities. The filter matches any part of a label, so “lo”
+              finds both London and Los Angeles.
+            </Text>
+          </View>
+        ),
+      },
+      {
+        label: 'Searchable — overlay',
+        render: () => <SearchableSelectDemo presentation="overlay" />,
+      },
+      { label: 'Disabled option', render: () => <DisabledOptionSelectDemo /> },
       { label: 'Native — menu', render: () => <NativeSelectDemo /> },
       { label: 'Native — wheel', render: () => <NativeWheelPickerDemo /> },
     ],
@@ -10465,6 +10750,39 @@ export const COMPONENTS: ComponentEntry[] = [
       },
       { label: 'Haptics', render: () => <HapticSwitchDemo /> },
       { label: 'Native', render: () => <NativeSwitchDemo /> },
+    ],
+  },
+  {
+    slug: 'table',
+    name: 'Table',
+    summary: 'Rows and columns that stay lined up',
+    demos: [
+      { label: 'Basic', render: () => <TableDemo /> },
+      { label: 'Outline', render: () => <TableDemo variant="outline" /> },
+      { label: 'Striped', render: () => <TableDemo variant="outline" striped /> },
+      { label: 'Sortable columns', render: () => <SortableTableDemo /> },
+      { label: 'Selectable rows', render: () => <SelectableTableDemo /> },
+      { label: 'Wider than the screen', render: () => <WideTableDemo /> },
+      {
+        label: 'Empty',
+        render: () => (
+          <Table variant="outline">
+            <Table.Header>
+              <Table.Row>
+                <Table.Head flex={2}>Invoice</Table.Head>
+                <Table.Head align="end">Amount</Table.Head>
+              </Table.Row>
+            </Table.Header>
+            <Table.Empty>No invoices yet</Table.Empty>
+          </Table>
+        ),
+      },
+      {
+        label: 'With a caption',
+        render: () => (
+          <TableDemo variant="outline" caption="Five most recent invoices." />
+        ),
+      },
     ],
   },
   {

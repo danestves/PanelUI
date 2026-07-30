@@ -3005,9 +3005,9 @@
     "intro": "A picker with one trigger and three ways of showing its options: a bottom sheet, a list expanded in place, or a panel floating over the page. Which is right depends on what surrounds the trigger rather than on what the options are, so it is one prop rather than three components.",
     "usage": "<Select\n  value={fruit}\n  onValueChange={setFruit}\n  placeholder=\"Select a fruit\"\n  title=\"Favorite fruit\"\n>\n  <Select.Item value=\"apple\" label=\"Apple\" />\n  <Select.Item value=\"banana\" label=\"Banana\" />\n</Select>",
     "parts": {
-      "Item": "One option. `value` identifies it, `label` is what is shown."
+      "Item": "One option. `value` identifies it, `label` is what is shown, and `disabled` keeps it listed but unselectable."
     },
-    "notes": "### Choosing a presentation\n\n`sheet` takes the bottom of the screen. Reach for it when the list is long, or on a small screen where an anchored panel would cover the very thing you are choosing for.\n\n`inline` expands the list in normal layout flow, so everything below it moves down. That reads as the row growing inside a settings list, and reads as the page jumping anywhere else.\n\n`overlay` floats the list through a portal, anchored to the trigger and flipped above it when there is no room below. Nothing else on the screen moves. `contentWidth` and `offset` apply here only.\n\n### Native rendering\n\nPass `native` to render the platform’s own picker instead — SwiftUI on iOS, Jetpack Compose on Android. It needs the optional `@expo/ui` package and is a silent no-op without it.\n\n**Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className`, `presentation` and most styling props are ignored. A native picker always has a selection, so an unset `value` shows the first option rather than the placeholder — set an initial value or add an explicit \"None\" item.\n\nSee [Native rendering](/docs/native) for the full prop-by-prop breakdown.",
+    "notes": "### Choosing a presentation\n\n`sheet` takes the bottom of the screen. Reach for it when the list is long, or on a small screen where an anchored panel would cover the very thing you are choosing for.\n\n`inline` expands the list in normal layout flow, so everything below it moves down. That reads as the row growing inside a settings list, and reads as the page jumping anywhere else.\n\n`overlay` floats the list through a portal, anchored to the trigger and flipped above it when there is no room below. Nothing else on the screen moves. `contentWidth` and `offset` apply here only.\n\n### Native rendering\n\nPass `native` to render the platform’s own picker instead — SwiftUI on iOS, Jetpack Compose on Android. It needs the optional `@expo/ui` package and is a silent no-op without it.\n\n**Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className`, `presentation` and most styling props are ignored. A native picker always has a selection, so an unset `value` shows the first option rather than the placeholder — set an initial value or add an explicit \"None\" item.\n\nSee [Native rendering](/docs/native) for the full prop-by-prop breakdown.\n\n### Filtering a long list\n\n`searchable` puts a filter above the options in every presentation, matching case-insensitively on any part of an option's label. It narrows what is *shown* rather than what is declared, so the options stay where they are and nothing has to be lifted into state; `searchPlaceholder` names the field and `emptyMessage` replaces the list when nothing matches. The filter clears itself when the list closes, so it is never waiting there the next time with most of the options missing.\n\nThe field is deliberately not focused on open — on a phone that throws the keyboard over the list you are trying to look at — and the option scrollers dismiss the keyboard on a drag, so you can get back to reading without first tapping somewhere neutral.",
     "anatomy": "<Select>\n  <Select.Item value=\"…\" label=\"…\" />\n</Select>",
     "examples": [
       {
@@ -3033,6 +3033,16 @@
         "title": "Floating over the page",
         "description": "Anchored to the trigger, flipped above it when there is no room below, and clamped inside the screen. Nothing else moves. `contentWidth` matches the trigger by default; pass `content` to size to the longest option, or a number for a fixed width.",
         "code": "<Select\n  presentation=\"overlay\"\n  contentWidth=\"content\"\n  offset={12}\n  value={region}\n  onValueChange={setRegion}\n>\n  <Select.Item value=\"us\" label=\"United States\" />\n  <Select.Item value=\"apac\" label=\"Asia Pacific\" />\n</Select>"
+      },
+      {
+        "title": "Filtering a long list",
+        "description": "Past a couple of dozen options, scrolling is not a way of finding anything. `searchable` puts a filter above the list, matching case-insensitively on any part of a label — so “lo” finds both London and Los Angeles. The field is never focused on open: on a phone that would throw the keyboard over the very list you are trying to read.",
+        "code": "<Select\n  searchable\n  searchPlaceholder=\"Search cities\"\n  emptyMessage=\"No city by that name\"\n  value={zone}\n  onValueChange={setZone}\n  placeholder=\"Select a time zone\"\n  title=\"Time zone\"\n>\n  {timezones.map((tz) => (\n    <Select.Item key={tz.value} value={tz.value} label={tz.label} />\n  ))}\n</Select>"
+      },
+      {
+        "title": "An option you cannot pick",
+        "description": "A plan above the current tier, a region with nothing in stock. Keep it in the list rather than dropping it: an option that disappears reads as one that was never offered.",
+        "code": "<Select value={plan} onValueChange={setPlan} title=\"Plan\">\n  <Select.Item value=\"starter\" label=\"Starter\" />\n  <Select.Item value=\"team\" label=\"Team\" />\n  <Select.Item value=\"enterprise\" label=\"Enterprise — contact sales\" disabled />\n</Select>"
       }
     ],
     "extraImports": [
@@ -3048,7 +3058,10 @@
       "alt": "The Select component, running in the example app.",
       "width": 720,
       "height": 494
-    }
+    },
+    "hideVariants": [
+      "itemDisabled"
+    ]
   },
   "separator": {
     "intro": "A rule between content.\n\nReact Native has no `<hr>`, so a separator is a view sized on one axis and stretched on the other. That is why the orientation is a prop rather than something the layout works out: the component has to know which axis carries the thickness.",
@@ -3661,6 +3674,59 @@
       "width": 1179,
       "height": 541
     }
+  },
+  "table": {
+    "intro": "Rows and columns that stay lined up. React Native has no table layout, so a table here is a stack of flex rows whose cells divide the width the same way — and the component owns everything that is not that: the hairlines between rows, the muted header and footer bands, optional striping, per-column alignment, and a sort arrow that turns over rather than being swapped.",
+    "usage": "<Table variant=\"outline\">\n  <Table.Header>\n    <Table.Row>\n      <Table.Head flex={2}>Invoice</Table.Head>\n      <Table.Head align=\"end\">Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    <Table.Row>\n      <Table.Cell flex={2}>INV-001</Table.Cell>\n      <Table.Cell align=\"end\">$250.00</Table.Cell>\n    </Table.Row>\n  </Table.Body>\n</Table>",
+    "extraImports": [
+      "Badge",
+      "ScrollFade"
+    ],
+    "anatomy": "<Table>\n  <Table.Header>\n    <Table.Row>\n      <Table.Head />\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    <Table.Row>\n      <Table.Cell />\n    </Table.Row>\n  </Table.Body>\n  <Table.Footer>\n    <Table.Row>\n      <Table.Cell />\n    </Table.Row>\n  </Table.Footer>\n  <Table.Empty />\n  <Table.Caption />\n</Table>",
+    "parts": {
+      "Header": "The band of column headers. Draws the rule that separates it from the body.",
+      "Body": "The data rows. Renders every child it is given — reach for a `FlatList` once the table is long.",
+      "Footer": "Totals band, tinted and ruled off, because a sum is not another row of data.",
+      "Row": "One row. Given `onPress` it becomes a button; `selected` keeps the chosen one lit.",
+      "Head": "A column header. Given `onPress` it becomes the handle for sorting by that column.",
+      "Cell": "One cell. Bare text is wrapped in the cell’s own type style; anything else is rendered as given.",
+      "Empty": "Stands in for the body when there is nothing to show, keeping the header that says what would be there.",
+      "Caption": "A line about the table as a whole. Place it after the body — a caption read before the columns is a heading."
+    },
+    "partNotes": "A `Table.Head` and the `Table.Cell`s beneath it must be given the same `flex` or `width`, or the column drifts. That is the one rule the component cannot enforce for you: nothing in React Native connects the third cell of one row to the third cell of the next except both of them dividing the row the same way.",
+    "examples": [
+      {
+        "title": "Basic",
+        "description": "Cells divide the row evenly unless told otherwise. `flex={2}` gives a column twice the share of the leftover width, and `align=\"end\"` puts a money column’s digits against the same edge so they read as a column.",
+        "code": "<Table variant=\"outline\">\n  <Table.Header>\n    <Table.Row>\n      <Table.Head flex={2}>Invoice</Table.Head>\n      <Table.Head>Method</Table.Head>\n      <Table.Head align=\"end\">Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    {invoices.map((invoice) => (\n      <Table.Row key={invoice.id}>\n        <Table.Cell flex={2}>{invoice.id}</Table.Cell>\n        <Table.Cell>{invoice.method}</Table.Cell>\n        <Table.Cell align=\"end\">{invoice.amount}</Table.Cell>\n      </Table.Row>\n    ))}\n  </Table.Body>\n  <Table.Footer>\n    <Table.Row>\n      <Table.Cell flex={2} labelClassName=\"font-medium\">Total</Table.Cell>\n      <Table.Cell />\n      <Table.Cell align=\"end\" labelClassName=\"font-medium\">$1,750.00</Table.Cell>\n    </Table.Row>\n  </Table.Footer>\n</Table>"
+      },
+      {
+        "title": "Striped",
+        "description": "Tints every other body row, which helps the eye track across a wide one. Leave it off for a short table, where the stripes are louder than the data.",
+        "code": "<Table variant=\"outline\" striped>\n  {/* …header and body… */}\n</Table>"
+      },
+      {
+        "title": "Sortable columns",
+        "description": "A header given `onPress` is the handle for sorting by its column. Pass `sortDirection` to the column being sorted by and leave it off the others; the arrow rotates between the two directions rather than being replaced, and sits dimmed on the columns that could be sorted but are not.",
+        "code": "const [column, setColumn] = useState<'id' | 'amount'>('amount');\nconst [direction, setDirection] = useState<'asc' | 'desc'>('desc');\n\nconst sortBy = (next: 'id' | 'amount') => {\n  if (next === column) {\n    setDirection((d) => (d === 'asc' ? 'desc' : 'asc'));\n    return;\n  }\n  setColumn(next);\n  setDirection('asc');\n};\n\n<Table.Head\n  flex={2}\n  sortable\n  sortDirection={column === 'id' ? direction : undefined}\n  onPress={() => sortBy('id')}\n>\n  Invoice\n</Table.Head>"
+      },
+      {
+        "title": "Selectable rows",
+        "description": "A row with an `onPress` announces itself as a button rather than as a row, since being tappable is the more useful fact. `selected` lights the chosen one.",
+        "code": "const [picked, setPicked] = useState('INV-002');\n\n<Table.Body>\n  {invoices.map((invoice) => (\n    <Table.Row\n      key={invoice.id}\n      selected={picked === invoice.id}\n      onPress={() => setPicked(invoice.id)}\n    >\n      <Table.Cell flex={2}>{invoice.id}</Table.Cell>\n      <Table.Cell>\n        <Badge variant=\"success\">{invoice.status}</Badge>\n      </Table.Cell>\n    </Table.Row>\n  ))}\n</Table.Body>"
+      },
+      {
+        "title": "Wider than the screen",
+        "description": "More columns than a phone is wide belong in a horizontal scroller, not squeezed until the columns are unreadable. Give the table a `minWidth` and fixed `width` per column, and wrap it in `ScrollFade` so the fading edge says there is more to the right.",
+        "code": "<ScrollFade size={24}>\n  <ScrollView horizontal showsHorizontalScrollIndicator={false}>\n    <Table variant=\"outline\" size=\"sm\" striped style={{ minWidth: 560 }}>\n      <Table.Header>\n        <Table.Row>\n          <Table.Head width={96}>Invoice</Table.Head>\n          <Table.Head width={110}>Customer</Table.Head>\n          <Table.Head width={110} align=\"end\">Amount</Table.Head>\n        </Table.Row>\n      </Table.Header>\n      {/* …body, with the same widths… */}\n    </Table>\n  </ScrollView>\n</ScrollFade>"
+      },
+      {
+        "title": "Nothing to show",
+        "description": "A header with no rows under it looks broken rather than empty. `Table.Empty` replaces the body and keeps the header, which is worth keeping: it says what would be there.",
+        "code": "<Table variant=\"outline\">\n  <Table.Header>\n    <Table.Row>\n      <Table.Head flex={2}>Invoice</Table.Head>\n      <Table.Head align=\"end\">Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Empty>No invoices yet</Table.Empty>\n</Table>"
+      }
+    ],
+    "notes": "### Columns are a convention, not a mechanism\n\nThere is no column model. A column exists because every row divides its width the same way, so `flex` and `width` on a `Table.Head` and on the `Table.Cell`s beneath it have to agree. `flex` is a share of the leftover width — the default of 1 makes columns even — and `width` pins a column that must not move, such as an icon or a state dot.\n\n### Long tables\n\n`Table.Body` renders every row it is given, so a table of thousands belongs in a `FlatList` instead. `Table.Row` takes `index` and `last` directly for that case: a virtualised row has no `Table.Body` above it to read its position from, and without them a striped table would tint nothing and every row would keep its hairline.\n\n```tsx\n<FlatList\n  data={invoices}\n  renderItem={({ item, index }) => (\n    <Table.Row index={index} last={index === invoices.length - 1}>\n      <Table.Cell flex={2}>{item.id}</Table.Cell>\n      <Table.Cell align=\"end\">{item.amount}</Table.Cell>\n    </Table.Row>\n  )}\n/>\n```\n\nWrap the list in a `Table` so the rows still read the density and striping, and put the header row above the list rather than inside it.\n\n### Accessibility\n\nThe root, the bands, the rows and the cells carry `table`, `rowgroup`, `row`, `columnheader` and `cell` roles, so a screen reader walks the table as a table. A row given `onPress` is the exception: it announces itself as a button, because being able to act on it is the more useful fact about it."
   },
   "tabs": {
     "intro": "Segmented navigation with one indicator that springs between measured trigger positions. A single thing travelling is what makes a switch two tabs away read as one movement rather than as two states swapping.",
