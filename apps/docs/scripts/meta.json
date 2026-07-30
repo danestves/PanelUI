@@ -230,7 +230,7 @@
     "react native map maplibre markers clusters",
     {
       "addedIn": "0.24.0",
-      "updatedIn": "0.25.0",
+      "updatedIn": "0.32.0",
       "alpha": true
     }
   ],

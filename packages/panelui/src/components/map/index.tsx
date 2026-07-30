@@ -78,6 +78,11 @@ const mapVariants = tv({
     control: 'h-9 w-9 items-center justify-center active:bg-muted',
     popup: 'rounded-xl border border-border bg-popover px-3 py-2 shadow-lg',
     pin: 'h-3.5 w-3.5 rounded-full border-2 border-background bg-primary shadow-md',
+    // Opaque enough to read over a landmass fill, with an edge and a shadow so
+    // it sits on the map rather than in it. At 85% the basemap's own roads and
+    // borders showed through the text.
+    label: 'rounded-md border border-border bg-background/95 shadow-sm',
+    labelText: 'text-foreground',
   },
   variants: {
     position: {
@@ -89,6 +94,27 @@ const mapVariants = tv({
   },
   defaultVariants: { position: 'bottom-right' },
 });
+
+/**
+ * The two knobs on a label's pill.
+ *
+ * Lookups rather than `tv()` variants because they belong to `Map.Label`, not
+ * to `Map` — a variant here would be read off the root and documented as
+ * something you could pass to the map itself.
+ */
+const labelSize: Record<'sm' | 'md', string> = {
+  sm: 'px-1.5 py-px',
+  md: 'px-2 py-0.5',
+};
+
+const labelTone: Record<'default' | 'muted' | 'primary', { pill: string; text: string }> = {
+  default: { pill: '', text: '' },
+  muted: { pill: '', text: 'text-muted-foreground' },
+  primary: {
+    pill: 'border-primary/24 bg-primary',
+    text: 'text-primary-foreground',
+  },
+};
 
 export type MapControlsPosition =
   | 'top-left'
@@ -445,6 +471,13 @@ export interface MapLabelProps {
   className?: string;
   /** Which side of the marker the label sits on. */
   side?: 'top' | 'bottom';
+  /** `sm` for a map carrying a lot of them, where the pills start to collide. */
+  size?: 'sm' | 'md';
+  /**
+   * How loud the label is. `muted` for codes and counts that support the map
+   * without being its subject; `primary` for the one place being pointed at.
+   */
+  tone?: 'default' | 'muted' | 'primary';
 }
 
 /**
@@ -460,19 +493,35 @@ export interface MapLabelProps {
  * without widening the marker — a name is usually far wider than the dot it
  * belongs to, and a box sized to the name would be anchored by the name.
  */
-function MapLabel({ children, className, side = 'bottom' }: MapLabelProps) {
+function MapLabel({
+  children,
+  className,
+  side = 'bottom',
+  size = 'md',
+  tone = 'default',
+}: MapLabelProps) {
+  const { label, labelText } = mapVariants();
+  const shade = labelTone[tone];
+
   return (
     <View
       pointerEvents="none"
       className={cn(
         'absolute items-center',
-        side === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
+        // 6pt of clearance rather than 4: the pill has a border now, and at 4
+        // its edge and the pin's ring read as one smudged shape.
+        side === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
       )}
       style={{ left: -120, right: -120 }}
     >
-      <View className={cn('rounded-md bg-background/85 px-1.5 py-0.5', className)}>
+      <View className={label({ className: cn(labelSize[size], shade.pill, className) })}>
         {textChildren(children, (text) => (
-          <Text size="xs" weight="medium" numberOfLines={1}>
+          <Text
+            size="xs"
+            weight="medium"
+            numberOfLines={1}
+            className={labelText({ className: shade.text })}
+          >
             {text}
           </Text>
         ))}

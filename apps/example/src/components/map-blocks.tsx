@@ -38,6 +38,53 @@ function useToken(name: string, fallback: string) {
 }
 
 /**
+ * One figure in the row under a map.
+ *
+ * Shared by every block that has such a row, because they were drifting: two
+ * of them had their own padding, their own type scale and their own idea of
+ * where a delta goes, and the three-across version had `numberOfLines={1}` on
+ * a value that then had nowhere to be.
+ *
+ * `columns` is the only knob, and it is about room rather than taste. Two
+ * across a phone leaves enough width for the value and its delta on one line;
+ * three does not, so the delta drops beneath rather than squeezing the number
+ * it belongs to.
+ */
+function MapStat({
+  label,
+  value,
+  delta,
+  columns = 2,
+}: {
+  label: string;
+  value: string;
+  delta?: string;
+  columns?: 2 | 3;
+}) {
+  const tight = columns === 3;
+
+  return (
+    <Card className="flex-1">
+      <Card.Content className="items-start gap-1 p-3.5">
+        <Text size="xs" muted numberOfLines={1}>
+          {label}
+        </Text>
+        <View
+          className={tight ? 'w-full items-start gap-1' : 'w-full flex-row items-center gap-2'}
+        >
+          {/* `shrink` rather than a line clamp: a value with room to wrap is
+              better than a value with an ellipsis where its unit was. */}
+          <Text size={tight ? 'lg' : 'xl'} weight="semibold" className="shrink">
+            {value}
+          </Text>
+          {delta ? <Badge variant="outline">{delta}</Badge> : null}
+        </View>
+      </Card.Content>
+    </Card>
+  );
+}
+
+/**
  * Deterministic pseudo-random numbers.
  *
  * The demos need figures that look measured rather than typed, but a real
@@ -117,7 +164,11 @@ export function AnalyticsMapBlock() {
             />
             {Object.entries(CAPITALS).map(([code, lngLat]) => (
               <Map.Marker key={code} lngLat={lngLat}>
-                <Map.Label>{code}</Map.Label>
+                {/* Muted and small: eight of them at once, and they are the
+                    index to the shading rather than the subject of the map. */}
+                <Map.Label size="sm" tone="muted">
+                  {code}
+                </Map.Label>
               </Map.Marker>
             ))}
           </Map>
@@ -125,20 +176,8 @@ export function AnalyticsMapBlock() {
       </Card>
 
       <View className="flex-row gap-3">
-        <Card className="flex-1">
-          <Card.Content className="items-start gap-1 p-4">
-            <Text size="xs" muted>Sessions</Text>
-            <Text size="xl" weight="semibold">128k</Text>
-            <Badge variant="outline">+12.4%</Badge>
-          </Card.Content>
-        </Card>
-        <Card className="flex-1">
-          <Card.Content className="items-start gap-1 p-4">
-            <Text size="xs" muted>Countries</Text>
-            <Text size="xl" weight="semibold">{TRAFFIC.length}</Text>
-            <Badge variant="outline">+3</Badge>
-          </Card.Content>
-        </Card>
+        <MapStat label="Sessions" value="128k" delta="+12.4%" />
+        <MapStat label="Countries" value={String(TRAFFIC.length)} delta="+3" />
       </View>
 
       <Card className="overflow-hidden">
@@ -550,7 +589,11 @@ export function LogisticsNetworkBlock() {
                     : 'h-2.5 w-2.5 rounded-full border-2 border-background bg-muted-foreground'
                 }
               />
-              <Map.Label>{site.name}</Map.Label>
+              {/* The hubs are named at full strength and the spokes quietly,
+                  so the network's shape survives fourteen labels at once. */}
+              <Map.Label size="sm" tone={site.tier === 'hub' ? 'default' : 'muted'}>
+                {site.name}
+              </Map.Label>
             </Map.Marker>
           ))}
         </Map>
@@ -598,7 +641,11 @@ export function UptimeMonitorBlock() {
                       : 'h-3 w-3 rounded-full border-2 border-background bg-destructive'
                 }
               />
-              <Map.Label>{node.id.toUpperCase()}</Map.Label>
+              {/* The dot already carries the state in its colour; the code is
+                  only there to say which node it is. */}
+              <Map.Label size="sm" tone="muted">
+                {node.id.toUpperCase()}
+              </Map.Label>
             </Map.Marker>
           ))}
         </Map>
@@ -682,29 +729,29 @@ export function AnalyticsCardBlock() {
               fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, TRAFFIC_PEAK, primary]}
               fillOpacity={0.9}
             />
+            {/* The four heaviest, named. A shaded map with nothing written on
+                it asks the reader to recognise a country by its outline. */}
+            {(['GB', 'DE', 'FR', 'ES'] as const).map((code) => (
+              <Map.Marker key={code} lngLat={CAPITALS[code]!}>
+                <Map.Label size="sm" tone="muted">
+                  {code}
+                </Map.Label>
+              </Map.Marker>
+            ))}
           </Map>
         </View>
-        <View className="flex-row items-center justify-between p-4">
-          <Text size="xs" muted>28 countries</Text>
-          <Text size="xs" muted>Updated 4m ago</Text>
+        {/* Chips rather than two runs of grey text at opposite corners, which
+            read as a caption that had been torn in half. */}
+        <View className="flex-row items-center gap-2 p-4">
+          <Chip size="sm">28 countries</Chip>
+          <Chip size="sm">Updated 4m ago</Chip>
         </View>
       </Card>
 
       <View className="flex-row gap-3">
-        {[
-          { label: 'Sessions', value: '128k' },
-          { label: 'Bounce', value: '32%' },
-          { label: 'Avg. time', value: '4m 12s' },
-        ].map((stat) => (
-          // Three across a phone leaves ~80pt of content each, so these are
-          // tighter than the two-up cards and hold one line apiece.
-          <Card key={stat.label} className="flex-1">
-            <Card.Content className="gap-1 p-3">
-              <Text size="xs" muted numberOfLines={1}>{stat.label}</Text>
-              <Text size="sm" weight="semibold" numberOfLines={1}>{stat.value}</Text>
-            </Card.Content>
-          </Card>
-        ))}
+        <MapStat columns={3} label="Sessions" value="128k" />
+        <MapStat columns={3} label="Bounce" value="32%" />
+        <MapStat columns={3} label="Avg. time" value="4m 12s" />
       </View>
     </ScrollView>
   );

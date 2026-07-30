@@ -68,7 +68,7 @@ npx panelui-cli@latest add map
 ```
 
 - **`Map.Marker`** — A point drawn as React views, so it can hold anything the rest of the library can draw.
-- **`Map.Label`** — A caption pinned to a marker and always visible, unlike a popup.
+- **`Map.Label`** — A caption pinned to a marker and always visible, unlike a popup. `size` and `tone` are for maps carrying a lot of them at once.
 - **`Map.Popup`** — A card anchored to a point — to the marker it sits inside, or to a coordinate of its own.
 - **`Map.Controls`** — Zoom, compass and locate, as themed views rather than the renderer's own ornaments.
 - **`Map.Route`** — A path across the map, drawn as a style layer so its cost does not grow with its length.
@@ -152,7 +152,7 @@ The tiles are the one part of the style that is somebody else's to license. `sou
 
 ### Analytics map
 
-Sessions by country, over a basemap dropped for the data. The shading and the cards above it come from the same tokens, so the map is part of the dashboard rather than an image pasted into it.
+Sessions by country, over a basemap dropped for the data. The shading and the cards above it come from the same tokens, so the map is part of the dashboard rather than an image pasted into it. Eight `Map.Label`s name the countries at `size="sm" tone="muted"` — they are the index to the shading, not the subject of the map.
 
 ```tsx
 <Map blank bounds={[-11, 35, 31, 63]}>
@@ -160,6 +160,11 @@ Sessions by country, over a basemap dropped for the data. The shading and the ca
     data={countries}
     fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}
   />
+  {Object.entries(capitals).map(([code, lngLat]) => (
+    <Map.Marker key={code} lngLat={lngLat}>
+      <Map.Label size="sm" tone="muted">{code}</Map.Label>
+    </Map.Marker>
+  ))}
 </Map>
 ```
 
@@ -255,7 +260,7 @@ Edge nodes coloured by state, spread across the world. A marker is a React view,
 
 ### Analytics card
 
-The small end of the range — a map as one element inside a card. `interactive={false}` because at this size a stray pan is an accident: the card scrolls, the map does not.
+The small end of the range — a map as one element inside a card. `interactive={false}` because at this size a stray pan is an accident: the card scrolls, the map does not. Only the four heaviest countries are named, because a shaded map with nothing written on it asks the reader to recognise a country by its outline.
 
 ```tsx
 <Card className="overflow-hidden">
@@ -305,7 +310,9 @@ The small end of the range — a map as one element inside a card. `interactive=
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `side` | `'top' \| 'bottom'` | — | Which side of the marker the label sits on. |
+| `side` | `'top' \| 'bottom'` | `'bottom'` | Which side of the marker the label sits on. |
+| `size` | `'sm' \| 'md'` | `'md'` | `sm` for a map carrying a lot of them, where the pills start to collide. |
+| `tone` | `'default' \| 'muted' \| 'primary'` | `'default'` | How loud the label is. `muted` for codes and counts that support the map without being its subject; `primary` for the one place being pointed at. |
 
 ### Map.Popup
 
@@ -411,3 +418,9 @@ Pass `mapStyle` to skip all of it and use a style wholesale — the escape hatch
 ### Markers or clusters
 
 `Map.Marker` is a React view, which is what lets it hold an avatar, a chip, or anything else the library draws. That also means a marker costs what a view costs. Past a few dozen points use `Map.Cluster`, which draws in a style layer and merges points as they crowd — by the time markers become expensive they have also become unreadable, so the two limits arrive together.
+
+### Labels on a crowded map
+
+`Map.Label` is out of the marker's layout flow, and deliberately so: a marker sits on its coordinate by the centre of its box, so a label in flow beneath the pin would drag that centre down and lift every pin off the place it marks. The pill overhangs the marker by a wide margin on both sides, which is what lets a long name stay centred over a small dot without the marker being anchored by the name instead.
+
+What that does not solve is a map with a dozen of them. `size="sm"` tightens the pill, and `tone="muted"` drops the text to the muted colour — together they are the difference between a network map and a wall of chips. The rule of thumb: label at `default` only the places the map is *about*, and let everything else support at `muted`. `tone="primary"` inverts the pill for the single place being pointed at.
