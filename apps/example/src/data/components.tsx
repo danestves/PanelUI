@@ -79,6 +79,7 @@ import {
   Item,
   KeyboardAvoider,
   Label,
+  ListChecksIcon,
   LockIcon,
   LineChart,
   type LineChartHandle,
@@ -5580,45 +5581,119 @@ function TaskRunDemo() {
   );
 }
 
-/** A plan whose fields arrive one at a time, which is what the shimmer is for. */
+const PLAN_STEPS = [
+  { title: 'Make the in-range test inclusive', meta: 'utils/date.ts' },
+  { title: 'Round the band only where it stops', meta: 'calendar/index.tsx' },
+  { title: 'Square the discs against the band', meta: undefined },
+  { title: 'Regenerate the docs page', meta: 'scripts/gen.mjs' },
+];
+
+/** The rail: four steps, the running one marked, the finished ones filled in. */
+function PlanRailDemo() {
+  return (
+    <Plan>
+      <Plan.Header>
+        <Plan.Icon>
+          <ListChecksIcon size={16} />
+        </Plan.Icon>
+        <Plan.Title>Fix the calendar range</Plan.Title>
+        <Plan.Description>Four files, and no API change.</Plan.Description>
+        <Plan.Action>
+          <Plan.Progress />
+          <Plan.Trigger />
+        </Plan.Action>
+      </Plan.Header>
+      <Plan.Content>
+        <Plan.Steps>
+          {PLAN_STEPS.map((step, index) => (
+            <Plan.Step
+              key={step.title}
+              status={index < 2 ? 'done' : index === 2 ? 'active' : 'pending'}
+              meta={step.meta}
+            >
+              {step.title}
+            </Plan.Step>
+          ))}
+        </Plan.Steps>
+      </Plan.Content>
+      <Plan.Footer>
+        <Button size="sm" variant="ghost">
+          Revise
+        </Button>
+        <Button size="sm">Approve</Button>
+        <Plan.Hint>⌘↩</Plan.Hint>
+      </Plan.Footer>
+    </Plan>
+  );
+}
+
+/**
+ * A plan whose fields arrive one at a time, which is what the shimmer is for.
+ * The rail fills in behind it, so the header count is a live one.
+ */
 function PlanStreamDemo() {
   const [streaming, setStreaming] = useState(false);
+  const [reached, setReached] = useState(PLAN_STEPS.length);
 
   useEffect(() => {
     if (!streaming) return;
-    const timer = setTimeout(() => setStreaming(false), 2600);
-    return () => clearTimeout(timer);
+    const timers = PLAN_STEPS.map((_unused, index) =>
+      setTimeout(() => setReached(index), 400 + index * 550)
+    );
+    const done = setTimeout(() => {
+      setReached(PLAN_STEPS.length);
+      setStreaming(false);
+    }, 400 + PLAN_STEPS.length * 550);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(done);
+    };
   }, [streaming]);
+
+  const start = () => {
+    setReached(-1);
+    setStreaming(true);
+  };
 
   return (
     <View className="w-full gap-4">
       <Plan isStreaming={streaming}>
         <Plan.Header>
+          <Plan.Icon>
+            <ListChecksIcon size={16} />
+          </Plan.Icon>
           <Plan.Title>Fix the calendar range</Plan.Title>
           <Plan.Description>Four files, and no API change.</Plan.Description>
           <Plan.Action>
+            <Plan.Progress />
             <Plan.Trigger />
           </Plan.Action>
         </Plan.Header>
         <Plan.Content>
-          <Text size="sm" muted>
-            1. Make the in-range test inclusive of both ends.
-          </Text>
-          <Text size="sm" muted>
-            2. Round the band only where it genuinely stops.
-          </Text>
-          <Text size="sm" muted>
-            3. Square the discs so they meet the band along an edge.
-          </Text>
+          <Plan.Steps>
+            {PLAN_STEPS.map((step, index) => (
+              <Plan.Step
+                key={step.title}
+                status={
+                  index < reached ? 'done' : index === reached ? 'active' : 'pending'
+                }
+                meta={step.meta}
+              >
+                {step.title}
+              </Plan.Step>
+            ))}
+          </Plan.Steps>
         </Plan.Content>
         <Plan.Footer>
           <Button size="sm" variant="ghost">
             Revise
           </Button>
           <Button size="sm">Approve</Button>
+          <Plan.Hint>⌘↩</Plan.Hint>
         </Plan.Footer>
       </Plan>
-      <Button variant="outline" onPress={() => setStreaming(true)} disabled={streaming}>
+      <Button variant="outline" onPress={start} disabled={streaming}>
         {streaming ? 'Writing…' : 'Stream it in'}
       </Button>
     </View>
@@ -5633,6 +5708,7 @@ function PlanWithTasksDemo() {
         <Plan.Title>Fix the calendar range</Plan.Title>
         <Plan.Action>
           <Badge variant="secondary">2 of 3</Badge>
+          <Plan.Trigger />
         </Plan.Action>
       </Plan.Header>
       <Plan.Content>
@@ -10193,6 +10269,7 @@ export const COMPONENTS: ComponentEntry[] = [
     name: 'Plan',
     summary: 'What an agent intends to do, before it does it',
     demos: [
+      { label: 'A rail of steps', render: () => <PlanRailDemo /> },
       { label: 'Streaming in', render: () => <PlanStreamDemo /> },
       { label: 'Steps that are tasks', render: () => <PlanWithTasksDemo /> },
     ],

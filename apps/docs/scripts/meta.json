@@ -511,7 +511,8 @@
     "react native ai plan card",
     {
       "group": "ai-components",
-      "addedIn": "0.30.0"
+      "addedIn": "0.30.0",
+      "updatedIn": "0.32.0"
     }
   ]
 }
