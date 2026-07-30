@@ -20,6 +20,12 @@
  *   <Select.Item value="eu" label="Europe" />
  * </Select>
  * ```
+ *
+ * Past a couple of dozen options, scrolling stops being a way of finding
+ * anything: pass `searchable` and the list gets a filter above it, matching on
+ * the option labels. The filter narrows what is *shown* — the declared options
+ * are still the source of truth, so nothing has to be lifted into state to make
+ * it work.
  */
 import {
   Children,
@@ -48,12 +54,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
-import { CheckIcon, ChevronDownIcon } from '../../icons';
+import { CheckIcon, ChevronDownIcon, SearchIcon } from '../../icons';
 import { getNativeUI } from '../../native';
 import { Portal } from '../../primitives/portal';
 import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { BottomSheet } from '../bottom-sheet';
+import { InputGroup } from '../input-group';
 
 const selectVariants = tv({
   slots: {
@@ -74,6 +81,9 @@ const selectVariants = tv({
     },
     disabled: {
       true: { trigger: 'opacity-[0.64]' },
+    },
+    itemDisabled: {
+      true: { item: 'opacity-[0.64]' },
     },
     presentation: {
       sheet: {},
@@ -98,23 +108,33 @@ const SelectContext = createContext<SelectContextValue | null>(null);
 export interface SelectItemProps {
   value: string;
   label: string;
+  /**
+   * Shows the option but refuses it — a plan above the current tier, a region
+   * with nothing in stock. Kept in the list rather than dropped from it, because
+   * an option that vanishes reads as one that never existed.
+   */
+  disabled?: boolean;
 }
 
 /** Declarative option. Rendered inside whichever surface is presenting. */
-function SelectItem({ value, label }: SelectItemProps) {
+function SelectItem({ value, label, disabled }: SelectItemProps) {
   const context = useContext(SelectContext);
   if (!context) {
     throw new Error('Select.Item must be used within a <Select>');
   }
 
   const selected = context.value === value;
-  const { item, itemLabel, itemIndicator } = selectVariants({ selected });
+  const { item, itemLabel, itemIndicator } = selectVariants({
+    selected,
+    itemDisabled: !!disabled,
+  });
   const checkColor = useCSSVariable('--color-muted-foreground');
 
   return (
     <Pressable
       accessibilityRole="menuitem"
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected, disabled: !!disabled }}
+      disabled={disabled}
       onPress={() => context.onSelect(value)}
       className={item()}
     >
@@ -163,6 +183,19 @@ export interface SelectProps {
   /** Called when the options open or close. */
   onOpenChange?: (open: boolean) => void;
   /**
+   * Put a filter above the options, matching case-insensitively on any part of
+   * an option's label. For a list long enough that scrolling it is not finding
+   * anything — countries, currencies, a repository's branches.
+   *
+   * The field is not focused on open: on a phone that would throw the keyboard
+   * over the very list you are trying to look at.
+   */
+  searchable?: boolean;
+  /** Placeholder for the filter field. `searchable` only. */
+  searchPlaceholder?: string;
+  /** Shown in place of the list when the filter matches nothing. */
+  emptyMessage?: string;
+  /**
    * Render the platform's own picker instead of the trigger-and-list pair.
    * Requires the optional `@expo/ui` package; without it this prop does
    * nothing.
@@ -191,11 +224,15 @@ function SelectRoot({
   contentWidth = 'trigger',
   offset = 8,
   onOpenChange,
+  searchable = false,
+  searchPlaceholder = 'Search',
+  emptyMessage = 'No matches',
   native,
   nativeAppearance = 'menu',
   children,
 }: SelectProps) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const [listHeight, setListHeight] = useState(0);
   const triggerRef = useRef<View>(null);
@@ -207,7 +244,11 @@ function SelectRoot({
     const collected: SelectItemProps[] = [];
     Children.forEach(children, (child) => {
       if (isValidElement<SelectItemProps>(child)) {
-        collected.push({ value: child.props.value, label: child.props.label });
+        collected.push({
+          value: child.props.value,
+          label: child.props.label,
+          disabled: child.props.disabled,
+        });
       }
     });
     return collected;
@@ -218,10 +259,30 @@ function SelectRoot({
     [options, value]
   );
 
+  /*
+   * The options the filter leaves standing, or null when nothing is being
+   * filtered — which is the common case, and the one that must not pay for the
+   * feature. `null` means "render the children as given", so an unsearched
+   * Select does no per-option work at all.
+   */
+  const filtered = useMemo(() => {
+    const needle = searchable ? query.trim().toLowerCase() : '';
+    if (!needle) return null;
+
+    return Children.toArray(children).filter(
+      (child) =>
+        isValidElement<SelectItemProps>(child) &&
+        child.props.label.toLowerCase().includes(needle)
+    );
+  }, [children, query, searchable]);
+
   const close = useCallback(() => {
     chevron.value = withTiming(0, { duration: 160 });
     setOpen(false);
     onOpenChange?.(false);
+    // A filter left behind would be waiting the next time the list opens, with
+    // most of the options missing and no obvious reason why.
+    setQuery('');
   }, [chevron, onOpenChange]);
 
   // An open overlay list catches the Android back button, closing itself
@@ -275,14 +336,15 @@ function SelectRoot({
   if (nativeUI) {
     const { Host, Picker } = nativeUI;
     // The native picker has no empty state, so an unset value shows the first
-    // option rather than the placeholder.
+    // selectable option rather than the placeholder.
+    const firstEnabled = options.find((option) => !option.disabled);
     return (
       // A picker fills the width of the row it sits in and reports its own
       // height — a menu is a compact button, a wheel a full rotor, and the
       // platform is the only thing that knows which by how much.
       <Host matchContents={{ vertical: true }}>
         <Picker
-          selectedValue={value ?? options[0]?.value ?? ''}
+          selectedValue={value ?? firstEnabled?.value ?? ''}
           onValueChange={(next: string) => onValueChange(next)}
           appearance={nativeAppearance}
           enabled={!disabled}
@@ -317,6 +379,48 @@ function SelectRoot({
     </Pressable>
   );
 
+  /*
+   * The filter, and the list it narrows. Both are built once here rather than
+   * per presentation: the three surfaces differ in where they put the field —
+   * above the scroller, so it does not scroll away with the options — not in
+   * what it is.
+   */
+  const search = searchable ? (
+    <View className="pb-2">
+      <InputGroup>
+        <InputGroup.Prefix isDecorative>
+          <SearchIcon
+            size={18}
+            color={typeof chevronColor === 'string' ? chevronColor : '#737373'}
+          />
+        </InputGroup.Prefix>
+        <InputGroup.Input
+          variant="filled"
+          size="sm"
+          value={query}
+          onChangeText={setQuery}
+          placeholder={searchPlaceholder}
+          accessibilityLabel={searchPlaceholder}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+        />
+      </InputGroup>
+    </View>
+  ) : null;
+
+  const optionList =
+    filtered === null ? (
+      textChildren(children)
+    ) : filtered.length ? (
+      filtered
+    ) : (
+      <Text className="px-3 py-6 text-center text-sm text-muted-foreground">
+        {emptyMessage}
+      </Text>
+    );
+
   if (presentation === 'sheet') {
     return (
       <SelectContext.Provider value={context}>
@@ -338,8 +442,17 @@ function SelectRoot({
                   {title}
                 </Text>
               ) : null}
-              <ScrollView bounces={false} className="max-h-96">
-                <View className="gap-1 pb-2">{textChildren(children)}</View>
+              {search ? <View className="px-1">{search}</View> : null}
+              <ScrollView
+                bounces={false}
+                className="max-h-96"
+                // The filter is a text field above a scroller: dismissing the
+                // keyboard on a drag is what lets you look at what you filtered
+                // to without first tapping somewhere neutral.
+                keyboardDismissMode="on-drag"
+                keyboardShouldPersistTaps="handled"
+              >
+                <View className="gap-1 pb-2">{optionList}</View>
               </ScrollView>
             </SelectContext.Provider>
           </BottomSheet.Content>
@@ -359,7 +472,8 @@ function SelectRoot({
               exiting={FadeOut.duration(120)}
               className={slots.list()}
             >
-              {textChildren(children)}
+              {search}
+              {optionList}
             </Animated.View>
           ) : null}
         </View>
@@ -415,8 +529,14 @@ function SelectRoot({
               style={overlayPosition}
               className={slots.list()}
             >
-              <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-                {textChildren(children)}
+              {search}
+              <ScrollView
+                bounces={false}
+                showsVerticalScrollIndicator={false}
+                keyboardDismissMode="on-drag"
+                keyboardShouldPersistTaps="handled"
+              >
+                {optionList}
               </ScrollView>
             </Animated.View>
           </SelectContext.Provider>
