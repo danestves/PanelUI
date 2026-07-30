@@ -1,0 +1,191 @@
+---
+title: Response
+description: A model's answer, rendered as markdown while it is still arriving.
+status: beta
+---
+
+A model's answer, rendered as it arrives.
+
+An answer is markdown. It has headings and lists and fenced code in it, because that is what a model writes, and rendering it as one run of plain text throws away the structure the model went to the trouble of producing.
+
+So this reads the markdown and renders it through the library's own parts — [Typography](/docs/components/typography) for prose, [CodeBlock](/docs/ai-components/code-block) for fences, [Table](/docs/components/table) for tables. Nothing here draws its own type or its own colours: an answer inside a message bubble should look like the app it is in, not like a document viewer someone embedded. It brings no new dependencies with it.
+
+## Installation
+
+Response ships with the library — no separate install.
+
+```tsx
+import { Response, Message, Button } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add response
+```
+
+## Usage
+
+```tsx
+<Response isStreaming={status === 'streaming'}>{text}</Response>
+```
+
+## Examples
+
+### An answer
+
+Headings, lists, a quote, a fence and a table — the whole surface. Each block is drawn by the component that already knows how: a fence becomes a `CodeBlock` with its own copy button and sideways scroll, a table becomes a real `Table`.
+
+```tsx
+const answer = `## Paying down a card
+
+1. **Avalanche** — highest rate first. Costs the least overall.
+2. **Snowball** — smallest balance first. Closes an account soonest.
+
+> Pick the one you will still be doing in six months.
+
+\`\`\`ts
+const order = cards.slice().sort((a, b) => b.apr - a.apr);
+\`\`\`
+`;
+
+<Response>{answer}</Response>
+```
+
+### Streaming in
+
+The reason this is a component and not a `<Text>`. A token stream hands the renderer every prefix of the final answer, so it sees `**bo`, then `**bol`, then `**bold**`. `isStreaming` finishes an unterminated construct at the end of the text rather than escaping it — an open fence is a code block still filling, an open `**` is bold text still being written — so the answer never flickers between styles as its delimiters land.
+
+```tsx
+const [text, setText] = useState('');
+const [streaming, setStreaming] = useState(true);
+
+// …append each token to `text` as it arrives…
+
+<Response isStreaming={streaming}>{text}</Response>
+```
+
+### Inside a turn
+
+Where one actually turns up: as the body of an assistant’s [Message](/docs/components/message). Join the message’s text parts into one string — a `Response` per part renders a heading in one component and the paragraph under it in another, and neither knows about the other.
+
+```tsx
+<Message align="start">
+  <Message.Content>
+    <Message.Bubble>
+      <Message.BubbleContent>
+        <Response isStreaming={status === 'streaming'}>
+          {message.parts
+            .filter((part) => part.type === 'text')
+            .map((part) => part.text)
+            .join('')}
+        </Response>
+      </Message.BubbleContent>
+    </Message.Bubble>
+  </Message.Content>
+</Message>
+```
+
+### Replacing a block
+
+`components` swaps out how a block is drawn without giving up the rest. The commonest reason is a runnable snippet, or a diff rendered as a diff. Images render as nothing by default — an image in an answer is a URL the model wrote, and fetching it unasked is a request to a host nobody chose — so this is also where you opt back into them.
+
+```tsx
+<Response
+  components={{
+    code: ({ code, language, streaming }) => (
+      <Playground code={code} language={language} disabled={streaming} />
+    ),
+    image: ({ src, alt }) => <RemoteImage uri={src} alt={alt} />,
+  }}
+>
+  {text}
+</Response>
+```
+
+## Versions
+
+### A full answer
+
+Headings, a list, a quote, a fence and a table — the whole surface, on a screen of its own because an answer is as long as it is.
+
+```tsx
+<ScrollView contentContainerClassName="px-5 pb-12 pt-2">
+  <Response>{answer}</Response>
+</ScrollView>
+```
+
+### Streaming in
+
+The same answer arriving a few characters at a time. Watch the fence and the bold runs: they resolve without the text under them flickering.
+
+```tsx
+const [shown, setShown] = useState(0);
+const streaming = shown < answer.length;
+
+useEffect(() => {
+  if (!streaming) return;
+  const timer = setInterval(() => {
+    setShown((count) => Math.min(count + 4, answer.length));
+  }, 24);
+  return () => clearInterval(timer);
+}, [streaming]);
+
+<Response isStreaming={streaming}>{answer.slice(0, shown)}</Response>
+```
+
+## API Reference
+
+### Response
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `isStreaming` | `boolean` | `false` | Whether more is still coming. Finishes an unterminated construct at the end of the text instead of escaping it, so the answer does not flicker between styles as its delimiters arrive. |
+| `parseIncompleteMarkdown` | `boolean` | `true` | Turns off speculative completion entirely, even while streaming. |
+| `onLinkPress` | `(href: string) => void` | — | What a link does. Opens it with the system handler by default. |
+| `allowedLinkPrefixes` | `string[]` | `DEFAULT_LINK_PREFIXES` | Schemes a link is allowed to open. A model can write any URL it likes, and an answer is not a trusted document — so the default list is the four that cannot do anything but navigate. |
+| `components` | `ResponseComponents` | — | Swap out how a block is drawn. |
+| `showLineNumbers` | `boolean` | `false` | Line numbers in fenced code. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### What it reads
+
+Headings, paragraphs, fenced code with an info string, blockquotes, ordered and unordered lists nested by indent, GFM tables with per-column alignment, thematic breaks. Inline: `**bold**`, `*italic*`, `` `code` ``, `~~strikethrough~~`, links, and backslash escapes.
+
+Not a general Markdown implementation, and not trying to be. It reads what a model writes.
+
+### Half-arrived markdown
+
+The rule the reader works to is that **no word already on screen may disappear when the next token arrives.** Delimiters may vanish as they are recognised — that is what recognising them means — but words never do.
+
+What that buys, concretely:
+
+- An unterminated ``` fence renders as a code block that is still filling, not as literal backticks that later vanish and take the snippet's first line with them.
+- A trailing `**bo` renders as bold text, so the words do not flash unstyled and then restyle a token later.
+- A half-typed `[label](htt` shows its label and nothing else, so the text does not jump when the closing paren lands.
+- A lone trailing `#` or `-` is not promoted to a heading or a list until a space and some content follow it.
+- A table's header row stays a paragraph until its divider arrives, because until then it is a paragraph with pipes in it.
+
+Only the *tail* is treated this way. An unterminated `**` in the middle of a finished paragraph is two asterisks, because a document that has stopped arriving means what it says. Set `parseIncompleteMarkdown={false}` to turn the speculation off entirely.
+
+### Links are not trusted
+
+A model can write any URL it likes, and an answer is not a trusted document. A link only becomes pressable if its href starts with one of `allowedLinkPrefixes`, which defaults to `https://`, `http://`, `mailto:` and `tel:` — the four that cannot do anything but navigate. Anything else still renders as text; it just does nothing. Pass `onLinkPress` to route links through your own navigator instead of the system handler.
+
+### It re-renders on the text and nothing else
+
+A stream re-renders its parent on every token, and the callbacks and overrides that parent passes down are usually fresh objects each time. `Response` compares the text, the streaming flag and the class name, so a long answer does not re-parse because a sibling moved. Tokenising is memoised on the string as well.
+
+### Column widths are even
+
+A markdown table carries no widths. Guessing them from the longest cell makes the columns jump about as rows stream in, which is exactly the movement everything else here exists to avoid — so every column takes the same share.
+
+### Everything renders inside the text flow
+
+React Native will not render a bare string outside a `Text`, and it lays out a view inside one by breaking the line before it. Both are easy to trip over here, because a paragraph is a `Text` and a table cell is a view — so inline code is a styled `Text` with a background rather than the boxed `Typography.Code`, and a table cell wraps its run in a `Text` of its own.
+
+It matters for the `components.image` override too: it is rendered inside a paragraph's text run, so return a `Text` or an `Image` from it. A `View` will break the sentence around it.

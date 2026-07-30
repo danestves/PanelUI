@@ -506,6 +506,13 @@ export {
   type ReasoningContentProps,
 } from './components/reasoning';
 export {
+  Response,
+  type ResponseProps,
+  type ResponseComponents,
+  type ResponseBlock,
+  type ResponseInline,
+} from './components/response';
+export {
   Sources,
   type SourcesProps,
   type SourcesTriggerProps,

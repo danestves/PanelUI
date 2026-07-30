@@ -552,6 +552,18 @@
     ]
   },
   {
+    "name": "response",
+    "type": "registry:ui",
+    "description": "A model's answer, rendered as markdown while it is still arriving.",
+    "registryDependencies": [
+      "cn",
+      "code-block",
+      "table",
+      "text",
+      "typography"
+    ]
+  },
+  {
     "name": "ring-chart",
     "type": "registry:ui",
     "description": "Concentric arcs, each measured against its own target.",

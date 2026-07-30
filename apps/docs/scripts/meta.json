@@ -522,5 +522,15 @@
     {
       "addedIn": "0.32.0"
     }
+  ],
+  "response": [
+    "Response",
+    "A model's answer, rendered as markdown while it is still arriving.",
+    "react native ai streaming markdown renderer",
+    {
+      "group": "ai-components",
+      "addedIn": "0.32.0",
+      "beta": true
+    }
   ]
 }

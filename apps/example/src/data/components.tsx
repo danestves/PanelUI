@@ -95,6 +95,7 @@ import {
   MessageScroller,
   Plan,
   Reasoning,
+  Response,
   MicIcon,
   MoonIcon,
   NumberInput,
@@ -5596,6 +5597,114 @@ function TaskRunDemo() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Response                                                                   */
+/* -------------------------------------------------------------------------- */
+
+const ANSWER = `## Paying down a card
+
+Two orders work, and they answer different questions.
+
+1. **Avalanche** — highest interest rate first. Costs the least overall.
+2. **Snowball** — smallest balance first. Closes an account soonest, which
+   is the one that keeps people going.
+
+> Pick the one you will still be doing in six months.
+
+Rough sketch of the avalanche order:
+
+\`\`\`ts
+const order = cards
+  .slice()
+  .sort((a, b) => b.apr - a.apr);
+\`\`\`
+
+| Card | Balance | APR |
+| :--- | ------: | --: |
+| Blue | £2,400 | 24.9% |
+| Store | £310 | 29.9% |
+
+See [the worked example](https://example.com) for the full month-by-month.`;
+
+/**
+ * The whole surface at once — headings, lists, a quote, a fence and a table.
+ * Nothing here draws its own type: it is Typography, CodeBlock and Table.
+ *
+ * Its own screen, because an answer is as long as it is and a snapped page
+ * would crop it at whatever height the phone happens to be — hiding the table
+ * and the fence, which are the two blocks worth seeing.
+ */
+function ResponseDemo() {
+  return (
+    <ScrollView contentContainerClassName="px-5 pb-12 pt-2">
+      <Response>{ANSWER}</Response>
+    </ScrollView>
+  );
+}
+
+/** The inline marks, in one paragraph. */
+function ResponseMarksDemo() {
+  return (
+    <Response>
+      {`Rates are **fixed for 12 months**, then they *revert*. The old rate was ~~29.9%~~ and the call is \`cards.sort(byApr)\`. See [the summary](https://example.com).`}
+    </Response>
+  );
+}
+
+/** A GFM table, with its alignment respected. */
+function ResponseTableDemo() {
+  return (
+    <Response>
+      {`| Card | Balance | APR |\n| :--- | ------: | --: |\n| Blue | £2,400 | 24.9% |\n| Store | £310 | 29.9% |\n| Travel | £45 | 21.9% |`}
+    </Response>
+  );
+}
+
+/**
+ * The point of the component: text arriving a token at a time, without the
+ * styles flickering as their delimiters land.
+ */
+function ResponseStreamDemo() {
+  const [shown, setShown] = useState(ANSWER.length);
+  const streaming = shown < ANSWER.length;
+
+  useEffect(() => {
+    if (!streaming) return;
+    const timer = setInterval(() => {
+      // A handful of characters a frame, which is roughly how a token stream
+      // actually lands — one character at a time is a typewriter, not a model.
+      setShown((count) => Math.min(count + 4, ANSWER.length));
+    }, 24);
+    return () => clearInterval(timer);
+  }, [streaming]);
+
+  return (
+    <ScrollView contentContainerClassName="gap-4 px-5 pb-12 pt-2">
+      <Button variant="outline" onPress={() => setShown(0)} disabled={streaming}>
+        {streaming ? 'Answering…' : 'Stream it in'}
+      </Button>
+      <Response isStreaming={streaming}>{ANSWER.slice(0, shown)}</Response>
+    </ScrollView>
+  );
+}
+
+/** Where one actually turns up: as the body of an assistant's turn. */
+function ResponseInTurnDemo() {
+  return (
+    <Message align="start">
+      <Message.Content>
+        <Message.Bubble>
+          <Message.BubbleContent>
+            <Response>
+              {`Three things changed in **Reanimated 4**:\n\n- the worklet runtime\n- \`useAnimatedStyle\` composition\n- layout animations that respect shared values\n\nThe third is the one you will notice.`}
+            </Response>
+          </Message.BubbleContent>
+        </Message.Bubble>
+      </Message.Content>
+    </Message>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* Post                                                                       */
 /* -------------------------------------------------------------------------- */
 
@@ -10486,6 +10595,33 @@ export const COMPONENTS: ComponentEntry[] = [
             <CodeBlock code={AI_PATCH} language="diff" />
           </View>
         ),
+      },
+    ],
+  },
+  {
+    slug: 'response',
+    name: 'Response',
+    summary: "A model's answer, rendered as it arrives",
+    demos: [
+      // The short ones page under the rail. The two long ones are listed above
+      // them and open on a screen of their own — a whole answer cropped to a
+      // snapped page hides the table and the fence at the bottom of it.
+      { label: 'Inside a turn', render: () => <ResponseInTurnDemo /> },
+      { label: 'Marks and links', render: () => <ResponseMarksDemo /> },
+      { label: 'A table', render: () => <ResponseTableDemo /> },
+      {
+        label: 'A full answer',
+        id: 'answer',
+        description: 'Headings, a list, a quote, a fence and a table — the whole surface.',
+        fullPage: true,
+        render: () => <ResponseDemo />,
+      },
+      {
+        label: 'Streaming in',
+        id: 'streaming',
+        description: 'The same answer arriving a few characters at a time, without the styles flickering.',
+        fullPage: true,
+        render: () => <ResponseStreamDemo />,
       },
     ],
   },
