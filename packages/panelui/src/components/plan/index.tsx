@@ -38,8 +38,8 @@
  *     </Plan.Steps>
  *   </Plan.Content>
  *   <Plan.Footer>
+ *     <Button variant="outline">Revise</Button>
  *     <Button>Approve</Button>
- *     <Plan.Hint>⌘↩</Plan.Hint>
  *   </Plan.Footer>
  * </Plan>
  * ```
@@ -100,8 +100,7 @@ const planVariants = tv({
     stepDescription: 'text-xs text-muted-foreground',
     stepMeta:
       'self-start rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground',
-    footer: 'flex-row items-center justify-end gap-2 border-t border-border p-4',
-    hint: 'rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground',
+    footer: 'flex-row items-center gap-2 border-t border-border p-4',
   },
 });
 
@@ -583,34 +582,41 @@ function PlanProgress({ className, value, total, ...props }: PlanProgressProps) 
   );
 }
 
-export interface PlanHintProps extends ViewProps {
-  className?: string;
-  children?: ReactNode;
-}
-
-/** A keycap in the footer, for the shortcut that does what the button does. */
-function PlanHint({ className, children, ...props }: PlanHintProps) {
-  const { hint } = planVariants();
-  return (
-    <View {...props} className={cn(hint(), className)}>
-      {textChildren(children, (text) => (
-        <Text className="font-mono text-[11px] text-muted-foreground">{text}</Text>
-      ))}
-    </View>
-  );
-}
-
 export interface PlanFooterProps extends ViewProps {
   className?: string;
+  /**
+   * How the actions divide the row. `stretch` splits it between them, which is
+   * what a phone wants: the decision is the point of the card, and the two
+   * buttons that make it should be the width of a thumb. `end` packs them
+   * against the trailing edge for a plan sitting inside something denser.
+   */
+  layout?: 'stretch' | 'end';
   children?: ReactNode;
 }
 
-/** Where the button that approves the plan goes. */
-function PlanFooter({ className, children, ...props }: PlanFooterProps) {
+/**
+ * Where the buttons that answer the plan go.
+ *
+ * Each action takes an equal share of the row by default. A pair of small
+ * buttons hugging the trailing corner is a pointer-and-cursor shape; on a phone
+ * the answer to "shall I do this" is the most important control on the screen
+ * and wants to be hit without aiming.
+ */
+function PlanFooter({ className, layout = 'stretch', children, ...props }: PlanFooterProps) {
   const { footer } = planVariants();
+
   return (
-    <View {...props} className={cn(footer(), className)}>
-      {children}
+    <View
+      {...props}
+      className={cn(footer(), layout === 'end' && 'justify-end', className)}
+    >
+      {layout === 'stretch'
+        ? // A view stretches its children across the cross axis by default, so
+          // a button inside one of these fills it without being told to.
+          Children.map(children, (child) =>
+            isValidElement(child) ? <View className="flex-1">{child}</View> : child
+          )
+        : children}
     </View>
   );
 }
@@ -626,7 +632,6 @@ PlanContent.displayName = 'Plan.Content';
 PlanSteps.displayName = 'Plan.Steps';
 PlanStep.displayName = 'Plan.Step';
 PlanFooter.displayName = 'Plan.Footer';
-PlanHint.displayName = 'Plan.Hint';
 
 export const Plan = Object.assign(PlanRoot, {
   Header: PlanHeader,
@@ -640,5 +645,4 @@ export const Plan = Object.assign(PlanRoot, {
   Steps: PlanSteps,
   Step: PlanStep,
   Footer: PlanFooter,
-  Hint: PlanHint,
 });

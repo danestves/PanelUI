@@ -12,6 +12,18 @@
  *   comparison here goes through `startOfDay`.
  * - **Month arithmetic is done with `setMonth`, not by adding days.** The
  *   platform already knows that a month is 28, 29, 30 or 31 days long.
+ *
+ * Three more that are easy to lose and expensive to get back:
+ *
+ * - **Days are stepped with `setDate`, never with milliseconds.** Adding
+ *   `n * 86400000` is wrong by an hour on the two days a year the clocks move,
+ *   which is enough to land the wrong side of midnight and shift a whole grid.
+ * - **A month is normalised to the 1st before months are added.** `setMonth`
+ *   on the 31st of a month whose neighbour is shorter overflows into the month
+ *   after next — January 31st plus one month is March 3rd.
+ * - **Nothing is ever parsed back out of formatted text.** `Intl` is asked for
+ *   the *parts* and the numbers are read from those, because the order and the
+ *   separators belong to the locale and only the numbers are ours.
  */
 
 /** Names of the weekdays and months, in the caller's locale. */
@@ -60,12 +72,6 @@ export function addDays(date: Date, days: number): Date {
   return copy;
 }
 
-/** Whole days from `a` to `b`, ignoring the time of day on both. */
-export function daysBetween(a: Date, b: Date): number {
-  const MS = 24 * 60 * 60 * 1000;
-  return Math.round((startOfDay(b).getTime() - startOfDay(a).getTime()) / MS);
-}
-
 export function isBefore(a: Date, b: Date): boolean {
   return startOfDay(a).getTime() < startOfDay(b).getTime();
 }
@@ -82,10 +88,57 @@ export function isWithin(date: Date, from: Date, to: Date): boolean {
   return time >= Math.min(start, end) && time <= Math.max(start, end);
 }
 
+/**
+ * `date` pulled inside `min`..`max`, at day resolution.
+ *
+ * The bound is returned at its own start of day rather than as given, so a
+ * `maxDate` that happens to carry a time of 17:30 does not hand back a value
+ * that then compares as *after* the last selectable day.
+ */
 export function clampDate(date: Date, min?: Date, max?: Date): Date {
-  if (min && isBefore(date, min)) return min;
-  if (max && isAfter(date, max)) return max;
+  if (min && isBefore(date, min)) return startOfDay(min);
+  if (max && isAfter(date, max)) return startOfDay(max);
   return date;
+}
+
+/**
+ * A first-day-of-week index made safe.
+ *
+ * `weekStartsOn` arrives from a caller and reaches an array index by way of
+ * `(day + weekStartsOn) % 7`, where a negative or out-of-range value yields a
+ * negative index and an `undefined` weekday name. Both directions wrap.
+ */
+export function normalizeWeekStart(weekStartsOn: number): number {
+  if (!Number.isFinite(weekStartsOn)) return 0;
+  return ((Math.trunc(weekStartsOn) % 7) + 7) % 7;
+}
+
+/**
+ * The day the week starts on where this locale is spoken, as `Date.getDay()`
+ * counts it — 0 for Sunday.
+ *
+ * Sunday is a poor default outside North America and a handful of other
+ * regions, but it is the one the platform gives us when it knows nothing. Where
+ * `Intl` carries week data, ask it: `en-GB` and `fr-FR` start on Monday, and a
+ * calendar that says otherwise is wrong in a way its reader notices immediately.
+ */
+export function localeWeekStart(locale: DateLocale): number {
+  try {
+    const tag = (locale ?? 'en').split('-u-')[0] || 'en';
+    const resolved = new Intl.Locale(tag) as Intl.Locale & {
+      getWeekInfo?: () => { firstDay?: number };
+      weekInfo?: { firstDay?: number };
+    };
+    // Proposed as a method and shipped as a property first; both are in the
+    // wild, and neither is guaranteed to be there at all.
+    const info = resolved.getWeekInfo?.() ?? resolved.weekInfo;
+    const first = info?.firstDay;
+    // `Intl` counts 1 = Monday … 7 = Sunday; `Date.getDay()` counts 0 = Sunday.
+    if (typeof first === 'number' && Number.isFinite(first)) return first % 7;
+  } catch {
+    // No week data in this build.
+  }
+  return 0;
 }
 
 /**
@@ -98,12 +151,20 @@ export function clampDate(date: Date, min?: Date, max?: Date): Date {
  *
  * The leading and trailing cells belong to the neighbouring months; whether
  * they are drawn or left blank is the caller's decision.
+ *
+ * `system` and `locale` are what make this work for a Hijri grid, where the
+ * month it has to open on is not the Gregorian 1st.
  */
-export function monthGrid(month: Date, weekStartsOn: number): Date[][] {
-  const first = startOfMonth(month);
+export function monthGrid(
+  month: Date,
+  weekStartsOn: number,
+  system: 'gregory' | 'islamic' = 'gregory',
+  locale?: DateLocale
+): Date[][] {
+  const first = startOfCalendarMonth(month, system, locale);
   // How far back to the most recent `weekStartsOn`. The `+ 7` keeps the
   // modulo positive when the week starts later than the first of the month.
-  const lead = (first.getDay() - weekStartsOn + 7) % 7;
+  const lead = (first.getDay() - normalizeWeekStart(weekStartsOn) + 7) % 7;
   const start = addDays(first, -lead);
 
   return Array.from({ length: 6 }, (_unusedWeek, week) =>
@@ -119,10 +180,49 @@ export function monthGrid(month: Date, weekStartsOn: number): Date[][] {
  * locales they do not carry. Every formatter here falls back to English rather
  * than taking the screen down over a month name.
  */
+/**
+ * Formatters, kept.
+ *
+ * Building an `Intl.DateTimeFormat` is the expensive part of formatting, and a
+ * Hijri grid asks for one per cell twice over — once to decide which month the
+ * cell belongs to and once for the number in it — which is 84 constructions a
+ * render before anyone touches the year dropdown, where a century jump used to
+ * cost tens of thousands. The set of shapes asked for is tiny and fixed, so it
+ * is cached for the life of the process. A failure is cached too: a build with
+ * no data for a locale will not acquire any by being asked again.
+ */
+const formatters = new Map<string, Intl.DateTimeFormat | null>();
+
+function formatter(
+  locale: DateLocale,
+  options: Intl.DateTimeFormatOptions
+): Intl.DateTimeFormat | null {
+  // Sorted, so two call sites writing the same options in a different order
+  // share one entry rather than building two.
+  const shape = Object.keys(options)
+    .sort()
+    .map((key) => `${key}=${String(options[key as keyof Intl.DateTimeFormatOptions])}`)
+    .join(',');
+  const key = `${locale ?? ''}|${shape}`;
+
+  if (formatters.has(key)) return formatters.get(key) ?? null;
+
+  let made: Intl.DateTimeFormat | null = null;
+  try {
+    made = new Intl.DateTimeFormat(locale, options);
+  } catch {
+    made = null;
+  }
+  formatters.set(key, made);
+  return made;
+}
+
 function format(date: Date, locale: DateLocale, options: Intl.DateTimeFormatOptions): string | null {
   try {
-    return new Intl.DateTimeFormat(locale, options).format(date);
+    return formatter(locale, options)?.format(date) ?? null;
   } catch {
+    // Constructing succeeded and formatting still failed — some builds only
+    // discover a missing calendar at format time.
     return null;
   }
 }
@@ -189,7 +289,7 @@ export interface CalendarParts {
 export function resolveCalendar(system: CalendarSystem, locale: DateLocale): 'gregory' | 'islamic' {
   if (system !== 'auto') return system;
   try {
-    const resolved = new Intl.DateTimeFormat(locale).resolvedOptions().calendar ?? '';
+    const resolved = formatter(locale, {})?.resolvedOptions().calendar ?? '';
     return resolved.startsWith('islamic') ? 'islamic' : 'gregory';
   } catch {
     return 'gregory';
@@ -214,11 +314,12 @@ export function calendarParts(
     return { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
   }
   try {
-    const parts = new Intl.DateTimeFormat(withCalendar(locale, 'islamic'), {
+    const parts = formatter(withCalendar(locale, 'islamic'), {
       year: 'numeric',
       month: 'numeric',
       day: 'numeric',
-    }).formatToParts(date);
+    })?.formatToParts(date);
+    if (!parts) throw new Error('unusable');
     const read = (type: string) => Number(parts.find((part) => part.type === type)?.value);
     const year = read('year');
     const month = read('month');
@@ -413,9 +514,10 @@ export function monthNames(locale: DateLocale, style: 'long' | 'short' = 'long')
 
 /** Column headings, rotated so the first one is `weekStartsOn`. */
 export function weekdayNames(locale: DateLocale, weekStartsOn: number): string[] {
+  const first = normalizeWeekStart(weekStartsOn);
   // 2021-08-01 was a Sunday, so adding the index lands on each weekday in turn.
   return Array.from({ length: 7 }, (_unused, day) => {
-    const index = (day + weekStartsOn) % 7;
+    const index = (day + first) % 7;
     const formatted = formatGregory(new Date(2021, 7, 1 + index), locale, { weekday: 'short' });
     return formatted ?? WEEKDAYS_EN[index]!;
   });

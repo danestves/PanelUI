@@ -5617,11 +5617,8 @@ function PlanRailDemo() {
         </Plan.Steps>
       </Plan.Content>
       <Plan.Footer>
-        <Button size="sm" variant="ghost">
-          Revise
-        </Button>
-        <Button size="sm">Approve</Button>
-        <Plan.Hint>⌘↩</Plan.Hint>
+        <Button variant="outline">Revise</Button>
+        <Button>Approve</Button>
       </Plan.Footer>
     </Plan>
   );
@@ -5686,11 +5683,8 @@ function PlanStreamDemo() {
           </Plan.Steps>
         </Plan.Content>
         <Plan.Footer>
-          <Button size="sm" variant="ghost">
-            Revise
-          </Button>
-          <Button size="sm">Approve</Button>
-          <Plan.Hint>⌘↩</Plan.Hint>
+          <Button variant="outline">Revise</Button>
+          <Button>Approve</Button>
         </Plan.Footer>
       </Plan>
       <Button variant="outline" onPress={start} disabled={streaming}>

@@ -535,7 +535,6 @@ export {
   type PlanStepStatus,
   type PlanStepCounts,
   type PlanFooterProps,
-  type PlanHintProps,
 } from './components/plan';
 export {
   ScrollText,

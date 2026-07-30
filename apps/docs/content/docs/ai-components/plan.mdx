@@ -49,8 +49,8 @@ npx panelui-cli@latest add plan
     </Plan.Steps>
   </Plan.Content>
   <Plan.Footer>
-    <Button size="sm">Approve</Button>
-    <Plan.Hint>⌘↩</Plan.Hint>
+    <Button variant="outline">Revise</Button>
+    <Button>Approve</Button>
   </Plan.Footer>
 </Plan>
 ```
@@ -73,9 +73,7 @@ npx panelui-cli@latest add plan
       <Plan.Step />
     </Plan.Steps>
   </Plan.Content>
-  <Plan.Footer>
-    <Plan.Hint />
-  </Plan.Footer>
+  <Plan.Footer />
 </Plan>
 ```
 
@@ -113,9 +111,8 @@ The four statuses are `pending`, `active`, `done` and `skipped`. Only one step i
     </Plan.Steps>
   </Plan.Content>
   <Plan.Footer>
-    <Button size="sm" variant="ghost">Revise</Button>
-    <Button size="sm">Approve</Button>
-    <Plan.Hint>⌘↩</Plan.Hint>
+    <Button variant="outline">Revise</Button>
+    <Button>Approve</Button>
   </Plan.Footer>
 </Plan>
 ```
@@ -152,7 +149,7 @@ const { object, isLoading } = useObject({
 
 ### Approving it
 
-The footer is the reason this is a card. A plan the reader has to agree to needs somewhere unambiguous for the agreement to live, separated from the steps by a rule. `Plan.Hint` states the shortcut next to the button it belongs to, rather than in a tooltip nobody opens.
+The footer is the reason this is a card. A plan the reader has to agree to needs somewhere unambiguous for the agreement to live, separated from the steps by a rule. The actions split the row evenly, because on a phone the answer to *shall I do this* is the most important control on the screen and should be hit without aiming — pass `layout="end"` to pack them against the trailing edge instead.
 
 ```tsx
 <Plan>
@@ -166,9 +163,8 @@ The footer is the reason this is a card. A plan the reader has to agree to needs
   </Plan.Header>
   <Plan.Content>…</Plan.Content>
   <Plan.Footer>
-    <Button size="sm" variant="ghost">Revise</Button>
-    <Button size="sm">Approve</Button>
-    <Plan.Hint>⌘↩</Plan.Hint>
+    <Button variant="outline">Revise</Button>
+    <Button>Approve</Button>
   </Plan.Footer>
 </Plan>
 ```
@@ -283,17 +279,12 @@ A step that has a story of its own — files read, commands run — outgrows the
 | `value` | `number` | — | Steps settled so far. Defaults to what `Plan.Steps` counted. |
 | `total` | `number` | — | Steps in total. Defaults to what `Plan.Steps` counted. |
 
-### Plan.Hint
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `className` | `string` | — |  |
-
 ### Plan.Footer
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
+| `layout` | `'stretch' \| 'end'` | — | How the actions divide the row. `stretch` splits it between them, which is what a phone wants: the decision is the point of the card, and the two buttons that make it should be the width of a thumb. `end` packs them against the trailing edge for a plan sitting inside something denser. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -304,6 +295,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 **Only string children shimmer.** `Plan.Title`, `Plan.Description` and the `active` `Plan.Step` wrap text in a shimmer while `isStreaming`, and leave an element alone — an element may already be animating, and two animations over one heading is a mess rather than an emphasis.
 
 **`Plan.Icon` and `Plan.Action` are lifted out of the heading column** by the header, to the leading and trailing edges respectively, so neither rides down with a title that wraps to a second line.
+
+**The footer stretches its actions.** A pair of small buttons hugging the trailing corner is a pointer-and-cursor shape; here each action takes an equal share of the row so both clear a thumb. `layout="end"` gives you the packed arrangement for a plan sitting inside something denser.
 
 **The body collapses rather than unmounting**, for the same reason as everywhere else here: a streaming plan is still growing while it is folded.
 
