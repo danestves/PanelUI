@@ -206,7 +206,7 @@ The cells at the ends of the grid belong to the neighbouring months. They are dr
 | `maxDate` | `Date` | — | Latest selectable day. |
 | `startMonth` | `Date` | — | Earliest month the caption's pickers offer. Defaults to `minDate`, and to a hundred years back when there is none. Separate from `minDate` because they answer different questions: `minDate` is about which days can be picked, this is about how far the month and year lists reach. A birthday picker wants a century of years on offer and no bound at all on the days inside them. |
 | `endMonth` | `Date` | — | Latest month the caption's pickers offer. Defaults to `maxDate`, else ten years on. |
-| `weekStartsOn` | `number` | `0` | `0` is Sunday. |
+| `weekStartsOn` | `number \| 'auto'` | — | Which day the week's first column is. `0` is Sunday. `auto` asks the locale, which is what most of the world wants — `en-GB` and `fr-FR` start on Monday, and a calendar that says otherwise is wrong in a way its reader notices immediately. It is not the default only because changing an existing calendar's columns out from under it is not something a version bump should do. Out-of-range numbers wrap rather than producing a blank column. |
 | `showOutsideDays` | `boolean` | `true` | Draw the neighbouring months' days rather than leaving the cells blank. |
 | `selectOutsideDays` | `boolean` | `false` | Let a tap on a neighbouring month's day select it. Off by default: those cells exist to keep the grid six rows tall, and a tap on one is far more often a misfire than an attempt to reach into July from June. Paging to the month is the way to pick a day in it. |
 | `bordered` | `boolean` | `true` | Draw the calendar's own panel — a rounded, bordered card. On by default, for a calendar standing on a page. Turn it off when it is already inside something that draws one, which is what `DatePicker` does. |
@@ -244,12 +244,36 @@ Days are square-ish rather than round for the same reason. A circle touches the 
 
 **It opens on the selection, not on today.** A picker reopened on a date chosen last year lands on that month — otherwise it opens on today and the choice looks lost.
 
-**`minDate` and `maxDate` bound the paging too**, not only the selection: an arrow that pages to a month where every day is dead is an arrow that should have been off. Both are compared at local midnight, so `minDate={new Date()}` means *from today* and does not rule today out.
+**`minDate` and `maxDate` bound the paging too**, not only the selection: an arrow that pages to a month where every day is dead is an arrow that should have been off. So do the caption's month and year lists, and so does a controlled `month` — every route to a new month goes through the same clamp, because a list that offers a year is a poor place to discover the year was out of bounds. Both are compared at local midnight, so `minDate={new Date()}` means *from today* and does not rule today out.
 
 **`startMonth` and `endMonth` are a different bound.** They say how far the caption's month and year lists reach, not which days can be picked. A birthday picker wants a century on offer and no bound at all on the days inside it, which is one prop pair for each half of that sentence.
 
 **`calendar` goes all the way down.** It is `gregory` by default rather than `auto`, because a grid whose month boundaries move with the device's language is a surprise — and it is the caller, not the locale, who knows whether the dates being picked are Hijri ones. Set `islamic` and the month anchoring, the paging, the outside-day dimming and the day numbers all count in it, so the caption and the cells can never disagree. Month lengths are asked of the platform's own calendar data a day at a time rather than read from a table, which is what keeps a 29-day month 29 days in the years it is one.
 
+**`weekStartsOn` can follow the locale.** It is `0` — Sunday — by default, which is right for North America and wrong for most of everywhere else. `weekStartsOn="auto"` asks the locale instead, so `en-GB` and `fr-FR` open on Monday. It is not the default only because changing an existing calendar's columns out from under it is not something a version bump should do. Numbers outside `0`–`6` wrap rather than producing a blank column.
+
 **Digits are pinned to Latin.** The cells render numbers, so a caption in Arabic-Indic over cells in Latin would be two scripts for one date; both are Latin instead.
 
 **Without islamic data in the build, it falls back to Gregorian** rather than throwing — wrong, but coherent, which is the same posture the month names already take.
+
+## Working with dates
+
+JavaScript `Date` arithmetic is wrong in ways that do not show up until someone is in another timezone in another month, so this is what the calendar does and why. Every one of these is worth copying into your own code.
+
+**Step days with calendar fields, never with milliseconds.** `setDate(getDate() + n)` is right across a daylight-saving boundary; `+ n * 86400000` is an hour out on the two days a year the clocks move, which is enough to land the wrong side of midnight and shift the whole grid by a day.
+
+**Normalise to the 1st before adding months.** `setMonth` on the 31st of a month whose neighbour is shorter overflows into the month *after* next — January 31st plus one month is March 3rd. Rebuilding the date on the 1st first makes the arithmetic mean what it reads as.
+
+**Ask for the last day of a month by asking for day 0 of the next one.** `new Date(y, m + 1, 0)` is the last day of month `m`, so a leap February needs no special case and no rule about which years have one.
+
+**Normalise both sides of every comparison.** A bound that carries a time of day silently excludes its own last day: `date <= endOfRange` is false all afternoon if `endOfRange` was captured at nine in the morning. Both operands go through `startOfDay` here, always.
+
+**Compare days by calendar fields, not by timestamp.** Two `Date`s are the same day when their year, month and date agree — not when some derived number does.
+
+**Stay in local time.** No `toISOString`, no UTC round-trips. A date shown to a reader is a local calendar day, and a UTC round-trip moves it by one for half the planet.
+
+**Never build a date out of formatted text.** Ask `Intl` for the *parts* and read the numbers from those; the order and the separators belong to the locale and only the numbers are yours. And cache the formatter — constructing one is the expensive half of formatting.
+
+**Do not assume a calendar labels a day 1.** The observational Islamic calendars the platforms ship do not always emit one: in 1450 AH, month 11 day 30 is followed directly by month 12 day 2. Find a month boundary by watching for the month *number* to change, not by hunting for a particular day number.
+
+**"Today" is not a constant.** A calendar left open across midnight keeps marking yesterday. This one recomputes when the app comes back to the foreground, which is when a stale answer would otherwise become visible.

@@ -39,11 +39,12 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
-import { Pressable, ScrollView, View, type ViewProps } from 'react-native';
+import { AppState, Pressable, ScrollView, View, type ViewProps } from 'react-native';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import {
@@ -57,17 +58,20 @@ import { cn } from '../../utils/cn';
 import { Popover } from '../popover';
 import {
   addCalendarMonths,
-  addDays,
   calendarDayNumber,
   calendarLongDate,
   calendarMonthLabel,
   calendarMonthNames,
   calendarParts,
+  clampDate,
   isAfter,
   isBefore,
   isSameCalendarMonth,
   isSameDay,
   isWithin,
+  localeWeekStart,
+  monthGrid,
+  normalizeWeekStart,
   resolveCalendar,
   startOfCalendarMonth,
   startOfDay,
@@ -184,6 +188,35 @@ function useCalendar(component: string): CalendarContextValue {
   return context;
 }
 
+/**
+ * Today, kept current.
+ *
+ * "Today" is not a constant, and a calendar is exactly the kind of thing left
+ * on screen across the boundary that changes it — a picker open in a sheet, an
+ * app resumed the next morning. Recomputed when the app comes back to the
+ * foreground, which is when a stale answer would otherwise become visible, and
+ * held as state so the marker actually moves when it does.
+ */
+function useToday(): Date {
+  const [today, setToday] = useState(() => startOfDay(new Date()));
+
+  useEffect(() => {
+    const refresh = () => {
+      const now = startOfDay(new Date());
+      // A new object every resume would invalidate every memo below it for a
+      // date that has not changed.
+      setToday((current) => (current.getTime() === now.getTime() ? current : now));
+    };
+
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => subscription.remove();
+  }, []);
+
+  return today;
+}
+
 /** Whether a rule, a list or a span rules this day out. */
 function isDisabled(
   date: Date,
@@ -245,8 +278,17 @@ export interface CalendarProps<Mode extends CalendarMode = 'single'>
   startMonth?: Date;
   /** Latest month the caption's pickers offer. Defaults to `maxDate`, else ten years on. */
   endMonth?: Date;
-  /** `0` is Sunday. */
-  weekStartsOn?: number;
+  /**
+   * Which day the week's first column is. `0` is Sunday.
+   *
+   * `auto` asks the locale, which is what most of the world wants — `en-GB` and
+   * `fr-FR` start on Monday, and a calendar that says otherwise is wrong in a
+   * way its reader notices immediately. It is not the default only because
+   * changing an existing calendar's columns out from under it is not something
+   * a version bump should do. Out-of-range numbers wrap rather than producing
+   * a blank column.
+   */
+  weekStartsOn?: number | 'auto';
   /** Draw the neighbouring months' days rather than leaving the cells blank. */
   showOutsideDays?: boolean;
   /**
@@ -291,7 +333,7 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
   maxDate,
   startMonth,
   endMonth,
-  weekStartsOn = 0,
+  weekStartsOn: weekStartsOnProp = 0,
   showOutsideDays = true,
   selectOutsideDays = false,
   bordered = true,
@@ -302,6 +344,16 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
   // Settled once here rather than at each call site, so every part of the
   // grid is certainly reading the same calendar.
   const system = useMemo(() => resolveCalendar(calendar, locale), [calendar, locale]);
+  // Settled once too, and normalised: everything below indexes an array of
+  // seven with it, where a negative or out-of-range value is a blank column
+  // rather than an error anyone would trace back to here.
+  const weekStartsOn = useMemo(
+    () =>
+      weekStartsOnProp === 'auto'
+        ? localeWeekStart(locale)
+        : normalizeWeekStart(weekStartsOnProp),
+    [weekStartsOnProp, locale]
+  );
   const [internalSelected, setInternalSelected] = useState<CalendarSelection[Mode] | undefined>(
     defaultSelected
   );
@@ -328,15 +380,52 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
   }, []);
 
   const [internalMonth, setInternalMonth] = useState(initialMonth);
-  const month = monthProp ? startOfCalendarMonth(monthProp, system, locale) : internalMonth;
+  /*
+   * Memoised on the *instant*, not on the prop. A controlled caller almost
+   * always passes a fresh `new Date(…)`, and deriving a new month object from
+   * it on every render invalidates the grid memo and the context memo below —
+   * so a calendar that has not moved rebuilds forty-two cells per keystroke
+   * somewhere else on the screen.
+   */
+  const controlledMonth = useMemo(
+    () => (monthProp ? startOfCalendarMonth(monthProp, system, locale) : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [monthProp?.getTime(), system, locale]
+  );
+  const month = controlledMonth ?? internalMonth;
+
+  /*
+   * How far the calendar may be paged, as the first day of the outermost month
+   * either way. `startMonth`/`endMonth` win where they are given, because they
+   * are the props about *navigation*; `minDate`/`maxDate` are about which days
+   * can be picked, and stand in when the navigation bounds are not stated.
+   */
+  const monthBounds = useMemo(() => {
+    const lower = startMonth ?? minDate;
+    const upper = endMonth ?? maxDate;
+    return {
+      from: lower ? startOfCalendarMonth(lower, system, locale) : undefined,
+      to: upper ? startOfCalendarMonth(upper, system, locale) : undefined,
+    };
+  }, [startMonth, minDate, endMonth, maxDate, system, locale]);
 
   const setMonth = useCallback(
     (next: Date) => {
-      const settled = startOfCalendarMonth(next, system, locale);
+      /*
+       * Clamped here rather than only at the arrows. The arrows guard
+       * themselves, but the caption's dropdowns and a controlled caller both
+       * reach this by other routes — and a month list that offers a year is a
+       * poor place to discover that the year was out of bounds.
+       */
+      const settled = clampDate(
+        startOfCalendarMonth(next, system, locale),
+        monthBounds.from,
+        monthBounds.to
+      );
       if (!monthProp) setInternalMonth(settled);
       onMonthChange?.(settled);
     },
-    [monthProp, onMonthChange, system, locale]
+    [monthProp, onMonthChange, system, locale, monthBounds]
   );
 
   const commit = useCallback(
@@ -350,6 +439,14 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
   const select = useCallback(
     (date: Date) => {
       const day = startOfDay(date);
+
+      /*
+       * A tap on a neighbouring month's cell — which only happens with
+       * `selectOutsideDays` — commits a date the grid is not showing. Page to
+       * it, or the selection lands in a greyed-out cell of the month you are
+       * still looking at and reads as having missed.
+       */
+      if (!isSameCalendarMonth(day, month, system, locale)) setMonth(day);
 
       if (mode === 'multiple') {
         const current = (value as Date[] | undefined) ?? [];
@@ -379,7 +476,7 @@ function CalendarRoot<Mode extends CalendarMode = 'single'>({
       const current = value as Date | undefined;
       commit((isSameDay(current, day) ? undefined : day) as CalendarSelection[Mode]);
     },
-    [mode, value, commit]
+    [mode, value, commit, month, system, locale, setMonth]
   );
 
   const context = useMemo(
@@ -563,10 +660,30 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
    */
   const first = startMonth ?? minDate;
   const last = endMonth ?? maxDate;
+  const firstParts = first ? calendarParts(first, system, locale) : null;
+  const lastParts = last ? calendarParts(last, system, locale) : null;
   const bounds = {
-    from: first ? calendarParts(first, system, locale).year : current.year - 100,
-    to: last ? calendarParts(last, system, locale).year : current.year + 10,
+    from: firstParts ? firstParts.year : current.year - 100,
+    to: lastParts ? lastParts.year : current.year + 10,
   };
+  /*
+   * The month list is bounded too, and only the year list used to be — so a
+   * calendar starting in March 1925 still offered January and February of 1925,
+   * and picking one navigated somewhere the calendar had said it would not go.
+   * Only the outermost year of each bound loses months; every year between them
+   * has all twelve.
+   */
+  const monthOptions = months
+    .map((label, index) => ({ label, month: index + 1 }))
+    .filter(({ month }) => {
+      if (firstParts && current.year === firstParts.year && month < firstParts.month) {
+        return false;
+      }
+      if (lastParts && current.year === lastParts.year && month > lastParts.month) {
+        return false;
+      }
+      return true;
+    });
   /*
    * Oldest first, the way a year runs. The list is long — a century by default
    * — so it is opened scrolled to the year already in the caption rather than
@@ -594,10 +711,10 @@ function CalendarDropdowns({ month, offset }: { month: Date; offset: number }) {
       <CaptionDropdown
         label={months[current.month - 1] ?? String(current.month)}
         accessibilityLabel="Month"
-        options={months}
-        active={current.month - 1}
+        options={monthOptions.map((option) => option.label)}
+        active={monthOptions.findIndex((option) => option.month === current.month)}
         width={MONTH_LIST_WIDTH}
-        onSelect={(index) => choose(index - (current.month - 1))}
+        onSelect={(index) => choose((monthOptions[index]?.month ?? current.month) - current.month)}
       />
       <CaptionDropdown
         label={String(current.year)}
@@ -787,16 +904,12 @@ function CalendarGrid({
    * boundaries and the day numbers differ — so the walk itself is the same
    * either way and only where it starts moves.
    */
-  const weeks = useMemo(() => {
-    const first = startOfCalendarMonth(month, system, locale);
-    const lead = (first.getDay() - weekStartsOn + 7) % 7;
-    const start = addDays(first, -lead);
-    return Array.from({ length: 6 }, (_unusedWeek, week) =>
-      Array.from({ length: 7 }, (_unusedDay, day) => addDays(start, week * 7 + day))
-    );
-  }, [month, weekStartsOn, system, locale]);
+  const weeks = useMemo(
+    () => monthGrid(month, weekStartsOn, system, locale),
+    [month, weekStartsOn, system, locale]
+  );
   const headings = useMemo(() => weekdayNames(locale, weekStartsOn), [locale, weekStartsOn]);
-  const today = startOfDay(new Date());
+  const today = useToday();
 
   const range = mode === 'range' ? (value as DateRange | undefined) : undefined;
   const multiple = mode === 'multiple' ? ((value as Date[] | undefined) ?? []) : [];

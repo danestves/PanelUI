@@ -72,7 +72,7 @@
     "react native calendar component",
     {
       "addedIn": "0.27.0",
-      "updatedIn": "0.30.0"
+      "updatedIn": "0.32.0"
     }
   ],
   "carousel": [

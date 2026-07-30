@@ -292,6 +292,7 @@
     "description": "Contribution grid with a themed colour ramp and a readout.",
     "registryDependencies": [
       "cn",
+      "date",
       "text"
     ]
   },

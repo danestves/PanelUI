@@ -347,13 +347,24 @@ export function isSameCalendarMonth(
   return one.year === two.year && one.month === two.month;
 }
 
+/** Whether two days fall in the same year and month of the given calendar. */
+function sameCalendarMonthParts(a: CalendarParts, b: CalendarParts): boolean {
+  return a.year === b.year && a.month === b.month;
+}
+
 /**
  * The first day of the calendar month `date` falls in.
  *
  * Walked back a day at a time rather than computed. A Hijri month is 29 or 30
  * days depending on the year, and the platform's own calendar data already
- * knows which — stepping until the day number reads 1 asks it, instead of
- * shipping a table that will disagree with the device.
+ * knows which — asking it is better than shipping a table that will disagree
+ * with the device.
+ *
+ * The walk stops where the *month number changes*, not where the day number
+ * reads 1. The observational Islamic calendars the platforms ship do not always
+ * label a day 1: in 1450 AH, month 11 day 30 is followed directly by month 12
+ * day 2. Hunting for a day 1 that is never emitted walked the cursor off the
+ * end of its budget and then paged the calendar to the same month forever.
  */
 export function startOfCalendarMonth(
   date: Date,
@@ -362,9 +373,15 @@ export function startOfCalendarMonth(
 ): Date {
   if (system === 'gregory') return startOfMonth(date);
   let cursor = startOfDay(date);
-  for (let step = 0; step < 31; step += 1) {
-    if (calendarParts(cursor, system, locale).day === 1) return cursor;
-    cursor = addDays(cursor, -1);
+  const target = calendarParts(cursor, system, locale);
+  // 32, not 31: one step more than the longest month, so the loop is bounded
+  // by a real answer rather than by running out.
+  for (let step = 0; step < 32; step += 1) {
+    const previous = addDays(cursor, -1);
+    if (!sameCalendarMonthParts(calendarParts(previous, system, locale), target)) {
+      return cursor;
+    }
+    cursor = previous;
   }
   return cursor;
 }
@@ -377,8 +394,13 @@ export function daysInCalendarMonth(
 ): number {
   if (system === 'gregory') return endOfMonth(date).getDate();
   const start = startOfCalendarMonth(date, system, locale);
+  const parts = calendarParts(start, system, locale);
+  // The first offset that lands outside this month is its length, whatever the
+  // day numbers along the way are called.
   for (let length = 28; length <= 31; length += 1) {
-    if (calendarParts(addDays(start, length), system, locale).day === 1) return length;
+    if (!sameCalendarMonthParts(calendarParts(addDays(start, length), system, locale), parts)) {
+      return length;
+    }
   }
   return 30;
 }

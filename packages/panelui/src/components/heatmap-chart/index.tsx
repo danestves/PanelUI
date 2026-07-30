@@ -60,6 +60,7 @@ import Svg, { ClipPath, Defs, G, Line as SvgLine, Rect } from 'react-native-svg'
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
+import { normalizeWeekStart, startOfDay } from '../../utils/date';
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
@@ -225,12 +226,15 @@ export function buildHeatmapCalendar(
   entries: { date: Date; count: number }[],
   options: { start?: Date; end?: Date; weekStartDay?: number } = {}
 ): HeatmapColumn[] {
-  const weekStartDay = options.weekStartDay ?? 0;
+  const weekStartDay = normalizeWeekStart(options.weekStartDay ?? 0);
   if (!entries.length && !options.start) return [];
 
   const times = entries.map((entry) => entry.date.getTime());
-  const start = options.start ?? new Date(Math.min(...times));
-  const end = options.end ?? new Date(Math.max(...times));
+  // Both bounds at local midnight, and both the same way. Comparing a
+  // normalised lower bound against a raw upper one drops the last day whenever
+  // the caller's `end` carries a time earlier than the cell being tested.
+  const start = startOfDay(options.start ?? new Date(Math.min(...times)));
+  const end = startOfDay(options.end ?? new Date(Math.max(...times)));
 
   const byDay = new Map<string, number>();
   for (const entry of entries) {
@@ -240,7 +244,7 @@ export function buildHeatmapCalendar(
 
   // Back up to the first day of the week the range starts in, so column 0 is a
   // whole week and every row lines up with a weekday for the rest of the chart.
-  const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const cursor = startOfDay(start);
   cursor.setDate(cursor.getDate() - ((cursor.getDay() - weekStartDay + 7) % 7));
 
   const columns: HeatmapColumn[] = [];
@@ -251,7 +255,7 @@ export function buildHeatmapCalendar(
     const date = new Date(cursor);
     // Before the range starts and after it ends the cell exists but has no
     // reading — `count: 0` and no date, so the tooltip stays quiet on it.
-    const inRange = date >= startOfDay(start) && date <= end;
+    const inRange = date >= start && date <= end;
     column.push({
       bin: row,
       count: inRange ? (byDay.get(dayKey(date)) ?? 0) : 0,
@@ -267,10 +271,6 @@ export function buildHeatmapCalendar(
   }
 
   return columns;
-}
-
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 function dayKey(date: Date) {
