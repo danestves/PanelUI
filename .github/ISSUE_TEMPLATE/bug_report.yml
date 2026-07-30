@@ -1,0 +1,115 @@
+name: Bug report
+description: Something in PanelUI does not behave the way it is documented.
+title: '[bug]: '
+labels: ['bug', 'needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug.
+
+        Before you file: please search the [existing issues](https://github.com/panel-ui/PanelUI/issues?q=is%3Aissue)
+        first, and check that you are on the [latest version](https://www.npmjs.com/package/panelui-native).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+      placeholder: |
+        I expected the bottom sheet to close when the Android back button is pressed.
+        Instead the screen behind it popped and the sheet stayed open.
+    validations:
+      required: true
+
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      description: Which component, if it is one in particular?
+      placeholder: BottomSheet
+    validations:
+      required: false
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: |
+        The smallest piece of code that shows the problem. A link to a repository or an Expo Snack
+        is even better — most bugs that cannot be reproduced cannot be fixed.
+      render: tsx
+      placeholder: |
+        <BottomSheet>
+          <BottomSheet.Content>…</BottomSheet.Content>
+        </BottomSheet>
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: PanelUI version
+      placeholder: 0.32.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options:
+        - iOS
+        - Android
+        - Both
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        The output of `npx expo-env-info`, or just the versions of Expo SDK, React Native,
+        Reanimated and Uniwind.
+      render: text
+      placeholder: |
+        Expo SDK: 57.0.7
+        React Native: 0.81.0
+        react-native-reanimated: 4.0.0
+        uniwind: 1.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How is PanelUI installed?
+      options:
+        - The panelui-native package
+        - Source copied in with panelui-cli
+        - Both
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Any error message in full, and a screenshot or recording if it is visual.
+      placeholder: Paste the whole error, not just its first line — the stack is usually the useful part.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and this is not a duplicate.
+          required: true
+        - label: I am on the latest version of `panelui-native`.
+          required: true
+        - label: I restarted the Metro dev server after changing `metro.config.js` or `global.css`.
+          required: false

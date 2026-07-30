@@ -11,218 +11,74 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/panelui-native"><img src="https://img.shields.io/npm/v/panelui-native?style=flat-square" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/panelui-native"><img src="https://img.shields.io/npm/dm/panelui-native?style=flat-square" alt="npm downloads per month" /></a>
   <a href="https://github.com/panel-ui/PanelUI/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
-  <img src="https://img.shields.io/badge/platforms-iOS%20%7C%20Android-black?style=flat-square" alt="Platforms" />
+  <img src="https://img.shields.io/badge/platforms-iOS%20%7C%20Android-black?style=flat-square" alt="Platforms: iOS and Android" />
   <img src="https://img.shields.io/badge/Expo-SDK%2057%2B-000?style=flat-square&logo=expo" alt="Expo SDK 57+" />
+</p>
+
+<p align="center">
+  <a href="https://panelui.dev/docs"><b>Documentation</b></a> ·
+  <a href="https://panelui.dev/docs/installation">Installation</a> ·
+  <a href="https://panelui.dev/docs/components/button">Components</a> ·
+  <a href="https://panelui.dev/docs/theming">Theming</a> ·
+  <a href="https://panelui.dev/docs/cli">CLI</a>
 </p>
 
 ---
 
-**PanelUI** brings compound-component APIs and a coherent visual language to React Native — built for Expo from day one and engineered for performance:
+**PanelUI is an open-source React Native UI component library for Expo apps**, styled with
+Tailwind CSS v4 and animated with Reanimated 4. **73 accessible, typed components** — buttons,
+inputs, forms, dialogs, bottom sheets, charts, calendars, maps and a set of AI chat components —
+in one coherent visual language, with light and dark themes out of the box.
 
-- ⚡ **Uniwind (Tailwind v4)** — the fastest Tailwind bindings for React Native. No Babel transform, ~2.4–3× faster styling than NativeWind.
-- 🧵 **UI-thread animations** — every animation (press feedback, switches, sheets, dialogs, tabs) runs on the UI thread with Reanimated 4. No JS-thread jank.
-- 🎨 **Semantic design tokens** — one colour system (`background`, `primary`, `muted`, `destructive`, …) in light and dark, resolved to static values for native.
-- 🌗 **Native dark mode** — theme switching handled by Uniwind at the native level, without re-rendering your tree.
-- ♿ **Accessible** — proper `accessibilityRole` and state wiring on every interactive component.
-- 📦 **Tree-shakeable, typed, zero native code** — pure TypeScript, works in Expo Go.
+Pure TypeScript with no native modules, so it runs in **Expo Go** with no `prebuild`, no Xcode and
+no Android Studio.
 
-## Install
+## Why PanelUI
 
-Needs an Expo SDK 57+ app and Node 20+. No `prebuild`, no Xcode, no Android Studio — PanelUI has
-no native modules, so it runs in Expo Go.
+- ⚡ **Fast styling** — [Uniwind](https://github.com/jonlepage/uniwind) brings Tailwind v4 to React
+  Native with no Babel transform, around 2.4–3× faster than the alternatives.
+- 🧵 **UI-thread animations** — press feedback, switches, sheets, dialogs and tabs all run on the
+  UI thread with Reanimated 4. No JS-thread jank.
+- 🎨 **Semantic design tokens** — one colour system (`background`, `primary`, `muted`,
+  `destructive`, …) across light and dark, precomputed to static values for native.
+- 🌗 **Native dark mode** — theme switching is applied natively, without re-rendering your tree.
+- ♿ **Accessible by default** — every interactive component wires up `accessibilityRole` and
+  mirrors its state.
+- 🧩 **Compound APIs** — `Card.Header`, `Dialog.Content`, `Table.Row` compose the way the markup
+  reads.
+- 📦 **Typed, tree-shakeable, zero native code** — works in Expo Go, ships full TypeScript types.
+
+## Getting started
+
+Needs an Expo SDK 57+ app and Node 20+.
 
 ```bash
 npx expo install panelui-native uniwind tailwindcss @react-native-masked-view/masked-view expo-linear-gradient react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-svg react-native-worklets
 ```
 
-Then three files: [Metro config, CSS entry, provider](#installation) — or follow the
-**[full walkthrough](https://panelui.dev/docs/installation)**, which explains where each file goes
-and lists a fix for every error people hit.
+Then three files — a Metro config, a CSS entry and the provider. The
+**[installation guide](https://panelui.dev/docs/installation)** walks through each one and lists a
+fix for every error people hit.
 
-Or copy a single component's source into your project, to own and edit it:
+### Or copy the source
+
+`panelui-cli` copies a component's source into your project, to own and edit:
 
 ```bash
 npx panelui-cli@latest init
 npx panelui-cli@latest add button
 ```
 
-Both are supported, and you can mix them. See [the docs](https://panelui.dev/docs/cli).
-
-## Components
-
-| | | |
-| --- | --- | --- |
-| Accordion | Frame | ScrollFade |
-| Alert | HeatmapChart | ScrollText |
-| AreaChart | Input | SectionRail |
-| Attachment | InputGroup | Select |
-| Avatar | Item | Separator |
-| Badge | Label | Shimmer |
-| BarChart | LineChart | Signature |
-| BottomSheet | Loader | Skeleton |
-| Breadcrumb | Map | Slider |
-| Button | Marker | Soundwave |
-| Calendar | Menu | Spinner |
-| Card | Message | Steps |
-| Carousel | MessageScroller | Surface |
-| Checkbox | NumberInput | Switch |
-| Chip | OtpInput | Table |
-| DatePicker | Popover | Tabs |
-| Dialog | Post | ThinkingOrb |
-| Direction | Progress | Timeline |
-| EmptyState | RadioGroup | Toast |
-| Field | Rating | ToggleButton |
-| Flow | RingChart | Tooltip |
-| Form | ScrollCanvas | Typography |
-
-`Select` shows its options in a bottom sheet, expanded in place, or floating
-over the page — one `presentation` prop, because which is right depends on what
-surrounds the trigger rather than on what the options are. Past a couple of
-dozen options, `searchable` puts a filter above the list.
-`Table` keeps rows and columns lined up in a runtime that has no table layout:
-a stack of flex rows dividing their width the same way, with the hairlines, the
-muted header and footer bands, the striping and a sort arrow that turns over
-rather than being swapped.
-`Menu` is the list of things you can do to something — rows that are verbs
-rather than values, carrying their own roles, their dismiss-on-select rule and
-a destructive tint. Submenus expand in place rather than flying out sideways,
-because a finger has no path across to a second panel.
-`Tooltip` is a small inverted label that names the control under your finger:
-a long press reveals it, it points at its trigger, and it hides itself after a
-beat rather than waiting to be dismissed.
-`Dialog`, `BottomSheet`, `Popover` and `Select` each own the Android hardware
-back button while they are open, closing themselves instead of letting the
-press pop the screen behind them.
-`Frame` is a widget shell: a card of rows sitting in a tray, with the strip of
-tray left showing above it carrying the title.
-`InputGroup` measures its prefix/suffix and pads the input to match.
-`OtpInput` spreads a one-time code across a cell per digit, over a single
-hidden field so the keyboard, SMS autofill and paste all still behave.
-`ScrollText` and `ScrollCanvas` scrub a reveal off the scroll position,
-`ThinkingOrb` says which kind of busy an agent is rather than just that it is,
-and `Soundwave` draws the level of a voice — capsules, metering bars, a
-travelling wave or an ambient glow — from a number your recorder already has.
-`Direction` flips a subtree right to left without restarting the app.
-`Flow` is a canvas of nodes joined by edges that you pan, pinch and rearrange
-with a finger — positions live in a shared value, so dragging a node re-routes
-every edge attached to it without React rendering once.
-`Signature` captures a signature drawn with a finger and hands it back as SVG,
-a data URI, or a file.
-`Rating` is a row of stars you read or set — drag to pick a value, `precision`
-to allow half stars, and any fractional value renders as a partial fill.
-`Map` draws its basemap from your theme tokens, so a map matches the app it is
-in rather than the tile server it came from.
-`Loader` is nine loading animations behind one `variant` prop — dots, bars, a
-morphing ring and a ball bouncing along a row of them — all on the UI thread,
-and all drawing in the foreground of whatever surface they land on.
-The four charts share their scales and path building, so a line and an area
-drawn from the same data lie exactly on top of each other. `LineChart` is
-change over time, `AreaChart` is what a total is made of, `BarChart` compares
-categories by length, and `RingChart` measures each ring against its own
-target rather than against the others.
-
-Plus primitives: `PanelUIProvider`, `Portal`, `AnimatedPressable`, `useTheme`,
-`useThemeMode`, `useToast`, `cn`.
-
-## Installation
-
-After the [install command above](#install), three files. Full walkthrough with troubleshooting:
-[panelui.dev/docs/installation](https://panelui.dev/docs/installation).
-
-### 1. `metro.config.js`
-
-**In the root of your project, next to `package.json`** — not in `app/`, not in `src/`. A Metro
-config anywhere else is silently ignored and none of your classes will do anything. A fresh Expo
-app has no such file; `npx expo customize metro.config.js` writes one.
-
-```js
-// metro.config.js
-const { getDefaultConfig } = require('expo/metro-config');
-const { withUniwindConfig } = require('uniwind/metro');
-
-const config = getDefaultConfig(__dirname);
-
-module.exports = withUniwindConfig(config, {
-  cssEntryFile: './src/global.css',
-  dtsFile: './uniwind-types.d.ts',
-  // Only needed to switch to the Moon or Grass themes at runtime.
-  extraThemes: ['moon', 'moon-dark', 'grass', 'grass-dark'],
-});
-```
-
-`cssEntryFile` and `dtsFile` are relative to this file. `./src/global.css` is where
-`create-expo-app` puts the CSS — if yours is at the project root, change it to `'./global.css'`.
-Nothing validates the path: name a file that does not exist and Metro still bundles, while not one
-class resolves — a blank screen and `Uniwind - We couldn't find your variable --color-background`.
-
-In a monorepo this file belongs in the app's own folder, with `watchFolders` pointing at the
-workspace root — see [`apps/example/metro.config.js`](apps/example/metro.config.js).
-
-### 2. `global.css`
-
-**Look for this file before you create one** — an app made by `create-expo-app` already has
-`src/global.css`. Add these lines at the top of it and leave the rest below; a second CSS file at
-the project root gives you two entries, only one of which is compiled.
-
-```css
-/* src/global.css */
-@import 'tailwindcss';
-@import 'uniwind';
-@import 'panelui-native/theme.css';
-
-@source '../node_modules/panelui-native/src';
-```
-
-`@source` is relative to **the CSS file**, and has to land on `node_modules/panelui-native/src` —
-hence the `../` above, from `src/`. From `src/styles/global.css` it is `'../../node_modules/…'`.
-Get it wrong and your own classes work while PanelUI's components come out unstyled.
-
-### 3. The entry file
-
-Import the CSS at the top, and wrap the app in the provider. The default template uses Expo Router
-with routes under `src/`, so there is usually no `App.tsx` — the entry is `src/app/_layout.tsx`,
-which already returns a navigation `ThemeProvider` to wrap rather than replace:
-
-```tsx
-// src/app/_layout.tsx
-import '../global.css';
-
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
-import { PanelUIProvider } from 'panelui-native';
-
-import AppTabs from '@/components/app-tabs';
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
-  return (
-    <PanelUIProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AppTabs />
-      </ThemeProvider>
-    </PanelUIProvider>
-  );
-}
-```
-
-`PanelUIProvider` owns the gesture root, the themed page background, the portal host used by
-overlays, and the toast viewport. One at the root is enough. No `babel.config.js` is needed —
-Expo's default preset already wires the worklets plugin Reanimated needs.
-
-Then `npx expo start --clear`. Metro reads all three of `metro.config.js`, `global.css` and
-`extraThemes` once at startup, so restart the dev server after changing any of them; `--clear` on a
-running one is not enough.
+Both approaches are supported and you can mix them. See [the CLI docs](https://panelui.dev/docs/cli).
 
 ## Usage
 
 ```tsx
-import { Button, Card, Dialog, Input, useTheme } from 'panelui-native';
+import { Button, Card, Dialog, Input } from 'panelui-native';
 
-function Example() {
-  const { theme, setTheme } = useTheme();
-
+function CreateProject() {
   return (
     <Card>
       <Card.Header>
@@ -256,7 +112,7 @@ function Example() {
 }
 ```
 
-Every component accepts `className`, so you can restyle anything with Tailwind classes:
+Every component takes `className`, so anything can be restyled with Tailwind classes:
 
 ```tsx
 <Button className="w-full rounded-full" labelClassName="uppercase">
@@ -264,57 +120,34 @@ Every component accepts `className`, so you can restyle anything with Tailwind c
 </Button>
 ```
 
-### Buttons
+## Components
 
-`Button` supports icon slots, a `loading` state (renders a variant-matched
-spinner and blocks presses), and `fullWidth`:
+**73 components**, documented with live examples and full props tables at
+**[panelui.dev/docs](https://panelui.dev/docs)**.
 
-```tsx
-<Button loading={saving} startContent={<SaveIcon />} fullWidth>
-  {saving ? 'Saving…' : 'Save changes'}
-</Button>
-```
+- **Layout & content** — Card, Frame, Surface, Item, Separator, Typography, Table, Timeline,
+  Steps, Accordion, Carousel, EmptyState, Skeleton
+- **Forms & inputs** — Form, Field, Input, Textarea, InputGroup, NumberInput, OtpInput, Select,
+  Checkbox, RadioGroup, Switch, Slider, Rating, Signature, DatePicker, Calendar, Label
+- **Actions & navigation** — Button, ToggleButton, Menu, Tabs, Breadcrumb, SectionRail, Chip,
+  Badge
+- **Overlays & feedback** — Dialog, BottomSheet, Popover, Tooltip, Toast, Alert, Progress,
+  Spinner, Loader
+- **Data visualisation** — LineChart, AreaChart, BarChart, RingChart, HeatmapChart, Map, Marker,
+  Flow
+- **AI components** — Message, MessageScroller, Response, Reasoning, Plan, Task, Sources,
+  CodeBlock, Shimmer, ThinkingOrb, Soundwave
+- **Social** — Post, Avatar, Attachment
+- **Scroll & motion** — ScrollFade, ScrollText, ScrollCanvas, Direction
 
-### Progress
-
-Determinate or indeterminate, animated on the UI thread. `value` is `0–100`:
-
-```tsx
-<Progress value={uploaded} color="success" />
-<Progress indeterminate color="info" />
-```
-
-`color` is `primary | success | warning | destructive | info` and `size` is
-`sm | md | lg`.
-
-### Toasts
-
-The toast queue lives outside React, so `toast.show()` works from anywhere —
-including API clients and other non-component code:
-
-```tsx
-const { toast } = useToast();
-
-toast.show('Link copied');
-toast.show({
-  variant: 'success',
-  label: 'Deployment complete',
-  description: 'panelui.dev is live on production.',
-  actionLabel: 'View',
-  onActionPress: ({ hide }) => hide(),
-});
-```
+Plus the primitives: `PanelUIProvider`, `Portal`, `AnimatedPressable`, `useTheme`, `useThemeMode`,
+`useToast`, `cn`.
 
 ## Theming
 
-Six themes ship in [`theme.css`](packages/panelui/theme.css): `light`, `dark`,
-`moon`, `moon-dark`, `grass` and `grass-dark`. Each family sets its own radius scale as
-well as its own palette, so switching one changes the shape of the UI too.
-
-Uniwind only gives `light` and `dark` `prefers-color-scheme` handling — any other
-theme compiles to a plain class selector and cannot adapt on its own. So each brand
-ships as a light/dark pair, and `useThemeMode()` treats brand and mode as separate
-axes:
+Six themes ship in [`theme.css`](packages/panelui/theme.css) — `light`, `dark`, `moon`,
+`moon-dark`, `grass` and `grass-dark`. Each family sets its own radius scale as well as its own
+palette, so switching one changes the shape of the UI too.
 
 ```tsx
 const { theme, setTheme } = useTheme();
@@ -322,49 +155,18 @@ setTheme('moon-dark');
 setTheme('system'); // follow the device
 
 const { family, mode, setFamily, toggleMode } = useThemeMode();
-toggleMode();          // dark ↔ light, staying in the current brand
-setFamily('grass');    // switch family, staying in the current mode
+toggleMode();       // dark ↔ light, staying in the current brand
+setFamily('grass'); // switch family, staying in the current mode
 ```
 
-Named themes must be registered in `extraThemes` in your Metro config, or
-`setTheme` throws "it was not registered".
-
-Tokens are CSS variables. Override them in your own `global.css` using the same
-`@variant` shape the library uses — Uniwind does not support the web's
-`:root` / `.dark` pattern:
-
-```css
-@import 'panelui-native/theme.css';
-
-@layer theme {
-  :root {
-    @variant light {
-      --color-primary: #4f46e5;
-    }
-    @variant dark {
-      --color-primary: #818cf8;
-    }
-  }
-}
-```
-
-Every theme must define the same set of variables — Uniwind fails the build with
-"All themes must have the same variables" otherwise.
-
-## Performance principles
-
-Every component follows the same rules:
-
-1. Animations run on the UI thread (Reanimated 4) — never the RN `Animated` API.
-2. Variant styles are computed once at module scope with `tailwind-variants`.
-3. Overlays mount lazily and unmount after their exit animation.
-4. Theme switches are applied natively by Uniwind without a tree re-render.
-
-The [example app](apps/example) is an Expo Router showcase — a browsable component
-gallery with a live demo per component and a theme picker, used to smoke-test every
-component in all six themes before a release.
+Tokens are CSS variables and can be overridden in your own `global.css`. See
+**[the theming guide](https://panelui.dev/docs/theming)** for the token reference and the
+`@variant` shape overrides have to use.
 
 ## Example app
+
+An Expo Router showcase with a live demo for every component and a theme picker — used to
+smoke-test the whole library in all six themes before a release.
 
 ```sh
 git clone https://github.com/panel-ui/PanelUI.git
@@ -377,13 +179,25 @@ Then press `i` for iOS or `a` for Android.
 
 ## Contributing
 
-Contributions are welcome! The library lives in [`packages/panelui`](packages/panelui), the showcase app in [`apps/example`](apps/example).
+Contributions are welcome. The library lives in [`packages/panelui`](packages/panelui), the
+showcase in [`apps/example`](apps/example) and the documentation site in
+[`apps/docs`](apps/docs).
 
 ```sh
 npm install         # install workspace deps
 npm run typecheck   # typecheck all workspaces
-npm run build       # build the library with react-native-builder-bob
+npm run build       # build the library
 ```
+
+Read **[CONTRIBUTING.md](CONTRIBUTING.md)** before opening a pull request, and please follow the
+**[Code of Conduct](CODE_OF_CONDUCT.md)**.
+
+## Community
+
+- **[Report a bug](https://github.com/panel-ui/PanelUI/issues/new?template=bug_report.yml)** or
+  **[request a component](https://github.com/panel-ui/PanelUI/issues/new?template=feature_request.yml)**
+- **[Ask a question](https://github.com/panel-ui/PanelUI/discussions)** in Discussions
+- Star the repo if PanelUI is useful to you — it is how other people find it
 
 ## License
 

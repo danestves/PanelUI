@@ -1,0 +1,97 @@
+name: Feature request
+description: Propose a new component, a new variant, or a change to an existing API.
+title: '[feat]: '
+labels: ['enhancement', 'needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the proposal.
+
+        PanelUI aims at one coherent visual language across 70-odd components, so it is worth
+        having the design conversation here before any code gets written.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change is this?
+      options:
+        - A new component
+        - A new variant or prop on an existing component
+        - A change to how an existing component behaves
+        - Theming or design tokens
+        - Documentation or the CLI
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: |
+        What are you trying to build, and where does PanelUI get in the way today? Describe the
+        situation rather than the solution — the best API is often not the one either of us
+        thought of first.
+      placeholder: |
+        I need a list row that reveals actions when swiped. Item gets me the row, but there is
+        nothing for the swipe, so I am reaching for a gesture handler and reimplementing the
+        press feedback.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you have in mind
+      description: An API sketch, if you have one. Rough is fine.
+      render: tsx
+      placeholder: |
+        <Item onPress={open}>
+          <Item.Content>…</Item.Content>
+          <Item.SwipeActions>
+            <Item.SwipeAction tone="destructive" onPress={remove}>Delete</Item.SwipeAction>
+          </Item.SwipeActions>
+        </Item>
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you are doing instead today
+      description: The workaround, and what is wrong with it.
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: |
+        Links to the same idea solved elsewhere, a screenshot, or a design you are working from.
+        Useful even when the implementation would be nothing alike.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and discussions and this is not a duplicate.
+          required: true
+        - label: I checked the [documentation](https://panelui.dev/docs) and no existing component covers this.
+          required: true
+
+  - type: dropdown
+    id: contributing
+    attributes:
+      label: Would you be willing to work on this?
+      description: Entirely optional, and not a condition of the proposal being accepted.
+      options:
+        - 'Yes, if the approach is agreed first'
+        - 'I could help test it'
+        - 'No'
+    validations:
+      required: false
