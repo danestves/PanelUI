@@ -60,6 +60,7 @@ import {
   type DirectionValue,
   DownloadIcon,
   EllipsisIcon,
+  EyeIcon,
   EmptyState,
   FacebookIcon,
   Field,
@@ -69,6 +70,7 @@ import {
   Form,
   Frame,
   GoogleIcon,
+  HeartIcon,
   HeatmapChart,
   type HeatmapCell,
   buildHeatmapCalendar,
@@ -86,8 +88,10 @@ import {
   Loader,
   type LoaderVariant,
   Marker,
+  MaximizeIcon,
   Menu,
   Message,
+  MessageCircleIcon,
   MessageScroller,
   Plan,
   Reasoning,
@@ -101,6 +105,8 @@ import {
   PlayIcon,
   PlusSquareIcon,
   Popover,
+  Post,
+  type PostVote,
   Portal,
   Progress,
   RadioGroup,
@@ -108,6 +114,7 @@ import {
   RingChart,
   type RingDatum,
   ReceiptIcon,
+  RepeatIcon,
   Scrim,
   SearchIcon,
   SendIcon,
@@ -179,6 +186,13 @@ const AVATARS = [
   'https://i.pravatar.cc/150?img=32',
   'https://i.pravatar.cc/150?img=47',
 ];
+
+/** Photographs for the Post demos, wide enough to crop to 16:10 without blur. */
+const POST_PHOTOS = {
+  savings: 'https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?w=900&q=60',
+  workshop: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=900&q=60',
+  coast: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=60',
+};
 
 export interface Demo {
   /** Label shown in the variant picker. */
@@ -5581,6 +5595,223 @@ function TaskRunDemo() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Post                                                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The full card. Every count in the footer is live, so a press moves a number
+ * rather than only lighting an icon.
+ */
+function FeedPostDemo() {
+  const [liked, setLiked] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  return (
+    <Post variant="feed" className="w-full">
+      <Post.Header>
+        <Post.Author
+          name="Dwayne F. White"
+          verified
+          timestamp="Posted 3m ago"
+          avatar={{ uri: AVATARS[0] }}
+        />
+        <Post.Action>
+          <EllipsisIcon size={18} />
+        </Post.Action>
+      </Post.Header>
+
+      <Post.Body onTagPress={() => {}}>
+        {
+          "I've been working hard to pay off my credit card debt, and I'm wondering what strategies you've all found most effective? #FinancialFreedom #DebtSnowball"
+        }
+      </Post.Body>
+
+      <Post.Media
+        source={{ uri: POST_PHOTOS.savings }}
+        alt="A coin going into a piggy bank beside stacks of change"
+        overlay={
+          <View className="absolute end-3 top-3 h-8 w-8 items-center justify-center rounded-lg bg-black/45">
+            <MaximizeIcon size={16} color="#ffffff" />
+          </View>
+        }
+      />
+
+      <Post.Footer>
+        <Post.Stat icon={EyeIcon} value="5,874" />
+        <Post.Stat
+          icon={HeartIcon}
+          tone="like"
+          active={liked}
+          value={liked ? 216 : 215}
+          onPress={() => setLiked((on) => !on)}
+        />
+        <Post.Stat icon={MessageCircleIcon} value="11" onPress={() => {}} />
+        <Post.Stat
+          icon={BookmarkIcon}
+          tone="save"
+          align="end"
+          active={saved}
+          value={saved ? 'Saved' : 'Save'}
+          onPress={() => setSaved((on) => !on)}
+        />
+      </Post.Footer>
+    </Post>
+  );
+}
+
+/**
+ * The ranked-community shape: a score pill beside the headline. Pressing the
+ * arrow already cast clears the vote, so a mind can be changed.
+ */
+function VotePostDemo() {
+  const [vote, setVote] = useState<PostVote>(null);
+  const base = 1240;
+  const score = base + (vote === 'up' ? 1 : vote === 'down' ? -1 : 0);
+
+  return (
+    <Post variant="vote" className="w-full">
+      <Post.Header>
+        <Post.Community
+          name="r/reactnative"
+          avatar={{ uri: AVATARS[1] }}
+          meta="5h ago"
+        />
+        <Post.Action>
+          <EllipsisIcon size={18} />
+        </Post.Action>
+      </Post.Header>
+
+      <Post.Title>Reanimated 4 shipped — what actually changed?</Post.Title>
+      <Post.Body numberOfLines={3}>
+        The worklet runtime is the headline, but the part that matters day to day
+        is that layout animations finally compose with shared values.
+      </Post.Body>
+
+      <Post.Footer>
+        <Post.Votes score={score.toLocaleString()} vote={vote} onVote={setVote} />
+        <Post.Stat icon={MessageCircleIcon} value="184" onPress={() => {}} />
+        <Post.Stat icon={ShareNodesIcon} value="Share" align="end" onPress={() => {}} />
+      </Post.Footer>
+    </Post>
+  );
+}
+
+/** A dense timeline row: name and handle on one line, no media. */
+function CompactPostDemo() {
+  const [liked, setLiked] = useState(true);
+  const [reposted, setReposted] = useState(false);
+
+  return (
+    <Post variant="compact" className="w-full">
+      <Post.Header>
+        <Post.Author
+          name="Ada Okonkwo"
+          handle="@ada"
+          timestamp="12m"
+          avatar={{ uri: AVATARS[2] }}
+        />
+        <Post.Action>
+          <EllipsisIcon size={16} />
+        </Post.Action>
+      </Post.Header>
+
+      <Post.Body onMentionPress={() => {}}>
+        Spent the morning deleting a caching layer nobody had touched in a year.
+        Fastest the app has ever been. cc @dwayne
+      </Post.Body>
+
+      <Post.Footer>
+        <Post.Stat icon={MessageCircleIcon} value="8" onPress={() => {}} />
+        <Post.Stat
+          icon={RepeatIcon}
+          tone="repost"
+          active={reposted}
+          value={reposted ? 41 : 40}
+          onPress={() => setReposted((on) => !on)}
+        />
+        <Post.Stat
+          icon={HeartIcon}
+          tone="like"
+          active={liked}
+          value={liked ? 312 : 311}
+          onPress={() => setLiked((on) => !on)}
+        />
+        <Post.Stat icon={EyeIcon} value="9.1k" align="end" />
+      </Post.Footer>
+    </Post>
+  );
+}
+
+/** The image is the card, and the author is laid over it. */
+function MediaPostDemo() {
+  const [liked, setLiked] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  return (
+    <Post variant="media" className="w-full">
+      {/* The scrim comes with the variant: white type over a photograph is only
+          legible against one, and a flat panel would have an edge of its own. */}
+      <Post.Media
+        source={{ uri: POST_PHOTOS.coast }}
+        aspectRatio={4 / 3}
+        alt="A coastline at dusk"
+      />
+      <Post.Header>
+        <Post.Author
+          name="Marta Lindqvist"
+          verified
+          timestamp="Yesterday"
+          avatar={{ uri: AVATARS[1] }}
+        />
+      </Post.Header>
+
+      <Post.Body onTagPress={() => {}}>
+        Four hours of walking for eleven minutes of light. #goldenhour
+      </Post.Body>
+
+      <Post.Footer>
+        <Post.Stat
+          icon={HeartIcon}
+          tone="like"
+          active={liked}
+          value={liked ? '2,041' : '2,040'}
+          onPress={() => setLiked((on) => !on)}
+        />
+        <Post.Stat icon={MessageCircleIcon} value="63" onPress={() => {}} />
+        <Post.Stat
+          icon={BookmarkIcon}
+          tone="save"
+          align="end"
+          active={saved}
+          onPress={() => setSaved((on) => !on)}
+        />
+      </Post.Footer>
+    </Post>
+  );
+}
+
+/**
+ * All four in a scroll, which is the only place a feed card is really judged.
+ *
+ * Not `fullBleed`: this one keeps the screen's header, because it has no way
+ * back of its own and a feed running under the notch is a feed you cannot
+ * leave.
+ */
+function PostFeedDemo() {
+  return (
+    <ScrollView
+      contentContainerClassName="gap-4 px-4 pb-12 pt-1"
+      showsVerticalScrollIndicator={false}
+    >
+      <FeedPostDemo />
+      <VotePostDemo />
+      <CompactPostDemo />
+      <MediaPostDemo />
+    </ScrollView>
+  );
+}
+
 const PLAN_STEPS = [
   { title: 'Make the in-range test inclusive', meta: 'utils/date.ts' },
   { title: 'Round the band only where it stops', meta: 'calendar/index.tsx' },
@@ -10255,6 +10486,24 @@ export const COMPONENTS: ComponentEntry[] = [
             <CodeBlock code={AI_PATCH} language="diff" />
           </View>
         ),
+      },
+    ],
+  },
+  {
+    slug: 'post',
+    name: 'Post',
+    summary: 'A card carrying something somebody said, and what everyone did about it',
+    demos: [
+      { label: 'Feed card', render: () => <FeedPostDemo /> },
+      { label: 'Vote post', render: () => <VotePostDemo /> },
+      { label: 'Compact', render: () => <CompactPostDemo /> },
+      { label: 'Media first', render: () => <MediaPostDemo /> },
+      {
+        label: 'A feed',
+        id: 'feed',
+        description: 'All four in a scroll, which is where a card is really judged.',
+        fullPage: true,
+        render: () => <PostFeedDemo />,
       },
     ],
   },

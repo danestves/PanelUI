@@ -514,5 +514,13 @@
       "addedIn": "0.30.0",
       "updatedIn": "0.32.0"
     }
+  ],
+  "post": [
+    "Post",
+    "A social card — author, body, media and the counts underneath, with the votes animated.",
+    "react native social post card component",
+    {
+      "addedIn": "0.32.0"
+    }
   ]
 }

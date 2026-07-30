@@ -133,12 +133,18 @@ export function CalendarIcon({ size = 16, color, ...props }: IconProps) {
   );
 }
 
-export function BookmarkIcon({ size = 16, color, ...props }: IconProps) {
+export function BookmarkIcon({
+  size = 16,
+  color,
+  filled,
+  ...props
+}: IconProps & { filled?: boolean }) {
   const resolved = useResolvedColor(color, '#737373');
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
       <Path
         d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"
+        fill={filled ? resolved : 'none'}
         stroke={resolved}
         strokeWidth={2}
         strokeLinecap="round"
@@ -971,6 +977,161 @@ export function CircleIcon({ size = 16, color, ...props }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
       <Circle cx={12} cy={12} r={8} stroke={resolved} strokeWidth={2} />
+    </Svg>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Social                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The icons a post's action row is made of.
+ *
+ * These are the only ones in the set that take `filled`, and it is not a
+ * stylistic choice: a like, a save and a vote are toggles, and the outline and
+ * the solid are the two states of one control. Drawn as two different icons
+ * they would swap shape under the finger; drawn as one that fills, the shape
+ * stays put and only the inside changes.
+ */
+export interface ToggleIconProps extends IconProps {
+  /** Solid rather than outlined — the on state of a like, a save, a vote. */
+  filled?: boolean;
+}
+
+/** Upvote. Filled once the vote is cast. */
+export function ArrowUpIcon({ size = 16, color, filled, ...props }: ToggleIconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M9 18v-6H5l7-7 7 7h-4v6z"
+        fill={filled ? resolved : 'none'}
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** Downvote. The same arrow, turned over. */
+export function ArrowDownIcon({ size = 16, color, filled, ...props }: ToggleIconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M9 6v6H5l7 7 7-7h-4V6z"
+        fill={filled ? resolved : 'none'}
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** A like. */
+export function HeartIcon({ size = 16, color, filled, ...props }: ToggleIconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
+        fill={filled ? resolved : 'none'}
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** A reply, or the count of them. */
+export function MessageCircleIcon({ size = 16, color, filled, ...props }: ToggleIconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"
+        fill={filled ? resolved : 'none'}
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** Views — how many times a thing has been seen rather than acted on. */
+export function EyeIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx={12} cy={12} r={3} stroke={resolved} strokeWidth={2} />
+    </Svg>
+  );
+}
+
+/** A repost — the same thing sent round again. */
+export function RepeatIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="m2 9 3-3 3 3M5 6v10a2 2 0 0 0 2 2h6M22 15l-3 3-3-3M19 18V8a2 2 0 0 0-2-2h-6"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export interface BadgeCheckIconProps extends IconProps {
+  /** The tick's colour when the rosette is solid. Defaults to white. */
+  checkColor?: string;
+}
+
+/**
+ * The verified rosette.
+ *
+ * Solid by default, unlike everything else here. A verification mark is a
+ * claim about the account rather than a control, and an outlined one next to
+ * an outlined like button reads as another thing you could press.
+ */
+export function BadgeCheckIcon({
+  size = 16,
+  color,
+  checkColor = '#ffffff',
+  ...props
+}: BadgeCheckIconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"
+        fill={resolved}
+      />
+      <Path
+        d="m9 12 2 2 4-4"
+        stroke={checkColor}
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </Svg>
   );
 }

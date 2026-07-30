@@ -445,6 +445,21 @@ export {
   type PopoverAlign,
   type PopoverPresentation,
 } from './components/popover';
+export {
+  Post,
+  type PostProps,
+  type PostHeaderProps,
+  type PostAuthorProps,
+  type PostActionProps,
+  type PostCommunityProps,
+  type PostTitleProps,
+  type PostBodyProps,
+  type PostMediaProps,
+  type PostFooterProps,
+  type PostStatProps,
+  type PostVotesProps,
+  type PostVote,
+} from './components/post';
 export { Progress, type ProgressProps } from './components/progress';
 export {
   RadioGroup,
@@ -616,7 +631,10 @@ export {
 export {
   AlertTriangleIcon,
   AppleIcon,
+  ArrowDownIcon,
+  ArrowUpIcon,
   ArrowUpRightIcon,
+  BadgeCheckIcon,
   BellIcon,
   BookmarkIcon,
   CalendarIcon,
@@ -633,9 +651,11 @@ export {
   CrosshairIcon,
   DownloadIcon,
   EllipsisIcon,
+  EyeIcon,
   FacebookIcon,
   FileIcon,
   GoogleIcon,
+  HeartIcon,
   IconColorProvider,
   InfoIcon,
   ImageIcon,
@@ -643,6 +663,7 @@ export {
   ListChecksIcon,
   LockIcon,
   MaximizeIcon,
+  MessageCircleIcon,
   MicIcon,
   MinusIcon,
   MoonIcon,
@@ -654,6 +675,7 @@ export {
   PlusIcon,
   PlusSquareIcon,
   ReceiptIcon,
+  RepeatIcon,
   RotateCcwIcon,
   RotateCwIcon,
   SearchIcon,
@@ -669,6 +691,8 @@ export {
   XIcon,
   useIconColor,
   type IconProps,
+  type ToggleIconProps,
+  type BadgeCheckIconProps,
 } from './icons';
 
 // Hooks

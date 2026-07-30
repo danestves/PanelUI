@@ -53,28 +53,28 @@ Both are supported, and you can mix them. See [the docs](https://panelui.dev/doc
 
 | | | |
 | --- | --- | --- |
-| Accordion | Frame | ScrollText |
-| Alert | HeatmapChart | SectionRail |
-| AreaChart | Input | Select |
-| Attachment | InputGroup | Separator |
-| Avatar | Item | Shimmer |
-| Badge | Label | Signature |
-| BarChart | LineChart | Skeleton |
-| BottomSheet | Loader | Slider |
-| Breadcrumb | Map | Soundwave |
-| Button | Marker | Spinner |
-| Calendar | Menu | Steps |
-| Card | Message | Surface |
-| Carousel | MessageScroller | Switch |
-| Checkbox | NumberInput | Table |
-| Chip | OtpInput | Tabs |
-| DatePicker | Popover | ThinkingOrb |
-| Dialog | Progress | Timeline |
-| Direction | RadioGroup | Toast |
-| EmptyState | Rating | ToggleButton |
-| Field | RingChart | Tooltip |
-| Flow | ScrollCanvas | Typography |
-| Form | ScrollFade |  |
+| Accordion | Frame | ScrollFade |
+| Alert | HeatmapChart | ScrollText |
+| AreaChart | Input | SectionRail |
+| Attachment | InputGroup | Select |
+| Avatar | Item | Separator |
+| Badge | Label | Shimmer |
+| BarChart | LineChart | Signature |
+| BottomSheet | Loader | Skeleton |
+| Breadcrumb | Map | Slider |
+| Button | Marker | Soundwave |
+| Calendar | Menu | Spinner |
+| Card | Message | Steps |
+| Carousel | MessageScroller | Surface |
+| Checkbox | NumberInput | Switch |
+| Chip | OtpInput | Table |
+| DatePicker | Popover | Tabs |
+| Dialog | Post | ThinkingOrb |
+| Direction | Progress | Timeline |
+| EmptyState | RadioGroup | Toast |
+| Field | Rating | ToggleButton |
+| Flow | RingChart | Tooltip |
+| Form | ScrollCanvas | Typography |
 
 `Select` shows its options in a bottom sheet, expanded in place, or floating
 over the page — one `presentation` prop, because which is right depends on what

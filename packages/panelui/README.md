@@ -203,6 +203,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `NumberInput` | Numeric field stepped by buttons or typed by hand |
 | `OtpInput` | One-time-code field drawn as a row of separate cells |
 | `Popover` | Panel anchored to the element that opened it |
+| `Post` | Social card — author, body, media and the counts underneath |
 | `Progress` | Determinate and indeterminate progress bar |
 | `RadioGroup` | Single-select list of options |
 | `Rating` | A row of stars to read or set a score |

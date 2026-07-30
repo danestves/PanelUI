@@ -1,0 +1,372 @@
+---
+title: Post
+description: A social card — author, body, media and the counts underneath, with the votes animated.
+status: new
+---
+
+A card carrying something somebody said, and what everyone did about it.
+
+Four shapes, because a feed is not one thing. `feed` is the full card — author, body, media and a row of counts. `vote` puts a score pill beside a headline, the way a ranked community reads. `compact` drops the media and puts the name and handle on one line, for a dense timeline. `media` gives the image the whole card and lays the author over it.
+
+What they share is the anatomy. The same parts appear in every variant, so moving between them is a prop rather than a rewrite: the variant decides padding, media shape and where the author sits, not which parts exist.
+
+## Installation
+
+Post ships with the library — no separate install.
+
+```tsx
+import { Post, EllipsisIcon, EyeIcon, HeartIcon, MessageCircleIcon, BookmarkIcon, RepeatIcon, ShareNodesIcon } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add post
+```
+
+## Usage
+
+```tsx
+<Post variant="feed">
+  <Post.Header>
+    <Post.Author
+      name="Dwayne F. White"
+      verified
+      timestamp="Posted 3m ago"
+      avatar={{ uri: face }}
+    />
+    <Post.Action>
+      <EllipsisIcon size={18} />
+    </Post.Action>
+  </Post.Header>
+
+  <Post.Body>
+    I&apos;ve been paying off my credit card debt #FinancialFreedom
+  </Post.Body>
+
+  <Post.Media source={{ uri: photo }} alt="A coin going into a piggy bank" />
+
+  <Post.Footer>
+    <Post.Stat icon={EyeIcon} value="5,874" />
+    <Post.Stat
+      icon={HeartIcon}
+      tone="like"
+      active={liked}
+      value={liked ? 216 : 215}
+      onPress={() => setLiked((on) => !on)}
+    />
+    <Post.Stat icon={MessageCircleIcon} value="11" onPress={openReplies} />
+    <Post.Stat icon={BookmarkIcon} tone="save" align="end" value="Save" onPress={save} />
+  </Post.Footer>
+</Post>
+```
+
+## Composition
+
+```tsx
+<Post>
+  <Post.Header>
+    <Post.Author />
+    <Post.Community />
+    <Post.Action />
+  </Post.Header>
+  <Post.Title />
+  <Post.Body />
+  <Post.Media />
+  <Post.Footer>
+    <Post.Votes />
+    <Post.Stat />
+  </Post.Footer>
+</Post>
+```
+
+`Post.Stat` takes the icon **component**, not an element — `icon={HeartIcon}` rather than `icon={<HeartIcon />}`. It re-renders the icon on every toggle to fill it and recolour it, which it cannot do to an element it was handed.
+
+Every part reads the variant from the root, so `size` and `variant` are set once and nothing below needs telling again.
+
+`align="end"` on a `Post.Stat` pushes it and everything after it to the footer’s trailing edge. That is how a Save or a Share ends up opposite the counts rather than crowded against them — the counts are things the post has, and an action you can take is not one of them.
+
+## Examples
+
+### Feed card
+
+The full shape. Every count in the footer is live: `active` fills the icon and takes the tone colour, and passing the changed `value` alongside it is what makes the number move. `tone` is which colour lit means — a like is red, a save the accent, a repost green.
+
+```tsx
+<Post variant="feed">
+  <Post.Header>
+    <Post.Author name="Dwayne F. White" verified timestamp="Posted 3m ago" avatar={face} />
+    <Post.Action><EllipsisIcon size={18} /></Post.Action>
+  </Post.Header>
+
+  <Post.Body>
+    What debt strategies have you found effective? #FinancialFreedom
+  </Post.Body>
+
+  <Post.Media source={photo} alt="A coin going into a piggy bank" />
+
+  <Post.Footer>
+    <Post.Stat icon={EyeIcon} value="5,874" />
+    <Post.Stat
+      icon={HeartIcon}
+      tone="like"
+      active={liked}
+      value={liked ? 216 : 215}
+      onPress={() => setLiked((on) => !on)}
+    />
+    <Post.Stat icon={MessageCircleIcon} value="11" onPress={openReplies} />
+    <Post.Stat icon={BookmarkIcon} tone="save" align="end" value="Save" onPress={save} />
+  </Post.Footer>
+</Post>
+```
+
+### Votes
+
+A score with two arrows. Both fill and take a colour when cast and the pill tints with them, because an arrow alone is 17pt of a card and not enough to notice from arm’s length. Pressing the arrow already cast clears the vote — `onVote` receives `null` — which is not a nicety: a vote that cannot be withdrawn is one people hesitate to cast.
+
+```tsx
+const [vote, setVote] = useState<PostVote>(null);
+const score = 1240 + (vote === 'up' ? 1 : vote === 'down' ? -1 : 0);
+
+<Post variant="vote">
+  <Post.Header>
+    <Post.Community name="r/reactnative" avatar={groupAvatar} meta="5h ago" />
+    <Post.Action><EllipsisIcon size={18} /></Post.Action>
+  </Post.Header>
+
+  <Post.Title>Reanimated 4 shipped — what actually changed?</Post.Title>
+  <Post.Body numberOfLines={3}>{body}</Post.Body>
+
+  <Post.Footer>
+    <Post.Votes score={score.toLocaleString()} vote={vote} onVote={setVote} />
+    <Post.Stat icon={MessageCircleIcon} value="184" onPress={openReplies} />
+    <Post.Stat icon={ShareNodesIcon} value="Share" align="end" onPress={share} />
+  </Post.Footer>
+</Post>
+```
+
+### Compact
+
+For a dense timeline. The handle and the timestamp join the name on one line instead of taking a second, and there is no media — which is the whole difference between a row and a card.
+
+```tsx
+<Post variant="compact">
+  <Post.Header>
+    <Post.Author name="Ada Okonkwo" handle="@ada" timestamp="12m" avatar={face} />
+    <Post.Action><EllipsisIcon size={16} /></Post.Action>
+  </Post.Header>
+
+  <Post.Body onMentionPress={openProfile}>
+    Deleted a caching layer nobody had touched in a year. cc @dwayne
+  </Post.Body>
+
+  <Post.Footer>
+    <Post.Stat icon={MessageCircleIcon} value="8" onPress={openReplies} />
+    <Post.Stat icon={RepeatIcon} tone="repost" active={reposted} value={40} onPress={repost} />
+    <Post.Stat icon={HeartIcon} tone="like" active={liked} value={311} onPress={like} />
+    <Post.Stat icon={EyeIcon} value="9.1k" align="end" />
+  </Post.Footer>
+</Post>
+```
+
+### Media first
+
+The image is the card and the author is laid over it. The `media` variant switches `Post.Media`’s scrim on by default — a gradient over the top 112 points, which is the only reason white type stays legible over a photograph. A flat panel would do the same job and bring an edge of its own, and that edge reads as a bar covering the picture.
+
+```tsx
+<Post variant="media">
+  <Post.Media
+    source={photo}
+    aspectRatio={4 / 3}
+    alt="A coastline at dusk"
+  />
+  <Post.Header>
+    <Post.Author name="Marta Lindqvist" verified timestamp="Yesterday" avatar={face} />
+  </Post.Header>
+
+  <Post.Body onTagPress={openTag}>
+    Four hours of walking for eleven minutes of light. #goldenhour
+  </Post.Body>
+
+  <Post.Footer>
+    <Post.Stat icon={HeartIcon} tone="like" active={liked} value="2,040" onPress={like} />
+    <Post.Stat icon={MessageCircleIcon} value="63" onPress={openReplies} />
+    <Post.Stat icon={BookmarkIcon} tone="save" align="end" active={saved} onPress={save} />
+  </Post.Footer>
+</Post>
+```
+
+### Hashtags and mentions
+
+A string body is tokenised: `#tag` and `@handle` are coloured, and pressable when you supply a handler. They are found in the text rather than declared, because a body arrives as one string from wherever it was typed — asking every caller to pre-split it would mean every caller writing the same tokeniser. A non-string child is left entirely alone.
+
+```tsx
+<Post.Body onTagPress={(tag) => router.push(`/tag/${tag}`)} onMentionPress={openProfile}>
+  Shipped it. #FinancialFreedom #DebtSnowball — thanks @ada for the review.
+</Post.Body>
+```
+
+## Variants
+
+### `variant`
+
+- `feed` *(default)*
+- `vote`
+- `compact`
+- `media`
+
+```tsx
+<Post variant="feed">…</Post>
+<Post variant="vote">…</Post>
+<Post variant="compact">…</Post>
+<Post variant="media">…</Post>
+```
+
+### `size`
+
+- `default` *(default)*
+- `sm`
+
+```tsx
+<Post size="default">…</Post>
+<Post size="sm">…</Post>
+```
+
+## API Reference
+
+### Post
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `variant` | `PostVariant` | `feed` | Which of the four shapes. |
+| `size` | `'default' \| 'sm'` | `default` | `sm` tightens the type for a card in a sidebar or a preview. |
+| `onPress` | `PressableProps['onPress']` | — | Opening the post itself. The parts inside keep their own presses. |
+
+### Post.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Post.Author
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `name` | `string` | — | Display name. |
+| `handle` | `string` | — | `@handle`, shown beside the name in `compact` and under it elsewhere. |
+| `avatar` | `ImageSourcePropType` | — |  |
+| `fallback` | `string` | — | Initials behind a missing or broken avatar. |
+| `verified` | `boolean` | — | Draws the verification rosette after the name. |
+| `timestamp` | `ReactNode` | — | "Posted 3m ago" — whatever the caller wants to call the time. |
+
+### Post.Action
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Post.Community
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `name` | `string` | — | The group's name — "r/reactnative", "#design". |
+| `avatar` | `ImageSourcePropType` | — |  |
+| `meta` | `ReactNode` | — | How long ago, and anything else that belongs on the line. |
+
+### Post.Title
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Post.Body
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `numberOfLines` | `number` | — | How many lines before it is cut off. Unlimited by default. |
+| `onTagPress` | `(tag: string) => void` | — | Called with the tag, without its `#`. Makes hashtags pressable. |
+| `onMentionPress` | `(handle: string) => void` | — | Called with the handle, without its `@`. |
+
+### Post.Media
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `source` | `ImageSourcePropType` | — |  |
+| `aspectRatio` | `number` | `16 / 10` | Width over height. `16 / 10` by default — wide enough not to eat the feed. |
+| `scrim` | `'none' \| 'top' \| 'bottom' \| 'both'` | — | Darkens an edge of the image so type laid over it stays legible. A gradient rather than a panel: a flat rectangle over the top of a photograph has an edge of its own, and that edge reads as a bar covering the picture rather than as shading. `media` posts default to `top`, where the author sits; everything else to `none`. |
+| `overlay` | `ReactNode` | — | Laid over the image: an expand affordance, a duration, a gallery count. |
+| `alt` | `string` | — | Described for a screen reader. An image with nothing to say is decorative. |
+| `onPress` | `PressableProps['onPress']` | — |  |
+
+### Post.Footer
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Post.Stat
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `icon` | `ComponentType<IconProps & { filled?: boolean }>` | — | The icon component itself, not an element — it is re-rendered on toggle. |
+| `value` | `ReactNode` | — | The number, or a word where a number would be meaningless ("Save"). |
+| `active` | `boolean` | `false` | Lit, and filled. |
+| `tone` | `'default' \| 'like' \| 'save' \| 'repost'` | `'default'` | Which colour "lit" is. |
+| `align` | `'start' \| 'end'` | `'start'` | Pushes this stat and everything after it to the trailing edge. |
+
+### Post.Votes
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `score` | `number \| string` | — | The score as it stands, with the reader's own vote already in it. |
+| `vote` | `PostVote` | `null` | Which way this reader voted, if either. |
+| `onVote` | `(vote: PostVote) => void` | — | Called with the new vote. Pressing the arrow already cast clears it, so `null` arrives as often as the other two — a vote you cannot take back is a vote people hesitate over. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | `vertical` stacks the arrows beside a thumbnail, the way a ranked list reads. |
+| `disabled` | `boolean` | `false` |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### The number is the point
+
+Every control in the footer is a toggle over a count, and a like that lights up while `215` sits there has not told you it counted. So a value that changes animates: the new number arrives from the direction the count travelled — rising into place when it went up, dropping in when it came down — while the old one fades.
+
+Only the arriving half carries the direction. The number leaving was rendered before anyone knew which way the count would go, so asking it to animate knowingly would mean knowing the future.
+
+A value that is not a number cross-fades instead, since there is no direction for the word "Save" to travel in. All of it is skipped under Reduce Motion, where the value simply changes.
+
+### State stays with you
+
+Nothing here keeps a count. `active`, `value`, `vote` and `score` are all yours, because the moment a like is optimistic — and it always is — the component's copy and the server's answer are two different things and only you know how to reconcile them. What the component owns is what a press *looks* like.
+
+### Toggles fill rather than swap
+
+The like, save, repost and vote icons take a `filled` prop and are the same shape in both states. Drawn as two different icons they would change shape under the finger; drawn as one that fills, the shape stays put and only the inside changes.
+
+### Media has a fixed aspect ratio
+
+`Post.Media` crops to `aspectRatio` — `16 / 10` by default — rather than following the image's own proportions. A feed whose card heights are decided by whatever was uploaded scrolls like a broken staircase, and a reader who has learnt where the like button sits loses it on every card.
+
+Keep it wide. A portrait ratio makes one card most of a screen, and a feed you can only see one item of is a feed nobody scrolls — `4 / 3` is about as tall as a card should get before the next one stops hinting that it exists.
+
+### The scrim is a gradient, not a panel
+
+`scrim` darkens an edge of the image so type laid over it stays legible. It is on by default in the `media` variant, where the author sits over the picture, and off everywhere else.
+
+It is a gradient over a fixed 112 points rather than a flat rectangle, and rather than a fraction of the image. A flat panel has an edge of its own, and that edge reads as a bar covering the photograph rather than as shading; a fraction of a tall portrait shades half the picture to do a job that needs its top inch.
+
+### The overflow menu sits on the name
+
+`Post.Action` is as tall as the name's own line box and the author block is top-aligned, so the menu lands on the username's line in all four variants rather than drifting between the two lines of the author block as the variant changes what is underneath the name.
+
+### Accessibility
+
+Each stat is a button carrying its selected state, and every target has `hitSlop` around it — the footer is dense enough that spacing the controls far enough apart to be hit reliably would make it twice as wide as the numbers in it. `Post.Votes` announces itself as adjustable with the score as its value, and each arrow is a button of its own. `Post.Media` is only described to a screen reader when you pass `alt`; an image with nothing to say is decorative and better skipped.

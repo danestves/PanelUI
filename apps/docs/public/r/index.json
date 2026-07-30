@@ -496,6 +496,20 @@
     "registryDependencies": []
   },
   {
+    "name": "post",
+    "type": "registry:ui",
+    "description": "A social card — author, body, media and the counts underneath, with the votes animated.",
+    "registryDependencies": [
+      "animated-pressable",
+      "avatar",
+      "cn",
+      "haptics",
+      "icons",
+      "text",
+      "use-previous"
+    ]
+  },
+  {
     "name": "progress",
     "type": "registry:ui",
     "description": "Determinate and indeterminate progress bar.",
