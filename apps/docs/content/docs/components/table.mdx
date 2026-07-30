@@ -42,6 +42,11 @@ npx panelui-cli@latest add table
 ## Composition
 
 ```tsx
+<Table.Frame>
+  <Table.Header />
+  <Table.Body />
+</Table.Frame>
+
 <Table>
   <Table.Header>
     <Table.Row>
@@ -64,6 +69,8 @@ npx panelui-cli@latest add table
 ```
 
 A `Table.Head` and the `Table.Cell`s beneath it must be given the same `flex` or `width`, or the column drifts. That is the one rule the component cannot enforce for you: nothing in React Native connects the third cell of one row to the third cell of the next except both of them dividing the row the same way.
+
+`Table.Frame` is the one place that rule gets easier rather than harder. The headings end up outside the card, but they are still the same `Table.Header` you would have written inside it — so the columns are declared once and the lift keeps them measuring against the same padding as the rows.
 
 ## Examples
 
@@ -109,9 +116,38 @@ Tints every other body row, which helps the eye track across a wide one. Leave i
 </Table>
 ```
 
+### In a frame
+
+Column headings are not data. `Table.Frame` puts them on the tray above the card, where they read as the label for the block, and leaves the card holding nothing but rows. Give it the whole table — it takes the `Table.Header` out itself, so the columns are still declared once.
+
+```tsx
+<Table.Frame
+  title="Invoices"
+  description="Five most recent"
+  action={<Badge variant="outline">Q3</Badge>}
+>
+  <Table.Header>
+    <Table.Row>
+      <Table.Head flex={2}>Invoice</Table.Head>
+      <Table.Head>Method</Table.Head>
+      <Table.Head align="end">Amount</Table.Head>
+    </Table.Row>
+  </Table.Header>
+  <Table.Body>
+    {invoices.map((invoice) => (
+      <Table.Row key={invoice.id}>
+        <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+        <Table.Cell>{invoice.method}</Table.Cell>
+        <Table.Cell align="end">{invoice.amount}</Table.Cell>
+      </Table.Row>
+    ))}
+  </Table.Body>
+</Table.Frame>
+```
+
 ### Sortable columns
 
-A header given `onPress` is the handle for sorting by its column. Pass `sortDirection` to the column being sorted by and leave it off the others; the arrow rotates between the two directions rather than being replaced, and sits dimmed on the columns that could be sorted but are not.
+A header given `onPress` is the handle for sorting by its column. Pass `sortDirection` to the column being sorted by and leave it off the others: that column takes a full-strength arrow and a foreground label, while the rest keep a dimmed arrow saying they could be sorted too. The arrow rotates between the two directions rather than being replaced, so it stays the same arrow pointing the other way.
 
 ```tsx
 const [column, setColumn] = useState<'id' | 'amount'>('amount');
@@ -161,17 +197,18 @@ const [picked, setPicked] = useState('INV-002');
 
 ### Wider than the screen
 
-More columns than a phone is wide belong in a horizontal scroller, not squeezed until the columns are unreadable. Give the table a `minWidth` and fixed `width` per column, and wrap it in `ScrollFade` so the fading edge says there is more to the right.
+More columns than a phone is wide belong in a horizontal scroller, not squeezed until the columns are unreadable. Give the table a `minWidth` and a fixed `width` per column, and wrap it in `ScrollFade` so the fading edge says there is more to the right. The `w-full` on the wrapper is load-bearing — without a width of its own it shrink-wraps to the scroller’s content and the table runs off the screen instead of clipping.
 
 ```tsx
-<ScrollFade size={24}>
+<ScrollFade size={24} className="w-full self-start">
   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-    <Table variant="outline" size="sm" striped style={{ minWidth: 560 }}>
+    <Table variant="outline" size="sm" striped style={{ minWidth: 440 }}>
       <Table.Header>
         <Table.Row>
-          <Table.Head width={96}>Invoice</Table.Head>
-          <Table.Head width={110}>Customer</Table.Head>
-          <Table.Head width={110} align="end">Amount</Table.Head>
+          <Table.Head width={86}>Invoice</Table.Head>
+          <Table.Head width={100}>Customer</Table.Head>
+          <Table.Head width={82}>Status</Table.Head>
+          <Table.Head width={92} align="end">Amount</Table.Head>
         </Table.Row>
       </Table.Header>
       {/* …body, with the same widths… */}
@@ -226,7 +263,7 @@ A header with no rows under it looks broken rather than empty. `Table.Empty` rep
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `size` | `TableSize` | `default` | Row density. `Table.Row`, `Table.Head` and `Table.Cell` follow it, so it only needs setting here. |
-| `striped` | `boolean` | — | Tint every other body row. Helps the eye track across a wide row; drop it for a short table, where the stripes are louder than the data. |
+| `striped` | `boolean` | `false` | Tint every other body row. Helps the eye track across a wide row; drop it for a short table, where the stripes are louder than the data. |
 
 ### Table.Header
 
@@ -291,6 +328,17 @@ A header with no rows under it looks broken rather than empty. `Table.Empty` rep
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
+### Table.Frame
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `ReactNode` | — | Caption on the tray, above the column headings. |
+| `action` | `ReactNode` | — | Trailing slot on the title row — a button, a badge, a menu. |
+| `description` | `ReactNode` | — | A line under the title, for what the table is counting. |
+| `size` | `TableSize` | `default` | Row density, as on `Table`. |
+| `striped` | `boolean` | `false` | Tint every other body row, as on `Table`. |
+
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
@@ -298,6 +346,12 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 ### Columns are a convention, not a mechanism
 
 There is no column model. A column exists because every row divides its width the same way, so `flex` and `width` on a `Table.Head` and on the `Table.Cell`s beneath it have to agree. `flex` is a share of the leftover width — the default of 1 makes columns even — and `width` pins a column that must not move, such as an icon or a state dot.
+
+### Sorting is yours
+
+The table renders a sort direction; it never sorts. `sortDirection` says which way the arrow points and `onPress` reports the tap — reordering the rows stays with you, because the data being reordered is yours and only you know whether that means a comparator, a refetch or a new query.
+
+What the component does own is making the press land. The sorted column takes a full-strength arrow *and* a foreground label at a heavier weight, because one signal at the size of a sort arrow is too quiet: a press that only nudges a dim chevron reads as a press that did nothing, even when the rows behind it did move.
 
 ### Long tables
 

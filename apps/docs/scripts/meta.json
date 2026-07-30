@@ -398,7 +398,8 @@
     "Rows and columns that stay lined up, with sortable headers.",
     "react native table component",
     {
-      "addedIn": "0.31.0"
+      "addedIn": "0.31.0",
+      "updatedIn": "0.32.0"
     }
   ],
   "tabs": [

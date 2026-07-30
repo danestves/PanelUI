@@ -5132,6 +5132,46 @@ function TableDemo({
   );
 }
 
+/** Headings on the tray, rows in the card — `Table.Frame` does the lift. */
+function FramedTableDemo() {
+  return (
+    <Table.Frame
+      className="w-full"
+      title="Invoices"
+      description="Five most recent"
+      action={<Badge variant="outline">Q3</Badge>}
+    >
+      <Table.Header>
+        <Table.Row>
+          <Table.Head flex={2}>Invoice</Table.Head>
+          <Table.Head>Method</Table.Head>
+          <Table.Head align="end">Amount</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {INVOICES.map((invoice) => (
+          <Table.Row key={invoice.id}>
+            <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+            <Table.Cell>{invoice.method}</Table.Cell>
+            <Table.Cell align="end">{invoiceAmount(invoice.amount)}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+      <Table.Footer>
+        <Table.Row>
+          <Table.Cell flex={2} labelClassName="font-medium">
+            Total
+          </Table.Cell>
+          <Table.Cell />
+          <Table.Cell align="end" labelClassName="font-medium">
+            {invoiceAmount(INVOICES.reduce((sum, i) => sum + i.amount, 0))}
+          </Table.Cell>
+        </Table.Row>
+      </Table.Footer>
+    </Table.Frame>
+  );
+}
+
 /** A column header is the handle for sorting by it; the arrow turns over. */
 function SortableTableDemo() {
   const [column, setColumn] = useState<'id' | 'amount'>('amount');
@@ -5237,33 +5277,36 @@ function SelectableTableDemo() {
 /**
  * More columns than a phone is wide. The table keeps a `minWidth` and scrolls
  * sideways rather than crushing the columns; the fade says there is more.
+ *
+ * `w-full` on the `ScrollFade` is what makes that true. Without it the wrapper
+ * shrink-wraps to the scroller's content and the table runs off the screen
+ * instead of clipping — a scroll view only scrolls once something has decided
+ * how wide its window is.
  */
 function WideTableDemo() {
   return (
-    <ScrollFade size={24}>
+    <ScrollFade size={24} className="w-full self-start">
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <Table variant="outline" size="sm" striped style={{ minWidth: 560 }}>
+        <Table variant="outline" size="sm" striped style={{ minWidth: 440 }}>
           <Table.Header>
             <Table.Row>
-              <Table.Head width={96}>Invoice</Table.Head>
-              <Table.Head width={110}>Customer</Table.Head>
-              <Table.Head width={96}>Method</Table.Head>
-              <Table.Head width={96}>Status</Table.Head>
-              <Table.Head width={110} align="end">
+              <Table.Head width={86}>Invoice</Table.Head>
+              <Table.Head width={100}>Customer</Table.Head>
+              <Table.Head width={82}>Status</Table.Head>
+              <Table.Head width={92} align="end">
                 Amount
               </Table.Head>
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {INVOICES.map((invoice, index) => (
+            {INVOICES.slice(0, 4).map((invoice, index) => (
               <Table.Row key={invoice.id}>
-                <Table.Cell width={96}>{invoice.id}</Table.Cell>
-                <Table.Cell width={110}>
-                  {['Acme', 'Globex', 'Initech', 'Umbrella', 'Soylent'][index]}
+                <Table.Cell width={86}>{invoice.id}</Table.Cell>
+                <Table.Cell width={100}>
+                  {['Acme', 'Globex', 'Initech', 'Umbrella'][index]}
                 </Table.Cell>
-                <Table.Cell width={96}>{invoice.method}</Table.Cell>
-                <Table.Cell width={96}>{invoice.status}</Table.Cell>
-                <Table.Cell width={110} align="end">
+                <Table.Cell width={82}>{invoice.status}</Table.Cell>
+                <Table.Cell width={92} align="end">
                   {invoiceAmount(invoice.amount)}
                 </Table.Cell>
               </Table.Row>
@@ -10760,6 +10803,7 @@ export const COMPONENTS: ComponentEntry[] = [
       { label: 'Basic', render: () => <TableDemo /> },
       { label: 'Outline', render: () => <TableDemo variant="outline" /> },
       { label: 'Striped', render: () => <TableDemo variant="outline" striped /> },
+      { label: 'In a frame', render: () => <FramedTableDemo /> },
       { label: 'Sortable columns', render: () => <SortableTableDemo /> },
       { label: 'Selectable rows', render: () => <SelectableTableDemo /> },
       { label: 'Wider than the screen', render: () => <WideTableDemo /> },

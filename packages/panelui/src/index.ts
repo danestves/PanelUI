@@ -257,6 +257,7 @@ export {
 export {
   Table,
   type TableProps,
+  type TableFrameProps,
   type TableHeaderProps,
   type TableBodyProps,
   type TableFooterProps,

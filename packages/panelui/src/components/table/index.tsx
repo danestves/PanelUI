@@ -31,6 +31,10 @@
  * </Table>
  * ```
  *
+ * `Table.Frame` is the same table in a widget shell, with the column headings
+ * lifted onto the tray above the card. It takes the whole table and does the
+ * lift itself, so the columns are still declared once.
+ *
  * A table wider than the phone belongs in a horizontal scroller with a
  * `minWidth` on the table, not squeezed until the columns are unreadable — wrap
  * it in `ScrollFade` and the cut edge tells you there is more to the right.
@@ -41,12 +45,14 @@
  */
 import {
   Children,
+  cloneElement,
   createContext,
   forwardRef,
   isValidElement,
   useContext,
   useEffect,
   useMemo,
+  type ReactElement,
   type ReactNode,
 } from 'react';
 import { View, type ViewProps } from 'react-native';
@@ -64,6 +70,8 @@ import {
 } from '../../primitives/animated-pressable';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
+import { selectionTick } from '../../utils/haptics';
+import { Frame } from '../frame';
 
 /** Long enough to read as the arrow turning over, short enough not to lag a tap. */
 const SORT_DURATION = 160;
@@ -392,6 +400,15 @@ export interface TableHeadProps extends Omit<ViewProps, 'children'> {
  * A column header. Given `onPress` it becomes the handle for sorting by that
  * column, and the arrow rotates between the two directions rather than being
  * replaced, so it is clear it is the same arrow pointing the other way.
+ *
+ * The sorted column is stated twice — a full-strength arrow *and* a label that
+ * takes the foreground colour and a heavier weight. One signal at the size of a
+ * sort arrow is too quiet to notice: a press that only nudges a dim 14px chevron
+ * reads as a press that did nothing, even when the rows behind it did move.
+ *
+ * The component never sorts. It renders the direction it is told and reports
+ * the press; which column, which way and in what order stay with the caller,
+ * because the data being sorted is theirs.
  */
 const TableHead = forwardRef<View, TableHeadProps>(
   (
@@ -413,6 +430,7 @@ const TableHead = forwardRef<View, TableHeadProps>(
     const { size } = useContext(TableContext);
     const { head, headLabel } = tableVariants({ size });
     const arrowColor = useCSSVariable('--color-muted-foreground');
+    const activeArrowColor = useCSSVariable('--color-foreground');
 
     const showArrow = sortable || !!sortDirection;
     const turn = useSharedValue(sortDirection === 'desc' ? 1 : 0);
@@ -431,17 +449,32 @@ const TableHead = forwardRef<View, TableHeadProps>(
     const label = (
       <>
         {textChildren(children, (text) => (
-          <Text className={headLabel({ className: labelClassName })}>{text}</Text>
+          <Text
+            className={headLabel({
+              className: cn(sortDirection && 'font-semibold text-foreground', labelClassName),
+            })}
+          >
+            {text}
+          </Text>
         ))}
         {showArrow ? (
           <Animated.View
             // Dimmed until this is the column being sorted by: the arrow is an
-            // affordance first and an answer second.
-            style={[arrowStyle, sortDirection ? undefined : { opacity: 0.4 }]}
+            // affordance first and an answer second. Far enough down that the
+            // two states are not mistaken for each other at a glance.
+            style={[arrowStyle, sortDirection ? undefined : { opacity: 0.35 }]}
           >
             <ChevronUpIcon
-              size={14}
-              color={typeof arrowColor === 'string' ? arrowColor : '#737373'}
+              size={sortDirection ? 16 : 14}
+              color={
+                sortDirection
+                  ? typeof activeArrowColor === 'string'
+                    ? activeArrowColor
+                    : '#0a0a0a'
+                  : typeof arrowColor === 'string'
+                    ? arrowColor
+                    : '#737373'
+              }
             />
           </Animated.View>
         ) : null}
@@ -467,7 +500,19 @@ const TableHead = forwardRef<View, TableHeadProps>(
         ref={ref}
         accessibilityRole="button"
         accessibilityState={{ selected: !!sortDirection }}
-        onPress={onPress}
+        accessibilityHint={
+          sortDirection === 'asc'
+            ? 'Sorts this column in descending order'
+            : sortDirection === 'desc'
+              ? 'Sorts this column in ascending order'
+              : 'Sorts the table by this column'
+        }
+        onPress={(event) => {
+          // The rows re-order under the finger; the tick is what ties that to
+          // the press, on the frame of the press rather than after the sort.
+          selectionTick();
+          onPress?.(event);
+        }}
         className={classes}
         style={[columnStyle({ flex, width }), style]}
         {...props}
@@ -578,7 +623,119 @@ const TableEmpty = forwardRef<View, TableEmptyProps>(
 );
 TableEmpty.displayName = 'Table.Empty';
 
+export interface TableFrameProps extends Omit<ViewProps, 'children'> {
+  className?: string;
+  /** Caption on the tray, above the column headings. */
+  title?: ReactNode;
+  /** Trailing slot on the title row — a button, a badge, a menu. */
+  action?: ReactNode;
+  /** A line under the title, for what the table is counting. */
+  description?: ReactNode;
+  /** Row density, as on `Table`. */
+  size?: TableSize;
+  /** Tint every other body row, as on `Table`. */
+  striped?: boolean;
+  children?: ReactNode;
+}
+
+/**
+ * The table in a widget shell: column headings on the tray, rows in the card
+ * below.
+ *
+ * The headings are lifted out of the card because they are not data. Sitting on
+ * the tray they read as the label for the block, the way the muted caption above
+ * any other panel does, and the card underneath holds nothing but rows — so the
+ * first row is a row rather than the thing after the header.
+ *
+ * The lift is done here rather than by the caller because the alternative is
+ * declaring every column twice: a heading row outside the table and a body
+ * inside it, with `flex` and `width` kept in agreement across the gap by hand.
+ * Given the whole table, this can take the `Table.Header` out of it and leave
+ * everything measuring against the same padding.
+ *
+ * ```tsx
+ * <Table.Frame title="Invoices" action={<Badge>5</Badge>}>
+ *   <Table.Header>
+ *     <Table.Row>
+ *       <Table.Head flex={2}>Invoice</Table.Head>
+ *       <Table.Head align="end">Amount</Table.Head>
+ *     </Table.Row>
+ *   </Table.Header>
+ *   <Table.Body>…</Table.Body>
+ * </Table.Frame>
+ * ```
+ */
+const TableFrame = forwardRef<View, TableFrameProps>(
+  (
+    {
+      className,
+      title,
+      action,
+      description,
+      size = 'default',
+      striped = false,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    const context = useMemo(() => ({ size, striped }), [size, striped]);
+
+    const { heading, body } = useMemo(() => {
+      let found: ReactElement<TableHeaderProps> | null = null;
+      const remaining: ReactNode[] = [];
+
+      for (const child of Children.toArray(children)) {
+        if (!found && isValidElement(child) && child.type === TableHeader) {
+          // The tray already draws the rule the panel's top border is, so the
+          // header's own would double it.
+          found = cloneElement(child as ReactElement<TableHeaderProps>, {
+            className: cn('border-b-0', (child.props as TableHeaderProps).className),
+          });
+          continue;
+        }
+        remaining.push(child);
+      }
+
+      return { heading: found, body: remaining };
+    }, [children]);
+
+    const captioned = title !== undefined || description !== undefined || !!action;
+
+    return (
+      <TableContext.Provider value={context}>
+        <Frame ref={ref} role="table" className={className} {...props}>
+          {captioned ? (
+            <Frame.Header className={cn('items-start', heading && 'pb-1.5')}>
+              <View className="min-w-0 flex-1 gap-0.5">
+                {textChildren(title, (text) => (
+                  <Frame.Title>{text}</Frame.Title>
+                ))}
+                {textChildren(description, (text) => (
+                  <Frame.Description>{text}</Frame.Description>
+                ))}
+              </View>
+              {action ? <Frame.Action>{action}</Frame.Action> : null}
+            </Frame.Header>
+          ) : null}
+
+          {heading ? (
+            // No horizontal padding of its own: `Table.Row` brings the same
+            // `px-4` the rows in the panel do, which is the whole reason the
+            // headings still line up with their cells from out here.
+            <View className={cn('pb-2', captioned ? 'pt-0' : 'pt-2.5')}>{heading}</View>
+          ) : null}
+
+          <Frame.Panel dividers={false}>{body}</Frame.Panel>
+        </Frame>
+      </TableContext.Provider>
+    );
+  }
+);
+TableFrame.displayName = 'Table.Frame';
+
 export const Table = Object.assign(TableRoot, {
+  Frame: TableFrame,
   Header: TableHeader,
   Body: TableBody,
   Footer: TableFooter,

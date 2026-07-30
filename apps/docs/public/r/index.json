@@ -715,6 +715,8 @@
     "registryDependencies": [
       "animated-pressable",
       "cn",
+      "frame",
+      "haptics",
       "icons",
       "text"
     ]
