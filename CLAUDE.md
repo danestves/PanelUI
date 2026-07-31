@@ -175,6 +175,29 @@ wrapper around it.
   4. **Remind the user to run `npm publish`.** Never publish to npm autonomously — that is the
      user's call, always.
 
+## "Native" means Liquid Glass on iOS
+
+When the user asks for something **native**, read it as: *iOS should draw it in Liquid Glass*.
+That is the specific ask, not a general "use the platform toolkit" — a control that hands off to
+SwiftUI but comes back looking like iOS 18 has not answered it.
+
+- On **iOS**, `native` is not enough on its own. Pass `glass` too. It goes on through
+  `buttonStyle('glass' | 'glassProminent')`, resolved by `getSwiftUIModifiers()` in
+  `src/native/index.ts` — the portable `@expo/ui` props cannot ask for the material, only a
+  modifier can. `glassProminent` is the tinted one and is what keeps the accent fill on a
+  primary button; drawing the material by hand over a `plain` button throws that fill away.
+- On **Android**, the same props mean the same thing: hand off to Jetpack Compose and let the
+  platform draw it. There is no Liquid Glass there and none is faked — the material is the iOS
+  half of one instruction, not a look to reproduce.
+- **Liquid Glass is iOS 26+.** Below that the modifier is inert and the button keeps its ordinary
+  platform style. That is indistinguishable from the prop not working, so before changing any
+  code on a report of "no glass", check what the demo actually passes and what OS it is running
+  on. The Button page's Liquid Glass version puts a glass button beside its non-glass twin
+  precisely so those two cases can be told apart.
+- A native control **ignores `className` and every theme token** — the platform owns its
+  colours, metrics and shape. Anything the look depends on has to be a prop or a modifier, and
+  spacing around it has to come from the container.
+
 ## Conventions
 
 - One folder per component: `packages/panelui/src/components/<name>/index.tsx`; export it from `src/index.ts`.

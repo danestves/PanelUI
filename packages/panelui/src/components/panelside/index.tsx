@@ -229,7 +229,10 @@ const itemVariants = tv({
 });
 
 const ctaVariants = tv({
-  base: 'h-11 shrink flex-row items-center justify-center gap-2 rounded-full px-5',
+  // Taller and wider than a list row's control, and set a step up. It is the
+  // one thing in the panel you are meant to reach for without reading, so it
+  // should not be the same size as the eight chat titles above it.
+  base: 'h-12 shrink flex-row items-center justify-center gap-2 rounded-full px-6',
   variants: {
     variant: {
       primary: 'bg-primary',
@@ -1042,6 +1045,9 @@ function PanelsideCta({
       <Button
         native
         glass={glass}
+        // The platform sizes a native button from its label, so the step up
+        // has to be asked for rather than styled on.
+        size="lg"
         variant={variant}
         accessibilityLabel={label}
         // Pressable allows `null` for disabled; Button does not.
@@ -1065,6 +1071,7 @@ function PanelsideCta({
         {icon}
         {label ? (
           <Text
+            size="lg"
             weight="medium"
             // The pill gives way before the panel does, so the label has to be
             // able to end somewhere rather than pushing the button off the edge.

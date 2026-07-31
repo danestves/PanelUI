@@ -149,7 +149,17 @@ const NATIVE_HEIGHT: Record<NonNullable<ButtonVariantProps['size']>, number> = {
   sm: 36,
   md: 44,
   lg: 48,
-  icon: 44,
+  /*
+   * Larger than the styled icon button, and deliberately.
+   *
+   * The styled one pads a glyph inside a box the theme drew. A native one is
+   * given a square frame instead of being left to the platform's own padding —
+   * which is sized for a *label* and comes out as a wide capsule — and 44 is
+   * the accessibility floor, not a comfortable circle. At 52 a 20-point glyph
+   * has real room on every side, which is what the platform's own round
+   * controls look like.
+   */
+  icon: 52,
 };
 
 /** PanelUI variants mapped onto the platform button styles. */
