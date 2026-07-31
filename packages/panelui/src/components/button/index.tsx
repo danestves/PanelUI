@@ -163,7 +163,7 @@ const NATIVE_HEIGHT: Record<NonNullable<ButtonVariantProps['size']>, number> = {
  * label here is a React Native view we host ourselves, so padding it in React
  * is both the simplest lever and the only one that works.
  */
-const NATIVE_ICON_PADDING = 12;
+const NATIVE_ICON_PADDING = 8;
 
 /**
  * The frame a native icon button is given, which must contain the padded glyph
@@ -180,7 +180,7 @@ const NATIVE_ICON_PADDING = 12;
  * deliberately not sent: adding it took the app down on entering any screen
  * with a native button on it.
  */
-const NATIVE_ICON_FRAME = 52;
+const NATIVE_ICON_FRAME = 48;
 
 
 /** PanelUI variants mapped onto the platform button styles. */
@@ -307,9 +307,20 @@ export const Button = forwardRef<View, ButtonProps>(
             {isStringLabel ? undefined : (
               <RNHostView matchContents>
                 {/* Padding the hosted label is what grows the button, because
-                    the platform draws its background around the label. */}
+                    the platform draws its background around the label. The
+                    centring is not redundant with it: a view lays a child out
+                    from its leading edge, so an icon narrower than the line it
+                    sits on ends up off to one side of a circle that is not. */}
                 <View
-                  style={size === 'icon' ? { padding: NATIVE_ICON_PADDING } : undefined}
+                  style={
+                    size === 'icon'
+                      ? {
+                          padding: NATIVE_ICON_PADDING,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }
+                      : undefined
+                  }
                 >
                   <IconColorProvider color={nativeContent}>
                     {textChildren(children, (text) => (
