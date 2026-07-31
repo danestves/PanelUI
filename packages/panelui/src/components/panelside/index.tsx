@@ -178,20 +178,20 @@ const GAP = 12;
  */
 const SCENE_SCALE = 1;
 /** The corner radius the scene picks up at full travel. */
-const SCENE_RADIUS = 36;
+const SCENE_RADIUS = 40;
 /** How far the scene is dimmed at full travel. */
 const SCENE_DIM = 0.45;
 /** How strongly the line along the scene's edge reads at full travel. */
-const EDGE_OPACITY = 0.35;
+const EDGE_OPACITY = 0.25;
 /**
  * How thick that line is.
  *
- * A point, not `StyleSheet.hairlineWidth`. A hairline is one physical pixel,
- * which is the right answer for a divider on a flat surface and the wrong one
+ * Half a point rather than `StyleSheet.hairlineWidth`. A hairline is one
+ * physical pixel, which is right for a divider on a flat surface and too little
  * on a corner this round — most of the line is curve, and a third of a point of
  * curve antialiases away to nothing.
  */
-const EDGE_WIDTH_PT = 1;
+const EDGE_WIDTH_PT = 0.5;
 
 /**
  * How far behind the scene the panel starts.
@@ -1139,7 +1139,7 @@ export interface PanelsideSceneProps extends ViewProps {
    * as well as at the side.
    */
   scale?: number;
-  /** The corner radius the scene reaches at full travel. Default 36. */
+  /** The corner radius the scene reaches at full travel. Default 40. */
   radius?: number;
   /** How far the scene dims at full travel, 0 to 1. Default 0.45. */
   dim?: number;
@@ -1160,13 +1160,16 @@ function PanelsideScene({
   const [sceneWidth, setSceneWidth] = useState(0);
   const sign = useDirectionSign();
   /*
-   * Not `--color-border`, which is 6% white. That token is tuned for an edge
-   * between two *different* surfaces, where it only has to hint. Here the panel
-   * and the scene are the same colour, so the line is the only thing
-   * distinguishing them, and 6% under a dim is nothing at all. The muted
-   * foreground held back to a third reads as a hairline in both themes.
+   * The foreground, held back to a quarter — not a border or a muted token.
+   *
+   * Both of those are grey, and grey only contrasts with one of the two themes
+   * at a time: in a light one the scene is dimmed toward black while the panel
+   * stays white, so a mid grey line lands on the dark side of the boundary and
+   * disappears into it. The foreground is the one colour a theme guarantees
+   * reads against its own background, so it inverts with the theme and the line
+   * is visible in both.
    */
-  const edge = useCSSVariable('--color-muted-foreground');
+  const edge = useCSSVariable('--color-foreground');
   const edgeColor = typeof edge === 'string' ? edge : undefined;
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
