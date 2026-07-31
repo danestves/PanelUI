@@ -195,7 +195,7 @@ function SceneBar({ title, native = false }: { title: string; native?: boolean }
   return (
     <View
       style={{ paddingTop: insets.top + 8 }}
-      className="flex-row items-center gap-3 px-4 pb-3"
+      className="flex-row items-center gap-2 px-3 pb-3"
     >
       <Panelside.Trigger>
         <Button
@@ -531,7 +531,7 @@ function NativeChatScene() {
         className="px-3 pt-2"
         style={{ paddingBottom: Math.max(insets.bottom, 10) }}
       >
-        <View className="gap-3 rounded-3xl bg-secondary px-3 py-3">
+        <View className="gap-2 rounded-3xl bg-secondary px-3 py-3">
           {/*
             No `leading-*`: a line-height step adds leading above the glyphs,
             and in a field this short that is the difference between a
@@ -543,10 +543,10 @@ function NativeChatScene() {
             placeholder="Message the assistant"
             placeholderTextColor={placeholderTint}
             multiline
-            className="max-h-32 min-h-7 px-2 pt-1 text-[16px] text-foreground"
+            className="max-h-32 min-h-6 px-1 text-[16px] text-foreground"
           />
 
-          <View className="flex-row items-center gap-3">
+          <View className="flex-row items-center gap-2">
             <Button
               native
               glass
