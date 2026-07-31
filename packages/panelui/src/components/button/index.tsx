@@ -165,13 +165,14 @@ const NATIVE_HEIGHT: Record<NonNullable<ButtonVariantProps['size']>, number> = {
  */
 const NATIVE_ICON_PADDING = 12;
 
-/** Our sizes on the platform's own control scale. */
-const NATIVE_CONTROL_SIZE = {
-  sm: 'small',
-  md: 'regular',
-  lg: 'large',
-  icon: 'large',
-} as const;
+/*
+ * `controlSize` is deliberately not sent, though it is the modifier that would
+ * otherwise be right for this. Adding it took Expo Go down on entering a screen
+ * with a native button on it — a native decode failure is not something a JS
+ * try/catch can catch, so an unproven modifier is not worth a crash when
+ * padding the label achieves the same thing from the React side. The two
+ * modifiers below are the ones already shipped and seen working.
+ */
 
 /** PanelUI variants mapped onto the platform button styles. */
 const NATIVE_VARIANT: Record<
@@ -253,9 +254,6 @@ export const Button = forwardRef<View, ButtonProps>(
         ? [
             glass ? swiftUI.buttonStyle(prominent ? 'glassProminent' : 'glass') : null,
             size === 'icon' ? swiftUI.buttonBorderShape('circle') : null,
-            // The platform's own idea of how big a control is, which is what
-            // sets the padding its style draws around the label.
-            swiftUI.controlSize(NATIVE_CONTROL_SIZE[size ?? 'md']),
           ].filter(Boolean)
         : [];
 
@@ -276,9 +274,9 @@ export const Button = forwardRef<View, ButtonProps>(
             disabled={isDisabled}
             /*
              * A height for a labelled button, and nothing at all for an icon
-             * one. `controlSize` and the label's own padding decide how big an
-             * icon button is; adding a frame on top would only re-centre the
-             * result inside a box of a different size.
+             * one. The label's own padding is what decides how big an icon
+             * button is; a frame on top would only re-centre the result inside
+             * a box of a different size.
              */
             style={size === 'icon' ? undefined : { height: NATIVE_HEIGHT[size ?? 'md'] }}
             modifiers={nativeModifiers.length ? nativeModifiers : undefined}
