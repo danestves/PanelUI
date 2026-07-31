@@ -499,10 +499,14 @@ function DrawerContent({
                    * full-width title reads as a button that only works near its
                    * top edge.
                    *
-                   * `top-0` rather than a measured offset: an absolutely
-                   * positioned child is placed against the padding box, so zero
-                   * is already below the safe-area inset the panel is padding
-                   * for, level with the first line of the header.
+                   * Offset by the panel's own top padding rather than pinned
+                   * with `top-0`. An absolutely positioned child's containing
+                   * block is the padding *edge*, so padding moves the content
+                   * around it and leaves it where it was — `top-0` put the
+                   * button at the top of the panel, which on the three sides
+                   * that reach the top of the screen is behind the status bar.
+                   * Taking the same number the padding does is what keeps it
+                   * level with the first line of the header on every side.
                    *
                    * The corner follows the docked edge. An `end` drawer's own
                    * edge is the trailing one, so its button moves to the
@@ -516,9 +520,10 @@ function DrawerContent({
                       onPress={close}
                       hitSlop={8}
                       className={cn(
-                        'absolute top-0 z-10 h-8 w-8 items-center justify-center rounded-full bg-muted active:opacity-70',
+                        'absolute z-10 h-8 w-8 items-center justify-center rounded-full bg-muted active:opacity-70',
                         side === 'end' ? 'start-4' : 'end-4'
                       )}
+                      style={{ top: padding.paddingTop }}
                     >
                       <XIcon
                         size={16}
