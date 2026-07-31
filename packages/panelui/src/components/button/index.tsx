@@ -163,7 +163,7 @@ const NATIVE_HEIGHT: Record<NonNullable<ButtonVariantProps['size']>, number> = {
  * label here is a React Native view we host ourselves, so padding it in React
  * is both the simplest lever and the only one that works.
  */
-const NATIVE_ICON_PADDING = 8;
+const NATIVE_ICON_PADDING = 6;
 
 /**
  * The frame a native icon button is given, which must contain the padded glyph
@@ -180,7 +180,7 @@ const NATIVE_ICON_PADDING = 8;
  * deliberately not sent: adding it took the app down on entering any screen
  * with a native button on it.
  */
-const NATIVE_ICON_FRAME = 48;
+const NATIVE_ICON_FRAME = 44;
 
 
 /** PanelUI variants mapped onto the platform button styles. */

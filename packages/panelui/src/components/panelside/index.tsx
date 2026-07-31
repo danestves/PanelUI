@@ -992,6 +992,7 @@ function PanelsideFooter({
 
 const styles = StyleSheet.create({
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
+  nativeLabel: { paddingHorizontal: 10, paddingVertical: 3 },
 });
 
 export interface PanelsideCtaProps extends Omit<PressableProps, 'children'> {
@@ -1054,7 +1055,32 @@ function PanelsideCta({
         disabled={disabled ?? undefined}
         {...props}
       >
-        {label ?? children}
+        {/*
+          A hosted label rather than a plain string, and that is what makes the
+          padding possible at all: handed a string the platform draws its own
+          label and its own room around it, with no way to ask for more short
+          of a control-size modifier that this app cannot survive. Handed a
+          view, it draws the background around the view — so the padding here
+          is the button's padding.
+
+          The colour is set rather than inherited because the platform paints
+          the background: a prominent button is the accent, whatever the theme
+          believes its own primary foreground to be.
+        */}
+        <View style={styles.nativeLabel}>
+          {label ? (
+            <Text
+              size="lg"
+              weight="medium"
+              numberOfLines={1}
+              style={{ color: variant === 'primary' ? '#ffffff' : tint }}
+            >
+              {label}
+            </Text>
+          ) : (
+            textChildren(children)
+          )}
+        </View>
       </Button>
     );
   }
