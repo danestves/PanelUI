@@ -231,6 +231,20 @@ export function EllipsisIcon({ size = 16, color, ...props }: IconProps) {
   );
 }
 
+export function MenuIcon({ size = 20, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M4 6h16M4 12h16M4 18h16"
+        stroke={resolved}
+        strokeWidth={2}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 export function XIcon({ size = 16, color, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#737373');
   return (

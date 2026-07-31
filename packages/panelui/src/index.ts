@@ -361,6 +361,25 @@ export {
   type NumberInputProps,
 } from './components/number-input';
 export { OtpInput, type OtpInputProps } from './components/otp-input';
+export {
+  Panelside,
+  usePanelside,
+  type PanelsideProps,
+  type PanelsidePanelProps,
+  type PanelsideHeaderProps,
+  type PanelsideSearchProps,
+  type PanelsideContentProps,
+  type PanelsideGroupProps,
+  type PanelsideGroupLabelProps,
+  type PanelsideItemProps,
+  type PanelsideActionProps,
+  type PanelsideFooterProps,
+  type PanelsideCtaProps,
+  type PanelsideSceneProps,
+  type PanelsideTriggerProps,
+  type PanelsideMode,
+  type UsePanelsideResult,
+} from './components/panelside';
 export { Textarea, type TextareaProps } from './components/textarea';
 export {
   Item,
@@ -682,6 +701,7 @@ export {
   ListChecksIcon,
   LockIcon,
   MaximizeIcon,
+  MenuIcon,
   MessageCircleIcon,
   MicIcon,
   MinusIcon,
