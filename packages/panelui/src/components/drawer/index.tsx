@@ -88,7 +88,11 @@ import { Portal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
-import { useDirection, useDirectionSign } from '../../hooks/use-direction';
+import {
+  DirectionContext,
+  useDirection,
+  useDirectionSign,
+} from '../../hooks/use-direction';
 import { cn } from '../../utils/cn';
 
 const SPRING = { damping: 24, stiffness: 300, mass: 0.7 } as const;
@@ -118,12 +122,7 @@ const WIDTH = {
   full: { fraction: 0.94, max: Infinity },
 } as const;
 
-/**
- * The same idea on the vertical axis, where there is no sensible cap — the
- * fraction is of the room below the status bar rather than of the screen, so
- * `full` fills what the drawer is allowed instead of overflowing off the end
- * of it.
- */
+/** The same idea on the vertical axis, where there is no sensible cap. */
 const HEIGHT = {
   sm: 0.3,
   md: 0.45,
@@ -138,13 +137,9 @@ const panelVariants = tv({
       // Three real edges each. The fourth is the screen edge the drawer is
       // docked to, and drawing a border or a radius along it would be a line
       // through the middle of nothing.
-      //
-      // No `top-0` on the three sides that reach the top of the screen: that
-      // edge is placed in points against the status bar inset, and a class
-      // pinning it to zero would be one more thing to have to out-rank.
-      start: 'bottom-0 start-0 rounded-e-3xl border-e',
-      end: 'bottom-0 end-0 rounded-s-3xl border-s',
-      top: 'end-0 start-0 rounded-b-3xl border-b',
+      start: 'bottom-0 start-0 top-0 rounded-e-3xl border-e',
+      end: 'bottom-0 end-0 top-0 rounded-s-3xl border-s',
+      top: 'end-0 start-0 top-0 rounded-b-3xl border-b',
       bottom: 'bottom-0 end-0 start-0 rounded-t-3xl border-t',
     },
   },
@@ -301,6 +296,11 @@ function DrawerContent({
   const sign = useDirectionSign();
   const closeTint = useCSSVariable('--color-muted-foreground');
 
+  // Memoised for the reason `Direction` memoises its own: this is the object
+  // that invalidates layout for the whole panel, and a fresh one every render
+  // would re-run Yoga over it for a value that almost never changes.
+  const directionStyle = useMemo(() => ({ direction: dir }) as const, [dir]);
+
   const close = useCallback(() => setOpen(false), [setOpen]);
 
   // An open drawer catches the Android back button, closing itself instead of
@@ -310,29 +310,12 @@ function DrawerContent({
   const horizontal = side === 'start' || side === 'end';
 
   /**
-   * The vertical room the drawer is allowed.
-   *
-   * A drawer stops at the status bar rather than running under it. Padding the
-   * content down past the notch keeps the text clear, but it leaves the panel
-   * itself — a lit surface, its own colour, its own shadow — printed behind
-   * the clock and the battery, which reads as the drawer having swallowed the
-   * system bar rather than having covered the app. So the top edge is placed
-   * below the inset and everything else is measured from there.
+   * How far the panel has to travel to be fully off-screen — the distance a
+   * dismissing drag animates out to, and the axis the drag is measured on.
    */
-  const room = screenHeight - insets.top;
-
-  /** The panel's own size along the axis it is docked on. */
   const extent = horizontal
     ? Math.min(screenWidth * WIDTH[size].fraction, WIDTH[size].max)
-    : room * HEIGHT[size];
-
-  /**
-   * How far the panel has to travel to be fully off-screen — the distance a
-   * dismissing drag animates out to. A `top` drawer starts below the status
-   * bar, so it has that much further to go than its own height; every other
-   * side is flush with the edge it leaves by.
-   */
-  const offscreen = side === 'top' ? extent + insets.top : extent;
+    : screenHeight * HEIGHT[size];
 
   /**
    * Which way "outward" points in raw pixels.
@@ -376,7 +359,7 @@ function DrawerContent({
         const velocity =
           (horizontal ? event.velocityX : event.velocityY) * outward;
         if (travel.value > DISMISS_DISTANCE || velocity > DISMISS_VELOCITY) {
-          travel.value = withTiming(offscreen, { duration: 180 }, (finished) => {
+          travel.value = withTiming(extent, { duration: 180 }, (finished) => {
             if (finished) runOnJS(close)();
           });
         } else {
@@ -393,7 +376,7 @@ function DrawerContent({
     return horizontal
       ? gesture.activeOffsetX([-12, 12]).failOffsetY([-18, 18])
       : gesture.activeOffsetY([-12, 12]).failOffsetX([-18, 18]);
-  }, [close, horizontal, offscreen, outward, swipeToDismiss, travel]);
+  }, [close, extent, horizontal, outward, swipeToDismiss, travel]);
 
   const panelStyle = useAnimatedStyle(() =>
     horizontal
@@ -434,18 +417,22 @@ function DrawerContent({
   }[physical];
 
   /*
-   * The top is plain padding now that the panel starts below the status bar —
-   * the inset is in the placement rather than in here, and counting it twice
-   * would open the drawer with a notch-high band of empty surface above the
-   * header.
+   * The inset and the panel's own padding stack rather than compete.
    *
-   * The bottom still carries its inset, because that edge *is* docked to the
-   * screen: every side but `top` reaches the home indicator, and only `top`
-   * ends in open screen where padding for an indicator it never meets would
-   * leave a band of empty panel under the content.
+   * A drawer that reaches the top of the screen is drawn behind the status bar
+   * on purpose — a surface the app disappears under should not stop short of
+   * the edge — but the clock and the battery are drawn *in* that band, so the
+   * content clears the whole of it and then takes its padding on top. `Math.max`
+   * gave the two the same slot: on a 59-point inset it resolved to 59, leaving
+   * the header and the close button flush against the clock with nothing
+   * between them.
+   *
+   * `bottom` is the one side whose top edge is nowhere near the status bar, and
+   * `top` the one side ending in open screen rather than at the home indicator.
+   * Each takes plain padding on the edge it does not meet.
    */
   const padding = {
-    paddingTop: 16,
+    paddingTop: side === 'bottom' ? 16 : insets.top + 16,
     paddingBottom: side === 'top' ? 16 : Math.max(insets.bottom, 16),
   };
 
@@ -454,78 +441,98 @@ function DrawerContent({
       {/* Portal content mounts under PortalHost, outside this provider's
           subtree — re-provide the context so Drawer.Close keeps working. */}
       <DrawerContext.Provider value={{ open, setOpen }}>
-        <View className="absolute inset-0">
-          {/* Scrim draws the backdrop and its own fade; the Pressable over it
-              is what closes the drawer, since the scrim takes no touches. */}
-          <Scrim blur={blur} />
-          <Pressable
-            accessibilityLabel="Close drawer"
-            className="flex-1"
-            onPress={dismissible ? close : undefined}
-          />
-        </View>
-        <GestureDetector gesture={pan}>
-          <Animated.View
-            entering={entering.springify().damping(24).stiffness(260).mass(0.7)}
-            exiting={exiting.duration(200)}
-            accessibilityViewIsModal
-            className={panelVariants({ side, className })}
-            {...props}
-            // After the spread, and folding the caller's own `style` in rather
-            // than replacing the array: spread last, a caller passing `style`
-            // would silently drop the drag transform and the safe-area padding
-            // with it.
-            // `bottom` is the one side whose top edge is nowhere near the
-            // status bar, so it is the one side that does not carry the inset.
-            style={[
-              panelStyle,
-              padding,
-              horizontal
-                ? { top: insets.top, width: extent }
-                : side === 'top'
-                  ? { top: insets.top, height: extent }
-                  : { height: extent },
-              props.style,
-            ]}
-          >
-            <DrawerSurfaceContext.Provider value={surface}>
-              {textChildren(children)}
-              {/*
-               * Last, and lifted above the content, so a header that spans the
-               * panel cannot bury it — in React Native a later sibling wins the
-               * touch, and a close button drawn first under a full-width title
-               * reads as a button that only works near its top edge.
-               *
-               * `top-0` rather than a measured offset: an absolutely
-               * positioned child is placed against the padding box, so zero is
-               * already inside the panel's own top padding, level with the
-               * first line of the header.
-               *
-               * The corner follows the docked edge. An `end` drawer's own edge
-               * is the trailing one, so its button moves to the leading side
-               * rather than sitting against the screen edge the drawer came
-               * out of.
-               */}
-              {showClose ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Close"
-                  onPress={close}
-                  hitSlop={8}
-                  className={cn(
-                    'absolute top-0 z-10 h-8 w-8 items-center justify-center rounded-full bg-muted active:opacity-70',
-                    side === 'end' ? 'start-4' : 'end-4'
-                  )}
-                >
-                  <XIcon
-                    size={16}
-                    color={typeof closeTint === 'string' ? closeTint : undefined}
-                  />
-                </Pressable>
-              ) : null}
-            </DrawerSurfaceContext.Provider>
-          </Animated.View>
-        </GestureDetector>
+        {/*
+         * The reading direction has to be put back on this layer, and in both
+         * of its forms.
+         *
+         * A portal escapes the `Direction` the drawer was written inside twice
+         * over. It escapes the *context*, because an element reads context from
+         * where it is rendered rather than from where it was written — the same
+         * reason `Drawer.Close` needs its provider back. And it escapes the
+         * *style*, because the flip is Yoga's: `direction` mirrors the view
+         * subtree it is set on, and this one now hangs off the portal host
+         * instead. Without the style a `start` drawer in a right-to-left app
+         * docks to the left while its animation comes from the right; without
+         * the provider its rows and its text stay left-to-right inside it.
+         */}
+        <DirectionContext.Provider value={dir}>
+          <View className="absolute inset-0" style={directionStyle}>
+            <View className="absolute inset-0">
+              {/* Scrim draws the backdrop and its own fade; the Pressable over
+                  it is what closes the drawer, since the scrim takes no
+                  touches. */}
+              <Scrim blur={blur} />
+              <Pressable
+                accessibilityLabel="Close drawer"
+                className="flex-1"
+                onPress={dismissible ? close : undefined}
+              />
+            </View>
+            <GestureDetector gesture={pan}>
+              <Animated.View
+                entering={entering
+                  .springify()
+                  .damping(24)
+                  .stiffness(260)
+                  .mass(0.7)}
+                exiting={exiting.duration(200)}
+                accessibilityViewIsModal
+                className={panelVariants({ side, className })}
+                {...props}
+                // After the spread, and folding the caller's own `style` in
+                // rather than replacing the array: spread last, a caller
+                // passing `style` would silently drop the drag transform and
+                // the safe-area padding with it.
+                style={[
+                  panelStyle,
+                  padding,
+                  horizontal ? { width: extent } : { height: extent },
+                  props.style,
+                ]}
+              >
+                <DrawerSurfaceContext.Provider value={surface}>
+                  {textChildren(children)}
+                  {/*
+                   * Last, and lifted above the content, so a header that spans
+                   * the panel cannot bury it — in React Native a later sibling
+                   * wins the touch, and a close button drawn first under a
+                   * full-width title reads as a button that only works near its
+                   * top edge.
+                   *
+                   * `top-0` rather than a measured offset: an absolutely
+                   * positioned child is placed against the padding box, so zero
+                   * is already below the safe-area inset the panel is padding
+                   * for, level with the first line of the header.
+                   *
+                   * The corner follows the docked edge. An `end` drawer's own
+                   * edge is the trailing one, so its button moves to the
+                   * leading side rather than sitting against the screen edge
+                   * the drawer came out of.
+                   */}
+                  {showClose ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Close"
+                      onPress={close}
+                      hitSlop={8}
+                      className={cn(
+                        'absolute top-0 z-10 h-8 w-8 items-center justify-center rounded-full bg-muted active:opacity-70',
+                        side === 'end' ? 'start-4' : 'end-4'
+                      )}
+                    >
+                      <XIcon
+                        size={16}
+                        color={
+                          typeof closeTint === 'string' ? closeTint : undefined
+                        }
+                      />
+                    </Pressable>
+                  ) : null}
+                </DrawerSurfaceContext.Provider>
+              </Animated.View>
+            </GestureDetector>
+          </View>
+        </DirectionContext.Provider>
       </DrawerContext.Provider>
     </Portal>
   );
