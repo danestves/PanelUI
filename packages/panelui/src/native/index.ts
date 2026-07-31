@@ -127,6 +127,21 @@ interface SwiftUIModifiers {
     shape: 'automatic' | 'capsule' | 'roundedRectangle' | 'circle',
     cornerRadius?: number
   ) => unknown;
+  glassEffect: (params?: {
+    glass?: {
+      variant: 'regular' | 'clear' | 'identity';
+      interactive?: boolean;
+      tint?: string;
+    };
+    shape?:
+      | 'circle'
+      | 'capsule'
+      | 'rectangle'
+      | 'ellipse'
+      | 'roundedRectangle'
+      | 'containerRelativeShape';
+    cornerRadius?: number;
+  }) => unknown;
 }
 
 let modifiersResolved = false;

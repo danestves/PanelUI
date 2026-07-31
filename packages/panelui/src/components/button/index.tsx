@@ -126,8 +126,9 @@ export interface ButtonProps
    * later; anywhere else it is ignored and the button keeps its ordinary
    * platform style rather than failing.
    *
-   * `primary` and `destructive` take the prominent, tinted variant; every other
-   * variant takes the plain one.
+   * The material is drawn in the button's own shape: a circle at `size="icon"`,
+   * a capsule otherwise. `primary` and `destructive` tint it with the theme's
+   * accent; every other variant leaves it untinted.
    */
   glass?: boolean;
 }
@@ -199,6 +200,13 @@ export const Button = forwardRef<View, ButtonProps>(
         variant === 'destructive' ? 'primary' : (variant ?? 'primary')
       ]
     );
+    /*
+     * The accent itself, not the colour that reads against it. Glass is tinted
+     * by its background rather than by its label, so a prominent glass button
+     * needs the fill colour — the opposite of what the icons above want.
+     */
+    const themedAccent = useCSSVariable('--color-primary');
+
     const contentColor =
       variant === 'destructive'
         ? '#ffffff'
@@ -212,22 +220,45 @@ export const Button = forwardRef<View, ButtonProps>(
       const prominent = variant === 'primary' || variant === 'destructive';
 
       /*
-       * Two looks the portable props cannot ask for.
+       * Looks the portable props cannot ask for.
        *
-       * `buttonStyle` because Liquid Glass has no cross-platform variant to map
-       * onto, and `buttonBorderShape` because an icon button is round and the
-       * platform's default capsule is not — a lone glyph in a capsule reads as
-       * a text button somebody forgot to label.
+       * Glass goes on as `glassEffect` rather than `buttonStyle('glass')`.
+       * Both exist, but the button style only resolves where the platform has
+       * a glass *button* style to resolve to, and it leaves the shape to the
+       * button — which for a bare hosted glyph is the wrong one. `glassEffect`
+       * puts the material on the view itself and takes the shape as an
+       * argument, so what is drawn does not depend on the button agreeing.
+       * `buttonStyle('plain')` goes with it to stop the variant painting a
+       * second background underneath the material.
        *
-       * A supplied `buttonStyle` replaces the one the variant would have set,
-       * which is what makes glass a substitution rather than a layer on top.
+       * `buttonBorderShape` is for the non-glass case, where the border is the
+       * platform's to draw: an icon button is round and the default capsule is
+       * not — a lone glyph in a capsule reads as a text button somebody forgot
+       * to label.
        */
       const swiftUI = getSwiftUIModifiers();
+      const shape = size === 'icon' ? 'circle' : 'capsule';
       const nativeModifiers = swiftUI
-        ? [
-            glass ? swiftUI.buttonStyle(prominent ? 'glassProminent' : 'glass') : null,
-            size === 'icon' ? swiftUI.buttonBorderShape('circle') : null,
-          ].filter(Boolean)
+        ? (glass
+            ? [
+                swiftUI.buttonStyle('plain'),
+                swiftUI.glassEffect({
+                  glass: {
+                    variant: 'regular',
+                    // The material reacts to the touch rather than sitting
+                    // under it, which is most of what makes it read as glass.
+                    interactive: true,
+                    ...(prominent && typeof themedAccent === 'string'
+                      ? { tint: themedAccent }
+                      : null),
+                  },
+                  shape,
+                }),
+              ]
+            : size === 'icon'
+              ? [swiftUI.buttonBorderShape('circle')]
+              : []
+          ).filter(Boolean)
         : [];
 
       /*
