@@ -16,16 +16,17 @@ import { TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import {
   Avatar,
+  BottomSheet,
   Button,
   FileIcon,
   ImageIcon,
-  BottomSheet,
   Item,
   Marker,
   MenuIcon,
   Message,
   MessageCircleIcon,
   MessageScroller,
+  MicIcon,
   PackageIcon,
   Panelside,
   PlusIcon,
@@ -171,9 +172,15 @@ function AssistantPanel({ native = false }: { native?: boolean }) {
  * findable at all. `Panelside.Trigger` takes the button as its child and
  * chains the toggle onto its own `onPress`, native or not.
  *
- * Under `native` the platform draws them. It also stops tinting the icons for
- * us — the themed content colour is applied inside the styled button, which a
- * native one never reaches — so the colour is passed in by hand.
+ * Under `native` the platform draws them, and the variant has to change with
+ * it: `ghost` maps onto the platform's *text* style, which draws no chrome at
+ * all, so a native ghost icon button is indistinguishable from a bare glyph
+ * sitting on the page. `outline` maps onto the bordered style and gives it the
+ * ring that says it is a control.
+ *
+ * The platform also stops tinting the icon for us — the themed content colour
+ * is applied inside the styled button, which a native one never reaches — so
+ * the colour is passed in by hand.
  */
 function SceneBar({ title, native = false }: { title: string; native?: boolean }) {
   const insets = useSafeAreaInsets();
@@ -182,7 +189,7 @@ function SceneBar({ title, native = false }: { title: string; native?: boolean }
   const glyph = native && typeof tint === 'string' ? tint : undefined;
 
   const shape = native ? undefined : 'h-10 w-10 rounded-full';
-  const variant = native ? 'ghost' : 'secondary';
+  const variant = native ? 'outline' : 'secondary';
 
   return (
     <View
@@ -513,32 +520,20 @@ function NativeChatScene() {
       </MessageScroller>
 
       {/*
-        A composer is a pill with its controls inside it on both platforms, so
-        that is what this is: attach on the leading end, a field that grows,
-        and send on the trailing end. A row of labelled buttons underneath
-        would be the platform's button drawn in the wrong place.
+        A composer is a card, not a line. One row for what you are writing and
+        one for the controls, because a single row makes the field compete with
+        every button in it — the field ends up too short to read a sentence in
+        and the buttons too close together to hit.
       */}
       <View
-        className="border-t border-border px-3 pt-2"
+        className="px-3 pt-2"
         style={{ paddingBottom: Math.max(insets.bottom, 10) }}
       >
-        <View className="flex-row items-end gap-1 rounded-3xl bg-secondary p-1">
-          <Button
-            native
-            size="icon"
-            variant="ghost"
-            accessibilityLabel="Attach"
-            onPress={() => setAttaching(true)}
-          >
-            <PlusIcon size={20} color={glyph} />
-          </Button>
-
+        <View className="gap-2 rounded-3xl bg-secondary px-3 py-3">
           {/*
-            No `leading-*`: a line-height step adds leading above the glyphs, and
-            in a field this short that is the difference between a placeholder
-            on the centre line and one sitting under it. The font's own line box
-            plus even padding is what centres it, and `textAlignVertical` is the
-            same instruction for Android.
+            No `leading-*`: a line-height step adds leading above the glyphs,
+            and in a field this short that is the difference between a
+            placeholder on the centre line and one sitting under it.
           */}
           <TextInput
             value={draft}
@@ -546,20 +541,37 @@ function NativeChatScene() {
             placeholder="Message the assistant"
             placeholderTextColor={placeholderTint}
             multiline
-            textAlignVertical="center"
-            className="min-h-11 max-h-32 flex-1 px-2 py-2.5 text-[16px] text-foreground"
+            className="max-h-32 min-h-6 px-1 text-[16px] text-foreground"
           />
 
-          <Button
-            native
-            size="icon"
-            variant="primary"
-            accessibilityLabel="Send"
-            disabled={draft.trim() === ''}
-            onPress={send}
-          >
-            <SendIcon size={17} color={sendGlyph} />
-          </Button>
+          <View className="flex-row items-center gap-2">
+            <Button
+              native
+              size="icon"
+              variant="outline"
+              accessibilityLabel="Attach"
+              onPress={() => setAttaching(true)}
+            >
+              <PlusIcon size={20} color={glyph} />
+            </Button>
+
+            <View className="flex-1" />
+
+            <Button native size="icon" variant="outline" accessibilityLabel="Dictate">
+              <MicIcon size={19} color={glyph} />
+            </Button>
+
+            <Button
+              native
+              size="icon"
+              variant="primary"
+              accessibilityLabel="Send"
+              disabled={draft.trim() === ''}
+              onPress={send}
+            >
+              <SendIcon size={17} color={sendGlyph} />
+            </Button>
+          </View>
         </View>
       </View>
 
