@@ -118,6 +118,15 @@ export interface ButtonProps
    * A native button **sizes itself to its label**, the way a platform button
    * is supposed to. It does not stretch to fill its container, and `fullWidth`
    * has no effect on it.
+   *
+   * **Give it a string, not elements, unless `size` is `icon`.** A string
+   * becomes the platform's own label. Anything else has to be hosted inside
+   * the native tree, and a hosted view only measures where something above it
+   * is definite on *both* axes — which is true of an icon button, because it
+   * is a square this component sizes, and false of a labelled one, whose width
+   * is its text's and known to nobody in advance. Host a label without a width
+   * and the two layout systems ask each other the same question until the app
+   * dies, in native code, where a `try` here has nothing to catch.
    */
   native?: boolean;
   /**

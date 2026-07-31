@@ -194,6 +194,12 @@ SwiftUI but comes back looking like iOS 18 has not answered it.
   code on a report of "no glass", check what the demo actually passes and what OS it is running
   on. The Button page's Liquid Glass version puts a glass button beside its non-glass twin
   precisely so those two cases can be told apart.
+- **A hosted view inside a native control needs a definite size above it, on both axes.**
+  Passing elements instead of a string makes the platform host them (`RNHostView`), and a
+  hosted view only measures where something above it is fixed. An icon button is a square the
+  component sizes, so it works; a labelled button's width is its text's and known to nobody, so
+  hosting a label there leaves the width unresolved and the app dies in native code — where a
+  `try` in JavaScript has nothing to catch. This has cost two crashes; do not rediscover it.
 - A native control **ignores `className` and every theme token** — the platform owns its
   colours, metrics and shape. Anything the look depends on has to be a prop or a modifier, and
   spacing around it has to come from the container.

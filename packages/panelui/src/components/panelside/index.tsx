@@ -992,7 +992,6 @@ function PanelsideFooter({
 
 const styles = StyleSheet.create({
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
-  nativeLabel: { paddingHorizontal: 10, paddingVertical: 3 },
 });
 
 export interface PanelsideCtaProps extends Omit<PressableProps, 'children'> {
@@ -1056,31 +1055,21 @@ function PanelsideCta({
         {...props}
       >
         {/*
-          A hosted label rather than a plain string, and that is what makes the
-          padding possible at all: handed a string the platform draws its own
-          label and its own room around it, with no way to ask for more short
-          of a control-size modifier that this app cannot survive. Handed a
-          view, it draws the background around the view — so the padding here
-          is the button's padding.
+          A plain string, not a hosted view — and this is not a missed chance
+          to pad it.
 
-          The colour is set rather than inherited because the platform paints
-          the background: a prominent button is the accent, whatever the theme
-          believes its own primary foreground to be.
+          A hosted label goes inside an `RNHostView(matchContents)`, and that
+          only measures where something above it is definite on both axes. An
+          icon button is a square and can be; a compose button's width is its
+          text's, which nothing here knows in advance. Hosting the label to pad
+          it therefore leaves the width with no fixed point, and the two layout
+          systems take the app down rather than settle.
+
+          So the room around this label is the platform's to decide, as it is
+          for every other labelled native button. `controlSize` is the modifier
+          that would change it, and it crashes this app too.
         */}
-        <View style={styles.nativeLabel}>
-          {label ? (
-            <Text
-              size="lg"
-              weight="medium"
-              numberOfLines={1}
-              style={{ color: variant === 'primary' ? '#ffffff' : tint }}
-            >
-              {label}
-            </Text>
-          ) : (
-            textChildren(children)
-          )}
-        </View>
+        {label ?? children}
       </Button>
     );
   }

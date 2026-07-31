@@ -196,7 +196,7 @@ The `social` variant is a neutral surface sized for a full-width column of provi
 | `startContent` | `ReactNode` | — | Content rendered before the label (replaced by the spinner while loading). |
 | `endContent` | `ReactNode` | — | Content rendered after the label. |
 | `labelClassName` | `string` | — | Extra classes for the label when children is a string. |
-| `native` | `boolean` | — | Render the platform's own button instead of this one. Requires the optional `@expo/ui` package; without it this prop does nothing. **Theme tokens do not apply** — the platform draws the button, so `className`, `fullWidth`, `startContent`, `endContent` and `loading` are all ignored. `variant` maps onto the nearest platform style: `primary`/`destructive` → filled, `outline` → outlined, everything else → text; `size` sets the height. A native button **sizes itself to its label**, the way a platform button is supposed to. It does not stretch to fill its container, and `fullWidth` has no effect on it. |
+| `native` | `boolean` | — | Render the platform's own button instead of this one. Requires the optional `@expo/ui` package; without it this prop does nothing. **Theme tokens do not apply** — the platform draws the button, so `className`, `fullWidth`, `startContent`, `endContent` and `loading` are all ignored. `variant` maps onto the nearest platform style: `primary`/`destructive` → filled, `outline` → outlined, everything else → text; `size` sets the height. A native button **sizes itself to its label**, the way a platform button is supposed to. It does not stretch to fill its container, and `fullWidth` has no effect on it. **Give it a string, not elements, unless `size` is `icon`.** A string becomes the platform's own label. Anything else has to be hosted inside the native tree, and a hosted view only measures where something above it is definite on *both* axes — which is true of an icon button, because it is a square this component sizes, and false of a labelled one, whose width is its text's and known to nobody in advance. Host a label without a width and the two layout systems ask each other the same question until the app dies, in native code, where a `try` here has nothing to catch. |
 | `glass` | `boolean` | `false` | Draw the native button in the platform's Liquid Glass material — the one iOS 26 uses for its own floating controls. Requires `native`, and iOS 26 or later; anywhere else it is ignored and the button keeps its ordinary platform style rather than failing. `primary` and `destructive` take the prominent variant, which keeps the accent tint a filled button is supposed to have; every other variant takes the plain one. An icon button is drawn round rather than in the platform's default capsule. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
@@ -224,3 +224,13 @@ See [Native rendering](/docs/native) for the full prop-by-prop breakdown.
   <MenuIcon size={20} />
 </Button>
 ```
+
+<Callout type="warn" title="Give a native button a string label">
+Anything other than a string has to be hosted inside the native tree, and a hosted view only measures where something above it is definite on both axes. An icon button is a square this component sizes, so it qualifies. A labelled one does not — its width is its text's, which nothing knows in advance — and hosting a label there leaves the width with no fixed point. The two layout systems then ask each other the same question until the app dies, in native code, where a JavaScript `try` has nothing to catch.
+
+```tsx
+<Button native>New chat</Button>                    {/* fine */}
+<Button native size="icon"><PlusIcon /></Button>    {/* fine */}
+<Button native><Text>New chat</Text></Button>       {/* crashes */}
+```
+</Callout>
