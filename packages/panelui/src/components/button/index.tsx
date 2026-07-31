@@ -245,7 +245,21 @@ export const Button = forwardRef<View, ButtonProps>(
             label={isStringLabel ? children : undefined}
             variant={NATIVE_VARIANT[variant ?? 'primary']}
             disabled={isDisabled}
-            style={{ height: NATIVE_HEIGHT[size ?? 'md'] }}
+            /*
+             * An icon button is given both dimensions, the rest only a height.
+             *
+             * A height alone leaves the width to the platform, which sizes a
+             * button to its content plus the padding a *labelled* button needs
+             * — so a lone glyph comes out in a wide capsule with air on either
+             * side of it, and the circular border shape then has nothing square
+             * to draw around. A label, by contrast, is the thing that should
+             * decide the width, so it still does.
+             */
+            style={
+              size === 'icon'
+                ? { width: NATIVE_HEIGHT.icon, height: NATIVE_HEIGHT.icon }
+                : { height: NATIVE_HEIGHT[size ?? 'md'] }
+            }
             modifiers={nativeModifiers.length ? nativeModifiers : undefined}
             onPress={props.onPress}
           >
