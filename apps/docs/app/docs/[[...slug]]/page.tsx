@@ -75,6 +75,28 @@ export function generateStaticParams() {
   return source.generateParams();
 }
 
+/**
+ * Which part of the docs a page belongs to, for the line above the title on
+ * its social card. Taken from the first slug segment, which is the folder the
+ * page is filed in and therefore the sidebar group it appears under.
+ *
+ * Anything unlisted falls back to the generic label rather than guessing a
+ * name from the folder — a card is read by people who have not been to the
+ * site, and a heading like "ai-components" tells them less than nothing.
+ */
+const SECTIONS: Record<string, string> = {
+  components: 'Components',
+  'ai-components': 'AI Components',
+  ai: 'AI',
+  form: 'Form',
+  hooks: 'Hooks',
+  utilities: 'Utilities',
+};
+
+function sectionOf(slug: string[] | undefined): string {
+  return (slug?.[0] && SECTIONS[slug[0]]) || `${site.name} docs`;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const page = source.getPage(slug);
@@ -84,7 +106,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = page.data.title;
   const description = page.data.description ?? site.description;
   const ogImage = absoluteUrl(
-    `/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`
+    `/og?title=${encodeURIComponent(title)}` +
+      `&description=${encodeURIComponent(description)}` +
+      `&eyebrow=${encodeURIComponent(sectionOf(slug))}`
   );
 
   return {

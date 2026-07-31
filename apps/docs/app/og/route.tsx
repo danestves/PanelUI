@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import type { NextRequest } from 'next/server';
+import { OG_SIZE, OgCard } from '@/lib/og-card';
 import { site } from '@/lib/site';
 
 /**
@@ -8,6 +9,9 @@ import { site } from '@/lib/site';
  * A route handler rather than a colocated `opengraph-image.tsx`: the docs
  * route is an optional catch-all (`[[...slug]]`), and Next forbids nesting a
  * file segment under one.
+ *
+ * The card itself is `lib/og-card.tsx`, shared with the root image so the two
+ * cannot drift.
  */
 export function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -17,31 +21,13 @@ export function GET(request: NextRequest) {
 
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          background: '#0a0a0a',
-          padding: 80,
-          color: '#fafafa',
-          fontFamily: 'sans-serif',
-        }}
-      >
-        <div style={{ display: 'flex', fontSize: 36, color: '#a1a1a1' }}>{eyebrow}</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ display: 'flex', fontSize: 72, fontWeight: 600, lineHeight: 1.1 }}>
-            {title}
-          </div>
-          <div style={{ display: 'flex', fontSize: 30, color: '#a1a1a1', lineHeight: 1.35 }}>
-            {description}
-          </div>
-        </div>
-        <div style={{ display: 'flex', fontSize: 26, color: '#a1a1a1' }}>panelui.dev</div>
-      </div>
+      <OgCard
+        eyebrow={eyebrow}
+        title={title}
+        description={description}
+        footer={`npm i ${site.package}`}
+      />
     ),
-    { width: 1200, height: 630 }
+    OG_SIZE
   );
 }

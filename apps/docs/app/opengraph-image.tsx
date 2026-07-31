@@ -1,42 +1,23 @@
 import { ImageResponse } from 'next/og';
-import { site } from '@/lib/site';
+import { OG_SIZE, OgCard } from '@/lib/og-card';
+import { componentCount, site } from '@/lib/site';
 
 export const alt = `${site.name} — ${site.tagline}`;
-export const size = { width: 1200, height: 630 };
+export const size = OG_SIZE;
 export const contentType = 'image/png';
 
-/** Social card for the site root. Component pages generate their own. */
+/** Social card for the site root. Docs pages generate their own via `/og`. */
 export default function Image() {
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          background: '#0a0a0a',
-          padding: 80,
-          color: '#fafafa',
-          fontFamily: 'sans-serif',
-        }}
-      >
-        <div style={{ display: 'flex', fontSize: 40, fontWeight: 600 }}>
-          {site.name}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div style={{ display: 'flex', fontSize: 68, fontWeight: 600, lineHeight: 1.1 }}>
-            {site.tagline}
-          </div>
-          <div style={{ display: 'flex', fontSize: 30, color: '#a1a1a1' }}>
-            26 accessible components · Reanimated · Expo Go
-          </div>
-        </div>
-        <div style={{ display: 'flex', fontSize: 26, color: '#a1a1a1' }}>
-          npm i {site.package}
-        </div>
-      </div>
+      <OgCard
+        eyebrow="React Native UI library"
+        title={site.tagline}
+        // Counted, not written down: this line claimed 26 components for a
+        // library that shipped 74.
+        description={`${componentCount} accessible components · Reanimated · Expo Go`}
+        footer={`npm i ${site.package}`}
+      />
     ),
     size
   );
