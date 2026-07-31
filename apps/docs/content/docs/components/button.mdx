@@ -197,7 +197,7 @@ The `social` variant is a neutral surface sized for a full-width column of provi
 | `endContent` | `ReactNode` | — | Content rendered after the label. |
 | `labelClassName` | `string` | — | Extra classes for the label when children is a string. |
 | `native` | `boolean` | — | Render the platform's own button instead of this one. Requires the optional `@expo/ui` package; without it this prop does nothing. **Theme tokens do not apply** — the platform draws the button, so `className`, `fullWidth`, `startContent`, `endContent` and `loading` are all ignored. `variant` maps onto the nearest platform style: `primary`/`destructive` → filled, `outline` → outlined, everything else → text; `size` sets the height. A native button **sizes itself to its label**, the way a platform button is supposed to. It does not stretch to fill its container, and `fullWidth` has no effect on it. |
-| `glass` | `boolean` | `false` | Draw the native button in the platform's Liquid Glass material — the one iOS 26 uses for its own floating controls. Requires `native`, and iOS 26 or later; anywhere else it is ignored and the button keeps its ordinary platform style rather than failing. The material is drawn in the button's own shape: a circle at `size="icon"`, a capsule otherwise. `primary` and `destructive` tint it with the theme's accent; every other variant leaves it untinted. |
+| `glass` | `boolean` | `false` | Draw the native button in the platform's Liquid Glass material — the one iOS 26 uses for its own floating controls. Requires `native`, and iOS 26 or later; anywhere else it is ignored and the button keeps its ordinary platform style rather than failing. `primary` and `destructive` take the prominent variant, which keeps the accent tint a filled button is supposed to have; every other variant takes the plain one. An icon button is drawn round rather than in the platform's default capsule. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -217,12 +217,10 @@ See [Native rendering](/docs/native) for the full prop-by-prop breakdown.
 
 `glass` draws a `native` button in the material iOS 26 uses for its own floating controls. It needs `native` — on its own it does nothing — and on an older iOS, on Android, or without `@expo/ui` the button keeps its ordinary platform style rather than failing.
 
-The material is drawn in the button's own shape: a circle at `size="icon"`, a capsule otherwise. `primary` and `destructive` tint it with the theme's accent; every other variant leaves it untinted.
+`primary` and `destructive` take the prominent variant, which keeps the accent tint a filled button is supposed to have; every other variant takes the plain one. A `native` icon button is also drawn round rather than in the platform's default capsule — a lone glyph in a capsule reads as a text button somebody forgot to label.
 
 ```tsx
 <Button native glass size="icon" variant="ghost">
   <MenuIcon size={20} />
 </Button>
 ```
-
-A `native` button at `size="icon"` is also drawn round rather than in the platform's default capsule — a lone glyph in a capsule reads as a text button somebody forgot to label.

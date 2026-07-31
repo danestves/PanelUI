@@ -940,7 +940,11 @@ function PanelsideFooter({
         style,
       ]}
       className={cn(
-        'flex-row items-center gap-2 px-3',
+        // `gap-3` and a wider inset: the compose control is the one thing in
+        // the panel that is not a list row, and a native one brings its own
+        // metrics — it needs room around it rather than the row spacing the
+        // list uses.
+        'flex-row items-center gap-3 px-4',
         floating ? 'absolute bottom-0 end-0 start-0' : 'border-t border-border bg-background pt-2',
         className
       )}

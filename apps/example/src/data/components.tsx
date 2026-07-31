@@ -3355,6 +3355,54 @@ function NativeDemo({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * `glass` is the one native look with a floor under it: the material only
+ * exists from iOS 26, so on anything earlier the modifier is inert and the
+ * button keeps its ordinary platform style. That is indistinguishable from the
+ * prop not working, which is exactly the confusion this demo exists to end —
+ * it puts a glass button next to its non-glass twin, so "no glass" and "no
+ * difference" are the same observation and both point at the OS.
+ */
+function GlassButtonDemo() {
+  return (
+    <NativeDemo>
+      <View className="w-full gap-2">
+        <Text size="sm" muted>
+          Glass — needs iOS 26
+        </Text>
+        <View className="w-full flex-row items-center gap-3">
+          <Button native glass onPress={() => {}}>
+            Prominent
+          </Button>
+          <Button native glass variant="ghost" onPress={() => {}}>
+            Plain
+          </Button>
+          <Button native glass size="icon" variant="ghost" onPress={() => {}}>
+            <SearchIcon size={18} />
+          </Button>
+        </View>
+      </View>
+
+      <View className="w-full gap-2">
+        <Text size="sm" muted>
+          The same buttons without it
+        </Text>
+        <View className="w-full flex-row items-center gap-3">
+          <Button native onPress={() => {}}>
+            Prominent
+          </Button>
+          <Button native variant="ghost" onPress={() => {}}>
+            Plain
+          </Button>
+          <Button native size="icon" variant="ghost" onPress={() => {}}>
+            <SearchIcon size={18} />
+          </Button>
+        </View>
+      </View>
+    </NativeDemo>
+  );
+}
+
 function NativeSliderDemo() {
   const [level, setLevel] = useState(40);
 
@@ -8043,6 +8091,10 @@ export const COMPONENTS: ComponentEntry[] = [
             </View>
           </NativeDemo>
         ),
+      },
+      {
+        label: 'Liquid Glass',
+        render: () => <GlassButtonDemo />,
       },
     ],
   },
