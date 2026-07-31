@@ -5457,7 +5457,7 @@
       {
         "title": "Deeper curve",
         "description": "The three scene numbers turned well past their defaults, so what each one does is unmistakable rather than a matter of opinion.",
-        "code": "<Panelside width={240}>\n  <AssistantPanel />\n  <Panelside.Scene scale={0.72} radius={44} dim={0.7}>\n    <SceneBar />\n    <Transcript />\n  </Panelside.Scene>\n</Panelside>"
+        "code": "<Panelside>\n  <AssistantPanel />\n  <Panelside.Scene scale={0.72} radius={44} dim={0.7}>\n    <SceneBar />\n    <Transcript />\n  </Panelside.Scene>\n</Panelside>"
       },
       {
         "title": "Full chat",

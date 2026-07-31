@@ -149,6 +149,7 @@ function AssistantPanel({ native = false }: { native?: boolean }) {
             Without a label the row stretches on its own, which is what pushes
             the button to the trailing end. */}
         <Panelside.Item
+          className="flex-1"
           icon={<Avatar size="md" fallback="K" />}
           accessibilityLabel="Account"
         />
@@ -353,7 +354,6 @@ export function PanelsideDockedBlock() {
 export function PanelsideCurveBlock() {
   return (
     <AssistantDemo
-      width={240}
       title="Copy for the empty states"
       sceneProps={{ scale: 0.72, radius: 44, dim: 0.7 }}
     />

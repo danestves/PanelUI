@@ -217,8 +217,11 @@ export type PanelsideSwipeFrom = 'anywhere' | 'edge';
 
 const itemVariants = tv({
   // No width: in a group it stretches on its own, and pinning it to full width
-  // would stop it sharing a footer row with anything else.
-  base: 'flex-row items-center gap-3 rounded-xl px-3 py-2.5',
+  // would stop it sharing a footer row with anything else. `shrink` because
+  // React Native defaults `flexShrink` to 0 — in a footer beside a button, on a
+  // panel narrow enough for the two not to fit, nothing would give way and
+  // both would simply hang off the edge.
+  base: 'shrink flex-row items-center gap-3 rounded-xl px-3 py-2.5',
   variants: {
     active: { true: 'bg-secondary' },
     disabled: { true: 'opacity-40' },
@@ -226,7 +229,7 @@ const itemVariants = tv({
 });
 
 const ctaVariants = tv({
-  base: 'h-11 flex-row items-center justify-center gap-2 rounded-full px-5',
+  base: 'h-11 shrink flex-row items-center justify-center gap-2 rounded-full px-5',
   variants: {
     variant: {
       primary: 'bg-primary',
@@ -1052,7 +1055,13 @@ function PanelsideCta({
         {label ? (
           <Text
             weight="medium"
-            className={variant === 'primary' ? 'text-primary-foreground' : 'text-secondary-foreground'}
+            // The pill gives way before the panel does, so the label has to be
+            // able to end somewhere rather than pushing the button off the edge.
+            numberOfLines={1}
+            className={cn(
+              'shrink',
+              variant === 'primary' ? 'text-primary-foreground' : 'text-secondary-foreground'
+            )}
           >
             {label}
           </Text>
