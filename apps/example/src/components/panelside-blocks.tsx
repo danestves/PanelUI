@@ -19,17 +19,18 @@ import {
   Button,
   FileIcon,
   ImageIcon,
+  BottomSheet,
   InputGroup,
+  Item,
   Marker,
   MenuIcon,
   Message,
   MessageCircleIcon,
   MessageScroller,
   PackageIcon,
-  PaperclipIcon,
   Panelside,
   PlusIcon,
-  SendIcon,
+  Select,
   Text,
   XIcon,
   usePanelside,
@@ -286,21 +287,47 @@ function AssistantDemo({
 
 /** The default shape: swipe from the edge, the screen slides and curves away. */
 export function PanelsideAssistantBlock() {
-  return <AssistantDemo />;
+  return <AssistantDemo title="Migrating the design tokens" />;
 }
 
 /** The same panel, sliding over a screen that stays exactly where it is. */
 export function PanelsideOverlayBlock() {
-  return <AssistantDemo mode="overlay" />;
+  return <AssistantDemo mode="overlay" title="Why is the bundle 4 MB" />;
 }
 
 /**
- * Docked at 380 points, which every phone clears in portrait — so this demo
- * opens already docked, and the panel is a column of the layout rather than a
- * thing you open. The trigger removes itself, since there is nothing to toggle.
+ * Docking is a tablet layout, not a phone one: below about 700 points there is
+ * no width that gives both a usable sidebar and a usable app. So this demo
+ * says which side of the threshold the device is on, and rotating a phone is
+ * enough to cross it.
+ */
+function DockedScene() {
+  const { docked } = usePanelside();
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View className="flex-1 gap-3 px-4" style={{ paddingBottom: insets.bottom + 12 }}>
+      <View className="rounded-xl bg-secondary p-4">
+        <Text weight="semibold">{docked ? 'Docked' : 'Not docked yet'}</Text>
+        <Text size="sm" muted className="mt-1">
+          {docked
+            ? 'The panel is a column of this layout. It has no trigger, no gesture and no scrim, because there is nothing to open.'
+            : 'Rotate the device. Past 700 points the panel stops being an overlay and takes a column of its own.'}
+        </Text>
+      </View>
+      {THREAD.slice(0, 2).map((turn) => (
+        <Turn key={turn.id} turn={turn} />
+      ))}
+    </View>
+  );
+}
+
+/**
+ * Docked past 700 points — the first width where a sidebar and an app both
+ * have room. The trigger removes itself, since there is nothing to toggle.
  */
 export function PanelsideDockedBlock() {
-  return <AssistantDemo dock={380} />;
+  return <AssistantDemo dock={700} title="Weekly standup summary" scene={<DockedScene />} />;
 }
 
 /**
@@ -311,6 +338,7 @@ export function PanelsideCurveBlock() {
   return (
     <AssistantDemo
       width={240}
+      title="Copy for the empty states"
       sceneProps={{ scale: 0.72, radius: 44, dim: 0.7 }}
     />
   );
@@ -392,10 +420,24 @@ export function PanelsideChatBlock() {
   return <AssistantDemo scene={<ChatScene />} title="Theme tokens" />;
 }
 
-/** A chat with a real composer: attach, type, send, and the keyboard handled. */
-function ComposerScene() {
+/**
+ * The native version.
+ *
+ * Panelside itself has no `native` prop, and cannot: the platform toolkits
+ * ship a switch, a picker, a sheet and a button, but neither has a pushing
+ * navigation panel to hand rendering to. What "native" means here is the
+ * controls inside it — the model picker is a real UIPickerView menu, the
+ * attachment sheet is a real UISheetPresentationController, and the send
+ * button is a real UIButton. The panel and the transcript stay ours.
+ *
+ * Install `@expo/ui` and they light up; without it every one of them falls
+ * back to the styled implementation rather than failing.
+ */
+function NativeChatScene() {
   const [turns, setTurns] = useState<Turn[]>(THREAD.slice(0, 2));
   const [draft, setDraft] = useState('');
+  const [model, setModel] = useState('balanced');
+  const [attaching, setAttaching] = useState(false);
   const insets = useSafeAreaInsets();
   const nextId = useRef(0);
 
@@ -420,6 +462,18 @@ function ComposerScene() {
 
   return (
     <View className="flex-1">
+      {/* The platform's own picker, opening a real menu. */}
+      <View className="flex-row items-center gap-2 px-4 pb-2">
+        <Text size="sm" muted>
+          Model
+        </Text>
+        <Select native value={model} onValueChange={setModel}>
+          <Select.Item value="fast" label="Fast" />
+          <Select.Item value="balanced" label="Balanced" />
+          <Select.Item value="deep" label="Deep reasoning" />
+        </Select>
+      </View>
+
       <MessageScroller autoScroll className="flex-1">
         <MessageScroller.Viewport>
           <MessageScroller.Content>
@@ -440,42 +494,60 @@ function ComposerScene() {
       {/* Pinned to the bottom edge, so it travels with the keyboard rather
           than being lifted out of a page that is not scrolling. */}
       <View
-        className="flex-row items-end gap-2 border-t border-border px-4 pt-3"
+        className="gap-2 border-t border-border px-4 pt-3"
         style={{ paddingBottom: Math.max(insets.bottom, 12) }}
       >
-        <Button size="icon" variant="ghost" className="h-11 w-11" accessibilityLabel="Attach a file">
-          <PaperclipIcon size={20} />
-        </Button>
-
-        <InputGroup className="flex-1">
+        <InputGroup>
           <InputGroup.Input
             value={draft}
             onChangeText={setDraft}
             placeholder="Message the assistant"
             multiline
-            onSubmitEditing={send}
             avoidKeyboard
             keyboardMode="dock"
             keyboardBottomInset={Math.max(insets.bottom, 12)}
           />
-          <InputGroup.Suffix>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8"
-              accessibilityLabel="Send"
-              disabled={draft.trim() === ''}
-              onPress={send}
-            >
-              <SendIcon size={18} />
-            </Button>
-          </InputGroup.Suffix>
         </InputGroup>
+
+        {/* Native buttons size themselves to their label and ignore
+            className, which is why these are labelled rather than icon-only. */}
+        <View className="flex-row items-center justify-between">
+          <Button native variant="ghost" onPress={() => setAttaching(true)}>
+            Attach
+          </Button>
+          <Button native onPress={send} disabled={draft.trim() === ''}>
+            Send
+          </Button>
+        </View>
       </View>
+
+      {/* A real platform sheet, resting at half height. */}
+      <BottomSheet native open={attaching} onOpenChange={setAttaching} snapPoints={['half']}>
+        <BottomSheet.Content>
+          <BottomSheet.Header title="Attach" description="Anything the assistant should read." />
+          <BottomSheet.Body>
+            <Item>
+              <Item.Content>
+                <Item.Title>Photo library</Item.Title>
+              </Item.Content>
+            </Item>
+            <Item>
+              <Item.Content>
+                <Item.Title>Files</Item.Title>
+              </Item.Content>
+            </Item>
+            <Item>
+              <Item.Content>
+                <Item.Title>Camera</Item.Title>
+              </Item.Content>
+            </Item>
+          </BottomSheet.Body>
+        </BottomSheet.Content>
+      </BottomSheet>
     </View>
   );
 }
 
-export function PanelsideComposerBlock() {
-  return <AssistantDemo scene={<ComposerScene />} title="New chat" />;
+export function PanelsideNativeBlock() {
+  return <AssistantDemo scene={<NativeChatScene />} title="Refactor the settings screen" />;
 }

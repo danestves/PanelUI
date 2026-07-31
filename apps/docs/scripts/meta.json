@@ -540,5 +540,15 @@
       "addedIn": "0.32.0",
       "beta": true
     }
+  ],
+  "panelside": [
+    "Panelside",
+    "Navigation panel that moves the app aside instead of covering it.",
+    "react native ai app navigation drawer",
+    {
+      "group": "ai-components",
+      "addedIn": "0.34.0",
+      "alpha": true
+    }
   ]
 }

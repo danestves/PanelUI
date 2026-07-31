@@ -5363,5 +5363,114 @@
       "height": 1142,
       "alt": "The Response component, running in the example app."
     }
+  },
+  "panelside": {
+    "intro": "The navigation pattern an assistant app uses: a button in the corner, and the screen slides across, shrinks, rounds its corners and dims — revealing a panel of destinations and history that was behind it all along. The app never disappears, so going back is a tap on the thing you were just looking at.\n\nIt is not a Drawer with different styling. A drawer mounts through a portal, which puts it above the app by construction and leaves the app content somewhere else in the tree, unreachable — there is nothing to push. Panelside renders inline and owns both halves, which is why the part of your app that moves has to be named.",
+    "usage": "<Panelside>\n  <Panelside.Panel>\n    <Panelside.Header title=\"Assistant\">\n      <Panelside.Search value={query} onChangeText={setQuery} />\n    </Panelside.Header>\n\n    <Panelside.Content>\n      <Panelside.Group>\n        <Panelside.GroupLabel>Recents</Panelside.GroupLabel>\n        <Panelside.Item label=\"Migrating the design tokens\" />\n      </Panelside.Group>\n    </Panelside.Content>\n\n    <Panelside.Footer>\n      <Panelside.Cta label=\"New chat\" onPress={compose} />\n    </Panelside.Footer>\n  </Panelside.Panel>\n\n  <Panelside.Scene>\n    <Panelside.Trigger />\n    <Conversation />\n  </Panelside.Scene>\n</Panelside>",
+    "extraImports": [
+      "Avatar",
+      "Button",
+      "MenuIcon",
+      "MessageCircleIcon",
+      "PackageIcon",
+      "PlusIcon",
+      "usePanelside"
+    ],
+    "anatomy": "<Panelside>\n  <Panelside.Panel>\n    <Panelside.Header>\n      <Panelside.Search />\n    </Panelside.Header>\n    <Panelside.Content>\n      <Panelside.Group>\n        <Panelside.GroupLabel>…</Panelside.GroupLabel>\n        <Panelside.Item>\n          <Panelside.Action />\n        </Panelside.Item>\n      </Panelside.Group>\n    </Panelside.Content>\n    <Panelside.Footer>\n      <Panelside.Cta />\n    </Panelside.Footer>\n  </Panelside.Panel>\n\n  <Panelside.Scene>\n    <Panelside.Trigger />\n  </Panelside.Scene>\n</Panelside>",
+    "parts": {
+      "Panel": "The navigation surface, sitting behind the app. It is a column: a sticky header, a scroller, and a footer pinned to the bottom edge.",
+      "Header": "The panel's title row, and anything below it that should not scroll. It clears the status bar itself, because the panel draws behind it.",
+      "Search": "A compact filter field. It reports what was typed and nothing else — what counts as a match is yours, since a search that only read titles would be wrong for the first app that indexes message bodies.",
+      "Content": "The scrolling middle. It leaves room at the end for a floating footer, measured rather than assumed.",
+      "Group": "A run of related rows. Groups are the unit of spacing, so an empty one costs nothing to render conditionally.",
+      "GroupLabel": "The heading over a group — “Starred”, “Recents”, “Today”. Announced as a heading.",
+      "Item": "One destination or one conversation: a leading icon, a label truncated to a line, an optional badge, and an active state.",
+      "Action": "The trailing control on a row — rename, delete, the overflow menu. It takes its target back as touch slop rather than as layout, so it stays small next to a row-sized target.",
+      "Footer": "The bar across the bottom of the panel. It floats over the list by default, the way an account row and a compose button do in the apps this pattern comes from.",
+      "Cta": "The compose button. A pill rather than a rectangle, because it is the one control in the panel that is not a list row.",
+      "Scene": "Your app. This is the half that moves, and naming it is the whole contract — everything inside it slides, scales, rounds and dims together.",
+      "Trigger": "Opens and closes the panel. Wraps a control of your own, or draws a plain one. It renders nothing at all when the panel is docked, since there would be nothing to toggle."
+    },
+    "diagrams": [
+      {
+        "src": "/diagrams/panelside-anatomy-dark.webp",
+        "srcLight": "/diagrams/panelside-anatomy-light.webp",
+        "alt": "The panel's regions: a sticky Header holding a Search field, a scrollable Content holding two Groups, and a sticky Footer holding a Cta.",
+        "width": 778,
+        "height": 1008,
+        "caption": "The panel is a column. Only the middle scrolls."
+      },
+      {
+        "src": "/diagrams/panelside-item-dark.webp",
+        "srcLight": "/diagrams/panelside-item-light.webp",
+        "alt": "A Group of four Items, each built from an icon, a label, an optional badge and a trailing Action, with a GroupLabel above the group.",
+        "width": 1560,
+        "height": 503,
+        "caption": "A row, and the four slots it is made of."
+      }
+    ],
+    "examples": [
+      {
+        "title": "Destinations and history",
+        "description": "Two groups, because they are two different things. The first is where you can go and never changes; the second is what you have done and changes every session — so only the second carries a label, and only its rows carry an action.",
+        "code": "<Panelside.Content>\n  <Panelside.Group>\n    <Panelside.Item icon={<MessageCircleIcon size={20} />} label=\"Chats\" active />\n    <Panelside.Item icon={<PackageIcon size={20} />} label=\"Projects\" badge={4} />\n  </Panelside.Group>\n\n  <Panelside.Group>\n    <Panelside.GroupLabel>Recents</Panelside.GroupLabel>\n    {recents.map((chat) => (\n      <Panelside.Item key={chat.id} label={chat.title} onPress={() => open(chat.id)}>\n        <Panelside.Action label={`Options for ${chat.title}`} onPress={() => menu(chat.id)} />\n      </Panelside.Item>\n    ))}\n  </Panelside.Group>\n</Panelside.Content>"
+      },
+      {
+        "title": "Searching the history",
+        "description": "`Panelside.Search` reports what was typed; deciding what matches is yours. Filtering to nothing renders nothing, so the groups can be dropped entirely rather than left as empty headings.",
+        "code": "const [query, setQuery] = useState('');\n\nconst results = useMemo(() => {\n  const needle = query.trim().toLowerCase();\n  if (!needle) return chats;\n  return chats.filter((chat) => chat.title.toLowerCase().includes(needle));\n}, [chats, query]);\n\nreturn (\n  <Panelside.Panel>\n    <Panelside.Header title=\"Assistant\">\n      <Panelside.Search\n        value={query}\n        onChangeText={setQuery}\n        placeholder=\"Search chats\"\n      />\n    </Panelside.Header>\n\n    <Panelside.Content>\n      {results.length > 0 && (\n        <Panelside.Group>\n          <Panelside.GroupLabel>Recents</Panelside.GroupLabel>\n          {results.map((chat) => (\n            <Panelside.Item key={chat.id} label={chat.title} />\n          ))}\n        </Panelside.Group>\n      )}\n    </Panelside.Content>\n  </Panelside.Panel>\n);"
+      },
+      {
+        "title": "A trigger of your own",
+        "description": "Given a child, `Panelside.Trigger` chains the toggle onto that element's own `onPress` rather than replacing it. A control sitting on the app's bare surface needs a shape to be findable, which is why this is usually a Button rather than an icon on its own.",
+        "code": "<Panelside.Scene>\n  <View className=\"flex-row items-center gap-2 px-3 pt-3\">\n    <Panelside.Trigger>\n      <Button size=\"icon\" variant=\"secondary\" className=\"rounded-full\">\n        <MenuIcon size={20} />\n      </Button>\n    </Panelside.Trigger>\n    <Text size=\"lg\" weight=\"semibold\" className=\"flex-1\">\n      Migrating the design tokens\n    </Text>\n  </View>\n\n  <Conversation />\n</Panelside.Scene>"
+      },
+      {
+        "title": "Moving something with the panel",
+        "description": "`usePanelside` hands back `progress` as a shared value, so a header of your own can travel with the panel on the UI thread instead of re-rendering once a frame. It reads 0 closed and 1 open, and every value in between during a drag.",
+        "code": "function SceneTitle() {\n  const { progress, toggle } = usePanelside();\n\n  const style = useAnimatedStyle(() => ({\n    opacity: 1 - progress.value,\n    transform: [{ translateY: progress.value * -8 }],\n  }));\n\n  return (\n    <Animated.View style={style}>\n      <Text size=\"lg\" weight=\"semibold\">Migrating the design tokens</Text>\n    </Animated.View>\n  );\n}"
+      },
+      {
+        "title": "A sidebar on a tablet",
+        "description": "Past `dock`, the panel stops being an overlay: it takes a column of the layout, stays open, drops the gesture, and `Panelside.Trigger` renders nothing. The number is yours on purpose — a large phone in landscape is wider than a small tablet in portrait, so no default is right for every app.",
+        "code": "<Panelside dock={768}>\n  <Panelside.Panel>{/* … */}</Panelside.Panel>\n  <Panelside.Scene>\n    {/* The trigger disappears on its own above 768pt. */}\n    <Panelside.Trigger />\n    <Conversation />\n  </Panelside.Scene>\n</Panelside>"
+      }
+    ],
+    "versions": [
+      {
+        "title": "Assistant",
+        "description": "The default shape. Swipe in from the leading edge and the screen slides, shrinks and rounds in step with your finger; release under 60 points and it springs back.",
+        "code": "<Panelside>\n  <AssistantPanel />\n  <Panelside.Scene>\n    <SceneBar />\n    <Transcript />\n  </Panelside.Scene>\n</Panelside>"
+      },
+      {
+        "title": "Overlay",
+        "description": "The same panel, sliding over a screen that stays exactly where it is — for a scene whose content cannot afford to move.",
+        "code": "<Panelside mode=\"overlay\">\n  <AssistantPanel />\n  <Panelside.Scene>\n    <SceneBar />\n    <Transcript />\n  </Panelside.Scene>\n</Panelside>"
+      },
+      {
+        "title": "Docked",
+        "description": "Past the width you name, the panel is a column of the layout rather than a thing you open, and the trigger removes itself.",
+        "code": "<Panelside dock={380}>\n  <AssistantPanel />\n  <Panelside.Scene>\n    <SceneBar />\n    <Transcript />\n  </Panelside.Scene>\n</Panelside>"
+      },
+      {
+        "title": "Deeper curve",
+        "description": "The three scene numbers turned well past their defaults, so what each one does is unmistakable rather than a matter of opinion.",
+        "code": "<Panelside width={240}>\n  <AssistantPanel />\n  <Panelside.Scene scale={0.72} radius={44} dim={0.7}>\n    <SceneBar />\n    <Transcript />\n  </Panelside.Scene>\n</Panelside>"
+      },
+      {
+        "title": "Full chat",
+        "description": "A streaming transcript in the scene, anchored and scrolling on its own while the panel holds the history it came from.",
+        "code": "<Panelside>\n  <AssistantPanel />\n  <Panelside.Scene>\n    <SceneBar />\n    <MessageScroller autoScroll className=\"flex-1\">\n      <MessageScroller.Viewport>\n        <MessageScroller.Content>\n          {turns.map((turn) => (\n            <MessageScroller.Item\n              key={turn.id}\n              messageId={turn.id}\n              scrollAnchor={turn.role === 'user'}\n            >\n              <Turn turn={turn} />\n            </MessageScroller.Item>\n          ))}\n        </MessageScroller.Content>\n      </MessageScroller.Viewport>\n      <MessageScroller.Button />\n    </MessageScroller>\n  </Panelside.Scene>\n</Panelside>"
+      },
+      {
+        "title": "Chat with composer",
+        "description": "The whole thing: history in the panel, transcript in the scene, and a composer pinned to the bottom edge that travels with the keyboard.",
+        "code": "<Panelside.Scene>\n  <SceneBar />\n  <Transcript />\n\n  <View\n    className=\"flex-row items-end gap-2 border-t border-border px-4 pt-3\"\n    style={{ paddingBottom: Math.max(insets.bottom, 12) }}\n  >\n    <InputGroup className=\"flex-1\">\n      <InputGroup.Input\n        value={draft}\n        onChangeText={setDraft}\n        placeholder=\"Message the assistant\"\n        multiline\n        avoidKeyboard\n        keyboardMode=\"dock\"\n        keyboardBottomInset={Math.max(insets.bottom, 12)}\n      />\n      <InputGroup.Suffix>\n        <Button size=\"icon\" variant=\"ghost\" onPress={send} disabled={!draft.trim()}>\n          <SendIcon size={18} />\n        </Button>\n      </InputGroup.Suffix>\n    </InputGroup>\n  </View>\n</Panelside.Scene>"
+      }
+    ],
+    "notes": "### How far everything travels\n\nOne shared value drives both layers, so a half-finished drag is a real halfway state rather than a blend of two snapshots. At progress `p`, with panel width `W` and container width `C`:\n\n```\nscale      = 1 - (1 - scale) * p\ntranslateX = p * (W + 12) - C * (1 - scale) / 2\nradius     = p * radius\n```\n\nThe subtraction is the part worth knowing about. React Native scales a view about its centre, so a scaled scene has already pulled its leading edge inward before any translation applies — translating by the panel width alone leaves a gap that grows with the scale, and the panel looks mis-measured.\n\n<Diagram\n  src=\"/diagrams/panelside-scene-dark.webp\"\n  srcLight=\"/diagrams/panelside-scene-light.webp\"\n  alt=\"Three stages of the transition: closed, dragging and open, with the scene sliding right, scaling to 0.92 and rounding to a 28-point radius as progress runs 0 to 1.\"\n  width={1559}\n  height={522}\n  caption=\"Closed, dragging, open — one value, three properties.\"\n/>\n\n### The edge strip\n\nOne pan gesture serves both directions of travel. While the panel is closed its hit area is narrowed to `edgeWidth` points at the leading screen edge, so a horizontal swipe anywhere else — a carousel, a code block, a chart — keeps its own touches. Open, the strip is dropped and the whole surface drags.\n\n<Callout type=\"warn\" title=\"iOS claims the same edge\">\nA native stack turns on a back-swipe from the leading screen edge, and it wins over anything JavaScript puts there — so on a screen inside one, the panel's gesture never sees a touch and only the trigger works. Turn the stack gesture off for that screen:\n\n```tsx\n<Stack.Screen options={{ gestureEnabled: false }} />\n```\n\nGive the screen another way back when you do — Panelside is usually the root of a tab, where there was nothing to go back to anyway.\n</Callout>\n\n### Both halves leave the accessibility tree\n\nBeing covered says nothing to a screen reader: without help it reads out a navigation list nobody can see, or the app underneath an open panel. Panelside hides whichever half is not in front, so a swipe through the elements only ever reaches what is actually on the screen.\n\n### Reduced motion\n\nEvery spring here resolves instantly to its target when the system setting is on. The panel still opens and the scene still ends up in the right place — it just does not travel.",
+    "hideVariants": [
+      "variant"
+    ]
   }
 }

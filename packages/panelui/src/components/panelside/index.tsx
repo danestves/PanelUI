@@ -157,6 +157,17 @@ const PARALLAX = 0.18;
 const WIDTH_FRACTION = 0.8;
 const WIDTH_MAX = 360;
 
+/**
+ * The same, for a docked panel — and nothing like it, because the job changed.
+ *
+ * An overlay panel can take most of the width, since the app is behind it and
+ * gets it all back on close. A docked panel keeps what it takes: every point
+ * of it is a point the app does not have, and 80% of the container leaves a
+ * column too narrow to put anything in. A third, capped, is a sidebar.
+ */
+const DOCK_WIDTH_FRACTION = 0.32;
+const DOCK_WIDTH_MAX = 320;
+
 /** Progress past which a layer is treated as fully hidden for accessibility. */
 const HIDDEN_EPSILON = 0.05;
 
@@ -275,11 +286,14 @@ export interface PanelsideProps {
   /**
    * Container width at or above which the panel stops being an overlay and
    * becomes a permanent sidebar: laid out beside the scene, always open, with
-   * the gesture and the trigger switched off.
+   * the gesture and the trigger switched off. A docked panel also narrows to a
+   * third of the container, capped at 320 — docked, every point it takes is a
+   * point the app does not get back.
    *
    * Off by default, and deliberately not a guess — a large phone in landscape
    * is wider than a small tablet in portrait, so no single number is right for
-   * every app. Pick the width your own layout stops being a phone at.
+   * every app. Set it high enough that what is left over is still a screen:
+   * around 700 is the first width where both halves have room.
    */
   dock?: number | false;
   /** Swipe from the leading edge to open, and drag the scene to close. Default true. */
@@ -327,7 +341,11 @@ function PanelsideRoot({
   }, []);
 
   const docked = dock !== false && containerWidth >= dock;
-  const width = widthProp ?? Math.min(containerWidth * WIDTH_FRACTION, WIDTH_MAX);
+  const width =
+    widthProp ??
+    (docked
+      ? Math.min(containerWidth * DOCK_WIDTH_FRACTION, DOCK_WIDTH_MAX)
+      : Math.min(containerWidth * WIDTH_FRACTION, WIDTH_MAX));
 
   /**
    * How far the drag runs. In push mode the scene clears the gap too.
@@ -552,7 +570,10 @@ function PanelsideHeader({
       // header's to clear, and it stacks with its own padding rather than
       // being maxed against it.
       style={[{ paddingTop: insets.top + 12 }, style]}
-      className={cn('gap-3 px-4 pb-3', className)}
+      // `px-3` matches the scroller below it, so the search field and the rows
+      // share one edge. A header inset further would leave the field floating
+      // a few points inside the list it filters.
+      className={cn('gap-3 px-3 pb-3', className)}
       {...props}
     >
       {(title || action) && (
@@ -606,7 +627,14 @@ function PanelsideSearch({
       <TextInput
         placeholder={placeholder}
         placeholderTextColor={muted}
-        className={cn('h-full flex-1 text-base text-foreground', className)}
+        /*
+         * `text-[16px]`, not `text-base`. A `text-*` step sets a size and a
+         * line height together — 16px glyphs in a 24px line box — and in a
+         * field of fixed height the extra leading lands above them, so the
+         * text and the placeholder sit below the middle of the row. A length
+         * sets the size alone and leaves the line box the font's own.
+         */
+        className={cn('h-full flex-1 text-[16px] text-foreground', className)}
         style={typeof textTint === 'string' ? { color: textTint } : undefined}
         accessibilityRole="search"
         returnKeyType="search"
@@ -635,7 +663,7 @@ function PanelsideContent({
   return (
     <ScrollView
       className={cn('flex-1', className)}
-      contentContainerClassName={cn('gap-1 px-2 pb-3', contentContainerClassName)}
+      contentContainerClassName={cn('gap-1 px-3 pb-3', contentContainerClassName)}
       // Room for the footer, which floats over this list rather than taking a
       // row below it — so the last item can be scrolled clear of the pill
       // instead of living permanently underneath it.
@@ -834,8 +862,12 @@ function PanelsideFooter({
       onLayout={floating ? onLayout : undefined}
       style={[{ paddingBottom: Math.max(insets.bottom, 12) }, style]}
       className={cn(
-        'flex-row items-center gap-2 bg-background px-3 pt-2',
-        floating ? 'absolute bottom-0 end-0 start-0' : 'border-t border-border',
+        'flex-row items-center gap-2 px-3 pt-2',
+        // Floating, it has no surface of its own: the list runs underneath and
+        // stays visible, which is what says the footer is over the panel
+        // rather than a bar cut out of the bottom of it. Only the controls in
+        // it are opaque. Docked to the flow, it needs both.
+        floating ? 'absolute bottom-0 end-0 start-0' : 'border-t border-border bg-background',
         className
       )}
       {...props}

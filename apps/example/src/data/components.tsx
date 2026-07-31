@@ -182,9 +182,9 @@ import {
 import {
   PanelsideAssistantBlock,
   PanelsideChatBlock,
-  PanelsideComposerBlock,
   PanelsideCurveBlock,
   PanelsideDockedBlock,
+  PanelsideNativeBlock,
   PanelsideOverlayBlock,
 } from '../components/panelside-blocks';
 
@@ -12035,12 +12035,12 @@ export const COMPONENTS: ComponentEntry[] = [
         render: () => <PanelsideChatBlock />,
       },
       {
-        label: 'Chat with composer',
-        id: 'composer',
+        label: 'Native chat',
+        id: 'native',
         fullPage: true,
         fullBleed: true,
-        description: 'The whole thing: history in the panel, a pinned composer in the scene.',
-        render: () => <PanelsideComposerBlock />,
+        description: 'Platform picker, sheet and buttons inside the panel — needs @expo/ui.',
+        render: () => <PanelsideNativeBlock />,
       },
     ],
   },
