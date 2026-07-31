@@ -16,6 +16,43 @@ interface PageProps {
   params: Promise<{ slug?: string[] }>;
 }
 
+/** One rung of a `BreadcrumbList`. The last has no `url` — it is this page. */
+interface Crumb {
+  name: string;
+  url?: string;
+}
+
+/**
+ * The trail a search result draws above the title, in place of the raw path
+ * it would otherwise guess at from the URL.
+ *
+ * Every rung but the last has to link somewhere that exists: Google discards a
+ * trail pointing at a 404, which would leave the page worse off than with no
+ * markup at all. Most sidebar groups are not pages — `/docs/components` is a
+ * folder whose contents are spread into the sidebar by `meta.json`, and it
+ * returns 404 — so an ancestor earns a rung only when `source` resolves it.
+ * That is true of `/docs` and `/docs/ai` today, and becomes true of any group
+ * that later gains an index page, without this needing to be told.
+ */
+function breadcrumbTrail(slug: string[], title: string): Crumb[] {
+  // The docs root is its own page; a trail from it to itself says nothing.
+  if (slug.length === 0) return [];
+
+  const trail: Crumb[] = [];
+  const root = source.getPage([]);
+  if (root) trail.push({ name: 'Docs', url: absoluteUrl(root.url) });
+
+  for (let depth = 1; depth < slug.length; depth++) {
+    const ancestor = source.getPage(slug.slice(0, depth));
+    if (ancestor) {
+      trail.push({ name: ancestor.data.title, url: absoluteUrl(ancestor.url) });
+    }
+  }
+
+  trail.push({ name: title });
+  return trail;
+}
+
 export default async function Page({ params }: PageProps) {
   const { slug } = await params;
   const page = source.getPage(slug);
@@ -27,6 +64,7 @@ export default async function Page({ params }: PageProps) {
   // `slugs`, not `url`: the route resolves against the content root, which has
   // no /docs prefix.
   const markdownUrl = `/llms.mdx/${page.slugs.join('/')}`;
+  const trail = breadcrumbTrail(slug ?? [], page.data.title);
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
@@ -45,25 +83,52 @@ export default async function Page({ params }: PageProps) {
         <MDX components={getMDXComponents()} />
       </DocsBody>
 
-      {/* Marks each page as a technical article so search engines and AI
-          answer engines can attribute it. */}
+      {/* One graph rather than two script tags: the article and the trail
+          describe the same page, and a single block is what a validator and a
+          reader both expect to find.
+
+          TechArticle marks the page up so search engines and AI answer engines
+          can attribute it. BreadcrumbList is what turns the URL line of a
+          result from a guessed path into named rungs. */}
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'TechArticle',
-            headline: page.data.title,
-            description: page.data.description,
-            url,
-            isPartOf: {
-              '@type': 'WebSite',
-              name: site.name,
-              url: site.url,
-            },
-            author: { '@type': 'Person', name: 'Khalid Abdi' },
-            inLanguage: 'en',
+            '@graph': [
+              {
+                '@type': 'TechArticle',
+                headline: page.data.title,
+                description: page.data.description,
+                url,
+                isPartOf: {
+                  '@type': 'WebSite',
+                  name: site.name,
+                  url: site.url,
+                },
+                author: { '@type': 'Person', name: 'Khalid Abdi' },
+                inLanguage: 'en',
+              },
+              // A single rung is not a trail, so pages that resolve to one —
+              // the docs root — emit no BreadcrumbList at all rather than a
+              // degenerate one.
+              ...(trail.length > 1
+                ? [
+                    {
+                      '@type': 'BreadcrumbList',
+                      itemListElement: trail.map((crumb, index) => ({
+                        '@type': 'ListItem',
+                        position: index + 1,
+                        name: crumb.name,
+                        // Omitted on the last rung, which is this page: there
+                        // is nowhere for it to link to.
+                        ...(crumb.url ? { item: crumb.url } : {}),
+                      })),
+                    },
+                  ]
+                : []),
+            ],
           }),
         }}
       />
