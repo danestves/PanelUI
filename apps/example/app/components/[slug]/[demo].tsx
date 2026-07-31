@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { EmptyState, Text } from 'panelui-native';
 import { ScreenHeader } from '../../../src/components/screen-header';
 import { COMPONENTS_BY_SLUG } from '../../../src/data/components';
@@ -36,8 +36,18 @@ export default function ComponentVersionScreen() {
 
   // A full-bleed demo gets the screen and nothing else — no header, no
   // description, no padding. It draws its own way back.
+  //
+  // The native back-swipe goes with it. iOS claims the left screen edge for
+  // popping the stack, and it wins over anything JavaScript puts there, so a
+  // demo whose own gesture starts at that edge never sees a touch. Turning it
+  // off is why these demos have to draw their own way out.
   if (demo.fullBleed) {
-    return <View className="flex-1">{demo.render()}</View>;
+    return (
+      <View className="flex-1">
+        <Stack.Screen options={{ gestureEnabled: false }} />
+        {demo.render()}
+      </View>
+    );
   }
 
   return (

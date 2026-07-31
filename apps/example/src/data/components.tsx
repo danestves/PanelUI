@@ -181,6 +181,8 @@ import {
 } from '../components/map-blocks';
 import {
   PanelsideAssistantBlock,
+  PanelsideChatBlock,
+  PanelsideComposerBlock,
   PanelsideCurveBlock,
   PanelsideDockedBlock,
   PanelsideOverlayBlock,
@@ -12005,7 +12007,7 @@ export const COMPONENTS: ComponentEntry[] = [
         id: 'overlay',
         fullPage: true,
         fullBleed: true,
-        description: 'The same panel over a screen that stays where it is.',
+        description: 'The same panel sliding over a screen that stays where it is.',
         render: () => <PanelsideOverlayBlock />,
       },
       {
@@ -12013,7 +12015,7 @@ export const COMPONENTS: ComponentEntry[] = [
         id: 'docked',
         fullPage: true,
         fullBleed: true,
-        description: 'Rotate the device: past 600 points the panel becomes a column.',
+        description: 'Past a width you pick, the panel is a column and the trigger goes.',
         render: () => <PanelsideDockedBlock />,
       },
       {
@@ -12021,8 +12023,24 @@ export const COMPONENTS: ComponentEntry[] = [
         id: 'curve',
         fullPage: true,
         fullBleed: true,
-        description: 'Scale, radius and dim turned up, to show they are yours to set.',
+        description: 'Scale, radius and dim turned well up — the three numbers are yours.',
         render: () => <PanelsideCurveBlock />,
+      },
+      {
+        label: 'Full chat',
+        id: 'chat',
+        fullPage: true,
+        fullBleed: true,
+        description: 'A streaming transcript underneath, anchored and scrolling on its own.',
+        render: () => <PanelsideChatBlock />,
+      },
+      {
+        label: 'Chat with composer',
+        id: 'composer',
+        fullPage: true,
+        fullBleed: true,
+        description: 'The whole thing: history in the panel, a pinned composer in the scene.',
+        render: () => <PanelsideComposerBlock />,
       },
     ],
   },
