@@ -31,7 +31,10 @@ import meta from '@/scripts/meta.json';
 type MetaEntry = [string, string, string, { group?: string }?];
 
 export const metadata: Metadata = {
-  title: `${site.name} — ${site.tagline}`,
+  // `absolute` because this title already carries the brand. A plain string
+  // here goes through the root's `%s — PanelUI` template and comes out saying
+  // PanelUI twice, which is what the home page was serving.
+  title: { absolute: `${site.name} — ${site.titleTagline}` },
   description: site.description,
   alternates: { canonical: absoluteUrl('/') },
 };

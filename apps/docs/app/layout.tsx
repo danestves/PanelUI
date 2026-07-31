@@ -22,8 +22,15 @@ const geistMono = Geist_Mono({subsets:['latin'],variable:'--font-mono'});
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
+  /*
+   * `template` appends the brand to every child page's title, so a child must
+   * never include the brand itself — that is what produced
+   * "PanelUI — … — PanelUI" on the home page. A page that needs the brand in
+   * its own title opts out with `title: { absolute }` rather than spelling it
+   * twice.
+   */
   title: {
-    default: `${site.name} — ${site.tagline}`,
+    default: `${site.name} — ${site.titleTagline}`,
     template: `%s — ${site.name}`,
   },
   description: site.description,
