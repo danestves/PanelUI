@@ -1,5 +1,5 @@
 import { forwardRef, type ReactNode } from 'react';
-import type { View } from 'react-native';
+import { View } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import {
@@ -153,19 +153,25 @@ const NATIVE_HEIGHT: Record<NonNullable<ButtonVariantProps['size']>, number> = {
 };
 
 /**
- * Room around the glyph in a native icon button.
+ * Room around the glyph in a native icon button, applied to the glyph itself.
  *
- * Padding, not a frame — and the distinction is the whole thing. A frame sets
- * the button's *layout* box, but a platform button style draws its background
- * around the label plus the label's padding, so a framed icon button is a
- * small circle sitting in the middle of a large invisible square. Padding
- * grows the label, so the background grows with it.
- *
- * The width is left alone for the same reason it is set on a labelled button:
- * equal padding around a square glyph is already square, and the circular
- * border shape has something round to draw.
+ * Not to the button, and that distinction is the whole thing. SwiftUI's
+ * `padding` on a Button pads *outside* its background — the chrome stays the
+ * size it was and moves inward — and `frame` only sets the layout box, leaving
+ * a glyph-sized background centred in a larger invisible one. Neither grows
+ * the button. What the background is drawn around is the *label*, and the
+ * label here is a React Native view we host ourselves, so padding it in React
+ * is both the simplest lever and the only one that works.
  */
-const NATIVE_ICON_PADDING = 14;
+const NATIVE_ICON_PADDING = 12;
+
+/** Our sizes on the platform's own control scale. */
+const NATIVE_CONTROL_SIZE = {
+  sm: 'small',
+  md: 'regular',
+  lg: 'large',
+  icon: 'large',
+} as const;
 
 /** PanelUI variants mapped onto the platform button styles. */
 const NATIVE_VARIANT: Record<
@@ -247,6 +253,9 @@ export const Button = forwardRef<View, ButtonProps>(
         ? [
             glass ? swiftUI.buttonStyle(prominent ? 'glassProminent' : 'glass') : null,
             size === 'icon' ? swiftUI.buttonBorderShape('circle') : null,
+            // The platform's own idea of how big a control is, which is what
+            // sets the padding its style draws around the label.
+            swiftUI.controlSize(NATIVE_CONTROL_SIZE[size ?? 'md']),
           ].filter(Boolean)
         : [];
 
@@ -266,19 +275,12 @@ export const Button = forwardRef<View, ButtonProps>(
             variant={NATIVE_VARIANT[variant ?? 'primary']}
             disabled={isDisabled}
             /*
-             * An icon button is padded; every other size is given a height.
-             *
-             * A labelled button should be as wide as its label, so it gets a
-             * height and nothing else. An icon button has no label to size to,
-             * and a frame would only centre a glyph-sized background inside a
-             * larger box — so it gets padding instead, which the platform's
-             * button style draws its background around.
+             * A height for a labelled button, and nothing at all for an icon
+             * one. `controlSize` and the label's own padding decide how big an
+             * icon button is; adding a frame on top would only re-centre the
+             * result inside a box of a different size.
              */
-            style={
-              size === 'icon'
-                ? { padding: NATIVE_ICON_PADDING }
-                : { height: NATIVE_HEIGHT[size ?? 'md'] }
-            }
+            style={size === 'icon' ? undefined : { height: NATIVE_HEIGHT[size ?? 'md'] }}
             modifiers={nativeModifiers.length ? nativeModifiers : undefined}
             onPress={props.onPress}
           >
@@ -289,11 +291,17 @@ export const Button = forwardRef<View, ButtonProps>(
                 bare text once it is in there. */}
             {isStringLabel ? undefined : (
               <RNHostView matchContents>
-                <IconColorProvider color={nativeContent}>
-                  {textChildren(children, (text) => (
-                    <Text className={label({ className: labelClassName })}>{text}</Text>
-                  ))}
-                </IconColorProvider>
+                {/* Padding the hosted label is what grows the button, because
+                    the platform draws its background around the label. */}
+                <View
+                  style={size === 'icon' ? { padding: NATIVE_ICON_PADDING } : undefined}
+                >
+                  <IconColorProvider color={nativeContent}>
+                    {textChildren(children, (text) => (
+                      <Text className={label({ className: labelClassName })}>{text}</Text>
+                    ))}
+                  </IconColorProvider>
+                </View>
               </RNHostView>
             )}
           </NativeButton>
