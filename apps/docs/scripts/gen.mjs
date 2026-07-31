@@ -89,6 +89,17 @@ const previewVideoTag = (p) =>
   `<PreviewVideo\n  src="${p.src}"${p.poster ? `\n  poster="${p.poster}"` : ''}\n  alt="${p.alt}"\n  width={${p.width}}\n  height={${p.height}}${p.caption ? `\n  caption="${p.caption}"` : ''}\n/>`;
 
 /**
+ * A labelled schematic of the component's structure, drawn once for a dark
+ * page and once for a light one.
+ *
+ * Not a `Preview`: that frames a portrait shot of a device and holds it narrow,
+ * which is right for a screenshot and wrong for a wide diagram whose whole job
+ * is to be read.
+ */
+const diagramTag = (d) =>
+  `<Diagram\n  src="${d.src}"\n  srcLight="${d.srcLight}"\n  alt="${d.alt}"\n  width={${d.width}}\n  height={${d.height}}${d.caption ? `\n  caption="${d.caption}"` : ''}\n/>`;
+
+/**
  * The shot that sits above a worked example or version — a recording when the
  * demo moves, a screenshot when it doesn't, and nothing when neither is given.
  * Prefers `previewVideo` so a component can carry both and get the moving one.
@@ -192,7 +203,15 @@ ${u.usage ?? `<${name} />`}
 ${u.anatomy ?? `<${name}>\n  ${parts.map((p) => `<${p}>…</${p}>`).join('\n  ')}\n</${name}>`}
 \`\`\`
 
-${u.partNotes ?? parts.map((p) => `- **\`${p}\`** — ${u.parts?.[p.split('.')[1]] ?? 'See props below.'}`).join('\n')}`);
+${u.partNotes ?? parts.map((p) => `- **\`${p}\`** — ${u.parts?.[p.split('.')[1]] ?? 'See props below.'}`).join('\n')}${
+  /*
+   * Diagrams land here, under the parts they name, rather than at the top of
+   * the page. The shot above the fold is of the component running; a labelled
+   * schematic answers a different question, and it only answers it next to the
+   * list of names it is labelling.
+   */
+  u.diagrams?.length ? `\n\n${u.diagrams.map(diagramTag).join('\n\n')}` : ''
+}`);
   }
 
   // Worked examples, one heading each. This is the section people actually

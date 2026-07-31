@@ -23,6 +23,7 @@ S=./scripts node scripts/gen.mjs       # api.json + usage.json -> MDX
   | `usage` | The `## Usage` snippet |
   | `extraImports` | Extra names on the import line — must cover everything the snippets use |
   | `anatomy` / `parts` / `partNotes` | The `## Composition` section |
+  | `diagrams` | Labelled schematics under the part list, where the names they label are: an array of `{ src, srcLight, alt, width, height, caption? }`. Both renderings are required and both live in `public/diagrams/` — the page ships each and hides one, so the right diagram is in the first paint rather than after hydration |
   | `examples` | `## Examples` — an array of `{ title, description?, code }` |
   | `versions` | `## Versions` — an array of `{ title, description?, code }`, one per `fullPage` demo in `apps/example/src/data/components.tsx`. Only for components that have them |
   | `variantCode` | Per-variant snippet, keyed by variant name. Overrides the generic `<Name variant="x">…</Name>` fallback, which is wrong for components that take no children |
