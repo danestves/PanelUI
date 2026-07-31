@@ -151,7 +151,7 @@ function AssistantPanel({ native = false }: { native?: boolean }) {
             the button to the trailing end. */}
         <Panelside.Item
           className="flex-1"
-          icon={<Avatar size="md" fallback="K" />}
+          icon={<Avatar size="lg" fallback="K" />}
           accessibilityLabel="Account"
         />
         <Panelside.Cta
