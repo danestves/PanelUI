@@ -278,9 +278,11 @@ export interface PanelsideProps {
    */
   mode?: PanelsideMode;
   /**
-   * Panel width in points. Defaults to 72% of the container, capped at 320 —
-   * a fraction alone reads correctly on a phone and absurdly on a tablet,
-   * where it becomes a navigation list with a column of whitespace beside it.
+   * Panel width in points. Defaults to 80% of the container capped at 360,
+   * and to a third of it capped at 320 once docked — an overlay panel gives
+   * the width back when it closes and a docked one keeps it, so they are not
+   * the same measurement. The caps are what stop a tablet getting a navigation
+   * list with a field of whitespace beside it.
    */
   width?: number;
   /**

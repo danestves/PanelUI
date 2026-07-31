@@ -13,7 +13,7 @@ It is not a Drawer with different styling. A drawer mounts through a portal, whi
 Panelside ships with the library — no separate install.
 
 ```tsx
-import { Panelside, Avatar, Button, MenuIcon, MessageCircleIcon, PackageIcon, PlusIcon, usePanelside } from 'panelui-native';
+import { Panelside, Avatar, BottomSheet, Button, MenuIcon, MessageCircleIcon, PackageIcon, PlusIcon, Select, usePanelside } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -213,13 +213,13 @@ function SceneTitle() {
 
 ### A sidebar on a tablet
 
-Past `dock`, the panel stops being an overlay: it takes a column of the layout, stays open, drops the gesture, and `Panelside.Trigger` renders nothing. The number is yours on purpose — a large phone in landscape is wider than a small tablet in portrait, so no default is right for every app.
+Past `dock`, the panel stops being an overlay: it takes a column of the layout, stays open, drops the gesture, narrows to a third of the container, and `Panelside.Trigger` renders nothing. The number is yours on purpose — set it high enough that what is left over is still a screen. Around 700 is the first width where both halves have room.
 
 ```tsx
-<Panelside dock={768}>
+<Panelside dock={700}>
   <Panelside.Panel>{/* … */}</Panelside.Panel>
   <Panelside.Scene>
-    {/* The trigger disappears on its own above 768pt. */}
+    {/* The trigger disappears on its own above 700pt. */}
     <Panelside.Trigger />
     <Conversation />
   </Panelside.Scene>
@@ -258,10 +258,10 @@ The same panel, sliding over a screen that stays exactly where it is — for a s
 
 ### Docked
 
-Past the width you name, the panel is a column of the layout rather than a thing you open, and the trigger removes itself.
+Past the width you name, the panel is a column of the layout rather than a thing you open: the trigger removes itself, the gesture goes, and the panel narrows to a third of the container — docked, every point it takes is a point the app does not get back.
 
 ```tsx
-<Panelside dock={380}>
+<Panelside dock={700}>
   <AssistantPanel />
   <Panelside.Scene>
     <SceneBar />
@@ -313,37 +313,33 @@ A streaming transcript in the scene, anchored and scrolling on its own while the
 </Panelside>
 ```
 
-### Chat with composer
+### Native chat
 
-The whole thing: history in the panel, transcript in the scene, and a composer pinned to the bottom edge that travels with the keyboard.
+Panelside has no `native` prop and cannot have one — the platform toolkits ship a switch, a picker, a sheet and a button, and none of them is a pushing navigation panel. What goes native is what is inside it.
 
 ```tsx
-<Panelside.Scene>
-  <SceneBar />
-  <Transcript />
+<Panelside>
+  <AssistantPanel />
+  <Panelside.Scene>
+    <SceneBar />
 
-  <View
-    className="flex-row items-end gap-2 border-t border-border px-4 pt-3"
-    style={{ paddingBottom: Math.max(insets.bottom, 12) }}
-  >
-    <InputGroup className="flex-1">
-      <InputGroup.Input
-        value={draft}
-        onChangeText={setDraft}
-        placeholder="Message the assistant"
-        multiline
-        avoidKeyboard
-        keyboardMode="dock"
-        keyboardBottomInset={Math.max(insets.bottom, 12)}
-      />
-      <InputGroup.Suffix>
-        <Button size="icon" variant="ghost" onPress={send} disabled={!draft.trim()}>
-          <SendIcon size={18} />
-        </Button>
-      </InputGroup.Suffix>
-    </InputGroup>
-  </View>
-</Panelside.Scene>
+    <Select native value={model} onValueChange={setModel}>
+      <Select.Item value="fast" label="Fast" />
+      <Select.Item value="balanced" label="Balanced" />
+    </Select>
+
+    <Transcript />
+
+    <View className="flex-row justify-between">
+      <Button native variant="ghost" onPress={() => setAttaching(true)}>Attach</Button>
+      <Button native onPress={send}>Send</Button>
+    </View>
+
+    <BottomSheet native open={attaching} onOpenChange={setAttaching} snapPoints={['half']}>
+      <BottomSheet.Content>{/* … */}</BottomSheet.Content>
+    </BottomSheet>
+  </Panelside.Scene>
+</Panelside>
 ```
 
 ## API Reference
@@ -356,8 +352,8 @@ The whole thing: history in the panel, transcript in the scene, and a composer p
 | `onOpenChange` | `(open: boolean) => void` | — | Called with the next open state, whether a gesture or you caused it. |
 | `defaultOpen` | `boolean` | `false` | Open state to start at when you are not controlling it. |
 | `mode` | `PanelsideMode` | `'push'` | How the two layers relate. `push` moves the scene aside and curves it, which is the point of this component. `overlay` slides the panel over a scene that stays put — the same navigation, for a screen whose content cannot afford to move. |
-| `width` | `number` | — | Panel width in points. Defaults to 72% of the container, capped at 320 — a fraction alone reads correctly on a phone and absurdly on a tablet, where it becomes a navigation list with a column of whitespace beside it. |
-| `dock` | `number \| false` | `false` | Container width at or above which the panel stops being an overlay and becomes a permanent sidebar: laid out beside the scene, always open, with the gesture and the trigger switched off. Off by default, and deliberately not a guess — a large phone in landscape is wider than a small tablet in portrait, so no single number is right for every app. Pick the width your own layout stops being a phone at. |
+| `width` | `number` | — | Panel width in points. Defaults to 80% of the container capped at 360, and to a third of it capped at 320 once docked — an overlay panel gives the width back when it closes and a docked one keeps it, so they are not the same measurement. The caps are what stop a tablet getting a navigation list with a field of whitespace beside it. |
+| `dock` | `number \| false` | `false` | Container width at or above which the panel stops being an overlay and becomes a permanent sidebar: laid out beside the scene, always open, with the gesture and the trigger switched off. A docked panel also narrows to a third of the container, capped at 320 — docked, every point it takes is a point the app does not get back. Off by default, and deliberately not a guess — a large phone in landscape is wider than a small tablet in portrait, so no single number is right for every app. Set it high enough that what is left over is still a screen: around 700 is the first width where both halves have room. |
 | `swipeEnabled` | `boolean` | `true` | Swipe from the leading edge to open, and drag the scene to close. Default true. |
 | `edgeWidth` | `number` | `EDGE_WIDTH` | How wide the edge strip that starts a swipe is. Default 32. |
 | `dismissible` | `boolean` | `true` | Tapping the pushed scene, or the Android back button, closes the panel. Default true. |
@@ -495,6 +491,10 @@ Give the screen another way back when you do — Panelside is usually the root o
 ### Both halves leave the accessibility tree
 
 Being covered says nothing to a screen reader: without help it reads out a navigation list nobody can see, or the app underneath an open panel. Panelside hides whichever half is not in front, so a swipe through the elements only ever reaches what is actually on the screen.
+
+### There is no `native` prop
+
+The platform toolkits behind the `native` prop on Button, Select, Switch and BottomSheet ship a handful of controls, and a pushing navigation panel is not one of them — so there is nothing for Panelside to hand rendering to, and a prop that quietly did nothing would be worse than not having one. Everything *inside* it can still be native: put a `native` picker in the scene, a `native` sheet behind an attach button, `native` buttons in a composer.
 
 ### Reduced motion
 
