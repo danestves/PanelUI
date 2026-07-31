@@ -160,7 +160,9 @@ const clamp = (value: number, min: number, max: number) => {
 export type PanelsideMode = 'push' | 'overlay';
 
 const itemVariants = tv({
-  base: 'w-full flex-row items-center gap-3 rounded-xl px-3 py-2.5',
+  // No width: in a group it stretches on its own, and pinning it to full width
+  // would stop it sharing a footer row with anything else.
+  base: 'flex-row items-center gap-3 rounded-xl px-3 py-2.5',
   variants: {
     active: { true: 'bg-secondary' },
     disabled: { true: 'opacity-40' },

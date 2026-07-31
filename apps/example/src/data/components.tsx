@@ -179,6 +179,12 @@ import {
   StoreLocatorBlock,
   UptimeMonitorBlock,
 } from '../components/map-blocks';
+import {
+  PanelsideAssistantBlock,
+  PanelsideCurveBlock,
+  PanelsideDockedBlock,
+  PanelsideOverlayBlock,
+} from '../components/panelside-blocks';
 
 const PHOTO = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=60';
 
@@ -11975,6 +11981,48 @@ export const COMPONENTS: ComponentEntry[] = [
             </Typography.List>
           </View>
         ),
+      },
+    ],
+  },
+  {
+    slug: 'panelside',
+    name: 'Panelside',
+    summary: 'Navigation panel that pushes and curves the app screen',
+    // Every one of these is the whole screen. Panelside wraps the app content
+    // in order to push it, so there is no version of it that fits in a section
+    // between two dividers.
+    demos: [
+      {
+        label: 'Assistant',
+        id: 'assistant',
+        fullPage: true,
+        fullBleed: true,
+        description: 'Swipe from the left edge — the screen slides, shrinks and rounds.',
+        render: () => <PanelsideAssistantBlock />,
+      },
+      {
+        label: 'Overlay',
+        id: 'overlay',
+        fullPage: true,
+        fullBleed: true,
+        description: 'The same panel over a screen that stays where it is.',
+        render: () => <PanelsideOverlayBlock />,
+      },
+      {
+        label: 'Docked',
+        id: 'docked',
+        fullPage: true,
+        fullBleed: true,
+        description: 'Rotate the device: past 600 points the panel becomes a column.',
+        render: () => <PanelsideDockedBlock />,
+      },
+      {
+        label: 'Deeper curve',
+        id: 'curve',
+        fullPage: true,
+        fullBleed: true,
+        description: 'Scale, radius and dim turned up, to show they are yours to set.',
+        render: () => <PanelsideCurveBlock />,
       },
     ],
   },
