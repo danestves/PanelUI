@@ -355,7 +355,7 @@ Panelside has no `native` prop and cannot have one — the platform toolkits shi
 | `width` | `number` | — | Panel width in points. Defaults to 80% of the container capped at 360, and to a third of it capped at 320 once docked — an overlay panel gives the width back when it closes and a docked one keeps it, so they are not the same measurement. The caps are what stop a tablet getting a navigation list with a field of whitespace beside it. |
 | `dock` | `number \| false` | `false` | Container width at or above which the panel stops being an overlay and becomes a permanent sidebar: laid out beside the scene, always open, with the gesture and the trigger switched off. A docked panel also narrows to a third of the container, capped at 320 — docked, every point it takes is a point the app does not get back. Off by default, and deliberately not a guess — a large phone in landscape is wider than a small tablet in portrait, so no single number is right for every app. Set it high enough that what is left over is still a screen: around 700 is the first width where both halves have room. |
 | `swipeEnabled` | `boolean` | `true` | Swipe from the leading edge to open, and drag the scene to close. Default true. |
-| `edgeWidth` | `number` | `EDGE_WIDTH` | How wide the edge strip that starts a swipe is. Default 32. |
+| `edgeWidth` | `number` | `EDGE_WIDTH` | How wide the leading-edge strip that starts a swipe is. Default 48 — wider than the system's own edge gestures, because there is no bezel to feel for. Raise it on a screen with nothing else competing for a horizontal drag. |
 | `dismissible` | `boolean` | `true` | Tapping the pushed scene, or the Android back button, closes the panel. Default true. |
 | `className` | `string` | — |  |
 

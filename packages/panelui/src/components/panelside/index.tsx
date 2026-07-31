@@ -120,12 +120,30 @@ import { cn } from '../../utils/cn';
 
 const SPRING = { damping: 24, stiffness: 300, mass: 0.7 } as const;
 
-/** How wide the leading-edge strip that starts a swipe is, in points. */
-const EDGE_WIDTH = 32;
+/**
+ * How wide the leading-edge strip that starts a swipe is, in points.
+ *
+ * Wider than the system's own edge gestures, because this one has to be found
+ * without a bezel to feel for: a thumb reaching for the side of a phone lands
+ * anywhere in the first 40-odd points, and a strip narrower than that reads as
+ * a gesture that does not work rather than one that was missed.
+ */
+const EDGE_WIDTH = 48;
 /** A drag has to clear this before releasing it changes the open state. */
 const COMMIT_DISTANCE = 60;
 /** A flick this fast commits regardless of how far it got. */
 const COMMIT_VELOCITY = 500;
+/** Horizontal travel that claims the drag. Small, so it wins early. */
+const ACTIVATE_OFFSET = 6;
+/**
+ * Vertical travel that gives it up.
+ *
+ * Deliberately looser than the horizontal one. Nobody swipes in a straight
+ * line from the side of a phone, and matching the two means a gesture that
+ * dies on the wobble — while a list underneath still keeps anything with real
+ * vertical intent behind it.
+ */
+const FAIL_OFFSET = 16;
 /** Below this the drag is a tap that wobbled, and velocity is not consulted. */
 const MIN_OFFSET = 5;
 
@@ -306,7 +324,11 @@ export interface PanelsideProps {
   dock?: number | false;
   /** Swipe from the leading edge to open, and drag the scene to close. Default true. */
   swipeEnabled?: boolean;
-  /** How wide the edge strip that starts a swipe is. Default 32. */
+  /**
+   * How wide the leading-edge strip that starts a swipe is. Default 48 — wider
+   * than the system's own edge gestures, because there is no bezel to feel for.
+   * Raise it on a screen with nothing else competing for a horizontal drag.
+   */
   edgeWidth?: number;
   /**
    * Tapping the pushed scene, or the Android back button, closes the panel.
@@ -433,10 +455,10 @@ function PanelsideRoot({
   const pan = useMemo(() => {
     let gesture = Gesture.Pan()
       .enabled(swipeEnabled && !docked)
-      .activeOffsetX([-MIN_OFFSET, MIN_OFFSET])
-      // Any real vertical intent hands the touch back, so a list inside the
-      // panel and a scroller inside the app both keep their own drags.
-      .failOffsetY([-MIN_OFFSET, MIN_OFFSET])
+      .activeOffsetX([-ACTIVATE_OFFSET, ACTIVATE_OFFSET])
+      // Real vertical intent hands the touch back, so a list inside the panel
+      // and a scroller inside the app both keep their own drags.
+      .failOffsetY([-FAIL_OFFSET, FAIL_OFFSET])
       .onChange((event) => {
         translation.value = clamp(translation.value + event.changeX * sign, 0, extent);
       })
@@ -870,10 +892,14 @@ function PanelsideFooter({
   return (
     <View
       onLayout={floating ? onLayout : undefined}
-      style={[{ paddingBottom: Math.max(insets.bottom, 12) }, style]}
+      style={[
+        { paddingBottom: Math.max(insets.bottom, 12) },
+        floating ? { paddingTop: FOOTER_FADE } : null,
+        style,
+      ]}
       className={cn(
-        'flex-row items-center gap-2 px-3 pt-2',
-        floating ? 'absolute bottom-0 end-0 start-0' : 'border-t border-border bg-background',
+        'flex-row items-center gap-2 px-3',
+        floating ? 'absolute bottom-0 end-0 start-0' : 'border-t border-border bg-background pt-2',
         className
       )}
       {...props}
@@ -881,29 +907,43 @@ function PanelsideFooter({
       {/*
         A floating footer has no edge and no bar. A solid one cuts a strip out
         of the bottom of the list; a transparent one lets rows slide under the
-        controls and collide with them. What it wants is neither: the list
-        dissolves into the panel just before the footer, so the controls always
-        have something plain behind them and nothing looks cut off.
+        controls and show through the labels. So it is neither: the top
+        `FOOTER_FADE` points are a gradient the list dissolves into, and
+        everything below that — the band the controls actually sit in — is
+        plain background.
 
-        Drawn behind the children and reaching above the footer's own box, so
-        the fade starts before the first control rather than at it.
+        The fade has to finish *above* the first control, not run through it.
+        Two layers rather than one gradient across the whole box, because a
+        gradient sized to the box puts its midpoint wherever the box happens to
+        be tall, which is exactly where the labels are.
+
+        Both are inside the footer's own bounds, so neither depends on a parent
+        that does not clip its children.
       */}
       {floating ? (
-        <LinearGradient
-          colors={[`${solid}00`, solid, solid]}
-          locations={[0, 0.5, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          pointerEvents="none"
-          // Reaches above the footer's own box, so the fade starts before the
-          // first control rather than at it.
-          style={[StyleSheet.absoluteFill, { top: -FOOTER_FADE }]}
-        />
+        <>
+          <LinearGradient
+            colors={[`${solid}00`, solid]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            pointerEvents="none"
+            style={[styles.fade, { height: FOOTER_FADE }]}
+          />
+          <View
+            pointerEvents="none"
+            className="absolute bottom-0 end-0 start-0 bg-background"
+            style={{ top: FOOTER_FADE }}
+          />
+        </>
       ) : null}
       {textChildren(children)}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  fade: { position: 'absolute', top: 0, left: 0, right: 0 },
+});
 
 export interface PanelsideCtaProps extends Omit<PressableProps, 'children'> {
   className?: string;

@@ -29,7 +29,6 @@ import {
   PackageIcon,
   Panelside,
   PlusIcon,
-  Select,
   SendIcon,
   Text,
   XIcon,
@@ -439,9 +438,9 @@ export function PanelsideChatBlock() {
  *
  * Panelside itself has no `native` prop, and cannot: the platform toolkits
  * ship a switch, a picker, a sheet and a button, and none of them is a pushing
- * navigation panel. What goes native is what is inside it — the model picker
- * is a real platform menu, the attachment sheet a real platform sheet, and
- * both the send button and the panel's compose button real platform buttons.
+ * navigation panel. What goes native is what is inside it — the attachment
+ * sheet is a real platform sheet, and the panel's compose button is a real
+ * platform button.
  *
  * The transcript, the rows and the composer field stay ours, because there is
  * no platform control for any of them. A screen that went half-native would
@@ -450,7 +449,6 @@ export function PanelsideChatBlock() {
 function NativeChatScene() {
   const [turns, setTurns] = useState<Turn[]>(THREAD.slice(0, 2));
   const [draft, setDraft] = useState('');
-  const [model, setModel] = useState('balanced');
   const [attaching, setAttaching] = useState(false);
   const insets = useSafeAreaInsets();
   const nextId = useRef(0);
@@ -479,19 +477,6 @@ function NativeChatScene() {
 
   return (
     <View className="flex-1">
-      {/*
-        The platform picker reports its own height and fills the row it is in,
-        so it needs a row of its own with a real width — in a `flex-row` beside
-        a label, with nothing telling it to grow, it collapses to nothing.
-      */}
-      <View className="px-4 pb-2">
-        <Select native value={model} onValueChange={setModel}>
-          <Select.Item value="fast" label="Fast" />
-          <Select.Item value="balanced" label="Balanced" />
-          <Select.Item value="deep" label="Deep reasoning" />
-        </Select>
-      </View>
-
       <MessageScroller autoScroll className="flex-1">
         <MessageScroller.Viewport>
           <MessageScroller.Content>
