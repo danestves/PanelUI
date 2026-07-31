@@ -1003,6 +1003,11 @@ export interface PanelsideCtaProps extends Omit<PressableProps, 'children'> {
    * `className` and `icon` are ignored and it sizes itself to `label`.
    */
   native?: boolean;
+  /**
+   * Draw the native button in the platform's Liquid Glass material. Requires
+   * `native`, and iOS 26 or later; ignored anywhere else.
+   */
+  glass?: boolean;
   children?: ReactNode;
 }
 
@@ -1012,6 +1017,7 @@ function PanelsideCta({
   icon,
   variant = 'primary',
   native = false,
+  glass = false,
   disabled,
   children,
   ...props
@@ -1031,6 +1037,7 @@ function PanelsideCta({
     return (
       <Button
         native
+        glass={glass}
         variant={variant}
         accessibilityLabel={label}
         // Pressable allows `null` for disabled; Button does not.

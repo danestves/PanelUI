@@ -8,7 +8,7 @@ import {
 } from '../../primitives/animated-pressable';
 import { Text, textChildren } from '../../primitives/text';
 import { IconColorProvider } from '../../icons';
-import { getNativeUI } from '../../native';
+import { getNativeUI, getSwiftUIModifiers } from '../../native';
 import { Spinner } from '../spinner';
 
 const buttonVariants = tv({
@@ -120,6 +120,16 @@ export interface ButtonProps
    * has no effect on it.
    */
   native?: boolean;
+  /**
+   * Draw the native button in the platform's Liquid Glass material — the one
+   * iOS 26 uses for its own floating controls. Requires `native`, and iOS 26 or
+   * later; anywhere else it is ignored and the button keeps its ordinary
+   * platform style rather than failing.
+   *
+   * `primary` and `destructive` take the prominent, tinted variant; every other
+   * variant takes the plain one.
+   */
+  glass?: boolean;
 }
 
 /**
@@ -167,6 +177,7 @@ export const Button = forwardRef<View, ButtonProps>(
       startContent,
       endContent,
       native,
+      glass = false,
       ...props
     },
     ref
@@ -198,6 +209,35 @@ export const Button = forwardRef<View, ButtonProps>(
     if (nativeUI) {
       const { Host, Button: NativeButton, RNHostView } = nativeUI;
       const isStringLabel = typeof children === 'string';
+      const prominent = variant === 'primary' || variant === 'destructive';
+
+      /*
+       * Two looks the portable props cannot ask for.
+       *
+       * `buttonStyle` because Liquid Glass has no cross-platform variant to map
+       * onto, and `buttonBorderShape` because an icon button is round and the
+       * platform's default capsule is not — a lone glyph in a capsule reads as
+       * a text button somebody forgot to label.
+       *
+       * A supplied `buttonStyle` replaces the one the variant would have set,
+       * which is what makes glass a substitution rather than a layer on top.
+       */
+      const swiftUI = getSwiftUIModifiers();
+      const nativeModifiers = swiftUI
+        ? [
+            glass ? swiftUI.buttonStyle(prominent ? 'glassProminent' : 'glass') : null,
+            size === 'icon' ? swiftUI.buttonBorderShape('circle') : null,
+          ].filter(Boolean)
+        : [];
+
+      /*
+       * The platform paints the background, not the theme — so a hosted icon
+       * cannot read its colour from a token the way it does in the styled
+       * button. On a tinted button that is white, whatever the theme thinks its
+       * own primary foreground is; on the rest, including plain glass, the
+       * material is clear enough to leave the page's own foreground legible.
+       */
+      const nativeContent = prominent ? '#ffffff' : contentColor;
 
       return (
         <Host matchContents>
@@ -206,6 +246,7 @@ export const Button = forwardRef<View, ButtonProps>(
             variant={NATIVE_VARIANT[variant ?? 'primary']}
             disabled={isDisabled}
             style={{ height: NATIVE_HEIGHT[size ?? 'md'] }}
+            modifiers={nativeModifiers.length ? nativeModifiers : undefined}
             onPress={props.onPress}
           >
             {/* Non-string children are React Native views, and the native
@@ -215,11 +256,11 @@ export const Button = forwardRef<View, ButtonProps>(
                 bare text once it is in there. */}
             {isStringLabel ? undefined : (
               <RNHostView matchContents>
-                <>
+                <IconColorProvider color={nativeContent}>
                   {textChildren(children, (text) => (
                     <Text className={label({ className: labelClassName })}>{text}</Text>
                   ))}
-                </>
+                </IconColorProvider>
               </RNHostView>
             )}
           </NativeButton>

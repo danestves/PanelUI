@@ -158,6 +158,7 @@ function AssistantPanel({ native = false }: { native?: boolean }) {
           icon={<PlusIcon size={18} />}
           label="New chat"
           native={native}
+          glass={native}
         />
       </Panelside.Footer>
     </Panelside.Panel>
@@ -189,7 +190,7 @@ function SceneBar({ title, native = false }: { title: string; native?: boolean }
   const glyph = native && typeof tint === 'string' ? tint : undefined;
 
   const shape = native ? undefined : 'h-10 w-10 rounded-full';
-  const variant = native ? 'outline' : 'secondary';
+  const variant = native ? 'ghost' : 'secondary';
 
   return (
     <View
@@ -199,6 +200,7 @@ function SceneBar({ title, native = false }: { title: string; native?: boolean }
       <Panelside.Trigger>
         <Button
           native={native}
+          glass={native}
           size="icon"
           variant={variant}
           className={shape}
@@ -221,6 +223,7 @@ function SceneBar({ title, native = false }: { title: string; native?: boolean }
           native back-swipe off with it, so the way out is this bar's to draw. */}
       <Button
         native={native}
+        glass={native}
         size="icon"
         variant={variant}
         className={shape}
@@ -475,10 +478,9 @@ function NativeChatScene() {
   const nextId = useRef(0);
   // A bare TextInput has no themed placeholder of its own, and a native button
   // never reaches the icon tint the styled one provides — so both are read here.
-  const [placeholderTint, glyph, sendGlyph] = useCSSVariable([
+  const [placeholderTint, glyph] = useCSSVariable([
     '--color-muted-foreground',
     '--color-foreground',
-    '--color-primary-foreground',
   ]) as (string | undefined)[];
 
   const send = () => {
@@ -547,8 +549,9 @@ function NativeChatScene() {
           <View className="flex-row items-center gap-2">
             <Button
               native
+              glass
               size="icon"
-              variant="outline"
+              variant="ghost"
               accessibilityLabel="Attach"
               onPress={() => setAttaching(true)}
             >
@@ -557,19 +560,22 @@ function NativeChatScene() {
 
             <View className="flex-1" />
 
-            <Button native size="icon" variant="outline" accessibilityLabel="Dictate">
+            <Button native glass size="icon" variant="ghost" accessibilityLabel="Dictate">
               <MicIcon size={19} color={glyph} />
             </Button>
 
+            {/* Prominent glass: the tinted variant, and the platform paints
+                the icon white rather than reading a theme token. */}
             <Button
               native
+              glass
               size="icon"
               variant="primary"
               accessibilityLabel="Send"
               disabled={draft.trim() === ''}
               onPress={send}
             >
-              <SendIcon size={17} color={sendGlyph} />
+              <SendIcon size={17} />
             </Button>
           </View>
         </View>

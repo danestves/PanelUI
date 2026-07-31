@@ -97,3 +97,53 @@ export function getNativeUI(): NativeUIModule | null {
 export function hasNativeUI(): boolean {
   return getNativeUI() !== null;
 }
+
+/**
+ * The SwiftUI view modifiers, for the handful of things the portable props
+ * cannot express.
+ *
+ * The universal components cover the common ground — a variant, a size, an
+ * enabled flag — but the platform has looks with no cross-platform equivalent,
+ * and Liquid Glass is the one that matters: it is the material iOS 26 draws its
+ * own floating controls in, and nothing in the portable API asks for it. A
+ * modifier is how SwiftUI is configured, so this is the door to it.
+ *
+ * iOS only, and lazily resolved like everything else here. Android's toolkit
+ * has its own modifier system and no equivalent material, so asking for glass
+ * there is not a downgrade — it is a different question.
+ */
+interface SwiftUIModifiers {
+  buttonStyle: (
+    style:
+      | 'automatic'
+      | 'bordered'
+      | 'borderedProminent'
+      | 'borderless'
+      | 'glass'
+      | 'glassProminent'
+      | 'plain'
+  ) => unknown;
+  buttonBorderShape: (
+    shape: 'automatic' | 'capsule' | 'roundedRectangle' | 'circle',
+    cornerRadius?: number
+  ) => unknown;
+}
+
+let modifiersResolved = false;
+let modifiers: SwiftUIModifiers | null = null;
+
+export function getSwiftUIModifiers(): SwiftUIModifiers | null {
+  if (modifiersResolved) return modifiers;
+  modifiersResolved = true;
+
+  if (Platform.OS !== 'ios') return null;
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    modifiers = require('@expo/ui/swift-ui/modifiers') as SwiftUIModifiers;
+  } catch {
+    modifiers = null;
+  }
+
+  return modifiers;
+}

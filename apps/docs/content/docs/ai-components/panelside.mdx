@@ -86,7 +86,7 @@ npx panelui-cli@latest add panelside
 - **`Panelside.Item`** — One destination or one conversation: a leading icon, a label truncated to a line, an optional badge, and an active state.
 - **`Panelside.Action`** — The trailing control on a row — rename, delete, the overflow menu. It takes its target back as touch slop rather than as layout, so it stays small next to a row-sized target.
 - **`Panelside.Footer`** — The bar across the bottom of the panel — an account control at one end, the compose button at the other. It floats over the list, with the list dissolving into the panel just above it: a solid bar would cut a strip out of the bottom of the scroller, and a transparent one would let rows show through the controls.
-- **`Panelside.Cta`** — The compose button. A pill rather than a rectangle, because it is the one control in the panel that is not a list row. Takes `native` to hand it to the platform.
+- **`Panelside.Cta`** — The compose button. A pill rather than a rectangle, because it is the one control in the panel that is not a list row. Takes `native` to hand it to the platform, and `glass` to have the platform draw it in Liquid Glass.
 - **`Panelside.Scene`** — Your app. This is the half that moves, and naming it is the whole contract — everything inside it slides, scales, rounds and dims together.
 - **`Panelside.Trigger`** — Opens and closes the panel. Wraps a control of your own, or draws a plain one. It renders nothing at all when the panel is docked, since there would be nothing to toggle.
 
@@ -434,6 +434,7 @@ Panelside has no `native` prop and cannot have one — the platform toolkits shi
 | `icon` | `ReactNode` | — | Leading element, usually an icon. |
 | `variant` | `'primary' \| 'secondary'` | `'primary'` | `primary` is the filled accent pill; `secondary` is the quiet one. |
 | `native` | `boolean` | `false` | Render the platform's own button instead of the pill. Requires the optional `@expo/ui` package; without it this prop does nothing. **Theme tokens do not apply** — the platform draws the button, so `className` and `icon` are ignored and it sizes itself to `label`. |
+| `glass` | `boolean` | `false` | Draw the native button in the platform's Liquid Glass material. Requires `native`, and iOS 26 or later; ignored anywhere else. |
 
 ### Panelside.Scene
 
@@ -504,7 +505,7 @@ Being covered says nothing to a screen reader: without help it reads out a navig
 
 ### There is no `native` prop
 
-The platform toolkits behind the `native` prop on Button, Select, Switch and BottomSheet ship a handful of controls, and a pushing navigation panel is not one of them — so there is nothing for Panelside to hand rendering to, and a prop that quietly did nothing would be worse than not having one. Everything *inside* it can still be native. `Panelside.Cta` takes `native` and hands the compose button to the platform; in the scene, a `native` picker, a `native` sheet behind an attach button and `native` buttons all work as they do anywhere else. The rows and the search field stay ours, because there is no platform control for either — a panel that went half-native would match neither.
+The platform toolkits behind the `native` prop on Button, Select, Switch and BottomSheet ship a handful of controls, and a pushing navigation panel is not one of them — so there is nothing for Panelside to hand rendering to, and a prop that quietly did nothing would be worse than not having one. Everything *inside* it can still be native. `Panelside.Cta` takes `native` and hands the compose button to the platform, and `glass` with it for the iOS 26 material; in the scene, a `native` picker, a `native` sheet behind an attach button and `native` buttons all work as they do anywhere else. The rows and the search field stay ours, because there is no platform control for either — a panel that went half-native would match neither.
 
 ### Reduced motion
 
