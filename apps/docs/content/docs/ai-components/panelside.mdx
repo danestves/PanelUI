@@ -85,7 +85,7 @@ npx panelui-cli@latest add panelside
 - **`Panelside.GroupLabel`** — The heading over a group — “Starred”, “Recents”, “Today”. Announced as a heading.
 - **`Panelside.Item`** — One destination or one conversation: a leading icon, a label truncated to a line, an optional badge, and an active state.
 - **`Panelside.Action`** — The trailing control on a row — rename, delete, the overflow menu. It takes its target back as touch slop rather than as layout, so it stays small next to a row-sized target.
-- **`Panelside.Footer`** — The bar across the bottom of the panel. It floats over the list by default, with the list dissolving into the panel just above it — a solid bar would cut a strip out of the bottom of the scroller, and a transparent one would let rows collide with the controls.
+- **`Panelside.Footer`** — The bar across the bottom of the panel — an account control at one end, the compose button at the other. It floats over the list, with the list dissolving into the panel just above it: a solid bar would cut a strip out of the bottom of the scroller, and a transparent one would let rows show through the controls.
 - **`Panelside.Cta`** — The compose button. A pill rather than a rectangle, because it is the one control in the panel that is not a list row. Takes `native` to hand it to the platform.
 - **`Panelside.Scene`** — Your app. This is the half that moves, and naming it is the whole contract — everything inside it slides, scales, rounds and dims together.
 - **`Panelside.Trigger`** — Opens and closes the panel. Wraps a control of your own, or draws a plain one. It renders nothing at all when the panel is docked, since there would be nothing to toggle.
@@ -354,8 +354,9 @@ Panelside has no `native` prop and cannot have one — the platform toolkits shi
 | `mode` | `PanelsideMode` | `'push'` | How the two layers relate. `push` moves the scene aside and curves it, which is the point of this component. `overlay` slides the panel over a scene that stays put — the same navigation, for a screen whose content cannot afford to move. |
 | `width` | `number` | — | Panel width in points. Defaults to 80% of the container capped at 360, and to a third of it capped at 320 once docked — an overlay panel gives the width back when it closes and a docked one keeps it, so they are not the same measurement. The caps are what stop a tablet getting a navigation list with a field of whitespace beside it. |
 | `dock` | `number \| false` | `false` | Container width at or above which the panel stops being an overlay and becomes a permanent sidebar: laid out beside the scene, always open, with the gesture and the trigger switched off. A docked panel also narrows to a third of the container, capped at 320 — docked, every point it takes is a point the app does not get back. Off by default, and deliberately not a guess — a large phone in landscape is wider than a small tablet in portrait, so no single number is right for every app. Set it high enough that what is left over is still a screen: around 700 is the first width where both halves have room. |
-| `swipeEnabled` | `boolean` | `true` | Swipe from the leading edge to open, and drag the scene to close. Default true. |
-| `edgeWidth` | `number` | `EDGE_WIDTH` | How wide the leading-edge strip that starts a swipe is. Default 48 — wider than the system's own edge gestures, because there is no bezel to feel for. Raise it on a screen with nothing else competing for a horizontal drag. |
+| `swipeEnabled` | `boolean` | `true` | Swipe to open, and drag the scene to close. Default true. |
+| `swipeFrom` | `PanelsideSwipeFrom` | `'anywhere'` | Where a swipe may begin. `anywhere` is the default and the behaviour this pattern is known for — a sideways drag across the app opens the panel from wherever your thumb already was. `edge` narrows it to a strip at the leading screen edge, for a scene that has its own use for a horizontal drag: a carousel, a wide table, a chart you can pan. Anything like that under an `anywhere` panel will fight it, and the panel usually wins. |
+| `edgeWidth` | `number` | `EDGE_WIDTH` | How wide the leading-edge strip that starts a swipe is, when `swipeFrom` is `edge`. Default 48 — wider than the system's own edge gestures, because there is no bezel to feel for. Ignored otherwise. |
 | `dismissible` | `boolean` | `true` | Tapping the pushed scene, or the Android back button, closes the panel. Default true. |
 | `className` | `string` | — |  |
 
@@ -475,9 +476,17 @@ The subtraction is the part worth knowing about. React Native scales a view abou
   caption="Closed, dragging, open — one value, three properties."
 />
 
-### The edge strip
+### Where a swipe can start
 
-One pan gesture serves both directions of travel. While the panel is closed its hit area is narrowed to `edgeWidth` points at the leading screen edge, so a horizontal swipe anywhere else — a carousel, a code block, a chart — keeps its own touches. Open, the strip is dropped and the whole surface drags.
+A single pan opens and closes, and by default it listens across the whole surface: a sideways drag anywhere on the app brings the panel in, from wherever your thumb already was. What keeps a list usable underneath it is the pair of thresholds — the drag gives itself up on 12 points of vertical travel and only claims the touch at 14 horizontal, so anything even slightly vertical resolves as a scroll.
+
+`swipeFrom="edge"` narrows the closed-state hit area to `edgeWidth` points at the leading screen edge instead. Reach for it when the scene has its own use for a horizontal drag — a carousel, a wide table, a pannable chart — which would otherwise fight the panel and lose.
+
+```tsx
+<Panelside swipeFrom="edge" edgeWidth={64}>…</Panelside>
+```
+
+Either way the restriction is a closed-state one. Open, the whole surface drags: the panel is already out, so there is no app underneath left to compete.
 
 <Callout type="warn" title="iOS claims the same edge">
 A native stack turns on a back-swipe from the leading screen edge, and it wins over anything JavaScript puts there — so on a screen inside one, the panel's gesture never sees a touch and only the trigger works. Turn the stack gesture off for that screen:

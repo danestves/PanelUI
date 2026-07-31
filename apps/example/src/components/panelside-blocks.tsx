@@ -144,10 +144,13 @@ function AssistantPanel({ native = false }: { native?: boolean }) {
       </Panelside.Content>
 
       <Panelside.Footer>
+        {/* No label: the avatar is the account, and a name beside it is one
+            more thing between the compose button and the edge of the panel.
+            Without a label the row stretches on its own, which is what pushes
+            the button to the trailing end. */}
         <Panelside.Item
-          className="flex-1"
           icon={<Avatar size="md" fallback="K" />}
-          label="Khalid Abdi"
+          accessibilityLabel="Account"
         />
         <Panelside.Cta
           icon={<PlusIcon size={18} />}

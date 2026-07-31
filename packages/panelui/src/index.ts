@@ -378,6 +378,7 @@ export {
   type PanelsideSceneProps,
   type PanelsideTriggerProps,
   type PanelsideMode,
+  type PanelsideSwipeFrom,
   type UsePanelsideResult,
 } from './components/panelside';
 export { Textarea, type TextareaProps } from './components/textarea';

@@ -57,14 +57,20 @@
  * Both are driven from one shared value, so a half-finished drag is a real
  * halfway state rather than an interpolation between two snapshots.
  *
- * ## The edge strip
+ * ## One gesture, both directions
  *
- * One pan gesture serves both directions of travel. While the panel is closed
- * its hit area is narrowed to a strip at the leading screen edge, so a
- * horizontal swipe anywhere else in the app — a carousel, a code block, a chart
- * — keeps its own touches. While the panel is open the strip is dropped and the
- * whole surface drags, because at that point there is nothing else to compete
- * with.
+ * A single pan opens and closes. By default it listens across the whole
+ * surface, because that is the behaviour this pattern is known for: a sideways
+ * drag anywhere on the app brings the panel in, from wherever your thumb
+ * already was. What keeps a list usable underneath it is the pair of
+ * thresholds — the drag gives itself up on twelve points of vertical travel
+ * and only claims the touch at fourteen horizontal, so anything even slightly
+ * vertical resolves as a scroll.
+ *
+ * `swipeFrom="edge"` narrows the closed-state hit area to a strip at the
+ * leading screen edge instead. That is for a scene with its own use for a
+ * horizontal drag — a carousel, a wide table, a pannable chart — which would
+ * otherwise fight the panel and lose.
  *
  * Reanimated's default `ReduceMotion.System` applies throughout: with the
  * accessibility setting on, every spring here resolves instantly to its target
@@ -133,17 +139,23 @@ const EDGE_WIDTH = 48;
 const COMMIT_DISTANCE = 60;
 /** A flick this fast commits regardless of how far it got. */
 const COMMIT_VELOCITY = 500;
-/** Horizontal travel that claims the drag. Small, so it wins early. */
-const ACTIVATE_OFFSET = 6;
 /**
- * Vertical travel that gives it up.
+ * How much travel claims the drag, and how much gives it up — different on
+ * each axis, and different again depending on where the swipe may start.
  *
- * Deliberately looser than the horizontal one. Nobody swipes in a straight
- * line from the side of a phone, and matching the two means a gesture that
- * dies on the wobble — while a list underneath still keeps anything with real
- * vertical intent behind it.
+ * From the edge strip the horizontal claim is small and the vertical give-up
+ * generous: the target is narrow, so the gesture has to win early, and nobody
+ * swipes in a straight line from the side of a phone.
+ *
+ * From anywhere the numbers invert, because now the whole screen is competing.
+ * Giving up sooner than it claims is what makes a lazy diagonal resolve as a
+ * scroll rather than as the panel: a list keeps every drag that is even
+ * slightly vertical, and only a deliberate sideways one opens the panel.
  */
-const FAIL_OFFSET = 16;
+const OFFSETS = {
+  edge: { activate: 6, fail: 16 },
+  anywhere: { activate: 14, fail: 12 },
+} as const;
 /** Below this the drag is a tap that wobbled, and velocity is not consulted. */
 const MIN_OFFSET = 5;
 
@@ -201,6 +213,7 @@ const clamp = (value: number, min: number, max: number) => {
 };
 
 export type PanelsideMode = 'push' | 'overlay';
+export type PanelsideSwipeFrom = 'anywhere' | 'edge';
 
 const itemVariants = tv({
   // No width: in a group it stretches on its own, and pinning it to full width
@@ -322,12 +335,23 @@ export interface PanelsideProps {
    * around 700 is the first width where both halves have room.
    */
   dock?: number | false;
-  /** Swipe from the leading edge to open, and drag the scene to close. Default true. */
+  /** Swipe to open, and drag the scene to close. Default true. */
   swipeEnabled?: boolean;
   /**
-   * How wide the leading-edge strip that starts a swipe is. Default 48 — wider
-   * than the system's own edge gestures, because there is no bezel to feel for.
-   * Raise it on a screen with nothing else competing for a horizontal drag.
+   * Where a swipe may begin. `anywhere` is the default and the behaviour this
+   * pattern is known for — a sideways drag across the app opens the panel from
+   * wherever your thumb already was.
+   *
+   * `edge` narrows it to a strip at the leading screen edge, for a scene that
+   * has its own use for a horizontal drag: a carousel, a wide table, a chart
+   * you can pan. Anything like that under an `anywhere` panel will fight it,
+   * and the panel usually wins.
+   */
+  swipeFrom?: PanelsideSwipeFrom;
+  /**
+   * How wide the leading-edge strip that starts a swipe is, when `swipeFrom`
+   * is `edge`. Default 48 — wider than the system's own edge gestures, because
+   * there is no bezel to feel for. Ignored otherwise.
    */
   edgeWidth?: number;
   /**
@@ -347,6 +371,7 @@ function PanelsideRoot({
   width: widthProp,
   dock = false,
   swipeEnabled = true,
+  swipeFrom = 'anywhere',
   edgeWidth = EDGE_WIDTH,
   dismissible = true,
   className,
@@ -452,13 +477,15 @@ function PanelsideRoot({
     settle(open);
   }, [docked, extent, open, settle, translation]);
 
+  const offsets = OFFSETS[swipeFrom];
+
   const pan = useMemo(() => {
     let gesture = Gesture.Pan()
       .enabled(swipeEnabled && !docked)
-      .activeOffsetX([-ACTIVATE_OFFSET, ACTIVATE_OFFSET])
+      .activeOffsetX([-offsets.activate, offsets.activate])
       // Real vertical intent hands the touch back, so a list inside the panel
       // and a scroller inside the app both keep their own drags.
-      .failOffsetY([-FAIL_OFFSET, FAIL_OFFSET])
+      .failOffsetY([-offsets.fail, offsets.fail])
       .onChange((event) => {
         translation.value = clamp(translation.value + event.changeX * sign, 0, extent);
       })
@@ -479,18 +506,30 @@ function PanelsideRoot({
       });
 
     /*
-     * Closed, the gesture only listens along the leading screen edge. Open,
-     * the restriction is dropped so the scene drags from anywhere — there is
-     * no longer an app underneath competing for the same horizontal swipe.
+     * The strip is only ever a closed-state restriction. Open, it is dropped
+     * whatever `swipeFrom` says: the panel is already out, so there is no app
+     * underneath left to compete for the same horizontal swipe.
      */
-    if (!open) {
+    if (!open && swipeFrom === 'edge') {
       gesture = gesture.hitSlop(
         sign === 1 ? { left: 0, width: edgeWidth } : { right: 0, width: edgeWidth }
       );
     }
 
     return gesture;
-  }, [docked, edgeWidth, extent, open, setOpen, settle, sign, swipeEnabled, translation]);
+  }, [
+    docked,
+    edgeWidth,
+    extent,
+    offsets,
+    open,
+    setOpen,
+    settle,
+    sign,
+    swipeEnabled,
+    swipeFrom,
+    translation,
+  ]);
 
   const context = useMemo<PanelsideContextValue>(
     () => ({ open, setOpen, toggle, progress, width, mode, docked, dismissible }),
