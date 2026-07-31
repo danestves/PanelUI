@@ -169,11 +169,20 @@ function AssistantPanel({ native = false }: { native?: boolean }) {
  * Both controls are real `Button`s rather than bare glyphs — they sit on the
  * app's own surface with nothing around them, so they need a shape to be
  * findable at all. `Panelside.Trigger` takes the button as its child and
- * chains the toggle onto its own `onPress`.
+ * chains the toggle onto its own `onPress`, native or not.
+ *
+ * Under `native` the platform draws them. It also stops tinting the icons for
+ * us — the themed content colour is applied inside the styled button, which a
+ * native one never reaches — so the colour is passed in by hand.
  */
-function SceneBar({ title }: { title: string }) {
+function SceneBar({ title, native = false }: { title: string; native?: boolean }) {
   const insets = useSafeAreaInsets();
   const { docked } = usePanelside();
+  const tint = useCSSVariable('--color-foreground');
+  const glyph = native && typeof tint === 'string' ? tint : undefined;
+
+  const shape = native ? undefined : 'h-10 w-10 rounded-full';
+  const variant = native ? 'ghost' : 'secondary';
 
   return (
     <View
@@ -182,12 +191,13 @@ function SceneBar({ title }: { title: string }) {
     >
       <Panelside.Trigger>
         <Button
+          native={native}
           size="icon"
-          variant="secondary"
-          className="h-10 w-10 rounded-full"
+          variant={variant}
+          className={shape}
           accessibilityLabel="Open navigation panel"
         >
-          <MenuIcon size={20} />
+          <MenuIcon size={20} color={glyph} />
         </Button>
       </Panelside.Trigger>
 
@@ -203,13 +213,14 @@ function SceneBar({ title }: { title: string }) {
       {/* The route hands a full-bleed demo the whole screen and turns the
           native back-swipe off with it, so the way out is this bar's to draw. */}
       <Button
+        native={native}
         size="icon"
-        variant="secondary"
-        className="h-10 w-10 rounded-full"
+        variant={variant}
+        className={shape}
         accessibilityLabel="Close demo"
         onPress={() => router.back()}
       >
-        <XIcon size={18} />
+        <XIcon size={18} color={glyph} />
       </Button>
     </View>
   );
@@ -295,7 +306,7 @@ function AssistantDemo({
     <Panelside {...props}>
       <AssistantPanel native={native} />
       <Panelside.Scene {...sceneProps}>
-        <SceneBar title={title} />
+        <SceneBar title={title} native={native} />
         {scene ?? <Transcript />}
       </Panelside.Scene>
     </Panelside>
@@ -455,9 +466,13 @@ function NativeChatScene() {
   const [attaching, setAttaching] = useState(false);
   const insets = useSafeAreaInsets();
   const nextId = useRef(0);
-  // A bare TextInput has no themed placeholder of its own.
-  const tint = useCSSVariable('--color-muted-foreground');
-  const placeholderTint = typeof tint === 'string' ? tint : undefined;
+  // A bare TextInput has no themed placeholder of its own, and a native button
+  // never reaches the icon tint the styled one provides — so both are read here.
+  const [placeholderTint, glyph, sendGlyph] = useCSSVariable([
+    '--color-muted-foreground',
+    '--color-foreground',
+    '--color-primary-foreground',
+  ]) as (string | undefined)[];
 
   const send = () => {
     const text = draft.trim();
@@ -507,35 +522,43 @@ function NativeChatScene() {
         className="border-t border-border px-3 pt-2"
         style={{ paddingBottom: Math.max(insets.bottom, 10) }}
       >
-        <View className="flex-row items-end gap-1 rounded-3xl bg-secondary py-1 ps-1 pe-1">
+        <View className="flex-row items-end gap-1 rounded-3xl bg-secondary p-1">
           <Button
+            native
             size="icon"
             variant="ghost"
-            className="h-9 w-9 rounded-full"
             accessibilityLabel="Attach"
             onPress={() => setAttaching(true)}
           >
-            <PlusIcon size={20} />
+            <PlusIcon size={20} color={glyph} />
           </Button>
 
+          {/*
+            No `leading-*`: a line-height step adds leading above the glyphs, and
+            in a field this short that is the difference between a placeholder
+            on the centre line and one sitting under it. The font's own line box
+            plus even padding is what centres it, and `textAlignVertical` is the
+            same instruction for Android.
+          */}
           <TextInput
             value={draft}
             onChangeText={setDraft}
             placeholder="Message the assistant"
             placeholderTextColor={placeholderTint}
             multiline
-            className="min-h-9 max-h-32 flex-1 py-2 text-[16px] leading-normal text-foreground"
+            textAlignVertical="center"
+            className="min-h-11 max-h-32 flex-1 px-2 py-2.5 text-[16px] text-foreground"
           />
 
           <Button
+            native
             size="icon"
             variant="primary"
-            className="h-9 w-9 rounded-full"
             accessibilityLabel="Send"
             disabled={draft.trim() === ''}
             onPress={send}
           >
-            <SendIcon size={17} />
+            <SendIcon size={17} color={sendGlyph} />
           </Button>
         </View>
       </View>
