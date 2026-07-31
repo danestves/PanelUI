@@ -46,10 +46,18 @@ export const metadata: Metadata = {
   creator: 'Khalid Abdi',
   alternates: { canonical: absoluteUrl('/') },
   /*
-   * app/icon.png and app/apple-icon.png are picked up by Next's file
-   * convention on their own; this adds the larger mark that search results and
-   * install prompts prefer. Google wants a square favicon that is a multiple
-   * of 48px to show one beside a result at all — icon.png is 192.
+   * app/favicon.ico is deliberately not listed here. Next treats that one
+   * filename specially — it serves it at the root and emits its `rel="icon"`
+   * tag whatever this object says, so repeating it produces two tags for one
+   * file with disagreeing `sizes`. app/icon.png gets no such treatment: naming
+   * `icons` at all replaces the tag Next would have emitted for it, which is
+   * why the PNGs below have to be written out.
+   *
+   * The root ICO is the point of all this. It is what a search engine falls
+   * back to when it will not take a `rel="icon"` PNG, and having nothing there
+   * is why results showed a blank globe beside the domain. The PNGs stay
+   * because they are what a browser tab and an install prompt actually draw —
+   * Google wants a square icon that is a multiple of 48px, and icon.png is 192.
    */
   icons: {
     icon: [
