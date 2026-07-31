@@ -514,10 +514,20 @@ function SelectRoot({
 
       {open && overlayPosition ? (
         <Portal>
-          {/* Full-screen catcher so a press anywhere else dismisses the list. */}
+          {/*
+           * Full-screen catcher so a press anywhere else dismisses the list.
+           *
+           * Hidden from assistive tech, and deliberately: it is a dismiss
+           * affordance for a pointer, and announcing it would put an unlabelled
+           * full-screen "button" ahead of the options in the reading order,
+           * where swiping through the list would land on it before the first
+           * one. Escaping the list is the back gesture's job, and on iOS the
+           * modal flag's.
+           */}
           <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            accessibilityElementsHidden
             onPress={close}
             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           />
@@ -527,6 +537,16 @@ function SelectRoot({
               exiting={FadeOut.duration(120)}
               onLayout={onListLayout}
               style={overlayPosition}
+              /*
+               * The floating list is a modal layer, the same as the sheet
+               * presentation's is — it covers the screen with a catcher and
+               * takes the back button. Without this the page behind it stays
+               * in the accessibility tree, so a screen reader could walk out
+               * of the open list into content the list is covering and act on
+               * it. The sheet gets this from BottomSheet; the anchored list
+               * has to say it itself.
+               */
+              accessibilityViewIsModal
               className={slots.list()}
             >
               {search}

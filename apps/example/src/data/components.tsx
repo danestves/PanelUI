@@ -59,6 +59,7 @@ import {
   Direction,
   type DirectionValue,
   DownloadIcon,
+  Drawer,
   EllipsisIcon,
   EyeIcon,
   EmptyState,
@@ -7429,6 +7430,51 @@ function LoaderInlineVersion() {
   );
 }
 
+/**
+ * A filter drawer on the end edge — the edge text runs toward, so it is the
+ * right in a left-to-right app and the left in a right-to-left one.
+ */
+function DrawerFiltersDemo() {
+  const [inStock, setInStock] = useState(true);
+  const [onSale, setOnSale] = useState(false);
+
+  return (
+    <Drawer>
+      <Drawer.Trigger>
+        <Button variant="outline">Filters</Button>
+      </Drawer.Trigger>
+      <Drawer.Content side="end">
+        <Drawer.Header title="Filters" />
+        <Drawer.Body>
+          <Item>
+            <Item.Content>
+              <Item.Title>In stock only</Item.Title>
+              <Item.Description>Hide anything on backorder</Item.Description>
+            </Item.Content>
+            <Item.Actions>
+              <Switch value={inStock} onValueChange={setInStock} />
+            </Item.Actions>
+          </Item>
+          <Item>
+            <Item.Content>
+              <Item.Title>On sale</Item.Title>
+              <Item.Description>Reduced in the last 30 days</Item.Description>
+            </Item.Content>
+            <Item.Actions>
+              <Switch value={onSale} onValueChange={setOnSale} />
+            </Item.Actions>
+          </Item>
+        </Drawer.Body>
+        <Drawer.Footer>
+          <Drawer.Close>
+            <Button className="flex-1">Apply</Button>
+          </Drawer.Close>
+        </Drawer.Footer>
+      </Drawer.Content>
+    </Drawer>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /* Catalogue                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -8298,6 +8344,130 @@ export const COMPONENTS: ComponentEntry[] = [
         render: () => (
           <Direction dir="rtl" className="w-full">
             <DirectionRows />
+          </Direction>
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'drawer',
+    name: 'Drawer',
+    summary: 'A panel that comes in from an edge of the screen',
+    demos: [
+      {
+        label: 'Navigation drawer',
+        render: () => (
+          <Drawer>
+            <Drawer.Trigger>
+              <Button variant="outline">Open menu</Button>
+            </Drawer.Trigger>
+            <Drawer.Content>
+              <Drawer.Header
+                title="Workspace"
+                description="Switch project or manage members."
+              />
+              <Drawer.Body>
+                {['Projects', 'Members', 'Billing'].map((label) => (
+                  <Item key={label}>
+                    <Item.Content>
+                      <Item.Title>{label}</Item.Title>
+                    </Item.Content>
+                  </Item>
+                ))}
+              </Drawer.Body>
+              <Drawer.Footer>
+                <Drawer.Close>
+                  <Button variant="outline" className="flex-1">
+                    Close
+                  </Button>
+                </Drawer.Close>
+              </Drawer.Footer>
+            </Drawer.Content>
+          </Drawer>
+        ),
+      },
+      {
+        label: 'From the end edge',
+        render: () => <DrawerFiltersDemo />,
+      },
+      {
+        label: 'Sizes',
+        render: () => (
+          // A horizontal drawer is capped in points as well as by its fraction,
+          // so `md` is a 320-point panel on a tablet rather than 78% of one.
+          <View className="flex-row flex-wrap gap-2">
+            {(['sm', 'md', 'lg', 'full'] as const).map((size) => (
+              <Drawer key={size}>
+                <Drawer.Trigger>
+                  <Button variant="outline" size="sm">
+                    {size}
+                  </Button>
+                </Drawer.Trigger>
+                <Drawer.Content size={size}>
+                  <Drawer.Header title={`size="${size}"`} />
+                  <Drawer.Body>
+                    <Text size="sm" muted>
+                      Drag the panel back toward its edge to dismiss it.
+                    </Text>
+                  </Drawer.Body>
+                </Drawer.Content>
+              </Drawer>
+            ))}
+          </View>
+        ),
+      },
+      {
+        label: 'From the top',
+        render: () => (
+          // On the vertical axis the sides mean what they say — there is no
+          // reading direction to mirror.
+          <Drawer>
+            <Drawer.Trigger>
+              <Button variant="outline">Notifications</Button>
+            </Drawer.Trigger>
+            <Drawer.Content side="top" size="sm">
+              <Drawer.Header title="Notifications" />
+              <Drawer.Body>
+                <Item>
+                  <Item.Content>
+                    <Item.Title>Build passed</Item.Title>
+                    <Item.Description>2 minutes ago</Item.Description>
+                  </Item.Content>
+                </Item>
+                <Item>
+                  <Item.Content>
+                    <Item.Title>New comment</Item.Title>
+                    <Item.Description>1 hour ago</Item.Description>
+                  </Item.Content>
+                </Item>
+              </Drawer.Body>
+            </Drawer.Content>
+          </Drawer>
+        ),
+      },
+      {
+        label: 'Right to left',
+        render: () => (
+          // The same `side="start"` drawer, mirrored: it docks to the right,
+          // slides in from the right, and dismisses on a swipe to the right.
+          <Direction dir="rtl" className="w-full">
+            <Drawer>
+              <Drawer.Trigger>
+                <Button variant="outline">افتح القائمة</Button>
+              </Drawer.Trigger>
+              <Drawer.Content side="start">
+                <Drawer.Header title="مساحة العمل" />
+                <Drawer.Body>
+                  {['المشاريع', 'الأعضاء'].map((label) => (
+                    <Item key={label}>
+                      <Item.Content>
+                        <Item.Title>{label}</Item.Title>
+                      </Item.Content>
+                    </Item>
+                  ))}
+                </Drawer.Body>
+              </Drawer.Content>
+            </Drawer>
           </Direction>
         ),
       },

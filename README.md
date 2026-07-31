@@ -122,7 +122,7 @@ Every component takes `className`, so anything can be restyled with Tailwind cla
 
 ## Components
 
-**73 components**, documented with live examples and full props tables at
+**74 components**, documented with live examples and full props tables at
 **[panelui.dev/docs](https://panelui.dev/docs)**.
 
 - **Layout & content** — Card, Frame, Surface, Item, Separator, Typography, Table, Timeline,
@@ -131,8 +131,8 @@ Every component takes `className`, so anything can be restyled with Tailwind cla
   Checkbox, RadioGroup, Switch, Slider, Rating, Signature, DatePicker, Calendar, Label
 - **Actions & navigation** — Button, ToggleButton, Menu, Tabs, Breadcrumb, SectionRail, Chip,
   Badge
-- **Overlays & feedback** — Dialog, BottomSheet, Popover, Tooltip, Toast, Alert, Progress,
-  Spinner, Loader
+- **Overlays & feedback** — Dialog, BottomSheet, Drawer, Popover, Tooltip, Toast, Alert,
+  Progress, Spinner, Loader
 - **Data visualisation** — LineChart, AreaChart, BarChart, RingChart, HeatmapChart, Map, Marker,
   Flow
 - **AI components** — Message, MessageScroller, Response, Reasoning, Plan, Task, Sources,

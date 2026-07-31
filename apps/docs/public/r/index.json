@@ -236,6 +236,20 @@
     ]
   },
   {
+    "name": "drawer",
+    "type": "registry:ui",
+    "description": "A panel that comes in from an edge of the screen and covers the app until dismissed.",
+    "registryDependencies": [
+      "cn",
+      "icons",
+      "portal",
+      "scrim",
+      "text",
+      "use-back-handler",
+      "use-direction"
+    ]
+  },
+  {
     "name": "empty-state",
     "type": "registry:ui",
     "description": "Placeholder for a list or screen with no content.",
