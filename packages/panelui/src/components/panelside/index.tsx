@@ -161,8 +161,22 @@ const MIN_OFFSET = 5;
 
 /** Gap left between the panel's edge and the pushed scene. */
 const GAP = 12;
-/** How small the scene gets at full travel. */
-const SCENE_SCALE = 0.92;
+/**
+ * How small the scene gets at full travel. One, by default: it does not shrink.
+ *
+ * Scaling is the obvious way to make the pushed screen read as a card, and it
+ * is the wrong one. A scale is applied about the centre, so it insets the
+ * scene at the top and the bottom as well as the side — the screen lifts away
+ * from the status bar and the home indicator, and the two strips of panel that
+ * appear above and below it are strips of nothing. What the apps this pattern
+ * comes from do instead is keep the screen full height, running behind the
+ * status bar exactly as it did before, and let the corner radius and the dim
+ * carry the whole effect. Only the *content* respects the safe area, which it
+ * was already doing.
+ *
+ * Set it below one for the shrinking version; nothing else has to change.
+ */
+const SCENE_SCALE = 1;
 /** The corner radius the scene picks up at full travel. */
 const SCENE_RADIUS = 28;
 /** How far the scene is dimmed at full travel. */
@@ -1107,7 +1121,12 @@ function PanelsideCta({
 
 export interface PanelsideSceneProps extends ViewProps {
   className?: string;
-  /** How small the scene gets at full travel. Default 0.92. */
+  /**
+   * How small the scene gets at full travel. Default 1 — the screen keeps its
+   * full height and stays behind the status bar, and the radius and dim do the
+   * work. Below one it shrinks about its centre, which insets it top and bottom
+   * as well as at the side.
+   */
   scale?: number;
   /** The corner radius the scene reaches at full travel. Default 28. */
   radius?: number;

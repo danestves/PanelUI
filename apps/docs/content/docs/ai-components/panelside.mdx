@@ -272,7 +272,7 @@ Past the width you name, the panel is a column of the layout rather than a thing
 
 ### Deeper curve
 
-The three scene numbers turned well past their defaults, so what each one does is unmistakable rather than a matter of opinion.
+Scale, radius and dim turned well past their defaults. `scale` is the one that changes the shape of the thing rather than its finish: below one the screen stops being full height and lifts away from the status bar, which is a different look and not the default for good reason.
 
 ```tsx
 <Panelside>
@@ -441,7 +441,7 @@ Panelside has no `native` prop and cannot have one — the platform toolkits shi
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `scale` | `number` | `SCENE_SCALE` | How small the scene gets at full travel. Default 0.92. |
+| `scale` | `number` | `SCENE_SCALE` | How small the scene gets at full travel. Default 1 — the screen keeps its full height and stays behind the status bar, and the radius and dim do the work. Below one it shrinks about its centre, which insets it top and bottom as well as at the side. |
 | `radius` | `number` | `SCENE_RADIUS` | The corner radius the scene reaches at full travel. Default 28. |
 | `dim` | `number` | `SCENE_DIM` | How far the scene dims at full travel, 0 to 1. Default 0.45. |
 
@@ -466,7 +466,9 @@ translateX = p * (W + 12) - C * (1 - scale) / 2
 radius     = p * radius
 ```
 
-The subtraction is the part worth knowing about. React Native scales a view about its centre, so a scaled scene has already pulled its leading edge inward before any translation applies — translating by the panel width alone leaves a gap that grows with the scale, and the panel looks mis-measured.
+`scale` defaults to **1**, so by default the middle term falls away and the scene simply travels. That is deliberate: a scale is applied about the centre, so anything below one insets the screen at the top and the bottom as well as at the side — it lifts away from the status bar and the home indicator, and the strips of panel that appear above and below it are strips of nothing. Full height, with the corner radius and the dim carrying the effect, is what this pattern actually looks like. Only the screen's *content* respects the safe area, and it was already doing that on its own.
+
+Set `scale` below one and the subtraction earns its place. React Native scales about the centre, so a scaled scene has already pulled its leading edge inward before any translation applies — travelling by the panel width alone would leave a gap that grows with the scale, and the panel would look mis-measured.
 
 <Diagram
   src="/diagrams/panelside-scene-dark.webp"
