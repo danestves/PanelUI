@@ -165,14 +165,23 @@ const NATIVE_HEIGHT: Record<NonNullable<ButtonVariantProps['size']>, number> = {
  */
 const NATIVE_ICON_PADDING = 12;
 
-/*
- * `controlSize` is deliberately not sent, though it is the modifier that would
- * otherwise be right for this. Adding it took Expo Go down on entering a screen
- * with a native button on it — a native decode failure is not something a JS
- * try/catch can catch, so an unproven modifier is not worth a crash when
- * padding the label achieves the same thing from the React side. The two
- * modifiers below are the ones already shipped and seen working.
+/**
+ * The frame a native icon button is given, which must contain the padded glyph
+ * above with room to spare.
+ *
+ * It exists to end a measurement, not to set a look. The chain is
+ * `Host(matchContents)` → platform button → `RNHostView(matchContents)` → our
+ * view: every link sized by its contents, and nothing anywhere with a size of
+ * its own. Something has to be definite or the two layout systems ask each
+ * other the same question forever, and that fails down in the platform, where
+ * there is nothing for a JavaScript `try` to catch.
+ *
+ * `controlSize` would be the idiomatic way to size the control instead, and is
+ * deliberately not sent: adding it took the app down on entering any screen
+ * with a native button on it.
  */
+const NATIVE_ICON_FRAME = 52;
+
 
 /** PanelUI variants mapped onto the platform button styles. */
 const NATIVE_VARIANT: Record<
@@ -273,12 +282,20 @@ export const Button = forwardRef<View, ButtonProps>(
             variant={NATIVE_VARIANT[variant ?? 'primary']}
             disabled={isDisabled}
             /*
-             * A height for a labelled button, and nothing at all for an icon
-             * one. The label's own padding is what decides how big an icon
-             * button is; a frame on top would only re-centre the result inside
-             * a box of a different size.
+             * A square for an icon button, a height for a labelled one — and
+             * in both cases a definite number, which is what stops the
+             * measurement chain above from having no fixed point in it.
+             *
+             * The frame does not decide how big the *button* looks; the padded
+             * label does, because that is what the platform draws its
+             * background around. The frame only has to be large enough to hold
+             * the result.
              */
-            style={size === 'icon' ? undefined : { height: NATIVE_HEIGHT[size ?? 'md'] }}
+            style={
+              size === 'icon'
+                ? { width: NATIVE_ICON_FRAME, height: NATIVE_ICON_FRAME }
+                : { height: NATIVE_HEIGHT[size ?? 'md'] }
+            }
             modifiers={nativeModifiers.length ? nativeModifiers : undefined}
             onPress={props.onPress}
           >
