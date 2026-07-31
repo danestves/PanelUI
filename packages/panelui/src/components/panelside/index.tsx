@@ -178,20 +178,26 @@ const GAP = 12;
  */
 const SCENE_SCALE = 1;
 /** The corner radius the scene picks up at full travel. */
-const SCENE_RADIUS = 40;
+const SCENE_RADIUS = 44;
 /** How far the scene is dimmed at full travel. */
 const SCENE_DIM = 0.45;
-/** How strongly the line along the scene's edge reads at full travel. */
-const EDGE_OPACITY = 0.25;
+/**
+ * How strongly the line along the scene's edge reads at full travel.
+ *
+ * One, because the token it is drawn in already carries its own alpha — 6%
+ * white in a dark theme, 8% black in a light one. Holding it back further would
+ * be dimming a colour that is already almost entirely transparent.
+ */
+const EDGE_OPACITY = 1;
 /**
  * How thick that line is.
  *
- * Half a point rather than `StyleSheet.hairlineWidth`. A hairline is one
- * physical pixel, which is right for a divider on a flat surface and too little
- * on a corner this round — most of the line is curve, and a third of a point of
+ * A point rather than `StyleSheet.hairlineWidth`. A hairline is one physical
+ * pixel, which is right for a divider on a flat surface and too little on a
+ * corner this round — most of the line is curve, and a third of a point of
  * curve antialiases away to nothing.
  */
-const EDGE_WIDTH_PT = 0.5;
+const EDGE_WIDTH_PT = 1;
 
 /**
  * How far behind the scene the panel starts.
@@ -1139,7 +1145,7 @@ export interface PanelsideSceneProps extends ViewProps {
    * as well as at the side.
    */
   scale?: number;
-  /** The corner radius the scene reaches at full travel. Default 40. */
+  /** The corner radius the scene reaches at full travel. Default 44. */
   radius?: number;
   /** How far the scene dims at full travel, 0 to 1. Default 0.45. */
   dim?: number;
@@ -1160,16 +1166,16 @@ function PanelsideScene({
   const [sceneWidth, setSceneWidth] = useState(0);
   const sign = useDirectionSign();
   /*
-   * The foreground, held back to a quarter — not a border or a muted token.
+   * The same border token every other edge in the library is drawn in, so this
+   * one belongs to the same set rather than being a line of its own invention.
+   * It already inverts with the theme — white at 6% in a dark one, black at 8%
+   * in a light one — which is what makes it read on both sides of a boundary
+   * between two surfaces of the same colour.
    *
-   * Both of those are grey, and grey only contrasts with one of the two themes
-   * at a time: in a light one the scene is dimmed toward black while the panel
-   * stays white, so a mid grey line lands on the dark side of the boundary and
-   * disappears into it. The foreground is the one colour a theme guarantees
-   * reads against its own background, so it inverts with the theme and the line
-   * is visible in both.
+   * It only failed to show before because it was drawn *under* the scrim. Above
+   * it, at a full point, the token is enough on its own.
    */
-  const edge = useCSSVariable('--color-foreground');
+  const edge = useCSSVariable('--color-border');
   const edgeColor = typeof edge === 'string' ? edge : undefined;
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
