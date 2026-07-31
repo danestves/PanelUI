@@ -178,7 +178,7 @@ const GAP = 12;
  */
 const SCENE_SCALE = 1;
 /** The corner radius the scene picks up at full travel. */
-const SCENE_RADIUS = 28;
+const SCENE_RADIUS = 32;
 /** How far the scene is dimmed at full travel. */
 const SCENE_DIM = 0.45;
 
@@ -1128,7 +1128,7 @@ export interface PanelsideSceneProps extends ViewProps {
    * as well as at the side.
    */
   scale?: number;
-  /** The corner radius the scene reaches at full travel. Default 28. */
+  /** The corner radius the scene reaches at full travel. Default 32. */
   radius?: number;
   /** How far the scene dims at full travel, 0 to 1. Default 0.45. */
   dim?: number;
@@ -1148,6 +1148,8 @@ function PanelsideScene({
     usePanelsideContext('Panelside.Scene');
   const [sceneWidth, setSceneWidth] = useState(0);
   const sign = useDirectionSign();
+  const edge = useCSSVariable('--color-border');
+  const edgeColor = typeof edge === 'string' ? edge : undefined;
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     setSceneWidth(event.nativeEvent.layout.width);
@@ -1182,6 +1184,18 @@ function PanelsideScene({
     return { opacity: p * dim };
   }, [dim, docked]);
 
+  /*
+   * The edge is drawn as its own layer rather than as a border on the scene.
+   * A border is a layout property: put one on the scene itself and it insets
+   * everything inside by its width for the whole life of the screen, open or
+   * shut, to show a line that is only wanted while the panel is out. A ring
+   * over the top costs nothing when it is invisible.
+   */
+  const ringStyle = useAnimatedStyle(() => {
+    const p = docked ? 0 : progress.value;
+    return { opacity: p, borderRadius: p * radius };
+  }, [docked, radius]);
+
   const animatedProps = useAnimatedProps<ViewProps>(() => {
     const hidden = !docked && progress.value > 1 - HIDDEN_EPSILON;
     return Platform.OS === 'android'
@@ -1199,6 +1213,21 @@ function PanelsideScene({
       <Animated.View animatedProps={animatedProps} className="flex-1">
         {children}
       </Animated.View>
+
+      {/* A hairline where the scene meets the panel. Without it two surfaces
+          of the same colour meet at a corner and the radius is the only thing
+          saying they are separate — which reads as a rendering artefact rather
+          than as an edge. */}
+      {edgeColor ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { borderWidth: StyleSheet.hairlineWidth, borderColor: edgeColor },
+            ringStyle,
+          ]}
+        />
+      ) : null}
 
       {/* Layered over the scene rather than under it, so it dims the app and
           catches the tap in the scene's own space — which means it inherits

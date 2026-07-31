@@ -5390,7 +5390,7 @@
       "Action": "The trailing control on a row — rename, delete, the overflow menu. It takes its target back as touch slop rather than as layout, so it stays small next to a row-sized target.",
       "Footer": "The bar across the bottom of the panel — an account control at one end, the compose button at the other. It floats over the list, with the list dissolving into the panel just above it: a solid bar would cut a strip out of the bottom of the scroller, and a transparent one would let rows show through the controls.",
       "Cta": "The compose button. A pill rather than a rectangle, because it is the one control in the panel that is not a list row. Takes `native` to hand it to the platform, and `glass` to have the platform draw it in Liquid Glass.",
-      "Scene": "Your app. This is the half that moves, and naming it is the whole contract — everything inside it slides, scales, rounds and dims together.",
+      "Scene": "Your app. This is the half that moves, and naming it is the whole contract — everything inside it travels, rounds and dims together. It also draws a hairline along its edge as it goes, since two surfaces of the same colour meeting at a corner need something to say they are separate.",
       "Trigger": "Opens and closes the panel. Wraps a control of your own, or draws a plain one. It renders nothing at all when the panel is docked, since there would be nothing to toggle."
     },
     "diagrams": [
