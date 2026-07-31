@@ -145,9 +145,17 @@ const SCENE_DIM = 0.45;
  */
 const PARALLAX = 0.18;
 
-/** Fraction of the container the panel takes, and the cap it never passes. */
-const WIDTH_FRACTION = 0.72;
-const WIDTH_MAX = 320;
+/**
+ * Fraction of the container the panel takes, and the cap it never passes.
+ *
+ * Wide on purpose. The sliver of app left showing is not a preview of it — it
+ * is a handle and a reminder, and the moment it is wide enough to read as a
+ * column the screen turns into a two-pane layout that neither pane fits. The
+ * cap keeps that true on a tablet, where the fraction alone would produce a
+ * navigation list with a field of whitespace beside it.
+ */
+const WIDTH_FRACTION = 0.8;
+const WIDTH_MAX = 360;
 
 /** Progress past which a layer is treated as fully hidden for accessibility. */
 const HIDDEN_EPSILON = 0.05;
@@ -321,8 +329,14 @@ function PanelsideRoot({
   const docked = dock !== false && containerWidth >= dock;
   const width = widthProp ?? Math.min(containerWidth * WIDTH_FRACTION, WIDTH_MAX);
 
-  /** How far the drag runs. In push mode the scene clears the gap too. */
-  const extent = mode === 'push' ? width + GAP : width;
+  /**
+   * How far the drag runs. In push mode the scene clears the gap too.
+   *
+   * Floored at 1 because it is a divisor: a container measured at zero — one
+   * frame during a collapsed layout is enough — would otherwise make progress
+   * infinite and park both layers somewhere off the screen for good.
+   */
+  const extent = Math.max(1, mode === 'push' ? width + GAP : width);
 
   const translation = useSharedValue(open ? extent : 0);
   const progress = useDerivedValue(() => translation.value / extent, [extent]);
@@ -410,7 +424,9 @@ function PanelsideRoot({
         // wherever the panel already was.
         const next = decisive ? (velocity === 0 ? distance : velocity) > 0 : open;
 
-        settle(next, velocity * sign);
+        // `velocity` is already in travel space; the spring runs on the same
+        // axis, so it must not be converted back to screen space here.
+        settle(next, velocity);
         runOnJS(setOpen)(next);
       });
 
@@ -491,6 +507,11 @@ function PanelsidePanel({ className, children, style, ...props }: PanelsidePanel
         className={cn(
           'bg-background',
           docked ? 'h-full border-e border-border' : 'absolute bottom-0 start-0 top-0',
+          // In overlay mode the panel comes in *over* the app, but it is the
+          // first child and the scene is the second — so without this it slides
+          // in behind the very thing it is supposed to cover, and all you see
+          // is the scrim.
+          !docked && mode === 'overlay' && 'z-10 shadow-lg',
           className
         )}
         // Animated style before the caller's, so a className or style cannot
@@ -891,7 +912,7 @@ function PanelsideScene({
   style,
   ...props
 }: PanelsideSceneProps) {
-  const { progress, width, mode, docked, dismissible, setOpen } =
+  const { progress, width, mode, docked, dismissible, open, setOpen } =
     usePanelsideContext('Panelside.Scene');
   const [sceneWidth, setSceneWidth] = useState(0);
   const sign = useDirectionSign();
@@ -926,10 +947,7 @@ function PanelsideScene({
 
   const scrimStyle = useAnimatedStyle(() => {
     const p = docked ? 0 : progress.value;
-    return {
-      opacity: p * dim,
-      pointerEvents: p > HIDDEN_EPSILON ? 'auto' : 'none',
-    };
+    return { opacity: p * dim };
   }, [dim, docked]);
 
   const animatedProps = useAnimatedProps<ViewProps>(() => {
@@ -952,8 +970,14 @@ function PanelsideScene({
 
       {/* Layered over the scene rather than under it, so it dims the app and
           catches the tap in the scene's own space — which means it inherits
-          the corner radius instead of having to reproduce it. */}
+          the corner radius instead of having to reproduce it.
+
+          `pointerEvents` is a prop driven by state, not an animated style.
+          A view at zero opacity still takes touches, so getting this wrong
+          does not look like anything — it silently eats every tap on the app,
+          including the one on the button that opens the panel. */}
       <Animated.View
+        pointerEvents={open && !docked ? 'auto' : 'none'}
         className="absolute bottom-0 end-0 start-0 top-0 bg-black"
         style={scrimStyle}
       >
