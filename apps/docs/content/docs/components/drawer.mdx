@@ -298,6 +298,12 @@ The panel's position mirrors because it is laid out from logical insets. The *dr
 
 `size` is a fraction of the screen with a cap in points on the horizontal axis. The cap is the point: a fraction alone reads correctly on a phone and absurdly on a tablet, where 78% of the width is a navigation list with a column of whitespace beside it. `full` is 94%, not 100% — the sliver of app left showing is what says it is still there behind the drawer, and it is the only thing left to tap to dismiss.
 
+### Where it stops
+
+Every side but `bottom` starts below the status bar rather than running under it. The panel is a lit surface with its own colour and its own shadow, and a surface with the clock and the battery printed on it reads as the drawer having swallowed the system bar instead of having covered the app. The vertical fractions are of the room left under that inset, so a `full` top or bottom drawer fills what the drawer is allowed rather than overflowing off the end of it.
+
+The bottom edge is the other way round: every side but `top` is docked to it, so the panel reaches the bottom of the screen and pads its content clear of the home indicator.
+
 ### Dismissing it
 
 A tap on the backdrop, a drag back toward the docked edge, the corner close button, `Drawer.Close`, or the Android back button. Turn the first two off with `dismissible={false}` and `swipeToDismiss={false}` — turn off `swipeToDismiss` when the content wants the same axis, such as a horizontal scroller in a side drawer.
