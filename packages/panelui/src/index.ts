@@ -305,6 +305,18 @@ export {
   type ChipSize,
 } from './components/chip';
 export {
+  Drawer,
+  type DrawerProps,
+  type DrawerTriggerProps,
+  type DrawerContentProps,
+  type DrawerHeaderProps,
+  type DrawerBodyProps,
+  type DrawerFooterProps,
+  type DrawerCloseProps,
+  type DrawerSide,
+  type DrawerSize,
+} from './components/drawer';
+export {
   EmptyState,
   type EmptyStateProps,
   type EmptyStateMediaProps,

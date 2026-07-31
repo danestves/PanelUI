@@ -1070,6 +1070,56 @@
       "height": 1560
     }
   },
+  "drawer": {
+    "intro": "A panel that comes in from an edge of the screen and covers the app until it is dismissed. Mounts through a portal, takes the Android back button, and unmounts after its exit animation.",
+    "usage": "<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Open menu</Button>\n  </Drawer.Trigger>\n  <Drawer.Content>\n    <Drawer.Header title=\"Workspace\" description=\"Switch project or manage members.\" />\n    <Drawer.Body>\n      {['Projects', 'Members', 'Billing'].map((label) => (\n        <Item key={label}>\n          <Item.Content>\n            <Item.Title>{label}</Item.Title>\n          </Item.Content>\n        </Item>\n      ))}\n    </Drawer.Body>\n    <Drawer.Footer>\n      <Drawer.Close>\n        <Button variant=\"outline\" className=\"flex-1\">Close</Button>\n      </Drawer.Close>\n    </Drawer.Footer>\n  </Drawer.Content>\n</Drawer>",
+    "extraImports": [
+      "Button",
+      "Direction",
+      "Item",
+      "Switch",
+      "Text"
+    ],
+    "parts": {
+      "Trigger": "Clones its child and opens the drawer on press.",
+      "Content": "The panel. Renders through a portal above everything else, and owns the edge, the size and the swipe.",
+      "Header": "A title and a line under it. Leaves the corner the close button took clear, on whichever side that is.",
+      "Body": "The scrolling part. Its axis is the one the drawer is *not* dragged on, so the two never compete.",
+      "Footer": "A row pinned below the body, for the action the drawer is asking about.",
+      "Close": "Clones its child and closes the drawer on press."
+    },
+    "examples": [
+      {
+        "title": "Navigation drawer",
+        "description": "The default: docked to the start edge, sized to `md`, with a header, a scrolling body and a footer.",
+        "code": "<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Open menu</Button>\n  </Drawer.Trigger>\n  <Drawer.Content>\n    <Drawer.Header title=\"Workspace\" description=\"Switch project or manage members.\" />\n    <Drawer.Body>\n      {['Projects', 'Members', 'Billing'].map((label) => (\n        <Item key={label}>\n          <Item.Content>\n            <Item.Title>{label}</Item.Title>\n          </Item.Content>\n        </Item>\n      ))}\n    </Drawer.Body>\n    <Drawer.Footer>\n      <Drawer.Close>\n        <Button variant=\"outline\" className=\"flex-1\">Close</Button>\n      </Drawer.Close>\n    </Drawer.Footer>\n  </Drawer.Content>\n</Drawer>"
+      },
+      {
+        "title": "From the end edge",
+        "description": "`side=\"end\"` docks the drawer to the edge text runs toward — the right in a left-to-right app, the left in a right-to-left one.",
+        "code": "const [inStock, setInStock] = useState(true);\nconst [onSale, setOnSale] = useState(false);\n\n<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Filters</Button>\n  </Drawer.Trigger>\n  <Drawer.Content side=\"end\">\n    <Drawer.Header title=\"Filters\" />\n    <Drawer.Body>\n      <Item>\n        <Item.Content>\n          <Item.Title>In stock only</Item.Title>\n          <Item.Description>Hide anything on backorder</Item.Description>\n        </Item.Content>\n        <Item.Actions>\n          <Switch value={inStock} onValueChange={setInStock} />\n        </Item.Actions>\n      </Item>\n      <Item>\n        <Item.Content>\n          <Item.Title>On sale</Item.Title>\n          <Item.Description>Reduced in the last 30 days</Item.Description>\n        </Item.Content>\n        <Item.Actions>\n          <Switch value={onSale} onValueChange={setOnSale} />\n        </Item.Actions>\n      </Item>\n    </Drawer.Body>\n    <Drawer.Footer>\n      <Drawer.Close>\n        <Button className=\"flex-1\">Apply</Button>\n      </Drawer.Close>\n    </Drawer.Footer>\n  </Drawer.Content>\n</Drawer>"
+      },
+      {
+        "title": "Sizes",
+        "description": "`size` is the drawer's width on `start` / `end` and its height on `top` / `bottom`. A horizontal drawer is capped in points as well, so `md` is a 320-point panel on a tablet rather than 78% of one.",
+        "code": "<View className=\"flex-row flex-wrap gap-2\">\n  {([\"sm\", \"md\", \"lg\", \"full\"] as const).map((size) => (\n    <Drawer key={size}>\n      <Drawer.Trigger>\n        <Button variant=\"outline\" size=\"sm\">{size}</Button>\n      </Drawer.Trigger>\n      <Drawer.Content size={size}>\n        <Drawer.Header title={`size=\"${size}\"`} />\n        <Drawer.Body>\n          <Text size=\"sm\" muted>Drag the panel back toward its edge to dismiss it.</Text>\n        </Drawer.Body>\n      </Drawer.Content>\n    </Drawer>\n  ))}\n</View>"
+      },
+      {
+        "title": "From the top",
+        "description": "On the vertical axis the sides mean what they say — there is no reading direction to mirror. Best for short content, since a top or bottom drawer is dragged on the same axis a list scrolls on.",
+        "code": "<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Notifications</Button>\n  </Drawer.Trigger>\n  <Drawer.Content side=\"top\" size=\"sm\">\n    <Drawer.Header title=\"Notifications\" />\n    <Drawer.Body>\n      <Item>\n        <Item.Content>\n          <Item.Title>Build passed</Item.Title>\n          <Item.Description>2 minutes ago</Item.Description>\n        </Item.Content>\n      </Item>\n      <Item>\n        <Item.Content>\n          <Item.Title>New comment</Item.Title>\n          <Item.Description>1 hour ago</Item.Description>\n        </Item.Content>\n      </Item>\n    </Drawer.Body>\n  </Drawer.Content>\n</Drawer>"
+      },
+      {
+        "title": "Right to left",
+        "description": "The same `side=\"start\"` drawer inside a right-to-left subtree: it docks to the right, slides in from the right, and dismisses on a swipe to the right. Nothing about the drawer had to change.",
+        "code": "<Direction dir=\"rtl\" className=\"w-full\">\n  <Drawer>\n    <Drawer.Trigger>\n      <Button variant=\"outline\">افتح القائمة</Button>\n    </Drawer.Trigger>\n    <Drawer.Content side=\"start\">\n      <Drawer.Header title=\"مساحة العمل\" />\n      <Drawer.Body>\n        {['المشاريع', 'الأعضاء'].map((label) => (\n          <Item key={label}>\n            <Item.Content>\n              <Item.Title>{label}</Item.Title>\n            </Item.Content>\n          </Item>\n        ))}\n      </Drawer.Body>\n    </Drawer.Content>\n  </Drawer>\n</Direction>"
+      }
+    ],
+    "variantCode": {
+      "side": "<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Open</Button>\n  </Drawer.Trigger>\n  {/* `side` is a Drawer.Content prop: the root owns the open state, the panel owns the edge. */}\n  <Drawer.Content side=\"start\">\n    <Drawer.Header title=\"Workspace\" />\n  </Drawer.Content>\n</Drawer>"
+    },
+    "notes": "Control it with `open` / `onOpenChange`, or leave it uncontrolled with `defaultOpen`.\n\n### Why the sides are `start` and `end`\n\nA drawer is the one overlay whose whole identity is the edge it belongs to, and in a right-to-left app the navigation edge is the right one. Naming the sides `left` and `right` would bake a reading direction into the API and leave every caller in an RTL app inverting it by hand, so they are logical instead: `start` is the edge text begins at, `end` the edge it runs toward. Both follow the enclosing `Direction`. `top` and `bottom` mean what they say, because the vertical axis does not mirror.\n\nThe panel's position mirrors because it is laid out from logical insets. The *drag* does not — a transform is measured in raw pixels, not laid out — so the gesture reads the direction and negates itself. That is what keeps a swipe outward dismissing in both directions instead of only one.\n\n### How wide it opens\n\n`size` is a fraction of the screen with a cap in points on the horizontal axis. The cap is the point: a fraction alone reads correctly on a phone and absurdly on a tablet, where 78% of the width is a navigation list with a column of whitespace beside it. `full` is 94%, not 100% — the sliver of app left showing is what says it is still there behind the drawer, and it is the only thing left to tap to dismiss.\n\n### Dismissing it\n\nA tap on the backdrop, a drag back toward the docked edge, the corner close button, `Drawer.Close`, or the Android back button. Turn the first two off with `dismissible={false}` and `swipeToDismiss={false}` — turn off `swipeToDismiss` when the content wants the same axis, such as a horizontal scroller in a side drawer.\n\n### Drawer or BottomSheet\n\nA sheet is sized by its content and dragged along the axis its scroller runs on, which is why so much of it is about sharing one drag between the two. A side drawer is sized by the screen and dragged across its scroller's axis, so the two never compete: the cross-axis drag fails and the list keeps it. Reach for the sheet for something the content sizes — a share menu, a short form — and the drawer for navigation, filters, and anything that should feel like part of the app's frame."
+  },
   "empty-state": {
     "intro": "The placeholder for a list or screen with nothing in it. `Media variant=\"icon\"` frames the icon in a small card with two rotated ghost cards fanned behind it.",
     "usage": "<EmptyState>\n  <EmptyState.Header>\n    <EmptyState.Media variant=\"icon\">\n      <SearchIcon size={18} />\n    </EmptyState.Media>\n    <EmptyState.Title>No results found</EmptyState.Title>\n    <EmptyState.Description>\n      Try adjusting your search or filters.\n    </EmptyState.Description>\n  </EmptyState.Header>\n  <EmptyState.Content>\n    <Button variant=\"outline\" fullWidth>Clear filters</Button>\n  </EmptyState.Content>\n</EmptyState>",

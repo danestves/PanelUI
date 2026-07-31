@@ -126,6 +126,14 @@
       "updatedIn": "0.25.0"
     }
   ],
+  "drawer": [
+    "Drawer",
+    "A panel that comes in from an edge of the screen and covers the app until dismissed.",
+    "react native drawer component",
+    {
+      "addedIn": "0.33.0"
+    }
+  ],
   "empty-state": [
     "EmptyState",
     "Placeholder for a list or screen with no content.",
