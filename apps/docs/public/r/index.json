@@ -484,6 +484,7 @@
     "description": "Navigation panel that moves the app aside instead of covering it.",
     "registryDependencies": [
       "animated-pressable",
+      "button",
       "cn",
       "icons",
       "text",
