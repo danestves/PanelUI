@@ -178,9 +178,20 @@ const GAP = 12;
  */
 const SCENE_SCALE = 1;
 /** The corner radius the scene picks up at full travel. */
-const SCENE_RADIUS = 32;
+const SCENE_RADIUS = 36;
 /** How far the scene is dimmed at full travel. */
 const SCENE_DIM = 0.45;
+/** How strongly the line along the scene's edge reads at full travel. */
+const EDGE_OPACITY = 0.35;
+/**
+ * How thick that line is.
+ *
+ * A point, not `StyleSheet.hairlineWidth`. A hairline is one physical pixel,
+ * which is the right answer for a divider on a flat surface and the wrong one
+ * on a corner this round — most of the line is curve, and a third of a point of
+ * curve antialiases away to nothing.
+ */
+const EDGE_WIDTH_PT = 1;
 
 /**
  * How far behind the scene the panel starts.
@@ -1128,7 +1139,7 @@ export interface PanelsideSceneProps extends ViewProps {
    * as well as at the side.
    */
   scale?: number;
-  /** The corner radius the scene reaches at full travel. Default 32. */
+  /** The corner radius the scene reaches at full travel. Default 36. */
   radius?: number;
   /** How far the scene dims at full travel, 0 to 1. Default 0.45. */
   dim?: number;
@@ -1148,7 +1159,14 @@ function PanelsideScene({
     usePanelsideContext('Panelside.Scene');
   const [sceneWidth, setSceneWidth] = useState(0);
   const sign = useDirectionSign();
-  const edge = useCSSVariable('--color-border');
+  /*
+   * Not `--color-border`, which is 6% white. That token is tuned for an edge
+   * between two *different* surfaces, where it only has to hint. Here the panel
+   * and the scene are the same colour, so the line is the only thing
+   * distinguishing them, and 6% under a dim is nothing at all. The muted
+   * foreground held back to a third reads as a hairline in both themes.
+   */
+  const edge = useCSSVariable('--color-muted-foreground');
   const edgeColor = typeof edge === 'string' ? edge : undefined;
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
@@ -1193,7 +1211,7 @@ function PanelsideScene({
    */
   const ringStyle = useAnimatedStyle(() => {
     const p = docked ? 0 : progress.value;
-    return { opacity: p, borderRadius: p * radius };
+    return { opacity: p * EDGE_OPACITY, borderRadius: p * radius };
   }, [docked, radius]);
 
   const animatedProps = useAnimatedProps<ViewProps>(() => {
@@ -1213,21 +1231,6 @@ function PanelsideScene({
       <Animated.View animatedProps={animatedProps} className="flex-1">
         {children}
       </Animated.View>
-
-      {/* A hairline where the scene meets the panel. Without it two surfaces
-          of the same colour meet at a corner and the radius is the only thing
-          saying they are separate — which reads as a rendering artefact rather
-          than as an edge. */}
-      {edgeColor ? (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFill,
-            { borderWidth: StyleSheet.hairlineWidth, borderColor: edgeColor },
-            ringStyle,
-          ]}
-        />
-      ) : null}
 
       {/* Layered over the scene rather than under it, so it dims the app and
           catches the tap in the scene's own space — which means it inherits
@@ -1251,6 +1254,21 @@ function PanelsideScene({
           />
         ) : null}
       </Animated.View>
+
+      {/* A hairline where the scene meets the panel. Without it two surfaces
+          of the same colour meet at a corner and the radius is the only thing
+          saying they are separate — which reads as a rendering artefact rather
+          than as an edge. */}
+      {edgeColor ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { borderWidth: EDGE_WIDTH_PT, borderColor: edgeColor },
+            ringStyle,
+          ]}
+        />
+      ) : null}
     </Animated.View>
   );
 }
