@@ -12,7 +12,7 @@
  * when the behaviour does.
  */
 import { useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import {
   Avatar,
@@ -20,7 +20,6 @@ import {
   FileIcon,
   ImageIcon,
   BottomSheet,
-  InputGroup,
   Item,
   Marker,
   MenuIcon,
@@ -31,6 +30,7 @@ import {
   Panelside,
   PlusIcon,
   Select,
+  SendIcon,
   Text,
   XIcon,
   usePanelside,
@@ -38,6 +38,7 @@ import {
   type PanelsideSceneProps,
 } from 'panelui-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCSSVariable } from 'uniwind';
 
 const NAV = [
   { id: 'chats', label: 'Chats', icon: <MessageCircleIcon size={20} /> },
@@ -63,8 +64,15 @@ const RECENTS = [
   'Weekly standup summary',
 ];
 
-/** The panel, identical across all six demos. */
-function AssistantPanel() {
+/**
+ * The panel, shared by all six demos.
+ *
+ * `native` only reaches the one control that has a platform equivalent. There
+ * is no native list row and no native search field, so the rest stays ours —
+ * which is the honest answer rather than a half-native panel that matches
+ * neither.
+ */
+function AssistantPanel({ native = false }: { native?: boolean }) {
   const [query, setQuery] = useState('');
 
   // Filtering lives here rather than in the component: the panel does not know
@@ -139,10 +147,14 @@ function AssistantPanel() {
       <Panelside.Footer>
         <Panelside.Item
           className="flex-1"
-          icon={<Avatar size="sm" fallback="K" />}
-          label="Khalid"
+          icon={<Avatar size="md" fallback="K" />}
+          label="Khalid Abdi"
         />
-        <Panelside.Cta icon={<PlusIcon size={18} />} label="New chat" />
+        <Panelside.Cta
+          icon={<PlusIcon size={18} />}
+          label="New chat"
+          native={native}
+        />
       </Panelside.Footer>
     </Panelside.Panel>
   );
@@ -267,16 +279,18 @@ function Transcript() {
 function AssistantDemo({
   sceneProps,
   scene,
+  native = false,
   title = 'Migrating the design tokens',
   ...props
 }: Partial<PanelsideProps> & {
   sceneProps?: Partial<PanelsideSceneProps>;
   scene?: React.ReactNode;
+  native?: boolean;
   title?: string;
 }) {
   return (
     <Panelside {...props}>
-      <AssistantPanel />
+      <AssistantPanel native={native} />
       <Panelside.Scene {...sceneProps}>
         <SceneBar title={title} />
         {scene ?? <Transcript />}
@@ -424,14 +438,14 @@ export function PanelsideChatBlock() {
  * The native version.
  *
  * Panelside itself has no `native` prop, and cannot: the platform toolkits
- * ship a switch, a picker, a sheet and a button, but neither has a pushing
- * navigation panel to hand rendering to. What "native" means here is the
- * controls inside it — the model picker is a real UIPickerView menu, the
- * attachment sheet is a real UISheetPresentationController, and the send
- * button is a real UIButton. The panel and the transcript stay ours.
+ * ship a switch, a picker, a sheet and a button, and none of them is a pushing
+ * navigation panel. What goes native is what is inside it — the model picker
+ * is a real platform menu, the attachment sheet a real platform sheet, and
+ * both the send button and the panel's compose button real platform buttons.
  *
- * Install `@expo/ui` and they light up; without it every one of them falls
- * back to the styled implementation rather than failing.
+ * The transcript, the rows and the composer field stay ours, because there is
+ * no platform control for any of them. A screen that went half-native would
+ * match neither.
  */
 function NativeChatScene() {
   const [turns, setTurns] = useState<Turn[]>(THREAD.slice(0, 2));
@@ -440,6 +454,9 @@ function NativeChatScene() {
   const [attaching, setAttaching] = useState(false);
   const insets = useSafeAreaInsets();
   const nextId = useRef(0);
+  // A bare TextInput has no themed placeholder of its own.
+  const tint = useCSSVariable('--color-muted-foreground');
+  const placeholderTint = typeof tint === 'string' ? tint : undefined;
 
   const send = () => {
     const text = draft.trim();
@@ -462,11 +479,12 @@ function NativeChatScene() {
 
   return (
     <View className="flex-1">
-      {/* The platform's own picker, opening a real menu. */}
-      <View className="flex-row items-center gap-2 px-4 pb-2">
-        <Text size="sm" muted>
-          Model
-        </Text>
+      {/*
+        The platform picker reports its own height and fills the row it is in,
+        so it needs a row of its own with a real width — in a `flex-row` beside
+        a label, with nothing telling it to grow, it collapses to nothing.
+      */}
+      <View className="px-4 pb-2">
         <Select native value={model} onValueChange={setModel}>
           <Select.Item value="fast" label="Fast" />
           <Select.Item value="balanced" label="Balanced" />
@@ -491,32 +509,45 @@ function NativeChatScene() {
         <MessageScroller.Button />
       </MessageScroller>
 
-      {/* Pinned to the bottom edge, so it travels with the keyboard rather
-          than being lifted out of a page that is not scrolling. */}
+      {/*
+        A composer is a pill with its controls inside it on both platforms, so
+        that is what this is: attach on the leading end, a field that grows,
+        and send on the trailing end. A row of labelled buttons underneath
+        would be the platform's button drawn in the wrong place.
+      */}
       <View
-        className="gap-2 border-t border-border px-4 pt-3"
-        style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+        className="border-t border-border px-3 pt-2"
+        style={{ paddingBottom: Math.max(insets.bottom, 10) }}
       >
-        <InputGroup>
-          <InputGroup.Input
+        <View className="flex-row items-end gap-1 rounded-3xl bg-secondary py-1 ps-1 pe-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-9 w-9 rounded-full"
+            accessibilityLabel="Attach"
+            onPress={() => setAttaching(true)}
+          >
+            <PlusIcon size={20} />
+          </Button>
+
+          <TextInput
             value={draft}
             onChangeText={setDraft}
             placeholder="Message the assistant"
+            placeholderTextColor={placeholderTint}
             multiline
-            avoidKeyboard
-            keyboardMode="dock"
-            keyboardBottomInset={Math.max(insets.bottom, 12)}
+            className="min-h-9 max-h-32 flex-1 py-2 text-[16px] leading-normal text-foreground"
           />
-        </InputGroup>
 
-        {/* Native buttons size themselves to their label and ignore
-            className, which is why these are labelled rather than icon-only. */}
-        <View className="flex-row items-center justify-between">
-          <Button native variant="ghost" onPress={() => setAttaching(true)}>
-            Attach
-          </Button>
-          <Button native onPress={send} disabled={draft.trim() === ''}>
-            Send
+          <Button
+            size="icon"
+            variant="primary"
+            className="h-9 w-9 rounded-full"
+            accessibilityLabel="Send"
+            disabled={draft.trim() === ''}
+            onPress={send}
+          >
+            <SendIcon size={17} />
           </Button>
         </View>
       </View>
@@ -526,21 +557,13 @@ function NativeChatScene() {
         <BottomSheet.Content>
           <BottomSheet.Header title="Attach" description="Anything the assistant should read." />
           <BottomSheet.Body>
-            <Item>
-              <Item.Content>
-                <Item.Title>Photo library</Item.Title>
-              </Item.Content>
-            </Item>
-            <Item>
-              <Item.Content>
-                <Item.Title>Files</Item.Title>
-              </Item.Content>
-            </Item>
-            <Item>
-              <Item.Content>
-                <Item.Title>Camera</Item.Title>
-              </Item.Content>
-            </Item>
+            {['Photo library', 'Files', 'Camera'].map((label) => (
+              <Item key={label}>
+                <Item.Content>
+                  <Item.Title>{label}</Item.Title>
+                </Item.Content>
+              </Item>
+            ))}
           </BottomSheet.Body>
         </BottomSheet.Content>
       </BottomSheet>
@@ -549,5 +572,11 @@ function NativeChatScene() {
 }
 
 export function PanelsideNativeBlock() {
-  return <AssistantDemo scene={<NativeChatScene />} title="Refactor the settings screen" />;
+  return (
+    <AssistantDemo
+      native
+      scene={<NativeChatScene />}
+      title="Refactor the settings screen"
+    />
+  );
 }

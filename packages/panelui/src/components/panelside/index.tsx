@@ -86,6 +86,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   TextInput,
   useWindowDimensions,
   View,
@@ -108,7 +109,9 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
+import { LinearGradient } from 'expo-linear-gradient';
 import { EllipsisIcon, IconColorProvider, MenuIcon, SearchIcon } from '../../icons';
+import { Button } from '../button';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
 import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
@@ -167,6 +170,9 @@ const WIDTH_MAX = 360;
  */
 const DOCK_WIDTH_FRACTION = 0.32;
 const DOCK_WIDTH_MAX = 320;
+
+/** How far above the floating footer the list starts dissolving into it. */
+const FOOTER_FADE = 28;
 
 /** Progress past which a layer is treated as fully hidden for accessibility. */
 const HIDDEN_EPSILON = 0.05;
@@ -851,6 +857,8 @@ function PanelsideFooter({
   const insets = useSafeAreaInsets();
   const surface = useContext(PanelsideSurfaceContext);
   const setFooterHeight = surface?.setFooterHeight;
+  const background = useCSSVariable('--color-background');
+  const solid = typeof background === 'string' ? background : '#000000';
 
   const onLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -865,15 +873,33 @@ function PanelsideFooter({
       style={[{ paddingBottom: Math.max(insets.bottom, 12) }, style]}
       className={cn(
         'flex-row items-center gap-2 px-3 pt-2',
-        // Floating, it has no surface of its own: the list runs underneath and
-        // stays visible, which is what says the footer is over the panel
-        // rather than a bar cut out of the bottom of it. Only the controls in
-        // it are opaque. Docked to the flow, it needs both.
         floating ? 'absolute bottom-0 end-0 start-0' : 'border-t border-border bg-background',
         className
       )}
       {...props}
     >
+      {/*
+        A floating footer has no edge and no bar. A solid one cuts a strip out
+        of the bottom of the list; a transparent one lets rows slide under the
+        controls and collide with them. What it wants is neither: the list
+        dissolves into the panel just before the footer, so the controls always
+        have something plain behind them and nothing looks cut off.
+
+        Drawn behind the children and reaching above the footer's own box, so
+        the fade starts before the first control rather than at it.
+      */}
+      {floating ? (
+        <LinearGradient
+          colors={[`${solid}00`, solid, solid]}
+          locations={[0, 0.5, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          pointerEvents="none"
+          // Reaches above the footer's own box, so the fade starts before the
+          // first control rather than at it.
+          style={[StyleSheet.absoluteFill, { top: -FOOTER_FADE }]}
+        />
+      ) : null}
       {textChildren(children)}
     </View>
   );
@@ -887,6 +913,14 @@ export interface PanelsideCtaProps extends Omit<PressableProps, 'children'> {
   icon?: ReactNode;
   /** `primary` is the filled accent pill; `secondary` is the quiet one. */
   variant?: 'primary' | 'secondary';
+  /**
+   * Render the platform's own button instead of the pill. Requires the
+   * optional `@expo/ui` package; without it this prop does nothing.
+   *
+   * **Theme tokens do not apply** — the platform draws the button, so
+   * `className` and `icon` are ignored and it sizes itself to `label`.
+   */
+  native?: boolean;
   children?: ReactNode;
 }
 
@@ -895,6 +929,8 @@ function PanelsideCta({
   label,
   icon,
   variant = 'primary',
+  native = false,
+  disabled,
   children,
   ...props
 }: PanelsideCtaProps) {
@@ -903,11 +939,33 @@ function PanelsideCta({
   const raw = variant === 'primary' ? primaryTint : secondaryTint;
   const tint = typeof raw === 'string' ? raw : undefined;
 
+  /*
+   * Delegated to Button rather than reaching for the native bridge here.
+   * Button already resolves the package lazily, maps the variant onto the
+   * platform's own style and falls back when it is missing — reimplementing
+   * that would be a second copy to keep in step with the first.
+   */
+  if (native) {
+    return (
+      <Button
+        native
+        variant={variant}
+        accessibilityLabel={label}
+        // Pressable allows `null` for disabled; Button does not.
+        disabled={disabled ?? undefined}
+        {...props}
+      >
+        {label ?? children}
+      </Button>
+    );
+  }
+
   return (
     <AnimatedPressable
       className={ctaVariants({ variant, className })}
       accessibilityRole="button"
       accessibilityLabel={label}
+      disabled={disabled}
       {...props}
     >
       <IconColorProvider color={tint}>
