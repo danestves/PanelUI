@@ -185,11 +185,25 @@ const NATIVE_ICON_PADDING = 6;
  * other the same question forever, and that fails down in the platform, where
  * there is nothing for a JavaScript `try` to catch.
  *
- * `controlSize` would be the idiomatic way to size the control instead, and is
- * deliberately not sent: adding it took the app down on entering any screen
- * with a native button on it.
  */
 const NATIVE_ICON_FRAME = 44;
+
+/**
+ * Our sizes on the platform's own control scale, which is how a native button
+ * is made bigger: it scales the room the style leaves around the label, and the
+ * label with it.
+ *
+ * Only ever sent for a *string* label. A hosted label is the case that has
+ * taken this app down twice, and while the cause turned out to be a missing
+ * frame rather than this modifier, a labelled button has no hosted view and no
+ * measurement to get wrong — so there is no reason to find out on both at once.
+ */
+const NATIVE_CONTROL_SIZE = {
+  sm: 'small',
+  md: 'regular',
+  lg: 'large',
+  icon: 'regular',
+} as const;
 
 
 /** PanelUI variants mapped onto the platform button styles. */
@@ -272,6 +286,7 @@ export const Button = forwardRef<View, ButtonProps>(
         ? [
             glass ? swiftUI.buttonStyle(prominent ? 'glassProminent' : 'glass') : null,
             size === 'icon' ? swiftUI.buttonBorderShape('circle') : null,
+            isStringLabel ? swiftUI.controlSize(NATIVE_CONTROL_SIZE[size ?? 'md']) : null,
           ].filter(Boolean)
         : [];
 

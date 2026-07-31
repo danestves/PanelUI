@@ -1055,19 +1055,19 @@ function PanelsideCta({
         {...props}
       >
         {/*
-          A plain string, not a hosted view — and this is not a missed chance
-          to pad it.
+          A plain string, not a hosted view.
 
-          A hosted label goes inside an `RNHostView(matchContents)`, and that
-          only measures where something above it is definite on both axes. An
-          icon button is a square and can be; a compose button's width is its
-          text's, which nothing here knows in advance. Hosting the label to pad
-          it therefore leaves the width with no fixed point, and the two layout
-          systems take the app down rather than settle.
+          An icon button pads its glyph in React, because the glyph *is* a
+          React Native view and the platform draws the background around it.
+          That works because an icon button is a square this component sizes,
+          so the hosted view has a fixed reference to measure against. A label
+          has neither half of that: a string is the platform's own text with no
+          React view in it to pad, and hosting one to get a view leaves a width
+          nothing knows in advance.
 
-          So the room around this label is the platform's to decide, as it is
-          for every other labelled native button. `controlSize` is the modifier
-          that would change it, and it crashes this app too.
+          So this one is sized rather than padded — `size="lg"` reaches the
+          platform as a control size, which scales the room the style leaves
+          around the label and the label with it.
         */}
         {label ?? children}
       </Button>

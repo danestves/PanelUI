@@ -127,6 +127,7 @@ interface SwiftUIModifiers {
     shape: 'automatic' | 'capsule' | 'roundedRectangle' | 'circle',
     cornerRadius?: number
   ) => unknown;
+  controlSize: (size: 'mini' | 'small' | 'regular' | 'large' | 'extraLarge') => unknown;
 }
 
 let modifiersResolved = false;
