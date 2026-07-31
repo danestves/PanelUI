@@ -149,19 +149,23 @@ const NATIVE_HEIGHT: Record<NonNullable<ButtonVariantProps['size']>, number> = {
   sm: 36,
   md: 44,
   lg: 48,
-  /*
-   * Much larger than the styled icon button, and deliberately.
-   *
-   * The styled one pads a glyph inside a box the theme drew. A native one is
-   * handed a square frame instead, because left to itself the platform pads a
-   * button for a *label* and a lone glyph comes out in a wide capsule. That
-   * makes the number the padding: 44 is the accessibility floor and nothing
-   * more, and a 20-point glyph in a 44-point circle touches the sides. At 60
-   * there is real room on every side, which is what the platform's own round
-   * controls — and the material drawn in them — are shaped for.
-   */
-  icon: 60,
+  icon: 44,
 };
+
+/**
+ * Room around the glyph in a native icon button.
+ *
+ * Padding, not a frame — and the distinction is the whole thing. A frame sets
+ * the button's *layout* box, but a platform button style draws its background
+ * around the label plus the label's padding, so a framed icon button is a
+ * small circle sitting in the middle of a large invisible square. Padding
+ * grows the label, so the background grows with it.
+ *
+ * The width is left alone for the same reason it is set on a labelled button:
+ * equal padding around a square glyph is already square, and the circular
+ * border shape has something round to draw.
+ */
+const NATIVE_ICON_PADDING = 14;
 
 /** PanelUI variants mapped onto the platform button styles. */
 const NATIVE_VARIANT: Record<
@@ -262,18 +266,17 @@ export const Button = forwardRef<View, ButtonProps>(
             variant={NATIVE_VARIANT[variant ?? 'primary']}
             disabled={isDisabled}
             /*
-             * An icon button is given both dimensions, the rest only a height.
+             * An icon button is padded; every other size is given a height.
              *
-             * A height alone leaves the width to the platform, which sizes a
-             * button to its content plus the padding a *labelled* button needs
-             * — so a lone glyph comes out in a wide capsule with air on either
-             * side of it, and the circular border shape then has nothing square
-             * to draw around. A label, by contrast, is the thing that should
-             * decide the width, so it still does.
+             * A labelled button should be as wide as its label, so it gets a
+             * height and nothing else. An icon button has no label to size to,
+             * and a frame would only centre a glyph-sized background inside a
+             * larger box — so it gets padding instead, which the platform's
+             * button style draws its background around.
              */
             style={
               size === 'icon'
-                ? { width: NATIVE_HEIGHT.icon, height: NATIVE_HEIGHT.icon }
+                ? { padding: NATIVE_ICON_PADDING }
                 : { height: NATIVE_HEIGHT[size ?? 'md'] }
             }
             modifiers={nativeModifiers.length ? nativeModifiers : undefined}
