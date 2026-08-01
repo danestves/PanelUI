@@ -37,7 +37,7 @@ export interface PanelThemeFamily {
  *
  * ```js
  * withUniwindConfig(config, {
- *   cssEntryFile: './global.css',
+ *   cssEntryFile: './src/global.css',
  *   extraThemes: ['moon', 'moon-dark', 'grass', 'grass-dark'],
  * });
  * ```
