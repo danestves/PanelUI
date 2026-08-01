@@ -38,7 +38,7 @@ import {
   useContext,
   useImperativeHandle,
   useMemo,
-  useState,
+  useRef,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -407,18 +407,30 @@ const SwipeRoot = forwardRef<SwipeHandle, SwipeProps>(
     const hasStart = startNode != null;
     const hasEnd = endNode != null;
 
-    const [, setOpen] = useState<SwipeOpenSide>(null);
+    /**
+     * The side the row is open on, held in a ref rather than in state: nothing
+     * here renders from it, and a row that re-rendered every time a drag
+     * settled would be paying for the one thing this component exists to
+     * avoid.
+     */
+    const openSide = useRef<SwipeOpenSide>(null);
+
     /**
      * Only a genuine change is reported. The gesture cannot know whether the
      * row was already closed when it settles it closed, so the comparison has
      * to happen here rather than at each call site.
+     *
+     * The comparison and the callback both have to sit outside React's state,
+     * because `onOpenChange` is the caller's and will usually set state of its
+     * own. Run from inside a state updater — which React is free to call while
+     * rendering — that lands as a set during another component's render, and
+     * React says so.
      */
     const reportOpen = useCallback(
       (side: SwipeOpenSide) => {
-        setOpen((previous) => {
-          if (previous !== side) onOpenChange?.(side);
-          return side;
-        });
+        if (openSide.current === side) return;
+        openSide.current = side;
+        onOpenChange?.(side);
       },
       [onOpenChange]
     );
