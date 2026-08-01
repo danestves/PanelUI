@@ -30,6 +30,7 @@
  */
 import {
   Children,
+  cloneElement,
   createContext,
   forwardRef,
   isValidElement,
@@ -99,22 +100,37 @@ const SwipeContext = createContext<SwipeContextValue | null>(null);
 /* Action                                                                     */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * A tile is a filled block of colour with its content laid over it, which
+ * settles both halves of how it is coloured:
+ *
+ * - The fill is the status colour at full strength, never a tint of it. A tile
+ *   only exists while the row is out of the way, so it has to be legible in the
+ *   moment it appears; a 6%-alpha wash of the row's own background is not a
+ *   tile at all, it is a hole with a glyph floating in it.
+ * - The content is white, because the status colours are chosen to be carried
+ *   at full strength with white over them. The `-foreground` token of a status
+ *   is the *darker text* form of that hue, meant for a neutral surface — laid
+ *   over the fill it is the same hue twice and the label all but disappears.
+ *
+ * `default` and `primary` are the two that cannot take white. `primary`
+ * inverts with the theme and owns a true on-primary token, so it uses it;
+ * `default` is a mid grey in every theme, and takes the background colour,
+ * which is the neutral furthest from it in whichever direction the theme runs.
+ */
 const actionVariants = tv({
   slots: {
-    root: 'h-full min-w-[76px] items-center justify-center gap-1 px-4',
-    label: 'text-center text-xs font-medium',
+    root: 'h-full min-w-[80px] items-center justify-center gap-1.5 px-4',
+    label: 'text-center text-xs font-semibold',
   },
   variants: {
     color: {
-      default: { root: 'bg-muted', label: 'text-foreground' },
+      default: { root: 'bg-muted-foreground', label: 'text-background' },
       primary: { root: 'bg-primary', label: 'text-primary-foreground' },
-      success: { root: 'bg-success', label: 'text-success-foreground' },
-      warning: { root: 'bg-warning', label: 'text-warning-foreground' },
-      info: { root: 'bg-info', label: 'text-info-foreground' },
-      destructive: {
-        root: 'bg-destructive',
-        label: 'text-destructive-foreground',
-      },
+      success: { root: 'bg-success', label: 'text-white' },
+      warning: { root: 'bg-warning', label: 'text-white' },
+      info: { root: 'bg-info', label: 'text-white' },
+      destructive: { root: 'bg-destructive', label: 'text-white' },
     },
   },
   defaultVariants: {
@@ -135,7 +151,7 @@ export type SwipeActionColor =
  * extends the outermost action's colour instead of opening a hole.
  */
 const PANEL_FILL: Record<SwipeActionColor, string> = {
-  default: 'bg-muted',
+  default: 'bg-muted-foreground',
   primary: 'bg-primary',
   success: 'bg-success',
   warning: 'bg-warning',
@@ -149,7 +165,11 @@ export interface SwipeActionProps
   className?: string;
   /** What the action does. Also what a screen reader is offered. */
   label: string;
-  /** Drawn above the label, tinted to match it. Pass the glyph, not a colour. */
+  /**
+   * Drawn above the label and tinted to match it. Pass the glyph, not a colour
+   * and not a size — a tile sizes it to read at a glance, since it is the part
+   * of an action the eye reaches before the word underneath it.
+   */
   icon?: ReactNode;
   /** Run when the tile is tapped, or when a full swipe reaches it. */
   onPress?: () => void;
@@ -197,7 +217,9 @@ const SwipeAction = forwardRef<View, SwipeActionProps>(
         className={slots.root({ className })}
         {...props}
       >
-        {icon ? <IconColorProvider color={tint}>{icon}</IconColorProvider> : null}
+        {icon ? (
+          <IconColorProvider color={tint}>{sizeIcon(icon)}</IconColorProvider>
+        ) : null}
         <Text className={slots.label({ className: labelClassName })} numberOfLines={1}>
           {label}
         </Text>
@@ -208,29 +230,41 @@ const SwipeAction = forwardRef<View, SwipeActionProps>(
 SwipeAction.displayName = 'Swipe.Action';
 
 /**
- * The foreground a colour reads against, resolved from the theme rather than
- * written down as a hex — a hex stops being right the moment the theme
- * inverts. Every token is resolved on every render because a hook cannot be
- * called for one branch only; they are variable lookups, not work.
+ * How big a glyph is drawn on a tile. The icons default to the 16 that suits
+ * them inline in a row of text, which is too small here: a tile is 80 wide and
+ * mostly empty, and the icon is the part of it read first — at 16 it looks
+ * like a mistake rather than a target.
+ */
+const ICON_SIZE = 22;
+
+/**
+ * The icon at tile size, unless the caller asked for one. Sizing it here rather
+ * than asking every call site to is what keeps two tiles beside each other
+ * matching, which is the whole reason a panel of them reads as a set.
+ */
+function sizeIcon(icon: ReactNode): ReactNode {
+  if (!isValidElement<{ size?: number }>(icon)) return icon;
+  if (icon.props.size !== undefined) return icon;
+  return cloneElement(icon, { size: ICON_SIZE });
+}
+
+/**
+ * The colour a tile's glyph is drawn in — the same colour as its label, so the
+ * two read as one thing. Resolved from the theme rather than written down as a
+ * hex wherever the theme has an answer, since a hex stops being right the
+ * moment the theme inverts; white is the exception, because a status fill is
+ * the same saturated colour in every theme and white is what it carries.
+ *
+ * Both tokens are resolved on every render because a hook cannot be called for
+ * one branch only. They are variable lookups, not work.
  */
 function useActionTint(color: SwipeActionColor): string | undefined {
-  const foreground = useCSSVariable('--color-foreground');
+  const background = useCSSVariable('--color-background');
   const primary = useCSSVariable('--color-primary-foreground');
-  const success = useCSSVariable('--color-success-foreground');
-  const warning = useCSSVariable('--color-warning-foreground');
-  const info = useCSSVariable('--color-info-foreground');
-  const destructive = useCSSVariable('--color-destructive-foreground');
 
-  const raw = {
-    default: foreground,
-    primary,
-    success,
-    warning,
-    info,
-    destructive,
-  }[color];
-
-  return typeof raw === 'string' ? raw : undefined;
+  if (color === 'default') return typeof background === 'string' ? background : undefined;
+  if (color === 'primary') return typeof primary === 'string' ? primary : undefined;
+  return '#ffffff';
 }
 
 /* -------------------------------------------------------------------------- */

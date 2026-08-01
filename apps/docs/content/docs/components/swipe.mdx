@@ -205,7 +205,7 @@ The same row inside a right-to-left subtree. `Swipe.End` still means the edge te
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `label` | `string` | — | What the action does. Also what a screen reader is offered. |
-| `icon` | `ReactNode` | — | Drawn above the label, tinted to match it. Pass the glyph, not a colour. |
+| `icon` | `ReactNode` | — | Drawn above the label and tinted to match it. Pass the glyph, not a colour and not a size — a tile sizes it to read at a glance, since it is the part of an action the eye reaches before the word underneath it. |
 | `onPress` | `() => void` | — | Run when the tile is tapped, or when a full swipe reaches it. |
 | `keepOpen` | `boolean` | `false` | Leave the row open after the action runs. Off by default: an action that has already happened has nothing left to offer, and a row left standing open is the most common way a swipe list ends up feeling stuck. |
 | `labelClassName` | `string` | — | Extra classes for the label. |
