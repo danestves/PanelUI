@@ -754,6 +754,19 @@
     "registryDependencies": []
   },
   {
+    "name": "swipe",
+    "type": "registry:ui",
+    "description": "A row that slides aside to reveal the things you can do to it.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "haptics",
+      "icons",
+      "text",
+      "use-direction"
+    ]
+  },
+  {
     "name": "switch",
     "type": "registry:ui",
     "description": "Animated on/off toggle.",

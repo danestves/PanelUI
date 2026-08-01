@@ -280,7 +280,10 @@
   "progress": [
     "Progress",
     "Determinate and indeterminate progress bar.",
-    "react native progress bar"
+    "react native progress bar",
+    {
+      "updatedIn": "0.35.0"
+    }
   ],
   "radio-group": [
     "RadioGroup",
@@ -392,6 +395,14 @@
     "Surface",
     "Elevated container with a variant ladder.",
     "react native surface container"
+  ],
+  "swipe": [
+    "Swipe",
+    "A row that slides aside to reveal the things you can do to it.",
+    "react native swipe to delete list row actions",
+    {
+      "addedIn": "0.35.0"
+    }
   ],
   "switch": [
     "Switch",

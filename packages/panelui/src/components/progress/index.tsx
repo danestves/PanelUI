@@ -52,8 +52,21 @@ export interface ProgressProps
   extends Omit<ViewProps, 'children'>,
     ProgressVariantProps {
   className?: string;
-  /** Progress value, 0–100. Ignored when `indeterminate` is set. */
+  /**
+   * Where the work has got to, somewhere between `minValue` and `maxValue`.
+   * Ignored when `indeterminate` is set.
+   */
   value?: number;
+  /**
+   * The bottom of the range — the value at which the bar reads as empty.
+   * Defaults to `0`.
+   */
+  minValue?: number;
+  /**
+   * The top of the range — the value at which the bar reads as full. Defaults
+   * to `100`, so a bare percentage keeps working with neither bound set.
+   */
+  maxValue?: number;
   /** Show a looping animation for unknown-duration work. */
   indeterminate?: boolean;
   /** Extra classes for the moving indicator. */
@@ -75,37 +88,59 @@ export interface ProgressProps
    */
   valueLabel?: string;
   /**
-   * Format the value label as a fraction of the whole with `Intl.NumberFormat`
-   * — e.g. `{ style: 'currency', currency: 'USD' }`. Falls back to a rounded
-   * percent when omitted.
+   * How to write the value, through `Intl.NumberFormat`. A `percent` style
+   * formats how far along the bar is; every other style formats the value
+   * itself, so `{ style: 'currency', currency: 'USD' }` against a `maxValue`
+   * of `2000` reads `$1,250.00` rather than a percentage of it. Falls back to
+   * a rounded percent when omitted.
    */
   formatOptions?: Intl.NumberFormatOptions;
   /** Extra classes for the label + value-label row. */
   headerClassName?: string;
 }
 
-function clamp(value: number) {
-  'worklet';
-  if (value < 0) return 0;
-  if (value > 100) return 100;
+/** `value` held inside the range, so a stray number cannot escape the track. */
+function clamp(value: number, min: number, max: number) {
+  if (!(value > min)) return min;
+  if (value > max) return max;
   return value;
 }
 
-/** The right-hand caption: an explicit override, an Intl fraction, or a percent. */
+/**
+ * How far along the bar is, 0–1. An empty or inverted range has no meaningful
+ * position in it, so it reads as empty rather than dividing by zero.
+ */
+function fractionOf(value: number, min: number, max: number) {
+  const span = max - min;
+  if (!(span > 0)) return 0;
+  return clamp((value - min) / span, 0, 1);
+}
+
+/**
+ * The right-hand caption: an explicit override, an `Intl` rendering, or a
+ * rounded percent.
+ *
+ * A `percent` style is given the fraction, because that is what a percentage
+ * of the range means; every other style is given the value, because a currency
+ * or a byte count is a quantity and not a proportion.
+ */
 function formatValue(
   value: number,
+  fraction: number,
   valueLabel?: string,
   formatOptions?: Intl.NumberFormatOptions
 ) {
   if (valueLabel != null) return valueLabel;
   if (formatOptions) {
     try {
-      return new Intl.NumberFormat(undefined, formatOptions).format(value / 100);
+      return new Intl.NumberFormat(undefined, formatOptions).format(
+        formatOptions.style === 'percent' ? fraction : value
+      );
     } catch {
       // Some engines ship a partial Intl; fall through to the plain percent.
     }
   }
-  return `${Math.round(value)}%`;
+  return `${Math.round(fraction * 100)}%`;
 }
 
 /**
@@ -115,6 +150,12 @@ function formatValue(
  *
  * Pass `label` or `showValueLabel` to caption the bar with a header row; the
  * bare track renders when neither is set, so existing call sites are untouched.
+ *
+ * The value is read against `minValue` / `maxValue`, which default to 0 and
+ * 100 — so a percentage needs neither. Set them and the bar speaks in whatever
+ * the work is actually counted in: bytes uploaded, seats filled, points
+ * scored. Nothing has to be converted to a percent on the way in, and the
+ * screen reader is told the real range rather than a derived one.
  */
 export const Progress = forwardRef<View, ProgressProps>(
   (
@@ -123,6 +164,8 @@ export const Progress = forwardRef<View, ProgressProps>(
       indicatorClassName,
       headerClassName,
       value = 0,
+      minValue = 0,
+      maxValue = 100,
       indeterminate = false,
       label,
       showValueLabel = false,
@@ -139,23 +182,33 @@ export const Progress = forwardRef<View, ProgressProps>(
     // Yoga mirrors the track; the bar sliding along it is a transform, so it
     // has to be turned around itself.
     const sign = useDirectionSign();
-    const progress = useSharedValue(clamp(value) / 100);
+    const target = fractionOf(value, minValue, maxValue);
+    const progress = useSharedValue(target);
     const slide = useSharedValue(0);
 
-    const target = clamp(value) / 100;
-
+    /**
+     * The loop is tied to `indeterminate` alone. Restarting it whenever the
+     * value moved used to leave `withRepeat` cycling from wherever the bar had
+     * got to, so a bar that kept receiving values while looping ended up
+     * sweeping a shrinking sliver of the track instead of crossing it.
+     */
     useEffect(() => {
-      if (indeterminate) {
-        slide.value = withRepeat(
-          withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
-          -1,
-          false
-        );
-        return () => cancelAnimation(slide);
-      }
+      if (!indeterminate) return undefined;
+      slide.value = 0;
+      slide.value = withRepeat(
+        withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        false
+      );
+      return () => cancelAnimation(slide);
+    }, [indeterminate, slide]);
+
+    // The fill follows the value, and picks up from wherever the loop left it
+    // when a bar stops being indeterminate mid-flight.
+    useEffect(() => {
+      if (indeterminate) return;
       progress.value = withSpring(target, SPRING);
-      return undefined;
-    }, [indeterminate, target, progress, slide]);
+    }, [indeterminate, target, progress]);
 
     const onLayout = (event: LayoutChangeEvent) => {
       trackWidth.value = event.nativeEvent.layout.width;
@@ -188,6 +241,12 @@ export const Progress = forwardRef<View, ProgressProps>(
     // The value label is meaningless while looping, so it is dropped there.
     const showValue = showValueLabel && !indeterminate;
     const hasHeader = label != null || showValue;
+    const spoken = formatValue(
+      clamp(value, minValue, maxValue),
+      target,
+      valueLabel,
+      formatOptions
+    );
 
     const track = (
       <View
@@ -195,7 +254,16 @@ export const Progress = forwardRef<View, ProgressProps>(
         accessibilityRole="progressbar"
         accessibilityLabel={label}
         accessibilityValue={
-          indeterminate ? undefined : { min: 0, max: 100, now: clamp(value) }
+          indeterminate
+            ? undefined
+            : {
+                min: minValue,
+                max: maxValue,
+                now: clamp(value, minValue, maxValue),
+                // Without this the range is read as a bare number. `text` is
+                // what carries the unit — the percent sign, the currency.
+                text: spoken,
+              }
         }
         className={slots.track({ className })}
         onLayout={onLayout}
@@ -222,7 +290,7 @@ export const Progress = forwardRef<View, ProgressProps>(
           )}
           {showValue ? (
             <Text size="sm" muted className={cn(label == null && 'ms-auto')}>
-              {formatValue(clamp(value), valueLabel, formatOptions)}
+              {spoken}
             </Text>
           ) : null}
         </View>

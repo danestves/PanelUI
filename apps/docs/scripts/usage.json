@@ -2600,13 +2600,13 @@
     }
   },
   "progress": {
-    "intro": "A progress bar, determinate or indeterminate, animated on the UI thread. Caption it with a label and a value readout when the bar needs a heading.",
-    "usage": "<Progress value={uploaded} />\n<Progress value={70} color=\"success\" size=\"lg\" />\n<Progress indeterminate color=\"info\" />",
-    "notes": "`value` is `0–100`. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. `formatOptions` renders the readout with `Intl.NumberFormat` over `value / 100`.",
+    "intro": "A progress bar, determinate or indeterminate, animated on the UI thread. Reads its value against a range you set, and captions itself with a label and a value readout when the bar needs a heading.",
+    "usage": "<Progress value={uploaded} />\n<Progress value={70} color=\"success\" size=\"lg\" />\n<Progress value={1250} maxValue={2000} label=\"Budget\" showValueLabel />\n<Progress indeterminate color=\"info\" />",
+    "notes": "`value` is read against `minValue` and `maxValue`, which default to `0` and `100` — a percentage needs neither. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. The animation runs on the UI thread and stops when reduce-motion is on.\n\n### Writing the value\n\n`formatOptions` renders the readout through `Intl.NumberFormat`. A `percent` style is given how far along the bar is; every other style is given the value itself, so a currency or a byte count comes out as the quantity it is rather than as a proportion of the range. `valueLabel` replaces the whole thing when the text is not a number at all.\n\nWhatever the readout says is also what a screen reader is told, alongside the real range — so a bar counting seats reads \"18 of 24\" rather than \"75\".",
     "examples": [
       {
         "title": "Determinate",
-        "description": "`value` is a percentage from 0 to 100.",
+        "description": "`value` against the default range of 0 to 100 — a plain percentage.",
         "code": "<Progress value={72} />\n\n<Progress value={uploaded / total * 100} color=\"success\" size=\"lg\" />"
       },
       {
@@ -2619,6 +2619,11 @@
           "width": 1179,
           "height": 629
         }
+      },
+      {
+        "title": "A range of its own",
+        "description": "`minValue` and `maxValue` let the bar take the numbers the work is actually counted in. Nothing has to be converted to a percentage on the way in, and the screen reader is told the real range rather than a derived one.",
+        "code": "<Progress\n  value={1250}\n  maxValue={2000}\n  label=\"Budget\"\n  formatOptions={{ style: 'currency', currency: 'USD' }}\n  showValueLabel\n/>\n\n<Progress\n  value={18}\n  maxValue={24}\n  label=\"Seats\"\n  valueLabel={`${18} of ${24}`}\n  color=\"info\"\n  showValueLabel\n/>"
       },
       {
         "title": "Indeterminate",
@@ -5474,5 +5479,56 @@
     "hideVariants": [
       "variant"
     ]
+  },
+  "swipe": {
+    "intro": "A row that slides aside to reveal the things you can do to it. The actions sit behind the row rather than beside it, so nothing about the layout changes when one opens — the row is the only thing that moves, and it moves on the UI thread.",
+    "usage": "<Swipe>\n  <Swipe.End>\n    <Swipe.Action\n      icon={<TrashIcon />}\n      label=\"Delete\"\n      color=\"destructive\"\n      onPress={() => remove(id)}\n    />\n  </Swipe.End>\n  <Item variant=\"outline\">\n    <Item.Content>\n      <Item.Title>Invoice.pdf</Item.Title>\n      <Item.Description>2.4 MB</Item.Description>\n    </Item.Content>\n  </Item>\n</Swipe>",
+    "extraImports": [
+      "Item",
+      "Text",
+      "Direction",
+      "TrashIcon",
+      "BookmarkIcon",
+      "BellIcon",
+      "CheckIcon"
+    ],
+    "anatomy": "<Swipe>\n  <Swipe.Start>\n    <Swipe.Action label=\"…\" />\n  </Swipe.Start>\n  <Swipe.End>\n    <Swipe.Action label=\"…\" />\n  </Swipe.End>\n  {/* the row itself — anything at all */}\n</Swipe>",
+    "parts": {
+      "Start": "Actions revealed by dragging toward the end edge. Declares which side its children belong to; the root lays them out.",
+      "End": "Actions revealed by dragging toward the start edge — the destructive side by convention.",
+      "Action": "One tile: an icon, a label, and what to run. Sized by its own content down to a minimum wide enough to hit."
+    },
+    "partNotes": "The panels are markers, not containers. The root lifts their children out and lays them out itself, because it is the root that knows how wide the gap behind the row currently is — so a `className` on a panel styles nothing. Order does not matter: the panels are recognised by type, and everything else you pass is the row.",
+    "examples": [
+      {
+        "title": "Swipe to delete",
+        "description": "The common case. One action on the end side, in the destructive colour, and a drag carried far enough fires it without the tile ever being tapped.",
+        "code": "const [rows, setRows] = useState(['Invoice.pdf', 'Contract.docx', 'Notes.md']);\n\n<Item.Group>\n  {rows.map((name) => (\n    <Swipe key={name} haptics>\n      <Swipe.End>\n        <Swipe.Action\n          icon={<TrashIcon />}\n          label=\"Delete\"\n          color=\"destructive\"\n          onPress={() => setRows((r) => r.filter((n) => n !== name))}\n        />\n      </Swipe.End>\n      <Item>\n        <Item.Content>\n          <Item.Title>{name}</Item.Title>\n        </Item.Content>\n      </Item>\n    </Swipe>\n  ))}\n</Item.Group>"
+      },
+      {
+        "title": "Both sides",
+        "description": "A panel on each side, with more than one tile on the end. The tiles pack against the row and emerge from under it as it moves, so they are whole and readable by the time the row has cleared them.",
+        "code": "<Swipe>\n  <Swipe.Start>\n    <Swipe.Action icon={<CheckIcon />} label=\"Done\" color=\"success\" onPress={complete} />\n  </Swipe.Start>\n  <Swipe.End>\n    <Swipe.Action icon={<BellIcon />} label=\"Snooze\" color=\"warning\" onPress={snooze} />\n    <Swipe.Action icon={<TrashIcon />} label=\"Delete\" color=\"destructive\" onPress={remove} />\n  </Swipe.End>\n  <Item>\n    <Item.Content>\n      <Item.Title>Renew the domain</Item.Title>\n      <Item.Description>Due Friday</Item.Description>\n    </Item.Content>\n  </Item>\n</Swipe>"
+      },
+      {
+        "title": "Without the full swipe",
+        "description": "`fullSwipe={false}` makes the row open and stop there, so every action has to be tapped. Worth setting when the outermost action destroys something that cannot be undone, since a full swipe is easy to perform by accident on a fast list.",
+        "code": "<Swipe fullSwipe={false}>\n  <Swipe.End>\n    <Swipe.Action icon={<TrashIcon />} label=\"Delete\" color=\"destructive\" onPress={remove} />\n  </Swipe.End>\n  <Item>\n    <Item.Content>\n      <Item.Title>Production database</Item.Title>\n    </Item.Content>\n  </Item>\n</Swipe>"
+      },
+      {
+        "title": "Keeping the row open",
+        "description": "`keepOpen` leaves the row aside after the tile is tapped, for an action that toggles rather than finishes — the row still says what it did, and the same tile is there to undo it.",
+        "code": "const [saved, setSaved] = useState(false);\n\n<Swipe>\n  <Swipe.Start>\n    <Swipe.Action\n      icon={<BookmarkIcon />}\n      label={saved ? 'Saved' : 'Save'}\n      color={saved ? 'success' : 'primary'}\n      keepOpen\n      onPress={() => setSaved((s) => !s)}\n    />\n  </Swipe.Start>\n  <Item>\n    <Item.Content>\n      <Item.Title>Weekly digest</Item.Title>\n    </Item.Content>\n  </Item>\n</Swipe>"
+      },
+      {
+        "title": "Right to left",
+        "description": "The same row inside a right-to-left subtree. `Swipe.End` still means the edge text runs toward, so the actions sit on the left and the row opens rightward. Nothing about the markup changed.",
+        "code": "<Direction dir=\"rtl\" className=\"w-full\">\n  <Swipe>\n    <Swipe.End>\n      <Swipe.Action icon={<TrashIcon />} label=\"حذف\" color=\"destructive\" onPress={remove} />\n    </Swipe.End>\n    <Item>\n      <Item.Content>\n        <Item.Title>فاتورة</Item.Title>\n      </Item.Content>\n    </Item>\n  </Swipe>\n</Direction>"
+      }
+    ],
+    "variantCode": {
+      "color": "{/* `color` is a Swipe.Action prop — the panel behind the tiles takes the\n    outermost one, so an overshoot extends that action rather than opening a hole. */}\n<Swipe>\n  <Swipe.End>\n    <Swipe.Action label=\"Archive\" color=\"info\" onPress={archive} />\n    <Swipe.Action label=\"Delete\" color=\"destructive\" onPress={remove} />\n  </Swipe.End>\n  <Item>\n    <Item.Content>\n      <Item.Title>Row</Item.Title>\n    </Item.Content>\n  </Item>\n</Swipe>"
+    },
+    "notes": "A panel is exactly as wide as the gap the row has left behind — never wider, so it cannot paint over the row, and never narrower, so carrying the drag past the tiles extends the outermost action's colour instead of opening a hole onto the screen underneath. The row therefore needs no background of its own, and the two never overlap at any point in the gesture.\n\n### Which action a full swipe fires\n\nThe one furthest from the row, because that is the one the gesture travelled all the way to. On the end side that is the last tile declared, on the start side the first — in both cases the tile at the outer edge, whose colour the panel takes and which grows to fill the gap as the drag is carried past it. Put the destructive action there, or turn the behaviour off with `fullSwipe={false}`.\n\n### Sharing the screen with a scroller\n\nThe drag waits for clearly horizontal intent and fails outright the moment the finger commits vertically, so a list of swipeable rows scrolls the way an ordinary list does and no row twitches open under a scroll. Inside a *horizontal* scroller the two do want the same axis — there the row should be `disabled`, or the scroller should be the one that gives way.\n\n### Reaching the actions without the gesture\n\nA swipe is invisible to a screen reader: there is nothing on screen to announce, and no way to discover the gesture from the row itself. Every action is therefore also published as an accessibility action on the row, named by its `label` — which is why `label` is required and why it should say what the action does rather than name an icon.\n\n### Opening it yourself\n\nThe row is uncontrolled, and a ref is how you reach it: `open('start' | 'end')` and `close()`. `onOpenChange` reports the side that opened, or `null` when the row closed — enough to keep only one row of a list open at a time by closing the previous one."
   }
 }

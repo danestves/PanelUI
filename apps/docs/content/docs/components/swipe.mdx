@@ -1,0 +1,250 @@
+---
+title: Swipe
+description: A row that slides aside to reveal the things you can do to it.
+status: new
+---
+
+A row that slides aside to reveal the things you can do to it. The actions sit behind the row rather than beside it, so nothing about the layout changes when one opens — the row is the only thing that moves, and it moves on the UI thread.
+
+## Installation
+
+Swipe ships with the library — no separate install.
+
+```tsx
+import { Swipe, Item, Text, Direction, TrashIcon, BookmarkIcon, BellIcon, CheckIcon } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add swipe
+```
+
+## Usage
+
+```tsx
+<Swipe>
+  <Swipe.End>
+    <Swipe.Action
+      icon={<TrashIcon />}
+      label="Delete"
+      color="destructive"
+      onPress={() => remove(id)}
+    />
+  </Swipe.End>
+  <Item variant="outline">
+    <Item.Content>
+      <Item.Title>Invoice.pdf</Item.Title>
+      <Item.Description>2.4 MB</Item.Description>
+    </Item.Content>
+  </Item>
+</Swipe>
+```
+
+## Composition
+
+```tsx
+<Swipe>
+  <Swipe.Start>
+    <Swipe.Action label="…" />
+  </Swipe.Start>
+  <Swipe.End>
+    <Swipe.Action label="…" />
+  </Swipe.End>
+  {/* the row itself — anything at all */}
+</Swipe>
+```
+
+The panels are markers, not containers. The root lifts their children out and lays them out itself, because it is the root that knows how wide the gap behind the row currently is — so a `className` on a panel styles nothing. Order does not matter: the panels are recognised by type, and everything else you pass is the row.
+
+## Examples
+
+### Swipe to delete
+
+The common case. One action on the end side, in the destructive colour, and a drag carried far enough fires it without the tile ever being tapped.
+
+```tsx
+const [rows, setRows] = useState(['Invoice.pdf', 'Contract.docx', 'Notes.md']);
+
+<Item.Group>
+  {rows.map((name) => (
+    <Swipe key={name} haptics>
+      <Swipe.End>
+        <Swipe.Action
+          icon={<TrashIcon />}
+          label="Delete"
+          color="destructive"
+          onPress={() => setRows((r) => r.filter((n) => n !== name))}
+        />
+      </Swipe.End>
+      <Item>
+        <Item.Content>
+          <Item.Title>{name}</Item.Title>
+        </Item.Content>
+      </Item>
+    </Swipe>
+  ))}
+</Item.Group>
+```
+
+### Both sides
+
+A panel on each side, with more than one tile on the end. The tiles pack against the row and emerge from under it as it moves, so they are whole and readable by the time the row has cleared them.
+
+```tsx
+<Swipe>
+  <Swipe.Start>
+    <Swipe.Action icon={<CheckIcon />} label="Done" color="success" onPress={complete} />
+  </Swipe.Start>
+  <Swipe.End>
+    <Swipe.Action icon={<BellIcon />} label="Snooze" color="warning" onPress={snooze} />
+    <Swipe.Action icon={<TrashIcon />} label="Delete" color="destructive" onPress={remove} />
+  </Swipe.End>
+  <Item>
+    <Item.Content>
+      <Item.Title>Renew the domain</Item.Title>
+      <Item.Description>Due Friday</Item.Description>
+    </Item.Content>
+  </Item>
+</Swipe>
+```
+
+### Without the full swipe
+
+`fullSwipe={false}` makes the row open and stop there, so every action has to be tapped. Worth setting when the outermost action destroys something that cannot be undone, since a full swipe is easy to perform by accident on a fast list.
+
+```tsx
+<Swipe fullSwipe={false}>
+  <Swipe.End>
+    <Swipe.Action icon={<TrashIcon />} label="Delete" color="destructive" onPress={remove} />
+  </Swipe.End>
+  <Item>
+    <Item.Content>
+      <Item.Title>Production database</Item.Title>
+    </Item.Content>
+  </Item>
+</Swipe>
+```
+
+### Keeping the row open
+
+`keepOpen` leaves the row aside after the tile is tapped, for an action that toggles rather than finishes — the row still says what it did, and the same tile is there to undo it.
+
+```tsx
+const [saved, setSaved] = useState(false);
+
+<Swipe>
+  <Swipe.Start>
+    <Swipe.Action
+      icon={<BookmarkIcon />}
+      label={saved ? 'Saved' : 'Save'}
+      color={saved ? 'success' : 'primary'}
+      keepOpen
+      onPress={() => setSaved((s) => !s)}
+    />
+  </Swipe.Start>
+  <Item>
+    <Item.Content>
+      <Item.Title>Weekly digest</Item.Title>
+    </Item.Content>
+  </Item>
+</Swipe>
+```
+
+### Right to left
+
+The same row inside a right-to-left subtree. `Swipe.End` still means the edge text runs toward, so the actions sit on the left and the row opens rightward. Nothing about the markup changed.
+
+```tsx
+<Direction dir="rtl" className="w-full">
+  <Swipe>
+    <Swipe.End>
+      <Swipe.Action icon={<TrashIcon />} label="حذف" color="destructive" onPress={remove} />
+    </Swipe.End>
+    <Item>
+      <Item.Content>
+        <Item.Title>فاتورة</Item.Title>
+      </Item.Content>
+    </Item>
+  </Swipe>
+</Direction>
+```
+
+## Variants
+
+### `color`
+
+- `default` *(default)*
+- `primary`
+- `success`
+- `warning`
+- `info`
+- `destructive`
+
+```tsx
+{/* `color` is a Swipe.Action prop — the panel behind the tiles takes the
+    outermost one, so an overshoot extends that action rather than opening a hole. */}
+<Swipe>
+  <Swipe.End>
+    <Swipe.Action label="Archive" color="info" onPress={archive} />
+    <Swipe.Action label="Delete" color="destructive" onPress={remove} />
+  </Swipe.End>
+  <Item>
+    <Item.Content>
+      <Item.Title>Row</Item.Title>
+    </Item.Content>
+  </Item>
+</Swipe>
+```
+
+## API Reference
+
+### Swipe.Action
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `label` | `string` | — | What the action does. Also what a screen reader is offered. |
+| `icon` | `ReactNode` | — | Drawn above the label, tinted to match it. Pass the glyph, not a colour. |
+| `onPress` | `() => void` | — | Run when the tile is tapped, or when a full swipe reaches it. |
+| `keepOpen` | `boolean` | `false` | Leave the row open after the action runs. Off by default: an action that has already happened has nothing left to offer, and a row left standing open is the most common way a swipe list ends up feeling stuck. |
+| `labelClassName` | `string` | — | Extra classes for the label. |
+
+### Swipe.Panel
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Swipe
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `fullSwipe` | `boolean` | `true` | Let a drag carried well past the panel fire its outermost action on release, without the tile ever being tapped. On by default, and the reason the far end of a panel is the destructive slot by convention. |
+| `disabled` | `boolean` | `false` | Turn the gesture off and leave the row static. The tiles stay tappable. |
+| `haptics` | `boolean` | `false` | Tick when a drag crosses the point at which letting go fires an action. |
+| `onOpenChange` | `(side: SwipeOpenSide) => void` | — | Told which side opened, or `null` when the row closed. |
+| `contentClassName` | `string` | — | Extra classes for the moving row. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+A panel is exactly as wide as the gap the row has left behind — never wider, so it cannot paint over the row, and never narrower, so carrying the drag past the tiles extends the outermost action's colour instead of opening a hole onto the screen underneath. The row therefore needs no background of its own, and the two never overlap at any point in the gesture.
+
+### Which action a full swipe fires
+
+The one furthest from the row, because that is the one the gesture travelled all the way to. On the end side that is the last tile declared, on the start side the first — in both cases the tile at the outer edge, whose colour the panel takes and which grows to fill the gap as the drag is carried past it. Put the destructive action there, or turn the behaviour off with `fullSwipe={false}`.
+
+### Sharing the screen with a scroller
+
+The drag waits for clearly horizontal intent and fails outright the moment the finger commits vertically, so a list of swipeable rows scrolls the way an ordinary list does and no row twitches open under a scroll. Inside a *horizontal* scroller the two do want the same axis — there the row should be `disabled`, or the scroller should be the one that gives way.
+
+### Reaching the actions without the gesture
+
+A swipe is invisible to a screen reader: there is nothing on screen to announce, and no way to discover the gesture from the row itself. Every action is therefore also published as an accessibility action on the row, named by its `label` — which is why `label` is required and why it should say what the action does rather than name an icon.
+
+### Opening it yourself
+
+The row is uncontrolled, and a ref is how you reach it: `open('start' | 'end')` and `close()`. `onOpenChange` reports the side that opened, or `null` when the row closed — enough to keep only one row of a list open at a time by closing the previous one.

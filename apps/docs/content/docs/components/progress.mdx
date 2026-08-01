@@ -1,9 +1,10 @@
 ---
 title: Progress
 description: Determinate and indeterminate progress bar.
+status: updated
 ---
 
-A progress bar, determinate or indeterminate, animated on the UI thread. Caption it with a label and a value readout when the bar needs a heading.
+A progress bar, determinate or indeterminate, animated on the UI thread. Reads its value against a range you set, and captions itself with a label and a value readout when the bar needs a heading.
 
 <PreviewVideo
   src="/previews/progress.mp4"
@@ -32,6 +33,7 @@ npx panelui-cli@latest add progress
 ```tsx
 <Progress value={uploaded} />
 <Progress value={70} color="success" size="lg" />
+<Progress value={1250} maxValue={2000} label="Budget" showValueLabel />
 <Progress indeterminate color="info" />
 ```
 
@@ -39,7 +41,7 @@ npx panelui-cli@latest add progress
 
 ### Determinate
 
-`value` is a percentage from 0 to 100.
+`value` against the default range of 0 to 100 — a plain percentage.
 
 ```tsx
 <Progress value={72} />
@@ -65,6 +67,29 @@ npx panelui-cli@latest add progress
   value={40}
   label="Storage"
   valueLabel="8.2 GB of 20 GB"
+  showValueLabel
+/>
+```
+
+### A range of its own
+
+`minValue` and `maxValue` let the bar take the numbers the work is actually counted in. Nothing has to be converted to a percentage on the way in, and the screen reader is told the real range rather than a derived one.
+
+```tsx
+<Progress
+  value={1250}
+  maxValue={2000}
+  label="Budget"
+  formatOptions={{ style: 'currency', currency: 'USD' }}
+  showValueLabel
+/>
+
+<Progress
+  value={18}
+  maxValue={24}
+  label="Seats"
+  valueLabel={`${18} of ${24}`}
+  color="info"
   showValueLabel
 />
 ```
@@ -137,17 +162,25 @@ For work with no measurable progress. The animation runs on the UI thread and st
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `value` | `number` | `0` | Progress value, 0–100. Ignored when `indeterminate` is set. |
+| `value` | `number` | `0` | Where the work has got to, somewhere between `minValue` and `maxValue`. Ignored when `indeterminate` is set. |
+| `minValue` | `number` | `0` | The bottom of the range — the value at which the bar reads as empty. Defaults to `0`. |
+| `maxValue` | `number` | `100` | The top of the range — the value at which the bar reads as full. Defaults to `100`, so a bare percentage keeps working with neither bound set. |
 | `indeterminate` | `boolean` | `false` | Show a looping animation for unknown-duration work. |
 | `indicatorClassName` | `string` | — | Extra classes for the moving indicator. |
 | `label` | `string` | — | Caption drawn above the track, on the left. Supplying it (or `showValueLabel`) wraps the bar in a header row; the track alone renders otherwise. |
 | `showValueLabel` | `boolean` | `false` | Draw the percentage above the track, on the right. Hidden while `indeterminate` — there is nothing meaningful to show. |
 | `valueLabel` | `string` | — | Text for the value label. Overrides the formatted percentage — use it for a byte count, a step tally, anything that is not a bare percent. |
-| `formatOptions` | `Intl.NumberFormatOptions` | — | Format the value label as a fraction of the whole with `Intl.NumberFormat` — e.g. `{ style: 'currency', currency: 'USD' }`. Falls back to a rounded percent when omitted. |
+| `formatOptions` | `Intl.NumberFormatOptions` | — | How to write the value, through `Intl.NumberFormat`. A `percent` style formats how far along the bar is; every other style formats the value itself, so `{ style: 'currency', currency: 'USD' }` against a `maxValue` of `2000` reads `$1,250.00` rather than a percentage of it. Falls back to a rounded percent when omitted. |
 | `headerClassName` | `string` | — | Extra classes for the label + value-label row. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
 
-`value` is `0–100`. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. `formatOptions` renders the readout with `Intl.NumberFormat` over `value / 100`.
+`value` is read against `minValue` and `maxValue`, which default to `0` and `100` — a percentage needs neither. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. The animation runs on the UI thread and stops when reduce-motion is on.
+
+### Writing the value
+
+`formatOptions` renders the readout through `Intl.NumberFormat`. A `percent` style is given how far along the bar is; every other style is given the value itself, so a currency or a byte count comes out as the quantity it is rather than as a proportion of the range. `valueLabel` replaces the whole thing when the text is not a number at all.
+
+Whatever the readout says is also what a screen reader is told, alongside the real range — so a bar counting seats reads "18 of 24" rather than "75".
