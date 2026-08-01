@@ -35,37 +35,35 @@ export const baseOptions: BaseLayoutProps = {
     url: '/',
   },
   /*
-   * `on: 'nav'` on every item is load-bearing. Fumadocs defaults link items to
-   * 'all', which renders them in the header *and* again at the top of the docs
-   * sidebar — duplicating Docs/Components/Theming above the real page tree and
-   * putting a GitHub link somewhere it does not belong.
+   * No `on` here, which means 'all' — and that is what puts these links in the
+   * mobile menu.
+   *
+   * They were 'nav' to stop them being duplicated above the page tree in the
+   * docs sidebar. But 'nav' is *only* the navbar: it leaves `menuItems` empty,
+   * and `menuItems` is what both mobile menus are built from. The trigger
+   * still rendered, so the landing page had a menu button that opened onto
+   * nothing and no way to reach the docs on a phone.
+   *
+   * The duplication it was avoiding does not happen in this layout anyway —
+   * the notebook sidebar renders these `lg:hidden`, above the tree on small
+   * screens only, which is exactly where they are wanted.
    */
   links: [
-    { type: 'main', on: 'nav', text: 'Docs', url: '/docs', active: 'nested-url' },
+    { type: 'main', text: 'Docs', url: '/docs', active: 'nested-url' },
     {
       type: 'main',
-      on: 'nav',
       text: 'Components',
       url: '/docs/components/button',
       active: 'nested-url',
     },
     {
-      type: 'main',
-      on: 'nav',
-      text: 'Customization',
-      url: '/docs/customization/colors',
-      active: 'nested-url',
-    },
-    {
       // Star count where available, a bare icon while the repo is private.
       type: 'custom',
-      on: 'nav',
       children: <GithubStars />,
       secondary: true,
     },
     {
       type: 'button',
-      on: 'nav',
       text: 'Get started',
       url: '/docs',
       secondary: true,
