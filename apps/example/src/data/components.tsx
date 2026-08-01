@@ -141,6 +141,7 @@ import {
   Steps,
   SunIcon,
   Surface,
+  Swipe,
   Switch,
   Table,
   Tabs,
@@ -7531,6 +7532,238 @@ function DrawerFiltersDemo() {
   );
 }
 
+/**
+ * A short list where every row deletes itself. The rows are state so the full
+ * swipe has something real to do — an action that only logs proves nothing
+ * about whether the row got out of the way afterwards.
+ */
+function SwipeDeleteDemo() {
+  const [rows, setRows] = useState([
+    { name: 'Invoice.pdf', meta: '2.4 MB' },
+    { name: 'Contract.docx', meta: '812 KB' },
+    { name: 'Notes.md', meta: '4 KB' },
+  ]);
+
+  if (rows.length === 0) {
+    return (
+      <View className="w-full gap-3">
+        <Text size="sm" muted>
+          Every row deleted.
+        </Text>
+        <Button
+          variant="outline"
+          size="sm"
+          onPress={() =>
+            setRows([
+              { name: 'Invoice.pdf', meta: '2.4 MB' },
+              { name: 'Contract.docx', meta: '812 KB' },
+              { name: 'Notes.md', meta: '4 KB' },
+            ])
+          }
+        >
+          Put them back
+        </Button>
+      </View>
+    );
+  }
+
+  return (
+    <View className="w-full overflow-hidden rounded-xl border border-border">
+      {rows.map((row, index) => (
+        <View key={row.name}>
+          <Swipe haptics>
+            <Swipe.End>
+              <Swipe.Action
+                icon={<TrashIcon />}
+                label="Delete"
+                color="destructive"
+                onPress={() =>
+                  setRows((current) => current.filter((r) => r.name !== row.name))
+                }
+              />
+            </Swipe.End>
+            <Item>
+              <Item.Media variant="icon">
+                <FileIcon />
+              </Item.Media>
+              <Item.Content>
+                <Item.Title>{row.name}</Item.Title>
+                <Item.Description>{row.meta}</Item.Description>
+              </Item.Content>
+            </Item>
+          </Swipe>
+          {index < rows.length - 1 ? <Item.Separator /> : null}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * A panel on each side, and more than one tile on the end — which is where the
+ * rule about the outermost action earns its keep: Delete is the far tile, so it
+ * is the one a full swipe reaches.
+ */
+function SwipeBothSidesDemo() {
+  const [status, setStatus] = useState('Drag the row either way.');
+
+  return (
+    <View className="w-full gap-3">
+      <View className="overflow-hidden rounded-xl border border-border">
+        <Swipe haptics onOpenChange={(side) => side && setStatus(`Open on the ${side}.`)}>
+          <Swipe.Start>
+            <Swipe.Action
+              icon={<CheckIcon />}
+              label="Done"
+              color="success"
+              onPress={() => setStatus('Marked done.')}
+            />
+          </Swipe.Start>
+          <Swipe.End>
+            <Swipe.Action
+              icon={<BellIcon />}
+              label="Snooze"
+              color="warning"
+              onPress={() => setStatus('Snoozed until tomorrow.')}
+            />
+            <Swipe.Action
+              icon={<TrashIcon />}
+              label="Delete"
+              color="destructive"
+              onPress={() => setStatus('Deleted.')}
+            />
+          </Swipe.End>
+          <Item>
+            <Item.Content>
+              <Item.Title>Renew the domain</Item.Title>
+              <Item.Description>Due Friday</Item.Description>
+            </Item.Content>
+          </Item>
+        </Swipe>
+      </View>
+      <Text size="sm" muted>
+        {status}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * The two halves of the full-swipe decision, side by side. The top row fires
+ * its action on a long drag; the bottom one opens and waits to be tapped.
+ */
+function SwipeFullSwipeDemo() {
+  const [log, setLog] = useState('Nothing fired yet.');
+
+  return (
+    <View className="w-full gap-4">
+      <View className="gap-2">
+        <Text size="sm" weight="medium">
+          fullSwipe (default)
+        </Text>
+        <View className="overflow-hidden rounded-xl border border-border">
+          <Swipe haptics>
+            <Swipe.End>
+              <Swipe.Action
+                icon={<TrashIcon />}
+                label="Delete"
+                color="destructive"
+                onPress={() => setLog('Fired by the swipe.')}
+              />
+            </Swipe.End>
+            <Item>
+              <Item.Content>
+                <Item.Title>Draft note</Item.Title>
+                <Item.Description>Carry the drag all the way</Item.Description>
+              </Item.Content>
+            </Item>
+          </Swipe>
+        </View>
+      </View>
+
+      <View className="gap-2">
+        <Text size="sm" weight="medium">
+          fullSwipe={'{false}'}
+        </Text>
+        <View className="overflow-hidden rounded-xl border border-border">
+          <Swipe fullSwipe={false}>
+            <Swipe.End>
+              <Swipe.Action
+                icon={<TrashIcon />}
+                label="Delete"
+                color="destructive"
+                onPress={() => setLog('Fired by the tile.')}
+              />
+            </Swipe.End>
+            <Item>
+              <Item.Content>
+                <Item.Title>Production database</Item.Title>
+                <Item.Description>The tile has to be tapped</Item.Description>
+              </Item.Content>
+            </Item>
+          </Swipe>
+        </View>
+      </View>
+
+      <Text size="sm" muted>
+        {log}
+      </Text>
+    </View>
+  );
+}
+
+/** `keepOpen` for an action that toggles rather than finishes. */
+function SwipeKeepOpenDemo() {
+  const [saved, setSaved] = useState(false);
+
+  return (
+    <View className="w-full overflow-hidden rounded-xl border border-border">
+      <Swipe>
+        <Swipe.Start>
+          <Swipe.Action
+            icon={<BookmarkIcon />}
+            label={saved ? 'Saved' : 'Save'}
+            color={saved ? 'success' : 'primary'}
+            keepOpen
+            onPress={() => setSaved((current) => !current)}
+          />
+        </Swipe.Start>
+        <Item>
+          <Item.Content>
+            <Item.Title>Weekly digest</Item.Title>
+            <Item.Description>{saved ? 'Saved for later' : 'Not saved'}</Item.Description>
+          </Item.Content>
+        </Item>
+      </Swipe>
+    </View>
+  );
+}
+
+/**
+ * The same row in a right-to-left subtree. `Swipe.End` still means the edge
+ * text runs toward, so the panel is on the left and the row opens rightward —
+ * without a word of the markup changing.
+ */
+function SwipeRtlDemo() {
+  return (
+    <Direction dir="rtl" className="w-full">
+      <View className="overflow-hidden rounded-xl border border-border">
+        <Swipe>
+          <Swipe.End>
+            <Swipe.Action icon={<TrashIcon />} label="حذف" color="destructive" />
+          </Swipe.End>
+          <Item>
+            <Item.Content>
+              <Item.Title>فاتورة يوليو</Item.Title>
+              <Item.Description>٢٫٤ ميغابايت</Item.Description>
+            </Item.Content>
+          </Item>
+        </Swipe>
+      </View>
+    </Direction>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /* Catalogue                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -10216,6 +10449,31 @@ export const COMPONENTS: ComponentEntry[] = [
         ),
       },
       {
+        // The bars below count money and seats, not percentages — nothing is
+        // converted on the way in, and the readout says what was counted.
+        label: 'A range of its own',
+        render: () => (
+          <View className="w-full gap-4">
+            <Progress
+              value={1250}
+              maxValue={2000}
+              label="Budget"
+              formatOptions={{ style: 'currency', currency: 'USD' }}
+              showValueLabel
+            />
+            <Progress
+              value={18}
+              maxValue={24}
+              color="info"
+              label="Seats"
+              valueLabel="18 of 24"
+              showValueLabel
+            />
+            <Progress value={72} minValue={40} maxValue={80} color="success" showValueLabel />
+          </View>
+        ),
+      },
+      {
         label: 'Colors',
         render: () => (
           <View className="w-full gap-4">
@@ -10275,31 +10533,6 @@ export const COMPONENTS: ComponentEntry[] = [
           <View className="w-full gap-5">
             <Rating precision={0.5} defaultValue={3.5} />
             <Rating precision={0.5} defaultValue={2.5} color="primary" />
-          </View>
-        ),
-      },
-      {
-        // The bars below count money and seats, not percentages — nothing is
-        // converted on the way in, and the readout says what was counted.
-        label: 'A range of its own',
-        render: () => (
-          <View className="w-full gap-4">
-            <Progress
-              value={1250}
-              maxValue={2000}
-              label="Budget"
-              formatOptions={{ style: 'currency', currency: 'USD' }}
-              showValueLabel
-            />
-            <Progress
-              value={18}
-              maxValue={24}
-              color="info"
-              label="Seats"
-              valueLabel="18 of 24"
-              showValueLabel
-            />
-            <Progress value={72} minValue={40} maxValue={80} color="success" showValueLabel />
           </View>
         ),
       },
@@ -11475,6 +11708,18 @@ export const COMPONENTS: ComponentEntry[] = [
           </Steps>
         ),
       },
+    ],
+  },
+  {
+    slug: 'swipe',
+    name: 'Swipe',
+    summary: 'A row that slides aside to reveal its actions',
+    demos: [
+      { label: 'Swipe to delete', render: () => <SwipeDeleteDemo /> },
+      { label: 'Both sides', render: () => <SwipeBothSidesDemo /> },
+      { label: 'Full swipe', render: () => <SwipeFullSwipeDemo /> },
+      { label: 'Keeping the row open', render: () => <SwipeKeepOpenDemo /> },
+      { label: 'Right to left', render: () => <SwipeRtlDemo /> },
     ],
   },
   {

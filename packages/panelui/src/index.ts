@@ -620,6 +620,15 @@ export {
   type StepsOrientation,
 } from './components/steps';
 export { Surface, type SurfaceProps } from './components/surface';
+export {
+  Swipe,
+  type SwipeProps,
+  type SwipePanelProps,
+  type SwipeActionProps,
+  type SwipeActionColor,
+  type SwipeOpenSide,
+  type SwipeHandle,
+} from './components/swipe';
 export { Switch, type SwitchProps } from './components/switch';
 export {
   Timeline,
