@@ -2600,13 +2600,13 @@
     }
   },
   "progress": {
-    "intro": "A progress bar, determinate or indeterminate, animated on the UI thread. Caption it with a label and a value readout when the bar needs a heading.",
-    "usage": "<Progress value={uploaded} />\n<Progress value={70} color=\"success\" size=\"lg\" />\n<Progress indeterminate color=\"info\" />",
-    "notes": "`value` is `0–100`. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. `formatOptions` renders the readout with `Intl.NumberFormat` over `value / 100`.",
+    "intro": "A progress bar, determinate or indeterminate, animated on the UI thread. Reads its value against a range you set, and captions itself with a label and a value readout when the bar needs a heading.",
+    "usage": "<Progress value={uploaded} />\n<Progress value={70} color=\"success\" size=\"lg\" />\n<Progress value={1250} maxValue={2000} label=\"Budget\" showValueLabel />\n<Progress indeterminate color=\"info\" />",
+    "notes": "`value` is read against `minValue` and `maxValue`, which default to `0` and `100` — a percentage needs neither. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. The animation runs on the UI thread and stops when reduce-motion is on.\n\n### Writing the value\n\n`formatOptions` renders the readout through `Intl.NumberFormat`. A `percent` style is given how far along the bar is; every other style is given the value itself, so a currency or a byte count comes out as the quantity it is rather than as a proportion of the range. `valueLabel` replaces the whole thing when the text is not a number at all.\n\nWhatever the readout says is also what a screen reader is told, alongside the real range — so a bar counting seats reads \"18 of 24\" rather than \"75\".",
     "examples": [
       {
         "title": "Determinate",
-        "description": "`value` is a percentage from 0 to 100.",
+        "description": "`value` against the default range of 0 to 100 — a plain percentage.",
         "code": "<Progress value={72} />\n\n<Progress value={uploaded / total * 100} color=\"success\" size=\"lg\" />"
       },
       {
@@ -2619,6 +2619,11 @@
           "width": 1179,
           "height": 629
         }
+      },
+      {
+        "title": "A range of its own",
+        "description": "`minValue` and `maxValue` let the bar take the numbers the work is actually counted in. Nothing has to be converted to a percentage on the way in, and the screen reader is told the real range rather than a derived one.",
+        "code": "<Progress\n  value={1250}\n  maxValue={2000}\n  label=\"Budget\"\n  formatOptions={{ style: 'currency', currency: 'USD' }}\n  showValueLabel\n/>\n\n<Progress\n  value={18}\n  maxValue={24}\n  label=\"Seats\"\n  valueLabel={`${18} of ${24}`}\n  color=\"info\"\n  showValueLabel\n/>"
       },
       {
         "title": "Indeterminate",

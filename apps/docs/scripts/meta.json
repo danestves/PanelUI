@@ -280,7 +280,10 @@
   "progress": [
     "Progress",
     "Determinate and indeterminate progress bar.",
-    "react native progress bar"
+    "react native progress bar",
+    {
+      "updatedIn": "0.35.0"
+    }
   ],
   "radio-group": [
     "RadioGroup",

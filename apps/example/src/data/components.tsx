@@ -10279,6 +10279,31 @@ export const COMPONENTS: ComponentEntry[] = [
         ),
       },
       {
+        // The bars below count money and seats, not percentages — nothing is
+        // converted on the way in, and the readout says what was counted.
+        label: 'A range of its own',
+        render: () => (
+          <View className="w-full gap-4">
+            <Progress
+              value={1250}
+              maxValue={2000}
+              label="Budget"
+              formatOptions={{ style: 'currency', currency: 'USD' }}
+              showValueLabel
+            />
+            <Progress
+              value={18}
+              maxValue={24}
+              color="info"
+              label="Seats"
+              valueLabel="18 of 24"
+              showValueLabel
+            />
+            <Progress value={72} minValue={40} maxValue={80} color="success" showValueLabel />
+          </View>
+        ),
+      },
+      {
         label: 'Colors',
         render: () => (
           <View className="w-full gap-4">
