@@ -879,6 +879,68 @@ function DatePickerSheetDemo() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Input — content inside the field                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The case this is here to prove: an icon that stays put when a label lands
+ * above the field. The content is positioned against the field box, so nothing
+ * added around the field can move it.
+ */
+function InputContentDemo() {
+  const [query, setQuery] = useState('');
+
+  return (
+    <View className="w-full gap-4">
+      <Input
+        label="Description"
+        placeholder="A short description"
+        description="Shown on your public profile."
+        startContent={<PencilIcon size={18} />}
+      />
+
+      <Input
+        placeholder="Find a project"
+        value={query}
+        onChangeText={setQuery}
+        startContent={<SearchIcon size={18} />}
+        // `interactiveContent` because this one is a button rather than a
+        // decoration — without it the press would fall through to the field.
+        interactiveContent={query.length > 0}
+        endContent={
+          query ? (
+            <Pressable onPress={() => setQuery('')} accessibilityLabel="Clear search">
+              <XIcon size={16} />
+            </Pressable>
+          ) : null
+        }
+      />
+
+      <Input
+        label="Amount"
+        placeholder="0.00"
+        keyboardType="decimal-pad"
+        startContent={<Text muted>$</Text>}
+        endContent={<Text muted>USD</Text>}
+      />
+
+      <Input
+        label="Note"
+        multiline
+        placeholder="Anything worth remembering"
+        startContent={<PencilIcon size={18} />}
+      />
+
+      <Text size="sm" muted>
+        Every field here has a label, and the icons have not moved. That is the
+        difference from wrapping the whole component — a label lands above the
+        field, so anything centred on the component drifts up with it.
+      </Text>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* TimePicker                                                                 */
 /* -------------------------------------------------------------------------- */
 
@@ -1000,40 +1062,44 @@ function TimePickerFrameDemo() {
   const setEditing = edge === 'start' ? setStart : setEnd;
 
   return (
-    <Frame className="w-full">
-      <Frame.Header>
-        <Frame.Title>Time</Frame.Title>
-        <Frame.Action>
-          {formatTime(start)} – {formatTime(end)}
-        </Frame.Action>
-      </Frame.Header>
-      <Frame.Panel>
-        {/* `items-center` centres the face and its list. The toggle row opts
-            out of it with `w-full`, so the two ends of the span sit at the two
-            edges of the card. */}
-        <Frame.Section className="items-center gap-4">
-          {/* Pushed to opposite ends rather than sitting together in the
-              middle: they are the two ends of one span, and the row reads as
-              that span when they are laid out like it. */}
-          <ToggleButtonGroup
-            selectionMode="single"
-            size="sm"
-            value={[edge]}
-            onValueChange={(next) => setEdge(next[0] ?? 'start')}
-            className="w-full justify-between px-1"
-          >
-            <ToggleButton id="start">Starts</ToggleButton>
-            <ToggleButton id="end">Ends</ToggleButton>
-          </ToggleButtonGroup>
-          <TimePicker
-            presentation="inline"
-            layout="clock"
-            value={editing}
-            onValueChange={setEditing}
-          />
-        </Frame.Section>
-      </Frame.Panel>
-    </Frame>
+    <View className="w-full gap-3">
+      {/*
+        Outside the card, not in it. The card is one time being edited; the
+        toggle chooses *which* time that is, which is a decision about the card
+        rather than a control inside it. At opposite ends because they are the
+        two ends of one span, and the row reads as that span when it is laid
+        out like one.
+      */}
+      <ToggleButtonGroup
+        selectionMode="single"
+        size="sm"
+        value={[edge]}
+        onValueChange={(next) => setEdge(next[0] ?? 'start')}
+        className="w-full justify-between px-1"
+      >
+        <ToggleButton id="start">Starts</ToggleButton>
+        <ToggleButton id="end">Ends</ToggleButton>
+      </ToggleButtonGroup>
+
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Time</Frame.Title>
+          <Frame.Action>
+            {formatTime(start)} – {formatTime(end)}
+          </Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <Frame.Section className="items-center">
+            <TimePicker
+              presentation="inline"
+              layout="clock"
+              value={editing}
+              onValueChange={setEditing}
+            />
+          </Frame.Section>
+        </Frame.Panel>
+      </Frame>
+    </View>
   );
 }
 
@@ -9452,6 +9518,7 @@ export const COMPONENTS: ComponentEntry[] = [
     name: 'Input',
     summary: 'Text field with label and validation',
     demos: [
+      { label: 'Icons inside the field', render: () => <InputContentDemo /> },
       {
         label: 'States',
         render: () => (

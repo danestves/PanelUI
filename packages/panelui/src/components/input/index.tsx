@@ -14,13 +14,31 @@
  * ```tsx
  * <Input label="Email" placeholder="you@example.com" />
  * <Input variant="filled" size="lg" label="Name" isRequired />
+ * <Input label="Note" startContent={<PencilIcon size={18} />} />
  * ```
  *
- * For a field with an icon or a button attached, reach for `InputGroup` — it
- * measures its decorators and pads this field around them.
+ * ## An icon inside the field, and why it lives here
+ *
+ * `startContent` and `endContent` are measured and turned into padding on the
+ * text, so a value never runs underneath them however wide they turn out to
+ * be. They are positioned against the *field box* rather than against the
+ * component, which is the whole reason they are a prop rather than something
+ * you compose: a label and a description are laid out above and below the
+ * field, so anything centred on the component as a whole drifts upward the
+ * moment a label is added.
+ *
+ * `InputGroup` is still the right answer for a decorator that is not part of
+ * the field — a button attached to its end, a select bolted to its start, an
+ * addon with its own background. It measures the same way; it just spans a
+ * different box.
  */
-import { forwardRef, useCallback, useEffect, useState } from 'react';
-import { TextInput, View, type TextInputProps } from 'react-native';
+import { forwardRef, useCallback, useEffect, useState, type ReactNode } from 'react';
+import {
+  TextInput,
+  View,
+  type LayoutChangeEvent,
+  type TextInputProps,
+} from 'react-native';
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
@@ -30,8 +48,9 @@ import Animated, {
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import type { KeyboardAvoidanceMode } from '../../hooks/use-keyboard-avoidance';
+import { IconColorProvider } from '../../icons';
 import { KeyboardAvoider } from '../../primitives/keyboard-avoider';
-import { Text } from '../../primitives/text';
+import { Text, textChildren } from '../../primitives/text';
 import { Label } from '../label';
 
 /** Long enough to read as a transition, short enough not to lag a fast tab. */
@@ -49,6 +68,16 @@ const inputVariants = tv({
     field: 'w-full rounded-lg border font-normal text-foreground',
     description: 'text-sm text-muted-foreground',
     error: 'text-sm text-destructive',
+    /*
+     * The box the content is positioned against, and the reason this works
+     * where wrapping the whole component does not: it is the field alone, so
+     * a label above it and a description below it cannot move what is inside.
+     */
+    fieldBox: 'relative w-full',
+    startContent:
+      'absolute bottom-0 start-0 top-0 z-10 flex-row items-center justify-center gap-2',
+    endContent:
+      'absolute bottom-0 end-0 top-0 z-10 flex-row items-center justify-center gap-2',
   },
   variants: {
     variant: {
@@ -66,19 +95,33 @@ const inputVariants = tv({
        * below the middle of the box, a few pixels off whatever is beside them.
        * A length sets the size alone and leaves the line box the font's own.
        */
-      sm: { field: 'h-10 px-3 text-[14px]' },
-      md: { field: 'h-12 px-3.5 text-[16px]' },
-      lg: { field: 'h-14 px-4 text-[16px]' },
+      // The content boxes take the field's own horizontal padding, so an icon
+      // sits at exactly the inset the text would have started at.
+      sm: { field: 'h-10 px-3 text-[14px]', startContent: 'px-3', endContent: 'px-3' },
+      md: { field: 'h-12 px-3.5 text-[16px]', startContent: 'px-3.5', endContent: 'px-3.5' },
+      lg: { field: 'h-14 px-4 text-[16px]', startContent: 'px-4', endContent: 'px-4' },
     },
     multiline: {
       // A multiline field grows, so a fixed height would crop it. Text starts
       // at the top rather than floating in the middle of an empty box — and
       // once there are several lines the leading is wanted back, since here it
       // separates the lines instead of pushing one off centre.
-      true: { field: 'h-auto min-h-24 py-3 leading-normal' },
+      //
+      // The content follows the text to the top for the same reason: centred
+      // in a box that grows, an icon slides further from the line it belongs
+      // to with every line typed.
+      true: {
+        field: 'h-auto min-h-24 py-3 leading-normal',
+        startContent: 'bottom-auto py-3',
+        endContent: 'bottom-auto py-3',
+      },
     },
     disabled: {
-      true: { field: 'opacity-[0.64]' },
+      true: {
+        field: 'opacity-[0.64]',
+        startContent: 'opacity-[0.64]',
+        endContent: 'opacity-[0.64]',
+      },
     },
   },
   defaultVariants: {
@@ -101,6 +144,24 @@ export interface InputProps
   /** Marks the field required — an asterisk on the label, and the a11y state. */
   isRequired?: boolean;
   disabled?: boolean;
+  /**
+   * Content inside the field, before the text — usually an icon. Measured, so
+   * the text is padded clear of it however wide it is.
+   *
+   * `start`, not `left`: it follows the reading direction, and swaps sides
+   * under `Direction dir="rtl"` along with the text it introduces.
+   */
+  startContent?: ReactNode;
+  /** Content inside the field, after the text — an icon, a unit, a count. */
+  endContent?: ReactNode;
+  /**
+   * Let touches reach the content instead of falling through to the field.
+   *
+   * Off by default: an icon is decoration, and a tap anywhere on a field
+   * should put the caret in it rather than hitting a dead spot. Turn it on for
+   * content that does something — a clear button, a show-password toggle.
+   */
+  interactiveContent?: boolean;
   /**
    * Keep the field clear of the software keyboard. Moves by exactly the
    * overlap, and not at all when the field is already clear — or when the
@@ -142,6 +203,9 @@ export const Input = forwardRef<TextInput, InputProps>(
       errorMessage,
       isRequired,
       disabled,
+      startContent,
+      endContent,
+      interactiveContent = false,
       variant,
       size,
       avoidKeyboard = false,
@@ -157,6 +221,10 @@ export const Input = forwardRef<TextInput, InputProps>(
   ) => {
     const [focused, setFocused] = useState(false);
     const invalid = !!errorMessage;
+    // Measured so the text can be padded clear of the content, whatever it
+    // turns out to be — an icon, a unit, a two-word label.
+    const [startWidth, setStartWidth] = useState(0);
+    const [endWidth, setEndWidth] = useState(0);
 
     const placeholderColor = useCSSVariable('--color-muted-foreground');
     const restColor = useCSSVariable('--color-input');
@@ -213,6 +281,49 @@ export const Input = forwardRef<TextInput, InputProps>(
       [onBlur]
     );
 
+    const handleStartLayout = useCallback((event: LayoutChangeEvent) => {
+      setStartWidth(event.nativeEvent.layout.width);
+    }, []);
+
+    const handleEndLayout = useCallback((event: LayoutChangeEvent) => {
+      setEndWidth(event.nativeEvent.layout.width);
+    }, []);
+
+    /*
+     * The content is quieter than the value. An icon at the same weight as the
+     * text reads as part of what was typed, and the placeholder colour is
+     * already the field's own word for "not the value".
+     */
+    const iconColor = typeof placeholderColor === 'string' ? placeholderColor : undefined;
+
+    const field = (
+      <AnimatedTextInput
+        ref={ref}
+        editable={!disabled}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        accessibilityLabel={label}
+        accessibilityState={{ disabled: !!disabled }}
+        aria-required={isRequired}
+        aria-invalid={invalid}
+        className={slots.field({ className })}
+        style={[
+          borderStyle,
+          // Only the side that has content, and only once it has been
+          // measured — a 0 here would wipe out the field's own padding.
+          startWidth ? { paddingStart: startWidth } : null,
+          endWidth ? { paddingEnd: endWidth } : null,
+          // Caller styles come last so InputGroup can pad the field around its
+          // decorators, but never last enough to drop the animated border.
+          style,
+        ]}
+        placeholderTextColor={
+          typeof placeholderColor === 'string' ? placeholderColor : undefined
+        }
+        {...props}
+      />
+    );
+
     const body = (
       <>
         {label ? (
@@ -220,24 +331,49 @@ export const Input = forwardRef<TextInput, InputProps>(
             {label}
           </Label>
         ) : null}
-        <AnimatedTextInput
-          ref={ref}
-          editable={!disabled}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          accessibilityLabel={label}
-          accessibilityState={{ disabled: !!disabled }}
-          aria-required={isRequired}
-          aria-invalid={invalid}
-          className={slots.field({ className })}
-          // Caller styles come last so InputGroup can pad the field around its
-          // decorators, but never last enough to drop the animated border.
-          style={[borderStyle, style]}
-          placeholderTextColor={
-            typeof placeholderColor === 'string' ? placeholderColor : undefined
-          }
-          {...props}
-        />
+        {startContent || endContent ? (
+          /*
+           * Only wrapped when there is something to position. An extra view
+           * around every field in an app is a real cost in a long form, and
+           * the field is `w-full` either way so the wrapper changes nothing
+           * else about the layout.
+           */
+          <View className={slots.fieldBox()}>
+            {startContent ? (
+              <View
+                onLayout={handleStartLayout}
+                pointerEvents={interactiveContent ? 'auto' : 'none'}
+                accessibilityElementsHidden={!interactiveContent}
+                importantForAccessibility={
+                  interactiveContent ? 'auto' : 'no-hide-descendants'
+                }
+                className={slots.startContent()}
+              >
+                <IconColorProvider color={iconColor}>
+                  {textChildren(startContent)}
+                </IconColorProvider>
+              </View>
+            ) : null}
+            {field}
+            {endContent ? (
+              <View
+                onLayout={handleEndLayout}
+                pointerEvents={interactiveContent ? 'auto' : 'none'}
+                accessibilityElementsHidden={!interactiveContent}
+                importantForAccessibility={
+                  interactiveContent ? 'auto' : 'no-hide-descendants'
+                }
+                className={slots.endContent()}
+              >
+                <IconColorProvider color={iconColor}>
+                  {textChildren(endContent)}
+                </IconColorProvider>
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          field
+        )}
         {errorMessage ? (
           <Text className={slots.error()}>{errorMessage}</Text>
         ) : description ? (

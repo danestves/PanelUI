@@ -186,7 +186,10 @@
   "input": [
     "Input",
     "Text field with label, description and error message.",
-    "react native text input"
+    "react native text input",
+    {
+      "updatedIn": "0.36.0"
+    }
   ],
   "input-group": [
     "InputGroup",

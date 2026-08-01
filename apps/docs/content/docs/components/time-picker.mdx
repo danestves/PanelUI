@@ -117,39 +117,42 @@ The same panel over a frosted screen. Worth it when the time *is* the decision o
 
 ### Inline, inside a Frame
 
-`inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own — a segmented header over a picker is a settings row rather than a popover.
+`inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own. The toggle goes outside the card: it chooses *which* time the card is editing, which is a decision about the card rather than a control inside it.
 
 ```tsx
 const [edge, setEdge] = useState('start');
 
-<Frame>
-  <Frame.Header>
-    <Frame.Title>Time</Frame.Title>
-    <Frame.Action>
-      {formatTime(start)} – {formatTime(end)}
-    </Frame.Action>
-  </Frame.Header>
-  <Frame.Panel>
-    <Frame.Section className="items-center gap-4">
-      <ToggleButtonGroup
-        selectionMode="single"
-        size="sm"
-        value={[edge]}
-        onValueChange={(next) => setEdge(next[0] ?? 'start')}
-        className="w-full justify-between px-1"
-      >
-        <ToggleButton id="start">Starts</ToggleButton>
-        <ToggleButton id="end">Ends</ToggleButton>
-      </ToggleButtonGroup>
-      <TimePicker
-        presentation="inline"
-        layout="clock"
-        value={edge === 'start' ? start : end}
-        onValueChange={edge === 'start' ? setStart : setEnd}
-      />
-    </Frame.Section>
-  </Frame.Panel>
-</Frame>
+<View className="gap-3">
+  <ToggleButtonGroup
+    selectionMode="single"
+    size="sm"
+    value={[edge]}
+    onValueChange={(next) => setEdge(next[0] ?? 'start')}
+    className="w-full justify-between px-1"
+  >
+    <ToggleButton id="start">Starts</ToggleButton>
+    <ToggleButton id="end">Ends</ToggleButton>
+  </ToggleButtonGroup>
+
+  <Frame>
+    <Frame.Header>
+      <Frame.Title>Time</Frame.Title>
+      <Frame.Action>
+        {formatTime(start)} – {formatTime(end)}
+      </Frame.Action>
+    </Frame.Header>
+    <Frame.Panel>
+      <Frame.Section className="items-center">
+        <TimePicker
+          presentation="inline"
+          layout="clock"
+          value={edge === 'start' ? start : end}
+          onValueChange={edge === 'start' ? setStart : setEnd}
+        />
+      </Frame.Section>
+    </Frame.Panel>
+  </Frame>
+</View>
 ```
 
 ### Your own trigger

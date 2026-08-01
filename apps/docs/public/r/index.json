@@ -323,6 +323,7 @@
     "type": "registry:ui",
     "description": "Text field with label, description and error message.",
     "registryDependencies": [
+      "icons",
       "keyboard-avoider",
       "label",
       "text",
