@@ -1,7 +1,7 @@
 {
   "name": "date",
   "type": "registry:lib",
-  "description": "date.",
+  "description": "Day and month arithmetic, and locale-aware date formatting.",
   "registryDependencies": [],
   "dependencies": [],
   "optionalDependencies": [],

@@ -631,6 +631,12 @@ export {
 } from './components/swipe';
 export { Switch, type SwitchProps } from './components/switch';
 export {
+  TimePicker,
+  type TimePickerProps,
+  type TimePickerLayout,
+  type TimePickerPresentation,
+} from './components/time-picker';
+export {
   Timeline,
   type TimelineProps,
   type TimelineItemProps,

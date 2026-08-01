@@ -5530,5 +5530,69 @@
       "color": "{/* `color` is a Swipe.Action prop — the panel behind the tiles takes the\n    outermost one, so an overshoot extends that action rather than opening a hole. */}\n<Swipe>\n  <Swipe.End>\n    <Swipe.Action label=\"Archive\" color=\"info\" onPress={archive} />\n    <Swipe.Action label=\"Delete\" color=\"destructive\" onPress={remove} />\n  </Swipe.End>\n  <Item>\n    <Item.Content>\n      <Item.Title>Row</Item.Title>\n    </Item.Content>\n  </Item>\n</Swipe>"
     },
     "notes": "A panel is exactly as wide as the gap the row has left behind — never wider, so it cannot paint over the row, and never narrower, so carrying the drag past the tiles extends the outermost action's colour instead of opening a hole onto the screen underneath. The row therefore needs no background of its own, and the two never overlap at any point in the gesture.\n\n### Which action a full swipe fires\n\nThe one furthest from the row, because that is the one the gesture travelled all the way to. On the end side that is the last tile declared, on the start side the first — in both cases the tile at the outer edge, whose colour the panel takes and which grows to fill the gap as the drag is carried past it. Put the destructive action there, or turn the behaviour off with `fullSwipe={false}`.\n\n### Sharing the screen with a scroller\n\nThe drag waits for clearly horizontal intent and fails outright the moment the finger commits vertically, so a list of swipeable rows scrolls the way an ordinary list does and no row twitches open under a scroll. Inside a *horizontal* scroller the two do want the same axis — there the row should be `disabled`, or the scroller should be the one that gives way.\n\n### Reaching the actions without the gesture\n\nA swipe is invisible to a screen reader: there is nothing on screen to announce, and no way to discover the gesture from the row itself. Every action is therefore also published as an accessibility action on the row, named by its `label` — which is why `label` is required and why it should say what the action does rather than name an icon.\n\n### Opening it yourself\n\nThe row is uncontrolled, and a ref is how you reach it: `open('start' | 'end')` and `close()`. `onOpenChange` reports the side that opened, or `null` when the row closed — enough to keep only one row of a list open at a time by closing the previous one."
+  },
+  "time-picker": {
+    "intro": "A time of day behind a trigger, in one of three faces.\n\nThe value is `{ hour, minute }` on a 24-hour clock whatever the face shows. A 12-hour display is a rendering choice, and storing 7pm as `{ hour: 7 }` plus a meridiem flag would put that flag into every comparison downstream.\n\nThe three layouts exist because “pick a time” is three different tasks. `wheel` is the precise one — any minute in the day is two or three flicks away. `clock` picks a *slot* rather than a time, and its face answers “morning or evening?” faster than reading digits. `ruler` is the coarse one, and the only one that reads at arm's length, which makes it the one for a sheet with a thumb on it.\n\nAll three produce the same value and take the same props, so swapping between them is a one-word change.",
+    "usage": "const [time, setTime] = useState<TimeValue>();\n\n<TimePicker value={time} onValueChange={setTime} />",
+    "extraImports": [
+      "Button",
+      "ClockIcon",
+      "Frame",
+      "ToggleButton",
+      "ToggleButtonGroup",
+      "formatTime",
+      "type TimeValue"
+    ],
+    "parts": {
+      "Trigger": "Wraps a trigger of your own and opens the panel on press. Pass a child to the picker instead and it is wrapped for you."
+    },
+    "examples": [
+      {
+        "title": "A time",
+        "description": "The trigger reads back the chosen time and falls back to the placeholder. Nothing chosen yet means the wheel opens near the current hour rather than at midnight — an unset picker still has to open somewhere plausible.",
+        "code": "const [time, setTime] = useState<TimeValue>();\n\n<TimePicker value={time} onValueChange={setTime} />"
+      },
+      {
+        "title": "A 24-hour clock",
+        "description": "`hourCycle={24}` drops the meridiem column entirely and writes hours 00–23. The stored value does not change: it was always on a 24-hour clock.",
+        "code": "<TimePicker value={time} onValueChange={setTime} hourCycle={24} />"
+      },
+      {
+        "title": "Slots, not times",
+        "description": "A `minuteStep` turns the wheel into a list of the times you actually offer. Half-hour slots is four rows of scrolling instead of sixty.",
+        "code": "<TimePicker value={time} onValueChange={setTime} minuteStep={30} />"
+      },
+      {
+        "title": "Within opening hours",
+        "description": "`minTime` and `maxTime` bound the value rather than the scroll. A face reports the row it landed on and the picker clamps it, so every layout is bounded by the same rule and a value outside the span comes back as the nearest one inside it.",
+        "code": "<TimePicker\n  value={time}\n  onValueChange={setTime}\n  minTime={{ hour: 9, minute: 0 }}\n  maxTime={{ hour: 17, minute: 30 }}\n  minuteStep={15}\n/>"
+      },
+      {
+        "title": "The clock face",
+        "description": "A face beside a list of times. The hands sweep to the selection rather than jumping, because the face’s whole job is to say *when in the day* the highlighted row is — and a hand that jumps gives that away one row at a time.",
+        "code": "<TimePicker layout=\"clock\" value={time} onValueChange={setTime} />"
+      },
+      {
+        "title": "The ruler, in a sheet",
+        "description": "One large readout over a scale you swipe. It is the layout that reads at arm’s length, so it is the one for a sheet — and the sheet is the presentation that gets a Done button, because a sheet’s outside is only the strip above it.",
+        "code": "<TimePicker\n  layout=\"ruler\"\n  presentation=\"bottom-sheet\"\n  value={time}\n  onValueChange={setTime}\n/>"
+      },
+      {
+        "title": "In a dialog",
+        "description": "The same panel, centred over a dimmed screen. Worth it when the picker is the only decision on the screen and the trigger is somewhere awkward to anchor to.",
+        "code": "<TimePicker presentation=\"dialog\" value={time} onValueChange={setTime} />"
+      },
+      {
+        "title": "Inline, inside a Frame",
+        "description": "`inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own — a segmented header over a picker is a settings row rather than a popover.",
+        "code": "const [mode, setMode] = useState('start');\n\n<Frame>\n  <Frame.Header>\n    <Frame.Title>Time</Frame.Title>\n    <Frame.Action>{formatTime(time)}</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <Frame.Section>\n      <ToggleButtonGroup value={mode} onValueChange={setMode}>\n        <ToggleButton id=\"start\">Starts</ToggleButton>\n        <ToggleButton id=\"end\">Ends</ToggleButton>\n      </ToggleButtonGroup>\n      <TimePicker\n        presentation=\"inline\"\n        layout=\"clock\"\n        value={mode === 'start' ? start : end}\n        onValueChange={mode === 'start' ? setStart : setEnd}\n      />\n    </Frame.Section>\n  </Frame.Panel>\n</Frame>"
+      },
+      {
+        "title": "Your own trigger",
+        "description": "Pass a child and it is cloned with an `onPress` that opens the panel, so a field row or an icon button can stand in for the default button.",
+        "code": "<TimePicker value={time} onValueChange={setTime}>\n  <Button variant=\"ghost\" size=\"icon\" accessibilityLabel=\"Choose a time\">\n    <ClockIcon size={18} />\n  </Button>\n</TimePicker>"
+      }
+    ],
+    "notes": "**The value is always 0–23.** `displayHour` and `hourFromDisplay` are exported alongside it if you need the face's own numbering, but nothing stored should be in it.\n\n**`minuteStep` defaults per layout.** `wheel` steps by 1, `clock` by 30 and `ruler` by 15 — the two that scroll the whole day at once need a coarser grid to be usable. Pass it explicitly and the layout stops mattering.\n\n**A chosen time off the step is rounded, not rejected.** At a 30-minute step 7:29 is a finger that stopped just short of half past, not a request for seven o'clock.\n\n**Every face is a scroll view.** Momentum, deceleration and fling physics come from the platform, and the selection is the row it comes to rest on. That is also why the panel needs a definite width, which the presentations give it.\n\n**The sheet gets a Done button and the popover does not.** A popover is dismissed by tapping anywhere outside it, which is most of the screen; a sheet's outside is the strip above it, and a scale under your thumb needs somewhere deliberate to finish."
   }
 }

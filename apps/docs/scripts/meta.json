@@ -434,6 +434,15 @@
       "addedIn": "0.30.0"
     }
   ],
+  "time-picker": [
+    "TimePicker",
+    "A time of day, as a wheel, a clock or a swipeable scale.",
+    "react native time picker",
+    {
+      "addedIn": "0.36.0",
+      "beta": true
+    }
+  ],
   "timeline": [
     "Timeline",
     "Vertical sequence of events.",

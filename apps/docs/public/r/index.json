@@ -197,7 +197,7 @@
   {
     "name": "date",
     "type": "registry:lib",
-    "description": "date.",
+    "description": "Day and month arithmetic, and locale-aware date formatting.",
     "registryDependencies": []
   },
   {
@@ -841,6 +841,27 @@
     "description": "Dotted orb saying which kind of busy an agent is.",
     "registryDependencies": [
       "cn"
+    ]
+  },
+  {
+    "name": "time",
+    "type": "registry:lib",
+    "description": "Time-of-day arithmetic, and locale-aware time formatting.",
+    "registryDependencies": []
+  },
+  {
+    "name": "time-picker",
+    "type": "registry:ui",
+    "description": "A time of day, as a wheel, a clock or a swipeable scale.",
+    "registryDependencies": [
+      "button",
+      "cn",
+      "dialog",
+      "haptics",
+      "icons",
+      "popover",
+      "text",
+      "time"
     ]
   },
   {

@@ -1,0 +1,194 @@
+---
+title: TimePicker
+description: A time of day, as a wheel, a clock or a swipeable scale.
+status: beta
+---
+
+A time of day behind a trigger, in one of three faces.
+
+The value is `{ hour, minute }` on a 24-hour clock whatever the face shows. A 12-hour display is a rendering choice, and storing 7pm as `{ hour: 7 }` plus a meridiem flag would put that flag into every comparison downstream.
+
+The three layouts exist because “pick a time” is three different tasks. `wheel` is the precise one — any minute in the day is two or three flicks away. `clock` picks a *slot* rather than a time, and its face answers “morning or evening?” faster than reading digits. `ruler` is the coarse one, and the only one that reads at arm's length, which makes it the one for a sheet with a thumb on it.
+
+All three produce the same value and take the same props, so swapping between them is a one-word change.
+
+## Installation
+
+TimePicker ships with the library — no separate install.
+
+```tsx
+import { TimePicker, Button, ClockIcon, Frame, ToggleButton, ToggleButtonGroup, formatTime, type TimeValue } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add time-picker
+```
+
+## Usage
+
+```tsx
+const [time, setTime] = useState<TimeValue>();
+
+<TimePicker value={time} onValueChange={setTime} />
+```
+
+## Composition
+
+```tsx
+<TimePicker>
+  <TimePicker.Trigger>…</TimePicker.Trigger>
+</TimePicker>
+```
+
+- **`TimePicker.Trigger`** — Wraps a trigger of your own and opens the panel on press. Pass a child to the picker instead and it is wrapped for you.
+
+## Examples
+
+### A time
+
+The trigger reads back the chosen time and falls back to the placeholder. Nothing chosen yet means the wheel opens near the current hour rather than at midnight — an unset picker still has to open somewhere plausible.
+
+```tsx
+const [time, setTime] = useState<TimeValue>();
+
+<TimePicker value={time} onValueChange={setTime} />
+```
+
+### A 24-hour clock
+
+`hourCycle={24}` drops the meridiem column entirely and writes hours 00–23. The stored value does not change: it was always on a 24-hour clock.
+
+```tsx
+<TimePicker value={time} onValueChange={setTime} hourCycle={24} />
+```
+
+### Slots, not times
+
+A `minuteStep` turns the wheel into a list of the times you actually offer. Half-hour slots is four rows of scrolling instead of sixty.
+
+```tsx
+<TimePicker value={time} onValueChange={setTime} minuteStep={30} />
+```
+
+### Within opening hours
+
+`minTime` and `maxTime` bound the value rather than the scroll. A face reports the row it landed on and the picker clamps it, so every layout is bounded by the same rule and a value outside the span comes back as the nearest one inside it.
+
+```tsx
+<TimePicker
+  value={time}
+  onValueChange={setTime}
+  minTime={{ hour: 9, minute: 0 }}
+  maxTime={{ hour: 17, minute: 30 }}
+  minuteStep={15}
+/>
+```
+
+### The clock face
+
+A face beside a list of times. The hands sweep to the selection rather than jumping, because the face’s whole job is to say *when in the day* the highlighted row is — and a hand that jumps gives that away one row at a time.
+
+```tsx
+<TimePicker layout="clock" value={time} onValueChange={setTime} />
+```
+
+### The ruler, in a sheet
+
+One large readout over a scale you swipe. It is the layout that reads at arm’s length, so it is the one for a sheet — and the sheet is the presentation that gets a Done button, because a sheet’s outside is only the strip above it.
+
+```tsx
+<TimePicker
+  layout="ruler"
+  presentation="bottom-sheet"
+  value={time}
+  onValueChange={setTime}
+/>
+```
+
+### In a dialog
+
+The same panel, centred over a dimmed screen. Worth it when the picker is the only decision on the screen and the trigger is somewhere awkward to anchor to.
+
+```tsx
+<TimePicker presentation="dialog" value={time} onValueChange={setTime} />
+```
+
+### Inline, inside a Frame
+
+`inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own — a segmented header over a picker is a settings row rather than a popover.
+
+```tsx
+const [mode, setMode] = useState('start');
+
+<Frame>
+  <Frame.Header>
+    <Frame.Title>Time</Frame.Title>
+    <Frame.Action>{formatTime(time)}</Frame.Action>
+  </Frame.Header>
+  <Frame.Panel>
+    <Frame.Section>
+      <ToggleButtonGroup value={mode} onValueChange={setMode}>
+        <ToggleButton id="start">Starts</ToggleButton>
+        <ToggleButton id="end">Ends</ToggleButton>
+      </ToggleButtonGroup>
+      <TimePicker
+        presentation="inline"
+        layout="clock"
+        value={mode === 'start' ? start : end}
+        onValueChange={mode === 'start' ? setStart : setEnd}
+      />
+    </Frame.Section>
+  </Frame.Panel>
+</Frame>
+```
+
+### Your own trigger
+
+Pass a child and it is cloned with an `onPress` that opens the panel, so a field row or an icon button can stand in for the default button.
+
+```tsx
+<TimePicker value={time} onValueChange={setTime}>
+  <Button variant="ghost" size="icon" accessibilityLabel="Choose a time">
+    <ClockIcon size={18} />
+  </Button>
+</TimePicker>
+```
+
+## API Reference
+
+### TimePicker
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `TimeValue` | — | Controlled selection, as `{ hour, minute }` on a 24-hour clock. |
+| `defaultValue` | `TimeValue` | — | Starting selection when uncontrolled. Defaults to the top of the hour. |
+| `onValueChange` | `(value: TimeValue) => void` | — |  |
+| `layout` | `TimePickerLayout` | `'wheel'` | Which face the panel draws. |
+| `presentation` | `TimePickerPresentation` | `'popover'` | How the panel gets onto the screen. `inline` renders it with no trigger. |
+| `open` | `boolean` | — | Controlled open state of the panel. |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
+| `hourCycle` | `HourCycle` | `12` | `24` drops the meridiem column and writes hours 00–23. |
+| `minuteStep` | `number` | — | Minutes between selectable times. `wheel` defaults to 1; `clock` and `ruler` default to 30 and 15, since both scroll the whole day at once. |
+| `minTime` | `TimeValue` | — | Earliest selectable time, inclusive. |
+| `maxTime` | `TimeValue` | — | Latest selectable time, inclusive. |
+| `placeholder` | `string` | `DEFAULT_PLACEHOLDER` | What the trigger reads when nothing has been chosen. |
+| `format` | `(value: TimeValue) => string` | — | Override how the chosen time is written on the trigger. |
+| `locale` | `string` | — | BCP 47 tag for the time's text and the meridiem labels. |
+| `disabled` | `boolean` | `false` | Stop the trigger opening it, and the faces from being scrolled. |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+**The value is always 0–23.** `displayHour` and `hourFromDisplay` are exported alongside it if you need the face's own numbering, but nothing stored should be in it.
+
+**`minuteStep` defaults per layout.** `wheel` steps by 1, `clock` by 30 and `ruler` by 15 — the two that scroll the whole day at once need a coarser grid to be usable. Pass it explicitly and the layout stops mattering.
+
+**A chosen time off the step is rounded, not rejected.** At a 30-minute step 7:29 is a finger that stopped just short of half past, not a request for seven o'clock.
+
+**Every face is a scroll view.** Momentum, deceleration and fling physics come from the platform, and the selection is the row it comes to rest on. That is also why the panel needs a definite width, which the presentations give it.
+
+**The sheet gets a Done button and the popover does not.** A popover is dismissed by tapping anywhere outside it, which is most of the screen; a sheet's outside is the strip above it, and a scale under your thumb needs somewhere deliberate to finish.
