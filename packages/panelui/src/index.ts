@@ -694,6 +694,7 @@ export {
   ChevronRightIcon,
   ChevronUpIcon,
   CircleIcon,
+  ClockIcon,
   CompassIcon,
   CopyIcon,
   CrosshairIcon,
@@ -707,6 +708,7 @@ export {
   IconColorProvider,
   InfoIcon,
   ImageIcon,
+  KeyboardIcon,
   LinkIcon,
   ListChecksIcon,
   LockIcon,
@@ -749,3 +751,20 @@ export * from './hooks';
 
 // Utils
 export { cn } from './utils/cn';
+export {
+  clampTime,
+  compareTime,
+  displayHour,
+  formatTime,
+  isSameTime,
+  isTimeInRange,
+  meridiemLabels,
+  minutesToTime,
+  roundToStep,
+  timeFromDate,
+  timeToDate,
+  timeToMinutes,
+  timesOfDay,
+  type HourCycle,
+  type TimeValue,
+} from './utils/time';

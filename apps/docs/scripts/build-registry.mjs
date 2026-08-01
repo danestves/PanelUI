@@ -61,6 +61,8 @@ const SUPPORT_DESCRIPTIONS = {
   icons: 'The icon set, plus the colour context components use to tint them.',
   cn: 'Merges Tailwind class names, with later classes winning conflicts.',
   chart: 'Scales, monotone curves and path building. Shared by every chart.',
+  date: 'Day and month arithmetic, and locale-aware date formatting.',
+  time: 'Time-of-day arithmetic, and locale-aware time formatting.',
   native: 'Optional bridge to the platform UI toolkit, behind the `native` prop.',
   haptics: 'Optional bridge to the platform haptic engine, behind the `haptics` prop.',
   'use-theme': 'Read and change the active theme.',
@@ -156,6 +158,14 @@ register(
   [path.join(SRC, 'utils/date.ts')],
   () => 'lib/date.ts',
   () => `${ALIAS.lib}/date`
+);
+
+register(
+  'time',
+  'registry:lib',
+  [path.join(SRC, 'utils/time.ts')],
+  () => 'lib/time.ts',
+  () => `${ALIAS.lib}/time`
 );
 
 register(
