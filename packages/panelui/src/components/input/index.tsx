@@ -40,7 +40,13 @@ const FOCUS_DURATION = 150;
 const inputVariants = tv({
   slots: {
     container: 'w-full gap-1.5',
-    field: 'w-full rounded-lg border text-foreground',
+    /*
+     * `font-normal` on a field that is not bold: this is a TextInput, so it
+     * does not go through the Text primitive and inherits nothing. The class
+     * is what an app's `--font-normal` token attaches to, and without it a
+     * custom font would stop at the edge of every field in the library.
+     */
+    field: 'w-full rounded-lg border font-normal text-foreground',
     description: 'text-sm text-muted-foreground',
     error: 'text-sm text-destructive',
   },

@@ -740,7 +740,7 @@ function PanelsideSearch({
          * text and the placeholder sit below the middle of the row. A length
          * sets the size alone and leaves the line box the font's own.
          */
-        className={cn('h-full flex-1 text-[16px] text-foreground', className)}
+        className={cn('h-full flex-1 font-normal text-[16px] text-foreground', className)}
         style={typeof textTint === 'string' ? { color: textTint } : undefined}
         accessibilityRole="search"
         returnKeyType="search"

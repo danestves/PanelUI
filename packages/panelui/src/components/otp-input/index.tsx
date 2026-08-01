@@ -49,7 +49,10 @@ const otpVariants = tv({
     container: 'gap-1.5',
     row: 'flex-row items-center',
     cell: 'items-center justify-center rounded-lg border border-input bg-background',
-    char: 'text-foreground',
+    /* The typed character is drawn by an Animated.Text rather than the Text
+       primitive, so its weight class has to be written here for an app's
+       --font-normal token to reach it. */
+    char: 'font-normal text-foreground',
     caret: 'w-0.5 rounded-full bg-foreground',
     separator: 'h-0.5 rounded-full bg-border',
     error: 'text-sm text-destructive',

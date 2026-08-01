@@ -145,10 +145,42 @@
   --radius-xl: unset;
   --radius-2xl: unset;
   --radius-3xl: unset;
+
+  /*
+   * The monospace family. Declared because Tailwind's default is a *stack* —
+   * eight families separated by commas — and React Native takes fontFamily as
+   * one name. The whole list arrives at the platform as a single family that
+   * does not exist, so `font-mono` silently draws in the system font and code
+   * stops looking like code. One real name per platform is the fix.
+   *
+   * The four weight names are deliberately *not* declared here, and that is
+   * the mechanism by which an app changes the font. Tailwind resolves the
+   * `font-*` utility against `--font-*` before `--font-weight-*`, so leaving
+   * `--font-normal` and friends undefined is what keeps `font-semibold`
+   * meaning a weight. An app that defines them flips every one of those
+   * classes to a font family, which is the right trade on native: a weight
+   * there is a separately registered face, not a variation of one family.
+   * Declaring them here — even as `unset` — would take the weights away from
+   * every app that never asked for a custom font.
+   */
+  --font-mono: unset;
 }
 
 @layer theme {
   :root {
+    /*
+     * Not themed — a platform's monospace face is a property of the platform,
+     * not of the palette. `Menlo` ships with iOS; `monospace` is Android's
+     * alias for its own. Neither exists on the other, which is why this cannot
+     * be one value.
+     */
+    @variant ios {
+      --font-mono: Menlo;
+    }
+    @variant android {
+      --font-mono: monospace;
+    }
+
     @variant light {
       --color-background: #ffffff;
       /* neutral-800 */

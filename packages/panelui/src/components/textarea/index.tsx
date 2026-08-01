@@ -66,7 +66,9 @@ const textareaVariants = tv({
      * the leading is wanted — between several lines it separates them, where in
      * a one-line field it would push the text off centre.
      */
-    field: 'w-full rounded-lg border text-foreground',
+    /* `font-normal` so an app's --font-normal token reaches a TextInput,
+       which inherits nothing from the Text primitive. */
+    field: 'w-full rounded-lg border font-normal text-foreground',
     footer: 'w-full flex-row items-start justify-between gap-3',
     description: 'text-sm text-muted-foreground',
     error: 'text-sm text-destructive',
