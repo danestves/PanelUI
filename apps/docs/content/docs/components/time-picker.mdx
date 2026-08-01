@@ -120,24 +120,30 @@ The same panel, centred over a dimmed screen. Worth it when the picker is the on
 `inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own — a segmented header over a picker is a settings row rather than a popover.
 
 ```tsx
-const [mode, setMode] = useState('start');
+const [edge, setEdge] = useState('start');
 
 <Frame>
   <Frame.Header>
     <Frame.Title>Time</Frame.Title>
-    <Frame.Action>{formatTime(time)}</Frame.Action>
+    <Frame.Action>
+      {formatTime(start)} – {formatTime(end)}
+    </Frame.Action>
   </Frame.Header>
   <Frame.Panel>
-    <Frame.Section>
-      <ToggleButtonGroup value={mode} onValueChange={setMode}>
+    <Frame.Section className="items-center gap-4">
+      <ToggleButtonGroup
+        selectionMode="single"
+        value={[edge]}
+        onValueChange={(next) => setEdge(next[0] ?? 'start')}
+      >
         <ToggleButton id="start">Starts</ToggleButton>
         <ToggleButton id="end">Ends</ToggleButton>
       </ToggleButtonGroup>
       <TimePicker
         presentation="inline"
         layout="clock"
-        value={mode === 'start' ? start : end}
-        onValueChange={mode === 'start' ? setStart : setEnd}
+        value={edge === 'start' ? start : end}
+        onValueChange={edge === 'start' ? setStart : setEnd}
       />
     </Frame.Section>
   </Frame.Panel>

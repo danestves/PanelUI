@@ -150,6 +150,9 @@ import {
   Textarea,
   ThinkingOrb,
   XIcon,
+  TimePicker,
+  type TimeValue,
+  formatTime,
   Timeline,
   Toast,
   ToggleButton,
@@ -872,6 +875,157 @@ function DatePickerSheetDemo() {
         beside its trigger. A sheet earns its place when the screen is busy.
       </Text>
     </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* TimePicker                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/** The same wheel behind each of the three overlays it can arrive in. */
+function TimePickerPresentationsDemo() {
+  const [popover, setPopover] = useState<TimeValue>();
+  const [dialog, setDialog] = useState<TimeValue>();
+  const [sheet, setSheet] = useState<TimeValue>();
+
+  return (
+    <View className="w-full gap-6">
+      <View className="gap-2">
+        <Label>Popover</Label>
+        <TimePicker value={popover} onValueChange={setPopover} />
+      </View>
+
+      <View className="gap-2">
+        <Label>Dialog</Label>
+        <TimePicker presentation="dialog" value={dialog} onValueChange={setDialog} />
+      </View>
+
+      <View className="gap-2">
+        <Label>Bottom sheet</Label>
+        <TimePicker presentation="bottom-sheet" value={sheet} onValueChange={setSheet} />
+      </View>
+    </View>
+  );
+}
+
+/** 24-hour, and a wheel narrowed to the slots actually on offer. */
+function TimePickerWheelDemo() {
+  const [any, setAny] = useState<TimeValue>();
+  const [slot, setSlot] = useState<TimeValue>();
+
+  return (
+    <View className="w-full gap-6">
+      <View className="gap-2">
+        <Label>A 24-hour clock</Label>
+        <TimePicker hourCycle={24} value={any} onValueChange={setAny} />
+      </View>
+
+      <View className="gap-2">
+        <Label>Within opening hours</Label>
+        {/* The bounds are applied to the value, not to the scroll: a face
+            reports the row it landed on and the picker clamps it. */}
+        <TimePicker
+          value={slot}
+          onValueChange={setSlot}
+          minTime={{ hour: 9, minute: 0 }}
+          maxTime={{ hour: 17, minute: 30 }}
+          minuteStep={15}
+          placeholder="Pick a slot"
+        />
+      </View>
+    </View>
+  );
+}
+
+/** The face beside its list, inline so both are on screen at once. */
+function TimePickerClockDemo() {
+  const [time, setTime] = useState<TimeValue>({ hour: 19, minute: 0 });
+
+  return (
+    <View className="w-full items-center gap-4">
+      <TimePicker presentation="inline" layout="clock" value={time} onValueChange={setTime} />
+      <Text size="sm" muted>
+        The hands sweep rather than jump. The face is there to say when in the
+        day the highlighted row is, and a hand that jumps gives that away one
+        row at a time.
+      </Text>
+    </View>
+  );
+}
+
+/** The ruler where it belongs — a sheet, with a thumb on it. */
+function TimePickerRulerVersion() {
+  const [time, setTime] = useState<TimeValue>({ hour: 0, minute: 0 });
+
+  return (
+    <View className="flex-1 justify-center gap-8 px-5">
+      <View className="gap-2">
+        <Text size="2xl" weight="semibold">
+          Reminder
+        </Text>
+        <Text muted>
+          The readout reads at arm's length, which is what makes this the layout
+          for a sheet. Swipe the scale; it comes to rest on a step.
+        </Text>
+      </View>
+
+      <TimePicker
+        layout="ruler"
+        presentation="bottom-sheet"
+        value={time}
+        onValueChange={setTime}
+        placeholder="Set a reminder"
+      />
+
+      <Text size="sm" muted>
+        Chosen: {formatTime(time)}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * A picker composed into a card rather than hidden behind a trigger.
+ *
+ * Two independent times behind a segmented header — which is what a "single
+ * time or a range" control actually is, and why the picker does not need a
+ * range mode of its own to build one.
+ */
+function TimePickerFrameDemo() {
+  const [edge, setEdge] = useState('start');
+  const [start, setStart] = useState<TimeValue>({ hour: 19, minute: 0 });
+  const [end, setEnd] = useState<TimeValue>({ hour: 21, minute: 30 });
+
+  const editing = edge === 'start' ? start : end;
+  const setEditing = edge === 'start' ? setStart : setEnd;
+
+  return (
+    <Frame className="w-full">
+      <Frame.Header>
+        <Frame.Title>Time</Frame.Title>
+        <Frame.Action>
+          {formatTime(start)} – {formatTime(end)}
+        </Frame.Action>
+      </Frame.Header>
+      <Frame.Panel>
+        <Frame.Section className="items-center gap-4">
+          <ToggleButtonGroup
+            selectionMode="single"
+            value={[edge]}
+            onValueChange={(next) => setEdge(next[0] ?? 'start')}
+          >
+            <ToggleButton id="start">Starts</ToggleButton>
+            <ToggleButton id="end">Ends</ToggleButton>
+          </ToggleButtonGroup>
+          <TimePicker
+            presentation="inline"
+            layout="clock"
+            value={editing}
+            onValueChange={setEditing}
+          />
+        </Frame.Section>
+      </Frame.Panel>
+    </Frame>
   );
 }
 
@@ -12021,6 +12175,25 @@ export const COMPONENTS: ComponentEntry[] = [
           'A one-row composer that grows as the message does and rides the keyboard up.',
         render: () => <TextareaComposerDemo />,
       },
+    ],
+  },
+  {
+    slug: 'time-picker',
+    name: 'TimePicker',
+    summary: 'A time of day, as a wheel, a clock or a swipeable scale',
+    demos: [
+      { label: 'Presentations', render: () => <TimePickerPresentationsDemo /> },
+      { label: 'The wheel', render: () => <TimePickerWheelDemo /> },
+      { label: 'The clock face', render: () => <TimePickerClockDemo /> },
+      {
+        label: 'The ruler, in a sheet',
+        id: 'ruler',
+        fullPage: true,
+        description:
+          'One large readout over a scale you swipe. The layout that reads at arm’s length.',
+        render: () => <TimePickerRulerVersion />,
+      },
+      { label: 'Inline, inside a Frame', render: () => <TimePickerFrameDemo /> },
     ],
   },
   {
