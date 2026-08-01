@@ -1008,11 +1008,19 @@ function TimePickerFrameDemo() {
         </Frame.Action>
       </Frame.Header>
       <Frame.Panel>
+        {/* `items-center` centres the face and its list. The toggle row opts
+            out of it with `w-full`, so the two ends of the span sit at the two
+            edges of the card. */}
         <Frame.Section className="items-center gap-4">
+          {/* Pushed to opposite ends rather than sitting together in the
+              middle: they are the two ends of one span, and the row reads as
+              that span when they are laid out like it. */}
           <ToggleButtonGroup
             selectionMode="single"
+            size="sm"
             value={[edge]}
             onValueChange={(next) => setEdge(next[0] ?? 'start')}
+            className="w-full justify-between px-1"
           >
             <ToggleButton id="start">Starts</ToggleButton>
             <ToggleButton id="end">Ends</ToggleButton>

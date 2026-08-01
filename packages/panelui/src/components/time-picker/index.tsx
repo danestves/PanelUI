@@ -583,13 +583,17 @@ function RulerFace({
   );
   const resting = useRef(index);
   /*
-   * Measured, not assumed. The end padding has to be exactly half the
-   * scroller's width for a tick at offset zero to sit under the indicator, and
-   * the scroller is narrower than the panel by whatever padding the
-   * presentation put around it — which this component cannot see.
+   * Measured, not assumed: the scroller is narrower than the panel by whatever
+   * padding the presentation put around it, which this component cannot see.
+   *
+   * Half the scroller, *less half a tick*. A tick is drawn in the middle of a
+   * cell `TICK_SPACING` wide, so padding by half the width alone puts the
+   * cell's leading edge under the indicator and the tick itself half a cell to
+   * the right of it — close enough to look like a rounding error and wrong at
+   * every rest position.
    */
   const [width, setWidth] = useState(0);
-  const pad = width / 2;
+  const pad = Math.max(0, width / 2 - TICK_SPACING / 2);
 
   const snapToOffsets = useMemo(
     () => times.map((_, i) => i * TICK_SPACING),
@@ -701,15 +705,27 @@ const PANEL_WIDTH = 300;
 interface PanelProps extends FaceProps {
   layout: TimePickerLayout;
   className?: string;
+  /**
+   * Take the container's width instead of the panel's own.
+   *
+   * A popover has no width until its content claims one, so there the fixed
+   * width is doing real work. A sheet is already the width of the screen, and
+   * a 300pt box centred in it reads as a card that has been dropped into a
+   * sheet rather than as the sheet's own contents.
+   */
+  fullWidth?: boolean;
   /** Rendered under the face — the sheet's Done button. */
   footer?: ReactNode;
 }
 
-function Panel({ layout, className, footer, ...face }: PanelProps) {
+function Panel({ layout, className, fullWidth, footer, ...face }: PanelProps) {
   const slots = timePickerVariants();
 
   return (
-    <View className={cn(slots.panel(), className)} style={{ width: PANEL_WIDTH }}>
+    <View
+      className={cn(slots.panel(), className)}
+      style={fullWidth ? undefined : { width: PANEL_WIDTH }}
+    >
       {layout === 'wheel' ? <WheelFace {...face} /> : null}
       {layout === 'clock' ? <ClockFaceLayout {...face} /> : null}
       {layout === 'ruler' ? <RulerFace {...face} /> : null}
@@ -872,19 +888,27 @@ function TimePickerRoot({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <Dialog.Trigger>{trigger}</Dialog.Trigger>
-        {/* `items-center` on the content rather than a width on the panel: the
-            dialog sizes to its child, and a panel of a fixed width inside a
-            stretch-aligned parent would be pinned to one edge. */}
-        <Dialog.Content className="items-center gap-0 p-4">
+        {/*
+          `items-center` on the content rather than a width on the panel: the
+          dialog sizes to its child, and a panel of a fixed width inside a
+          stretch-aligned parent would be pinned to one edge.
+
+          Blurred rather than dimmed. A dialog is the presentation you reach
+          for when the time *is* the decision on the screen, and frosting what
+          is behind it says that in a way a dim does not. Falls back to the dim
+          when expo-blur is not installed, so it is safe either way.
+        */}
+        <Dialog.Content blur className="items-center gap-0 p-4">
           <Panel
             layout={layout}
             {...face}
             footer={
-              <View className="flex-row justify-end">
-                <Dialog.Close>
-                  <Button size="sm">Done</Button>
-                </Dialog.Close>
-              </View>
+              // Full width, like the sheet's. It is the only tap target in the
+              // dialog, and a small button in a corner of one asks to be
+              // aimed at.
+              <Dialog.Close>
+                <Button className="mt-1 w-full">Done</Button>
+              </Dialog.Close>
             }
           />
         </Dialog.Content>
@@ -892,31 +916,50 @@ function TimePickerRoot({
     );
   }
 
+  const isSheet = presentation === 'bottom-sheet';
+
   /*
    * The sheet gets a Done button and the popover does not. A popover is
    * dismissed by tapping anywhere outside it, which is most of the screen; a
    * sheet's outside is the strip above it, and a picker whose scale is under
    * your thumb needs somewhere deliberate to finish.
+   *
+   * Full width and set apart from the face rather than tucked under it. It is
+   * the only tap target in the sheet, and at the bottom of the screen it is
+   * also the one under the thumb already holding the phone.
    */
-  const footer =
-    presentation === 'bottom-sheet' ? (
-      <Popover.Close>
-        <Button className="w-full">Done</Button>
-      </Popover.Close>
-    ) : null;
+  const footer = isSheet ? (
+    <Popover.Close>
+      <Button className="mt-2 w-full">Done</Button>
+    </Popover.Close>
+  ) : null;
 
   return (
     <Popover
       open={open}
       onOpenChange={setOpen}
-      presentation={presentation === 'bottom-sheet' ? 'bottom-sheet' : 'popover'}
+      presentation={isSheet ? 'bottom-sheet' : 'popover'}
     >
       <Popover.Trigger>{trigger}</Popover.Trigger>
-      {/* The padding is on the panel, not on the content: in sheet mode a
-          className on the panel is merged into the sheet's own padding and
-          would replace it. */}
-      <Popover.Content width="content-fit">
-        <Panel layout={layout} className="self-center p-3" footer={footer} {...face} />
+      {/*
+        `full` in a sheet, `content-fit` anchored. A sheet is already the width
+        of the screen, and a panel sized to its content sits centred in it as a
+        card that happens to be inside a sheet rather than as the sheet's own
+        contents — which is the difference between the two and the reason the
+        sheet is worth having.
+
+        The padding is on the panel, not on the content: in sheet mode a
+        className on the panel is merged into the sheet's own padding and would
+        replace it.
+      */}
+      <Popover.Content width={isSheet ? 'full' : 'content-fit'}>
+        <Panel
+          layout={layout}
+          fullWidth={isSheet}
+          className={isSheet ? 'w-full gap-4 px-1 pb-2' : 'self-center p-3'}
+          footer={footer}
+          {...face}
+        />
       </Popover.Content>
     </Popover>
   );

@@ -96,7 +96,7 @@ A face beside a list of times. The hands sweep to the selection rather than jump
 
 ### The ruler, in a sheet
 
-One large readout over a scale you swipe. It is the layout that reads at arm’s length, so it is the one for a sheet — and the sheet is the presentation that gets a Done button, because a sheet’s outside is only the strip above it.
+One large readout over a scale you swipe. It is the layout that reads at arm's length, so it is the one for a sheet — where the panel takes the full width and the Done button with it, because a sheet's outside is only the strip above it.
 
 ```tsx
 <TimePicker
@@ -109,7 +109,7 @@ One large readout over a scale you swipe. It is the layout that reads at arm’s
 
 ### In a dialog
 
-The same panel, centred over a dimmed screen. Worth it when the picker is the only decision on the screen and the trigger is somewhere awkward to anchor to.
+The same panel over a frosted screen. Worth it when the time *is* the decision on the screen — the blur says that in a way a dim does not, and falls back to the dim where expo-blur is not installed.
 
 ```tsx
 <TimePicker presentation="dialog" value={time} onValueChange={setTime} />
@@ -133,8 +133,10 @@ const [edge, setEdge] = useState('start');
     <Frame.Section className="items-center gap-4">
       <ToggleButtonGroup
         selectionMode="single"
+        size="sm"
         value={[edge]}
         onValueChange={(next) => setEdge(next[0] ?? 'start')}
+        className="w-full justify-between px-1"
       >
         <ToggleButton id="start">Starts</ToggleButton>
         <ToggleButton id="end">Ends</ToggleButton>

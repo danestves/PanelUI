@@ -5574,18 +5574,18 @@
       },
       {
         "title": "The ruler, in a sheet",
-        "description": "One large readout over a scale you swipe. It is the layout that reads at arm’s length, so it is the one for a sheet — and the sheet is the presentation that gets a Done button, because a sheet’s outside is only the strip above it.",
+        "description": "One large readout over a scale you swipe. It is the layout that reads at arm's length, so it is the one for a sheet — where the panel takes the full width and the Done button with it, because a sheet's outside is only the strip above it.",
         "code": "<TimePicker\n  layout=\"ruler\"\n  presentation=\"bottom-sheet\"\n  value={time}\n  onValueChange={setTime}\n/>"
       },
       {
         "title": "In a dialog",
-        "description": "The same panel, centred over a dimmed screen. Worth it when the picker is the only decision on the screen and the trigger is somewhere awkward to anchor to.",
+        "description": "The same panel over a frosted screen. Worth it when the time *is* the decision on the screen — the blur says that in a way a dim does not, and falls back to the dim where expo-blur is not installed.",
         "code": "<TimePicker presentation=\"dialog\" value={time} onValueChange={setTime} />"
       },
       {
         "title": "Inline, inside a Frame",
         "description": "`inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own — a segmented header over a picker is a settings row rather than a popover.",
-        "code": "const [edge, setEdge] = useState('start');\n\n<Frame>\n  <Frame.Header>\n    <Frame.Title>Time</Frame.Title>\n    <Frame.Action>\n      {formatTime(start)} – {formatTime(end)}\n    </Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <Frame.Section className=\"items-center gap-4\">\n      <ToggleButtonGroup\n        selectionMode=\"single\"\n        value={[edge]}\n        onValueChange={(next) => setEdge(next[0] ?? 'start')}\n      >\n        <ToggleButton id=\"start\">Starts</ToggleButton>\n        <ToggleButton id=\"end\">Ends</ToggleButton>\n      </ToggleButtonGroup>\n      <TimePicker\n        presentation=\"inline\"\n        layout=\"clock\"\n        value={edge === 'start' ? start : end}\n        onValueChange={edge === 'start' ? setStart : setEnd}\n      />\n    </Frame.Section>\n  </Frame.Panel>\n</Frame>"
+        "code": "const [edge, setEdge] = useState('start');\n\n<Frame>\n  <Frame.Header>\n    <Frame.Title>Time</Frame.Title>\n    <Frame.Action>\n      {formatTime(start)} – {formatTime(end)}\n    </Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <Frame.Section className=\"items-center gap-4\">\n      <ToggleButtonGroup\n        selectionMode=\"single\"\n        size=\"sm\"\n        value={[edge]}\n        onValueChange={(next) => setEdge(next[0] ?? 'start')}\n        className=\"w-full justify-between px-1\"\n      >\n        <ToggleButton id=\"start\">Starts</ToggleButton>\n        <ToggleButton id=\"end\">Ends</ToggleButton>\n      </ToggleButtonGroup>\n      <TimePicker\n        presentation=\"inline\"\n        layout=\"clock\"\n        value={edge === 'start' ? start : end}\n        onValueChange={edge === 'start' ? setStart : setEnd}\n      />\n    </Frame.Section>\n  </Frame.Panel>\n</Frame>"
       },
       {
         "title": "Your own trigger",
