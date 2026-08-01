@@ -1,0 +1,149 @@
+---
+title: Colors
+description: The semantic colour tokens every component draws from, what each one is for, and how to change them.
+---
+
+Nothing in PanelUI names a colour. A Button does not know it is dark grey; it knows it is
+`primary`, and what `primary` resolves to is decided by the active theme. That indirection is the
+whole reason a theme switch restyles the library rather than only the screens you wrote.
+
+So there is one rule, and it applies to your own code as much as to ours: **use the semantic
+token, not the palette value.** `bg-primary`, not `bg-neutral-800`. The moment a raw value
+appears, that element stops following the theme and starts being a bug someone finds in dark
+mode.
+
+## The tokens
+
+Most come in pairs — a surface and the text that goes on it. `foreground` is always the readable
+colour *for* the token it is named after, so `bg-card text-card-foreground` is guaranteed to have
+contrast in every theme.
+
+### Surfaces
+
+| Token | Used for |
+| --- | --- |
+| `background` / `foreground` | The page itself, and its text |
+| `card` / `card-foreground` | Raised surfaces standing on the page |
+| `popover` / `popover-foreground` | Overlays — dialogs, sheets, toasts, tooltips |
+| `overlay` / `overlay-foreground` | Floating panels: menus, and anything opened *on top of* an overlay |
+
+`overlay` is one step further forward than `popover`, and it exists because a menu is usually the
+thing on top of a popover. Without a step of its own it disappears into whatever it opened over.
+
+### Elevation
+
+| Token | Used for |
+| --- | --- |
+| `surface` | The grouping surface behind `Frame` |
+| `surface-secondary` | One step further from the page |
+| `surface-tertiary` | Two steps further |
+
+A ladder rather than one value, so nesting reads as hierarchy. This describes depth *within* the
+page; `overlay` describes leaving it.
+
+### Actions and state
+
+| Token | Used for |
+| --- | --- |
+| `primary` / `primary-foreground` | The main action colour |
+| `secondary` / `secondary-foreground` | Secondary fills |
+| `muted` / `muted-foreground` | Quiet fills, and supporting text |
+| `accent` / `accent-foreground` | Hover and selected states |
+| `border` | Hairlines |
+| `input` | Field borders |
+| `ring` | Focus rings |
+| `skeleton` | The shimmer fill |
+
+### Status
+
+`destructive`, `info`, `success` and `warning`, each with a `-foreground`, a `-soft` and a
+`-subtle`.
+
+| Suffix | Used for |
+| --- | --- |
+| *(none)* | The saturated colour — an icon, a border, a filled button |
+| `-foreground` | Text on a tinted fill. Darker than the base colour, so it is readable on one |
+| `-soft` | The tint behind an Alert |
+| `-subtle` | The tint behind a Badge, one step quieter |
+
+The tints are real tokens rather than opacity modifiers, and that is not an accident. `dark:`
+only resolves inside the `light` and `dark` themes — inside a named theme it compiles to a class
+selector that never matches, so a `dark:bg-info/[0.06]` tint silently vanishes the moment someone
+switches to Moon. See [Theming](/docs/customization/theming) for why.
+
+### Charts
+
+`chart-1` through `chart-5`, ordered by prominence. A separate ramp from the status colours
+because they answer a different question: a status colour *means* something — this failed, this
+is fine — while a series colour only has to be told apart from the other four.
+
+`chart-1` is the series the chart is about, and every theme starts it on that family's own
+accent. `LineChart` takes `chart-1` by default and each further series takes the next, so putting
+every chart in an app on brand is five lines in your `global.css`.
+
+### Syntax
+
+`code-keyword`, `code-string`, `code-number`, `code-comment`, `code-function`, `code-property`,
+`code-punctuation`, `code-inserted` and `code-deleted` — the highlighting ramp `CodeBlock` and
+`Response` draw from.
+
+## Changing a colour
+
+Redefine the token in your own `global.css`, in the same `@variant` shape the library uses:
+
+```css title="global.css"
+@import 'panelui-native/theme.css';
+
+@layer theme {
+  :root {
+    @variant light {
+      --color-primary: #4f46e5;
+      --color-primary-foreground: #ffffff;
+    }
+    @variant dark {
+      --color-primary: #818cf8;
+      --color-primary-foreground: #1e1b4b;
+    }
+  }
+}
+```
+
+Every component drawing `bg-primary` follows, including ones you have not written yet.
+
+<Callout type="warn" title="Two rules Uniwind enforces">
+  **Every theme must define the same variables.** Adding a token to one theme without adding it
+  to all of them fails the build with *"All themes must have the same variables"*.
+
+  **The web's `:root { --x }` / `.dark { --x }` pattern does not work.** Uniwind resolves themed
+  tokens only from `@variant` blocks, and `light-dark()` inside `@theme` breaks colour parsing
+  outright.
+</Callout>
+
+If you are overriding for all six themes rather than two, the same block takes `moon`,
+`moon-dark`, `grass` and `grass-dark` alongside `light` and `dark`.
+
+## Reading a colour in JavaScript
+
+Some things cannot be given a class: an SVG fill, a `placeholderTextColor`, a prop on a
+third-party component. Resolve the token instead of hardcoding what it currently evaluates to:
+
+```tsx
+import { useCSSVariable } from 'uniwind';
+
+const muted = useCSSVariable('--color-muted-foreground');
+
+<Svg><Circle fill={muted} /></Svg>
+```
+
+It subscribes to theme changes, so the value updates on every switch — which a hex literal
+copied out of this page would not. Icons inside PanelUI's own coloured surfaces already do this
+for you; see [Button](/docs/components/button) for how `startContent` icons pick up a readable
+colour.
+
+## Next
+
+<Cards>
+  <Card title="Theming" href="/docs/customization/theming" />
+  <Card title="Fonts" href="/docs/customization/fonts" />
+  <Card title="Styling" href="/docs/customization/styling" />
+</Cards>

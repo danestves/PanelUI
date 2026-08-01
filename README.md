@@ -21,7 +21,7 @@
   <a href="https://panelui.dev/docs"><b>Documentation</b></a> ·
   <a href="https://panelui.dev/docs/installation">Installation</a> ·
   <a href="https://panelui.dev/docs/components/button">Components</a> ·
-  <a href="https://panelui.dev/docs/theming">Theming</a> ·
+  <a href="https://panelui.dev/docs/customization/theming">Theming</a> ·
   <a href="https://panelui.dev/docs/cli">CLI</a>
 </p>
 
@@ -160,8 +160,9 @@ setFamily('grass'); // switch family, staying in the current mode
 ```
 
 Tokens are CSS variables and can be overridden in your own `global.css`. See
-**[the theming guide](https://panelui.dev/docs/theming)** for the token reference and the
-`@variant` shape overrides have to use.
+**[Colors](https://panelui.dev/docs/customization/colors)** for the token reference and the
+`@variant` shape overrides have to use, and **[Fonts](https://panelui.dev/docs/customization/fonts)**
+for pointing the library at a typeface of your own.
 
 ## Example app
 

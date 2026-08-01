@@ -1,0 +1,152 @@
+---
+title: Theming
+description: Six built-in themes across three families, how to switch at runtime, and how to write a theme of your own.
+---
+
+PanelUI ships three theme families, each in a light and a dark form. A family sets its own
+**radius scale** as well as its own palette, so switching one restyles the shape of the UI, not
+just its colour.
+
+| Family | Light | Dark | Character |
+| --- | --- | --- | --- |
+| **Panel** | `light` | `dark` | The default — neutral greys, moderate corners |
+| **Moon** | `moon` | `moon-dark` | Monochrome and high-contrast, electric blue accent, tight corners |
+| **Grass** | `grass` | `grass-dark` | Green accent on warm neutrals, soft generous corners |
+
+What each theme actually sets is the token list on [Colors](/docs/customization/colors). This
+page is about choosing between them and adding your own.
+
+## Registering the themes
+
+`light` and `dark` work everywhere. The other four must be listed in `extraThemes` in your Metro
+config, or `setTheme('moon')` throws *"it was not registered"*.
+
+```js title="metro.config.js"
+module.exports = withUniwindConfig(config, {
+  cssEntryFile: './global.css',
+  extraThemes: ['moon', 'moon-dark', 'grass', 'grass-dark'],
+});
+```
+
+`PANEL_EXTRA_THEMES` is exported with exactly that list, if you would rather not keep two copies
+in step.
+
+<Callout type="warn">
+  A change to `extraThemes` needs the dev server restarted, not reloaded. A running server
+  rewrites the generated CSS from the theme list it started with, so a newly added theme appears
+  to be registered and still is not.
+</Callout>
+
+## Switching at runtime
+
+```tsx
+import { useTheme, useThemeMode, PANEL_THEMES } from 'panelui-native';
+
+// By name
+const { theme, setTheme } = useTheme();
+setTheme('moon-dark');
+setTheme('system'); // follow the device
+
+// Or as two independent axes
+const { family, mode, setFamily, setMode, toggleMode } = useThemeMode();
+toggleMode();          // dark ↔ light, staying in the current family
+setFamily('grass');    // switch family, staying in the current mode
+```
+
+Uniwind applies the change natively without re-rendering the tree, so a theme switch costs
+nothing beyond the repaint.
+
+### Why there are two hooks
+
+Uniwind gives `prefers-color-scheme` handling to `light` and `dark` and to nothing else — any
+other theme compiles to a plain class selector and cannot adapt on its own. Each family therefore
+ships as a light/dark *pair*, and `useThemeMode` treats family and mode as separate axes so a sun
+toggle keeps working inside a brand theme. Without it, someone in Moon dark who taps the sun
+lands in default light rather than in Moon light.
+
+`PANEL_THEMES` is the list of families, each with a display name and a representative swatch
+colour for both modes — enough to build a theme picker without hardcoding anything.
+
+```tsx
+{PANEL_THEMES.map((entry) => (
+  <Pressable key={entry.id} onPress={() => setFamily(entry.id)}>
+    <View style={{ backgroundColor: entry.swatch[mode === 'dark' ? 1 : 0] }} />
+    <Text>{entry.name}</Text>
+  </Pressable>
+))}
+```
+
+## Radius
+
+`--radius-xs` through `--radius-3xl` are themed, and that is what gives each family its shape.
+Use `rounded-md`, `rounded-xl` and friends as normal — the values move with the theme.
+
+| Token | Panel |
+| --- | --- |
+| `--radius-xs` | 4px |
+| `--radius-sm` | 6px |
+| `--radius-md` | 8px |
+| `--radius-lg` | 10px |
+| `--radius-xl` | 14px |
+| `--radius-2xl` | 16px |
+| `--radius-3xl` | 24px |
+
+Moon tightens the scale and Grass opens it out. Override them the way you would override a
+colour, and every rounded corner in the library follows.
+
+## Writing a theme
+
+A theme is a `@variant` block that defines every token. Start by copying an existing one rather
+than from nothing — the build fails on the first token you miss, and the error names the rule
+rather than the token.
+
+```css title="global.css"
+@import 'tailwindcss';
+@import 'uniwind';
+@import 'panelui-native/theme.css';
+
+@source './node_modules/panelui-native/src';
+
+@custom-variant sunset (&:where(.sunset, .sunset *));
+
+@layer theme {
+  :root {
+    @variant sunset {
+      --color-background: #fffaf5;
+      --color-foreground: #2b1a12;
+      /* …every remaining token… */
+    }
+  }
+}
+```
+
+Then add `sunset` to `extraThemes` and restart the server.
+
+<Callout type="warn" title="Two rules Uniwind enforces">
+  **Every theme must define the same variables.** Adding a token to one theme without adding it
+  to all of them fails the build with *"All themes must have the same variables"*.
+
+  **The web's `:root { --x }` / `.dark { --x }` pattern does not work.** Uniwind resolves themed
+  tokens only from `@variant` blocks, and `light-dark()` inside `@theme` breaks colour parsing
+  outright.
+</Callout>
+
+### Why theme.css declares its own variants
+
+`panelui-native/theme.css` carries a `@custom-variant` line for each of the four named themes,
+which looks redundant next to `extraThemes`. It is not.
+
+The variants Uniwind generates from `extraThemes` live in an artifact it produces by compiling
+`theme.css` — so on a fresh install, at the moment `moon` was first used, nothing had defined it
+yet. The dev server got away with it because it registers themes in memory; a production bundle
+failed with `Cannot use @variant with unknown variant`. Declared in the file itself the cycle
+does not exist, and `extraThemes` goes back to meaning only what it reads like it means: which
+themes can be switched to at runtime.
+
+## Next
+
+<Cards>
+  <Card title="Colors" href="/docs/customization/colors" />
+  <Card title="Fonts" href="/docs/customization/fonts" />
+  <Card title="Styling" href="/docs/customization/styling" />
+</Cards>

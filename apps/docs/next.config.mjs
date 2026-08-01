@@ -30,6 +30,13 @@ const config = {
         destination: '/docs/components/field',
         permanent: true,
       },
+      // Theming gained neighbours — Colors, Fonts and Styling — and moved into
+      // the section they share. It is the most linked-to page in the docs.
+      {
+        source: '/docs/theming',
+        destination: '/docs/customization/theming',
+        permanent: true,
+      },
     ];
   },
 };

@@ -52,8 +52,8 @@ export const baseOptions: BaseLayoutProps = {
     {
       type: 'main',
       on: 'nav',
-      text: 'Theming',
-      url: '/docs/theming',
+      text: 'Customization',
+      url: '/docs/customization/colors',
       active: 'nested-url',
     },
     {

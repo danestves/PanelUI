@@ -1,0 +1,142 @@
+---
+title: Styling
+description: className on every component, when to reach for style instead, and how to build your own components on top.
+---
+
+Every component in PanelUI takes a `className`, and it is the intended way to change how one
+looks. Classes are Tailwind's, compiled for React Native by
+[Uniwind](https://github.com/jpudysz/uniwind) — so `px-4`, `flex-row`, `rounded-xl` and
+`bg-primary` all mean what you expect.
+
+```tsx
+<Button className="w-full rounded-full">Continue</Button>
+<Card className="border-info/40 bg-info-soft">…</Card>
+```
+
+## className merges, it does not replace
+
+What you pass is merged with the component's own classes through
+[tailwind-merge](https://github.com/dcastil/tailwind-merge), so a class of yours *wins over the
+one it conflicts with* and leaves everything else alone.
+
+```tsx
+// Keeps the height, padding, radius, border and press behaviour.
+// Changes only the background.
+<Button className="bg-destructive">Delete</Button>
+```
+
+This is why you rarely need to restate a component's own styling to change one thing about it.
+
+## Compound parts take their own
+
+Anything built out of parts styles each part separately, which is usually more precise than
+styling the root:
+
+```tsx
+<Card className="gap-0">
+  <Card.Header className="pb-2">
+    <Card.Title className="text-lg">Invoice</Card.Title>
+  </Card.Header>
+  <Card.Content className="pt-0">…</Card.Content>
+</Card>
+```
+
+The parts a component has are listed under **Composition** on its page.
+
+## When to use `style`
+
+`style` wins over `className` — Uniwind puts the resolved classes first in the style array and
+your `style` prop after, so the later one lands on top.
+
+Reach for it when the value is not a class: a computed dimension, an interpolated colour, a font
+family, anything coming out of a measurement.
+
+```tsx
+<View style={{ width: containerWidth * 0.6 }} className="rounded-xl bg-card" />
+```
+
+<Callout type="warn" title="Animated properties are not yours to set">
+  Some components animate a property on the UI thread — an Input's border colour while it takes
+  focus, a Slider's fill width, a Switch's thumb offset. A `className` setting that same property
+  is overwritten on the next frame, so it looks like it did nothing.
+
+  Those components expose the values as props instead. If a class appears to be ignored, check
+  the component's page for a prop that owns it.
+</Callout>
+
+## `cn` for conditional classes
+
+The same helper the library uses internally, exported for yours. It is `clsx` and
+`tailwind-merge` together, so conditions and conflict resolution both work:
+
+```tsx
+import { cn } from 'panelui-native';
+
+<Item
+  className={cn(
+    'rounded-xl',
+    selected && 'bg-accent',
+    disabled && 'opacity-50'
+  )}
+/>
+```
+
+## Building on top
+
+For a variant of your own, wrap the component with
+[tailwind-variants](https://www.tailwind-variants.org) — the same tool the library's own variants
+are built with:
+
+```tsx
+import { Button, type ButtonProps } from 'panelui-native';
+import { tv, type VariantProps } from 'tailwind-variants';
+
+const promoButton = tv({
+  base: 'rounded-full',
+  variants: {
+    tone: {
+      launch: 'bg-info',
+      sale: 'bg-warning',
+    },
+  },
+  defaultVariants: { tone: 'launch' },
+});
+
+type PromoProps = Omit<ButtonProps, 'variant'> & VariantProps<typeof promoButton>;
+
+export function PromoButton({ tone, className, ...props }: PromoProps) {
+  return <Button {...props} className={promoButton({ tone, className })} />;
+}
+```
+
+Declare the `tv()` at module scope, never inside the render — it is a builder, and rebuilding it
+every frame is pure overhead.
+
+## Colours belong to tokens
+
+Anywhere you would write a colour, write the token instead: `bg-primary`, not `bg-neutral-800`.
+A hardcoded value stops following the theme and becomes something you find again in dark mode.
+[Colors](/docs/customization/colors) has the full list, and `useCSSVariable` for the cases where
+a class will not do.
+
+## Native controls ignore all of this
+
+A component rendered with `native` hands off to SwiftUI or Jetpack Compose, and the platform owns
+what comes back — its colours, its metrics, its shape. `className` does nothing to it, and
+neither does a theme token.
+
+```tsx
+// The className is not an error, and it is not applied either.
+<Button native glass className="bg-primary">Continue</Button>
+```
+
+Anything the look depends on has to be a prop, and the spacing around it has to come from the
+container. See [Native](/docs/native).
+
+## Next
+
+<Cards>
+  <Card title="Colors" href="/docs/customization/colors" />
+  <Card title="Theming" href="/docs/customization/theming" />
+  <Card title="Fonts" href="/docs/customization/fonts" />
+</Cards>

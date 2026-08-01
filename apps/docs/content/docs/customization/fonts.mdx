@@ -1,0 +1,172 @@
+---
+title: Fonts
+description: Load a font and point five tokens at it. Every component in the library follows.
+---
+
+Changing the font is two steps: load the faces, then define five tokens. There is no provider to
+configure and no prop to thread — every component already writes the classes those tokens attach
+to.
+
+## 1. Load the faces
+
+Any loader works. With Expo:
+
+```bash
+npx expo install expo-font @expo-google-fonts/inter
+```
+
+```tsx title="app/_layout.tsx"
+import { useFonts } from 'expo-font';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
+import { PanelUIProvider } from 'panelui-native';
+
+export default function Layout() {
+  const [loaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  if (!loaded) return null;
+
+  return <PanelUIProvider>{/* … */}</PanelUIProvider>;
+}
+```
+
+The keys you pass to `useFonts` are the names the platform will know the faces by. Those exact
+strings go into the tokens below.
+
+## 2. Point the tokens at them
+
+```css title="global.css"
+@import 'tailwindcss';
+@import 'uniwind';
+@import 'panelui-native/theme.css';
+
+@source './node_modules/panelui-native/src';
+
+@theme {
+  --font-normal: Inter_400Regular;
+  --font-medium: Inter_500Medium;
+  --font-semibold: Inter_600SemiBold;
+  --font-bold: Inter_700Bold;
+}
+```
+
+Restart the dev server, and that is the whole change. Every heading, label, button, field and
+table cell in the library is now set in Inter.
+
+| Token | The class it takes over | Where it lands |
+| --- | --- | --- |
+| `--font-normal` | `font-normal` | Body text, descriptions, fields — most of the library |
+| `--font-medium` | `font-medium` | Labels, table headers, the number in a NumberInput |
+| `--font-semibold` | `font-semibold` | Headings, button labels, dialog titles |
+| `--font-bold` | `font-bold` | `Typography` `h1`, and anything asking for `font-bold` |
+| `--font-mono` | `font-mono` | `CodeBlock`, inline code, file paths |
+
+You do not have to define all five. Leave `--font-bold` out and `font-bold` keeps meaning weight
+700 in whatever the system font is — useful if your family has no bold face.
+
+## Why the weight becomes the family
+
+Setting `--font-medium` does not make `font-medium` mean "Inter at weight 500". It makes it mean
+`font-family: Inter_500Medium`, and the `font-weight: 500` it used to set goes away entirely.
+
+That is deliberate, and it is the shape native platforms actually want. On the web a browser
+picks a face out of one family by weight. On iOS and Android a weight is a *separately registered
+face* — `Inter_500Medium` and `Inter_700Bold` are two different fonts as far as the platform is
+concerned, and asking for `fontWeight: 700` on a family registered as a single face gets you a
+synthesised smear on one platform and nothing at all on the other.
+
+So the token carries the face, and the class that used to name a weight now names the file that
+*is* that weight. Nothing in your code changes: `font-semibold` still means "the bold-ish one".
+
+<Callout>
+  This is also why the library ships no `--font-*` values of its own for the four weights. If it
+  declared them, `font-semibold` would resolve to a font family on every install — including for
+  apps that never wanted a custom font, which would silently lose every bold string in the UI.
+  Undefined tokens are what keep the weights working by default.
+</Callout>
+
+## Monospace
+
+`--font-mono` is the one weight-less token, and unlike the others the library *does* give it a
+value: `Menlo` on iOS and `monospace` on Android.
+
+It has to. Tailwind's default `--font-mono` is a stack of eight families separated by commas, and
+React Native takes `fontFamily` as a single name — the whole list arrives at the platform as one
+family that does not exist, and code quietly renders in the system font. Override it with one
+real family name, never a stack:
+
+```css
+@theme {
+  --font-mono: JetBrainsMono_400Regular;
+}
+```
+
+## One font for one theme
+
+The tokens are ordinary theme variables, so they take a `@variant` block like any other. A brand
+theme can bring its own typeface while the default theme keeps the system font:
+
+```css title="global.css"
+@layer theme {
+  :root {
+    @variant grass {
+      --font-normal: Nunito_400Regular;
+      --font-semibold: Nunito_600SemiBold;
+    }
+    @variant grass-dark {
+      --font-normal: Nunito_400Regular;
+      --font-semibold: Nunito_600SemiBold;
+    }
+  }
+}
+```
+
+Uniwind requires every theme to define the same variables, so a token scoped this way has to
+appear in all six blocks — see [Theming](/docs/customization/theming).
+
+## Setting a font on one component
+
+The tokens are global by design. For a single element, put the family on it directly:
+
+```tsx
+<Typography type="h1" style={{ fontFamily: 'PlayfairDisplay_700Bold' }}>
+  Reading list
+</Typography>
+```
+
+`style` wins over `className`, so this works even where a weight class is already in play. See
+[Styling](/docs/customization/styling).
+
+## Troubleshooting
+
+**Nothing changed.** The dev server has to be restarted, not reloaded — a running one rewrites
+its generated CSS from the theme it started with. Stop it and run `npx expo start -c`.
+
+**The text is there but the font is the old one.** The token value has to match the name the
+platform registered, which is the *key* you passed to `useFonts` — not the file name, not the
+family name from the font's metadata. `Inter_600SemiBold`, not `Inter` and not
+`Inter-SemiBold.ttf`.
+
+**Bold disappeared.** Expected, if you defined `--font-normal` but not `--font-bold`: `font-bold`
+now resolves to a family, finds none, and falls back. Define all the weights you use, or none.
+
+**One component still uses the system font.** Something is drawing text without a weight class.
+Every component in the library carries one; if you find one that does not, that is a bug worth
+[reporting](https://github.com/panel-ui/PanelUI/issues).
+
+## Next
+
+<Cards>
+  <Card title="Colors" href="/docs/customization/colors" />
+  <Card title="Theming" href="/docs/customization/theming" />
+  <Card title="Styling" href="/docs/customization/styling" />
+</Cards>

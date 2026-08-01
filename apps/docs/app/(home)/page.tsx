@@ -274,7 +274,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          <Button variant="outline" className="self-start" render={<Link href="/docs/theming" />}>
+          <Button variant="outline" className="self-start" render={<Link href="/docs/customization/theming" />}>
             Read the theming guide
             <ArrowRightIcon />
           </Button>
