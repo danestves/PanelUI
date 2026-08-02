@@ -1017,11 +1017,11 @@ function TimePickerClockDemo() {
 }
 
 /** The ruler where it belongs — a sheet, with a thumb on it. */
-function TimePickerRulerVersion() {
+function TimePickerRulerDemo() {
   const [time, setTime] = useState<TimeValue>({ hour: 0, minute: 0 });
 
   return (
-    <View className="flex-1 justify-center gap-8 px-5">
+    <View className="w-full gap-6">
       <View className="gap-2">
         <Text size="2xl" weight="semibold">
           Reminder
@@ -12514,17 +12514,13 @@ export const COMPONENTS: ComponentEntry[] = [
     name: 'TimePicker',
     summary: 'A time of day, as a wheel, a clock or a swipeable scale',
     demos: [
+      // The ruler leads: it is a trigger and a sheet, so it needs no more of
+      // the screen than any other page here, and a Versions list of one row
+      // pointing at it was a page spent on a link.
+      { label: 'The ruler, in a sheet', render: () => <TimePickerRulerDemo /> },
       { label: 'Presentations', render: () => <TimePickerPresentationsDemo /> },
       { label: 'The wheel', render: () => <TimePickerWheelDemo /> },
       { label: 'The clock face', render: () => <TimePickerClockDemo /> },
-      {
-        label: 'The ruler, in a sheet',
-        id: 'ruler',
-        fullPage: true,
-        description:
-          'One large readout over a scale you swipe. The layout that reads at arm’s length.',
-        render: () => <TimePickerRulerVersion />,
-      },
       { label: 'Inline, inside a Frame', render: () => <TimePickerFrameDemo /> },
     ],
   },
