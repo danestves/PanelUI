@@ -2,7 +2,14 @@ import { useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRightIcon, EmptyState, Item, SectionRail, Text } from 'panelui-native';
+import {
+  ChevronRightIcon,
+  EmptyState,
+  Item,
+  SectionRail,
+  Text,
+  useKeyboard,
+} from 'panelui-native';
 import { ScreenHeader } from '../../../src/components/screen-header';
 import { COMPONENTS_BY_SLUG, type ComponentEntry, type Demo } from '../../../src/data/components';
 
@@ -131,6 +138,14 @@ function PagerLayout({
   const [page, setPage] = useState(0);
   const [pageHeight, setPageHeight] = useState(0);
   const scroller = useRef<ScrollView>(null);
+  /*
+   * A page centres its demo in the viewport, which is the wrong place to be
+   * once a field on it takes focus: the keyboard covers the bottom half, and
+   * centred means sitting right on its edge with anything the field opens
+   * underneath it. While the keyboard is up the demo goes to the top instead,
+   * which is the only part of the page still visible.
+   */
+  const { isVisible: keyboardVisible } = useKeyboard();
 
   // The versions list leads, where there is one to show: it is the index to
   // the screens that are not pages themselves.
@@ -156,7 +171,13 @@ function PagerLayout({
         pagingEnabled
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
-        onLayout={(event) => setPageHeight(event.nativeEvent.layout.height)}
+        // Not while the keyboard is up: a platform that resizes the window for
+        // it would re-measure every page mid-scroll, and each snap position
+        // would move out from under the offset the scroll is already at.
+        onLayout={(event) => {
+          if (keyboardVisible) return;
+          setPageHeight(event.nativeEvent.layout.height);
+        }}
         onScroll={(event) => {
           const { contentOffset, layoutMeasurement } = event.nativeEvent;
           if (!layoutMeasurement.height) return;
@@ -170,7 +191,9 @@ function PagerLayout({
             // Nothing to lay out until the viewport has been measured; a page
             // of the wrong height would scroll to the wrong place first.
             style={{ height: pageHeight || undefined }}
-            className={fills ? 'pt-1' : 'justify-center px-5'}
+            className={
+              fills ? 'pt-1' : keyboardVisible ? 'px-5 pt-2' : 'justify-center px-5'
+            }
           >
             <View className={fills ? 'px-5' : undefined}>
               <Text size="xs" muted className="mb-2">
