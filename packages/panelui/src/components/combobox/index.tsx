@@ -78,6 +78,7 @@ import { CheckIcon, ChevronDownIcon, XIcon } from '../../icons';
 import { Portal } from '../../primitives/portal';
 import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
+import { useKeyboard } from '../../hooks/use-keyboard';
 import { cn } from '../../utils/cn';
 import { Chip } from '../chip';
 import { Spinner } from '../spinner';
@@ -423,6 +424,13 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
   const fieldRef = useRef<View>(null);
   const inputRef = useRef<TextInput>(null);
   const { height: screenHeight } = useWindowDimensions();
+  /*
+   * The keyboard is up whenever this list is open — the field is a text input
+   * and opening the list is what typing in it does. So the space the list has
+   * to work with is never the window: it is the window above the keyboard, and
+   * measuring against the window would put the options behind it.
+   */
+  const { height: keyboardHeight } = useKeyboard();
 
   const [internalValue, setInternalValue] = useState<ComboboxSelection[Mode]>(
     () =>
@@ -503,6 +511,19 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
   // An open overlay list catches the Android back button, closing itself
   // instead of popping the screen behind it.
   useBackHandler(open && presentation === 'overlay', close);
+
+  /*
+   * The anchor is a snapshot, and the keyboard invalidates it: a scroll view
+   * that lifts its content clear of the keyboard moves the field after it was
+   * measured, and the list would stay at the old position. Re-measure whenever
+   * the keyboard's height changes while the list is open.
+   */
+  useEffect(() => {
+    if (!open || presentation !== 'overlay') return;
+    fieldRef.current?.measureInWindow((x, y, width, height) =>
+      setAnchor({ x, y, width, height })
+    );
+  }, [open, presentation, keyboardHeight]);
 
   /*
    * A single-select field shows the chosen option's label when it is not being
@@ -818,10 +839,12 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
     );
   }
 
-  // Flip above the field when the list would run off the bottom. listHeight is
-  // 0 on the first frame, so it opens downwards and corrects itself once
+  // Flip above the field when the list would run off the bottom — where the
+  // bottom is the top of the keyboard, not the bottom of the screen. listHeight
+  // is 0 on the first frame, so it opens downwards and corrects itself once
   // measured — invisible inside the 140ms fade.
-  const spaceBelow = anchor ? screenHeight - (anchor.y + anchor.height) - offset : 0;
+  const viewportBottom = screenHeight - keyboardHeight;
+  const spaceBelow = anchor ? viewportBottom - (anchor.y + anchor.height) - offset : 0;
   const flip = !!anchor && listHeight > 0 && listHeight > spaceBelow;
 
   const overlayPosition = anchor
