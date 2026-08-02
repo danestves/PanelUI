@@ -1047,46 +1047,95 @@ function TimePickerRulerDemo() {
   );
 }
 
+type TimeEdge = 'start' | 'end';
+
+/**
+ * One end of the span, in the header readout.
+ *
+ * The lit one is the end the face is editing. Nothing else marks it, and
+ * nothing else needs to: the readout is already the only place both times are
+ * written down, so the answer to "which of these am I turning the face for" is
+ * the one that is brighter.
+ */
+function TimeEdgeButton({
+  label,
+  time,
+  active,
+  onPress,
+}: {
+  label: string;
+  time: TimeValue;
+  active: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${label} ${formatTime(time)}`}
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      className={`rounded-md px-2 py-1 ${active ? 'bg-accent' : ''}`}
+    >
+      <Text size="sm" weight={active ? 'medium' : 'normal'} muted={!active}>
+        {formatTime(time)}
+      </Text>
+    </Pressable>
+  );
+}
+
 /**
  * A picker composed into a card rather than hidden behind a trigger.
  *
- * Two independent times behind a segmented header — which is what a "single
- * time or a range" control actually is, and why the picker does not need a
- * range mode of its own to build one.
+ * Two independent times behind one face — which is what a "single time or a
+ * range" control actually is, and why the picker does not need a range mode of
+ * its own to build one.
  */
 function TimePickerFrameDemo() {
-  const [edge, setEdge] = useState('start');
+  const { toast } = useToast();
+  const [edge, setEdge] = useState<TimeEdge>('start');
   const [start, setStart] = useState<TimeValue>({ hour: 19, minute: 0 });
   const [end, setEnd] = useState<TimeValue>({ hour: 21, minute: 30 });
 
   const editing = edge === 'start' ? start : end;
   const setEditing = edge === 'start' ? setStart : setEnd;
 
+  /*
+   * Tapping a time is how you choose which one the face edits — so there is no
+   * separate pair of buttons above the card saying the same thing twice. The
+   * readout lights up, and a toast says what the face is now for, because the
+   * highlight alone is a small change to notice on the far side of the header.
+   */
+  const edit = (next: TimeEdge) => {
+    setEdge(next);
+    toast.show({
+      variant: 'info',
+      label: next === 'start' ? 'Editing the start' : 'Editing the end',
+      description: 'Turn the face to set it.',
+      duration: 2000,
+    });
+  };
+
   return (
     <View className="w-full gap-3">
-      {/*
-        Outside the card, not in it. The card is one time being edited; the
-        toggle chooses *which* time that is, which is a decision about the card
-        rather than a control inside it. At opposite ends because they are the
-        two ends of one span, and the row reads as that span when it is laid
-        out like one.
-      */}
-      <ToggleButtonGroup
-        selectionMode="single"
-        size="sm"
-        value={[edge]}
-        onValueChange={(next) => setEdge(next[0] ?? 'start')}
-        className="w-full justify-between px-1"
-      >
-        <ToggleButton id="start">Starts</ToggleButton>
-        <ToggleButton id="end">Ends</ToggleButton>
-      </ToggleButtonGroup>
-
       <Frame className="w-full">
         <Frame.Header>
           <Frame.Title>Time</Frame.Title>
-          <Frame.Action>
-            {formatTime(start)} – {formatTime(end)}
+          <Frame.Action className="gap-1">
+            <TimeEdgeButton
+              label="Starts"
+              time={start}
+              active={edge === 'start'}
+              onPress={() => edit('start')}
+            />
+            <Text size="sm" muted>
+              –
+            </Text>
+            <TimeEdgeButton
+              label="Ends"
+              time={end}
+              active={edge === 'end'}
+              onPress={() => edit('end')}
+            />
           </Frame.Action>
         </Frame.Header>
         <Frame.Panel>
@@ -1100,6 +1149,10 @@ function TimePickerFrameDemo() {
           </Frame.Section>
         </Frame.Panel>
       </Frame>
+
+      <Text size="sm" muted>
+        Tap either time to point the face at it.
+      </Text>
     </View>
   );
 }
