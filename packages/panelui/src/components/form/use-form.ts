@@ -24,6 +24,12 @@
  * `defaultValues` is read once, on the first render. If default values
  * arrive asynchronously, mount the form once you have them (e.g. behind a
  * loading check) rather than expecting the hook to pick up a later change.
+ *
+ * It also declares the fields. A field's `name` has to be a key of it —
+ * including the empty ones, as `''`, `false`, `null`. A name it does not
+ * declare has no value to give a validator and nothing to submit, so
+ * `useField` says so in development rather than letting the field quietly do
+ * nothing.
  */
 import { useCallback, useMemo, useReducer, useRef } from 'react';
 
@@ -123,6 +129,42 @@ function reducer<T extends Record<string, any>>(
   }
 }
 
+/** Stands in for the message a rule that crashed never got to return. */
+const VALIDATOR_THREW = 'This field could not be validated.';
+
+/**
+ * Run one field's rule, and survive a rule that throws.
+ *
+ * A validator is caller code reached from a path nothing awaits — `onBlur`
+ * fires and forgets, and `handleSubmit` is wired straight to a press. A throw
+ * in there becomes an unhandled rejection: a red box whose message ("cannot
+ * read property 'length' of undefined") names neither the field nor the rule,
+ * and which takes the screen for one line of one validator.
+ *
+ * So it is caught, reported against the field by name, and counted as a
+ * failure. Counted, rather than waved through: a rule that crashed reached no
+ * verdict, and a form that submits past a rule that never ran is the worse of
+ * the two outcomes — it puts unchecked values somewhere they cannot be taken
+ * back from. The placeholder message is what stands between the two; the
+ * console entry beside it is for whoever can fix the rule.
+ */
+async function runValidator<T extends Record<string, any>>(
+  name: keyof T,
+  validator: (value: any, values: T) => string | undefined | Promise<string | undefined>,
+  values: T
+): Promise<string | undefined> {
+  try {
+    return await validator(values[name], values);
+  } catch (error) {
+    console.error(
+      `[PanelUI] The validator for form field "${String(name)}" threw, so the ` +
+        `field is being treated as invalid.`,
+      error
+    );
+    return VALIDATOR_THREW;
+  }
+}
+
 export function useForm<T extends Record<string, any>>({
   defaultValues,
   validate,
@@ -140,7 +182,22 @@ export function useForm<T extends Record<string, any>>({
     isSubmitting: false,
   });
 
+  /*
+   * The values as of the last *change*, not as of the last render.
+   *
+   * Validation runs in the same tick as the edit that triggered it —
+   * `validateOn="change"` calls `validateField` immediately after
+   * `setFieldValue`, and submit runs from a press handler. React state is a
+   * render behind at that point, so a validator reading it would judge the
+   * character before the one just typed, and a submit fired straight after an
+   * edit would submit the value before it. The ref is written on the way into
+   * the dispatch so both see what the user actually entered.
+   */
+  const valuesRef = useRef(state.values);
+  valuesRef.current = state.values;
+
   const setFieldValue = useCallback(<K extends keyof T>(name: K, value: T[K]) => {
+    valuesRef.current = { ...valuesRef.current, [name]: value } as T;
     dispatch({ type: 'SET_VALUE', name, value });
   }, []);
 
@@ -175,32 +232,64 @@ export function useForm<T extends Record<string, any>>({
     [state.values, state.errors, state.touched]
   );
 
-  const validateField = useCallback(
-    async <K extends keyof T>(name: K) => {
-      const validator = validatorsRef.current[name];
-      if (!validator) return true;
-      const error = await validator(state.values[name], state.values);
-      dispatch({ type: 'SET_ERROR', name, error });
-      return !error;
-    },
-    [state.values]
-  );
+  const validateField = useCallback(async <K extends keyof T>(name: K) => {
+    const validator = validatorsRef.current[name];
+    if (!validator) return true;
+    const values = valuesRef.current;
+    const error = await runValidator(name, validator, values);
+    dispatch({ type: 'SET_ERROR', name, error });
+    return !error;
+  }, []);
 
   const handleSubmit = useCallback(async () => {
-    const names = Object.keys(state.values) as (keyof T)[];
+    const values = valuesRef.current;
+    /*
+     * Every field the form knows of, which is not the same as every key of
+     * `defaultValues`: a field can register a validator under a name that was
+     * never declared there. Submitting only the declared ones meant such a
+     * field was never validated and never blocked anything, so a form of
+     * required-but-undeclared fields submitted itself while still empty.
+     *
+     * It is still a mistake to name a field that `defaultValues` does not
+     * declare — its value stays undefined and never reaches `onSubmit` —
+     * which is why `useField` says so. Validating it anyway is what turns
+     * that mistake into a visible error instead of a silent submit.
+     */
+    const names = Array.from(
+      new Set([...Object.keys(values), ...Object.keys(validatorsRef.current)])
+    ) as (keyof T)[];
     dispatch({ type: 'TOUCH_ALL', names });
 
     const fieldErrorEntries = await Promise.all(
       names.map(async (name) => {
         const validator = validatorsRef.current[name];
         const error = validator
-          ? await validator(state.values[name], state.values)
+          ? await runValidator(name, validator, values)
           : undefined;
         return [name, error] as const;
       })
     );
 
-    const formErrors = validate ? await validate(state.values) : {};
+    /*
+     * Same reasoning as a field's rule, one level up: a cross-field check that
+     * throws must not take the screen, and must not let the submit through.
+     * It belongs to no single field, so it blocks without marking one — there
+     * is no field whose error line would be the honest place to put it.
+     */
+    let formErrors: FieldErrors<T> = {};
+    let formValidateThrew = false;
+    if (validate) {
+      try {
+        formErrors = await validate(values);
+      } catch (error) {
+        console.error(
+          '[PanelUI] The form-level validate() threw, so the form is being ' +
+            'treated as invalid and the submit was not run.',
+          error
+        );
+        formValidateThrew = true;
+      }
+    }
 
     const cleared = Object.fromEntries(names.map((name) => [name, undefined]));
     const nextErrors: FieldErrors<T> = {
@@ -210,17 +299,18 @@ export function useForm<T extends Record<string, any>>({
     };
     dispatch({ type: 'SET_ERRORS', errors: nextErrors });
 
-    if (Object.values(nextErrors).some(Boolean)) return;
+    if (formValidateThrew || Object.values(nextErrors).some(Boolean)) return;
 
     dispatch({ type: 'SUBMIT_START' });
     try {
-      await onSubmit(state.values);
+      await onSubmit(values);
     } finally {
       dispatch({ type: 'SUBMIT_END' });
     }
-  }, [state.values, validate, onSubmit]);
+  }, [validate, onSubmit]);
 
   const reset = useCallback((values: T = defaultsRef.current) => {
+    valuesRef.current = values;
     dispatch({ type: 'RESET', values });
   }, []);
 

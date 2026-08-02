@@ -1,6 +1,7 @@
 ---
 title: Form
 description: Form state — values, validation and submission — with no form library underneath.
+status: updated
 ---
 
 `useForm` holds a form's values, errors, touched state and submission lifecycle — built on `useReducer`, no form library underneath. `Form` and `Form.Field` bind that state to a control without threading `form` through every field by hand.
@@ -255,7 +256,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 | Option | Type | Description |
 | --- | --- | --- |
-| `defaultValues` | `T` | Read once, on the first render. |
+| `defaultValues` | `T` | The form's fields and their starting values. Read once, on the first render. Every field's `name` has to be a key of it. |
 | `validate` | `(values: T) => FieldErrors<T> \| Promise<FieldErrors<T>>` | Whole-form validation — a rule that compares two fields. Runs on submit. |
 | `onSubmit` | `(values: T) => void \| Promise<void>` | Called with the current values once every field, and the whole form, pass validation. |
 
@@ -274,6 +275,14 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 Each field registers its `validate` function with the form on mount, so `handleSubmit` can run every field's rule even for a field the user never touched. `useField(form, name, options)` returns `{ value, error, touched, onChange, onBlur }` — spread the pieces a control needs onto its own props. Which prop that is (`onChangeText`, `onCheckedChange`, `onValueChange`, …) is the reason this is a hook rather than a component that clones its child: only the caller knows which one a given control takes.
 
 `Form`/`Form.Field` trade some type precision for that JSX convenience — a field's `name` isn't checked against `keyof YourValues` there, because a value's shape can't flow through React Context generically. Reach for `useField(form, name)` directly, outside `<Form>`, when a field's name should be checked against the form's own value type.
+
+A field's `name` has to be a key of `defaultValues`, including the empty ones — `''` for text, `false` for a toggle. `defaultValues` is what declares the fields, and a name it does not declare has no value to hand a validator and nothing to submit. `Form.Field` cannot catch that in the types, so it warns in development instead; the typed `useField(form, name)` rejects it outright.
+
+### When a validator throws
+
+A rule is reached from a path nothing awaits — blur fires and forgets, and `handleSubmit` is usually wired straight to a press — so a throw inside one would surface as an unhandled rejection: a red box naming neither the field nor the rule.
+
+Instead it is caught, logged to the console against the field by name, and counted as a failure. Counted rather than waved through, because a rule that crashed reached no verdict, and a form that submits past a rule that never ran puts unchecked values somewhere they cannot be taken back from. The field shows a placeholder message until the rule is fixed. A form-level `validate` that throws blocks the submit the same way, without marking any one field — it belongs to none of them.
 
 ### Scope
 
