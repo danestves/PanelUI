@@ -413,6 +413,13 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
   const [focused, setFocused] = useState(false);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const [listHeight, setListHeight] = useState(0);
+  /*
+   * The anchor is measured off the plain wrapper rather than off the animated
+   * field inside it. In `overlay` the wrapper *is* the field's box — the list
+   * is portalled out — and a host View is the thing with a dependable
+   * `measureInWindow`. `inline` never reads the anchor, so the list it also
+   * wraps cannot skew anything.
+   */
   const fieldRef = useRef<View>(null);
   const inputRef = useRef<TextInput>(null);
   const { height: screenHeight } = useWindowDimensions();
@@ -698,7 +705,6 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
 
   const field = (
     <Animated.View
-      ref={fieldRef}
       style={fieldStyle}
       className={slots.field()}
       // The field is one control made of several views. Announcing it as a
@@ -796,7 +802,7 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
   if (presentation === 'inline') {
     return (
       <ComboboxContext.Provider value={context}>
-        <View className={cn(slots.root(), className)} {...props}>
+        <View ref={fieldRef} className={cn(slots.root(), className)} {...props}>
           {field}
           {open ? (
             <Animated.View
@@ -837,7 +843,7 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
 
   return (
     <ComboboxContext.Provider value={context}>
-      <View className={cn(slots.root(), className)} {...props}>
+      <View ref={fieldRef} className={cn(slots.root(), className)} {...props}>
         {field}
       </View>
 
