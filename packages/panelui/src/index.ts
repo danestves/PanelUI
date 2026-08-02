@@ -235,6 +235,7 @@ export {
   Select,
   type SelectProps,
   type SelectItemProps,
+  type SelectGroupProps,
   type SelectPresentation,
 } from './components/select';
 export {
@@ -304,6 +305,15 @@ export {
   type ChipVariant,
   type ChipSize,
 } from './components/chip';
+export {
+  Combobox,
+  type ComboboxProps,
+  type ComboboxItemProps,
+  type ComboboxGroupProps,
+  type ComboboxMode,
+  type ComboboxSelection,
+  type ComboboxPresentation,
+} from './components/combobox';
 export {
   Drawer,
   type DrawerProps,

@@ -195,6 +195,20 @@
     ]
   },
   {
+    "name": "combobox",
+    "type": "registry:ui",
+    "description": "A text field that filters a list of options as you type.",
+    "registryDependencies": [
+      "chip",
+      "cn",
+      "icons",
+      "portal",
+      "spinner",
+      "text",
+      "use-back-handler"
+    ]
+  },
+  {
     "name": "date",
     "type": "registry:lib",
     "description": "Day and month arithmetic, and locale-aware date formatting.",
@@ -655,6 +669,7 @@
     "description": "Picker shown in a bottom sheet, expanded in place, or floating over the page.",
     "registryDependencies": [
       "bottom-sheet",
+      "cn",
       "icons",
       "input-group",
       "native",

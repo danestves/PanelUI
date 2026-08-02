@@ -45,6 +45,7 @@ import {
   Button,
   Calendar,
   CodeBlock,
+  Combobox,
   Card,
   Carousel,
   CardIcon,
@@ -3464,6 +3465,198 @@ function RadioGroupCardDemo() {
   );
 }
 
+/** Enough of a list that typing beats scrolling, and short enough to read. */
+const FRAMEWORKS = [
+  { value: 'expo', label: 'Expo' },
+  { value: 'react-native', label: 'React Native' },
+  { value: 'next', label: 'Next.js' },
+  { value: 'remix', label: 'Remix' },
+  { value: 'astro', label: 'Astro' },
+  { value: 'nuxt', label: 'Nuxt' },
+  { value: 'svelte-kit', label: 'SvelteKit' },
+  { value: 'solid-start', label: 'SolidStart' },
+  { value: 'qwik', label: 'Qwik City' },
+];
+
+function ComboboxDemo() {
+  const [framework, setFramework] = useState<string>();
+
+  return (
+    <View className="w-full gap-1.5">
+      <Label>Framework</Label>
+      <Combobox
+        value={framework}
+        onValueChange={setFramework}
+        placeholder="Search frameworks"
+        clearable
+      >
+        {FRAMEWORKS.map((item) => (
+          <Combobox.Item key={item.value} value={item.value} label={item.label} />
+        ))}
+      </Combobox>
+    </View>
+  );
+}
+
+/** Headings make a long list scannable before the query narrows it. */
+function ComboboxGroupedDemo() {
+  const [framework, setFramework] = useState<string>();
+
+  return (
+    <View className="w-full gap-1.5">
+      <Label>Framework</Label>
+      <Combobox
+        value={framework}
+        onValueChange={setFramework}
+        placeholder="Search frameworks"
+        openOnFocus
+      >
+        <Combobox.Group label="Native">
+          <Combobox.Item value="expo" label="Expo" />
+          <Combobox.Item value="react-native" label="React Native" />
+        </Combobox.Group>
+        <Combobox.Group label="Web">
+          <Combobox.Item value="next" label="Next.js" />
+          <Combobox.Item value="remix" label="Remix" />
+          <Combobox.Item value="astro" label="Astro" />
+        </Combobox.Group>
+      </Combobox>
+    </View>
+  );
+}
+
+function ComboboxMultipleDemo() {
+  const [picked, setPicked] = useState<string[]>(['expo']);
+
+  return (
+    <View className="w-full gap-1.5">
+      <Label>Stack</Label>
+      <Combobox
+        mode="multiple"
+        value={picked}
+        onValueChange={setPicked}
+        placeholder="Add a framework"
+        clearable
+      >
+        {FRAMEWORKS.map((item) => (
+          <Combobox.Item key={item.value} value={item.value} label={item.label} />
+        ))}
+      </Combobox>
+      <Text size="sm" muted>
+        Each pick becomes a chip. Backspace on the empty field takes the last one
+        back.
+      </Text>
+    </View>
+  );
+}
+
+/** A tag field: the list suggests, it does not decide. */
+function ComboboxTagsDemo() {
+  const [tags, setTags] = useState<string[]>(['design']);
+
+  return (
+    <View className="w-full gap-1.5">
+      <Label>Tags</Label>
+      <Combobox
+        mode="multiple"
+        value={tags}
+        onValueChange={setTags}
+        allowCustomValue
+        placeholder="Add a tag"
+        emptyMessage="No tag by that name yet"
+      >
+        <Combobox.Item value="design" label="design" />
+        <Combobox.Item value="engineering" label="engineering" />
+        <Combobox.Item value="research" label="research" />
+      </Combobox>
+      <Text size="sm" muted>
+        Type something that is not on the list and press return to keep it.
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * Options fetched for the query. `filter={false}` because the matching already
+ * happened somewhere else — filtering again here would only drop correct
+ * answers the field cannot see the reasoning behind.
+ */
+function ComboboxAsyncDemo() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<{ value: string; label: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [city, setCity] = useState<string>();
+
+  useEffect(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) {
+      setResults([]);
+      setLoading(false);
+      return undefined;
+    }
+
+    setLoading(true);
+    // Stands in for a request. The timer is cleared on the next keystroke, so
+    // a fast typist makes one "call" rather than one per character.
+    const timer = setTimeout(() => {
+      setResults(
+        TIMEZONES.filter((tz) => tz.label.toLowerCase().includes(needle)).slice(0, 6)
+      );
+      setLoading(false);
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  return (
+    <View className="w-full gap-1.5">
+      <Label>City</Label>
+      <Combobox
+        value={city}
+        onValueChange={setCity}
+        inputValue={query}
+        onInputValueChange={setQuery}
+        filter={false}
+        loading={loading}
+        loadingMessage="Looking up cities"
+        emptyMessage="No city by that name"
+        placeholder="Search cities"
+        clearable
+      >
+        {results.map((item) => (
+          <Combobox.Item key={item.value} value={item.value} label={item.label} />
+        ))}
+      </Combobox>
+    </View>
+  );
+}
+
+function ComboboxInlineDemo() {
+  const [framework, setFramework] = useState<string>();
+
+  return (
+    <View className="w-full gap-4">
+      <View className="w-full gap-1.5">
+        <Label>Framework</Label>
+        <Combobox
+          presentation="inline"
+          value={framework}
+          onValueChange={setFramework}
+          placeholder="Search frameworks"
+        >
+          {FRAMEWORKS.map((item) => (
+            <Combobox.Item key={item.value} value={item.value} label={item.label} />
+          ))}
+        </Combobox>
+      </View>
+      <Text size="sm" muted>
+        The list expands in layout flow, so this paragraph is pushed down by its
+        height instead of being covered by it.
+      </Text>
+    </View>
+  );
+}
+
 function SelectDemo() {
   const [fruit, setFruit] = useState<string>();
 
@@ -3549,6 +3742,45 @@ function DisabledOptionSelectDemo() {
         {/* Still listed, because an option that disappears reads as one that
             was never offered. */}
         <Select.Item value="enterprise" label="Enterprise — contact sales" disabled />
+      </Select>
+    </View>
+  );
+}
+
+/**
+ * Grouping is presentational — the value is still one flat string — and the
+ * filter reaches through it, dropping any group the query empties rather than
+ * leaving a heading standing over nothing.
+ */
+function GroupedSelectDemo() {
+  const [zone, setZone] = useState<string>();
+
+  return (
+    <View className="w-full gap-1.5">
+      <Label>Time zone</Label>
+      <Select
+        searchable
+        searchPlaceholder="Search cities"
+        emptyMessage="No city by that name"
+        value={zone}
+        onValueChange={setZone}
+        placeholder="Select a time zone"
+        title="Time zone"
+      >
+        <Select.Group label="Europe">
+          <Select.Item value="europe/london" label="London" />
+          <Select.Item value="europe/paris" label="Paris" />
+          <Select.Item value="europe/berlin" label="Berlin" />
+        </Select.Group>
+        <Select.Group label="Asia">
+          <Select.Item value="asia/dubai" label="Dubai" />
+          <Select.Item value="asia/tokyo" label="Tokyo" />
+          <Select.Item value="asia/singapore" label="Singapore" />
+        </Select.Group>
+        <Select.Group label="Americas">
+          <Select.Item value="america/new_york" label="New York" />
+          <Select.Item value="america/los_angeles" label="Los Angeles" />
+        </Select.Group>
       </Select>
     </View>
   );
@@ -8749,6 +8981,19 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'combobox',
+    name: 'Combobox',
+    summary: 'A text field that filters a list as you type',
+    demos: [
+      { label: 'Filter as you type', render: () => <ComboboxDemo /> },
+      { label: 'Grouped options', render: () => <ComboboxGroupedDemo /> },
+      { label: 'Several at once', render: () => <ComboboxMultipleDemo /> },
+      { label: 'Values it does not know about', render: () => <ComboboxTagsDemo /> },
+      { label: 'Fetched for the query', render: () => <ComboboxAsyncDemo /> },
+      { label: 'Inline — nothing is covered', render: () => <ComboboxInlineDemo /> },
+    ],
+  },
+  {
     slug: 'date-picker',
     name: 'DatePicker',
     summary: 'A calendar behind a button',
@@ -10908,6 +11153,18 @@ export const COMPONENTS: ComponentEntry[] = [
       {
         label: 'Searchable — overlay',
         render: () => <SearchableSelectDemo presentation="overlay" />,
+      },
+      {
+        label: 'Grouped options',
+        render: () => (
+          <View className="w-full gap-4">
+            <GroupedSelectDemo />
+            <Text size="sm" muted>
+              Filter for “lo” and Asia disappears with its heading — a heading
+              over no options reads as a section that failed to load.
+            </Text>
+          </View>
+        ),
       },
       { label: 'Disabled option', render: () => <DisabledOptionSelectDemo /> },
       { label: 'Native — menu', render: () => <NativeSelectDemo /> },

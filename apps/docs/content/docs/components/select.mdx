@@ -1,6 +1,7 @@
 ---
 title: Select
 description: Picker shown in a bottom sheet, expanded in place, or floating over the page.
+status: updated
 ---
 
 A picker with one trigger and three ways of showing its options: a bottom sheet, a list expanded in place, or a panel floating over the page. Which is right depends on what surrounds the trigger rather than on what the options are, so it is one prop rather than three components.
@@ -46,10 +47,14 @@ npx panelui-cli@latest add select
 ```tsx
 <Select>
   <Select.Item value="…" label="…" />
+  <Select.Group label="…">
+    <Select.Item value="…" label="…" />
+  </Select.Group>
 </Select>
 ```
 
 - **`Select.Item`** — One option. `value` identifies it, `label` is what is shown, and `disabled` keeps it listed but unselectable.
+- **`Select.Group`** — A titled run of options. `label` is the heading. Grouping is presentational — the value is still one flat string — and the filter reaches through it.
 
 ## Examples
 
@@ -163,6 +168,23 @@ A plan above the current tier, a region with nothing in stock. Keep it in the li
 </Select>
 ```
 
+### Grouped options
+
+Headings make a long list scannable before the filter narrows it.
+
+```tsx
+<Select value={zone} onValueChange={setZone} searchable title="Time zone">
+  <Select.Group label="Europe">
+    <Select.Item value="europe/london" label="London" />
+    <Select.Item value="europe/paris" label="Paris" />
+  </Select.Group>
+  <Select.Group label="Americas">
+    <Select.Item value="america/new_york" label="New York" />
+    <Select.Item value="america/los_angeles" label="Los Angeles" />
+  </Select.Group>
+</Select>
+```
+
 ## Variants
 
 ### `presentation`
@@ -198,6 +220,14 @@ A plan above the current tier, a region with nothing in stock. Keep it in the li
 | `value` | `string` | — |  |
 | `label` | `string` | — |  |
 | `disabled` | `boolean` | — | Shows the option but refuses it — a plan above the current tier, a region with nothing in stock. Kept in the list rather than dropped from it, because an option that vanishes reads as one that never existed. |
+
+### Select.Group
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | — | Heading over the run of options. Announced as a header, so a screen reader reaching the group is told what it is before walking into it. |
+| `className` | `string` | — | Extra classes for the group wrapper. |
+| `labelClassName` | `string` | — | Extra classes for the heading. |
 
 ### Select
 
@@ -244,3 +274,11 @@ See [Native rendering](/docs/native) for the full prop-by-prop breakdown.
 `searchable` puts a filter above the options in every presentation, matching case-insensitively on any part of an option's label. It narrows what is *shown* rather than what is declared, so the options stay where they are and nothing has to be lifted into state; `searchPlaceholder` names the field and `emptyMessage` replaces the list when nothing matches. The filter clears itself when the list closes, so it is never waiting there the next time with most of the options missing.
 
 The field is deliberately not focused on open — on a phone that throws the keyboard over the list you are trying to look at — and the option scrollers dismiss the keyboard on a drag, so you can get back to reading without first tapping somewhere neutral.
+
+### Grouping options
+
+`Select.Group` wraps a run of options under a heading, which is what a list long enough to want a filter is usually long enough to want. Grouping is presentational: the Select still reports one flat string, and `Select.Item` needs to know nothing about being inside a group.
+
+The filter reaches through groups. A group is rebuilt around whatever survives inside it and dropped when that is nothing, so a heading never stands over an empty section — which would read as a section that failed to load rather than one the query emptied.
+
+The heading is announced as a header, so a screen reader reaching the group is told what it is before walking into it.
