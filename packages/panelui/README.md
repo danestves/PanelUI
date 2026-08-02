@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 76 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 78 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -180,9 +180,12 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Carousel` | A run of slides, one at a time, dragged with a finger |
 | `Checkbox` | Animated checkbox, as a row or a selectable card |
 | `Chip` | Interactive pill — a filter, a tag, or a removable token |
+| `CodeBlock` | Syntax-highlighted code with a header and a copy button |
+| `Combobox` | A text field that filters a list of options as you type |
 | `DatePicker` | A calendar behind a button |
 | `Dialog` | Modal dialog with a backdrop and footer actions |
 | `Direction` | Reading direction for everything below it |
+| `Drawer` | Panel that slides in from an edge of the screen |
 | `EmptyState` | Placeholder for a list or screen with no content |
 | `Field` | Layout and validation-state kit a form control composes into |
 | `Flow` | Pan-and-zoom canvas of draggable nodes joined by animated edges |
@@ -202,11 +205,15 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `MessageScroller` | Scroll behaviour a chat transcript needs |
 | `NumberInput` | Numeric field stepped by buttons or typed by hand |
 | `OtpInput` | One-time-code field drawn as a row of separate cells |
+| `Panelside` | Collapsible side panel with its own search, groups and scenes |
+| `Plan` | What an agent intends to do, before it does it |
 | `Popover` | Panel anchored to the element that opened it |
 | `Post` | Social card — author, body, media and the counts underneath |
 | `Progress` | Determinate and indeterminate progress bar |
 | `RadioGroup` | Single-select list of options |
 | `Rating` | A row of stars to read or set a score |
+| `Reasoning` | An agent’s thinking, collapsed until you want it |
+| `Response` | Streamed markdown rendered as native components |
 | `RingChart` | Concentric arcs, each measured against its own target |
 | `ScrollCanvas` | Image frame whose contents move as you scroll |
 | `ScrollFade` | Fades the edges of a scroll container |
@@ -219,6 +226,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Skeleton` | Shimmer placeholder for loading content |
 | `Slider` | Pick a value by dragging a thumb along a track |
 | `Soundwave` | What a voice looks like while an app listens |
+| `Sources` | The references behind an answer, behind a disclosure |
 | `Spinner` | Indeterminate loading indicator |
 | `Steps` | Stepper for multi-step flows |
 | `Surface` | Elevated container with a variant ladder |
@@ -226,8 +234,11 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Switch` | Animated on/off toggle |
 | `Table` | Rows and columns that stay lined up, with sortable headers |
 | `Tabs` | Segmented navigation with an animated indicator |
+| `Task` | A step an agent is working through, with its files |
+| `Textarea` | Multi-line text field that can grow with its content |
 | `ThinkingOrb` | Dotted orb saying which kind of busy an agent is |
 | `Timeline` | Vertical sequence of events |
+| `TimePicker` | Pick a time — as a wheel, a ruler, or a pair of fields |
 | `Toast` | Transient notification queue with swipe to dismiss |
 | `ToggleButton` | A button that stays down, on its own or in a group |
 | `Tooltip` | A small label that names the control under your finger |
