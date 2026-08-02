@@ -26,9 +26,16 @@
  * the option labels. The filter narrows what is *shown* — the declared options
  * are still the source of truth, so nothing has to be lifted into state to make
  * it work.
+ *
+ * A list long enough to need a filter is usually long enough to want dividing,
+ * so options can be wrapped in `Select.Group` under a heading. Grouping is
+ * presentational — the value is still a flat string — and the filter reaches
+ * through it, dropping any group the query empties rather than leaving a
+ * heading standing over nothing.
  */
 import {
   Children,
+  cloneElement,
   createContext,
   isValidElement,
   useCallback,
@@ -36,6 +43,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactElement,
   type ReactNode,
 } from 'react';
 import {
@@ -59,6 +67,7 @@ import { getNativeUI } from '../../native';
 import { Portal } from '../../primitives/portal';
 import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
+import { cn } from '../../utils/cn';
 import { BottomSheet } from '../bottom-sheet';
 import { InputGroup } from '../input-group';
 
@@ -74,6 +83,8 @@ const selectVariants = tv({
     item: 'flex-row items-center gap-2 rounded-lg px-3 py-3',
     itemLabel: 'flex-1 text-base font-medium text-foreground',
     itemIndicator: 'h-5 w-5 items-center justify-center',
+    group: 'gap-1',
+    groupLabel: 'px-3 pb-1 pt-2',
   },
   variants: {
     selected: {
@@ -149,6 +160,96 @@ function SelectItem({ value, label, disabled }: SelectItemProps) {
       </View>
     </Pressable>
   );
+}
+
+export interface SelectGroupProps {
+  /**
+   * Heading over the run of options. Announced as a header, so a screen reader
+   * reaching the group is told what it is before walking into it.
+   */
+  label?: string;
+  /** Extra classes for the group wrapper. */
+  className?: string;
+  /** Extra classes for the heading. */
+  labelClassName?: string;
+  children: ReactNode;
+}
+
+/**
+ * A titled run of options.
+ *
+ * Purely a way of arranging the list: a grouped Select still reports one flat
+ * string, and `Select.Item` needs to know nothing about being inside one.
+ */
+function SelectGroup({ label, className, labelClassName, children }: SelectGroupProps) {
+  const { group, groupLabel } = selectVariants();
+
+  return (
+    <View className={cn(group(), className)}>
+      {label ? (
+        <View accessibilityRole="header" className={cn(groupLabel(), labelClassName)}>
+          <Text size="xs" weight="medium" muted className="uppercase tracking-wide">
+            {label}
+          </Text>
+        </View>
+      ) : null}
+      {textChildren(children)}
+    </View>
+  );
+}
+
+/**
+ * Walk the declared children, visiting every `Select.Item` — including the ones
+ * nested inside a `Select.Group`.
+ *
+ * Grouping is a rendering concern, but the selected label and the native
+ * picker's option list both want the flat set, so the tree is flattened once
+ * here rather than in each of them.
+ */
+function eachOption(children: ReactNode, visit: (option: SelectItemProps) => void) {
+  Children.forEach(children, (child) => {
+    if (!isValidElement(child)) return;
+    if (child.type === SelectGroup) {
+      eachOption((child.props as SelectGroupProps).children, visit);
+      return;
+    }
+    if (child.type !== SelectItem) return;
+    const { value, label, disabled } = child.props as SelectItemProps;
+    visit({ value, label, disabled });
+  });
+}
+
+/**
+ * The children a query leaves standing.
+ *
+ * A group is rebuilt around whatever survives inside it and dropped when that
+ * is nothing — a heading with no options under it reads as a section that
+ * failed to load rather than one the filter emptied. Anything that is neither
+ * an item nor a group is left alone: a caption or a divider the caller put in
+ * the list is not something a filter has an opinion about.
+ */
+function filterOptions(children: ReactNode, needle: string): ReactNode[] {
+  const kept: ReactNode[] = [];
+
+  Children.forEach(children, (child) => {
+    if (!isValidElement(child)) return;
+
+    if (child.type === SelectGroup) {
+      const props = child.props as SelectGroupProps;
+      const inner = filterOptions(props.children, needle);
+      if (inner.length) {
+        kept.push(cloneElement(child as ReactElement<SelectGroupProps>, {}, inner));
+      }
+      return;
+    }
+
+    if (child.type === SelectItem) {
+      const { label } = child.props as SelectItemProps;
+      if (label.toLowerCase().includes(needle)) kept.push(child);
+    }
+  });
+
+  return kept;
 }
 
 /** Trigger frame in window coordinates, measured when the list opens. */
@@ -242,15 +343,7 @@ function SelectRoot({
 
   const options = useMemo(() => {
     const collected: SelectItemProps[] = [];
-    Children.forEach(children, (child) => {
-      if (isValidElement<SelectItemProps>(child)) {
-        collected.push({
-          value: child.props.value,
-          label: child.props.label,
-          disabled: child.props.disabled,
-        });
-      }
-    });
+    eachOption(children, (option) => collected.push(option));
     return collected;
   }, [children]);
 
@@ -269,11 +362,7 @@ function SelectRoot({
     const needle = searchable ? query.trim().toLowerCase() : '';
     if (!needle) return null;
 
-    return Children.toArray(children).filter(
-      (child) =>
-        isValidElement<SelectItemProps>(child) &&
-        child.props.label.toLowerCase().includes(needle)
-    );
+    return filterOptions(children, needle);
   }, [children, query, searchable]);
 
   const close = useCallback(() => {
@@ -360,7 +449,13 @@ function SelectRoot({
   const trigger = (
     <Pressable
       ref={triggerRef}
-      accessibilityRole="button"
+      /*
+       * A trigger that owns a list of options and reports whether that list is
+       * open is a combobox, not a button — and `expanded` only means anything
+       * on a role that can be expanded. Announced as "collapsed"/"expanded"
+       * rather than as a button whose state has nowhere to be read.
+       */
+      accessibilityRole="combobox"
       accessibilityState={{ disabled: !!disabled, expanded: open }}
       disabled={disabled}
       onPress={toggle}
@@ -566,6 +661,10 @@ function SelectRoot({
   );
 }
 
+SelectItem.displayName = 'Select.Item';
+SelectGroup.displayName = 'Select.Group';
+
 export const Select = Object.assign(SelectRoot, {
   Item: SelectItem,
+  Group: SelectGroup,
 });

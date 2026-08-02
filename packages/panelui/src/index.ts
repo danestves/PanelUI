@@ -235,6 +235,7 @@ export {
   Select,
   type SelectProps,
   type SelectItemProps,
+  type SelectGroupProps,
   type SelectPresentation,
 } from './components/select';
 export {
