@@ -317,7 +317,7 @@ const insets = useSafeAreaInsets();
 | `disabled` | `boolean` | — |  |
 | `startContent` | `ReactNode` | — | Content inside the field, before the text — usually an icon. Measured, so the text is padded clear of it however wide it is. `start`, not `left`: it follows the reading direction, and swaps sides under `Direction dir="rtl"` along with the text it introduces. |
 | `endContent` | `ReactNode` | — | Content inside the field, after the text — an icon, a unit, a count. |
-| `interactiveContent` | `boolean` | `false` | Let touches reach the content instead of falling through to the field. Off by default: an icon is decoration, and a tap anywhere on a field should put the caret in it rather than hitting a dead spot. Turn it on for content that does something — a clear button, a show-password toggle. |
+| `interactiveContent` | `boolean` | `true` | Whether touches reach the content. On by default, so a button placed in the field — a clear ✕, a show-password eye, a unit picker — is pressable without anything else being passed. Only the content itself takes those touches: the padding around it is transparent, so a tap that misses the button still lands on the field and puts the caret in it. Turn it off for pure decoration, where the icon should not be a target at all and every pixel of the field should focus it. That also drops the content from the accessibility tree, which is right for an icon that only restates the label. |
 | `avoidKeyboard` | `boolean` | `false` | Keep the field clear of the software keyboard. Moves by exactly the overlap, and not at all when the field is already clear — or when the keyboard belongs to a different field. The overlap is re-read every frame while the field is focused, so the field keeps its place in the page as it scrolls under and back out of the keyboard. Install `react-native-keyboard-controller` for this to behave on Android. Do not toggle this at runtime — it changes which component renders the container, which would remount the field and drop focus. |
 | `keyboardMode` | `KeyboardAvoidanceMode` | `'lift'` | How the field gets clear. `lift` moves it up by its overlap and follows the scroll — right for a field in the flow of a page. `dock` makes it travel with the keyboard, for a composer already pinned near the bottom edge; pair it with `keyboardBottomInset`. |
 | `keyboardOffset` | `number` | `16` | Gap kept between the field and the keyboard. `keyboardMode="lift"` only. |
@@ -337,7 +337,11 @@ The focus border is animated with a shared value rather than switched with a cla
 
 They are `start` and `end` rather than left and right because they follow the reading direction, and swap sides under `Direction dir="rtl"` along with the text they introduce.
 
-Touches fall through to the field by default, so tapping an icon still puts the caret in the input. Pass `interactiveContent` for content that does something of its own — a clear button, a show-password toggle — and it takes its own presses and its own place in the accessibility tree.
+Content is pressable by default, so a button placed in the field — a clear ✕, a show-password eye, a unit picker — works without anything else being passed. Only the content itself takes those touches: the padding around it stays transparent, so a tap that misses the button still lands on the field and puts the caret in it.
+
+Pass `interactiveContent={false}` for pure decoration. The icon stops being a target at all, every pixel of the field focuses it, and the content leaves the accessibility tree — which is what an icon that only restates the label should do.
+
+The prop covers both ends at once, since it is one field. When one end is decoration and the other is a control, leave it on and wrap the decorative one in a `<View pointerEvents="none">`.
 
 [InputGroup](/docs/components/input-group) is still the right answer for a decorator that is not part of the field: a button attached to its end, a select bolted to its start, an addon with a background of its own. It measures the same way; it just spans a different box.
 

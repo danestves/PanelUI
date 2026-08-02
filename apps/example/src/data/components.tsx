@@ -904,10 +904,14 @@ function InputContentDemo() {
         placeholder="Find a project"
         value={query}
         onChangeText={setQuery}
-        startContent={<SearchIcon size={18} />}
-        // `interactiveContent` because this one is a button rather than a
-        // decoration — without it the press would fall through to the field.
-        interactiveContent={query.length > 0}
+        // Wrapped so the magnifier stays decoration while the ✕ beside it
+        // stays a button: the field's own `interactiveContent` covers both
+        // ends at once, and only one of these two is a control.
+        startContent={
+          <View pointerEvents="none">
+            <SearchIcon size={18} />
+          </View>
+        }
         endContent={
           query ? (
             <Pressable onPress={() => setQuery('')} accessibilityLabel="Clear search">

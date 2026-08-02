@@ -27,6 +27,13 @@
  * field, so anything centred on the component as a whole drifts upward the
  * moment a label is added.
  *
+ * Both are pressable. A button dropped in there — a clear ✕, a show-password
+ * eye — gets its own touches, while the padding around it stays transparent so
+ * a tap that misses still lands on the field and puts the caret in it. An icon
+ * that is only decoration should say so with `interactiveContent={false}`,
+ * which gives the whole field back to the caret and takes the icon out of the
+ * accessibility tree.
+ *
  * `InputGroup` is still the right answer for a decorator that is not part of
  * the field — a button attached to its end, a select bolted to its start, an
  * addon with its own background. It measures the same way; it just spans a
@@ -155,11 +162,18 @@ export interface InputProps
   /** Content inside the field, after the text — an icon, a unit, a count. */
   endContent?: ReactNode;
   /**
-   * Let touches reach the content instead of falling through to the field.
+   * Whether touches reach the content.
    *
-   * Off by default: an icon is decoration, and a tap anywhere on a field
-   * should put the caret in it rather than hitting a dead spot. Turn it on for
-   * content that does something — a clear button, a show-password toggle.
+   * On by default, so a button placed in the field — a clear ✕, a
+   * show-password eye, a unit picker — is pressable without anything else
+   * being passed. Only the content itself takes those touches: the padding
+   * around it is transparent, so a tap that misses the button still lands on
+   * the field and puts the caret in it.
+   *
+   * Turn it off for pure decoration, where the icon should not be a target at
+   * all and every pixel of the field should focus it. That also drops the
+   * content from the accessibility tree, which is right for an icon that only
+   * restates the label.
    */
   interactiveContent?: boolean;
   /**
@@ -205,7 +219,7 @@ export const Input = forwardRef<TextInput, InputProps>(
       disabled,
       startContent,
       endContent,
-      interactiveContent = false,
+      interactiveContent = true,
       variant,
       size,
       avoidKeyboard = false,
@@ -342,7 +356,7 @@ export const Input = forwardRef<TextInput, InputProps>(
             {startContent ? (
               <View
                 onLayout={handleStartLayout}
-                pointerEvents={interactiveContent ? 'auto' : 'none'}
+                pointerEvents={interactiveContent ? 'box-none' : 'none'}
                 accessibilityElementsHidden={!interactiveContent}
                 importantForAccessibility={
                   interactiveContent ? 'auto' : 'no-hide-descendants'
@@ -358,7 +372,7 @@ export const Input = forwardRef<TextInput, InputProps>(
             {endContent ? (
               <View
                 onLayout={handleEndLayout}
-                pointerEvents={interactiveContent ? 'auto' : 'none'}
+                pointerEvents={interactiveContent ? 'box-none' : 'none'}
                 accessibilityElementsHidden={!interactiveContent}
                 importantForAccessibility={
                   interactiveContent ? 'auto' : 'no-hide-descendants'
