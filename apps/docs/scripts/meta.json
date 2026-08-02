@@ -343,7 +343,7 @@
     "Picker shown in a bottom sheet, expanded in place, or floating over the page.",
     "expo select component",
     {
-      "updatedIn": "0.31.0"
+      "updatedIn": "0.37.0"
     }
   ],
   "separator": [
@@ -534,6 +534,14 @@
     {
       "group": "ai-components",
       "addedIn": "0.30.0"
+    }
+  ],
+  "combobox": [
+    "Combobox",
+    "A text field that filters a list of options as you type.",
+    "react native combobox autocomplete",
+    {
+      "addedIn": "0.37.0"
     }
   ],
   "plan": [
