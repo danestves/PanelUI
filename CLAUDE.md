@@ -169,19 +169,45 @@ wrapper around it.
   or area where it helps (`feat(toast): …`).
 - **When everything the user asked for is finished**, in this order:
   1. `npm run typecheck` and `npm run build` — both must pass.
-  2. Bump the version in `packages/panelui/package.json` (minor for new components/tokens, patch
-     for fixes). Bump it **before** `npm run docs:generate`, because `gen.mjs` compares the library
-     version against `addedIn`/`updatedIn` to decide which sidebar dots to emit.
-  3. **Write the release's entry in `CHANGELOG.md`** (see below) and commit it with the bump.
-  4. `git push` to `panel-ui/PanelUI`.
-  5. **Remind the user to run `npm publish`**, and to tag and cut the GitHub release from the
-     changelog entry. Never publish, tag or release autonomously — that is the user's call, always.
+  2. Commit the outstanding work and **`git push` to `panel-ui/PanelUI`**.
+  3. **Ask the user whether this is going out as a release.** See below — this is a question,
+     asked every time, never assumed either way.
+  4. Only if they say yes, do the release steps below.
+
+### Always ask whether a release is being cut
+
+**Finishing the work and cutting a release are two separate decisions, and the second one is the
+user's.** Never infer it from the size of the change, from a component having been added, or from
+the work looking finished. A run of commits with no release is a perfectly normal state for this
+repo.
+
+So at the end of every task, once the work is committed and pushed, **ask**: is this going out as
+a release, and at what version? Use `AskUserQuestion` with the version you would pick — minor for
+new components, parts, props or tokens; patch for fixes that leave the API alone — so answering is
+one keystroke. Offer "no release yet" as an option, and take it as the end of the task.
+
+If the answer is yes, then and only then:
+
+1. Bump the version in `packages/panelui/package.json`. Bump it **before**
+   `npm run docs:generate`, because `gen.mjs` compares the library version against
+   `addedIn`/`updatedIn` to decide which sidebar dots to emit — regenerating first bakes in the
+   old answer.
+2. Write the release's `CHANGELOG.md` entry (see below) and commit it with the bump.
+3. Push, then tag `vX.Y.Z` and cut the GitHub release from that changelog entry.
+4. **Remind the user to run `npm publish`.** Never publish to npm autonomously — that stays the
+   user's call whatever they answered above.
+
+Tagging and the GitHub release are outward-facing, so confirm before the first one in a session
+unless the user has already said to go ahead. Their answer to the release question counts as that
+go-ahead for the release they just approved, and for that one only.
 
 ### Release notes
 
 **Every release gets a `CHANGELOG.md` entry, patches included**, written in the same commit as the
-version bump. It is the only record of what changed: the tags are stale and the release commits
-touch nothing but the version.
+version bump. It is the record of what changed, and the source the GitHub release is cut from —
+the release commit itself touches nothing but the version, so without the entry there is nothing
+anywhere saying what shipped. Releases before 0.40.0 have no entry and no tag; the changelog starts
+there rather than reconstructing them.
 
 - Newest first, `## [X.Y.Z] — YYYY-MM-DD`, grouped **Added / Changed / Fixed / Docs**. Omit a
   group that has nothing in it.
