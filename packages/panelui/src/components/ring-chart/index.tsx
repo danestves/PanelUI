@@ -3,10 +3,10 @@
  *
  * ```tsx
  * <RingChart data={goals}>
+ *   <RingChart.Header title="Today" value="486 kcal" legend />
  *   <RingChart.Ring index={0} />
  *   <RingChart.Ring index={1} />
  *   <RingChart.Center />
- *   <RingChart.Legend />
  * </RingChart>
  * ```
  *
@@ -25,11 +25,15 @@
  *
  * ## Drawing
  *
- * Each ring is two arcs — a full-circle track and the progress over it — with
- * only the progress animated, through `strokeDasharray`. Sweeping the arc by
- * rebuilding its path would work, but a dash offset is two numbers moving on
- * an unchanged path, and it keeps the rounded cap pinned to the moving end for
- * free.
+ * Each ring is two arcs — a track and the progress over it — with only the
+ * progress animated, through `strokeDasharray`. Sweeping the arc by rebuilding
+ * its path would work, but a dash offset is two numbers moving on an unchanged
+ * path, and it keeps the rounded cap pinned to the moving end for free.
+ *
+ * The same dash pattern is what makes the other two shapes possible without any
+ * more geometry. An open gauge is the pattern cut short of the circumference
+ * and the whole circle turned to put the gap where it is wanted; a segmented
+ * ring is the pattern repeated, one pair per tick. Both stay one `Circle`.
  *
  * Touch, not hover: a ring is selected by pressing it, and pressing the same
  * one again clears the selection. There is no equivalent of a pointer resting
@@ -65,6 +69,12 @@ import { cn } from '../../utils/cn';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
+/**
+ * Where a child is drawn. Rings go inside the SVG, the header above it, and
+ * everything else over it as ordinary views.
+ */
+type Slot = 'ring' | 'overlay' | 'header';
+
 /** One ring per datum, and the datum is the whole of its contract. */
 export interface RingDatum {
   /** Name for the legend and the centre readout. */
@@ -88,6 +98,10 @@ interface RingChartContextValue {
   activeIndex: number;
   setActiveIndex: (index: number) => void;
   radiusOf: (index: number) => number;
+  /** Where the arcs begin, in degrees clockwise from twelve o'clock. */
+  startAngle: number;
+  /** How far they run, as a fraction of a full turn. 1 is a closed ring. */
+  arc: number;
 }
 
 const RingChartContext = createContext<RingChartContextValue | null>(null);
@@ -119,6 +133,17 @@ export interface RingChartProps extends ViewProps {
   strokeWidth?: number;
   /** Gap between one ring and the next. */
   ringGap?: number;
+  /**
+   * Where the arcs begin, in degrees clockwise from twelve o'clock. `0` is the
+   * top, `90` the right-hand side.
+   */
+  startAngle?: number;
+  /**
+   * Where they end, on the same clock. Leaving a turn's worth between the two
+   * gives a closed ring; anything less leaves a gap and reads as a gauge —
+   * `startAngle={-90} endAngle={90}` is the half circle over the top.
+   */
+  endAngle?: number;
   /** Milliseconds for the arcs to sweep in. */
   animationDuration?: number;
   /** Selected ring. Leave unset to let the chart track it. */
@@ -140,6 +165,8 @@ const RingChartRoot = forwardRef<RingChartHandle, RingChartProps>(function RingC
     size,
     strokeWidth = 12,
     ringGap = 6,
+    startAngle = 0,
+    endAngle = 360,
     animationDuration = 1100,
     activeIndex: activeIndexProp,
     onActiveIndexChange,
@@ -165,6 +192,13 @@ const RingChartRoot = forwardRef<RingChartHandle, RingChartProps>(function RingC
   );
 
   const box = size ?? measured;
+
+  /*
+   * The sweep as a fraction of a turn, which is the form every arc length here
+   * is wanted in. Clamped to one turn because a ring drawn past 360° laps
+   * itself, and clamped above zero because a ring of no length is not a chart.
+   */
+  const arc = Math.min(Math.max(endAngle - startAngle, 0), 360) / 360;
 
   /*
    * Outermost ring first, so `data[0]` is the one the eye lands on. Each ring
@@ -231,47 +265,70 @@ const RingChartRoot = forwardRef<RingChartHandle, RingChartProps>(function RingC
       activeIndex,
       setActiveIndex,
       radiusOf,
+      startAngle,
+      arc,
     }),
-    [data, box, strokeWidth, ringGap, colors, reveal, activeIndex, setActiveIndex, radiusOf]
+    [
+      data,
+      box,
+      strokeWidth,
+      ringGap,
+      colors,
+      reveal,
+      activeIndex,
+      setActiveIndex,
+      radiusOf,
+      startAngle,
+      arc,
+    ]
   );
 
   const rings: ReactNode[] = [];
   const overlay: ReactNode[] = [];
+  const header: ReactNode[] = [];
   Children.forEach(children, (child, index) => {
     if (!isValidElement(child)) return;
-    const slot = (child.type as { slot?: 'ring' | 'overlay' }).slot ?? 'overlay';
-    (slot === 'ring' ? rings : overlay).push(
+    const slot = (child.type as { slot?: Slot }).slot ?? 'overlay';
+    (slot === 'ring' ? rings : slot === 'header' ? header : overlay).push(
       <ChildSlot key={index}>{child}</ChildSlot>
     );
   });
 
   return (
     <RingChartContext.Provider value={context}>
-      <View
-        {...props}
-        onLayout={onLayout}
-        style={[size ? { width: size, height: size } : { aspectRatio: 1 }, props.style]}
-        className={cn('w-full items-center justify-center', className)}
-      >
-        {box > 0 ? (
-          <>
-            <Svg width={box} height={box}>
-              {rings}
-            </Svg>
-            {/*
-             * The centre and the legend sit over the SVG rather than inside
-             * it: both are text, and SVG text ignores the platform's text
-             * scaling and the theme's font.
-             */}
-            <View
-              pointerEvents="box-none"
-              style={{ position: 'absolute', width: box, height: box }}
-              className="items-center justify-center"
-            >
-              {overlay}
-            </View>
-          </>
-        ) : null}
+      {/*
+       * Two views, because the header is not part of the plot. The square and
+       * the layout measurement belong to the drawing area alone — measured on
+       * the outer view they would take in the header too, and the rings would
+       * be laid out inside a box taller than the one they are drawn in.
+       */}
+      <View {...props} style={props.style} className={cn('w-full', className)}>
+        {header}
+        <View
+          onLayout={onLayout}
+          style={size ? { width: size, height: size } : { aspectRatio: 1 }}
+          className="w-full items-center justify-center"
+        >
+          {box > 0 ? (
+            <>
+              <Svg width={box} height={box}>
+                {rings}
+              </Svg>
+              {/*
+               * The centre and the legend sit over the SVG rather than inside
+               * it: both are text, and SVG text ignores the platform's text
+               * scaling and the theme's font.
+               */}
+              <View
+                pointerEvents="box-none"
+                style={{ position: 'absolute', width: box, height: box }}
+                className="items-center justify-center"
+              >
+                {overlay}
+              </View>
+            </>
+          ) : null}
+        </View>
       </View>
     </RingChartContext.Provider>
   );
@@ -289,10 +346,23 @@ export interface RingChartRingProps {
   color?: string;
   /** Which of the five chart tokens to take, when the datum names no colour. */
   colorIndex?: SeriesColorIndex;
-  /** Rounded ends, or square ones. */
+  /**
+   * Rounded ends, or square ones. Defaults to round, and to square when the
+   * ring is segmented — a rounded cap on a tick as long as it is wide draws a
+   * lozenge rather than a tick.
+   */
   lineCap?: 'round' | 'butt';
   /** Opacity of the track behind the arc. */
   trackOpacity?: number;
+  /**
+   * Break the ring into this many ticks, lit one at a time as the value
+   * climbs. For a target made of countable things — eight of twelve sessions
+   * reads off ticks you can count, and off a smooth arc only as "about two
+   * thirds".
+   */
+  segments?: number;
+  /** Gap between one tick and the next, in points. */
+  segmentGap?: number;
 }
 
 /**
@@ -308,11 +378,23 @@ function RingChartRing({
   index,
   color,
   colorIndex,
-  lineCap = 'round',
+  lineCap,
   trackOpacity = 0.15,
+  segments,
+  segmentGap = 3,
 }: RingChartRingProps) {
-  const { data, size, strokeWidth, colors, reveal, activeIndex, setActiveIndex, radiusOf } =
-    useChart('RingChart.Ring');
+  const {
+    data,
+    size,
+    strokeWidth,
+    colors,
+    reveal,
+    activeIndex,
+    setActiveIndex,
+    radiusOf,
+    startAngle,
+    arc,
+  } = useChart('RingChart.Ring');
 
   const datum = data[index];
   const tokenColor = useSeriesColor(undefined, colorIndex ?? 1);
@@ -321,6 +403,14 @@ function RingChartRing({
   const radius = radiusOf(index);
   const circumference = 2 * Math.PI * radius;
   const centre = size / 2;
+  /* The drawn part of the circle. The whole of it for a closed ring. */
+  const arcLength = circumference * arc;
+  const ticks = segments && segments > 0 ? Math.floor(segments) : 0;
+  /* One tick and the gap after it. The gap is taken out of the tick, not added
+     to it, so N ticks still span exactly the arc asked for. */
+  const slot = ticks ? arcLength / ticks : 0;
+  const dash = ticks ? Math.max(slot - segmentGap, 0.5) : 0;
+  const cap = lineCap ?? (ticks ? 'butt' : 'round');
 
   const fraction = datum && datum.maxValue > 0 ? datum.value / datum.maxValue : 0;
   // A value past its target fills the ring and stops. Going round twice would
@@ -337,15 +427,37 @@ function RingChartRing({
 
   const props = useAnimatedProps(() => {
     const progress = Math.max(0, Math.min(1, (reveal.value - start) / 0.6));
-    const drawn = circumference * clamped * progress;
-    return {
-      strokeDasharray: [drawn, circumference],
-    };
+    if (!ticks) {
+      return { strokeDasharray: [arcLength * clamped * progress, circumference] };
+    }
+    /*
+     * A tick is lit or it is not, so the sweep rounds to whole ones. The array
+     * stays the same length whatever is lit — an unlit tick is a dash of no
+     * length rather than a missing pair — because a dash pattern that changes
+     * length between frames is a new pattern, not an animated one.
+     */
+    const lit = Math.round(ticks * clamped * progress);
+    const pattern: number[] = [];
+    for (let tick = 0; tick < ticks; tick += 1) {
+      if (tick < lit) pattern.push(dash, slot - dash);
+      else pattern.push(0, slot);
+    }
+    return { strokeDasharray: pattern };
   });
 
   const dimmed = activeIndex >= 0 && activeIndex !== index;
 
   if (!datum || radius <= 0) return null;
+
+  /*
+   * A circle's stroke starts at three o'clock, so everything is turned back a
+   * quarter to put the start at twelve — an arc starting at three reads as a
+   * gauge that has already been running. `startAngle` turns it on from there.
+   */
+  const rotate = `rotate(${startAngle - 90} ${centre} ${centre})`;
+  /* The unlit part of a segmented ring is the gaps between its ticks, so the
+     track is ticked too; an open gauge's track stops where its arc stops. */
+  const trackDash = ticks ? [dash, slot - dash] : [arcLength, circumference];
 
   return (
     <G opacity={dimmed ? 0.35 : 1}>
@@ -356,7 +468,10 @@ function RingChartRing({
         stroke={stroke}
         strokeOpacity={trackOpacity}
         strokeWidth={strokeWidth}
+        strokeLinecap={cap}
+        strokeDasharray={trackDash}
         fill="none"
+        transform={rotate}
       />
       <AnimatedCircle
         animatedProps={props}
@@ -365,16 +480,15 @@ function RingChartRing({
         r={radius}
         stroke={stroke}
         strokeWidth={strokeWidth}
-        strokeLinecap={lineCap}
+        strokeLinecap={cap}
         fill="none"
-        // Rotated so the arc starts at twelve o'clock. An arc starting at
-        // three reads as a gauge that has already been running.
-        transform={`rotate(-90 ${centre} ${centre})`}
+        transform={rotate}
       />
       {/*
        * The touch target is the ring itself, drawn as a transparent stroke
        * over it and made wider than the ring — a twelve-point band is below
-       * the size a finger can reliably hit.
+       * the size a finger can reliably hit. It follows the sweep rather than
+       * closing the circle, so the dead half of a gauge stays dead.
        */}
       <Circle
         cx={centre}
@@ -382,7 +496,9 @@ function RingChartRing({
         r={radius}
         stroke="transparent"
         strokeWidth={Math.max(strokeWidth, 28)}
+        strokeDasharray={[arcLength, circumference]}
         fill="none"
+        transform={rotate}
         onPress={() => setActiveIndex(activeIndex === index ? -1 : index)}
       />
     </G>
@@ -536,7 +652,107 @@ function RingChartLegend({ className, showValue = true, ...props }: RingChartLeg
 RingChartLegend.displayName = 'RingChart.Legend';
 RingChartLegend.slot = 'overlay' as const;
 
+export interface RingChartHeaderProps extends ViewProps {
+  className?: string;
+  /** Small line above the value — what the chart is of. */
+  title?: string;
+  /** The readout. The largest thing on the card, and the first thing read. */
+  value?: string;
+  /** One muted line under the value — a period, a comparison, a target. */
+  caption?: string;
+  /** Prettier names for the rings, keyed by their `label`. */
+  labels?: Record<string, string>;
+  /**
+   * Draw a swatch and a name per ring along the trailing edge. Prefer this to
+   * `RingChart.Legend` on a chart that has a header: that legend hangs off the
+   * bottom of the square, where it overlaps whatever is under the chart.
+   */
+  legend?: boolean;
+  /** Trailing slot — a control, a badge, a range picker. Wins over `legend`. */
+  children?: ReactNode;
+}
+
+/**
+ * The strip above the rings: what the chart is of, what it currently reads, and
+ * what the colours mean.
+ *
+ * It belongs to the chart rather than to the card around it because it is about
+ * the *rings* — the number changes as one is selected, and the legend is the
+ * list the chart itself is holding. The card's header is a caption on the tray
+ * the chart sits in; this is the chart introducing itself.
+ *
+ * The value is not derived here. There is no total to derive: the rings measure
+ * different things against different targets. Take it from `onActiveIndexChange`
+ * and pass the formatted string down, so one header can show the headline figure
+ * when nothing is selected and a ring's own when something is.
+ */
+function RingChartHeader({
+  className,
+  title,
+  value,
+  caption,
+  labels,
+  legend = false,
+  children,
+  ...props
+}: RingChartHeaderProps) {
+  const { data, colors } = useChart('RingChart.Header');
+  const trailing =
+    children ??
+    (legend && data.length ? (
+      <View className="flex-row flex-wrap items-center justify-end gap-x-3 gap-y-1">
+        {data.map((ring, index) => (
+          <View key={ring.label} className="flex-row items-center gap-1.5">
+            <View
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: colors[index],
+              }}
+            />
+            <Text size="xs" muted numberOfLines={1}>
+              {labels?.[ring.label] ?? ring.label}
+            </Text>
+          </View>
+        ))}
+      </View>
+    ) : null);
+
+  return (
+    <View
+      {...props}
+      className={cn('flex-row items-start justify-between gap-3 pb-3', className)}
+    >
+      <View className="flex-1 gap-0.5">
+        {title ? (
+          <Text size="xs" muted>
+            {title}
+          </Text>
+        ) : null}
+        {value ? (
+          <Text size="xl" weight="bold">
+            {value}
+          </Text>
+        ) : null}
+        {caption ? (
+          <Text size="xs" muted>
+            {caption}
+          </Text>
+        ) : null}
+      </View>
+      {/* Shrinkable, unlike a view's default in React Native. Held rigid, a
+          three-ring key takes the width it wants and the caption underneath
+          the value wraps to two lines to make room for it. */}
+      {trailing ? <View className="shrink pt-1">{trailing}</View> : null}
+    </View>
+  );
+}
+RingChartHeader.displayName = 'RingChart.Header';
+RingChartHeader.slot = 'header' as const;
+
 export const RingChart = Object.assign(RingChartRoot, {
+  Header: RingChartHeader,
   Ring: RingChartRing,
   Center: RingChartCenter,
   Legend: RingChartLegend,
