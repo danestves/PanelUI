@@ -326,6 +326,7 @@ export {
   type DrawerCloseProps,
   type DrawerSide,
   type DrawerSize,
+  type DrawerCloseSide,
 } from './components/drawer';
 export {
   EmptyState,

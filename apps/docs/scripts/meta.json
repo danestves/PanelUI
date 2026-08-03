@@ -131,7 +131,8 @@
     "A panel that comes in from an edge of the screen and covers the app until dismissed.",
     "react native drawer component",
     {
-      "addedIn": "0.33.0"
+      "addedIn": "0.33.0",
+      "updatedIn": "0.41.0"
     }
   ],
   "empty-state": [

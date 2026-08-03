@@ -1,6 +1,7 @@
 ---
 title: Drawer
 description: A panel that comes in from an edge of the screen and covers the app until dismissed.
+status: updated
 ---
 
 A panel that comes in from an edge of the screen and covers the app until it is dismissed. Mounts through a portal, takes the Android back button, and unmounts after its exit animation.
@@ -10,7 +11,7 @@ A panel that comes in from an edge of the screen and covers the app until it is 
 Drawer ships with the library — no separate install.
 
 ```tsx
-import { Drawer, Button, Direction, Item, Switch, Text } from 'panelui-native';
+import { Drawer, Button, Chip, Direction, Item, Label, Separator, Slider, Switch, Text } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -61,7 +62,7 @@ npx panelui-cli@latest add drawer
 
 - **`Drawer.Trigger`** — Clones its child and opens the drawer on press.
 - **`Drawer.Content`** — The panel. Renders through a portal above everything else, and owns the edge, the size and the swipe.
-- **`Drawer.Header`** — A title and a line under it. Leaves the corner the close button took clear, on whichever side that is.
+- **`Drawer.Header`** — A title and a line under it. Leaves the corner the close button took clear, on whichever side that is — including when `closeSide` moved it.
 - **`Drawer.Body`** — The scrolling part. Its axis is the one the drawer is *not* dragged on, so the two never compete.
 - **`Drawer.Footer`** — A row pinned below the body, for the action the drawer is asking about.
 - **`Drawer.Close`** — Clones its child and closes the drawer on press.
@@ -99,41 +100,47 @@ The default: docked to the start edge, sized to `md`, with a header, a scrolling
 
 ### From the end edge
 
-`side="end"` docks the drawer to the edge text runs toward — the right in a left-to-right app, the left in a right-to-left one.
+`side="end"` docks the drawer to the edge text runs toward — the right in a left-to-right app, the left in a right-to-left one. `closeSide="end"` then keeps the ✕ in the outer corner rather than the inner one an end drawer takes by default, so the panel is always closed from the same place.
 
 ```tsx
-const [inStock, setInStock] = useState(true);
-const [onSale, setOnSale] = useState(false);
+const [categories, setCategories] = useState(['Chairs']);
+const [budget, setBudget] = useState(320);
 
 <Drawer>
   <Drawer.Trigger>
     <Button variant="outline">Filters</Button>
   </Drawer.Trigger>
-  <Drawer.Content side="end">
-    <Drawer.Header title="Filters" />
+  <Drawer.Content side="end" closeSide="end">
+    <Drawer.Header title="Filters" description="2 applied" />
     <Drawer.Body>
-      <Item>
-        <Item.Content>
-          <Item.Title>In stock only</Item.Title>
-          <Item.Description>Hide anything on backorder</Item.Description>
-        </Item.Content>
-        <Item.Actions>
-          <Switch value={inStock} onValueChange={setInStock} />
-        </Item.Actions>
-      </Item>
-      <Item>
-        <Item.Content>
-          <Item.Title>On sale</Item.Title>
-          <Item.Description>Reduced in the last 30 days</Item.Description>
-        </Item.Content>
-        <Item.Actions>
-          <Switch value={onSale} onValueChange={setOnSale} />
-        </Item.Actions>
-      </Item>
+      <View className="gap-6 pb-6">
+        <View className="gap-3">
+          <Label>Category</Label>
+          <View className="flex-row flex-wrap gap-2">
+            {CATEGORIES.map((name) => (
+              <Chip
+                key={name}
+                selected={categories.includes(name)}
+                onPress={() => toggleCategory(name)}
+              >
+                {name}
+              </Chip>
+            ))}
+          </View>
+        </View>
+
+        <Separator />
+
+        <View className="gap-3">
+          <Label>Budget</Label>
+          <Slider value={budget} onValueChange={setBudget} min={40} max={500} step={20} />
+        </View>
+      </View>
     </Drawer.Body>
     <Drawer.Footer>
+      <Button variant="ghost" onPress={reset}>Reset</Button>
       <Drawer.Close>
-        <Button className="flex-1">Apply</Button>
+        <Button className="flex-1">Show 148 results</Button>
       </Drawer.Close>
     </Drawer.Footer>
   </Drawer.Content>
@@ -142,7 +149,7 @@ const [onSale, setOnSale] = useState(false);
 
 ### Sizes
 
-`size` is the drawer's width on `start` / `end` and its height on `top` / `bottom`. A horizontal drawer is capped in points as well, so `md` is a 320-point panel on a tablet rather than 78% of one.
+`sm` asks for 62% of the width and is never wider than 280pt, `md` 78% capped at 320, `lg` 88% capped at 400, and `full` 94% with no cap. The cap is the part a fraction cannot do on its own: 78% of a tablet is a navigation list with a column of whitespace beside it. On `top` and `bottom` there is no sensible cap, so the fraction is the whole of it.
 
 ```tsx
 <View className="flex-row flex-wrap gap-2">
@@ -258,6 +265,7 @@ The same `side="start"` drawer inside a right-to-left subtree: it docks to the r
 | `dismissible` | `boolean` | `true` | Tap on the backdrop closes the drawer. Default true. |
 | `swipeToDismiss` | `boolean` | `true` | Drag the drawer back toward its edge to dismiss it. Default true. Turn it off for a drawer whose content wants the same axis — a horizontal scroller in a side drawer. |
 | `showClose` | `boolean` | `true` | Show a close button in the drawer's inner top corner. Default true. |
+| `closeSide` | `DrawerCloseSide` | — | Which top corner the close button takes. Logical, like `side`: `end` is the corner text runs toward, so it is the right one in a left-to-right app and the left one in a right-to-left one. Defaults to the corner *away* from the docked edge, so an `end` drawer's button does not sit against the screen edge the panel came out of. Set it when the drawer reads better with the button on the outer corner instead — a panel people close by reaching for the same corner every time. |
 | `blur` | `boolean` | `false` | Frost the screen behind the drawer instead of dimming it. Needs the optional `expo-blur`; without it this dims, rather than failing. |
 
 ### Drawer.Header
@@ -302,6 +310,12 @@ The drawer also re-establishes the reading direction on its own layer. It is por
 ### Where it stops
 
 The panel is drawn behind the status bar, not below it — a surface the app disappears under should reach the edge of the screen rather than stopping short of it and leaving a strip of app above. The *content* is the part that clears it: the safe-area inset and the panel's own padding stack, so the header starts a clear gap below the clock instead of flush against it. The same goes for the bottom, where every side but `top` reaches the screen edge and pads its content clear of the home indicator.
+
+### Which corner the ✕ takes
+
+By default the corner *away* from the docked edge, so an `end` drawer's button sits on its inner side rather than against the screen edge the panel came out of. `closeSide` overrides that, and is logical like `side` is: `end` is the corner text runs toward, so it is the right one in a left-to-right app and the left one in a right-to-left one. Set it for a panel that is opened and closed all day, where a target always under the same thumb beats one that moves with the edge.
+
+`Drawer.Header` reserves whichever corner the button ended up in, so a long title wraps above it instead of running underneath. That is one decision read from two places, which is why it is resolved once rather than worked out again by the header.
 
 ### Dismissing it
 

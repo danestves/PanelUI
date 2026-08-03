@@ -103,6 +103,7 @@ const DISMISS_VELOCITY = 650;
 
 export type DrawerSide = 'start' | 'end' | 'top' | 'bottom';
 export type DrawerSize = 'sm' | 'md' | 'lg' | 'full';
+export type DrawerCloseSide = 'start' | 'end';
 
 /**
  * How much of the screen each size asks for, and the cap it is never allowed
@@ -168,7 +169,7 @@ function useDrawer(component: string): DrawerContextValue {
  * so a header can leave it clear rather than wrap underneath it.
  */
 interface DrawerSurfaceValue {
-  side: DrawerSide;
+  closeSide: DrawerCloseSide;
   showClose: boolean;
 }
 
@@ -271,6 +272,17 @@ export interface DrawerContentProps extends ViewProps {
   /** Show a close button in the drawer's inner top corner. Default true. */
   showClose?: boolean;
   /**
+   * Which top corner the close button takes. Logical, like `side`: `end` is the
+   * corner text runs toward, so it is the right one in a left-to-right app and
+   * the left one in a right-to-left one.
+   *
+   * Defaults to the corner *away* from the docked edge, so an `end` drawer's
+   * button does not sit against the screen edge the panel came out of. Set it
+   * when the drawer reads better with the button on the outer corner instead —
+   * a panel people close by reaching for the same corner every time.
+   */
+  closeSide?: DrawerCloseSide;
+  /**
    * Frost the screen behind the drawer instead of dimming it. Needs the
    * optional `expo-blur`; without it this dims, rather than failing.
    */
@@ -285,6 +297,7 @@ function DrawerContent({
   dismissible = true,
   swipeToDismiss = true,
   showClose = true,
+  closeSide,
   blur = false,
   children,
   ...props
@@ -384,9 +397,17 @@ function DrawerContent({
       : { transform: [{ translateY: travel.value * outward }] }
   );
 
+  /*
+   * Resolved once and shared, because the button's corner and the header's
+   * clearance are the same decision seen from two places. Letting each work it
+   * out from `side` is how they drift, and a header padded on the wrong side
+   * runs its title straight under the button.
+   */
+  const closeCorner: DrawerCloseSide = closeSide ?? (side === 'end' ? 'start' : 'end');
+
   const surface = useMemo<DrawerSurfaceValue>(
-    () => ({ side, showClose }),
-    [side, showClose]
+    () => ({ closeSide: closeCorner, showClose }),
+    [closeCorner, showClose]
   );
 
   if (!open) return null;
@@ -508,10 +529,11 @@ function DrawerContent({
                    * Taking the same number the padding does is what keeps it
                    * level with the first line of the header on every side.
                    *
-                   * The corner follows the docked edge. An `end` drawer's own
-                   * edge is the trailing one, so its button moves to the
-                   * leading side rather than sitting against the screen edge
-                   * the drawer came out of.
+                   * The corner follows the docked edge by default. An `end`
+                   * drawer's own edge is the trailing one, so its button moves
+                   * to the leading side rather than sitting against the screen
+                   * edge the drawer came out of — and `closeSide` overrides
+                   * that for a panel that wants the same corner every time.
                    */}
                   {showClose ? (
                     <Pressable
@@ -521,7 +543,7 @@ function DrawerContent({
                       hitSlop={8}
                       className={cn(
                         'absolute z-10 h-8 w-8 items-center justify-center rounded-full bg-muted active:opacity-70',
-                        side === 'end' ? 'start-4' : 'end-4'
+                        closeCorner === 'start' ? 'start-4' : 'end-4'
                       )}
                       style={{ top: padding.paddingTop }}
                     >
@@ -569,7 +591,7 @@ function DrawerHeader({
    */
   const clearance = !surface?.showClose
     ? undefined
-    : surface.side === 'end'
+    : surface.closeSide === 'start'
       ? 'ps-14'
       : 'pe-14';
 
