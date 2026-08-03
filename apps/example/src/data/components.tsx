@@ -5,7 +5,7 @@
  * screen derives its counts from it, so adding a component means adding one
  * entry and nothing else.
  */
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -8301,43 +8301,300 @@ function LoaderInlineVersion() {
 }
 
 /**
+ * A navigation drawer with a destination selected, because that is the state a
+ * navigation drawer is almost always in: it opens to tell you where you are,
+ * not only where you could go. The group under the rule is the second tier —
+ * settings that belong to the workspace rather than places inside it.
+ */
+function DrawerNavigationDemo() {
+  const [destination, setDestination] = useState('Projects');
+
+  const places = [
+    { label: 'Projects', icon: <PackageIcon size={16} />, detail: '12 active' },
+    { label: 'Members', icon: <BellIcon size={16} />, detail: '8 people' },
+    { label: 'Billing', icon: <CardIcon size={16} />, detail: 'Pro plan' },
+  ];
+
+  return (
+    <Drawer>
+      <Drawer.Trigger>
+        <Button variant="outline">Open menu</Button>
+      </Drawer.Trigger>
+      <Drawer.Content>
+        <Drawer.Header title="Acme Studio" description="Switch project or manage members." />
+        <Drawer.Body>
+          <View className="gap-4 pb-4">
+            <Item.Group>
+              {places.map(({ label, icon, detail }, index) => (
+                <Fragment key={label}>
+                  {index > 0 ? <Item.Separator /> : null}
+                  <Item
+                    // Selected rather than merely pressable: the row you are on
+                    // has to be announced as such, not only tinted.
+                    variant={destination === label ? 'muted' : 'default'}
+                    onPress={() => setDestination(label)}
+                    accessibilityState={{ selected: destination === label }}
+                  >
+                    <Item.Media variant="icon">{icon}</Item.Media>
+                    <Item.Content>
+                      <Item.Title>{label}</Item.Title>
+                      <Item.Description>{detail}</Item.Description>
+                    </Item.Content>
+                    <Item.Actions>
+                      {destination === label ? (
+                        <Badge variant="secondary">Here</Badge>
+                      ) : (
+                        <ChevronRightIcon size={16} />
+                      )}
+                    </Item.Actions>
+                  </Item>
+                </Fragment>
+              ))}
+            </Item.Group>
+
+            <Separator />
+
+            <Item.Group>
+              <Item>
+                <Item.Media variant="icon">
+                  <ShieldCheckIcon size={16} />
+                </Item.Media>
+                <Item.Content>
+                  <Item.Title>Security</Item.Title>
+                  <Item.Description>Two-factor is on</Item.Description>
+                </Item.Content>
+                <Item.Actions>
+                  <ChevronRightIcon size={16} />
+                </Item.Actions>
+              </Item>
+              <Item.Separator />
+              <Item>
+                <Item.Media variant="icon">
+                  <BellIcon size={16} />
+                </Item.Media>
+                <Item.Content>
+                  <Item.Title>Notifications</Item.Title>
+                  <Item.Description>Badges, sounds, banners</Item.Description>
+                </Item.Content>
+                <Item.Actions>
+                  <ChevronRightIcon size={16} />
+                </Item.Actions>
+              </Item>
+            </Item.Group>
+          </View>
+        </Drawer.Body>
+        <Drawer.Footer>
+          <Avatar size="sm" fallback="KA" />
+          <View className="min-w-0 flex-1">
+            <Text size="sm" weight="medium" numberOfLines={1}>
+              Khalid Abdi
+            </Text>
+            <Text size="xs" muted numberOfLines={1}>
+              khalid@acme.studio
+            </Text>
+          </View>
+          <Drawer.Close>
+            <Button variant="outline" size="sm">
+              Sign out
+            </Button>
+          </Drawer.Close>
+        </Drawer.Footer>
+      </Drawer.Content>
+    </Drawer>
+  );
+}
+
+/**
+ * What each size asks for and what it is capped at. Written out because the
+ * cap is the part that is invisible on a phone and the whole point on a
+ * tablet — a fraction alone reads correctly on one and absurdly on the other.
+ */
+const DRAWER_SIZES = [
+  { size: 'sm', asks: '62% of the width', capped: 'never past 280pt', use: 'A short list of destinations.' },
+  { size: 'md', asks: '78% of the width', capped: 'never past 320pt', use: 'The default. Navigation, filters, a form.' },
+  { size: 'lg', asks: '88% of the width', capped: 'never past 400pt', use: 'Anything with two columns of content.' },
+  { size: 'full', asks: '94% of the width', capped: 'no cap', use: 'A takeover that still shows the app behind it.' },
+] as const;
+
+function DrawerSizesDemo() {
+  return (
+    <View className="w-full flex-row flex-wrap justify-center gap-2">
+      {DRAWER_SIZES.map(({ size, asks, capped, use }) => (
+        <Drawer key={size}>
+          <Drawer.Trigger>
+            <Button variant="outline" size="sm">
+              {size}
+            </Button>
+          </Drawer.Trigger>
+          <Drawer.Content size={size}>
+            <Drawer.Header title={`size="${size}"`} description={use} />
+            <Drawer.Body>
+              <View className="gap-4 pb-4">
+                <Item.Group>
+                  <Item>
+                    <Item.Content>
+                      <Item.Title>Asks for</Item.Title>
+                    </Item.Content>
+                    <Item.Actions>
+                      <Text size="sm" muted>
+                        {asks}
+                      </Text>
+                    </Item.Actions>
+                  </Item>
+                  <Item.Separator />
+                  <Item>
+                    <Item.Content>
+                      <Item.Title>Capped at</Item.Title>
+                    </Item.Content>
+                    <Item.Actions>
+                      <Text size="sm" muted>
+                        {capped}
+                      </Text>
+                    </Item.Actions>
+                  </Item>
+                </Item.Group>
+                <Text size="sm" muted>
+                  The cap is what a fraction cannot do on its own: 78% of a tablet is
+                  a navigation list with a column of whitespace beside it.
+                </Text>
+                <Text size="sm" muted>
+                  Drag the panel back toward its edge to dismiss it.
+                </Text>
+              </View>
+            </Drawer.Body>
+          </Drawer.Content>
+        </Drawer>
+      ))}
+    </View>
+  );
+}
+
+const DRAWER_CATEGORIES = ['Chairs', 'Desks', 'Lighting', 'Storage', 'Rugs'];
+
+/**
  * A filter drawer on the end edge — the edge text runs toward, so it is the
  * right in a left-to-right app and the left in a right-to-left one.
+ *
+ * `closeSide="end"` puts the ✕ in the outer corner rather than the inner one it
+ * would take by default. A filter panel is opened and closed a dozen times in a
+ * session, and a target that is always under the same thumb beats one that
+ * moves with the edge the panel came from.
+ *
+ * Everything in it drives the count in the footer, so the panel is a control
+ * rather than a picture of one — a filter that changes nothing demonstrates
+ * nothing about whether the drawer can hold a real form.
  */
 function DrawerFiltersDemo() {
+  const [categories, setCategories] = useState<string[]>(['Chairs']);
+  const [budget, setBudget] = useState(320);
+  const [rating, setRating] = useState(4);
   const [inStock, setInStock] = useState(true);
   const [onSale, setOnSale] = useState(false);
+
+  const toggleCategory = (name: string) =>
+    setCategories((current) =>
+      current.includes(name)
+        ? current.filter((item) => item !== name)
+        : [...current, name]
+    );
+
+  const reset = () => {
+    setCategories([]);
+    setBudget(500);
+    setRating(0);
+    setInStock(false);
+    setOnSale(false);
+  };
+
+  // Deliberately arbitrary, but monotonic in every input: the number has to
+  // move the right way when a filter tightens, or the footer is a decoration.
+  const results =
+    240 -
+    categories.length * 26 -
+    Math.round((500 - budget) / 8) -
+    rating * 11 -
+    (inStock ? 18 : 0) -
+    (onSale ? 34 : 0);
+  const applied =
+    categories.length + (budget < 500 ? 1 : 0) + (rating > 0 ? 1 : 0) + (inStock ? 1 : 0) + (onSale ? 1 : 0);
 
   return (
     <Drawer>
       <Drawer.Trigger>
         <Button variant="outline">Filters</Button>
       </Drawer.Trigger>
-      <Drawer.Content side="end">
-        <Drawer.Header title="Filters" />
+      <Drawer.Content side="end" closeSide="end">
+        <Drawer.Header
+          title="Filters"
+          description={applied === 0 ? 'Nothing applied' : `${applied} applied`}
+        />
         <Drawer.Body>
-          <Item>
-            <Item.Content>
-              <Item.Title>In stock only</Item.Title>
-              <Item.Description>Hide anything on backorder</Item.Description>
-            </Item.Content>
-            <Item.Actions>
-              <Switch value={inStock} onValueChange={setInStock} />
-            </Item.Actions>
-          </Item>
-          <Item>
-            <Item.Content>
-              <Item.Title>On sale</Item.Title>
-              <Item.Description>Reduced in the last 30 days</Item.Description>
-            </Item.Content>
-            <Item.Actions>
-              <Switch value={onSale} onValueChange={setOnSale} />
-            </Item.Actions>
-          </Item>
+          <View className="gap-6 pb-6">
+          <View className="gap-3">
+            <Label>Category</Label>
+            <View className="flex-row flex-wrap gap-2">
+              {DRAWER_CATEGORIES.map((name) => (
+                <Chip
+                  key={name}
+                  selected={categories.includes(name)}
+                  onPress={() => toggleCategory(name)}
+                >
+                  {name}
+                </Chip>
+              ))}
+            </View>
+          </View>
+
+          <Separator />
+
+          <View className="gap-3">
+            <View className="flex-row items-center justify-between">
+              <Label>Budget</Label>
+              <Text size="sm" muted>
+                Up to ${budget}
+              </Text>
+            </View>
+            <Slider value={budget} onValueChange={setBudget} min={40} max={500} step={20} />
+          </View>
+
+          <Separator />
+
+          <View className="gap-2">
+            <Label>Minimum rating</Label>
+            <Rating value={rating} onValueChange={setRating} allowClear />
+          </View>
+
+          <Separator />
+
+          <Item.Group>
+            <Item>
+              <Item.Content>
+                <Item.Title>In stock only</Item.Title>
+                <Item.Description>Hide anything on backorder</Item.Description>
+              </Item.Content>
+              <Item.Actions>
+                <Switch value={inStock} onValueChange={setInStock} />
+              </Item.Actions>
+            </Item>
+            <Item.Separator />
+            <Item>
+              <Item.Content>
+                <Item.Title>On sale</Item.Title>
+                <Item.Description>Reduced in the last 30 days</Item.Description>
+              </Item.Content>
+              <Item.Actions>
+                <Switch value={onSale} onValueChange={setOnSale} />
+              </Item.Actions>
+            </Item>
+          </Item.Group>
+          </View>
         </Drawer.Body>
         <Drawer.Footer>
+          <Button variant="ghost" onPress={reset}>
+            Reset
+          </Button>
           <Drawer.Close>
-            <Button className="flex-1">Apply</Button>
+            <Button className="flex-1">Show {Math.max(results, 0)} results</Button>
           </Drawer.Close>
         </Drawer.Footer>
       </Drawer.Content>
@@ -9473,68 +9730,12 @@ export const COMPONENTS: ComponentEntry[] = [
     name: 'Drawer',
     summary: 'A panel that comes in from an edge of the screen',
     demos: [
-      {
-        label: 'Navigation drawer',
-        render: () => (
-          <Drawer>
-            <Drawer.Trigger>
-              <Button variant="outline">Open menu</Button>
-            </Drawer.Trigger>
-            <Drawer.Content>
-              <Drawer.Header
-                title="Workspace"
-                description="Switch project or manage members."
-              />
-              <Drawer.Body>
-                {['Projects', 'Members', 'Billing'].map((label) => (
-                  <Item key={label}>
-                    <Item.Content>
-                      <Item.Title>{label}</Item.Title>
-                    </Item.Content>
-                  </Item>
-                ))}
-              </Drawer.Body>
-              <Drawer.Footer>
-                <Drawer.Close>
-                  <Button variant="outline" className="flex-1">
-                    Close
-                  </Button>
-                </Drawer.Close>
-              </Drawer.Footer>
-            </Drawer.Content>
-          </Drawer>
-        ),
-      },
+      { label: 'Navigation drawer', render: () => <DrawerNavigationDemo /> },
       {
         label: 'From the end edge',
         render: () => <DrawerFiltersDemo />,
       },
-      {
-        label: 'Sizes',
-        render: () => (
-          // A horizontal drawer is capped in points as well as by its fraction,
-          // so `md` is a 320-point panel on a tablet rather than 78% of one.
-          <View className="flex-row flex-wrap gap-2">
-            {(['sm', 'md', 'lg', 'full'] as const).map((size) => (
-              <Drawer key={size}>
-                <Drawer.Trigger>
-                  <Button variant="outline" size="sm">
-                    {size}
-                  </Button>
-                </Drawer.Trigger>
-                <Drawer.Content size={size}>
-                  <Drawer.Header title={`size="${size}"`} />
-                  <Drawer.Body>
-                    <Text size="sm" muted>
-                      Drag the panel back toward its edge to dismiss it.
-                    </Text>
-                  </Drawer.Body>
-                </Drawer.Content>
-              </Drawer>
-            ))}
-          </View>
-        ),
-      },
+      { label: 'Sizes', render: () => <DrawerSizesDemo /> },
       {
         label: 'From the top',
         render: () => (
