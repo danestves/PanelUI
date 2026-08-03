@@ -246,6 +246,8 @@ const clamp = (value: number, min: number, max: number) => {
 
 export type PanelsideMode = 'push' | 'overlay';
 export type PanelsideSwipeFrom = 'anywhere' | 'edge';
+export type PanelsideItemSize = 'default' | 'sm';
+export type PanelsideCtaSize = 'default' | 'lg';
 
 const itemVariants = tv({
   // No width: in a group it stretches on its own, and pinning it to full width
@@ -253,26 +255,40 @@ const itemVariants = tv({
   // React Native defaults `flexShrink` to 0 — in a footer beside a button, on a
   // panel narrow enough for the two not to fit, nothing would give way and
   // both would simply hang off the edge.
-  base: 'shrink flex-row items-center gap-3 rounded-xl px-3 py-2.5',
+  base: 'shrink flex-row items-center rounded-xl',
   variants: {
+    size: {
+      default: 'gap-3 px-3 py-2.5',
+      sm: 'gap-2.5 px-2.5 py-2',
+    },
     active: { true: 'bg-secondary' },
     disabled: { true: 'opacity-40' },
+  },
+  defaultVariants: {
+    size: 'default',
   },
 });
 
 const ctaVariants = tv({
-  // Taller and wider than a list row's control, and set a step up. It is the
-  // one thing in the panel you are meant to reach for without reading, so it
-  // should not be the same size as the eight chat titles above it.
-  base: 'h-12 shrink flex-row items-center justify-center gap-2 rounded-full px-6',
+  // Taller and wider than a list row's control. It is the one thing in the
+  // panel you are meant to reach for without reading, so it should not be the
+  // same size as the eight chat titles above it — but it shares its footer row
+  // with an account button, and a pill that stands a whole step above that row
+  // makes the footer taller than anything in the panel needs it to be.
+  base: 'shrink flex-row items-center justify-center rounded-full',
   variants: {
     variant: {
       primary: 'bg-primary',
       secondary: 'bg-secondary',
     },
+    size: {
+      default: 'h-10 gap-2 px-5',
+      lg: 'h-12 gap-2 px-6',
+    },
   },
   defaultVariants: {
     variant: 'primary',
+    size: 'default',
   },
 });
 
@@ -886,6 +902,12 @@ export interface PanelsideItemProps extends Omit<PressableProps, 'children'> {
    */
   badge?: ReactNode;
   disabled?: boolean;
+  /**
+   * Row density. `sm` tightens the padding for a panel that has to show more
+   * history at once, without touching the type size — a list you can read is
+   * worth more than two extra rows.
+   */
+  size?: PanelsideItemSize;
   /** Trailing content — usually a `Panelside.Action`. */
   children?: ReactNode;
 }
@@ -897,6 +919,7 @@ function PanelsideItem({
   active = false,
   badge,
   disabled = false,
+  size = 'default',
   children,
   ...props
 }: PanelsideItemProps) {
@@ -913,7 +936,7 @@ function PanelsideItem({
 
   return (
     <AnimatedPressable
-      className={itemVariants({ active, disabled, className })}
+      className={itemVariants({ active, disabled, size, className })}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ selected: active, disabled }}
@@ -1089,6 +1112,15 @@ export interface PanelsideCtaProps extends Omit<PressableProps, 'children'> {
   /** `primary` is the filled accent pill; `secondary` is the quiet one. */
   variant?: 'primary' | 'secondary';
   /**
+   * How tall the pill is. `default` is 40pt, which sits level with the account
+   * button beside it in the footer; `lg` is the 48pt pill, for a panel where
+   * the call to action is the only thing in the row.
+   *
+   * Ignored under `native` — the platform sizes its own button, and asks for a
+   * control size rather than a height.
+   */
+  size?: PanelsideCtaSize;
+  /**
    * Render the platform's own button instead of the pill. Requires the
    * optional `@expo/ui` package; without it this prop does nothing.
    *
@@ -1109,6 +1141,7 @@ function PanelsideCta({
   label,
   icon,
   variant = 'primary',
+  size = 'default',
   native = false,
   glass = false,
   disabled,
@@ -1131,9 +1164,9 @@ function PanelsideCta({
       <Button
         native
         glass={glass}
-        // The platform sizes a native button from its label, so the step up
-        // has to be asked for rather than styled on.
-        size="lg"
+        // The platform sizes a native button from its label, so a height means
+        // nothing here — the step is asked for as a control size instead.
+        size={size === 'lg' ? 'lg' : 'md'}
         variant={variant}
         accessibilityLabel={label}
         // Pressable allows `null` for disabled; Button does not.
@@ -1162,7 +1195,7 @@ function PanelsideCta({
 
   return (
     <AnimatedPressable
-      className={ctaVariants({ variant, className })}
+      className={ctaVariants({ variant, size, className })}
       accessibilityRole="button"
       accessibilityLabel={label}
       disabled={disabled}
@@ -1172,7 +1205,7 @@ function PanelsideCta({
         {icon}
         {label ? (
           <Text
-            size="lg"
+            size={size === 'lg' ? 'lg' : 'base'}
             weight="medium"
             // The pill gives way before the panel does, so the label has to be
             // able to end somewhere rather than pushing the button off the edge.
@@ -1198,26 +1231,53 @@ export interface PanelsideSceneProps extends ViewProps {
    * full height and stays behind the status bar, and the radius and dim do the
    * work. Below one it shrinks about its centre, which insets it top and bottom
    * as well as at the side.
+   *
+   * Falls back to the same prop on the `Panelside` root, so the three numbers
+   * that describe the curve can be set once where the panel is configured.
    */
   scale?: number;
   /** The corner radius the scene reaches at full travel. Default 44. */
   radius?: number;
   /** How far the scene dims at full travel, 0 to 1. Default 0.45. */
   dim?: number;
+  /**
+   * Styles the layer that dims the scene. Its opacity is `dim`'s to set, so
+   * this is for the colour — a scrim that is not black, for a light theme
+   * where black at 45% reads as a hole rather than as shade.
+   */
+  scrimClassName?: string;
   children?: ReactNode;
 }
 
 function PanelsideScene({
   className,
-  scale = SCENE_SCALE,
-  radius = SCENE_RADIUS,
-  dim = SCENE_DIM,
+  scale: scaleProp,
+  radius: radiusProp,
+  dim: dimProp,
+  scrimClassName,
   children,
   style,
   ...props
 }: PanelsideSceneProps) {
-  const { progress, width, mode, docked, dismissible, open, setOpen } =
-    usePanelsideContext('Panelside.Scene');
+  const {
+    progress,
+    width,
+    mode,
+    docked,
+    dismissible,
+    open,
+    setOpen,
+    scale: rootScale,
+    radius: rootRadius,
+    dim: rootDim,
+  } = usePanelsideContext('Panelside.Scene');
+
+  // The part's own prop, then the root's, then the constant. Three levels
+  // because the root's is a default for every scene under it and the part's is
+  // a statement about this one.
+  const scale = scaleProp ?? rootScale ?? SCENE_SCALE;
+  const radius = radiusProp ?? rootRadius ?? SCENE_RADIUS;
+  const dim = dimProp ?? rootDim ?? SCENE_DIM;
   const [sceneWidth, setSceneWidth] = useState(0);
   const sign = useDirectionSign();
   /*
@@ -1306,7 +1366,7 @@ function PanelsideScene({
           including the one on the button that opens the panel. */}
       <Animated.View
         pointerEvents={open && !docked ? 'auto' : 'none'}
-        className="absolute bottom-0 end-0 start-0 top-0 bg-black"
+        className={cn('absolute bottom-0 end-0 start-0 top-0 bg-black', scrimClassName)}
         style={scrimStyle}
       >
         {dismissible ? (

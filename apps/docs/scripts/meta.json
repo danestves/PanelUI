@@ -594,7 +594,8 @@
     {
       "group": "ai-components",
       "addedIn": "0.34.0",
-      "alpha": true
+      "alpha": true,
+      "updatedIn": "0.41.0"
     }
   ]
 }

@@ -192,6 +192,7 @@ import {
   PanelsideCurveBlock,
   PanelsideDockedBlock,
   PanelsideNativeBlock,
+  PanelsideNavigateBlock,
   PanelsideOverlayBlock,
 } from '../components/panelside-blocks';
 
@@ -13498,6 +13499,14 @@ export const COMPONENTS: ComponentEntry[] = [
         fullBleed: true,
         description: 'Swipe from the left edge — the screen slides, shrinks and rounds.',
         render: () => <PanelsideAssistantBlock />,
+      },
+      {
+        label: 'Open a conversation',
+        id: 'navigate',
+        fullPage: true,
+        fullBleed: true,
+        description: 'Press a chat and the screen becomes it, with the panel closing itself.',
+        render: () => <PanelsideNavigateBlock />,
       },
       {
         label: 'Overlay',

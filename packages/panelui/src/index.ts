@@ -391,6 +391,8 @@ export {
   type PanelsideTriggerProps,
   type PanelsideMode,
   type PanelsideSwipeFrom,
+  type PanelsideItemSize,
+  type PanelsideCtaSize,
   type UsePanelsideResult,
 } from './components/panelside';
 export {

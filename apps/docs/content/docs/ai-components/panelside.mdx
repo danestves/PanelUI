@@ -83,11 +83,11 @@ npx panelui-cli@latest add panelside
 - **`Panelside.Content`** — The scrolling middle. It leaves room at the end for a floating footer, measured rather than assumed.
 - **`Panelside.Group`** — A run of related rows. Groups are the unit of spacing, so an empty one costs nothing to render conditionally.
 - **`Panelside.GroupLabel`** — The heading over a group — “Starred”, “Recents”, “Today”. Announced as a heading.
-- **`Panelside.Item`** — One destination or one conversation: a leading icon, a label truncated to a line, an optional badge, and an active state.
+- **`Panelside.Item`** — One destination or one conversation: a leading icon, a label truncated to a line, an optional badge, and an active state. `size="sm"` tightens the padding for a panel that has to show more history at once.
 - **`Panelside.Action`** — The trailing control on a row — rename, delete, the overflow menu. It takes its target back as touch slop rather than as layout, so it stays small next to a row-sized target.
 - **`Panelside.Footer`** — The bar across the bottom of the panel — an account control at one end, the compose button at the other. It floats over the list, with the list dissolving into the panel just above it: a solid bar would cut a strip out of the bottom of the scroller, and a transparent one would let rows show through the controls.
-- **`Panelside.Cta`** — The compose button. A pill rather than a rectangle, because it is the one control in the panel that is not a list row. Takes `native` to hand it to the platform, and `glass` to have the platform draw it in Liquid Glass.
-- **`Panelside.Scene`** — Your app. This is the half that moves, and naming it is the whole contract — everything inside it travels, rounds and dims together. It also draws a hairline along its edge as it goes, since two surfaces of the same colour meeting at a corner need something to say they are separate.
+- **`Panelside.Cta`** — The compose button. A pill rather than a rectangle, because it is the one control in the panel that is not a list row — 40pt by default so it sits level with the account button beside it, `size="lg"` for the taller one. Takes `native` to hand it to the platform, and `glass` to have the platform draw it in Liquid Glass.
+- **`Panelside.Scene`** — Your app. This is the half that moves, and naming it is the whole contract — everything inside it travels, rounds and dims together. It also draws a hairline along its edge as it goes, since two surfaces of the same colour meeting at a corner need something to say they are separate. `scale`, `radius` and `dim` are its numbers, and it takes the root's as defaults for all three.
 - **`Panelside.Trigger`** — Opens and closes the panel. Wraps a control of your own, or draws a plain one. It renders nothing at all when the panel is docked, since there would be nothing to toggle.
 
 <Diagram
@@ -226,6 +226,32 @@ Past `dock`, the panel stops being an overlay: it takes a column of the layout, 
 </Panelside>
 ```
 
+### Sizing and tinting it
+
+The panel is meant to be changed. `scale`, `radius` and `dim` set the curve for every scene under the root, so the three numbers live where the panel is configured rather than on a part further down — a `Panelside.Scene` prop still wins where one screen wants something of its own. `scrimClassName` is for the colour of the dim, which black at 45% gets wrong in a light theme, where it reads as a hole rather than as shade.
+
+`Panelside.Cta` and `Panelside.Item` take a size. The pill is 40pt by default so it sits level with the account button beside it; `size="lg"` is the 48pt one, for a footer where the call to action is the only thing in the row. `Panelside.Item` has `size="sm"` for a panel that has to show more history at once — it tightens the padding and leaves the type alone, because a list you can read is worth more than two extra rows.
+
+```tsx
+<Panelside haptics scale={0.92} radius={32} dim={0.55}>
+  <Panelside.Panel>
+    <Panelside.Content>
+      {history.map((chat) => (
+        <Panelside.Item key={chat} label={chat} size="sm" />
+      ))}
+    </Panelside.Content>
+    <Panelside.Footer>
+      <Panelside.Item className="flex-1" icon={<Avatar size="md" fallback="K" />} />
+      <Panelside.Cta icon={<PlusIcon size={18} />} label="New chat" />
+    </Panelside.Footer>
+  </Panelside.Panel>
+
+  <Panelside.Scene scrimClassName="bg-neutral-900">
+    <App />
+  </Panelside.Scene>
+</Panelside>
+```
+
 ## Versions
 
 ### Assistant
@@ -238,6 +264,43 @@ The default shape. Swipe in from the leading edge and the screen slides, shrinks
   <Panelside.Scene>
     <SceneBar />
     <Transcript />
+  </Panelside.Scene>
+</Panelside>
+```
+
+### Open a conversation
+
+The panel used as navigation rather than as a display. Pressing a row sets the conversation the scene shows and closes the panel on the way — leaving it open would put the thing you just navigated to behind the thing you navigated from. The row you are on stays `active`, because a history list where nothing is marked answers what you could open and never what you have open.
+
+```tsx
+const [active, setActive] = useState(chats[0]);
+
+function Panel() {
+  const { setOpen } = usePanelside();
+
+  return (
+    <Panelside.Panel>
+      <Panelside.Content>
+        {chats.map((chat) => (
+          <Panelside.Item
+            key={chat}
+            label={chat}
+            active={chat === active}
+            onPress={() => {
+              setActive(chat);
+              setOpen(false);
+            }}
+          />
+        ))}
+      </Panelside.Content>
+    </Panelside.Panel>
+  );
+}
+
+<Panelside haptics>
+  <Panel />
+  <Panelside.Scene>
+    <Conversation title={active} />
   </Panelside.Scene>
 </Panelside>
 ```
@@ -414,6 +477,7 @@ Panelside has no `native` prop and cannot have one — the platform toolkits shi
 | `active` | `boolean` | `false` | Marks the row as the current destination. |
 | `badge` | `ReactNode` | — | Trailing count or status. A number or string renders as a pill; anything else renders as given. |
 | `disabled` | `boolean` | `false` |  |
+| `size` | `PanelsideItemSize` | `'default'` | Row density. `sm` tightens the padding for a panel that has to show more history at once, without touching the type size — a list you can read is worth more than two extra rows. |
 
 ### Panelside.Action
 
@@ -437,6 +501,7 @@ Panelside has no `native` prop and cannot have one — the platform toolkits shi
 | `label` | `string` | — | The button's text. |
 | `icon` | `ReactNode` | — | Leading element, usually an icon. |
 | `variant` | `'primary' \| 'secondary'` | `'primary'` | `primary` is the filled accent pill; `secondary` is the quiet one. |
+| `size` | `PanelsideCtaSize` | `'default'` | How tall the pill is. `default` is 40pt, which sits level with the account button beside it in the footer; `lg` is the 48pt pill, for a panel where the call to action is the only thing in the row. Ignored under `native` — the platform sizes its own button, and asks for a control size rather than a height. |
 | `native` | `boolean` | `false` | Render the platform's own button instead of the pill. Requires the optional `@expo/ui` package; without it this prop does nothing. **Theme tokens do not apply** — the platform draws the button, so `className` and `icon` are ignored and it sizes itself to `label`. |
 | `glass` | `boolean` | `false` | Draw the native button in the platform's Liquid Glass material. Requires `native`, and iOS 26 or later; ignored anywhere else. |
 
@@ -445,9 +510,10 @@ Panelside has no `native` prop and cannot have one — the platform toolkits shi
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `scale` | `number` | `SCENE_SCALE` | How small the scene gets at full travel. Default 1 — the screen keeps its full height and stays behind the status bar, and the radius and dim do the work. Below one it shrinks about its centre, which insets it top and bottom as well as at the side. |
-| `radius` | `number` | `SCENE_RADIUS` | The corner radius the scene reaches at full travel. Default 44. |
-| `dim` | `number` | `SCENE_DIM` | How far the scene dims at full travel, 0 to 1. Default 0.45. |
+| `scale` | `number` | — | How small the scene gets at full travel. Default 1 — the screen keeps its full height and stays behind the status bar, and the radius and dim do the work. Below one it shrinks about its centre, which insets it top and bottom as well as at the side. Falls back to the same prop on the `Panelside` root, so the three numbers that describe the curve can be set once where the panel is configured. |
+| `radius` | `number` | — | The corner radius the scene reaches at full travel. Default 44. |
+| `dim` | `number` | — | How far the scene dims at full travel, 0 to 1. Default 0.45. |
+| `scrimClassName` | `string` | — | Styles the layer that dims the scene. Its opacity is `dim`'s to set, so this is for the colour — a scrim that is not black, for a light theme where black at 45% reads as a hole rather than as shade. |
 
 ### Panelside.Trigger
 
@@ -512,6 +578,16 @@ Being covered says nothing to a screen reader: without help it reads out a navig
 ### There is no `native` prop
 
 The platform toolkits behind the `native` prop on Button, Select, Switch and BottomSheet ship a handful of controls, and a pushing navigation panel is not one of them — so there is nothing for Panelside to hand rendering to, and a prop that quietly did nothing would be worse than not having one. Everything *inside* it can still be native. `Panelside.Cta` takes `native` and hands the compose button to the platform, and `glass` with it for the iOS 26 material; in the scene, a `native` picker, a `native` sheet behind an attach button and `native` buttons all work as they do anywhere else. The rows and the search field stay ours, because there is no platform control for either — a panel that went half-native would match neither.
+
+### A tick when the swipe takes
+
+`haptics` puts a selection tick under the finger at the moment a drag commits to opening or closing. It fires on the commit and not during the drag — the panel following your thumb is already the feedback for the drag, and a tick per frame is what makes a gesture feel broken rather than responsive. It also stays quiet for a swipe that fell short and sprang back, since nothing opened and a tick saying otherwise is worse than none.
+
+Off by default, and it needs the optional `expo-haptics`; without it the prop is silent rather than an error.
+
+### What is yours to change
+
+Every part takes `className`. On top of that: `width` and `dock` decide the geometry, `scale`, `radius` and `dim` the curve — settable on the root as defaults for every scene, or per scene — `scrimClassName` the colour of the dim, and `size` on `Panelside.Cta` and `Panelside.Item` the density of the two things in the panel that are not text. `swipeFrom` and `edgeWidth` decide where a swipe may start, and `swipeEnabled` turns it off.
 
 ### Reduced motion
 

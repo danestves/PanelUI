@@ -1,5 +1,5 @@
 /**
- * The Panelside blocks — six whole screens, one per full-page demo.
+ * The Panelside blocks — seven whole screens, one per full-page demo.
  *
  * Panelside owns the screen by definition: it wraps the app content in order
  * to push it, so there is nothing to render inline in a section between two
@@ -7,7 +7,7 @@
  * because the route gives it no header — and, on iOS, no back-swipe either,
  * since the system claims the same screen edge the panel opens from.
  *
- * All six share one panel. What changes is the props on the root and what the
+ * All seven share one panel. What changes is the props on the root and what the
  * scene holds, which is the point worth showing: the anatomy does not change
  * when the behaviour does.
  */
@@ -72,8 +72,28 @@ const RECENTS = [
  * which is the honest answer rather than a half-native panel that matches
  * neither.
  */
-function AssistantPanel({ native = false }: { native?: boolean }) {
+function AssistantPanel({
+  native = false,
+  activeId,
+  onSelect,
+}: {
+  native?: boolean;
+  /** The conversation currently open in the scene, if the demo tracks one. */
+  activeId?: string;
+  /** Given, every history row becomes a destination. */
+  onSelect?: (title: string) => void;
+}) {
   const [query, setQuery] = useState('');
+  const { setOpen } = usePanelside();
+
+  // Selecting a destination closes the panel. Leaving it open would mean the
+  // thing you just navigated to is behind the thing you navigated from.
+  const select = onSelect
+    ? (title: string) => {
+        onSelect(title);
+        setOpen(false);
+      }
+    : undefined;
 
   // Filtering lives here rather than in the component: the panel does not know
   // what a history entry is, and a search that only matched titles would be
@@ -117,7 +137,12 @@ function AssistantPanel({ native = false }: { native?: boolean }) {
           <Panelside.Group>
             <Panelside.GroupLabel>Starred</Panelside.GroupLabel>
             {starred.map((title) => (
-              <Panelside.Item key={title} label={title}>
+              <Panelside.Item
+                key={title}
+                label={title}
+                active={title === activeId}
+                onPress={select && (() => select(title))}
+              >
                 <Panelside.Action label={`Options for ${title}`} />
               </Panelside.Item>
             ))}
@@ -128,7 +153,12 @@ function AssistantPanel({ native = false }: { native?: boolean }) {
           <Panelside.Group>
             <Panelside.GroupLabel>Recents</Panelside.GroupLabel>
             {recents.map((title) => (
-              <Panelside.Item key={title} label={title}>
+              <Panelside.Item
+                key={title}
+                label={title}
+                active={title === activeId}
+                onPress={select && (() => select(title))}
+              >
                 <Panelside.Action label={`Options for ${title}`} />
               </Panelside.Item>
             ))}
@@ -149,9 +179,12 @@ function AssistantPanel({ native = false }: { native?: boolean }) {
             more thing between the compose button and the edge of the panel.
             Without a label the row stretches on its own, which is what pushes
             the button to the trailing end. */}
+        {/* `md`, not `lg`: a 56pt avatar is taller than the pill beside it, and
+            the footer row ends up sized by the account button rather than by
+            the thing the footer is for. */}
         <Panelside.Item
           className="flex-1"
-          icon={<Avatar size="lg" fallback="K" />}
+          icon={<Avatar size="md" fallback="K" />}
           accessibilityLabel="Account"
         />
         <Panelside.Cta
@@ -305,16 +338,22 @@ function AssistantDemo({
   scene,
   native = false,
   title = 'Migrating the design tokens',
+  activeId,
+  onSelect,
   ...props
 }: Partial<PanelsideProps> & {
   sceneProps?: Partial<PanelsideSceneProps>;
   scene?: React.ReactNode;
   native?: boolean;
   title?: string;
+  activeId?: string;
+  onSelect?: (title: string) => void;
 }) {
   return (
-    <Panelside {...props}>
-      <AssistantPanel native={native} />
+    // On in every demo: the swipe is the way this component is opened, and a
+    // tick where it commits is what tells your thumb it took.
+    <Panelside haptics {...props}>
+      <AssistantPanel native={native} activeId={activeId} onSelect={onSelect} />
       <Panelside.Scene {...sceneProps}>
         <SceneBar title={title} native={native} />
         {scene ?? <Transcript />}
@@ -606,6 +645,64 @@ export function PanelsideNativeBlock() {
       native
       scene={<NativeChatScene />}
       title="Refactor the settings screen"
+    />
+  );
+}
+
+/**
+ * One conversation, built from its own title so that opening a different row
+ * visibly lands somewhere different. A transcript that is the same eight turns
+ * whichever row you pressed proves the panel closed, and nothing about whether
+ * anything was navigated to.
+ */
+function conversation(title: string): Turn[] {
+  return [
+    { id: `${title}-1`, role: 'user', text: `${title} — where did we leave this?` },
+    {
+      id: `${title}-2`,
+      role: 'assistant',
+      text: `Two things outstanding on “${title}”. The first is a decision, the second is only work.`,
+    },
+    { id: `${title}-3`, role: 'user', text: 'Which is the decision?' },
+    {
+      id: `${title}-4`,
+      role: 'assistant',
+      text: 'Whether it ships behind a flag. Everything after that follows from the answer, so it is the one worth spending the meeting on.',
+    },
+  ];
+}
+
+/** The scene for the navigable demo: whichever conversation is selected. */
+function ConversationScene({ title }: { title: string }) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View className="flex-1 gap-3 px-4" style={{ paddingBottom: insets.bottom + 12 }}>
+      {conversation(title).map((turn) => (
+        <Turn key={turn.id} turn={turn} />
+      ))}
+    </View>
+  );
+}
+
+/**
+ * The panel used as navigation rather than as a display: press a conversation
+ * and the scene becomes that conversation, with the panel closing itself on
+ * the way.
+ *
+ * The selected row stays marked. A history list where nothing is active tells
+ * you what you could open and never what you have open, which is the question
+ * anyone opening the panel a second time is asking.
+ */
+export function PanelsideNavigateBlock() {
+  const [active, setActive] = useState(STARRED[0] as string);
+
+  return (
+    <AssistantDemo
+      title={active}
+      activeId={active}
+      onSelect={setActive}
+      scene={<ConversationScene title={active} />}
     />
   );
 }
