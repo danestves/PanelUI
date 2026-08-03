@@ -1,13 +1,15 @@
 /**
  * Steps — a stepper for multi-step flows.
  *
- * Adapted from: origin-space/originui apps/origin/registry/default/ui/stepper.tsx
- * (the Stepper / Item / Trigger / Indicator / Title / Description / Separator
- * anatomy, and the completed | active | inactive | loading state resolution).
+ * A row or column of numbered stops, each one completed, active, inactive or
+ * loading. An item works that state out from its own position against the
+ * root's `value` rather than being told it, so the four states stay mutually
+ * exclusive and in order — there is no way to write two active steps, or to
+ * mark step four done while step three is still pending.
  *
- * Upstream drives all styling through `data-*` attributes, which React Native
- * has no equivalent for. Here the state is resolved in JS and passed down
- * through context into `tv()` variants — the same approach Alert uses.
+ * The state is resolved in JS and passed down through context into `tv()`
+ * variants, because React Native has no attribute selectors a stylesheet could
+ * key off. Alert and Timeline resolve their states the same way.
  *
  * Steps does not own your flow: it reflects whatever step your app says is
  * active. Pass `value` to control it, or `defaultValue` to let it manage

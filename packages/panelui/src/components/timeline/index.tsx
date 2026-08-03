@@ -1,14 +1,15 @@
 /**
  * Timeline — a vertical sequence of events.
  *
- * Adapted from: origin-space/originui apps/origin/registry/default/ui/timeline.tsx
- * (the Item / Indicator / Separator / Header / Date / Title / Content anatomy
- * and the completed-up-to-active state rule), shaped to match this repo's
- * `Steps` component so the two read as siblings.
+ * One `value` on the root says how far the sequence has got, and every item
+ * resolves its own state from its `step` against it — completed below, active
+ * at, inactive above. Stating it once is the point: a timeline whose items each
+ * carried their own state would let you write two active items, or none.
  *
- * Upstream drives styling through `data-*` attributes, which React Native has
- * no equivalent for; state is resolved in JS and passed through context into
- * `tv()` variants instead.
+ * State is resolved in JS and handed down through context into `tv()` variants
+ * rather than being read off the element, because React Native has no
+ * attribute selectors for a stylesheet to key off. `Steps` resolves its states
+ * the same way, so the two read as siblings.
  *
  * Vertical only — a horizontal timeline gives each item roughly a fifth of a
  * phone's width, which is not enough for a date and a title.
