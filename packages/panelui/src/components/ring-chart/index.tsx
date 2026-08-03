@@ -307,7 +307,7 @@ const RingChartRoot = forwardRef<RingChartHandle, RingChartProps>(function RingC
         <View
           onLayout={onLayout}
           style={size ? { width: size, height: size } : { aspectRatio: 1 }}
-          className="w-full items-center justify-center"
+          className={cn('items-center justify-center', !size && 'w-full')}
         >
           {box > 0 ? (
             <>

@@ -7819,60 +7819,54 @@ function AreaChartOverlaidVersion() {
   );
 }
 
+const percentOf = (ring: RingDatum) =>
+  ring.maxValue > 0 ? Math.round((ring.value / ring.maxValue) * 100) : 0;
+
 /** Three targets, each read against its own. */
 function RingChartGoalsVersion() {
   const [active, setActive] = useState(-1);
+  const ring = active >= 0 ? GOALS[active] : null;
 
   return (
-    <View className="flex-1 items-center justify-center gap-6 p-6">
-      <View className="items-center gap-1">
-        <Text size="lg" weight="semibold">
-          Today
-        </Text>
-        <Text size="sm" muted className="text-center">
-          Each ring is a value against its own target, so nothing has to add up.
-        </Text>
-      </View>
-
-      <View className="w-full max-w-[280px]">
-        <RingChart
-          data={GOALS}
-          strokeWidth={18}
-          ringGap={6}
-          activeIndex={active}
-          onActiveIndexChange={setActive}
-        >
-          {GOALS.map((goal, index) => (
-            <RingChart.Ring key={goal.label} index={index} />
-          ))}
-          <RingChart.Center defaultLabel="Move" />
-        </RingChart>
-      </View>
-
-      <View className="w-full max-w-[280px] gap-2">
-        {GOALS.map((goal, index) => (
-          <Item
-            key={goal.label}
-            onPress={() => setActive(active === index ? -1 : index)}
-            className={index === active ? 'border-primary' : undefined}
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Today</Frame.Title>
+          <Frame.Action>Tap a ring</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <RingChart
+            data={GOALS}
+            strokeWidth={18}
+            ringGap={6}
+            activeIndex={active}
+            onActiveIndexChange={setActive}
           >
-            <Item.Content>
-              <Item.Title>{goal.label}</Item.Title>
-              <Item.Description>
-                {goal.value} of {goal.maxValue}
-              </Item.Description>
-            </Item.Content>
-            <Item.Actions>
-              <Badge>{`${Math.round((goal.value / goal.maxValue) * 100)}%`}</Badge>
-            </Item.Actions>
-          </Item>
-        ))}
-      </View>
+            {/* The value follows the selection and falls back to the headline
+                ring, which is why it is passed in rather than derived — there
+                is no total to derive from three unrelated targets. */}
+            <RingChart.Header
+              className={CHART_HEADER}
+              value={`${percentOf(ring ?? GOALS[0]!)}%`}
+              caption={
+                ring
+                  ? `${ring.label} · ${ring.value} of ${ring.maxValue}`
+                  : 'Each ring against its own target'
+              }
+              legend
+            />
+            {GOALS.map((goal, index) => (
+              <RingChart.Ring key={goal.label} index={index} />
+            ))}
+            <RingChart.Center defaultLabel="Move" />
+          </RingChart>
+        </Frame.Panel>
+      </Frame>
     </View>
   );
 }
 
-/** The small end — a ring as one element inside a card. */
+/** The small end — a ring as one element in a row, not the whole screen. */
 function RingChartCompactVersion() {
   const usage: RingDatum[] = useMemo(
     () => [
@@ -7883,41 +7877,162 @@ function RingChartCompactVersion() {
   );
 
   return (
-    <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
-      <View className="gap-1">
-        <Text size="lg" weight="semibold">
-          Plan usage
-        </Text>
-        <Text size="sm" muted>
-          A ring reads as a share of something without needing an axis.
-        </Text>
-      </View>
-
-      <Card>
-        <Card.Content className="flex-row items-center gap-5 py-6">
-          <View className="w-28">
-            <RingChart data={usage} strokeWidth={12} ringGap={5}>
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Plan usage</Frame.Title>
+          <Frame.Action>Fair use</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          {/* Sized rather than measured: at this end the ring is one element in
+              a row, so it must not take the width the way a plot does. */}
+          <View className="flex-row items-center gap-5 p-4">
+            <RingChart data={usage} size={116} strokeWidth={11} ringGap={5}>
               {usage.map((ring, index) => (
                 <RingChart.Ring key={ring.label} index={index} />
               ))}
               <RingChart.Center formatValue={(value) => `${value}%`} />
             </RingChart>
+            <View className="flex-1 gap-2.5">
+              {usage.map((ring) => (
+                <View key={ring.label} className="gap-0.5">
+                  <Text size="sm" weight="medium">
+                    {ring.label}
+                  </Text>
+                  <Text size="xs" muted>
+                    {ring.value}% of your allowance
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-          <View className="flex-1 gap-2">
-            {usage.map((ring) => (
-              <View key={ring.label} className="gap-1">
-                <Text size="sm" weight="medium">
-                  {ring.label}
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+const HEALTH: RingDatum[] = [{ label: 'Health', value: 82, maxValue: 100 }];
+
+/**
+ * The ring opened into a gauge. Three quarters of a turn with the notch at the
+ * bottom, which is where a dial has always had it.
+ */
+function RingChartGaugeVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Index health</Frame.Title>
+          <Frame.Action>Last run 4m ago</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <RingChart
+            data={HEALTH}
+            startAngle={-135}
+            endAngle={135}
+            strokeWidth={22}
+            className="pb-2"
+          >
+            <RingChart.Header
+              className={CHART_HEADER}
+              title="Score"
+              value="82 of 100"
+              caption="Above the 75 the alerting is set at"
+            />
+            <RingChart.Ring index={0} colorIndex={2} />
+            <RingChart.Center
+              formatValue={(value) => `${value}`}
+              defaultLabel="Healthy"
+            />
+          </RingChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+const COURSE_SESSIONS: RingDatum[] = [{ label: 'Sessions', value: 8, maxValue: 12 }];
+
+/**
+ * Ticks instead of an arc, for a target made of countable things. Eight of
+ * twelve reads off ticks you can count, and off a smooth arc only as "about
+ * two thirds".
+ */
+function RingChartSegmentedVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Course progress</Frame.Title>
+          <Frame.Action>Spring cohort</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <RingChart data={COURSE_SESSIONS} strokeWidth={20}>
+            <RingChart.Header
+              className={CHART_HEADER}
+              title="Sessions attended"
+              value="8 of 12"
+              caption="Four left before the assessment"
+            />
+            <RingChart.Ring index={0} segments={12} segmentGap={6} colorIndex={4} />
+            <RingChart.Center formatValue={(value) => `${value}`} />
+          </RingChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+const BUDGETS: RingDatum[] = [
+  { label: 'Compute', value: 412, maxValue: 500 },
+  { label: 'Storage', value: 96, maxValue: 400 },
+  { label: 'Egress', value: 268, maxValue: 300 },
+];
+
+/**
+ * Three charts rather than three rings. Separate targets that are not read
+ * against each other belong on separate dials — concentric, the outer ring is
+ * longer than the inner one at the same percentage, and the eye reads the
+ * length.
+ */
+function RingChartTilesVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Monthly budgets</Frame.Title>
+          <Frame.Action>8 days left</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="flex-row items-start justify-around p-4">
+            {BUDGETS.map((budget, index) => (
+              <View key={budget.label} className="items-center gap-1.5">
+                <RingChart
+                  data={[budget]}
+                  size={92}
+                  strokeWidth={9}
+                  startAngle={-120}
+                  endAngle={120}
+                >
+                  <RingChart.Ring
+                    index={0}
+                    colorIndex={((index % 5) + 1) as 1 | 2 | 3 | 4 | 5}
+                  />
+                  <RingChart.Center formatValue={() => `${percentOf(budget)}%`} />
+                </RingChart>
+                <Text size="xs" weight="medium">
+                  {budget.label}
                 </Text>
                 <Text size="xs" muted>
-                  {ring.value}% of your allowance
+                  {budget.value} of {budget.maxValue}
                 </Text>
               </View>
             ))}
           </View>
-        </Card.Content>
-      </Card>
-    </ScrollView>
+        </Frame.Panel>
+      </Frame>
+    </View>
   );
 }
 
@@ -11517,10 +11632,9 @@ export const COMPONENTS: ComponentEntry[] = [
     slug: 'ring-chart',
     name: 'RingChart',
     summary: 'Concentric arcs, each against its own target',
-    // Two versions, one of which brings its own vertical scroller — paged,
-    // the two fight over the same drag and the rail is left floating over
-    // both. Listed instead, each opening on the screen it was written for.
-    layout: 'sections',
+    // One chart per version, none of them bringing a scroller of its own, so
+    // the versions can be the pages and the rail can index them.
+    layout: 'pager',
     demos: [
       {
         label: "Today's goals",
@@ -11530,11 +11644,32 @@ export const COMPONENTS: ComponentEntry[] = [
         render: () => <RingChartGoalsVersion />,
       },
       {
-        label: 'Inside a card',
+        label: 'In a row',
         id: 'compact',
         fullPage: true,
         description: 'The small end — a share of something, with no axis needed.',
         render: () => <RingChartCompactVersion />,
+      },
+      {
+        label: 'Gauge',
+        id: 'gauge',
+        fullPage: true,
+        description: 'The ring opened to three quarters of a turn, notch at the bottom.',
+        render: () => <RingChartGaugeVersion />,
+      },
+      {
+        label: 'Segmented',
+        id: 'segmented',
+        fullPage: true,
+        description: 'Ticks rather than an arc, for a target made of countable things.',
+        render: () => <RingChartSegmentedVersion />,
+      },
+      {
+        label: 'Separate dials',
+        id: 'tiles',
+        fullPage: true,
+        description: 'Three charts rather than three rings, when nothing is read against anything.',
+        render: () => <RingChartTilesVersion />,
       },
     ],
   },
