@@ -123,6 +123,7 @@ import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { useDirectionSign } from '../../hooks/use-direction';
 import { cn } from '../../utils/cn';
+import { selectionTick } from '../../utils/haptics';
 
 const SPRING = { damping: 24, stiffness: 300, mass: 0.7 } as const;
 
@@ -287,6 +288,10 @@ interface PanelsideContextValue {
   /** True when the panel is laid out beside the scene rather than behind it. */
   docked: boolean;
   dismissible: boolean;
+  /** Scene defaults set on the root. A `Panelside.Scene` prop still wins. */
+  scale?: number;
+  radius?: number;
+  dim?: number;
 }
 
 const PanelsideContext = createContext<PanelsideContextValue | null>(null);
@@ -396,6 +401,26 @@ export interface PanelsideProps {
    * Default true.
    */
   dismissible?: boolean;
+  /**
+   * A tick under the finger when a swipe commits to opening or closing. Off by
+   * default — needs the optional `expo-haptics`, and is silent without it.
+   *
+   * It fires on the commit rather than during the drag: the panel following
+   * your thumb is already the feedback for the drag, and a tick per frame is
+   * what makes a gesture feel broken rather than responsive.
+   */
+  haptics?: boolean;
+  /**
+   * How far the scene shrinks at full open, as a scale factor. Sets the
+   * default for every `Panelside.Scene` underneath; the scene's own prop still
+   * wins. Here so the three numbers that describe the curve can be set once
+   * where the panel is configured, rather than on a part further down.
+   */
+  scale?: number;
+  /** The corner radius the scene reaches at full open, in points. */
+  radius?: number;
+  /** How far the scene is dimmed at full open, 0 to 1. */
+  dim?: number;
   className?: string;
 }
 
@@ -411,6 +436,10 @@ function PanelsideRoot({
   swipeFrom = 'anywhere',
   edgeWidth = EDGE_WIDTH,
   dismissible = true,
+  haptics = false,
+  scale,
+  radius,
+  dim,
   className,
 }: PanelsideProps) {
   const { width: windowWidth } = useWindowDimensions();
@@ -499,6 +528,15 @@ function PanelsideRoot({
   const toggle = useCallback(() => setOpen(!open), [open, setOpen]);
   const close = useCallback(() => setOpen(false), [setOpen]);
 
+  /*
+   * Wrapped so the gesture's worklet has one stable function to hand to
+   * `runOnJS` — a fresh closure each render would be re-serialised on every
+   * frame the pan is rebuilt.
+   */
+  const tick = useCallback(() => {
+    if (haptics) selectionTick();
+  }, [haptics]);
+
   useBackHandler(open && dismissible && !docked, close);
 
   /*
@@ -539,6 +577,10 @@ function PanelsideRoot({
         // `velocity` is already in travel space; the spring runs on the same
         // axis, so it must not be converted back to screen space here.
         settle(next, velocity);
+        // Only where the drag changed something. A swipe that fell short and
+        // sprang back did not open or close anything, and a tick that says it
+        // did is worse than no tick at all.
+        if (next !== open) runOnJS(tick)();
         runOnJS(setOpen)(next);
       });
 
@@ -565,12 +607,25 @@ function PanelsideRoot({
     sign,
     swipeEnabled,
     swipeFrom,
+    tick,
     translation,
   ]);
 
   const context = useMemo<PanelsideContextValue>(
-    () => ({ open, setOpen, toggle, progress, width, mode, docked, dismissible }),
-    [dismissible, docked, mode, open, progress, setOpen, toggle, width]
+    () => ({
+      open,
+      setOpen,
+      toggle,
+      progress,
+      width,
+      mode,
+      docked,
+      dismissible,
+      scale,
+      radius,
+      dim,
+    }),
+    [dim, dismissible, docked, mode, open, progress, radius, scale, setOpen, toggle, width]
   );
 
   return (

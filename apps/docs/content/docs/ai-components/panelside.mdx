@@ -358,6 +358,10 @@ Panelside has no `native` prop and cannot have one — the platform toolkits shi
 | `swipeFrom` | `PanelsideSwipeFrom` | `'anywhere'` | Where a swipe may begin. `anywhere` is the default and the behaviour this pattern is known for — a sideways drag across the app opens the panel from wherever your thumb already was. `edge` narrows it to a strip at the leading screen edge, for a scene that has its own use for a horizontal drag: a carousel, a wide table, a chart you can pan. Anything like that under an `anywhere` panel will fight it, and the panel usually wins. |
 | `edgeWidth` | `number` | `EDGE_WIDTH` | How wide the leading-edge strip that starts a swipe is, when `swipeFrom` is `edge`. Default 48 — wider than the system's own edge gestures, because there is no bezel to feel for. Ignored otherwise. |
 | `dismissible` | `boolean` | `true` | Tapping the pushed scene, or the Android back button, closes the panel. Default true. |
+| `haptics` | `boolean` | `false` | A tick under the finger when a swipe commits to opening or closing. Off by default — needs the optional `expo-haptics`, and is silent without it. It fires on the commit rather than during the drag: the panel following your thumb is already the feedback for the drag, and a tick per frame is what makes a gesture feel broken rather than responsive. |
+| `scale` | `number` | — | How far the scene shrinks at full open, as a scale factor. Sets the default for every `Panelside.Scene` underneath; the scene's own prop still wins. Here so the three numbers that describe the curve can be set once where the panel is configured, rather than on a part further down. |
+| `radius` | `number` | — | The corner radius the scene reaches at full open, in points. |
+| `dim` | `number` | — | How far the scene is dimmed at full open, 0 to 1. |
 | `className` | `string` | — |  |
 
 ### Panelside.Panel

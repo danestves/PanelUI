@@ -69,7 +69,7 @@ npx panelui-cli@latest add card
 - **`Card.Description`** — Muted supporting line.
 - **`Card.Content`** — Main body.
 - **`Card.Footer`** — Row of actions.
-- **`Card.Wash`** — A decorative layer for the back of the card: colour rising from the bottom edge, dithered with grain that breathes. Fills the card absolutely and takes no touches, so it goes first and everything else draws over it.
+- **`Card.Wash`** — A decorative layer for the back of the card: the tint rising from its bottom edge and fading out before the top. Fills the card absolutely and takes no touches, so it goes first and everything else draws over it.
 
 ## Examples
 
@@ -181,7 +181,7 @@ Card as the shell around a short form.
 
 ### An animated wash behind it
 
-`Card.Wash` is the card's back: the tint rises from the bottom edge on a power curve, so it is nothing across the top and arrives in the lower third — a straight fade would read as a tinted panel instead. Over it sits grain, cross-faded between two seedings so each point on the card travels between two values on its own phase rather than holding one forever.
+`Card.Wash` is the card's back: the tint rises from the bottom edge on a power curve, so the top two thirds are untouched and the colour arrives in the lower third. On a straight ramp it would already be at half strength across the middle and read as a tinted panel, which is a different thing. It breathes — a slow swell in the layer's opacity, small enough to be noticed only by not being there.
 
 The root needs `overflow-hidden`: the layer reaches the card's edges, and the root is the thing with the corner radius. Put it first — it is absolutely positioned and takes no touches, so everything after it draws on top.
 
@@ -213,10 +213,8 @@ The root needs `overflow-hidden`: the layer reaches the card's edges, and the ro
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `tint` | `string` | `'--color-primary'` | The colour the wash rises in. A theme token name such as `--color-primary`, or any colour string. Defaults to `--color-primary`. |
-| `intensity` | `number` | `0.2` | How opaque the wash gets at the bottom edge, 0–1. |
-| `noise` | `number` | `0.35` | How much grain sits over the wash, 0–1. Zero draws the gradient alone. |
-| `grainSize` | `number` | `3` | The size of one grain cell, in points. Larger is chunkier and cheaper. |
-| `speed` | `number` | `1` | Multiplier on how fast the grain breathes. `0` freezes it on one frame, which is also what a reduced-motion setting does. |
+| `intensity` | `number` | `0.16` | How opaque the wash gets at the bottom edge, 0–1. It is meant to be small: past about 0.25 the card reads as tinted rather than washed, which is a different thing and usually not the one you wanted. |
+| `speed` | `number` | `1` | Multiplier on how slowly the wash breathes. `0` holds it still, which is also what a reduced-motion setting does. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -228,6 +226,6 @@ The root carries none, which is why a card whose media reaches its own corners n
 
 ### Tuning `Card.Wash`
 
-`tint` takes a theme token name or any colour string, and defaults to `--color-primary`. `intensity` is how opaque the wash gets at the bottom edge, `noise` how much grain sits over it, and `grainSize` how chunky that grain is — larger cells are also cheaper, since the tile is drawn once and repeated by the renderer rather than laid out as a grid of views.
+`tint` takes a theme token name or any colour string, and defaults to `--color-primary`. `intensity` is how opaque the wash gets at the very bottom edge, and it is meant to be small: past about 0.25 the card reads as tinted rather than washed.
 
-`speed` scales how fast the grain breathes, and `speed={0}` freezes it on one frame. A reduced-motion setting does the same thing without being asked: the wash and one still layer of grain are drawn, and nothing loops.
+`speed` scales how slowly it breathes, and `speed={0}` holds it still. A reduced-motion setting does the same thing without being asked — the gradient is drawn once and nothing loops.

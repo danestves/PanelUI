@@ -515,6 +515,7 @@
       "animated-pressable",
       "button",
       "cn",
+      "haptics",
       "icons",
       "text",
       "use-back-handler",
