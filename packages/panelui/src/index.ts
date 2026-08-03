@@ -267,6 +267,7 @@ export {
   type TableCellProps,
   type TableCaptionProps,
   type TableEmptyProps,
+  type TableColumn,
   type TableSortDirection,
 } from './components/table';
 export {
@@ -391,6 +392,20 @@ export {
   type PanelsideSwipeFrom,
   type UsePanelsideResult,
 } from './components/panelside';
+export {
+  Pagination,
+  paginationRange,
+  type PaginationProps,
+  type PaginationItemProps,
+  type PaginationPreviousProps,
+  type PaginationNextProps,
+  type PaginationEllipsisProps,
+  type PaginationSummaryProps,
+  type PaginationStatusProps,
+  type PaginationVariant,
+  type PaginationSize,
+  type PaginationItemValue,
+} from './components/pagination';
 export { Textarea, type TextareaProps } from './components/textarea';
 export {
   Item,

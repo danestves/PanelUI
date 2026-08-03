@@ -103,6 +103,7 @@ import {
   NumberInput,
   OtpInput,
   PackageIcon,
+  Pagination,
   PauseIcon,
   PencilIcon,
   PlayIcon,
@@ -5677,6 +5678,90 @@ const INVOICES = [
 ];
 
 const invoiceAmount = (value: number) => `$${value.toFixed(2)}`;
+
+/**
+ * The same three columns as the basic demo, sized once at the top instead of on
+ * all eighteen heads and cells. Module scope, not inline: a fresh array every
+ * frame renumbers every cell in the table.
+ */
+const INVOICE_COLUMNS = [{ flex: 2 }, {}, { align: 'end' as const }];
+
+/** One column model on the root; the rows below are just their contents. */
+function ColumnsTableDemo() {
+  return (
+    <Table variant="outline" columns={INVOICE_COLUMNS} className="w-full">
+      <Table.Header>
+        <Table.Row>
+          <Table.Head>Invoice</Table.Head>
+          <Table.Head>Method</Table.Head>
+          <Table.Head>Amount</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {INVOICES.map((invoice) => (
+          <Table.Row key={invoice.id}>
+            <Table.Cell>{invoice.id}</Table.Cell>
+            <Table.Cell>{invoice.method}</Table.Cell>
+            <Table.Cell>{invoiceAmount(invoice.amount)}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table>
+  );
+}
+
+/**
+ * A table that pages. The component reports the page; slicing the rows stays
+ * here, which is the whole division of labour it is built around.
+ */
+function PaginatedTableDemo() {
+  const [page, setPage] = useState(1);
+  const pageSize = 2;
+  const rows = INVOICES.slice((page - 1) * pageSize, page * pageSize);
+
+  return (
+    <View className="w-full gap-3">
+      <Table variant="outline" columns={INVOICE_COLUMNS} className="w-full">
+        <Table.Header>
+          <Table.Row>
+            <Table.Head>Invoice</Table.Head>
+            <Table.Head>Method</Table.Head>
+            <Table.Head>Amount</Table.Head>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {rows.map((invoice) => (
+            <Table.Row key={invoice.id}>
+              <Table.Cell>{invoice.id}</Table.Cell>
+              <Table.Cell>{invoice.method}</Table.Cell>
+              <Table.Cell>{invoiceAmount(invoice.amount)}</Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table>
+
+      <Pagination
+        count={Math.ceil(INVOICES.length / pageSize)}
+        page={page}
+        onPageChange={setPage}
+        variant="compact"
+        size="sm"
+      >
+        <Pagination.Status pageSize={pageSize} total={INVOICES.length} />
+      </Pagination>
+    </View>
+  );
+}
+
+/** Every presentation driven from one page number, so the three stay in step. */
+function PaginationDemo({
+  count = 12,
+  ...props
+}: Partial<React.ComponentProps<typeof Pagination>>) {
+  const [page, setPage] = useState(1);
+
+  return <Pagination count={count} page={page} onPageChange={setPage} {...props} />;
+}
 
 function TableDemo({
   variant,
@@ -12302,6 +12387,8 @@ export const COMPONENTS: ComponentEntry[] = [
       { label: 'Basic', render: () => <TableDemo /> },
       { label: 'Outline', render: () => <TableDemo variant="outline" /> },
       { label: 'Striped', render: () => <TableDemo variant="outline" striped /> },
+      { label: 'Declared columns', render: () => <ColumnsTableDemo /> },
+      { label: 'Paged', render: () => <PaginatedTableDemo /> },
       { label: 'In a frame', render: () => <FramedTableDemo /> },
       { label: 'Sortable columns', render: () => <SortableTableDemo /> },
       { label: 'Selectable rows', render: () => <SelectableTableDemo /> },
@@ -12325,6 +12412,42 @@ export const COMPONENTS: ComponentEntry[] = [
         render: () => (
           <TableDemo variant="outline" caption="Five most recent invoices." />
         ),
+      },
+    ],
+  },
+  {
+    slug: 'pagination',
+    name: 'Pagination',
+    summary: 'Moving through a result set one page at a time',
+    demos: [
+      { label: 'Basic', render: () => <PaginationDemo /> },
+      { label: 'Compact', render: () => <PaginationDemo variant="compact" /> },
+      { label: 'Simple', render: () => <PaginationDemo variant="simple" /> },
+      { label: 'Small', render: () => <PaginationDemo size="sm" /> },
+      {
+        label: 'A long set',
+        render: () => <PaginationDemo count={240} />,
+      },
+      {
+        label: 'Wider run',
+        render: () => <PaginationDemo count={240} siblings={2} boundaries={2} size="sm" />,
+      },
+      {
+        label: 'Numbers only',
+        render: () => <PaginationDemo controls={false} />,
+      },
+      {
+        label: 'With a status line',
+        render: () => (
+          <PaginationDemo count={12} variant="compact">
+            <Pagination.Status pageSize={20} total={240} />
+          </PaginationDemo>
+        ),
+      },
+      { label: 'Beside a table', render: () => <PaginatedTableDemo /> },
+      {
+        label: 'Disabled',
+        render: () => <PaginationDemo disabled />,
       },
     ],
   },

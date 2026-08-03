@@ -213,6 +213,14 @@
       "addedIn": "0.18.0"
     }
   ],
+  "pagination": [
+    "Pagination",
+    "Paged navigation over a long result set.",
+    "react native pagination component",
+    {
+      "addedIn": "0.39.0"
+    }
+  ],
   "item": [
     "Item",
     "Row of media, text and actions for lists and settings.",
@@ -422,7 +430,7 @@
     "react native table component",
     {
       "addedIn": "0.31.0",
-      "updatedIn": "0.32.0"
+      "updatedIn": "0.39.0"
     }
   ],
   "tabs": [

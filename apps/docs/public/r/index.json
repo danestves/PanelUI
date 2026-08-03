@@ -485,6 +485,19 @@
     ]
   },
   {
+    "name": "pagination",
+    "type": "registry:ui",
+    "description": "Paged navigation over a long result set.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "haptics",
+      "icons",
+      "text",
+      "use-direction"
+    ]
+  },
+  {
     "name": "panel-ui-provider",
     "type": "registry:ui",
     "description": "Root provider: gesture root, themed background, portal host, toasts.",
