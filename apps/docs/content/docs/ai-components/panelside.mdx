@@ -171,13 +171,13 @@ return (
 
 ### A trigger of your own
 
-Given a child, `Panelside.Trigger` chains the toggle onto that element's own `onPress` rather than replacing it. A control sitting on the app's bare surface needs a shape to be findable, which is why this is usually a Button rather than an icon on its own.
+Given a child, `Panelside.Trigger` chains the toggle onto that element's own `onPress` rather than replacing it. A control sitting on the app's bare surface needs a shape to be findable, which is why this is usually a Button rather than an icon on its own. `outline` rather than a filled variant: the trigger sits on the app's own surface with nothing around it, so it needs a shape to be findable — and a second filled surface on a screen that already has the panel's is one too many.
 
 ```tsx
 <Panelside.Scene>
   <View className="flex-row items-center gap-2 px-3 pt-3">
     <Panelside.Trigger>
-      <Button size="icon" variant="secondary" className="rounded-full">
+      <Button size="icon" variant="outline" className="rounded-full">
         <MenuIcon size={20} />
       </Button>
     </Panelside.Trigger>

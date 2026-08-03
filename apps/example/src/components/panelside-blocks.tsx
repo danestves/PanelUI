@@ -206,11 +206,16 @@ function AssistantPanel({
  * findable at all. `Panelside.Trigger` takes the button as its child and
  * chains the toggle onto its own `onPress`, native or not.
  *
- * Under `native` the platform draws them, and the variant has to change with
- * it: `ghost` maps onto the platform's *text* style, which draws no chrome at
- * all, so a native ghost icon button is indistinguishable from a bare glyph
- * sitting on the page. `outline` maps onto the bordered style and gives it the
- * ring that says it is a control.
+ * Ours are `outline`: a ring and no fill, which is enough to say "control"
+ * without putting a second filled surface on a screen that already has the
+ * panel's. A filled button here also competes with whatever the app itself
+ * draws in its bar, which is the one thing a demo of a navigation frame should
+ * not do.
+ *
+ * Under `native` the platform draws them and the variant has to change with
+ * it. `ghost` maps onto the platform's *text* style, which is chromeless by
+ * design and is what the Liquid Glass material wants to sit in — the material
+ * is the chrome, and a border under it is a second edge.
  *
  * The platform also stops tinting the icon for us — the themed content colour
  * is applied inside the styled button, which a native one never reaches — so
@@ -223,7 +228,7 @@ function SceneBar({ title, native = false }: { title: string; native?: boolean }
   const glyph = native && typeof tint === 'string' ? tint : undefined;
 
   const shape = native ? undefined : 'h-10 w-10 rounded-full';
-  const variant = native ? 'ghost' : 'secondary';
+  const variant = native ? 'ghost' : 'outline';
 
   return (
     <View

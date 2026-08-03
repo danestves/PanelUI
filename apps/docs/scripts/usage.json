@@ -5565,8 +5565,8 @@
       },
       {
         "title": "A trigger of your own",
-        "description": "Given a child, `Panelside.Trigger` chains the toggle onto that element's own `onPress` rather than replacing it. A control sitting on the app's bare surface needs a shape to be findable, which is why this is usually a Button rather than an icon on its own.",
-        "code": "<Panelside.Scene>\n  <View className=\"flex-row items-center gap-2 px-3 pt-3\">\n    <Panelside.Trigger>\n      <Button size=\"icon\" variant=\"secondary\" className=\"rounded-full\">\n        <MenuIcon size={20} />\n      </Button>\n    </Panelside.Trigger>\n    <Text size=\"lg\" weight=\"semibold\" className=\"flex-1\">\n      Migrating the design tokens\n    </Text>\n  </View>\n\n  <Conversation />\n</Panelside.Scene>"
+        "description": "Given a child, `Panelside.Trigger` chains the toggle onto that element's own `onPress` rather than replacing it. A control sitting on the app's bare surface needs a shape to be findable, which is why this is usually a Button rather than an icon on its own. `outline` rather than a filled variant: the trigger sits on the app's own surface with nothing around it, so it needs a shape to be findable — and a second filled surface on a screen that already has the panel's is one too many.",
+        "code": "<Panelside.Scene>\n  <View className=\"flex-row items-center gap-2 px-3 pt-3\">\n    <Panelside.Trigger>\n      <Button size=\"icon\" variant=\"outline\" className=\"rounded-full\">\n        <MenuIcon size={20} />\n      </Button>\n    </Panelside.Trigger>\n    <Text size=\"lg\" weight=\"semibold\" className=\"flex-1\">\n      Migrating the design tokens\n    </Text>\n  </View>\n\n  <Conversation />\n</Panelside.Scene>"
       },
       {
         "title": "Moving something with the panel",
