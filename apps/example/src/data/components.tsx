@@ -177,12 +177,11 @@ import {
   VoiceControls,
 } from '../components/voice';
 import {
-  AnalyticsCardBlock,
-  AnalyticsMapBlock,
   ChoroplethBlock,
   DeliveryTrackerBlock,
   HeatmapBlock,
   LogisticsNetworkBlock,
+  PlacesBlock,
   StoreLocatorBlock,
   UptimeMonitorBlock,
 } from '../components/map-blocks';
@@ -10924,11 +10923,12 @@ export const COMPONENTS: ComponentEntry[] = [
     // between two dividers demonstrates nothing except that it does not fit.
     demos: [
       {
-        label: 'Analytics map',
-        id: 'analytics',
+        label: 'Places',
+        id: 'places',
         fullPage: true,
-        description: 'Sessions by country, over a basemap dropped for the data.',
-        render: () => <AnalyticsMapBlock />,
+        fullBleed: true,
+        description: 'A street map that is the whole screen — search, pins and a place card.',
+        render: () => <PlacesBlock />,
       },
       {
         label: 'Choropleth',
@@ -10941,7 +10941,7 @@ export const COMPONENTS: ComponentEntry[] = [
         label: 'Heatmap',
         id: 'heatmap',
         fullPage: true,
-        description: 'Density as a field, fading out once points can be counted.',
+        description: 'Density as a field, handing over to the points it was made of.',
         render: () => <HeatmapBlock />,
       },
       {
@@ -10971,13 +10971,6 @@ export const COMPONENTS: ComponentEntry[] = [
         fullPage: true,
         description: 'Edge nodes coloured by state, spread across the world.',
         render: () => <UptimeMonitorBlock />,
-      },
-      {
-        label: 'Analytics card',
-        id: 'card',
-        fullPage: true,
-        description: 'The small end — a map as one element inside a card.',
-        render: () => <AnalyticsCardBlock />,
       },
     ],
   },

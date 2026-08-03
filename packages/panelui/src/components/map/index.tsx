@@ -128,6 +128,43 @@ function useToken(name: string, fallback: string): string {
   return typeof value === 'string' && value.length > 0 ? value : fallback;
 }
 
+/** True for a theme token name, as opposed to a literal colour. */
+function isToken(value: string | undefined): value is string {
+  return typeof value === 'string' && value.startsWith('--');
+}
+
+/**
+ * The same colour at a given alpha, for a ramp built from one hue.
+ *
+ * Style expressions are handed to the renderer as strings, so this produces
+ * `rgba()` rather than reaching for a colour type the layer would not accept.
+ */
+function withAlpha(color: string, alpha: number): string {
+  if (color.startsWith('#')) {
+    const hex = color.slice(1);
+    const full =
+      hex.length === 3
+        ? hex
+            .split('')
+            .map((c) => c + c)
+            .join('')
+        : hex.slice(0, 6);
+    const r = parseInt(full.slice(0, 2), 16);
+    const g = parseInt(full.slice(2, 4), 16);
+    const b = parseInt(full.slice(4, 6), 16);
+    if (Number.isNaN(r + g + b)) return color;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  const channels = color.match(/rgba?\(([^)]+)\)/)?.[1];
+  if (channels) {
+    const [r, g, b] = channels.split(',').map((part) => part.trim());
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  return color;
+}
+
 interface MapContextValue {
   mapRef: React.RefObject<MapRef | null>;
   cameraRef: React.RefObject<CameraRef | null>;
@@ -1026,6 +1063,28 @@ export interface MapHeatmapProps {
   /** Feature property to weight each point by. Unweighted when omitted. */
   weight?: string;
   /**
+   * Base colour of the field — a theme token by name, or a literal. The ramp
+   * is this colour at rising opacity, so density reads as *more of the same
+   * thing* rather than as a change of subject.
+   *
+   * Defaults to `--color-chart-2`, which is a saturated accent in every theme.
+   * It is deliberately not `--color-chart-1`: that is the series colour a chart
+   * is about, and every theme starts it on something close to the foreground —
+   * near-black in a light theme, near-white in a dark one — which over a
+   * basemap is a smudge rather than a measurement.
+   */
+  color?: string;
+  /**
+   * Replace the derived ramp outright, coolest first. For the conventional
+   * heat ramp, where the hue carries the reading as well as the opacity —
+   * worth it when the field sits over varied terrain and one hue at five
+   * opacities stops being separable from what is underneath it.
+   *
+   * The first stop is drawn at the lowest density, the last at the highest.
+   * Density zero stays fully transparent either way.
+   */
+  colors?: string[];
+  /**
    * Spread of a single point, in points, at street zoom. Larger blurs more.
    * The drawn radius shrinks as the map zooms out, so a point keeps covering
    * roughly the same ground rather than the same screen area.
@@ -1037,6 +1096,12 @@ export interface MapHeatmapProps {
   opacity?: number;
   /** Above this zoom the layer fades out — see the note on the component. */
   maxZoom?: number;
+  /**
+   * Draw the points themselves as the field fades out, coloured from the same
+   * ramp by weight. Without them, zooming past `maxZoom` leaves an empty map:
+   * the layer gets out of the way, and nothing takes its place.
+   */
+  points?: boolean;
   id?: string;
 }
 
@@ -1050,29 +1115,62 @@ export interface MapHeatmapProps {
  *
  * It fades out past `maxZoom` on purpose. Zoomed far enough in, every point is
  * its own island and the blur says less than the points would — so the layer
- * gets out of the way rather than smearing five records across a street.
+ * gets out of the way rather than smearing five records across a street. Set
+ * `points` and the records themselves fade in as it goes, which is the whole
+ * handover: a field while the question is where, marks once it is which.
  *
  * The radius is tied to zoom for the mirror-image reason. Left as a fixed
  * number of screen points it would mean a different distance at every zoom:
  * a blur that reads as a city at street level covers half a continent once
  * the map is pulled out, and a field measured over land ends up sitting in
  * the sea. Scaling it with the projection keeps the claim the same one.
+ *
+ * Intensity is tied to zoom too, and in the other direction. The same points
+ * are packed into fewer pixels the further out the map goes, so a constant
+ * intensity saturates the whole field at world zoom and shows nothing but its
+ * own ceiling.
  */
 function MapHeatmap({
   data,
   weight,
+  color,
+  colors,
   radius = 24,
   intensity = 1,
   opacity = 0.85,
   maxZoom = 15,
+  points = false,
   id = 'heatmap',
 }: MapHeatmapProps) {
-  const cool = useToken('--color-muted', 'rgba(0,0,0,0.06)');
-  const warm = useToken('--color-chart-1', '#262626');
-  const hot = useToken('--color-chart-2', '#666666');
+  const base = useToken(isToken(color) ? color : '--color-chart-2', '#3b82f6');
+  const resolved = (isToken(color) ? base : color) ?? base;
+
+  /*
+   * One colour at rising opacity rather than five colours, which is how every
+   * other ramp in the library is built: a sequential scale is one quantity
+   * getting larger, and five hues say five categories. `colors` is there for
+   * the case where that is not enough.
+   */
+  const ramp = colors?.length
+    ? colors
+    : [
+        withAlpha(resolved, 0.25),
+        withAlpha(resolved, 0.45),
+        withAlpha(resolved, 0.7),
+        withAlpha(resolved, 0.9),
+        resolved,
+      ];
 
   if (!MapLibre) return null;
   const { GeoJSONSource, Layer } = MapLibre;
+
+  // Density zero is transparent rather than the coolest colour, so the map
+  // shows through everywhere nothing was measured instead of the whole
+  // viewport being tinted by the absence of data.
+  const stops = ramp.flatMap((entry, index) => [
+    0.15 + (0.85 * index) / Math.max(1, ramp.length - 1),
+    entry,
+  ]);
 
   return (
     <GeoJSONSource id={`${id}-source`} data={data}>
@@ -1084,7 +1182,15 @@ function MapHeatmap({
           heatmapWeight: weight
             ? ['interpolate', ['linear'], ['get', weight], 0, 0, 1, 1]
             : 1,
-          heatmapIntensity: intensity,
+          heatmapIntensity: [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            0,
+            intensity * 0.6,
+            maxZoom,
+            intensity * 1.2,
+          ],
           // `radius` is the spread at street zoom; below that it is scaled
           // down so it keeps covering the same ground rather than the same
           // number of pixels. The stops are the projection: each zoom level
@@ -1101,21 +1207,13 @@ function MapHeatmap({
             14,
             radius,
           ],
-          // Transparent at zero rather than the coolest colour, so the map
-          // shows through everywhere nothing was measured instead of the whole
-          // viewport being tinted by the absence of data.
           heatmapColor: [
             'interpolate',
             ['linear'],
             ['heatmap-density'],
             0,
             'rgba(0,0,0,0)',
-            0.2,
-            cool,
-            0.6,
-            warm,
-            1,
-            hot,
+            ...stops,
           ],
           heatmapOpacity: [
             'interpolate',
@@ -1128,6 +1226,52 @@ function MapHeatmap({
           ],
         }}
       />
+
+      {/* The handover, in the two zoom levels the field spends fading: the
+          marks arrive as it leaves, so there is never a zoom with neither. */}
+      {points ? (
+        <Layer
+          id={`${id}-points`}
+          type="circle"
+          minzoom={maxZoom - 2}
+          style={{
+            circleRadius: weight
+              ? ['interpolate', ['linear'], ['get', weight], 0, 3, 1, 9]
+              : 5,
+            circleColor: weight
+              ? [
+                  'interpolate',
+                  ['linear'],
+                  ['get', weight],
+                  0,
+                  ramp[0] as string,
+                  1,
+                  ramp[ramp.length - 1] as string,
+                ]
+              : (ramp[ramp.length - 1] as string),
+            circleStrokeWidth: 1,
+            circleStrokeColor: 'rgba(255,255,255,0.75)',
+            circleOpacity: [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              maxZoom - 2,
+              0,
+              maxZoom,
+              0.85,
+            ],
+            circleStrokeOpacity: [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              maxZoom - 2,
+              0,
+              maxZoom,
+              0.6,
+            ],
+          }}
+        />
+      ) : null}
     </GeoJSONSource>
   );
 }

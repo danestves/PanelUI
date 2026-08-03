@@ -83,7 +83,7 @@ npx panelui-cli@latest add map
 - **`Map.Arc`** — A curved connection between two points, bowed so arcs sharing an endpoint stay tellable apart.
 - **`Map.GeoJSON`** — Arbitrary geography as a themed layer. `fill` takes a style expression, which is what makes a choropleth one layer instead of one per bucket.
 - **`Map.Cluster`** — Dense points merged as they get too close to tell apart — the layer to reach for past a few dozen.
-- **`Map.Heatmap`** — Point density as a continuous field — the layer for *where*, once the points are too many to count.
+- **`Map.Heatmap`** — Point density as a continuous field — the layer for *where*, once the points are too many to count. `points` hands over to the records themselves as it fades out past `maxZoom`, so no zoom level shows neither.
 - **`Map.UserLocation`** — The device's own position, drawn by the renderer.
 
 ## Examples
@@ -158,29 +158,33 @@ The tiles are the one part of the style that is somebody else's to license. `sou
 
 ## Versions
 
-### Analytics map
+### Places
 
-Sessions by country, over a basemap dropped for the data. The shading and the cards above it come from the same tokens, so the map is part of the dashboard rather than an image pasted into it. Eight `Map.Label`s name the countries at `size="sm" tone="muted"` — they are the index to the shading, not the subject of the map.
-
-<PreviewVideo
-  src="/previews/map-analytics-map.mp4"
-  poster="/previews/map-analytics-map-poster.jpg"
-  alt="Map — Analytics map."
-  width={720}
-  height={1560}
-/>
+A street map that is the whole screen, with the search field, the locate control and the place card sitting over it. On a map every point of chrome is a point of geography you cannot see, so nothing here takes a strip of its own. The card appears only once something is selected, and the pin you picked is the only one carrying a name — four labels at once is a map with the names of everything on it and the shape of nothing.
 
 ```tsx
-<Map blank bounds={[-11, 35, 31, 63]}>
-  <Map.GeoJSON
-    data={countries}
-    fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}
-  />
-  {Object.entries(capitals).map(([code, lngLat]) => (
-    <Map.Marker key={code} lngLat={lngLat}>
-      <Map.Label size="sm" tone="muted">{code}</Map.Label>
+const [selected, setSelected] = useState(null);
+const map = useRef(null);
+
+<Map ref={map} center={here} zoom={14}>
+  {places.map((place) => (
+    <Map.Marker
+      key={place.id}
+      lngLat={place.lngLat}
+      onPress={() => {
+        setSelected(place);
+        map.current?.flyTo({ center: place.lngLat, zoom: 15 });
+      }}
+    >
+      <Pin active={place.id === selected?.id} />
+      {place.id === selected?.id ? (
+        <Map.Label side="top" size="sm" tone="primary">{place.name}</Map.Label>
+      ) : null}
     </Map.Marker>
   ))}
+
+  {route ? <Map.Route coordinates={[here, selected.lngLat]} width={5} /> : null}
+  <Map.Controls locate position="top-right" />
 </Map>
 ```
 
@@ -201,11 +205,18 @@ One layer shaded by a style expression rather than one layer per bucket — whic
 
 ### Heatmap
 
-Density as a continuous field. It fades out past `maxZoom` on purpose: zoomed far enough in, every point is its own island and the blur says less than the points would.
+Density as a field, with the ramp passed in and the points it was made of fading in as the field fades out. The derived ramp is the base colour at rising opacity, which is right over empty ground; over streets and coastline the opacity alone stops being separable from what is underneath, and the hue has to carry part of the reading — which is what `colors` is for.
 
 ```tsx
 <Map bounds={[-10, 38, 20, 56]}>
-  <Map.Heatmap data={reports} weight="weight" radius={28} />
+  <Map.Heatmap
+    data={reports}
+    weight="weight"
+    radius={28}
+    colors={['#fff7bc', '#fee391', '#fec44f', '#fe9929', '#d7301f']}
+    points
+    maxZoom={9}
+  />
 </Map>
 ```
 
@@ -304,24 +315,6 @@ Edge nodes coloured by state, spread across the world. A marker is a React view,
     </Map.Marker>
   ))}
 </Map>
-```
-
-### Analytics card
-
-The small end of the range — a map as one element inside a card. `interactive={false}` because at this size a stray pan is an accident: the card scrolls, the map does not. Only the four heaviest countries are named, because a shaded map with nothing written on it asks the reader to recognise a country by its outline.
-
-```tsx
-<Card className="overflow-hidden">
-  <LineChart data={week} xDataKey="day" aspectRatio={3}>
-    <LineChart.Area dataKey="value" />
-    <LineChart.Line dataKey="value" />
-  </LineChart>
-  <View className="h-44">
-    <Map blank interactive={false} bounds={[-11, 35, 31, 63]}>
-      <Map.GeoJSON data={countries} fill={ramp} />
-    </Map>
-  </View>
-</Card>
 ```
 
 ## API Reference
@@ -434,10 +427,13 @@ The small end of the range — a map as one element inside a card. `interactive=
 | --- | --- | --- | --- |
 | `data` | `unknown` | — | Point features to spread. |
 | `weight` | `string` | — | Feature property to weight each point by. Unweighted when omitted. |
+| `color` | `string` | — | Base colour of the field — a theme token by name, or a literal. The ramp is this colour at rising opacity, so density reads as *more of the same thing* rather than as a change of subject. Defaults to `--color-chart-2`, which is a saturated accent in every theme. It is deliberately not `--color-chart-1`: that is the series colour a chart is about, and every theme starts it on something close to the foreground — near-black in a light theme, near-white in a dark one — which over a basemap is a smudge rather than a measurement. |
+| `colors` | `string[]` | — | Replace the derived ramp outright, coolest first. For the conventional heat ramp, where the hue carries the reading as well as the opacity — worth it when the field sits over varied terrain and one hue at five opacities stops being separable from what is underneath it. The first stop is drawn at the lowest density, the last at the highest. Density zero stays fully transparent either way. |
 | `radius` | `number` | `24` | Spread of a single point, in points, at street zoom. Larger blurs more. The drawn radius shrinks as the map zooms out, so a point keeps covering roughly the same ground rather than the same screen area. |
 | `intensity` | `number` | `1` | Overall strength. Raise it when the data is sparse. |
 | `opacity` | `number` | `0.85` | 0 is invisible, 1 is solid. |
 | `maxZoom` | `number` | `15` | Above this zoom the layer fades out — see the note on the component. |
+| `points` | `boolean` | `false` | Draw the points themselves as the field fades out, coloured from the same ramp by weight. Without them, zooming past `maxZoom` leaves an empty map: the layer gets out of the way, and nothing takes its place. |
 | `id` | `string` | `'heatmap'` |  |
 
 ### Map.UserLocation

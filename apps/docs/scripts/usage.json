@@ -2082,7 +2082,7 @@
       "GeoJSON": "Arbitrary geography as a themed layer. `fill` takes a style expression, which is what makes a choropleth one layer instead of one per bucket.",
       "Cluster": "Dense points merged as they get too close to tell apart — the layer to reach for past a few dozen.",
       "UserLocation": "The device's own position, drawn by the renderer.",
-      "Heatmap": "Point density as a continuous field — the layer for *where*, once the points are too many to count."
+      "Heatmap": "Point density as a continuous field — the layer for *where*, once the points are too many to count. `points` hands over to the records themselves as it fades out past `maxZoom`, so no zoom level shows neither."
     },
     "examples": [
       {
@@ -2113,16 +2113,9 @@
     ],
     "versions": [
       {
-        "title": "Analytics map",
-        "description": "Sessions by country, over a basemap dropped for the data. The shading and the cards above it come from the same tokens, so the map is part of the dashboard rather than an image pasted into it. Eight `Map.Label`s name the countries at `size=\"sm\" tone=\"muted\"` — they are the index to the shading, not the subject of the map.",
-        "code": "<Map blank bounds={[-11, 35, 31, 63]}>\n  <Map.GeoJSON\n    data={countries}\n    fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}\n  />\n  {Object.entries(capitals).map(([code, lngLat]) => (\n    <Map.Marker key={code} lngLat={lngLat}>\n      <Map.Label size=\"sm\" tone=\"muted\">{code}</Map.Label>\n    </Map.Marker>\n  ))}\n</Map>",
-        "previewVideo": {
-          "src": "/previews/map-analytics-map.mp4",
-          "poster": "/previews/map-analytics-map-poster.jpg",
-          "width": 720,
-          "height": 1560,
-          "alt": "Map — Analytics map."
-        }
+        "title": "Places",
+        "description": "A street map that is the whole screen, with the search field, the locate control and the place card sitting over it. On a map every point of chrome is a point of geography you cannot see, so nothing here takes a strip of its own. The card appears only once something is selected, and the pin you picked is the only one carrying a name — four labels at once is a map with the names of everything on it and the shape of nothing.",
+        "code": "const [selected, setSelected] = useState(null);\nconst map = useRef(null);\n\n<Map ref={map} center={here} zoom={14}>\n  {places.map((place) => (\n    <Map.Marker\n      key={place.id}\n      lngLat={place.lngLat}\n      onPress={() => {\n        setSelected(place);\n        map.current?.flyTo({ center: place.lngLat, zoom: 15 });\n      }}\n    >\n      <Pin active={place.id === selected?.id} />\n      {place.id === selected?.id ? (\n        <Map.Label side=\"top\" size=\"sm\" tone=\"primary\">{place.name}</Map.Label>\n      ) : null}\n    </Map.Marker>\n  ))}\n\n  {route ? <Map.Route coordinates={[here, selected.lngLat]} width={5} /> : null}\n  <Map.Controls locate position=\"top-right\" />\n</Map>"
       },
       {
         "title": "Choropleth",
@@ -2131,8 +2124,8 @@
       },
       {
         "title": "Heatmap",
-        "description": "Density as a continuous field. It fades out past `maxZoom` on purpose: zoomed far enough in, every point is its own island and the blur says less than the points would.",
-        "code": "<Map bounds={[-10, 38, 20, 56]}>\n  <Map.Heatmap data={reports} weight=\"weight\" radius={28} />\n</Map>"
+        "description": "Density as a field, with the ramp passed in and the points it was made of fading in as the field fades out. The derived ramp is the base colour at rising opacity, which is right over empty ground; over streets and coastline the opacity alone stops being separable from what is underneath, and the hue has to carry part of the reading — which is what `colors` is for.",
+        "code": "<Map bounds={[-10, 38, 20, 56]}>\n  <Map.Heatmap\n    data={reports}\n    weight=\"weight\"\n    radius={28}\n    colors={['#fff7bc', '#fee391', '#fec44f', '#fe9929', '#d7301f']}\n    points\n    maxZoom={9}\n  />\n</Map>"
       },
       {
         "title": "Delivery tracker",
@@ -2181,11 +2174,6 @@
           "height": 1560,
           "alt": "Map — Uptime monitor."
         }
-      },
-      {
-        "title": "Analytics card",
-        "description": "The small end of the range — a map as one element inside a card. `interactive={false}` because at this size a stray pan is an accident: the card scrolls, the map does not. Only the four heaviest countries are named, because a shaded map with nothing written on it asks the reader to recognise a country by its outline.",
-        "code": "<Card className=\"overflow-hidden\">\n  <LineChart data={week} xDataKey=\"day\" aspectRatio={3}>\n    <LineChart.Area dataKey=\"value\" />\n    <LineChart.Line dataKey=\"value\" />\n  </LineChart>\n  <View className=\"h-44\">\n    <Map blank interactive={false} bounds={[-11, 35, 31, 63]}>\n      <Map.GeoJSON data={countries} fill={ramp} />\n    </Map>\n  </View>\n</Card>"
       }
     ],
     "notes": "### Why the basemap is assembled rather than downloaded\n\nA hosted style ships its colours baked in, which gives you exactly two maps. Everything here is built from the same tokens as the rest of the library, so `moon`, `grass` and anything you add later get a basemap that matches them without a designer redrawing one per theme.\n\nThe layer list is deliberately short. A full street style runs to ninety-odd layers separating tunnel casings from bridge casings across eleven zoom stops; almost none of that survives being recoloured down to five greys, and every layer is another thing to keep in step with the tokens. What is there is the set that still reads as a map at any zoom: ground, water, green space, buildings, roads, boundaries, and the labels that make them findable.\n\nPass `mapStyle` to skip all of it and use a style wholesale — the escape hatch for a map that has to match something outside the app.\n\n### Tile licensing\n\n`Map` defaults to CARTO's street tiles, which are free for non-commercial use and require a licence from CARTO for commercial use. That is a decision about your project rather than about this component, so `source` takes any provider serving the OpenMapTiles schema.\n\n### Markers or clusters\n\n`Map.Marker` is a React view, which is what lets it hold an avatar, a chip, or anything else the library draws. That also means a marker costs what a view costs. Past a few dozen points use `Map.Cluster`, which draws in a style layer and merges points as they crowd — by the time markers become expensive they have also become unreadable, so the two limits arrive together.\n\n### Labels on a crowded map\n\n`Map.Label` is out of the marker's layout flow, and deliberately so: a marker sits on its coordinate by the centre of its box, so a label in flow beneath the pin would drag that centre down and lift every pin off the place it marks. The pill overhangs the marker by a wide margin on both sides, which is what lets a long name stay centred over a small dot without the marker being anchored by the name instead.\n\nWhat that does not solve is a map with a dozen of them. `size=\"sm\"` tightens the pill, and `tone=\"muted\"` drops the text to the muted colour — together they are the difference between a network map and a wall of chips. The rule of thumb: label at `default` only the places the map is *about*, and let everything else support at `muted`. `tone=\"primary\"` inverts the pill for the single place being pointed at.",

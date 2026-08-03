@@ -1,5 +1,5 @@
 /**
- * The Map blocks — eight worked screens, one per full-page demo.
+ * The Map blocks — seven worked screens, one per full-page demo.
  *
  * Each is a whole screen rather than a snippet, because that is the only
  * honest way to show a map: squeezed into a section between two dividers it
@@ -16,15 +16,18 @@ import { ScrollView, View } from 'react-native';
 import {
   Avatar,
   Badge,
+  Button,
   Card,
   Chip,
   Frame,
   Item,
-  LineChart,
   Map,
   Progress,
+  SearchIcon,
   Separator,
+  StarIcon,
   Text,
+  XIcon,
   type LngLat,
   type MapHandle,
 } from 'panelui-native';
@@ -35,53 +38,6 @@ import { EUROPE_CODES, europeFeatures } from '../data/europe-outlines';
 function useToken(name: string, fallback: string) {
   const value = useCSSVariable(name);
   return typeof value === 'string' && value.length > 0 ? value : fallback;
-}
-
-/**
- * One figure in the row under a map.
- *
- * Shared by every block that has such a row, because they were drifting: two
- * of them had their own padding, their own type scale and their own idea of
- * where a delta goes, and the three-across version had `numberOfLines={1}` on
- * a value that then had nowhere to be.
- *
- * `columns` is the only knob, and it is about room rather than taste. Two
- * across a phone leaves enough width for the value and its delta on one line;
- * three does not, so the delta drops beneath rather than squeezing the number
- * it belongs to.
- */
-function MapStat({
-  label,
-  value,
-  delta,
-  columns = 2,
-}: {
-  label: string;
-  value: string;
-  delta?: string;
-  columns?: 2 | 3;
-}) {
-  const tight = columns === 3;
-
-  return (
-    <Card className="flex-1">
-      <Card.Content className="items-start gap-1 p-3.5">
-        <Text size="xs" muted numberOfLines={1}>
-          {label}
-        </Text>
-        <View
-          className={tight ? 'w-full items-start gap-1' : 'w-full flex-row items-center gap-2'}
-        >
-          {/* `shrink` rather than a line clamp: a value with room to wrap is
-              better than a value with an ellipsis where its unit was. */}
-          <Text size={tight ? 'lg' : 'xl'} weight="semibold" className="shrink">
-            {value}
-          </Text>
-          {delta ? <Badge variant="outline">{delta}</Badge> : null}
-        </View>
-      </Card.Content>
-    </Card>
-  );
 }
 
 /**
@@ -101,116 +57,183 @@ function seeded(key: string, min: number, max: number) {
 const EUROPE_BOUNDS: [number, number, number, number] = [-11, 35, 31, 63];
 
 /* -------------------------------------------------------------------------- */
-/* 1. Analytics map                                                           */
+/* 1. Places                                                                  */
 /* -------------------------------------------------------------------------- */
 
-const TRAFFIC = EUROPE_CODES.map((code) => ({
-  code,
-  visitors: seeded(`v${code}`, 400, 48000),
-}));
-
-const TRAFFIC_BY_CODE = Object.fromEntries(TRAFFIC.map((t) => [t.code, t.visitors]));
-const TRAFFIC_PEAK = Math.max(...TRAFFIC.map((t) => t.visitors));
-
-const SESSIONS = [
-  { hour: '00', value: 1200 }, { hour: '03', value: 800 },
-  { hour: '06', value: 1600 }, { hour: '09', value: 4200 },
-  { hour: '12', value: 5100 }, { hour: '15', value: 4800 },
-  { hour: '18', value: 6200 }, { hour: '21', value: 3400 },
+/**
+ * The shape everyone already knows: a street map filling the screen, a search
+ * field floating over it, pins you can press, and a card at the bottom for
+ * whatever is selected.
+ *
+ * Nothing here is a chart. The other blocks put a map inside a dashboard, and
+ * the honest thing to show first is a map that is the screen — with the search,
+ * the locate button and the details card sitting *over* it, because on a map
+ * every point of chrome is a point of geography you cannot see.
+ */
+const PLACES = [
+  {
+    id: 'nat',
+    name: 'Natural History Museum',
+    category: 'Museum',
+    rating: 4.7,
+    reviews: '92k',
+    minutes: 14,
+    open: 'Closes 17:50',
+    lngLat: [-0.1763, 51.4967] as LngLat,
+  },
+  {
+    id: 'vna',
+    name: 'V&A',
+    category: 'Museum',
+    rating: 4.8,
+    reviews: '61k',
+    minutes: 12,
+    open: 'Closes 17:45',
+    lngLat: [-0.1719, 51.4966] as LngLat,
+  },
+  {
+    id: 'hyde',
+    name: 'Hyde Park',
+    category: 'Park',
+    rating: 4.7,
+    reviews: '140k',
+    minutes: 9,
+    open: 'Open until midnight',
+    lngLat: [-0.1657, 51.5073] as LngLat,
+  },
+  {
+    id: 'harr',
+    name: 'Harrods',
+    category: 'Department store',
+    rating: 4.4,
+    reviews: '73k',
+    minutes: 7,
+    open: 'Closes 21:00',
+    lngLat: [-0.1633, 51.4994] as LngLat,
+  },
 ];
 
-/** Where each country's label sits. Roughly the centroid, by eye. */
-const CAPITALS: Record<string, LngLat> = {
-  GB: [-1.5, 52.8], FR: [2.3, 46.6], DE: [10.4, 51.1], ES: [-3.7, 40.2],
-  IT: [12.6, 42.6], PL: [19.4, 52.1], SE: [15.5, 62.0], NL: [5.6, 52.2],
-};
+/** Where "you" are, so a distance and a route have somewhere to start. */
+const HERE: LngLat = [-0.1622, 51.4936];
 
-export function AnalyticsMapBlock() {
-  const muted = useToken('--color-muted', 'rgba(0,0,0,0.06)');
-  const primary = useToken('--color-primary', '#262626');
+export function PlacesBlock() {
+  const [selected, setSelected] = useState<(typeof PLACES)[number] | null>(null);
+  const [directions, setDirections] = useState(false);
+  const map = useRef<MapHandle>(null);
 
-  const data = useMemo(() => europeFeatures(TRAFFIC_BY_CODE), []);
-  const top = useMemo(
-    () => [...TRAFFIC].sort((a, b) => b.visitors - a.visitors).slice(0, 5),
-    []
-  );
+  const select = (place: (typeof PLACES)[number]) => {
+    setSelected(place);
+    setDirections(false);
+    // Through the ref, not through `center`: driving the camera from state
+    // would undo the user's own panning on the next render.
+    map.current?.flyTo({ center: place.lngLat, zoom: 15 });
+  };
 
   return (
-    <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
-      <View className="gap-1">
-        <Text size="lg" weight="semibold">Audience</Text>
-        <Text size="sm" muted>
-          Sessions in the last 24 hours, by country.
-        </Text>
-      </View>
-
-      <Card className="overflow-hidden">
-        <View className="h-72">
-          {/* Blank: a choropleth supplies its own geography, and streets under
-              it are noise rather than context. */}
-          <Map blank bounds={EUROPE_BOUNDS}>
-            <Map.GeoJSON
-              data={data}
-              fill={[
-                'interpolate',
-                ['linear'],
-                ['get', 'value'],
-                0,
-                muted,
-                TRAFFIC_PEAK,
-                primary,
-              ]}
-              fillOpacity={0.9}
+    <View className="flex-1">
+      <Map ref={map} center={HERE} zoom={14}>
+        {PLACES.map((place) => (
+          <Map.Marker key={place.id} lngLat={place.lngLat} onPress={() => select(place)}>
+            <View
+              className={
+                place.id === selected?.id
+                  ? 'h-6 w-6 rounded-full border-[3px] border-background bg-primary shadow-md'
+                  : 'h-4 w-4 rounded-full border-2 border-background bg-muted-foreground'
+              }
             />
-            {Object.entries(CAPITALS).map(([code, lngLat]) => (
-              <Map.Marker key={code} lngLat={lngLat}>
-                {/* Muted and small: eight of them at once, and they are the
-                    index to the shading rather than the subject of the map. */}
-                <Map.Label size="sm" tone="muted">
-                  {code}
-                </Map.Label>
-              </Map.Marker>
-            ))}
-          </Map>
-        </View>
-      </Card>
+            {/* Only the selected pin is labelled. Four names at once is a map
+                with the labels of everything on it and the shape of nothing. */}
+            {place.id === selected?.id ? (
+              <Map.Label side="top" size="sm" tone="primary">
+                {place.name}
+              </Map.Label>
+            ) : null}
+          </Map.Marker>
+        ))}
 
-      <View className="flex-row gap-3">
-        <MapStat label="Sessions" value="128k" delta="+12.4%" />
-        <MapStat label="Countries" value={String(TRAFFIC.length)} delta="+3" />
+        <Map.Marker lngLat={HERE}>
+          <View className="h-4 w-4 rounded-full border-2 border-background bg-info" />
+        </Map.Marker>
+
+        {directions && selected ? (
+          <Map.Route coordinates={[HERE, selected.lngLat]} width={5} />
+        ) : null}
+
+        <Map.Controls locate position="top-right" className="mt-16" />
+      </Map>
+
+      {/* Over the map, not above it: a search bar in a header would take a
+          strip of geography away for the whole life of the screen. */}
+      <View className="absolute start-4 end-4 top-4">
+        <Card>
+          <Card.Content className="flex-row items-center gap-3 p-3">
+            <SearchIcon size={18} />
+            <Text size="sm" muted className="flex-1">
+              Search here
+            </Text>
+            <Avatar size="sm" fallback="K" />
+          </Card.Content>
+        </Card>
+        <View className="mt-2 flex-row gap-2">
+          {['Restaurants', 'Museums', 'Parks'].map((label) => (
+            <Chip key={label} size="sm">
+              {label}
+            </Chip>
+          ))}
+        </View>
       </View>
 
-      <Card className="overflow-hidden">
-        <Card.Content className="gap-3 p-4">
-          <Text size="sm" weight="medium">By hour</Text>
-          <LineChart data={SESSIONS} xDataKey="hour" aspectRatio={2.6}>
-            <LineChart.Grid rows={3} opacity={0.4} />
-            <LineChart.Area dataKey="value" />
-            <LineChart.Line dataKey="value" />
-            <LineChart.XAxis />
-          </LineChart>
-        </Card.Content>
-      </Card>
+      {/* The details card. Absent until something is selected, because an
+          empty one is a strip of map traded for nothing. */}
+      {selected ? (
+        <View className="absolute bottom-4 start-4 end-4">
+          <Card>
+            <Card.Content className="gap-3 p-4">
+              <View className="flex-row items-start gap-3">
+                <View className="min-w-0 flex-1 gap-0.5">
+                  <Text weight="semibold" numberOfLines={1}>
+                    {selected.name}
+                  </Text>
+                  <View className="flex-row items-center gap-1.5">
+                    <Text size="sm" weight="medium">
+                      {selected.rating}
+                    </Text>
+                    <StarIcon size={12} filled />
+                    <Text size="sm" muted numberOfLines={1}>
+                      ({selected.reviews}) · {selected.category}
+                    </Text>
+                  </View>
+                  <Text size="sm" muted numberOfLines={1}>
+                    {selected.open} · {selected.minutes} min walk
+                  </Text>
+                </View>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  accessibilityLabel="Close"
+                  onPress={() => setSelected(null)}
+                >
+                  <XIcon size={16} />
+                </Button>
+              </View>
 
-      <Frame>
-        <Frame.Header>
-          <Frame.Title>Top countries</Frame.Title>
-          <Frame.Action>Sessions</Frame.Action>
-        </Frame.Header>
-        <Frame.Panel>
-          {top.map((row) => (
-            <Frame.Row key={row.code}>
-              <Frame.Content>
-                <Frame.Title>{row.code}</Frame.Title>
-              </Frame.Content>
-              <Frame.Actions>
-                <Text size="sm" muted>{row.visitors.toLocaleString()}</Text>
-              </Frame.Actions>
-            </Frame.Row>
-          ))}
-        </Frame.Panel>
-      </Frame>
-    </ScrollView>
+              <View className="flex-row gap-2">
+                <Button
+                  className="flex-1"
+                  size="sm"
+                  onPress={() => setDirections((current) => !current)}
+                >
+                  {directions ? 'Hide route' : 'Directions'}
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1">
+                  Save
+                </Button>
+              </View>
+            </Card.Content>
+          </Card>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -329,6 +352,43 @@ function scatter() {
   };
 }
 
+/**
+ * The conventional heat ramp, passed in rather than derived.
+ *
+ * The derived default is one colour at rising opacity, which is right for a
+ * field over an empty ground. Over streets and coastline the opacity alone
+ * stops being separable from what is underneath it, and the hue has to carry
+ * part of the reading — which is the whole reason every heatmap ever drawn
+ * looks like this one.
+ */
+const HEAT_RAMP = ['#fff7bc', '#fee391', '#fec44f', '#fe9929', '#d7301f'];
+
+/** The ramp as a row of blocks, which is the only thing that makes it legible. */
+function HeatLegend() {
+  return (
+    <Card>
+      <Card.Content className="gap-2 p-3">
+        <Text size="xs" weight="medium">
+          Reports per square kilometre
+        </Text>
+        <View className="h-2 flex-row overflow-hidden rounded-full">
+          {HEAT_RAMP.map((color) => (
+            <View key={color} className="flex-1" style={{ backgroundColor: color }} />
+          ))}
+        </View>
+        <View className="flex-row justify-between">
+          <Text size="xs" muted>
+            Low
+          </Text>
+          <Text size="xs" muted>
+            High
+          </Text>
+        </View>
+      </Card.Content>
+    </Card>
+  );
+}
+
 export function HeatmapBlock() {
   const data = useMemo(scatter, []);
 
@@ -337,14 +397,27 @@ export function HeatmapBlock() {
       <View className="gap-1 p-4">
         <Text size="lg" weight="semibold">Reported outages</Text>
         <Text size="sm" muted>
-          Where, rather than how many — zoom in and the layer gets out of the way.
+          Where, rather than how many. Zoom in and the field hands over to the
+          reports it was made of.
         </Text>
       </View>
       <View className="flex-1">
         <Map bounds={[-10, 38, 20, 56]}>
-          <Map.Heatmap data={data} weight="weight" radius={28} />
+          <Map.Heatmap
+            data={data}
+            weight="weight"
+            radius={28}
+            colors={HEAT_RAMP}
+            // The handover: past `maxZoom - 2` the field fades and the points
+            // it was made of fade in, so no zoom level shows neither.
+            points
+            maxZoom={9}
+          />
           <Map.Controls position="top-right" />
         </Map>
+        <View className="absolute bottom-4 start-4 end-4">
+          <HeatLegend />
+        </View>
       </View>
     </View>
   );
@@ -682,77 +755,5 @@ export function UptimeMonitorBlock() {
         </Frame.Panel>
       </Frame>
     </View>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* 8. Analytics card                                                          */
-/* -------------------------------------------------------------------------- */
-
-const WEEK = [
-  { day: 'M', value: 320 }, { day: 'T', value: 410 }, { day: 'W', value: 380 },
-  { day: 'T', value: 520 }, { day: 'F', value: 610 }, { day: 'S', value: 440 },
-  { day: 'S', value: 390 },
-];
-
-/**
- * The small end of the range: a map as one element inside a card rather than
- * as the screen. `interactive={false}` because at this size a stray pan is an
- * accident rather than an intention — the card scrolls, the map does not.
- */
-export function AnalyticsCardBlock() {
-  const muted = useToken('--color-muted', 'rgba(0,0,0,0.06)');
-  const primary = useToken('--color-primary', '#262626');
-  const data = useMemo(() => europeFeatures(TRAFFIC_BY_CODE), []);
-
-  return (
-    <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
-      <Card className="overflow-hidden">
-        <View className="gap-1 p-4">
-          <Text size="sm" muted>Weekly active</Text>
-          <View className="flex-row items-end gap-2">
-            <Text size="2xl" weight="semibold">3,072</Text>
-            <Badge variant="outline" className="mb-1">+8.1%</Badge>
-          </View>
-        </View>
-        <View className="px-2">
-          <LineChart data={WEEK} xDataKey="day" aspectRatio={3}>
-            <LineChart.Area dataKey="value" />
-            <LineChart.Line dataKey="value" />
-          </LineChart>
-        </View>
-        <Separator />
-        <View className="h-44">
-          <Map blank interactive={false} bounds={EUROPE_BOUNDS}>
-            <Map.GeoJSON
-              data={data}
-              fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, TRAFFIC_PEAK, primary]}
-              fillOpacity={0.9}
-            />
-            {/* The four heaviest, named. A shaded map with nothing written on
-                it asks the reader to recognise a country by its outline. */}
-            {(['GB', 'DE', 'FR', 'ES'] as const).map((code) => (
-              <Map.Marker key={code} lngLat={CAPITALS[code]!}>
-                <Map.Label size="sm" tone="muted">
-                  {code}
-                </Map.Label>
-              </Map.Marker>
-            ))}
-          </Map>
-        </View>
-        {/* Chips rather than two runs of grey text at opposite corners, which
-            read as a caption that had been torn in half. */}
-        <View className="flex-row items-center gap-2 p-4">
-          <Chip size="sm">28 countries</Chip>
-          <Chip size="sm">Updated 4m ago</Chip>
-        </View>
-      </Card>
-
-      <View className="flex-row gap-3">
-        <MapStat columns={3} label="Sessions" value="128k" />
-        <MapStat columns={3} label="Bounce" value="32%" />
-        <MapStat columns={3} label="Avg. time" value="4m 12s" />
-      </View>
-    </ScrollView>
   );
 }
