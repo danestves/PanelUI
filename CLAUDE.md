@@ -139,6 +139,59 @@ heading as `Item` rows, and each pushes `/components/<slug>/<id>`, where
 `app/components/[slug]/[demo].tsx` renders it edge to edge with no padding and no scroll
 wrapper around it.
 
+### Screenshots and recordings: convert, never reframe
+
+The previews on the docs pages are recorded on a device and left in `~/Downloads`. Placing them
+is a mechanical job, and the one rule that matters is this:
+
+> **Never crop, pan, reframe or re-time a recording. The framing is the author's.**
+
+A crop that looks like it tightens the shot is a crop that cuts the button off the bottom of it,
+and nobody reviewing a docs page can tell what was lost. Convert the container, resample the
+whole frame to the folder's width, and stop there.
+
+**Which file goes where.** The filename says it, and the words are load-bearing:
+
+| In the name | Where it goes |
+| --- | --- |
+| `top` | The `preview` / `previewVideo` under the page's intro |
+| `<title> version` | The `examples` or `versions` entry with that title |
+| `top and <title> version` | **Both** — the top preview *and* that entry |
+
+Only the current day's batch is in play. `~/Downloads` keeps months of these, and an older file
+with the same name is a recording of a component that has since changed — check the dates, and
+where two files claim the same slot, the later one wins.
+
+**The conversion, exactly.** Everything here matches the 146 previews already in
+`apps/docs/public/previews`, and the point of writing it down is that a file which differs is
+the odd one out on a page beside them:
+
+```bash
+# video: any container -> mp4, whole frame, 720 points wide
+ffmpeg -i "<source>" -vf scale=720:-2:flags=lanczos \
+  -an -c:v libx264 -preset slow -crf 26 \
+  -pix_fmt yuv420p -movflags +faststart "<slug>[-<kebab-title>].mp4"
+
+# its poster: the first frame, whole
+ffmpeg -i "<slug>.mp4" -frames:v 1 -q:v 3 "<slug>[-<kebab-title>]-poster.jpg"
+```
+
+- `-2` keeps the aspect ratio and rounds the height to something H.264 accepts. Scaling is not
+  cropping — every pixel of the frame survives, and 720 is roughly a third of the decode work
+  of a native-resolution recording played in a column half its width.
+- **Stills are already framed at 1179 points.** Re-encode them to `.jpg` at quality 90 and do
+  not resize them.
+- Strip the audio. None of these have any, and a silent track is bytes on every page load.
+
+**Wiring it up.** Files go in `apps/docs/public/previews`; the entries go in
+`apps/docs/scripts/usage.json`, never into an MDX file by hand. A video is `previewVideo` with a
+`poster`; a still is `preview`. Both carry `alt` and the **real pixel dimensions** — Next needs
+them to reserve the aspect ratio, and a wrong number is a page that jumps as it loads.
+
+If a recording has no example or version to attach to, **write the example**. Attaching it to a
+neighbouring one because the name is close puts a caption on a video that shows something else,
+which is worse than the gap it filled.
+
 ## Architecture
 
 - npm-workspaces monorepo:
