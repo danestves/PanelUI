@@ -11,6 +11,7 @@
  *
  * ```tsx
  * <HeatmapChart data={weeks}>
+ *   <HeatmapChart.Header title="Contributions" value="1,204" legend />
  *   <HeatmapChart.YAxis />
  *   <HeatmapChart.XAxis />
  *   <HeatmapChart.Cells />
@@ -132,7 +133,7 @@ const MONTHS = [
  * composition stays a flat list of children instead of four nested slots the
  * caller has to remember the order of.
  */
-type Slot = 'cells' | 'x-axis' | 'y-axis' | 'rules' | 'tooltip' | 'legend';
+type Slot = 'cells' | 'x-axis' | 'y-axis' | 'rules' | 'tooltip' | 'legend' | 'header';
 
 export type HeatmapLayout = 'fluid' | 'fill';
 
@@ -566,6 +567,10 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
         onLayout={onLayout}
         className={cn('w-full', className)}
       >
+        {/* Above the axis gutter as well as the grid: the header is about the
+            whole chart, so it starts at the chart's edge, not the grid's. */}
+        {parts.header}
+
         {parts.x ? (
           <View style={{ paddingLeft: axisWidth }}>{parts.x}</View>
         ) : null}
@@ -605,6 +610,7 @@ interface Parts {
   y: React.ReactElement<{ width?: number }> | null;
   tooltip: ReactNode[];
   legend: ReactNode[];
+  header: ReactNode[];
   columns: number;
 }
 
@@ -617,6 +623,7 @@ function splitParts(children: ReactNode): Parts {
     y: null,
     tooltip: [],
     legend: [],
+    header: [],
     columns: 0,
   };
 
@@ -630,6 +637,7 @@ function splitParts(children: ReactNode): Parts {
     else if (slot === 'rules') parts.rules.push(keyed);
     else if (slot === 'tooltip') parts.tooltip.push(keyed);
     else if (slot === 'legend') parts.legend.push(keyed);
+    else if (slot === 'header') parts.header.push(keyed);
     else parts.cells.push(keyed);
   });
 
@@ -1061,7 +1069,120 @@ function HeatmapLegend({
 }
 HeatmapLegend.slot = 'legend' as Slot;
 
+/* -------------------------------------------------------------------------- */
+/* Header                                                                     */
+/* -------------------------------------------------------------------------- */
+
+export interface HeatmapHeaderProps extends ViewProps {
+  className?: string;
+  /** Small line above the value — what the grid is of. */
+  title?: string;
+  /** The readout. The largest thing on the card, and the first thing read. */
+  value?: string;
+  /** One muted line under the value — a period, a total, the held cell. */
+  caption?: string;
+  /**
+   * Draw the ramp along the trailing edge, `Less ▢▢▢▢▢ More`. The key for a
+   * grid that scrolls sideways, where `HeatmapChart.Legend` under the cells
+   * would scroll away with them.
+   */
+  legend?: boolean;
+  /** Text at the low end of the ramp, when `legend` is set. */
+  lessLabel?: string;
+  /** Text at the high end. */
+  moreLabel?: string;
+  /** Trailing slot — a control, a badge, a range picker. Wins over `legend`. */
+  children?: ReactNode;
+}
+
+/**
+ * The strip above the grid: what the chart is of, what it currently reads, and
+ * what the shading means.
+ *
+ * It belongs to the chart rather than to the card around it because it is about
+ * the *grid* — the number changes as a finger moves across the cells, and the
+ * ramp is the scale the chart itself derived. The card's header is a caption on
+ * the tray the chart sits in; this is the chart introducing itself.
+ *
+ * The value is not derived here. Take it from `onActiveCellChange` and pass the
+ * formatted string down, so one header can show a total when nothing is held
+ * and a day's own count when something is.
+ */
+function HeatmapHeader({
+  className,
+  title,
+  value,
+  caption,
+  legend = false,
+  lessLabel = 'Less',
+  moreLabel = 'More',
+  children,
+  ...props
+}: HeatmapHeaderProps) {
+  const { ramp, opacities, grid, cornerRadius } = useHeatmap('HeatmapChart.Header');
+  // Small enough to sit on one line beside the text, whatever the cells are.
+  const size = Math.max(Math.min(grid.size, 12), 8);
+
+  const trailing =
+    children ??
+    (legend ? (
+      <View className="flex-row items-center gap-1.5">
+        <Text size="xs" muted>
+          {lessLabel}
+        </Text>
+        {ramp.map((fill, level) => (
+          <Svg key={level} width={size} height={size}>
+            <Rect
+              x={0}
+              y={0}
+              width={size}
+              height={size}
+              rx={cornerRadius}
+              ry={cornerRadius}
+              fill={fill}
+              fillOpacity={opacities[level]}
+            />
+          </Svg>
+        ))}
+        <Text size="xs" muted>
+          {moreLabel}
+        </Text>
+      </View>
+    ) : null);
+
+  return (
+    <View
+      {...props}
+      className={cn('flex-row items-start justify-between gap-3 pb-3', className)}
+    >
+      <View className="flex-1 gap-0.5">
+        {title ? (
+          <Text size="xs" muted>
+            {title}
+          </Text>
+        ) : null}
+        {value ? (
+          <Text size="xl" weight="bold">
+            {value}
+          </Text>
+        ) : null}
+        {caption ? (
+          <Text size="xs" muted>
+            {caption}
+          </Text>
+        ) : null}
+      </View>
+      {/* Shrinkable, unlike a view's default in React Native — held rigid, the
+          ramp takes the width it wants and the caption wraps around it. */}
+      {trailing ? <View className="shrink pt-1">{trailing}</View> : null}
+    </View>
+  );
+}
+HeatmapHeader.displayName = 'HeatmapChart.Header';
+HeatmapHeader.slot = 'header' as Slot;
+
 export const HeatmapChart = Object.assign(HeatmapChartRoot, {
+  Header: HeatmapHeader,
   Cells: HeatmapCells,
   Separator: HeatmapSeparator,
   XAxis: HeatmapXAxis,
