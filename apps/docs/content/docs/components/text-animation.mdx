@@ -1,0 +1,263 @@
+---
+title: TextAnimation
+description: Five ways a piece of text or a number arrives.
+status: new
+---
+
+Five ways a piece of text or a number arrives: typed, rotated, counted, rolled, or scrolled past on a scale. They are one component because they are one idea — a value that wants to be seen changing — and because they share every prop that says *how*. Put `duration`, `delay`, `loop` or `enabled` on the root and they become the defaults for everything inside it, so a headline with three of these in it is configured once rather than three times. Each part also works on its own, with no root at all.
+
+## Installation
+
+TextAnimation ships with the library — no separate install.
+
+```tsx
+import { TextAnimation, Text, Button, ToggleButton, ToggleButtonGroup } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add text-animation
+```
+
+## Usage
+
+```tsx
+<TextAnimation.Typing text="Everything ships with its accessibility done" caret />
+<TextAnimation.Rotating text={['fast', 'native', 'yours']} />
+<TextAnimation.Counting value={2048} />
+```
+
+## Composition
+
+```tsx
+{/* each part on its own */}
+<TextAnimation.Typing text="…" />
+<TextAnimation.Rotating text={[…]} />
+<TextAnimation.Counting value={0} />
+<TextAnimation.Sliding value={0} />
+<TextAnimation.Scrolling value={0} step={1} />
+
+{/* or several, sharing one configuration */}
+<TextAnimation duration={900} delay={200}>
+  <TextAnimation.Counting value={48} />
+  <TextAnimation.Counting value={60} />
+</TextAnimation>
+```
+
+The root is optional and does two things: it lays its children out as a row, and it carries the shared configuration. A part's own prop always wins over it, including an explicit `false`.
+
+**`Sliding` or `Scrolling`** is a question about what the reader is being told. An odometer says *this number changed*; a column scrolling past its neighbours says *this number was chosen from a scale*, and the values either side of it are the scale. Reach for the second for a target, a threshold or a picked quantity, and for the first for a plain change of value.
+
+## Examples
+
+### Typed, with a caret
+
+The caret is solid while characters are arriving and blinks while they are not, which is what says *waiting* rather than *finished*. It is nested inside the text rather than laid out beside it: as a sibling it would sit against the right of the whole block, and the moment a line wrapped it would stop being after the last character. As a glyph in the flow it lands wherever typing has got to, on whichever line that is — and it is sized by the font, so it is right at every text size without being told any of them.
+
+Give the line a height. `Typing` reserves no space, so a line that grows as it types pushes everything under it down the screen on every keystroke.
+
+```tsx
+<View className="h-16 justify-center">
+  <TextAnimation.Typing
+    text="Everything ships with its accessibility wiring already done."
+    size="lg"
+    weight="medium"
+    caret
+  />
+</View>
+```
+
+### A cycle of phrases
+
+An array types each string, holds it for `hold`, erases it and starts the next. `loop` sends it back to the first rather than stopping on the last.
+
+```tsx
+<TextAnimation.Typing
+  text={['fast by default', 'native where it counts', 'yours to change']}
+  caret
+  loop
+/>
+```
+
+### One word rotating in a sentence
+
+The box is as tall as the tallest phrase rather than as tall as the current one — every phrase is laid out and all but one is hidden, so the line above it does not jump each time the words change.
+
+```tsx
+<View className="flex-row items-center gap-2">
+  <Text size="xl" weight="semibold">Built for</Text>
+  <TextAnimation.Rotating text={['Expo', 'React Native', 'you']} size="xl" weight="semibold" />
+</View>
+```
+
+### A counter, and a formatted one
+
+`formatOptions` is passed straight to `Intl.NumberFormat`, so a currency, a percentage or grouped thousands cost a prop rather than a helper. On an engine whose `Intl` cannot do it, the number falls back to a plain fixed-point string instead of throwing.
+
+```tsx
+<TextAnimation.Counting value={2048} size="3xl" weight="semibold" />
+
+<TextAnimation.Counting
+  value={99.4}
+  decimals={1}
+  formatOptions={{ style: 'percent', maximumFractionDigits: 1 }}
+/>
+```
+
+### A price that rolls when the plan changes
+
+`Sliding` animates whenever the value it is given changes, so it is driven by state rather than by a timer — which is the case it is for. The currency mark and the unit sit beside it as ordinary text, because neither of them is rolling.
+
+```tsx
+const [price, setPrice] = useState(24.99);
+
+<View className="flex-row items-center">
+  <Text size="2xl" weight="semibold">$</Text>
+  <TextAnimation.Sliding value={price} decimals={2} size="2xl" weight="semibold" />
+  <Text size="sm" muted className="ms-2">/month</Text>
+</View>
+```
+
+### Sharing one configuration
+
+Two counters under one root, so the timing is written once. A part that wants something else says so itself and wins.
+
+```tsx
+<TextAnimation duration={900} delay={200} className="gap-2">
+  <TextAnimation.Counting value={48} size="2xl" weight="semibold" />
+  <Text size="2xl" weight="semibold">of</Text>
+  <TextAnimation.Counting value={60} size="2xl" weight="semibold" />
+</TextAnimation>
+```
+
+### A value picked from a scale
+
+`Scrolling` is for a number chosen from a range rather than one that simply changed, and the values either side of the window are the range. `highlight` puts a band behind the one it lands on.
+
+The edges fade into whatever is behind them, and that has to be said out loud: the fade is painted, not masked, so it is only the right colour if it is given the right colour. `fadeColor` defaults to `--color-background`; inside a card, pass `--color-card`, and on a surface that is not one flat colour pass `false` and turn it off.
+
+```tsx
+<TextAnimation.Scrolling
+  value={120}
+  step={10}
+  highlight
+  size="2xl"
+  weight="semibold"
+  className="w-28"
+/>
+
+{/* inside a card, the fade has to be the card's colour */}
+<TextAnimation.Scrolling value={45} step={5} highlight fadeColor="--color-card" />
+```
+
+## API Reference
+
+### TextAnimation
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `duration` | `number` | — | How long one pass takes, in milliseconds. What that measures depends on the part: a keystroke for `Typing`, a phrase's turn on screen for `Rotating`, the whole journey for the three that count. |
+| `delay` | `number` | — | How long to wait before starting, in milliseconds. |
+| `loop` | `boolean` | — | Start again from the beginning when the run finishes. |
+| `enabled` | `boolean` | — | Animate at all. `false` draws the finished text or the final number immediately, which is also what a reduced-motion setting does. |
+
+### TextAnimation.Typing
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `text` | `string \| string[]` | — | What to type. An array is typed, held, erased and replaced by the next, which is the shape a rotating headline wants. |
+| `duration` | `number` | — | Milliseconds per keystroke. |
+| `delay` | `number` | — | Milliseconds before the first keystroke. |
+| `hold` | `number` | `1400` | How long a finished string sits before it is erased, in milliseconds. |
+| `loop` | `boolean` | — | Start again after the last string. Only means anything for an array. |
+| `caret` | `boolean` | `false` | Draw a blinking caret after the text. |
+| `caretClassName` | `string` | — | Styles the caret. |
+| `onDone` | `() => void` | — | Called once the last string has finished being typed. |
+| `enabled` | `boolean` | — |  |
+
+### TextAnimation.Rotating
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `text` | `string \| string[]` | — | The phrases to cycle. One string never rotates, which is a valid state. |
+| `duration` | `number` | — | How long each phrase holds, in milliseconds. |
+| `delay` | `number` | — | Milliseconds before the first change. |
+| `enabled` | `boolean` | — |  |
+
+### TextAnimation.Counting
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `number` | — | Where the number ends up. |
+| `from` | `number` | `0` | Where it starts from. Defaults to zero. |
+| `duration` | `number` | — | How long the whole journey takes, in milliseconds. |
+| `delay` | `number` | — | Milliseconds before it starts. |
+| `decimals` | `number` | `0` | Digits after the point. |
+| `formatOptions` | `Intl.NumberFormatOptions` | — | Formatting for the number, as `Intl.NumberFormat` options — a currency, a percentage, grouped thousands. Falls back to a plain fixed-point string on an engine whose `Intl` cannot do it. |
+| `enabled` | `boolean` | — |  |
+
+### TextAnimation.Sliding
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `number` | — | The number to show. Each digit rolls to its new value independently. |
+| `decimals` | `number` | `0` | Digits after the point. |
+| `padStart` | `number` | `1` | Pad the whole part to this many digits with leading zeroes. |
+| `thousandSeparator` | `string` | — | A separator every three digits — `','` for `1,024`. |
+| `decimalSeparator` | `string` | `'.'` | The decimal mark. |
+| `textClassName` | `string` | — | Styles the digits. |
+| `size` | `TextProps['size']` | — | Size of the digits, as on `Text`. |
+| `weight` | `TextProps['weight']` | — | Weight of the digits, as on `Text`. |
+| `delay` | `number` | — | Milliseconds before the roll starts. |
+| `enabled` | `boolean` | — |  |
+
+### TextAnimation.Scrolling
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `number` | — | The value to land on. |
+| `step` | `number` | `1` | The gap between the values either side of it. |
+| `around` | `number` | `2` | How many values to show above and below the one in the window. |
+| `duration` | `number` | — | How long the run takes, in milliseconds. |
+| `delay` | `number` | — | Milliseconds before it starts. |
+| `formatOptions` | `Intl.NumberFormatOptions` | — | Formatting for each value, as `Intl.NumberFormat` options. |
+| `textClassName` | `string` | — | Styles the values. |
+| `size` | `TextProps['size']` | — | Size of the values, as on `Text`. |
+| `weight` | `TextProps['weight']` | — | Weight of the values, as on `Text`. |
+| `highlight` | `boolean` | `false` | Draw a band behind the value in the window, so the one being chosen is told apart from the scale around it. |
+| `highlightClassName` | `string` | — | Styles that band. |
+| `fadeColor` | `string \| false` | `'--color-background'` | What the top and bottom of the window fade into — a theme token name, or any colour. It has to be told: the fade is painted, so it can only be the right colour if it is the colour of whatever is behind the window. Defaults to `--color-background`; pass `--color-card` inside a card. `false` turns the fade off, for a window on a surface that is not one flat colour. |
+| `enabled` | `boolean` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Where the work happens
+
+A number animated as React state is a re-render per frame. `Counting` runs the value on the UI thread and crosses back only when the *rounded* number changes — for a whole number that is a couple of dozen times over the run rather than sixty a second. `Sliding` and `Scrolling` never cross back at all: every digit is already rendered and the animation is a transform on a column of them.
+
+`Typing` is the exception, and has to be. A character is a different string, and a string is a re-render whichever thread decided on it. At a keystroke every fifty-odd milliseconds that is three orders of magnitude slower than a frame.
+
+### Nothing is measured
+
+A sliding column is ten digits tall and is moved by a percentage of its own height, so a digit lands in the window whatever the font size turns out to be — no `onLayout`, and no first frame at the wrong offset. The window's size comes from one hidden `0` laid out in flow, which is also what makes it exactly as wide and as tall as a digit in the current font rather than as wide as a number happens to be.
+
+### The digits do not move sideways
+
+Every numeric part draws in `tabular-nums`. Proportional digits are different widths, so a rolling number changes width as it rolls and shoves whatever is beside it back and forth — which reads as the layout being broken rather than as the number being alive.
+
+### What a screen reader gets
+
+The final value, not the animation. A counter is labelled with the number it is heading for, a sliding column with the whole number rather than four columns of ten digits each, and a rotating phrase list announces only the phrase on screen. The caret is hidden outright.
+
+### Reduced motion
+
+Every part draws its finished state immediately and nothing loops. `enabled={false}` does the same thing on demand — useful for a screenshot, or for a list where the same effect on forty rows would be a fairground rather than an accent.

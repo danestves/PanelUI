@@ -850,6 +850,15 @@
     ]
   },
   {
+    "name": "text-animation",
+    "type": "registry:ui",
+    "description": "Five ways a piece of text or a number arrives.",
+    "registryDependencies": [
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "textarea",
     "type": "registry:ui",
     "description": "Text field that runs to several lines, sized in rows.",

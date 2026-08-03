@@ -625,6 +625,15 @@ export {
   type ScrollTextSplit,
 } from './components/scroll-text';
 export {
+  TextAnimation,
+  type TextAnimationProps,
+  type TextAnimationTypingProps,
+  type TextAnimationRotatingProps,
+  type TextAnimationCountingProps,
+  type TextAnimationSlidingProps,
+  type TextAnimationScrollingProps,
+} from './components/text-animation';
+export {
   ScrollCanvas,
   type ScrollCanvasProps,
   type ScrollCanvasEffect,

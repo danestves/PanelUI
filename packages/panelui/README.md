@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 79 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 80 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -236,6 +236,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Table` | Rows and columns that stay lined up, with sortable headers |
 | `Tabs` | Segmented navigation with an animated indicator |
 | `Task` | A step an agent is working through, with its files |
+| `TextAnimation` | Five ways a piece of text or a number arrives |
 | `Textarea` | Multi-line text field that can grow with its content |
 | `ThinkingOrb` | Dotted orb saying which kind of busy an agent is |
 | `Timeline` | Vertical sequence of events |

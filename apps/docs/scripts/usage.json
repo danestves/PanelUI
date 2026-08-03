@@ -3098,6 +3098,63 @@
       "height": 1460
     }
   },
+  "text-animation": {
+    "intro": "Five ways a piece of text or a number arrives: typed, rotated, counted, rolled, or scrolled past on a scale. They are one component because they are one idea — a value that wants to be seen changing — and because they share every prop that says *how*. Put `duration`, `delay`, `loop` or `enabled` on the root and they become the defaults for everything inside it, so a headline with three of these in it is configured once rather than three times. Each part also works on its own, with no root at all.",
+    "usage": "<TextAnimation.Typing text=\"Everything ships with its accessibility done\" caret />\n<TextAnimation.Rotating text={['fast', 'native', 'yours']} />\n<TextAnimation.Counting value={2048} />",
+    "extraImports": [
+      "Text",
+      "Button",
+      "ToggleButton",
+      "ToggleButtonGroup"
+    ],
+    "anatomy": "{/* each part on its own */}\n<TextAnimation.Typing text=\"…\" />\n<TextAnimation.Rotating text={[…]} />\n<TextAnimation.Counting value={0} />\n<TextAnimation.Sliding value={0} />\n<TextAnimation.Scrolling value={0} step={1} />\n\n{/* or several, sharing one configuration */}\n<TextAnimation duration={900} delay={200}>\n  <TextAnimation.Counting value={48} />\n  <TextAnimation.Counting value={60} />\n</TextAnimation>",
+    "parts": {
+      "Typing": "A string arriving one character at a time, with an optional caret that flows with the text — including onto the second line. Given an array it types each in turn, holds it, erases it and moves on.",
+      "Rotating": "One phrase replaced by the next, the outgoing one leaving upward and the incoming one arriving from below. The box is sized by the longest phrase, so it neither resizes as the words change nor clips the ones that do not fit the first.",
+      "Counting": "A number counting up to itself, formatted through `Intl.NumberFormat` where you give it options.",
+      "Sliding": "An odometer: every digit is a column of ten, and each rolls to the one it should be showing.",
+      "Scrolling": "A column of values scrolling past a window and coming to rest on one, with its neighbours either side of it. `highlight` marks the chosen one and the edges fade into the surface behind them, which together are what make it read as a scale with an answer in it rather than a list of five numbers."
+    },
+    "partNotes": "The root is optional and does two things: it lays its children out as a row, and it carries the shared configuration. A part's own prop always wins over it, including an explicit `false`.\n\n**`Sliding` or `Scrolling`** is a question about what the reader is being told. An odometer says *this number changed*; a column scrolling past its neighbours says *this number was chosen from a scale*, and the values either side of it are the scale. Reach for the second for a target, a threshold or a picked quantity, and for the first for a plain change of value.",
+    "examples": [
+      {
+        "title": "Typed, with a caret",
+        "description": "The caret is solid while characters are arriving and blinks while they are not, which is what says *waiting* rather than *finished*. It is nested inside the text rather than laid out beside it: as a sibling it would sit against the right of the whole block, and the moment a line wrapped it would stop being after the last character. As a glyph in the flow it lands wherever typing has got to, on whichever line that is — and it is sized by the font, so it is right at every text size without being told any of them.\n\nGive the line a height. `Typing` reserves no space, so a line that grows as it types pushes everything under it down the screen on every keystroke.",
+        "code": "<View className=\"h-16 justify-center\">\n  <TextAnimation.Typing\n    text=\"Everything ships with its accessibility wiring already done.\"\n    size=\"lg\"\n    weight=\"medium\"\n    caret\n  />\n</View>"
+      },
+      {
+        "title": "A cycle of phrases",
+        "description": "An array types each string, holds it for `hold`, erases it and starts the next. `loop` sends it back to the first rather than stopping on the last.",
+        "code": "<TextAnimation.Typing\n  text={['fast by default', 'native where it counts', 'yours to change']}\n  caret\n  loop\n/>"
+      },
+      {
+        "title": "One word rotating in a sentence",
+        "description": "The box is as tall as the tallest phrase rather than as tall as the current one — every phrase is laid out and all but one is hidden, so the line above it does not jump each time the words change.",
+        "code": "<View className=\"flex-row items-center gap-2\">\n  <Text size=\"xl\" weight=\"semibold\">Built for</Text>\n  <TextAnimation.Rotating text={['Expo', 'React Native', 'you']} size=\"xl\" weight=\"semibold\" />\n</View>"
+      },
+      {
+        "title": "A counter, and a formatted one",
+        "description": "`formatOptions` is passed straight to `Intl.NumberFormat`, so a currency, a percentage or grouped thousands cost a prop rather than a helper. On an engine whose `Intl` cannot do it, the number falls back to a plain fixed-point string instead of throwing.",
+        "code": "<TextAnimation.Counting value={2048} size=\"3xl\" weight=\"semibold\" />\n\n<TextAnimation.Counting\n  value={99.4}\n  decimals={1}\n  formatOptions={{ style: 'percent', maximumFractionDigits: 1 }}\n/>"
+      },
+      {
+        "title": "A price that rolls when the plan changes",
+        "description": "`Sliding` animates whenever the value it is given changes, so it is driven by state rather than by a timer — which is the case it is for. The currency mark and the unit sit beside it as ordinary text, because neither of them is rolling.",
+        "code": "const [price, setPrice] = useState(24.99);\n\n<View className=\"flex-row items-center\">\n  <Text size=\"2xl\" weight=\"semibold\">$</Text>\n  <TextAnimation.Sliding value={price} decimals={2} size=\"2xl\" weight=\"semibold\" />\n  <Text size=\"sm\" muted className=\"ms-2\">/month</Text>\n</View>"
+      },
+      {
+        "title": "Sharing one configuration",
+        "description": "Two counters under one root, so the timing is written once. A part that wants something else says so itself and wins.",
+        "code": "<TextAnimation duration={900} delay={200} className=\"gap-2\">\n  <TextAnimation.Counting value={48} size=\"2xl\" weight=\"semibold\" />\n  <Text size=\"2xl\" weight=\"semibold\">of</Text>\n  <TextAnimation.Counting value={60} size=\"2xl\" weight=\"semibold\" />\n</TextAnimation>"
+      },
+      {
+        "title": "A value picked from a scale",
+        "description": "`Scrolling` is for a number chosen from a range rather than one that simply changed, and the values either side of the window are the range. `highlight` puts a band behind the one it lands on.\n\nThe edges fade into whatever is behind them, and that has to be said out loud: the fade is painted, not masked, so it is only the right colour if it is given the right colour. `fadeColor` defaults to `--color-background`; inside a card, pass `--color-card`, and on a surface that is not one flat colour pass `false` and turn it off.",
+        "code": "<TextAnimation.Scrolling\n  value={120}\n  step={10}\n  highlight\n  size=\"2xl\"\n  weight=\"semibold\"\n  className=\"w-28\"\n/>\n\n{/* inside a card, the fade has to be the card's colour */}\n<TextAnimation.Scrolling value={45} step={5} highlight fadeColor=\"--color-card\" />"
+      }
+    ],
+    "notes": "### Where the work happens\n\nA number animated as React state is a re-render per frame. `Counting` runs the value on the UI thread and crosses back only when the *rounded* number changes — for a whole number that is a couple of dozen times over the run rather than sixty a second. `Sliding` and `Scrolling` never cross back at all: every digit is already rendered and the animation is a transform on a column of them.\n\n`Typing` is the exception, and has to be. A character is a different string, and a string is a re-render whichever thread decided on it. At a keystroke every fifty-odd milliseconds that is three orders of magnitude slower than a frame.\n\n### Nothing is measured\n\nA sliding column is ten digits tall and is moved by a percentage of its own height, so a digit lands in the window whatever the font size turns out to be — no `onLayout`, and no first frame at the wrong offset. The window's size comes from one hidden `0` laid out in flow, which is also what makes it exactly as wide and as tall as a digit in the current font rather than as wide as a number happens to be.\n\n### The digits do not move sideways\n\nEvery numeric part draws in `tabular-nums`. Proportional digits are different widths, so a rolling number changes width as it rolls and shoves whatever is beside it back and forth — which reads as the layout being broken rather than as the number being alive.\n\n### What a screen reader gets\n\nThe final value, not the animation. A counter is labelled with the number it is heading for, a sliding column with the whole number rather than four columns of ten digits each, and a rotating phrase list announces only the phrase on screen. The caret is hidden outright.\n\n### Reduced motion\n\nEvery part draws its finished state immediately and nothing loops. `enabled={false}` does the same thing on demand — useful for a screenshot, or for a list where the same effect on forty rows would be a fairground rather than an accent."
+  },
   "section-rail": {
     "intro": "A floating navigator for a long screen: a stack of short bars pinned to one edge, one per section, that expands into a labelled panel when you touch it. Collapsed it is a position indicator you can read at a glance without giving up any content width; expanded it is a list you can jump from.",
     "usage": "<SectionRail align=\"bottom\" haptics value={active} onValueChange={scrollToSection}>\n  <SectionRail.Trigger>\n    <SectionRail.Bar value=\"intro\" />\n    <SectionRail.Bar value=\"setup\" level={1} />\n  </SectionRail.Trigger>\n  <SectionRail.Content>\n    <SectionRail.Item value=\"intro\">Introduction</SectionRail.Item>\n    <SectionRail.Item value=\"setup\" level={1}>Setup</SectionRail.Item>\n  </SectionRail.Content>\n</SectionRail>",

@@ -345,6 +345,14 @@
       "addedIn": "0.14.0"
     }
   ],
+  "text-animation": [
+    "TextAnimation",
+    "Five ways a piece of text or a number arrives.",
+    "react native typewriter animated counter text animation",
+    {
+      "addedIn": "0.41.0"
+    }
+  ],
   "section-rail": [
     "SectionRail",
     "Floating section navigator for a long screen.",
