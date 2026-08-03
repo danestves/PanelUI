@@ -1,6 +1,7 @@
 ---
 title: HeatmapChart
 description: Contribution grid with a themed colour ramp and a readout.
+status: updated
 ---
 
 A calendar of bins shaded by how much happened in each — one column per period, one row per bin inside it. It answers “when was this busy” at a glance, which no line can: a year of daily numbers plotted as a series is a hairball, and as a grid it is a pattern.
@@ -19,7 +20,7 @@ A calendar of bins shaded by how much happened in each — one column per period
 HeatmapChart ships with the library — no separate install.
 
 ```tsx
-import { HeatmapChart, buildHeatmapCalendar, Card, Text } from 'panelui-native';
+import { HeatmapChart, buildHeatmapCalendar, Frame, Text } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -32,11 +33,11 @@ npx panelui-cli@latest add heatmap-chart
 
 ```tsx
 <HeatmapChart data={weeks} weekStartDay={1}>
+  <HeatmapChart.Header title="Contributions" value="1,204" legend />
   <HeatmapChart.XAxis />
   <HeatmapChart.YAxis />
   <HeatmapChart.Cells />
   <HeatmapChart.Tooltip />
-  <HeatmapChart.Legend />
 </HeatmapChart>
 ```
 
@@ -44,6 +45,7 @@ npx panelui-cli@latest add heatmap-chart
 
 ```tsx
 <HeatmapChart>
+  <HeatmapChart.Header />     {/* the strip above the grid */}
   <HeatmapChart.XAxis />      {/* month labels, above the grid */}
   <HeatmapChart.YAxis />      {/* weekday labels, beside it */}
   <HeatmapChart.Separator />  {/* rules grouping the columns */}
@@ -53,9 +55,10 @@ npx panelui-cli@latest add heatmap-chart
 </HeatmapChart>
 ```
 
+- **`HeatmapChart.Header`** — The strip above the grid — what the chart is of, what it reads, and the ramp as a key. The place to put the key on a grid that scrolls sideways, where `Legend` would scroll away with the cells.
 - **`HeatmapChart.Cells`** — The grid. Every row of every column is drawn, including the empty ones.
 - **`HeatmapChart.Separator`** — Vertical rules grouping the columns — quarters, months, sprints.
-- **`HeatmapChart.XAxis`** — Month labels above the grid, emitted where the month changes.
+- **`HeatmapChart.XAxis`** — Month labels above the grid, emitted where the month changes. Pass `labels` for columns that are not weeks.
 - **`HeatmapChart.YAxis`** — Row labels beside the grid. Weekdays by default; pass `labels` for anything else.
 - **`HeatmapChart.Tooltip`** — The readout that follows the finger across the grid.
 - **`HeatmapChart.Legend`** — The `Less ▢▢▢▢▢ More` key, under the grid.
@@ -169,13 +172,31 @@ const [active, setActive] = useState(null);
 </HeatmapChart>
 ```
 
+### Labelling columns that are not weeks
+
+The x-axis emits a label where the month changes, which a grid of weekdays never does — there is no month in it to change. `labels` overrides them with one per column, the way `YAxis` already takes one per row, so a grid can be rows of hours by columns of days.
+
+```tsx
+<HeatmapChart data={week} layout="fill" rows={8} gap={4}>
+  <HeatmapChart.Header title="Tickets opened" legend />
+  <HeatmapChart.XAxis labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']} />
+  <HeatmapChart.YAxis labels={['00', '03', '06', '09', '12', '15', '18', '21']} tickFilter="all" width={24} />
+  <HeatmapChart.Cells cornerRadius={3} />
+  <HeatmapChart.Tooltip />
+</HeatmapChart>
+```
+
 ## Versions
 
 ### Contribution grid
 
-A full year with a readout that follows the finger. Fifty-three weeks do not fit across a phone, so the chart is `fluid` inside a horizontal `ScrollView` and the legend sits outside it, at the card's width. Press and hold to read a day — a swipe scrolls the chart instead.
+A full year with a readout that follows the finger. Fifty-three weeks do not fit across a phone, so the chart is `fluid` inside a horizontal `ScrollView` — and the header sits outside that scroller, at the frame's width, or it would scroll away with the cells. Press and hold to read a day; a swipe scrolls the chart instead.
 
 ```tsx
+<HeatmapChart data={[]}>
+  <HeatmapChart.Header value={active ? `${active.count}` : total} caption={caption} legend />
+</HeatmapChart>
+
 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
   <HeatmapChart data={weeks} weekStartDay={1} binSize={13} onActiveCellChange={setActive}>
     <HeatmapChart.XAxis />
@@ -192,6 +213,7 @@ For a short range, `fill` divides the available width between the columns rather
 
 ```tsx
 <HeatmapChart data={weeks.slice(-13)} layout="fill" weekStartDay={1} gap={4}>
+  <HeatmapChart.Header title="Last 13 weeks" caption="The width divided between the columns" />
   <HeatmapChart.XAxis />
   <HeatmapChart.YAxis />
   <HeatmapChart.Cells cornerRadius={3} />
@@ -218,6 +240,20 @@ A rule every thirteen columns, and the ramp derived from a colour of your own in
   <HeatmapChart.YAxis tickFilter="all" labelFormat="initial" width={16} />
   <HeatmapChart.Separator every="quarter" dashArray="2,3" />
   <HeatmapChart.Cells />
+  <HeatmapChart.Tooltip />
+</HeatmapChart>
+```
+
+### Punchcard
+
+Rows that are hours and columns that are weekdays. “When is this busy” is a question the year grid cannot answer, having already spent its rows on the days of the week — `rows` and a pair of `labels` turn the same grid on its side.
+
+```tsx
+<HeatmapChart data={week} layout="fill" rows={8} gap={4} onActiveCellChange={setActive}>
+  <HeatmapChart.Header title="Tickets opened" value="9am – 6pm" legend />
+  <HeatmapChart.XAxis labels={weekdays} />
+  <HeatmapChart.YAxis labels={hours} tickFilter="all" width={24} />
+  <HeatmapChart.Cells cornerRadius={3} />
   <HeatmapChart.Tooltip />
 </HeatmapChart>
 ```
@@ -265,6 +301,7 @@ A rule every thirteen columns, and the ramp derived from a colour of your own in
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `formatLabel` | `(date: Date, column: number) => string` | — | Label a column. Given the first dated bin in it, so a month name can be derived. Return an empty string to leave the column unlabelled. |
+| `labels` | `string[]` | — | Column labels, left to right. Overrides the month names — for a grid whose columns are not weeks, where there is no month to change and so nothing to emit a label on. |
 
 ### HeatmapChart.HeatmapYAxis
 
@@ -293,6 +330,18 @@ A rule every thirteen columns, and the ramp derived from a colour of your own in
 | `moreLabel` | `string` | `'More'` | Text at the high end. |
 | `swatchSize` | `number` | — | Side of a swatch, in pixels. Defaults to the chart's cell size. |
 
+### HeatmapChart.HeatmapHeader
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | — | Small line above the value — what the grid is of. |
+| `value` | `string` | — | The readout. The largest thing on the card, and the first thing read. |
+| `caption` | `string` | — | One muted line under the value — a period, a total, the held cell. |
+| `legend` | `boolean` | `false` | Draw the ramp along the trailing edge, `Less ▢▢▢▢▢ More`. The key for a grid that scrolls sideways, where `HeatmapChart.Legend` under the cells would scroll away with them. |
+| `lessLabel` | `string` | `'Less'` | Text at the low end of the ramp, when `legend` is set. |
+| `moreLabel` | `string` | `'More'` | Text at the high end. |
+
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
@@ -309,6 +358,10 @@ There are four ways to change it, in rough order of how often you want them:
 - **`levelColors`** replaces all five outright, for a ramp that is not one colour fading. The opacities are dropped then, since dimming a colour someone chose on purpose is not a ramp.
 
 The four thresholds are the data's own quartiles by default, so a chart of single-digit counts and a chart of thousands both use the whole ramp. Zero is its own level and is left out of the quartiles — counting it drags every threshold to nothing on a sparse chart. Pass `levels` to fix them yourself.
+
+### Where the key goes
+
+A grid that scrolls sideways has two places for its ramp and only one of them works. `Legend` sits under the cells, inside the scroller, and slides out of view with them; `Header legend` sits above the grid at the chart's own width and stays put. On a grid that fits, either is fine.
 
 ### Layout
 

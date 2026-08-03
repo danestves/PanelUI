@@ -1,6 +1,7 @@
 ---
 title: RingChart
 description: Concentric arcs, each measured against its own target.
+status: updated
 ---
 
 Progress towards several targets, as concentric arcs.
@@ -20,7 +21,7 @@ It is not a pie, and the difference matters. A pie divides one whole between its
 RingChart ships with the library — no separate install.
 
 ```tsx
-import { RingChart, type RingDatum, Card, Text } from 'panelui-native';
+import { RingChart, type RingDatum, Frame, Text } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -32,7 +33,8 @@ npx panelui-cli@latest add ring-chart
 ## Usage
 
 ```tsx
-<RingChart data={goals}>
+<RingChart data={goals} size={208}>
+  <RingChart.Header title="Today" value="81%" legend />
   {goals.map((goal, index) => (
     <RingChart.Ring key={goal.label} index={index} />
   ))}
@@ -44,16 +46,18 @@ npx panelui-cli@latest add ring-chart
 
 ```tsx
 <RingChart data={…}>
-  <RingChart.Ring index={0} />          {/* one per entry, outermost first */}
+  <RingChart.Header />                 {/* the strip above the rings */}
+  <RingChart.Ring index={0} />         {/* one per entry, outermost first */}
   <RingChart.Ring index={1} />
-  <RingChart.Center />                  {/* the readout in the hole */}
+  <RingChart.Center />                 {/* the readout in the hole */}
   <RingChart.Legend />
 </RingChart>
 ```
 
-- **`RingChart.Ring`** — One ring: a full-circle track, and the arc showing how far along it the value has got.
+- **`RingChart.Header`** — The strip above the rings — what the chart is of, what it reads, and a key for the colours. The chart introducing itself, as distinct from the caption on the card around it.
+- **`RingChart.Ring`** — One ring: a track, and the arc showing how far along it the value has got. Segment it into ticks with `segments`.
 - **`RingChart.Center`** — The readout in the hole. Shows the outermost ring until one is selected, then that ring’s own figures.
-- **`RingChart.Legend`** — A swatch, a name and a percentage per ring — pressable in the same way the rings are, and usually the easier target of the two.
+- **`RingChart.Legend`** — A swatch, a name and a percentage per ring — pressable in the same way the rings are, and usually the easier target of the two. Prefer `Header legend` on a chart that has a header.
 
 ## Examples
 
@@ -104,44 +108,91 @@ const [active, setActive] = useState(-1);
 
 ### Sizing it
 
-The chart measures its container and stays square. `strokeWidth` and `ringGap` decide how much of it the rings take and how much hole is left — and the hole is what the centre readout has to fit inside, so a chart of many thick rings has room for a number and not much else.
+Left alone the chart measures its container and stays square — which inside a card means a plot twice as tall as a bar or area chart at `aspectRatio={2}`. Give it a `size` and it draws that square and centres it in whatever it was handed. `strokeWidth` and `ringGap` decide how much of it the rings take and how much hole is left, and the hole is what the centre readout has to fit inside, so a chart of many thick rings has room for a number and not much else.
 
 ```tsx
-{/* Fills its container. */}
-<RingChart data={goals} strokeWidth={18} ringGap={6}>…</RingChart>
+{/* Sized, and centred in its container. The usual answer in a card. */}
+<RingChart data={goals} size={208} strokeWidth={16} ringGap={6}>…</RingChart>
 
-{/* Or a fixed size, for a ring inside a row. */}
-<RingChart data={usage} size={96} strokeWidth={10} ringGap={4}>…</RingChart>
+{/* Or left to fill, when the chart is the screen. */}
+<RingChart data={goals} strokeWidth={18} ringGap={6}>…</RingChart>
+```
+
+### Opening the ring into a gauge
+
+`startAngle` and `endAngle` are degrees clockwise from twelve o’clock. Leave a turn between them and the ring closes; leave less and the gap becomes the notch a dial has always had at the bottom. The track stops where the arc stops, and so does the touch target — the dead part of a gauge stays dead.
+
+```tsx
+<RingChart data={[health]} size={208} startAngle={-135} endAngle={135} strokeWidth={18}>
+  <RingChart.Header title="Score" value="82 of 100" />
+  <RingChart.Ring index={0} />
+  <RingChart.Center formatValue={(value) => `${value}`} />
+</RingChart>
+```
+
+### Counting in ticks
+
+`segments` breaks the ring into that many ticks, lit one at a time as the value climbs. For a target made of countable things: eight of twelve sessions reads off ticks you can count, and off a smooth arc only as “about two thirds”. The ends square themselves off unless you say otherwise, because a rounded cap on a tick as long as it is wide draws a lozenge.
+
+```tsx
+<RingChart data={[{ label: 'Sessions', value: 8, maxValue: 12 }]} size={208} strokeWidth={16}>
+  <RingChart.Header title="Sessions attended" value="8 of 12" />
+  <RingChart.Ring index={0} segments={12} segmentGap={6} />
+  <RingChart.Center formatValue={(value) => `${value}`} />
+</RingChart>
 ```
 
 ## Versions
 
 ### Today's goals
 
-Three targets, each read against its own rather than against each other — and a list beside them that selects the same rings.
+Three targets, each read against its own rather than against each other. Selecting a ring swaps the header’s figures for that ring’s.
 
 ```tsx
-<RingChart data={goals} strokeWidth={18} ringGap={6} activeIndex={active} onActiveIndexChange={setActive}>
+<RingChart data={goals} size={208} strokeWidth={16} ringGap={6} activeIndex={active} onActiveIndexChange={setActive}>
+  <RingChart.Header value={`${percent}%`} caption={caption} legend />
   {goals.map((goal, index) => (
     <RingChart.Ring key={goal.label} index={index} />
   ))}
-  <RingChart.Center />
+  <RingChart.Center defaultLabel="Move" />
 </RingChart>
 ```
 
-### Inside a card
+### Gauge
 
-The small end — a share of something, sitting in a row, with no axis needed to say what it is.
+The ring opened to three quarters of a turn, with the notch at the bottom where a dial has always had it. One value, and the room a wide hole gives the number.
 
 ```tsx
-<View className="w-28">
-  <RingChart data={usage} strokeWidth={12} ringGap={5}>
-    {usage.map((ring, index) => (
-      <RingChart.Ring key={ring.label} index={index} />
-    ))}
-    <RingChart.Center formatValue={(value) => `${value}%`} />
+<RingChart data={[health]} size={208} startAngle={-135} endAngle={135} strokeWidth={18}>
+  <RingChart.Header title="Score" value="82 of 100" caption="Above the 75 the alerting is set at" />
+  <RingChart.Ring index={0} colorIndex={2} />
+  <RingChart.Center formatValue={(value) => `${value}`} />
+</RingChart>
+```
+
+### Segmented
+
+Ticks rather than an arc, for a target made of countable things. Twelve sessions, eight of them attended, and you can count them.
+
+```tsx
+<RingChart data={[sessions]} size={208} strokeWidth={16}>
+  <RingChart.Header title="Sessions attended" value="8 of 12" />
+  <RingChart.Ring index={0} segments={12} segmentGap={6} colorIndex={4} />
+  <RingChart.Center formatValue={(value) => `${value}`} />
+</RingChart>
+```
+
+### Separate dials
+
+Three charts rather than three rings. Concentric, the outer ring is longer than the inner one at the same percentage and the eye reads the length — so targets that are not read against each other are better off apart.
+
+```tsx
+{budgets.map((budget, index) => (
+  <RingChart key={budget.label} data={[budget]} size={92} strokeWidth={9} startAngle={-120} endAngle={120}>
+    <RingChart.Ring index={0} colorIndex={index + 1} />
+    <RingChart.Center formatValue={() => `${percentOf(budget)}%`} />
   </RingChart>
-</View>
+))}
 ```
 
 ## API Reference
@@ -155,6 +206,8 @@ The small end — a share of something, sitting in a row, with no axis needed to
 | `size` | `number` | — | Fixed diameter in points. Measured from the container when omitted. |
 | `strokeWidth` | `number` | `12` | Thickness of each ring. |
 | `ringGap` | `number` | `6` | Gap between one ring and the next. |
+| `startAngle` | `number` | `0` | Where the arcs begin, in degrees clockwise from twelve o'clock. `0` is the top, `90` the right-hand side. |
+| `endAngle` | `number` | `360` | Where they end, on the same clock. Leaving a turn's worth between the two gives a closed ring; anything less leaves a gap and reads as a gauge — `startAngle={-90} endAngle={90}` is the half circle over the top. |
 | `animationDuration` | `number` | `1100` | Milliseconds for the arcs to sweep in. |
 | `activeIndex` | `number` | — | Selected ring. Leave unset to let the chart track it. |
 | `onActiveIndexChange` | `(index: number) => void` | — | Fires with the selected ring, or `-1` when the selection is cleared. |
@@ -166,8 +219,10 @@ The small end — a share of something, sitting in a row, with no axis needed to
 | `index` | `number` | — | Which entry in `data` this ring draws. |
 | `color` | `string` | — | Explicit colour, overriding the datum's and the token. |
 | `colorIndex` | `SeriesColorIndex` | — | Which of the five chart tokens to take, when the datum names no colour. |
-| `lineCap` | `'round' \| 'butt'` | `'round'` | Rounded ends, or square ones. |
+| `lineCap` | `'round' \| 'butt'` | — | Rounded ends, or square ones. Defaults to round, and to square when the ring is segmented — a rounded cap on a tick as long as it is wide draws a lozenge rather than a tick. |
 | `trackOpacity` | `number` | `0.15` | Opacity of the track behind the arc. |
+| `segments` | `number` | — | Break the ring into this many ticks, lit one at a time as the value climbs. For a target made of countable things — eight of twelve sessions reads off ticks you can count, and off a smooth arc only as "about two thirds". |
+| `segmentGap` | `number` | `3` | Gap between one tick and the next, in points. |
 
 ### RingChart.Center
 
@@ -184,6 +239,17 @@ The small end — a share of something, sitting in a row, with no axis needed to
 | `className` | `string` | — |  |
 | `showValue` | `boolean` | — | Show each ring's percentage of its own target beside its name. |
 
+### RingChart.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | — | Small line above the value — what the chart is of. |
+| `value` | `string` | — | The readout. The largest thing on the card, and the first thing read. |
+| `caption` | `string` | — | One muted line under the value — a period, a comparison, a target. |
+| `labels` | `Record<string, string>` | — | Prettier names for the rings, keyed by their `label`. |
+| `legend` | `boolean` | `false` | Draw a swatch and a name per ring along the trailing edge. Prefer this to `RingChart.Legend` on a chart that has a header: that legend hangs off the bottom of the square, where it overlaps whatever is under the chart. |
+
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
@@ -197,6 +263,10 @@ A value past its target fills the ring and stops there. Going round twice would 
 ### What the centre shows
 
 The outermost ring, until one is selected. Not a total: the rings measure different things against different targets, so their values do not add up and their percentages do not average — a total in the middle would be a confident number about nothing. Pass a render function to `Center` when your rings *do* share a unit and a total is honest.
+
+### The header, and the card around it
+
+`RingChart.Header` belongs to the chart; the card's header belongs to the tray the chart sits in. The distinction is worth keeping: the header's value changes as a ring is selected, and its legend is the list the chart itself is holding. Pass the formatted value in rather than expecting it to be derived — there is no total to derive from targets that measure different things.
 
 ### Touch, not hover
 

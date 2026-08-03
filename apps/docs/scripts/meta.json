@@ -181,7 +181,7 @@
     "react native heatmap chart",
     {
       "addedIn": "0.14.0",
-      "updatedIn": "0.25.0"
+      "updatedIn": "0.40.0"
     }
   ],
   "input": [
@@ -313,9 +313,10 @@
   "ring-chart": [
     "RingChart",
     "Concentric arcs, each measured against its own target.",
-    "react native ring chart radial progress",
+    "react native ring chart radial progress gauge",
     {
-      "addedIn": "0.25.0"
+      "addedIn": "0.25.0",
+      "updatedIn": "0.40.0"
     }
   ],
   "scroll-canvas": [
