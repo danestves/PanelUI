@@ -761,6 +761,12 @@ export interface HeatmapXAxisProps {
    * derived. Return an empty string to leave the column unlabelled.
    */
   formatLabel?: (date: Date, column: number) => string;
+  /**
+   * Column labels, left to right. Overrides the month names — for a grid whose
+   * columns are not weeks, where there is no month to change and so nothing to
+   * emit a label on.
+   */
+  labels?: string[];
 }
 
 /**
@@ -768,13 +774,21 @@ export interface HeatmapXAxisProps {
  *
  * A label is emitted where the month changes rather than at a fixed interval,
  * because months are not the same length — spacing them evenly puts "Mar" over
- * a week in February.
+ * a week in February. A grid whose columns are not weeks has no such signal, so
+ * it passes `labels` and gets one over every column.
  */
-function HeatmapXAxis({ className, formatLabel }: HeatmapXAxisProps) {
+function HeatmapXAxis({ className, formatLabel, labels: given }: HeatmapXAxisProps) {
   const { data, grid } = useHeatmap('HeatmapChart.XAxis');
   const step = grid.size + grid.gap;
 
   const labels = useMemo(() => {
+    if (given) {
+      return given
+        .slice(0, data.length)
+        .map((label, column) => ({ column, label }))
+        .filter((entry) => entry.label);
+    }
+
     const out: { column: number; label: string }[] = [];
     let lastMonth = -1;
 
@@ -792,7 +806,7 @@ function HeatmapXAxis({ className, formatLabel }: HeatmapXAxisProps) {
     // collides with the next one. Drop it when it has no room.
     if (out.length > 1 && out[1]!.column - out[0]!.column < 3) out.shift();
     return out;
-  }, [data, formatLabel]);
+  }, [data, formatLabel, given]);
 
   return (
     <View className={cn('h-4', className)} style={{ width: grid.width }}>

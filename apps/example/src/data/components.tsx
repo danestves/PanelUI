@@ -75,6 +75,7 @@ import {
   HeartIcon,
   HeatmapChart,
   type HeatmapCell,
+  type HeatmapColumn,
   buildHeatmapCalendar,
   InfoIcon,
   Input,
@@ -5468,23 +5469,46 @@ function heatmapYear(days = 371, seed = 7) {
 const HEATMAP_YEAR = buildHeatmapCalendar(heatmapYear(), { weekStartDay: 1 });
 const HEATMAP_QUARTER = HEATMAP_YEAR.slice(-13);
 
+const HEATMAP_TOTAL = HEATMAP_YEAR.reduce(
+  (running, column) => running + column.bins.reduce((sum, cell) => sum + cell.count, 0),
+  0
+);
+
 /** A full year, scrolled sideways — 53 weeks do not fit on a phone. */
 function HeatmapContributionVersion() {
   const [active, setActive] = useState<HeatmapCell | null>(null);
 
   return (
-    <View className="flex-1 justify-center px-5">
-      <Card>
-        <Card.Header>
-          <Card.Title>Contributions</Card.Title>
-          <Card.Description>
-            {active
-              ? `${active.count} on ${active.date?.toDateString() ?? '—'}`
-              : 'Press and hold, then drag, to read a day.'}
-          </Card.Description>
-        </Card.Header>
-        <Card.Content>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Contributions</Frame.Title>
+          <Frame.Action>Hold to read</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          {/* The header is outside the horizontal scroller on purpose: it and
+              its ramp belong at the frame's width, not the grid's, or they
+              scroll away with the cells. */}
+          <HeatmapChart data={[]} className={CHART_HEADER}>
+            <HeatmapChart.Header
+              value={
+                active
+                  ? `${active.count}`
+                  : HEATMAP_TOTAL.toLocaleString()
+              }
+              caption={
+                active
+                  ? (active.date?.toDateString() ?? '—')
+                  : 'Contributions in the last year'
+              }
+              legend
+            />
+          </HeatmapChart>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerClassName="px-4 pb-4"
+          >
             <HeatmapChart
               data={HEATMAP_YEAR}
               weekStartDay={1}
@@ -5497,47 +5521,37 @@ function HeatmapContributionVersion() {
               <HeatmapChart.Tooltip />
             </HeatmapChart>
           </ScrollView>
-          <HeatmapLegendRow />
-        </Card.Content>
-      </Card>
+        </Frame.Panel>
+      </Frame>
     </View>
-  );
-}
-
-/**
- * The legend belongs under the chart at the *card's* width, not the scrolled
- * grid's, so it is its own one-cell chart rather than a child of the big one.
- */
-function HeatmapLegendRow() {
-  return (
-    <HeatmapChart data={[]} className="pt-1">
-      <HeatmapChart.Legend swatchSize={12} />
-    </HeatmapChart>
   );
 }
 
 /** A quarter, with the cells sized to the width they are given. */
 function HeatmapFillVersion() {
   return (
-    <View className="flex-1 justify-center px-5">
-      <Card>
-        <Card.Header>
-          <Card.Title>Last 13 weeks</Card.Title>
-          <Card.Description>
-            `layout="fill"` divides the width between the columns instead of
-            drawing them at a fixed size.
-          </Card.Description>
-        </Card.Header>
-        <Card.Content>
-          <HeatmapChart data={HEATMAP_QUARTER} layout="fill" weekStartDay={1} gap={4}>
-            <HeatmapChart.XAxis />
-            <HeatmapChart.YAxis />
-            <HeatmapChart.Cells cornerRadius={3} />
-            <HeatmapChart.Tooltip />
-            <HeatmapChart.Legend />
-          </HeatmapChart>
-        </Card.Content>
-      </Card>
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Last 13 weeks</Frame.Title>
+          <Frame.Action>layout=&quot;fill&quot;</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="p-4">
+            <HeatmapChart data={HEATMAP_QUARTER} layout="fill" weekStartDay={1} gap={4}>
+              <HeatmapChart.Header
+                title="Last 13 weeks"
+                caption="The width divided between the columns, rather than a fixed cell"
+              />
+              <HeatmapChart.XAxis />
+              <HeatmapChart.YAxis />
+              <HeatmapChart.Cells cornerRadius={3} />
+              <HeatmapChart.Tooltip />
+              <HeatmapChart.Legend />
+            </HeatmapChart>
+          </View>
+        </Frame.Panel>
+      </Frame>
     </View>
   );
 }
@@ -5547,17 +5561,24 @@ function HeatmapQuartersVersion() {
   const success = useCSSVariable('--color-success');
 
   return (
-    <View className="flex-1 justify-center px-5">
-      <Card>
-        <Card.Header>
-          <Card.Title>Deploys by quarter</Card.Title>
-          <Card.Description>
-            A rule every thirteen columns, and a ramp off one colour rather than
-            the chart token.
-          </Card.Description>
-        </Card.Header>
-        <Card.Content>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Deploys by quarter</Frame.Title>
+          <Frame.Action>Rules every 13</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <HeatmapChart data={[]} className={CHART_HEADER}>
+            <HeatmapChart.Header
+              title="Deploys"
+              caption="A ramp off one colour rather than the chart token"
+            />
+          </HeatmapChart>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerClassName="px-4 pb-4"
+          >
             <HeatmapChart
               data={HEATMAP_YEAR}
               weekStartDay={1}
@@ -5571,8 +5592,84 @@ function HeatmapQuartersVersion() {
               <HeatmapChart.Tooltip />
             </HeatmapChart>
           </ScrollView>
-        </Card.Content>
-      </Card>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+const HOURS = ['00', '03', '06', '09', '12', '15', '18', '21'];
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/**
+ * A week by time of day rather than a year by date — seven columns of eight
+ * three-hour bins, seeded the same way the year is so the shape holds still.
+ */
+function punchcardWeek(): HeatmapColumn[] {
+  let state = 19;
+  const random = () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
+
+  return WEEKDAYS.map((_, day) => ({
+    bin: day,
+    bins: HOURS.map((_hour, slot) => {
+      const roll = random();
+      const weekend = day >= 5;
+      // Office hours on weekdays, a quiet evening bump at the weekend, and
+      // nothing much overnight either way.
+      const working = slot >= 3 && slot <= 6;
+      const peak = weekend ? (slot >= 5 && slot <= 6 ? 0.5 : 0.12) : working ? 1 : 0.2;
+      return { bin: slot, count: Math.floor(roll * 20 * peak) };
+    }),
+  }));
+}
+
+const HEATMAP_PUNCHCARD = punchcardWeek();
+
+/**
+ * The grid with something other than a calendar in it — rows are times of day,
+ * columns are weekdays. "When is this busy" is a question the year grid cannot
+ * answer, because it has already spent its rows on the days of the week.
+ */
+function HeatmapPunchcardVersion() {
+  const [active, setActive] = useState<HeatmapCell | null>(null);
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Support load</Frame.Title>
+          <Frame.Action>By hour</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="p-4">
+            <HeatmapChart
+              data={HEATMAP_PUNCHCARD}
+              layout="fill"
+              rows={HOURS.length}
+              gap={4}
+              onActiveCellChange={setActive}
+            >
+              <HeatmapChart.Header
+                title="Tickets opened"
+                value={active ? `${active.count}` : '9am – 6pm'}
+                caption={
+                  active
+                    ? `${WEEKDAYS[active.column] ?? ''} at ${HOURS[active.row] ?? ''}:00`
+                    : 'Where the week actually lands'
+                }
+                legend
+              />
+              <HeatmapChart.XAxis labels={WEEKDAYS} />
+              <HeatmapChart.YAxis labels={HOURS} tickFilter="all" width={24} />
+              <HeatmapChart.Cells cornerRadius={3} />
+              <HeatmapChart.Tooltip />
+            </HeatmapChart>
+          </View>
+        </Frame.Panel>
+      </Frame>
     </View>
   );
 }
@@ -10012,6 +10109,13 @@ export const COMPONENTS: ComponentEntry[] = [
         fullPage: true,
         description: 'Rules grouping the columns, and a ramp off a colour of your own.',
         render: () => <HeatmapQuartersVersion />,
+      },
+      {
+        label: 'Punchcard',
+        id: 'punchcard',
+        fullPage: true,
+        description: 'Rows that are hours rather than days — when the week actually lands.',
+        render: () => <HeatmapPunchcardVersion />,
       },
     ],
   },
