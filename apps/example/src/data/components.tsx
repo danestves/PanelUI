@@ -7919,6 +7919,13 @@ function AreaChartOverlaidVersion() {
 const percentOf = (ring: RingDatum) =>
   ring.maxValue > 0 ? Math.round((ring.value / ring.maxValue) * 100) : 0;
 
+/**
+ * Side of the plot on the ring versions. A ring is square, so left to take the
+ * width it stands twice as tall as the bar and area plots beside it at
+ * `aspectRatio={2}` — this is those, and a little over.
+ */
+const RING_SIZE = 208;
+
 /** Three targets, each read against its own. */
 function RingChartGoalsVersion() {
   const [active, setActive] = useState(-1);
@@ -7932,10 +7939,14 @@ function RingChartGoalsVersion() {
           <Frame.Action>Tap a ring</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
+          {/* Sized rather than measured. Left to take the width the square
+              would be twice the height the other charts stand at. */}
           <RingChart
             data={GOALS}
-            strokeWidth={18}
+            size={RING_SIZE}
+            strokeWidth={16}
             ringGap={6}
+            className="pb-4"
             activeIndex={active}
             onActiveIndexChange={setActive}
           >
@@ -7963,52 +7974,6 @@ function RingChartGoalsVersion() {
   );
 }
 
-/** The small end — a ring as one element in a row, not the whole screen. */
-function RingChartCompactVersion() {
-  const usage: RingDatum[] = useMemo(
-    () => [
-      { label: 'Storage', value: 68, maxValue: 100 },
-      { label: 'Bandwidth', value: 41, maxValue: 100 },
-    ],
-    []
-  );
-
-  return (
-    <View className="flex-1 justify-center p-4">
-      <Frame className="w-full">
-        <Frame.Header>
-          <Frame.Title>Plan usage</Frame.Title>
-          <Frame.Action>Fair use</Frame.Action>
-        </Frame.Header>
-        <Frame.Panel>
-          {/* Sized rather than measured: at this end the ring is one element in
-              a row, so it must not take the width the way a plot does. */}
-          <View className="flex-row items-center gap-5 p-4">
-            <RingChart data={usage} size={116} strokeWidth={11} ringGap={5}>
-              {usage.map((ring, index) => (
-                <RingChart.Ring key={ring.label} index={index} />
-              ))}
-              <RingChart.Center formatValue={(value) => `${value}%`} />
-            </RingChart>
-            <View className="flex-1 gap-2.5">
-              {usage.map((ring) => (
-                <View key={ring.label} className="gap-0.5">
-                  <Text size="sm" weight="medium">
-                    {ring.label}
-                  </Text>
-                  <Text size="xs" muted>
-                    {ring.value}% of your allowance
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </Frame.Panel>
-      </Frame>
-    </View>
-  );
-}
-
 const HEALTH: RingDatum[] = [{ label: 'Health', value: 82, maxValue: 100 }];
 
 /**
@@ -8026,10 +7991,11 @@ function RingChartGaugeVersion() {
         <Frame.Panel>
           <RingChart
             data={HEALTH}
+            size={RING_SIZE}
             startAngle={-135}
             endAngle={135}
-            strokeWidth={22}
-            className="pb-2"
+            strokeWidth={18}
+            className="pb-4"
           >
             <RingChart.Header
               className={CHART_HEADER}
@@ -8065,7 +8031,7 @@ function RingChartSegmentedVersion() {
           <Frame.Action>Spring cohort</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
-          <RingChart data={COURSE_SESSIONS} strokeWidth={20}>
+          <RingChart data={COURSE_SESSIONS} size={RING_SIZE} strokeWidth={16} className="pb-4">
             <RingChart.Header
               className={CHART_HEADER}
               title="Sessions attended"
@@ -11746,13 +11712,6 @@ export const COMPONENTS: ComponentEntry[] = [
         fullPage: true,
         description: 'Three targets, each read against its own rather than each other.',
         render: () => <RingChartGoalsVersion />,
-      },
-      {
-        label: 'In a row',
-        id: 'compact',
-        fullPage: true,
-        description: 'The small end — a share of something, with no axis needed.',
-        render: () => <RingChartCompactVersion />,
       },
       {
         label: 'Gauge',

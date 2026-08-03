@@ -304,10 +304,16 @@ const RingChartRoot = forwardRef<RingChartHandle, RingChartProps>(function RingC
        */}
       <View {...props} style={props.style} className={cn('w-full', className)}>
         {header}
+        {/*
+         * Given a size the plot is that square and sits in the middle of
+         * whatever it was handed; left to measure, it takes the width and is
+         * as tall as it is wide. `size` is the usual answer inside a card —
+         * a full-width square is twice the height the other charts take.
+         */}
         <View
           onLayout={onLayout}
           style={size ? { width: size, height: size } : { aspectRatio: 1 }}
-          className={cn('items-center justify-center', !size && 'w-full')}
+          className={cn('items-center justify-center', size ? 'self-center' : 'w-full')}
         >
           {box > 0 ? (
             <>
