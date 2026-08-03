@@ -170,10 +170,29 @@ wrapper around it.
 - **When everything the user asked for is finished**, in this order:
   1. `npm run typecheck` and `npm run build` — both must pass.
   2. Bump the version in `packages/panelui/package.json` (minor for new components/tokens, patch
-     for fixes) and commit it.
-  3. `git push` to `panel-ui/PanelUI`.
-  4. **Remind the user to run `npm publish`.** Never publish to npm autonomously — that is the
-     user's call, always.
+     for fixes). Bump it **before** `npm run docs:generate`, because `gen.mjs` compares the library
+     version against `addedIn`/`updatedIn` to decide which sidebar dots to emit.
+  3. **Write the release's entry in `CHANGELOG.md`** (see below) and commit it with the bump.
+  4. `git push` to `panel-ui/PanelUI`.
+  5. **Remind the user to run `npm publish`**, and to tag and cut the GitHub release from the
+     changelog entry. Never publish, tag or release autonomously — that is the user's call, always.
+
+### Release notes
+
+**Every release gets a `CHANGELOG.md` entry, patches included**, written in the same commit as the
+version bump. It is the only record of what changed: the tags are stale and the release commits
+touch nothing but the version.
+
+- Newest first, `## [X.Y.Z] — YYYY-MM-DD`, grouped **Added / Changed / Fixed / Docs**. Omit a
+  group that has nothing in it.
+- Source it from the Conventional Commit subjects since the previous `chore(release):` commit —
+  `git log --oneline <previous-release-commit>..HEAD`. Those subjects are already written to be
+  read, so the entry is a regrouping rather than a rewrite.
+- Write it for someone deciding whether to upgrade: what they can now do, what moved, what stopped
+  being wrong. Say *why* a change was made where the reason is not obvious from the what — a
+  changelog that only lists prop names is a diff with extra steps.
+- The same rule as everywhere else applies: **never name a reference library**, and never credit
+  one for a component's design.
 
 ## "Native" means Liquid Glass on iOS
 
