@@ -267,6 +267,7 @@ export {
   type TableCellProps,
   type TableCaptionProps,
   type TableEmptyProps,
+  type TableColumn,
   type TableSortDirection,
 } from './components/table';
 export {

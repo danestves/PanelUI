@@ -4,28 +4,37 @@
  * React Native has no table layout: no `<table>`, no column model, nothing that
  * makes the third cell of one row the same width as the third cell of the next.
  * A table here is therefore a stack of flex rows, and the columns exist only
- * because every row divides its width the same way. That is the one rule the
- * component cannot enforce for you — `flex` and `width` on a `Table.Head` and
- * on the `Table.Cell` beneath it have to agree, or the column drifts.
+ * because every row divides its width the same way.
+ *
+ * `columns` is the column model that closes that gap. Give the root one entry
+ * per column and every `Table.Head` and `Table.Cell` takes its `flex`, `width`
+ * and `align` from the entry at its own position in the row — so a column is
+ * described once, at the top, and a row is just its contents. Without it the
+ * sizing has to be repeated on every head and every cell, and the column drifts
+ * the moment two of them disagree.
+ *
+ * ```tsx
+ * <Table columns={[{ flex: 2 }, { align: 'end' }]}>
+ * ```
+ *
+ * Props set on a head or a cell still win, for the one row that has to differ.
  *
  * Everything else it does own: the hairlines between rows and the missing one
  * under the last, the muted header and footer, the striping, the alignment of a
  * numeric column, and the sort arrow that turns over rather than swapping.
  *
  * ```tsx
- * <Table variant="outline">
+ * <Table variant="outline" columns={[{ flex: 2 }, { align: 'end' }]}>
  *   <Table.Header>
  *     <Table.Row>
- *       <Table.Head flex={2}>Invoice</Table.Head>
- *       <Table.Head align="end" sortDirection="desc" onPress={toggleSort}>
- *         Amount
- *       </Table.Head>
+ *       <Table.Head>Invoice</Table.Head>
+ *       <Table.Head sortDirection="desc" onPress={toggleSort}>Amount</Table.Head>
  *     </Table.Row>
  *   </Table.Header>
  *   <Table.Body>
  *     <Table.Row>
- *       <Table.Cell flex={2}>INV-001</Table.Cell>
- *       <Table.Cell align="end">$250.00</Table.Cell>
+ *       <Table.Cell>INV-001</Table.Cell>
+ *       <Table.Cell>$250.00</Table.Cell>
  *     </Table.Row>
  *   </Table.Body>
  * </Table>
@@ -125,14 +134,81 @@ const alignment: Record<CellAlign, string> = {
   end: 'justify-end',
 };
 
+export interface TableColumn {
+  /**
+   * Share of the leftover width, relative to the other columns. Defaults to 1,
+   * so columns divide the row evenly.
+   */
+  flex?: number;
+  /**
+   * Fixed width in pixels, for a column that must not move — an icon, a state
+   * dot. Wins over `flex`.
+   */
+  width?: number;
+  /**
+   * Which edge the column's content sits against. Use `end` for numbers: a
+   * money column reads as a column only when the digits line up.
+   */
+  align?: CellAlign;
+}
+
 /**
- * Density and striping are set once on the root; every part below reads them
- * from here rather than being told again per row and per cell.
+ * Density, striping and the column model are set once on the root; every part
+ * below reads them from here rather than being told again per row and per cell.
  */
-const TableContext = createContext<{ size: TableSize; striped: boolean }>({
+const TableContext = createContext<{
+  size: TableSize;
+  striped: boolean;
+  columns?: TableColumn[];
+}>({
   size: 'default',
   striped: false,
 });
+
+/**
+ * Which column a head or a cell is in — its position among its row's children,
+ * counted by `Table.Row`. Only meaningful under a `columns` root, and the
+ * counting is skipped entirely without one, so a table that sizes its cells by
+ * hand pays nothing for a model it is not using.
+ */
+const TableColumnContext = createContext<number>(-1);
+
+/**
+ * Resolves a head's or a cell's sizing against the column it sits in. What the
+ * part was given always wins: the model is the default for the column, not a
+ * rule about it, so the one row that has to differ still can.
+ */
+function useColumn(own: TableColumn): Required<Pick<TableColumn, 'align'>> & TableColumn {
+  const { columns } = useContext(TableContext);
+  const index = useContext(TableColumnContext);
+  const column = index >= 0 ? columns?.[index] : undefined;
+
+  return {
+    flex: own.flex ?? column?.flex,
+    width: own.width ?? column?.width,
+    align: own.align ?? column?.align ?? 'start',
+  };
+}
+
+/**
+ * Numbers a row's children so each one knows its column. Runs only when the
+ * root carries a `columns` model — otherwise the children are handed straight
+ * through, with no extra provider per cell on every row of the table.
+ */
+function useRowCells(children: ReactNode, enabled: boolean): ReactNode {
+  return useMemo(() => {
+    const cells = textChildren(children);
+    if (!enabled) return cells;
+
+    return Children.map(cells, (child, index) =>
+      isValidElement(child) ? (
+        <TableColumnContext.Provider value={index}>{child}</TableColumnContext.Provider>
+      ) : (
+        child
+      )
+    );
+  }, [children, enabled]);
+}
 
 /**
  * Which band of the table a row is in, and where in that band. A row needs all
@@ -162,13 +238,25 @@ export interface TableProps extends ViewProps, VariantProps<typeof tableVariants
    * for a short table, where the stripes are louder than the data.
    */
   striped?: boolean;
+  /**
+   * The column model: one entry per column, in order. Every `Table.Head` and
+   * `Table.Cell` takes its `flex`, `width` and `align` from the entry at its
+   * own position in the row, so a column is described once instead of on every
+   * row. Anything set on a head or a cell still wins.
+   *
+   * Declare it outside render — a new array each frame renumbers every cell.
+   */
+  columns?: TableColumn[];
   children?: ReactNode;
 }
 
 const TableRoot = forwardRef<View, TableProps>(
-  ({ className, variant, size = 'default', striped = false, children, ...props }, ref) => {
+  (
+    { className, variant, size = 'default', striped = false, columns, children, ...props },
+    ref
+  ) => {
     const { root } = tableVariants({ variant, size });
-    const context = useMemo(() => ({ size, striped }), [size, striped]);
+    const context = useMemo(() => ({ size, striped, columns }), [size, striped, columns]);
 
     return (
       <TableContext.Provider value={context}>
@@ -296,9 +384,10 @@ export interface TableRowProps
  */
 const TableRow = forwardRef<View, TableRowProps>(
   ({ className, selected, disabled, index, last, children, onPress, ...props }, ref) => {
-    const { size, striped } = useContext(TableContext);
+    const { size, striped, columns } = useContext(TableContext);
     const row = useContext(TableRowContext);
     const { row: rowClass } = tableVariants({ size });
+    const cells = useRowCells(children, !!columns);
 
     const position = index ?? row.index;
     const isLast = last ?? row.last;
@@ -330,7 +419,7 @@ const TableRow = forwardRef<View, TableRowProps>(
           className={classes}
           {...(props as ViewProps)}
         >
-          {textChildren(children)}
+          {cells}
         </View>
       );
     }
@@ -347,7 +436,7 @@ const TableRow = forwardRef<View, TableRowProps>(
         className={classes}
         {...props}
       >
-        {textChildren(children)}
+        {cells}
       </AnimatedPressable>
     );
   }
@@ -368,13 +457,14 @@ export interface TableHeadProps extends Omit<ViewProps, 'children'> {
   className?: string;
   /**
    * Share of the leftover width, relative to the other cells in the row.
-   * Defaults to 1, so columns divide the row evenly. Must match the `flex` on
-   * the cells beneath it.
+   * Defaults to 1, so columns divide the row evenly. Without a `columns` model
+   * on the root it must match the `flex` on the cells beneath it.
    */
   flex?: number;
   /**
    * Fixed width in pixels, for a column that must not move — an icon, a state
-   * dot. Must match the `width` on the cells beneath it.
+   * dot. Without a `columns` model on the root it must match the `width` on the
+   * cells beneath it.
    */
   width?: number;
   /**
@@ -415,12 +505,12 @@ const TableHead = forwardRef<View, TableHeadProps>(
     {
       className,
       labelClassName,
-      align = 'start',
+      align: ownAlign,
       sortable,
       sortDirection,
       onPress,
-      flex,
-      width,
+      flex: ownFlex,
+      width: ownWidth,
       children,
       style,
       ...props
@@ -428,6 +518,11 @@ const TableHead = forwardRef<View, TableHeadProps>(
     ref
   ) => {
     const { size } = useContext(TableContext);
+    const { flex, width, align } = useColumn({
+      flex: ownFlex,
+      width: ownWidth,
+      align: ownAlign,
+    });
     const { head, headLabel } = tableVariants({ size });
     const arrowColor = useCSSVariable('--color-muted-foreground');
     const activeArrowColor = useCSSVariable('--color-foreground');
@@ -528,15 +623,19 @@ export interface TableCellProps extends ViewProps {
   className?: string;
   /**
    * Share of the leftover width, relative to the other cells in the row.
-   * Defaults to 1. Must match the `flex` on the head above it.
+   * Defaults to 1. Without a `columns` model on the root it must match the
+   * `flex` on the head above it.
    */
   flex?: number;
   /**
-   * Fixed width in pixels, for a column that must not move. Must match the
-   * `width` on the head above it.
+   * Fixed width in pixels, for a column that must not move. Without a `columns`
+   * model on the root it must match the `width` on the head above it.
    */
   width?: number;
-  /** Which edge the cell's content sits against. Match the head above it. */
+  /**
+   * Which edge the cell's content sits against. Without a `columns` model on
+   * the root, match the head above it.
+   */
   align?: CellAlign;
   /** Styles the cell's text. */
   labelClassName?: string;
@@ -550,10 +649,24 @@ export interface TableCellProps extends ViewProps {
  */
 const TableCell = forwardRef<View, TableCellProps>(
   (
-    { className, labelClassName, align = 'start', flex, width, children, style, ...props },
+    {
+      className,
+      labelClassName,
+      align: ownAlign,
+      flex: ownFlex,
+      width: ownWidth,
+      children,
+      style,
+      ...props
+    },
     ref
   ) => {
     const { size } = useContext(TableContext);
+    const { flex, width, align } = useColumn({
+      flex: ownFlex,
+      width: ownWidth,
+      align: ownAlign,
+    });
     const { cell, cellLabel } = tableVariants({ size });
 
     return (
@@ -635,6 +748,8 @@ export interface TableFrameProps extends Omit<ViewProps, 'children'> {
   size?: TableSize;
   /** Tint every other body row, as on `Table`. */
   striped?: boolean;
+  /** The column model, as on `Table`. */
+  columns?: TableColumn[];
   children?: ReactNode;
 }
 
@@ -674,12 +789,13 @@ const TableFrame = forwardRef<View, TableFrameProps>(
       description,
       size = 'default',
       striped = false,
+      columns,
       children,
       ...props
     },
     ref
   ) => {
-    const context = useMemo(() => ({ size, striped }), [size, striped]);
+    const context = useMemo(() => ({ size, striped, columns }), [size, striped, columns]);
 
     const { heading, body } = useMemo(() => {
       let found: ReactElement<TableHeaderProps> | null = null;
