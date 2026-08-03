@@ -218,7 +218,8 @@
     "Paged navigation over a long result set.",
     "react native pagination component",
     {
-      "addedIn": "0.39.0"
+      "addedIn": "0.39.0",
+      "updatedIn": "0.41.0"
     }
   ],
   "item": [

@@ -12660,8 +12660,14 @@ export const COMPONENTS: ComponentEntry[] = [
         render: () => <PaginationDemo count={240} />,
       },
       {
+        // Nine targets is as wide as a run gets on a phone. Two boundaries and
+        // two arriving arrows put it past the screen, and a centred row that
+        // does not fit hangs off both ends — so this trades the arrows for the
+        // numbers, which is what a wider run was for.
         label: 'Wider run',
-        render: () => <PaginationDemo count={240} siblings={2} boundaries={2} size="sm" />,
+        render: () => (
+          <PaginationDemo count={240} siblings={2} boundaries={1} size="sm" controls={false} />
+        ),
       },
       {
         label: 'Numbers only',

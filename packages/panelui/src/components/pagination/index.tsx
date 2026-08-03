@@ -65,9 +65,10 @@ export type PaginationSize = 'sm' | 'default';
 /**
  * What the small size gives back as padding. 44pt is the smallest target a
  * finger reliably hits, and the row is allowed to get tighter than that only
- * because the reach is restored outside the paint.
+ * because the reach is restored outside the paint — so this is exactly the
+ * difference between the small target's 32pt and that 44.
  */
-const SMALL_HIT_SLOP = { top: 4, bottom: 4, left: 4, right: 4 } as const;
+const SMALL_HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 } as const;
 
 const paginationVariants = tv({
   slots: {
@@ -91,9 +92,9 @@ const paginationVariants = tv({
       },
       sm: {
         list: 'gap-0.5',
-        item: 'h-9 min-w-9 px-1',
+        item: 'h-8 min-w-8 px-1',
         itemLabel: 'text-xs',
-        ellipsis: 'h-9 w-9',
+        ellipsis: 'h-8 w-8',
         status: 'text-xs',
         summary: 'text-xs',
       },
@@ -304,7 +305,18 @@ const PaginationRoot = forwardRef<View, PaginationProps>(
             // With nothing on the leading edge the controls are the whole row
             // and centre in it; with something there they part to the two ends,
             // which is the shape a table footer wants.
-            className: cn(children ? 'justify-between gap-3' : 'justify-center', className),
+            //
+            // Clipped, because the run is a fixed number of targets and a
+            // narrow enough container cannot hold it. Overflowing, a centred
+            // row hangs the same distance past both edges, and the leading
+            // number ends up half off the screen with nothing to say why.
+            // Inside its own bounds the shortfall at least looks deliberate,
+            // and `siblings`/`boundaries` are the knobs that fix it.
+            className: cn(
+              'overflow-hidden',
+              children ? 'justify-between gap-3' : 'justify-center',
+              className
+            ),
           })}
           {...props}
         >
@@ -312,7 +324,7 @@ const PaginationRoot = forwardRef<View, PaginationProps>(
             <PaginationStatus>{text}</PaginationStatus>
           ))}
 
-          <View className={list()}>
+          <View className={list({ className: 'max-w-full' })}>
             {controls ? <PaginationPrevious label={variant === 'simple'} /> : null}
 
             {variant === 'numbers'
