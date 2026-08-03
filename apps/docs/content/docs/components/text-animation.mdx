@@ -6,6 +6,14 @@ status: new
 
 Five ways a piece of text or a number arrives: typed, rotated, counted, rolled, or scrolled past on a scale. They are one component because they are one idea — a value that wants to be seen changing — and because they share every prop that says *how*. Put `duration`, `delay`, `loop` or `enabled` on the root and they become the defaults for everything inside it, so a headline with three of these in it is configured once rather than three times. Each part also works on its own, with no root at all.
 
+<PreviewVideo
+  src="/previews/text-animation.mp4"
+  poster="/previews/text-animation-poster.jpg"
+  alt="The TextAnimation component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 TextAnimation ships with the library — no separate install.
@@ -57,6 +65,14 @@ The caret is solid while characters are arriving and blinks while they are not, 
 
 Give the line a height. `Typing` reserves no space, so a line that grows as it types pushes everything under it down the screen on every keystroke.
 
+<PreviewVideo
+  src="/previews/text-animation-typed-with-a-caret.mp4"
+  poster="/previews/text-animation-typed-with-a-caret-poster.jpg"
+  alt="TextAnimation — Typed, with a caret."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <View className="h-16 justify-center">
   <TextAnimation.Typing
@@ -72,6 +88,14 @@ Give the line a height. `Typing` reserves no space, so a line that grows as it t
 
 An array types each string, holds it for `hold`, erases it and starts the next. `loop` sends it back to the first rather than stopping on the last.
 
+<PreviewVideo
+  src="/previews/text-animation-a-cycle-of-phrases.mp4"
+  poster="/previews/text-animation-a-cycle-of-phrases-poster.jpg"
+  alt="TextAnimation — A cycle of phrases."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <TextAnimation.Typing
   text={['fast by default', 'native where it counts', 'yours to change']}
@@ -84,6 +108,14 @@ An array types each string, holds it for `hold`, erases it and starts the next. 
 
 The box is as tall as the tallest phrase rather than as tall as the current one — every phrase is laid out and all but one is hidden, so the line above it does not jump each time the words change.
 
+<PreviewVideo
+  src="/previews/text-animation-one-word-rotating-in-a-sentence.mp4"
+  poster="/previews/text-animation-one-word-rotating-in-a-sentence-poster.jpg"
+  alt="TextAnimation — One word rotating in a sentence."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <View className="flex-row items-center gap-2">
   <Text size="xl" weight="semibold">Built for</Text>
@@ -95,6 +127,14 @@ The box is as tall as the tallest phrase rather than as tall as the current one 
 
 `formatOptions` is passed straight to `Intl.NumberFormat`, so a currency, a percentage or grouped thousands cost a prop rather than a helper. On an engine whose `Intl` cannot do it, the number falls back to a plain fixed-point string instead of throwing.
 
+<PreviewVideo
+  src="/previews/text-animation-a-counter-and-a-formatted-one.mp4"
+  poster="/previews/text-animation-a-counter-and-a-formatted-one-poster.jpg"
+  alt="TextAnimation — A counter, and a formatted one."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <TextAnimation.Counting value={2048} size="3xl" weight="semibold" />
 
@@ -105,9 +145,40 @@ The box is as tall as the tallest phrase rather than as tall as the current one 
 />
 ```
 
+### An odometer
+
+`Sliding` animates whenever the value it is handed changes, so it is driven by state rather than by a timer. Each digit is its own column of ten and rolls only if it has to — add 137 to 1,024 and the hundreds column travels while the thousands sits still, which is the whole reason it reads as a counter rather than as a number being replaced.
+
+<PreviewVideo
+  src="/previews/text-animation-an-odometer.mp4"
+  poster="/previews/text-animation-an-odometer-poster.jpg"
+  alt="TextAnimation — An odometer."
+  width={720}
+  height={1560}
+/>
+
+```tsx
+const [total, setTotal] = useState(1024);
+
+<TextAnimation.Sliding
+  value={total}
+  thousandSeparator=","
+  size="3xl"
+  weight="semibold"
+/>
+```
+
 ### A price that rolls when the plan changes
 
 `Sliding` animates whenever the value it is given changes, so it is driven by state rather than by a timer — which is the case it is for. The currency mark and the unit sit beside it as ordinary text, because neither of them is rolling.
+
+<PreviewVideo
+  src="/previews/text-animation-a-price-that-rolls-when-the-plan-changes.mp4"
+  poster="/previews/text-animation-a-price-that-rolls-when-the-plan-changes-poster.jpg"
+  alt="TextAnimation — A price that rolls when the plan changes."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const [price, setPrice] = useState(24.99);
@@ -123,6 +194,14 @@ const [price, setPrice] = useState(24.99);
 
 Two counters under one root, so the timing is written once. A part that wants something else says so itself and wins.
 
+<PreviewVideo
+  src="/previews/text-animation-sharing-one-configuration.mp4"
+  poster="/previews/text-animation-sharing-one-configuration-poster.jpg"
+  alt="TextAnimation — Sharing one configuration."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <TextAnimation duration={900} delay={200} className="gap-2">
   <TextAnimation.Counting value={48} size="2xl" weight="semibold" />
@@ -136,6 +215,14 @@ Two counters under one root, so the timing is written once. A part that wants so
 `Scrolling` is for a number chosen from a range rather than one that simply changed, and the values either side of the window are the range. `highlight` puts a band behind the one it lands on.
 
 The edges fade into whatever is behind them, and that has to be said out loud: the fade is painted, not masked, so it is only the right colour if it is given the right colour. `fadeColor` defaults to `--color-background`; inside a card, pass `--color-card`, and on a surface that is not one flat colour pass `false` and turn it off.
+
+<PreviewVideo
+  src="/previews/text-animation-a-value-picked-from-a-scale.mp4"
+  poster="/previews/text-animation-a-value-picked-from-a-scale-poster.jpg"
+  alt="TextAnimation — A value picked from a scale."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <TextAnimation.Scrolling

@@ -167,8 +167,7 @@
     "react native node graph flow diagram",
     {
       "addedIn": "0.19.0",
-      "updatedIn": "0.21.0",
-      "beta": true
+      "updatedIn": "0.21.0"
     }
   ],
   "frame": [
@@ -465,8 +464,7 @@
     "A time of day, as a wheel, a clock or a swipeable scale.",
     "react native time picker",
     {
-      "addedIn": "0.36.0",
-      "beta": true
+      "addedIn": "0.36.0"
     }
   ],
   "timeline": [

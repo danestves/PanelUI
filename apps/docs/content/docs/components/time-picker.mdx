@@ -1,7 +1,6 @@
 ---
 title: TimePicker
 description: A time of day, as a wheel, a clock or a swipeable scale.
-status: beta
 ---
 
 A time of day behind a trigger, in one of three faces.
@@ -11,6 +10,14 @@ The value is `{ hour, minute }` on a 24-hour clock whatever the face shows. A 12
 The three layouts exist because “pick a time” is three different tasks. `wheel` is the precise one — any minute in the day is two or three flicks away. `clock` picks a *slot* rather than a time, and its face answers “morning or evening?” faster than reading digits. `ruler` is the coarse one, and the only one that reads at arm's length, which makes it the one for a sheet with a thumb on it.
 
 All three produce the same value and take the same props, so swapping between them is a one-word change.
+
+<PreviewVideo
+  src="/previews/time-picker.mp4"
+  poster="/previews/time-picker-poster.jpg"
+  alt="The TimePicker component, running in the example app."
+  width={720}
+  height={1560}
+/>
 
 ## Installation
 
@@ -49,6 +56,14 @@ const [time, setTime] = useState<TimeValue>();
 ### A time
 
 The trigger reads back the chosen time and falls back to the placeholder. Nothing chosen yet means the wheel opens near the current hour rather than at midnight — an unset picker still has to open somewhere plausible.
+
+<PreviewVideo
+  src="/previews/time-picker-a-time.mp4"
+  poster="/previews/time-picker-a-time-poster.jpg"
+  alt="TimePicker — A time."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const [time, setTime] = useState<TimeValue>();
@@ -90,6 +105,14 @@ A `minuteStep` turns the wheel into a list of the times you actually offer. Half
 
 A face beside a list of times. The hands sweep to the selection rather than jumping, because the face’s whole job is to say *when in the day* the highlighted row is — and a hand that jumps gives that away one row at a time.
 
+<PreviewVideo
+  src="/previews/time-picker-the-clock-face.mp4"
+  poster="/previews/time-picker-the-clock-face-poster.jpg"
+  alt="TimePicker — The clock face."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <TimePicker layout="clock" value={time} onValueChange={setTime} />
 ```
@@ -98,6 +121,14 @@ A face beside a list of times. The hands sweep to the selection rather than jump
 
 One large readout over a scale you swipe. It is the layout that reads at arm's length, so it is the one for a sheet — where the panel takes the full width and the Done button with it, because a sheet's outside is only the strip above it.
 
+<PreviewVideo
+  src="/previews/time-picker-the-ruler-in-a-sheet.mp4"
+  poster="/previews/time-picker-the-ruler-in-a-sheet-poster.jpg"
+  alt="TimePicker — The ruler, in a sheet."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <TimePicker
   layout="ruler"
@@ -105,6 +136,25 @@ One large readout over a scale you swipe. It is the layout that reads at arm's l
   value={time}
   onValueChange={setTime}
 />
+```
+
+### The four presentations
+
+`presentation` decides where the picker opens, and the choice is about how much of the screen the answer is worth. `popover` keeps the field in view and is the default; `dialog` takes the middle of the screen for a choice that is the whole point of the step; `bottom-sheet` puts it under the thumb, which is what a scale you swipe wants; and `inline` opens nothing at all, for a picker that is part of a form rather than behind it.
+
+<PreviewVideo
+  src="/previews/time-picker-the-four-presentations.mp4"
+  poster="/previews/time-picker-the-four-presentations-poster.jpg"
+  alt="TimePicker — The four presentations."
+  width={720}
+  height={1560}
+/>
+
+```tsx
+<TimePicker presentation="popover" value={time} onValueChange={setTime} />
+<TimePicker presentation="dialog" … />
+<TimePicker presentation="bottom-sheet" … />
+<TimePicker presentation="inline" … />
 ```
 
 ### In a dialog
@@ -118,6 +168,14 @@ The same panel over a frosted screen. Worth it when the time *is* the decision o
 ### Inline, inside a Frame
 
 `inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own. The toggle goes outside the card: it chooses *which* time the card is editing, which is a decision about the card rather than a control inside it.
+
+<PreviewVideo
+  src="/previews/time-picker-inline-inside-a-frame.mp4"
+  poster="/previews/time-picker-inline-inside-a-frame-poster.jpg"
+  alt="TimePicker — Inline, inside a Frame."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const [edge, setEdge] = useState('start');

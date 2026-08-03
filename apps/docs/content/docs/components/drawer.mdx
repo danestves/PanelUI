@@ -6,6 +6,14 @@ status: updated
 
 A panel that comes in from an edge of the screen and covers the app until it is dismissed. Mounts through a portal, takes the Android back button, and unmounts after its exit animation.
 
+<PreviewVideo
+  src="/previews/drawer.mp4"
+  poster="/previews/drawer-poster.jpg"
+  alt="The Drawer component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Drawer ships with the library — no separate install.
@@ -73,6 +81,14 @@ npx panelui-cli@latest add drawer
 
 The default: docked to the start edge, sized to `md`, with a header, a scrolling body and a footer.
 
+<PreviewVideo
+  src="/previews/drawer-navigation-drawer.mp4"
+  poster="/previews/drawer-navigation-drawer-poster.jpg"
+  alt="Drawer — Navigation drawer."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Drawer>
   <Drawer.Trigger>
@@ -101,6 +117,14 @@ The default: docked to the start edge, sized to `md`, with a header, a scrolling
 ### From the end edge
 
 `side="end"` docks the drawer to the edge text runs toward — the right in a left-to-right app, the left in a right-to-left one. `closeSide="end"` then keeps the ✕ in the outer corner rather than the inner one an end drawer takes by default, so the panel is always closed from the same place.
+
+<PreviewVideo
+  src="/previews/drawer-from-the-end-edge.mp4"
+  poster="/previews/drawer-from-the-end-edge-poster.jpg"
+  alt="Drawer — From the end edge."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const [categories, setCategories] = useState(['Chairs']);
@@ -151,6 +175,14 @@ const [budget, setBudget] = useState(320);
 
 `sm` asks for 62% of the width and is never wider than 280pt, `md` 78% capped at 320, `lg` 88% capped at 400, and `full` 94% with no cap. The cap is the part a fraction cannot do on its own: 78% of a tablet is a navigation list with a column of whitespace beside it. On `top` and `bottom` there is no sensible cap, so the fraction is the whole of it.
 
+<PreviewVideo
+  src="/previews/drawer-sizes.mp4"
+  poster="/previews/drawer-sizes-poster.jpg"
+  alt="Drawer — Sizes."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <View className="flex-row flex-wrap gap-2">
   {(["sm", "md", "lg", "full"] as const).map((size) => (
@@ -172,6 +204,14 @@ const [budget, setBudget] = useState(320);
 ### From the top
 
 On the vertical axis the sides mean what they say — there is no reading direction to mirror. Best for short content, since a top or bottom drawer is dragged on the same axis a list scrolls on.
+
+<PreviewVideo
+  src="/previews/drawer-from-the-top.mp4"
+  poster="/previews/drawer-from-the-top-poster.jpg"
+  alt="Drawer — From the top."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Drawer>
@@ -201,6 +241,14 @@ On the vertical axis the sides mean what they say — there is no reading direct
 ### Right to left
 
 The same `side="start"` drawer inside a right-to-left subtree: it docks to the right, slides in from the right, and dismisses on a swipe to the right. Nothing about the drawer had to change.
+
+<PreviewVideo
+  src="/previews/drawer-right-to-left.mp4"
+  poster="/previews/drawer-right-to-left-poster.jpg"
+  alt="Drawer — Right to left."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Direction dir="rtl" className="w-full">

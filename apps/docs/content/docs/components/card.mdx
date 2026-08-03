@@ -185,6 +185,14 @@ Card as the shell around a short form.
 
 The root needs `overflow-hidden`: the layer reaches the card's edges, and the root is the thing with the corner radius. Put it first — it is absolutely positioned and takes no touches, so everything after it draws on top.
 
+<PreviewVideo
+  src="/previews/card-an-animated-wash-behind-it.mp4"
+  poster="/previews/card-an-animated-wash-behind-it-poster.jpg"
+  alt="Card — An animated wash behind it."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Card className="overflow-hidden">
   <Card.Wash tint="--color-info" />

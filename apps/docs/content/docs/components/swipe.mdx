@@ -5,6 +5,14 @@ description: A row that slides aside to reveal the things you can do to it.
 
 A row that slides aside to reveal the things you can do to it. The actions sit behind the row rather than beside it, so nothing about the layout changes when one opens — the row is the only thing that moves, and it moves on the UI thread.
 
+<PreviewVideo
+  src="/previews/swipe.mp4"
+  poster="/previews/swipe-poster.jpg"
+  alt="The Swipe component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Swipe ships with the library — no separate install.
@@ -62,6 +70,14 @@ The panels are markers, not containers. The root lifts their children out and la
 
 The common case. One action on the end side, in the destructive colour, and a drag carried far enough fires it without the tile ever being tapped.
 
+<PreviewVideo
+  src="/previews/swipe-swipe-to-delete.mp4"
+  poster="/previews/swipe-swipe-to-delete-poster.jpg"
+  alt="Swipe — Swipe to delete."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [rows, setRows] = useState(['Invoice.pdf', 'Contract.docx', 'Notes.md']);
 
@@ -89,6 +105,14 @@ const [rows, setRows] = useState(['Invoice.pdf', 'Contract.docx', 'Notes.md']);
 ### Both sides
 
 A panel on each side, with more than one tile on the end. The tiles pack against the row and emerge from under it as it moves, so they are whole and readable by the time the row has cleared them.
+
+<PreviewVideo
+  src="/previews/swipe-both-sides.mp4"
+  poster="/previews/swipe-both-sides-poster.jpg"
+  alt="Swipe — Both sides."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Swipe>
@@ -129,6 +153,14 @@ A panel on each side, with more than one tile on the end. The tiles pack against
 
 `keepOpen` leaves the row aside after the tile is tapped, for an action that toggles rather than finishes — the row still says what it did, and the same tile is there to undo it.
 
+<PreviewVideo
+  src="/previews/swipe-keeping-the-row-open.mp4"
+  poster="/previews/swipe-keeping-the-row-open-poster.jpg"
+  alt="Swipe — Keeping the row open."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [saved, setSaved] = useState(false);
 
@@ -153,6 +185,14 @@ const [saved, setSaved] = useState(false);
 ### Right to left
 
 The same row inside a right-to-left subtree. `Swipe.End` still means the edge text runs toward, so the actions sit on the left and the row opens rightward. Nothing about the markup changed.
+
+<PreviewVideo
+  src="/previews/swipe-right-to-left.mp4"
+  poster="/previews/swipe-right-to-left-poster.jpg"
+  alt="Swipe — Right to left."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Direction dir="rtl" className="w-full">

@@ -13,7 +13,7 @@ It is not a pie, and the difference matters. A pie divides one whole between its
   poster="/previews/ring-chart-poster.jpg"
   alt="The RingChart component, running in the example app."
   width={720}
-  height={1232}
+  height={1560}
 />
 
 ## Installation
@@ -148,6 +148,14 @@ Left alone the chart measures its container and stays square — which inside a 
 
 Three targets, each read against its own rather than against each other. Selecting a ring swaps the header’s figures for that ring’s.
 
+<PreviewVideo
+  src="/previews/ring-chart-today-s-goals.mp4"
+  poster="/previews/ring-chart-today-s-goals-poster.jpg"
+  alt="RingChart — Today's goals."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <RingChart data={goals} size={208} strokeWidth={16} ringGap={6} activeIndex={active} onActiveIndexChange={setActive}>
   <RingChart.Header value={`${percent}%`} caption={caption} legend />
@@ -162,6 +170,13 @@ Three targets, each read against its own rather than against each other. Selecti
 
 The ring opened to three quarters of a turn, with the notch at the bottom where a dial has always had it. One value, and the room a wide hole gives the number.
 
+<Preview
+  src="/previews/ring-chart-gauge.jpg"
+  alt="RingChart — Gauge."
+  width={1179}
+  height={1227}
+/>
+
 ```tsx
 <RingChart data={[health]} size={208} startAngle={-135} endAngle={135} strokeWidth={18}>
   <RingChart.Header title="Score" value="82 of 100" caption="Above the 75 the alerting is set at" />
@@ -174,6 +189,13 @@ The ring opened to three quarters of a turn, with the notch at the bottom where 
 
 Ticks rather than an arc, for a target made of countable things. Twelve sessions, eight of them attended, and you can count them.
 
+<Preview
+  src="/previews/ring-chart-segmented.jpg"
+  alt="RingChart — Segmented."
+  width={1179}
+  height={1177}
+/>
+
 ```tsx
 <RingChart data={[sessions]} size={208} strokeWidth={16}>
   <RingChart.Header title="Sessions attended" value="8 of 12" />
@@ -185,6 +207,13 @@ Ticks rather than an arc, for a target made of countable things. Twelve sessions
 ### Separate dials
 
 Three charts rather than three rings. Concentric, the outer ring is longer than the inner one at the same percentage and the eye reads the length — so targets that are not read against each other are better off apart.
+
+<Preview
+  src="/previews/ring-chart-separate-dials.jpg"
+  alt="RingChart — Separate dials."
+  width={1179}
+  height={820}
+/>
 
 ```tsx
 {budgets.map((budget, index) => (

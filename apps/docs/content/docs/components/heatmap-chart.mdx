@@ -9,10 +9,9 @@ A calendar of bins shaded by how much happened in each — one column per period
 <PreviewVideo
   src="/previews/heatmap-chart.mp4"
   poster="/previews/heatmap-chart-poster.jpg"
-  alt="A screen recording of the HeatmapChart demo on a dark phone screen. A year of contribution cells shaded across a colour ramp scrolls sideways, and a held press brings up a readout that follows the finger across the grid."
+  alt="The HeatmapChart component, running in the example app."
   width={720}
-  height={660}
-  caption="A year of cells, scrolled sideways. Hold to read a day — a swipe scrolls instead."
+  height={1560}
 />
 
 ## Installation
@@ -192,6 +191,14 @@ The x-axis emits a label where the month changes, which a grid of weekdays never
 
 A full year with a readout that follows the finger. Fifty-three weeks do not fit across a phone, so the chart is `fluid` inside a horizontal `ScrollView` — and the header sits outside that scroller, at the frame's width, or it would scroll away with the cells. Press and hold to read a day; a swipe scrolls the chart instead.
 
+<PreviewVideo
+  src="/previews/heatmap-chart-contribution-grid.mp4"
+  poster="/previews/heatmap-chart-contribution-grid-poster.jpg"
+  alt="HeatmapChart — Contribution grid."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <HeatmapChart data={[]}>
   <HeatmapChart.Header value={active ? `${active.count}` : total} caption={caption} legend />
@@ -210,6 +217,13 @@ A full year with a readout that follows the finger. Fifty-three weeks do not fit
 ### Filling the width
 
 For a short range, `fill` divides the available width between the columns rather than drawing them at a fixed size, so the chart always meets both edges of its card. No chart header here — the card's own already says what this is, and a second title under the first says it twice.
+
+<Preview
+  src="/previews/heatmap-chart-filling-the-width.jpg"
+  alt="HeatmapChart — Filling the width."
+  width={1179}
+  height={1031}
+/>
 
 ```tsx
 <HeatmapChart data={weeks.slice(-13)} layout="fill" weekStartDay={1} gap={4}>
@@ -230,7 +244,7 @@ A rule every thirteen columns, and the ramp derived from a colour of your own in
   poster="/previews/heatmap-chart-quarters-poster.jpg"
   alt="HeatmapChart — Quarters."
   width={720}
-  height={554}
+  height={1560}
 />
 
 ```tsx
@@ -246,6 +260,14 @@ A rule every thirteen columns, and the ramp derived from a colour of your own in
 ### Punchcard
 
 Rows that are hours and columns that are weekdays. “When is this busy” is a question the year grid cannot answer, having already spent its rows on the days of the week — `rows` and a pair of `labels` turn the same grid on its side. Four six-hour bins: `fill` sizes a cell off the width, so with seven columns every extra row costs a lot of height.
+
+<PreviewVideo
+  src="/previews/heatmap-chart-punchcard.mp4"
+  poster="/previews/heatmap-chart-punchcard-poster.jpg"
+  alt="HeatmapChart — Punchcard."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <HeatmapChart data={week} layout="fill" rows={4} gap={4} onActiveCellChange={setActive}>

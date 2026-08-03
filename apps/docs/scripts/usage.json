@@ -604,7 +604,14 @@
       {
         "title": "An animated wash behind it",
         "description": "`Card.Wash` is the card's back: the tint rises from the bottom edge on a power curve, so the top two thirds are untouched and the colour arrives in the lower third. On a straight ramp it would already be at half strength across the middle and read as a tinted panel, which is a different thing. It breathes — a slow swell in the layer's opacity, small enough to be noticed only by not being there.\n\nThe root needs `overflow-hidden`: the layer reaches the card's edges, and the root is the thing with the corner radius. Put it first — it is absolutely positioned and takes no touches, so everything after it draws on top.",
-        "code": "<Card className=\"overflow-hidden\">\n  <Card.Wash tint=\"--color-info\" />\n\n  <Card.Header>\n    <Card.Description>Last 30 days</Card.Description>\n    <Card.Title>Weekly active</Card.Title>\n  </Card.Header>\n  <Card.Content>\n    <Text size=\"3xl\" weight=\"semibold\">3,072</Text>\n  </Card.Content>\n</Card>"
+        "code": "<Card className=\"overflow-hidden\">\n  <Card.Wash tint=\"--color-info\" />\n\n  <Card.Header>\n    <Card.Description>Last 30 days</Card.Description>\n    <Card.Title>Weekly active</Card.Title>\n  </Card.Header>\n  <Card.Content>\n    <Text size=\"3xl\" weight=\"semibold\">3,072</Text>\n  </Card.Content>\n</Card>",
+        "previewVideo": {
+          "src": "/previews/card-an-animated-wash-behind-it.mp4",
+          "poster": "/previews/card-an-animated-wash-behind-it-poster.jpg",
+          "alt": "Card — An animated wash behind it.",
+          "width": 720,
+          "height": 1560
+        }
       }
     ],
     "preview": {
@@ -1107,33 +1114,75 @@
       {
         "title": "Navigation drawer",
         "description": "The default: docked to the start edge, sized to `md`, with a header, a scrolling body and a footer.",
-        "code": "<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Open menu</Button>\n  </Drawer.Trigger>\n  <Drawer.Content>\n    <Drawer.Header title=\"Workspace\" description=\"Switch project or manage members.\" />\n    <Drawer.Body>\n      {['Projects', 'Members', 'Billing'].map((label) => (\n        <Item key={label}>\n          <Item.Content>\n            <Item.Title>{label}</Item.Title>\n          </Item.Content>\n        </Item>\n      ))}\n    </Drawer.Body>\n    <Drawer.Footer>\n      <Drawer.Close>\n        <Button variant=\"outline\" className=\"flex-1\">Close</Button>\n      </Drawer.Close>\n    </Drawer.Footer>\n  </Drawer.Content>\n</Drawer>"
+        "code": "<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Open menu</Button>\n  </Drawer.Trigger>\n  <Drawer.Content>\n    <Drawer.Header title=\"Workspace\" description=\"Switch project or manage members.\" />\n    <Drawer.Body>\n      {['Projects', 'Members', 'Billing'].map((label) => (\n        <Item key={label}>\n          <Item.Content>\n            <Item.Title>{label}</Item.Title>\n          </Item.Content>\n        </Item>\n      ))}\n    </Drawer.Body>\n    <Drawer.Footer>\n      <Drawer.Close>\n        <Button variant=\"outline\" className=\"flex-1\">Close</Button>\n      </Drawer.Close>\n    </Drawer.Footer>\n  </Drawer.Content>\n</Drawer>",
+        "previewVideo": {
+          "src": "/previews/drawer-navigation-drawer.mp4",
+          "poster": "/previews/drawer-navigation-drawer-poster.jpg",
+          "alt": "Drawer — Navigation drawer.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "From the end edge",
         "description": "`side=\"end\"` docks the drawer to the edge text runs toward — the right in a left-to-right app, the left in a right-to-left one. `closeSide=\"end\"` then keeps the ✕ in the outer corner rather than the inner one an end drawer takes by default, so the panel is always closed from the same place.",
-        "code": "const [categories, setCategories] = useState(['Chairs']);\nconst [budget, setBudget] = useState(320);\n\n<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Filters</Button>\n  </Drawer.Trigger>\n  <Drawer.Content side=\"end\" closeSide=\"end\">\n    <Drawer.Header title=\"Filters\" description=\"2 applied\" />\n    <Drawer.Body>\n      <View className=\"gap-6 pb-6\">\n        <View className=\"gap-3\">\n          <Label>Category</Label>\n          <View className=\"flex-row flex-wrap gap-2\">\n            {CATEGORIES.map((name) => (\n              <Chip\n                key={name}\n                selected={categories.includes(name)}\n                onPress={() => toggleCategory(name)}\n              >\n                {name}\n              </Chip>\n            ))}\n          </View>\n        </View>\n\n        <Separator />\n\n        <View className=\"gap-3\">\n          <Label>Budget</Label>\n          <Slider value={budget} onValueChange={setBudget} min={40} max={500} step={20} />\n        </View>\n      </View>\n    </Drawer.Body>\n    <Drawer.Footer>\n      <Button variant=\"ghost\" onPress={reset}>Reset</Button>\n      <Drawer.Close>\n        <Button className=\"flex-1\">Show 148 results</Button>\n      </Drawer.Close>\n    </Drawer.Footer>\n  </Drawer.Content>\n</Drawer>"
+        "code": "const [categories, setCategories] = useState(['Chairs']);\nconst [budget, setBudget] = useState(320);\n\n<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Filters</Button>\n  </Drawer.Trigger>\n  <Drawer.Content side=\"end\" closeSide=\"end\">\n    <Drawer.Header title=\"Filters\" description=\"2 applied\" />\n    <Drawer.Body>\n      <View className=\"gap-6 pb-6\">\n        <View className=\"gap-3\">\n          <Label>Category</Label>\n          <View className=\"flex-row flex-wrap gap-2\">\n            {CATEGORIES.map((name) => (\n              <Chip\n                key={name}\n                selected={categories.includes(name)}\n                onPress={() => toggleCategory(name)}\n              >\n                {name}\n              </Chip>\n            ))}\n          </View>\n        </View>\n\n        <Separator />\n\n        <View className=\"gap-3\">\n          <Label>Budget</Label>\n          <Slider value={budget} onValueChange={setBudget} min={40} max={500} step={20} />\n        </View>\n      </View>\n    </Drawer.Body>\n    <Drawer.Footer>\n      <Button variant=\"ghost\" onPress={reset}>Reset</Button>\n      <Drawer.Close>\n        <Button className=\"flex-1\">Show 148 results</Button>\n      </Drawer.Close>\n    </Drawer.Footer>\n  </Drawer.Content>\n</Drawer>",
+        "previewVideo": {
+          "src": "/previews/drawer-from-the-end-edge.mp4",
+          "poster": "/previews/drawer-from-the-end-edge-poster.jpg",
+          "alt": "Drawer — From the end edge.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Sizes",
         "description": "`sm` asks for 62% of the width and is never wider than 280pt, `md` 78% capped at 320, `lg` 88% capped at 400, and `full` 94% with no cap. The cap is the part a fraction cannot do on its own: 78% of a tablet is a navigation list with a column of whitespace beside it. On `top` and `bottom` there is no sensible cap, so the fraction is the whole of it.",
-        "code": "<View className=\"flex-row flex-wrap gap-2\">\n  {([\"sm\", \"md\", \"lg\", \"full\"] as const).map((size) => (\n    <Drawer key={size}>\n      <Drawer.Trigger>\n        <Button variant=\"outline\" size=\"sm\">{size}</Button>\n      </Drawer.Trigger>\n      <Drawer.Content size={size}>\n        <Drawer.Header title={`size=\"${size}\"`} />\n        <Drawer.Body>\n          <Text size=\"sm\" muted>Drag the panel back toward its edge to dismiss it.</Text>\n        </Drawer.Body>\n      </Drawer.Content>\n    </Drawer>\n  ))}\n</View>"
+        "code": "<View className=\"flex-row flex-wrap gap-2\">\n  {([\"sm\", \"md\", \"lg\", \"full\"] as const).map((size) => (\n    <Drawer key={size}>\n      <Drawer.Trigger>\n        <Button variant=\"outline\" size=\"sm\">{size}</Button>\n      </Drawer.Trigger>\n      <Drawer.Content size={size}>\n        <Drawer.Header title={`size=\"${size}\"`} />\n        <Drawer.Body>\n          <Text size=\"sm\" muted>Drag the panel back toward its edge to dismiss it.</Text>\n        </Drawer.Body>\n      </Drawer.Content>\n    </Drawer>\n  ))}\n</View>",
+        "previewVideo": {
+          "src": "/previews/drawer-sizes.mp4",
+          "poster": "/previews/drawer-sizes-poster.jpg",
+          "alt": "Drawer — Sizes.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "From the top",
         "description": "On the vertical axis the sides mean what they say — there is no reading direction to mirror. Best for short content, since a top or bottom drawer is dragged on the same axis a list scrolls on.",
-        "code": "<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Notifications</Button>\n  </Drawer.Trigger>\n  <Drawer.Content side=\"top\" size=\"sm\">\n    <Drawer.Header title=\"Notifications\" />\n    <Drawer.Body>\n      <Item>\n        <Item.Content>\n          <Item.Title>Build passed</Item.Title>\n          <Item.Description>2 minutes ago</Item.Description>\n        </Item.Content>\n      </Item>\n      <Item>\n        <Item.Content>\n          <Item.Title>New comment</Item.Title>\n          <Item.Description>1 hour ago</Item.Description>\n        </Item.Content>\n      </Item>\n    </Drawer.Body>\n  </Drawer.Content>\n</Drawer>"
+        "code": "<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Notifications</Button>\n  </Drawer.Trigger>\n  <Drawer.Content side=\"top\" size=\"sm\">\n    <Drawer.Header title=\"Notifications\" />\n    <Drawer.Body>\n      <Item>\n        <Item.Content>\n          <Item.Title>Build passed</Item.Title>\n          <Item.Description>2 minutes ago</Item.Description>\n        </Item.Content>\n      </Item>\n      <Item>\n        <Item.Content>\n          <Item.Title>New comment</Item.Title>\n          <Item.Description>1 hour ago</Item.Description>\n        </Item.Content>\n      </Item>\n    </Drawer.Body>\n  </Drawer.Content>\n</Drawer>",
+        "previewVideo": {
+          "src": "/previews/drawer-from-the-top.mp4",
+          "poster": "/previews/drawer-from-the-top-poster.jpg",
+          "alt": "Drawer — From the top.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Right to left",
         "description": "The same `side=\"start\"` drawer inside a right-to-left subtree: it docks to the right, slides in from the right, and dismisses on a swipe to the right. Nothing about the drawer had to change.",
-        "code": "<Direction dir=\"rtl\" className=\"w-full\">\n  <Drawer>\n    <Drawer.Trigger>\n      <Button variant=\"outline\">افتح القائمة</Button>\n    </Drawer.Trigger>\n    <Drawer.Content side=\"start\">\n      <Drawer.Header title=\"مساحة العمل\" />\n      <Drawer.Body>\n        {['المشاريع', 'الأعضاء'].map((label) => (\n          <Item key={label}>\n            <Item.Content>\n              <Item.Title>{label}</Item.Title>\n            </Item.Content>\n          </Item>\n        ))}\n      </Drawer.Body>\n    </Drawer.Content>\n  </Drawer>\n</Direction>"
+        "code": "<Direction dir=\"rtl\" className=\"w-full\">\n  <Drawer>\n    <Drawer.Trigger>\n      <Button variant=\"outline\">افتح القائمة</Button>\n    </Drawer.Trigger>\n    <Drawer.Content side=\"start\">\n      <Drawer.Header title=\"مساحة العمل\" />\n      <Drawer.Body>\n        {['المشاريع', 'الأعضاء'].map((label) => (\n          <Item key={label}>\n            <Item.Content>\n              <Item.Title>{label}</Item.Title>\n            </Item.Content>\n          </Item>\n        ))}\n      </Drawer.Body>\n    </Drawer.Content>\n  </Drawer>\n</Direction>",
+        "previewVideo": {
+          "src": "/previews/drawer-right-to-left.mp4",
+          "poster": "/previews/drawer-right-to-left-poster.jpg",
+          "alt": "Drawer — Right to left.",
+          "width": 720,
+          "height": 1560
+        }
       }
     ],
     "variantCode": {
       "side": "<Drawer>\n  <Drawer.Trigger>\n    <Button variant=\"outline\">Open</Button>\n  </Drawer.Trigger>\n  {/* `side` is a Drawer.Content prop: the root owns the open state, the panel owns the edge. */}\n  <Drawer.Content side=\"start\">\n    <Drawer.Header title=\"Workspace\" />\n  </Drawer.Content>\n</Drawer>"
     },
-    "notes": "Control it with `open` / `onOpenChange`, or leave it uncontrolled with `defaultOpen`.\n\n### Why the sides are `start` and `end`\n\nA drawer is the one overlay whose whole identity is the edge it belongs to, and in a right-to-left app the navigation edge is the right one. Naming the sides `left` and `right` would bake a reading direction into the API and leave every caller in an RTL app inverting it by hand, so they are logical instead: `start` is the edge text begins at, `end` the edge it runs toward. Both follow the enclosing `Direction`. `top` and `bottom` mean what they say, because the vertical axis does not mirror.\n\nThe panel's position mirrors because it is laid out from logical insets. The *drag* does not — a transform is measured in raw pixels, not laid out — so the gesture reads the direction and negates itself. That is what keeps a swipe outward dismissing in both directions instead of only one.\n\nThe drawer also re-establishes the reading direction on its own layer. It is portaled above the app, which takes it out of the `Direction` subtree it was written inside — so a panel that did not put the direction back would dock to the wrong edge and lay its rows out the wrong way while its animation came from the right one. Worth knowing if you portal an overlay of your own.\n\n### How wide it opens\n\n`size` is a fraction of the screen with a cap in points on the horizontal axis. The cap is the point: a fraction alone reads correctly on a phone and absurdly on a tablet, where 78% of the width is a navigation list with a column of whitespace beside it. `full` is 94%, not 100% — the sliver of app left showing is what says it is still there behind the drawer, and it is the only thing left to tap to dismiss.\n\n### Where it stops\n\nThe panel is drawn behind the status bar, not below it — a surface the app disappears under should reach the edge of the screen rather than stopping short of it and leaving a strip of app above. The *content* is the part that clears it: the safe-area inset and the panel's own padding stack, so the header starts a clear gap below the clock instead of flush against it. The same goes for the bottom, where every side but `top` reaches the screen edge and pads its content clear of the home indicator.\n\n### Which corner the ✕ takes\n\nBy default the corner *away* from the docked edge, so an `end` drawer's button sits on its inner side rather than against the screen edge the panel came out of. `closeSide` overrides that, and is logical like `side` is: `end` is the corner text runs toward, so it is the right one in a left-to-right app and the left one in a right-to-left one. Set it for a panel that is opened and closed all day, where a target always under the same thumb beats one that moves with the edge.\n\n`Drawer.Header` reserves whichever corner the button ended up in, so a long title wraps above it instead of running underneath. That is one decision read from two places, which is why it is resolved once rather than worked out again by the header.\n\n### Dismissing it\n\nA tap on the backdrop, a drag back toward the docked edge, the corner close button, `Drawer.Close`, or the Android back button. Turn the first two off with `dismissible={false}` and `swipeToDismiss={false}` — turn off `swipeToDismiss` when the content wants the same axis, such as a horizontal scroller in a side drawer.\n\n### Drawer or BottomSheet\n\nA sheet is sized by its content and dragged along the axis its scroller runs on, which is why so much of it is about sharing one drag between the two. A side drawer is sized by the screen and dragged across its scroller's axis, so the two never compete: the cross-axis drag fails and the list keeps it. Reach for the sheet for something the content sizes — a share menu, a short form — and the drawer for navigation, filters, and anything that should feel like part of the app's frame."
+    "notes": "Control it with `open` / `onOpenChange`, or leave it uncontrolled with `defaultOpen`.\n\n### Why the sides are `start` and `end`\n\nA drawer is the one overlay whose whole identity is the edge it belongs to, and in a right-to-left app the navigation edge is the right one. Naming the sides `left` and `right` would bake a reading direction into the API and leave every caller in an RTL app inverting it by hand, so they are logical instead: `start` is the edge text begins at, `end` the edge it runs toward. Both follow the enclosing `Direction`. `top` and `bottom` mean what they say, because the vertical axis does not mirror.\n\nThe panel's position mirrors because it is laid out from logical insets. The *drag* does not — a transform is measured in raw pixels, not laid out — so the gesture reads the direction and negates itself. That is what keeps a swipe outward dismissing in both directions instead of only one.\n\nThe drawer also re-establishes the reading direction on its own layer. It is portaled above the app, which takes it out of the `Direction` subtree it was written inside — so a panel that did not put the direction back would dock to the wrong edge and lay its rows out the wrong way while its animation came from the right one. Worth knowing if you portal an overlay of your own.\n\n### How wide it opens\n\n`size` is a fraction of the screen with a cap in points on the horizontal axis. The cap is the point: a fraction alone reads correctly on a phone and absurdly on a tablet, where 78% of the width is a navigation list with a column of whitespace beside it. `full` is 94%, not 100% — the sliver of app left showing is what says it is still there behind the drawer, and it is the only thing left to tap to dismiss.\n\n### Where it stops\n\nThe panel is drawn behind the status bar, not below it — a surface the app disappears under should reach the edge of the screen rather than stopping short of it and leaving a strip of app above. The *content* is the part that clears it: the safe-area inset and the panel's own padding stack, so the header starts a clear gap below the clock instead of flush against it. The same goes for the bottom, where every side but `top` reaches the screen edge and pads its content clear of the home indicator.\n\n### Which corner the ✕ takes\n\nBy default the corner *away* from the docked edge, so an `end` drawer's button sits on its inner side rather than against the screen edge the panel came out of. `closeSide` overrides that, and is logical like `side` is: `end` is the corner text runs toward, so it is the right one in a left-to-right app and the left one in a right-to-left one. Set it for a panel that is opened and closed all day, where a target always under the same thumb beats one that moves with the edge.\n\n`Drawer.Header` reserves whichever corner the button ended up in, so a long title wraps above it instead of running underneath. That is one decision read from two places, which is why it is resolved once rather than worked out again by the header.\n\n### Dismissing it\n\nA tap on the backdrop, a drag back toward the docked edge, the corner close button, `Drawer.Close`, or the Android back button. Turn the first two off with `dismissible={false}` and `swipeToDismiss={false}` — turn off `swipeToDismiss` when the content wants the same axis, such as a horizontal scroller in a side drawer.\n\n### Drawer or BottomSheet\n\nA sheet is sized by its content and dragged along the axis its scroller runs on, which is why so much of it is about sharing one drag between the two. A side drawer is sized by the screen and dragged across its scroller's axis, so the two never compete: the cross-axis drag fails and the list keeps it. Reach for the sheet for something the content sizes — a share menu, a short form — and the drawer for navigation, filters, and anything that should feel like part of the app's frame.",
+    "previewVideo": {
+      "src": "/previews/drawer.mp4",
+      "poster": "/previews/drawer-poster.jpg",
+      "alt": "The Drawer component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
   },
   "empty-state": {
     "intro": "The placeholder for a list or screen with nothing in it. `Media variant=\"icon\"` frames the icon in a small card with two rotated ghost cards fanned behind it.",
@@ -1507,10 +1556,9 @@
     "previewVideo": {
       "src": "/previews/heatmap-chart.mp4",
       "poster": "/previews/heatmap-chart-poster.jpg",
-      "alt": "A screen recording of the HeatmapChart demo on a dark phone screen. A year of contribution cells shaded across a colour ramp scrolls sideways, and a held press brings up a readout that follows the finger across the grid.",
+      "alt": "The HeatmapChart component, running in the example app.",
       "width": 720,
-      "height": 660,
-      "caption": "A year of cells, scrolled sideways. Hold to read a day — a swipe scrolls instead."
+      "height": 1560
     },
     "usage": "<HeatmapChart data={weeks} weekStartDay={1}>\n  <HeatmapChart.Header title=\"Contributions\" value=\"1,204\" legend />\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis />\n  <HeatmapChart.Cells />\n  <HeatmapChart.Tooltip />\n</HeatmapChart>",
     "extraImports": [
@@ -1575,12 +1623,25 @@
       {
         "title": "Contribution grid",
         "description": "A full year with a readout that follows the finger. Fifty-three weeks do not fit across a phone, so the chart is `fluid` inside a horizontal `ScrollView` — and the header sits outside that scroller, at the frame's width, or it would scroll away with the cells. Press and hold to read a day; a swipe scrolls the chart instead.",
-        "code": "<HeatmapChart data={[]}>\n  <HeatmapChart.Header value={active ? `${active.count}` : total} caption={caption} legend />\n</HeatmapChart>\n\n<ScrollView horizontal showsHorizontalScrollIndicator={false}>\n  <HeatmapChart data={weeks} weekStartDay={1} binSize={13} onActiveCellChange={setActive}>\n    <HeatmapChart.XAxis />\n    <HeatmapChart.YAxis />\n    <HeatmapChart.Cells />\n    <HeatmapChart.Tooltip />\n  </HeatmapChart>\n</ScrollView>"
+        "code": "<HeatmapChart data={[]}>\n  <HeatmapChart.Header value={active ? `${active.count}` : total} caption={caption} legend />\n</HeatmapChart>\n\n<ScrollView horizontal showsHorizontalScrollIndicator={false}>\n  <HeatmapChart data={weeks} weekStartDay={1} binSize={13} onActiveCellChange={setActive}>\n    <HeatmapChart.XAxis />\n    <HeatmapChart.YAxis />\n    <HeatmapChart.Cells />\n    <HeatmapChart.Tooltip />\n  </HeatmapChart>\n</ScrollView>",
+        "previewVideo": {
+          "src": "/previews/heatmap-chart-contribution-grid.mp4",
+          "poster": "/previews/heatmap-chart-contribution-grid-poster.jpg",
+          "alt": "HeatmapChart — Contribution grid.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Filling the width",
         "description": "For a short range, `fill` divides the available width between the columns rather than drawing them at a fixed size, so the chart always meets both edges of its card. No chart header here — the card's own already says what this is, and a second title under the first says it twice.",
-        "code": "<HeatmapChart data={weeks.slice(-13)} layout=\"fill\" weekStartDay={1} gap={4}>\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis />\n  <HeatmapChart.Cells cornerRadius={3} />\n  <HeatmapChart.Tooltip />\n  <HeatmapChart.Legend />\n</HeatmapChart>"
+        "code": "<HeatmapChart data={weeks.slice(-13)} layout=\"fill\" weekStartDay={1} gap={4}>\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis />\n  <HeatmapChart.Cells cornerRadius={3} />\n  <HeatmapChart.Tooltip />\n  <HeatmapChart.Legend />\n</HeatmapChart>",
+        "preview": {
+          "src": "/previews/heatmap-chart-filling-the-width.jpg",
+          "alt": "HeatmapChart — Filling the width.",
+          "width": 1179,
+          "height": 1031
+        }
       },
       {
         "title": "Quarters",
@@ -1591,13 +1652,20 @@
           "poster": "/previews/heatmap-chart-quarters-poster.jpg",
           "alt": "HeatmapChart — Quarters.",
           "width": 720,
-          "height": 554
+          "height": 1560
         }
       },
       {
         "title": "Punchcard",
         "description": "Rows that are hours and columns that are weekdays. “When is this busy” is a question the year grid cannot answer, having already spent its rows on the days of the week — `rows` and a pair of `labels` turn the same grid on its side. Four six-hour bins: `fill` sizes a cell off the width, so with seven columns every extra row costs a lot of height.",
-        "code": "<HeatmapChart data={week} layout=\"fill\" rows={4} gap={4} onActiveCellChange={setActive}>\n  <HeatmapChart.Header title=\"Tickets opened\" value=\"06:00 – 18:00\" legend />\n  <HeatmapChart.XAxis labels={weekdays} />\n  <HeatmapChart.YAxis labels={hours} tickFilter=\"all\" width={24} />\n  <HeatmapChart.Cells cornerRadius={3} />\n  <HeatmapChart.Tooltip\n    formatLabel={(cell) => `${cell.count} · ${weekdays[cell.column]} ${hours[cell.row]}:00`}\n  />\n</HeatmapChart>"
+        "code": "<HeatmapChart data={week} layout=\"fill\" rows={4} gap={4} onActiveCellChange={setActive}>\n  <HeatmapChart.Header title=\"Tickets opened\" value=\"06:00 – 18:00\" legend />\n  <HeatmapChart.XAxis labels={weekdays} />\n  <HeatmapChart.YAxis labels={hours} tickFilter=\"all\" width={24} />\n  <HeatmapChart.Cells cornerRadius={3} />\n  <HeatmapChart.Tooltip\n    formatLabel={(cell) => `${cell.count} · ${weekdays[cell.column]} ${hours[cell.row]}:00`}\n  />\n</HeatmapChart>",
+        "previewVideo": {
+          "src": "/previews/heatmap-chart-punchcard.mp4",
+          "poster": "/previews/heatmap-chart-punchcard-poster.jpg",
+          "alt": "HeatmapChart — Punchcard.",
+          "width": 720,
+          "height": 1560
+        }
       }
     ],
     "notes": "### The colour ramp\n\nOne colour at five opacities, not five colours. A heatmap reads as *more* and *less* of one thing, and five distinct hues read as five different things — which is what the `--color-chart-*` tokens are for, and why only the first of them is used here. The base is `--color-chart-1`, so the ramp follows the active theme.\n\nThere are four ways to change it, in rough order of how often you want them:\n\n- **`color`** swaps the base. It takes a token by name — `color=\"--color-chart-3\"` — as readily as a literal, and naming the token is almost always what you meant: a literal is a colour frozen at the moment it was written, and it cannot follow the theme into dark mode.\n- **`emptyColor`** is the cell with nothing in it, `--color-muted` by default. Take it lighter or darker when \"measured, and empty\" should read differently from the surface around it.\n- **`levelOpacity`** retunes the contrast between the five steps without naming five colours.\n- **`levelColors`** replaces all five outright, for a ramp that is not one colour fading. The opacities are dropped then, since dimming a colour someone chose on purpose is not a ramp.\n\nThe four thresholds are the data's own quartiles by default, so a chart of single-digit counts and a chart of thousands both use the whole ramp. Zero is its own level and is left out of the quartiles — counting it drags every threshold to nothing on a sparse chart. Pass `levels` to fix them yourself.\n\n### Reading a grid that is not a calendar\n\nThe tooltip's default label names contributions on a date, because that is what the cells usually are. A grid built from bins with no `date` gets the count on its own — it is not a calendar, so there is nothing to say after the number, and it is emphatically not \"no data\". Pass `formatLabel` to name what the cells actually count.\n\n### Where the key goes\n\nA grid that scrolls sideways has two places for its ramp and only one of them works. `Legend` sits under the cells, inside the scroller, and slides out of view with them; `Header legend` sits above the grid at the chart's own width and stays put. On a grid that fits, either is fine.\n\n### Layout\n\nThe parts sit in a real layout rather than stacking over the plot: the labels are *beside* and *above* the grid and the legend is below it, so they take up room and the grid is sized with them accounted for. Only the cells and the rules are SVG — every label is a React Native view, because SVG text ignores the platform's text scaling and the theme's font.\n\n### Reading a cell without hijacking the scroll\n\n`HeatmapChart.Tooltip` waits for the press to be *held* before it claims the touch. It has to: a full year of columns lives inside a horizontal scroller, and a readout that takes over on the first pixel of movement means the chart can never be scrolled at all. Holding first is what separates “I am moving the chart” from “I am reading it”, and dragging from there moves the readout as usual.\n\n`activateAfterLongPress={0}` gives the touch back immediately, for a chart that is not inside a scroll view and so has no scroll to protect.\n\nThe cell is resolved on the UI thread and only crosses into JS when it *changes*, so a drag across a year costs a handful of re-renders rather than one per frame.\n\n### The reveal\n\nColumns arrive left to right on mount, drawn by one clip rectangle wiping across the grid rather than by an animation per column. The effect is the same and it costs one animated value instead of fifty-two. It plays once; a data change redraws without replaying it, because repeating it turns a refresh into an animation. `useReducedMotion` skips it."
@@ -3120,40 +3188,108 @@
       {
         "title": "Typed, with a caret",
         "description": "The caret is solid while characters are arriving and blinks while they are not, which is what says *waiting* rather than *finished*. It is nested inside the text rather than laid out beside it: as a sibling it would sit against the right of the whole block, and the moment a line wrapped it would stop being after the last character. As a glyph in the flow it lands wherever typing has got to, on whichever line that is — and it is sized by the font, so it is right at every text size without being told any of them.\n\nGive the line a height. `Typing` reserves no space, so a line that grows as it types pushes everything under it down the screen on every keystroke.",
-        "code": "<View className=\"h-16 justify-center\">\n  <TextAnimation.Typing\n    text=\"Everything ships with its accessibility wiring already done.\"\n    size=\"lg\"\n    weight=\"medium\"\n    caret\n  />\n</View>"
+        "code": "<View className=\"h-16 justify-center\">\n  <TextAnimation.Typing\n    text=\"Everything ships with its accessibility wiring already done.\"\n    size=\"lg\"\n    weight=\"medium\"\n    caret\n  />\n</View>",
+        "previewVideo": {
+          "src": "/previews/text-animation-typed-with-a-caret.mp4",
+          "poster": "/previews/text-animation-typed-with-a-caret-poster.jpg",
+          "alt": "TextAnimation — Typed, with a caret.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "A cycle of phrases",
         "description": "An array types each string, holds it for `hold`, erases it and starts the next. `loop` sends it back to the first rather than stopping on the last.",
-        "code": "<TextAnimation.Typing\n  text={['fast by default', 'native where it counts', 'yours to change']}\n  caret\n  loop\n/>"
+        "code": "<TextAnimation.Typing\n  text={['fast by default', 'native where it counts', 'yours to change']}\n  caret\n  loop\n/>",
+        "previewVideo": {
+          "src": "/previews/text-animation-a-cycle-of-phrases.mp4",
+          "poster": "/previews/text-animation-a-cycle-of-phrases-poster.jpg",
+          "alt": "TextAnimation — A cycle of phrases.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "One word rotating in a sentence",
         "description": "The box is as tall as the tallest phrase rather than as tall as the current one — every phrase is laid out and all but one is hidden, so the line above it does not jump each time the words change.",
-        "code": "<View className=\"flex-row items-center gap-2\">\n  <Text size=\"xl\" weight=\"semibold\">Built for</Text>\n  <TextAnimation.Rotating text={['Expo', 'React Native', 'you']} size=\"xl\" weight=\"semibold\" />\n</View>"
+        "code": "<View className=\"flex-row items-center gap-2\">\n  <Text size=\"xl\" weight=\"semibold\">Built for</Text>\n  <TextAnimation.Rotating text={['Expo', 'React Native', 'you']} size=\"xl\" weight=\"semibold\" />\n</View>",
+        "previewVideo": {
+          "src": "/previews/text-animation-one-word-rotating-in-a-sentence.mp4",
+          "poster": "/previews/text-animation-one-word-rotating-in-a-sentence-poster.jpg",
+          "alt": "TextAnimation — One word rotating in a sentence.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "A counter, and a formatted one",
         "description": "`formatOptions` is passed straight to `Intl.NumberFormat`, so a currency, a percentage or grouped thousands cost a prop rather than a helper. On an engine whose `Intl` cannot do it, the number falls back to a plain fixed-point string instead of throwing.",
-        "code": "<TextAnimation.Counting value={2048} size=\"3xl\" weight=\"semibold\" />\n\n<TextAnimation.Counting\n  value={99.4}\n  decimals={1}\n  formatOptions={{ style: 'percent', maximumFractionDigits: 1 }}\n/>"
+        "code": "<TextAnimation.Counting value={2048} size=\"3xl\" weight=\"semibold\" />\n\n<TextAnimation.Counting\n  value={99.4}\n  decimals={1}\n  formatOptions={{ style: 'percent', maximumFractionDigits: 1 }}\n/>",
+        "previewVideo": {
+          "src": "/previews/text-animation-a-counter-and-a-formatted-one.mp4",
+          "poster": "/previews/text-animation-a-counter-and-a-formatted-one-poster.jpg",
+          "alt": "TextAnimation — A counter, and a formatted one.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "An odometer",
+        "description": "`Sliding` animates whenever the value it is handed changes, so it is driven by state rather than by a timer. Each digit is its own column of ten and rolls only if it has to — add 137 to 1,024 and the hundreds column travels while the thousands sits still, which is the whole reason it reads as a counter rather than as a number being replaced.",
+        "code": "const [total, setTotal] = useState(1024);\n\n<TextAnimation.Sliding\n  value={total}\n  thousandSeparator=\",\"\n  size=\"3xl\"\n  weight=\"semibold\"\n/>",
+        "previewVideo": {
+          "src": "/previews/text-animation-an-odometer.mp4",
+          "poster": "/previews/text-animation-an-odometer-poster.jpg",
+          "alt": "TextAnimation — An odometer.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "A price that rolls when the plan changes",
         "description": "`Sliding` animates whenever the value it is given changes, so it is driven by state rather than by a timer — which is the case it is for. The currency mark and the unit sit beside it as ordinary text, because neither of them is rolling.",
-        "code": "const [price, setPrice] = useState(24.99);\n\n<View className=\"flex-row items-center\">\n  <Text size=\"2xl\" weight=\"semibold\">$</Text>\n  <TextAnimation.Sliding value={price} decimals={2} size=\"2xl\" weight=\"semibold\" />\n  <Text size=\"sm\" muted className=\"ms-2\">/month</Text>\n</View>"
+        "code": "const [price, setPrice] = useState(24.99);\n\n<View className=\"flex-row items-center\">\n  <Text size=\"2xl\" weight=\"semibold\">$</Text>\n  <TextAnimation.Sliding value={price} decimals={2} size=\"2xl\" weight=\"semibold\" />\n  <Text size=\"sm\" muted className=\"ms-2\">/month</Text>\n</View>",
+        "previewVideo": {
+          "src": "/previews/text-animation-a-price-that-rolls-when-the-plan-changes.mp4",
+          "poster": "/previews/text-animation-a-price-that-rolls-when-the-plan-changes-poster.jpg",
+          "alt": "TextAnimation — A price that rolls when the plan changes.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Sharing one configuration",
         "description": "Two counters under one root, so the timing is written once. A part that wants something else says so itself and wins.",
-        "code": "<TextAnimation duration={900} delay={200} className=\"gap-2\">\n  <TextAnimation.Counting value={48} size=\"2xl\" weight=\"semibold\" />\n  <Text size=\"2xl\" weight=\"semibold\">of</Text>\n  <TextAnimation.Counting value={60} size=\"2xl\" weight=\"semibold\" />\n</TextAnimation>"
+        "code": "<TextAnimation duration={900} delay={200} className=\"gap-2\">\n  <TextAnimation.Counting value={48} size=\"2xl\" weight=\"semibold\" />\n  <Text size=\"2xl\" weight=\"semibold\">of</Text>\n  <TextAnimation.Counting value={60} size=\"2xl\" weight=\"semibold\" />\n</TextAnimation>",
+        "previewVideo": {
+          "src": "/previews/text-animation-sharing-one-configuration.mp4",
+          "poster": "/previews/text-animation-sharing-one-configuration-poster.jpg",
+          "alt": "TextAnimation — Sharing one configuration.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "A value picked from a scale",
         "description": "`Scrolling` is for a number chosen from a range rather than one that simply changed, and the values either side of the window are the range. `highlight` puts a band behind the one it lands on.\n\nThe edges fade into whatever is behind them, and that has to be said out loud: the fade is painted, not masked, so it is only the right colour if it is given the right colour. `fadeColor` defaults to `--color-background`; inside a card, pass `--color-card`, and on a surface that is not one flat colour pass `false` and turn it off.",
-        "code": "<TextAnimation.Scrolling\n  value={120}\n  step={10}\n  highlight\n  size=\"2xl\"\n  weight=\"semibold\"\n  className=\"w-28\"\n/>\n\n{/* inside a card, the fade has to be the card's colour */}\n<TextAnimation.Scrolling value={45} step={5} highlight fadeColor=\"--color-card\" />"
+        "code": "<TextAnimation.Scrolling\n  value={120}\n  step={10}\n  highlight\n  size=\"2xl\"\n  weight=\"semibold\"\n  className=\"w-28\"\n/>\n\n{/* inside a card, the fade has to be the card's colour */}\n<TextAnimation.Scrolling value={45} step={5} highlight fadeColor=\"--color-card\" />",
+        "previewVideo": {
+          "src": "/previews/text-animation-a-value-picked-from-a-scale.mp4",
+          "poster": "/previews/text-animation-a-value-picked-from-a-scale-poster.jpg",
+          "alt": "TextAnimation — A value picked from a scale.",
+          "width": 720,
+          "height": 1560
+        }
       }
     ],
-    "notes": "### Where the work happens\n\nA number animated as React state is a re-render per frame. `Counting` runs the value on the UI thread and crosses back only when the *rounded* number changes — for a whole number that is a couple of dozen times over the run rather than sixty a second. `Sliding` and `Scrolling` never cross back at all: every digit is already rendered and the animation is a transform on a column of them.\n\n`Typing` is the exception, and has to be. A character is a different string, and a string is a re-render whichever thread decided on it. At a keystroke every fifty-odd milliseconds that is three orders of magnitude slower than a frame.\n\n### Nothing is measured\n\nA sliding column is ten digits tall and is moved by a percentage of its own height, so a digit lands in the window whatever the font size turns out to be — no `onLayout`, and no first frame at the wrong offset. The window's size comes from one hidden `0` laid out in flow, which is also what makes it exactly as wide and as tall as a digit in the current font rather than as wide as a number happens to be.\n\n### The digits do not move sideways\n\nEvery numeric part draws in `tabular-nums`. Proportional digits are different widths, so a rolling number changes width as it rolls and shoves whatever is beside it back and forth — which reads as the layout being broken rather than as the number being alive.\n\n### What a screen reader gets\n\nThe final value, not the animation. A counter is labelled with the number it is heading for, a sliding column with the whole number rather than four columns of ten digits each, and a rotating phrase list announces only the phrase on screen. The caret is hidden outright.\n\n### Reduced motion\n\nEvery part draws its finished state immediately and nothing loops. `enabled={false}` does the same thing on demand — useful for a screenshot, or for a list where the same effect on forty rows would be a fairground rather than an accent."
+    "notes": "### Where the work happens\n\nA number animated as React state is a re-render per frame. `Counting` runs the value on the UI thread and crosses back only when the *rounded* number changes — for a whole number that is a couple of dozen times over the run rather than sixty a second. `Sliding` and `Scrolling` never cross back at all: every digit is already rendered and the animation is a transform on a column of them.\n\n`Typing` is the exception, and has to be. A character is a different string, and a string is a re-render whichever thread decided on it. At a keystroke every fifty-odd milliseconds that is three orders of magnitude slower than a frame.\n\n### Nothing is measured\n\nA sliding column is ten digits tall and is moved by a percentage of its own height, so a digit lands in the window whatever the font size turns out to be — no `onLayout`, and no first frame at the wrong offset. The window's size comes from one hidden `0` laid out in flow, which is also what makes it exactly as wide and as tall as a digit in the current font rather than as wide as a number happens to be.\n\n### The digits do not move sideways\n\nEvery numeric part draws in `tabular-nums`. Proportional digits are different widths, so a rolling number changes width as it rolls and shoves whatever is beside it back and forth — which reads as the layout being broken rather than as the number being alive.\n\n### What a screen reader gets\n\nThe final value, not the animation. A counter is labelled with the number it is heading for, a sliding column with the whole number rather than four columns of ten digits each, and a rotating phrase list announces only the phrase on screen. The caret is hidden outright.\n\n### Reduced motion\n\nEvery part draws its finished state immediately and nothing loops. `enabled={false}` does the same thing on demand — useful for a screenshot, or for a list where the same effect on forty rows would be a fairground rather than an accent.",
+    "previewVideo": {
+      "src": "/previews/text-animation.mp4",
+      "poster": "/previews/text-animation-poster.jpg",
+      "alt": "The TextAnimation component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
   },
   "section-rail": {
     "intro": "A floating navigator for a long screen: a stack of short bars pinned to one edge, one per section, that expands into a labelled panel when you touch it. Collapsed it is a position indicator you can read at a glance without giving up any content width; expanded it is a list you can jump from.",
@@ -4030,7 +4166,14 @@
       {
         "title": "Paged",
         "description": "`Pagination` reports the page; slicing the rows stays with you. Put it under the table with a `Pagination.Status` for the span, and the footer says both where you are and how much is left.",
-        "code": "const [page, setPage] = useState(1);\nconst pageSize = 20;\nconst rows = invoices.slice((page - 1) * pageSize, page * pageSize);\n\n<Pagination\n  count={Math.ceil(invoices.length / pageSize)}\n  page={page}\n  onPageChange={setPage}\n  variant=\"compact\"\n  size=\"sm\"\n>\n  <Pagination.Status pageSize={pageSize} total={invoices.length} />\n</Pagination>"
+        "code": "const [page, setPage] = useState(1);\nconst pageSize = 20;\nconst rows = invoices.slice((page - 1) * pageSize, page * pageSize);\n\n<Pagination\n  count={Math.ceil(invoices.length / pageSize)}\n  page={page}\n  onPageChange={setPage}\n  variant=\"compact\"\n  size=\"sm\"\n>\n  <Pagination.Status pageSize={pageSize} total={invoices.length} />\n</Pagination>",
+        "previewVideo": {
+          "src": "/previews/table-paged.mp4",
+          "poster": "/previews/table-paged-poster.jpg",
+          "alt": "Table — Paged.",
+          "width": 720,
+          "height": 1560
+        }
       }
     ],
     "notes": "### Columns are a convention, not a mechanism\n\nThere is no column model. A column exists because every row divides its width the same way, so `flex` and `width` on a `Table.Head` and on the `Table.Cell`s beneath it have to agree. `flex` is a share of the leftover width — the default of 1 makes columns even — and `width` pins a column that must not move, such as an icon or a state dot.\n\n### Sorting is yours\n\nThe table renders a sort direction; it never sorts. `sortDirection` says which way the arrow points and `onPress` reports the tap — reordering the rows stays with you, because the data being reordered is yours and only you know whether that means a comparator, a refetch or a new query.\n\nWhat the component does own is making the press land. The sorted column takes a full-strength arrow *and* a foreground label at a heavier weight, because one signal at the size of a sort arrow is too quiet: a press that only nudges a dim chevron reads as a press that did nothing, even when the rows behind it did move.\n\n### Long tables\n\n`Table.Body` renders every row it is given, so a table of thousands belongs in a `FlatList` instead. `Table.Row` takes `index` and `last` directly for that case: a virtualised row has no `Table.Body` above it to read its position from, and without them a striped table would tint nothing and every row would keep its hairline.\n\n```tsx\n<FlatList\n  data={invoices}\n  renderItem={({ item, index }) => (\n    <Table.Row index={index} last={index === invoices.length - 1}>\n      <Table.Cell flex={2}>{item.id}</Table.Cell>\n      <Table.Cell align=\"end\">{item.amount}</Table.Cell>\n    </Table.Row>\n  )}\n/>\n```\n\nWrap the list in a `Table` so the rows still read the density and striping, and put the header row above the list rather than inside it.\n\n### Accessibility\n\nThe root, the bands, the rows and the cells carry `table`, `rowgroup`, `row`, `columnheader` and `cell` roles, so a screen reader walks the table as a table. A row given `onPress` is the exception: it announces itself as a button, because being able to act on it is the more useful fact about it.",
@@ -4986,22 +5129,47 @@
       {
         "title": "Today's goals",
         "description": "Three targets, each read against its own rather than against each other. Selecting a ring swaps the header’s figures for that ring’s.",
-        "code": "<RingChart data={goals} size={208} strokeWidth={16} ringGap={6} activeIndex={active} onActiveIndexChange={setActive}>\n  <RingChart.Header value={`${percent}%`} caption={caption} legend />\n  {goals.map((goal, index) => (\n    <RingChart.Ring key={goal.label} index={index} />\n  ))}\n  <RingChart.Center defaultLabel=\"Move\" />\n</RingChart>"
+        "code": "<RingChart data={goals} size={208} strokeWidth={16} ringGap={6} activeIndex={active} onActiveIndexChange={setActive}>\n  <RingChart.Header value={`${percent}%`} caption={caption} legend />\n  {goals.map((goal, index) => (\n    <RingChart.Ring key={goal.label} index={index} />\n  ))}\n  <RingChart.Center defaultLabel=\"Move\" />\n</RingChart>",
+        "previewVideo": {
+          "src": "/previews/ring-chart-today-s-goals.mp4",
+          "poster": "/previews/ring-chart-today-s-goals-poster.jpg",
+          "alt": "RingChart — Today's goals.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Gauge",
         "description": "The ring opened to three quarters of a turn, with the notch at the bottom where a dial has always had it. One value, and the room a wide hole gives the number.",
-        "code": "<RingChart data={[health]} size={208} startAngle={-135} endAngle={135} strokeWidth={18}>\n  <RingChart.Header title=\"Score\" value=\"82 of 100\" caption=\"Above the 75 the alerting is set at\" />\n  <RingChart.Ring index={0} colorIndex={2} />\n  <RingChart.Center formatValue={(value) => `${value}`} />\n</RingChart>"
+        "code": "<RingChart data={[health]} size={208} startAngle={-135} endAngle={135} strokeWidth={18}>\n  <RingChart.Header title=\"Score\" value=\"82 of 100\" caption=\"Above the 75 the alerting is set at\" />\n  <RingChart.Ring index={0} colorIndex={2} />\n  <RingChart.Center formatValue={(value) => `${value}`} />\n</RingChart>",
+        "preview": {
+          "src": "/previews/ring-chart-gauge.jpg",
+          "alt": "RingChart — Gauge.",
+          "width": 1179,
+          "height": 1227
+        }
       },
       {
         "title": "Segmented",
         "description": "Ticks rather than an arc, for a target made of countable things. Twelve sessions, eight of them attended, and you can count them.",
-        "code": "<RingChart data={[sessions]} size={208} strokeWidth={16}>\n  <RingChart.Header title=\"Sessions attended\" value=\"8 of 12\" />\n  <RingChart.Ring index={0} segments={12} segmentGap={6} colorIndex={4} />\n  <RingChart.Center formatValue={(value) => `${value}`} />\n</RingChart>"
+        "code": "<RingChart data={[sessions]} size={208} strokeWidth={16}>\n  <RingChart.Header title=\"Sessions attended\" value=\"8 of 12\" />\n  <RingChart.Ring index={0} segments={12} segmentGap={6} colorIndex={4} />\n  <RingChart.Center formatValue={(value) => `${value}`} />\n</RingChart>",
+        "preview": {
+          "src": "/previews/ring-chart-segmented.jpg",
+          "alt": "RingChart — Segmented.",
+          "width": 1179,
+          "height": 1177
+        }
       },
       {
         "title": "Separate dials",
         "description": "Three charts rather than three rings. Concentric, the outer ring is longer than the inner one at the same percentage and the eye reads the length — so targets that are not read against each other are better off apart.",
-        "code": "{budgets.map((budget, index) => (\n  <RingChart key={budget.label} data={[budget]} size={92} strokeWidth={9} startAngle={-120} endAngle={120}>\n    <RingChart.Ring index={0} colorIndex={index + 1} />\n    <RingChart.Center formatValue={() => `${percentOf(budget)}%`} />\n  </RingChart>\n))}"
+        "code": "{budgets.map((budget, index) => (\n  <RingChart key={budget.label} data={[budget]} size={92} strokeWidth={9} startAngle={-120} endAngle={120}>\n    <RingChart.Ring index={0} colorIndex={index + 1} />\n    <RingChart.Center formatValue={() => `${percentOf(budget)}%`} />\n  </RingChart>\n))}",
+        "preview": {
+          "src": "/previews/ring-chart-separate-dials.jpg",
+          "alt": "RingChart — Separate dials.",
+          "width": 1179,
+          "height": 820
+        }
       }
     ],
     "notes": "### Why every ring has a track\n\nAn arc drawn on nothing shows how far something went. An arc drawn on a full circle shows how far it went *of what it was aiming at*, which is the entire question a ring chart is asked. The track is the target made visible.\n\nA value past its target fills the ring and stops there. Going round twice would draw 110% as 10%, which is the wrong answer told confidently.\n\n### What the centre shows\n\nThe outermost ring, until one is selected. Not a total: the rings measure different things against different targets, so their values do not add up and their percentages do not average — a total in the middle would be a confident number about nothing. Pass a render function to `Center` when your rings *do* share a unit and a total is honest.\n\n### The header, and the card around it\n\n`RingChart.Header` belongs to the chart; the card's header belongs to the tray the chart sits in. The distinction is worth keeping: the header's value changes as a ring is selected, and its legend is the list the chart itself is holding. Pass the formatted value in rather than expecting it to be derived — there is no total to derive from targets that measure different things.\n\n### Touch, not hover\n\nRings are selected by pressing them. There is no equivalent here of a pointer resting somewhere without committing, so a chart that only revealed its numbers on hover would never reveal them at all — and because a twelve-point band is below the size a finger reliably hits, the touch target is widened well past the ring it belongs to.\n\n### Reduced motion\n\nThe sweep is skipped and the arcs draw at their final length.",
@@ -5010,7 +5178,7 @@
       "poster": "/previews/ring-chart-poster.jpg",
       "alt": "The RingChart component, running in the example app.",
       "width": 720,
-      "height": 1232
+      "height": 1560
     }
   },
   "menu": {
@@ -5697,12 +5865,26 @@
       {
         "title": "Swipe to delete",
         "description": "The common case. One action on the end side, in the destructive colour, and a drag carried far enough fires it without the tile ever being tapped.",
-        "code": "const [rows, setRows] = useState(['Invoice.pdf', 'Contract.docx', 'Notes.md']);\n\n<Item.Group>\n  {rows.map((name) => (\n    <Swipe key={name} haptics>\n      <Swipe.End>\n        <Swipe.Action\n          icon={<TrashIcon />}\n          label=\"Delete\"\n          color=\"destructive\"\n          onPress={() => setRows((r) => r.filter((n) => n !== name))}\n        />\n      </Swipe.End>\n      <Item>\n        <Item.Content>\n          <Item.Title>{name}</Item.Title>\n        </Item.Content>\n      </Item>\n    </Swipe>\n  ))}\n</Item.Group>"
+        "code": "const [rows, setRows] = useState(['Invoice.pdf', 'Contract.docx', 'Notes.md']);\n\n<Item.Group>\n  {rows.map((name) => (\n    <Swipe key={name} haptics>\n      <Swipe.End>\n        <Swipe.Action\n          icon={<TrashIcon />}\n          label=\"Delete\"\n          color=\"destructive\"\n          onPress={() => setRows((r) => r.filter((n) => n !== name))}\n        />\n      </Swipe.End>\n      <Item>\n        <Item.Content>\n          <Item.Title>{name}</Item.Title>\n        </Item.Content>\n      </Item>\n    </Swipe>\n  ))}\n</Item.Group>",
+        "previewVideo": {
+          "src": "/previews/swipe-swipe-to-delete.mp4",
+          "poster": "/previews/swipe-swipe-to-delete-poster.jpg",
+          "alt": "Swipe — Swipe to delete.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Both sides",
         "description": "A panel on each side, with more than one tile on the end. The tiles pack against the row and emerge from under it as it moves, so they are whole and readable by the time the row has cleared them.",
-        "code": "<Swipe>\n  <Swipe.Start>\n    <Swipe.Action icon={<CheckIcon />} label=\"Done\" color=\"success\" onPress={complete} />\n  </Swipe.Start>\n  <Swipe.End>\n    <Swipe.Action icon={<BellIcon />} label=\"Snooze\" color=\"warning\" onPress={snooze} />\n    <Swipe.Action icon={<TrashIcon />} label=\"Delete\" color=\"destructive\" onPress={remove} />\n  </Swipe.End>\n  <Item>\n    <Item.Content>\n      <Item.Title>Renew the domain</Item.Title>\n      <Item.Description>Due Friday</Item.Description>\n    </Item.Content>\n  </Item>\n</Swipe>"
+        "code": "<Swipe>\n  <Swipe.Start>\n    <Swipe.Action icon={<CheckIcon />} label=\"Done\" color=\"success\" onPress={complete} />\n  </Swipe.Start>\n  <Swipe.End>\n    <Swipe.Action icon={<BellIcon />} label=\"Snooze\" color=\"warning\" onPress={snooze} />\n    <Swipe.Action icon={<TrashIcon />} label=\"Delete\" color=\"destructive\" onPress={remove} />\n  </Swipe.End>\n  <Item>\n    <Item.Content>\n      <Item.Title>Renew the domain</Item.Title>\n      <Item.Description>Due Friday</Item.Description>\n    </Item.Content>\n  </Item>\n</Swipe>",
+        "previewVideo": {
+          "src": "/previews/swipe-both-sides.mp4",
+          "poster": "/previews/swipe-both-sides-poster.jpg",
+          "alt": "Swipe — Both sides.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Without the full swipe",
@@ -5712,18 +5894,39 @@
       {
         "title": "Keeping the row open",
         "description": "`keepOpen` leaves the row aside after the tile is tapped, for an action that toggles rather than finishes — the row still says what it did, and the same tile is there to undo it.",
-        "code": "const [saved, setSaved] = useState(false);\n\n<Swipe>\n  <Swipe.Start>\n    <Swipe.Action\n      icon={<BookmarkIcon />}\n      label={saved ? 'Saved' : 'Save'}\n      color={saved ? 'success' : 'primary'}\n      keepOpen\n      onPress={() => setSaved((s) => !s)}\n    />\n  </Swipe.Start>\n  <Item>\n    <Item.Content>\n      <Item.Title>Weekly digest</Item.Title>\n    </Item.Content>\n  </Item>\n</Swipe>"
+        "code": "const [saved, setSaved] = useState(false);\n\n<Swipe>\n  <Swipe.Start>\n    <Swipe.Action\n      icon={<BookmarkIcon />}\n      label={saved ? 'Saved' : 'Save'}\n      color={saved ? 'success' : 'primary'}\n      keepOpen\n      onPress={() => setSaved((s) => !s)}\n    />\n  </Swipe.Start>\n  <Item>\n    <Item.Content>\n      <Item.Title>Weekly digest</Item.Title>\n    </Item.Content>\n  </Item>\n</Swipe>",
+        "previewVideo": {
+          "src": "/previews/swipe-keeping-the-row-open.mp4",
+          "poster": "/previews/swipe-keeping-the-row-open-poster.jpg",
+          "alt": "Swipe — Keeping the row open.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Right to left",
         "description": "The same row inside a right-to-left subtree. `Swipe.End` still means the edge text runs toward, so the actions sit on the left and the row opens rightward. Nothing about the markup changed.",
-        "code": "<Direction dir=\"rtl\" className=\"w-full\">\n  <Swipe>\n    <Swipe.End>\n      <Swipe.Action icon={<TrashIcon />} label=\"حذف\" color=\"destructive\" onPress={remove} />\n    </Swipe.End>\n    <Item>\n      <Item.Content>\n        <Item.Title>فاتورة</Item.Title>\n      </Item.Content>\n    </Item>\n  </Swipe>\n</Direction>"
+        "code": "<Direction dir=\"rtl\" className=\"w-full\">\n  <Swipe>\n    <Swipe.End>\n      <Swipe.Action icon={<TrashIcon />} label=\"حذف\" color=\"destructive\" onPress={remove} />\n    </Swipe.End>\n    <Item>\n      <Item.Content>\n        <Item.Title>فاتورة</Item.Title>\n      </Item.Content>\n    </Item>\n  </Swipe>\n</Direction>",
+        "previewVideo": {
+          "src": "/previews/swipe-right-to-left.mp4",
+          "poster": "/previews/swipe-right-to-left-poster.jpg",
+          "alt": "Swipe — Right to left.",
+          "width": 720,
+          "height": 1560
+        }
       }
     ],
     "variantCode": {
       "color": "{/* `color` is a Swipe.Action prop — the panel behind the tiles takes the\n    outermost one, so an overshoot extends that action rather than opening a hole. */}\n<Swipe>\n  <Swipe.End>\n    <Swipe.Action label=\"Archive\" color=\"info\" onPress={archive} />\n    <Swipe.Action label=\"Delete\" color=\"destructive\" onPress={remove} />\n  </Swipe.End>\n  <Item>\n    <Item.Content>\n      <Item.Title>Row</Item.Title>\n    </Item.Content>\n  </Item>\n</Swipe>"
     },
-    "notes": "A panel is exactly as wide as the gap the row has left behind — never wider, so it cannot paint over the row, and never narrower, so carrying the drag past the tiles extends the outermost action's colour instead of opening a hole onto the screen underneath. The row therefore needs no background of its own, and the two never overlap at any point in the gesture.\n\n### Which action a full swipe fires\n\nThe one furthest from the row, because that is the one the gesture travelled all the way to. On the end side that is the last tile declared, on the start side the first — in both cases the tile at the outer edge, whose colour the panel takes and which grows to fill the gap as the drag is carried past it. Put the destructive action there, or turn the behaviour off with `fullSwipe={false}`.\n\n### Sharing the screen with a scroller\n\nThe drag waits for clearly horizontal intent and fails outright the moment the finger commits vertically, so a list of swipeable rows scrolls the way an ordinary list does and no row twitches open under a scroll. Inside a *horizontal* scroller the two do want the same axis — there the row should be `disabled`, or the scroller should be the one that gives way.\n\n### Reaching the actions without the gesture\n\nA swipe is invisible to a screen reader: there is nothing on screen to announce, and no way to discover the gesture from the row itself. Every action is therefore also published as an accessibility action on the row, named by its `label` — which is why `label` is required and why it should say what the action does rather than name an icon.\n\n### Opening it yourself\n\nThe row is uncontrolled, and a ref is how you reach it: `open('start' | 'end')` and `close()`. `onOpenChange` reports the side that opened, or `null` when the row closed — enough to keep only one row of a list open at a time by closing the previous one."
+    "notes": "A panel is exactly as wide as the gap the row has left behind — never wider, so it cannot paint over the row, and never narrower, so carrying the drag past the tiles extends the outermost action's colour instead of opening a hole onto the screen underneath. The row therefore needs no background of its own, and the two never overlap at any point in the gesture.\n\n### Which action a full swipe fires\n\nThe one furthest from the row, because that is the one the gesture travelled all the way to. On the end side that is the last tile declared, on the start side the first — in both cases the tile at the outer edge, whose colour the panel takes and which grows to fill the gap as the drag is carried past it. Put the destructive action there, or turn the behaviour off with `fullSwipe={false}`.\n\n### Sharing the screen with a scroller\n\nThe drag waits for clearly horizontal intent and fails outright the moment the finger commits vertically, so a list of swipeable rows scrolls the way an ordinary list does and no row twitches open under a scroll. Inside a *horizontal* scroller the two do want the same axis — there the row should be `disabled`, or the scroller should be the one that gives way.\n\n### Reaching the actions without the gesture\n\nA swipe is invisible to a screen reader: there is nothing on screen to announce, and no way to discover the gesture from the row itself. Every action is therefore also published as an accessibility action on the row, named by its `label` — which is why `label` is required and why it should say what the action does rather than name an icon.\n\n### Opening it yourself\n\nThe row is uncontrolled, and a ref is how you reach it: `open('start' | 'end')` and `close()`. `onOpenChange` reports the side that opened, or `null` when the row closed — enough to keep only one row of a list open at a time by closing the previous one.",
+    "previewVideo": {
+      "src": "/previews/swipe.mp4",
+      "poster": "/previews/swipe-poster.jpg",
+      "alt": "The Swipe component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
   },
   "time-picker": {
     "intro": "A time of day behind a trigger, in one of three faces.\n\nThe value is `{ hour, minute }` on a 24-hour clock whatever the face shows. A 12-hour display is a rendering choice, and storing 7pm as `{ hour: 7 }` plus a meridiem flag would put that flag into every comparison downstream.\n\nThe three layouts exist because “pick a time” is three different tasks. `wheel` is the precise one — any minute in the day is two or three flicks away. `clock` picks a *slot* rather than a time, and its face answers “morning or evening?” faster than reading digits. `ruler` is the coarse one, and the only one that reads at arm's length, which makes it the one for a sheet with a thumb on it.\n\nAll three produce the same value and take the same props, so swapping between them is a one-word change.",
@@ -5744,7 +5947,14 @@
       {
         "title": "A time",
         "description": "The trigger reads back the chosen time and falls back to the placeholder. Nothing chosen yet means the wheel opens near the current hour rather than at midnight — an unset picker still has to open somewhere plausible.",
-        "code": "const [time, setTime] = useState<TimeValue>();\n\n<TimePicker value={time} onValueChange={setTime} />"
+        "code": "const [time, setTime] = useState<TimeValue>();\n\n<TimePicker value={time} onValueChange={setTime} />",
+        "previewVideo": {
+          "src": "/previews/time-picker-a-time.mp4",
+          "poster": "/previews/time-picker-a-time-poster.jpg",
+          "alt": "TimePicker — A time.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "A 24-hour clock",
@@ -5764,12 +5974,38 @@
       {
         "title": "The clock face",
         "description": "A face beside a list of times. The hands sweep to the selection rather than jumping, because the face’s whole job is to say *when in the day* the highlighted row is — and a hand that jumps gives that away one row at a time.",
-        "code": "<TimePicker layout=\"clock\" value={time} onValueChange={setTime} />"
+        "code": "<TimePicker layout=\"clock\" value={time} onValueChange={setTime} />",
+        "previewVideo": {
+          "src": "/previews/time-picker-the-clock-face.mp4",
+          "poster": "/previews/time-picker-the-clock-face-poster.jpg",
+          "alt": "TimePicker — The clock face.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "The ruler, in a sheet",
         "description": "One large readout over a scale you swipe. It is the layout that reads at arm's length, so it is the one for a sheet — where the panel takes the full width and the Done button with it, because a sheet's outside is only the strip above it.",
-        "code": "<TimePicker\n  layout=\"ruler\"\n  presentation=\"bottom-sheet\"\n  value={time}\n  onValueChange={setTime}\n/>"
+        "code": "<TimePicker\n  layout=\"ruler\"\n  presentation=\"bottom-sheet\"\n  value={time}\n  onValueChange={setTime}\n/>",
+        "previewVideo": {
+          "src": "/previews/time-picker-the-ruler-in-a-sheet.mp4",
+          "poster": "/previews/time-picker-the-ruler-in-a-sheet-poster.jpg",
+          "alt": "TimePicker — The ruler, in a sheet.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "The four presentations",
+        "description": "`presentation` decides where the picker opens, and the choice is about how much of the screen the answer is worth. `popover` keeps the field in view and is the default; `dialog` takes the middle of the screen for a choice that is the whole point of the step; `bottom-sheet` puts it under the thumb, which is what a scale you swipe wants; and `inline` opens nothing at all, for a picker that is part of a form rather than behind it.",
+        "code": "<TimePicker presentation=\"popover\" value={time} onValueChange={setTime} />\n<TimePicker presentation=\"dialog\" … />\n<TimePicker presentation=\"bottom-sheet\" … />\n<TimePicker presentation=\"inline\" … />",
+        "previewVideo": {
+          "src": "/previews/time-picker-the-four-presentations.mp4",
+          "poster": "/previews/time-picker-the-four-presentations-poster.jpg",
+          "alt": "TimePicker — The four presentations.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "In a dialog",
@@ -5779,7 +6015,14 @@
       {
         "title": "Inline, inside a Frame",
         "description": "`inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own. The toggle goes outside the card: it chooses *which* time the card is editing, which is a decision about the card rather than a control inside it.",
-        "code": "const [edge, setEdge] = useState('start');\n\n<View className=\"gap-3\">\n  <ToggleButtonGroup\n    selectionMode=\"single\"\n    size=\"sm\"\n    value={[edge]}\n    onValueChange={(next) => setEdge(next[0] ?? 'start')}\n    className=\"w-full justify-between px-1\"\n  >\n    <ToggleButton id=\"start\">Starts</ToggleButton>\n    <ToggleButton id=\"end\">Ends</ToggleButton>\n  </ToggleButtonGroup>\n\n  <Frame>\n    <Frame.Header>\n      <Frame.Title>Time</Frame.Title>\n      <Frame.Action>\n        {formatTime(start)} – {formatTime(end)}\n      </Frame.Action>\n    </Frame.Header>\n    <Frame.Panel>\n      <Frame.Section className=\"items-center\">\n        <TimePicker\n          presentation=\"inline\"\n          layout=\"clock\"\n          value={edge === 'start' ? start : end}\n          onValueChange={edge === 'start' ? setStart : setEnd}\n        />\n      </Frame.Section>\n    </Frame.Panel>\n  </Frame>\n</View>"
+        "code": "const [edge, setEdge] = useState('start');\n\n<View className=\"gap-3\">\n  <ToggleButtonGroup\n    selectionMode=\"single\"\n    size=\"sm\"\n    value={[edge]}\n    onValueChange={(next) => setEdge(next[0] ?? 'start')}\n    className=\"w-full justify-between px-1\"\n  >\n    <ToggleButton id=\"start\">Starts</ToggleButton>\n    <ToggleButton id=\"end\">Ends</ToggleButton>\n  </ToggleButtonGroup>\n\n  <Frame>\n    <Frame.Header>\n      <Frame.Title>Time</Frame.Title>\n      <Frame.Action>\n        {formatTime(start)} – {formatTime(end)}\n      </Frame.Action>\n    </Frame.Header>\n    <Frame.Panel>\n      <Frame.Section className=\"items-center\">\n        <TimePicker\n          presentation=\"inline\"\n          layout=\"clock\"\n          value={edge === 'start' ? start : end}\n          onValueChange={edge === 'start' ? setStart : setEnd}\n        />\n      </Frame.Section>\n    </Frame.Panel>\n  </Frame>\n</View>",
+        "previewVideo": {
+          "src": "/previews/time-picker-inline-inside-a-frame.mp4",
+          "poster": "/previews/time-picker-inline-inside-a-frame-poster.jpg",
+          "alt": "TimePicker — Inline, inside a Frame.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Your own trigger",
@@ -5787,7 +6030,14 @@
         "code": "<TimePicker value={time} onValueChange={setTime}>\n  <Button variant=\"ghost\" size=\"icon\" accessibilityLabel=\"Choose a time\">\n    <ClockIcon size={18} />\n  </Button>\n</TimePicker>"
       }
     ],
-    "notes": "**The value is always 0–23.** `displayHour` and `hourFromDisplay` are exported alongside it if you need the face's own numbering, but nothing stored should be in it.\n\n**`minuteStep` defaults per layout.** `wheel` steps by 1, `clock` by 30 and `ruler` by 15 — the two that scroll the whole day at once need a coarser grid to be usable. Pass it explicitly and the layout stops mattering.\n\n**A chosen time off the step is rounded, not rejected.** At a 30-minute step 7:29 is a finger that stopped just short of half past, not a request for seven o'clock.\n\n**Every face is a scroll view.** Momentum, deceleration and fling physics come from the platform, and the selection is the row it comes to rest on. That is also why the panel needs a definite width, which the presentations give it.\n\n**The sheet gets a Done button and the popover does not.** A popover is dismissed by tapping anywhere outside it, which is most of the screen; a sheet's outside is the strip above it, and a scale under your thumb needs somewhere deliberate to finish."
+    "notes": "**The value is always 0–23.** `displayHour` and `hourFromDisplay` are exported alongside it if you need the face's own numbering, but nothing stored should be in it.\n\n**`minuteStep` defaults per layout.** `wheel` steps by 1, `clock` by 30 and `ruler` by 15 — the two that scroll the whole day at once need a coarser grid to be usable. Pass it explicitly and the layout stops mattering.\n\n**A chosen time off the step is rounded, not rejected.** At a 30-minute step 7:29 is a finger that stopped just short of half past, not a request for seven o'clock.\n\n**Every face is a scroll view.** Momentum, deceleration and fling physics come from the platform, and the selection is the row it comes to rest on. That is also why the panel needs a definite width, which the presentations give it.\n\n**The sheet gets a Done button and the popover does not.** A popover is dismissed by tapping anywhere outside it, which is most of the screen; a sheet's outside is the strip above it, and a scale under your thumb needs somewhere deliberate to finish.",
+    "previewVideo": {
+      "src": "/previews/time-picker.mp4",
+      "poster": "/previews/time-picker-poster.jpg",
+      "alt": "The TimePicker component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
   },
   "combobox": {
     "intro": "A text field that filters a list of options as you type. The difference from Select is where the typing happens: a Select is a button that opens a list, and its optional filter lives inside that list once it is open. A Combobox is the field itself — you are already typing when the options appear, which is what you want when the value is something you know the name of rather than something you expect to recognise by scrolling.",
