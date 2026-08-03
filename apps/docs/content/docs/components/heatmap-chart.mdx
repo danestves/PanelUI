@@ -177,10 +177,10 @@ const [active, setActive] = useState(null);
 The x-axis emits a label where the month changes, which a grid of weekdays never does — there is no month in it to change. `labels` overrides them with one per column, the way `YAxis` already takes one per row, so a grid can be rows of hours by columns of days.
 
 ```tsx
-<HeatmapChart data={week} layout="fill" rows={8} gap={4}>
+<HeatmapChart data={week} layout="fill" rows={6} gap={4}>
   <HeatmapChart.Header title="Tickets opened" legend />
   <HeatmapChart.XAxis labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']} />
-  <HeatmapChart.YAxis labels={['00', '03', '06', '09', '12', '15', '18', '21']} tickFilter="all" width={24} />
+  <HeatmapChart.YAxis labels={['00', '04', '08', '12', '16', '20']} tickFilter="all" width={24} />
   <HeatmapChart.Cells cornerRadius={3} />
   <HeatmapChart.Tooltip />
 </HeatmapChart>
@@ -209,11 +209,10 @@ A full year with a readout that follows the finger. Fifty-three weeks do not fit
 
 ### Filling the width
 
-For a short range, `fill` divides the available width between the columns rather than drawing them at a fixed size, so the chart always meets both edges of its card.
+For a short range, `fill` divides the available width between the columns rather than drawing them at a fixed size, so the chart always meets both edges of its card. No chart header here — the card's own already says what this is, and a second title under the first says it twice.
 
 ```tsx
 <HeatmapChart data={weeks.slice(-13)} layout="fill" weekStartDay={1} gap={4}>
-  <HeatmapChart.Header title="Last 13 weeks" caption="The width divided between the columns" />
   <HeatmapChart.XAxis />
   <HeatmapChart.YAxis />
   <HeatmapChart.Cells cornerRadius={3} />
@@ -246,11 +245,11 @@ A rule every thirteen columns, and the ramp derived from a colour of your own in
 
 ### Punchcard
 
-Rows that are hours and columns that are weekdays. “When is this busy” is a question the year grid cannot answer, having already spent its rows on the days of the week — `rows` and a pair of `labels` turn the same grid on its side.
+Rows that are hours and columns that are weekdays. “When is this busy” is a question the year grid cannot answer, having already spent its rows on the days of the week — `rows` and a pair of `labels` turn the same grid on its side. Six four-hour bins rather than eight three-hour ones, so the grid stands the same height as the calendars beside it.
 
 ```tsx
-<HeatmapChart data={week} layout="fill" rows={8} gap={4} onActiveCellChange={setActive}>
-  <HeatmapChart.Header title="Tickets opened" value="9am – 6pm" legend />
+<HeatmapChart data={week} layout="fill" rows={6} gap={4} onActiveCellChange={setActive}>
+  <HeatmapChart.Header title="Tickets opened" value="08:00 – 16:00" legend />
   <HeatmapChart.XAxis labels={weekdays} />
   <HeatmapChart.YAxis labels={hours} tickFilter="all" width={24} />
   <HeatmapChart.Cells cornerRadius={3} />

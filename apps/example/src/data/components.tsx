@@ -5538,11 +5538,9 @@ function HeatmapFillVersion() {
         </Frame.Header>
         <Frame.Panel>
           <View className="p-4">
+            {/* No chart header here: the frame's own already says what this
+                is, and a second title under the first says it twice. */}
             <HeatmapChart data={HEATMAP_QUARTER} layout="fill" weekStartDay={1} gap={4}>
-              <HeatmapChart.Header
-                title="Last 13 weeks"
-                caption="The width divided between the columns, rather than a fixed cell"
-              />
               <HeatmapChart.XAxis />
               <HeatmapChart.YAxis />
               <HeatmapChart.Cells cornerRadius={3} />
@@ -5598,12 +5596,17 @@ function HeatmapQuartersVersion() {
   );
 }
 
-const HOURS = ['00', '03', '06', '09', '12', '15', '18', '21'];
+/*
+ * Four-hour bins rather than three. Six rows is a grid the same height as the
+ * calendar ones beside it — eight stood a good deal taller than everything
+ * else in the pager.
+ */
+const HOURS = ['00', '04', '08', '12', '16', '20'];
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /**
- * A week by time of day rather than a year by date — seven columns of eight
- * three-hour bins, seeded the same way the year is so the shape holds still.
+ * A week by time of day rather than a year by date — seven columns of six
+ * four-hour bins, seeded the same way the year is so the shape holds still.
  */
 function punchcardWeek(): HeatmapColumn[] {
   let state = 19;
@@ -5619,8 +5622,8 @@ function punchcardWeek(): HeatmapColumn[] {
       const weekend = day >= 5;
       // Office hours on weekdays, a quiet evening bump at the weekend, and
       // nothing much overnight either way.
-      const working = slot >= 3 && slot <= 6;
-      const peak = weekend ? (slot >= 5 && slot <= 6 ? 0.5 : 0.12) : working ? 1 : 0.2;
+      const working = slot >= 2 && slot <= 4;
+      const peak = weekend ? (slot === 4 ? 0.5 : 0.12) : working ? 1 : 0.2;
       return { bin: slot, count: Math.floor(roll * 20 * peak) };
     }),
   }));
@@ -5654,7 +5657,7 @@ function HeatmapPunchcardVersion() {
             >
               <HeatmapChart.Header
                 title="Tickets opened"
-                value={active ? `${active.count}` : '9am – 6pm'}
+                value={active ? `${active.count}` : '08:00 – 16:00'}
                 caption={
                   active
                     ? `${WEEKDAYS[active.column] ?? ''} at ${HOURS[active.row] ?? ''}:00`
