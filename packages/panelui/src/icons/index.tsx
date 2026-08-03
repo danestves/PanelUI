@@ -15,6 +15,12 @@
  *
  * Brand marks (Google, Facebook, Apple) are the exception: they carry their
  * own colours and ignore the context.
+ *
+ * A glyph whose *meaning* is a horizontal direction mirrors in a right-to-left
+ * subtree — the chevrons, the outward arrow, the send plane. Everything else
+ * is drawn once and left alone, including the vertical arrows, since the
+ * vertical axis does not mirror, and including asymmetric glyphs that are not
+ * directions (a magnifier, a pencil, a play triangle).
  */
 import { createContext, useContext, type ReactNode } from 'react';
 import Svg, { Circle, G, Path, type SvgProps } from 'react-native-svg';
@@ -226,11 +232,20 @@ export function ChevronDownIcon({ size = 16, color, ...props }: IconProps) {
  *
  * Only for glyphs whose meaning *is* a direction. An icon that happens to be
  * asymmetric — a pencil, a magnifier — means the same thing either way round,
- * and flipping it is just a wrong drawing.
+ * and flipping it is just a wrong drawing. The vertical axis never mirrors, so
+ * the up and down glyphs stay as they are drawn.
+ *
+ * Left-to-right gets an identity transform rather than no transform at all.
+ * Dropping the prop leaves the last matrix the view was given in place, so a
+ * glyph mirrored once stays mirrored when the direction flips back — the
+ * arrows in an app that can switch direction at runtime end up pointing at the
+ * text one toggle in, and never recover.
  */
-function useFlip(): { transform?: string } {
-  const rtl = useDirection() === 'rtl';
-  return rtl ? { transform: 'scale(-1 1) translate(-24 0)' } : {};
+const IDENTITY = 'translate(0 0)';
+const MIRROR = 'scale(-1 1) translate(-24 0)';
+
+function useFlip(): { transform: string } {
+  return { transform: useDirection() === 'rtl' ? MIRROR : IDENTITY };
 }
 
 export function ChevronLeftIcon({ size = 16, color, ...props }: IconProps) {
@@ -325,6 +340,7 @@ export function SearchIcon({ size = 16, color, ...props }: IconProps) {
 
 export function ArrowUpRightIcon({ size = 20, color, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#fff');
+  const flip = useFlip();
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
       <Path
@@ -333,6 +349,7 @@ export function ArrowUpRightIcon({ size = 20, color, ...props }: IconProps) {
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
+        {...flip}
       />
     </Svg>
   );
@@ -618,6 +635,7 @@ export function ReceiptIcon({ size = 16, color, ...props }: IconProps) {
 /** Paper plane — sent, submitted, approved-and-forwarded. */
 export function SendIcon({ size = 16, color, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#737373');
+  const flip = useFlip();
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
       <Path
@@ -625,6 +643,7 @@ export function SendIcon({ size = 16, color, ...props }: IconProps) {
         stroke={resolved}
         strokeWidth={2}
         strokeLinejoin="round"
+        {...flip}
       />
     </Svg>
   );

@@ -5242,7 +5242,9 @@ function DirectionRows() {
           <Item.Title>Notifications</Item.Title>
           <Item.Description>Badges, sounds, banners</Item.Description>
         </Item.Content>
-        <ChevronRightIcon size={16} />
+        <Item.Actions>
+          <ChevronRightIcon size={16} />
+        </Item.Actions>
       </Item>
       <Item.Separator />
       <Item>
@@ -5253,7 +5255,9 @@ function DirectionRows() {
           <Item.Title>Privacy</Item.Title>
           <Item.Description>Two-factor is on</Item.Description>
         </Item.Content>
-        <ChevronRightIcon size={16} />
+        <Item.Actions>
+          <ChevronRightIcon size={16} />
+        </Item.Actions>
       </Item>
       <Item.Separator />
       <Item>
@@ -5264,7 +5268,24 @@ function DirectionRows() {
           <Item.Title>Payment</Item.Title>
           <Item.Description>Visa ending 4242</Item.Description>
         </Item.Content>
-        <ChevronRightIcon size={16} />
+        <Item.Actions>
+          <ChevronRightIcon size={16} />
+        </Item.Actions>
+      </Item>
+      <Item.Separator />
+      {/* The send glyph is a direction too, and mirrors with the chevrons —
+          toggle back and forth and both have to follow every time, not once. */}
+      <Item>
+        <Item.Media variant="icon">
+          <SendIcon size={16} />
+        </Item.Media>
+        <Item.Content>
+          <Item.Title>Send feedback</Item.Title>
+          <Item.Description>Goes to the team</Item.Description>
+        </Item.Content>
+        <Item.Actions>
+          <ChevronRightIcon size={16} />
+        </Item.Actions>
       </Item>
     </Item.Group>
   );

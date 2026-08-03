@@ -123,7 +123,7 @@
     "react native rtl support",
     {
       "addedIn": "0.15.0",
-      "updatedIn": "0.25.0"
+      "updatedIn": "0.41.0"
     }
   ],
   "drawer": [
