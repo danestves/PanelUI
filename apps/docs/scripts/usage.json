@@ -545,16 +545,18 @@
       "Button",
       "Text",
       "Badge",
-      "Input"
+      "Input",
+      "Chip"
     ],
     "parts": {
       "Header": "Title and description block.",
       "Title": "Card heading.",
       "Description": "Muted supporting line.",
       "Content": "Main body.",
-      "Footer": "Row of actions."
+      "Footer": "Row of actions.",
+      "Wash": "A decorative layer for the back of the card: colour rising from the bottom edge, dithered with grain that breathes. Fills the card absolutely and takes no touches, so it goes first and everything else draws over it."
     },
-    "anatomy": "<Card>\n  <Card.Header>\n    <Card.Title>…</Card.Title>\n    <Card.Description>…</Card.Description>\n  </Card.Header>\n  <Card.Content>…</Card.Content>\n  <Card.Footer>…</Card.Footer>\n</Card>",
+    "anatomy": "<Card>\n  <Card.Header>\n    <Card.Title>…</Card.Title>\n    <Card.Description>…</Card.Description>\n  </Card.Header>\n  <Card.Content>…</Card.Content>\n  <Card.Footer>…</Card.Footer>\n</Card>\n\n{/* behind all of it, in a card that clips */}\n<Card className=\"overflow-hidden\">\n  <Card.Wash />\n  …\n</Card>",
     "examples": [
       {
         "title": "Full anatomy",
@@ -598,6 +600,11 @@
           "height": 1275
         },
         "code": "<Card>\n  <Card.Header>\n    <Card.Title>Project settings</Card.Title>\n    <Card.Description>Manage how your project appears to others.</Card.Description>\n  </Card.Header>\n  <Card.Content className=\"gap-4\">\n    <Input label=\"Project name\" placeholder=\"PanelUI\" />\n    <Input label=\"Description\" placeholder=\"A short description\" description=\"Shown on your public profile.\" />\n  </Card.Content>\n  <Card.Footer>\n    <Button size=\"sm\">Save</Button>\n    <Button size=\"sm\" variant=\"ghost\">Cancel</Button>\n  </Card.Footer>\n</Card>"
+      },
+      {
+        "title": "An animated wash behind it",
+        "description": "`Card.Wash` is the card's back: the tint rises from the bottom edge on a power curve, so it is nothing across the top and arrives in the lower third — a straight fade would read as a tinted panel instead. Over it sits grain, cross-faded between two seedings so each point on the card travels between two values on its own phase rather than holding one forever.\n\nThe root needs `overflow-hidden`: the layer reaches the card's edges, and the root is the thing with the corner radius. Put it first — it is absolutely positioned and takes no touches, so everything after it draws on top.",
+        "code": "<Card className=\"overflow-hidden\">\n  <Card.Wash tint=\"--color-info\" />\n\n  <Card.Header>\n    <Card.Description>Last 30 days</Card.Description>\n    <Card.Title>Weekly active</Card.Title>\n  </Card.Header>\n  <Card.Content>\n    <Text size=\"3xl\" weight=\"semibold\">3,072</Text>\n  </Card.Content>\n</Card>"
       }
     ],
     "preview": {
@@ -606,7 +613,8 @@
       "width": 1179,
       "height": 755,
       "caption": "Header, content and footer, running in the example app."
-    }
+    },
+    "notes": "### Padding lives on the slots\n\nThe root carries none, which is why a card whose media reaches its own corners needs nothing but `overflow-hidden` — no padding to undo first.\n\n### Tuning `Card.Wash`\n\n`tint` takes a theme token name or any colour string, and defaults to `--color-primary`. `intensity` is how opaque the wash gets at the bottom edge, `noise` how much grain sits over it, and `grainSize` how chunky that grain is — larger cells are also cheaper, since the tile is drawn once and repeated by the renderer rather than laid out as a grid of views.\n\n`speed` scales how fast the grain breathes, and `speed={0}` freezes it on one frame. A reduced-motion setting does the same thing without being asked: the wash and one still layer of grain are drawn, and nothing loops."
   },
   "calendar": {
     "intro": "A month of days, for picking one, several, or a span with two ends. It draws its own panel — a rounded, bordered card — so it can stand on a page without being wrapped in one; `bordered={false}` turns that off for a calendar already inside something that frames it.\n\nIt carries no date library. Month names, weekday names and day numbers come from `Intl`, and the arithmetic is a handful of guarded helpers, so a calendar costs no dependency.",

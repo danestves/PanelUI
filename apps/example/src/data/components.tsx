@@ -8300,6 +8300,61 @@ function LoaderInlineVersion() {
   );
 }
 
+const WASH_TINTS = [
+  { label: 'Primary', token: '--color-primary' },
+  { label: 'Info', token: '--color-info' },
+  { label: 'Success', token: '--color-success' },
+  { label: 'Warning', token: '--color-warning' },
+] as const;
+
+/**
+ * The wash with its tint on a switch, because the layer being parameterised is
+ * the point — a single tinted card would read as a picture rather than a knob.
+ */
+function CardWashDemo() {
+  const [tint, setTint] = useState<string>('--color-primary');
+
+  return (
+    <View className="w-full gap-3">
+      <Card className="w-full overflow-hidden">
+        {/* First inside the card, so everything after it is drawn on top. The
+            root needs `overflow-hidden` — the layer reaches its edges, and the
+            root is the thing holding the corner radius. */}
+        <Card.Wash tint={tint} />
+        <Card.Header>
+          <Card.Description>Last 30 days</Card.Description>
+          <Card.Title>Weekly active</Card.Title>
+        </Card.Header>
+        <Card.Content className="gap-1">
+          <Text size="3xl" weight="semibold" className="tabular-nums">
+            3,072
+          </Text>
+          <Text size="sm" muted>
+            Up 8.1% on the month before.
+          </Text>
+        </Card.Content>
+        <Card.Footer>
+          <Button variant="outline" size="sm" fullWidth>
+            Open report
+          </Button>
+        </Card.Footer>
+      </Card>
+
+      <View className="flex-row flex-wrap justify-center gap-2">
+        {WASH_TINTS.map((option) => (
+          <Chip
+            key={option.token}
+            selected={tint === option.token}
+            onPress={() => setTint(option.token)}
+          >
+            {option.label}
+          </Chip>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 /**
  * A navigation drawer with a destination selected, because that is the state a
  * navigation drawer is almost always in: it opens to tell you where you are,
@@ -9495,6 +9550,7 @@ export const COMPONENTS: ComponentEntry[] = [
           </Card>
         ),
       },
+      { label: 'Animated wash', render: () => <CardWashDemo /> },
     ],
   },
   {

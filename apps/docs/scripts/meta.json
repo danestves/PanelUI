@@ -64,7 +64,10 @@
   "card": [
     "Card",
     "Content surface with header, body and footer.",
-    "react native card"
+    "react native card",
+    {
+      "updatedIn": "0.41.0"
+    }
   ],
   "calendar": [
     "Calendar",
