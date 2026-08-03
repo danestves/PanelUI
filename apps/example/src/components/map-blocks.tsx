@@ -13,17 +13,21 @@
  */
 import { useMemo, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
+import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Avatar,
   Badge,
   Button,
   Card,
+  ChevronLeftIcon,
   Chip,
+  CompassIcon,
   Frame,
+  Input,
   Item,
   Map,
   Progress,
-  SearchIcon,
   Separator,
   StarIcon,
   Text,
@@ -119,11 +123,24 @@ const HERE: LngLat = [-0.1622, 51.4936];
 export function PlacesBlock() {
   const [selected, setSelected] = useState<(typeof PLACES)[number] | null>(null);
   const [directions, setDirections] = useState(false);
+  const [query, setQuery] = useState('');
+  const insets = useSafeAreaInsets();
   const map = useRef<MapHandle>(null);
+
+  const matches = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return [];
+    return PLACES.filter(
+      (place) =>
+        place.name.toLowerCase().includes(needle) ||
+        place.category.toLowerCase().includes(needle)
+    );
+  }, [query]);
 
   const select = (place: (typeof PLACES)[number]) => {
     setSelected(place);
     setDirections(false);
+    setQuery('');
     // Through the ref, not through `center`: driving the camera from state
     // would undo the user's own panning on the next render.
     map.current?.flyTo({ center: place.lngLat, zoom: 15 });
@@ -159,34 +176,103 @@ export function PlacesBlock() {
           <Map.Route coordinates={[HERE, selected.lngLat]} width={5} />
         ) : null}
 
-        <Map.Controls locate position="top-right" className="mt-16" />
+        <Map.Controls locate position="top-right" className="mt-32" />
       </Map>
 
-      {/* Over the map, not above it: a search bar in a header would take a
-          strip of geography away for the whole life of the screen. */}
-      <View className="absolute start-4 end-4 top-4">
+      {/*
+       * Over the map, not above it: a search bar in a header would take a strip
+       * of geography away for the whole life of the screen.
+       *
+       * The safe-area inset is applied here rather than by the route. This demo
+       * is full-bleed, which means it gets the screen with no header on it and
+       * no back-swipe either — iOS claims the same edge for popping the stack
+       * and wins — so the status bar and the way out are both this block's to
+       * deal with.
+       */}
+      <View className="absolute start-4 end-4" style={{ top: insets.top + 8 }}>
         <Card>
-          <Card.Content className="flex-row items-center gap-3 p-3">
-            <SearchIcon size={18} />
-            <Text size="sm" muted className="flex-1">
-              Search here
-            </Text>
-            <Avatar size="sm" fallback="K" />
+          <Card.Content className="flex-row items-center gap-2 p-2">
+            <Button
+              size="icon"
+              variant="ghost"
+              accessibilityLabel="Back"
+              onPress={() => router.back()}
+            >
+              <ChevronLeftIcon size={18} />
+            </Button>
+            {/* A real field. The bordered variants would draw a second edge
+                inside the card that already has one, so this is the plain one
+                with the card's own padding around it. */}
+            <Input
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search here"
+              containerClassName="flex-1"
+              className="border-0 bg-transparent px-0"
+              size="sm"
+              returnKeyType="search"
+              onSubmitEditing={() => matches[0] && select(matches[0])}
+            />
+            {query.length > 0 ? (
+              <Button
+                size="icon"
+                variant="ghost"
+                accessibilityLabel="Clear search"
+                onPress={() => setQuery('')}
+              >
+                <XIcon size={16} />
+              </Button>
+            ) : (
+              <Avatar size="sm" fallback="K" />
+            )}
           </Card.Content>
         </Card>
-        <View className="mt-2 flex-row gap-2">
-          {['Restaurants', 'Museums', 'Parks'].map((label) => (
-            <Chip key={label} size="sm">
-              {label}
-            </Chip>
-          ))}
-        </View>
+
+        {/* Results replace the category chips rather than stacking under them:
+            once you have typed, the chips are a second way to do the thing you
+            are already doing. */}
+        {query.trim() ? (
+          <Card className="mt-2">
+            {matches.length === 0 ? (
+              <Card.Content className="p-3">
+                <Text size="sm" muted>
+                  Nothing here matches “{query.trim()}”.
+                </Text>
+              </Card.Content>
+            ) : (
+              matches.map((place) => (
+                <Item key={place.id} size="sm" onPress={() => select(place)}>
+                  <Item.Media variant="icon">
+                    <CompassIcon size={16} />
+                  </Item.Media>
+                  <Item.Content>
+                    <Item.Title>{place.name}</Item.Title>
+                    <Item.Description>
+                      {place.category} · {place.minutes} min walk
+                    </Item.Description>
+                  </Item.Content>
+                </Item>
+              ))
+            )}
+          </Card>
+        ) : (
+          <View className="mt-2 flex-row gap-2">
+            {['Restaurants', 'Museums', 'Parks'].map((label) => (
+              <Chip key={label} size="sm" onPress={() => setQuery(label.slice(0, -1))}>
+                {label}
+              </Chip>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* The details card. Absent until something is selected, because an
           empty one is a strip of map traded for nothing. */}
       {selected ? (
-        <View className="absolute bottom-4 start-4 end-4">
+        <View
+          className="absolute start-4 end-4"
+          style={{ bottom: insets.bottom + 16 }}
+        >
           <Card>
             <Card.Content className="gap-3 p-4">
               <View className="flex-row items-start gap-3">

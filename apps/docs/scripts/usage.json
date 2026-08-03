@@ -2114,7 +2114,7 @@
     "versions": [
       {
         "title": "Places",
-        "description": "A street map that is the whole screen, with the search field, the locate control and the place card sitting over it. On a map every point of chrome is a point of geography you cannot see, so nothing here takes a strip of its own. The card appears only once something is selected, and the pin you picked is the only one carrying a name — four labels at once is a map with the names of everything on it and the shape of nothing.",
+        "description": "A street map that is the whole screen, with the search field, the locate control and the place card sitting over it. On a map every point of chrome is a point of geography you cannot see, so nothing here takes a strip of its own — including the way back, which lives in the search bar. The card appears only once something is selected, and the pin you picked is the only one carrying a name: four labels at once is a map with the names of everything on it and the shape of nothing.",
         "code": "const [selected, setSelected] = useState(null);\nconst map = useRef(null);\n\n<Map ref={map} center={here} zoom={14}>\n  {places.map((place) => (\n    <Map.Marker\n      key={place.id}\n      lngLat={place.lngLat}\n      onPress={() => {\n        setSelected(place);\n        map.current?.flyTo({ center: place.lngLat, zoom: 15 });\n      }}\n    >\n      <Pin active={place.id === selected?.id} />\n      {place.id === selected?.id ? (\n        <Map.Label side=\"top\" size=\"sm\" tone=\"primary\">{place.name}</Map.Label>\n      ) : null}\n    </Map.Marker>\n  ))}\n\n  {route ? <Map.Route coordinates={[here, selected.lngLat]} width={5} /> : null}\n  <Map.Controls locate position=\"top-right\" />\n</Map>"
       },
       {
