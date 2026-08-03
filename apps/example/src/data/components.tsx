@@ -5939,10 +5939,12 @@ function TableDemo({
 /** Headings on the tray, rows in the card — `Table.Frame` does the lift. */
 function FramedTableDemo() {
   return (
+    // One caption line, not two. On the tray a title and a description are the
+    // same muted `text-sm`, so stacking them reads as one sentence broken in
+    // half and costs the frame a row of height for nothing.
     <Table.Frame
       className="w-full"
-      title="Invoices"
-      description="Five most recent"
+      title="Five most recent invoices"
       action={<Badge variant="outline">Q3</Badge>}
     >
       <Table.Header>

@@ -165,12 +165,11 @@ Tints every other body row, which helps the eye track across a wide one. Leave i
 
 ### In a frame
 
-Column headings are not data. `Table.Frame` puts them on the tray above the card, where they read as the label for the block, and leaves the card holding nothing but rows. Give it the whole table — it takes the `Table.Header` out itself, so the columns are still declared once.
+Column headings are not data. `Table.Frame` puts them on the tray above the card, where they read as the label for the block, and leaves the card holding nothing but rows. Give it the whole table — it takes the `Table.Header` out itself, so the columns are still declared once. A title and a description are the same muted line on the tray, so a caption that fits on one line should be one — `description` is for a second thought, not the rest of the first.
 
 ```tsx
 <Table.Frame
-  title="Invoices"
-  description="Five most recent"
+  title="Five most recent invoices"
   action={<Badge variant="outline">Q3</Badge>}
 >
   <Table.Header>
