@@ -1024,9 +1024,16 @@ function HeatmapTooltip({
 }
 HeatmapTooltip.slot = 'tooltip' as Slot;
 
+/*
+ * A cell with no date is not a cell with no data — it is a cell in a grid that
+ * is not a calendar, and it has a count like any other. Saying "No data" over
+ * it reports a hole in the data that is not there. Without a date there is
+ * simply nothing to say after the number, so the number is the whole label,
+ * and a grid that wants a noun for it passes `formatLabel`.
+ */
 function defaultTooltipLabel(cell: HeatmapCell) {
+  if (!cell.date) return `${cell.count}`;
   const count = `${cell.count} ${cell.count === 1 ? 'contribution' : 'contributions'}`;
-  if (!cell.date) return 'No data';
   const date = `${MONTHS[cell.date.getMonth()]} ${cell.date.getDate()}`;
   return `${count} on ${date}`;
 }

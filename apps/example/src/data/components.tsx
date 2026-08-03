@@ -5597,16 +5597,17 @@ function HeatmapQuartersVersion() {
 }
 
 /*
- * Four-hour bins rather than three. Six rows is a grid the same height as the
- * calendar ones beside it — eight stood a good deal taller than everything
- * else in the pager.
+ * Six-hour bins. `fill` sizes a cell off the width, so with seven columns the
+ * cells are wide and every row costs that much height — four rows is a grid
+ * that stands shorter than the calendars it is paged beside, where eight
+ * three-hour ones stood half as tall again.
  */
-const HOURS = ['00', '04', '08', '12', '16', '20'];
+const HOURS = ['00', '06', '12', '18'];
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /**
- * A week by time of day rather than a year by date — seven columns of six
- * four-hour bins, seeded the same way the year is so the shape holds still.
+ * A week by time of day rather than a year by date — seven columns of four
+ * six-hour bins, seeded the same way the year is so the shape holds still.
  */
 function punchcardWeek(): HeatmapColumn[] {
   let state = 19;
@@ -5622,8 +5623,8 @@ function punchcardWeek(): HeatmapColumn[] {
       const weekend = day >= 5;
       // Office hours on weekdays, a quiet evening bump at the weekend, and
       // nothing much overnight either way.
-      const working = slot >= 2 && slot <= 4;
-      const peak = weekend ? (slot === 4 ? 0.5 : 0.12) : working ? 1 : 0.2;
+      const working = slot === 1 || slot === 2;
+      const peak = weekend ? (slot === 2 ? 0.45 : 0.1) : working ? 1 : 0.18;
       return { bin: slot, count: Math.floor(roll * 20 * peak) };
     }),
   }));
@@ -5657,7 +5658,7 @@ function HeatmapPunchcardVersion() {
             >
               <HeatmapChart.Header
                 title="Tickets opened"
-                value={active ? `${active.count}` : '08:00 – 16:00'}
+                value={active ? `${active.count}` : '06:00 – 18:00'}
                 caption={
                   active
                     ? `${WEEKDAYS[active.column] ?? ''} at ${HOURS[active.row] ?? ''}:00`
@@ -5668,7 +5669,13 @@ function HeatmapPunchcardVersion() {
               <HeatmapChart.XAxis labels={WEEKDAYS} />
               <HeatmapChart.YAxis labels={HOURS} tickFilter="all" width={24} />
               <HeatmapChart.Cells cornerRadius={3} />
-              <HeatmapChart.Tooltip />
+              {/* The default label names contributions on a date, and this
+                  grid has neither — so it says what this one is counting. */}
+              <HeatmapChart.Tooltip
+                formatLabel={(cell) =>
+                  `${cell.count} · ${WEEKDAYS[cell.column] ?? ''} ${HOURS[cell.row] ?? ''}:00`
+                }
+              />
             </HeatmapChart>
           </View>
         </Frame.Panel>

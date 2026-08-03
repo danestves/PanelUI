@@ -177,10 +177,10 @@ const [active, setActive] = useState(null);
 The x-axis emits a label where the month changes, which a grid of weekdays never does — there is no month in it to change. `labels` overrides them with one per column, the way `YAxis` already takes one per row, so a grid can be rows of hours by columns of days.
 
 ```tsx
-<HeatmapChart data={week} layout="fill" rows={6} gap={4}>
+<HeatmapChart data={week} layout="fill" rows={4} gap={4}>
   <HeatmapChart.Header title="Tickets opened" legend />
   <HeatmapChart.XAxis labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']} />
-  <HeatmapChart.YAxis labels={['00', '04', '08', '12', '16', '20']} tickFilter="all" width={24} />
+  <HeatmapChart.YAxis labels={['00', '06', '12', '18']} tickFilter="all" width={24} />
   <HeatmapChart.Cells cornerRadius={3} />
   <HeatmapChart.Tooltip />
 </HeatmapChart>
@@ -245,15 +245,17 @@ A rule every thirteen columns, and the ramp derived from a colour of your own in
 
 ### Punchcard
 
-Rows that are hours and columns that are weekdays. “When is this busy” is a question the year grid cannot answer, having already spent its rows on the days of the week — `rows` and a pair of `labels` turn the same grid on its side. Six four-hour bins rather than eight three-hour ones, so the grid stands the same height as the calendars beside it.
+Rows that are hours and columns that are weekdays. “When is this busy” is a question the year grid cannot answer, having already spent its rows on the days of the week — `rows` and a pair of `labels` turn the same grid on its side. Four six-hour bins: `fill` sizes a cell off the width, so with seven columns every extra row costs a lot of height.
 
 ```tsx
-<HeatmapChart data={week} layout="fill" rows={6} gap={4} onActiveCellChange={setActive}>
-  <HeatmapChart.Header title="Tickets opened" value="08:00 – 16:00" legend />
+<HeatmapChart data={week} layout="fill" rows={4} gap={4} onActiveCellChange={setActive}>
+  <HeatmapChart.Header title="Tickets opened" value="06:00 – 18:00" legend />
   <HeatmapChart.XAxis labels={weekdays} />
   <HeatmapChart.YAxis labels={hours} tickFilter="all" width={24} />
   <HeatmapChart.Cells cornerRadius={3} />
-  <HeatmapChart.Tooltip />
+  <HeatmapChart.Tooltip
+    formatLabel={(cell) => `${cell.count} · ${weekdays[cell.column]} ${hours[cell.row]}:00`}
+  />
 </HeatmapChart>
 ```
 
@@ -357,6 +359,10 @@ There are four ways to change it, in rough order of how often you want them:
 - **`levelColors`** replaces all five outright, for a ramp that is not one colour fading. The opacities are dropped then, since dimming a colour someone chose on purpose is not a ramp.
 
 The four thresholds are the data's own quartiles by default, so a chart of single-digit counts and a chart of thousands both use the whole ramp. Zero is its own level and is left out of the quartiles — counting it drags every threshold to nothing on a sparse chart. Pass `levels` to fix them yourself.
+
+### Reading a grid that is not a calendar
+
+The tooltip's default label names contributions on a date, because that is what the cells usually are. A grid built from bins with no `date` gets the count on its own — it is not a calendar, so there is nothing to say after the number, and it is emphatically not "no data". Pass `formatLabel` to name what the cells actually count.
 
 ### Where the key goes
 
