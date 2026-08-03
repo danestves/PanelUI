@@ -29,6 +29,7 @@
     "input-group",
     "number-input",
     "otp-input",
+    "pagination",
     "item",
     "label",
     "line-chart",

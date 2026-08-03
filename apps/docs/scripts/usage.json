@@ -2543,6 +2543,70 @@
       "height": 306
     }
   },
+  "pagination": {
+    "intro": "Moving through a result set one page at a time. The component owns the arithmetic and nothing else: give it how many pages there are and which one you are on, and it works out which numbers to show, where the gaps fall, and which controls are dead at the ends. It never fetches and never slices — the data is yours.",
+    "usage": "const [page, setPage] = useState(1);\n\n<Pagination count={12} page={page} onPageChange={setPage} />",
+    "extraVariants": {
+      "variant": [
+        "numbers",
+        "compact",
+        "simple"
+      ]
+    },
+    "hideVariants": [
+      "current"
+    ],
+    "variantCode": {
+      "variant": "<Pagination count={12} page={page} onPageChange={setPage} variant=\"numbers\" />\n<Pagination count={12} page={page} onPageChange={setPage} variant=\"compact\" />\n<Pagination count={12} page={page} onPageChange={setPage} variant=\"simple\" />",
+      "size": "<Pagination count={12} page={page} onPageChange={setPage} size=\"default\" />\n<Pagination count={12} page={page} onPageChange={setPage} size=\"sm\" />"
+    },
+    "extraImports": [
+      "Table"
+    ],
+    "anatomy": "<Pagination>\n  <Pagination.Status />\n</Pagination>\n\n{/* the parts the root draws for you, for a row of your own */}\n<Pagination.Previous />\n<Pagination.Item />\n<Pagination.Ellipsis />\n<Pagination.Summary />\n<Pagination.Next />",
+    "parts": {
+      "Item": "One numbered target. Announced as a selected button when it is the page you are on, so the current page is spoken as state rather than only painted.",
+      "Previous": "Back one page. Dead on the first page rather than looping to the last.",
+      "Next": "Forward one page. Dead on the last page rather than looping to the first.",
+      "Ellipsis": "The gap in the run, and a way across it — tapping jumps `pageJump` pages towards the end the gap is on.",
+      "Summary": "`3 / 12`, in the space the two arrows leave between them. What `variant=\"compact\"` puts there.",
+      "Status": "The line that says how much of the set you are looking at — `1–20 of 240`. Give it `pageSize` and `total`; it takes the page from the root."
+    },
+    "partNotes": "The root draws its own controls, so a plain pagination is one element and no parts. The parts are exported for the row you build yourself — a page-size select between the arrows, a jump-to-first button — and each one reads the page it is on from the root above it, so none of them has to be told.\n\nGiven children, the root becomes a row with them on the leading edge and the controls on the trailing one. That is where `Pagination.Status` goes, and it is the shape a table footer wants.",
+    "examples": [
+      {
+        "title": "Basic",
+        "description": "`count` is how many pages there are; pages are numbered from 1. Pass `page` to control the component, or leave it off and give `defaultPage` to let it keep its own. `onPageChange` is called with the page that was asked for, already clamped to `count`.",
+        "code": "const [page, setPage] = useState(1);\n\n<Pagination count={12} page={page} onPageChange={setPage} />"
+      },
+      {
+        "title": "Compact",
+        "description": "The two arrows with `3 / 12` between them, for a footer with no room for a run of numbers. Digits and a slash rather than “Page 3 of 12”, so there is no sentence to translate.",
+        "code": "<Pagination count={12} page={page} onPageChange={setPage} variant=\"compact\" />"
+      },
+      {
+        "title": "Simple",
+        "description": "Labelled Previous and Next, and no numbers at all — for a flow you walk rather than jump around in: a wizard, an article, a set of onboarding cards.",
+        "code": "<Pagination count={5} page={page} onPageChange={setPage} variant=\"simple\" />"
+      },
+      {
+        "title": "A long set",
+        "description": "`siblings` is how many pages to keep either side of the current one, `boundaries` how many to pin at each end. The defaults draw about seven targets, which is what a phone fits; raise both on a tablet. The run is a fixed width rather than a sliding window, so the row does not reflow under the finger as you step through it — the number you were aiming at stays where it was.\n\nTapping an ellipsis jumps `pageJump` pages towards the end its gap is on. A dead 44pt target in a row of live ones is something people tap and then think is broken.",
+        "code": "<Pagination\n  count={240}\n  page={page}\n  onPageChange={setPage}\n  siblings={2}\n  boundaries={2}\n  size=\"sm\"\n/>"
+      },
+      {
+        "title": "Beside a table",
+        "description": "The component reports the page and the caller slices the rows, which is the division of labour the whole thing is built around. `Pagination.Status` answers the question a page number does not — how much is left — and sits on the leading edge with the controls opposite it.",
+        "code": "const [page, setPage] = useState(1);\nconst pageSize = 20;\nconst rows = invoices.slice((page - 1) * pageSize, page * pageSize);\n\n<Table variant=\"outline\" columns={columns}>\n  {/* …header, and a row per entry in `rows`… */}\n</Table>\n\n<Pagination\n  count={Math.ceil(invoices.length / pageSize)}\n  page={page}\n  onPageChange={setPage}\n  variant=\"compact\"\n  size=\"sm\"\n>\n  <Pagination.Status pageSize={pageSize} total={invoices.length} />\n</Pagination>"
+      },
+      {
+        "title": "While a page loads",
+        "description": "`disabled` greys the row and deafens every target in it, which is what you want between asking for a page and having it — a second tap on the same arrow would otherwise queue a page you never see.",
+        "code": "<Pagination\n  count={12}\n  page={page}\n  onPageChange={setPage}\n  disabled={isFetching}\n/>"
+      }
+    ],
+    "notes": "Every target clears 44pt in both axes, which is the smallest a finger reliably hits. `size=\"sm\"` draws a tighter row and keeps that reach through `hitSlop` instead — the paint gets smaller, the touch area does not.\n\nWhich arrowhead means “back” is a question about the reading direction: under `<Direction dir=\"rtl\">` the previous page is to the right, and the glyphs swap to match. Yoga mirrors the row itself; the arrowheads inside it have to be chosen.\n\n`paginationRange` is exported for a control of your own that has to lay out the same run — a jump bar, a scrubber. Two implementations of that arithmetic would drift.\n\nA page number past the end is clamped rather than honoured, so a `count` that shrinks under a controlled page — a filter narrowing the result set — lands on the last page instead of lighting nothing and disabling both arrows at once."
+  },
   "popover": {
     "intro": "A panel anchored to the thing that opened it.\n\nA dialog takes the screen and asks to be dealt with; a popover stays next to its trigger and keeps the context around it visible. That difference is the whole reason both exist, and it is why this one is positioned rather than centred.\n\nPlacement is a preference, not a promise. The trigger is measured in window coordinates when it is pressed, the panel measures itself on its first layout, and the two are reconciled against the safe area — so `placement=\"bottom\"` means *below, if below fits*. A trigger near the bottom of the screen opens upwards instead of off the edge.",
     "usage": "<Popover>\n  <Popover.Trigger>\n    <Button variant=\"outline\">Options</Button>\n  </Popover.Trigger>\n  <Popover.Content placement=\"bottom\" align=\"end\">\n    <Popover.Title>Export</Popover.Title>\n    <Popover.Description>Choose a format.</Popover.Description>\n  </Popover.Content>\n</Popover>",
@@ -3788,10 +3852,11 @@
   },
   "table": {
     "intro": "Rows and columns that stay lined up. React Native has no table layout, so a table here is a stack of flex rows whose cells divide the width the same way — and the component owns everything that is not that: the hairlines between rows, the muted header and footer bands, optional striping, per-column alignment, and a sort arrow that turns over rather than being swapped.",
-    "usage": "<Table variant=\"outline\">\n  <Table.Header>\n    <Table.Row>\n      <Table.Head flex={2}>Invoice</Table.Head>\n      <Table.Head align=\"end\">Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    <Table.Row>\n      <Table.Cell flex={2}>INV-001</Table.Cell>\n      <Table.Cell align=\"end\">$250.00</Table.Cell>\n    </Table.Row>\n  </Table.Body>\n</Table>",
+    "usage": "<Table variant=\"outline\" columns={[{ flex: 2 }, {}, { align: 'end' }]}>\n  <Table.Header>\n    <Table.Row>\n      <Table.Head>Invoice</Table.Head>\n      <Table.Head>Method</Table.Head>\n      <Table.Head>Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    <Table.Row>\n      <Table.Cell>INV-001</Table.Cell>\n      <Table.Cell>Card</Table.Cell>\n      <Table.Cell>$250.00</Table.Cell>\n    </Table.Row>\n  </Table.Body>\n</Table>",
     "extraImports": [
       "Badge",
-      "ScrollFade"
+      "ScrollFade",
+      "Pagination"
     ],
     "anatomy": "<Table.Frame>\n  <Table.Header />\n  <Table.Body />\n</Table.Frame>\n\n<Table>\n  <Table.Header>\n    <Table.Row>\n      <Table.Head />\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    <Table.Row>\n      <Table.Cell />\n    </Table.Row>\n  </Table.Body>\n  <Table.Footer>\n    <Table.Row>\n      <Table.Cell />\n    </Table.Row>\n  </Table.Footer>\n  <Table.Empty />\n  <Table.Caption />\n</Table>",
     "parts": {
@@ -3805,12 +3870,17 @@
       "Empty": "Stands in for the body when there is nothing to show, keeping the header that says what would be there.",
       "Caption": "A line about the table as a whole. Place it after the body — a caption read before the columns is a heading."
     },
-    "partNotes": "A `Table.Head` and the `Table.Cell`s beneath it must be given the same `flex` or `width`, or the column drifts. That is the one rule the component cannot enforce for you: nothing in React Native connects the third cell of one row to the third cell of the next except both of them dividing the row the same way.\n\n`Table.Frame` is the one place that rule gets easier rather than harder. The headings end up outside the card, but they are still the same `Table.Header` you would have written inside it — so the columns are declared once and the lift keeps them measuring against the same padding as the rows.",
+    "partNotes": "Nothing in React Native connects the third cell of one row to the third cell of the next except both of them dividing the row the same way. `columns` on the root is what states that once: one entry per column, and every `Table.Head` and `Table.Cell` takes its `flex`, `width` and `align` from the entry at its own position in the row. Anything set on a head or a cell still wins, for the one row that has to differ.\n\nWithout it the sizing has to be repeated on every head and every cell, and the column drifts the moment two of them disagree — which on a five-row, three-column table is eighteen places to keep in agreement by hand.\n\n`Table.Frame` is the other place that rule gets easier rather than harder. The headings end up outside the card, but they are still the same `Table.Header` you would have written inside it, and the lift keeps them measuring against the same padding as the rows.",
     "examples": [
       {
         "title": "Basic",
         "description": "Cells divide the row evenly unless told otherwise. `flex={2}` gives a column twice the share of the leftover width, and `align=\"end\"` puts a money column’s digits against the same edge so they read as a column.",
         "code": "<Table variant=\"outline\">\n  <Table.Header>\n    <Table.Row>\n      <Table.Head flex={2}>Invoice</Table.Head>\n      <Table.Head>Method</Table.Head>\n      <Table.Head align=\"end\">Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    {invoices.map((invoice) => (\n      <Table.Row key={invoice.id}>\n        <Table.Cell flex={2}>{invoice.id}</Table.Cell>\n        <Table.Cell>{invoice.method}</Table.Cell>\n        <Table.Cell align=\"end\">{invoice.amount}</Table.Cell>\n      </Table.Row>\n    ))}\n  </Table.Body>\n  <Table.Footer>\n    <Table.Row>\n      <Table.Cell flex={2} labelClassName=\"font-medium\">Total</Table.Cell>\n      <Table.Cell />\n      <Table.Cell align=\"end\" labelClassName=\"font-medium\">$1,750.00</Table.Cell>\n    </Table.Row>\n  </Table.Footer>\n</Table>"
+      },
+      {
+        "title": "Declared columns",
+        "description": "The same table with its sizing moved to one array. A column is described once, at the top, and a row is just its contents — there is no longer a `flex` on a head that a cell underneath can contradict.\n\nDeclare it outside render. A fresh array every frame renumbers every cell in the table.",
+        "code": "const columns = [{ flex: 2 }, {}, { align: 'end' as const }];\n\n<Table variant=\"outline\" columns={columns}>\n  <Table.Header>\n    <Table.Row>\n      <Table.Head>Invoice</Table.Head>\n      <Table.Head>Method</Table.Head>\n      <Table.Head>Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    {invoices.map((invoice) => (\n      <Table.Row key={invoice.id}>\n        <Table.Cell>{invoice.id}</Table.Cell>\n        <Table.Cell>{invoice.method}</Table.Cell>\n        <Table.Cell>{invoice.amount}</Table.Cell>\n      </Table.Row>\n    ))}\n  </Table.Body>\n</Table>"
       },
       {
         "title": "Striped",
@@ -3885,6 +3955,11 @@
           "height": 1193,
           "alt": "Table — With a caption."
         }
+      },
+      {
+        "title": "Paged",
+        "description": "`Pagination` reports the page; slicing the rows stays with you. Put it under the table with a `Pagination.Status` for the span, and the footer says both where you are and how much is left.",
+        "code": "const [page, setPage] = useState(1);\nconst pageSize = 20;\nconst rows = invoices.slice((page - 1) * pageSize, page * pageSize);\n\n<Pagination\n  count={Math.ceil(invoices.length / pageSize)}\n  page={page}\n  onPageChange={setPage}\n  variant=\"compact\"\n  size=\"sm\"\n>\n  <Pagination.Status pageSize={pageSize} total={invoices.length} />\n</Pagination>"
       }
     ],
     "notes": "### Columns are a convention, not a mechanism\n\nThere is no column model. A column exists because every row divides its width the same way, so `flex` and `width` on a `Table.Head` and on the `Table.Cell`s beneath it have to agree. `flex` is a share of the leftover width — the default of 1 makes columns even — and `width` pins a column that must not move, such as an icon or a state dot.\n\n### Sorting is yours\n\nThe table renders a sort direction; it never sorts. `sortDirection` says which way the arrow points and `onPress` reports the tap — reordering the rows stays with you, because the data being reordered is yours and only you know whether that means a comparator, a refetch or a new query.\n\nWhat the component does own is making the press land. The sorted column takes a full-strength arrow *and* a foreground label at a heavier weight, because one signal at the size of a sort arrow is too quiet: a press that only nudges a dim chevron reads as a press that did nothing, even when the rows behind it did move.\n\n### Long tables\n\n`Table.Body` renders every row it is given, so a table of thousands belongs in a `FlatList` instead. `Table.Row` takes `index` and `last` directly for that case: a virtualised row has no `Table.Body` above it to read its position from, and without them a striped table would tint nothing and every row would keep its hairline.\n\n```tsx\n<FlatList\n  data={invoices}\n  renderItem={({ item, index }) => (\n    <Table.Row index={index} last={index === invoices.length - 1}>\n      <Table.Cell flex={2}>{item.id}</Table.Cell>\n      <Table.Cell align=\"end\">{item.amount}</Table.Cell>\n    </Table.Row>\n  )}\n/>\n```\n\nWrap the list in a `Table` so the rows still read the density and striping, and put the header row above the list rather than inside it.\n\n### Accessibility\n\nThe root, the bands, the rows and the cells carry `table`, `rowgroup`, `row`, `columnheader` and `cell` roles, so a screen reader walks the table as a table. A row given `onPress` is the exception: it announces itself as a button, because being able to act on it is the more useful fact about it.",

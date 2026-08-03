@@ -381,11 +381,19 @@ const PaginationItem = forwardRef<View, PaginationItemProps>(
 );
 PaginationItem.displayName = 'Pagination.Item';
 
-interface PaginationArrowProps extends Omit<AnimatedPressableProps, 'children'> {
+export interface PaginationPreviousProps extends Omit<AnimatedPressableProps, 'children'> {
   className?: string;
   /** Write the word beside the arrow, rather than leaving it as a glyph. */
   label?: boolean;
 }
+
+export interface PaginationNextProps extends Omit<AnimatedPressableProps, 'children'> {
+  className?: string;
+  /** Write the word beside the arrow, rather than leaving it as a glyph. */
+  label?: boolean;
+}
+
+type PaginationArrowProps = PaginationPreviousProps;
 
 /**
  * The two arrows, which are the same button pointed the other way.
@@ -442,15 +450,11 @@ function PaginationArrow({
   );
 }
 
-export type PaginationPreviousProps = PaginationArrowProps;
-
 /** Back one page. Dead on the first page rather than looping to the last. */
 const PaginationPrevious = ({ ...props }: PaginationPreviousProps) => (
   <PaginationArrow step={-1} part="Pagination.Previous" word="Previous" {...props} />
 );
 PaginationPrevious.displayName = 'Pagination.Previous';
-
-export type PaginationNextProps = PaginationArrowProps;
 
 /** Forward one page. Dead on the last page rather than looping to the first. */
 const PaginationNext = ({ ...props }: PaginationNextProps) => (
