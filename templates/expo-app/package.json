@@ -11,8 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-native-masked-view/masked-view": "0.3.2",
     "expo": "~57.0.10",
     "expo-constants": "~57.0.9",
+    "expo-linear-gradient": "~57.0.1",
     "expo-linking": "~57.0.5",
     "expo-router": "~57.0.10",
     "expo-status-bar": "~57.0.1",
