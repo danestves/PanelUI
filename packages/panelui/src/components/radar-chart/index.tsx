@@ -86,6 +86,8 @@ const BARE_ROOM = { x: 6, y: 6 };
 
 /** How long the polygons take to grow out of the centre. */
 const REVEAL_DURATION = 900;
+/** …and how long one profile takes to travel to the next when the data changes. */
+const MORPH_DURATION = 420;
 
 /**
  * Ring diameter when nothing says otherwise.
@@ -631,16 +633,72 @@ function RadarChartSeries({
   const loading = status === 'loading';
 
   /*
-   * The polygon is rebuilt on the UI thread every frame the reveal is running.
-   * Scaling the *values* rather than transforming the group is what makes the
-   * shape grow along its own axes — a `scale` transform would grow the stroke
-   * and the dots with it, and arrive at the wrong stroke width.
+   * Where the shape is coming from and where it is going, and how far between
+   * them it currently is.
+   *
+   * A radar is the chart people put behind a switch — this quarter or last,
+   * you or the team — and a polygon that jumps from one profile to the next
+   * loses the only thing worth showing at the moment of the switch, which is
+   * which axes moved and by how much. Held as two arrays and tweened per
+   * vertex, the outline travels and the eye follows the parts of it that
+   * travelled furthest.
+   */
+  const from = useSharedValue<(number | null)[]>(values);
+  const to = useSharedValue<(number | null)[]>(values);
+  const morph = useSharedValue(1);
+  const settled = useRef(false);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    // The first values are not a change from anything.
+    if (!settled.current) {
+      settled.current = true;
+      from.value = values;
+      to.value = values;
+      morph.value = 1;
+      return;
+    }
+
+    if (reducedMotion) {
+      from.value = values;
+      to.value = values;
+      morph.value = 1;
+      return;
+    }
+
+    // Leave from wherever the last tween had got to, so a switch part way
+    // through another one carries on from the shape actually on screen.
+    const t = morph.value;
+    const previous = from.value;
+    const current = to.value;
+    from.value = current.map((value, index) => {
+      const start = previous[index];
+      if (value === null || start === null || start === undefined) return value ?? start ?? null;
+      return start + (value - start) * t;
+    });
+    to.value = values;
+    morph.value = 0;
+    morph.value = withTiming(1, { duration: MORPH_DURATION });
+  }, [values, reducedMotion, from, to, morph]);
+
+  /*
+   * The polygon is rebuilt on the UI thread every frame the reveal or the
+   * morph is running. Scaling the *values* rather than transforming the group
+   * is what makes the shape grow along its own axes — a `scale` transform
+   * would grow the stroke and the dots with it, and arrive at the wrong
+   * stroke width.
    */
   const animatedProps = useAnimatedProps(() => {
     const span = Math.max(domainMax.value - domainMin.value, 1e-6);
-    const scaled = values.map((value) =>
-      value === null ? null : ((value - domainMin.value) / span) * reveal.value
-    );
+    const target = to.value;
+    const start = from.value;
+    const scaled = target.map((value, index) => {
+      const a = start[index] ?? value;
+      const b = value ?? a;
+      if (a === null || a === undefined || b === null || b === undefined) return null;
+      const mixed = a + (b - a) * morph.value;
+      return ((mixed - domainMin.value) / span) * reveal.value;
+    });
     return { d: loading ? '' : radarPath(scaled, cx, cy, radius) };
   });
 
@@ -659,12 +717,15 @@ function RadarChartSeries({
             value === null ? null : (
               <RadarDot
                 key={index}
-                value={value}
+                index={index}
                 turn={index / count}
                 cx={cx}
                 cy={cy}
                 radius={radius}
                 color={stroke}
+                from={from}
+                to={to}
+                morph={morph}
                 domainMin={domainMin}
                 domainMax={domainMax}
                 reveal={reveal}
@@ -676,31 +737,43 @@ function RadarChartSeries({
   );
 }
 
-/** One vertex, riding the same reveal as the polygon it sits on. */
+/** One vertex, riding the same reveal and the same morph as its polygon. */
 function RadarDot({
-  value,
+  index,
   turn,
   cx,
   cy,
   radius,
   color,
+  from,
+  to,
+  morph,
   domainMin,
   domainMax,
   reveal,
 }: {
-  value: number;
+  index: number;
   turn: number;
   cx: number;
   cy: number;
   radius: number;
   color: string;
+  from: SharedValue<(number | null)[]>;
+  to: SharedValue<(number | null)[]>;
+  morph: SharedValue<number>;
   domainMin: SharedValue<number>;
   domainMax: SharedValue<number>;
   reveal: SharedValue<number>;
 }) {
   const point = useDerivedValue(() => {
     const span = Math.max(domainMax.value - domainMin.value, 1e-6);
-    const fraction = ((value - domainMin.value) / span) * reveal.value;
+    const target = to.value[index];
+    const start = from.value[index] ?? target;
+    if (target === null || target === undefined || start === null || start === undefined) {
+      return { x: cx, y: cy };
+    }
+    const mixed = start + (target - start) * morph.value;
+    const fraction = ((mixed - domainMin.value) / span) * reveal.value;
     return polarPoint(cx, cy, radius * fraction, turn);
   });
 

@@ -118,6 +118,7 @@ import {
   Portal,
   Progress,
   RadarChart,
+  type RadarChartDatum,
   RadioGroup,
   Rating,
   RingChart,
@@ -624,40 +625,69 @@ const RADAR_SKILLS = [
   { axis: 'Testing', score: 71 },
 ];
 
-/** The sizes the radar version offers, smallest first. */
-const RADAR_SIZES = [
-  { value: 'sm', label: 'Small', size: 130 },
-  { value: 'md', label: 'Medium', size: 180 },
-  { value: 'lg', label: 'Large', size: 230 },
+/** One profile per quarter, on the same axes and the same scale. */
+const RADAR_QUARTERS = {
+  q1: [
+    { axis: 'Speed', score: 54 },
+    { axis: 'Accuracy', score: 61 },
+    { axis: 'Coverage', score: 38 },
+    { axis: 'Uptime', score: 72 },
+    { axis: 'Cost', score: 44 },
+    { axis: 'Support', score: 50 },
+  ],
+  q2: [
+    { axis: 'Speed', score: 68 },
+    { axis: 'Accuracy', score: 66 },
+    { axis: 'Coverage', score: 57 },
+    { axis: 'Uptime', score: 85 },
+    { axis: 'Cost', score: 51 },
+    { axis: 'Support', score: 63 },
+  ],
+  q3: [
+    { axis: 'Speed', score: 82 },
+    { axis: 'Accuracy', score: 71 },
+    { axis: 'Coverage', score: 88 },
+    { axis: 'Uptime', score: 94 },
+    { axis: 'Cost', score: 48 },
+    { axis: 'Support', score: 77 },
+  ],
+} satisfies Record<string, RadarChartDatum[]>;
+
+const RADAR_PERIODS = [
+  { value: 'q1', label: 'Q1' },
+  { value: 'q2', label: 'Q2' },
+  { value: 'q3', label: 'Q3' },
 ] as const;
 
-function RadarSizesVersion() {
-  const [size, setSize] = useState<string>('md');
-  const picked = RADAR_SIZES.find((entry) => entry.value === size) ?? RADAR_SIZES[1];
+function RadarSwitchVersion() {
+  const [period, setPeriod] = useState<string>('q3');
+  const data = RADAR_QUARTERS[period as keyof typeof RADAR_QUARTERS] ?? RADAR_QUARTERS.q3;
+  const best = [...data].sort((a, b) => b.score - a.score)[0];
 
   return (
     <ChartScreen>
       <Frame className="w-full">
         <Frame.Header>
-          <Frame.Title>Coverage</Frame.Title>
-          <Frame.Action>{picked.size}pt</Frame.Action>
+          <Frame.Title>Service profile</Frame.Title>
+          <Frame.Action>{best.axis} leads</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
-          <View className="items-center px-4 pb-4 pt-2">
-            {/* A radar sizes itself rather than filling its container, so the
-                chart is the same shape at every size — only the room it takes
-                changes. The labels keep their distance from the rings, which
-                is why the small one is still readable. */}
-            <RadarChart data={RADAR_PROFILE} domain={[0, 100]} size={picked.size}>
+          <View className="items-center px-4 pb-2 pt-2">
+            {/* Changing the tab changes the data, and the outline travels to
+                the new one a vertex at a time. That movement is the point: it
+                is what says which axes moved and by how much, which a shape
+                that simply appeared would not. The scale is fixed so the two
+                profiles stay comparable. */}
+            <RadarChart data={data} domain={[0, 100]}>
               <RadarChart.Grid />
-              <RadarChart.Axis fontSize={picked.size < 160 ? 10 : 11} />
-              <RadarChart.Series dataKey="you" colorIndex={1} showDots />
+              <RadarChart.Axis />
+              <RadarChart.Series dataKey="score" colorIndex={1} showDots />
             </RadarChart>
           </View>
           <Frame.Section className="px-4 py-3">
-            <Tabs value={size} onValueChange={setSize} defaultValue="md">
+            <Tabs value={period} onValueChange={setPeriod} defaultValue="q3">
               <Tabs.List>
-                {RADAR_SIZES.map((entry) => (
+                {RADAR_PERIODS.map((entry) => (
                   <Tabs.Trigger key={entry.value} value={entry.value}>
                     {entry.label}
                   </Tabs.Trigger>
@@ -11654,11 +11684,11 @@ export const COMPONENTS: ComponentEntry[] = [
         render: () => <RadarOutlineVersion />,
       },
       {
-        label: 'Sizing it',
-        id: 'sizes',
+        label: 'Switching the data',
+        id: 'switch',
         fullPage: true,
-        description: 'Tabs under the chart change how much room it takes.',
-        render: () => <RadarSizesVersion />,
+        description: 'Tabs under the chart change what it draws, and the outline travels.',
+        render: () => <RadarSwitchVersion />,
       },
     ],
   },
