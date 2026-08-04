@@ -307,6 +307,16 @@ export {
   type ChipSize,
 } from './components/chip';
 export {
+  ColorPicker,
+  type ColorPickerProps,
+  type ColorPickerAreaProps,
+  type ColorPickerHueProps,
+  type ColorPickerAlphaProps,
+  type ColorPickerPreviewProps,
+  type ColorPickerSwatchesProps,
+  type ColorPickerSize,
+} from './components/color-picker';
+export {
   Combobox,
   type ComboboxProps,
   type ComboboxItemProps,
@@ -794,6 +804,18 @@ export * from './hooks';
 
 // Utils
 export { cn } from './utils/cn';
+export {
+  formatColor,
+  hsvToCss,
+  hsvToHex,
+  hsvToHsl,
+  hsvToRgb,
+  isValidColor,
+  parseColor,
+  rgbToHsv,
+  type ColorFormat,
+  type HsvaColor,
+} from './utils/color';
 export {
   clampTime,
   compareTime,

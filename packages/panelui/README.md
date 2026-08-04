@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 80 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 81 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -181,6 +181,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Checkbox` | Animated checkbox, as a row or a selectable card |
 | `Chip` | Interactive pill — a filter, a tag, or a removable token |
 | `CodeBlock` | Syntax-highlighted code with a header and a copy button |
+| `ColorPicker` | A colour chosen by dragging — a saturation square, a hue scale, and opacity |
 | `Combobox` | A text field that filters a list of options as you type |
 | `DatePicker` | A calendar behind a button |
 | `Dialog` | Modal dialog with a backdrop and footer actions |
@@ -225,7 +226,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Shimmer` | Animated highlight sweeping across content |
 | `Signature` | Sign with a finger, and get the result back out as SVG or PNG |
 | `Skeleton` | Shimmer placeholder for loading content |
-| `Slider` | Pick a value by dragging a thumb along a track |
+| `Slider` | Pick a value, or a span, by dragging a thumb along a track |
 | `Soundwave` | What a voice looks like while an app listens |
 | `Sources` | The references behind an answer, behind a disclosure |
 | `Spinner` | Indeterminate loading indicator |

@@ -3699,9 +3699,9 @@
     }
   },
   "slider": {
-    "intro": "A value picker driven by a single thumb. The thumb is a pill exactly as tall as the track — the two are the same height, so nothing has to escape the track to be drawn whole — with a knob inside it that shrinks while you drag. Position and fill are animated on the UI thread, so dragging never round-trips through React; the picked value bridges back on change and again on release.",
-    "usage": "<Slider defaultValue={40} />\n<Slider label=\"Volume\" showValue defaultValue={40} />\n<Slider value={volume} onValueChange={setVolume} />\n<Slider min={0} max={10} step={1} defaultValue={5} />",
-    "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change is expensive. The value is always snapped to a multiple of `step` from `min`.\n\nThe knob is painted with the page background rather than a per-colour on-token, because the status foregrounds are the darker text hues meant for soft fills — a green-700 knob on a green-500 pill would barely show. Override `knobClassName` if a theme needs something else.\n\nSee [Native rendering](/docs/native) for what `native` keeps and what it gives up — notably `onValueCommit`, which the platform control does not report.",
+    "intro": "A value picker driven by a thumb, or a span picked by two. The thumb is a pill exactly as tall as the track — the two are the same height, so nothing has to escape the track to be drawn whole — with a knob inside it that shrinks while you drag. Position and fill are animated on the UI thread, so dragging never round-trips through React; the picked value bridges back on change and again on release.",
+    "usage": "<Slider defaultValue={40} />\n<Slider label=\"Volume\" showValue defaultValue={40} />\n<Slider value={volume} onValueChange={setVolume} />\n<Slider defaultRange={[20, 80]} onRangeCommit={save} />",
+    "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change is expensive. The value is always snapped to a multiple of `step` from `min`.\n\n**A range is a second pair of props, not a tuple in the first.** Passing `range` or `defaultRange` gives the slider two thumbs and reports through `onRangeChange` / `onRangeCommit`. Keeping them apart is what lets a one-thumb slider's handler stay `(value: number) => void` — a single set of props covering both would hand every existing caller a union to narrow before they could read a number out of it.\n\nThe knob is painted with the page background rather than a per-colour on-token, because the status foregrounds are the darker text hues meant for soft fills — a green-700 knob on a green-500 pill would barely show. Override `knobClassName` if a theme needs something else.\n\nSee [Native rendering](/docs/native) for what `native` keeps and what it gives up — notably `onValueCommit`, which the platform control does not report. `native` is ignored on a range slider: neither platform ships a two-thumb control, so a range draws ours rather than quietly losing a thumb.",
     "examples": [
       {
         "title": "Controlled",
@@ -3712,6 +3712,16 @@
         "title": "With a caption row",
         "description": "`label` and `showValue` draw a row above the track. `formatValue` owns the units, so the caption reads the way the value is spoken rather than as a bare number. The label doubles as the accessibility label.",
         "code": "<Slider label=\"Brightness\" showValue defaultValue={62} />\n\n<Slider\n  label=\"Budget\"\n  showValue\n  formatValue={(v) => `$${Math.round(v)}`}\n  min={0}\n  max={1000}\n  step={20}\n  defaultValue={340}\n  color=\"success\"\n/>"
+      },
+      {
+        "title": "A range",
+        "description": "`defaultRange` — or `range` for a controlled one — gives the slider two thumbs and fills between them instead of from the start. Whichever thumb your finger lands nearest is the one that moves, and the two bound each other rather than the track, so they can meet but never cross.",
+        "code": "const [price, setPrice] = useState([220, 680]);\n\n<Slider\n  label=\"Price\"\n  showValue\n  formatValue={(v) => `$${Math.round(v)}`}\n  range={price}\n  onRangeChange={setPrice}\n  min={0}\n  max={1000}\n  step={20}\n  color=\"success\"\n/>"
+      },
+      {
+        "title": "Keeping the thumbs apart",
+        "description": "`minStepsBetweenThumbs` is the gap the span can never close. A filter wants at least one: an empty range matches nothing, and a control that can be dragged into matching nothing reads as a bug rather than a choice.",
+        "code": "<Slider\n  label=\"Nights\"\n  showValue\n  defaultRange={[2, 6]}\n  min={1}\n  max={14}\n  step={1}\n  minStepsBetweenThumbs={1}\n/>"
       },
       {
         "title": "Restyling the thumb",
@@ -6081,5 +6091,53 @@
         "code": "<Combobox\n  presentation=\"inline\"\n  value={framework}\n  onValueChange={setFramework}\n  placeholder=\"Search frameworks\"\n>\n  {/* …items… */}\n</Combobox>"
       }
     ]
+  },
+  "color-picker": {
+    "intro": "A colour chosen by dragging, not by typing. The controls are the colour model made visible: a square where saturation runs across and brightness runs up, under a hue picked on its own scale, with opacity on a third. Composition is the API — a picker with no opacity is one with no `ColorPicker.Alpha` in it, not one with a prop turned off.\n\nNothing about a drag crosses to JavaScript. The four channels are shared values, and the hue behind the square, both thumb fills and the preview swatch are colours computed from them on the UI thread; the picked colour bridges back on change and again on release, the same as any other input here.",
+    "usage": "<ColorPicker defaultValue=\"#22c55e\" onValueCommit={setBrand}>\n  <ColorPicker.Area />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>",
+    "extraImports": [
+      "Button",
+      "Card",
+      "Text"
+    ],
+    "anatomy": "<ColorPicker>\n  <ColorPicker.Swatches colors={[…]} />\n  <ColorPicker.Area />\n  <ColorPicker.Hue />\n  <ColorPicker.Alpha />\n  <ColorPicker.Preview showValue />\n</ColorPicker>",
+    "parts": {
+      "Area": "The square: saturation across it, brightness up it, under the current hue. The thumb sits centred on the colour it has picked rather than nudged inside the edge, so a fully saturated corner is reachable and looks reachable.",
+      "Hue": "The hue scale, drawn as a gradient through the six corners of the colour wheel and back to red.",
+      "Alpha": "Opacity, over a checkerboard that says *nothing here*. The ramp is a gradient used as a mask over a solid fill of the current colour, so changing the colour above never re-declares a gradient's props from React.",
+      "Preview": "A swatch of the result, optionally with the colour written beside it. Takes children, for a copy button or a caption.",
+      "Swatches": "Presets. Tapping one sets every channel at once, and the ring marks the one that is currently exact."
+    },
+    "partNotes": "Every part is optional and they render in the order you write them, so the layout is yours: presets above the square, the preview at the top, opacity left out entirely.\n\nThe picker stores hue, saturation, value and alpha rather than the string it hands back. That is not an implementation detail you can ignore — it is why the thumb stays where you left it. A fully black colour is `#000` whatever hue and saturation produced it, so a picker that stored its own output would lose the thumb the moment you dragged into a corner and have nowhere to put it back.",
+    "examples": [
+      {
+        "title": "Controlled",
+        "description": "Hold the colour in state and apply it to something. `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change writes anywhere.",
+        "code": "const [color, setColor] = useState('#22c55e');\n\n<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Area />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>\n\n<Button className=\"w-full\" style={{ backgroundColor: color }}>\n  Save theme\n</Button>"
+      },
+      {
+        "title": "With opacity",
+        "description": "Add `ColorPicker.Alpha` and the colour gains a fourth channel. `format` decides how it is written: `hex` grows an `#rrggbbaa` pair and the other two switch to their `a` forms, but only once the colour is actually translucent — an opaque colour written with a trailing `ff` is the same colour spelled in a way half the parsers in the world reject.",
+        "code": "<ColorPicker defaultValue=\"rgba(59, 130, 246, 0.6)\" format=\"rgb\" onValueCommit={save}>\n  <ColorPicker.Area height={150} />\n  <ColorPicker.Hue />\n  <ColorPicker.Alpha />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
+      },
+      {
+        "title": "Presets first",
+        "description": "Most colour choices are one of eight, and the square is for the ninth. Putting `ColorPicker.Swatches` above it makes the common case a single tap without hiding the rest. Unreadable strings are dropped rather than rendered as black — a row of presets with a mystery black one in it is worse than a shorter row.",
+        "code": "<ColorPicker defaultValue=\"#f97316\" onValueCommit={setColor} size=\"sm\">\n  <ColorPicker.Swatches\n    colors={['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#0f172a']}\n  />\n  <ColorPicker.Area height={120} />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
+      },
+      {
+        "title": "Just a hue",
+        "description": "There is no minimum picker. A control that only needs a hue is the hue scale and nothing else, and it still reports a full colour.",
+        "code": "<ColorPicker defaultValue=\"#3b82f6\" onValueChange={setAccent}>\n  <ColorPicker.Hue />\n</ColorPicker>"
+      },
+      {
+        "title": "Disabled",
+        "code": "<ColorPicker defaultValue=\"#64748b\" disabled>\n  <ColorPicker.Area height={110} />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
+      }
+    ],
+    "variantCode": {
+      "size": "<ColorPicker size=\"sm\" defaultValue=\"#8b5cf6\">…</ColorPicker>\n<ColorPicker size=\"md\" defaultValue=\"#8b5cf6\">…</ColorPicker>\n<ColorPicker size=\"lg\" defaultValue=\"#8b5cf6\">…</ColorPicker>"
+    },
+    "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). Both read `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`, `hsl()` and `hsla()`; a string the picker cannot read leaves it on the colour it already has, rather than snapping to black.\n\n`ColorPicker.Preview`'s printed value is built on the UI thread and only crosses to JavaScript when it differs from the last one, so a drag that is not changing the rounded value costs nothing.\n\nThe square is adjustable to a screen reader in both axes: increment and decrement move saturation, and a **Brighter** / **Darker** pair moves brightness. Hue and opacity are adjustable on their own. Their spoken values update when a drag ends rather than during it — nobody is listening to the middle of a gesture, and a value that re-announced every frame would be a hundred announcements for one drag.\n\nThe conversion helpers the picker is built on are exported too — `parseColor`, `formatColor`, `hsvToHex`, `hsvToRgb`, `rgbToHsv`, `hsvToHsl`, `hsvToCss` and `isValidColor`. Every one is a worklet, so they can be called from an animated style as well as from ordinary code."
   }
 }

@@ -9,6 +9,38 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.42.0] — 2026-08-04
+
+### Added
+
+- `ColorPicker` — a colour chosen by dragging rather than typed: a square with saturation across
+  it and brightness up it, a hue scale, an opacity scale over a checkerboard, a preview and a row
+  of presets. Every part is optional and renders where you write it, so a picker with no opacity
+  is one with no `ColorPicker.Alpha` in it rather than one with a prop turned off. It stores hue,
+  saturation, value and alpha rather than the string it hands back, which is what keeps the thumb
+  where you left it — a fully black colour is `#000` whatever produced it, so a picker that stored
+  its own output would lose the thumb in the corner of the square and have nowhere to put it back.
+  Nothing about a drag crosses to JavaScript: the four channels are shared values and every fill
+  is computed from them on the UI thread, including the opacity ramp, which is a gradient used as
+  a mask over a solid colour rather than a gradient whose colours React would have to re-declare
+  on every frame.
+- `Slider` takes `range` and `defaultRange`, and reports through `onRangeChange` and
+  `onRangeCommit`. A range is a second pair of props rather than a tuple in the first one, so a
+  one-thumb slider's handler stays `(value: number) => void` and no existing caller has to narrow
+  a union to read a number out of it. `minStepsBetweenThumbs` is the gap the span can never
+  close; the two thumbs bound each other rather than the track, so they meet but never cross.
+- The colour maths the picker is built on is exported: `parseColor`, `formatColor`, `hsvToHex`,
+  `hsvToRgb`, `rgbToHsv`, `hsvToHsl`, `hsvToCss` and `isValidColor`. Every one is a worklet, so
+  they can be called from an animated style as well as from ordinary code.
+
+### Fixed
+
+- A controlled `Slider` fought the finger while being dragged. Each change was echoed straight
+  back as a new prop, and the effect that keeps the thumb in step with an outside change sprang it
+  onto that echo — so at a coarse `step` every frame pulled the knob back onto the last snapped
+  value while the finger had already moved past it. The sync now stands down for the length of a
+  gesture.
+
 ## [0.41.0] — 2026-08-03
 
 ### Added

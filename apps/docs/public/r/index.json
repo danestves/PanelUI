@@ -195,6 +195,23 @@
     ]
   },
   {
+    "name": "color",
+    "type": "registry:lib",
+    "description": "HSV colour arithmetic, parsing and formatting. Every function a worklet.",
+    "registryDependencies": []
+  },
+  {
+    "name": "color-picker",
+    "type": "registry:ui",
+    "description": "A colour chosen by dragging — a saturation square, a hue scale, and opacity.",
+    "registryDependencies": [
+      "color",
+      "haptics",
+      "text",
+      "use-direction"
+    ]
+  },
+  {
     "name": "combobox",
     "type": "registry:ui",
     "description": "A text field that filters a list of options as you type.",
@@ -734,7 +751,7 @@
   {
     "name": "slider",
     "type": "registry:ui",
-    "description": "Pick a value by dragging a thumb along a track.",
+    "description": "Pick a value, or a span, by dragging a thumb along a track.",
     "registryDependencies": [
       "haptics",
       "native",

@@ -61,6 +61,7 @@ const SUPPORT_DESCRIPTIONS = {
   icons: 'The icon set, plus the colour context components use to tint them.',
   cn: 'Merges Tailwind class names, with later classes winning conflicts.',
   chart: 'Scales, monotone curves and path building. Shared by every chart.',
+  color: 'HSV colour arithmetic, parsing and formatting. Every function a worklet.',
   date: 'Day and month arithmetic, and locale-aware date formatting.',
   time: 'Time-of-day arithmetic, and locale-aware time formatting.',
   native: 'Optional bridge to the platform UI toolkit, behind the `native` prop.',
@@ -150,6 +151,14 @@ register(
   [path.join(SRC, 'utils/chart.ts')],
   () => 'lib/chart.ts',
   () => `${ALIAS.lib}/chart`
+);
+
+register(
+  'color',
+  'registry:lib',
+  [path.join(SRC, 'utils/color.ts')],
+  () => 'lib/color.ts',
+  () => `${ALIAS.lib}/color`
 );
 
 register(

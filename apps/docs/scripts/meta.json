@@ -103,6 +103,14 @@
       "addedIn": "0.13.0"
     }
   ],
+  "color-picker": [
+    "ColorPicker",
+    "A colour chosen by dragging — a saturation square, a hue scale, and opacity.",
+    "react native color picker",
+    {
+      "addedIn": "0.42.0"
+    }
+  ],
   "date-picker": [
     "DatePicker",
     "A calendar behind a button.",
@@ -400,10 +408,10 @@
   ],
   "slider": [
     "Slider",
-    "Pick a value by dragging a thumb along a track.",
+    "Pick a value, or a span, by dragging a thumb along a track.",
     "react native slider",
     {
-      "updatedIn": "0.20.0"
+      "updatedIn": "0.42.0"
     }
   ],
   "spinner": [
