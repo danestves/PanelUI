@@ -624,6 +624,53 @@ const RADAR_SKILLS = [
   { axis: 'Testing', score: 71 },
 ];
 
+/** The sizes the radar version offers, smallest first. */
+const RADAR_SIZES = [
+  { value: 'sm', label: 'Small', size: 180 },
+  { value: 'md', label: 'Medium', size: 240 },
+  { value: 'lg', label: 'Large', size: 300 },
+] as const;
+
+function RadarSizesVersion() {
+  const [size, setSize] = useState<string>('md');
+  const picked = RADAR_SIZES.find((entry) => entry.value === size) ?? RADAR_SIZES[1];
+
+  return (
+    <ChartScreen>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Coverage</Frame.Title>
+          <Frame.Action>{picked.size}pt</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="items-center px-4 pb-4 pt-2">
+            {/* A radar sizes itself rather than filling its container, so the
+                chart is the same shape at every size — only the room it takes
+                changes. The labels keep their distance from the rings, which
+                is why the small one is still readable. */}
+            <RadarChart data={RADAR_PROFILE} domain={[0, 100]} size={picked.size}>
+              <RadarChart.Grid />
+              <RadarChart.Axis fontSize={picked.size < 220 ? 10 : 11} />
+              <RadarChart.Series dataKey="you" colorIndex={1} showDots />
+            </RadarChart>
+          </View>
+          <Frame.Section className="px-4 py-3">
+            <Tabs value={size} onValueChange={setSize} defaultValue="md">
+              <Tabs.List>
+                {RADAR_SIZES.map((entry) => (
+                  <Tabs.Trigger key={entry.value} value={entry.value}>
+                    {entry.label}
+                  </Tabs.Trigger>
+                ))}
+              </Tabs.List>
+            </Tabs>
+          </Frame.Section>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
+
 function RadarSingleVersion() {
   return (
     <ChartScreen>
@@ -11605,6 +11652,13 @@ export const COMPONENTS: ComponentEntry[] = [
         fullPage: true,
         description: 'Circular rings and no fill, for reading a value off a spoke.',
         render: () => <RadarOutlineVersion />,
+      },
+      {
+        label: 'Sizing it',
+        id: 'sizes',
+        fullPage: true,
+        description: 'Tabs under the chart change how much room it takes.',
+        render: () => <RadarSizesVersion />,
       },
     ],
   },

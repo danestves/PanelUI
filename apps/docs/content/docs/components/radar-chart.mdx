@@ -15,7 +15,7 @@ That is also its limit, and worth knowing before you reach for it: the order of 
 RadarChart ships with the library — no separate install.
 
 ```tsx
-import { RadarChart, type RadarChartDatum, Frame } from 'panelui-native';
+import { RadarChart, type RadarChartDatum, Frame, Tabs } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -27,7 +27,7 @@ npx panelui-cli@latest add radar-chart
 ## Usage
 
 ```tsx
-<RadarChart data={scores} domain={[0, 100]}>
+<RadarChart data={scores} domain={[0, 100]} size={240}>
   <RadarChart.Grid />
   <RadarChart.Axis />
   <RadarChart.Series dataKey="score" colorIndex={1} showDots />
@@ -80,6 +80,29 @@ Pass `domain` and mean it. A radar derives its outer ring from the data if you d
   <RadarChart.Axis />
   <RadarChart.Series dataKey="you" />
 </RadarChart>
+```
+
+### How big it is
+
+Unlike the other charts here a radar does not fill its container. It is square, so filling a panel makes it as tall as the panel is wide — twice the height of the wide chart beside it, for the same handful of numbers. It takes 240pt by default and centres itself; pass `size` for another, or `size={undefined}` with an `aspectRatio` to go back to filling the width.
+
+```tsx
+{/* Three sizes behind a set of tabs. */}
+const sizes = { sm: 180, md: 240, lg: 300 };
+
+<RadarChart data={profile} domain={[0, 100]} size={sizes[picked]}>
+  <RadarChart.Grid />
+  <RadarChart.Axis />
+  <RadarChart.Series dataKey="you" />
+</RadarChart>
+
+<Tabs value={picked} onValueChange={setPicked} defaultValue="md">
+  <Tabs.List>
+    <Tabs.Trigger value="sm">Small</Tabs.Trigger>
+    <Tabs.Trigger value="md">Medium</Tabs.Trigger>
+    <Tabs.Trigger value="lg">Large</Tabs.Trigger>
+  </Tabs.List>
+</Tabs>
 ```
 
 ### Two profiles over each other
@@ -174,6 +197,28 @@ Circular rings and no fill, for reading a value off a spoke.
 </RadarChart>
 ```
 
+### Sizing it
+
+Tabs under the chart change how much room it takes.
+
+```tsx
+<RadarChart data={profile} domain={[0, 100]} size={picked.size}>
+  <RadarChart.Grid />
+  <RadarChart.Axis fontSize={picked.size < 220 ? 10 : 11} />
+  <RadarChart.Series dataKey="you" colorIndex={1} showDots />
+</RadarChart>
+
+<Tabs value={size} onValueChange={setSize} defaultValue="md">
+  <Tabs.List>
+    {SIZES.map((entry) => (
+      <Tabs.Trigger key={entry.value} value={entry.value}>
+        {entry.label}
+      </Tabs.Trigger>
+    ))}
+  </Tabs.List>
+</Tabs>
+```
+
 ## API Reference
 
 ### RadarChart
@@ -184,7 +229,8 @@ Circular rings and no fill, for reading a value off a spoke.
 | `data` | `RadarChartDatum[]` | — | One row per axis, in the order they go round. |
 | `axisKey` | `string` | `'axis'` | Key holding each row's axis label. |
 | `status` | `RadarChartStatus` | `'ready'` | `loading` holds the shape at the centre until the data arrives, then grows it — one component throughout rather than a spinner swapped for a chart, because swapping loses the transition. |
-| `aspectRatio` | `number` | `1` | Width ÷ height. `1` is the square a radar wants; the rings are circular either way. |
+| `size` | `number` | — | Fixed size in points, centred in whatever it is put in. A radar is square, and a square that fills the width of a panel is as tall as the panel is wide — much bigger than the wide charts it sits beside, for no more information. So unlike them this has a default size rather than filling its container; pass `size={undefined}` with an `aspectRatio` to go back to filling it. |
+| `aspectRatio` | `number` | `1` | Width ÷ height when `size` is not given. `1` is the square a radar wants; the rings stay circular whatever it is set to. |
 | `domain` | `[number, number]` | — | Fix the scale instead of deriving it from the data. A radar almost always wants this: the shape only means something against a known maximum, and a scale that moves with the data makes two charts incomparable. |
 | `animationDuration` | `number` | `REVEAL_DURATION` | Milliseconds for the reveal on mount. |
 | `compact` | `boolean` | `false` | Drop the room reserved for axis labels, for a radar with none. |
@@ -247,6 +293,10 @@ Three axes is the minimum — two spokes are a line, not a shape — and past ab
 The polygons grow out of the centre rather than sweeping across, because a polar chart has no left-hand edge for a sweep to start from. It scales the **values**, not the group: a `scale` transform would grow the stroke and the dots along with the shape and arrive at the wrong stroke width.
 
 It plays once on mount. `replay()` on the ref runs it again. Under *Reduce Motion* the shape is simply there.
+
+### It sizes itself
+
+Every other chart here fills its container. This one does not, and the reason is that it is square: filling a panel makes a radar as tall as the panel is wide, which is twice the height of the wide chart beside it for the same five or six numbers. It takes 240pt and centres. `size` moves that; `size={undefined}` with an `aspectRatio` goes back to filling the width.
 
 ### Space for the labels
 

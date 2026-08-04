@@ -85,6 +85,16 @@ const BARE_PADDING = 6;
 /** How long the polygons take to grow out of the centre. */
 const REVEAL_DURATION = 900;
 
+/**
+ * How big a radar is when nothing says otherwise.
+ *
+ * The other charts here fill their container, because they are wide and a
+ * wider one is a better one. A radar is square, so filling a panel makes it as
+ * tall as the panel is wide — twice the height of the chart beside it, for the
+ * same handful of numbers. It sizes itself instead, and centres.
+ */
+const DEFAULT_SIZE = 240;
+
 export type RadarChartStatus = 'loading' | 'ready';
 
 /** One row is one axis: its label, and one value per series. */
@@ -167,7 +177,20 @@ export interface RadarChartProps extends Omit<ViewProps, 'children'> {
    * because swapping loses the transition.
    */
   status?: RadarChartStatus;
-  /** Width ÷ height. `1` is the square a radar wants; the rings are circular either way. */
+  /**
+   * Fixed size in points, centred in whatever it is put in.
+   *
+   * A radar is square, and a square that fills the width of a panel is as tall
+   * as the panel is wide — much bigger than the wide charts it sits beside,
+   * for no more information. So unlike them this has a default size rather
+   * than filling its container; pass `size={undefined}` with an `aspectRatio`
+   * to go back to filling it.
+   */
+  size?: number;
+  /**
+   * Width ÷ height when `size` is not given. `1` is the square a radar wants;
+   * the rings stay circular whatever it is set to.
+   */
   aspectRatio?: number;
   /**
    * Fix the scale instead of deriving it from the data. A radar almost always
@@ -194,6 +217,7 @@ const RadarChartRoot = forwardRef<RadarChartHandle, RadarChartProps>(
       data,
       axisKey = 'axis',
       status = 'ready',
+      size: fixedSize = DEFAULT_SIZE,
       aspectRatio = 1,
       domain,
       animationDuration = REVEAL_DURATION,
@@ -341,7 +365,13 @@ const RadarChartRoot = forwardRef<RadarChartHandle, RadarChartProps>(
       <RadarChartContext.Provider value={context}>
         <View {...props} style={props.style} className={cn('w-full', className)}>
           {header}
-          <View onLayout={onLayout} style={{ aspectRatio }} className="w-full">
+          <View
+            onLayout={onLayout}
+            style={
+              fixedSize ? { width: fixedSize, height: fixedSize } : { aspectRatio }
+            }
+            className={fixedSize ? 'self-center' : 'w-full'}
+          >
             {radius > 0 ? (
               <>
                 <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
