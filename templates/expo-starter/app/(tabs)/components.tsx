@@ -194,9 +194,15 @@ export default function ComponentsScreen() {
       </Section>
 
       <Section title="Status" hint="Alerts, badges, chips and progress.">
+        {/* Alert.Content is the flex-1 wrapper. Without it the text sits in the
+            row unconstrained and runs past the padding on the right. */}
         <Alert variant="info">
           <Alert.Indicator />
-          <Text size="sm">Every one of these follows the theme, including this one.</Text>
+          <Alert.Content>
+            <Alert.Description>
+              Every one of these follows the theme, including this one.
+            </Alert.Description>
+          </Alert.Content>
         </Alert>
         <View className="flex-row flex-wrap gap-2">
           {['All', 'Open', 'Closed'].map((label) => (
@@ -218,7 +224,12 @@ export default function ComponentsScreen() {
         <Card>
           <Accordion defaultValue="what">
             <Accordion.Item value="what">
-              <Accordion.Trigger>What is in this template?</Accordion.Trigger>
+              {/* The chevron is a part, not automatic — a trigger without one
+                  reads as a line of text rather than a row that opens. */}
+              <Accordion.Trigger>
+                <Accordion.Title>What is in this template?</Accordion.Title>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
               <Accordion.Content>
                 <Text size="sm" muted>
                   Three screens, a native tab bar, and the theme wired up. Nothing
@@ -227,7 +238,10 @@ export default function ComponentsScreen() {
               </Accordion.Content>
             </Accordion.Item>
             <Accordion.Item value="next">
-              <Accordion.Trigger>How do I add more?</Accordion.Trigger>
+              <Accordion.Trigger>
+                <Accordion.Title>How do I add more?</Accordion.Title>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
               <Accordion.Content>
                 <Text size="sm" muted className="font-mono">
                   npx panelui-cli@latest add {'<name>'}
