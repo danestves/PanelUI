@@ -85,6 +85,7 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "lucide-react-native": "^1.28.0",
     "tailwind-merge": "^3.3.1",
     "tailwind-variants": "^3.2.2"
   },

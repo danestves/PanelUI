@@ -11445,7 +11445,7 @@ export const COMPONENTS: ComponentEntry[] = [
                 {/* The surface is a layer, so it can be replaced. A BlurView or
                     a gradient goes in the same slot. */}
                 <Menu.Background className="bg-overlay">
-                  <View className="flex-1 bg-info/10" />
+                  <View className="flex-1 bg-foreground/5" />
                 </Menu.Background>
                 <Menu.Item icon={<PencilIcon size={16} />}>Rename</Menu.Item>
                 <Menu.Item icon={<ShareNodesIcon size={16} />}>Share</Menu.Item>
