@@ -131,7 +131,7 @@ export function ThemePicker() {
     <View className="gap-4">
       <View className="flex-row gap-3">
         {PANEL_THEMES.map((entry) => {
-          const selected = entry.id === family;
+          const selected = entry.id === family.id;
           return (
             <Pressable
               key={entry.id}

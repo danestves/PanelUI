@@ -205,15 +205,32 @@ export function detectPackageManager(cwd) {
  * Installs through `expo install` where possible — it picks versions that
  * match the project's SDK, which plain `npm install` does not.
  */
-export async function installDependencies(cwd, packages, { assumeYes, dryRun, isExpo }) {
-  if (!packages.length) return;
+export async function installDependencies(
+  cwd,
+  packages,
+  { assumeYes, dryRun, isExpo, installAll = false }
+) {
+  if (!packages.length && !installAll) return;
 
   const manager = detectPackageManager(cwd);
-  const command = isExpo
-    ? `npx expo install ${packages.join(' ')}`
-    : `${manager} ${manager === 'npm' ? 'install' : 'add'} ${packages.join(' ')}`;
 
-  step(`Install ${packages.length} package${packages.length === 1 ? '' : 's'}`);
+  /*
+   * A freshly scaffolded project already lists everything it needs, so this is
+   * an install of what is written down rather than an addition to it — and it
+   * goes through the package manager rather than `expo install`, which resolves
+   * names against an SDK and has nothing to resolve when given none.
+   */
+  const command = installAll
+    ? `${manager} install`
+    : isExpo
+      ? `npx expo install ${packages.join(' ')}`
+      : `${manager} ${manager === 'npm' ? 'install' : 'add'} ${packages.join(' ')}`;
+
+  step(
+    installAll
+      ? 'Install dependencies'
+      : `Install ${packages.length} package${packages.length === 1 ? '' : 's'}`
+  );
   console.log(dim(`  ${command}\n`));
 
   if (dryRun) return;

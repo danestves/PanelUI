@@ -17,7 +17,8 @@ ${bold('Usage')}
   npx panelui-cli@latest <command> [options]
 
 ${bold('Commands')}
-  init                 Set up this project: config, theme, CSS entry, Metro
+  init                 In an empty folder, start a new app from a template.
+                       In an existing one, set it up to receive components.
   add <name...>        Copy components in, with everything they depend on
   list                 Show everything available
 
@@ -30,8 +31,14 @@ ${bold('Options')}
   --help, -h           This
   --version, -v        Print the version
 
+${bold('New project')}
+  --template <name>    starter | minimal
+  --name <name>        Folder and app name
+  --theme <name>       panel | moon | grass
+
 ${bold('Examples')}
   npx panelui-cli@latest init
+  npx panelui-cli@latest init --template starter --name my-app --theme moon
   npx panelui-cli@latest add button
   npx panelui-cli@latest add item message --yes
 `;
@@ -43,6 +50,9 @@ function parseArgs(argv) {
     overwrite: false,
     dryRun: false,
     registry: undefined,
+    template: undefined,
+    name: undefined,
+    theme: undefined,
     help: false,
     version: false,
   };
@@ -76,6 +86,15 @@ function parseArgs(argv) {
       case '--registry':
         // A trailing slash would produce `…/r//item.json`.
         options.registry = argv[++i]?.replace(/\/+$/, '');
+        break;
+      case '--template':
+        options.template = argv[++i];
+        break;
+      case '--name':
+        options.name = argv[++i];
+        break;
+      case '--theme':
+        options.theme = argv[++i];
         break;
       default:
         if (arg.startsWith('-')) {

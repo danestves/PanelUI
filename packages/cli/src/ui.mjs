@@ -79,6 +79,48 @@ export async function ask(question, defaultValue) {
   }
 }
 
+/**
+ * Pick one of a list. Returns the first when not attached to a TTY, so the
+ * whole flow still runs in CI rather than hanging on input nobody can give it.
+ *
+ * Numbered rather than arrow-driven: reading raw keypresses means putting the
+ * terminal into raw mode and putting it back on every exit path, which is a
+ * lot of surface for a prompt that is answered once.
+ */
+export async function select(question, choices, { assumeYes = false } = {}) {
+  if (assumeYes || !stdin.isTTY || choices.length === 1) return choices[0];
+
+  console.log(`${cyan('?')} ${question}`);
+  choices.forEach((choice, index) => {
+    const label = `${bold(String(index + 1))}. ${choice.title}`;
+    console.log(`  ${label}${choice.description ? dim(` — ${choice.description}`) : ''}`);
+  });
+
+  const rl = readline.createInterface({ input: stdin, output: stdout });
+  try {
+    for (;;) {
+      const answer = (await rl.question(`  ${dim('(1)')} `)).trim();
+      if (!answer) return choices[0];
+
+      const index = Number(answer) - 1;
+      if (Number.isInteger(index) && index >= 0 && index < choices.length) {
+        return choices[index];
+      }
+
+      // By name as well as by number — someone who read the list is more
+      // likely to type "moon" than to count to two.
+      const named = choices.find(
+        (choice) => choice.title.toLowerCase() === answer.toLowerCase()
+      );
+      if (named) return named;
+
+      console.log(dim(`  Pick a number between 1 and ${choices.length}.`));
+    }
+  } finally {
+    rl.close();
+  }
+}
+
 /** Shows what would be appended to a file, so a patch is never a surprise. */
 export function printAddition(filePath, lines) {
   console.log(`\n${bold(filePath)}`);

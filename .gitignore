@@ -32,3 +32,6 @@ android/
 
 # typescript
 *.tsbuildinfo
+
+# Scratch space for `npm run template`
+
