@@ -607,6 +607,16 @@
     ]
   },
   {
+    "name": "radar-chart",
+    "type": "registry:ui",
+    "description": "Several measures of one thing, drawn as one shape.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "radio-group",
     "type": "registry:ui",
     "description": "Single-select list of options.",

@@ -628,5 +628,13 @@
     {
       "addedIn": "0.43.0"
     }
+  ],
+  "radar-chart": [
+    "RadarChart",
+    "Several measures of one thing, drawn as one shape.",
+    "react native radar chart spider web",
+    {
+      "addedIn": "0.43.0"
+    }
   ]
 }

@@ -117,6 +117,7 @@ import {
   type PostVote,
   Portal,
   Progress,
+  RadarChart,
   RadioGroup,
   Rating,
   RingChart,
@@ -605,6 +606,105 @@ function ChartMultiVersion() {
 
 /** Padding a KPI row takes inside a Frame.Panel, matching Frame.Row. */
 const KPI_ROW = 'px-4 py-3.5';
+
+const RADAR_PROFILE = [
+  { axis: 'Speed', you: 82, team: 64 },
+  { axis: 'Accuracy', you: 71, team: 78 },
+  { axis: 'Coverage', you: 55, team: 83 },
+  { axis: 'Uptime', you: 94, team: 91 },
+  { axis: 'Cost', you: 48, team: 62 },
+  { axis: 'Support', you: 77, team: 58 },
+];
+
+const RADAR_SKILLS = [
+  { axis: 'Design', score: 88 },
+  { axis: 'Frontend', score: 94 },
+  { axis: 'Backend', score: 62 },
+  { axis: 'Infra', score: 45 },
+  { axis: 'Testing', score: 71 },
+];
+
+function RadarSingleVersion() {
+  return (
+    <ChartScreen>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Skills</Frame.Title>
+          <Frame.Action>Self-assessed</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="px-4 pb-4 pt-2">
+            {/* One profile, filled. The scale is fixed at 0–100 rather than
+                derived, because a shape only means anything against a known
+                maximum. */}
+            <RadarChart data={RADAR_SKILLS} domain={[0, 100]}>
+              <RadarChart.Grid />
+              <RadarChart.Axis />
+              <RadarChart.Series dataKey="score" colorIndex={1} showDots />
+            </RadarChart>
+          </View>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
+
+function RadarComparisonVersion() {
+  return (
+    <ChartScreen>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>You vs the team</Frame.Title>
+          <Frame.Action>This quarter</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="px-4 pb-4 pt-2">
+            {/* Two profiles over each other. Only the first is filled — two
+                translucent fills make a third colour that means nothing. */}
+            <RadarChart data={RADAR_PROFILE} domain={[0, 100]}>
+              <RadarChart.Grid />
+              <RadarChart.Axis />
+              <RadarChart.Series dataKey="you" colorIndex={1} />
+              <RadarChart.Series dataKey="team" colorIndex={2} fillOpacity={0} />
+              <RadarChart.Legend />
+            </RadarChart>
+          </View>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
+
+function RadarOutlineVersion() {
+  return (
+    <ChartScreen>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Coverage</Frame.Title>
+          <Frame.Action>Circular rings</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="px-4 pb-4 pt-2">
+            {/* Circular rings and no fill — for reading a value off a spoke
+                rather than comparing two outlines. */}
+            <RadarChart data={RADAR_PROFILE} domain={[0, 100]}>
+              <RadarChart.Header title="Weakest axis" value="Cost" caption="48 of 100" />
+              <RadarChart.Grid circular rings={5} />
+              <RadarChart.Axis fontSize={10} />
+              <RadarChart.Series
+                dataKey="you"
+                colorIndex={3}
+                fillOpacity={0}
+                strokeWidth={2.5}
+                showDots
+              />
+            </RadarChart>
+          </View>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
 
 function KpiDefaultVersion() {
   return (
@@ -11476,6 +11576,35 @@ export const COMPONENTS: ComponentEntry[] = [
         fullPage: true,
         description: 'Divided by a rule rather than spaced apart, in a row and a column.',
         render: () => <KpiGroupVersion />,
+      },
+    ],
+  },
+  {
+    slug: 'radar-chart',
+    name: 'RadarChart',
+    summary: 'Several measures of one thing, on one shape',
+    layout: 'pager',
+    demos: [
+      {
+        label: 'One profile',
+        id: 'single',
+        fullPage: true,
+        description: 'A filled polygon on polygonal rings, with a dot at each vertex.',
+        render: () => <RadarSingleVersion />,
+      },
+      {
+        label: 'Two compared',
+        id: 'comparison',
+        fullPage: true,
+        description: 'Two profiles over each other, only the first of them filled.',
+        render: () => <RadarComparisonVersion />,
+      },
+      {
+        label: 'Outline on circles',
+        id: 'outline',
+        fullPage: true,
+        description: 'Circular rings and no fill, for reading a value off a spoke.',
+        render: () => <RadarOutlineVersion />,
       },
     ],
   },

@@ -232,6 +232,19 @@ export {
   type ViewState,
 } from './components/map';
 export {
+  RadarChart,
+  useRadarChart,
+  type RadarChartProps,
+  type RadarChartHandle,
+  type RadarChartHeaderProps,
+  type RadarChartGridProps,
+  type RadarChartAxisProps,
+  type RadarChartSeriesProps,
+  type RadarChartLegendProps,
+  type RadarChartDatum,
+  type RadarChartStatus,
+} from './components/radar-chart';
+export {
   Select,
   type SelectProps,
   type SelectItemProps,

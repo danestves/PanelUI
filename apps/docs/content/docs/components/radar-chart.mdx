@@ -1,0 +1,257 @@
+---
+title: RadarChart
+description: Several measures of one thing, drawn as one shape.
+status: new
+---
+
+Several measures of one thing, on one shape.
+
+A radar answers a question a bar chart cannot: not *which of these is biggest* but *what shape is this*. Five scores read as five bars are five facts; read as a polygon they are a profile, and two profiles laid over each other are comparable at a glance in a way two groups of bars never are.
+
+That is also its limit, and worth knowing before you reach for it: the order of the axes changes the outline, and the outline is what people read. Two datasets are only comparable on one radar if their axes are in the same order, and a radar is the wrong chart entirely for data whose axes have no natural order.
+
+## Installation
+
+RadarChart ships with the library — no separate install.
+
+```tsx
+import { RadarChart, type RadarChartDatum, Frame } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add radar-chart
+```
+
+## Usage
+
+```tsx
+<RadarChart data={scores} domain={[0, 100]}>
+  <RadarChart.Grid />
+  <RadarChart.Axis />
+  <RadarChart.Series dataKey="score" colorIndex={1} showDots />
+</RadarChart>
+```
+
+## Composition
+
+```tsx
+<RadarChart data={…} axisKey="axis" domain={[0, 100]}>
+  <RadarChart.Header title="…" value="…" />   {/* the strip above */}
+  <RadarChart.Grid rings={4} />               {/* the scale */}
+  <RadarChart.Axis />                         {/* the names round it */}
+  <RadarChart.Series dataKey="you" />         {/* one profile */}
+  <RadarChart.Series dataKey="team" fillOpacity={0} />
+  <RadarChart.Legend />
+</RadarChart>
+```
+
+- **`RadarChart.Header`** — The strip above the rings — a caption, a headline figure, and optionally the legend on the trailing end.
+- **`RadarChart.Grid`** — The scale, as rings. Polygonal by default; `circular` draws them as circles.
+- **`RadarChart.Axis`** — The axis names, placed around the outside and anchored by which side of the circle they are on.
+- **`RadarChart.Series`** — One profile. Filled by default; drop `fillOpacity` to `0` on the second and subsequent ones.
+- **`RadarChart.Legend`** — The series, named and coloured, in the bottom-left corner of the plot — which on a radar is empty by construction.
+
+## Examples
+
+### The data
+
+One row per axis, in the order they go round, with one key per series. `axisKey` names the column holding each row’s label; it defaults to `axis`.
+
+```tsx
+const profile: RadarChartDatum[] = [
+  { axis: 'Speed', you: 82, team: 64 },
+  { axis: 'Accuracy', you: 71, team: 78 },
+  { axis: 'Coverage', you: 55, team: 83 },
+  { axis: 'Uptime', you: 94, team: 91 },
+  { axis: 'Cost', you: 48, team: 62 },
+];
+```
+
+### Fix the scale
+
+Pass `domain` and mean it. A radar derives its outer ring from the data if you do not, and a scale that moves with the data makes two charts incomparable and a small value look like a large one — which is the failure this chart is most prone to. Where there is a known maximum, say so.
+
+```tsx
+{/* The rings are 20, 40, 60, 80, 100 — the same on every chart. */}
+<RadarChart data={profile} domain={[0, 100]}>
+  <RadarChart.Grid rings={5} />
+  <RadarChart.Axis />
+  <RadarChart.Series dataKey="you" />
+</RadarChart>
+```
+
+### Two profiles over each other
+
+Add a second `Series`. Fill only the first — two translucent fills over each other make a third colour that means nothing, and the reader has to work out which of the three regions is which.
+
+```tsx
+<RadarChart data={profile} domain={[0, 100]}>
+  <RadarChart.Grid />
+  <RadarChart.Axis />
+  <RadarChart.Series dataKey="you" colorIndex={1} />
+  <RadarChart.Series dataKey="team" colorIndex={2} fillOpacity={0} />
+  <RadarChart.Legend />
+</RadarChart>
+```
+
+### Circular rings
+
+Rings are polygons by default, drawn through the spokes, because they are read against the shape laid over them — a round ring behind an angular polygon gives every axis a different apparent distance to the edge. Use `circular` when the chart is for reading a value off one spoke rather than for comparing outlines.
+
+```tsx
+<RadarChart data={profile} domain={[0, 100]}>
+  <RadarChart.Grid circular rings={5} />
+  <RadarChart.Axis fontSize={10} />
+  <RadarChart.Series dataKey="you" fillOpacity={0} showDots />
+</RadarChart>
+```
+
+### Replay the reveal
+
+Take a ref and call `replay()` to grow the shape out of the centre again — the reveal scales the *values*, not the group, so the stroke stays the width it will end at rather than growing with it.
+
+```tsx
+const chart = useRef<RadarChartHandle>(null);
+
+<Button onPress={() => chart.current?.replay()}>Replay</Button>
+
+<RadarChart ref={chart} data={profile} domain={[0, 100]}>
+  <RadarChart.Grid />
+  <RadarChart.Series dataKey="you" />
+</RadarChart>
+```
+
+## Versions
+
+### One profile
+
+A filled polygon on polygonal rings, with a dot at each vertex.
+
+```tsx
+<Frame>
+  <Frame.Header>
+    <Frame.Title>Skills</Frame.Title>
+    <Frame.Action>Self-assessed</Frame.Action>
+  </Frame.Header>
+  <Frame.Panel>
+    <View className="px-4 pb-4 pt-2">
+      <RadarChart data={skills} domain={[0, 100]}>
+        <RadarChart.Grid />
+        <RadarChart.Axis />
+        <RadarChart.Series dataKey="score" colorIndex={1} showDots />
+      </RadarChart>
+    </View>
+  </Frame.Panel>
+</Frame>
+```
+
+### Two compared
+
+Two profiles over each other, only the first of them filled.
+
+```tsx
+<RadarChart data={profile} domain={[0, 100]}>
+  <RadarChart.Grid />
+  <RadarChart.Axis />
+  <RadarChart.Series dataKey="you" colorIndex={1} />
+  <RadarChart.Series dataKey="team" colorIndex={2} fillOpacity={0} />
+  <RadarChart.Legend />
+</RadarChart>
+```
+
+### Outline on circles
+
+Circular rings and no fill, for reading a value off a spoke.
+
+```tsx
+<RadarChart data={profile} domain={[0, 100]}>
+  <RadarChart.Header title="Weakest axis" value="Cost" caption="48 of 100" />
+  <RadarChart.Grid circular rings={5} />
+  <RadarChart.Axis fontSize={10} />
+  <RadarChart.Series dataKey="you" colorIndex={3} fillOpacity={0} showDots />
+</RadarChart>
+```
+
+## API Reference
+
+### RadarChart
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `data` | `RadarChartDatum[]` | — | One row per axis, in the order they go round. |
+| `axisKey` | `string` | `'axis'` | Key holding each row's axis label. |
+| `status` | `RadarChartStatus` | `'ready'` | `loading` holds the shape at the centre until the data arrives, then grows it — one component throughout rather than a spinner swapped for a chart, because swapping loses the transition. |
+| `aspectRatio` | `number` | `1` | Width ÷ height. `1` is the square a radar wants; the rings are circular either way. |
+| `domain` | `[number, number]` | — | Fix the scale instead of deriving it from the data. A radar almost always wants this: the shape only means something against a known maximum, and a scale that moves with the data makes two charts incomparable. |
+| `animationDuration` | `number` | `REVEAL_DURATION` | Milliseconds for the reveal on mount. |
+| `compact` | `boolean` | `false` | Drop the room reserved for axis labels, for a radar with none. |
+
+### RadarChart.Grid
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rings` | `number` | `4` | How many rings, including the outermost. |
+| `color` | `string` | — | Overrides the themed hairline colour. |
+| `circular` | `boolean` | `false` | Draw the rings as circles rather than as polygons through the spokes. |
+| `spokes` | `boolean` | `true` | Draw a line from the centre out to each axis. |
+
+### RadarChart.Axis
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `color` | `string` | — | Overrides the themed label colour. |
+| `fontSize` | `number` | — | Label size in points. |
+| `offset` | `number` | — | How far outside the rings the labels sit. |
+| `formatLabel` | `(label: string, index: number) => string` | — | Rewrites a label — to shorten it, or to add a unit. |
+
+### RadarChart.Series
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string` | — | Key holding this series' value on each row. |
+| `name` | `string` | — | Name for the legend. Defaults to `dataKey`. |
+| `color` | `string` | — | Stroke colour. Defaults to the `--color-chart-*` token at `colorIndex`, so a series follows the theme without the call site naming a colour. |
+| `colorIndex` | `SeriesColorIndex` | `1` | Which `--color-chart-*` token to take when `color` is not given. |
+| `strokeWidth` | `number` | `2` |  |
+| `fillOpacity` | `number` | `0.18` | Opacity of the fill. Two filled polygons over each other make a third colour that means nothing, so drop it towards `0` — or to `0` — on the second and subsequent series. |
+| `showDots` | `boolean` | `false` | A dot at each vertex. Worth it on a radar with few axes. |
+
+### RadarChart.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | — | Small caption above the value. |
+| `value` | `string` | — | The headline figure, if there is one. |
+| `caption` | `string` | — | A line under the value. |
+| `legend` | `boolean` | `false` | Draw the series legend on the trailing end of the strip. |
+
+### RadarChart.Legend
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `formatName` | `(key: string) => string` | — | Rewrites a series' name — the key is rarely what a reader should see. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+Three axes is the minimum — two spokes are a line, not a shape — and past about eight the labels start colliding and the outline stops being readable as one form. Five or six is where this chart works.
+
+### The reveal
+
+The polygons grow out of the centre rather than sweeping across, because a polar chart has no left-hand edge for a sweep to start from. It scales the **values**, not the group: a `scale` transform would grow the stroke and the dots along with the shape and arrive at the wrong stroke width.
+
+It plays once on mount. `replay()` on the ref runs it again. Under *Reduce Motion* the shape is simply there.
+
+### Space for the labels
+
+Axis labels sit outside the rings rather than along an edge, so unlike every other chart here the padding is not a margin — it is the gap between the box and the outermost ring, and a label too long for it runs off the side of the view instead of being clipped somewhere visible. Shorten them with `formatLabel`, or pass `compact` to reclaim the room on a radar that has no labels at all.
+
+### Colour
+
+Series take the `--color-chart-*` tokens through `colorIndex`, the same ramp every other chart here uses, so the first series is the same colour as the first series on the chart beside it. The rings read `--color-border` and the labels `--color-muted-foreground`.

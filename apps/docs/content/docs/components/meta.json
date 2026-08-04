@@ -71,6 +71,7 @@
     "typography",
     "combobox",
     "post",
-    "kpi-chart"
+    "kpi-chart",
+    "radar-chart"
   ]
 }
