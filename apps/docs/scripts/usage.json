@@ -6178,7 +6178,8 @@
     "usage": "<KpiChart colorIndex={1}>\n  <KpiChart.Content layout=\"inline\">\n    <KpiChart.Stat>\n      <KpiChart.Title>Total Revenue</KpiChart.Title>\n      <KpiChart.Value>$317,904</KpiChart.Value>\n      <KpiChart.Trend value={7.8} caption=\"last 30d\" />\n    </KpiChart.Stat>\n    <KpiChart.Chart data={week} dataKey=\"v\" inline />\n  </KpiChart.Content>\n</KpiChart>",
     "extraImports": [
       "Text",
-      "Frame"
+      "Frame",
+      "Surface"
     ],
     "anatomy": "<KpiChart colorIndex={1} goodDirection=\"up\">\n  <KpiChart.Header>\n    <KpiChart.Icon>{/* a glyph */}</KpiChart.Icon>\n    <KpiChart.Title />\n    <KpiChart.Actions>{/* a menu */}</KpiChart.Actions>\n  </KpiChart.Header>\n  <KpiChart.Content layout=\"inline\">\n    <KpiChart.Stat>          {/* title, value and change, stacked */}\n      <KpiChart.Title />\n      <KpiChart.Value />\n      <KpiChart.Trend value={7.8} />\n    </KpiChart.Stat>\n    <KpiChart.Chart data={series} dataKey=\"v\" inline />\n  </KpiChart.Content>\n  <KpiChart.Progress value={73} />\n  <KpiChart.Separator />\n  <KpiChart.Footer>{/* a caveat */}</KpiChart.Footer>\n</KpiChart>\n\n<KpiChart.Group orientation=\"horizontal\">{/* several cards */}</KpiChart.Group>",
     "parts": {
@@ -6231,8 +6232,8 @@
       },
       {
         "title": "With a sparkline",
-        "description": "The chart under the number, full width and filled.",
-        "code": "<KpiChart colorIndex={1}>\n  <KpiChart.Header>\n    <KpiChart.Title>Total revenue</KpiChart.Title>\n    <KpiChart.Trend value={7.8} variant=\"badge\" />\n  </KpiChart.Header>\n  <KpiChart.Value>$317,904</KpiChart.Value>\n  <KpiChart.Chart data={week} dataKey=\"v\" height={88} />\n</KpiChart>"
+        "description": "The shape under the number, and the shape beside it.",
+        "code": "<KpiChart colorIndex={1}>\n  <KpiChart.Header>\n    <KpiChart.Title>Total revenue</KpiChart.Title>\n  </KpiChart.Header>\n  <KpiChart.Content>\n    <KpiChart.Value>$317,904</KpiChart.Value>\n    <KpiChart.Trend value={7.8} />\n  </KpiChart.Content>\n  <KpiChart.Chart data={week} dataKey=\"v\" />\n</KpiChart>"
       },
       {
         "title": "With progress",
@@ -6241,8 +6242,8 @@
       },
       {
         "title": "Several as one panel",
-        "description": "Several metrics as one panel — across a row, and down a column.",
-        "code": "<KpiChart.Group orientation=\"vertical\">\n  {services.map((service) => (\n    <KpiChart key={service.label} surface={false} goodDirection=\"down\">\n      <KpiChart.Content layout=\"inline\">\n        <KpiChart.Stat>\n          <KpiChart.Title>{service.label}</KpiChart.Title>\n          <KpiChart.Value>{service.value}</KpiChart.Value>\n        </KpiChart.Stat>\n        <KpiChart.Trend value={service.delta} variant=\"badge\" />\n      </KpiChart.Content>\n    </KpiChart>\n  ))}\n</KpiChart.Group>"
+        "description": "Divided by a rule rather than spaced apart, in a row and a column.",
+        "code": "<Surface variant=\"secondary\" padding=\"lg\">\n  <KpiChart.Group>\n    {metrics.map((metric) => (\n      <KpiChart key={metric.label} surface={false} colorIndex={metric.colorIndex}>\n        <KpiChart.Title>{metric.label}</KpiChart.Title>\n        <KpiChart.Value className=\"text-2xl\">{metric.value}</KpiChart.Value>\n        <KpiChart.Trend value={metric.delta} className=\"self-start\" />\n      </KpiChart>\n    ))}\n  </KpiChart.Group>\n</Surface>"
       }
     ],
     "notes": "The sparkline is a `LineChart` in `compact` mode — the same chart used everywhere else with its axis padding dropped, because there is no grid, no axis and no crosshair here and every point of padding is one the shape is not using.\n\n`inline` gives it a **fixed 128pt column** rather than a share of the row. A stack of stat cards has labels of every length — \"Revenue\" over \"New customers\" — and a chart taking whatever the text leaves would be a different width on every card in it. Fixed, the shapes line up down the right-hand edge, which is the only reason they are there to be compared.\n\n### Where the space goes\n\n`KpiChart.Stat` exists because a title, a number and a change are one fact in three lines, and the card’s own spacing is for the gaps *between* facts. Writing the three straight into the card gives them the wider spacing and they stop reading as a unit.\n\nIt also matters for a row of them. `KpiChart.Title` grows to fill a header row, and a growing child of a *column* absorbs that column’s leftover height — which would push each card’s number down by however much that card had spare, and land three numbers at three different heights. The title only grows inside `KpiChart.Header`.\n\n### Colour\n\n`colorIndex` is set on the card rather than on the chart, so a row of cards can be given five different series colours without repeating the choice on every part inside them. It resolves through the `--color-chart-*` tokens, so the cards follow the theme.\n\nThe trend does not use it. A change is coloured by meaning — success or destructive — and a metric’s series colour has nothing to say about whether its number went the right way.\n\n### Accessibility\n\nA trend is announced as one string — *\"Up 7.8 percent, last 30d\"* — rather than as an arrow, a number and a caption a screen reader would read as three unrelated stops. The rules inside a `Group` are hidden from it: a divider between two metrics is decoration, and announcing it puts an unlabelled stop between them."

@@ -681,32 +681,33 @@ function KpiSparklineVersion() {
   return (
     <ChartScreen>
       <View className="w-full gap-3">
-        {/* The chart under everything instead of beside it: full width,
-            filled, and tall enough to be looked at rather than glanced at. */}
         <KpiChart colorIndex={1}>
           <KpiChart.Header>
             <KpiChart.Title>Total revenue</KpiChart.Title>
-            <KpiChart.Trend value={7.8} variant="badge" />
           </KpiChart.Header>
-          <KpiChart.Value>$317,904</KpiChart.Value>
-          <KpiChart.Chart
-            data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])}
-            dataKey="v"
-            height={88}
-          />
+          <KpiChart.Content>
+            <KpiChart.Value>$317,904</KpiChart.Value>
+            <KpiChart.Trend value={7.8} />
+          </KpiChart.Content>
+          <KpiChart.Chart data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])} dataKey="v" />
         </KpiChart>
 
+        {/* The chart beside the number instead of under it, for a denser row. */}
         <KpiChart colorIndex={2}>
           <KpiChart.Header>
             <KpiChart.Title>New customers</KpiChart.Title>
-            <KpiChart.Trend value={4.2} variant="badge" />
           </KpiChart.Header>
-          <KpiChart.Value>2,867</KpiChart.Value>
-          <KpiChart.Chart
-            data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
-            dataKey="v"
-            height={88}
-          />
+          <KpiChart.Content layout="inline">
+            <View>
+              <KpiChart.Value>2,867</KpiChart.Value>
+              <KpiChart.Trend value={4.2} className="mt-1 self-start" />
+            </View>
+            <KpiChart.Chart
+              data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
+              dataKey="v"
+              inline
+            />
+          </KpiChart.Content>
         </KpiChart>
       </View>
     </ChartScreen>
@@ -762,52 +763,47 @@ function KpiProgressVersion() {
 function KpiGroupVersion() {
   return (
     <ChartScreen>
-      <View className="w-full gap-4">
-        {/* Across a row: a rule between the metrics rather than space around
-            them, so they read as one panel with three parts. */}
+      <View className="w-full gap-6">
+        {/* Three metrics as one panel: a rule between them rather than space
+            around them, so they read as one thing with three parts. */}
         <Surface variant="secondary" padding="lg">
           <KpiChart.Group>
             <KpiChart surface={false} colorIndex={1}>
-              <KpiChart.Title>Sessions</KpiChart.Title>
-              <KpiChart.Value>48.2k</KpiChart.Value>
-              <KpiChart.Trend value={12.4} />
+              <KpiChart.Title>Revenue</KpiChart.Title>
+              <KpiChart.Value className="text-2xl">$317k</KpiChart.Value>
+              <KpiChart.Trend value={7.8} className="self-start" />
             </KpiChart>
             <KpiChart surface={false} colorIndex={2}>
-              <KpiChart.Title>Signups</KpiChart.Title>
-              <KpiChart.Value>312</KpiChart.Value>
-              <KpiChart.Trend value={0} />
+              <KpiChart.Title>Orders</KpiChart.Title>
+              <KpiChart.Value className="text-2xl">2,867</KpiChart.Value>
+              <KpiChart.Trend value={4.2} className="self-start" />
+            </KpiChart>
+            <KpiChart surface={false} colorIndex={3} goodDirection="down">
+              <KpiChart.Title>Refunds</KpiChart.Title>
+              <KpiChart.Value className="text-2xl">1.4%</KpiChart.Value>
+              <KpiChart.Trend value={-0.3} className="self-start" />
             </KpiChart>
           </KpiChart.Group>
         </Surface>
 
-        {/* …and down a column, where each row puts its change on the end. */}
         <Surface variant="secondary" padding="lg">
           <KpiChart.Group orientation="vertical">
-            <KpiChart surface={false} goodDirection="down">
+            <KpiChart surface={false} colorIndex={1}>
               <KpiChart.Content layout="inline">
-                <KpiChart.Stat>
+                <View>
+                  <KpiChart.Title>Sessions</KpiChart.Title>
+                  <KpiChart.Value className="text-2xl">48,201</KpiChart.Value>
+                </View>
+                <KpiChart.Trend value={12.4} />
+              </KpiChart.Content>
+            </KpiChart>
+            <KpiChart surface={false} colorIndex={3} goodDirection="down">
+              <KpiChart.Content layout="inline">
+                <View>
                   <KpiChart.Title>Latency p95</KpiChart.Title>
-                  <KpiChart.Value>312ms</KpiChart.Value>
-                </KpiChart.Stat>
-                <KpiChart.Trend value={-6.1} variant="badge" />
-              </KpiChart.Content>
-            </KpiChart>
-            <KpiChart surface={false} goodDirection="down">
-              <KpiChart.Content layout="inline">
-                <KpiChart.Stat>
-                  <KpiChart.Title>Error rate</KpiChart.Title>
-                  <KpiChart.Value>0.42%</KpiChart.Value>
-                </KpiChart.Stat>
-                <KpiChart.Trend value={2.8} variant="badge" />
-              </KpiChart.Content>
-            </KpiChart>
-            <KpiChart surface={false} goodDirection="none">
-              <KpiChart.Content layout="inline">
-                <KpiChart.Stat>
-                  <KpiChart.Title>Instances</KpiChart.Title>
-                  <KpiChart.Value>24</KpiChart.Value>
-                </KpiChart.Stat>
-                <KpiChart.Trend value={9.1} variant="badge" />
+                  <KpiChart.Value className="text-2xl">312ms</KpiChart.Value>
+                </View>
+                <KpiChart.Trend value={-6.1} />
               </KpiChart.Content>
             </KpiChart>
           </KpiChart.Group>
@@ -11464,7 +11460,7 @@ export const COMPONENTS: ComponentEntry[] = [
         label: 'With a sparkline',
         id: 'sparkline',
         fullPage: true,
-        description: 'The chart under the number, full width and filled.',
+        description: 'The shape under the number, and the shape beside it.',
         render: () => <KpiSparklineVersion />,
       },
       {
@@ -11478,7 +11474,7 @@ export const COMPONENTS: ComponentEntry[] = [
         label: 'Several as one panel',
         id: 'group',
         fullPage: true,
-        description: 'Several metrics as one panel — across a row, and down a column.',
+        description: 'Divided by a rule rather than spaced apart, in a row and a column.',
         render: () => <KpiGroupVersion />,
       },
     ],

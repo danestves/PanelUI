@@ -15,7 +15,7 @@ The trend takes a number rather than a written string, so the component decides 
 KpiChart ships with the library — no separate install.
 
 ```tsx
-import { KpiChart, Text, Frame } from 'panelui-native';
+import { KpiChart, Text, Frame, Surface } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -209,16 +209,18 @@ Number and change on the left, the shape it made on the right.
 
 ### With a sparkline
 
-The chart under the number, full width and filled.
+The shape under the number, and the shape beside it.
 
 ```tsx
 <KpiChart colorIndex={1}>
   <KpiChart.Header>
     <KpiChart.Title>Total revenue</KpiChart.Title>
-    <KpiChart.Trend value={7.8} variant="badge" />
   </KpiChart.Header>
-  <KpiChart.Value>$317,904</KpiChart.Value>
-  <KpiChart.Chart data={week} dataKey="v" height={88} />
+  <KpiChart.Content>
+    <KpiChart.Value>$317,904</KpiChart.Value>
+    <KpiChart.Trend value={7.8} />
+  </KpiChart.Content>
+  <KpiChart.Chart data={week} dataKey="v" />
 </KpiChart>
 ```
 
@@ -247,22 +249,20 @@ Targets, with an icon, a badge and a bar under each number.
 
 ### Several as one panel
 
-Several metrics as one panel — across a row, and down a column.
+Divided by a rule rather than spaced apart, in a row and a column.
 
 ```tsx
-<KpiChart.Group orientation="vertical">
-  {services.map((service) => (
-    <KpiChart key={service.label} surface={false} goodDirection="down">
-      <KpiChart.Content layout="inline">
-        <KpiChart.Stat>
-          <KpiChart.Title>{service.label}</KpiChart.Title>
-          <KpiChart.Value>{service.value}</KpiChart.Value>
-        </KpiChart.Stat>
-        <KpiChart.Trend value={service.delta} variant="badge" />
-      </KpiChart.Content>
-    </KpiChart>
-  ))}
-</KpiChart.Group>
+<Surface variant="secondary" padding="lg">
+  <KpiChart.Group>
+    {metrics.map((metric) => (
+      <KpiChart key={metric.label} surface={false} colorIndex={metric.colorIndex}>
+        <KpiChart.Title>{metric.label}</KpiChart.Title>
+        <KpiChart.Value className="text-2xl">{metric.value}</KpiChart.Value>
+        <KpiChart.Trend value={metric.delta} className="self-start" />
+      </KpiChart>
+    ))}
+  </KpiChart.Group>
+</Surface>
 ```
 
 ## Variants
