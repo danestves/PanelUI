@@ -9,6 +9,37 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.44.0] — 2026-08-05
+
+### Changed
+
+- **Breaking:** `Card.Wash` and the `CardWashProps` type are removed. The wash was the only part
+  of `Card` that did any work — a shared value, a repeating opacity animation, a resolved theme
+  token and a ten-stop gradient — and reaching the gradient meant importing `expo-linear-gradient`
+  at module scope. That made a native module mandatory for everyone who renders a `Card`, when
+  only the wash ever used it, and a client built without that module hands JavaScript an undefined
+  native view which native code then dereferences rather than raising anything catchable. `Card`
+  is now six plain views and its registry item declares no dependencies at all, where it
+  previously pulled in three. A card that wants a decorative backing layer composes one as its
+  first child, inside a root that clips.
+
+### Fixed
+
+- The project templates declare `expo-linear-gradient` and `@react-native-masked-view/masked-view`.
+  Both are non-optional peers of the library — the first is still reached by `Shimmer`,
+  `ColorPicker`, `Post`, `Panelside`, `Soundwave`, `ScrollFade` and `TextAnimation`, the second by
+  `Shimmer` and `ColorPicker` — but neither template listed them. npm installs a missing required
+  peer on its own, so nothing failed locally; the versions were simply left to whatever `latest`
+  resolved to and stayed invisible to `expo install --check`. Under a client that does not
+  auto-install peers there was no native module at all. Both are now pinned to their SDK 57
+  versions alongside the rest.
+- The starter's component gallery composed `Alert` and `Accordion` against an anatomy they do not
+  have, and both showed on screen. `Alert`'s root is a flex row and `Alert.Content` is the flex-1
+  wrapper inside it; the gallery put a bare `Text` in the row, so nothing constrained the line and
+  it ran past the padding on the right. `Accordion.Trigger` draws no chevron of its own — that is
+  `Accordion.Indicator`, a part the caller places, and the trigger is laid out `justify-between` to
+  receive it — so a bare string gave a row that opened and closed with nothing saying it could.
+
 ## [0.43.0] — 2026-08-04
 
 ### Added
