@@ -203,7 +203,7 @@
   {
     "name": "color-picker",
     "type": "registry:ui",
-    "description": "A colour chosen by dragging — a saturation square, a hue scale, and opacity.",
+    "description": "A colour chosen by dragging — a saturation square or a wheel, a hue scale, and opacity.",
     "registryDependencies": [
       "color",
       "haptics",

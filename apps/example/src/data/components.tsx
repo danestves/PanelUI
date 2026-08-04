@@ -4187,6 +4187,47 @@ function ColorPickerDemo() {
   );
 }
 
+function ColorPickerCardVersion() {
+  const [color, setColor] = useState('#3b82f6');
+
+  return (
+    <View className="w-full gap-3 p-4">
+      {/* The strip names what is being picked and prints what it currently is;
+          the readout under the square names the track below it. Together they
+          turn a set of controls into a labelled panel. */}
+      <ColorPicker value={color} onValueChange={setColor}>
+        <ColorPicker.Field label="Accent" />
+        <Surface variant="secondary" padding="sm" className="gap-3 rounded-2xl">
+          <ColorPicker.Area height={280} />
+          <ColorPicker.Channel channel="hue" />
+          <ColorPicker.Hue />
+        </Surface>
+      </ColorPicker>
+    </View>
+  );
+}
+
+function ColorPickerWheelVersion() {
+  const [color, setColor] = useState('#f97316');
+
+  return (
+    <View className="w-full gap-4 p-4">
+      {/* Hue runs around and saturation runs out, so brightness has nowhere
+          left to go on the disc and takes a track of its own. */}
+      <ColorPicker value={color} onValueChange={setColor}>
+        <ColorPicker.Field label="Brand" />
+        <View className="py-2">
+          <ColorPicker.Wheel />
+        </View>
+        <ColorPicker.Channel channel="brightness" />
+        <ColorPicker.Brightness />
+        <ColorPicker.Channel channel="alpha" />
+        <ColorPicker.Alpha />
+      </ColorPicker>
+    </View>
+  );
+}
+
 function ColorPickerAlphaDemo() {
   const [color, setColor] = useState('rgba(59, 130, 246, 0.6)');
 
@@ -9993,6 +10034,22 @@ export const COMPONENTS: ComponentEntry[] = [
     name: 'ColorPicker',
     summary: 'A colour chosen by dragging, not by typing',
     demos: [
+      {
+        label: 'Accent card',
+        id: 'card',
+        fullPage: true,
+        description:
+          'A labelled strip over the square, and a readout naming the track under it.',
+        render: () => <ColorPickerCardVersion />,
+      },
+      {
+        label: 'Wheel',
+        id: 'wheel',
+        fullPage: true,
+        description:
+          'Hue around and saturation out, with brightness on a track of its own.',
+        render: () => <ColorPickerWheelVersion />,
+      },
       { label: 'Interactive', render: () => <ColorPickerDemo /> },
       { label: 'With opacity', render: () => <ColorPickerAlphaDemo /> },
       { label: 'Presets first', render: () => <ColorPickerSwatchesDemo /> },

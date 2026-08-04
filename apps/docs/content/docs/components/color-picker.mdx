@@ -1,10 +1,10 @@
 ---
 title: ColorPicker
-description: A colour chosen by dragging — a saturation square, a hue scale, and opacity.
+description: A colour chosen by dragging — a saturation square or a wheel, a hue scale, and opacity.
 status: new
 ---
 
-A colour chosen by dragging, not by typing. The controls are the colour model made visible: a square where saturation runs across and brightness runs up, under a hue picked on its own scale, with opacity on a third. Composition is the API — a picker with no opacity is one with no `ColorPicker.Alpha` in it, not one with a prop turned off.
+A colour chosen by dragging, not by typing. The controls are the colour model made visible: a square where saturation runs across and brightness runs up — or a wheel where hue is the angle and saturation the radius — under scales for whichever channels the shape does not carry. Composition is the API — a picker with no opacity is one with no `ColorPicker.Alpha` in it, not one with a prop turned off.
 
 Nothing about a drag crosses to JavaScript. The four channels are shared values, and the hue behind the square, both thumb fills and the preview swatch are colours computed from them on the UI thread; the picked colour bridges back on change and again on release, the same as any other input here.
 
@@ -13,7 +13,7 @@ Nothing about a drag crosses to JavaScript. The four channels are shared values,
 ColorPicker ships with the library — no separate install.
 
 ```tsx
-import { ColorPicker, Button, Card, Text } from 'panelui-native';
+import { ColorPicker, Button, Card, Text, Surface } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -36,9 +36,12 @@ npx panelui-cli@latest add color-picker
 
 ```tsx
 <ColorPicker>
+  <ColorPicker.Field label="Accent" />   {/* the strip above everything */}
   <ColorPicker.Swatches colors={[…]} />
-  <ColorPicker.Area />
+  <ColorPicker.Area />                    {/* …or <ColorPicker.Wheel /> */}
+  <ColorPicker.Channel channel="hue" />   {/* the readout above a track */}
   <ColorPicker.Hue />
+  <ColorPicker.Brightness />
   <ColorPicker.Alpha />
   <ColorPicker.Preview showValue />
 </ColorPicker>
@@ -49,6 +52,34 @@ Every part is optional and they render in the order you write them, so the layou
 The picker stores hue, saturation, value and alpha rather than the string it hands back. That is not an implementation detail you can ignore — it is why the thumb stays where you left it. A fully black colour is `#000` whatever hue and saturation produced it, so a picker that stored its own output would lose the thumb the moment you dragged into a corner and have nowhere to put it back.
 
 ## Examples
+
+### A labelled panel
+
+The layout the parts are shaped for: a strip that names the colour and prints it, the square, then a readout naming the track under it. Every piece is optional and none of them knows about the others — this is a composition, not a variant.
+
+```tsx
+<ColorPicker value={color} onValueChange={setColor}>
+  <ColorPicker.Field label="Accent" />
+  <Surface variant="secondary" padding="sm" className="gap-3 rounded-2xl">
+    <ColorPicker.Area height={280} />
+    <ColorPicker.Channel channel="hue" />
+    <ColorPicker.Hue />
+  </Surface>
+</ColorPicker>
+```
+
+### A wheel instead of a square
+
+Swap `Area` for `Wheel` and hue becomes the angle, saturation the radius. Brightness then has no dimension left on the disc, so it takes a track of its own — a wheel without one can only ever pick bright colours.
+
+```tsx
+<ColorPicker value={color} onValueChange={setColor}>
+  <ColorPicker.Field label="Brand" />
+  <ColorPicker.Wheel />
+  <ColorPicker.Channel channel="brightness" />
+  <ColorPicker.Brightness />
+</ColorPicker>
+```
 
 ### Controlled
 
@@ -113,6 +144,38 @@ There is no minimum picker. A control that only needs a hue is the hue scale and
   <ColorPicker.Area height={110} />
   <ColorPicker.Hue />
   <ColorPicker.Preview showValue />
+</ColorPicker>
+```
+
+## Versions
+
+### Accent card
+
+A labelled strip over the square, and a readout naming the track under it.
+
+```tsx
+<ColorPicker value={color} onValueChange={setColor}>
+  <ColorPicker.Field label="Accent" />
+  <Surface variant="secondary" padding="sm" className="gap-3 rounded-2xl">
+    <ColorPicker.Area height={280} />
+    <ColorPicker.Channel channel="hue" />
+    <ColorPicker.Hue />
+  </Surface>
+</ColorPicker>
+```
+
+### Wheel
+
+Hue around and saturation out, with brightness on a track of its own.
+
+```tsx
+<ColorPicker value={color} onValueChange={setColor}>
+  <ColorPicker.Field label="Brand" />
+  <ColorPicker.Wheel />
+  <ColorPicker.Channel channel="brightness" />
+  <ColorPicker.Brightness />
+  <ColorPicker.Channel channel="alpha" />
+  <ColorPicker.Alpha />
 </ColorPicker>
 ```
 
@@ -185,6 +248,39 @@ There is no minimum picker. A control that only needs a hue is the hue scale and
 | `swatchSize` | `number` | — | Diameter of one swatch in points. Defaults to the picker's size. |
 | `swatchClassName` | `string` | — | Extra classes for one swatch. |
 
+### ColorPicker.Field
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `label` | `string` | — | What the colour is for — "Accent", "Background", a layer name. |
+| `showValue` | `boolean` | — | Print the current colour beside the swatch, in the picker's `format`. On by default: the strip exists to say what the colour *is*, and a swatch alone cannot be read out, copied down or typed into a design tool. |
+| `swatchClassName` | `string` | — | Extra classes for the swatch. |
+
+### ColorPicker.Channel
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `channel` | `ColorPickerChannel` | — | Which channel to read. |
+| `label` | `string` | — | Overrides the channel's own name. |
+| `format` | `(value: number) => string` | `'hex'` | Writes the number yourself. Receives degrees for `hue` and a percentage for the other three, both already rounded. |
+
+### ColorPicker.Brightness
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `thumbClassName` | `string` | — | Extra classes for the draggable thumb. |
+
+### ColorPicker.Wheel
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `size` | `number` | `md` | Diameter in points. Defaults to the picker's size. |
+| `thumbClassName` | `string` | — | Extra classes for the draggable thumb. |
+
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
@@ -196,3 +292,11 @@ Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). Bo
 The square is adjustable to a screen reader in both axes: increment and decrement move saturation, and a **Brighter** / **Darker** pair moves brightness. Hue and opacity are adjustable on their own. Their spoken values update when a drag ends rather than during it — nobody is listening to the middle of a gesture, and a value that re-announced every frame would be a hundred announcements for one drag.
 
 The conversion helpers the picker is built on are exported too — `parseColor`, `formatColor`, `hsvToHex`, `hsvToRgb`, `rgbToHsv`, `hsvToHsl`, `hsvToCss` and `isValidColor`. Every one is a worklet, so they can be called from an animated style as well as from ordinary code.
+
+### The wheel, and what it cannot carry
+
+A square holds two channels because it has two axes. A wheel holds two as well — an angle and a radius — so swapping one for the other trades brightness for a shape, not for a third channel. `ColorPicker.Brightness` is the track that takes it back; a wheel without one can only pick colours at full brightness.
+
+The wheel is deliberately **not mirrored under RTL**, unlike the square and the tracks. Those have a start and an end, so they have a direction to be read in. A wheel has neither: reversing which way round the spectrum runs would move every colour somewhere else without making any of them easier to find.
+
+There is no conic gradient to draw a hue ring with, so it is approximated by 120 solid wedges given a hair of overlap — three degrees each is under a pixel of colour step at any size this is drawn at, and the overlap stops the seams reading as lighter spokes. The ring is built once at module scope: it is the same wheel in every picker.

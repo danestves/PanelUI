@@ -105,10 +105,11 @@
   ],
   "color-picker": [
     "ColorPicker",
-    "A colour chosen by dragging — a saturation square, a hue scale, and opacity.",
+    "A colour chosen by dragging — a saturation square or a wheel, a hue scale, and opacity.",
     "react native color picker",
     {
-      "addedIn": "0.42.0"
+      "addedIn": "0.42.0",
+      "updatedIn": "0.43.0"
     }
   ],
   "date-picker": [

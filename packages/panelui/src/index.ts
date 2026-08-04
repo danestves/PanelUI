@@ -309,8 +309,13 @@ export {
 export {
   ColorPicker,
   type ColorPickerProps,
+  type ColorPickerFieldProps,
   type ColorPickerAreaProps,
+  type ColorPickerWheelProps,
+  type ColorPickerChannelProps,
+  type ColorPickerChannel,
   type ColorPickerHueProps,
+  type ColorPickerBrightnessProps,
   type ColorPickerAlphaProps,
   type ColorPickerPreviewProps,
   type ColorPickerSwatchesProps,
