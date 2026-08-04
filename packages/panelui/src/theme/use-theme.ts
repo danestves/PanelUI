@@ -55,7 +55,7 @@ export const PANEL_THEMES: readonly PanelThemeFamily[] = [
     name: 'Moon',
     light: 'moon',
     dark: 'moon-dark',
-    swatch: ['#0070f3', '#0070f3'],
+    swatch: ['#5e6ad2', '#5e6ad2'],
   },
   {
     id: 'grass',

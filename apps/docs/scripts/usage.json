@@ -3979,7 +3979,7 @@
     }
   },
   "surface": {
-    "intro": "An elevated container. Nest the variants to build hierarchy — each level sits one step further from the page background than the one around it.\n\nBoth the fill **and the corner radius** follow the active theme: the variants resolve to themed surface tokens, and `rounded-3xl` resolves through the per-theme radius scale. A Surface is tight under Moon and soft under Grass without knowing anything about either.",
+    "intro": "An elevated container. Nest the variants to build hierarchy — each level sits one step further from the page background than the one around it.\n\nBoth the fill **and the corner radius** follow the active theme: the variants resolve to themed surface tokens, and `rounded-3xl` resolves through the per-theme radius scale. The same Surface is a 24px corner under Panel and a 32px one under Moon, without knowing anything about either.",
     "usage": "<Surface>\n  <Text weight=\"medium\">Account</Text>\n\n  <Surface variant=\"secondary\" className=\"mt-3\">\n    <Text size=\"sm\" muted>Signed in as khalid@example.com</Text>\n\n    <Surface variant=\"tertiary\" className=\"mt-3\">\n      <Text size=\"xs\" muted>Session expires in 12 days</Text>\n    </Surface>\n  </Surface>\n</Surface>",
     "extraImports": [
       "Text"
