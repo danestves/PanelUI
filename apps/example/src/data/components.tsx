@@ -626,9 +626,9 @@ const RADAR_SKILLS = [
 
 /** The sizes the radar version offers, smallest first. */
 const RADAR_SIZES = [
-  { value: 'sm', label: 'Small', size: 180 },
-  { value: 'md', label: 'Medium', size: 240 },
-  { value: 'lg', label: 'Large', size: 300 },
+  { value: 'sm', label: 'Small', size: 130 },
+  { value: 'md', label: 'Medium', size: 180 },
+  { value: 'lg', label: 'Large', size: 230 },
 ] as const;
 
 function RadarSizesVersion() {
@@ -650,7 +650,7 @@ function RadarSizesVersion() {
                 is why the small one is still readable. */}
             <RadarChart data={RADAR_PROFILE} domain={[0, 100]} size={picked.size}>
               <RadarChart.Grid />
-              <RadarChart.Axis fontSize={picked.size < 220 ? 10 : 11} />
+              <RadarChart.Axis fontSize={picked.size < 160 ? 10 : 11} />
               <RadarChart.Series dataKey="you" colorIndex={1} showDots />
             </RadarChart>
           </View>

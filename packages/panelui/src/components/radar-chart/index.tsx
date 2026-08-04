@@ -71,29 +71,31 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 /**
- * Room left around the rings for the axis labels.
+ * Room reserved around the rings for the axis labels — wider than it is tall.
  *
- * A radar's labels sit outside the shape rather than along an edge, so unlike
- * every other chart here the padding is not a margin — it is the difference
- * between the box and the largest ring, and a label that does not fit in it
- * runs off the side of the view rather than being clipped where it can be seen.
+ * Labels sit outside the shape rather than along an edge, and they are
+ * horizontal text: the one at three o'clock needs its whole width to the right
+ * of the ring, while the one at twelve needs a single line's height above it.
+ * A square box therefore cannot hold them — either the sides are clipped or
+ * the top and bottom are wasted — which is also why a radar drawn in a square
+ * ends up so much taller than the wide charts beside it.
  */
-const LABEL_PADDING = 44;
+const LABEL_ROOM = { x: 62, y: 26 };
 /** …and with no axis labels asking for it, only enough not to clip the stroke. */
-const BARE_PADDING = 6;
+const BARE_ROOM = { x: 6, y: 6 };
 
 /** How long the polygons take to grow out of the centre. */
 const REVEAL_DURATION = 900;
 
 /**
- * How big a radar is when nothing says otherwise.
+ * Ring diameter when nothing says otherwise.
  *
  * The other charts here fill their container, because they are wide and a
- * wider one is a better one. A radar is square, so filling a panel makes it as
- * tall as the panel is wide — twice the height of the chart beside it, for the
- * same handful of numbers. It sizes itself instead, and centres.
+ * wider one carries more. A radar filling a panel is as tall as the panel is
+ * wide — twice the height of the chart beside it, for the same handful of
+ * numbers — so it sizes itself instead, and centres.
  */
-const DEFAULT_SIZE = 240;
+const DEFAULT_SIZE = 180;
 
 export type RadarChartStatus = 'loading' | 'ready';
 
@@ -108,6 +110,9 @@ interface RadarChartContextValue {
   cy: number;
   /** Radius of the outermost ring. */
   radius: number;
+  /** The drawing box, so a label can be kept inside it rather than clipped. */
+  width: number;
+  height: number;
   status: RadarChartStatus;
   /** The value the outermost ring stands for, tweened. */
   domainMax: SharedValue<number>;
@@ -178,13 +183,15 @@ export interface RadarChartProps extends Omit<ViewProps, 'children'> {
    */
   status?: RadarChartStatus;
   /**
-   * Fixed size in points, centred in whatever it is put in.
+   * Diameter of the outermost ring, in points. The view is that plus the room
+   * the axis labels need around it, and centres itself.
    *
-   * A radar is square, and a square that fills the width of a panel is as tall
-   * as the panel is wide — much bigger than the wide charts it sits beside,
-   * for no more information. So unlike them this has a default size rather
-   * than filling its container; pass `size={undefined}` with an `aspectRatio`
-   * to go back to filling it.
+   * The ring rather than the box, because the ring is the thing being sized —
+   * a box measurement would mean "bigger" also meant "labels further from the
+   * shape", and the chart would grow without the drawing growing with it.
+   *
+   * Pass `size={undefined}` with an `aspectRatio` to fill the container the
+   * way the other charts do.
    */
   size?: number;
   /**
@@ -250,10 +257,15 @@ const RadarChartRoot = forwardRef<RadarChartHandle, RadarChartProps>(
       []
     );
 
-    const pad = compact ? BARE_PADDING : LABEL_PADDING;
+    const room = compact ? BARE_ROOM : LABEL_ROOM;
     const cx = size.width / 2;
     const cy = size.height / 2;
-    const radius = Math.max(Math.min(size.width, size.height) / 2 - pad, 0);
+    // Measured rather than assumed, so the `aspectRatio` path — where the box
+    // is whatever the container gave it — lands on the same geometry.
+    const radius = Math.max(
+      Math.min(size.width / 2 - room.x, size.height / 2 - room.y),
+      0
+    );
 
     const seriesKeys = series.map(([key]) => key).join('|');
     const extent = useMemo<[number, number]>(() => {
@@ -329,6 +341,8 @@ const RadarChartRoot = forwardRef<RadarChartHandle, RadarChartProps>(
         cx,
         cy,
         radius,
+        width: size.width,
+        height: size.height,
         status,
         domainMin,
         domainMax,
@@ -343,6 +357,8 @@ const RadarChartRoot = forwardRef<RadarChartHandle, RadarChartProps>(
         cx,
         cy,
         radius,
+        size.width,
+        size.height,
         status,
         domainMin,
         domainMax,
@@ -368,7 +384,15 @@ const RadarChartRoot = forwardRef<RadarChartHandle, RadarChartProps>(
           <View
             onLayout={onLayout}
             style={
-              fixedSize ? { width: fixedSize, height: fixedSize } : { aspectRatio }
+              fixedSize
+                ? {
+                    // The ring plus its label room — wider than tall, because
+                    // the labels are.
+                    width: fixedSize + room.x * 2,
+                    height: fixedSize + room.y * 2,
+                    maxWidth: '100%',
+                  }
+                : { aspectRatio }
             }
             className={fixedSize ? 'self-center' : 'w-full'}
           >
@@ -485,8 +509,8 @@ export interface RadarChartAxisProps {
  * centred on its point: a label centred at three o'clock overlaps the shape it
  * belongs to, and one centred at nine o'clock overlaps the view's edge.
  */
-function RadarChartAxis({ color, fontSize = 11, offset = 14, formatLabel }: RadarChartAxisProps) {
-  const { data, axisKey, cx, cy, radius } = useChart('RadarChart.Axis');
+function RadarChartAxis({ color, fontSize = 11, offset = 10, formatLabel }: RadarChartAxisProps) {
+  const { data, axisKey, cx, cy, radius, width, height } = useChart('RadarChart.Axis');
   const themed = useToken('--color-muted-foreground', '#737373');
   const fill = color ?? themed;
   const count = data.length;
@@ -507,15 +531,34 @@ function RadarChartAxis({ color, fontSize = 11, offset = 14, formatLabel }: Rada
         // chart rather than across it.
         const dx = point.x - cx;
         const anchor = Math.abs(dx) < radius * 0.15 ? 'middle' : dx > 0 ? 'start' : 'end';
+
+        /*
+         * Pull the anchor back inside the view before drawing.
+         *
+         * SVG clips at its viewport and does not reflow, so a label wider than
+         * the room left for it loses its tail with no sign that anything is
+         * missing — the reader sees "Accur" and has no reason to think it was
+         * ever longer. Nudging the anchor in costs a couple of points of gap
+         * between the label and the ring, which is the cheaper of the two.
+         */
+        const estimated = label.length * fontSize * 0.55;
+        const x =
+          anchor === 'start'
+            ? Math.min(point.x, Math.max(width - estimated, cx))
+            : anchor === 'end'
+              ? Math.max(point.x, Math.min(estimated, cx))
+              : point.x;
+
         // Text is anchored on its baseline, so a label below the chart needs
         // pushing down by roughly its cap height to look level with one above.
-        const dy = point.y < cy ? 0 : fontSize * 0.7;
+        const dy = point.y < cy ? 0 : fontSize * 0.72;
+        const y = Math.min(Math.max(point.y + dy, fontSize), height - 2);
 
         return (
           <SvgText
             key={index}
-            x={point.x}
-            y={point.y + dy}
+            x={x}
+            y={y}
             fill={fill}
             fontSize={fontSize}
             fontWeight="500"

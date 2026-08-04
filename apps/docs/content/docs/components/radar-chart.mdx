@@ -27,7 +27,7 @@ npx panelui-cli@latest add radar-chart
 ## Usage
 
 ```tsx
-<RadarChart data={scores} domain={[0, 100]} size={240}>
+<RadarChart data={scores} domain={[0, 100]} size={180}>
   <RadarChart.Grid />
   <RadarChart.Axis />
   <RadarChart.Series dataKey="score" colorIndex={1} showDots />
@@ -84,11 +84,11 @@ Pass `domain` and mean it. A radar derives its outer ring from the data if you d
 
 ### How big it is
 
-Unlike the other charts here a radar does not fill its container. It is square, so filling a panel makes it as tall as the panel is wide — twice the height of the wide chart beside it, for the same handful of numbers. It takes 240pt by default and centres itself; pass `size` for another, or `size={undefined}` with an `aspectRatio` to go back to filling the width.
+Unlike the other charts here a radar does not fill its container: filling a panel makes it as tall as the panel is wide, twice the height of the wide chart beside it for the same handful of numbers. `size` is the **diameter of the outermost ring** — not the box — and the view is that plus the room the labels need around it. It defaults to 180 and centres. Pass `size={undefined}` with an `aspectRatio` to fill the width instead.
 
 ```tsx
 {/* Three sizes behind a set of tabs. */}
-const sizes = { sm: 180, md: 240, lg: 300 };
+const sizes = { sm: 130, md: 180, lg: 230 };
 
 <RadarChart data={profile} domain={[0, 100]} size={sizes[picked]}>
   <RadarChart.Grid />
@@ -229,7 +229,7 @@ Tabs under the chart change how much room it takes.
 | `data` | `RadarChartDatum[]` | — | One row per axis, in the order they go round. |
 | `axisKey` | `string` | `'axis'` | Key holding each row's axis label. |
 | `status` | `RadarChartStatus` | `'ready'` | `loading` holds the shape at the centre until the data arrives, then grows it — one component throughout rather than a spinner swapped for a chart, because swapping loses the transition. |
-| `size` | `number` | — | Fixed size in points, centred in whatever it is put in. A radar is square, and a square that fills the width of a panel is as tall as the panel is wide — much bigger than the wide charts it sits beside, for no more information. So unlike them this has a default size rather than filling its container; pass `size={undefined}` with an `aspectRatio` to go back to filling it. |
+| `size` | `number` | — | Diameter of the outermost ring, in points. The view is that plus the room the axis labels need around it, and centres itself. The ring rather than the box, because the ring is the thing being sized — a box measurement would mean "bigger" also meant "labels further from the shape", and the chart would grow without the drawing growing with it. Pass `size={undefined}` with an `aspectRatio` to fill the container the way the other charts do. |
 | `aspectRatio` | `number` | `1` | Width ÷ height when `size` is not given. `1` is the square a radar wants; the rings stay circular whatever it is set to. |
 | `domain` | `[number, number]` | — | Fix the scale instead of deriving it from the data. A radar almost always wants this: the shape only means something against a known maximum, and a scale that moves with the data makes two charts incomparable. |
 | `animationDuration` | `number` | `REVEAL_DURATION` | Milliseconds for the reveal on mount. |
@@ -296,11 +296,13 @@ It plays once on mount. `replay()` on the ref runs it again. Under *Reduce Motio
 
 ### It sizes itself
 
-Every other chart here fills its container. This one does not, and the reason is that it is square: filling a panel makes a radar as tall as the panel is wide, which is twice the height of the wide chart beside it for the same five or six numbers. It takes 240pt and centres. `size` moves that; `size={undefined}` with an `aspectRatio` goes back to filling the width.
+Every other chart here fills its container. This one does not, and the reason is that it is square: filling a panel makes a radar as tall as the panel is wide, which is twice the height of the wide chart beside it for the same five or six numbers. It takes a 180pt ring and centres. `size` moves that; `size={undefined}` with an `aspectRatio` goes back to filling the width.
 
 ### Space for the labels
 
-Axis labels sit outside the rings rather than along an edge, so unlike every other chart here the padding is not a margin — it is the gap between the box and the outermost ring, and a label too long for it runs off the side of the view instead of being clipped somewhere visible. Shorten them with `formatLabel`, or pass `compact` to reclaim the room on a radar that has no labels at all.
+Axis labels are horizontal text sitting outside a circle, which is why the view is **wider than it is tall**: the label at three o'clock needs its whole width to the right of the ring, while the one at twelve needs a single line above it. A square box either clips the sides or wastes the top and bottom.
+
+SVG clips at its viewport and does not reflow, so a label with nowhere to go would lose its tail with nothing to show it ever had one. The anchor is pulled back inside the view before drawing, which costs a couple of points of gap and is the cheaper of the two. For labels long enough to still crowd the shape, shorten them with `formatLabel` — and pass `compact` to reclaim the room entirely on a radar with no labels at all.
 
 ### Colour
 
