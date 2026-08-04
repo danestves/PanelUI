@@ -3699,9 +3699,9 @@
     }
   },
   "slider": {
-    "intro": "A value picker driven by a single thumb. The thumb is a pill exactly as tall as the track — the two are the same height, so nothing has to escape the track to be drawn whole — with a knob inside it that shrinks while you drag. Position and fill are animated on the UI thread, so dragging never round-trips through React; the picked value bridges back on change and again on release.",
-    "usage": "<Slider defaultValue={40} />\n<Slider label=\"Volume\" showValue defaultValue={40} />\n<Slider value={volume} onValueChange={setVolume} />\n<Slider min={0} max={10} step={1} defaultValue={5} />",
-    "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change is expensive. The value is always snapped to a multiple of `step` from `min`.\n\nThe knob is painted with the page background rather than a per-colour on-token, because the status foregrounds are the darker text hues meant for soft fills — a green-700 knob on a green-500 pill would barely show. Override `knobClassName` if a theme needs something else.\n\nSee [Native rendering](/docs/native) for what `native` keeps and what it gives up — notably `onValueCommit`, which the platform control does not report.",
+    "intro": "A value picker driven by a thumb, or a span picked by two. The thumb is a pill exactly as tall as the track — the two are the same height, so nothing has to escape the track to be drawn whole — with a knob inside it that shrinks while you drag. Position and fill are animated on the UI thread, so dragging never round-trips through React; the picked value bridges back on change and again on release.",
+    "usage": "<Slider defaultValue={40} />\n<Slider label=\"Volume\" showValue defaultValue={40} />\n<Slider value={volume} onValueChange={setVolume} />\n<Slider defaultRange={[20, 80]} onRangeCommit={save} />",
+    "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change is expensive. The value is always snapped to a multiple of `step` from `min`.\n\n**A range is a second pair of props, not a tuple in the first.** Passing `range` or `defaultRange` gives the slider two thumbs and reports through `onRangeChange` / `onRangeCommit`. Keeping them apart is what lets a one-thumb slider's handler stay `(value: number) => void` — a single set of props covering both would hand every existing caller a union to narrow before they could read a number out of it.\n\nThe knob is painted with the page background rather than a per-colour on-token, because the status foregrounds are the darker text hues meant for soft fills — a green-700 knob on a green-500 pill would barely show. Override `knobClassName` if a theme needs something else.\n\nSee [Native rendering](/docs/native) for what `native` keeps and what it gives up — notably `onValueCommit`, which the platform control does not report. `native` is ignored on a range slider: neither platform ships a two-thumb control, so a range draws ours rather than quietly losing a thumb.",
     "examples": [
       {
         "title": "Controlled",
@@ -3712,6 +3712,16 @@
         "title": "With a caption row",
         "description": "`label` and `showValue` draw a row above the track. `formatValue` owns the units, so the caption reads the way the value is spoken rather than as a bare number. The label doubles as the accessibility label.",
         "code": "<Slider label=\"Brightness\" showValue defaultValue={62} />\n\n<Slider\n  label=\"Budget\"\n  showValue\n  formatValue={(v) => `$${Math.round(v)}`}\n  min={0}\n  max={1000}\n  step={20}\n  defaultValue={340}\n  color=\"success\"\n/>"
+      },
+      {
+        "title": "A range",
+        "description": "`defaultRange` — or `range` for a controlled one — gives the slider two thumbs and fills between them instead of from the start. Whichever thumb your finger lands nearest is the one that moves, and the two bound each other rather than the track, so they can meet but never cross.",
+        "code": "const [price, setPrice] = useState([220, 680]);\n\n<Slider\n  label=\"Price\"\n  showValue\n  formatValue={(v) => `$${Math.round(v)}`}\n  range={price}\n  onRangeChange={setPrice}\n  min={0}\n  max={1000}\n  step={20}\n  color=\"success\"\n/>"
+      },
+      {
+        "title": "Keeping the thumbs apart",
+        "description": "`minStepsBetweenThumbs` is the gap the span can never close. A filter wants at least one: an empty range matches nothing, and a control that can be dragged into matching nothing reads as a bug rather than a choice.",
+        "code": "<Slider\n  label=\"Nights\"\n  showValue\n  defaultRange={[2, 6]}\n  min={1}\n  max={14}\n  step={1}\n  minStepsBetweenThumbs={1}\n/>"
       },
       {
         "title": "Restyling the thumb",

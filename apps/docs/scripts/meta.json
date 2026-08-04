@@ -400,10 +400,10 @@
   ],
   "slider": [
     "Slider",
-    "Pick a value by dragging a thumb along a track.",
+    "Pick a value, or a span, by dragging a thumb along a track.",
     "react native slider",
     {
-      "updatedIn": "0.20.0"
+      "updatedIn": "0.42.0"
     }
   ],
   "spinner": [

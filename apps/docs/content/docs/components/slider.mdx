@@ -1,9 +1,10 @@
 ---
 title: Slider
-description: Pick a value by dragging a thumb along a track.
+description: Pick a value, or a span, by dragging a thumb along a track.
+status: updated
 ---
 
-A value picker driven by a single thumb. The thumb is a pill exactly as tall as the track — the two are the same height, so nothing has to escape the track to be drawn whole — with a knob inside it that shrinks while you drag. Position and fill are animated on the UI thread, so dragging never round-trips through React; the picked value bridges back on change and again on release.
+A value picker driven by a thumb, or a span picked by two. The thumb is a pill exactly as tall as the track — the two are the same height, so nothing has to escape the track to be drawn whole — with a knob inside it that shrinks while you drag. Position and fill are animated on the UI thread, so dragging never round-trips through React; the picked value bridges back on change and again on release.
 
 <Preview
   src="/previews/slider.jpg"
@@ -33,7 +34,7 @@ npx panelui-cli@latest add slider
 <Slider defaultValue={40} />
 <Slider label="Volume" showValue defaultValue={40} />
 <Slider value={volume} onValueChange={setVolume} />
-<Slider min={0} max={10} step={1} defaultValue={5} />
+<Slider defaultRange={[20, 80]} onRangeCommit={save} />
 ```
 
 ## Examples
@@ -64,6 +65,42 @@ const [volume, setVolume] = useState(40);
   step={20}
   defaultValue={340}
   color="success"
+/>
+```
+
+### A range
+
+`defaultRange` — or `range` for a controlled one — gives the slider two thumbs and fills between them instead of from the start. Whichever thumb your finger lands nearest is the one that moves, and the two bound each other rather than the track, so they can meet but never cross.
+
+```tsx
+const [price, setPrice] = useState([220, 680]);
+
+<Slider
+  label="Price"
+  showValue
+  formatValue={(v) => `$${Math.round(v)}`}
+  range={price}
+  onRangeChange={setPrice}
+  min={0}
+  max={1000}
+  step={20}
+  color="success"
+/>
+```
+
+### Keeping the thumbs apart
+
+`minStepsBetweenThumbs` is the gap the span can never close. A filter wants at least one: an empty range matches nothing, and a control that can be dragged into matching nothing reads as a bug rather than a choice.
+
+```tsx
+<Slider
+  label="Nights"
+  showValue
+  defaultRange={[2, 6]}
+  min={1}
+  max={14}
+  step={1}
+  minStepsBetweenThumbs={1}
 />
 ```
 
@@ -169,13 +206,18 @@ Passing `native` hands the track and thumb to SwiftUI or Jetpack Compose. The ca
 | `className` | `string` | — |  |
 | `value` | `number` | — | Controlled value. Leave unset and pass `defaultValue` to run uncontrolled. |
 | `defaultValue` | `number` | `0` | Starting value when uncontrolled. |
+| `range` | `[number, number]` | — | Controlled span, as `[low, high]`. Passing this — or `defaultRange` — gives the slider two thumbs and fills between them instead of from the start. |
+| `defaultRange` | `[number, number]` | — | Starting span when uncontrolled, as `[low, high]`. |
 | `min` | `number` | `0` | Lower bound. |
 | `max` | `number` | `100` | Upper bound. |
 | `step` | `number` | `1` | Snap granularity. The value is always a multiple of `step` from `min`. |
+| `minStepsBetweenThumbs` | `number` | `0` | How many steps the two thumbs must stay apart on a range slider. `0` lets them meet; `1` keeps a step between them, so the span is never empty. |
 | `onValueChange` | `(value: number) => void` | — | Fires on every change while dragging — cheap updates only. |
 | `onValueCommit` | `(value: number) => void` | — | Fires once when the gesture ends — the place for expensive side effects. |
+| `onRangeChange` | `(range: [number, number]) => void` | — | The range equivalent of `onValueChange`. Only fires on a range slider. |
+| `onRangeCommit` | `(range: [number, number]) => void` | — | The range equivalent of `onValueCommit`. Only fires on a range slider. |
 | `disabled` | `boolean` | `false` |  |
-| `native` | `boolean` | — | Render the platform's own slider instead of this one. Requires the optional `@expo/ui` package; without it this prop does nothing. **Theme tokens do not apply** — the platform draws the control, so `color`, `size` and the slot classNames are ignored. `label` and `showValue` still render the caption row above it, since that is ours. |
+| `native` | `boolean` | — | Render the platform's own slider instead of this one. Requires the optional `@expo/ui` package; without it this prop does nothing. **Theme tokens do not apply** — the platform draws the control, so `color`, `size` and the slot classNames are ignored. `label` and `showValue` still render the caption row above it, since that is ours. **Ignored on a range slider.** Neither platform ships a two-thumb slider, so a range draws ours rather than quietly losing a thumb. |
 | `label` | `string` | — | Caption above the track. Also becomes the accessibility label. |
 | `showValue` | `boolean` | `false` | Show the current value on the caption row, opposite the label. |
 | `formatValue` | `(value: number) => string` | — | Format the shown value. Defaults to the rounded number. |
@@ -192,6 +234,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change is expensive. The value is always snapped to a multiple of `step` from `min`.
 
+**A range is a second pair of props, not a tuple in the first.** Passing `range` or `defaultRange` gives the slider two thumbs and reports through `onRangeChange` / `onRangeCommit`. Keeping them apart is what lets a one-thumb slider's handler stay `(value: number) => void` — a single set of props covering both would hand every existing caller a union to narrow before they could read a number out of it.
+
 The knob is painted with the page background rather than a per-colour on-token, because the status foregrounds are the darker text hues meant for soft fills — a green-700 knob on a green-500 pill would barely show. Override `knobClassName` if a theme needs something else.
 
-See [Native rendering](/docs/native) for what `native` keeps and what it gives up — notably `onValueCommit`, which the platform control does not report.
+See [Native rendering](/docs/native) for what `native` keeps and what it gives up — notably `onValueCommit`, which the platform control does not report. `native` is ignored on a range slider: neither platform ships a two-thumb control, so a range draws ours rather than quietly losing a thumb.

@@ -734,7 +734,7 @@
   {
     "name": "slider",
     "type": "registry:ui",
-    "description": "Pick a value by dragging a thumb along a track.",
+    "description": "Pick a value, or a span, by dragging a thumb along a track.",
     "registryDependencies": [
       "haptics",
       "native",

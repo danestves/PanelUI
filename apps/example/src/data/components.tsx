@@ -4131,6 +4131,42 @@ function SliderDemo() {
   );
 }
 
+function RangeSliderDemo() {
+  const [price, setPrice] = useState<[number, number]>([220, 680]);
+
+  return (
+    <View className="w-full gap-6">
+      {/* Controlled through `range` + `onRangeChange`. The single-value props
+          are untouched, so nothing here has to narrow a union to read a
+          number. */}
+      <Slider
+        label="Price"
+        showValue
+        formatValue={(v) => `$${Math.round(v)}`}
+        range={price}
+        onRangeChange={setPrice}
+        min={0}
+        max={1000}
+        step={20}
+        color="success"
+      />
+      {/* `minStepsBetweenThumbs` keeps a gap the span can never close, which is
+          what a filter wants: an empty range matches nothing and looks like a
+          bug rather than a choice. */}
+      <Slider
+        label="Nights"
+        showValue
+        defaultRange={[2, 6]}
+        min={1}
+        max={14}
+        step={1}
+        minStepsBetweenThumbs={1}
+      />
+      <Slider label="Locked" showValue defaultRange={[30, 60]} disabled />
+    </View>
+  );
+}
+
 function RatingDemo() {
   const [score, setScore] = useState(3);
 
@@ -12907,6 +12943,7 @@ export const COMPONENTS: ComponentEntry[] = [
     summary: 'Pick a value by dragging a thumb along a track',
     demos: [
       { label: 'Interactive', render: () => <SliderDemo /> },
+      { label: 'Range', render: () => <RangeSliderDemo /> },
       { label: 'Native', render: () => <NativeSliderDemo /> },
       {
         label: 'Colors',
