@@ -1,6 +1,7 @@
 ---
 title: Tabs
 description: Segmented navigation with an animated indicator.
+status: updated
 ---
 
 Segmented navigation with one indicator that springs between measured trigger positions. A single thing travelling is what makes a switch two tabs away read as one movement rather than as two states swapping.
@@ -164,6 +165,27 @@ By default a panel is unmounted when you leave it, and a scroll position or a ha
 </Tabs>
 ```
 
+### Swiping between panels
+
+With `swipeable`, dragging sideways on the panel moves to the next or previous tab. The gesture only takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls. It is off by default: a panel may already contain something that wants a horizontal drag, and the two cannot both have it.
+
+```tsx
+<Tabs swipeable defaultValue="mon">
+  <Tabs.List scrollable>
+    {days.map((day) => (
+      <Tabs.Trigger key={day.value} value={day.value}>
+        {day.label}
+      </Tabs.Trigger>
+    ))}
+  </Tabs.List>
+  {days.map((day) => (
+    <Tabs.Content key={day.value} value={day.value}>
+      <Card>…</Card>
+    </Tabs.Content>
+  ))}
+</Tabs>
+```
+
 ## Variants
 
 ### `variant`
@@ -212,6 +234,7 @@ By default a panel is unmounted when you leave it, and a scroll position or a ha
 | `defaultValue` | `string` | — |  |
 | `variant` | `TabsVariant` | `'segmented'` | `segmented` is a chip travelling inside a recessed track, `underline` is a rule under the active tab, `pill` is a filled chip on the page. |
 | `keepMounted` | `boolean` | `false` | Keep inactive panels mounted and hidden instead of unmounting them, so a scroll position or a half-filled form survives a switch away and back. Costs the render of every panel up front. |
+| `swipeable` | `boolean` | `false` | Move between tabs by dragging sideways on the panel, as well as by pressing the triggers. Off by default, because a panel is allowed to contain something that already wants a horizontal drag — a carousel, a slider, a row that swipes open — and the two cannot both have it. Turn it on for panels of ordinary scrolling content, where it is the gesture people try first. |
 
 ### Tabs.List
 
@@ -238,3 +261,13 @@ By default a panel is unmounted when you leave it, and a scroll position or a ha
 | `value` | `string` | — |  |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Swiping
+
+A swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was. The panel follows about a third of the finger's travel and springs back; it does not track one-to-one, because there is no next panel behind it to reveal. Only one panel is mounted at a time unless `keepMounted` is set, and even then the others are laid out nowhere.
+
+The order swiped through is the order the triggers are **written** in, not the order they appear on screen. Under RTL those differ — the first tab is the rightmost — and a swipe towards the start of the reading direction goes to the previous tab in both.
+
+At the first and last tab the panel still moves, but a tenth as far. A gesture that produces nothing at all is indistinguishable from one that was not received.

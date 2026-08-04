@@ -458,7 +458,10 @@
   "tabs": [
     "Tabs",
     "Segmented navigation with an animated indicator.",
-    "react native tabs"
+    "react native tabs",
+    {
+      "updatedIn": "0.43.0"
+    }
   ],
   "textarea": [
     "Textarea",

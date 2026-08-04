@@ -4592,6 +4592,44 @@ function KeepMountedTabsDemo() {
   );
 }
 
+function SwipeableTabsDemo() {
+  const days = [
+    { value: 'mon', label: 'Mon', body: 'Two runs and a swim. 14km total.' },
+    { value: 'tue', label: 'Tue', body: 'Rest day. Nothing logged.' },
+    { value: 'wed', label: 'Wed', body: 'One long ride, 62km, out to the coast.' },
+    { value: 'thu', label: 'Thu', body: 'Intervals — 8 × 400m on the track.' },
+  ];
+
+  return (
+    // Drag sideways on a card to move to the next day. The indicator follows,
+    // and the row scrolls the tab into view when it lands off the end.
+    <Tabs swipeable defaultValue="mon" className="w-full">
+      <Tabs.List scrollable>
+        {days.map((day) => (
+          <Tabs.Trigger key={day.value} value={day.value}>
+            {day.label}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+      {days.map((day) => (
+        <Tabs.Content key={day.value} value={day.value}>
+          <Card>
+            <Card.Content className="gap-2 p-4">
+              <Text weight="medium">{day.label}</Text>
+              <Text size="sm" muted>
+                {day.body}
+              </Text>
+              <Text size="xs" muted className="mt-2">
+                Swipe left or right on this card.
+              </Text>
+            </Card.Content>
+          </Card>
+        </Tabs.Content>
+      ))}
+    </Tabs>
+  );
+}
+
 function PasswordInputDemo() {
   const [visible, setVisible] = useState(false);
 
@@ -13433,6 +13471,10 @@ export const COMPONENTS: ComponentEntry[] = [
       {
         label: 'Keeping panels mounted',
         render: () => <KeepMountedTabsDemo />,
+      },
+      {
+        label: 'Swiping between panels',
+        render: () => <SwipeableTabsDemo />,
       },
     ],
   },

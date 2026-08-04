@@ -842,7 +842,8 @@
     "description": "Segmented navigation with an animated indicator.",
     "registryDependencies": [
       "cn",
-      "text"
+      "text",
+      "use-direction"
     ]
   },
   {

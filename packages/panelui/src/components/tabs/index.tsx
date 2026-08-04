@@ -33,17 +33,46 @@ import {
   type LayoutChangeEvent,
   type ViewProps,
 } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
+import { useDirectionSign } from '../../hooks/use-direction';
 import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 
 const SPRING = { damping: 24, stiffness: 300, mass: 0.7 } as const;
+
+/**
+ * How far sideways a finger must travel before the panel takes the gesture
+ * from whatever is scrolling above it, and how far up or down before it gives
+ * up on it. The window between them is what lets a swipe start inside a
+ * vertically scrolling panel without either gesture stealing the other.
+ */
+const SWIPE_ACTIVATE_X = 12;
+const SWIPE_FAIL_Y = 8;
+
+/** A swipe past this share of the panel's width changes tab on release. */
+const SWIPE_DISTANCE_RATIO = 0.25;
+/** …or past this speed, however short it was. */
+const SWIPE_VELOCITY = 500;
+
+/**
+ * How much of the finger's travel the panel actually follows.
+ *
+ * Not all of it: a panel that tracked one-to-one would look like a pager that
+ * is about to reveal the next panel, and there is nothing behind it to reveal
+ * — the panels are separate views, only one of which is mounted. A third of
+ * the distance is enough to say the gesture was received.
+ */
+const SWIPE_FOLLOW = 0.32;
+/** …and a fraction of that again at the ends, where there is nowhere to go. */
+const SWIPE_FOLLOW_AT_END = 0.1;
 
 export type TabsVariant = 'segmented' | 'underline' | 'pill';
 
@@ -109,10 +138,21 @@ interface TabsContextValue {
   setValue: (value: string) => void;
   registerLayout: (value: string, layout: TabLayout) => void;
   layouts: Record<string, TabLayout>;
+  /**
+   * Every tab in the order it was declared, which is the order a swipe moves
+   * through them. Kept separately from `layouts` because that is a map keyed
+   * by value and its order is whatever the layout pass happened to produce —
+   * and because under RTL the leftmost trigger is the last one, so a position
+   * cannot stand in for a place in the sequence either.
+   */
+  tabs: string[];
+  registerTab: (value: string) => void;
+  unregisterTab: (value: string) => void;
   variant: TabsVariant;
   scrollable: boolean;
   setScrollable: (scrollable: boolean) => void;
   keepMounted: boolean;
+  swipeable: boolean;
 }
 
 const TabsContext = createContext<TabsContextValue | null>(null);
@@ -141,6 +181,16 @@ export interface TabsProps extends ViewProps {
    * Costs the render of every panel up front.
    */
   keepMounted?: boolean;
+  /**
+   * Move between tabs by dragging sideways on the panel, as well as by
+   * pressing the triggers.
+   *
+   * Off by default, because a panel is allowed to contain something that
+   * already wants a horizontal drag — a carousel, a slider, a row that swipes
+   * open — and the two cannot both have it. Turn it on for panels of ordinary
+   * scrolling content, where it is the gesture people try first.
+   */
+  swipeable?: boolean;
   children: ReactNode;
 }
 
@@ -151,11 +201,13 @@ function TabsRoot({
   defaultValue,
   variant = 'segmented',
   keepMounted = false,
+  swipeable = false,
   children,
   ...props
 }: TabsProps) {
   const [internalValue, setInternalValue] = useState(defaultValue);
   const [layouts, setLayouts] = useState<Record<string, TabLayout>>({});
+  const [tabs, setTabs] = useState<string[]>([]);
   // Published by the List rather than the root, because it is the List that
   // decides whether it scrolls — but the Triggers below it need to know.
   const [scrollable, setScrollable] = useState(false);
@@ -180,18 +232,46 @@ function TabsRoot({
     });
   }, []);
 
+  /*
+   * Triggers add themselves on mount, so the order is React's child order —
+   * the order they are written in, which is the order they are read in.
+   */
+  const registerTab = useCallback((tab: string) => {
+    setTabs((current) => (current.includes(tab) ? current : [...current, tab]));
+  }, []);
+
+  const unregisterTab = useCallback((tab: string) => {
+    setTabs((current) => current.filter((entry) => entry !== tab));
+  }, []);
+
   const context = useMemo(
     () => ({
       value: resolvedValue,
       setValue,
       registerLayout,
       layouts,
+      tabs,
+      registerTab,
+      unregisterTab,
       variant,
       scrollable,
       setScrollable,
       keepMounted,
+      swipeable,
     }),
-    [resolvedValue, setValue, registerLayout, layouts, variant, scrollable, keepMounted]
+    [
+      resolvedValue,
+      setValue,
+      registerLayout,
+      layouts,
+      tabs,
+      registerTab,
+      unregisterTab,
+      variant,
+      scrollable,
+      keepMounted,
+      swipeable,
+    ]
   );
 
   return (
@@ -331,6 +411,15 @@ function TabsTrigger({
     [context, value]
   );
 
+  // Separate from the layout registration above, and earlier than it: a swipe
+  // needs to know the sequence, which is known at mount, not the positions,
+  // which are not known until the row has been laid out.
+  const { registerTab, unregisterTab } = context;
+  useEffect(() => {
+    registerTab(value);
+    return () => unregisterTab(value);
+  }, [value, registerTab, unregisterTab]);
+
   return (
     <Pressable
       accessibilityRole="tab"
@@ -360,6 +449,72 @@ export interface TabsContentProps extends ViewProps {
 function TabsContent({ className, value, children, style, ...props }: TabsContentProps) {
   const context = useTabs('Tabs.Content');
   const active = context.value === value;
+  const { tabs, setValue, swipeable } = context;
+  const sign = useDirectionSign();
+
+  const offset = useSharedValue(0);
+  const width = useSharedValue(0);
+  // Read on the UI thread while the finger is down, so the resistance at the
+  // ends is known without a round trip to JavaScript.
+  const index = useSharedValue(0);
+  const count = useSharedValue(0);
+
+  const position = tabs.indexOf(value);
+  useEffect(() => {
+    index.value = position;
+    count.value = tabs.length;
+  }, [position, tabs.length, index, count]);
+
+  const step = useCallback(
+    (delta: number) => {
+      const from = tabs.indexOf(value);
+      const next = tabs[from + delta];
+      if (next) setValue(next);
+    },
+    [tabs, value, setValue]
+  );
+
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        // Sideways past the threshold takes the gesture; any real vertical
+        // travel hands it back, so a panel that scrolls still scrolls.
+        .activeOffsetX([-SWIPE_ACTIVATE_X, SWIPE_ACTIVATE_X])
+        .failOffsetY([-SWIPE_FAIL_Y, SWIPE_FAIL_Y])
+        .onUpdate((event) => {
+          // Positive is "towards the previous tab" in reading order, which is
+          // rightwards under LTR and leftwards under RTL.
+          const travel = event.translationX * sign;
+          const atEnd =
+            (travel > 0 && index.value === 0) ||
+            (travel < 0 && index.value >= count.value - 1);
+          offset.value =
+            event.translationX * (atEnd ? SWIPE_FOLLOW_AT_END : SWIPE_FOLLOW);
+        })
+        .onEnd((event) => {
+          const travel = event.translationX * sign;
+          const speed = event.velocityX * sign;
+          const far = Math.abs(travel) > width.value * SWIPE_DISTANCE_RATIO;
+          const fast = Math.abs(speed) > SWIPE_VELOCITY;
+
+          if (far || fast) {
+            // Distance and speed can disagree — a flick back the way it came
+            // reads as a cancel — so the direction comes from whichever of the
+            // two crossed its threshold, speed first.
+            const forward = fast ? speed < 0 : travel < 0;
+            runOnJS(step)(forward ? 1 : -1);
+          }
+          offset.value = withSpring(0, SPRING);
+        })
+        .onFinalize(() => {
+          offset.value = withSpring(0, SPRING);
+        }),
+    [sign, step, offset, width, index, count]
+  );
+
+  const followStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: offset.value }],
+  }));
 
   if (!active && !context.keepMounted) return null;
 
@@ -369,13 +524,19 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
    * it out of the reading order too. A screen reader walking through three
    * panels of a tab set it cannot see is worse than no tabs at all.
    */
-  return (
+  const panel = (
     <Animated.View
       // Only worth animating when the panel is genuinely arriving. A kept
       // panel is already there; fading it in every time it is revealed would
       // undo the point of keeping it.
       entering={context.keepMounted ? undefined : FadeIn.duration(150)}
-      style={[!active && { display: 'none' }, style]}
+      onLayout={(event: LayoutChangeEvent) => {
+        // The threshold is a share of the panel, not of the screen: a tab set
+        // inside a card is narrower than the window, and a quarter of the
+        // window would be most of the way across it.
+        width.value = event.nativeEvent.layout.width;
+      }}
+      style={[!active && { display: 'none' }, swipeable && followStyle, style]}
       pointerEvents={active ? 'auto' : 'none'}
       accessibilityElementsHidden={!active}
       importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
@@ -385,6 +546,13 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
       {textChildren(children)}
     </Animated.View>
   );
+
+  // Only the visible panel carries the gesture. A kept-mounted panel is
+  // `display: none` and takes no touches anyway, but attaching a detector to
+  // each of them would put several competing recognisers in the same tree.
+  if (!swipeable || !active) return panel;
+
+  return <GestureDetector gesture={pan}>{panel}</GestureDetector>;
 }
 
 export const Tabs = Object.assign(TabsRoot, {

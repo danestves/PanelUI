@@ -4259,6 +4259,11 @@
           "width": 1179,
           "height": 801
         }
+      },
+      {
+        "title": "Swiping between panels",
+        "description": "With `swipeable`, dragging sideways on the panel moves to the next or previous tab. The gesture only takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls. It is off by default: a panel may already contain something that wants a horizontal drag, and the two cannot both have it.",
+        "code": "<Tabs swipeable defaultValue=\"mon\">\n  <Tabs.List scrollable>\n    {days.map((day) => (\n      <Tabs.Trigger key={day.value} value={day.value}>\n        {day.label}\n      </Tabs.Trigger>\n    ))}\n  </Tabs.List>\n  {days.map((day) => (\n    <Tabs.Content key={day.value} value={day.value}>\n      <Card>…</Card>\n    </Tabs.Content>\n  ))}\n</Tabs>"
       }
     ],
     "extraImports": [
@@ -4302,7 +4307,8 @@
       "alt": "The Tabs component, running in the example app.",
       "width": 720,
       "height": 584
-    }
+    },
+    "notes": "### Swiping\n\nA swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was. The panel follows about a third of the finger's travel and springs back; it does not track one-to-one, because there is no next panel behind it to reveal. Only one panel is mounted at a time unless `keepMounted` is set, and even then the others are laid out nowhere.\n\nThe order swiped through is the order the triggers are **written** in, not the order they appear on screen. Under RTL those differ — the first tab is the rightmost — and a swipe towards the start of the reading direction goes to the previous tab in both.\n\nAt the first and last tab the panel still moves, but a tenth as far. A gesture that produces nothing at all is indistinguishable from one that was not received."
   },
   "thinking-orb": {
     "intro": "A spinner says “busy”. This says *which kind of busy*: particles running tilted orbits for work in flight, a scan meridian sweeping a globe for a search, bands that scramble and click back for a solve. Six states, each a distinct silhouette in motion, so a glance is enough.",
