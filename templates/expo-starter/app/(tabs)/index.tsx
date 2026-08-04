@@ -1,61 +1,60 @@
-import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Image, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Card, Item, Switch, Text } from 'panelui-native';
+import { Text, useThemeMode } from 'panelui-native';
 
+/**
+ * The landing screen — the one you delete first.
+ *
+ * It says three things and stops: what this is, that it is running, and the
+ * one command that adds the next thing. A starter that opens on a dashboard
+ * of invented numbers looks impressive and teaches nothing, and every line of
+ * it is a line to remove before any real work begins.
+ */
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const [notify, setNotify] = useState(true);
+  const { mode } = useThemeMode();
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerStyle={{
-        paddingTop: insets.top + 16,
-        paddingBottom: 32,
-        paddingHorizontal: 16,
-        gap: 20,
-      }}
+    <View
+      className="flex-1 items-center justify-center gap-8 bg-background px-8"
+      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
     >
-      <View className="gap-1">
+      {/* Two files rather than one tinted image: the mark carries a glow, and
+          a glow does not survive being recoloured. */}
+      <Image
+        source={
+          mode === 'dark'
+            ? require('../../assets/logo-dark.png')
+            : require('../../assets/logo-light.png')
+        }
+        style={{ width: 132, height: 132 }}
+        resizeMode="contain"
+        accessibilityLabel="PanelUI"
+      />
+
+      <View className="items-center gap-2">
         <Text size="3xl" weight="bold">
-          Home
+          PanelUI
         </Text>
-        <Text muted>
-          Nothing on this screen names a colour or a corner radius — every one
-          of them comes from the theme, which the Settings tab can change.
+        <Text muted className="text-center">
+          Edit{' '}
+          <Text muted className="font-mono">
+            app/(tabs)/index.tsx
+          </Text>{' '}
+          and save to reload.
         </Text>
       </View>
 
-      <Card>
-        <Card.Header>
-          <Card.Title>Getting started</Card.Title>
-          <Card.Description>Three screens, and somewhere to put yours.</Card.Description>
-        </Card.Header>
-        <Card.Content className="gap-3 p-4 pt-0">
-          <Button>Primary action</Button>
-          <Button variant="outline">Secondary</Button>
-        </Card.Content>
-      </Card>
-
-      <Card>
-        <Item>
-          <Item.Content>
-            <Item.Title>Notifications</Item.Title>
-            <Item.Description>An example of a settings row</Item.Description>
-          </Item.Content>
-          <Item.Actions>
-            <Switch value={notify} onValueChange={setNotify} />
-          </Item.Actions>
-        </Item>
-      </Card>
-
-      <Text size="sm" muted>
-        Add anything else with{' '}
-        <Text size="sm" className="font-mono">
-          npx panelui-cli@latest add &lt;name&gt;
+      <View className="items-center gap-1">
+        <Text size="sm" muted>
+          Add a component
         </Text>
-      </Text>
-    </ScrollView>
+        <View className="rounded-xl border border-border bg-surface px-4 py-2.5">
+          <Text size="sm" className="font-mono">
+            npx panelui-cli@latest add dialog
+          </Text>
+        </View>
+      </View>
+    </View>
   );
 }

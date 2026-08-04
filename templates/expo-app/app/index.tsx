@@ -1,46 +1,60 @@
-import { useState } from 'react';
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Card, Text, useThemeMode } from 'panelui-native';
+import { Button, Text, useThemeMode } from 'panelui-native';
 
+/**
+ * The landing screen — the one you delete first.
+ *
+ * It says three things and stops: what this is, that it is running, and the
+ * one command that adds the next thing.
+ */
 export default function Home() {
   const insets = useSafeAreaInsets();
   const { mode, toggleMode } = useThemeMode();
-  const [count, setCount] = useState(0);
 
   return (
     <View
-      className="flex-1 justify-center gap-6 bg-background px-6"
+      className="flex-1 items-center justify-center gap-8 bg-background px-8"
       style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
     >
-      <View className="gap-2">
+      {/* Two files rather than one tinted image: the mark carries a glow, and
+          a glow does not survive being recoloured. */}
+      <Image
+        source={
+          mode === 'dark'
+            ? require('../assets/logo-dark.png')
+            : require('../assets/logo-light.png')
+        }
+        style={{ width: 132, height: 132 }}
+        resizeMode="contain"
+        accessibilityLabel="PanelUI"
+      />
+
+      <View className="items-center gap-2">
         <Text size="3xl" weight="bold">
-          Hello
+          PanelUI
         </Text>
-        <Text muted>
-          Every colour and corner on this screen comes from a theme token, so
-          the toggle below restyles it without a single value changing here.
+        <Text muted className="text-center">
+          Edit{' '}
+          <Text muted className="font-mono">
+            app/index.tsx
+          </Text>{' '}
+          and save to reload.
         </Text>
       </View>
 
-      <Card>
-        <Card.Content className="gap-4 p-4">
-          <Text size="sm" muted>
-            Pressed {count} {count === 1 ? 'time' : 'times'}
+      <View className="w-full max-w-xs items-center gap-3">
+        {/* Nothing here names a colour — the button and the page both follow
+            the theme this switches. */}
+        <Button variant="outline" className="w-full" onPress={toggleMode}>
+          Switch to {mode === 'dark' ? 'light' : 'dark'}
+        </Button>
+        <View className="rounded-xl border border-border bg-surface px-4 py-2.5">
+          <Text size="sm" className="font-mono">
+            npx panelui-cli@latest add dialog
           </Text>
-          <Button onPress={() => setCount((current) => current + 1)}>Press me</Button>
-          <Button variant="outline" onPress={toggleMode}>
-            Switch to {mode === 'dark' ? 'light' : 'dark'}
-          </Button>
-        </Card.Content>
-      </Card>
-
-      <Text size="sm" muted>
-        Add more with{' '}
-        <Text size="sm" className="font-mono">
-          npx panelui-cli@latest add &lt;name&gt;
-        </Text>
-      </Text>
+        </View>
+      </View>
     </View>
   );
 }

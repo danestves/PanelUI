@@ -1,0 +1,152 @@
+---
+title: Templates
+description: Start a new Expo app with PanelUI already wired — a theme, a native tab bar and the whole pipeline.
+---
+
+Run `init` in an empty directory and there is no project to configure, only one to create. It
+asks four questions and writes an app that already runs.
+
+```bash
+npx panelui-cli@latest init
+```
+
+```text
+◆ Which template?
+  1. Starter — Tabs, a component gallery and a theme picker
+  2. Minimal — One screen, everything wired, nothing to delete
+◆ What is it called?   my-app
+◆ Which theme?         Panel · Moon · Grass
+◆ Light or dark?       System · Light · Dark
+
+✓ Created my-app
+✓ Wrote panelui.json
+✓ Dependencies installed
+```
+
+Then:
+
+```bash
+cd my-app
+npx expo start
+```
+
+Nothing else. No Metro config to edit, no `@source` line to remember, no provider to wrap by
+hand — the things [Installation](/docs/installation) walks you through are already done, because
+a template is a working app rather than a list of steps.
+
+## The two templates
+
+| | `--template minimal` | `--template starter` |
+| --- | --- | --- |
+| Screens | One | Three, behind a native tab bar |
+| Shows | The setup, and nothing else | A dozen components and a theme picker |
+| Best when | You know what you are building | You want to see it working first |
+
+**Minimal** is a single screen and the wiring. It is what you want if the first thing you do is
+delete the example.
+
+**Starter** adds a tab bar and three screens: a landing screen, a gallery of components with a
+dialog, a toast, a form and an accordion, and a settings screen with a working theme picker built
+from `PANEL_THEMES`. Every screen is meant to be deleted too — they are there to prove the
+pipeline works and to show what the pieces look like, not to be built on.
+
+## The tab bar is the platform's
+
+`expo-starter` uses `NativeTabs`, so the bar is drawn by the operating system: a real `UITabBar`
+on iOS and a Material bottom bar on Android, with the scroll-edge behaviour, the long-press
+gestures and the iOS 26 minimise that come with them.
+
+That means the platform owns its colours, and **theme tokens do not reach it through class
+names** — a native control ignores `className` entirely. They have to be handed over as values:
+
+```tsx title="app/(tabs)/_layout.tsx"
+const [tint, icon, background] = useCSSVariable([
+  '--color-primary',
+  '--color-muted-foreground',
+  '--color-card',
+]);
+
+<NativeTabs tintColor={tint} iconColor={icon} backgroundColor={background}>
+  <NativeTabs.Trigger name="index">
+    <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
+    <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+  </NativeTabs.Trigger>
+</NativeTabs>
+```
+
+`useCSSVariable` re-resolves on a theme change, so the bar follows the theme with everything
+else. Icons are named twice because each platform has its own catalogue — `sf` for SF Symbols,
+`md` for Material — which is what keeps the icon native on each rather than one drawing forced
+onto both.
+
+## Scripting it
+
+Every prompt has a flag, so a known combination needs no answering:
+
+```bash
+npx panelui-cli@latest init --template starter --name my-app --theme moon --yes
+```
+
+| Flag | Values |
+| --- | --- |
+| `--template` | `starter`, `minimal` |
+| `--name` | The folder and app name |
+| `--theme` | `panel`, `moon`, `grass` |
+| `--yes` | Take the default for anything not given |
+| `--dry-run` | Print the plan, write nothing |
+
+## What you get
+
+```text
+my-app/
+  app/
+    _layout.tsx          Provider, navigation theme, initial theme
+    (tabs)/              Starter only
+      _layout.tsx        The native tab bar
+      index.tsx
+      components.tsx
+      settings.tsx
+  assets/
+  global.css             Tailwind, Uniwind, the tokens, the @source line
+  metro.config.js        withUniwindConfig, extraThemes, dtsFile
+  panelui.json           Where `add` writes components
+  tsconfig.json          The @/* path alias
+  app.json
+```
+
+Two of those are worth knowing about before you change them.
+
+**`global.css`** carries an `@source` line pointing at the package. Tailwind only generates the
+classes it can see, and the components live in `node_modules` — without that line every component
+renders unstyled, which looks like a broken install rather than a missing line.
+
+**`metro.config.js`** lists the four extra themes in `extraThemes`. `light` and `dark` work
+without it; anything else throws *"it was not registered"* from `setTheme`. A change to that list
+needs the dev server **restarted rather than reloaded** — a running server rewrites its generated
+CSS from the list it started with, so a newly added theme appears to be registered and still is
+not.
+
+## Choosing the theme later
+
+The choice made at `init` is one line in the root layout, and it is meant to be edited:
+
+```tsx title="app/_layout.tsx"
+Uniwind.setTheme('moon');
+```
+
+At module scope rather than in an effect, so the first frame is already in the right theme — an
+effect paints the default one and switches out of it, which is visible. To change it at runtime
+instead, see [Theming](/docs/customization/theming).
+
+## Adding to an existing app
+
+`init` in a directory that already has a `package.json` does the other job: it patches what is
+there rather than creating anything, which is what [CLI](/docs/cli) covers.
+
+## Next
+
+<Cards>
+  <Card title="CLI" href="/docs/cli" />
+  <Card title="Theming" href="/docs/customization/theming" />
+  <Card title="Installation" href="/docs/installation" />
+</Cards>
