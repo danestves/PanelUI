@@ -1,6 +1,7 @@
 ---
 title: Menu
 description: The list of things you can do to something.
+status: updated
 ---
 
 The list of things you can do to something.
@@ -214,7 +215,7 @@ The same rows, moved into a draggable sheet — better on a small screen than a 
 
 ### Putting something behind the panel
 
-The panel's surface is a layer rather than a background, so it can be replaced. `Menu.Background` fills the panel behind the rows and inside its corner radius — pass one with a tint, a gradient, an image or a blur view inside it and it stands in for the default. Anything you put there is clipped to the panel and never scrolls with the rows.
+The panel's surface is a layer rather than a background, so it can be replaced. `Menu.Background` fills the panel behind the rows and inside its corner radius — pass one with a tint, a gradient, an image or a blur view inside it and it stands in for the default. Tint with a theme token rather than a fixed colour — a hue picked to look right on one theme is the wrong hue on the next. Anything you put there is clipped to the panel and never scrolls with the rows.
 
 ```tsx
 <Menu>
@@ -225,7 +226,7 @@ The panel's surface is a layer rather than a background, so it can be replaced. 
     {/* A tint over the overlay surface. Put a BlurView or a gradient in
         here instead and it fills the panel the same way. */}
     <Menu.Background className="bg-overlay">
-      <View className="flex-1 bg-info/10" />
+      <View className="flex-1 bg-foreground/5" />
     </Menu.Background>
     <Menu.Item icon={<PencilIcon size={16} />}>Rename</Menu.Item>
     <Menu.Item icon={<ShareNodesIcon size={16} />}>Share</Menu.Item>
@@ -350,6 +351,18 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 Every row carries the `menuitem` role, and a checkbox, radio or submenu row publishes its state alongside it — checked, selected or expanded — so a screen reader announces what the row *is* as well as what it says.
 
 `Menu.Content` is capped to the room inside the safe area and scrolls, so the last row of a long menu is always reachable. Pass `maxHeight` to cap it lower than that, or `scrollable={false}` when the rows are written out by hand and known to fit.
+
+### Indicators, and your own icons
+
+The tick, the radio dot and the submenu chevron are drawn with [`lucide-react-native`](https://lucide.dev), which Menu depends on. They are tinted from `--color-popover-foreground` and `--color-muted-foreground`, and the chevron becomes the mirrored glyph under RTL rather than being flipped — it is already being rotated, and a `scaleX` would rotate the wrong way with it.
+
+`Menu.Item`’s `icon` prop takes any element, from any set, drawn in an 18pt column. Icons from outside this library do not read the ambient icon colour, so pass `color` yourself:
+
+```tsx
+const tint = useCSSVariable('--color-popover-foreground');
+
+<Menu.Item icon={<Pencil size={16} color={tint} />}>Rename</Menu.Item>
+```
 
 ### The panel's surface
 

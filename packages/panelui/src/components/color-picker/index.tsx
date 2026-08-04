@@ -60,7 +60,15 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import Svg, { Defs, Pattern, Rect } from 'react-native-svg';
+import Svg, {
+  Circle,
+  Defs,
+  Path,
+  Pattern,
+  RadialGradient,
+  Rect,
+  Stop,
+} from 'react-native-svg';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { useDirectionSign } from '../../hooks/use-direction';
@@ -108,10 +116,13 @@ const HUE_NUDGE = 10;
 const colorPickerVariants = tv({
   slots: {
     root: 'w-full gap-3',
-    area: 'overflow-hidden rounded-xl border border-border',
+    area: 'overflow-hidden rounded-2xl border border-border',
+    wheel: 'overflow-hidden rounded-full border border-border',
     // Both thumbs are a white ring around a fill of the colour under them, so
     // the ring reads against the dark end of the square as well as the light.
-    thumb: 'absolute start-0 top-0 rounded-full border-[3px] border-white shadow-md',
+    // Two points, not three: the ring is there to separate the fill from what
+    // is behind it, and any more of it starts hiding the colour it is showing.
+    thumb: 'absolute start-0 top-0 rounded-full border-2 border-white shadow-md',
     thumbFill: 'flex-1 rounded-full',
     track: 'w-full overflow-hidden rounded-full border border-border',
     swatches: 'flex-row flex-wrap items-center gap-2',
@@ -120,6 +131,17 @@ const colorPickerVariants = tv({
     preview: 'flex-row items-center gap-3',
     previewSwatch: 'overflow-hidden rounded-full border border-border',
     previewValue: 'text-sm font-medium text-foreground',
+    // The header strip: a name on the leading edge, the value and a swatch on
+    // the trailing one.
+    field: 'w-full flex-row items-center gap-3 rounded-2xl bg-surface px-4 py-3',
+    fieldLabel: 'flex-1 text-base font-medium text-foreground',
+    fieldValue: 'text-base font-normal text-muted-foreground',
+    fieldSwatch: 'overflow-hidden rounded-full border border-border',
+    // The readout above a track — the number on one side, what it names on the
+    // other.
+    channel: 'w-full flex-row items-center justify-between gap-3',
+    channelValue: 'text-base font-normal text-muted-foreground',
+    channelLabel: 'text-base font-medium text-foreground',
   },
   variants: {
     size: {
@@ -141,8 +163,12 @@ export type ColorPickerSize = NonNullable<ColorPickerVariantProps['size']>;
 
 /** Height of the saturation/brightness square, per size. */
 const AREA_HEIGHT: Record<ColorPickerSize, number> = { sm: 140, md: 180, lg: 220 };
-/** Height of a channel track, per size. */
-const TRACK_HEIGHT: Record<ColorPickerSize, number> = { sm: 14, md: 18, lg: 22 };
+/**
+ * Height of a channel track, per size. Tall enough that the knob sits *in* the
+ * track rather than on top of a hairline — a slider whose thumb overhangs a
+ * thin rule reads as a control laid over a decoration.
+ */
+const TRACK_HEIGHT: Record<ColorPickerSize, number> = { sm: 16, md: 20, lg: 24 };
 /** Thumb diameter on a channel track — wider than the track, so it reads as a knob. */
 const TRACK_THUMB: Record<ColorPickerSize, number> = { sm: 22, md: 26, lg: 30 };
 /** Thumb diameter on the square. */
@@ -151,6 +177,10 @@ const AREA_THUMB: Record<ColorPickerSize, number> = { sm: 20, md: 24, lg: 28 };
 const SWATCH: Record<ColorPickerSize, number> = { sm: 26, md: 30, lg: 34 };
 /** The swatch beside the value in `Preview`. */
 const PREVIEW_SWATCH: Record<ColorPickerSize, number> = { sm: 28, md: 36, lg: 44 };
+/** The smaller swatch on the end of the `Field` strip. */
+const FIELD_SWATCH: Record<ColorPickerSize, number> = { sm: 22, md: 28, lg: 34 };
+/** Diameter of the wheel, per size. */
+const WHEEL_SIZE: Record<ColorPickerSize, number> = { sm: 180, md: 240, lg: 300 };
 
 interface ColorPickerContextValue {
   hue: SharedValue<number>;
@@ -1036,9 +1066,552 @@ function Swatch({
   );
 }
 
+/* ------------------------------------------------------------------ *
+ * Field — the strip above the controls: what is being picked, and what
+ * it currently is.
+ * ------------------------------------------------------------------ */
+
+export interface ColorPickerFieldProps {
+  className?: string;
+  /** What the colour is for — "Accent", "Background", a layer name. */
+  label?: string;
+  /**
+   * Print the current colour beside the swatch, in the picker's `format`.
+   * On by default: the strip exists to say what the colour *is*, and a swatch
+   * alone cannot be read out, copied down or typed into a design tool.
+   */
+  showValue?: boolean;
+  /** Extra classes for the swatch. */
+  swatchClassName?: string;
+  /** Anything to put after the swatch — a copy button, a reset. */
+  children?: ReactNode;
+}
+
+/**
+ * A header for the picker below it.
+ *
+ * The value it prints is built on the UI thread and only crosses to
+ * JavaScript when the rounded string actually changes, the same as `Preview`.
+ * A drag through a hundred frames of the same hex costs one render.
+ */
+const ColorPickerField = forwardRef<View, ColorPickerFieldProps>(
+  ({ className, label, showValue = true, swatchClassName, children }, ref) => {
+    const ctx = useColorPicker('ColorPicker.Field');
+    const slots = colorPickerVariants({ size: ctx.size });
+    const diameter = FIELD_SWATCH[ctx.size];
+
+    const read = useCallback(
+      () =>
+        formatColor(
+          {
+            h: ctx.hue.value,
+            s: ctx.saturation.value,
+            v: ctx.brightness.value,
+            a: ctx.opacity.value,
+          },
+          ctx.format
+        ),
+      // Shared values are stable objects; `format` is the only real dependency.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [ctx.format]
+    );
+
+    const [printed, setPrinted] = useState(read);
+
+    const format = ctx.format;
+    useAnimatedReaction(
+      () =>
+        formatColor(
+          {
+            h: ctx.hue.value,
+            s: ctx.saturation.value,
+            v: ctx.brightness.value,
+            a: ctx.opacity.value,
+          },
+          format
+        ),
+      (current, previous) => {
+        if (current !== previous) runOnJS(setPrinted)(current);
+      },
+      [format]
+    );
+
+    const fillStyle = useAnimatedStyle(() => ({
+      backgroundColor: hsvToCss(
+        ctx.hue.value,
+        ctx.saturation.value,
+        ctx.brightness.value,
+        ctx.opacity.value
+      ),
+    }));
+
+    return (
+      <View
+        ref={ref}
+        className={slots.field({ className })}
+        // One thing being read out, not three: a label, a value and a swatch
+        // announced separately are three stops that each say a third of it.
+        accessible
+        accessibilityLabel={label ? `${label}, ${printed}` : printed}
+      >
+        {label ? <Text className={slots.fieldLabel()}>{label}</Text> : null}
+        {showValue ? (
+          <Text className={slots.fieldValue()}>{printed.toUpperCase()}</Text>
+        ) : null}
+        <View
+          style={{ width: diameter, height: diameter }}
+          className={slots.fieldSwatch({ className: swatchClassName })}
+        >
+          {/* Only behind a translucent colour — a checkerboard under an opaque
+              swatch is a pattern nobody can see, drawn every frame. */}
+          <Checkerboard square={4} />
+          <Animated.View style={[StyleSheet.absoluteFill, fillStyle]} />
+        </View>
+        {children}
+      </View>
+    );
+  }
+);
+
+ColorPickerField.displayName = 'ColorPicker.Field';
+
+/* ------------------------------------------------------------------ *
+ * Channel — the readout that names the track under it.
+ * ------------------------------------------------------------------ */
+
+/** Which channel a readout is reading. */
+export type ColorPickerChannel = 'hue' | 'saturation' | 'brightness' | 'alpha';
+
+/** What each channel is called, and how its number is written. */
+const CHANNEL_LABEL: Record<ColorPickerChannel, string> = {
+  hue: 'Hue',
+  saturation: 'Saturation',
+  brightness: 'Brightness',
+  alpha: 'Opacity',
+};
+
+export interface ColorPickerChannelProps {
+  className?: string;
+  /** Which channel to read. */
+  channel: ColorPickerChannel;
+  /** Overrides the channel's own name. */
+  label?: string;
+  /**
+   * Writes the number yourself. Receives degrees for `hue` and a percentage
+   * for the other three, both already rounded.
+   */
+  format?: (value: number) => string;
+}
+
+/**
+ * The line above a track: the number on the leading edge, what it names on the
+ * trailing one.
+ *
+ * The number is the one thing in this component that has to reach JavaScript
+ * during a drag, because text cannot be written from a worklet. It is rounded
+ * first and only sent when the rounded value changes, so a slow drag across a
+ * hue track sends 360 updates rather than one per frame.
+ */
+const ColorPickerChannelReadout = forwardRef<View, ColorPickerChannelProps>(
+  ({ className, channel, label, format }, ref) => {
+    const ctx = useColorPicker('ColorPicker.Channel');
+    const slots = colorPickerVariants({ size: ctx.size });
+
+    const source =
+      channel === 'hue'
+        ? ctx.hue
+        : channel === 'saturation'
+          ? ctx.saturation
+          : channel === 'brightness'
+            ? ctx.brightness
+            : ctx.opacity;
+
+    const [value, setValue] = useState(() =>
+      Math.round(channel === 'hue' ? source.value : source.value * 100)
+    );
+
+    useAnimatedReaction(
+      () => Math.round(channel === 'hue' ? source.value : source.value * 100),
+      (current, previous) => {
+        if (current !== previous) runOnJS(setValue)(current);
+      },
+      [channel]
+    );
+
+    const text = format
+      ? format(value)
+      : channel === 'hue'
+        ? `${value}°`
+        : `${value}%`;
+
+    return (
+      <View ref={ref} className={slots.channel({ className })}>
+        <Text className={slots.channelValue()}>{text}</Text>
+        <Text className={slots.channelLabel()}>{label ?? CHANNEL_LABEL[channel]}</Text>
+      </View>
+    );
+  }
+);
+
+ColorPickerChannelReadout.displayName = 'ColorPicker.Channel';
+
+/* ------------------------------------------------------------------ *
+ * Brightness — the third channel, as a track.
+ * ------------------------------------------------------------------ */
+
+export interface ColorPickerBrightnessProps {
+  className?: string;
+  /** Extra classes for the draggable thumb. */
+  thumbClassName?: string;
+}
+
+/**
+ * Black to the colour at full brightness.
+ *
+ * The square carries saturation and brightness together, so a picker built
+ * around it never needs this. A wheel carries hue and saturation instead, and
+ * leaves brightness with nowhere to live — this is where it goes.
+ */
+const ColorPickerBrightness = forwardRef<View, ColorPickerBrightnessProps>(
+  ({ className, thumbClassName }, ref) => {
+    const ctx = useColorPicker('ColorPicker.Brightness');
+    const sign = useDirectionSign();
+    const thumbSize = TRACK_THUMB[ctx.size];
+    const width = useSharedValue(0);
+    const [announced, setAnnounced] = useState(() =>
+      Math.round(ctx.brightness.value * 100)
+    );
+
+    const settle = useCallback((v: number) => setAnnounced(Math.round(v * 100)), []);
+
+    /*
+     * The ramp's far end is the current hue at full brightness, so it has to be
+     * re-declared from React when the hue moves. Unlike the hue ramp — which is
+     * every hue and therefore never changes — this one is only two colours, so
+     * rebuilding it is a two-element array rather than a gradient recompile.
+     */
+    const [hueEnd, setHueEnd] = useState(() =>
+      hsvToCss(ctx.hue.value, ctx.saturation.value, 1, 1)
+    );
+
+    useAnimatedReaction(
+      () => hsvToCss(ctx.hue.value, ctx.saturation.value, 1, 1),
+      (current, previous) => {
+        if (current !== previous) runOnJS(setHueEnd)(current);
+      }
+    );
+
+    const apply = (x: number, commit: boolean) => {
+      'worklet';
+      const v = trackFraction(x, width.value, thumbSize, sign);
+      ctx.brightness.value = v;
+      runOnJS(ctx.emit)(ctx.hue.value, ctx.saturation.value, v, ctx.opacity.value, commit);
+      if (commit) {
+        runOnJS(settle)(v);
+        if (ctx.haptics) runOnJS(selectionTick)();
+      }
+    };
+
+    const pan = Gesture.Pan()
+      .enabled(!ctx.disabled)
+      .activeOffsetX([-6, 6])
+      .shouldCancelWhenOutside(false)
+      .onUpdate((event) => apply(event.x, false))
+      .onFinalize((event) => apply(event.x, true));
+
+    const tap = Gesture.Tap()
+      .enabled(!ctx.disabled)
+      .maxDuration(250)
+      .onEnd((event) => apply(event.x, true));
+
+    const gesture = Gesture.Race(pan, tap);
+
+    const thumbStyle = useAnimatedStyle(() => {
+      const travel = Math.max(width.value - thumbSize, 0);
+      return { transform: [{ translateX: ctx.brightness.value * travel * sign }] };
+    });
+
+    const thumbFillStyle = useAnimatedStyle(() => ({
+      backgroundColor: hsvToCss(
+        ctx.hue.value,
+        ctx.saturation.value,
+        ctx.brightness.value,
+        1
+      ),
+    }));
+
+    const nudge = (dir: 1 | -1) => {
+      const next = Math.min(Math.max(ctx.brightness.value + dir * NUDGE, 0), 1);
+      ctx.brightness.value = withTiming(next, TIMING);
+      settle(next);
+      ctx.emit(ctx.hue.value, ctx.saturation.value, next, ctx.opacity.value, true);
+    };
+
+    return (
+      <ChannelTrack
+        innerRef={ref}
+        gesture={gesture}
+        thumbStyle={thumbStyle}
+        thumbFillStyle={thumbFillStyle}
+        onLayout={(event) => {
+          width.value = event.nativeEvent.layout.width;
+        }}
+        size={ctx.size}
+        className={className}
+        thumbClassName={thumbClassName}
+        label="Brightness"
+        disabled={ctx.disabled}
+        accessibilityValue={{
+          min: 0,
+          max: 100,
+          now: announced,
+          text: `${announced}%`,
+        }}
+        onAccessibilityAction={(event) => {
+          if (event.nativeEvent.actionName === 'increment') nudge(1);
+          else if (event.nativeEvent.actionName === 'decrement') nudge(-1);
+        }}
+      >
+        <LinearGradient
+          colors={sign === 1 ? ['#000000', hueEnd] : [hueEnd, '#000000']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </ChannelTrack>
+    );
+  }
+);
+
+ColorPickerBrightness.displayName = 'ColorPicker.Brightness';
+
+/* ------------------------------------------------------------------ *
+ * Wheel — hue around, saturation out.
+ * ------------------------------------------------------------------ */
+
+/**
+ * How many wedges the hue ring is cut into.
+ *
+ * There is no conic gradient here to draw a hue ring with, so it is
+ * approximated by solid wedges. Three degrees each is under a pixel of colour
+ * step at any size this is drawn at, and the wedges are given a hair of
+ * overlap so the seams between them cannot show as lighter lines.
+ */
+const WHEEL_WEDGES = 120;
+const WHEEL_OVERLAP = 0.6;
+
+/** Radius of the drawing, in the wheel's own viewBox units. */
+const WHEEL_R = 50;
+
+/** The hue ring, built once — it is the same wheel in every picker. */
+const WHEEL_PATHS = Array.from({ length: WHEEL_WEDGES }, (_, index) => {
+  const step = 360 / WHEEL_WEDGES;
+  const from = index * step;
+  const to = from + step + WHEEL_OVERLAP;
+  const rad = (deg: number) => (deg * Math.PI) / 180;
+  const x1 = WHEEL_R + WHEEL_R * Math.cos(rad(from));
+  const y1 = WHEEL_R + WHEEL_R * Math.sin(rad(from));
+  const x2 = WHEEL_R + WHEEL_R * Math.cos(rad(to));
+  const y2 = WHEEL_R + WHEEL_R * Math.sin(rad(to));
+  return {
+    d: `M ${WHEEL_R} ${WHEEL_R} L ${x1} ${y1} A ${WHEEL_R} ${WHEEL_R} 0 0 1 ${x2} ${y2} Z`,
+    fill: hsvToCss(from, 1, 1, 1),
+  };
+});
+
+export interface ColorPickerWheelProps {
+  className?: string;
+  /** Diameter in points. Defaults to the picker's size. */
+  size?: number;
+  /** Extra classes for the draggable thumb. */
+  thumbClassName?: string;
+}
+
+/**
+ * The square, bent into a circle: hue is the angle and saturation is the
+ * distance from the middle.
+ *
+ * It reads the same three shared values as `ColorPicker.Area`, so the two are
+ * interchangeable — a picker is a wheel instead of a square, not a wheel as
+ * well as one. What it does not carry is brightness, which has no third
+ * dimension to occupy here; pair it with `ColorPicker.Brightness`.
+ *
+ * The wheel is deliberately not mirrored under RTL. A track has a start and an
+ * end and so has a direction to read it in; a wheel has neither, and flipping
+ * which way round the spectrum runs would only make the same colour sit
+ * somewhere else.
+ */
+const ColorPickerWheel = forwardRef<View, ColorPickerWheelProps>(
+  ({ className, size, thumbClassName }, ref) => {
+    const ctx = useColorPicker('ColorPicker.Wheel');
+    const slots = colorPickerVariants({ size: ctx.size });
+    const gradientId = useId().replace(/[^a-zA-Z0-9]/g, '');
+
+    const diameter = size ?? WHEEL_SIZE[ctx.size];
+    const thumbSize = AREA_THUMB[ctx.size];
+    const radius = diameter / 2;
+
+    const [announced, setAnnounced] = useState(() => ({
+      h: Math.round(ctx.hue.value),
+      s: Math.round(ctx.saturation.value * 100),
+    }));
+
+    const settle = useCallback((h: number, s: number) => {
+      setAnnounced({ h: Math.round(h), s: Math.round(s * 100) });
+    }, []);
+
+    const apply = (x: number, y: number, commit: boolean) => {
+      'worklet';
+      const dx = x - radius;
+      const dy = y - radius;
+      // Clockwise from three o'clock, which is what `atan2` already gives in a
+      // coordinate space whose y runs downwards — so the wedges above and the
+      // touch here agree without either of them correcting for the other.
+      const degrees = (Math.atan2(dy, dx) * 180) / Math.PI;
+      const h = (degrees + 360) % 360;
+      // Past the rim the colour is the one on the rim, rather than nothing:
+      // a finger that overshoots the edge of a disc has still chosen a hue.
+      const s = Math.min(Math.sqrt(dx * dx + dy * dy) / radius, 1);
+
+      ctx.hue.value = h;
+      ctx.saturation.value = s;
+      runOnJS(ctx.emit)(h, s, ctx.brightness.value, ctx.opacity.value, commit);
+      if (commit) {
+        runOnJS(settle)(h, s);
+        if (ctx.haptics) runOnJS(selectionTick)();
+      }
+    };
+
+    const pan = Gesture.Pan()
+      .enabled(!ctx.disabled)
+      .minDistance(0)
+      .shouldCancelWhenOutside(false)
+      .onBegin((event) => apply(event.x, event.y, false))
+      .onUpdate((event) => apply(event.x, event.y, false))
+      .onFinalize((event) => apply(event.x, event.y, true));
+
+    const thumbStyle = useAnimatedStyle(() => {
+      const angle = (ctx.hue.value * Math.PI) / 180;
+      const r = ctx.saturation.value * radius;
+      return {
+        transform: [
+          { translateX: radius + r * Math.cos(angle) - thumbSize / 2 },
+          { translateY: radius + r * Math.sin(angle) - thumbSize / 2 },
+        ],
+      };
+    });
+
+    const thumbFillStyle = useAnimatedStyle(() => ({
+      backgroundColor: hsvToCss(
+        ctx.hue.value,
+        ctx.saturation.value,
+        ctx.brightness.value,
+        1
+      ),
+    }));
+
+    // Brightness is not drawn into the wheel — it darkens the whole of it,
+    // which is what brightness does.
+    const dimStyle = useAnimatedStyle(() => ({
+      opacity: 1 - ctx.brightness.value,
+    }));
+
+    const nudge = (channel: 'hue' | 'saturation', dir: 1 | -1) => {
+      if (channel === 'hue') {
+        const next = (ctx.hue.value + dir * HUE_NUDGE + 360) % 360;
+        ctx.hue.value = next;
+        settle(next, ctx.saturation.value);
+        ctx.emit(next, ctx.saturation.value, ctx.brightness.value, ctx.opacity.value, true);
+        return;
+      }
+      const next = Math.min(Math.max(ctx.saturation.value + dir * NUDGE, 0), 1);
+      ctx.saturation.value = withTiming(next, TIMING);
+      settle(ctx.hue.value, next);
+      ctx.emit(ctx.hue.value, next, ctx.brightness.value, ctx.opacity.value, true);
+    };
+
+    const onAccessibilityAction = (event: AccessibilityActionEvent) => {
+      const action = event.nativeEvent.actionName;
+      if (action === 'increment') nudge('hue', 1);
+      else if (action === 'decrement') nudge('hue', -1);
+      else if (action === 'saturate') nudge('saturation', 1);
+      else if (action === 'desaturate') nudge('saturation', -1);
+    };
+
+    return (
+      <GestureDetector gesture={pan}>
+        {/* Square box, round drawing: the thumb travels to the rim and has to
+            be drawn whole when it gets there, so the box is not clipped and
+            only the wheel inside it is round. */}
+        <View
+          ref={ref}
+          style={{ width: diameter, height: diameter }}
+          className="self-center"
+          accessible
+          accessibilityRole="adjustable"
+          accessibilityLabel="Hue and saturation"
+          accessibilityState={{ disabled: ctx.disabled }}
+          accessibilityValue={{
+            min: 0,
+            max: 360,
+            now: announced.h,
+            text: `${announced.h}°, ${announced.s}% saturation`,
+          }}
+          accessibilityActions={[
+            { name: 'increment' },
+            { name: 'decrement' },
+            { name: 'saturate', label: 'More saturated' },
+            { name: 'desaturate', label: 'Less saturated' },
+          ]}
+          onAccessibilityAction={onAccessibilityAction}
+        >
+          <View
+            style={{ width: diameter, height: diameter }}
+            className={slots.wheel({ className })}
+          >
+            <Svg width="100%" height="100%" viewBox="0 0 100 100">
+              <Defs>
+                <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
+                  <Stop offset="0%" stopColor="#ffffff" stopOpacity={1} />
+                  <Stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
+                </RadialGradient>
+              </Defs>
+              {WHEEL_PATHS.map((wedge, index) => (
+                <Path key={index} d={wedge.d} fill={wedge.fill} />
+              ))}
+              {/* White at the middle falling off to nothing at the rim — the
+                  same ramp the square runs across, wrapped around a centre. */}
+              <Circle cx={WHEEL_R} cy={WHEEL_R} r={WHEEL_R} fill={`url(#${gradientId})`} />
+            </Svg>
+            <Animated.View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, dimStyle]}
+              className="bg-black"
+            />
+          </View>
+
+          <Animated.View
+            pointerEvents="none"
+            style={[thumbStyle, { width: thumbSize, height: thumbSize }]}
+            className={slots.thumb({ className: thumbClassName })}
+          >
+            <Animated.View style={thumbFillStyle} className={slots.thumbFill()} />
+          </Animated.View>
+        </View>
+      </GestureDetector>
+    );
+  }
+);
+
+ColorPickerWheel.displayName = 'ColorPicker.Wheel';
+
 export const ColorPicker = Object.assign(ColorPickerRoot, {
+  Field: ColorPickerField,
   Area: ColorPickerArea,
+  Wheel: ColorPickerWheel,
+  Channel: ColorPickerChannelReadout,
   Hue: ColorPickerHue,
+  Brightness: ColorPickerBrightness,
   Alpha: ColorPickerAlpha,
   Preview: ColorPickerPreview,
   Swatches: ColorPickerSwatches,

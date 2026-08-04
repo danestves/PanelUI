@@ -203,7 +203,7 @@
   {
     "name": "color-picker",
     "type": "registry:ui",
-    "description": "A colour chosen by dragging — a saturation square, a hue scale, and opacity.",
+    "description": "A colour chosen by dragging — a saturation square or a wheel, a hue scale, and opacity.",
     "registryDependencies": [
       "color",
       "haptics",
@@ -391,6 +391,19 @@
     ]
   },
   {
+    "name": "kpi-chart",
+    "type": "registry:ui",
+    "description": "One number, what it is doing, and the shape it made getting there.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "line-chart",
+      "progress",
+      "surface",
+      "text"
+    ]
+  },
+  {
     "name": "label",
     "type": "registry:ui",
     "description": "Form field label with required, invalid and disabled states.",
@@ -447,7 +460,6 @@
     "registryDependencies": [
       "cn",
       "haptics",
-      "icons",
       "popover",
       "text",
       "use-direction"
@@ -592,6 +604,16 @@
       "cn",
       "text",
       "use-direction"
+    ]
+  },
+  {
+    "name": "radar-chart",
+    "type": "registry:ui",
+    "description": "Several measures of one thing, drawn as one shape.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
     ]
   },
   {
@@ -843,7 +865,8 @@
     "description": "Segmented navigation with an animated indicator.",
     "registryDependencies": [
       "cn",
-      "text"
+      "text",
+      "use-direction"
     ]
   },
   {

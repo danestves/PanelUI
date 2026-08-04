@@ -232,6 +232,19 @@ export {
   type ViewState,
 } from './components/map';
 export {
+  RadarChart,
+  useRadarChart,
+  type RadarChartProps,
+  type RadarChartHandle,
+  type RadarChartHeaderProps,
+  type RadarChartGridProps,
+  type RadarChartAxisProps,
+  type RadarChartSeriesProps,
+  type RadarChartLegendProps,
+  type RadarChartDatum,
+  type RadarChartStatus,
+} from './components/radar-chart';
+export {
   Select,
   type SelectProps,
   type SelectItemProps,
@@ -309,8 +322,13 @@ export {
 export {
   ColorPicker,
   type ColorPickerProps,
+  type ColorPickerFieldProps,
   type ColorPickerAreaProps,
+  type ColorPickerWheelProps,
+  type ColorPickerChannelProps,
+  type ColorPickerChannel,
   type ColorPickerHueProps,
+  type ColorPickerBrightnessProps,
   type ColorPickerAlphaProps,
   type ColorPickerPreviewProps,
   type ColorPickerSwatchesProps,
@@ -433,6 +451,26 @@ export {
   type ItemHeaderProps,
   type ItemFooterProps,
 } from './components/item';
+export {
+  KpiChart,
+  type KpiChartProps,
+  type KpiChartHeaderProps,
+  type KpiChartIconProps,
+  type KpiChartTitleProps,
+  type KpiChartStatProps,
+  type KpiChartActionsProps,
+  type KpiChartContentProps,
+  type KpiChartValueProps,
+  type KpiChartTrendProps,
+  type KpiChartSparklineProps,
+  type KpiChartProgressProps,
+  type KpiChartFooterProps,
+  type KpiChartSeparatorProps,
+  type KpiChartGroupProps,
+  type KpiChartGroupOrientation,
+  type KpiGoodDirection,
+  type KpiTone,
+} from './components/kpi-chart';
 export { Label, type LabelProps, type LabelTextProps } from './components/label';
 export {
   LineChart,

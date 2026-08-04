@@ -63,6 +63,7 @@ import {
   View,
   type LayoutChangeEvent,
   type ViewProps,
+  type ViewStyle,
 } from 'react-native';
 import Animated, {
   FadeIn,
@@ -103,7 +104,13 @@ const comboboxVariants = tv({
     // Chips wrap onto their own lines; the input keeps a sane minimum so it is
     // still tappable once a few of them are in front of it.
     fieldContent: 'flex-1 flex-row flex-wrap items-center gap-1.5 py-1',
-    input: 'min-w-24 flex-1 py-1 text-base font-normal text-foreground',
+    /*
+     * A fixed height rather than vertical padding, because the chips beside it
+     * have one (`h-6`) and two differently-sized boxes on a `items-center` row
+     * centre to two different baselines. `py-0` clears the platform default,
+     * which is not the same on iOS and Android.
+     */
+    input: 'h-7 min-w-24 flex-1 py-0 text-base font-normal text-foreground',
     action: 'h-6 w-6 items-center justify-center rounded-full',
     list: 'overflow-hidden rounded-xl border border-border bg-popover p-2 shadow-sm',
     item: 'flex-row items-center gap-2 rounded-lg px-3 py-3',
@@ -190,6 +197,9 @@ function ComboboxItem({
       accessibilityState={{ selected, disabled: !!disabled }}
       disabled={disabled}
       onPress={() => context.onSelect(value, label)}
+      // The rows sit flush against each other, so the 4pt either side of the
+      // gap between two of them belongs to neither without this.
+      hitSlop={{ top: 2, bottom: 2 }}
       className={item()}
     >
       {start}
@@ -413,7 +423,17 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
   const [open, setOpen] = useState(false);
   const [focused, setFocused] = useState(false);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
-  const [listHeight, setListHeight] = useState(0);
+  /*
+   * Which side the list settled on, latched for as long as it stays open.
+   *
+   * The side is decided from the list's measured height, which is 0 on the
+   * frame it opens — so the honest answer changes once, from "below" to
+   * whatever fits, and the list jumps. A finger already on its way down to an
+   * option lands where the option used to be, which is the whole of "sometimes
+   * it takes two taps". Deciding once and holding it costs a list that opens
+   * downwards for one frame in a cramped viewport, which the fade covers.
+   */
+  const [flipped, setFlipped] = useState<boolean | null>(null);
   /*
    * The anchor is measured off the plain wrapper rather than off the animated
    * field inside it. In `overlay` the wrapper *is* the field's box — the list
@@ -507,6 +527,12 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
   }, [disabled, presentation, setOpenState]);
 
   const close = useCallback(() => setOpenState(false), [setOpenState]);
+
+  // A closed list has no side. Clearing the latch here rather than in `close`
+  // covers the caller closing it through `open` as well.
+  useEffect(() => {
+    if (!open) setFlipped(null);
+  }, [open]);
 
   // An open overlay list catches the Android back button, closing itself
   // instead of popping the screen behind it.
@@ -741,6 +767,10 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
               <Chip
                 key={entry}
                 size="sm"
+                // A chip is `self-start` by default, which overrides the row's
+                // `items-center` and leaves it riding high against the input.
+                // Inside a field it is one of several things sharing a line.
+                className="self-center"
                 onClose={disabled ? undefined : () => remove(entry)}
                 closeLabel={`Remove ${labelOf(entry)}`}
               >
@@ -776,6 +806,10 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
             }
           }}
           editable={!disabled}
+          // Android lays a single-line input's text against the top of its box
+          // unless told otherwise; iOS centres it. Without this the text sits
+          // above the chips on one platform and level with them on the other.
+          textAlignVertical="center"
           placeholder={values.length && multiple ? undefined : placeholder}
           placeholderTextColor={placeholderColor}
           autoCapitalize="none"
@@ -840,12 +874,12 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
   }
 
   // Flip above the field when the list would run off the bottom — where the
-  // bottom is the top of the keyboard, not the bottom of the screen. listHeight
-  // is 0 on the first frame, so it opens downwards and corrects itself once
-  // measured — invisible inside the 140ms fade.
+  // bottom is the top of the keyboard, not the bottom of the screen. The list
+  // has no height until it has been laid out, so the side is decided on that
+  // first measurement and then held; see `flipped`.
   const viewportBottom = screenHeight - keyboardHeight;
   const spaceBelow = anchor ? viewportBottom - (anchor.y + anchor.height) - offset : 0;
-  const flip = !!anchor && listHeight > 0 && listHeight > spaceBelow;
+  const flip = flipped ?? false;
 
   const overlayPosition = anchor
     ? {
@@ -854,6 +888,11 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
         ...(flip
           ? { bottom: screenHeight - anchor.y + offset }
           : { top: anchor.y + anchor.height + offset }),
+        // Above the dismiss strips it shares the portal with. They are earlier
+        // siblings so paint order already puts the list on top on iOS, but on
+        // Android a sibling without an elevation is not reliably ordered.
+        zIndex: 1,
+        elevation: 1,
         ...(contentWidth === 'field'
           ? { width: anchor.width }
           : typeof contentWidth === 'number'
@@ -863,6 +902,21 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
         maxHeight: Math.max((flip ? anchor.y : spaceBelow) - offset, 160),
       }
     : null;
+
+  /** The window minus the field: above it, below it, and either side of it. */
+  const catcherRects: ViewStyle[] = anchor
+    ? [
+        { top: 0, left: 0, right: 0, height: Math.max(anchor.y, 0) },
+        { top: anchor.y + anchor.height, left: 0, right: 0, bottom: 0 },
+        { top: anchor.y, height: anchor.height, left: 0, width: Math.max(anchor.x, 0) },
+        {
+          top: anchor.y,
+          height: anchor.height,
+          left: anchor.x + anchor.width,
+          right: 0,
+        },
+      ]
+    : [];
 
   return (
     <ComboboxContext.Provider value={context}>
@@ -879,26 +933,42 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
            * affordance for a pointer, and announcing it would put an unlabelled
            * full-screen "button" ahead of the options in the reading order.
            * Escaping the list is the back gesture's job.
+           *
+           * "Anywhere else" has to exclude the field, and one window-sized view
+           * cannot: covering the control that opened the list means a tap on
+           * the input to carry on typing, or on the chevron to close it, is
+           * spent dismissing instead and the field only answers on the second
+           * try. A view cannot have a hole cut in it, so the catcher is the
+           * four strips around the field's measured rect — which leaves the
+           * field uncovered and directly tappable.
            */}
-          <Pressable
-            accessible={false}
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
-            onPress={() => {
-              close();
-              inputRef.current?.blur();
-            }}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-          />
+          {catcherRects.map((rect, index) => (
+            <Pressable
+              key={index}
+              accessible={false}
+              importantForAccessibility="no-hide-descendants"
+              accessibilityElementsHidden
+              onPress={() => {
+                close();
+                inputRef.current?.blur();
+              }}
+              style={[{ position: 'absolute' }, rect]}
+            />
+          ))}
           {/* Portalled out of this subtree — re-provide the context so
               Combobox.Item keeps working. */}
           <ComboboxContext.Provider value={context}>
             <Animated.View
               entering={FadeIn.duration(140)}
               exiting={FadeOut.duration(120)}
-              onLayout={(event: LayoutChangeEvent) =>
-                setListHeight(event.nativeEvent.layout.height)
-              }
+              onLayout={(event: LayoutChangeEvent) => {
+                // The first measurement decides the side, and nothing after it
+                // does — see `flipped`.
+                const measured = event.nativeEvent.layout.height;
+                setFlipped((current) =>
+                  current === null ? measured > spaceBelow : current
+                );
+              }}
               style={overlayPosition}
               /*
                * The floating list covers the screen with a catcher and takes

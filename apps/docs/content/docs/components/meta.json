@@ -70,6 +70,8 @@
     "tooltip",
     "typography",
     "combobox",
-    "post"
+    "post",
+    "kpi-chart",
+    "radar-chart"
   ]
 }

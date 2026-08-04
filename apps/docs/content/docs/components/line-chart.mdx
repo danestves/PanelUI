@@ -1,6 +1,7 @@
 ---
 title: LineChart
 description: Animated time series, drawn on the UI thread.
+status: updated
 ---
 
 A time series, drawn and animated on the UI thread.
@@ -124,7 +125,7 @@ const chart = useRef<LineChartHandle>(null);
 
 ### A sparkline
 
-Set `compact` and drop the grid, axis and crosshair: the line reaches the edges and the shape is the whole point. Sits beside a number in a KPI card.
+Set `compact` and drop the grid, axis and crosshair: the line reaches the edges and the shape is the whole point. For the whole card around one — a headline number, a trend badge and the sparkline under it — reach for [KpiChart](/docs/components/kpi-chart) rather than assembling it each time.
 
 <Preview
   src="/previews/line-chart-kpi-sparklines.jpg"
@@ -377,17 +378,6 @@ Four series across the chart token ramp. They share one y-domain, so they stay c
     </LineChart>
   </Frame.Panel>
 </Frame>
-```
-
-### KPI sparklines
-
-`compact` drops the axis padding so the line reaches the edges. Beside a headline number the shape is the whole point — a grid and an axis around it are furniture.
-
-```tsx
-<LineChart data={spark} xDataKey="i" aspectRatio={3} compact>
-  <LineChart.Area dataKey="v" colorIndex={1} />
-  <LineChart.Line dataKey="v" colorIndex={1} />
-</LineChart>
 ```
 
 ## API Reference

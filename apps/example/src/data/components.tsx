@@ -21,6 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { router } from 'expo-router';
+import { DollarSign, Target } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Image,
@@ -84,6 +85,7 @@ import {
   ImageIcon,
   Item,
   KeyboardAvoider,
+  KpiChart,
   Label,
   ListChecksIcon,
   LockIcon,
@@ -115,6 +117,8 @@ import {
   type PostVote,
   Portal,
   Progress,
+  RadarChart,
+  type RadarChartDatum,
   RadioGroup,
   Rating,
   RingChart,
@@ -392,43 +396,6 @@ function ChartScreen({ children }: { children: ReactNode }) {
   return <View className="flex-1 justify-center px-4">{children}</View>;
 }
 
-/** A KPI stat card: number and delta on the left, a sparkline on the right. */
-function KpiCard({
-  label,
-  value,
-  delta,
-  data,
-  colorIndex,
-}: {
-  label: string;
-  value: string;
-  delta: string;
-  data: { t: string; v: number }[];
-  colorIndex: 1 | 2 | 3;
-}) {
-  const up = !delta.startsWith('-');
-  return (
-    <Surface variant="secondary" padding="lg" className="w-full flex-row items-center gap-4">
-      <View className="flex-1">
-        <Text size="sm" muted>
-          {label}
-        </Text>
-        <Text size="2xl" weight="bold" className="mt-1">
-          {value}
-        </Text>
-        <Text size="sm" className={up ? 'mt-1 text-success' : 'mt-1 text-destructive'}>
-          {delta}
-        </Text>
-      </View>
-      <View className="h-14 w-32">
-        <LineChart data={data} xDataKey="t" compact aspectRatio={2.3}>
-          <LineChart.Line dataKey="v" colorIndex={colorIndex} strokeWidth={2} />
-        </LineChart>
-      </View>
-    </Surface>
-  );
-}
-
 /* --- Versions ------------------------------------------------------------- */
 
 function ChartBasicVersion() {
@@ -638,31 +605,386 @@ function ChartMultiVersion() {
   );
 }
 
-function ChartKpiVersion() {
+/** Padding a KPI row takes inside a Frame.Panel, matching Frame.Row. */
+const KPI_ROW = 'px-4 py-3.5';
+
+const RADAR_PROFILE = [
+  { axis: 'Speed', you: 82, team: 64 },
+  { axis: 'Accuracy', you: 71, team: 78 },
+  { axis: 'Coverage', you: 55, team: 83 },
+  { axis: 'Uptime', you: 94, team: 91 },
+  { axis: 'Cost', you: 48, team: 62 },
+  { axis: 'Support', you: 77, team: 58 },
+];
+
+const RADAR_SKILLS = [
+  { axis: 'Design', score: 88 },
+  { axis: 'Frontend', score: 94 },
+  { axis: 'Backend', score: 62 },
+  { axis: 'Infra', score: 45 },
+  { axis: 'Testing', score: 71 },
+];
+
+/** One profile per quarter, on the same axes and the same scale. */
+const RADAR_QUARTERS = {
+  q1: [
+    { axis: 'Speed', score: 54 },
+    { axis: 'Accuracy', score: 61 },
+    { axis: 'Coverage', score: 38 },
+    { axis: 'Uptime', score: 72 },
+    { axis: 'Cost', score: 44 },
+    { axis: 'Support', score: 50 },
+  ],
+  q2: [
+    { axis: 'Speed', score: 68 },
+    { axis: 'Accuracy', score: 66 },
+    { axis: 'Coverage', score: 57 },
+    { axis: 'Uptime', score: 85 },
+    { axis: 'Cost', score: 51 },
+    { axis: 'Support', score: 63 },
+  ],
+  q3: [
+    { axis: 'Speed', score: 82 },
+    { axis: 'Accuracy', score: 71 },
+    { axis: 'Coverage', score: 88 },
+    { axis: 'Uptime', score: 94 },
+    { axis: 'Cost', score: 48 },
+    { axis: 'Support', score: 77 },
+  ],
+} satisfies Record<string, RadarChartDatum[]>;
+
+const RADAR_PERIODS = [
+  { value: 'q1', label: 'Q1' },
+  { value: 'q2', label: 'Q2' },
+  { value: 'q3', label: 'Q3' },
+] as const;
+
+function RadarSwitchVersion() {
+  const [period, setPeriod] = useState<string>('q3');
+  const data = RADAR_QUARTERS[period as keyof typeof RADAR_QUARTERS] ?? RADAR_QUARTERS.q3;
+  const best = [...data].sort((a, b) => b.score - a.score)[0];
+
+  return (
+    <ChartScreen>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Service profile</Frame.Title>
+          <Frame.Action>{best.axis} leads</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="items-center px-4 pb-2 pt-2">
+            {/* Changing the tab changes the data, and the outline travels to
+                the new one a vertex at a time. That movement is the point: it
+                is what says which axes moved and by how much, which a shape
+                that simply appeared would not. The scale is fixed so the two
+                profiles stay comparable. */}
+            <RadarChart data={data} domain={[0, 100]}>
+              <RadarChart.Grid />
+              <RadarChart.Axis />
+              <RadarChart.Series dataKey="score" colorIndex={1} showDots />
+            </RadarChart>
+          </View>
+          <Frame.Section className="px-4 py-3">
+            <Tabs value={period} onValueChange={setPeriod} defaultValue="q3">
+              <Tabs.List>
+                {RADAR_PERIODS.map((entry) => (
+                  <Tabs.Trigger key={entry.value} value={entry.value}>
+                    {entry.label}
+                  </Tabs.Trigger>
+                ))}
+              </Tabs.List>
+            </Tabs>
+          </Frame.Section>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
+
+function RadarSingleVersion() {
+  return (
+    <ChartScreen>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Skills</Frame.Title>
+          <Frame.Action>Self-assessed</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="px-4 pb-4 pt-2">
+            {/* One profile, filled. The scale is fixed at 0–100 rather than
+                derived, because a shape only means anything against a known
+                maximum. */}
+            <RadarChart data={RADAR_SKILLS} domain={[0, 100]}>
+              <RadarChart.Grid />
+              <RadarChart.Axis />
+              <RadarChart.Series dataKey="score" colorIndex={1} showDots />
+            </RadarChart>
+          </View>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
+
+function RadarComparisonVersion() {
+  return (
+    <ChartScreen>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>You vs the team</Frame.Title>
+          <Frame.Action>This quarter</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="px-4 pb-4 pt-2">
+            {/* Two profiles over each other. Only the first is filled — two
+                translucent fills make a third colour that means nothing. */}
+            <RadarChart data={RADAR_PROFILE} domain={[0, 100]}>
+              <RadarChart.Grid />
+              <RadarChart.Axis />
+              <RadarChart.Series dataKey="you" colorIndex={1} />
+              <RadarChart.Series dataKey="team" colorIndex={2} fillOpacity={0} />
+              <RadarChart.Legend />
+            </RadarChart>
+          </View>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
+
+function RadarOutlineVersion() {
+  return (
+    <ChartScreen>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Coverage</Frame.Title>
+          <Frame.Action>Circular rings</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="px-4 pb-4 pt-2">
+            {/* Circular rings and no fill — for reading a value off a spoke
+                rather than comparing two outlines. */}
+            <RadarChart data={RADAR_PROFILE} domain={[0, 100]}>
+              <RadarChart.Header title="Weakest axis" value="Cost" caption="48 of 100" />
+              <RadarChart.Grid circular rings={5} />
+              <RadarChart.Axis fontSize={10} />
+              <RadarChart.Series
+                dataKey="you"
+                colorIndex={3}
+                fillOpacity={0}
+                strokeWidth={2.5}
+                showDots
+              />
+            </RadarChart>
+          </View>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
+
+function KpiDefaultVersion() {
+  return (
+    <ChartScreen>
+      {/* Label, number and change on the left; a fixed sparkline column on
+          the right, so the shapes line up down the edge of the stack whatever
+          length the labels are. In a frame, with the rows divided by
+          hairlines — three readings of one thing, not three loose cards. */}
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Overview</Frame.Title>
+          <Frame.Action>Last 30 days</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <Frame.Section className={KPI_ROW}>
+            <KpiChart surface={false} colorIndex={1}>
+              <KpiChart.Content layout="inline">
+                <KpiChart.Stat>
+                  <KpiChart.Title>Total Revenue</KpiChart.Title>
+                  <KpiChart.Value>$317,904</KpiChart.Value>
+                  <KpiChart.Trend value={7.8} caption="last 30d" />
+                </KpiChart.Stat>
+                <KpiChart.Chart
+                  data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])}
+                  dataKey="v"
+                  inline
+                />
+              </KpiChart.Content>
+            </KpiChart>
+          </Frame.Section>
+
+          {/* A fall in bounce rate is the good news, so the change is green
+              even though the number is negative. */}
+          <Frame.Section className={KPI_ROW}>
+            <KpiChart surface={false} colorIndex={3} goodDirection="down">
+              <KpiChart.Content layout="inline">
+                <KpiChart.Stat>
+                  <KpiChart.Title>Bounce Rate</KpiChart.Title>
+                  <KpiChart.Value>37.6%</KpiChart.Value>
+                  <KpiChart.Trend value={-8.4} caption="vs last 7d" />
+                </KpiChart.Stat>
+                <KpiChart.Chart
+                  data={spark([88, 85, 73, 76, 64, 59, 61, 48, 39])}
+                  dataKey="v"
+                  inline
+                />
+              </KpiChart.Content>
+            </KpiChart>
+          </Frame.Section>
+
+          <Frame.Section className={KPI_ROW}>
+            <KpiChart surface={false} colorIndex={2}>
+              <KpiChart.Content layout="inline">
+                <KpiChart.Stat>
+                  <KpiChart.Title>New Customers</KpiChart.Title>
+                  <KpiChart.Value>2,867</KpiChart.Value>
+                  <KpiChart.Trend value={4.2} caption="this week" />
+                </KpiChart.Stat>
+                <KpiChart.Chart
+                  data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
+                  dataKey="v"
+                  inline
+                />
+              </KpiChart.Content>
+            </KpiChart>
+          </Frame.Section>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
+
+function KpiSparklineVersion() {
   return (
     <ChartScreen>
       <View className="w-full gap-3">
-        <KpiCard
-          label="Total Revenue"
-          value="$317,904"
-          delta="+7.8% last 30d"
-          colorIndex={1}
-          data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])}
-        />
-        <KpiCard
-          label="Bounce Rate"
-          value="37.6%"
-          delta="-8.4% vs last 7d"
-          colorIndex={3}
-          data={spark([88, 85, 73, 76, 64, 59, 61, 48, 39])}
-        />
-        <KpiCard
-          label="New Customers"
-          value="2,867"
-          delta="+4.2% this week"
-          colorIndex={2}
-          data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
-        />
+        <KpiChart colorIndex={1}>
+          <KpiChart.Header>
+            <KpiChart.Title>Total revenue</KpiChart.Title>
+          </KpiChart.Header>
+          <KpiChart.Content>
+            <KpiChart.Value>$317,904</KpiChart.Value>
+            <KpiChart.Trend value={7.8} />
+          </KpiChart.Content>
+          <KpiChart.Chart data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])} dataKey="v" />
+        </KpiChart>
+
+        {/* The chart beside the number instead of under it, for a denser row. */}
+        <KpiChart colorIndex={2}>
+          <KpiChart.Header>
+            <KpiChart.Title>New customers</KpiChart.Title>
+          </KpiChart.Header>
+          <KpiChart.Content layout="inline">
+            <View>
+              <KpiChart.Value>2,867</KpiChart.Value>
+              <KpiChart.Trend value={4.2} className="mt-1 self-start" />
+            </View>
+            <KpiChart.Chart
+              data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
+              dataKey="v"
+              inline
+            />
+          </KpiChart.Content>
+        </KpiChart>
+      </View>
+    </ChartScreen>
+  );
+}
+
+function KpiProgressVersion() {
+  return (
+    <ChartScreen>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Targets</Frame.Title>
+          <Frame.Action>Q3</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <Frame.Section className={KPI_ROW}>
+            <KpiChart surface={false} colorIndex={4}>
+              <KpiChart.Header>
+                <KpiChart.Icon tone="good">
+                  <Target size={16} color="#27a644" />
+                </KpiChart.Icon>
+                <KpiChart.Title>Quarterly revenue</KpiChart.Title>
+                <KpiChart.Trend value={7.8} variant="badge" />
+              </KpiChart.Header>
+              <KpiChart.Value>$317k</KpiChart.Value>
+              <KpiChart.Progress value={73} label="of $435k" showValueLabel />
+              <KpiChart.Footer>
+                <Text size="xs" muted>
+                  41 days left in the quarter
+                </Text>
+              </KpiChart.Footer>
+            </KpiChart>
+          </Frame.Section>
+          <Frame.Section className={KPI_ROW}>
+            <KpiChart surface={false} colorIndex={2}>
+              <KpiChart.Header>
+                <KpiChart.Icon>
+                  <DollarSign size={16} color="#8a8f98" />
+                </KpiChart.Icon>
+                <KpiChart.Title>New customers</KpiChart.Title>
+                <KpiChart.Trend value={4.2} variant="badge" />
+              </KpiChart.Header>
+              <KpiChart.Value>2,867</KpiChart.Value>
+              <KpiChart.Progress value={57} label="of 5,000" showValueLabel />
+            </KpiChart>
+          </Frame.Section>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
+
+function KpiGroupVersion() {
+  return (
+    <ChartScreen>
+      <View className="w-full gap-6">
+        {/* Three metrics as one panel: a rule between them rather than space
+            around them, so they read as one thing with three parts. */}
+        <Surface variant="secondary" padding="lg">
+          <KpiChart.Group>
+            <KpiChart surface={false} colorIndex={1}>
+              <KpiChart.Title>Revenue</KpiChart.Title>
+              <KpiChart.Value className="text-2xl">$317k</KpiChart.Value>
+              <KpiChart.Trend value={7.8} className="self-start" />
+            </KpiChart>
+            <KpiChart surface={false} colorIndex={2}>
+              <KpiChart.Title>Orders</KpiChart.Title>
+              <KpiChart.Value className="text-2xl">2,867</KpiChart.Value>
+              <KpiChart.Trend value={4.2} className="self-start" />
+            </KpiChart>
+            <KpiChart surface={false} colorIndex={3} goodDirection="down">
+              <KpiChart.Title>Refunds</KpiChart.Title>
+              <KpiChart.Value className="text-2xl">1.4%</KpiChart.Value>
+              <KpiChart.Trend value={-0.3} className="self-start" />
+            </KpiChart>
+          </KpiChart.Group>
+        </Surface>
+
+        <Surface variant="secondary" padding="lg">
+          <KpiChart.Group orientation="vertical">
+            <KpiChart surface={false} colorIndex={1}>
+              <KpiChart.Content layout="inline">
+                <View>
+                  <KpiChart.Title>Sessions</KpiChart.Title>
+                  <KpiChart.Value className="text-2xl">48,201</KpiChart.Value>
+                </View>
+                <KpiChart.Trend value={12.4} />
+              </KpiChart.Content>
+            </KpiChart>
+            <KpiChart surface={false} colorIndex={3} goodDirection="down">
+              <KpiChart.Content layout="inline">
+                <View>
+                  <KpiChart.Title>Latency p95</KpiChart.Title>
+                  <KpiChart.Value className="text-2xl">312ms</KpiChart.Value>
+                </View>
+                <KpiChart.Trend value={-6.1} />
+              </KpiChart.Content>
+            </KpiChart>
+          </KpiChart.Group>
+        </Surface>
       </View>
     </ChartScreen>
   );
@@ -4187,6 +4509,47 @@ function ColorPickerDemo() {
   );
 }
 
+function ColorPickerCardVersion() {
+  const [color, setColor] = useState('#3b82f6');
+
+  return (
+    <View className="w-full gap-3 p-4">
+      {/* The strip names what is being picked and prints what it currently is;
+          the readout under the square names the track below it. Together they
+          turn a set of controls into a labelled panel. */}
+      <ColorPicker value={color} onValueChange={setColor}>
+        <ColorPicker.Field label="Accent" />
+        <Surface variant="secondary" padding="sm" className="gap-3 rounded-2xl">
+          <ColorPicker.Area height={280} />
+          <ColorPicker.Channel channel="hue" />
+          <ColorPicker.Hue />
+        </Surface>
+      </ColorPicker>
+    </View>
+  );
+}
+
+function ColorPickerWheelVersion() {
+  const [color, setColor] = useState('#f97316');
+
+  return (
+    <View className="w-full gap-4 p-4">
+      {/* Hue runs around and saturation runs out, so brightness has nowhere
+          left to go on the disc and takes a track of its own. */}
+      <ColorPicker value={color} onValueChange={setColor}>
+        <ColorPicker.Field label="Brand" />
+        <View className="py-2">
+          <ColorPicker.Wheel />
+        </View>
+        <ColorPicker.Channel channel="brightness" />
+        <ColorPicker.Brightness />
+        <ColorPicker.Channel channel="alpha" />
+        <ColorPicker.Alpha />
+      </ColorPicker>
+    </View>
+  );
+}
+
 function ColorPickerAlphaDemo() {
   const [color, setColor] = useState('rgba(59, 130, 246, 0.6)');
 
@@ -4588,6 +4951,44 @@ function KeepMountedTabsDemo() {
           </Card.Content>
         </Card>
       </Tabs.Content>
+    </Tabs>
+  );
+}
+
+function SwipeableTabsDemo() {
+  const days = [
+    { value: 'mon', label: 'Mon', body: 'Two runs and a swim. 14km total.' },
+    { value: 'tue', label: 'Tue', body: 'Rest day. Nothing logged.' },
+    { value: 'wed', label: 'Wed', body: 'One long ride, 62km, out to the coast.' },
+    { value: 'thu', label: 'Thu', body: 'Intervals — 8 × 400m on the track.' },
+  ];
+
+  return (
+    // Drag sideways on a card to move to the next day. The indicator follows,
+    // and the row scrolls the tab into view when it lands off the end.
+    <Tabs swipeable defaultValue="mon" className="w-full">
+      <Tabs.List scrollable>
+        {days.map((day) => (
+          <Tabs.Trigger key={day.value} value={day.value}>
+            {day.label}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+      {days.map((day) => (
+        <Tabs.Content key={day.value} value={day.value}>
+          <Card>
+            <Card.Content className="gap-2 p-4">
+              <Text weight="medium">{day.label}</Text>
+              <Text size="sm" muted>
+                {day.body}
+              </Text>
+              <Text size="xs" muted className="mt-2">
+                Swipe left or right on this card.
+              </Text>
+            </Card.Content>
+          </Card>
+        </Tabs.Content>
+      ))}
     </Tabs>
   );
 }
@@ -9955,6 +10356,22 @@ export const COMPONENTS: ComponentEntry[] = [
     name: 'ColorPicker',
     summary: 'A colour chosen by dragging, not by typing',
     demos: [
+      {
+        label: 'Accent card',
+        id: 'card',
+        fullPage: true,
+        description:
+          'A labelled strip over the square, and a readout naming the track under it.',
+        render: () => <ColorPickerCardVersion />,
+      },
+      {
+        label: 'Wheel',
+        id: 'wheel',
+        fullPage: true,
+        description:
+          'Hue around and saturation out, with brightness on a track of its own.',
+        render: () => <ColorPickerWheelVersion />,
+      },
       { label: 'Interactive', render: () => <ColorPickerDemo /> },
       { label: 'With opacity', render: () => <ColorPickerAlphaDemo /> },
       { label: 'Presets first', render: () => <ColorPickerSwatchesDemo /> },
@@ -11201,12 +11618,77 @@ export const COMPONENTS: ComponentEntry[] = [
         description: 'Four series in the chart-token ramp.',
         render: () => <ChartMultiVersion />,
       },
+    ],
+  },
+  {
+    slug: 'kpi-chart',
+    name: 'KpiChart',
+    summary: 'One number, and what it is doing',
+    layout: 'pager',
+    demos: [
       {
-        label: 'KPI sparklines',
-        id: 'kpi',
+        label: 'Default',
+        id: 'default',
         fullPage: true,
-        description: 'Compact lines beside a headline number — no grid, no axis.',
-        render: () => <ChartKpiVersion />,
+        description: 'Number and change on the left, the shape it made on the right.',
+        render: () => <KpiDefaultVersion />,
+      },
+      {
+        label: 'With a sparkline',
+        id: 'sparkline',
+        fullPage: true,
+        description: 'The shape under the number, and the shape beside it.',
+        render: () => <KpiSparklineVersion />,
+      },
+      {
+        label: 'With progress',
+        id: 'progress',
+        fullPage: true,
+        description: 'Targets, with an icon, a badge and a bar under each number.',
+        render: () => <KpiProgressVersion />,
+      },
+      {
+        label: 'Several as one panel',
+        id: 'group',
+        fullPage: true,
+        description: 'Divided by a rule rather than spaced apart, in a row and a column.',
+        render: () => <KpiGroupVersion />,
+      },
+    ],
+  },
+  {
+    slug: 'radar-chart',
+    name: 'RadarChart',
+    summary: 'Several measures of one thing, on one shape',
+    layout: 'pager',
+    demos: [
+      {
+        label: 'One profile',
+        id: 'single',
+        fullPage: true,
+        description: 'A filled polygon on polygonal rings, with a dot at each vertex.',
+        render: () => <RadarSingleVersion />,
+      },
+      {
+        label: 'Two compared',
+        id: 'comparison',
+        fullPage: true,
+        description: 'Two profiles over each other, only the first of them filled.',
+        render: () => <RadarComparisonVersion />,
+      },
+      {
+        label: 'Outline on circles',
+        id: 'outline',
+        fullPage: true,
+        description: 'Circular rings and no fill, for reading a value off a spoke.',
+        render: () => <RadarOutlineVersion />,
+      },
+      {
+        label: 'Switching the data',
+        id: 'switch',
+        fullPage: true,
+        description: 'Tabs under the chart change what it draws, and the outline travels.',
+        render: () => <RadarSwitchVersion />,
       },
     ],
   },
@@ -11445,7 +11927,7 @@ export const COMPONENTS: ComponentEntry[] = [
                 {/* The surface is a layer, so it can be replaced. A BlurView or
                     a gradient goes in the same slot. */}
                 <Menu.Background className="bg-overlay">
-                  <View className="flex-1 bg-info/10" />
+                  <View className="flex-1 bg-foreground/5" />
                 </Menu.Background>
                 <Menu.Item icon={<PencilIcon size={16} />}>Rename</Menu.Item>
                 <Menu.Item icon={<ShareNodesIcon size={16} />}>Share</Menu.Item>
@@ -13433,6 +13915,10 @@ export const COMPONENTS: ComponentEntry[] = [
       {
         label: 'Keeping panels mounted',
         render: () => <KeepMountedTabsDemo />,
+      },
+      {
+        label: 'Swiping between panels',
+        render: () => <SwipeableTabsDemo />,
       },
     ],
   },

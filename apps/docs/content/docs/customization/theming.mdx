@@ -10,7 +10,7 @@ just its colour.
 | Family | Light | Dark | Character |
 | --- | --- | --- | --- |
 | **Panel** | `light` | `dark` | The default — neutral greys, moderate corners |
-| **Moon** | `moon` | `moon-dark` | Monochrome and high-contrast, electric blue accent, tight corners |
+| **Moon** | `moon` | `moon-dark` | Near-black canvas, lavender accent, elevation by hairline |
 | **Grass** | `grass` | `grass-dark` | Green accent on warm neutrals, soft generous corners |
 
 What each theme actually sets is the token list on [Colors](/docs/customization/colors). This
@@ -36,6 +36,44 @@ in step.
   rewrites the generated CSS from the theme list it started with, so a newly added theme appears
   to be registered and still is not.
 </Callout>
+
+### Where the tokens come from
+
+The themes live in a stylesheet, and which one you import depends on how you installed the
+library. Both give you the same six themes; they differ only in whether the file is yours to
+edit.
+
+<Tabs items={['Package', 'CLI']}>
+  <Tab value="Package">
+    Installed as a dependency, the stylesheet is read straight out of it. Upgrading the package
+    upgrades the themes, and there is no copy of them to fall behind.
+
+    ```css title="global.css"
+    @import 'tailwindcss';
+    @import 'uniwind';
+    @import 'panelui-native/theme.css';
+
+    @source './node_modules/panelui-native/src';
+    ```
+  </Tab>
+  <Tab value="CLI">
+    `panelui-cli init` copies `theme.css` into your project instead, next to the components it
+    copies. It is a file you own, so edit the tokens in place — but an upgrade will not touch it,
+    which is the trade.
+
+    ```css title="global.css"
+    @import 'tailwindcss';
+    @import 'uniwind';
+    @import './theme.css';
+
+    @source './components';
+    ```
+  </Tab>
+</Tabs>
+
+The `@source` line is not optional in either shape. It tells Tailwind where to look for the class
+names the components use; without it the components render with no styles at all, which reads
+like a broken install rather than a missing line.
 
 ## Switching at runtime
 
@@ -76,23 +114,103 @@ colour for both modes — enough to build a theme picker without hardcoding anyt
 ))}
 ```
 
+### A theme picker, in full
+
+Nothing here is specific to the themes that ship — a family you write yourself appears in the row
+as soon as it is in `PANEL_THEMES`, because the row is generated from that list rather than from a
+hardcoded three.
+
+```tsx
+import { Pressable, View } from 'react-native';
+import { PANEL_THEMES, Text, useThemeMode } from 'panelui-native';
+
+export function ThemePicker() {
+  const { family, mode, setFamily, toggleMode } = useThemeMode();
+
+  return (
+    <View className="gap-4">
+      <View className="flex-row gap-3">
+        {PANEL_THEMES.map((entry) => {
+          const selected = entry.id === family.id;
+          return (
+            <Pressable
+              key={entry.id}
+              accessibilityRole="radio"
+              accessibilityState={{ selected }}
+              accessibilityLabel={entry.name}
+              onPress={() => setFamily(entry.id)}
+              className="items-center gap-2"
+            >
+              <View
+                className={selected ? 'rounded-full border-2 border-ring p-0.5' : 'p-0.5'}
+              >
+                <View
+                  className="h-9 w-9 rounded-full border border-border"
+                  style={{ backgroundColor: entry.swatch[mode === 'dark' ? 1 : 0] }}
+                />
+              </View>
+              <Text size="sm" muted={!selected}>
+                {entry.name}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <Button variant="outline" onPress={toggleMode}>
+        {mode === 'dark' ? 'Light' : 'Dark'}
+      </Button>
+    </View>
+  );
+}
+```
+
+`setFamily` keeps the current mode and `toggleMode` keeps the current family, so the two controls
+are genuinely independent: someone in Moon dark who taps the sun lands in Moon light, not in the
+default light.
+
+### Reading a token in JavaScript
+
+Tailwind classes cover styling. Anything that takes a colour as a *value* — an SVG stroke, a
+React Navigation theme, a status bar, a native control — needs the resolved string, and
+`useCSSVariable` gives it. It re-resolves on a theme change, so the value follows the theme
+without a re-render of the tree above it.
+
+```tsx
+import { useCSSVariable } from 'uniwind';
+
+const border = useCSSVariable('--color-border');
+
+// It is `undefined` until the stylesheet has been read, so a component that
+// paints on the first frame needs a fallback rather than a crash.
+<Svg><Path stroke={typeof border === 'string' ? border : 'rgba(128,128,128,0.2)'} /></Svg>
+```
+
+That guard is the idiom throughout the library — every chart resolves its grid and series colours
+this way.
+
 ## Radius
 
 `--radius-xs` through `--radius-3xl` are themed, and that is what gives each family its shape.
 Use `rounded-md`, `rounded-xl` and friends as normal — the values move with the theme.
 
-| Token | Panel |
-| --- | --- |
-| `--radius-xs` | 4px |
-| `--radius-sm` | 6px |
-| `--radius-md` | 8px |
-| `--radius-lg` | 10px |
-| `--radius-xl` | 14px |
-| `--radius-2xl` | 16px |
-| `--radius-3xl` | 24px |
+| Token | Panel | Moon | Grass |
+| --- | --- | --- | --- |
+| `--radius-xs` | 4px | 4px | 6px |
+| `--radius-sm` | 6px | 6px | 8px |
+| `--radius-md` | 8px | 8px | 12px |
+| `--radius-lg` | 10px | 12px | 14px |
+| `--radius-xl` | 14px | 16px | 18px |
+| `--radius-2xl` | 16px | 24px | 22px |
+| `--radius-3xl` | 24px | 32px | 28px |
 
-Moon tightens the scale and Grass opens it out. Override them the way you would override a
-colour, and every rounded corner in the library follows.
+The three scales diverge at the top, not the bottom. A 4px and a 6px corner are nearly the same
+corner; a 16px and a 32px one are two different products. So a badge looks much the same in every
+family and a sheet does not, which is the right way round — the shapes that carry a family's
+character are the large ones.
+
+Override them the way you would override a colour, and every rounded corner in the library
+follows.
 
 ## Writing a theme
 
@@ -121,6 +239,112 @@ rather than the token.
 ```
 
 Then add `sunset` to `extraThemes` and restart the server.
+
+### The whole block
+
+All sixty tokens, in the order the built-in themes use them, so this can be pasted and edited
+rather than assembled. Values here are the light half of a warm neutral family; the dark half is
+the same list with the same names.
+
+```css title="global.css"
+@variant sunset {
+  /* surfaces, and what sits on them */
+  --color-background: #fffaf5;
+  --color-foreground: #2b1a12;
+  --color-card: #ffffff;
+  --color-card-foreground: #2b1a12;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #2b1a12;
+  --color-overlay: #ffffff;
+  --color-overlay-foreground: #2b1a12;
+
+  /* actions */
+  --color-primary: #c2410c;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: rgba(43, 26, 18, 0.06);
+  --color-secondary-foreground: #2b1a12;
+  --color-muted: rgba(43, 26, 18, 0.06);
+  --color-muted-foreground: #7c6659;
+  --color-accent: rgba(43, 26, 18, 0.07);
+  --color-accent-foreground: #2b1a12;
+
+  /* status */
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #b91c1c;
+  --color-info: #2563eb;
+  --color-info-foreground: #1d4ed8;
+  --color-success: #16a34a;
+  --color-success-foreground: #15803d;
+  --color-warning: #d97706;
+  --color-warning-foreground: #b45309;
+
+  /* lines */
+  --color-border: rgba(43, 26, 18, 0.1);
+  --color-input: rgba(43, 26, 18, 0.14);
+  --color-ring: #c2410c;
+
+  /* elevation */
+  --color-surface: #fdf5ec;
+  --color-surface-secondary: #faeee1;
+  --color-surface-tertiary: #f5e5d3;
+  --color-skeleton: rgba(43, 26, 18, 0.08);
+
+  /* tinted fills — `soft` is the stronger of the pair */
+  --color-info-soft: rgba(37, 99, 235, 0.1);
+  --color-info-subtle: rgba(37, 99, 235, 0.07);
+  --color-success-soft: rgba(22, 163, 74, 0.1);
+  --color-success-subtle: rgba(22, 163, 74, 0.07);
+  --color-warning-soft: rgba(217, 119, 6, 0.12);
+  --color-warning-subtle: rgba(217, 119, 6, 0.08);
+  --color-destructive-soft: rgba(220, 38, 38, 0.1);
+  --color-destructive-subtle: rgba(220, 38, 38, 0.07);
+
+  /* syntax */
+  --color-code-keyword: #9333ea;
+  --color-code-string: #15803d;
+  --color-code-number: #1d4ed8;
+  --color-code-comment: #9a8578;
+  --color-code-function: #7c3aed;
+  --color-code-property: #b45309;
+  --color-code-punctuation: #7c6659;
+  --color-code-inserted: #15803d;
+  --color-code-deleted: #b91c1c;
+
+  /* chart series, in order of prominence */
+  --color-chart-1: #c2410c;
+  --color-chart-2: #ea580c;
+  --color-chart-3: #f59e0b;
+  --color-chart-4: #16a34a;
+  --color-chart-5: #2563eb;
+
+  /* shape */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 28px;
+}
+```
+
+### Two things worth getting right
+
+**Ship both halves.** Uniwind gives `prefers-color-scheme` handling to `light` and `dark` and to
+nothing else, so a family with only one half cannot follow the device and breaks the sun toggle
+for anyone who lands in it — see [why there are two hooks](#why-there-are-two-hooks). Write
+`sunset` and `sunset-dark`, and add both to `extraThemes`.
+
+**Values must be static.** These are read by React Native, which cannot evaluate `color-mix()` or
+`--alpha()` at runtime. Precompute to a literal `rgba()` or hex. The same tokens on the web can
+keep the expressions.
+
+<Callout type="info">
+  Only the four remaining values are worth thinking about for long. Pick `--color-background`,
+  `--color-foreground`, `--color-primary` and `--color-border` first, then derive the rest from
+  them — the surfaces are steps away from the background, the tinted fills are their status
+  colour at 7–12% alpha, and `muted-foreground` is whatever clears 4.5:1 against the background.
+</Callout>
 
 <Callout type="warn" title="Two rules Uniwind enforces">
   **Every theme must define the same variables.** Adding a token to one theme without adding it

@@ -57,9 +57,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
-import { CheckIcon, ChevronRightIcon } from '../../icons';
+import { Check, ChevronLeft, ChevronRight, Circle } from 'lucide-react-native';
 import { Text, textChildren } from '../../primitives/text';
-import { useDirectionSign } from '../../hooks/use-direction';
+import { useDirection, useDirectionSign } from '../../hooks/use-direction';
 import { selectionTick } from '../../utils/haptics';
 import { cn } from '../../utils/cn';
 import { Popover, type PopoverContentProps, type PopoverProps } from '../popover';
@@ -78,6 +78,19 @@ function useTint(variable: string): string | undefined {
   const raw = useCSSVariable(variable);
   return typeof raw === 'string' ? raw : undefined;
 }
+
+/**
+ * The colour an indicator falls back to before the stylesheet has been read.
+ *
+ * The glyphs here are drawn by a general-purpose icon set rather than by this
+ * library's own, and that set defaults an unset colour to `currentColor` —
+ * which React Native cannot resolve and refuses to paint. A neutral mid grey
+ * is legible on either a light or a dark panel for the frame or two it lasts.
+ */
+const INDICATOR_FALLBACK = '#737373';
+
+/** Icon stroke, matched to the weight this library's own glyphs are drawn at. */
+const INDICATOR_STROKE = 2;
 
 /** How long a row takes to light up under a finger, and to let go again. */
 const PRESS_IN_DURATION = 90;
@@ -544,7 +557,17 @@ function MenuCheckboxItem({
       // An empty column rather than no column: the mark comes and goes as the
       // row is toggled, and a row whose label steps sideways each time reads
       // as a different row rather than the same one in a new state.
-      icon={checked ? <CheckIcon size={16} color={tint} /> : <MenuIndicatorSpacer />}
+      icon={
+        checked ? (
+          <Check
+            size={16}
+            strokeWidth={INDICATOR_STROKE}
+            color={tint ?? INDICATOR_FALLBACK}
+          />
+        ) : (
+          <MenuIndicatorSpacer />
+        )
+      }
       onSelect={() => {
         onCheckedChange?.(!checked);
         onSelect?.();
@@ -616,9 +639,22 @@ function MenuRadioItem({
       icon={
         selected ? (
           indicator === 'dot' ? (
-            <View className="h-2 w-2 rounded-full bg-popover-foreground" />
+            // A filled circle, not a bare View: the dot is an indicator like
+            // the tick beside it, and drawing one of the two as a rounded box
+            // is what makes them optically different sizes at the same nominal
+            // one.
+            <Circle
+              size={8}
+              strokeWidth={INDICATOR_STROKE}
+              color={tint ?? INDICATOR_FALLBACK}
+              fill={tint ?? INDICATOR_FALLBACK}
+            />
           ) : (
-            <CheckIcon size={16} color={tint} />
+            <Check
+              size={16}
+              strokeWidth={INDICATOR_STROKE}
+              color={tint ?? INDICATOR_FALLBACK}
+            />
           )
         ) : (
           // Held open, so the options stay in one column as the choice moves
@@ -690,8 +726,13 @@ export interface MenuSubTriggerProps
 function MenuSubTrigger({ className, children, icon, onSelect, ...props }: MenuSubTriggerProps) {
   const { open, toggle } = useMenuSub('Menu.SubTrigger');
   const sign = useDirectionSign();
+  const direction = useDirection();
   const reducedMotion = useReducedMotion();
   const chevronTint = useTint('--color-muted-foreground');
+  // The glyph mirrors by being the other glyph. A `scaleX` flip would work on
+  // a chevron, but it also flips the rotation below with it — and this one is
+  // already being rotated.
+  const Chevron = direction === 'rtl' ? ChevronLeft : ChevronRight;
   const progress = useSharedValue(open ? 1 : 0);
 
   useEffect(() => {
@@ -717,7 +758,11 @@ function MenuSubTrigger({ className, children, icon, onSelect, ...props }: MenuS
       className={className}
       trailing={
         <Animated.View style={chevronStyle}>
-          <ChevronRightIcon size={16} color={chevronTint} />
+          <Chevron
+            size={16}
+            strokeWidth={INDICATOR_STROKE}
+            color={chevronTint ?? INDICATOR_FALLBACK}
+          />
         </Animated.View>
       }
       onSelect={() => {

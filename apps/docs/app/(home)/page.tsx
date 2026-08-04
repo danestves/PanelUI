@@ -100,7 +100,11 @@ const COMPONENT_COUNT = COMPONENTS.length;
 
 const THEMES = [
   { name: 'Panel', body: 'The default — neutral greys, moderate corners.', swatch: '#262626' },
-  { name: 'Moon', body: 'Monochrome and high-contrast, with tight corners.', swatch: '#0070f3' },
+  {
+    name: 'Moon',
+    body: 'A near-black canvas, a lavender accent, and elevation carried by hairlines.',
+    swatch: '#5e6ad2',
+  },
   { name: 'Grass', body: 'Green accent on warm neutrals, soft generous corners.', swatch: '#24b47e' },
 ];
 

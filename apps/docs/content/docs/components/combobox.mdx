@@ -1,6 +1,7 @@
 ---
 title: Combobox
 description: A text field that filters a list of options as you type.
+status: updated
 ---
 
 A text field that filters a list of options as you type. The difference from Select is where the typing happens: a Select is a button that opens a list, and its optional filter lives inside that list once it is open. A Combobox is the field itself — you are already typing when the options appear, which is what you want when the value is something you know the name of rather than something you expect to recognise by scrolling.
@@ -257,6 +258,18 @@ Pass `filter={false}` when the options come from a server that is doing the matc
 ### Values it does not know about
 
 `allowCustomValue` lets the typed text become the value when it matches no option, committed on return. That turns the list into a set of suggestions rather than the set of legal answers, which is what a tag field is.
+
+### Inside a scroll view
+
+An `overlay` list is portalled out of the tree, so a screen-level scroll view is not one of its ancestors and taps on the options reach them directly.
+
+An `inline` list is not. It stays where it is rendered, which means the scroll view around it decides what happens to a tap that lands while the keyboard is up — and the default is to spend it dismissing the keyboard. Set `keyboardShouldPersistTaps="handled"` on that scroll view, or the first tap on an option will be swallowed and the option will only take on the second.
+
+```tsx
+<ScrollView keyboardShouldPersistTaps="handled">
+  <Combobox presentation="inline" … />
+</ScrollView>
+```
 
 ### Accessibility
 

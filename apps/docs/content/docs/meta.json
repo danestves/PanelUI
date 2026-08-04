@@ -4,6 +4,7 @@
     "index",
     "installation",
     "cli",
+    "templates",
     "native",
     "performance",
     "[llms.txt](/llms.txt)",
