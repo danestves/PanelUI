@@ -103,6 +103,14 @@
       "addedIn": "0.13.0"
     }
   ],
+  "color-picker": [
+    "ColorPicker",
+    "A colour chosen by dragging — a saturation square, a hue scale, and opacity.",
+    "react native color picker",
+    {
+      "addedIn": "0.42.0"
+    }
+  ],
   "date-picker": [
     "DatePicker",
     "A calendar behind a button.",
