@@ -309,7 +309,7 @@ export {
   type CalendarSelection,
   type DateRange,
 } from './components/calendar';
-export { Card, type CardProps, type CardWashProps } from './components/card';
+export { Card, type CardProps } from './components/card';
 export { Checkbox, type CheckboxProps } from './components/checkbox';
 export {
   Chip,
