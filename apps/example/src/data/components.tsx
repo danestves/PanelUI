@@ -21,6 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { router } from 'expo-router';
+import { DollarSign, Target } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Image,
@@ -84,6 +85,7 @@ import {
   ImageIcon,
   Item,
   KeyboardAvoider,
+  KpiChart,
   Label,
   ListChecksIcon,
   LockIcon,
@@ -392,43 +394,6 @@ function ChartScreen({ children }: { children: ReactNode }) {
   return <View className="flex-1 justify-center px-4">{children}</View>;
 }
 
-/** A KPI stat card: number and delta on the left, a sparkline on the right. */
-function KpiCard({
-  label,
-  value,
-  delta,
-  data,
-  colorIndex,
-}: {
-  label: string;
-  value: string;
-  delta: string;
-  data: { t: string; v: number }[];
-  colorIndex: 1 | 2 | 3;
-}) {
-  const up = !delta.startsWith('-');
-  return (
-    <Surface variant="secondary" padding="lg" className="w-full flex-row items-center gap-4">
-      <View className="flex-1">
-        <Text size="sm" muted>
-          {label}
-        </Text>
-        <Text size="2xl" weight="bold" className="mt-1">
-          {value}
-        </Text>
-        <Text size="sm" className={up ? 'mt-1 text-success' : 'mt-1 text-destructive'}>
-          {delta}
-        </Text>
-      </View>
-      <View className="h-14 w-32">
-        <LineChart data={data} xDataKey="t" compact aspectRatio={2.3}>
-          <LineChart.Line dataKey="v" colorIndex={colorIndex} strokeWidth={2} />
-        </LineChart>
-      </View>
-    </Surface>
-  );
-}
-
 /* --- Versions ------------------------------------------------------------- */
 
 function ChartBasicVersion() {
@@ -638,31 +603,168 @@ function ChartMultiVersion() {
   );
 }
 
-function ChartKpiVersion() {
+function KpiDefaultVersion() {
   return (
     <ChartScreen>
       <View className="w-full gap-3">
-        <KpiCard
-          label="Total Revenue"
-          value="$317,904"
-          delta="+7.8% last 30d"
-          colorIndex={1}
-          data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])}
-        />
-        <KpiCard
-          label="Bounce Rate"
-          value="37.6%"
-          delta="-8.4% vs last 7d"
-          colorIndex={3}
-          data={spark([88, 85, 73, 76, 64, 59, 61, 48, 39])}
-        />
-        <KpiCard
-          label="New Customers"
-          value="2,867"
-          delta="+4.2% this week"
-          colorIndex={2}
-          data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
-        />
+        <KpiChart colorIndex={1}>
+          <KpiChart.Header>
+            <KpiChart.Icon>
+              <DollarSign size={16} color="#6b7280" />
+            </KpiChart.Icon>
+            <KpiChart.Title>Total revenue</KpiChart.Title>
+          </KpiChart.Header>
+          <KpiChart.Content>
+            <KpiChart.Value>$317,904</KpiChart.Value>
+            <KpiChart.Trend value={7.8} />
+          </KpiChart.Content>
+          <KpiChart.Footer>
+            <Text size="xs" muted>
+              Compared with the previous 30 days
+            </Text>
+          </KpiChart.Footer>
+        </KpiChart>
+
+        {/* A fall in bounce rate is the good news, so the badge is green even
+            though the number is negative. */}
+        <KpiChart colorIndex={3} goodDirection="down">
+          <KpiChart.Header>
+            <KpiChart.Title>Bounce rate</KpiChart.Title>
+          </KpiChart.Header>
+          <KpiChart.Content>
+            <KpiChart.Value>37.6%</KpiChart.Value>
+            <KpiChart.Trend value={-8.4} />
+          </KpiChart.Content>
+        </KpiChart>
+      </View>
+    </ChartScreen>
+  );
+}
+
+function KpiSparklineVersion() {
+  return (
+    <ChartScreen>
+      <View className="w-full gap-3">
+        <KpiChart colorIndex={1}>
+          <KpiChart.Header>
+            <KpiChart.Title>Total revenue</KpiChart.Title>
+          </KpiChart.Header>
+          <KpiChart.Content>
+            <KpiChart.Value>$317,904</KpiChart.Value>
+            <KpiChart.Trend value={7.8} />
+          </KpiChart.Content>
+          <KpiChart.Chart data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])} dataKey="v" />
+        </KpiChart>
+
+        {/* The chart beside the number instead of under it, for a denser row. */}
+        <KpiChart colorIndex={2}>
+          <KpiChart.Header>
+            <KpiChart.Title>New customers</KpiChart.Title>
+          </KpiChart.Header>
+          <KpiChart.Content layout="inline">
+            <View>
+              <KpiChart.Value>2,867</KpiChart.Value>
+              <KpiChart.Trend value={4.2} className="mt-1 self-start" />
+            </View>
+            <KpiChart.Chart
+              data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
+              dataKey="v"
+              inline
+            />
+          </KpiChart.Content>
+        </KpiChart>
+      </View>
+    </ChartScreen>
+  );
+}
+
+function KpiProgressVersion() {
+  return (
+    <ChartScreen>
+      <View className="w-full gap-3">
+        <KpiChart colorIndex={4}>
+          <KpiChart.Header>
+            <KpiChart.Icon tone="good">
+              <Target size={16} color="#16a34a" />
+            </KpiChart.Icon>
+            <KpiChart.Title>Quarterly target</KpiChart.Title>
+          </KpiChart.Header>
+          <KpiChart.Content>
+            <KpiChart.Value>$317k</KpiChart.Value>
+            <KpiChart.Trend value={7.8} />
+          </KpiChart.Content>
+          <KpiChart.Progress value={73} label="of $435k" showValueLabel />
+          <KpiChart.Separator />
+          <KpiChart.Footer>
+            <Text size="xs" muted>
+              41 days left in the quarter
+            </Text>
+          </KpiChart.Footer>
+        </KpiChart>
+
+        {/* A metric that is neither good nor bad going up. */}
+        <KpiChart colorIndex={5} goodDirection="none">
+          <KpiChart.Header>
+            <KpiChart.Title>Headcount</KpiChart.Title>
+          </KpiChart.Header>
+          <KpiChart.Content>
+            <KpiChart.Value>184</KpiChart.Value>
+            <KpiChart.Trend value={2.2} />
+          </KpiChart.Content>
+        </KpiChart>
+      </View>
+    </ChartScreen>
+  );
+}
+
+function KpiGroupVersion() {
+  return (
+    <ChartScreen>
+      <View className="w-full gap-6">
+        {/* Three metrics as one panel: a rule between them rather than space
+            around them, so they read as one thing with three parts. */}
+        <Surface variant="secondary" padding="lg">
+          <KpiChart.Group>
+            <KpiChart surface={false} colorIndex={1}>
+              <KpiChart.Title>Revenue</KpiChart.Title>
+              <KpiChart.Value className="text-2xl">$317k</KpiChart.Value>
+              <KpiChart.Trend value={7.8} className="self-start" />
+            </KpiChart>
+            <KpiChart surface={false} colorIndex={2}>
+              <KpiChart.Title>Orders</KpiChart.Title>
+              <KpiChart.Value className="text-2xl">2,867</KpiChart.Value>
+              <KpiChart.Trend value={4.2} className="self-start" />
+            </KpiChart>
+            <KpiChart surface={false} colorIndex={3} goodDirection="down">
+              <KpiChart.Title>Refunds</KpiChart.Title>
+              <KpiChart.Value className="text-2xl">1.4%</KpiChart.Value>
+              <KpiChart.Trend value={-0.3} className="self-start" />
+            </KpiChart>
+          </KpiChart.Group>
+        </Surface>
+
+        <Surface variant="secondary" padding="lg">
+          <KpiChart.Group orientation="vertical">
+            <KpiChart surface={false} colorIndex={1}>
+              <KpiChart.Content layout="inline">
+                <View>
+                  <KpiChart.Title>Sessions</KpiChart.Title>
+                  <KpiChart.Value className="text-2xl">48,201</KpiChart.Value>
+                </View>
+                <KpiChart.Trend value={12.4} />
+              </KpiChart.Content>
+            </KpiChart>
+            <KpiChart surface={false} colorIndex={3} goodDirection="down">
+              <KpiChart.Content layout="inline">
+                <View>
+                  <KpiChart.Title>Latency p95</KpiChart.Title>
+                  <KpiChart.Value className="text-2xl">312ms</KpiChart.Value>
+                </View>
+                <KpiChart.Trend value={-6.1} />
+              </KpiChart.Content>
+            </KpiChart>
+          </KpiChart.Group>
+        </Surface>
       </View>
     </ChartScreen>
   );
@@ -11296,12 +11398,41 @@ export const COMPONENTS: ComponentEntry[] = [
         description: 'Four series in the chart-token ramp.',
         render: () => <ChartMultiVersion />,
       },
+    ],
+  },
+  {
+    slug: 'kpi-chart',
+    name: 'KpiChart',
+    summary: 'One number, and what it is doing',
+    layout: 'pager',
+    demos: [
       {
-        label: 'KPI sparklines',
-        id: 'kpi',
+        label: 'Default',
+        id: 'default',
         fullPage: true,
-        description: 'Compact lines beside a headline number — no grid, no axis.',
-        render: () => <ChartKpiVersion />,
+        description: 'The number, the movement, and what the movement means.',
+        render: () => <KpiDefaultVersion />,
+      },
+      {
+        label: 'With a sparkline',
+        id: 'sparkline',
+        fullPage: true,
+        description: 'The shape under the number, and the shape beside it.',
+        render: () => <KpiSparklineVersion />,
+      },
+      {
+        label: 'With progress',
+        id: 'progress',
+        fullPage: true,
+        description: 'A metric with a target, and one that is neither good nor bad.',
+        render: () => <KpiProgressVersion />,
+      },
+      {
+        label: 'Several as one panel',
+        id: 'group',
+        fullPage: true,
+        description: 'Divided by a rule rather than spaced apart, in a row and a column.',
+        render: () => <KpiGroupVersion />,
       },
     ],
   },

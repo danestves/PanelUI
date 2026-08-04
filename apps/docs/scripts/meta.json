@@ -247,7 +247,10 @@
   "line-chart": [
     "LineChart",
     "Animated time series, drawn on the UI thread.",
-    "react native line chart"
+    "react native line chart",
+    {
+      "updatedIn": "0.43.0"
+    }
   ],
   "loader": [
     "Loader",
@@ -616,6 +619,14 @@
       "addedIn": "0.34.0",
       "alpha": true,
       "updatedIn": "0.41.0"
+    }
+  ],
+  "kpi-chart": [
+    "KpiChart",
+    "One number, what it is doing, and the shape it made getting there.",
+    "react native kpi metric stat card",
+    {
+      "addedIn": "0.43.0"
     }
   ]
 }
