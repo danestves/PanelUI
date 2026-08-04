@@ -571,7 +571,8 @@
     "A text field that filters a list of options as you type.",
     "react native combobox autocomplete",
     {
-      "addedIn": "0.37.0"
+      "addedIn": "0.37.0",
+      "updatedIn": "0.43.0"
     }
   ],
   "plan": [
