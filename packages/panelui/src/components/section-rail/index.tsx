@@ -62,6 +62,14 @@ const BAR_LEVEL_STEP = 4;
 const BAR_ACTIVE_EXTRA = 8;
 /** Indent per level in the expanded panel. */
 const ITEM_INDENT = 12;
+/**
+ * How wide the panel may grow by default. A row spends at least 40pt on
+ * indent, padding and the panel's own border before any text, so a tighter cap
+ * than this truncates ordinary section titles on a narrow phone.
+ */
+const PANEL_MAX_WIDTH = '78%' as const;
+/** …and a floor, so a rail with one short section still opens a readable panel. */
+const PANEL_MIN_WIDTH = 200;
 
 export type SectionRailPlacement = 'left' | 'right';
 export type SectionRailAlign = 'center' | 'top' | 'bottom';
@@ -327,6 +335,13 @@ function SectionRailBar({ className, value, level = 0 }: SectionRailBarProps) {
 
 export interface SectionRailContentProps extends ViewProps {
   className?: string;
+  /**
+   * How wide the panel may grow, as a fraction of the screen or a point width.
+   * The default leaves room for the rail and the edge it is anchored to; raise
+   * it for a screen whose section titles are long enough to be worth wrapping
+   * rather than truncating.
+   */
+  maxWidth?: number | `${number}%`;
   children: ReactNode;
 }
 
@@ -334,7 +349,12 @@ export interface SectionRailContentProps extends ViewProps {
  * The expanded panel. Mounted through a portal so it floats over everything,
  * and unmounted after it fades out rather than left behind hidden.
  */
-function SectionRailContent({ className, children, ...props }: SectionRailContentProps) {
+function SectionRailContent({
+  className,
+  maxWidth = PANEL_MAX_WIDTH,
+  children,
+  ...props
+}: SectionRailContentProps) {
   const context = useSectionRail('SectionRail.Content');
   const { open, close, placement, align } = context;
   const insets = useSafeAreaInsets();
@@ -366,7 +386,7 @@ function SectionRailContent({ className, children, ...props }: SectionRailConten
           }}
           pointerEvents="box-none"
         >
-          <SectionRailPanel className={className} {...props}>
+          <SectionRailPanel className={className} maxWidth={maxWidth} {...props}>
             {children}
           </SectionRailPanel>
         </Animated.View>
@@ -380,7 +400,12 @@ function SectionRailContent({ className, children, ...props }: SectionRailConten
  * view as the entering/exiting fade — Reanimated will let a layout animation
  * overwrite an animated style that touches the same property.
  */
-function SectionRailPanel({ className, children, ...props }: SectionRailContentProps) {
+function SectionRailPanel({
+  className,
+  maxWidth = PANEL_MAX_WIDTH,
+  children,
+  ...props
+}: SectionRailContentProps) {
   const { placement } = useSectionRail('SectionRail.Content');
   const slide = useSharedValue(0);
 
@@ -398,10 +423,14 @@ function SectionRailPanel({ className, children, ...props }: SectionRailContentP
 
   return (
     <Animated.View
-      style={style}
+      // The cap is a style rather than a class so it can be a prop: a screen
+      // whose sections are called "Shipping and returns" needs more room than
+      // one whose sections are called "Specs", and a `className` override would
+      // be fighting the class already here rather than replacing it.
+      style={[style, { maxWidth, minWidth: PANEL_MIN_WIDTH }]}
       accessibilityRole="menu"
       className={cn(
-        'max-w-[60%] gap-0.5 rounded-2xl border border-border bg-popover p-2 shadow-lg',
+        'gap-0.5 rounded-2xl border border-border bg-popover p-2 shadow-lg',
         className
       )}
       {...props}
@@ -432,9 +461,11 @@ function SectionRailItem({ className, value, level = 0, children }: SectionRailI
       accessibilityRole="menuitem"
       accessibilityState={{ selected }}
       onPress={() => onValueChange?.(value)}
-      style={{ paddingLeft: 12 + level * ITEM_INDENT }}
+      // `paddingStart`, not `paddingLeft`: the indent has to fall on the same
+      // side as the bar it belongs to, which is the trailing edge under RTL.
+      style={{ paddingStart: 12 + level * ITEM_INDENT }}
       className={cn(
-        'rounded-lg py-2 pe-3 active:bg-accent',
+        'rounded-lg py-2 pe-2.5 active:bg-accent',
         selected && 'bg-accent',
         className
       )}
@@ -443,7 +474,10 @@ function SectionRailItem({ className, value, level = 0, children }: SectionRailI
         size="sm"
         weight={selected ? 'medium' : 'normal'}
         className={selected ? 'text-foreground' : 'text-muted-foreground'}
-        numberOfLines={1}
+        // Two lines rather than one: a long section title is worth wrapping,
+        // and an ellipsis in a navigator hides the very word that tells you
+        // which section you are about to jump to.
+        numberOfLines={2}
       >
         {children}
       </Text>

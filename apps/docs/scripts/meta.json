@@ -365,7 +365,8 @@
     "Floating section navigator for a long screen.",
     "react native table of contents",
     {
-      "addedIn": "0.11.0"
+      "addedIn": "0.11.0",
+      "updatedIn": "0.43.0"
     }
   ],
   "select": [
