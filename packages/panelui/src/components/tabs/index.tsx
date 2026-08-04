@@ -40,6 +40,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  type SharedValue,
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
 import { useDirectionSign } from '../../hooks/use-direction';
@@ -73,6 +74,20 @@ const SWIPE_VELOCITY = 500;
 const SWIPE_FOLLOW = 0.32;
 /** …and a fraction of that again at the ends, where there is nowhere to go. */
 const SWIPE_FOLLOW_AT_END = 0.1;
+
+/**
+ * How far off its resting place the arriving panel starts, as a share of the
+ * panel's width.
+ *
+ * A swipe that commits should not look like a swipe that was cancelled. Both
+ * end with a panel settling at rest, and the only thing that distinguishes
+ * them is which side it settled *from* — so the incoming panel picks up
+ * roughly where the outgoing one was let go, on the far side, and travels in.
+ */
+const SWIPE_ENTER = 0.3;
+
+/** The arriving panel is springier than the one being dragged back into place. */
+const ENTER_SPRING = { damping: 22, stiffness: 240, mass: 0.6 } as const;
 
 export type TabsVariant = 'segmented' | 'underline' | 'pill';
 
@@ -153,6 +168,18 @@ interface TabsContextValue {
   setScrollable: (scrollable: boolean) => void;
   keepMounted: boolean;
   swipeable: boolean;
+  /**
+   * How far the visible panel is displaced from its resting place, in points.
+   *
+   * It lives on the root rather than on a panel because the outgoing and
+   * incoming panels are different views, and a value that belonged to either
+   * of them would be destroyed at the moment of the handover. Shared, the
+   * displacement survives it: the panel being let go and the panel arriving
+   * are one continuous movement, drawn by two views in turn.
+   */
+  swipeOffset: SharedValue<number>;
+  /** The visible panel's measured width, which the throw above is a share of. */
+  panelWidth: SharedValue<number>;
 }
 
 const TabsContext = createContext<TabsContextValue | null>(null);
@@ -208,6 +235,9 @@ function TabsRoot({
   const [internalValue, setInternalValue] = useState(defaultValue);
   const [layouts, setLayouts] = useState<Record<string, TabLayout>>({});
   const [tabs, setTabs] = useState<string[]>([]);
+  const swipeOffset = useSharedValue(0);
+  const panelWidth = useSharedValue(0);
+  const sign = useDirectionSign();
   // Published by the List rather than the root, because it is the List that
   // decides whether it scrolls — but the Triggers below it need to know.
   const [scrollable, setScrollable] = useState(false);
@@ -216,10 +246,37 @@ function TabsRoot({
 
   const setValue = useCallback(
     (next: string) => {
+      /*
+       * The arriving panel starts on the side it is arriving from, and travels
+       * in. Done here rather than in the panel because only the root knows
+       * both the tab being left and the tab being gone to — a panel knows
+       * which one it is, not which one it replaced — and because a tab changed
+       * by pressing a trigger deserves the same movement as one changed by
+       * swiping to it. Without it the two read as different features.
+       */
+      if (swipeable) {
+        const from = tabs.indexOf(resolvedValue);
+        const to = tabs.indexOf(next);
+        if (from !== -1 && to !== -1 && from !== to) {
+          swipeOffset.value =
+            (to > from ? 1 : -1) * sign * panelWidth.value * SWIPE_ENTER;
+          swipeOffset.value = withSpring(0, ENTER_SPRING);
+        }
+      }
+
       if (!isControlled) setInternalValue(next);
       onValueChange?.(next);
     },
-    [isControlled, onValueChange]
+    [
+      isControlled,
+      onValueChange,
+      swipeable,
+      tabs,
+      resolvedValue,
+      sign,
+      swipeOffset,
+      panelWidth,
+    ]
   );
 
   const registerLayout = useCallback((tab: string, layout: TabLayout) => {
@@ -258,6 +315,8 @@ function TabsRoot({
       setScrollable,
       keepMounted,
       swipeable,
+      swipeOffset,
+      panelWidth,
     }),
     [
       resolvedValue,
@@ -271,6 +330,8 @@ function TabsRoot({
       scrollable,
       keepMounted,
       swipeable,
+      swipeOffset,
+      panelWidth,
     ]
   );
 
@@ -449,11 +510,14 @@ export interface TabsContentProps extends ViewProps {
 function TabsContent({ className, value, children, style, ...props }: TabsContentProps) {
   const context = useTabs('Tabs.Content');
   const active = context.value === value;
-  const { tabs, setValue, swipeable } = context;
+  const {
+    tabs,
+    setValue,
+    swipeable,
+    swipeOffset: offset,
+    panelWidth: width,
+  } = context;
   const sign = useDirectionSign();
-
-  const offset = useSharedValue(0);
-  const width = useSharedValue(0);
   // Read on the UI thread while the finger is down, so the resistance at the
   // ends is known without a round trip to JavaScript.
   const index = useSharedValue(0);
@@ -496,18 +560,29 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
           const speed = event.velocityX * sign;
           const far = Math.abs(travel) > width.value * SWIPE_DISTANCE_RATIO;
           const fast = Math.abs(speed) > SWIPE_VELOCITY;
+          const atEnd =
+            (travel > 0 && index.value === 0) ||
+            (travel < 0 && index.value >= count.value - 1);
 
-          if (far || fast) {
+          if ((far || fast) && !atEnd) {
             // Distance and speed can disagree — a flick back the way it came
             // reads as a cancel — so the direction comes from whichever of the
             // two crossed its threshold, speed first.
-            const forward = fast ? speed < 0 : travel < 0;
-            runOnJS(step)(forward ? 1 : -1);
+            //
+            // No spring back to zero here: `setValue` on the root throws the
+            // displacement across to the side the next panel arrives from, and
+            // springing to rest first would undo it a frame before it happens.
+            runOnJS(step)(fast ? (speed < 0 ? 1 : -1) : travel < 0 ? 1 : -1);
+            return;
           }
+
+          // Nothing changed hands, so this panel simply comes back.
           offset.value = withSpring(0, SPRING);
         })
-        .onFinalize(() => {
-          offset.value = withSpring(0, SPRING);
+        .onFinalize((_event, success) => {
+          // A cancelled gesture never reaches `onEnd`, and would otherwise
+          // leave the panel wherever the finger abandoned it.
+          if (!success) offset.value = withSpring(0, SPRING);
         }),
     [sign, step, offset, width, index, count]
   );
@@ -526,15 +601,27 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
    */
   const panel = (
     <Animated.View
-      // Only worth animating when the panel is genuinely arriving. A kept
-      // panel is already there; fading it in every time it is revealed would
-      // undo the point of keeping it.
-      entering={context.keepMounted ? undefined : FadeIn.duration(150)}
+      /*
+       * Only worth animating when the panel is genuinely arriving. A kept
+       * panel is already there; fading it in every time it is revealed would
+       * undo the point of keeping it.
+       *
+       * And never alongside the swipe: an entering layout animation owns the
+       * view's style for the length of it and will overwrite an animated style
+       * touching the same view, so the fade would eat the slide. When panels
+       * move, the movement is the entrance.
+       */
+      entering={context.keepMounted || swipeable ? undefined : FadeIn.duration(150)}
       onLayout={(event: LayoutChangeEvent) => {
-        // The threshold is a share of the panel, not of the screen: a tab set
-        // inside a card is narrower than the window, and a quarter of the
+        // The thresholds are a share of the panel, not of the screen: a tab
+        // set inside a card is narrower than the window, and a quarter of the
         // window would be most of the way across it.
-        width.value = event.nativeEvent.layout.width;
+        //
+        // Zero is ignored. Every panel reports into the same value, and a
+        // kept-mounted one is `display: none` — it measures as nothing, and
+        // letting it say so would leave the visible panel with no width.
+        const measured = event.nativeEvent.layout.width;
+        if (measured > 0) width.value = measured;
       }}
       style={[!active && { display: 'none' }, swipeable && followStyle, style]}
       pointerEvents={active ? 'auto' : 'none'}

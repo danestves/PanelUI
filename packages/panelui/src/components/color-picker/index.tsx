@@ -108,10 +108,13 @@ const HUE_NUDGE = 10;
 const colorPickerVariants = tv({
   slots: {
     root: 'w-full gap-3',
-    area: 'overflow-hidden rounded-xl border border-border',
+    area: 'overflow-hidden rounded-2xl border border-border',
+    wheel: 'overflow-hidden rounded-full border border-border',
     // Both thumbs are a white ring around a fill of the colour under them, so
     // the ring reads against the dark end of the square as well as the light.
-    thumb: 'absolute start-0 top-0 rounded-full border-[3px] border-white shadow-md',
+    // Two points, not three: the ring is there to separate the fill from what
+    // is behind it, and any more of it starts hiding the colour it is showing.
+    thumb: 'absolute start-0 top-0 rounded-full border-2 border-white shadow-md',
     thumbFill: 'flex-1 rounded-full',
     track: 'w-full overflow-hidden rounded-full border border-border',
     swatches: 'flex-row flex-wrap items-center gap-2',
@@ -120,6 +123,17 @@ const colorPickerVariants = tv({
     preview: 'flex-row items-center gap-3',
     previewSwatch: 'overflow-hidden rounded-full border border-border',
     previewValue: 'text-sm font-medium text-foreground',
+    // The header strip: a name on the leading edge, the value and a swatch on
+    // the trailing one.
+    field: 'w-full flex-row items-center gap-3 rounded-2xl bg-surface px-4 py-3',
+    fieldLabel: 'flex-1 text-base font-medium text-foreground',
+    fieldValue: 'text-base font-normal text-muted-foreground',
+    fieldSwatch: 'overflow-hidden rounded-full border border-border',
+    // The readout above a track — the number on one side, what it names on the
+    // other.
+    channel: 'w-full flex-row items-center justify-between gap-3',
+    channelValue: 'text-base font-normal text-muted-foreground',
+    channelLabel: 'text-base font-medium text-foreground',
   },
   variants: {
     size: {
@@ -141,8 +155,12 @@ export type ColorPickerSize = NonNullable<ColorPickerVariantProps['size']>;
 
 /** Height of the saturation/brightness square, per size. */
 const AREA_HEIGHT: Record<ColorPickerSize, number> = { sm: 140, md: 180, lg: 220 };
-/** Height of a channel track, per size. */
-const TRACK_HEIGHT: Record<ColorPickerSize, number> = { sm: 14, md: 18, lg: 22 };
+/**
+ * Height of a channel track, per size. Tall enough that the knob sits *in* the
+ * track rather than on top of a hairline — a slider whose thumb overhangs a
+ * thin rule reads as a control laid over a decoration.
+ */
+const TRACK_HEIGHT: Record<ColorPickerSize, number> = { sm: 16, md: 20, lg: 24 };
 /** Thumb diameter on a channel track — wider than the track, so it reads as a knob. */
 const TRACK_THUMB: Record<ColorPickerSize, number> = { sm: 22, md: 26, lg: 30 };
 /** Thumb diameter on the square. */

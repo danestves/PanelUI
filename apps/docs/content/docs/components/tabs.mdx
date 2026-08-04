@@ -266,7 +266,9 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ### Swiping
 
-A swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was. The panel follows about a third of the finger's travel and springs back; it does not track one-to-one, because there is no next panel behind it to reveal. Only one panel is mounted at a time unless `keepMounted` is set, and even then the others are laid out nowhere.
+A swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was. The panel follows about a third of the finger's travel; it does not track one-to-one, because there is no next panel behind it to reveal. Only one panel is mounted at a time unless `keepMounted` is set.
+
+On release the arriving panel starts on the side it is arriving from and springs into place, so a swipe that took reads differently from one that was cancelled — both end at rest, and the only thing that separates them is which side they settled from. A tab changed by pressing a trigger moves the same way, in the direction the tab sits: with `swipeable` set, the panels move rather than cross-fade, and one feature should not look like two.
 
 The order swiped through is the order the triggers are **written** in, not the order they appear on screen. Under RTL those differ — the first tab is the rightmost — and a swipe towards the start of the reading direction goes to the previous tab in both.
 
