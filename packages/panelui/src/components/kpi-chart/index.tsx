@@ -68,7 +68,7 @@ const kpiVariants = tv({
     value: 'text-2xl font-bold text-foreground',
     /** The stacked title/value/trend block, tight enough to read as one thing. */
     stat: 'flex-1 gap-1',
-    trend: 'flex-row items-center gap-1 self-center',
+    trend: 'flex-row items-center gap-1',
     trendLabel: 'font-medium',
     footer: 'flex-row items-center gap-2',
     separator: 'h-px w-full bg-border',
@@ -150,6 +150,18 @@ const KpiChartContext = createContext<KpiChartContextValue | null>(null);
  * different heights, which is exactly what a row of metrics must not be.
  */
 const KpiHeaderContext = createContext(false);
+
+/**
+ * Whether the part rendering is inside `KpiChart.Stat`.
+ *
+ * `Trend` is the one that cares. `self-center` on a flex child means "centre
+ * on the cross axis", and the cross axis is not the same axis in the two
+ * places a trend is put: in a row it is vertical, which is what a badge on the
+ * end of a header wants, and in the stat column it is *horizontal* — which
+ * indents the change by half whatever width it did not use, so two rows with
+ * captions of different lengths start at two different places.
+ */
+const KpiStatContext = createContext(false);
 
 function useKpiChart(part: string): KpiChartContextValue {
   const context = useContext(KpiChartContext);
@@ -284,9 +296,11 @@ export interface KpiChartStatProps extends ViewProps {
 function KpiChartStat({ className, children, ...props }: KpiChartStatProps) {
   const { stat } = kpiVariants();
   return (
-    <View className={stat({ className })} {...props}>
-      {children}
-    </View>
+    <KpiStatContext.Provider value={true}>
+      <View className={stat({ className })} {...props}>
+        {children}
+      </View>
+    </KpiStatContext.Provider>
   );
 }
 
@@ -413,6 +427,9 @@ function KpiChartTrend({
         ? 'good'
         : 'bad';
 
+  // Down a column it starts at the leading edge, level with the title and the
+  // number above it; across a row it centres against them — see `KpiStatContext`.
+  const inStat = useContext(KpiStatContext);
   const { trend, trendLabel } = kpiVariants({ tone, trendVariant: variant });
 
   // The arrow's colour, resolved so it matches the label beside it. An icon
@@ -433,7 +450,7 @@ function KpiChartTrend({
 
   return (
     <View
-      className={trend({ className })}
+      className={trend({ className: cn(inStat ? 'self-start' : 'self-center', className) })}
       accessible
       accessibilityLabel={`${flat ? 'No change' : rising ? 'Up' : 'Down'} ${Math.abs(
         value
