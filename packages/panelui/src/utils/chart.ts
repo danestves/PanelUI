@@ -342,6 +342,58 @@ export function arcPath(
   return `M${x1},${y1}A${radius},${radius} 0 ${sweep > 0.5 ? 1 : 0} 1 ${x2},${y2}`;
 }
 
+/**
+ * A point at `radius` from the centre, `turn` of the way round.
+ *
+ * Turns from twelve o'clock, clockwise, matching `arcPath` — a radar's axes
+ * and a ring's arcs are described the same way, and two polar conventions in
+ * one file is how a spoke ends up a quarter turn from its own label.
+ */
+export function polarPoint(
+  cx: number,
+  cy: number,
+  radius: number,
+  turn: number
+): { x: number; y: number } {
+  'worklet';
+  const angle = (turn - 0.25) * Math.PI * 2;
+  return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+}
+
+/**
+ * A closed polygon through evenly spaced spokes.
+ *
+ * `values` are already scaled to 0…1 — the fraction of the full radius each
+ * axis reaches. A `null` is a missing reading rather than a zero: a radar with
+ * a hole punched through to its centre says "none of this" when what happened
+ * was "we did not measure this", so the gap is bridged by its neighbours and
+ * the shape stays a shape.
+ */
+export function radarPath(
+  values: (number | null)[],
+  cx: number,
+  cy: number,
+  radius: number
+): string {
+  'worklet';
+  const count = values.length;
+  if (count < 3 || radius <= 0) return '';
+
+  let path = '';
+  let drawn = 0;
+
+  for (let index = 0; index < count; index += 1) {
+    const value = values[index];
+    if (value === null || value === undefined) continue;
+    const point = polarPoint(cx, cy, radius * value, index / count);
+    path += `${drawn === 0 ? 'M' : 'L'}${point.x},${point.y}`;
+    drawn += 1;
+  }
+
+  if (drawn < 3) return '';
+  return `${path}Z`;
+}
+
 /** The numbers of one column, with anything unusable left as a gap. */
 export function columnValues(
   data: Record<string, unknown>[],

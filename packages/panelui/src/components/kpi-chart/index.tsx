@@ -40,8 +40,19 @@ import { Surface } from '../surface';
 
 /** Height of the sparkline when nothing else is said. */
 const CHART_HEIGHT = 56;
-/** …and how wide it is when it sits beside the value rather than under it. */
-const INLINE_CHART_WIDTH = 108;
+/**
+ * …and its box beside the number, which is fixed rather than shared out.
+ *
+ * A column of stat cards has labels of every length — "Revenue" over "New
+ * customers" — and a chart taking whatever the text leaves would be a
+ * different width on every card in the stack. Fixed, the shapes line up down
+ * the right-hand edge and the eye can compare them, which is the only reason
+ * they are there.
+ */
+const INLINE_CHART_WIDTH = 128;
+const INLINE_CHART_HEIGHT = 56;
+/** Width ÷ height of the sparkline in that box. */
+const INLINE_ASPECT = 2.3;
 
 /** The arrow in a trend badge. Small — it is a direction, not an icon. */
 const TREND_ICON = 12;
@@ -49,14 +60,16 @@ const TREND_STROKE = 2.5;
 
 const kpiVariants = tv({
   slots: {
-    root: 'w-full gap-3',
+    root: 'w-full gap-2',
     header: 'flex-row items-center gap-2',
     icon: 'h-8 w-8 items-center justify-center rounded-xl',
-    title: 'flex-1 text-sm font-medium text-muted-foreground',
+    title: 'text-sm font-medium text-muted-foreground',
     content: 'flex-row items-end justify-between gap-3',
-    value: 'text-3xl font-bold text-foreground',
-    trend: 'flex-row items-center gap-1 self-center rounded-full px-2 py-0.5',
-    trendLabel: 'text-xs font-medium',
+    value: 'text-2xl font-bold text-foreground',
+    /** The stacked title/value/trend block, tight enough to read as one thing. */
+    stat: 'flex-1 gap-1',
+    trend: 'flex-row items-center gap-1 self-center',
+    trendLabel: 'font-medium',
     footer: 'flex-row items-center gap-2',
     separator: 'h-px w-full bg-border',
     group: 'w-full',
@@ -68,37 +81,44 @@ const kpiVariants = tv({
      * applied — so `good` is green whether it went up or down.
      */
     tone: {
-      good: {
-        trend: 'bg-success-subtle',
-        trendLabel: 'text-success-foreground',
-        icon: 'bg-success-subtle',
-      },
-      bad: {
-        trend: 'bg-destructive-subtle',
-        trendLabel: 'text-destructive-foreground',
-        icon: 'bg-destructive-subtle',
-      },
-      flat: {
-        trend: 'bg-muted',
-        trendLabel: 'text-muted-foreground',
-        icon: 'bg-muted',
-      },
-      neutral: {
-        trend: 'bg-muted',
-        trendLabel: 'text-muted-foreground',
-        icon: 'bg-secondary',
-      },
+      good: { trendLabel: 'text-success', icon: 'bg-success-subtle' },
+      bad: { trendLabel: 'text-destructive', icon: 'bg-destructive-subtle' },
+      flat: { trendLabel: 'text-muted-foreground', icon: 'bg-muted' },
+      neutral: { trendLabel: 'text-muted-foreground', icon: 'bg-secondary' },
+    },
+    /**
+     * How the change is drawn.
+     *
+     * `text` is the quieter of the two and the default: a line of colour under
+     * the number, which is where the eye already is. `badge` puts a pill round
+     * it for a card dense enough that a bare line of colour gets lost.
+     */
+    trendVariant: {
+      text: { trend: 'gap-0.5', trendLabel: 'text-sm' },
+      badge: { trend: 'rounded-full px-2 py-0.5', trendLabel: 'text-xs' },
     },
     /** Where the chart sits relative to the number. */
     layout: {
       /** Under everything, full width. The chart is a footnote. */
       below: {},
-      /** Beside the value, in a fixed column. For a dense row of cards. */
-      inline: { content: 'items-center' },
+      /**
+       * Beside the number: the text takes the width and the chart takes a
+       * fixed column on the end. The number is read first and the shape
+       * second, which is the order they sit in — so this is the shape a stat
+       * card wants, and `below` is for a chart big enough to be looked at.
+       */
+      inline: { content: 'items-center gap-4' },
     },
   },
+  compoundVariants: [
+    { trendVariant: 'badge', tone: 'good', class: { trend: 'bg-success-subtle' } },
+    { trendVariant: 'badge', tone: 'bad', class: { trend: 'bg-destructive-subtle' } },
+    { trendVariant: 'badge', tone: 'flat', class: { trend: 'bg-muted' } },
+    { trendVariant: 'badge', tone: 'neutral', class: { trend: 'bg-muted' } },
+  ],
   defaultVariants: {
     tone: 'neutral',
+    trendVariant: 'text',
     layout: 'below',
   },
 });
@@ -117,6 +137,19 @@ interface KpiChartContextValue {
 }
 
 const KpiChartContext = createContext<KpiChartContextValue | null>(null);
+
+/**
+ * Whether the part rendering is inside `KpiChart.Header`.
+ *
+ * `Title` is the only part that cares, and it cares a great deal. In a header
+ * it is one of several things on a row and has to take the space between the
+ * icon and the actions, so it grows. Written straight into the card it is one
+ * of several things in a *column* — and a growing child of a column absorbs
+ * the leftover height, which pushes the number under it down by however much
+ * that card had spare. Three of those side by side is three numbers at three
+ * different heights, which is exactly what a row of metrics must not be.
+ */
+const KpiHeaderContext = createContext(false);
 
 function useKpiChart(part: string): KpiChartContextValue {
   const context = useContext(KpiChartContext);
@@ -186,9 +219,11 @@ export interface KpiChartHeaderProps extends ViewProps {
 function KpiChartHeader({ className, children, ...props }: KpiChartHeaderProps) {
   const { header } = kpiVariants();
   return (
-    <View className={header({ className })} {...props}>
-      {children}
-    </View>
+    <KpiHeaderContext.Provider value={true}>
+      <View className={header({ className })} {...props}>
+        {children}
+      </View>
+    </KpiHeaderContext.Provider>
   );
 }
 
@@ -223,10 +258,35 @@ export interface KpiChartTitleProps {
 /** The metric's name. Quiet on purpose — the value is the thing being read. */
 function KpiChartTitle({ className, children }: KpiChartTitleProps) {
   const { title } = kpiVariants();
+  // Grows across a header row; never down a column — see `KpiHeaderContext`.
+  const inHeader = useContext(KpiHeaderContext);
   return (
-    <Text className={title({ className })} numberOfLines={1}>
+    <Text className={title({ className: cn(inHeader && 'flex-1', className) })} numberOfLines={1}>
       {children}
     </Text>
+  );
+}
+
+export interface KpiChartStatProps extends ViewProps {
+  className?: string;
+  children: ReactNode;
+}
+
+/**
+ * The stacked title / value / change block.
+ *
+ * Its own container rather than three loose children of the card, because the
+ * three belong together more tightly than they belong to whatever is above or
+ * below them — 4pt between the lines of one fact, and the card's own spacing
+ * between facts. It also takes the width in an `inline` row, leaving the chart
+ * its column on the end.
+ */
+function KpiChartStat({ className, children, ...props }: KpiChartStatProps) {
+  const { stat } = kpiVariants();
+  return (
+    <View className={stat({ className })} {...props}>
+      {children}
+    </View>
   );
 }
 
@@ -306,14 +366,22 @@ export interface KpiChartTrendProps extends Omit<ViewProps, 'children'> {
   format?: (value: number) => string;
   /** Overrides the card's own `goodDirection` for this one figure. */
   goodDirection?: KpiGoodDirection;
-  /** Anything after the number — "vs last week", a period name. */
+  /**
+   * `text` is a line of colour under the number — the default, and what a
+   * stat card usually wants. `badge` puts a pill round it, with an arrow, for
+   * a card busy enough that a bare line of colour is lost in it.
+   */
+  variant?: NonNullable<KpiVariantProps['trendVariant']>;
+  /** What it is being compared against — "last 30d", "vs last week". */
+  caption?: string;
+  /** Anything after the number, when a caption is not enough. */
   children?: ReactNode;
   /** Below which a movement counts as no movement. Defaults to `0`. */
   threshold?: number;
 }
 
 /**
- * The change, as a badge.
+ * The change.
  *
  * Colour comes from what the movement *means*, not from its sign: a fall in
  * churn is good news and is drawn as good news. That is the whole reason this
@@ -326,6 +394,8 @@ function KpiChartTrend({
   value,
   format,
   goodDirection,
+  variant = 'text',
+  caption,
   threshold = 0,
   children,
   ...props
@@ -343,12 +413,12 @@ function KpiChartTrend({
         ? 'good'
         : 'bad';
 
-  const { trend, trendLabel } = kpiVariants({ tone });
+  const { trend, trendLabel } = kpiVariants({ tone, trendVariant: variant });
 
-  // The badge's own label colour, resolved so the arrow beside it matches. An
-  // icon from outside this library does not inherit a text colour.
-  const goodTint = useCSSVariable('--color-success-foreground');
-  const badTint = useCSSVariable('--color-destructive-foreground');
+  // The arrow's colour, resolved so it matches the label beside it. An icon
+  // from outside this library does not inherit a text colour.
+  const goodTint = useCSSVariable('--color-success');
+  const badTint = useCSSVariable('--color-destructive');
   const mutedTint = useCSSVariable('--color-muted-foreground');
   const raw = tone === 'good' ? goodTint : tone === 'bad' ? badTint : mutedTint;
   const tint = typeof raw === 'string' ? raw : '#737373';
@@ -367,11 +437,21 @@ function KpiChartTrend({
       accessible
       accessibilityLabel={`${flat ? 'No change' : rising ? 'Up' : 'Down'} ${Math.abs(
         value
-      ).toFixed(1)} percent`}
+      ).toFixed(1)} percent${caption ? `, ${caption}` : ''}`}
       {...props}
     >
-      <Arrow size={TREND_ICON} strokeWidth={TREND_STROKE} color={tint} />
-      <Text className={trendLabel()}>{label}</Text>
+      {/* No arrow in `text`: the sign is already in front of the number, and
+          drawing both says the same thing twice in the same three points. */}
+      {variant === 'badge' ? (
+        <Arrow size={TREND_ICON} strokeWidth={TREND_STROKE} color={tint} />
+      ) : null}
+      <Text className={trendLabel()}>
+        {label}
+        {/* One Text, not two: a caption in its own element wraps onto its own
+            line the moment the card gets narrow, which reads as a second fact
+            rather than the rest of this one. */}
+        {caption ? <Text className="text-muted-foreground"> {caption}</Text> : null}
+      </Text>
       {children}
     </View>
   );
@@ -389,11 +469,18 @@ export interface KpiChartSparklineProps {
   dataKey: string;
   /** Overrides the card's `colorIndex`. */
   colorIndex?: SeriesColorIndex;
-  /** Fill under the line. On by default — the shape reads faster with one. */
+  /**
+   * Fill under the line. Off beside the number, where the chart is a gesture
+   * and a fill would make it a second block competing with the value; on when
+   * it has the full width under everything and is being looked at properly.
+   */
   filled?: boolean;
-  /** Height in points. Ignored when `inline` is set. */
+  /** Height in points. */
   height?: number;
-  /** Draw it in a fixed narrow column, for a chart sitting beside the value. */
+  /**
+   * Put it beside the number, taking whatever width the text leaves rather
+   * than a column of its own. Pair with `layout="inline"` on the content row.
+   */
   inline?: boolean;
   strokeWidth?: number;
 }
@@ -411,21 +498,26 @@ function KpiChartSparkline({
   data,
   dataKey,
   colorIndex,
-  filled = true,
-  height = CHART_HEIGHT,
+  filled,
+  height,
   inline = false,
   strokeWidth = 2,
 }: KpiChartSparklineProps) {
   const context = useKpiChart('KpiChart.Chart');
   const index = colorIndex ?? context.colorIndex;
+  const fill = filled ?? !inline;
 
   return (
     <View
       className={cn(inline ? '' : 'w-full', className)}
-      style={inline ? { width: INLINE_CHART_WIDTH, height } : { height }}
+      style={
+        inline
+          ? { width: INLINE_CHART_WIDTH, height: height ?? INLINE_CHART_HEIGHT }
+          : { height: height ?? CHART_HEIGHT }
+      }
     >
-      <LineChart data={data} compact aspectRatio={inline ? 2 : 4}>
-        {filled ? <LineChart.Area dataKey={dataKey} colorIndex={index} /> : null}
+      <LineChart data={data} compact aspectRatio={inline ? INLINE_ASPECT : 4}>
+        {fill ? <LineChart.Area dataKey={dataKey} colorIndex={index} /> : null}
         <LineChart.Line dataKey={dataKey} colorIndex={index} strokeWidth={strokeWidth} />
       </LineChart>
     </View>
@@ -535,7 +627,7 @@ const KpiChartGroup = forwardRef<View, KpiChartGroupProps>(function KpiChartGrou
       className={cn(
         group(),
         horizontal ? 'flex-row items-stretch' : 'flex-col',
-        separated ? '' : horizontal ? 'gap-3' : 'gap-3',
+        separated ? '' : 'gap-3',
         className
       )}
       {...props}
@@ -557,7 +649,13 @@ const KpiChartGroup = forwardRef<View, KpiChartGroupProps>(function KpiChartGrou
             <View
               className={cn(
                 groupSeparator(),
-                horizontal ? 'absolute bottom-0 start-0 top-0 w-px' : 'h-px w-full'
+                // Absolute on both axes, and on the *edge* of the padded box.
+                // In normal flow the rule lands after this cell's leading
+                // padding rather than on the boundary, which reads as a gap
+                // above the rule and none below it.
+                horizontal
+                  ? 'absolute bottom-0 start-0 top-0 w-px'
+                  : 'absolute end-0 start-0 top-0 h-px'
               )}
               // A rule between panels is decoration; announcing it puts an
               // unlabelled stop between two metrics.
@@ -576,6 +674,7 @@ KpiChartRoot.displayName = 'KpiChart';
 KpiChartHeader.displayName = 'KpiChart.Header';
 KpiChartIcon.displayName = 'KpiChart.Icon';
 KpiChartTitle.displayName = 'KpiChart.Title';
+KpiChartStat.displayName = 'KpiChart.Stat';
 KpiChartActions.displayName = 'KpiChart.Actions';
 KpiChartContent.displayName = 'KpiChart.Content';
 KpiChartValue.displayName = 'KpiChart.Value';
@@ -590,6 +689,7 @@ export const KpiChart = Object.assign(KpiChartRoot, {
   Header: KpiChartHeader,
   Icon: KpiChartIcon,
   Title: KpiChartTitle,
+  Stat: KpiChartStat,
   Actions: KpiChartActions,
   Content: KpiChartContent,
   Value: KpiChartValue,

@@ -444,6 +444,7 @@ export {
   type KpiChartHeaderProps,
   type KpiChartIconProps,
   type KpiChartTitleProps,
+  type KpiChartStatProps,
   type KpiChartActionsProps,
   type KpiChartContentProps,
   type KpiChartValueProps,
