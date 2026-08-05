@@ -3898,7 +3898,14 @@ function ScrollableSheetDemo() {
         <Button variant="outline">Open list</Button>
       </BottomSheet.Trigger>
       <BottomSheet.Content style={{ maxHeight: 420 }}>
-        <BottomSheet.Header title="Choose a country" />
+        {/* The heading names the behaviour, not just the task. Every version
+            of this sheet looks much the same from the outside, so a sheet that
+            only said "Choose a country" left nothing on screen to say which
+            one you had opened. */}
+        <BottomSheet.Header
+          title="Choose a country"
+          description="The list scrolls under the fixed heading. The sheet itself still drags."
+        />
         <BottomSheet.Body contentContainerClassName="pb-4">
           {COUNTRIES.map((country, index) => (
             <View
