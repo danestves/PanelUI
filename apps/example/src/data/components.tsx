@@ -45,6 +45,7 @@ import {
   Breadcrumb,
   Button,
   Calendar,
+  CalendarIcon,
   CodeBlock,
   Combobox,
   Card,
@@ -74,6 +75,7 @@ import {
   Form,
   Frame,
   GoogleIcon,
+  GridItem,
   HeartIcon,
   HeatmapChart,
   type HeatmapCell,
@@ -134,6 +136,7 @@ import {
   ShareNodesIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
+  SparklesIcon,
   Select,
   ScrollCanvas,
   ScrollFade,
@@ -8828,6 +8831,180 @@ function RingChartTilesVersion() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* GridItem                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/** A dashboard's worth of numbers, at four sizes. */
+function GridItemBentoDemo() {
+  return (
+    <GridItem.Group columns={2} gap={12} aspect={1.6} className="w-full">
+      <GridItem colSpan={2}>
+        <GridItem.Media variant="icon">
+          <SparklesIcon size={18} />
+        </GridItem.Media>
+        <GridItem.Title>Deploys</GridItem.Title>
+        <GridItem.Value>1,284</GridItem.Value>
+        <GridItem.Description>this week, across 12 projects</GridItem.Description>
+      </GridItem>
+      <GridItem>
+        <GridItem.Title>Uptime</GridItem.Title>
+        <GridItem.Value>99.98%</GridItem.Value>
+        <GridItem.Footer>
+          <Badge variant="secondary">30 days</Badge>
+        </GridItem.Footer>
+      </GridItem>
+      <GridItem variant="muted">
+        <GridItem.Title>p95 latency</GridItem.Title>
+        <GridItem.Value>142ms</GridItem.Value>
+        <GridItem.Description>down 18ms</GridItem.Description>
+      </GridItem>
+    </GridItem.Group>
+  );
+}
+
+/**
+ * What the spans actually do.
+ *
+ * The tall tile is the one to watch: the two after it tuck in beside it rather
+ * than starting a new row, which is the thing a wrapping row of views cannot do
+ * and the reason the group places its tiles itself.
+ */
+function GridItemSpansDemo() {
+  return (
+    <GridItem.Group columns={3} gap={10} className="w-full">
+      <GridItem rowSpan={2} variant="muted">
+        <GridItem.Title>rowSpan 2</GridItem.Title>
+        <GridItem.Description>
+          Two rows tall. The next tiles fill in beside it.
+        </GridItem.Description>
+      </GridItem>
+      <GridItem colSpan={2}>
+        <GridItem.Title>colSpan 2</GridItem.Title>
+      </GridItem>
+      <GridItem>
+        <GridItem.Title>1 × 1</GridItem.Title>
+      </GridItem>
+      <GridItem>
+        <GridItem.Title>1 × 1</GridItem.Title>
+      </GridItem>
+      <GridItem colSpan={3} variant="outline">
+        <GridItem.Title>colSpan 3</GridItem.Title>
+        <GridItem.Description>A full-width band under the rest.</GridItem.Description>
+      </GridItem>
+    </GridItem.Group>
+  );
+}
+
+/** Tiles that go somewhere. Pressing one dims it and gives a little. */
+function GridItemPressableDemo() {
+  const [opened, setOpened] = useState<string | null>(null);
+
+  const tiles = [
+    { key: 'billing', label: 'Billing', caption: '3 invoices due' },
+    { key: 'team', label: 'Team', caption: '12 members' },
+    { key: 'keys', label: 'API keys', caption: '2 active' },
+    { key: 'logs', label: 'Logs', caption: 'Live' },
+  ];
+
+  return (
+    <View className="w-full gap-3">
+      <GridItem.Group columns={2} gap={12} aspect={1.9} size="sm">
+        {tiles.map((tile) => (
+          <GridItem key={tile.key} onPress={() => setOpened(tile.label)}>
+            <GridItem.Title>{tile.label}</GridItem.Title>
+            <GridItem.Footer>
+              <Text size="xs" className="flex-1 text-muted-foreground">
+                {tile.caption}
+              </Text>
+              <ChevronRightIcon size={14} />
+            </GridItem.Footer>
+          </GridItem>
+        ))}
+      </GridItem.Group>
+      <Text size="xs" muted className="text-center">
+        {opened ? `Opened ${opened}` : 'Press a tile'}
+      </Text>
+    </View>
+  );
+}
+
+/** Three across at the smaller density, for a grid of shortcuts. */
+function GridItemCompactDemo() {
+  const shortcuts = [
+    { label: 'Search', icon: <SearchIcon size={16} /> },
+    { label: 'Upload', icon: <PackageIcon size={16} /> },
+    { label: 'Invite', icon: <PlusSquareIcon size={16} /> },
+    { label: 'Export', icon: <ReceiptIcon size={16} /> },
+    { label: 'Schedule', icon: <CalendarIcon size={16} /> },
+    { label: 'Alerts', icon: <BellIcon size={16} /> },
+  ];
+
+  return (
+    <GridItem.Group columns={3} gap={10} size="sm" className="w-full">
+      {shortcuts.map((shortcut) => (
+        <GridItem key={shortcut.label} onPress={() => {}}>
+          <GridItem.Media variant="icon">{shortcut.icon}</GridItem.Media>
+          <GridItem.Footer>
+            <GridItem.Title numberOfLines={1}>{shortcut.label}</GridItem.Title>
+          </GridItem.Footer>
+        </GridItem>
+      ))}
+    </GridItem.Group>
+  );
+}
+
+/** Seven days of something, for the tile that carries a shape behind it. */
+const TILE_TREND = [
+  { day: 'M', v: 18 },
+  { day: 'T', v: 26 },
+  { day: 'W', v: 21 },
+  { day: 'T', v: 34 },
+  { day: 'F', v: 41 },
+  { day: 'S', v: 37 },
+  { day: 'S', v: 52 },
+];
+
+/**
+ * The layer behind the text, which is what makes a bento a bento rather than a
+ * wall of stat cards. The tile clips it, so it is meant to run off the edges.
+ */
+function GridItemBackgroundDemo() {
+  return (
+    <GridItem.Group columns={2} gap={12} aspect={1.35} className="w-full">
+      <GridItem colSpan={2}>
+        <GridItem.Background>
+          {/* Pinned to the bottom and allowed to bleed off both sides — the
+              shape is the decoration, not a chart anyone reads values off. */}
+          <View className="mt-auto h-20 w-full opacity-60">
+            <LineChart data={TILE_TREND} compact aspectRatio={3.4}>
+              <LineChart.Area dataKey="v" />
+              <LineChart.Line dataKey="v" />
+            </LineChart>
+          </View>
+        </GridItem.Background>
+        <GridItem.Title>Requests</GridItem.Title>
+        <GridItem.Value>52.4k</GridItem.Value>
+        <GridItem.Description>up 41% on last week</GridItem.Description>
+      </GridItem>
+      <GridItem variant="muted">
+        <GridItem.Background>
+          <View className="absolute -bottom-4 -right-3 opacity-10">
+            <SparklesIcon size={96} />
+          </View>
+        </GridItem.Background>
+        <GridItem.Title>Cache hits</GridItem.Title>
+        <GridItem.Value>94%</GridItem.Value>
+      </GridItem>
+      <GridItem variant="outline">
+        <GridItem.Title>Errors</GridItem.Title>
+        <GridItem.Value>7</GridItem.Value>
+        <GridItem.Description>none critical</GridItem.Description>
+      </GridItem>
+    </GridItem.Group>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* PieChart                                                                   */
 /* -------------------------------------------------------------------------- */
 
@@ -11681,6 +11858,18 @@ const CATALOGUE: ComponentEntry[] = [
           </View>
         ),
       },
+    ],
+  },
+  {
+    slug: 'grid-item',
+    name: 'GridItem',
+    summary: 'Bento tiles, and the grid that places them',
+    demos: [
+      { label: 'A bento of stats', render: () => <GridItemBentoDemo /> },
+      { label: 'Spans', render: () => <GridItemSpansDemo /> },
+      { label: 'Behind the text', render: () => <GridItemBackgroundDemo /> },
+      { label: 'Pressable tiles', render: () => <GridItemPressableDemo /> },
+      { label: 'Three across', render: () => <GridItemCompactDemo /> },
     ],
   },
   {

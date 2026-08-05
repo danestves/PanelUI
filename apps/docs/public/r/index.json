@@ -327,6 +327,16 @@
     ]
   },
   {
+    "name": "grid-item",
+    "type": "registry:ui",
+    "description": "Bento tiles, and the grid that places them.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "haptics",
     "type": "registry:lib",
     "description": "Optional bridge to the platform haptic engine, behind the `haptics` prop.",

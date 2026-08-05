@@ -237,6 +237,14 @@
       "updatedIn": "0.41.0"
     }
   ],
+  "grid-item": [
+    "GridItem",
+    "Bento tiles, and the grid that places them.",
+    "react native bento grid tile component",
+    {
+      "addedIn": "0.46.0"
+    }
+  ],
   "item": [
     "Item",
     "Row of media, text and actions for lists and settings.",

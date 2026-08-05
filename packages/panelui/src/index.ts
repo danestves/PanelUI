@@ -192,6 +192,18 @@ export {
   type FrameVariant,
 } from './components/frame';
 export {
+  GridItem,
+  type GridItemProps,
+  type GridItemGroupProps,
+  type GridItemBackgroundProps,
+  type GridItemMediaProps,
+  type GridItemTitleProps,
+  type GridItemValueProps,
+  type GridItemDescriptionProps,
+  type GridItemFooterProps,
+  type GridItemActionsProps,
+} from './components/grid-item';
+export {
   HeatmapChart,
   useHeatmapChart,
   buildHeatmapCalendar,
