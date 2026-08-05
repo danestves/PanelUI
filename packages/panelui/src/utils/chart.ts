@@ -66,6 +66,24 @@ export function yOf(value: number, plot: Plot, min: number, max: number): number
   return plot.top + plot.height - ((value - min) / span) * plot.height;
 }
 
+/**
+ * A value's x on a *measured* axis, with `min` at the left edge and `max` at
+ * the right.
+ *
+ * The counterpart to `xOf`, and not a replacement for it. `xOf` spreads points
+ * evenly by position, which is what a time series wants — twelve months are
+ * twelve equal steps whatever the gaps between the dates behind them. This one
+ * places a point at the value it holds, which is what a scatter plot needs: the
+ * whole claim of a scatter plot is that both coordinates are quantities, and
+ * spacing its points evenly would throw away the one axis the reader is being
+ * asked to look for a relationship along.
+ */
+export function xAt(value: number, plot: Plot, min: number, max: number): number {
+  'worklet';
+  const span = max - min || 1;
+  return plot.left + ((value - min) / span) * plot.width;
+}
+
 /** The centre of the `index`th of `total` bands, as used for bars and columns. */
 export function bandOf(index: number, total: number, plot: Plot): number {
   'worklet';

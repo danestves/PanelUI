@@ -335,6 +335,14 @@
       "updatedIn": "0.40.0"
     }
   ],
+  "scatter-chart": [
+    "ScatterChart",
+    "Two quantities against each other, to show how they relate.",
+    "react native scatter plot chart",
+    {
+      "addedIn": "0.45.0"
+    }
+  ],
   "scroll-canvas": [
     "ScrollCanvas",
     "Image frame whose contents move as you scroll.",

@@ -2946,6 +2946,68 @@
       ]
     }
   },
+  "scatter-chart": {
+    "intro": "Two quantities plotted against each other, drawn and animated on the UI thread.\n\nEvery other chart here spaces its points evenly along the x-axis, because their x is a position — twelve months are twelve equal steps whatever the gaps between the dates behind them. A scatter plot is the one shape where that is wrong. Both coordinates are measured, and the reader is being asked to look for a relationship between them; spread the points evenly and the relationship is the one thing you have thrown away. So this chart carries an x-domain as well as a y-domain, and tweens both when the data changes.\n\nColours come from the `--color-chart-1` … `--color-chart-5` tokens, so a chart follows the active theme out of the box and is put on brand by overriding those five.",
+    "usage": "<ScatterChart data={sessions} xDataKey=\"spend\">\n  <ScatterChart.Grid />\n  <ScatterChart.Points dataKey=\"revenue\" />\n  <ScatterChart.XAxis />\n  <ScatterChart.YAxis />\n  <ScatterChart.Tooltip />\n</ScatterChart>",
+    "extraImports": [
+      "Frame",
+      "Text"
+    ],
+    "parts": {
+      "Grid": "Reference lines both ways. A scatter plot's x is a quantity, so it earns columns as well as rows.",
+      "Points": "One series, as a field of dots. Takes its colour from a `--color-chart-*` token unless given one.",
+      "Skeleton": "The still field of muted dots shown while `status=\"loading\"`.",
+      "XAxis": "The x labels, evenly along the axis, as real text under the plot.",
+      "YAxis": "The value labels down the side, one per grid line. Reserves its own gutter.",
+      "Tooltip": "The touch target, the nearest-point selection it drives, and the readout that follows it.",
+      "Legend": "A swatch and a name per registered series."
+    },
+    "examples": [
+      {
+        "title": "A chart card with a readout",
+        "description": "Pair it with `Frame` and add `ScatterChart.Tooltip`. Touching the plot selects the nearest point and floats a small readout beside it with both coordinates. The point it names swells and goes solid — both, rather than one: a size change alone is easy to miss among neighbours, and an opacity change alone is invisible wherever the points already overlap.",
+        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Spend vs Revenue</Frame.Title>\n    <Frame.Action>Touch a point</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <ScatterChart data={campaigns} xDataKey=\"spend\" aspectRatio={1.2}>\n      <ScatterChart.Grid />\n      <ScatterChart.Points dataKey=\"revenue\" />\n      <ScatterChart.XAxis format={(v) => `$${Math.round(v / 1000)}k`} />\n      <ScatterChart.YAxis format={(v) => `$${Math.round(v / 1000)}k`} />\n      <ScatterChart.Tooltip\n        formatTitle={(d) => String(d.name)}\n        formatX={(v) => `$${(v / 1000).toFixed(1)}k spend`}\n        formatY={(v) => `$${(v / 1000).toFixed(1)}k back`}\n      />\n    </ScatterChart>\n  </Frame.Panel>\n</Frame>"
+      },
+      {
+        "title": "A bubble chart",
+        "description": "Give `Points` a `sizeKey` and a third quantity rides each point's size. The value maps to the dot's **area**, not its radius — doubling a radius quadruples the ink, and the reader sees four times the value that is actually there. `sizeRange` sets the smallest and largest radius it maps onto.",
+        "code": "<ScatterChart data={countries} xDataKey=\"income\" aspectRatio={1.2}>\n  <ScatterChart.Grid />\n  <ScatterChart.Points dataKey=\"lifespan\" sizeKey=\"population\" sizeRange={[4, 18]} />\n  <ScatterChart.XAxis />\n  <ScatterChart.YAxis />\n  <ScatterChart.Tooltip formatTitle={(d) => String(d.name)} />\n</ScatterChart>"
+      },
+      {
+        "title": "Two series",
+        "description": "Declare a `Points` per series. They share both domains, so the two stay comparable — a per-series scale makes two clouds look alike when they sit in quite different places. Put the key in the panel with `ScatterChart.Legend`, or in the header strip.",
+        "code": "<ScatterChart data={trials} xDataKey=\"dose\" aspectRatio={1.2}>\n  <ScatterChart.Grid />\n  <ScatterChart.Points dataKey=\"control\" colorIndex={1} />\n  <ScatterChart.Points dataKey=\"treated\" colorIndex={2} />\n  <ScatterChart.XAxis />\n  <ScatterChart.YAxis />\n  <ScatterChart.Legend labels={{ control: \"Control\", treated: \"Treated\" }} />\n  <ScatterChart.Tooltip />\n</ScatterChart>"
+      },
+      {
+        "title": "Loading, and then data",
+        "description": "Add `ScatterChart.Skeleton` and drive `status`. The placeholder is a still field of muted dots — deliberately still. A shimmer over a field of dots reads as the points *moving*, which is the one thing a scatter plot must never appear to do: position is the entire message, and a loading state that implies it is changing is a loading state that lies.",
+        "code": "<ScatterChart data={data} status={status} xDataKey=\"spend\">\n  <ScatterChart.Grid />\n  <ScatterChart.Skeleton />\n  <ScatterChart.Points dataKey=\"revenue\" />\n  <ScatterChart.XAxis />\n  <ScatterChart.YAxis />\n  <ScatterChart.Tooltip />\n</ScatterChart>"
+      }
+    ],
+    "versions": [
+      {
+        "title": "Basic",
+        "description": "A single series with both axes and a grid. `aspectRatio` defaults to `1`, which suits a scatter plot: neither axis is the important one, and a wide frame flattens a cloud into a band.",
+        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Spend vs Revenue</Frame.Title>\n    <Frame.Action>28 campaigns</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <ScatterChart data={campaigns} xDataKey=\"spend\" aspectRatio={1.2}>\n      <ScatterChart.Grid />\n      <ScatterChart.Points dataKey=\"revenue\" />\n      <ScatterChart.XAxis format={(v) => `$${Math.round(v / 1000)}k`} />\n      <ScatterChart.YAxis format={(v) => `$${Math.round(v / 1000)}k`} />\n      <ScatterChart.Tooltip formatTitle={(d) => String(d.name)} />\n    </ScatterChart>\n  </Frame.Panel>\n</Frame>"
+      },
+      {
+        "title": "Bubbles",
+        "description": "A third quantity on each point's area via `sizeKey`. Points are translucent by default so that overlapping ones read as denser rather than hiding each other — in a crowded region that overlap is the finding, and opaque dots erase it.",
+        "code": "<ScatterChart data={countries} xDataKey=\"income\" aspectRatio={1.2}>\n  <ScatterChart.Grid />\n  <ScatterChart.Points dataKey=\"lifespan\" sizeKey=\"population\" sizeRange={[4, 18]} />\n  <ScatterChart.XAxis />\n  <ScatterChart.YAxis format={(v) => `${Math.round(v)} yrs`} />\n  <ScatterChart.Tooltip formatTitle={(d) => String(d.name)} />\n</ScatterChart>"
+      },
+      {
+        "title": "Two series",
+        "description": "Two clouds sharing both domains, told apart by colour, with the key in a band above the plot. Touching selects the nearest point in either series.",
+        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Response by dose</Frame.Title>\n  </Frame.Header>\n  <Frame.Panel>\n    <ChartLegendRow>\n      <LegendDot colorIndex={1} label=\"Control\" />\n      <LegendDot colorIndex={2} label=\"Treated\" />\n    </ChartLegendRow>\n    <ScatterChart data={trials} xDataKey=\"dose\" aspectRatio={1.2}>\n      <ScatterChart.Grid />\n      <ScatterChart.Points dataKey=\"control\" colorIndex={1} />\n      <ScatterChart.Points dataKey=\"treated\" colorIndex={2} />\n      <ScatterChart.XAxis />\n      <ScatterChart.YAxis />\n      <ScatterChart.Tooltip />\n    </ScatterChart>\n  </Frame.Panel>\n</Frame>"
+      },
+      {
+        "title": "Loading",
+        "description": "`status=\"loading\"` with a `Skeleton` child: a still field of muted dots that gives way to the real ones. Toggle it to watch the field settle onto the data.",
+        "code": "<ScatterChart data={campaigns} status={status} xDataKey=\"spend\" aspectRatio={1.2}>\n  <ScatterChart.Grid />\n  <ScatterChart.Skeleton />\n  <ScatterChart.Points dataKey=\"revenue\" />\n  <ScatterChart.XAxis />\n  <ScatterChart.YAxis />\n  <ScatterChart.Tooltip />\n</ScatterChart>"
+      }
+    ],
+    "notes": "### Why this one measures its x\n\nThe rest of the charts here place a point by its *position* in the data — the third row goes a third of the way across, whatever value it holds. That is right for a time series and wrong for a scatter plot, whose whole claim is that both coordinates are quantities. `xDataKey` must therefore point at a **number** here, not a label, and a row whose x is not a number is not plotted.\n\n### Finding a point with a finger\n\nA line chart's crosshair snaps to an x index. There is nothing to snap to here: there is no shared x, and two points can sit on the same one. So the nearest point is found by distance instead, on the UI thread, and only within `hitRadius` — a touch in an empty corner selects nothing rather than lighting up whichever point happens to be least far away.\n\nThe radius defaults to `32`, sized for a fingertip rather than for the dot. A scatter point is around 4 points across and the comfortable minimum touch target on both platforms is around 44, so without it the chart would only be usable with a mouse it will never see.\n\nOnly the identity of the winning point crosses back into JS, and only when it changes, so a drag across the plot costs a handful of re-renders rather than one per frame.\n\n### Neither axis is floored at zero\n\nAn area chart is floored at zero, because a filled region floating above the baseline reads as a shape rather than a quantity. A scatter plot is the opposite case: its subject is the *spread*, and forcing a cluster of values between 80 and 90 to share a frame with zero squashes it into a smudge in one corner and hides the very thing being plotted. Pass `xDomain` or `yDomain` when a fixed frame matters more than the spread.\n\n### Overlap is data\n\nPoints are drawn at 75% opacity by default, so a crowded region reads as darker rather than as one dot hiding several. Raise `opacity` to `1` only for a sparse plot where nothing overlaps.\n\n### Bubbles map area, not radius\n\n`sizeKey` maps its value onto each point's **area**. Mapping it to the radius instead — which is the easy mistake — means a point holding twice the value carries four times the ink, and the reader believes the larger figure.\n\n### Reading out the selected point\n\n`onActivePointChange` fires as the selection moves between points, and with `null` when the finger lifts. That is the one to use for a readout in the card header, because the header is outside the chart and a hook cannot reach up out of the subtree it is called in. `useScatterChart` is for something rendered *inside* the chart, which is the rarer case.\n\n### Sizing\n\nThe chart fills its parent's width and takes its height from `aspectRatio`. Do not set a height directly — the aspect ratio is what keeps the plot geometry stable while the layout settles. `aspectRatio` measures the plot, not the whole chart: the header sits above the drawing area rather than inside it.\n\n**Labels sit on what they name.** Each y label is centred on the grid line it belongs to, so `Grid`'s `rows` and `YAxis`'s `ticks` have to match, as `columns` and `XAxis`'s `ticks` do. All four default to `4`."
+  },
   "scroll-canvas": {
     "intro": "The counterpart to [ScrollText](/docs/components/scroll-text): the same scrubbed reveal applied to a picture. The frame stays where the layout puts it and the image moves *inside* it, which is what separates a parallax from a thing sliding about the page.",
     "usage": "<ScrollProgress>\n  <ScrollView>\n    <ScrollCanvas source={{ uri }} effect=\"parallax\" />\n  </ScrollView>\n</ScrollProgress>",
