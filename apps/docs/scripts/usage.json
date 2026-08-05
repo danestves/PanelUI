@@ -3011,7 +3011,15 @@
     ],
     "hideVariants": [
       "framed"
-    ]
+    ],
+    "previewVideo": {
+      "src": "/previews/questionnaire.mp4",
+      "poster": "/previews/questionnaire-poster.jpg",
+      "alt": "The Questionnaire component, running in the example app.",
+      "width": 720,
+      "height": 1560,
+      "caption": "A five-question flow — required, optional, multi-answer and freeform — and the summary it adds up to."
+    }
   },
   "radio-group": {
     "intro": "A single-select list of options.",
