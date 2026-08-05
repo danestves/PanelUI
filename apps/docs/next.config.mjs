@@ -37,6 +37,13 @@ const config = {
         destination: '/docs/customization/theming',
         permanent: true,
       },
+      // KpiChart became Kpi. It was never a chart — the sparkline on it is a
+      // footnote to the number, and half its versions have no chart at all.
+      {
+        source: '/docs/components/kpi-chart',
+        destination: '/docs/components/kpi',
+        permanent: true,
+      },
     ];
   },
 };

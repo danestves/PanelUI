@@ -85,7 +85,7 @@ import {
   ImageIcon,
   Item,
   KeyboardAvoider,
-  KpiChart,
+  Kpi,
   Label,
   ListChecksIcon,
   LockIcon,
@@ -861,56 +861,56 @@ function KpiDefaultVersion() {
         </Frame.Header>
         <Frame.Panel>
           <Frame.Section className={KPI_ROW}>
-            <KpiChart surface={false} colorIndex={1}>
-              <KpiChart.Content layout="inline">
-                <KpiChart.Stat>
-                  <KpiChart.Title>Total Revenue</KpiChart.Title>
-                  <KpiChart.Value>$317,904</KpiChart.Value>
-                  <KpiChart.Trend value={7.8} caption="last 30d" />
-                </KpiChart.Stat>
-                <KpiChart.Chart
+            <Kpi surface={false} colorIndex={1}>
+              <Kpi.Content layout="inline">
+                <Kpi.Stat>
+                  <Kpi.Title>Total Revenue</Kpi.Title>
+                  <Kpi.Value>$317,904</Kpi.Value>
+                  <Kpi.Trend value={7.8} caption="last 30d" />
+                </Kpi.Stat>
+                <Kpi.Chart
                   data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])}
                   dataKey="v"
                   inline
                 />
-              </KpiChart.Content>
-            </KpiChart>
+              </Kpi.Content>
+            </Kpi>
           </Frame.Section>
 
           {/* A fall in bounce rate is the good news, so the change is green
               even though the number is negative. */}
           <Frame.Section className={KPI_ROW}>
-            <KpiChart surface={false} colorIndex={3} goodDirection="down">
-              <KpiChart.Content layout="inline">
-                <KpiChart.Stat>
-                  <KpiChart.Title>Bounce Rate</KpiChart.Title>
-                  <KpiChart.Value>37.6%</KpiChart.Value>
-                  <KpiChart.Trend value={-8.4} caption="vs last 7d" />
-                </KpiChart.Stat>
-                <KpiChart.Chart
+            <Kpi surface={false} colorIndex={3} goodDirection="down">
+              <Kpi.Content layout="inline">
+                <Kpi.Stat>
+                  <Kpi.Title>Bounce Rate</Kpi.Title>
+                  <Kpi.Value>37.6%</Kpi.Value>
+                  <Kpi.Trend value={-8.4} caption="vs last 7d" />
+                </Kpi.Stat>
+                <Kpi.Chart
                   data={spark([88, 85, 73, 76, 64, 59, 61, 48, 39])}
                   dataKey="v"
                   inline
                 />
-              </KpiChart.Content>
-            </KpiChart>
+              </Kpi.Content>
+            </Kpi>
           </Frame.Section>
 
           <Frame.Section className={KPI_ROW}>
-            <KpiChart surface={false} colorIndex={2}>
-              <KpiChart.Content layout="inline">
-                <KpiChart.Stat>
-                  <KpiChart.Title>New Customers</KpiChart.Title>
-                  <KpiChart.Value>2,867</KpiChart.Value>
-                  <KpiChart.Trend value={4.2} caption="this week" />
-                </KpiChart.Stat>
-                <KpiChart.Chart
+            <Kpi surface={false} colorIndex={2}>
+              <Kpi.Content layout="inline">
+                <Kpi.Stat>
+                  <Kpi.Title>New Customers</Kpi.Title>
+                  <Kpi.Value>2,867</Kpi.Value>
+                  <Kpi.Trend value={4.2} caption="this week" />
+                </Kpi.Stat>
+                <Kpi.Chart
                   data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
                   dataKey="v"
                   inline
                 />
-              </KpiChart.Content>
-            </KpiChart>
+              </Kpi.Content>
+            </Kpi>
           </Frame.Section>
         </Frame.Panel>
       </Frame>
@@ -922,34 +922,34 @@ function KpiSparklineVersion() {
   return (
     <ChartScreen>
       <View className="w-full gap-3">
-        <KpiChart colorIndex={1}>
-          <KpiChart.Header>
-            <KpiChart.Title>Total revenue</KpiChart.Title>
-          </KpiChart.Header>
-          <KpiChart.Content>
-            <KpiChart.Value>$317,904</KpiChart.Value>
-            <KpiChart.Trend value={7.8} />
-          </KpiChart.Content>
-          <KpiChart.Chart data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])} dataKey="v" />
-        </KpiChart>
+        <Kpi colorIndex={1}>
+          <Kpi.Header>
+            <Kpi.Title>Total revenue</Kpi.Title>
+          </Kpi.Header>
+          <Kpi.Content>
+            <Kpi.Value>$317,904</Kpi.Value>
+            <Kpi.Trend value={7.8} />
+          </Kpi.Content>
+          <Kpi.Chart data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])} dataKey="v" />
+        </Kpi>
 
         {/* The chart beside the number instead of under it, for a denser row. */}
-        <KpiChart colorIndex={2}>
-          <KpiChart.Header>
-            <KpiChart.Title>New customers</KpiChart.Title>
-          </KpiChart.Header>
-          <KpiChart.Content layout="inline">
+        <Kpi colorIndex={2}>
+          <Kpi.Header>
+            <Kpi.Title>New customers</Kpi.Title>
+          </Kpi.Header>
+          <Kpi.Content layout="inline">
             <View>
-              <KpiChart.Value>2,867</KpiChart.Value>
-              <KpiChart.Trend value={4.2} className="mt-1 self-start" />
+              <Kpi.Value>2,867</Kpi.Value>
+              <Kpi.Trend value={4.2} className="mt-1 self-start" />
             </View>
-            <KpiChart.Chart
+            <Kpi.Chart
               data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
               dataKey="v"
               inline
             />
-          </KpiChart.Content>
-        </KpiChart>
+          </Kpi.Content>
+        </Kpi>
       </View>
     </ChartScreen>
   );
@@ -965,35 +965,35 @@ function KpiProgressVersion() {
         </Frame.Header>
         <Frame.Panel>
           <Frame.Section className={KPI_ROW}>
-            <KpiChart surface={false} colorIndex={4}>
-              <KpiChart.Header>
-                <KpiChart.Icon tone="good">
+            <Kpi surface={false} colorIndex={4}>
+              <Kpi.Header>
+                <Kpi.Icon tone="good">
                   <Target size={16} color="#27a644" />
-                </KpiChart.Icon>
-                <KpiChart.Title>Quarterly revenue</KpiChart.Title>
-                <KpiChart.Trend value={7.8} variant="badge" />
-              </KpiChart.Header>
-              <KpiChart.Value>$317k</KpiChart.Value>
-              <KpiChart.Progress value={73} label="of $435k" showValueLabel />
-              <KpiChart.Footer>
+                </Kpi.Icon>
+                <Kpi.Title>Quarterly revenue</Kpi.Title>
+                <Kpi.Trend value={7.8} variant="badge" />
+              </Kpi.Header>
+              <Kpi.Value>$317k</Kpi.Value>
+              <Kpi.Progress value={73} label="of $435k" showValueLabel />
+              <Kpi.Footer>
                 <Text size="xs" muted>
                   41 days left in the quarter
                 </Text>
-              </KpiChart.Footer>
-            </KpiChart>
+              </Kpi.Footer>
+            </Kpi>
           </Frame.Section>
           <Frame.Section className={KPI_ROW}>
-            <KpiChart surface={false} colorIndex={2}>
-              <KpiChart.Header>
-                <KpiChart.Icon>
+            <Kpi surface={false} colorIndex={2}>
+              <Kpi.Header>
+                <Kpi.Icon>
                   <DollarSign size={16} color="#8a8f98" />
-                </KpiChart.Icon>
-                <KpiChart.Title>New customers</KpiChart.Title>
-                <KpiChart.Trend value={4.2} variant="badge" />
-              </KpiChart.Header>
-              <KpiChart.Value>2,867</KpiChart.Value>
-              <KpiChart.Progress value={57} label="of 5,000" showValueLabel />
-            </KpiChart>
+                </Kpi.Icon>
+                <Kpi.Title>New customers</Kpi.Title>
+                <Kpi.Trend value={4.2} variant="badge" />
+              </Kpi.Header>
+              <Kpi.Value>2,867</Kpi.Value>
+              <Kpi.Progress value={57} label="of 5,000" showValueLabel />
+            </Kpi>
           </Frame.Section>
         </Frame.Panel>
       </Frame>
@@ -1008,46 +1008,46 @@ function KpiGroupVersion() {
         {/* Three metrics as one panel: a rule between them rather than space
             around them, so they read as one thing with three parts. */}
         <Surface variant="secondary" padding="lg">
-          <KpiChart.Group>
-            <KpiChart surface={false} colorIndex={1}>
-              <KpiChart.Title>Revenue</KpiChart.Title>
-              <KpiChart.Value className="text-2xl">$317k</KpiChart.Value>
-              <KpiChart.Trend value={7.8} className="self-start" />
-            </KpiChart>
-            <KpiChart surface={false} colorIndex={2}>
-              <KpiChart.Title>Orders</KpiChart.Title>
-              <KpiChart.Value className="text-2xl">2,867</KpiChart.Value>
-              <KpiChart.Trend value={4.2} className="self-start" />
-            </KpiChart>
-            <KpiChart surface={false} colorIndex={3} goodDirection="down">
-              <KpiChart.Title>Refunds</KpiChart.Title>
-              <KpiChart.Value className="text-2xl">1.4%</KpiChart.Value>
-              <KpiChart.Trend value={-0.3} className="self-start" />
-            </KpiChart>
-          </KpiChart.Group>
+          <Kpi.Group>
+            <Kpi surface={false} colorIndex={1}>
+              <Kpi.Title>Revenue</Kpi.Title>
+              <Kpi.Value className="text-2xl">$317k</Kpi.Value>
+              <Kpi.Trend value={7.8} className="self-start" />
+            </Kpi>
+            <Kpi surface={false} colorIndex={2}>
+              <Kpi.Title>Orders</Kpi.Title>
+              <Kpi.Value className="text-2xl">2,867</Kpi.Value>
+              <Kpi.Trend value={4.2} className="self-start" />
+            </Kpi>
+            <Kpi surface={false} colorIndex={3} goodDirection="down">
+              <Kpi.Title>Refunds</Kpi.Title>
+              <Kpi.Value className="text-2xl">1.4%</Kpi.Value>
+              <Kpi.Trend value={-0.3} className="self-start" />
+            </Kpi>
+          </Kpi.Group>
         </Surface>
 
         <Surface variant="secondary" padding="lg">
-          <KpiChart.Group orientation="vertical">
-            <KpiChart surface={false} colorIndex={1}>
-              <KpiChart.Content layout="inline">
+          <Kpi.Group orientation="vertical">
+            <Kpi surface={false} colorIndex={1}>
+              <Kpi.Content layout="inline">
                 <View>
-                  <KpiChart.Title>Sessions</KpiChart.Title>
-                  <KpiChart.Value className="text-2xl">48,201</KpiChart.Value>
+                  <Kpi.Title>Sessions</Kpi.Title>
+                  <Kpi.Value className="text-2xl">48,201</Kpi.Value>
                 </View>
-                <KpiChart.Trend value={12.4} />
-              </KpiChart.Content>
-            </KpiChart>
-            <KpiChart surface={false} colorIndex={3} goodDirection="down">
-              <KpiChart.Content layout="inline">
+                <Kpi.Trend value={12.4} />
+              </Kpi.Content>
+            </Kpi>
+            <Kpi surface={false} colorIndex={3} goodDirection="down">
+              <Kpi.Content layout="inline">
                 <View>
-                  <KpiChart.Title>Latency p95</KpiChart.Title>
-                  <KpiChart.Value className="text-2xl">312ms</KpiChart.Value>
+                  <Kpi.Title>Latency p95</Kpi.Title>
+                  <Kpi.Value className="text-2xl">312ms</Kpi.Value>
                 </View>
-                <KpiChart.Trend value={-6.1} />
-              </KpiChart.Content>
-            </KpiChart>
-          </KpiChart.Group>
+                <Kpi.Trend value={-6.1} />
+              </Kpi.Content>
+            </Kpi>
+          </Kpi.Group>
         </Surface>
       </View>
     </ChartScreen>
@@ -11759,8 +11759,8 @@ const CATALOGUE: ComponentEntry[] = [
     ],
   },
   {
-    slug: 'kpi-chart',
-    name: 'KpiChart',
+    slug: 'kpi',
+    name: 'Kpi',
     summary: 'One number, and what it is doing',
     layout: 'pager',
     demos: [

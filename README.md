@@ -135,7 +135,7 @@ Every component takes `className`, so anything can be restyled with Tailwind cla
 - **Overlays & feedback** — Dialog, BottomSheet, Drawer, Popover, Tooltip, Toast, Alert,
   Progress, Spinner, Loader
 - **Data visualisation** — LineChart, AreaChart, BarChart, ScatterChart, RingChart, RadarChart,
-  HeatmapChart, KpiChart, Map, Marker, Flow
+  HeatmapChart, Kpi, Map, Marker, Flow
 - **AI components** — Message, MessageScroller, Response, Reasoning, Plan, Task, Sources,
   CodeBlock, Shimmer, ThinkingOrb, Soundwave
 - **Social** — Post, Avatar, Attachment

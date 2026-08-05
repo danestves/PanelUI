@@ -391,7 +391,7 @@
     ]
   },
   {
-    "name": "kpi-chart",
+    "name": "kpi",
     "type": "registry:ui",
     "description": "One number, what it is doing, and the shape it made getting there.",
     "registryDependencies": [

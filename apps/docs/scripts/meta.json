@@ -629,12 +629,13 @@
       "updatedIn": "0.41.0"
     }
   ],
-  "kpi-chart": [
-    "KpiChart",
+  "kpi": [
+    "Kpi",
     "One number, what it is doing, and the shape it made getting there.",
     "react native kpi metric stat card",
     {
-      "addedIn": "0.43.0"
+      "addedIn": "0.43.0",
+      "updatedIn": "0.46.0"
     }
   ],
   "radar-chart": [
