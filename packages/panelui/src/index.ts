@@ -483,6 +483,7 @@ export {
   type LineChartAreaProps,
   type LineChartSkeletonProps,
   type LineChartXAxisProps,
+  type LineChartYAxisProps,
   type LineChartTooltipProps,
   type LineChartLegendProps,
   type LineChartDatum,
@@ -590,6 +591,23 @@ export {
   type RingChartLegendProps,
   type RingDatum,
 } from './components/ring-chart';
+export {
+  ScatterChart,
+  useScatterChart,
+  type ScatterChartProps,
+  type ScatterChartHandle,
+  type ScatterChartHeaderProps,
+  type ScatterChartGridProps,
+  type ScatterChartPointsProps,
+  type ScatterChartSkeletonProps,
+  type ScatterChartXAxisProps,
+  type ScatterChartYAxisProps,
+  type ScatterChartTooltipProps,
+  type ScatterChartLegendProps,
+  type ScatterChartDatum,
+  type ScatterChartPoint,
+  type ScatterChartStatus,
+} from './components/scatter-chart';
 export {
   ScrollFade,
   type ScrollFadeProps,

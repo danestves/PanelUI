@@ -671,6 +671,16 @@
     ]
   },
   {
+    "name": "scatter-chart",
+    "type": "registry:ui",
+    "description": "Two quantities against each other, to show how they relate.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "scrim",
     "type": "registry:ui",
     "description": "The backdrop behind an overlay — a dim, or a blur when expo-blur is installed.",

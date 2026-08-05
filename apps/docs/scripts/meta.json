@@ -249,7 +249,7 @@
     "Animated time series, drawn on the UI thread.",
     "react native line chart",
     {
-      "updatedIn": "0.43.0"
+      "updatedIn": "0.45.0"
     }
   ],
   "loader": [
@@ -333,6 +333,14 @@
     {
       "addedIn": "0.25.0",
       "updatedIn": "0.40.0"
+    }
+  ],
+  "scatter-chart": [
+    "ScatterChart",
+    "Two quantities against each other, to show how they relate.",
+    "react native scatter plot chart",
+    {
+      "addedIn": "0.45.0"
     }
   ],
   "scroll-canvas": [

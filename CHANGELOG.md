@@ -9,6 +9,43 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.45.0] — 2026-08-05
+
+### Added
+
+- **`ScatterChart`** — two quantities plotted against each other, to show how they relate.
+  Composed like the rest of the family: `Grid`, `Points`, `XAxis`, `YAxis`, `Tooltip`, `Legend`,
+  `Skeleton` and `Header`. It is the one chart here that *measures* its x rather than spacing
+  points evenly by position, because a scatter plot's whole claim is that both coordinates are
+  quantities — so `xDataKey` must point at a number, and both domains tween when the data
+  changes.
+
+  Touching the plot selects the nearest point by distance, resolved on the UI thread and only
+  within a hit radius sized for a fingertip rather than for the dot — so a touch in an empty
+  corner selects nothing instead of lighting up whichever point is least far away. Give `Points`
+  a `sizeKey` for a bubble chart; the value maps to each point's **area**, not its radius, since
+  mapping to the radius makes a point holding twice the value carry four times the ink.
+
+  Neither axis is floored at zero, unlike `AreaChart`'s. A scatter plot's subject is the spread,
+  and forcing a cluster of values between 80 and 90 to share a frame with zero squashes it into
+  a corner and hides the thing being plotted. Pass `xDomain`/`yDomain` when a fixed frame matters
+  more.
+
+- **`LineChart.YAxis`** — value labels down the side, one per grid line, as `AreaChart` and
+  `BarChart` already had. The chart's own documentation already told readers to match `Grid`'s
+  `rows` to `YAxis`'s `ticks`; the part it described did not exist until now. Like the others it
+  reserves its label gutter before the plot is laid out, and its labels read the settled domain
+  rather than the tweening one — a number counting through every intermediate value while the
+  axis animates is noise.
+
+- `xAt` joins the shared chart maths: a value's x on a measured axis. The counterpart to `xOf`,
+  which spreads points evenly by position, and not a replacement for it.
+
+### Docs
+
+- The README's component count had drifted (81, against 83 shipped) and its data-visualisation
+  list was missing `KpiChart` and `RadarChart`. Both corrected, alongside the new chart.
+
 ## [0.44.0] — 2026-08-05
 
 ### Changed

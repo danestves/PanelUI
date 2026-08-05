@@ -1,7 +1,6 @@
 ---
 title: Slider
 description: Pick a value, or a span, by dragging a thumb along a track.
-status: updated
 ---
 
 A value picker driven by a thumb, or a span picked by two. The thumb is a pill exactly as tall as the track — the two are the same height, so nothing has to escape the track to be drawn whole — with a knob inside it that shrinks while you drag. Position and fill are animated on the UI thread, so dragging never round-trips through React; the picked value bridges back on change and again on release.
