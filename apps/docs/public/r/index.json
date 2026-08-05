@@ -644,6 +644,19 @@
     ]
   },
   {
+    "name": "questionnaire",
+    "type": "registry:ui",
+    "description": "One question at a time, with progress, validation and a way back.",
+    "registryDependencies": [
+      "button",
+      "cn",
+      "frame",
+      "icons",
+      "input",
+      "text"
+    ]
+  },
+  {
     "name": "radar-chart",
     "type": "registry:ui",
     "description": "Several measures of one thing, drawn as one shape.",

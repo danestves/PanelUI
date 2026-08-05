@@ -601,6 +601,28 @@ export {
 } from './components/post';
 export { Progress, type ProgressProps } from './components/progress';
 export {
+  Questionnaire,
+  type QuestionnaireProps,
+  type QuestionnaireTitleProps,
+  type QuestionnaireProgressProps,
+  type QuestionnaireProgressState,
+  type QuestionnaireProgressVariant,
+  type QuestionnaireItemProps,
+  type QuestionnaireQuestionProps,
+  type QuestionnaireDescriptionProps,
+  type QuestionnaireChoicesProps,
+  type QuestionnaireChoiceProps,
+  type QuestionnaireInputProps,
+  type QuestionnaireErrorProps,
+  type QuestionnaireFooterProps,
+  type QuestionnaireActionProps,
+  type QuestionnaireActionState,
+  type QuestionnaireAnswers,
+  type QuestionnaireItemDefinition,
+  type QuestionnaireItemStatus,
+  type QuestionnaireShortcutMode,
+} from './components/questionnaire';
+export {
   RadioGroup,
   type RadioGroupProps,
   type RadioGroupItemProps,

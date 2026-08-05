@@ -122,6 +122,8 @@ import {
   type PostVote,
   Portal,
   Progress,
+  Questionnaire,
+  type QuestionnaireAnswers,
   RadarChart,
   type RadarChartDatum,
   RadioGroup,
@@ -10394,6 +10396,424 @@ function SwipeRtlDemo() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Questionnaire                                                              */
+/* -------------------------------------------------------------------------- */
+
+const PROTOTYPE_QUESTIONS = [
+  { name: 'direction', required: true },
+  { name: 'detail' },
+] as const;
+
+/** One answer to each of two questions, the second of which can be skipped. */
+function QuestionnaireDemo() {
+  const [answers, setAnswers] = useState<QuestionnaireAnswers>({});
+
+  return (
+    <View className="w-full gap-4">
+      <Questionnaire
+        items={PROTOTYPE_QUESTIONS}
+        onAnswersChange={setAnswers}
+        onSubmit={(final) => setAnswers(final)}
+      >
+        <Questionnaire.Title>Prototype</Questionnaire.Title>
+        <Questionnaire.Progress />
+        <Questionnaire.Item name="direction" required>
+          <Questionnaire.Question>What should we build next?</Questionnaire.Question>
+          <Questionnaire.Description>
+            Choose the direction you want to see first.
+          </Questionnaire.Description>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice
+              value="delegation"
+              label="Delegation"
+              description="Show how work moves to a specialist."
+            />
+            <Questionnaire.Choice
+              value="prompts"
+              label="Question prompts"
+              description="Show choices while the interface waits."
+            />
+            <Questionnaire.Choice value="both" label="Both together" />
+          </Questionnaire.Choices>
+          <Questionnaire.Error />
+        </Questionnaire.Item>
+        <Questionnaire.Item name="detail">
+          <Questionnaire.Question>How much detail?</Questionnaire.Question>
+          <Questionnaire.Description>
+            Skip this one if you have not decided.
+          </Questionnaire.Description>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="focused" label="Focused" />
+            <Questionnaire.Choice value="complete" label="The complete flow" />
+          </Questionnaire.Choices>
+        </Questionnaire.Item>
+        <Questionnaire.Footer>
+          <Questionnaire.Back />
+          <Questionnaire.Spacer />
+          <Questionnaire.Skip />
+          <Questionnaire.Next />
+          <Questionnaire.Submit />
+        </Questionnaire.Footer>
+      </Questionnaire>
+      <Text size="sm" muted>
+        {Object.keys(answers).length > 0
+          ? JSON.stringify(answers)
+          : 'Every answer arrives under the question’s own name.'}
+      </Text>
+    </View>
+  );
+}
+
+/** A question that takes as many answers as apply, so its answer is a list. */
+function QuestionnaireMultipleDemo() {
+  const [answers, setAnswers] = useState<QuestionnaireAnswers>({});
+
+  return (
+    <View className="w-full gap-4">
+      <Questionnaire onAnswersChange={setAnswers}>
+        <Questionnaire.Progress />
+        <Questionnaire.Item name="signals" required multiple>
+          <Questionnaire.Question>What should every update include?</Questionnaire.Question>
+          <Questionnaire.Description>Select all that apply.</Questionnaire.Description>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="progress" label="Progress" />
+            <Questionnaire.Choice value="decisions" label="Decisions" />
+            <Questionnaire.Choice value="risks" label="Risks" />
+          </Questionnaire.Choices>
+          <Questionnaire.Error />
+        </Questionnaire.Item>
+        <Questionnaire.Footer>
+          <Questionnaire.Spacer />
+          <Questionnaire.Submit />
+        </Questionnaire.Footer>
+      </Questionnaire>
+      <Text size="sm" muted>
+        {Array.isArray(answers.signals) && answers.signals.length > 0
+          ? answers.signals.join(', ')
+          : 'A question that takes several answers stores them as a list.'}
+      </Text>
+    </View>
+  );
+}
+
+/** The text field holds whatever answer the fixed choices do not offer. */
+function QuestionnaireFreeformDemo() {
+  const [answers, setAnswers] = useState<QuestionnaireAnswers>({});
+
+  return (
+    <View className="w-full gap-4">
+      <Questionnaire onAnswersChange={setAnswers}>
+        <Questionnaire.Progress />
+        <Questionnaire.Item name="tool" required>
+          <Questionnaire.Question>Where do you keep your notes?</Questionnaire.Question>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="files" label="Plain files" />
+            <Questionnaire.Choice value="issues" label="Issue tracker" />
+            <Questionnaire.Input placeholder="Somewhere else…" />
+          </Questionnaire.Choices>
+          <Questionnaire.Error />
+        </Questionnaire.Item>
+        <Questionnaire.Footer>
+          <Questionnaire.Spacer />
+          <Questionnaire.Submit />
+        </Questionnaire.Footer>
+      </Questionnaire>
+      <Text size="sm" muted>
+        Picking a choice empties the field, and typing clears the choice — one
+        answer to one question either way.
+      </Text>
+    </View>
+  );
+}
+
+/** A letter beside every answer, counting only the ones that can be picked. */
+function QuestionnaireShortcutsDemo() {
+  return (
+    <View className="w-full gap-4">
+      <Questionnaire shortcuts="letters">
+        <Questionnaire.Progress />
+        <Questionnaire.Item name="review" required>
+          <Questionnaire.Question>What should be reviewed first?</Questionnaire.Question>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="api" label="The public API" />
+            <Questionnaire.Choice value="tests" label="Test coverage" />
+            <Questionnaire.Choice value="perf" label="Performance" disabled />
+            <Questionnaire.Choice value="docs" label="The documentation" />
+          </Questionnaire.Choices>
+        </Questionnaire.Item>
+        <Questionnaire.Footer>
+          <Questionnaire.Spacer />
+          <Questionnaire.Submit />
+        </Questionnaire.Footer>
+      </Questionnaire>
+      <Text size="sm" muted>
+        Performance is disabled, so it takes no letter with it and the
+        documentation is C.
+      </Text>
+    </View>
+  );
+}
+
+/** Numbers instead of pips, for a flow the reader gets sent back through. */
+function QuestionnaireNumbersDemo() {
+  return (
+    <View className="w-full gap-4">
+      <Questionnaire items={PROTOTYPE_QUESTIONS}>
+        <Questionnaire.Title>Prototype</Questionnaire.Title>
+        <Questionnaire.Progress variant="numbers" />
+        <Questionnaire.Item name="direction" required>
+          <Questionnaire.Question>What should we build next?</Questionnaire.Question>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="delegation" label="Delegation" />
+            <Questionnaire.Choice value="prompts" label="Question prompts" />
+          </Questionnaire.Choices>
+          <Questionnaire.Error />
+        </Questionnaire.Item>
+        <Questionnaire.Item name="detail">
+          <Questionnaire.Question>How much detail?</Questionnaire.Question>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="focused" label="Focused" />
+            <Questionnaire.Choice value="complete" label="The complete flow" />
+          </Questionnaire.Choices>
+        </Questionnaire.Item>
+        <Questionnaire.Footer>
+          <Questionnaire.Back />
+          <Questionnaire.Spacer />
+          <Questionnaire.Skip />
+          <Questionnaire.Next />
+          <Questionnaire.Submit />
+        </Questionnaire.Footer>
+      </Questionnaire>
+      <Text size="sm" muted>
+        A number says which question this is, which a bar cannot — worth it
+        where somebody is going to be sent back to one of them.
+      </Text>
+    </View>
+  );
+}
+
+/** No frame, for a questionnaire in something that draws its own boundary. */
+function QuestionnaireBareDemo() {
+  return (
+    <View className="w-full">
+      <Card>
+        <Card.Content>
+          <Questionnaire frame={false}>
+            <Questionnaire.Progress />
+            <Questionnaire.Item name="timing" required>
+              <Questionnaire.Question>When should this ship?</Questionnaire.Question>
+              <Questionnaire.Choices>
+                <Questionnaire.Choice value="week" label="This week" />
+                <Questionnaire.Choice value="cycle" label="Next cycle" />
+              </Questionnaire.Choices>
+            </Questionnaire.Item>
+            <Questionnaire.Footer>
+              <Questionnaire.Spacer />
+              <Questionnaire.Submit />
+            </Questionnaire.Footer>
+          </Questionnaire>
+        </Card.Content>
+      </Card>
+    </View>
+  );
+}
+
+/* --- Versions ------------------------------------------------------------- */
+
+const ONBOARDING_QUESTIONS = [
+  { name: 'role', required: true },
+  { name: 'size', required: true },
+  { name: 'stack', multiple: true },
+  { name: 'timeline' },
+  { name: 'contact', required: true },
+] as const;
+
+const ONBOARDING_LABELS: Record<string, string> = {
+  role: 'Role',
+  size: 'Team size',
+  stack: 'Stack',
+  timeline: 'Timeline',
+  contact: 'Best way to reach you',
+};
+
+/** Five questions and the summary they add up to. */
+function QuestionnaireOnboardingVersion() {
+  const [done, setDone] = useState<QuestionnaireAnswers | null>(null);
+
+  if (done) {
+    return (
+      <ScrollView contentContainerClassName="gap-4 p-4">
+        <Text size="xl" weight="semibold">
+          That is everything
+        </Text>
+        <Frame>
+          <Frame.Header>
+            <Frame.Title>Your answers</Frame.Title>
+          </Frame.Header>
+          <Frame.Panel>
+            {Object.entries(done).map(([name, value]) => (
+              <Frame.Row key={name}>
+                <Frame.Content>
+                  <Frame.Title>{ONBOARDING_LABELS[name] ?? name}</Frame.Title>
+                  <Frame.Description>
+                    {Array.isArray(value) ? value.join(', ') : value}
+                  </Frame.Description>
+                </Frame.Content>
+              </Frame.Row>
+            ))}
+          </Frame.Panel>
+        </Frame>
+        <Button variant="outline" onPress={() => setDone(null)}>
+          Start over
+        </Button>
+      </ScrollView>
+    );
+  }
+
+  return (
+    <ScrollView contentContainerClassName="gap-4 p-4">
+      <Questionnaire items={ONBOARDING_QUESTIONS} onSubmit={setDone}>
+        <Questionnaire.Title>Getting set up</Questionnaire.Title>
+        <Questionnaire.Progress />
+
+        <Questionnaire.Item name="role" required>
+          <Questionnaire.Question>What do you do?</Questionnaire.Question>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="engineer" label="Engineering" />
+            <Questionnaire.Choice value="design" label="Design" />
+            <Questionnaire.Choice value="product" label="Product" />
+            <Questionnaire.Input placeholder="Something else…" />
+          </Questionnaire.Choices>
+          <Questionnaire.Error />
+        </Questionnaire.Item>
+
+        <Questionnaire.Item name="size" required>
+          <Questionnaire.Question>How big is the team?</Questionnaire.Question>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="solo" label="Just me" />
+            <Questionnaire.Choice value="small" label="Two to ten" />
+            <Questionnaire.Choice value="large" label="More than ten" />
+          </Questionnaire.Choices>
+          <Questionnaire.Error />
+        </Questionnaire.Item>
+
+        <Questionnaire.Item name="stack" multiple>
+          <Questionnaire.Question>What are you building with?</Questionnaire.Question>
+          <Questionnaire.Description>Select all that apply.</Questionnaire.Description>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="expo" label="Expo" />
+            <Questionnaire.Choice value="next" label="Next.js" />
+            <Questionnaire.Choice value="native" label="Bare React Native" />
+          </Questionnaire.Choices>
+        </Questionnaire.Item>
+
+        <Questionnaire.Item name="timeline">
+          <Questionnaire.Question>When are you shipping?</Questionnaire.Question>
+          <Questionnaire.Description>
+            Skip this if it is not decided.
+          </Questionnaire.Description>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="month" label="Within a month" />
+            <Questionnaire.Choice value="quarter" label="This quarter" />
+          </Questionnaire.Choices>
+        </Questionnaire.Item>
+
+        <Questionnaire.Item name="contact" required>
+          <Questionnaire.Question>Best way to reach you?</Questionnaire.Question>
+          <Questionnaire.Choices>
+            <Questionnaire.Choice value="email" label="Email" />
+            <Questionnaire.Choice value="none" label="Do not contact me" />
+          </Questionnaire.Choices>
+          <Questionnaire.Error />
+        </Questionnaire.Item>
+
+        <Questionnaire.Footer>
+          <Questionnaire.Back />
+          <Questionnaire.Spacer />
+          <Questionnaire.Skip />
+          <Questionnaire.Next />
+          <Questionnaire.Submit>Finish</Questionnaire.Submit>
+        </Questionnaire.Footer>
+      </Questionnaire>
+
+      <Text size="sm" muted>
+        Swipe across the questions, or use the buttons. The first, second and
+        last are required; the stack takes several answers and the timeline can
+        be skipped.
+      </Text>
+    </ScrollView>
+  );
+}
+
+/** In a sheet, which is where a phone usually asks a question like this. */
+function QuestionnaireSheetVersion() {
+  const [open, setOpen] = useState(false);
+  const [answers, setAnswers] = useState<QuestionnaireAnswers | null>(null);
+
+  return (
+    <View className="flex-1 justify-center gap-4 p-4">
+      <Button onPress={() => setOpen(true)}>Ask me two questions</Button>
+      {answers ? (
+        <Text size="sm" muted className="text-center">
+          {JSON.stringify(answers)}
+        </Text>
+      ) : (
+        <Text size="sm" muted className="text-center">
+          The sheet owns being dismissed; the questionnaire owns the questions.
+        </Text>
+      )}
+
+      {/*
+        The sheet already draws the boundary and the padding, so the
+        questionnaire goes in bare.
+
+        `showClose={false}` matters: the sheet's close button is absolutely
+        placed in its top-right corner, which is exactly where the progress
+        sits. Two things in one corner is one of them unreachable — and a
+        questionnaire that already has Back, Skip and Send does not need a
+        third way out. The sheet still dismisses by drag and by backdrop.
+      */}
+      <BottomSheet open={open} onOpenChange={setOpen}>
+        <BottomSheet.Content showClose={false}>
+          <Questionnaire
+            frame={false}
+            onSubmit={(final) => {
+              setAnswers(final);
+              setOpen(false);
+            }}
+          >
+            <Questionnaire.Title>Feedback</Questionnaire.Title>
+            <Questionnaire.Progress />
+            <Questionnaire.Item name="mood" required>
+              <Questionnaire.Question>How did that go?</Questionnaire.Question>
+              <Questionnaire.Choices>
+                <Questionnaire.Choice value="good" label="Better than expected" />
+                <Questionnaire.Choice value="fine" label="About right" />
+                <Questionnaire.Choice value="bad" label="Not well" />
+              </Questionnaire.Choices>
+              <Questionnaire.Error />
+            </Questionnaire.Item>
+            <Questionnaire.Item name="why">
+              <Questionnaire.Question>Anything to add?</Questionnaire.Question>
+              <Questionnaire.Choices>
+                <Questionnaire.Input placeholder="In your own words…" />
+              </Questionnaire.Choices>
+            </Questionnaire.Item>
+            <Questionnaire.Footer>
+              <Questionnaire.Back />
+              <Questionnaire.Spacer />
+              <Questionnaire.Skip />
+              <Questionnaire.Next />
+              <Questionnaire.Submit>Send</Questionnaire.Submit>
+            </Questionnaire.Footer>
+          </Questionnaire>
+        </BottomSheet.Content>
+      </BottomSheet>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* Catalogue                                                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -11211,6 +11631,35 @@ const CATALOGUE: ComponentEntry[] = [
       { label: 'Values it does not know about', render: () => <ComboboxTagsDemo /> },
       { label: 'Fetched for the query', render: () => <ComboboxAsyncDemo /> },
       { label: 'Inline — nothing is covered', render: () => <ComboboxInlineDemo /> },
+    ],
+  },
+  {
+    slug: 'questionnaire',
+    name: 'Questionnaire',
+    summary: 'One question at a time, with progress and a way back',
+    demos: [
+      { label: 'One answer at a time', render: () => <QuestionnaireDemo /> },
+      { label: 'Selecting more than one', render: () => <QuestionnaireMultipleDemo /> },
+      { label: 'An answer that is not listed', render: () => <QuestionnaireFreeformDemo /> },
+      { label: 'A letter beside every answer', render: () => <QuestionnaireShortcutsDemo /> },
+      { label: 'Numbers instead of pips', render: () => <QuestionnaireNumbersDemo /> },
+      { label: 'Without the frame', render: () => <QuestionnaireBareDemo /> },
+      {
+        label: 'Getting set up',
+        id: 'onboarding',
+        fullPage: true,
+        description:
+          'Five questions and the summary they add up to — required, optional, multi-answer and freeform in one flow.',
+        render: () => <QuestionnaireOnboardingVersion />,
+      },
+      {
+        label: 'In a sheet',
+        id: 'sheet',
+        fullPage: true,
+        description:
+          'Two questions in a bottom sheet, where the sheet owns dismissal and the questionnaire owns the questions.',
+        render: () => <QuestionnaireSheetVersion />,
+      },
     ],
   },
   {

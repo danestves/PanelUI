@@ -333,6 +333,15 @@
       "updatedIn": "0.35.0"
     }
   ],
+  "questionnaire": [
+    "Questionnaire",
+    "One question at a time, with progress, validation and a way back.",
+    "react native questionnaire survey form",
+    {
+      "addedIn": "0.47.0",
+      "alpha": true
+    }
+  ],
   "radio-group": [
     "RadioGroup",
     "Single-select list of options.",
