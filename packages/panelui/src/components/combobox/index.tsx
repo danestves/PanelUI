@@ -109,8 +109,14 @@ const comboboxVariants = tv({
      * have one (`h-6`) and two differently-sized boxes on a `items-center` row
      * centre to two different baselines. `py-0` clears the platform default,
      * which is not the same on iOS and Android.
+     *
+     * The size is a length rather than a `text-*` step for the reason Input
+     * gives: a step sets a size *and* a line height, and the extra leading
+     * lands above the glyphs, so inside a box of fixed height the text and the
+     * placeholder sit below its middle — a few pixels under the chips they are
+     * supposed to be level with. A length leaves the line box the font's own.
      */
-    input: 'h-7 min-w-24 flex-1 py-0 text-base font-normal text-foreground',
+    input: 'h-7 min-w-24 flex-1 py-0 text-[16px] font-normal text-foreground',
     action: 'h-6 w-6 items-center justify-center rounded-full',
     list: 'overflow-hidden rounded-xl border border-border bg-popover p-2 shadow-sm',
     item: 'flex-row items-center gap-2 rounded-lg px-3 py-3',
