@@ -15,6 +15,15 @@
  *   <Tabs.Content value="account">…</Tabs.Content>
  * </Tabs>
  * ```
+ *
+ * **Swiping.** Only the visible panel is mounted, so a drag has nothing behind
+ * it to reveal. The panel still tracks the finger one to one and dims as it
+ * goes, and the panel arriving comes back up through the same fade — the
+ * movement carries the change and the dissolve covers the gap. On release the
+ * arriving panel picks up a whole panel's width from wherever the outgoing one
+ * was let go, so the two views draw one continuous movement between them. The
+ * displacement lives on the root for exactly that reason: a value belonging to
+ * either panel would be destroyed at the handover.
  */
 import {
   createContext,
@@ -64,25 +73,30 @@ const SWIPE_DISTANCE_RATIO = 0.25;
 const SWIPE_VELOCITY = 500;
 
 /**
- * How much of the finger's travel the panel actually follows.
- *
- * Not all of it: a panel that tracked one-to-one would look like a pager that
- * is about to reveal the next panel, and there is nothing behind it to reveal
- * — the panels are separate views, only one of which is mounted. A third of
- * the distance is enough to say the gesture was received.
+ * How much of the finger's travel the panel follows at the ends of the row,
+ * where there is nowhere for it to go. Everywhere else it follows all of it.
  */
-const SWIPE_FOLLOW = 0.32;
-/** …and a fraction of that again at the ends, where there is nowhere to go. */
-const SWIPE_FOLLOW_AT_END = 0.1;
+const SWIPE_RESISTANCE_AT_END = 0.16;
 
 /**
- * How far off its resting place the arriving panel starts, as a share of the
- * panel's width.
+ * How far the panel fades as it is dragged, at a full panel's width.
  *
- * A swipe that commits should not look like a swipe that was cancelled. Both
- * end with a panel settling at rest, and the only thing that distinguishes
- * them is which side it settled *from* — so the incoming panel picks up
- * roughly where the outgoing one was let go, on the far side, and travels in.
+ * Tracking the finger one to one leaves the space behind the panel empty,
+ * because the panels are separate views and only the visible one is mounted.
+ * Dimming as it goes is what keeps that from reading as a hole punched in the
+ * card: a panel on its way out is on its way out, and the one arriving comes
+ * back up through the same fade. The two together read as a dissolve carried
+ * by the movement, rather than as a gap between two slides.
+ */
+const SWIPE_FADE = 0.75;
+
+/**
+ * How far off its resting place a panel arriving by a *press* starts, as a
+ * share of the panel's width.
+ *
+ * A press has no finger travel to continue from, so it is given a throw of its
+ * own. A swipe does not use this: the panel it hands over to picks up exactly
+ * where the outgoing one was let go — see `setValue`.
  */
 const SWIPE_ENTER = 0.3;
 
@@ -148,9 +162,19 @@ interface TabLayout {
   width: number;
 }
 
+/**
+ * What a swipe hands over to the tab it commits to: where the finger left the
+ * outgoing panel, and how fast it was still going. Absent when the tab was
+ * changed by pressing a trigger, which has neither.
+ */
+interface SwipeHandover {
+  /** Points per second at the moment of release, in the panel's own axis. */
+  velocity: number;
+}
+
 interface TabsContextValue {
   value: string;
-  setValue: (value: string) => void;
+  setValue: (value: string, handover?: SwipeHandover) => void;
   registerLayout: (value: string, layout: TabLayout) => void;
   layouts: Record<string, TabLayout>;
   /**
@@ -245,7 +269,7 @@ function TabsRoot({
   const resolvedValue = isControlled ? value : internalValue;
 
   const setValue = useCallback(
-    (next: string) => {
+    (next: string, handover?: SwipeHandover) => {
       /*
        * The arriving panel starts on the side it is arriving from, and travels
        * in. Done here rather than in the panel because only the root knows
@@ -258,9 +282,28 @@ function TabsRoot({
         const from = tabs.indexOf(resolvedValue);
         const to = tabs.indexOf(next);
         if (from !== -1 && to !== -1 && from !== to) {
-          swipeOffset.value =
-            (to > from ? 1 : -1) * sign * panelWidth.value * SWIPE_ENTER;
-          swipeOffset.value = withSpring(0, ENTER_SPRING);
+          const direction = to > from ? 1 : -1;
+
+          if (handover) {
+            /*
+             * A swipe hands over mid-movement, so the arriving panel starts a
+             * whole panel's width from wherever the outgoing one was let go —
+             * which is where it *would* have been all along, had both been
+             * mounted. Adding to the displacement rather than replacing it is
+             * the entire difference between one continuous movement and a jump
+             * at the moment the finger lifts.
+             */
+            swipeOffset.value += direction * sign * panelWidth.value;
+            swipeOffset.value = withSpring(0, {
+              ...ENTER_SPRING,
+              // Carried across too, so a flick keeps its speed instead of
+              // stopping dead and starting again from rest.
+              velocity: handover.velocity,
+            });
+          } else {
+            swipeOffset.value = direction * sign * panelWidth.value * SWIPE_ENTER;
+            swipeOffset.value = withSpring(0, ENTER_SPRING);
+          }
         }
       }
 
@@ -530,10 +573,10 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
   }, [position, tabs.length, index, count]);
 
   const step = useCallback(
-    (delta: number) => {
+    (delta: number, velocity: number) => {
       const from = tabs.indexOf(value);
       const next = tabs[from + delta];
-      if (next) setValue(next);
+      if (next) setValue(next, { velocity });
     },
     [tabs, value, setValue]
   );
@@ -552,8 +595,16 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
           const atEnd =
             (travel > 0 && index.value === 0) ||
             (travel < 0 && index.value >= count.value - 1);
-          offset.value =
-            event.translationX * (atEnd ? SWIPE_FOLLOW_AT_END : SWIPE_FOLLOW);
+          /*
+           * One to one, except at the ends. The panel is under the finger for
+           * the whole of the drag, which is what lets the handover on release
+           * continue the movement rather than restart it — and a panel that
+           * moved a third as far as the finger never felt attached to it in
+           * the first place.
+           */
+          offset.value = atEnd
+            ? event.translationX * SWIPE_RESISTANCE_AT_END
+            : event.translationX;
         })
         .onEnd((event) => {
           const travel = event.translationX * sign;
@@ -569,15 +620,20 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
             // reads as a cancel — so the direction comes from whichever of the
             // two crossed its threshold, speed first.
             //
-            // No spring back to zero here: `setValue` on the root throws the
-            // displacement across to the side the next panel arrives from, and
-            // springing to rest first would undo it a frame before it happens.
-            runOnJS(step)(fast ? (speed < 0 ? 1 : -1) : travel < 0 ? 1 : -1);
+            // No spring back to zero here: `setValue` on the root carries the
+            // displacement across to the arriving panel, and springing to rest
+            // first would undo it a frame before it happens.
+            runOnJS(step)(
+              fast ? (speed < 0 ? 1 : -1) : travel < 0 ? 1 : -1,
+              event.velocityX
+            );
             return;
           }
 
-          // Nothing changed hands, so this panel simply comes back.
-          offset.value = withSpring(0, SPRING);
+          // Nothing changed hands, so this panel simply comes back — with the
+          // speed it was let go at, so a cancelled flick decelerates rather
+          // than stopping and being pulled.
+          offset.value = withSpring(0, { ...SPRING, velocity: event.velocityX });
         })
         .onFinalize((_event, success) => {
           // A cancelled gesture never reaches `onEnd`, and would otherwise
@@ -587,9 +643,14 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
     [sign, step, offset, width, index, count]
   );
 
-  const followStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: offset.value }],
-  }));
+  const followStyle = useAnimatedStyle(() => {
+    const span = width.value || 1;
+    const travelled = Math.min(1, Math.abs(offset.value) / span);
+    return {
+      transform: [{ translateX: offset.value }],
+      opacity: 1 - SWIPE_FADE * travelled,
+    };
+  });
 
   if (!active && !context.keepMounted) return null;
 

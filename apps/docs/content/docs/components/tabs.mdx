@@ -266,10 +266,12 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ### Swiping
 
-A swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was. The panel follows about a third of the finger's travel; it does not track one-to-one, because there is no next panel behind it to reveal. Only one panel is mounted at a time unless `keepMounted` is set.
+A swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was.
 
-On release the arriving panel starts on the side it is arriving from and springs into place, so a swipe that took reads differently from one that was cancelled — both end at rest, and the only thing that separates them is which side they settled from. A tab changed by pressing a trigger moves the same way, in the direction the tab sits: with `swipeable` set, the panels move rather than cross-fade, and one feature should not look like two.
+The panel tracks the finger one to one. Only one panel is mounted at a time unless `keepMounted` is set, so there is nothing behind the one being dragged; instead of holding it back, the panel dims as it travels and the arriving one comes back up through the same fade. The movement carries the change, and the dissolve covers the gap.
+
+On release the arriving panel picks up a whole panel's width from wherever the outgoing one was let go — which is where it would have been all along had both been mounted — and springs to rest carrying the speed the finger let go at. That is what makes a swipe one continuous movement rather than a drag followed by a separate slide. A tab changed by pressing a trigger has no travel to continue from, so it is given a shorter throw of its own, in the direction the tab sits.
 
 The order swiped through is the order the triggers are **written** in, not the order they appear on screen. Under RTL those differ — the first tab is the rightmost — and a swipe towards the start of the reading direction goes to the previous tab in both.
 
-At the first and last tab the panel still moves, but a tenth as far. A gesture that produces nothing at all is indistinguishable from one that was not received.
+At the first and last tab the panel still moves, but a sixth as far. A gesture that produces nothing at all is indistinguishable from one that was not received.
