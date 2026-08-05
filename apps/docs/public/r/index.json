@@ -247,6 +247,23 @@
     ]
   },
   {
+    "name": "date-time-picker",
+    "type": "registry:ui",
+    "description": "A day and a time of day, picked in one panel.",
+    "registryDependencies": [
+      "button",
+      "calendar",
+      "cn",
+      "date",
+      "dialog",
+      "icons",
+      "popover",
+      "text",
+      "time",
+      "time-picker"
+    ]
+  },
+  {
     "name": "dialog",
     "type": "registry:ui",
     "description": "Modal dialog with a backdrop and footer actions.",

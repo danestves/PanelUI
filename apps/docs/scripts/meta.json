@@ -123,6 +123,14 @@
       "updatedIn": "0.30.0"
     }
   ],
+  "date-time-picker": [
+    "DateTimePicker",
+    "A day and a time of day, picked in one panel.",
+    "react native date time picker component",
+    {
+      "addedIn": "0.46.0"
+    }
+  ],
   "dialog": [
     "Dialog",
     "Modal dialog with a backdrop and footer actions.",

@@ -58,6 +58,7 @@ import {
   Chip,
   ColorPicker,
   DatePicker,
+  DateTimePicker,
   type DateRange,
   Dialog,
   Direction,
@@ -1269,6 +1270,123 @@ function DatePickerSheetDemo() {
       <Text size="sm" muted>
         The anchored panel is the default: a month grid is a fixed size and fits
         beside its trigger. A sheet earns its place when the screen is busy.
+      </Text>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* DateTimePicker                                                             */
+/* -------------------------------------------------------------------------- */
+
+/** Both halves in one panel, and one Done that finishes them together. */
+function DateTimePickerDemo() {
+  const [when, setWhen] = useState<Date>();
+
+  return (
+    <View className="w-full gap-4">
+      <DateTimePicker value={when} onValueChange={setWhen} />
+      <Text size="sm" muted>
+        {when
+          ? when.toLocaleString(undefined, {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              hour: 'numeric',
+              minute: '2-digit',
+            })
+          : 'One value, filled in from either end — the day first or the time first.'}
+      </Text>
+    </View>
+  );
+}
+
+/** In a sheet, which is where a panel this tall usually belongs on a phone. */
+function DateTimePickerSheetDemo() {
+  const [when, setWhen] = useState<Date>();
+
+  return (
+    <View className="w-full gap-4">
+      <DateTimePicker
+        value={when}
+        onValueChange={setWhen}
+        presentation="bottom-sheet"
+        placeholder="Pick a moment in a sheet"
+      />
+      <Text size="sm" muted>
+        A calendar and a scale stacked is a tall panel, and a sheet has the
+        height to give it without the popover having to leave the screen.
+      </Text>
+    </View>
+  );
+}
+
+/** The wheel face instead of the ruler, for a time down to the minute. */
+function DateTimePickerWheelDemo() {
+  const [when, setWhen] = useState<Date>();
+
+  return (
+    <View className="w-full gap-4">
+      <DateTimePicker
+        value={when}
+        onValueChange={setWhen}
+        layout="wheel"
+        hourCycle={24}
+        minuteStep={5}
+        presentation="dialog"
+        placeholder="Pick to the minute"
+      />
+      <Text size="sm" muted>
+        The ruler is the default because it fits under a month grid. Where the
+        exact minute matters more than the height, the wheel is a prop away.
+      </Text>
+    </View>
+  );
+}
+
+/** A slot inside opening hours, on a day inside the booking window. */
+function DateTimePickerSlotDemo() {
+  const [when, setWhen] = useState<Date>();
+
+  const today = new Date();
+  const window = new Date(today);
+  window.setDate(window.getDate() + 21);
+
+  return (
+    <View className="w-full gap-3">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Book a fitting</Frame.Title>
+          <Frame.Action>30 minutes</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="p-3">
+            {/* Bounded on both axes: three weeks of days, and only the hours
+                the shop is open. A picker that offers a slot nobody can be
+                given is a picker that has to reject it later. */}
+            <DateTimePicker
+              presentation="inline"
+              value={when}
+              onValueChange={setWhen}
+              minDate={today}
+              maxDate={window}
+              minTime={{ hour: 9, minute: 0 }}
+              maxTime={{ hour: 17, minute: 30 }}
+              minuteStep={30}
+            />
+          </View>
+        </Frame.Panel>
+      </Frame>
+      <Text size="sm" muted className="text-center">
+        {when
+          ? when.toLocaleString(undefined, {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              hour: 'numeric',
+              minute: '2-digit',
+            })
+          : 'Next three weeks, 9:00 to 17:30'}
       </Text>
     </View>
   );
@@ -5222,7 +5340,10 @@ const EXPANDING_TABS = [
  */
 function ExpandingTabsDemo() {
   return (
-    <Tabs variant="expanding" defaultValue="chats" className="w-full">
+    // `swipeable` as well, so the panel under the row arrives the way it does
+    // when it is dragged: pressing a pill throws the incoming panel in from the
+    // side it belongs on rather than cross-fading it in place.
+    <Tabs swipeable variant="expanding" defaultValue="chats" className="w-full">
       <Tabs.List className="justify-center">
         {EXPANDING_TABS.map((tab) => (
           <Tabs.Trigger key={tab.value} value={tab.value} icon={tab.icon}>
@@ -11099,6 +11220,17 @@ const CATALOGUE: ComponentEntry[] = [
     demos: [
       { label: 'Single, range and birthday', render: () => <DatePickerDemo /> },
       { label: 'In a sheet', render: () => <DatePickerSheetDemo /> },
+    ],
+  },
+  {
+    slug: 'date-time-picker',
+    name: 'DateTimePicker',
+    summary: 'A day and a time, picked in one panel',
+    demos: [
+      { label: 'Both halves at once', render: () => <DateTimePickerDemo /> },
+      { label: 'In a sheet', render: () => <DateTimePickerSheetDemo /> },
+      { label: 'The wheel face', render: () => <DateTimePickerWheelDemo /> },
+      { label: 'Booking a slot', render: () => <DateTimePickerSlotDemo /> },
     ],
   },
   {

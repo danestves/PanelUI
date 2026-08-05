@@ -981,6 +981,45 @@
       "height": 1560
     }
   },
+  "date-time-picker": {
+    "intro": "A day and a time of day, picked in one panel and carried in one `Date`.\n\nA date field beside a time field is two decisions the reader has to make separately and then hold together — and the two halves can disagree, which is how a booking ends up on the right day at a time that has already passed. Here the calendar and the scale are the same panel over one value, so what is on screen is the answer rather than two thirds of it.\n\nThe layout follows from that: the calendar is the coarse choice and takes the room, the time sits under it behind a hairline, and one Done finishes both.",
+    "usage": "const [when, setWhen] = useState<Date>();\n\n<DateTimePicker value={when} onValueChange={setWhen} />",
+    "extraImports": [
+      "Frame",
+      "Text"
+    ],
+    "parts": {
+      "Trigger": "Wrap your own trigger in it to replace the default button. It is `Popover.Trigger` — the same part `DatePicker` and `TimePicker` re-export, so a field row written for one works for all three."
+    },
+    "examples": [
+      {
+        "title": "One value, filled in from either end",
+        "description": "`onValueChange` fires on every change to either half, not on Done — Done closes the panel, it does not decide anything the caller has not already been told.\n\nThe halves can be filled in either order. A day picked first takes the top of the current hour until the time is touched; a time picked first means **today**, because a time is not a `Date` without a day and the day the reader is looking at is the only defensible guess. The alternative — emitting nothing until both halves have been touched — is a form that silently does nothing when you use it in the order it did not expect.",
+        "code": "const [when, setWhen] = useState<Date>();\n\n<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  placeholder=\"Pick a date and time\"\n/>"
+      },
+      {
+        "title": "Where the panel goes",
+        "description": "`popover` anchors it to the trigger and is the default. `bottom-sheet` is usually the better answer on a phone: a calendar and a scale stacked is a tall panel, and a sheet has the height to give it. `dialog` is for when the appointment *is* the decision on the screen. `inline` renders the panel bare, for composing into a Frame or a form.",
+        "code": "<DateTimePicker presentation=\"bottom-sheet\" />\n\n<DateTimePicker presentation=\"dialog\" />\n\n{/* Bare, inside something of your own. */}\n<Frame>\n  <Frame.Header><Frame.Title>Book a fitting</Frame.Title></Frame.Header>\n  <Frame.Panel>\n    <View className=\"p-3\">\n      <DateTimePicker presentation=\"inline\" value={when} onValueChange={setWhen} />\n    </View>\n  </Frame.Panel>\n</Frame>"
+      },
+      {
+        "title": "Which face the time is picked on",
+        "description": "`ruler` by default rather than the wheel. Under a month grid the panel is already tall, and the wheel is five rows of it; the ruler is one readout over a scale, reads at arm's length, and is the one face that fits under a calendar without the whole thing needing to scroll.\n\nWhere the exact minute matters more than the height, the other two faces are a prop away and produce the same value.",
+        "code": "{/* The default. */}\n<DateTimePicker layout=\"ruler\" />\n\n{/* Any minute in the day, two flicks away. */}\n<DateTimePicker layout=\"wheel\" minuteStep={5} hourCycle={24} />\n\n{/* A face beside a list of slots. */}\n<DateTimePicker layout=\"clock\" minuteStep={30} />"
+      },
+      {
+        "title": "Bounding it on both axes",
+        "description": "`minDate` and `maxDate` bound the calendar; `minTime` and `maxTime` bound the time of day, and `minuteStep` decides how finely it can be landed on. A picker that offers a slot nobody can be given is a picker that has to reject it afterwards, which is the same rejection arriving later and less usefully.\n\nThe bounds are independent, so this reads as \"any day in the next three weeks, between nine and half past five\" — which is what opening hours are.",
+        "code": "<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  minDate={today}\n  maxDate={threeWeeksOut}\n  minTime={{ hour: 9, minute: 0 }}\n  maxTime={{ hour: 17, minute: 30 }}\n  minuteStep={30}\n/>"
+      },
+      {
+        "title": "A trigger of your own",
+        "description": "Pass a child and it is cloned with an `onPress` that opens the panel, so a field row, a list item or an icon button can stand in for the default button without this component knowing what any of them look like.",
+        "code": "<DateTimePicker value={when} onValueChange={setWhen}>\n  <Item onPress={() => {}}>\n    <Item.Content>\n      <Item.Title>Starts</Item.Title>\n      <Item.Description>{when ? format(when) : 'Not set'}</Item.Description>\n    </Item.Content>\n    <ChevronRightIcon size={16} />\n  </Item>\n</DateTimePicker>"
+      }
+    ],
+    "notes": "### It does not close on the date\n\n[DatePicker](/docs/components/date-picker) closes as soon as a single day is tapped, because at that point there is nothing left to say. Here there is: the day is half the value, and closing on it would hide the other half at the moment it became relevant.\n\nSo the panel stays until Done — in every presentation, including the popover, which is the one place `DatePicker` has no Done button at all. Tapping outside still dismisses it, but that is how a popover is *abandoned*, and something has to say when both halves are settled.\n\n### The panel is a fixed width\n\nThat is what lets the two halves line up. A month grid and a time scale that each measured themselves would be two boxes of slightly different widths stacked on each other, and the seam shows at any size. The hairline between them is a hairline rather than a gap for the same reason: space alone reads as two controls that happen to be near each other.\n\n### The value is a `Date`, the time is not\n\nThe component's value is one `Date` carrying both halves, because that is what a caller stores and sends. Inside, and in `minTime` / `maxTime`, a time of day is `{ hour, minute }` on a 24-hour clock — a `Date` cannot hold a time without also holding a day, and the two conversions that forces on every caller are where the daylight-saving bugs live. `hourCycle` decides whether a meridiem is shown; it does not change what is stored.\n\n### When two fields are still the right answer\n\nIf the day and the time are genuinely separate decisions — a recurring event's day-of-week and its time, a filter with an optional time — keep them apart. This component is for the case where one moment is being chosen and half of it is not an answer."
+  },
   "dialog": {
     "intro": "A modal dialog. Mounts through a portal and unmounts after its exit animation.",
     "usage": "<Dialog>\n  <Dialog.Trigger>\n    <Button variant=\"outline\">Delete</Button>\n  </Dialog.Trigger>\n  <Dialog.Content>\n    <Dialog.Title>Delete project?</Dialog.Title>\n    <Dialog.Description>\n      This action cannot be undone.\n    </Dialog.Description>\n    <Dialog.Footer>\n      <Dialog.Close>\n        <Button size=\"sm\" variant=\"ghost\">Cancel</Button>\n      </Dialog.Close>\n      <Dialog.Close>\n        <Button size=\"sm\" variant=\"destructive\">Delete</Button>\n      </Dialog.Close>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
