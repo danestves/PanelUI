@@ -9,6 +9,49 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.47.0] — 2026-08-06
+
+### Added
+
+- **`Questionnaire`** (alpha) — one question at a time, with progress, validation and a way back.
+  Where `Steps` reflects a flow the app owns, this one *owns* the flow: it holds the answers,
+  decides which question is current, gates the way forward on the current one being answered, and
+  hands the whole set back when it is done. For onboarding, intake, surveys, and the clarifying
+  questions an agent asks before it starts work.
+
+  Answers come back as one record keyed by question name — a string for a single-answer question,
+  an array for a `multiple` one. A freeform `Questionnaire.Input` lands under the *same* name,
+  because it is another answer to the same question rather than a separate field, and that is what
+  makes picking a choice empty the text field and typing clear the choice without either part
+  knowing the other exists.
+
+  The root draws its own `Frame`, since a survey wants a boundary, a title strip and a footer that
+  stays put while the middle changes; `frame={false}` drops it for a sheet or a card that already
+  draws one. It reads its children once to sort them into that shell and to learn the full set of
+  questions without mounting any of them, which is what makes a total countable and a conditional
+  question skippable before it is ever reached. Pass `items` when a question is conditional — one
+  that has not been reached is not mounted, so it cannot report that it exists.
+
+  Only a **required** question blocks. `Questionnaire.Skip` therefore unblocks nothing; it
+  *records* that an optional question was deliberately left out, moving its status from
+  `unanswered` to `skipped` so an app can tell a skipped answer from a missing one. Demanding an
+  explicit skip would trap anyone who left the button out, and a question that cannot be ignored is
+  not optional. `Questionnaire.Next` and `Submit` dim while a required question is unanswered but
+  stay pressable, because a disabled button says no without saying why — the look says not yet, the
+  press puts the reason under the question.
+
+  `Questionnaire.Progress` draws a bar per question by default, `variant="numbers"` counts them out
+  where the reader will be sent back to a particular one, and `variant="count"` is plain text; both
+  marked variants fall back to the count past eight questions, where neither is countable at a
+  glance. `shortcuts` badges each answer with a letter or number, skipping disabled ones so they do
+  not take a letter out of the sequence — a visual affordance only, since React Native surfaces
+  hardware key events just to a focused text field.
+
+  A horizontal drag moves between questions under the same gate as the buttons, and yields to any
+  drag with vertical intent so a questionnaire inside a scroller never fights the page.
+
+  Marked **alpha**: it is a large new compound API and the first real use will move it.
+
 ## [0.46.0] — 2026-08-05
 
 ### Added
