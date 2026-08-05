@@ -373,12 +373,13 @@ Give a navigation button a function and it is called with the active question’
 
 ### Without the frame
 
-The surrounding `Frame` is the component’s own. Turn it off for a questionnaire inside something that already draws a boundary, and the header, question and footer stack bare.
+The surrounding `Frame` is the component’s own. Turn it off for a questionnaire inside something that already draws a boundary, and the header, question and footer stack bare — keeping only their vertical rhythm, because the container is already holding them off the edges. Mind that container’s own insets: `Card.Content` is `p-6 pt-0` because it expects a `Card.Header` above it, so without one the progress row starts flush against the card’s top edge.
 
 ```tsx
 <Card>
-  <Card.Content>
+  <Card.Content className="pt-6">
     <Questionnaire frame={false}>
+      <Questionnaire.Title>Timing</Questionnaire.Title>
       <Questionnaire.Progress />
       <Questionnaire.Item name="timing" required>
         <Questionnaire.Question>When should this ship?</Questionnaire.Question>
@@ -387,7 +388,7 @@ The surrounding `Frame` is the component’s own. Turn it off for a questionnair
           <Questionnaire.Choice value="cycle" label="Next cycle" />
         </Questionnaire.Choices>
       </Questionnaire.Item>
-      <Questionnaire.Footer className="px-0 pb-0">
+      <Questionnaire.Footer>
         <Questionnaire.Spacer />
         <Questionnaire.Submit />
       </Questionnaire.Footer>
@@ -421,7 +422,7 @@ The sheet owns being dismissed and the questionnaire owns the questions — neit
           </Questionnaire.Choices>
           <Questionnaire.Error />
         </Questionnaire.Item>
-        <Questionnaire.Footer className="px-0 pb-0">
+        <Questionnaire.Footer>
           <Questionnaire.Spacer />
           <Questionnaire.Submit>Send</Questionnaire.Submit>
         </Questionnaire.Footer>

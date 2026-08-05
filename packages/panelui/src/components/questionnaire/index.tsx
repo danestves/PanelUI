@@ -678,8 +678,14 @@ function QuestionnaireRoot({
     />
   );
 
+  /*
+   * More room above and below than a Frame header takes by default. That
+   * default is set for a line of text, and the progress indicator is a 4px
+   * bar — against the same padding it reads as pinned to the top edge rather
+   * than sitting on the strip.
+   */
   const header = (
-    <Frame.Header>
+    <Frame.Header className="pb-3.5 pt-3">
       {titleNode ?? <View className="flex-1" />}
       {progressNode ? <Frame.Action>{progressNode}</Frame.Action> : null}
     </Frame.Header>

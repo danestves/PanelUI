@@ -10597,8 +10597,14 @@ function QuestionnaireBareDemo() {
   return (
     <View className="w-full">
       <Card>
-        <Card.Content>
+        {/*
+          `pt-6`, because Card.Content is `p-6 pt-0` — it expects a Card.Header
+          above it, and without one the questionnaire's progress row starts
+          flush against the card's top edge.
+        */}
+        <Card.Content className="pt-6">
           <Questionnaire frame={false}>
+            <Questionnaire.Title>Timing</Questionnaire.Title>
             <Questionnaire.Progress />
             <Questionnaire.Item name="timing" required>
               <Questionnaire.Question>When should this ship?</Questionnaire.Question>
