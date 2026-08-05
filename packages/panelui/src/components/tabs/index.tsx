@@ -707,10 +707,18 @@ function ExpandingTrigger({
     >
       {icon}
       <Animated.View style={[{ overflow: 'hidden' }, reveal]}>
-        {/* Pinned to the measured width so the text does not reflow as the box
-            around it closes — a label that rewraps on its way out reads as a
-            glitch rather than as a reveal. */}
-        <View style={{ width: labelWidth }} className="ps-1.5">
+        {/*
+         * Pinned to the measured width so the text does not reflow as the box
+         * around it closes — a label that rewraps on its way out reads as a
+         * glitch rather than as a reveal.
+         *
+         * The gap after the icon is padding on this box, so it has to be added
+         * to the width rather than taken out of it. Set to the measured width
+         * alone, the padding comes off the inside and the label is handed six
+         * points less than it asked for, which a single-line `Text` answers by
+         * truncating: "Inbox" arrives as "Inbo…" and stays that way.
+         */}
+        <View style={{ width: labelWidth + LABEL_GAP, paddingStart: LABEL_GAP }}>
           {label}
         </View>
       </Animated.View>
