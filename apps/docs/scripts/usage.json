@@ -1977,7 +1977,7 @@
   },
   "line-chart": {
     "intro": "A time series, drawn and animated on the UI thread.\n\nThe chart is composed rather than configured: the grid, each series, the axis and the crosshair are separate children, so a chart that wants no grid simply does not have one. A single component with twenty booleans is how charts end up unreadable at the call site.\n\nColours come from the `--color-chart-1` … `--color-chart-5` tokens, so a chart follows the active theme out of the box and is put on brand by overriding those five. Nothing in it hardcodes a colour.",
-    "usage": "<LineChart data={visits} xDataKey=\"month\">\n  <LineChart.Grid />\n  <LineChart.Area dataKey=\"visits\" />\n  <LineChart.Line dataKey=\"visits\" />\n  <LineChart.XAxis />\n  <LineChart.Tooltip />\n</LineChart>",
+    "usage": "<LineChart data={visits} xDataKey=\"month\">\n  <LineChart.Grid />\n  <LineChart.Area dataKey=\"visits\" />\n  <LineChart.Line dataKey=\"visits\" />\n  <LineChart.XAxis />\n  <LineChart.YAxis />\n  <LineChart.Tooltip />\n</LineChart>",
     "extraImports": [
       "Frame",
       "Text",
@@ -1989,6 +1989,7 @@
       "Line": "One series. Takes its colour from a `--color-chart-*` token unless given one.",
       "Skeleton": "The flat rule with a sweep along it, shown while `status=\"loading\"`.",
       "XAxis": "The x labels, as real text under the plot.",
+      "YAxis": "The value labels down the side, one per grid line. Reserves its own gutter.",
       "Tooltip": "The crosshair and the drag that drives it.",
       "Legend": "A swatch and a name per registered series."
     },
@@ -2044,6 +2045,11 @@
         "title": "Basic",
         "description": "Two series sharing one axis, with the headline reading and the legend in a band above the chart rather than in the header. `curve=\"linear\"` joins the points straight rather than easing between them, which is the honest choice when the readings are discrete.",
         "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Traffic Source</Frame.Title>\n    <Frame.Action>Last 12 months</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <ChartStat value=\"292,000\" caption=\"Sessions\">\n      <LegendDot colorIndex={1} label=\"Organic\" />\n      <LegendDot colorIndex={2} label=\"Paid Ads\" />\n    </ChartStat>\n    <LineChart data={sessions} xDataKey=\"month\" curve=\"linear\" aspectRatio={1.7}>\n      <LineChart.Grid />\n      <LineChart.Line dataKey=\"organic\" colorIndex={1} />\n      <LineChart.Line dataKey=\"paid\" colorIndex={2} />\n      <LineChart.XAxis ticks={5} />\n      <LineChart.Tooltip formatValue={(v) => v.toLocaleString()} />\n    </LineChart>\n  </Frame.Panel>\n</Frame>"
+      },
+      {
+        "title": "Both axes",
+        "description": "Add `LineChart.YAxis` for value labels down the side. It reserves its own gutter before the plot is laid out, so the numbers sit beside the series rather than over it, and each label is centred on the grid line it names. Give it the same count as the grid — `Grid`’s `rows` and `YAxis`’s `ticks` both default to `4`, and a chart where they disagree has numbers naming lines that are not there.",
+        "code": "<LineChart data={revenue} xDataKey=\"month\" aspectRatio={1.7}>\n  <LineChart.Grid rows={4} />\n  <LineChart.Area dataKey=\"revenue\" />\n  <LineChart.Line dataKey=\"revenue\" />\n  <LineChart.XAxis ticks={5} />\n  <LineChart.YAxis ticks={4} format={(v) => `$${v / 1000}k`} />\n  <LineChart.Tooltip formatValue={(v) => `$${(v / 1000).toFixed(1)}k`} />\n</LineChart>"
       },
       {
         "title": "With dots",

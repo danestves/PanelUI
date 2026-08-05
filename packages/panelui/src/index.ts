@@ -483,6 +483,7 @@ export {
   type LineChartAreaProps,
   type LineChartSkeletonProps,
   type LineChartXAxisProps,
+  type LineChartYAxisProps,
   type LineChartTooltipProps,
   type LineChartLegendProps,
   type LineChartDatum,

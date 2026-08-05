@@ -40,6 +40,7 @@ npx panelui-cli@latest add line-chart
   <LineChart.Area dataKey="visits" />
   <LineChart.Line dataKey="visits" />
   <LineChart.XAxis />
+  <LineChart.YAxis />
   <LineChart.Tooltip />
 </LineChart>
 ```
@@ -54,6 +55,7 @@ npx panelui-cli@latest add line-chart
   <LineChart.Line>…</LineChart.Line>
   <LineChart.Skeleton>…</LineChart.Skeleton>
   <LineChart.XAxis>…</LineChart.XAxis>
+  <LineChart.YAxis>…</LineChart.YAxis>
   <LineChart.Tooltip>…</LineChart.Tooltip>
   <LineChart.Legend>…</LineChart.Legend>
 </LineChart>
@@ -65,6 +67,7 @@ npx panelui-cli@latest add line-chart
 - **`LineChart.Line`** — One series. Takes its colour from a `--color-chart-*` token unless given one.
 - **`LineChart.Skeleton`** — The flat rule with a sweep along it, shown while `status="loading"`.
 - **`LineChart.XAxis`** — The x labels, as real text under the plot.
+- **`LineChart.YAxis`** — The value labels down the side, one per grid line. Reserves its own gutter.
 - **`LineChart.Tooltip`** — The crosshair and the drag that drives it.
 - **`LineChart.Legend`** — A swatch and a name per registered series.
 
@@ -205,6 +208,21 @@ Two series sharing one axis, with the headline reading and the legend in a band 
     </LineChart>
   </Frame.Panel>
 </Frame>
+```
+
+### Both axes
+
+Add `LineChart.YAxis` for value labels down the side. It reserves its own gutter before the plot is laid out, so the numbers sit beside the series rather than over it, and each label is centred on the grid line it names. Give it the same count as the grid — `Grid`’s `rows` and `YAxis`’s `ticks` both default to `4`, and a chart where they disagree has numbers naming lines that are not there.
+
+```tsx
+<LineChart data={revenue} xDataKey="month" aspectRatio={1.7}>
+  <LineChart.Grid rows={4} />
+  <LineChart.Area dataKey="revenue" />
+  <LineChart.Line dataKey="revenue" />
+  <LineChart.XAxis ticks={5} />
+  <LineChart.YAxis ticks={4} format={(v) => `$${v / 1000}k`} />
+  <LineChart.Tooltip formatValue={(v) => `$${(v / 1000).toFixed(1)}k`} />
+</LineChart>
 ```
 
 ### With dots
@@ -440,6 +458,14 @@ Four series across the chart token ramp. They share one y-domain, so they stay c
 | --- | --- | --- | --- |
 | `ticks` | `number` | — | How many labels to show. The rest are dropped, evenly. |
 | `format` | `(datum: LineChartDatum, index: number) => string` | — | Turn a row into its label. Defaults to the value at `xDataKey`. |
+| `className` | `string` | — |  |
+
+### LineChart.YAxis
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `ticks` | `number` | — | How many intervals to divide the axis into. Yields `ticks + 1` labels. |
+| `format` | `(value: number) => string` | — | Turn a value into its label. Defaults to a compact number. |
 | `className` | `string` | — |  |
 
 ### LineChart.Tooltip

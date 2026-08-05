@@ -427,6 +427,31 @@ function ChartBasicVersion() {
   );
 }
 
+function ChartBothAxesVersion() {
+  return (
+    <ChartScreen>
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Monthly Revenue</Frame.Title>
+          <Frame.Action>Both axes</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <LineChart data={REVENUE} xDataKey="month" aspectRatio={1.7}>
+            {/* The grid's rows and the axis' ticks match, so every number
+                names a line that is actually drawn. */}
+            <LineChart.Grid rows={4} />
+            <LineChart.Area dataKey="revenue" />
+            <LineChart.Line dataKey="revenue" />
+            <LineChart.XAxis ticks={5} />
+            <LineChart.YAxis ticks={4} format={(v) => `$${Math.round(v / 1000)}k`} />
+            <LineChart.Tooltip formatValue={(v) => `$${(v / 1000).toFixed(1)}k`} />
+          </LineChart>
+        </Frame.Panel>
+      </Frame>
+    </ChartScreen>
+  );
+}
+
 function ChartDotsVersion() {
   return (
     <ChartScreen>
@@ -11519,6 +11544,13 @@ export const COMPONENTS: ComponentEntry[] = [
         fullPage: true,
         description: 'Two straight-line series sharing one axis, with a legend.',
         render: () => <ChartBasicVersion />,
+      },
+      {
+        label: 'Both axes',
+        id: 'both-axes',
+        fullPage: true,
+        description: 'Value labels down the side, each centred on the grid line it names.',
+        render: () => <ChartBothAxesVersion />,
       },
       {
         label: 'With dots',

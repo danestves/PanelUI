@@ -101,6 +101,12 @@ const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 /** Room left around the plot for the axis labels and the marker rings. */
 const PADDING = { top: 12, right: 10, bottom: 22, left: 10 };
 
+/** Left gutter reserved when a `YAxis` is present, for its labels to sit in. */
+const Y_AXIS_WIDTH = 44;
+
+/** Gap between the value labels and the plot they sit beside. */
+const Y_AXIS_GUTTER = 6;
+
 /**
  * Which layer a part belongs to. Read off the component itself, so composition
  * stays a flat list of children instead of two nested slots the caller has to
@@ -125,6 +131,12 @@ interface LineChartContextValue {
   /** Tweened y-domain. Read inside worklets to build the paths. */
   domainMin: SharedValue<number>;
   domainMax: SharedValue<number>;
+  /**
+   * The domain the tween is heading for. The axis labels read this rather than
+   * the shared values: a number re-rendered on every frame of a 500ms tween is
+   * 30 renders of a label that lands on the same string it started on.
+   */
+  extent: [number, number];
   /** Index under the finger, or -1 when nothing is being touched. */
   activeIndex: SharedValue<number>;
   activeIndexJS: number;
@@ -246,10 +258,28 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
     []
   );
 
+  /*
+   * Whether a `YAxis` was declared, read off the children before anything is
+   * laid out. The gutter its labels sit in has to come off the plot's width
+   * *before* the plot exists — an axis given no room is drawn over the series,
+   * which loses both the numbers and the shape they were meant to explain.
+   */
+  const hasYAxis = useMemo(() => {
+    let found = false;
+    Children.forEach(children, (child) => {
+      if (isValidElement(child) && (child.type as { axis?: string }).axis === 'y') {
+        found = true;
+      }
+    });
+    return found;
+  }, [children]);
+
   // A sparkline has no axis or grid to leave room for, so the line reaches the
   // edges; a stroke of a couple of pixels still needs a hair of inset not to be
   // clipped at the very top and bottom.
-  const pad = compact ? { top: 2, right: 1, bottom: 2, left: 1 } : PADDING;
+  const pad = compact
+    ? { top: 2, right: 1, bottom: 2, left: 1 }
+    : { ...PADDING, left: hasYAxis ? Y_AXIS_WIDTH : PADDING.left };
   const plot: Plot = {
     left: pad.left,
     top: pad.top,
@@ -360,6 +390,7 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
       unregisterSeries,
       domainMin,
       domainMax,
+      extent,
       activeIndex,
       activeIndexJS,
       setActiveIndexJS: handleActiveIndex,
@@ -381,6 +412,7 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
       unregisterSeries,
       domainMin,
       domainMax,
+      extent,
       activeIndex,
       activeIndexJS,
       handleActiveIndex,
@@ -789,6 +821,69 @@ function LineChartXAxis({ ticks = 4, format, className }: LineChartXAxisProps) {
 LineChartXAxis.displayName = 'LineChart.XAxis';
 LineChartXAxis.layer = 'overlay' as Layer;
 
+export interface LineChartYAxisProps {
+  /** How many intervals to divide the axis into. Yields `ticks + 1` labels. */
+  ticks?: number;
+  /** Turn a value into its label. Defaults to a compact number. */
+  format?: (value: number) => string;
+  className?: string;
+}
+
+/**
+ * Value labels down the side, one per grid line.
+ *
+ * Give it the same `ticks` as the grid, or the numbers name lines that are not
+ * there. Four is the default on both for that reason.
+ *
+ * The labels are the domain the data settles at, not the tweening one — a
+ * number that counts up through every intermediate value while the axis
+ * animates is noise, and the axis is the part of the chart that is supposed to
+ * hold still enough to read.
+ */
+function LineChartYAxis({ ticks = 4, format, className }: LineChartYAxisProps) {
+  const { plot, extent } = useChart('LineChart.YAxis');
+
+  const labels = useMemo(() => {
+    const [min, max] = extent;
+    if (min === 0 && max === 0) return [];
+    return Array.from({ length: ticks + 1 }, (_unused, index) => {
+      const value = max - ((max - min) * index) / ticks;
+      return { key: index, text: format ? format(value) : compactNumber(value) };
+    });
+  }, [extent, ticks, format]);
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: 0,
+        // Centred on the grid line each label names: the strip is lifted half
+        // a label and grown by a whole one, so `justify-between` lands the
+        // text's middle on the line rather than its top edge on the first line
+        // and its bottom edge on the last.
+        top: plot.top - AXIS_LABEL_HEIGHT / 2,
+        height: plot.height + AXIS_LABEL_HEIGHT,
+        // The gutter the root reserved, less a little breathing room, so the
+        // numbers sit clear of the plot instead of against it.
+        width: Math.max(plot.left - Y_AXIS_GUTTER, 0),
+      }}
+      className={cn('items-end justify-between', className)}
+    >
+      {labels.map((label) => (
+        <Text key={label.key} size="xs" muted numberOfLines={1}>
+          {label.text}
+        </Text>
+      ))}
+    </View>
+  );
+}
+LineChartYAxis.displayName = 'LineChart.YAxis';
+LineChartYAxis.layer = 'overlay' as Layer;
+// Read by the root, which has to leave room for the labels before it lays the
+// plot out.
+LineChartYAxis.axis = 'y' as const;
+
 export interface LineChartTooltipProps {
   color?: string;
   /**
@@ -994,7 +1089,7 @@ const POINT_LABEL_WIDTH = 56;
 /** Line height of an `xs` label, for centring one on the grid line it names. */
 const AXIS_LABEL_HEIGHT = 16;
 
-/** A compact number for the crosshair label: 1204 → "1.2k", 24801 → "24.8k". */
+/** Diameter of the dot that rides a series under the crosshair. */
 const DOT = 9;
 
 /** The dot riding one series under the crosshair. */
@@ -1177,12 +1272,6 @@ function LineChartHeader({
 LineChartHeader.displayName = 'LineChart.Header';
 LineChartHeader.layer = 'header' as Layer;
 
-/* -------------------------------------------------------------------------- */
-/* Scales and paths                                                           */
-/* -------------------------------------------------------------------------- */
-
-/** Only reached if the theme CSS was never imported. */
-
 export const LineChart = Object.assign(LineChartRoot, {
   Header: LineChartHeader,
   Grid: LineChartGrid,
@@ -1190,6 +1279,7 @@ export const LineChart = Object.assign(LineChartRoot, {
   Line: LineChartLine,
   Skeleton: LineChartSkeleton,
   XAxis: LineChartXAxis,
+  YAxis: LineChartYAxis,
   Tooltip: LineChartTooltip,
   Legend: LineChartLegend,
 });
