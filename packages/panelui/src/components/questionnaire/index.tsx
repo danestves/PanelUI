@@ -683,10 +683,15 @@ function QuestionnaireRoot({
    * default is set for a line of text, and the progress indicator is a 4px
    * bar — against the same padding it reads as pinned to the top edge rather
    * than sitting on the strip.
+   *
+   * With no title, the progress centres rather than staying hard right. Right
+   * is where it belongs when it is the trailing half of a pair; on its own at
+   * the end of an otherwise empty strip it reads as something left over
+   * rather than as the strip's subject.
    */
   const header = (
-    <Frame.Header className="pb-3.5 pt-3">
-      {titleNode ?? <View className="flex-1" />}
+    <Frame.Header className={cn('pb-3.5 pt-3', !titleNode && 'justify-center')}>
+      {titleNode}
       {progressNode ? <Frame.Action>{progressNode}</Frame.Action> : null}
     </Frame.Header>
   );
@@ -704,8 +709,15 @@ function QuestionnaireRoot({
       ) : (
         <View className={cn('w-full', className)} {...props}>
           {titleNode || progressNode ? (
-            <View className="flex-row items-center justify-between gap-3 pb-3">
-              {titleNode ?? <View className="flex-1" />}
+            // The same rule as the framed strip: paired with a title it sits
+            // at the trailing edge, alone it centres.
+            <View
+              className={cn(
+                'flex-row items-center gap-3 pb-3',
+                titleNode ? 'justify-between' : 'justify-center'
+              )}
+            >
+              {titleNode}
               {progressNode}
             </View>
           ) : null}
