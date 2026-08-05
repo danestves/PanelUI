@@ -104,9 +104,12 @@ Tiles are placed in the order they are written, each into the first free cell it
 
 `GridItem.Background` fills the tile, sits under everything else, and takes no touches, so it can be written anywhere among the children without moving them. The tile clips it — it is meant to run off the edges.
 
-This is what makes a bento grid read as a bento grid rather than as a wall of stat cards. A sparkline pinned to the bottom, an oversized icon in a corner at low opacity, a photo: none of them are read for values, so none of them need axes.
+This is what makes a bento grid read as a bento grid rather than as a wall of stat cards. A sparkline pinned to the bottom, an oversized icon hung off a corner, a photo: none of them are read for values, so none of them need axes.
+
+The icon treatment survives being used on *every* tile, which most decoration does not. An icon that fits inside the tile is an icon; one that runs off two edges of it at a tenth of its opacity is a texture — and giving each tile its own subject in its own `--color-chart-*` tint means four of them read as four different things rather than as wallpaper.
 
 ```tsx
+{/* A shape along the bottom. */}
 <GridItem colSpan={2}>
   <GridItem.Background>
     <View className="mt-auto h-20 w-full opacity-60">
@@ -118,6 +121,17 @@ This is what makes a bento grid read as a bento grid rather than as a wall of st
   </GridItem.Background>
   <GridItem.Title>Requests</GridItem.Title>
   <GridItem.Value>52.4k</GridItem.Value>
+</GridItem>
+
+{/* A watermark hung off the corner, tinted per tile. */}
+<GridItem>
+  <GridItem.Background>
+    <View className="absolute -bottom-6 -right-5 opacity-[0.14]">
+      <SparklesIcon size={112} color={useCSSVariable('--color-chart-1')} />
+    </View>
+  </GridItem.Background>
+  <GridItem.Title>Cache hits</GridItem.Title>
+  <GridItem.Value>94%</GridItem.Value>
 </GridItem>
 ```
 
@@ -249,7 +263,9 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ### A tile's height is its cells, not its content
 
-This is the trade the grid makes, and it is the right way round for a bento: a grid of boxes that each grew to fit their own text is not a grid. But it does mean long text overflows rather than pushing the tile taller. Give it `numberOfLines`, drop the group to `size="sm"`, or give the tile another row.
+This is the trade the grid makes, and it is the right way round for a bento: a grid of boxes that each grew to fit their own text is not a grid. But it does mean content taller than its cell is clipped rather than pushing the tile down.
+
+So set the cell from what the tallest tile has to hold, not from the shape that looked right. At the default density a tile carrying a media tile, a title, a value and a line under it needs about 164 points, and one carrying a title, a value and a footer about 130 — `rowHeight` says so directly, where `aspect` says it only once you know how wide a track came out. Then `numberOfLines` on the text, `size="sm"`, or another row for anything still over.
 
 ### It draws nothing until it has measured
 

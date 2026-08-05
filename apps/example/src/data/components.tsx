@@ -8837,14 +8837,22 @@ function RingChartTilesVersion() {
 /** A dashboard's worth of numbers, at four sizes. */
 function GridItemBentoDemo() {
   return (
-    <GridItem.Group columns={2} gap={12} aspect={1.6} className="w-full">
+    /*
+     * A row height rather than an aspect, and it is set from what the tiles
+     * have to hold rather than from the shape that looked right: the tallest
+     * of these is an icon, a title, a figure and a line under it, and a cell
+     * shorter than that clips the last of them. A tile's height is its cells.
+     */
+    <GridItem.Group columns={2} gap={12} rowHeight={164} className="w-full">
       <GridItem colSpan={2}>
         <GridItem.Media variant="icon">
           <SparklesIcon size={18} />
         </GridItem.Media>
         <GridItem.Title>Deploys</GridItem.Title>
         <GridItem.Value>1,284</GridItem.Value>
-        <GridItem.Description>this week, across 12 projects</GridItem.Description>
+        <GridItem.Description numberOfLines={1}>
+          this week, across 12 projects
+        </GridItem.Description>
       </GridItem>
       <GridItem>
         <GridItem.Title>Uptime</GridItem.Title>
@@ -8856,7 +8864,7 @@ function GridItemBentoDemo() {
       <GridItem variant="muted">
         <GridItem.Title>p95 latency</GridItem.Title>
         <GridItem.Value>142ms</GridItem.Value>
-        <GridItem.Description>down 18ms</GridItem.Description>
+        <GridItem.Description numberOfLines={1}>down 18ms</GridItem.Description>
       </GridItem>
     </GridItem.Group>
   );
@@ -8970,7 +8978,7 @@ const TILE_TREND = [
  */
 function GridItemBackgroundDemo() {
   return (
-    <GridItem.Group columns={2} gap={12} aspect={1.35} className="w-full">
+    <GridItem.Group columns={2} gap={12} rowHeight={132} className="w-full">
       <GridItem colSpan={2}>
         <GridItem.Background>
           {/* Pinned to the bottom and allowed to bleed off both sides — the
@@ -9000,6 +9008,90 @@ function GridItemBackgroundDemo() {
         <GridItem.Value>7</GridItem.Value>
         <GridItem.Description>none critical</GridItem.Description>
       </GridItem>
+    </GridItem.Group>
+  );
+}
+
+/** Every tile carrying the same treatment, in the five chart colours. */
+const WATERMARKS: {
+  label: string;
+  value: string;
+  caption: string;
+  icon: (color: string) => ReactNode;
+  token: string;
+}[] = [
+  {
+    label: 'Cache hits',
+    value: '94%',
+    caption: 'of 2.1M lookups',
+    icon: (color) => <SparklesIcon size={112} color={color} />,
+    token: '--color-chart-1',
+  },
+  {
+    label: 'Alerts',
+    value: '3',
+    caption: 'two acknowledged',
+    icon: (color) => <BellIcon size={112} color={color} />,
+    token: '--color-chart-2',
+  },
+  {
+    label: 'Blocked',
+    value: '1,902',
+    caption: 'requests today',
+    icon: (color) => <ShieldCheckIcon size={112} color={color} />,
+    token: '--color-chart-3',
+  },
+  {
+    label: 'Bundles',
+    value: '48 MB',
+    caption: 'served from the edge',
+    icon: (color) => <PackageIcon size={112} color={color} />,
+    token: '--color-chart-4',
+  },
+];
+
+/** One tile of the wall above, so the token hook has somewhere to live. */
+function WatermarkTile({ tile }: { tile: (typeof WATERMARKS)[number] }) {
+  const token = useCSSVariable(tile.token);
+  const tint = typeof token === 'string' ? token : undefined;
+
+  return (
+    <GridItem>
+      <GridItem.Background>
+        {/*
+         * Hung off the bottom-right corner and cut by the tile, which is the
+         * whole trick: an icon that fits inside the tile is an icon, and one
+         * that runs off two edges of it is a texture.
+         */}
+        <View className="absolute -bottom-6 -right-5 opacity-[0.14]">
+          {tile.icon(tint ?? '#888888')}
+        </View>
+      </GridItem.Background>
+      <GridItem.Title>{tile.label}</GridItem.Title>
+      <GridItem.Value>{tile.value}</GridItem.Value>
+      <GridItem.Footer>
+        <Text size="xs" muted numberOfLines={1}>
+          {tile.caption}
+        </Text>
+      </GridItem.Footer>
+    </GridItem>
+  );
+}
+
+/**
+ * The watermark treatment across the whole wall rather than on one tile.
+ *
+ * It survives being repeated because the icon is not decoration on top of the
+ * tile — it is the tile's own subject, at a size nobody reads it at, in that
+ * series' colour. Four of them read as four different things; four of the same
+ * icon would read as wallpaper.
+ */
+function GridItemWatermarksDemo() {
+  return (
+    <GridItem.Group columns={2} gap={12} rowHeight={132} className="w-full">
+      {WATERMARKS.map((tile) => (
+        <WatermarkTile key={tile.label} tile={tile} />
+      ))}
     </GridItem.Group>
   );
 }
@@ -11868,6 +11960,7 @@ const CATALOGUE: ComponentEntry[] = [
       { label: 'A bento of stats', render: () => <GridItemBentoDemo /> },
       { label: 'Spans', render: () => <GridItemSpansDemo /> },
       { label: 'Behind the text', render: () => <GridItemBackgroundDemo /> },
+      { label: 'A wall of watermarks', render: () => <GridItemWatermarksDemo /> },
       { label: 'Pressable tiles', render: () => <GridItemPressableDemo /> },
       { label: 'Three across', render: () => <GridItemCompactDemo /> },
     ],
