@@ -15,6 +15,7 @@ const contentDir = path.join(HERE, '../content/docs');
 /** Where a component's page goes, and what its sidebar group is called. */
 const GROUPS = {
   components: 'Components',
+  charts: 'Charts',
   'ai-components': 'AI Components',
   form: 'Form',
 };

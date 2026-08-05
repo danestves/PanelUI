@@ -151,6 +151,7 @@ export function generateStaticParams() {
  */
 const SECTIONS: Record<string, string> = {
   components: 'Components',
+  charts: 'Charts',
   'ai-components': 'AI Components',
   ai: 'AI',
   form: 'Form',

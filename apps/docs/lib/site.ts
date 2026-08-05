@@ -1,4 +1,5 @@
 import aiComponents from '@/content/docs/ai-components/meta.json';
+import charts from '@/content/docs/charts/meta.json';
 import components from '@/content/docs/components/meta.json';
 import form from '@/content/docs/form/meta.json';
 
@@ -12,11 +13,14 @@ import form from '@/content/docs/form/meta.json';
  * `scripts/gen.mjs` generates: add a component, run `docs:generate`, and every
  * surface that quotes the count follows on the next build.
  *
- * The three groups are the ones holding things you render. Hooks and utilities
+ * These four groups are the ones holding things you render. Hooks and utilities
  * are documented in their own groups and deliberately not counted here.
  */
 export const componentCount =
-  components.pages.length + aiComponents.pages.length + form.pages.length;
+  components.pages.length +
+  charts.pages.length +
+  aiComponents.pages.length +
+  form.pages.length;
 
 /** Canonical site metadata, used by every page's SEO tags and the sitemap. */
 export const site = {

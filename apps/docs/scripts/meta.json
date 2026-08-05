@@ -14,7 +14,8 @@
     "Filled bands over time, stacked or overlaid.",
     "react native area chart stacked",
     {
-      "addedIn": "0.25.0"
+      "addedIn": "0.25.0",
+      "group": "charts"
     }
   ],
   "attachment": [
@@ -37,7 +38,8 @@
     "Categories compared by length, grouped or stacked.",
     "react native bar chart",
     {
-      "addedIn": "0.25.0"
+      "addedIn": "0.25.0",
+      "group": "charts"
     }
   ],
   "bottom-sheet": [
@@ -193,7 +195,8 @@
     "react native heatmap chart",
     {
       "addedIn": "0.14.0",
-      "updatedIn": "0.40.0"
+      "updatedIn": "0.40.0",
+      "group": "charts"
     }
   ],
   "input": [
@@ -249,7 +252,8 @@
     "Animated time series, drawn on the UI thread.",
     "react native line chart",
     {
-      "updatedIn": "0.45.0"
+      "updatedIn": "0.45.0",
+      "group": "charts"
     }
   ],
   "loader": [
@@ -331,7 +335,8 @@
     "One whole, divided between its parts.",
     "react native pie donut chart",
     {
-      "addedIn": "0.46.0"
+      "addedIn": "0.46.0",
+      "group": "charts"
     }
   ],
   "ring-chart": [
@@ -340,7 +345,8 @@
     "react native ring chart radial progress gauge",
     {
       "addedIn": "0.25.0",
-      "updatedIn": "0.40.0"
+      "updatedIn": "0.40.0",
+      "group": "charts"
     }
   ],
   "scatter-chart": [
@@ -348,7 +354,8 @@
     "Two quantities against each other, to show how they relate.",
     "react native scatter plot chart",
     {
-      "addedIn": "0.45.0"
+      "addedIn": "0.45.0",
+      "group": "charts"
     }
   ],
   "scroll-canvas": [
@@ -651,7 +658,8 @@
     "Several measures of one thing, drawn as one shape.",
     "react native radar chart spider web",
     {
-      "addedIn": "0.43.0"
+      "addedIn": "0.43.0",
+      "group": "charts"
     }
   ]
 }

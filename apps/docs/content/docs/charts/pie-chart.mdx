@@ -6,7 +6,7 @@ status: new
 
 One whole, divided between its parts.
 
-Every slice is a share of one total: the values are normalised against their sum, the angles come to a full turn, and a slice only means anything next to the others. That is the opposite claim to the [RingChart](/docs/components/ring-chart) beside it, where each arc is measured against its own target and nothing has to add up.
+Every slice is a share of one total: the values are normalised against their sum, the angles come to a full turn, and a slice only means anything next to the others. That is the opposite claim to the [RingChart](/docs/charts/ring-chart) beside it, where each arc is measured against its own target and nothing has to add up.
 
 It follows that a pie is the wrong shape for a great many things. Two numbers that do not belong to one whole, anything over time, anything a reader has to compare precisely — all of those are a bar chart, because an angle is the hardest quantity to read off a page and the fifth-largest slice of eleven is not a fact anybody is going to extract. Use it for a handful of parts of one obvious total, and put the number in the middle.
 
@@ -290,7 +290,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 An angle is the hardest quantity to read off a page, and a pie asks the reader to compare several of them at once. It works for a handful of parts of one obvious whole — a budget, a disk, a split of traffic — and stops working somewhere around six or seven slices, where the small ones become a ring of slivers nobody can tell apart. Past that, sort the parts, take the top few, and put the rest in an “everything else” slice; or use a bar chart, where the comparison is a length and lengths are read exactly.
 
-Anything measured against its own target rather than against the others is a [RingChart](/docs/components/ring-chart), not a pie. Anything over time is a line or an area.
+Anything measured against its own target rather than against the others is a [RingChart](/docs/charts/ring-chart), not a pie. Anything over time is a line or an area.
 
 ### Every slice is a share
 
