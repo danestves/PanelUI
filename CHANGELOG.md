@@ -9,6 +9,137 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.46.0] — 2026-08-05
+
+### Added
+
+- **`PieChart`** — one whole, divided between its parts. Composed like the rest of the family:
+  `Header`, `Slices`, `Center`, `Legend` and `Skeleton`. It is the opposite claim to `RingChart`
+  beside it, and the difference decides which one you want: a ring is a value against *its own*
+  target and nothing has to add up, while every slice here is a share of one total, normalised
+  against the sum, closing the turn.
+
+  `innerRadius` is a share of the radius rather than a length, so `0` is a pie and anything above
+  it is a donut at the same proportions whatever size it is measured at. Prefer the donut where
+  there is a total worth showing, which is most of the time — the angles say roughly how the parts
+  compare, and the middle says what they came to, which is the one figure a reader takes off a pie
+  exactly.
+
+  `minAngle` puts a floor under the slices too small to see. A slice worth a third of a percent is
+  a hairline nobody can press, so it reads as *missing* rather than as small, and "missing" is a
+  different claim from "nearly none"; the angle it borrows comes off the others in proportion.
+  `padAngle` and `cornerRadius` turn the disc into separate segments, and `startAngle`/`endAngle`
+  open it into a dial.
+
+  The reveal is an unroll — one hand sweeping clockwise from the start of the dial, each slice
+  drawn as far as it has reached — so the chart fills the way it would be drawn by hand. The
+  loading state is one undivided band, because a placeholder split is an invented answer to the
+  only question the chart is being asked, and nobody can tell an invented split from a real one
+  until it changes under them.
+
+- **`GridItem`** — bento tiles, and the grid that places them. `GridItem.Group` owns `columns`,
+  `gap` and the cell shape; a tile takes `colSpan` and `rowSpan`, with `Background`, `Media`,
+  `Title`, `Value`, `Description`, `Footer` and `Actions` inside it.
+
+  The group measures itself and places its children into the first free cell each one fits in,
+  scanning row by row. That is what a wrapping row of views cannot do: wrapping puts whatever did
+  not fit on a *new line*, so nothing ever tucks under a tall tile and `rowSpan` would be a prop
+  that quietly did nothing. The trade is that a tile's height is its cells rather than its
+  content — which is the right way round for a bento, since a grid of boxes that each grew to fit
+  their own text is not a grid, but it does mean the cell has to be sized from what the tallest
+  tile holds.
+
+  `GridItem.Background` is the part that separates a bento from a wall of stat cards: a sparkline,
+  a wash, an oversized icon, clipped by the tile and meant to run off its edges.
+
+- **`DateTimePicker`** — a day and a time of day, picked in one panel and carried in one `Date`.
+  A date field beside a time field is two decisions the reader makes separately and then has to
+  hold together, and the two halves can disagree — which is how a booking lands on the right day
+  at a time that has already passed.
+
+  It composes what already exists rather than reimplementing either half: `Calendar` above,
+  `TimePicker`'s inline panel below, a hairline between them and one Done that finishes both. The
+  time face is the ruler by default, because under a month grid the panel is already tall and the
+  wheel is five rows of it; `layout` swaps in the other two.
+
+  It does **not** close on the date, in any presentation including the popover — the day is half
+  the value, and closing on it hides the other half at the moment it becomes relevant. A time
+  picked before a day means today, since a time is not a `Date` without one and refusing to emit
+  anything until both halves have been touched is a form that silently does nothing when used in
+  the order it did not expect.
+
+- **`Tabs` gains `variant="expanding"`** — a row of icon pills where only the selected one is
+  open, widening to let its label out and closing again behind it. For a short row of destinations
+  recognisable by their icons, where writing every label out spends the whole width on words
+  nobody rereads. Give every trigger an `icon`; a closed tab has nothing else. The label is never
+  unmounted, only closed over, so a screen reader still has something to read out.
+
+- `wedgePath` and `polarPoint` join the shared chart maths: a filled slice of an annulus, closing
+  on the centre for a pie and on a second arc for a donut. `arcPath` could not express it — it
+  draws a line to be stroked, and a stroke is a band of even thickness with no ends of its own.
+
+### Changed
+
+- **Breaking: `KpiChart` is now `Kpi`**, and every `KpiChart*Props` type is `Kpi*Props`. It was
+  never a chart — the number is the message, the sparkline is a footnote drawn by `LineChart`, and
+  half its versions have no chart at all. Calling it one filed it with the plots and described the
+  smallest part of it.
+
+  The docs URL keeps working through a redirect. **The registry item does not**: the CLI command
+  `npx panelui-cli@latest add kpi-chart` is now `add kpi`, and a redirect does not cover a fetch of
+  a file under `public/`.
+
+- **`ScatterChart`'s reveal is no longer a wipe.** The other charts sweep a clip across the plot,
+  which suits a series read along the x-axis; here it handed the reader a direction the data does
+  not have, when the whole claim of a scatter plot is that a point's position is its meaning. Each
+  point now grows into place on its own slice of one shared clock, a little past its size and back
+  to it. The selection swell went the same way — it was a hard switch, so the point under the
+  finger jumped half as big again between one frame and the next.
+
+- **`Tabs`' swipe is one continuous movement.** The panel followed a third of the finger's travel
+  and then, at the moment the finger lifted, the arriving panel started afresh from a fixed third
+  of a width away with none of the speed the gesture had — so it jumped exactly where it should
+  have been smoothest. The panel now tracks the finger one to one, and the arriving panel picks up
+  a whole panel's width from wherever the outgoing one was let go, carrying the release velocity
+  into the spring. Only one panel is mounted, so it dims as it travels and the arriving one comes
+  back up through the same fade, which reads as a dissolve the movement is carrying rather than as
+  a hole.
+
+- The eight charts have a **Charts** section of their own in the documentation sidebar, under
+  Components. Eight consecutive entries in the middle of an alphabetical list of eighty-seven is
+  where a list stops reading as a catalogue. Their URLs move with them and the old ones redirect.
+
+### Fixed
+
+- **`Combobox`** drew typed text below the middle of its field. The input asked for `text-base`,
+  which sets a 16px size and a 24px line height together, and the extra leading lands above the
+  glyphs — so inside the slot's fixed-height box the text and the placeholder sat a few points
+  under the chips they share the row with. It is a length now, as every `Input` size already was.
+
+- **`ScatterChart`'s loading state only ever animated once.** The reveal's guard was latched on the
+  first pass and never cleared, so a chart sent back to `loading` came back with no animation at
+  all. The placeholder field was also cut at the frame the data landed, leaving the plot briefly
+  empty; it now dissolves as the real points grow in.
+
+- **The templates could not be started where they are written.** Run from inside the checkout, a
+  template resolves past its own `node_modules` and up into the monorepo's, so the Worklets Babel
+  plugin came from one install and the Worklets runtime from another and the app died on the first
+  import with the two reporting different versions of themselves — followed by every route
+  reporting as missing a default export, which is the same failure one step downstream. Neither
+  message names the cause, so each template's `metro.config.js` now refuses to start from in there
+  and points at `npm run template`. Inert for a generated project, which is never inside this
+  repository.
+
+### Docs
+
+- Both component lists are alphabetical again, and neither is ordered by hand any more. The docs
+  sidebar sorts on the name it prints, and the example app derives its catalogue from its array —
+  a new component was always appended rather than inserted, which is how the charts collected under
+  L and `Item` ended up after `OtpInput`.
+
+- The scrollable **`BottomSheet`** version says which version it is. Every version of that sheet
+  looks much the same once open, and this one's heading read only "Choose a country".
+
 ## [0.45.0] — 2026-08-05
 
 ### Added
