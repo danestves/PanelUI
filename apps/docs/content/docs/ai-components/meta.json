@@ -1,15 +1,15 @@
 {
   "title": "AI Components",
   "pages": [
-    "shimmer",
-    "thinking-orb",
-    "soundwave",
+    "code-block",
+    "panelside",
+    "plan",
     "reasoning",
+    "response",
+    "shimmer",
+    "soundwave",
     "sources",
     "task",
-    "code-block",
-    "plan",
-    "response",
-    "panelside"
+    "thinking-orb"
   ]
 }

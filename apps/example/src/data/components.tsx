@@ -9730,7 +9730,7 @@ function SwipeRtlDemo() {
 /* Catalogue                                                                  */
 /* -------------------------------------------------------------------------- */
 
-export const COMPONENTS: ComponentEntry[] = [
+const CATALOGUE: ComponentEntry[] = [
   {
     slug: 'accordion',
     name: 'Accordion',
@@ -14561,6 +14561,19 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
 ];
+
+/**
+ * The catalogue, A–Z.
+ *
+ * Sorted here rather than kept in order above, because the array above is five
+ * thousand lines of demo code and a new component is always appended to the end
+ * of it. Every list that was alphabetical by hand has stopped being — this one
+ * had charts filed under L and Item under O — so the order is derived from the
+ * names the list prints and cannot drift again.
+ */
+export const COMPONENTS: ComponentEntry[] = [...CATALOGUE].sort((a, b) =>
+  a.name.localeCompare(b.name)
+);
 
 /** Catalogue keyed by slug, for the detail route. */
 export const COMPONENTS_BY_SLUG: Record<string, ComponentEntry> = Object.fromEntries(

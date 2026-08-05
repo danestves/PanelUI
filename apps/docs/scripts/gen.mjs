@@ -327,10 +327,18 @@ Every part also accepts the underlying React Native props (\`ViewProps\` or \`Te
  * source as the pages, so a component cannot be filed in one place and listed
  * in another — and a page left behind by a regroup is deleted rather than
  * quietly kept in the sidebar.
+ *
+ * Sorted by the name the sidebar actually prints, not by the slug and not by
+ * the order the entries happen to sit in meta.json. Read from the file's order
+ * the list was alphabetical only for as long as everyone remembered to insert
+ * rather than append, which is not a thing anyone remembers — and the two
+ * places a component is listed disagreed as a result, since the landing page
+ * has always sorted its own copy.
  */
 for (const [group, title] of Object.entries(GROUPS)) {
   const pages = Object.entries(meta)
     .filter(([, entry]) => groupOf(entry) === group)
+    .sort(([, a], [, b]) => a[0].localeCompare(b[0]))
     .map(([slug]) => slug);
 
   const dir = path.join(contentDir, group);
