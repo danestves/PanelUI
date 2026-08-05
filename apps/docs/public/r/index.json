@@ -552,6 +552,16 @@
     ]
   },
   {
+    "name": "pie-chart",
+    "type": "registry:ui",
+    "description": "One whole, divided between its parts.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "plan",
     "type": "registry:ui",
     "description": "What an agent intends to do, before it does it.",

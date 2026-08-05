@@ -361,6 +361,98 @@ export function arcPath(
 }
 
 /**
+ * A filled slice of an annulus, as a path.
+ *
+ * `arcPath` above cannot express this: it draws a line to be stroked, and a
+ * stroke is a band of even thickness with no ends of its own. A slice is a
+ * region — bounded by two arcs and two radial edges — and only a closed path
+ * can be filled as one.
+ *
+ * `inner` of zero gives the pie's wedge, closing on the centre rather than on a
+ * second arc. Anything above it gives the donut's, and the two are worth being
+ * one function: a donut is not a pie with a circle painted over the middle,
+ * because a slice pushed out of a donut has to be hollow along its whole length.
+ *
+ * `corner` rounds the four turns of a slice, and rounds them with a quadratic
+ * through the sharp corner rather than with a true fillet arc. The two are
+ * indistinguishable at the radii a slice is drawn at, and the quadratic cannot
+ * degenerate at a narrow slice the way solving for tangent points does — which
+ * matters here, because the narrow slices are exactly the ones a reader is
+ * least able to check.
+ */
+export function wedgePath(
+  cx: number,
+  cy: number,
+  outer: number,
+  inner: number,
+  from: number,
+  to: number,
+  corner: number
+): string {
+  'worklet';
+  const sweep = to - from;
+  if (outer <= 0 || sweep <= 0) return '';
+
+  const at = (turn: number, radius: number) => {
+    const angle = (turn - 0.25) * Math.PI * 2;
+    return `${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`;
+  };
+
+  const ring = Math.max(0, Math.min(inner, outer));
+
+  /*
+   * A full turn cannot be drawn as one arc — its start and end are the same
+   * point, and the renderer draws nothing rather than everything. Two halves
+   * can, and the hole in a full donut comes from tracing the inner circle the
+   * other way round: under the nonzero fill rule an opposed subpath is a hole,
+   * with no fill rule to set and no second element to keep in step.
+   */
+  if (sweep >= 1) {
+    const disc =
+      `M${at(0, outer)}A${outer},${outer} 0 1 1 ${at(0.5, outer)}` +
+      `A${outer},${outer} 0 1 1 ${at(0, outer)}Z`;
+    if (ring <= 0) return disc;
+    return (
+      `${disc}M${at(0, ring)}A${ring},${ring} 0 1 0 ${at(0.5, ring)}` +
+      `A${ring},${ring} 0 1 0 ${at(0, ring)}Z`
+    );
+  }
+
+  // Never more than half the slice from each end, or the two roundings meet in
+  // the middle and cross; never more than half the band, or the outer rounding
+  // reaches past the inner edge.
+  const band = ring > 0 ? outer - ring : outer;
+  const k = Math.max(0, Math.min(corner, band / 2, sweep * outer * Math.PI));
+  const outerInset = Math.min(k / (outer * Math.PI * 2), sweep / 2);
+  const innerInset = ring > 0 ? Math.min(k / (ring * Math.PI * 2), sweep / 2) : 0;
+  const large = sweep - 2 * outerInset > 0.5 ? 1 : 0;
+
+  const outerStart = from + outerInset;
+  const outerEnd = to - outerInset;
+
+  if (ring <= 0) {
+    // A wedge closes on the centre, and its apex stays sharp: rounding a point
+    // that three slices share opens a hole in the middle of the chart.
+    return (
+      `M${cx},${cy}L${at(from, outer - k)}Q${at(from, outer)} ${at(outerStart, outer)}` +
+      `A${outer},${outer} 0 ${large} 1 ${at(outerEnd, outer)}` +
+      `Q${at(to, outer)} ${at(to, outer - k)}Z`
+    );
+  }
+
+  return (
+    `M${at(outerStart, outer)}A${outer},${outer} 0 ${large} 1 ${at(outerEnd, outer)}` +
+    `Q${at(to, outer)} ${at(to, outer - k)}` +
+    `L${at(to, ring + k)}` +
+    `Q${at(to, ring)} ${at(to - innerInset, ring)}` +
+    `A${ring},${ring} 0 ${large} 0 ${at(from + innerInset, ring)}` +
+    `Q${at(from, ring)} ${at(from, ring + k)}` +
+    `L${at(from, outer - k)}` +
+    `Q${at(from, outer)} ${at(outerStart, outer)}Z`
+  );
+}
+
+/**
  * A point at `radius` from the centre, `turn` of the way round.
  *
  * Turns from twelve o'clock, clockwise, matching `arcPath` — a radar's axes

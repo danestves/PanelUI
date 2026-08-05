@@ -437,6 +437,19 @@ export {
   type PaginationSize,
   type PaginationItemValue,
 } from './components/pagination';
+export {
+  PieChart,
+  usePieChart,
+  type PieChartProps,
+  type PieChartHandle,
+  type PieChartHeaderProps,
+  type PieChartSlicesProps,
+  type PieChartCenterProps,
+  type PieChartLegendProps,
+  type PieChartSkeletonProps,
+  type PieChartStatus,
+  type PieDatum,
+} from './components/pie-chart';
 export { Textarea, type TextareaProps } from './components/textarea';
 export {
   Item,

@@ -326,6 +326,14 @@
       "addedIn": "0.20.0"
     }
   ],
+  "pie-chart": [
+    "PieChart",
+    "One whole, divided between its parts.",
+    "react native pie donut chart",
+    {
+      "addedIn": "0.46.0"
+    }
+  ],
   "ring-chart": [
     "RingChart",
     "Concentric arcs, each measured against its own target.",

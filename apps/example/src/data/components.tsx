@@ -110,6 +110,8 @@ import {
   Pagination,
   PauseIcon,
   PencilIcon,
+  PieChart,
+  type PieDatum,
   PlayIcon,
   PlusSquareIcon,
   Popover,
@@ -8825,6 +8827,216 @@ function RingChartTilesVersion() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* PieChart                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/** One month's spend, split between the things it went on. */
+const SPEND: PieDatum[] = [
+  { label: 'Rent', value: 1450 },
+  { label: 'Food', value: 620 },
+  { label: 'Transport', value: 210 },
+  { label: 'Utilities', value: 185 },
+  { label: 'Everything else', value: 240 },
+];
+
+/** A split with a long tail, which is what `minAngle` is for. */
+const TRAFFIC_SOURCES: PieDatum[] = [
+  { label: 'Organic', value: 41800 },
+  { label: 'Direct', value: 18400 },
+  { label: 'Referral', value: 6300 },
+  { label: 'Social', value: 2100 },
+  { label: 'Email', value: 240 },
+];
+
+const SPEND_TOTAL = SPEND.reduce((sum, slice) => sum + slice.value, 0);
+
+const PIE_SIZE = 208;
+
+/** The plain pie: five parts of one obvious whole, with a key beside it. */
+function PieBasicVersion() {
+  const [active, setActive] = useState(-1);
+  const slice = active >= 0 ? SPEND[active] : null;
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Where it went</Frame.Title>
+          <Frame.Action>Tap a slice</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PieChart
+            data={SPEND}
+            size={PIE_SIZE}
+            className="pb-4"
+            activeIndex={active}
+            onActiveIndexChange={setActive}
+          >
+            <PieChart.Header
+              className={CHART_HEADER}
+              value={money(slice ? slice.value : SPEND_TOTAL)}
+              caption={
+                slice
+                  ? `${slice.label} · ${Math.round((slice.value / SPEND_TOTAL) * 100)}% of the month`
+                  : 'August, across five categories'
+              }
+              legend
+            />
+            <PieChart.Slices />
+          </PieChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * The donut, which is the pie with somewhere to put the number.
+ *
+ * The total is the one figure a reader of a pie can actually use — the angles
+ * say roughly how the parts compare and the middle says what they came to.
+ */
+function PieDonutVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Monthly spend</Frame.Title>
+          <Frame.Action>Tap for a category</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PieChart data={SPEND} size={PIE_SIZE} innerRadius={0.62} className="pb-4">
+            <PieChart.Header className={CHART_HEADER} title="August" legend />
+            <PieChart.Slices />
+            <PieChart.Center formatValue={(value) => money(value)} />
+          </PieChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * Padded, rounded and floored.
+ *
+ * `minAngle` is the one doing the work here: email is a third of a percent of
+ * the traffic, and without a floor it is a hairline nobody can see or press —
+ * which reads as absent rather than as tiny.
+ */
+function PieSegmentsVersion() {
+  const [active, setActive] = useState(-1);
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Traffic by source</Frame.Title>
+          <Frame.Action>Last 30 days</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PieChart
+            data={TRAFFIC_SOURCES}
+            size={PIE_SIZE}
+            innerRadius={0.58}
+            padAngle={3}
+            minAngle={6}
+            className="pb-4"
+            activeIndex={active}
+            onActiveIndexChange={setActive}
+          >
+            <PieChart.Header className={CHART_HEADER} title="Sessions" legend />
+            <PieChart.Slices cornerRadius={6} />
+            <PieChart.Center defaultLabel="Sessions" />
+          </PieChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** What is on the disk, on a dial that stops short of a full turn. */
+const STORAGE: PieDatum[] = [
+  { label: 'Photos', value: 684 },
+  { label: 'Video', value: 412 },
+  { label: 'Backups', value: 233 },
+  { label: 'Free', value: 719 },
+];
+
+/** The dial: three quarters of a turn, with the notch at the bottom. */
+function PieDialVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Storage</Frame.Title>
+          <Frame.Action>2 TB plan</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PieChart
+            data={STORAGE}
+            size={PIE_SIZE}
+            innerRadius={0.66}
+            startAngle={-135}
+            endAngle={135}
+            padAngle={2}
+            className="pb-4"
+          >
+            <PieChart.Header className={CHART_HEADER} title="In use" legend />
+            <PieChart.Slices cornerRadius={4} />
+            <PieChart.Center
+              defaultLabel="Used"
+              formatValue={(value) => `${value.toFixed(0)} GB`}
+            />
+          </PieChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** Loading, and the one thing a pie must not invent while it waits: a split. */
+function PieLoadingVersion() {
+  const [status, setStatus] = useState<'loading' | 'ready'>('loading');
+
+  useEffect(() => {
+    if (status !== 'loading') return;
+    const timer = setTimeout(() => setStatus('ready'), 1400);
+    return () => clearTimeout(timer);
+  }, [status]);
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Monthly spend</Frame.Title>
+          <Frame.Action>
+            <Button size="sm" variant="ghost" onPress={() => setStatus('loading')}>
+              Reload
+            </Button>
+          </Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PieChart
+            data={SPEND}
+            size={PIE_SIZE}
+            innerRadius={0.62}
+            status={status}
+            className="pb-4"
+          >
+            <PieChart.Header className={CHART_HEADER} title="August" legend />
+            <PieChart.Skeleton />
+            <PieChart.Slices />
+            {status === 'ready' ? (
+              <PieChart.Center formatValue={(value) => money(value)} />
+            ) : null}
+          </PieChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
 const LOADER_VARIANTS: { variant: LoaderVariant; label: string }[] = [
   { variant: 'pulse-dots', label: 'Pulse dots' },
   { variant: 'bounce-dots', label: 'Bounce dots' },
@@ -12953,6 +13165,49 @@ const CATALOGUE: ComponentEntry[] = [
         fullPage: true,
         description: 'By character, and with a stagger wide enough to arrive all at once.',
         render: () => <ScrollTextCharactersVersion />,
+      },
+    ],
+  },
+  {
+    slug: 'pie-chart',
+    name: 'PieChart',
+    summary: 'One whole, divided between its parts',
+    layout: 'pager',
+    demos: [
+      {
+        label: 'Basic',
+        id: 'basic',
+        fullPage: true,
+        description: 'Five parts of one obvious total, with a key beside them.',
+        render: () => <PieBasicVersion />,
+      },
+      {
+        label: 'Donut',
+        id: 'donut',
+        fullPage: true,
+        description: 'The hole is where the total goes — the one figure a pie can be read for.',
+        render: () => <PieDonutVersion />,
+      },
+      {
+        label: 'Segments',
+        id: 'segments',
+        fullPage: true,
+        description: 'Padded and rounded, with a floor under the slices too small to see.',
+        render: () => <PieSegmentsVersion />,
+      },
+      {
+        label: 'Dial',
+        id: 'dial',
+        fullPage: true,
+        description: 'Three quarters of a turn rather than all of it, notch at the bottom.',
+        render: () => <PieDialVersion />,
+      },
+      {
+        label: 'Loading',
+        id: 'loading',
+        fullPage: true,
+        description: 'One undivided band while it waits, because an invented split is a lie.',
+        render: () => <PieLoadingVersion />,
       },
     ],
   },
