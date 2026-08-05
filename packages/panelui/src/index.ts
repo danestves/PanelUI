@@ -142,6 +142,11 @@ export {
   type DatePickerMode,
 } from './components/date-picker';
 export {
+  DateTimePicker,
+  type DateTimePickerProps,
+  type DateTimePickerPresentation,
+} from './components/date-time-picker';
+export {
   Dialog,
   type DialogProps,
   type DialogContentProps,
@@ -191,6 +196,18 @@ export {
   type FrameActionsProps,
   type FrameVariant,
 } from './components/frame';
+export {
+  GridItem,
+  type GridItemProps,
+  type GridItemGroupProps,
+  type GridItemBackgroundProps,
+  type GridItemMediaProps,
+  type GridItemTitleProps,
+  type GridItemValueProps,
+  type GridItemDescriptionProps,
+  type GridItemFooterProps,
+  type GridItemActionsProps,
+} from './components/grid-item';
 export {
   HeatmapChart,
   useHeatmapChart,
@@ -437,6 +454,19 @@ export {
   type PaginationSize,
   type PaginationItemValue,
 } from './components/pagination';
+export {
+  PieChart,
+  usePieChart,
+  type PieChartProps,
+  type PieChartHandle,
+  type PieChartHeaderProps,
+  type PieChartSlicesProps,
+  type PieChartCenterProps,
+  type PieChartLegendProps,
+  type PieChartSkeletonProps,
+  type PieChartStatus,
+  type PieDatum,
+} from './components/pie-chart';
 export { Textarea, type TextareaProps } from './components/textarea';
 export {
   Item,
@@ -452,25 +482,25 @@ export {
   type ItemFooterProps,
 } from './components/item';
 export {
-  KpiChart,
-  type KpiChartProps,
-  type KpiChartHeaderProps,
-  type KpiChartIconProps,
-  type KpiChartTitleProps,
-  type KpiChartStatProps,
-  type KpiChartActionsProps,
-  type KpiChartContentProps,
-  type KpiChartValueProps,
-  type KpiChartTrendProps,
-  type KpiChartSparklineProps,
-  type KpiChartProgressProps,
-  type KpiChartFooterProps,
-  type KpiChartSeparatorProps,
-  type KpiChartGroupProps,
-  type KpiChartGroupOrientation,
+  Kpi,
+  type KpiProps,
+  type KpiHeaderProps,
+  type KpiIconProps,
+  type KpiTitleProps,
+  type KpiStatProps,
+  type KpiActionsProps,
+  type KpiContentProps,
+  type KpiValueProps,
+  type KpiTrendProps,
+  type KpiSparklineProps,
+  type KpiProgressProps,
+  type KpiFooterProps,
+  type KpiSeparatorProps,
+  type KpiGroupProps,
+  type KpiGroupOrientation,
   type KpiGoodDirection,
   type KpiTone,
-} from './components/kpi-chart';
+} from './components/kpi';
 export { Label, type LabelProps, type LabelTextProps } from './components/label';
 export {
   LineChart,

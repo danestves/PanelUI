@@ -45,6 +45,7 @@ import {
   Breadcrumb,
   Button,
   Calendar,
+  CalendarIcon,
   CodeBlock,
   Combobox,
   Card,
@@ -57,6 +58,7 @@ import {
   Chip,
   ColorPicker,
   DatePicker,
+  DateTimePicker,
   type DateRange,
   Dialog,
   Direction,
@@ -74,6 +76,7 @@ import {
   Form,
   Frame,
   GoogleIcon,
+  GridItem,
   HeartIcon,
   HeatmapChart,
   type HeatmapCell,
@@ -85,7 +88,7 @@ import {
   ImageIcon,
   Item,
   KeyboardAvoider,
-  KpiChart,
+  Kpi,
   Label,
   ListChecksIcon,
   LockIcon,
@@ -110,6 +113,8 @@ import {
   Pagination,
   PauseIcon,
   PencilIcon,
+  PieChart,
+  type PieDatum,
   PlayIcon,
   PlusSquareIcon,
   Popover,
@@ -132,6 +137,7 @@ import {
   ShareNodesIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
+  SparklesIcon,
   Select,
   ScrollCanvas,
   ScrollFade,
@@ -861,56 +867,56 @@ function KpiDefaultVersion() {
         </Frame.Header>
         <Frame.Panel>
           <Frame.Section className={KPI_ROW}>
-            <KpiChart surface={false} colorIndex={1}>
-              <KpiChart.Content layout="inline">
-                <KpiChart.Stat>
-                  <KpiChart.Title>Total Revenue</KpiChart.Title>
-                  <KpiChart.Value>$317,904</KpiChart.Value>
-                  <KpiChart.Trend value={7.8} caption="last 30d" />
-                </KpiChart.Stat>
-                <KpiChart.Chart
+            <Kpi surface={false} colorIndex={1}>
+              <Kpi.Content layout="inline">
+                <Kpi.Stat>
+                  <Kpi.Title>Total Revenue</Kpi.Title>
+                  <Kpi.Value>$317,904</Kpi.Value>
+                  <Kpi.Trend value={7.8} caption="last 30d" />
+                </Kpi.Stat>
+                <Kpi.Chart
                   data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])}
                   dataKey="v"
                   inline
                 />
-              </KpiChart.Content>
-            </KpiChart>
+              </Kpi.Content>
+            </Kpi>
           </Frame.Section>
 
           {/* A fall in bounce rate is the good news, so the change is green
               even though the number is negative. */}
           <Frame.Section className={KPI_ROW}>
-            <KpiChart surface={false} colorIndex={3} goodDirection="down">
-              <KpiChart.Content layout="inline">
-                <KpiChart.Stat>
-                  <KpiChart.Title>Bounce Rate</KpiChart.Title>
-                  <KpiChart.Value>37.6%</KpiChart.Value>
-                  <KpiChart.Trend value={-8.4} caption="vs last 7d" />
-                </KpiChart.Stat>
-                <KpiChart.Chart
+            <Kpi surface={false} colorIndex={3} goodDirection="down">
+              <Kpi.Content layout="inline">
+                <Kpi.Stat>
+                  <Kpi.Title>Bounce Rate</Kpi.Title>
+                  <Kpi.Value>37.6%</Kpi.Value>
+                  <Kpi.Trend value={-8.4} caption="vs last 7d" />
+                </Kpi.Stat>
+                <Kpi.Chart
                   data={spark([88, 85, 73, 76, 64, 59, 61, 48, 39])}
                   dataKey="v"
                   inline
                 />
-              </KpiChart.Content>
-            </KpiChart>
+              </Kpi.Content>
+            </Kpi>
           </Frame.Section>
 
           <Frame.Section className={KPI_ROW}>
-            <KpiChart surface={false} colorIndex={2}>
-              <KpiChart.Content layout="inline">
-                <KpiChart.Stat>
-                  <KpiChart.Title>New Customers</KpiChart.Title>
-                  <KpiChart.Value>2,867</KpiChart.Value>
-                  <KpiChart.Trend value={4.2} caption="this week" />
-                </KpiChart.Stat>
-                <KpiChart.Chart
+            <Kpi surface={false} colorIndex={2}>
+              <Kpi.Content layout="inline">
+                <Kpi.Stat>
+                  <Kpi.Title>New Customers</Kpi.Title>
+                  <Kpi.Value>2,867</Kpi.Value>
+                  <Kpi.Trend value={4.2} caption="this week" />
+                </Kpi.Stat>
+                <Kpi.Chart
                   data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
                   dataKey="v"
                   inline
                 />
-              </KpiChart.Content>
-            </KpiChart>
+              </Kpi.Content>
+            </Kpi>
           </Frame.Section>
         </Frame.Panel>
       </Frame>
@@ -922,34 +928,34 @@ function KpiSparklineVersion() {
   return (
     <ChartScreen>
       <View className="w-full gap-3">
-        <KpiChart colorIndex={1}>
-          <KpiChart.Header>
-            <KpiChart.Title>Total revenue</KpiChart.Title>
-          </KpiChart.Header>
-          <KpiChart.Content>
-            <KpiChart.Value>$317,904</KpiChart.Value>
-            <KpiChart.Trend value={7.8} />
-          </KpiChart.Content>
-          <KpiChart.Chart data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])} dataKey="v" />
-        </KpiChart>
+        <Kpi colorIndex={1}>
+          <Kpi.Header>
+            <Kpi.Title>Total revenue</Kpi.Title>
+          </Kpi.Header>
+          <Kpi.Content>
+            <Kpi.Value>$317,904</Kpi.Value>
+            <Kpi.Trend value={7.8} />
+          </Kpi.Content>
+          <Kpi.Chart data={spark([36, 39, 47, 44, 55, 63, 61, 76, 88])} dataKey="v" />
+        </Kpi>
 
         {/* The chart beside the number instead of under it, for a denser row. */}
-        <KpiChart colorIndex={2}>
-          <KpiChart.Header>
-            <KpiChart.Title>New customers</KpiChart.Title>
-          </KpiChart.Header>
-          <KpiChart.Content layout="inline">
+        <Kpi colorIndex={2}>
+          <Kpi.Header>
+            <Kpi.Title>New customers</Kpi.Title>
+          </Kpi.Header>
+          <Kpi.Content layout="inline">
             <View>
-              <KpiChart.Value>2,867</KpiChart.Value>
-              <KpiChart.Trend value={4.2} className="mt-1 self-start" />
+              <Kpi.Value>2,867</Kpi.Value>
+              <Kpi.Trend value={4.2} className="mt-1 self-start" />
             </View>
-            <KpiChart.Chart
+            <Kpi.Chart
               data={spark([27, 35, 33, 46, 59, 55, 64, 79, 91])}
               dataKey="v"
               inline
             />
-          </KpiChart.Content>
-        </KpiChart>
+          </Kpi.Content>
+        </Kpi>
       </View>
     </ChartScreen>
   );
@@ -965,35 +971,35 @@ function KpiProgressVersion() {
         </Frame.Header>
         <Frame.Panel>
           <Frame.Section className={KPI_ROW}>
-            <KpiChart surface={false} colorIndex={4}>
-              <KpiChart.Header>
-                <KpiChart.Icon tone="good">
+            <Kpi surface={false} colorIndex={4}>
+              <Kpi.Header>
+                <Kpi.Icon tone="good">
                   <Target size={16} color="#27a644" />
-                </KpiChart.Icon>
-                <KpiChart.Title>Quarterly revenue</KpiChart.Title>
-                <KpiChart.Trend value={7.8} variant="badge" />
-              </KpiChart.Header>
-              <KpiChart.Value>$317k</KpiChart.Value>
-              <KpiChart.Progress value={73} label="of $435k" showValueLabel />
-              <KpiChart.Footer>
+                </Kpi.Icon>
+                <Kpi.Title>Quarterly revenue</Kpi.Title>
+                <Kpi.Trend value={7.8} variant="badge" />
+              </Kpi.Header>
+              <Kpi.Value>$317k</Kpi.Value>
+              <Kpi.Progress value={73} label="of $435k" showValueLabel />
+              <Kpi.Footer>
                 <Text size="xs" muted>
                   41 days left in the quarter
                 </Text>
-              </KpiChart.Footer>
-            </KpiChart>
+              </Kpi.Footer>
+            </Kpi>
           </Frame.Section>
           <Frame.Section className={KPI_ROW}>
-            <KpiChart surface={false} colorIndex={2}>
-              <KpiChart.Header>
-                <KpiChart.Icon>
+            <Kpi surface={false} colorIndex={2}>
+              <Kpi.Header>
+                <Kpi.Icon>
                   <DollarSign size={16} color="#8a8f98" />
-                </KpiChart.Icon>
-                <KpiChart.Title>New customers</KpiChart.Title>
-                <KpiChart.Trend value={4.2} variant="badge" />
-              </KpiChart.Header>
-              <KpiChart.Value>2,867</KpiChart.Value>
-              <KpiChart.Progress value={57} label="of 5,000" showValueLabel />
-            </KpiChart>
+                </Kpi.Icon>
+                <Kpi.Title>New customers</Kpi.Title>
+                <Kpi.Trend value={4.2} variant="badge" />
+              </Kpi.Header>
+              <Kpi.Value>2,867</Kpi.Value>
+              <Kpi.Progress value={57} label="of 5,000" showValueLabel />
+            </Kpi>
           </Frame.Section>
         </Frame.Panel>
       </Frame>
@@ -1008,46 +1014,46 @@ function KpiGroupVersion() {
         {/* Three metrics as one panel: a rule between them rather than space
             around them, so they read as one thing with three parts. */}
         <Surface variant="secondary" padding="lg">
-          <KpiChart.Group>
-            <KpiChart surface={false} colorIndex={1}>
-              <KpiChart.Title>Revenue</KpiChart.Title>
-              <KpiChart.Value className="text-2xl">$317k</KpiChart.Value>
-              <KpiChart.Trend value={7.8} className="self-start" />
-            </KpiChart>
-            <KpiChart surface={false} colorIndex={2}>
-              <KpiChart.Title>Orders</KpiChart.Title>
-              <KpiChart.Value className="text-2xl">2,867</KpiChart.Value>
-              <KpiChart.Trend value={4.2} className="self-start" />
-            </KpiChart>
-            <KpiChart surface={false} colorIndex={3} goodDirection="down">
-              <KpiChart.Title>Refunds</KpiChart.Title>
-              <KpiChart.Value className="text-2xl">1.4%</KpiChart.Value>
-              <KpiChart.Trend value={-0.3} className="self-start" />
-            </KpiChart>
-          </KpiChart.Group>
+          <Kpi.Group>
+            <Kpi surface={false} colorIndex={1}>
+              <Kpi.Title>Revenue</Kpi.Title>
+              <Kpi.Value className="text-2xl">$317k</Kpi.Value>
+              <Kpi.Trend value={7.8} className="self-start" />
+            </Kpi>
+            <Kpi surface={false} colorIndex={2}>
+              <Kpi.Title>Orders</Kpi.Title>
+              <Kpi.Value className="text-2xl">2,867</Kpi.Value>
+              <Kpi.Trend value={4.2} className="self-start" />
+            </Kpi>
+            <Kpi surface={false} colorIndex={3} goodDirection="down">
+              <Kpi.Title>Refunds</Kpi.Title>
+              <Kpi.Value className="text-2xl">1.4%</Kpi.Value>
+              <Kpi.Trend value={-0.3} className="self-start" />
+            </Kpi>
+          </Kpi.Group>
         </Surface>
 
         <Surface variant="secondary" padding="lg">
-          <KpiChart.Group orientation="vertical">
-            <KpiChart surface={false} colorIndex={1}>
-              <KpiChart.Content layout="inline">
+          <Kpi.Group orientation="vertical">
+            <Kpi surface={false} colorIndex={1}>
+              <Kpi.Content layout="inline">
                 <View>
-                  <KpiChart.Title>Sessions</KpiChart.Title>
-                  <KpiChart.Value className="text-2xl">48,201</KpiChart.Value>
+                  <Kpi.Title>Sessions</Kpi.Title>
+                  <Kpi.Value className="text-2xl">48,201</Kpi.Value>
                 </View>
-                <KpiChart.Trend value={12.4} />
-              </KpiChart.Content>
-            </KpiChart>
-            <KpiChart surface={false} colorIndex={3} goodDirection="down">
-              <KpiChart.Content layout="inline">
+                <Kpi.Trend value={12.4} />
+              </Kpi.Content>
+            </Kpi>
+            <Kpi surface={false} colorIndex={3} goodDirection="down">
+              <Kpi.Content layout="inline">
                 <View>
-                  <KpiChart.Title>Latency p95</KpiChart.Title>
-                  <KpiChart.Value className="text-2xl">312ms</KpiChart.Value>
+                  <Kpi.Title>Latency p95</Kpi.Title>
+                  <Kpi.Value className="text-2xl">312ms</Kpi.Value>
                 </View>
-                <KpiChart.Trend value={-6.1} />
-              </KpiChart.Content>
-            </KpiChart>
-          </KpiChart.Group>
+                <Kpi.Trend value={-6.1} />
+              </Kpi.Content>
+            </Kpi>
+          </Kpi.Group>
         </Surface>
       </View>
     </ChartScreen>
@@ -1264,6 +1270,123 @@ function DatePickerSheetDemo() {
       <Text size="sm" muted>
         The anchored panel is the default: a month grid is a fixed size and fits
         beside its trigger. A sheet earns its place when the screen is busy.
+      </Text>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* DateTimePicker                                                             */
+/* -------------------------------------------------------------------------- */
+
+/** Both halves in one panel, and one Done that finishes them together. */
+function DateTimePickerDemo() {
+  const [when, setWhen] = useState<Date>();
+
+  return (
+    <View className="w-full gap-4">
+      <DateTimePicker value={when} onValueChange={setWhen} />
+      <Text size="sm" muted>
+        {when
+          ? when.toLocaleString(undefined, {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              hour: 'numeric',
+              minute: '2-digit',
+            })
+          : 'One value, filled in from either end — the day first or the time first.'}
+      </Text>
+    </View>
+  );
+}
+
+/** In a sheet, which is where a panel this tall usually belongs on a phone. */
+function DateTimePickerSheetDemo() {
+  const [when, setWhen] = useState<Date>();
+
+  return (
+    <View className="w-full gap-4">
+      <DateTimePicker
+        value={when}
+        onValueChange={setWhen}
+        presentation="bottom-sheet"
+        placeholder="Pick a moment in a sheet"
+      />
+      <Text size="sm" muted>
+        A calendar and a scale stacked is a tall panel, and a sheet has the
+        height to give it without the popover having to leave the screen.
+      </Text>
+    </View>
+  );
+}
+
+/** The wheel face instead of the ruler, for a time down to the minute. */
+function DateTimePickerWheelDemo() {
+  const [when, setWhen] = useState<Date>();
+
+  return (
+    <View className="w-full gap-4">
+      <DateTimePicker
+        value={when}
+        onValueChange={setWhen}
+        layout="wheel"
+        hourCycle={24}
+        minuteStep={5}
+        presentation="dialog"
+        placeholder="Pick to the minute"
+      />
+      <Text size="sm" muted>
+        The ruler is the default because it fits under a month grid. Where the
+        exact minute matters more than the height, the wheel is a prop away.
+      </Text>
+    </View>
+  );
+}
+
+/** A slot inside opening hours, on a day inside the booking window. */
+function DateTimePickerSlotDemo() {
+  const [when, setWhen] = useState<Date>();
+
+  const today = new Date();
+  const window = new Date(today);
+  window.setDate(window.getDate() + 21);
+
+  return (
+    <View className="w-full gap-3">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Book a fitting</Frame.Title>
+          <Frame.Action>30 minutes</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <View className="p-3">
+            {/* Bounded on both axes: three weeks of days, and only the hours
+                the shop is open. A picker that offers a slot nobody can be
+                given is a picker that has to reject it later. */}
+            <DateTimePicker
+              presentation="inline"
+              value={when}
+              onValueChange={setWhen}
+              minDate={today}
+              maxDate={window}
+              minTime={{ hour: 9, minute: 0 }}
+              maxTime={{ hour: 17, minute: 30 }}
+              minuteStep={30}
+            />
+          </View>
+        </Frame.Panel>
+      </Frame>
+      <Text size="sm" muted className="text-center">
+        {when
+          ? when.toLocaleString(undefined, {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              hour: 'numeric',
+              minute: '2-digit',
+            })
+          : 'Next three weeks, 9:00 to 17:30'}
       </Text>
     </View>
   );
@@ -3898,7 +4021,14 @@ function ScrollableSheetDemo() {
         <Button variant="outline">Open list</Button>
       </BottomSheet.Trigger>
       <BottomSheet.Content style={{ maxHeight: 420 }}>
-        <BottomSheet.Header title="Choose a country" />
+        {/* The heading names the behaviour, not just the task. Every version
+            of this sheet looks much the same from the outside, so a sheet that
+            only said "Choose a country" left nothing on screen to say which
+            one you had opened. */}
+        <BottomSheet.Header
+          title="Choose a country"
+          description="The list scrolls under the fixed heading. The sheet itself still drags."
+        />
         <BottomSheet.Body contentContainerClassName="pb-4">
           {COUNTRIES.map((country, index) => (
             <View
@@ -5164,6 +5294,70 @@ function SwipeableTabsDemo() {
               </Text>
               <Text size="xs" muted className="mt-2">
                 Swipe left or right on this card.
+              </Text>
+            </Card.Content>
+          </Card>
+        </Tabs.Content>
+      ))}
+    </Tabs>
+  );
+}
+
+/** The four destinations of the expanding row, and what each one shows. */
+const EXPANDING_TABS = [
+  {
+    value: 'home',
+    label: 'Home',
+    icon: <PackageIcon size={18} />,
+    body: 'Everything that changed since you were last here.',
+  },
+  {
+    value: 'chats',
+    label: 'Chats',
+    icon: <MessageCircleIcon size={18} />,
+    body: 'Four threads, two of them waiting on you.',
+  },
+  {
+    value: 'calendar',
+    label: 'Calendar',
+    icon: <CalendarIcon size={18} />,
+    body: 'Nothing until Thursday, and then rather a lot.',
+  },
+  {
+    value: 'inbox',
+    label: 'Inbox',
+    icon: <BellIcon size={18} />,
+    body: 'Three notifications, none of them urgent.',
+  },
+];
+
+/**
+ * Icon-only until you pick one.
+ *
+ * Four labels written out take the whole row to say four words nobody rereads
+ * after the first time. Closed, they take an icon each; open, the one you are
+ * looking at says what it is.
+ */
+function ExpandingTabsDemo() {
+  return (
+    // `swipeable` as well, so the panel under the row arrives the way it does
+    // when it is dragged: pressing a pill throws the incoming panel in from the
+    // side it belongs on rather than cross-fading it in place.
+    <Tabs swipeable variant="expanding" defaultValue="chats" className="w-full">
+      <Tabs.List className="justify-center">
+        {EXPANDING_TABS.map((tab) => (
+          <Tabs.Trigger key={tab.value} value={tab.value} icon={tab.icon}>
+            {tab.label}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+      {EXPANDING_TABS.map((tab) => (
+        <Tabs.Content key={tab.value} value={tab.value}>
+          <Card>
+            <Card.Content className="gap-2 p-4">
+              <Text weight="medium">{tab.label}</Text>
+              <Text size="sm" muted>
+                {tab.body}
               </Text>
             </Card.Content>
           </Card>
@@ -8818,6 +9012,486 @@ function RingChartTilesVersion() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* GridItem                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/** A dashboard's worth of numbers, at four sizes. */
+function GridItemBentoDemo() {
+  return (
+    /*
+     * A row height rather than an aspect, and it is set from what the tiles
+     * have to hold rather than from the shape that looked right: the tallest
+     * of these is an icon, a title, a figure and a line under it, and a cell
+     * shorter than that clips the last of them. A tile's height is its cells.
+     */
+    <GridItem.Group columns={2} gap={12} rowHeight={164} className="w-full">
+      <GridItem colSpan={2}>
+        <GridItem.Media variant="icon">
+          <SparklesIcon size={18} />
+        </GridItem.Media>
+        <GridItem.Title>Deploys</GridItem.Title>
+        <GridItem.Value>1,284</GridItem.Value>
+        <GridItem.Description numberOfLines={1}>
+          this week, across 12 projects
+        </GridItem.Description>
+      </GridItem>
+      <GridItem>
+        <GridItem.Title>Uptime</GridItem.Title>
+        <GridItem.Value>99.98%</GridItem.Value>
+        <GridItem.Footer>
+          <Badge variant="secondary">30 days</Badge>
+        </GridItem.Footer>
+      </GridItem>
+      <GridItem variant="muted">
+        <GridItem.Title>p95 latency</GridItem.Title>
+        <GridItem.Value>142ms</GridItem.Value>
+        <GridItem.Description numberOfLines={1}>down 18ms</GridItem.Description>
+      </GridItem>
+    </GridItem.Group>
+  );
+}
+
+/**
+ * What the spans actually do.
+ *
+ * The tall tile is the one to watch: the two after it tuck in beside it rather
+ * than starting a new row, which is the thing a wrapping row of views cannot do
+ * and the reason the group places its tiles itself.
+ */
+function GridItemSpansDemo() {
+  return (
+    <GridItem.Group columns={3} gap={10} className="w-full">
+      <GridItem rowSpan={2} variant="muted">
+        <GridItem.Title>rowSpan 2</GridItem.Title>
+        <GridItem.Description>
+          Two rows tall. The next tiles fill in beside it.
+        </GridItem.Description>
+      </GridItem>
+      <GridItem colSpan={2}>
+        <GridItem.Title>colSpan 2</GridItem.Title>
+      </GridItem>
+      <GridItem>
+        <GridItem.Title>1 × 1</GridItem.Title>
+      </GridItem>
+      <GridItem>
+        <GridItem.Title>1 × 1</GridItem.Title>
+      </GridItem>
+      <GridItem colSpan={3} variant="outline">
+        <GridItem.Title>colSpan 3</GridItem.Title>
+        <GridItem.Description>A full-width band under the rest.</GridItem.Description>
+      </GridItem>
+    </GridItem.Group>
+  );
+}
+
+/** Tiles that go somewhere. Pressing one dims it and gives a little. */
+function GridItemPressableDemo() {
+  const [opened, setOpened] = useState<string | null>(null);
+
+  const tiles = [
+    { key: 'billing', label: 'Billing', caption: '3 invoices due' },
+    { key: 'team', label: 'Team', caption: '12 members' },
+    { key: 'keys', label: 'API keys', caption: '2 active' },
+    { key: 'logs', label: 'Logs', caption: 'Live' },
+  ];
+
+  return (
+    <View className="w-full gap-3">
+      <GridItem.Group columns={2} gap={12} aspect={1.9} size="sm">
+        {tiles.map((tile) => (
+          <GridItem key={tile.key} onPress={() => setOpened(tile.label)}>
+            <GridItem.Title>{tile.label}</GridItem.Title>
+            <GridItem.Footer>
+              <Text size="xs" className="flex-1 text-muted-foreground">
+                {tile.caption}
+              </Text>
+              <ChevronRightIcon size={14} />
+            </GridItem.Footer>
+          </GridItem>
+        ))}
+      </GridItem.Group>
+      <Text size="xs" muted className="text-center">
+        {opened ? `Opened ${opened}` : 'Press a tile'}
+      </Text>
+    </View>
+  );
+}
+
+/** Three across at the smaller density, for a grid of shortcuts. */
+function GridItemCompactDemo() {
+  const shortcuts = [
+    { label: 'Search', icon: <SearchIcon size={16} /> },
+    { label: 'Upload', icon: <PackageIcon size={16} /> },
+    { label: 'Invite', icon: <PlusSquareIcon size={16} /> },
+    { label: 'Export', icon: <ReceiptIcon size={16} /> },
+    { label: 'Schedule', icon: <CalendarIcon size={16} /> },
+    { label: 'Alerts', icon: <BellIcon size={16} /> },
+  ];
+
+  return (
+    <GridItem.Group columns={3} gap={10} size="sm" className="w-full">
+      {shortcuts.map((shortcut) => (
+        <GridItem key={shortcut.label} onPress={() => {}}>
+          <GridItem.Media variant="icon">{shortcut.icon}</GridItem.Media>
+          <GridItem.Footer>
+            <GridItem.Title numberOfLines={1}>{shortcut.label}</GridItem.Title>
+          </GridItem.Footer>
+        </GridItem>
+      ))}
+    </GridItem.Group>
+  );
+}
+
+/** Seven days of something, for the tile that carries a shape behind it. */
+const TILE_TREND = [
+  { day: 'M', v: 18 },
+  { day: 'T', v: 26 },
+  { day: 'W', v: 21 },
+  { day: 'T', v: 34 },
+  { day: 'F', v: 41 },
+  { day: 'S', v: 37 },
+  { day: 'S', v: 52 },
+];
+
+/**
+ * The layer behind the text, which is what makes a bento a bento rather than a
+ * wall of stat cards. The tile clips it, so it is meant to run off the edges.
+ */
+function GridItemBackgroundDemo() {
+  return (
+    <GridItem.Group columns={2} gap={12} rowHeight={132} className="w-full">
+      <GridItem colSpan={2}>
+        <GridItem.Background>
+          {/* Pinned to the bottom and allowed to bleed off both sides — the
+              shape is the decoration, not a chart anyone reads values off. */}
+          <View className="mt-auto h-20 w-full opacity-60">
+            <LineChart data={TILE_TREND} compact aspectRatio={3.4}>
+              <LineChart.Area dataKey="v" />
+              <LineChart.Line dataKey="v" />
+            </LineChart>
+          </View>
+        </GridItem.Background>
+        <GridItem.Title>Requests</GridItem.Title>
+        <GridItem.Value>52.4k</GridItem.Value>
+        <GridItem.Description>up 41% on last week</GridItem.Description>
+      </GridItem>
+      <GridItem variant="muted">
+        <GridItem.Background>
+          <View className="absolute -bottom-4 -right-3 opacity-10">
+            <SparklesIcon size={96} />
+          </View>
+        </GridItem.Background>
+        <GridItem.Title>Cache hits</GridItem.Title>
+        <GridItem.Value>94%</GridItem.Value>
+      </GridItem>
+      <GridItem variant="outline">
+        <GridItem.Title>Errors</GridItem.Title>
+        <GridItem.Value>7</GridItem.Value>
+        <GridItem.Description>none critical</GridItem.Description>
+      </GridItem>
+    </GridItem.Group>
+  );
+}
+
+/** Every tile carrying the same treatment, in the five chart colours. */
+const WATERMARKS: {
+  label: string;
+  value: string;
+  caption: string;
+  icon: (color: string) => ReactNode;
+  token: string;
+}[] = [
+  {
+    label: 'Cache hits',
+    value: '94%',
+    caption: 'of 2.1M lookups',
+    icon: (color) => <SparklesIcon size={112} color={color} />,
+    token: '--color-chart-1',
+  },
+  {
+    label: 'Alerts',
+    value: '3',
+    caption: 'two acknowledged',
+    icon: (color) => <BellIcon size={112} color={color} />,
+    token: '--color-chart-2',
+  },
+  {
+    label: 'Blocked',
+    value: '1,902',
+    caption: 'requests today',
+    icon: (color) => <ShieldCheckIcon size={112} color={color} />,
+    token: '--color-chart-3',
+  },
+  {
+    label: 'Bundles',
+    value: '48 MB',
+    caption: 'served from the edge',
+    icon: (color) => <PackageIcon size={112} color={color} />,
+    token: '--color-chart-4',
+  },
+];
+
+/** One tile of the wall above, so the token hook has somewhere to live. */
+function WatermarkTile({ tile }: { tile: (typeof WATERMARKS)[number] }) {
+  const token = useCSSVariable(tile.token);
+  const tint = typeof token === 'string' ? token : undefined;
+
+  return (
+    <GridItem>
+      <GridItem.Background>
+        {/*
+         * Hung off the bottom-right corner and cut by the tile, which is the
+         * whole trick: an icon that fits inside the tile is an icon, and one
+         * that runs off two edges of it is a texture.
+         */}
+        <View className="absolute -bottom-6 -right-5 opacity-[0.14]">
+          {tile.icon(tint ?? '#888888')}
+        </View>
+      </GridItem.Background>
+      <GridItem.Title>{tile.label}</GridItem.Title>
+      <GridItem.Value>{tile.value}</GridItem.Value>
+      <GridItem.Footer>
+        <Text size="xs" muted numberOfLines={1}>
+          {tile.caption}
+        </Text>
+      </GridItem.Footer>
+    </GridItem>
+  );
+}
+
+/**
+ * The watermark treatment across the whole wall rather than on one tile.
+ *
+ * It survives being repeated because the icon is not decoration on top of the
+ * tile — it is the tile's own subject, at a size nobody reads it at, in that
+ * series' colour. Four of them read as four different things; four of the same
+ * icon would read as wallpaper.
+ */
+function GridItemWatermarksDemo() {
+  return (
+    <GridItem.Group columns={2} gap={12} rowHeight={132} className="w-full">
+      {WATERMARKS.map((tile) => (
+        <WatermarkTile key={tile.label} tile={tile} />
+      ))}
+    </GridItem.Group>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* PieChart                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/** One month's spend, split between the things it went on. */
+const SPEND: PieDatum[] = [
+  { label: 'Rent', value: 1450 },
+  { label: 'Food', value: 620 },
+  { label: 'Transport', value: 210 },
+  { label: 'Utilities', value: 185 },
+  { label: 'Everything else', value: 240 },
+];
+
+/** A split with a long tail, which is what `minAngle` is for. */
+const TRAFFIC_SOURCES: PieDatum[] = [
+  { label: 'Organic', value: 41800 },
+  { label: 'Direct', value: 18400 },
+  { label: 'Referral', value: 6300 },
+  { label: 'Social', value: 2100 },
+  { label: 'Email', value: 240 },
+];
+
+const SPEND_TOTAL = SPEND.reduce((sum, slice) => sum + slice.value, 0);
+
+const PIE_SIZE = 208;
+
+/** The plain pie: five parts of one obvious whole, with a key beside it. */
+function PieBasicVersion() {
+  const [active, setActive] = useState(-1);
+  const slice = active >= 0 ? SPEND[active] : null;
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Where it went</Frame.Title>
+          <Frame.Action>Tap a slice</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PieChart
+            data={SPEND}
+            size={PIE_SIZE}
+            className="pb-4"
+            activeIndex={active}
+            onActiveIndexChange={setActive}
+          >
+            <PieChart.Header
+              className={CHART_HEADER}
+              value={money(slice ? slice.value : SPEND_TOTAL)}
+              caption={
+                slice
+                  ? `${slice.label} · ${Math.round((slice.value / SPEND_TOTAL) * 100)}% of the month`
+                  : 'August, across five categories'
+              }
+            />
+            <PieChart.Slices />
+            <PieChart.Legend className="px-4" />
+          </PieChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * The donut, which is the pie with somewhere to put the number.
+ *
+ * The total is the one figure a reader of a pie can actually use — the angles
+ * say roughly how the parts compare and the middle says what they came to.
+ */
+function PieDonutVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Monthly spend</Frame.Title>
+          <Frame.Action>Tap for a category</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PieChart data={SPEND} size={PIE_SIZE} innerRadius={0.62} className="pb-4">
+            <PieChart.Header className={CHART_HEADER} title="August" />
+            <PieChart.Slices />
+            <PieChart.Center formatValue={(value) => money(value)} />
+            <PieChart.Legend className="px-4" />
+          </PieChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * Padded, rounded and floored.
+ *
+ * `minAngle` is the one doing the work here: email is a third of a percent of
+ * the traffic, and without a floor it is a hairline nobody can see or press —
+ * which reads as absent rather than as tiny.
+ */
+function PieSegmentsVersion() {
+  const [active, setActive] = useState(-1);
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Traffic by source</Frame.Title>
+          <Frame.Action>Last 30 days</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PieChart
+            data={TRAFFIC_SOURCES}
+            size={PIE_SIZE}
+            innerRadius={0.58}
+            padAngle={3}
+            minAngle={6}
+            className="pb-4"
+            activeIndex={active}
+            onActiveIndexChange={setActive}
+          >
+            <PieChart.Header className={CHART_HEADER} title="Sessions" />
+            <PieChart.Slices cornerRadius={6} />
+            <PieChart.Center defaultLabel="Sessions" />
+            <PieChart.Legend className="px-4" />
+          </PieChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** What is on the disk, on a dial that stops short of a full turn. */
+const STORAGE: PieDatum[] = [
+  { label: 'Photos', value: 684 },
+  { label: 'Video', value: 412 },
+  { label: 'Backups', value: 233 },
+  { label: 'Free', value: 719 },
+];
+
+/** The dial: three quarters of a turn, with the notch at the bottom. */
+function PieDialVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Storage</Frame.Title>
+          <Frame.Action>2 TB plan</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PieChart
+            data={STORAGE}
+            size={PIE_SIZE}
+            innerRadius={0.66}
+            startAngle={-135}
+            endAngle={135}
+            padAngle={2}
+            className="pb-4"
+          >
+            <PieChart.Header className={CHART_HEADER} title="In use" />
+            <PieChart.Slices cornerRadius={4} />
+            <PieChart.Center
+              defaultLabel="Used"
+              formatValue={(value) => `${value.toFixed(0)} GB`}
+            />
+            <PieChart.Legend className="px-4" />
+          </PieChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** Loading, and the one thing a pie must not invent while it waits: a split. */
+function PieLoadingVersion() {
+  const [status, setStatus] = useState<'loading' | 'ready'>('loading');
+
+  useEffect(() => {
+    if (status !== 'loading') return;
+    const timer = setTimeout(() => setStatus('ready'), 1400);
+    return () => clearTimeout(timer);
+  }, [status]);
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Monthly spend</Frame.Title>
+          <Frame.Action>
+            <Button size="sm" variant="ghost" onPress={() => setStatus('loading')}>
+              Reload
+            </Button>
+          </Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PieChart
+            data={SPEND}
+            size={PIE_SIZE}
+            innerRadius={0.62}
+            status={status}
+            className="pb-4"
+          >
+            <PieChart.Header className={CHART_HEADER} title="August" />
+            <PieChart.Skeleton />
+            <PieChart.Slices />
+            {status === 'ready' ? (
+              <PieChart.Center formatValue={(value) => money(value)} />
+            ) : null}
+            {status === 'ready' ? <PieChart.Legend className="px-4" /> : null}
+          </PieChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
 const LOADER_VARIANTS: { variant: LoaderVariant; label: string }[] = [
   { variant: 'pulse-dots', label: 'Pulse dots' },
   { variant: 'bounce-dots', label: 'Bounce dots' },
@@ -9723,7 +10397,7 @@ function SwipeRtlDemo() {
 /* Catalogue                                                                  */
 /* -------------------------------------------------------------------------- */
 
-export const COMPONENTS: ComponentEntry[] = [
+const CATALOGUE: ComponentEntry[] = [
   {
     slug: 'accordion',
     name: 'Accordion',
@@ -10546,6 +11220,17 @@ export const COMPONENTS: ComponentEntry[] = [
     demos: [
       { label: 'Single, range and birthday', render: () => <DatePickerDemo /> },
       { label: 'In a sheet', render: () => <DatePickerSheetDemo /> },
+    ],
+  },
+  {
+    slug: 'date-time-picker',
+    name: 'DateTimePicker',
+    summary: 'A day and a time, picked in one panel',
+    demos: [
+      { label: 'Both halves at once', render: () => <DateTimePickerDemo /> },
+      { label: 'In a sheet', render: () => <DateTimePickerSheetDemo /> },
+      { label: 'The wheel face', render: () => <DateTimePickerWheelDemo /> },
+      { label: 'Booking a slot', render: () => <DateTimePickerSlotDemo /> },
     ],
   },
   {
@@ -11461,6 +12146,19 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'grid-item',
+    name: 'GridItem',
+    summary: 'Bento tiles, and the grid that places them',
+    demos: [
+      { label: 'A bento of stats', render: () => <GridItemBentoDemo /> },
+      { label: 'Spans', render: () => <GridItemSpansDemo /> },
+      { label: 'Behind the text', render: () => <GridItemBackgroundDemo /> },
+      { label: 'A wall of watermarks', render: () => <GridItemWatermarksDemo /> },
+      { label: 'Pressable tiles', render: () => <GridItemPressableDemo /> },
+      { label: 'Three across', render: () => <GridItemCompactDemo /> },
+    ],
+  },
+  {
     slug: 'item',
     name: 'Item',
     summary: 'Row of media, text and actions',
@@ -11752,8 +12450,8 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
   {
-    slug: 'kpi-chart',
-    name: 'KpiChart',
+    slug: 'kpi',
+    name: 'Kpi',
     summary: 'One number, and what it is doing',
     layout: 'pager',
     demos: [
@@ -12950,6 +13648,49 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'pie-chart',
+    name: 'PieChart',
+    summary: 'One whole, divided between its parts',
+    layout: 'pager',
+    demos: [
+      {
+        label: 'Basic',
+        id: 'basic',
+        fullPage: true,
+        description: 'Five parts of one obvious total, with a key beside them.',
+        render: () => <PieBasicVersion />,
+      },
+      {
+        label: 'Donut',
+        id: 'donut',
+        fullPage: true,
+        description: 'The hole is where the total goes — the one figure a pie can be read for.',
+        render: () => <PieDonutVersion />,
+      },
+      {
+        label: 'Segments',
+        id: 'segments',
+        fullPage: true,
+        description: 'Padded and rounded, with a floor under the slices too small to see.',
+        render: () => <PieSegmentsVersion />,
+      },
+      {
+        label: 'Dial',
+        id: 'dial',
+        fullPage: true,
+        description: 'Three quarters of a turn rather than all of it, notch at the bottom.',
+        render: () => <PieDialVersion />,
+      },
+      {
+        label: 'Loading',
+        id: 'loading',
+        fullPage: true,
+        description: 'One undivided band while it waits, because an invented split is a lie.',
+        render: () => <PieLoadingVersion />,
+      },
+    ],
+  },
+  {
     slug: 'ring-chart',
     name: 'RingChart',
     summary: 'Concentric arcs, each against its own target',
@@ -14089,6 +14830,10 @@ export const COMPONENTS: ComponentEntry[] = [
         label: 'Swiping between panels',
         render: () => <SwipeableTabsDemo />,
       },
+      {
+        label: 'Icons that open',
+        render: () => <ExpandingTabsDemo />,
+      },
     ],
   },
   {
@@ -14554,6 +15299,19 @@ export const COMPONENTS: ComponentEntry[] = [
     ],
   },
 ];
+
+/**
+ * The catalogue, A–Z.
+ *
+ * Sorted here rather than kept in order above, because the array above is five
+ * thousand lines of demo code and a new component is always appended to the end
+ * of it. Every list that was alphabetical by hand has stopped being — this one
+ * had charts filed under L and Item under O — so the order is derived from the
+ * names the list prints and cannot drift again.
+ */
+export const COMPONENTS: ComponentEntry[] = [...CATALOGUE].sort((a, b) =>
+  a.name.localeCompare(b.name)
+);
 
 /** Catalogue keyed by slug, for the detail route. */
 export const COMPONENTS_BY_SLUG: Record<string, ComponentEntry> = Object.fromEntries(

@@ -1,5 +1,5 @@
 ---
-title: KpiChart
+title: Kpi
 description: One number, what it is doing, and the shape it made getting there.
 status: new
 ---
@@ -12,71 +12,71 @@ The trend takes a number rather than a written string, so the component decides 
 
 ## Installation
 
-KpiChart ships with the library — no separate install.
+Kpi ships with the library — no separate install.
 
 ```tsx
-import { KpiChart, Text, Frame, Surface } from 'panelui-native';
+import { Kpi, Text, Frame, Surface } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
 
 ```bash
-npx panelui-cli@latest add kpi-chart
+npx panelui-cli@latest add kpi
 ```
 
 ## Usage
 
 ```tsx
-<KpiChart colorIndex={1}>
-  <KpiChart.Content layout="inline">
-    <KpiChart.Stat>
-      <KpiChart.Title>Total Revenue</KpiChart.Title>
-      <KpiChart.Value>$317,904</KpiChart.Value>
-      <KpiChart.Trend value={7.8} caption="last 30d" />
-    </KpiChart.Stat>
-    <KpiChart.Chart data={week} dataKey="v" inline />
-  </KpiChart.Content>
-</KpiChart>
+<Kpi colorIndex={1}>
+  <Kpi.Content layout="inline">
+    <Kpi.Stat>
+      <Kpi.Title>Total Revenue</Kpi.Title>
+      <Kpi.Value>$317,904</Kpi.Value>
+      <Kpi.Trend value={7.8} caption="last 30d" />
+    </Kpi.Stat>
+    <Kpi.Chart data={week} dataKey="v" inline />
+  </Kpi.Content>
+</Kpi>
 ```
 
 ## Composition
 
 ```tsx
-<KpiChart colorIndex={1} goodDirection="up">
-  <KpiChart.Header>
-    <KpiChart.Icon>{/* a glyph */}</KpiChart.Icon>
-    <KpiChart.Title />
-    <KpiChart.Actions>{/* a menu */}</KpiChart.Actions>
-  </KpiChart.Header>
-  <KpiChart.Content layout="inline">
-    <KpiChart.Stat>          {/* title, value and change, stacked */}
-      <KpiChart.Title />
-      <KpiChart.Value />
-      <KpiChart.Trend value={7.8} />
-    </KpiChart.Stat>
-    <KpiChart.Chart data={series} dataKey="v" inline />
-  </KpiChart.Content>
-  <KpiChart.Progress value={73} />
-  <KpiChart.Separator />
-  <KpiChart.Footer>{/* a caveat */}</KpiChart.Footer>
-</KpiChart>
+<Kpi colorIndex={1} goodDirection="up">
+  <Kpi.Header>
+    <Kpi.Icon>{/* a glyph */}</Kpi.Icon>
+    <Kpi.Title />
+    <Kpi.Actions>{/* a menu */}</Kpi.Actions>
+  </Kpi.Header>
+  <Kpi.Content layout="inline">
+    <Kpi.Stat>          {/* title, value and change, stacked */}
+      <Kpi.Title />
+      <Kpi.Value />
+      <Kpi.Trend value={7.8} />
+    </Kpi.Stat>
+    <Kpi.Chart data={series} dataKey="v" inline />
+  </Kpi.Content>
+  <Kpi.Progress value={73} />
+  <Kpi.Separator />
+  <Kpi.Footer>{/* a caveat */}</Kpi.Footer>
+</Kpi>
 
-<KpiChart.Group orientation="horizontal">{/* several cards */}</KpiChart.Group>
+<Kpi.Group orientation="horizontal">{/* several cards */}</Kpi.Group>
 ```
 
-- **`KpiChart.Header`** — The top row: a tinted icon, the metric's name, and anything acting on it.
-- **`KpiChart.Icon`** — A tinted square for a glyph. It takes the element rather than drawing one — a metric's icon comes from whatever set the app already uses, and an icon from outside this library needs its `color` passed explicitly.
-- **`KpiChart.Title`** — The metric's name. Quiet on purpose: the value is the thing being read.
-- **`KpiChart.Stat`** — The stacked title / value / change block. Its own container rather than three loose children, because the three belong together more tightly than they belong to whatever is above or below them — and because it takes the width in an `inline` row, leaving the chart its column on the end.
-- **`KpiChart.Actions`** — The trailing end of the header — a menu trigger, a period filter, a link.
-- **`KpiChart.Content`** — The row the value and the trend share. `layout="inline"` puts the chart beside them instead of under everything.
-- **`KpiChart.Value`** — The number. Formatted by you, not here — separators, currency and units are locale decisions a component would get wrong in a way that is hard to notice and impossible to override.
-- **`KpiChart.Trend`** — The change. Takes a signed percentage and derives its own direction and colour. `text` by default — a line of colour under the number — or `variant="badge"` for a pill with an arrow.
-- **`KpiChart.Chart`** — The sparkline. A line chart with the axis padding dropped. Under the card it is full width and filled; `inline` puts it in a fixed 128pt column beside the number, unfilled.
-- **`KpiChart.Progress`** — Progress towards a target, for a metric that has one.
-- **`KpiChart.Footer`** — The bottom strip — a comparison period, a caveat, a link.
-- **`KpiChart.Separator`** — A hairline across the card.
-- **`KpiChart.Group`** — Several metrics laid out as one panel, in a row or a column, divided by a rule.
+- **`Kpi.Header`** — The top row: a tinted icon, the metric's name, and anything acting on it.
+- **`Kpi.Icon`** — A tinted square for a glyph. It takes the element rather than drawing one — a metric's icon comes from whatever set the app already uses, and an icon from outside this library needs its `color` passed explicitly.
+- **`Kpi.Title`** — The metric's name. Quiet on purpose: the value is the thing being read.
+- **`Kpi.Stat`** — The stacked title / value / change block. Its own container rather than three loose children, because the three belong together more tightly than they belong to whatever is above or below them — and because it takes the width in an `inline` row, leaving the chart its column on the end.
+- **`Kpi.Actions`** — The trailing end of the header — a menu trigger, a period filter, a link.
+- **`Kpi.Content`** — The row the value and the trend share. `layout="inline"` puts the chart beside them instead of under everything.
+- **`Kpi.Value`** — The number. Formatted by you, not here — separators, currency and units are locale decisions a component would get wrong in a way that is hard to notice and impossible to override.
+- **`Kpi.Trend`** — The change. Takes a signed percentage and derives its own direction and colour. `text` by default — a line of colour under the number — or `variant="badge"` for a pill with an arrow.
+- **`Kpi.Chart`** — The sparkline. A line chart with the axis padding dropped. Under the card it is full width and filled; `inline` puts it in a fixed 128pt column beside the number, unfilled.
+- **`Kpi.Progress`** — Progress towards a target, for a metric that has one.
+- **`Kpi.Footer`** — The bottom strip — a comparison period, a caveat, a link.
+- **`Kpi.Separator`** — A hairline across the card.
+- **`Kpi.Group`** — Several metrics laid out as one panel, in a row or a column, divided by a rule.
 
 ## Examples
 
@@ -86,19 +86,19 @@ Colour comes from what the movement *means*, not from its sign. A fall in churn,
 
 ```tsx
 {/* A rise is good — the default. */}
-<KpiChart goodDirection="up">
-  <KpiChart.Trend value={7.8} />   {/* green */}
-</KpiChart>
+<Kpi goodDirection="up">
+  <Kpi.Trend value={7.8} />   {/* green */}
+</Kpi>
 
 {/* A fall is good. */}
-<KpiChart goodDirection="down">
-  <KpiChart.Trend value={-8.4} />  {/* also green */}
-</KpiChart>
+<Kpi goodDirection="down">
+  <Kpi.Trend value={-8.4} />  {/* also green */}
+</Kpi>
 
 {/* Neither. */}
-<KpiChart goodDirection="none">
-  <KpiChart.Trend value={2.2} />   {/* grey */}
-</KpiChart>
+<Kpi goodDirection="none">
+  <Kpi.Trend value={2.2} />   {/* grey */}
+</Kpi>
 ```
 
 ### Text or a badge
@@ -107,13 +107,13 @@ A trend is a line of coloured text by default, sitting under the number where th
 
 ```tsx
 {/* Under the number. */}
-<KpiChart.Trend value={7.8} caption="last 30d" />
+<Kpi.Trend value={7.8} caption="last 30d" />
 
 {/* On the end of a header row. */}
-<KpiChart.Header>
-  <KpiChart.Title>Quarterly revenue</KpiChart.Title>
-  <KpiChart.Trend value={7.8} variant="badge" />
-</KpiChart.Header>
+<Kpi.Header>
+  <Kpi.Title>Quarterly revenue</Kpi.Title>
+  <Kpi.Trend value={7.8} variant="badge" />
+</Kpi.Header>
 ```
 
 ### Writing the number yourself
@@ -121,7 +121,7 @@ A trend is a line of coloured text by default, sitting under the number where th
 The default prints one decimal place with an explicit sign. Pass `format` for anything else — the raw signed value goes in, the string comes out. `caption` is what it is being compared against, and stays muted.
 
 ```tsx
-<KpiChart.Trend
+<Kpi.Trend
   value={-8.4}
   format={(v) => `${v.toFixed(0)}%`}
   caption="vs last week"
@@ -141,16 +141,16 @@ A card on its own surface is one metric. Several inside a `Frame` are one report
   <Frame.Panel>
     {metrics.map((metric) => (
       <Frame.Section key={metric.label}>
-        <KpiChart surface={false} colorIndex={metric.colorIndex}>
-          <KpiChart.Content layout="inline">
-            <KpiChart.Stat>
-              <KpiChart.Title>{metric.label}</KpiChart.Title>
-              <KpiChart.Value>{metric.value}</KpiChart.Value>
-              <KpiChart.Trend value={metric.delta} caption={metric.period} />
-            </KpiChart.Stat>
-            <KpiChart.Chart data={metric.series} dataKey="v" inline />
-          </KpiChart.Content>
-        </KpiChart>
+        <Kpi surface={false} colorIndex={metric.colorIndex}>
+          <Kpi.Content layout="inline">
+            <Kpi.Stat>
+              <Kpi.Title>{metric.label}</Kpi.Title>
+              <Kpi.Value>{metric.value}</Kpi.Value>
+              <Kpi.Trend value={metric.delta} caption={metric.period} />
+            </Kpi.Stat>
+            <Kpi.Chart data={metric.series} dataKey="v" inline />
+          </Kpi.Content>
+        </Kpi>
       </Frame.Section>
     ))}
   </Frame.Panel>
@@ -159,22 +159,22 @@ A card on its own surface is one metric. Several inside a `Frame` are one report
 
 ### Several across a row
 
-`KpiChart.Group` divides its children with a rule rather than spacing them apart, and inserts the rules *between* them — the one thing a list of siblings cannot express, and the reason a trailing rule after the last card is such a common mistake. `orientation="vertical"` stacks them instead.
+`Kpi.Group` divides its children with a rule rather than spacing them apart, and inserts the rules *between* them — the one thing a list of siblings cannot express, and the reason a trailing rule after the last card is such a common mistake. `orientation="vertical"` stacks them instead.
 
 ```tsx
 <Frame.Section>
-  <KpiChart.Group>
-    <KpiChart surface={false} colorIndex={1}>
-      <KpiChart.Title>Revenue</KpiChart.Title>
-      <KpiChart.Value>$317k</KpiChart.Value>
-      <KpiChart.Trend value={7.8} />
-    </KpiChart>
-    <KpiChart surface={false} colorIndex={2}>
-      <KpiChart.Title>Orders</KpiChart.Title>
-      <KpiChart.Value>2,867</KpiChart.Value>
-      <KpiChart.Trend value={4.2} />
-    </KpiChart>
-  </KpiChart.Group>
+  <Kpi.Group>
+    <Kpi surface={false} colorIndex={1}>
+      <Kpi.Title>Revenue</Kpi.Title>
+      <Kpi.Value>$317k</Kpi.Value>
+      <Kpi.Trend value={7.8} />
+    </Kpi>
+    <Kpi surface={false} colorIndex={2}>
+      <Kpi.Title>Orders</Kpi.Title>
+      <Kpi.Value>2,867</Kpi.Value>
+      <Kpi.Trend value={4.2} />
+    </Kpi>
+  </Kpi.Group>
 </Frame.Section>
 ```
 
@@ -192,16 +192,16 @@ Number and change on the left, the shape it made on the right.
   </Frame.Header>
   <Frame.Panel>
     <Frame.Section>
-      <KpiChart surface={false} colorIndex={1}>
-        <KpiChart.Content layout="inline">
-          <KpiChart.Stat>
-            <KpiChart.Title>Total Revenue</KpiChart.Title>
-            <KpiChart.Value>$317,904</KpiChart.Value>
-            <KpiChart.Trend value={7.8} caption="last 30d" />
-          </KpiChart.Stat>
-          <KpiChart.Chart data={week} dataKey="v" inline />
-        </KpiChart.Content>
-      </KpiChart>
+      <Kpi surface={false} colorIndex={1}>
+        <Kpi.Content layout="inline">
+          <Kpi.Stat>
+            <Kpi.Title>Total Revenue</Kpi.Title>
+            <Kpi.Value>$317,904</Kpi.Value>
+            <Kpi.Trend value={7.8} caption="last 30d" />
+          </Kpi.Stat>
+          <Kpi.Chart data={week} dataKey="v" inline />
+        </Kpi.Content>
+      </Kpi>
     </Frame.Section>
   </Frame.Panel>
 </Frame>
@@ -212,16 +212,16 @@ Number and change on the left, the shape it made on the right.
 The shape under the number, and the shape beside it.
 
 ```tsx
-<KpiChart colorIndex={1}>
-  <KpiChart.Header>
-    <KpiChart.Title>Total revenue</KpiChart.Title>
-  </KpiChart.Header>
-  <KpiChart.Content>
-    <KpiChart.Value>$317,904</KpiChart.Value>
-    <KpiChart.Trend value={7.8} />
-  </KpiChart.Content>
-  <KpiChart.Chart data={week} dataKey="v" />
-</KpiChart>
+<Kpi colorIndex={1}>
+  <Kpi.Header>
+    <Kpi.Title>Total revenue</Kpi.Title>
+  </Kpi.Header>
+  <Kpi.Content>
+    <Kpi.Value>$317,904</Kpi.Value>
+    <Kpi.Trend value={7.8} />
+  </Kpi.Content>
+  <Kpi.Chart data={week} dataKey="v" />
+</Kpi>
 ```
 
 ### With progress
@@ -229,22 +229,22 @@ The shape under the number, and the shape beside it.
 Targets, with an icon, a badge and a bar under each number.
 
 ```tsx
-<KpiChart surface={false} colorIndex={4}>
-  <KpiChart.Header>
-    <KpiChart.Icon tone="good">
+<Kpi surface={false} colorIndex={4}>
+  <Kpi.Header>
+    <Kpi.Icon tone="good">
       <Target size={16} color={tint} />
-    </KpiChart.Icon>
-    <KpiChart.Title>Quarterly revenue</KpiChart.Title>
-    <KpiChart.Trend value={7.8} variant="badge" />
-  </KpiChart.Header>
-  <KpiChart.Value>$317k</KpiChart.Value>
-  <KpiChart.Progress value={73} label="of $435k" showValueLabel />
-  <KpiChart.Footer>
+    </Kpi.Icon>
+    <Kpi.Title>Quarterly revenue</Kpi.Title>
+    <Kpi.Trend value={7.8} variant="badge" />
+  </Kpi.Header>
+  <Kpi.Value>$317k</Kpi.Value>
+  <Kpi.Progress value={73} label="of $435k" showValueLabel />
+  <Kpi.Footer>
     <Text size="xs" muted>
       41 days left in the quarter
     </Text>
-  </KpiChart.Footer>
-</KpiChart>
+  </Kpi.Footer>
+</Kpi>
 ```
 
 ### Several as one panel
@@ -253,15 +253,15 @@ Divided by a rule rather than spaced apart, in a row and a column.
 
 ```tsx
 <Surface variant="secondary" padding="lg">
-  <KpiChart.Group>
+  <Kpi.Group>
     {metrics.map((metric) => (
-      <KpiChart key={metric.label} surface={false} colorIndex={metric.colorIndex}>
-        <KpiChart.Title>{metric.label}</KpiChart.Title>
-        <KpiChart.Value className="text-2xl">{metric.value}</KpiChart.Value>
-        <KpiChart.Trend value={metric.delta} className="self-start" />
-      </KpiChart>
+      <Kpi key={metric.label} surface={false} colorIndex={metric.colorIndex}>
+        <Kpi.Title>{metric.label}</Kpi.Title>
+        <Kpi.Value className="text-2xl">{metric.value}</Kpi.Value>
+        <Kpi.Trend value={metric.delta} className="self-start" />
+      </Kpi>
     ))}
-  </KpiChart.Group>
+  </Kpi.Group>
 </Surface>
 ```
 
@@ -275,10 +275,10 @@ Divided by a rule rather than spaced apart, in a row and a column.
 - `neutral` *(default)*
 
 ```tsx
-<KpiChart tone="good">…</KpiChart>
-<KpiChart tone="bad">…</KpiChart>
-<KpiChart tone="flat">…</KpiChart>
-<KpiChart tone="neutral">…</KpiChart>
+<Kpi tone="good">…</Kpi>
+<Kpi tone="bad">…</Kpi>
+<Kpi tone="flat">…</Kpi>
+<Kpi tone="neutral">…</Kpi>
 ```
 
 ### `trendVariant`
@@ -287,8 +287,8 @@ Divided by a rule rather than spaced apart, in a row and a column.
 - `badge`
 
 ```tsx
-<KpiChart trendVariant="text">…</KpiChart>
-<KpiChart trendVariant="badge">…</KpiChart>
+<Kpi trendVariant="text">…</Kpi>
+<Kpi trendVariant="badge">…</Kpi>
 ```
 
 ### `layout`
@@ -297,13 +297,13 @@ Divided by a rule rather than spaced apart, in a row and a column.
 - `inline`
 
 ```tsx
-<KpiChart layout="below">…</KpiChart>
-<KpiChart layout="inline">…</KpiChart>
+<Kpi layout="below">…</Kpi>
+<Kpi layout="inline">…</Kpi>
 ```
 
 ## API Reference
 
-### KpiChart
+### Kpi
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -312,51 +312,51 @@ Divided by a rule rather than spaced apart, in a row and a column.
 | `goodDirection` | `KpiGoodDirection` | — | Which way is the good news. `up` for revenue and signups, `down` for churn and latency, `none` for a number that is neither — a headcount, a version. Defaults to `up`. |
 | `surface` | `boolean` | — | Draw the card on a surface. Turn off to place it in a shell of your own. |
 
-### KpiChart.Header
+### Kpi.Header
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
-### KpiChart.Icon
+### Kpi.Icon
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `tone` | `KpiTone` | `neutral` | Overrides the tint the card's `colorIndex` would give it. |
 
-### KpiChart.Title
+### Kpi.Title
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
-### KpiChart.Stat
+### Kpi.Stat
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
-### KpiChart.Actions
+### Kpi.Actions
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
-### KpiChart.Content
+### Kpi.Content
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `layout` | `NonNullable<KpiVariantProps['layout']>` | `'below'` | `inline` puts the chart beside the value instead of under everything. |
 
-### KpiChart.Value
+### Kpi.Value
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
-### KpiChart.Trend
+### Kpi.Trend
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -368,7 +368,7 @@ Divided by a rule rather than spaced apart, in a row and a column.
 | `caption` | `string` | — | What it is being compared against — "last 30d", "vs last week". |
 | `threshold` | `number` | `0` | Below which a movement counts as no movement. Defaults to `0`. |
 
-### KpiChart.Sparkline
+### Kpi.Sparkline
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -381,7 +381,7 @@ Divided by a rule rather than spaced apart, in a row and a column.
 | `inline` | `boolean` | `false` | Put it beside the number, taking whatever width the text leaves rather than a column of its own. Pair with `layout="inline"` on the content row. |
 | `strokeWidth` | `number` | `2` |  |
 
-### KpiChart.Progress
+### Kpi.Progress
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -391,24 +391,24 @@ Divided by a rule rather than spaced apart, in a row and a column.
 | `label` | `string` | — | A caption above the bar. |
 | `showValueLabel` | `boolean` | — | Print the percentage on the right of the caption row. |
 
-### KpiChart.Footer
+### Kpi.Footer
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
-### KpiChart.Separator
+### Kpi.Separator
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
-### KpiChart.Group
+### Kpi.Group
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `orientation` | `KpiChartGroupOrientation` | — | `horizontal` splits the row between the cards; `vertical` stacks them. |
+| `orientation` | `KpiGroupOrientation` | — | `horizontal` splits the row between the cards; `vertical` stacks them. |
 | `separated` | `boolean` | — | Draw a hairline between the cards rather than spacing them apart. Several metrics separated by a rule read as one panel; several spaced apart read as several panels that happen to be adjacent. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
@@ -421,9 +421,9 @@ The sparkline is a `LineChart` in `compact` mode — the same chart used everywh
 
 ### Where the space goes
 
-`KpiChart.Stat` exists because a title, a number and a change are one fact in three lines, and the card’s own spacing is for the gaps *between* facts. Writing the three straight into the card gives them the wider spacing and they stop reading as a unit.
+`Kpi.Stat` exists because a title, a number and a change are one fact in three lines, and the card’s own spacing is for the gaps *between* facts. Writing the three straight into the card gives them the wider spacing and they stop reading as a unit.
 
-It also matters for a row of them. `KpiChart.Title` grows to fill a header row, and a growing child of a *column* absorbs that column’s leftover height — which would push each card’s number down by however much that card had spare, and land three numbers at three different heights. The title only grows inside `KpiChart.Header`.
+It also matters for a row of them. `Kpi.Title` grows to fill a header row, and a growing child of a *column* absorbs that column’s leftover height — which would push each card’s number down by however much that card had spare, and land three numbers at three different heights. The title only grows inside `Kpi.Header`.
 
 ### Colour
 

@@ -14,7 +14,8 @@
     "Filled bands over time, stacked or overlaid.",
     "react native area chart stacked",
     {
-      "addedIn": "0.25.0"
+      "addedIn": "0.25.0",
+      "group": "charts"
     }
   ],
   "attachment": [
@@ -37,7 +38,8 @@
     "Categories compared by length, grouped or stacked.",
     "react native bar chart",
     {
-      "addedIn": "0.25.0"
+      "addedIn": "0.25.0",
+      "group": "charts"
     }
   ],
   "bottom-sheet": [
@@ -121,6 +123,14 @@
       "updatedIn": "0.30.0"
     }
   ],
+  "date-time-picker": [
+    "DateTimePicker",
+    "A day and a time of day, picked in one panel.",
+    "react native date time picker component",
+    {
+      "addedIn": "0.46.0"
+    }
+  ],
   "dialog": [
     "Dialog",
     "Modal dialog with a backdrop and footer actions.",
@@ -193,7 +203,8 @@
     "react native heatmap chart",
     {
       "addedIn": "0.14.0",
-      "updatedIn": "0.40.0"
+      "updatedIn": "0.40.0",
+      "group": "charts"
     }
   ],
   "input": [
@@ -234,6 +245,14 @@
       "updatedIn": "0.41.0"
     }
   ],
+  "grid-item": [
+    "GridItem",
+    "Bento tiles, and the grid that places them.",
+    "react native bento grid tile component",
+    {
+      "addedIn": "0.46.0"
+    }
+  ],
   "item": [
     "Item",
     "Row of media, text and actions for lists and settings.",
@@ -249,7 +268,8 @@
     "Animated time series, drawn on the UI thread.",
     "react native line chart",
     {
-      "updatedIn": "0.45.0"
+      "updatedIn": "0.45.0",
+      "group": "charts"
     }
   ],
   "loader": [
@@ -326,13 +346,23 @@
       "addedIn": "0.20.0"
     }
   ],
+  "pie-chart": [
+    "PieChart",
+    "One whole, divided between its parts.",
+    "react native pie donut chart",
+    {
+      "addedIn": "0.46.0",
+      "group": "charts"
+    }
+  ],
   "ring-chart": [
     "RingChart",
     "Concentric arcs, each measured against its own target.",
     "react native ring chart radial progress gauge",
     {
       "addedIn": "0.25.0",
-      "updatedIn": "0.40.0"
+      "updatedIn": "0.40.0",
+      "group": "charts"
     }
   ],
   "scatter-chart": [
@@ -340,7 +370,8 @@
     "Two quantities against each other, to show how they relate.",
     "react native scatter plot chart",
     {
-      "addedIn": "0.45.0"
+      "addedIn": "0.45.0",
+      "group": "charts"
     }
   ],
   "scroll-canvas": [
@@ -472,7 +503,7 @@
     "Segmented navigation with an animated indicator.",
     "react native tabs",
     {
-      "updatedIn": "0.43.0"
+      "updatedIn": "0.46.0"
     }
   ],
   "textarea": [
@@ -629,12 +660,13 @@
       "updatedIn": "0.41.0"
     }
   ],
-  "kpi-chart": [
-    "KpiChart",
+  "kpi": [
+    "Kpi",
     "One number, what it is doing, and the shape it made getting there.",
     "react native kpi metric stat card",
     {
-      "addedIn": "0.43.0"
+      "addedIn": "0.43.0",
+      "updatedIn": "0.46.0"
     }
   ],
   "radar-chart": [
@@ -642,7 +674,8 @@
     "Several measures of one thing, drawn as one shape.",
     "react native radar chart spider web",
     {
-      "addedIn": "0.43.0"
+      "addedIn": "0.43.0",
+      "group": "charts"
     }
   ]
 }

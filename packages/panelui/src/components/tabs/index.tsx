@@ -15,6 +15,15 @@
  *   <Tabs.Content value="account">…</Tabs.Content>
  * </Tabs>
  * ```
+ *
+ * **Swiping.** Only the visible panel is mounted, so a drag has nothing behind
+ * it to reveal. The panel still tracks the finger one to one and dims as it
+ * goes, and the panel arriving comes back up through the same fade — the
+ * movement carries the change and the dissolve covers the gap. On release the
+ * arriving panel picks up a whole panel's width from wherever the outgoing one
+ * was let go, so the two views draw one continuous movement between them. The
+ * displacement lives on the root for exactly that reason: a value belonging to
+ * either panel would be destroyed at the handover.
  */
 import {
   createContext,
@@ -35,11 +44,16 @@ import {
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
+  Extrapolation,
   FadeIn,
+  interpolate,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring,
+  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
@@ -64,32 +78,56 @@ const SWIPE_DISTANCE_RATIO = 0.25;
 const SWIPE_VELOCITY = 500;
 
 /**
- * How much of the finger's travel the panel actually follows.
- *
- * Not all of it: a panel that tracked one-to-one would look like a pager that
- * is about to reveal the next panel, and there is nothing behind it to reveal
- * — the panels are separate views, only one of which is mounted. A third of
- * the distance is enough to say the gesture was received.
+ * How much of the finger's travel the panel follows at the ends of the row,
+ * where there is nowhere for it to go. Everywhere else it follows all of it.
  */
-const SWIPE_FOLLOW = 0.32;
-/** …and a fraction of that again at the ends, where there is nowhere to go. */
-const SWIPE_FOLLOW_AT_END = 0.1;
+const SWIPE_RESISTANCE_AT_END = 0.16;
 
 /**
- * How far off its resting place the arriving panel starts, as a share of the
- * panel's width.
+ * How far the panel fades as it is dragged, at a full panel's width.
  *
- * A swipe that commits should not look like a swipe that was cancelled. Both
- * end with a panel settling at rest, and the only thing that distinguishes
- * them is which side it settled *from* — so the incoming panel picks up
- * roughly where the outgoing one was let go, on the far side, and travels in.
+ * Tracking the finger one to one leaves the space behind the panel empty,
+ * because the panels are separate views and only the visible one is mounted.
+ * Dimming as it goes is what keeps that from reading as a hole punched in the
+ * card: a panel on its way out is on its way out, and the one arriving comes
+ * back up through the same fade. The two together read as a dissolve carried
+ * by the movement, rather than as a gap between two slides.
+ */
+const SWIPE_FADE = 0.75;
+
+/**
+ * How far off its resting place a panel arriving by a *press* starts, as a
+ * share of the panel's width.
+ *
+ * A press has no finger travel to continue from, so it is given a throw of its
+ * own. A swipe does not use this: the panel it hands over to picks up exactly
+ * where the outgoing one was let go — see `setValue`.
  */
 const SWIPE_ENTER = 0.3;
 
 /** The arriving panel is springier than the one being dragged back into place. */
 const ENTER_SPRING = { damping: 22, stiffness: 240, mass: 0.6 } as const;
 
-export type TabsVariant = 'segmented' | 'underline' | 'pill';
+/** How far the label's reveal is from its own width, in points — the gap after the icon. */
+const LABEL_GAP = 6;
+
+/** Points of room over the measured label, so a rounding error cannot truncate it. */
+const LABEL_SLACK = 2;
+
+/** Milliseconds for a tab to open its label, and for the one before it to close. */
+const EXPAND_DURATION = 260;
+
+/**
+ * A width the ghost label is measured inside.
+ *
+ * A `Text` measures against the box it is in, and the box it is really in is a
+ * pill whose width is the thing being measured. So the copy that gets measured
+ * sits in a box wide enough not to be the constraint, and reports the width the
+ * label actually wants.
+ */
+const MEASURE_WIDTH = 400;
+
+export type TabsVariant = 'segmented' | 'underline' | 'pill' | 'expanding';
 
 const tabsVariants = tv({
   slots: {
@@ -120,6 +158,22 @@ const tabsVariants = tv({
         indicator: 'bottom-0 top-0 rounded-full bg-primary',
         trigger: 'rounded-full py-2',
       },
+      /*
+       * A row of icon pills, one of which is open.
+       *
+       * Every tab draws its own pill here, so there is no indicator to slide
+       * between them — the shape that moves is the open tab itself, widening
+       * to let its label out and closing again behind it. An indicator sliding
+       * under pills that already have backgrounds would be invisible anyway.
+       *
+       * The open pill is a step further from the page than the closed ones:
+       * lighter in a dark theme, darker in a light one, which is what the
+       * tertiary surface token means and why it is used rather than a colour.
+       */
+      expanding: {
+        list: 'gap-1.5',
+        trigger: 'rounded-full bg-muted px-3.5 py-2.5',
+      },
     },
     active: {
       true: { label: 'text-foreground' },
@@ -136,6 +190,11 @@ const tabsVariants = tv({
   },
   compoundVariants: [
     { variant: 'pill', active: true, class: { label: 'text-primary-foreground' } },
+    // A pill is as wide as what is inside it. Equal shares would give every
+    // closed tab the width of the open one, which is the layout this variant
+    // exists to avoid.
+    { variant: 'expanding', class: { trigger: 'flex-none' } },
+    { variant: 'expanding', active: true, class: { trigger: 'bg-surface-tertiary' } },
   ],
   defaultVariants: {
     variant: 'segmented',
@@ -148,9 +207,19 @@ interface TabLayout {
   width: number;
 }
 
+/**
+ * What a swipe hands over to the tab it commits to: where the finger left the
+ * outgoing panel, and how fast it was still going. Absent when the tab was
+ * changed by pressing a trigger, which has neither.
+ */
+interface SwipeHandover {
+  /** Points per second at the moment of release, in the panel's own axis. */
+  velocity: number;
+}
+
 interface TabsContextValue {
   value: string;
-  setValue: (value: string) => void;
+  setValue: (value: string, handover?: SwipeHandover) => void;
   registerLayout: (value: string, layout: TabLayout) => void;
   layouts: Record<string, TabLayout>;
   /**
@@ -200,6 +269,12 @@ export interface TabsProps extends ViewProps {
   /**
    * `segmented` is a chip travelling inside a recessed track, `underline` is a
    * rule under the active tab, `pill` is a filled chip on the page.
+   *
+   * `expanding` is a row of icon pills where only the selected one is open:
+   * it widens to let its label out and closes again behind it. For a short row
+   * of destinations that are recognisable by their icons, where the labels
+   * would otherwise take the whole width to say things nobody rereads. Give
+   * every trigger an `icon` — a closed tab has nothing else.
    */
   variant?: TabsVariant;
   /**
@@ -245,7 +320,7 @@ function TabsRoot({
   const resolvedValue = isControlled ? value : internalValue;
 
   const setValue = useCallback(
-    (next: string) => {
+    (next: string, handover?: SwipeHandover) => {
       /*
        * The arriving panel starts on the side it is arriving from, and travels
        * in. Done here rather than in the panel because only the root knows
@@ -258,9 +333,28 @@ function TabsRoot({
         const from = tabs.indexOf(resolvedValue);
         const to = tabs.indexOf(next);
         if (from !== -1 && to !== -1 && from !== to) {
-          swipeOffset.value =
-            (to > from ? 1 : -1) * sign * panelWidth.value * SWIPE_ENTER;
-          swipeOffset.value = withSpring(0, ENTER_SPRING);
+          const direction = to > from ? 1 : -1;
+
+          if (handover) {
+            /*
+             * A swipe hands over mid-movement, so the arriving panel starts a
+             * whole panel's width from wherever the outgoing one was let go —
+             * which is where it *would* have been all along, had both been
+             * mounted. Adding to the displacement rather than replacing it is
+             * the entire difference between one continuous movement and a jump
+             * at the moment the finger lifts.
+             */
+            swipeOffset.value += direction * sign * panelWidth.value;
+            swipeOffset.value = withSpring(0, {
+              ...ENTER_SPRING,
+              // Carried across too, so a flick keeps its speed instead of
+              // stopping dead and starting again from rest.
+              velocity: handover.velocity,
+            });
+          } else {
+            swipeOffset.value = direction * sign * panelWidth.value * SWIPE_ENTER;
+            swipeOffset.value = withSpring(0, ENTER_SPRING);
+          }
         }
       }
 
@@ -414,7 +508,9 @@ function TabsList({ className, scrollable = false, children, ...props }: TabsLis
 
   const row = (
     <View accessibilityRole="tablist" className={cn(list(), className)} {...props}>
-      <TabsIndicator />
+      {/* Nothing to slide: in `expanding` every tab draws its own pill, and the
+          open one is the shape that moves. */}
+      {variant === 'expanding' ? null : <TabsIndicator />}
       {textChildren(children)}
     </View>
   );
@@ -438,7 +534,10 @@ function TabsList({ className, scrollable = false, children, ...props }: TabsLis
 export interface TabsTriggerProps {
   className?: string;
   value: string;
-  /** Rendered before the label. */
+  /**
+   * Rendered before the label. Required by `variant="expanding"`, where it is
+   * the only thing a closed tab has left to identify it by.
+   */
   icon?: ReactNode;
   /** Rendered after the label — a count, a dot, a status. */
   badge?: ReactNode;
@@ -481,6 +580,23 @@ function TabsTrigger({
     return () => unregisterTab(value);
   }, [value, registerTab, unregisterTab]);
 
+  if (context.variant === 'expanding') {
+    return (
+      <ExpandingTrigger
+        active={active}
+        disabled={disabled}
+        icon={icon}
+        badge={badge}
+        labelClassName={slots.label()}
+        className={cn(slots.trigger(), className)}
+        onLayout={handleLayout}
+        onPress={() => context.setValue(value)}
+      >
+        {children}
+      </ExpandingTrigger>
+    );
+  }
+
   return (
     <Pressable
       accessibilityRole="tab"
@@ -496,6 +612,142 @@ function TabsTrigger({
           {text}
         </Text>
       ))}
+      {badge}
+    </Pressable>
+  );
+}
+
+/**
+ * A tab that is an icon until it is selected, and then an icon and its label.
+ *
+ * The label is never unmounted, only closed over. Two reasons, and both matter:
+ * a screen reader walking a row of unlabelled icons has nothing to read out,
+ * and a label that mounts on selection has no width to animate *from*, so the
+ * pill would jump to its open size and the text would fade in inside it.
+ *
+ * So the width is animated instead, which needs a number — and the number is
+ * the one thing that cannot be measured in place, because the box the label
+ * sits in is the box being resized. A second copy, laid out once in a box wide
+ * enough not to constrain it, reports the width and is never seen.
+ */
+function ExpandingTrigger({
+  active,
+  disabled,
+  icon,
+  badge,
+  className,
+  labelClassName,
+  onLayout,
+  onPress,
+  children,
+}: {
+  active: boolean;
+  disabled: boolean;
+  icon?: ReactNode;
+  badge?: ReactNode;
+  className: string;
+  labelClassName: string;
+  onLayout: (event: LayoutChangeEvent) => void;
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  const [labelWidth, setLabelWidth] = useState(0);
+  const reducedMotion = useReducedMotion();
+  const open = useSharedValue(active ? 1 : 0);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      open.value = active ? 1 : 0;
+      return;
+    }
+    /*
+     * A curve, not a spring.
+     *
+     * This animates a *width*, so every frame of it is a layout pass — and the
+     * row is centred, so every other pill moves with it. A spring overshoots
+     * past its target and settles back, which on a box that is clipping text
+     * means the last word slides in, out and in again, and the whole row
+     * wobbles with it. The curve leaves quickly and arrives slowly, and it
+     * arrives once.
+     */
+    open.value = withTiming(active ? 1 : 0, {
+      duration: EXPAND_DURATION,
+      easing: Easing.bezier(0.2, 0, 0, 1),
+    });
+  }, [active, reducedMotion, open]);
+
+  const reveal = useAnimatedStyle(() => ({
+    width: (labelWidth + LABEL_GAP) * open.value,
+    /*
+     * Behind the width, not ahead of it. Text drawn into a box narrower than
+     * itself is text with its end cut off, and doing that on purpose for the
+     * first half of the animation is the difference between a label arriving
+     * and a label being wiped on.
+     */
+    opacity: interpolate(open.value, [0.35, 0.9], [0, 1], Extrapolation.CLAMP),
+  }));
+
+  const label = textChildren(children, (text) => (
+    <Text size="sm" weight="medium" numberOfLines={1} className={labelClassName}>
+      {text}
+    </Text>
+  ));
+
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active, disabled }}
+      // The label may be closed to nothing, and a tab announced as an unlabelled
+      // icon is a tab nobody can choose.
+      accessibilityLabel={typeof children === 'string' ? children : undefined}
+      disabled={disabled}
+      onPress={onPress}
+      onLayout={onLayout}
+      className={cn('flex-row items-center', className)}
+    >
+      {icon}
+      <Animated.View style={[{ overflow: 'hidden' }, reveal]}>
+        {/*
+         * Pinned to the measured width so the text does not reflow as the box
+         * around it closes — a label that rewraps on its way out reads as a
+         * glitch rather than as a reveal.
+         *
+         * The gap after the icon is padding on this box, so it has to be added
+         * to the width rather than taken out of it. Set to the measured width
+         * alone, the padding comes off the inside and the label is handed six
+         * points less than it asked for, which a single-line `Text` answers by
+         * truncating: "Inbox" arrives as "Inbo…" and stays that way.
+         */}
+        <View style={{ width: labelWidth + LABEL_GAP, paddingStart: LABEL_GAP }}>
+          {label}
+        </View>
+      </Animated.View>
+      {/* Measured once, never seen, and out of the layout so it cannot widen
+          the pill it is measuring. */}
+      <View
+        pointerEvents="none"
+        style={{ position: 'absolute', opacity: 0, width: MEASURE_WIDTH }}
+      >
+        <View
+          style={{ alignSelf: 'flex-start' }}
+          onLayout={(event: LayoutChangeEvent) => {
+            /*
+             * Rounded up and given a couple of points over.
+             *
+             * The measurement and the box it is put back into are two different
+             * layout passes, and a fraction of a point between them is enough
+             * for a single-line `Text` to decide it does not fit and truncate —
+             * which shows up as a label permanently missing its last letter.
+             */
+            const measured = Math.ceil(event.nativeEvent.layout.width) + LABEL_SLACK;
+            if (measured > LABEL_SLACK && measured !== labelWidth) {
+              setLabelWidth(measured);
+            }
+          }}
+        >
+          {label}
+        </View>
+      </View>
       {badge}
     </Pressable>
   );
@@ -530,10 +782,10 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
   }, [position, tabs.length, index, count]);
 
   const step = useCallback(
-    (delta: number) => {
+    (delta: number, velocity: number) => {
       const from = tabs.indexOf(value);
       const next = tabs[from + delta];
-      if (next) setValue(next);
+      if (next) setValue(next, { velocity });
     },
     [tabs, value, setValue]
   );
@@ -552,8 +804,16 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
           const atEnd =
             (travel > 0 && index.value === 0) ||
             (travel < 0 && index.value >= count.value - 1);
-          offset.value =
-            event.translationX * (atEnd ? SWIPE_FOLLOW_AT_END : SWIPE_FOLLOW);
+          /*
+           * One to one, except at the ends. The panel is under the finger for
+           * the whole of the drag, which is what lets the handover on release
+           * continue the movement rather than restart it — and a panel that
+           * moved a third as far as the finger never felt attached to it in
+           * the first place.
+           */
+          offset.value = atEnd
+            ? event.translationX * SWIPE_RESISTANCE_AT_END
+            : event.translationX;
         })
         .onEnd((event) => {
           const travel = event.translationX * sign;
@@ -569,15 +829,20 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
             // reads as a cancel — so the direction comes from whichever of the
             // two crossed its threshold, speed first.
             //
-            // No spring back to zero here: `setValue` on the root throws the
-            // displacement across to the side the next panel arrives from, and
-            // springing to rest first would undo it a frame before it happens.
-            runOnJS(step)(fast ? (speed < 0 ? 1 : -1) : travel < 0 ? 1 : -1);
+            // No spring back to zero here: `setValue` on the root carries the
+            // displacement across to the arriving panel, and springing to rest
+            // first would undo it a frame before it happens.
+            runOnJS(step)(
+              fast ? (speed < 0 ? 1 : -1) : travel < 0 ? 1 : -1,
+              event.velocityX
+            );
             return;
           }
 
-          // Nothing changed hands, so this panel simply comes back.
-          offset.value = withSpring(0, SPRING);
+          // Nothing changed hands, so this panel simply comes back — with the
+          // speed it was let go at, so a cancelled flick decelerates rather
+          // than stopping and being pulled.
+          offset.value = withSpring(0, { ...SPRING, velocity: event.velocityX });
         })
         .onFinalize((_event, success) => {
           // A cancelled gesture never reaches `onEnd`, and would otherwise
@@ -587,9 +852,14 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
     [sign, step, offset, width, index, count]
   );
 
-  const followStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: offset.value }],
-  }));
+  const followStyle = useAnimatedStyle(() => {
+    const span = width.value || 1;
+    const travelled = Math.min(1, Math.abs(offset.value) / span);
+    return {
+      transform: [{ translateX: offset.value }],
+      opacity: 1 - SWIPE_FADE * travelled,
+    };
+  });
 
   if (!active && !context.keepMounted) return null;
 

@@ -199,7 +199,7 @@ Two clouds sharing both domains, told apart by colour, with the key in a band ab
 
 ### Loading
 
-`status="loading"` with a `Skeleton` child: a still field of muted dots that gives way to the real ones. Toggle it to watch the field settle onto the data.
+`status="loading"` with a `Skeleton` child: a still field of muted dots that dissolves as the real ones grow into place. Reload it to watch the field settle onto the data again.
 
 ```tsx
 <ScatterChart data={campaigns} status={status} xDataKey="spend" aspectRatio={1.2}>
@@ -340,3 +340,9 @@ Points are drawn at 75% opacity by default, so a crowded region reads as darker 
 The chart fills its parent's width and takes its height from `aspectRatio`. Do not set a height directly — the aspect ratio is what keeps the plot geometry stable while the layout settles. `aspectRatio` measures the plot, not the whole chart: the header sits above the drawing area rather than inside it.
 
 **Labels sit on what they name.** Each y label is centred on the grid line it belongs to, so `Grid`'s `rows` and `YAxis`'s `ticks` have to match, as `columns` and `XAxis`'s `ticks` do. All four default to `4`.
+
+### The points arrive where they belong
+
+The other charts reveal by sweeping a clip across the plot, which suits a series that is read along the x-axis. A scatter plot is read as a field, and a wipe hands the reader a direction the data does not have. So there is no wipe here: each point grows into place on its own slice of one shared clock, slightly past its size and back to it, and the placeholder field dissolves underneath as they land. Set `animationDuration` to time the whole arrival, however many points there are — the stagger is taken out of that budget rather than added to it.
+
+Under the system's reduce-motion setting the field is simply there, and the placeholder is cut rather than faded.

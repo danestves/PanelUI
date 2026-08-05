@@ -1,5 +1,5 @@
 /**
- * KpiChart — one number, and what it is doing.
+ * Kpi — one number, and what it is doing.
  *
  * A metric card is not a chart with a caption. The number is the message and
  * the chart is the footnote, so the parts here are sized and ordered around
@@ -8,16 +8,16 @@
  * because nobody is reading values off it.
  *
  * ```tsx
- * <KpiChart>
- *   <KpiChart.Header>
- *     <KpiChart.Title>Active users</KpiChart.Title>
- *   </KpiChart.Header>
- *   <KpiChart.Content>
- *     <KpiChart.Value>12,480</KpiChart.Value>
- *     <KpiChart.Trend value={12.4} />
- *   </KpiChart.Content>
- *   <KpiChart.Chart data={week} dataKey="v" />
- * </KpiChart>
+ * <Kpi>
+ *   <Kpi.Header>
+ *     <Kpi.Title>Active users</Kpi.Title>
+ *   </Kpi.Header>
+ *   <Kpi.Content>
+ *     <Kpi.Value>12,480</Kpi.Value>
+ *     <Kpi.Trend value={12.4} />
+ *   </Kpi.Content>
+ *   <Kpi.Chart data={week} dataKey="v" />
+ * </Kpi>
  * ```
  *
  * The trend is given a number rather than a written string, so the component
@@ -131,15 +131,15 @@ export type KpiTone = NonNullable<KpiVariantProps['tone']>;
 /** Which direction of movement is the good news for this metric. */
 export type KpiGoodDirection = 'up' | 'down' | 'none';
 
-interface KpiChartContextValue {
+interface KpiContextValue {
   colorIndex: SeriesColorIndex;
   goodDirection: KpiGoodDirection;
 }
 
-const KpiChartContext = createContext<KpiChartContextValue | null>(null);
+const KpiContext = createContext<KpiContextValue | null>(null);
 
 /**
- * Whether the part rendering is inside `KpiChart.Header`.
+ * Whether the part rendering is inside `Kpi.Header`.
  *
  * `Title` is the only part that cares, and it cares a great deal. In a header
  * it is one of several things on a row and has to take the space between the
@@ -152,7 +152,7 @@ const KpiChartContext = createContext<KpiChartContextValue | null>(null);
 const KpiHeaderContext = createContext(false);
 
 /**
- * Whether the part rendering is inside `KpiChart.Stat`.
+ * Whether the part rendering is inside `Kpi.Stat`.
  *
  * `Trend` is the one that cares. `self-center` on a flex child means "centre
  * on the cross axis", and the cross axis is not the same axis in the two
@@ -163,9 +163,9 @@ const KpiHeaderContext = createContext(false);
  */
 const KpiStatContext = createContext(false);
 
-function useKpiChart(part: string): KpiChartContextValue {
-  const context = useContext(KpiChartContext);
-  if (!context) throw new Error(`${part} must be used inside <KpiChart>.`);
+function useKpi(part: string): KpiContextValue {
+  const context = useContext(KpiContext);
+  if (!context) throw new Error(`${part} must be used inside <Kpi>.`);
   return context;
 }
 
@@ -173,7 +173,7 @@ function useKpiChart(part: string): KpiChartContextValue {
  * Root.
  * ------------------------------------------------------------------ */
 
-export interface KpiChartProps extends Omit<ViewProps, 'children'> {
+export interface KpiProps extends Omit<ViewProps, 'children'> {
   className?: string;
   /**
    * Which `--color-chart-*` token the sparkline and the icon take. Set on the
@@ -192,7 +192,7 @@ export interface KpiChartProps extends Omit<ViewProps, 'children'> {
   children: ReactNode;
 }
 
-const KpiChartRoot = forwardRef<View, KpiChartProps>(function KpiChartRoot(
+const KpiRoot = forwardRef<View, KpiProps>(function KpiRoot(
   { className, colorIndex = 1, goodDirection = 'up', surface = true, children, ...props },
   ref
 ) {
@@ -206,7 +206,7 @@ const KpiChartRoot = forwardRef<View, KpiChartProps>(function KpiChartRoot(
   );
 
   return (
-    <KpiChartContext.Provider value={context}>
+    <KpiContext.Provider value={context}>
       {surface ? (
         <Surface ref={ref} variant="secondary" padding="lg" className="w-full">
           {body}
@@ -214,7 +214,7 @@ const KpiChartRoot = forwardRef<View, KpiChartProps>(function KpiChartRoot(
       ) : (
         body
       )}
-    </KpiChartContext.Provider>
+    </KpiContext.Provider>
   );
 });
 
@@ -222,13 +222,13 @@ const KpiChartRoot = forwardRef<View, KpiChartProps>(function KpiChartRoot(
  * Header, and the things that live in it.
  * ------------------------------------------------------------------ */
 
-export interface KpiChartHeaderProps extends ViewProps {
+export interface KpiHeaderProps extends ViewProps {
   className?: string;
   children: ReactNode;
 }
 
 /** The top row: an icon, the metric's name, and anything acting on it. */
-function KpiChartHeader({ className, children, ...props }: KpiChartHeaderProps) {
+function KpiHeader({ className, children, ...props }: KpiHeaderProps) {
   const { header } = kpiVariants();
   return (
     <KpiHeaderContext.Provider value={true}>
@@ -239,7 +239,7 @@ function KpiChartHeader({ className, children, ...props }: KpiChartHeaderProps) 
   );
 }
 
-export interface KpiChartIconProps extends ViewProps {
+export interface KpiIconProps extends ViewProps {
   className?: string;
   /** Overrides the tint the card's `colorIndex` would give it. */
   tone?: KpiTone;
@@ -253,7 +253,7 @@ export interface KpiChartIconProps extends ViewProps {
  * from whatever set the app already uses — and an icon from outside this
  * library will not read an ambient colour, so pass it one.
  */
-function KpiChartIcon({ className, tone = 'neutral', children, ...props }: KpiChartIconProps) {
+function KpiIcon({ className, tone = 'neutral', children, ...props }: KpiIconProps) {
   const { icon } = kpiVariants({ tone });
   return (
     <View className={icon({ className })} {...props}>
@@ -262,13 +262,13 @@ function KpiChartIcon({ className, tone = 'neutral', children, ...props }: KpiCh
   );
 }
 
-export interface KpiChartTitleProps {
+export interface KpiTitleProps {
   className?: string;
   children: ReactNode;
 }
 
 /** The metric's name. Quiet on purpose — the value is the thing being read. */
-function KpiChartTitle({ className, children }: KpiChartTitleProps) {
+function KpiTitle({ className, children }: KpiTitleProps) {
   const { title } = kpiVariants();
   // Grows across a header row; never down a column — see `KpiHeaderContext`.
   const inHeader = useContext(KpiHeaderContext);
@@ -279,7 +279,7 @@ function KpiChartTitle({ className, children }: KpiChartTitleProps) {
   );
 }
 
-export interface KpiChartStatProps extends ViewProps {
+export interface KpiStatProps extends ViewProps {
   className?: string;
   children: ReactNode;
 }
@@ -293,7 +293,7 @@ export interface KpiChartStatProps extends ViewProps {
  * between facts. It also takes the width in an `inline` row, leaving the chart
  * its column on the end.
  */
-function KpiChartStat({ className, children, ...props }: KpiChartStatProps) {
+function KpiStat({ className, children, ...props }: KpiStatProps) {
   const { stat } = kpiVariants();
   return (
     <KpiStatContext.Provider value={true}>
@@ -304,13 +304,13 @@ function KpiChartStat({ className, children, ...props }: KpiChartStatProps) {
   );
 }
 
-export interface KpiChartActionsProps extends ViewProps {
+export interface KpiActionsProps extends ViewProps {
   className?: string;
   children: ReactNode;
 }
 
 /** The trailing end of the header — a menu trigger, a filter, a link. */
-function KpiChartActions({ className, children, ...props }: KpiChartActionsProps) {
+function KpiActions({ className, children, ...props }: KpiActionsProps) {
   return (
     <View className={cn('flex-row items-center gap-1', className)} {...props}>
       {children}
@@ -322,7 +322,7 @@ function KpiChartActions({ className, children, ...props }: KpiChartActionsProps
  * The number, and what it is doing.
  * ------------------------------------------------------------------ */
 
-export interface KpiChartContentProps extends ViewProps {
+export interface KpiContentProps extends ViewProps {
   className?: string;
   /** `inline` puts the chart beside the value instead of under everything. */
   layout?: NonNullable<KpiVariantProps['layout']>;
@@ -330,12 +330,12 @@ export interface KpiChartContentProps extends ViewProps {
 }
 
 /** The row the value and the trend share. */
-function KpiChartContent({
+function KpiContent({
   className,
   layout = 'below',
   children,
   ...props
-}: KpiChartContentProps) {
+}: KpiContentProps) {
   const { content } = kpiVariants({ layout });
   return (
     <View className={content({ className })} {...props}>
@@ -344,7 +344,7 @@ function KpiChartContent({
   );
 }
 
-export interface KpiChartValueProps {
+export interface KpiValueProps {
   className?: string;
   children: ReactNode;
 }
@@ -356,7 +356,7 @@ export interface KpiChartValueProps {
  * and units are locale decisions, and a component that guessed them would be
  * wrong in a way that is hard to notice and impossible to override.
  */
-function KpiChartValue({ className, children }: KpiChartValueProps) {
+function KpiValue({ className, children }: KpiValueProps) {
   const { value } = kpiVariants();
   return (
     <Text className={value({ className })} numberOfLines={1}>
@@ -365,7 +365,7 @@ function KpiChartValue({ className, children }: KpiChartValueProps) {
   );
 }
 
-export interface KpiChartTrendProps extends Omit<ViewProps, 'children'> {
+export interface KpiTrendProps extends Omit<ViewProps, 'children'> {
   className?: string;
   /**
    * How much it moved, as a percentage. The sign carries the direction, so
@@ -403,7 +403,7 @@ export interface KpiChartTrendProps extends Omit<ViewProps, 'children'> {
  * label has to remember to change the colour when the metric changes, and
  * nobody does.
  */
-function KpiChartTrend({
+function KpiTrend({
   className,
   value,
   format,
@@ -413,8 +413,8 @@ function KpiChartTrend({
   threshold = 0,
   children,
   ...props
-}: KpiChartTrendProps) {
-  const context = useKpiChart('KpiChart.Trend');
+}: KpiTrendProps) {
+  const context = useKpi('Kpi.Trend');
   const polarity = goodDirection ?? context.goodDirection;
 
   const flat = Math.abs(value) <= threshold;
@@ -478,7 +478,7 @@ function KpiChartTrend({
  * The chart, and the bar.
  * ------------------------------------------------------------------ */
 
-export interface KpiChartSparklineProps {
+export interface KpiSparklineProps {
   className?: string;
   /** The rows. One point each, in order. */
   data: LineChartDatum[];
@@ -510,7 +510,7 @@ export interface KpiChartSparklineProps {
  * every point of padding is a point the shape is not using. Nobody reads a
  * value off one of these; they read whether it is going up.
  */
-function KpiChartSparkline({
+function KpiSparkline({
   className,
   data,
   dataKey,
@@ -519,8 +519,8 @@ function KpiChartSparkline({
   height,
   inline = false,
   strokeWidth = 2,
-}: KpiChartSparklineProps) {
-  const context = useKpiChart('KpiChart.Chart');
+}: KpiSparklineProps) {
+  const context = useKpi('Kpi.Chart');
   const index = colorIndex ?? context.colorIndex;
   const fill = filled ?? !inline;
 
@@ -541,7 +541,7 @@ function KpiChartSparkline({
   );
 }
 
-export interface KpiChartProgressProps {
+export interface KpiProgressProps {
   className?: string;
   /** Where it has got to. */
   value: number;
@@ -554,13 +554,13 @@ export interface KpiChartProgressProps {
 }
 
 /** Progress towards a target, for a metric that has one. */
-function KpiChartProgressBar({
+function KpiProgressBar({
   className,
   value,
   maxValue = 100,
   label,
   showValueLabel,
-}: KpiChartProgressProps) {
+}: KpiProgressProps) {
   return (
     <Progress
       className={className}
@@ -577,13 +577,13 @@ function KpiChartProgressBar({
  * Footer and separator.
  * ------------------------------------------------------------------ */
 
-export interface KpiChartFooterProps extends ViewProps {
+export interface KpiFooterProps extends ViewProps {
   className?: string;
   children: ReactNode;
 }
 
 /** The bottom strip — a comparison period, a caveat, a link. */
-function KpiChartFooter({ className, children, ...props }: KpiChartFooterProps) {
+function KpiFooter({ className, children, ...props }: KpiFooterProps) {
   const { footer } = kpiVariants();
   return (
     <View className={footer({ className })} {...props}>
@@ -592,12 +592,12 @@ function KpiChartFooter({ className, children, ...props }: KpiChartFooterProps) 
   );
 }
 
-export interface KpiChartSeparatorProps extends ViewProps {
+export interface KpiSeparatorProps extends ViewProps {
   className?: string;
 }
 
 /** A hairline across the card. */
-function KpiChartSeparator({ className, ...props }: KpiChartSeparatorProps) {
+function KpiSeparator({ className, ...props }: KpiSeparatorProps) {
   const { separator } = kpiVariants();
   return <View className={separator({ className })} {...props} />;
 }
@@ -606,12 +606,12 @@ function KpiChartSeparator({ className, ...props }: KpiChartSeparatorProps) {
  * Group.
  * ------------------------------------------------------------------ */
 
-export type KpiChartGroupOrientation = 'horizontal' | 'vertical';
+export type KpiGroupOrientation = 'horizontal' | 'vertical';
 
-export interface KpiChartGroupProps extends ViewProps {
+export interface KpiGroupProps extends ViewProps {
   className?: string;
   /** `horizontal` splits the row between the cards; `vertical` stacks them. */
-  orientation?: KpiChartGroupOrientation;
+  orientation?: KpiGroupOrientation;
   /**
    * Draw a hairline between the cards rather than spacing them apart. Several
    * metrics separated by a rule read as one panel; several spaced apart read
@@ -628,7 +628,7 @@ export interface KpiChartGroupProps extends ViewProps {
  * caller, because "between" is the one thing a list of siblings cannot express
  * — a trailing rule after the last card is the mistake this exists to prevent.
  */
-const KpiChartGroup = forwardRef<View, KpiChartGroupProps>(function KpiChartGroup(
+const KpiGroup = forwardRef<View, KpiGroupProps>(function KpiGroup(
   { className, orientation = 'horizontal', separated = true, children, ...props },
   ref
 ) {
@@ -687,33 +687,33 @@ const KpiChartGroup = forwardRef<View, KpiChartGroupProps>(function KpiChartGrou
   );
 });
 
-KpiChartRoot.displayName = 'KpiChart';
-KpiChartHeader.displayName = 'KpiChart.Header';
-KpiChartIcon.displayName = 'KpiChart.Icon';
-KpiChartTitle.displayName = 'KpiChart.Title';
-KpiChartStat.displayName = 'KpiChart.Stat';
-KpiChartActions.displayName = 'KpiChart.Actions';
-KpiChartContent.displayName = 'KpiChart.Content';
-KpiChartValue.displayName = 'KpiChart.Value';
-KpiChartTrend.displayName = 'KpiChart.Trend';
-KpiChartSparkline.displayName = 'KpiChart.Chart';
-KpiChartProgressBar.displayName = 'KpiChart.Progress';
-KpiChartFooter.displayName = 'KpiChart.Footer';
-KpiChartSeparator.displayName = 'KpiChart.Separator';
-KpiChartGroup.displayName = 'KpiChart.Group';
+KpiRoot.displayName = 'Kpi';
+KpiHeader.displayName = 'Kpi.Header';
+KpiIcon.displayName = 'Kpi.Icon';
+KpiTitle.displayName = 'Kpi.Title';
+KpiStat.displayName = 'Kpi.Stat';
+KpiActions.displayName = 'Kpi.Actions';
+KpiContent.displayName = 'Kpi.Content';
+KpiValue.displayName = 'Kpi.Value';
+KpiTrend.displayName = 'Kpi.Trend';
+KpiSparkline.displayName = 'Kpi.Chart';
+KpiProgressBar.displayName = 'Kpi.Progress';
+KpiFooter.displayName = 'Kpi.Footer';
+KpiSeparator.displayName = 'Kpi.Separator';
+KpiGroup.displayName = 'Kpi.Group';
 
-export const KpiChart = Object.assign(KpiChartRoot, {
-  Header: KpiChartHeader,
-  Icon: KpiChartIcon,
-  Title: KpiChartTitle,
-  Stat: KpiChartStat,
-  Actions: KpiChartActions,
-  Content: KpiChartContent,
-  Value: KpiChartValue,
-  Trend: KpiChartTrend,
-  Chart: KpiChartSparkline,
-  Progress: KpiChartProgressBar,
-  Footer: KpiChartFooter,
-  Separator: KpiChartSeparator,
-  Group: KpiChartGroup,
+export const Kpi = Object.assign(KpiRoot, {
+  Header: KpiHeader,
+  Icon: KpiIcon,
+  Title: KpiTitle,
+  Stat: KpiStat,
+  Actions: KpiActions,
+  Content: KpiContent,
+  Value: KpiValue,
+  Trend: KpiTrend,
+  Chart: KpiSparkline,
+  Progress: KpiProgressBar,
+  Footer: KpiFooter,
+  Separator: KpiSeparator,
+  Group: KpiGroup,
 });

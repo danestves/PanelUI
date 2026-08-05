@@ -21,17 +21,25 @@ added on your branch will fail against it with `Cannot read property … of
 undefined`, and reviewing a template against a version that predates it tells
 you nothing.
 
+Installing one where it stands does not help either: from inside the repository
+it resolves past its own `node_modules` and up into the monorepo's, so the
+Worklets Babel plugin comes from one install and the Worklets runtime from the
+other, and the app dies on the first import with the two reporting different
+versions of themselves. Each template's `metro.config.js` now refuses to start
+from in here rather than letting that happen.
+
 From the repository root:
 
 ```sh
 npm run template
 ```
 
-That scaffolds into `.template-preview/`, installs, and swaps the published
-package for the one built from `packages/panelui`. Then:
+That scaffolds outside the repository, installs, and swaps the published
+package for the one built from `packages/panelui`. It prints the path when it
+is done; then:
 
 ```sh
-cd .template-preview/<name>
+cd <the path it printed>
 npx expo start
 ```
 

@@ -247,6 +247,23 @@
     ]
   },
   {
+    "name": "date-time-picker",
+    "type": "registry:ui",
+    "description": "A day and a time of day, picked in one panel.",
+    "registryDependencies": [
+      "button",
+      "calendar",
+      "cn",
+      "date",
+      "dialog",
+      "icons",
+      "popover",
+      "text",
+      "time",
+      "time-picker"
+    ]
+  },
+  {
     "name": "dialog",
     "type": "registry:ui",
     "description": "Modal dialog with a backdrop and footer actions.",
@@ -327,6 +344,16 @@
     ]
   },
   {
+    "name": "grid-item",
+    "type": "registry:ui",
+    "description": "Bento tiles, and the grid that places them.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "haptics",
     "type": "registry:lib",
     "description": "Optional bridge to the platform haptic engine, behind the `haptics` prop.",
@@ -391,7 +418,7 @@
     ]
   },
   {
-    "name": "kpi-chart",
+    "name": "kpi",
     "type": "registry:ui",
     "description": "One number, what it is doing, and the shape it made getting there.",
     "registryDependencies": [
@@ -549,6 +576,16 @@
       "text",
       "use-back-handler",
       "use-direction"
+    ]
+  },
+  {
+    "name": "pie-chart",
+    "type": "registry:ui",
+    "description": "One whole, divided between its parts.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
     ]
   },
   {

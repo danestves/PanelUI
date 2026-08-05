@@ -1,0 +1,336 @@
+---
+title: PieChart
+description: One whole, divided between its parts.
+status: new
+---
+
+One whole, divided between its parts.
+
+Every slice is a share of one total: the values are normalised against their sum, the angles come to a full turn, and a slice only means anything next to the others. That is the opposite claim to the [RingChart](/docs/charts/ring-chart) beside it, where each arc is measured against its own target and nothing has to add up.
+
+It follows that a pie is the wrong shape for a great many things. Two numbers that do not belong to one whole, anything over time, anything a reader has to compare precisely — all of those are a bar chart, because an angle is the hardest quantity to read off a page and the fifth-largest slice of eleven is not a fact anybody is going to extract. Use it for a handful of parts of one obvious total, and put the number in the middle.
+
+## Installation
+
+PieChart ships with the library — no separate install.
+
+```tsx
+import { PieChart, type PieDatum, Frame, Text } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add pie-chart
+```
+
+## Usage
+
+```tsx
+<PieChart data={spend} size={208} innerRadius={0.62}>
+  <PieChart.Header title="August" />
+  <PieChart.Slices />
+  <PieChart.Center />
+  <PieChart.Legend />
+</PieChart>
+```
+
+## Composition
+
+```tsx
+<PieChart data={…}>
+  <PieChart.Header />      {/* the strip above the dial */}
+  <PieChart.Skeleton />    {/* the undivided band, while it loads */}
+  <PieChart.Slices />      {/* every slice, in data order */}
+  <PieChart.Center />      {/* the readout in the hole */}
+  <PieChart.Legend />      {/* the key, under the dial */}
+</PieChart>
+```
+
+- **`PieChart.Header`** — The strip above the dial — what the chart is of, what it reads, and optionally a key for the colours. The chart introducing itself, as distinct from the caption on the card around it.
+- **`PieChart.Slices`** — Every slice, drawn in the order the data lists them. One part rather than one per datum: slices share a radius, a hole and a dial by definition, and a chart where one of them could be given a different radius would be a chart drawing a lie.
+- **`PieChart.Center`** — The readout in the hole. Shows the total until a slice is selected, then that slice’s value and its share.
+- **`PieChart.Legend`** — The key: a swatch, a name and a share per slice, under the dial and across the width of it, wrapping rather than stacking. Pressable in the same way the slices are, and usually the easier target of the two. `Header legend` puts the same key in the header instead, which suits two or three short names and nothing longer.
+- **`PieChart.Skeleton`** — The dial as one plain band while `status="loading"`. Deliberately undivided: placeholder slices would be an invented split, and a reader cannot tell an invented one from a real one until it changes under them.
+
+## Examples
+
+### The data
+
+A label and a value per slice, and no maximum — the sum is the maximum. Negative values are treated as zero, because a share of a whole cannot be less than none of it.
+
+```tsx
+const spend: PieDatum[] = [
+  { label: 'Rent', value: 1450 },
+  { label: 'Food', value: 620 },
+  { label: 'Transport', value: 210 },
+  { label: 'Utilities', value: 185 },
+  { label: 'Everything else', value: 240 },
+];
+```
+
+### Pie or donut
+
+`innerRadius` is a share of the radius rather than a length, so the chart keeps its proportions at whatever size it is measured at. `0` is a pie. Anything above it is a donut, and `0.55`–`0.65` leaves room for a readout without the band getting thin enough to be hard to press.
+
+Prefer the donut where there is a total worth showing, which is most of the time: the angles say roughly how the parts compare, and the middle says what they came to. That number is the one figure a reader can take off a pie exactly.
+
+```tsx
+{/* A pie. */}
+<PieChart data={spend} size={208}>
+  <PieChart.Slices />
+  <PieChart.Legend />
+</PieChart>
+
+{/* A donut, with the total in the hole. */}
+<PieChart data={spend} size={208} innerRadius={0.62}>
+  <PieChart.Slices />
+  <PieChart.Center />
+  <PieChart.Legend />
+</PieChart>
+```
+
+### Selecting a slice
+
+Press a slice, or its row in the legend, and it lifts out of the dial while the others dim; the centre swaps to that slice’s figures. Pressing it again clears the selection. Control it from outside with `activeIndex` and `onActiveIndexChange` when something else on the screen has to stay in step.
+
+```tsx
+const [active, setActive] = useState(-1);
+const slice = active >= 0 ? spend[active] : null;
+
+<PieChart data={spend} size={208} activeIndex={active} onActiveIndexChange={setActive}>
+  <PieChart.Header
+    value={money(slice ? slice.value : total)}
+    caption={slice ? slice.label : 'Across five categories'}
+  />
+  <PieChart.Slices />
+  <PieChart.Legend />
+</PieChart>
+```
+
+### Where the key goes
+
+`PieChart.Legend` sits under the dial, across the full width, and wraps — five or six entries take two lines rather than six, and nothing is laid over the drawing.
+
+`Header legend` puts the same key in the trailing corner of the header instead. That suits two or three short names. Past that it is the wrong shape: the header's title column takes what the key leaves, so a key of five long names squeezes the title to a few points wide and renders it one letter to a line.
+
+```tsx
+{/* Two or three short names. */}
+<PieChart.Header title="Storage" legend />
+
+{/* Anything longer. */}
+<PieChart.Header title="Storage" />
+<PieChart.Legend />
+
+{/* Names only, without the shares. */}
+<PieChart.Legend showValue={false} />
+```
+
+### Gaps, rounding and a floor
+
+`padAngle` puts a gap between one slice and the next, and `cornerRadius` rounds the four turns of each — together they read as separate segments rather than as one divided disc.
+
+`minAngle` is the one that changes what the chart says. A slice worth a third of a percent is a hairline nobody can see and nobody can press, so it reads as *missing* rather than as small — and “missing” is a different claim from “nearly none”. The angle it borrows comes off the others in proportion, so the turn still closes.
+
+```tsx
+<PieChart data={sources} size={208} innerRadius={0.58} padAngle={3} minAngle={6}>
+  <PieChart.Header title="Sessions" />
+  <PieChart.Slices cornerRadius={6} />
+  <PieChart.Center defaultLabel="Sessions" />
+  <PieChart.Legend />
+</PieChart>
+```
+
+### Opening the dial
+
+`startAngle` and `endAngle` are degrees clockwise from twelve o’clock. Leave a turn between them and the dial closes; leave less and the gap becomes the notch at the bottom. The slices are still shares of the whole — the turn they share is simply shorter.
+
+```tsx
+<PieChart data={storage} size={208} innerRadius={0.66} startAngle={-135} endAngle={135} padAngle={2}>
+  <PieChart.Header title="In use" />
+  <PieChart.Slices cornerRadius={4} />
+  <PieChart.Center defaultLabel="Used" />
+  <PieChart.Legend />
+</PieChart>
+```
+
+### Drawing the middle yourself
+
+`Center` takes a render function instead of its default layout. It is given the selected slice, or `null` when nothing is selected. It is width-limited to the square that fits inside the hole, so anything you put there stays off the slices.
+
+```tsx
+<PieChart.Center>
+  {(slice) => (
+    <>
+      <Text size="xs" muted>{slice ? slice.label : 'August'}</Text>
+      <Text size="xl" weight="semibold">
+        {money(slice ? slice.value : total)}
+      </Text>
+    </>
+  )}
+</PieChart.Center>
+```
+
+### While it loads
+
+`status="loading"` with a `Skeleton` child draws the dial as one undivided band. It stays undivided on purpose: a placeholder split is a made-up answer to the only question the chart is being asked, and a reader has no way to tell it from a real one until it changes under them.
+
+Once the status flips, the pie unrolls clockwise from the start of the dial — one hand sweeping round, each slice drawn as far as it has reached, so the chart fills the way it would be drawn by hand.
+
+```tsx
+<PieChart data={spend} size={208} innerRadius={0.62} status={status}>
+  <PieChart.Header title="August" />
+  <PieChart.Skeleton />
+  <PieChart.Slices />
+</PieChart>
+```
+
+## Versions
+
+### Basic
+
+Five parts of one obvious total, with a key beside them and the selected slice’s figures in the header.
+
+```tsx
+<PieChart data={spend} size={208} activeIndex={active} onActiveIndexChange={setActive}>
+  <PieChart.Header value={money(slice ? slice.value : total)} caption={caption} />
+  <PieChart.Slices />
+  <PieChart.Legend />
+</PieChart>
+```
+
+### Donut
+
+The hole is where the total goes — the one figure a pie can be read for exactly.
+
+```tsx
+<PieChart data={spend} size={208} innerRadius={0.62}>
+  <PieChart.Header title="August" />
+  <PieChart.Slices />
+  <PieChart.Center formatValue={money} />
+  <PieChart.Legend />
+</PieChart>
+```
+
+### Segments
+
+Padded and rounded, with a floor under the slices too small to see. Email is a third of a percent of this traffic; without `minAngle` it is a hairline that reads as absent.
+
+```tsx
+<PieChart data={sources} size={208} innerRadius={0.58} padAngle={3} minAngle={6}>
+  <PieChart.Header title="Sessions" />
+  <PieChart.Slices cornerRadius={6} />
+  <PieChart.Center defaultLabel="Sessions" />
+  <PieChart.Legend />
+</PieChart>
+```
+
+### Dial
+
+Three quarters of a turn rather than all of it, with the notch at the bottom where a dial has always had it.
+
+```tsx
+<PieChart data={storage} size={208} innerRadius={0.66} startAngle={-135} endAngle={135} padAngle={2}>
+  <PieChart.Header title="In use" />
+  <PieChart.Slices cornerRadius={4} />
+  <PieChart.Center defaultLabel="Used" formatValue={(gb) => `${gb.toFixed(0)} GB`} />
+  <PieChart.Legend />
+</PieChart>
+```
+
+### Loading
+
+One undivided band while it waits, and then the pie unrolls clockwise as the data lands.
+
+```tsx
+<PieChart data={spend} size={208} innerRadius={0.62} status={status}>
+  <PieChart.Header title="August" legend />
+  <PieChart.Skeleton />
+  <PieChart.Slices />
+</PieChart>
+```
+
+## API Reference
+
+### PieChart
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `data` | `PieDatum[]` | — | One entry per slice, in the order they are drawn clockwise. |
+| `size` | `number` | — | Fixed diameter in points. Measured from the container when omitted. |
+| `innerRadius` | `number` | `0` | The hole, as a share of the radius. `0` is a pie; anything above it is a donut, and `0.55`–`0.65` is the range that leaves room for a readout in the middle without the band getting thin enough to be hard to hit. Given as a share rather than in points so a chart keeps its proportions at whatever size it is measured at. |
+| `startAngle` | `number` | `0` | Where the first slice begins, in degrees clockwise from twelve o'clock. |
+| `endAngle` | `number` | `360` | Where the last one ends, on the same clock. Leaving a turn's worth between the two gives a closed pie; anything less leaves a gap and reads as a dial. |
+| `padAngle` | `number` | `0` | Gap between one slice and the next, in degrees. |
+| `minAngle` | `number` | `0` | The smallest angle any non-zero slice is drawn at, in degrees. A slice worth a fifth of a percent is a hairline nobody can see and nobody can press, so it reads as missing rather than as small — and "missing" is a different claim from "nearly none". The angle it borrows comes off the others in proportion, so the turn still closes. |
+| `animationDuration` | `number` | `900` | Milliseconds for the pie to unroll. |
+| `status` | `PieChartStatus` | `'ready'` | `loading` draws a plain muted ring until the data arrives. |
+| `activeIndex` | `number` | — | Selected slice. Leave unset to let the chart track it. |
+| `onActiveIndexChange` | `(index: number) => void` | — | Fires with the selected slice, or `-1` when the selection is cleared. |
+
+### PieChart.Slices
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `cornerRadius` | `number` | `0` | Rounds the four turns of each slice, in points. |
+| `popOut` | `number` | `6` | How far a selected slice lifts out of the pie, in points. |
+| `dimOpacity` | `number` | `0.35` | Opacity of the slices that are not selected, once one is. |
+
+### PieChart.Skeleton
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `color` | `string` | — |  |
+
+### PieChart.Center
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `defaultLabel` | `string` | `'Total'` | Heading shown when no slice is selected. |
+| `formatValue` | `(value: number, slice: PieDatum \| null) => string` | — | Format the number under the label. Defaults to a compact number. |
+| `className` | `string` | — |  |
+
+### PieChart.Legend
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `showValue` | `boolean` | — | Show each slice's share of the whole beside its name. |
+
+### PieChart.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | — | Small line above the value — what the chart is of. |
+| `value` | `string` | — | The readout. The largest thing on the card, and the first thing read. |
+| `caption` | `string` | — | One muted line under the value — a period, a comparison, a caveat. |
+| `labels` | `Record<string, string>` | — | Prettier names for the slices, keyed by their `label`. |
+| `legend` | `boolean` | `false` | Draw a swatch and a name per slice along the trailing edge. For two or three short names. Past that use `PieChart.Legend`, which runs under the chart across the full width: a key of five long names crammed into the trailing corner of a header wraps to a column and leaves the title beside it a few points wide. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### When not to reach for it
+
+An angle is the hardest quantity to read off a page, and a pie asks the reader to compare several of them at once. It works for a handful of parts of one obvious whole — a budget, a disk, a split of traffic — and stops working somewhere around six or seven slices, where the small ones become a ring of slivers nobody can tell apart. Past that, sort the parts, take the top few, and put the rest in an “everything else” slice; or use a bar chart, where the comparison is a length and lengths are read exactly.
+
+Anything measured against its own target rather than against the others is a [RingChart](/docs/charts/ring-chart), not a pie. Anything over time is a line or an area.
+
+### Every slice is a share
+
+The values are normalised against their sum, so they can be in any unit and any magnitude and the chart still closes the turn. There is no `maxValue` and no domain to set. A slice with a value of zero is drawn at no width at all — not at `minAngle`, which is a floor for things that *are* there.
+
+### The hole is not decoration
+
+`innerRadius` above zero exists so there is somewhere to put the total, and the total is what makes a pie readable. `PieChart.Center` limits itself to the square that fits inside the hole, so a small hole gets the number alone and a larger one gets a label and a caption with it.
+
+### Selecting, and reaching
+
+A slice can be pressed, but a slice worth two percent is not a touch target on a chart 208 points across. `PieChart.Legend` puts the same selection on a row of text, which is reachable at any share — prefer it, and treat pressing the dial itself as the shortcut rather than as the way in.
+
+### Under reduce-motion
+
+The unroll is skipped and the pie is simply there. The lift on a selected slice is a short tween and stays: it is a response to a press rather than an entrance, and without it there is nothing to say the press was received.
