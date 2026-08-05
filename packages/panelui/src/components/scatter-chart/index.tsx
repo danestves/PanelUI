@@ -58,19 +58,46 @@ import Animated, {
   runOnJS,
   useAnimatedProps,
   useAnimatedStyle,
+  useDerivedValue,
   useReducedMotion,
   useSharedValue,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import Svg, { Circle, ClipPath, Defs, G, Line as SvgLine, Rect } from 'react-native-svg';
+import Svg, { Circle, G, Line as SvgLine } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
 import { compactNumber, useSeriesColor, xAt, yOf, type Plot } from '../../utils/chart';
 import { cn } from '../../utils/cn';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
+const AnimatedG = Animated.createAnimatedComponent(G);
+
+/**
+ * How much of the reveal is spent handing out the points' start times. The rest
+ * is the window each one gets, so the whole field still lands inside the one
+ * duration however many points there are.
+ */
+const STAGGER = 0.4;
+
+/** Milliseconds for the placeholder field to dissolve once the data arrives. */
+const SKELETON_FADE = 220;
+
+/** Milliseconds for a point to swell as it is selected, and settle as it is not. */
+const SELECT_DURATION = 140;
+
+/**
+ * A point arriving: up past its size and back to it.
+ *
+ * A dot that simply grows to its radius reads as the chart still loading right
+ * up to the last frame. The small overshoot is what makes it read as landing.
+ */
+function landing(t: number): number {
+  'worklet';
+  const back = 1.3;
+  const u = t - 1;
+  return 1 + (back + 1) * u * u * u + back * u * u;
+}
 
 /** Room left around the plot for the axis labels and the outermost dots. */
 const PADDING = { top: 14, right: 14, bottom: 22, left: 14 };
@@ -138,7 +165,8 @@ interface ScatterChartContextValue {
   activeId: SharedValue<string>;
   activePoint: ScatterChartPoint | null;
   setActivePoint: (point: ScatterChartPoint | null) => void;
-  clipId: string;
+  /** 0 to 1 as the field arrives. Each point reads its own slice of it. */
+  reveal: SharedValue<number>;
 }
 
 const ScatterChartContext = createContext<ScatterChartContextValue | null>(null);
@@ -225,7 +253,6 @@ const ScatterChartRoot = forwardRef<ScatterChartHandle, ScatterChartProps>(
     const [size, setSize] = useState({ width: 0, height: 0 });
     const [series, setSeries] = useState<[string, string][]>([]);
     const [activePoint, setActivePointState] = useState<ScatterChartPoint | null>(null);
-    const clipId = useRef(`panelui-clip-${Math.random().toString(36).slice(2, 9)}`).current;
 
     const reveal = useSharedValue(0);
     const xMin = useSharedValue(0);
@@ -341,23 +368,36 @@ const ScatterChartRoot = forwardRef<ScatterChartHandle, ScatterChartProps>(
           return;
         }
         reveal.value = 0;
+        /*
+         * Eased out rather than in and out. Each point is given a slice of this
+         * one clock, so an ease that dawdles at the start spends it on the
+         * first few points and leaves the rest to arrive in a rush.
+         */
         reveal.value = withTiming(1, {
           duration: animationDuration,
-          easing: Easing.bezier(0.85, 0, 0.15, 1),
+          easing: Easing.out(Easing.cubic),
         });
       },
       [reducedMotion, animationDuration, reveal]
     );
 
+    /*
+     * Armed again every time the chart goes back to loading, so a chart that
+     * reloads animates on the second pass as well as the first. Left latched,
+     * the guard made "loading" a state the chart could only leave once.
+     */
     useEffect(() => {
-      if (revealed.current || loading || plot.width <= 0 || !data.length) return;
+      if (loading) {
+        revealed.current = false;
+        reveal.value = 0;
+        return;
+      }
+      if (revealed.current || plot.width <= 0 || !data.length) return;
       revealed.current = true;
       playReveal();
-    }, [loading, plot.width, data.length, playReveal]);
+    }, [loading, plot.width, data.length, playReveal, reveal]);
 
     useImperativeHandle(ref, () => ({ replay: playReveal }), [playReveal]);
-
-    const clipProps = useAnimatedProps(() => ({ width: size.width * reveal.value }));
 
     // One place the selection lands, so the chart's own children and a readout
     // outside it never disagree about which point is active.
@@ -397,7 +437,7 @@ const ScatterChartRoot = forwardRef<ScatterChartHandle, ScatterChartProps>(
         activeId,
         activePoint,
         setActivePoint,
-        clipId,
+        reveal,
       }),
       // `plot` is rebuilt every render from `size`, so it is compared by value.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -420,7 +460,7 @@ const ScatterChartRoot = forwardRef<ScatterChartHandle, ScatterChartProps>(
         activeId,
         activePoint,
         setActivePoint,
-        clipId,
+        reveal,
       ]
     );
 
@@ -440,16 +480,6 @@ const ScatterChartRoot = forwardRef<ScatterChartHandle, ScatterChartProps>(
             {plot.width > 0 ? (
               <>
                 <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-                  <Defs>
-                    {/*
-                     * One clip for everything in the plot. Sharing it is what
-                     * makes the reveal read as the chart arriving, rather than
-                     * as each series animating in on its own.
-                     */}
-                    <ClipPath id={clipId}>
-                      <AnimatedRect x={0} y={0} height={size.height} animatedProps={clipProps} />
-                    </ClipPath>
-                  </Defs>
                   {svg}
                 </Svg>
                 {overlay}
@@ -518,7 +548,7 @@ export interface ScatterChartGridProps {
   opacity?: number;
 }
 
-/** Reference lines both ways. Drawn under everything, outside the reveal clip. */
+/** Reference lines both ways. Drawn under everything, and not part of the reveal. */
 function ScatterChartGrid({
   rows = 4,
   columns = 4,
@@ -618,7 +648,7 @@ function ScatterChartPoints({
     activeId,
     registerSeries,
     unregisterSeries,
-    clipId,
+    reveal,
   } = useChart('ScatterChart.Points');
   const fill = useSeriesColor(color, colorIndex);
 
@@ -663,8 +693,8 @@ function ScatterChartPoints({
   if (loading) return null;
 
   return (
-    <G clipPath={`url(#${clipId})`}>
-      {points.map((point) => (
+    <G>
+      {points.map((point, order) => (
         <Dot
           key={point.index}
           id={`${dataKey}:${point.index}`}
@@ -679,6 +709,9 @@ function ScatterChartPoints({
           fill={fill}
           opacity={opacity}
           activeId={activeId}
+          reveal={reveal}
+          order={order}
+          total={points.length}
         />
       ))}
     </G>
@@ -710,6 +743,13 @@ function radiusFor(
 /**
  * One point. Its position follows both domain tweens, so a data change moves
  * the whole field to the new scale rather than cutting to it.
+ *
+ * It arrives by growing in place, on its own slice of the shared reveal. The
+ * alternative — sweeping a clip across the plot, which is what the line and
+ * area charts do — is right for a series read along the x-axis and wrong here:
+ * a wipe gives the reader a direction to read the arrival in, and a scatter
+ * plot has none. Position is the whole message, so a point may only ever appear
+ * where it belongs.
  */
 function Dot({
   id,
@@ -724,6 +764,9 @@ function Dot({
   fill,
   opacity,
   activeId,
+  reveal,
+  order,
+  total,
 }: {
   id: string;
   x: number;
@@ -737,17 +780,38 @@ function Dot({
   fill: string;
   opacity: number;
   activeId: SharedValue<string>;
+  reveal: SharedValue<number>;
+  order: number;
+  total: number;
 }) {
+  /*
+   * The selection, as something that moves. It was a hard switch on
+   * `activeId`, so the point it named jumped half as big again between one
+   * frame and the next while every neighbour stayed put — read as a glitch
+   * rather than as a response to the finger.
+   */
+  const selected = useDerivedValue(() =>
+    withTiming(activeId.value === id ? 1 : 0, { duration: SELECT_DURATION })
+  );
+
+  // Where in the reveal this point starts. Spread over `STAGGER`, so the field
+  // settles as a field rather than switching on all at once.
+  const start = total > 1 ? (order / total) * STAGGER : 0;
+
   const animatedProps = useAnimatedProps(() => {
-    const selected = activeId.value === id;
+    const arrived = Math.max(0, Math.min(1, (reveal.value - start) / (1 - STAGGER)));
+    // The selected point swells and goes solid. Both, rather than one: a size
+    // change alone is easy to miss among neighbours, and an opacity change
+    // alone is invisible wherever the points already overlap.
+    const swell = 1 + 0.5 * selected.value;
     return {
       cx: xAt(x, plot, xMin.value, xMax.value),
       cy: yOf(y, plot, yMin.value, yMax.value),
-      // The selected point swells and goes solid. Both, rather than one: a size
-      // change alone is easy to miss among neighbours, and an opacity change
-      // alone is invisible wherever the points already overlap.
-      r: selected ? r * 1.5 : r,
-      fillOpacity: selected ? 1 : opacity,
+      r: r * landing(arrived) * swell,
+      // Ahead of the size, so a point is legible by the time it stops moving
+      // rather than fading in for the whole of its arrival.
+      fillOpacity:
+        Math.min(1, arrived * 2) * (opacity + (1 - opacity) * selected.value),
     };
   });
 
@@ -770,11 +834,37 @@ export interface ScatterChartSkeletonProps {
  *
  * The layout is deterministic rather than random, so it does not reshuffle on
  * every render of a component that may re-render several times while waiting.
+ *
+ * Still is not the same as abrupt, though. It dissolves as the real points grow
+ * in, and outlives the status change by exactly that long — cut at the frame the
+ * data lands, the placeholder disappears before anything has replaced it and the
+ * plot is briefly empty.
  */
 function ScatterChartSkeleton({ count = 24, color }: ScatterChartSkeletonProps) {
   const { plot, status } = useChart('ScatterChart.Skeleton');
   const token = useCSSVariable('--color-skeleton');
   const fill = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
+  const reducedMotion = useReducedMotion();
+
+  const loading = status === 'loading';
+  const fade = useSharedValue(1);
+  // Mounted a beat longer than `loading`, so there is something to fade.
+  const [mounted, setMounted] = useState(loading);
+
+  useEffect(() => {
+    if (loading) {
+      fade.value = 1;
+      setMounted(true);
+      return;
+    }
+    if (reducedMotion) {
+      setMounted(false);
+      return;
+    }
+    fade.value = withTiming(0, { duration: SKELETON_FADE }, (finished) => {
+      if (finished) runOnJS(setMounted)(false);
+    });
+  }, [loading, reducedMotion, fade]);
 
   const dots = useMemo(() => {
     // A cheap deterministic scatter: two irrational-ish strides that do not
@@ -786,10 +876,12 @@ function ScatterChartSkeleton({ count = 24, color }: ScatterChartSkeletonProps) 
     }));
   }, [count]);
 
-  if (status !== 'loading') return null;
+  const animatedProps = useAnimatedProps(() => ({ opacity: fade.value }));
+
+  if (!mounted) return null;
 
   return (
-    <G>
+    <AnimatedG animatedProps={animatedProps}>
       {dots.map((dot) => (
         <Circle
           key={dot.key}
@@ -799,7 +891,7 @@ function ScatterChartSkeleton({ count = 24, color }: ScatterChartSkeletonProps) 
           fill={fill}
         />
       ))}
-    </G>
+    </AnimatedG>
   );
 }
 ScatterChartSkeleton.displayName = 'ScatterChart.Skeleton';
