@@ -5185,6 +5185,67 @@ function SwipeableTabsDemo() {
   );
 }
 
+/** The four destinations of the expanding row, and what each one shows. */
+const EXPANDING_TABS = [
+  {
+    value: 'home',
+    label: 'Home',
+    icon: <PackageIcon size={18} />,
+    body: 'Everything that changed since you were last here.',
+  },
+  {
+    value: 'chats',
+    label: 'Chats',
+    icon: <MessageCircleIcon size={18} />,
+    body: 'Four threads, two of them waiting on you.',
+  },
+  {
+    value: 'calendar',
+    label: 'Calendar',
+    icon: <CalendarIcon size={18} />,
+    body: 'Nothing until Thursday, and then rather a lot.',
+  },
+  {
+    value: 'inbox',
+    label: 'Inbox',
+    icon: <BellIcon size={18} />,
+    body: 'Three notifications, none of them urgent.',
+  },
+];
+
+/**
+ * Icon-only until you pick one.
+ *
+ * Four labels written out take the whole row to say four words nobody rereads
+ * after the first time. Closed, they take an icon each; open, the one you are
+ * looking at says what it is.
+ */
+function ExpandingTabsDemo() {
+  return (
+    <Tabs variant="expanding" defaultValue="chats" className="w-full">
+      <Tabs.List className="justify-center">
+        {EXPANDING_TABS.map((tab) => (
+          <Tabs.Trigger key={tab.value} value={tab.value} icon={tab.icon}>
+            {tab.label}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+      {EXPANDING_TABS.map((tab) => (
+        <Tabs.Content key={tab.value} value={tab.value}>
+          <Card>
+            <Card.Content className="gap-2 p-4">
+              <Text weight="medium">{tab.label}</Text>
+              <Text size="sm" muted>
+                {tab.body}
+              </Text>
+            </Card.Content>
+          </Card>
+        </Tabs.Content>
+      ))}
+    </Tabs>
+  );
+}
+
 function PasswordInputDemo() {
   const [visible, setVisible] = useState(false);
 
@@ -14636,6 +14697,10 @@ const CATALOGUE: ComponentEntry[] = [
       {
         label: 'Swiping between panels',
         render: () => <SwipeableTabsDemo />,
+      },
+      {
+        label: 'Icons that open',
+        render: () => <ExpandingTabsDemo />,
       },
     ],
   },

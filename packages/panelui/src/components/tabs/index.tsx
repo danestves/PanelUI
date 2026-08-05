@@ -44,11 +44,16 @@ import {
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
+  Extrapolation,
   FadeIn,
+  interpolate,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring,
+  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
@@ -103,7 +108,26 @@ const SWIPE_ENTER = 0.3;
 /** The arriving panel is springier than the one being dragged back into place. */
 const ENTER_SPRING = { damping: 22, stiffness: 240, mass: 0.6 } as const;
 
-export type TabsVariant = 'segmented' | 'underline' | 'pill';
+/** How far the label's reveal is from its own width, in points — the gap after the icon. */
+const LABEL_GAP = 6;
+
+/** Points of room over the measured label, so a rounding error cannot truncate it. */
+const LABEL_SLACK = 2;
+
+/** Milliseconds for a tab to open its label, and for the one before it to close. */
+const EXPAND_DURATION = 260;
+
+/**
+ * A width the ghost label is measured inside.
+ *
+ * A `Text` measures against the box it is in, and the box it is really in is a
+ * pill whose width is the thing being measured. So the copy that gets measured
+ * sits in a box wide enough not to be the constraint, and reports the width the
+ * label actually wants.
+ */
+const MEASURE_WIDTH = 400;
+
+export type TabsVariant = 'segmented' | 'underline' | 'pill' | 'expanding';
 
 const tabsVariants = tv({
   slots: {
@@ -134,6 +158,22 @@ const tabsVariants = tv({
         indicator: 'bottom-0 top-0 rounded-full bg-primary',
         trigger: 'rounded-full py-2',
       },
+      /*
+       * A row of icon pills, one of which is open.
+       *
+       * Every tab draws its own pill here, so there is no indicator to slide
+       * between them — the shape that moves is the open tab itself, widening
+       * to let its label out and closing again behind it. An indicator sliding
+       * under pills that already have backgrounds would be invisible anyway.
+       *
+       * The open pill is a step further from the page than the closed ones:
+       * lighter in a dark theme, darker in a light one, which is what the
+       * tertiary surface token means and why it is used rather than a colour.
+       */
+      expanding: {
+        list: 'gap-1.5',
+        trigger: 'rounded-full bg-muted px-3.5 py-2.5',
+      },
     },
     active: {
       true: { label: 'text-foreground' },
@@ -150,6 +190,11 @@ const tabsVariants = tv({
   },
   compoundVariants: [
     { variant: 'pill', active: true, class: { label: 'text-primary-foreground' } },
+    // A pill is as wide as what is inside it. Equal shares would give every
+    // closed tab the width of the open one, which is the layout this variant
+    // exists to avoid.
+    { variant: 'expanding', class: { trigger: 'flex-none' } },
+    { variant: 'expanding', active: true, class: { trigger: 'bg-surface-tertiary' } },
   ],
   defaultVariants: {
     variant: 'segmented',
@@ -224,6 +269,12 @@ export interface TabsProps extends ViewProps {
   /**
    * `segmented` is a chip travelling inside a recessed track, `underline` is a
    * rule under the active tab, `pill` is a filled chip on the page.
+   *
+   * `expanding` is a row of icon pills where only the selected one is open:
+   * it widens to let its label out and closes again behind it. For a short row
+   * of destinations that are recognisable by their icons, where the labels
+   * would otherwise take the whole width to say things nobody rereads. Give
+   * every trigger an `icon` — a closed tab has nothing else.
    */
   variant?: TabsVariant;
   /**
@@ -457,7 +508,9 @@ function TabsList({ className, scrollable = false, children, ...props }: TabsLis
 
   const row = (
     <View accessibilityRole="tablist" className={cn(list(), className)} {...props}>
-      <TabsIndicator />
+      {/* Nothing to slide: in `expanding` every tab draws its own pill, and the
+          open one is the shape that moves. */}
+      {variant === 'expanding' ? null : <TabsIndicator />}
       {textChildren(children)}
     </View>
   );
@@ -481,7 +534,10 @@ function TabsList({ className, scrollable = false, children, ...props }: TabsLis
 export interface TabsTriggerProps {
   className?: string;
   value: string;
-  /** Rendered before the label. */
+  /**
+   * Rendered before the label. Required by `variant="expanding"`, where it is
+   * the only thing a closed tab has left to identify it by.
+   */
   icon?: ReactNode;
   /** Rendered after the label — a count, a dot, a status. */
   badge?: ReactNode;
@@ -524,6 +580,23 @@ function TabsTrigger({
     return () => unregisterTab(value);
   }, [value, registerTab, unregisterTab]);
 
+  if (context.variant === 'expanding') {
+    return (
+      <ExpandingTrigger
+        active={active}
+        disabled={disabled}
+        icon={icon}
+        badge={badge}
+        labelClassName={slots.label()}
+        className={cn(slots.trigger(), className)}
+        onLayout={handleLayout}
+        onPress={() => context.setValue(value)}
+      >
+        {children}
+      </ExpandingTrigger>
+    );
+  }
+
   return (
     <Pressable
       accessibilityRole="tab"
@@ -539,6 +612,134 @@ function TabsTrigger({
           {text}
         </Text>
       ))}
+      {badge}
+    </Pressable>
+  );
+}
+
+/**
+ * A tab that is an icon until it is selected, and then an icon and its label.
+ *
+ * The label is never unmounted, only closed over. Two reasons, and both matter:
+ * a screen reader walking a row of unlabelled icons has nothing to read out,
+ * and a label that mounts on selection has no width to animate *from*, so the
+ * pill would jump to its open size and the text would fade in inside it.
+ *
+ * So the width is animated instead, which needs a number — and the number is
+ * the one thing that cannot be measured in place, because the box the label
+ * sits in is the box being resized. A second copy, laid out once in a box wide
+ * enough not to constrain it, reports the width and is never seen.
+ */
+function ExpandingTrigger({
+  active,
+  disabled,
+  icon,
+  badge,
+  className,
+  labelClassName,
+  onLayout,
+  onPress,
+  children,
+}: {
+  active: boolean;
+  disabled: boolean;
+  icon?: ReactNode;
+  badge?: ReactNode;
+  className: string;
+  labelClassName: string;
+  onLayout: (event: LayoutChangeEvent) => void;
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  const [labelWidth, setLabelWidth] = useState(0);
+  const reducedMotion = useReducedMotion();
+  const open = useSharedValue(active ? 1 : 0);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      open.value = active ? 1 : 0;
+      return;
+    }
+    /*
+     * A curve, not a spring.
+     *
+     * This animates a *width*, so every frame of it is a layout pass — and the
+     * row is centred, so every other pill moves with it. A spring overshoots
+     * past its target and settles back, which on a box that is clipping text
+     * means the last word slides in, out and in again, and the whole row
+     * wobbles with it. The curve leaves quickly and arrives slowly, and it
+     * arrives once.
+     */
+    open.value = withTiming(active ? 1 : 0, {
+      duration: EXPAND_DURATION,
+      easing: Easing.bezier(0.2, 0, 0, 1),
+    });
+  }, [active, reducedMotion, open]);
+
+  const reveal = useAnimatedStyle(() => ({
+    width: (labelWidth + LABEL_GAP) * open.value,
+    /*
+     * Behind the width, not ahead of it. Text drawn into a box narrower than
+     * itself is text with its end cut off, and doing that on purpose for the
+     * first half of the animation is the difference between a label arriving
+     * and a label being wiped on.
+     */
+    opacity: interpolate(open.value, [0.35, 0.9], [0, 1], Extrapolation.CLAMP),
+  }));
+
+  const label = textChildren(children, (text) => (
+    <Text size="sm" weight="medium" numberOfLines={1} className={labelClassName}>
+      {text}
+    </Text>
+  ));
+
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active, disabled }}
+      // The label may be closed to nothing, and a tab announced as an unlabelled
+      // icon is a tab nobody can choose.
+      accessibilityLabel={typeof children === 'string' ? children : undefined}
+      disabled={disabled}
+      onPress={onPress}
+      onLayout={onLayout}
+      className={cn('flex-row items-center', className)}
+    >
+      {icon}
+      <Animated.View style={[{ overflow: 'hidden' }, reveal]}>
+        {/* Pinned to the measured width so the text does not reflow as the box
+            around it closes — a label that rewraps on its way out reads as a
+            glitch rather than as a reveal. */}
+        <View style={{ width: labelWidth }} className="ps-1.5">
+          {label}
+        </View>
+      </Animated.View>
+      {/* Measured once, never seen, and out of the layout so it cannot widen
+          the pill it is measuring. */}
+      <View
+        pointerEvents="none"
+        style={{ position: 'absolute', opacity: 0, width: MEASURE_WIDTH }}
+      >
+        <View
+          style={{ alignSelf: 'flex-start' }}
+          onLayout={(event: LayoutChangeEvent) => {
+            /*
+             * Rounded up and given a couple of points over.
+             *
+             * The measurement and the box it is put back into are two different
+             * layout passes, and a fraction of a point between them is enough
+             * for a single-line `Text` to decide it does not fit and truncate —
+             * which shows up as a label permanently missing its last letter.
+             */
+            const measured = Math.ceil(event.nativeEvent.layout.width) + LABEL_SLACK;
+            if (measured > LABEL_SLACK && measured !== labelWidth) {
+              setLabelWidth(measured);
+            }
+          }}
+        >
+          {label}
+        </View>
+      </View>
       {badge}
     </Pressable>
   );

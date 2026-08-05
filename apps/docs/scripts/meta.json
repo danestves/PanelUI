@@ -495,7 +495,7 @@
     "Segmented navigation with an animated indicator.",
     "react native tabs",
     {
-      "updatedIn": "0.43.0"
+      "updatedIn": "0.46.0"
     }
   ],
   "textarea": [
