@@ -28,9 +28,10 @@ npx panelui-cli@latest add pie-chart
 
 ```tsx
 <PieChart data={spend} size={208} innerRadius={0.62}>
-  <PieChart.Header title="August" legend />
+  <PieChart.Header title="August" />
   <PieChart.Slices />
   <PieChart.Center />
+  <PieChart.Legend />
 </PieChart>
 ```
 
@@ -42,14 +43,14 @@ npx panelui-cli@latest add pie-chart
   <PieChart.Skeleton />    {/* the undivided band, while it loads */}
   <PieChart.Slices />      {/* every slice, in data order */}
   <PieChart.Center />      {/* the readout in the hole */}
-  <PieChart.Legend />
+  <PieChart.Legend />      {/* the key, under the dial */}
 </PieChart>
 ```
 
-- **`PieChart.Header`** — The strip above the dial — what the chart is of, what it reads, and a key for the colours. The chart introducing itself, as distinct from the caption on the card around it.
+- **`PieChart.Header`** — The strip above the dial — what the chart is of, what it reads, and optionally a key for the colours. The chart introducing itself, as distinct from the caption on the card around it.
 - **`PieChart.Slices`** — Every slice, drawn in the order the data lists them. One part rather than one per datum: slices share a radius, a hole and a dial by definition, and a chart where one of them could be given a different radius would be a chart drawing a lie.
 - **`PieChart.Center`** — The readout in the hole. Shows the total until a slice is selected, then that slice’s value and its share.
-- **`PieChart.Legend`** — A swatch, a name and a percentage per slice — pressable in the same way the slices are, and usually the easier target of the two. Prefer `Header legend` on a chart that has a header.
+- **`PieChart.Legend`** — The key: a swatch, a name and a share per slice, under the dial and across the width of it, wrapping rather than stacking. Pressable in the same way the slices are, and usually the easier target of the two. `Header legend` puts the same key in the header instead, which suits two or three short names and nothing longer.
 - **`PieChart.Skeleton`** — The dial as one plain band while `status="loading"`. Deliberately undivided: placeholder slices would be an invented split, and a reader cannot tell an invented one from a real one until it changes under them.
 
 ## Examples
@@ -78,12 +79,14 @@ Prefer the donut where there is a total worth showing, which is most of the time
 {/* A pie. */}
 <PieChart data={spend} size={208}>
   <PieChart.Slices />
+  <PieChart.Legend />
 </PieChart>
 
 {/* A donut, with the total in the hole. */}
 <PieChart data={spend} size={208} innerRadius={0.62}>
   <PieChart.Slices />
   <PieChart.Center />
+  <PieChart.Legend />
 </PieChart>
 ```
 
@@ -99,10 +102,28 @@ const slice = active >= 0 ? spend[active] : null;
   <PieChart.Header
     value={money(slice ? slice.value : total)}
     caption={slice ? slice.label : 'Across five categories'}
-    legend
   />
   <PieChart.Slices />
+  <PieChart.Legend />
 </PieChart>
+```
+
+### Where the key goes
+
+`PieChart.Legend` sits under the dial, across the full width, and wraps — five or six entries take two lines rather than six, and nothing is laid over the drawing.
+
+`Header legend` puts the same key in the trailing corner of the header instead. That suits two or three short names. Past that it is the wrong shape: the header's title column takes what the key leaves, so a key of five long names squeezes the title to a few points wide and renders it one letter to a line.
+
+```tsx
+{/* Two or three short names. */}
+<PieChart.Header title="Storage" legend />
+
+{/* Anything longer. */}
+<PieChart.Header title="Storage" />
+<PieChart.Legend />
+
+{/* Names only, without the shares. */}
+<PieChart.Legend showValue={false} />
 ```
 
 ### Gaps, rounding and a floor
@@ -113,9 +134,10 @@ const slice = active >= 0 ? spend[active] : null;
 
 ```tsx
 <PieChart data={sources} size={208} innerRadius={0.58} padAngle={3} minAngle={6}>
-  <PieChart.Header title="Sessions" legend />
+  <PieChart.Header title="Sessions" />
   <PieChart.Slices cornerRadius={6} />
   <PieChart.Center defaultLabel="Sessions" />
+  <PieChart.Legend />
 </PieChart>
 ```
 
@@ -125,9 +147,10 @@ const slice = active >= 0 ? spend[active] : null;
 
 ```tsx
 <PieChart data={storage} size={208} innerRadius={0.66} startAngle={-135} endAngle={135} padAngle={2}>
-  <PieChart.Header title="In use" legend />
+  <PieChart.Header title="In use" />
   <PieChart.Slices cornerRadius={4} />
   <PieChart.Center defaultLabel="Used" />
+  <PieChart.Legend />
 </PieChart>
 ```
 
@@ -156,7 +179,7 @@ Once the status flips, the pie unrolls clockwise from the start of the dial — 
 
 ```tsx
 <PieChart data={spend} size={208} innerRadius={0.62} status={status}>
-  <PieChart.Header title="August" legend />
+  <PieChart.Header title="August" />
   <PieChart.Skeleton />
   <PieChart.Slices />
 </PieChart>
@@ -170,8 +193,9 @@ Five parts of one obvious total, with a key beside them and the selected slice�
 
 ```tsx
 <PieChart data={spend} size={208} activeIndex={active} onActiveIndexChange={setActive}>
-  <PieChart.Header value={money(slice ? slice.value : total)} caption={caption} legend />
+  <PieChart.Header value={money(slice ? slice.value : total)} caption={caption} />
   <PieChart.Slices />
+  <PieChart.Legend />
 </PieChart>
 ```
 
@@ -181,9 +205,10 @@ The hole is where the total goes — the one figure a pie can be read for exactl
 
 ```tsx
 <PieChart data={spend} size={208} innerRadius={0.62}>
-  <PieChart.Header title="August" legend />
+  <PieChart.Header title="August" />
   <PieChart.Slices />
   <PieChart.Center formatValue={money} />
+  <PieChart.Legend />
 </PieChart>
 ```
 
@@ -193,9 +218,10 @@ Padded and rounded, with a floor under the slices too small to see. Email is a t
 
 ```tsx
 <PieChart data={sources} size={208} innerRadius={0.58} padAngle={3} minAngle={6}>
-  <PieChart.Header title="Sessions" legend />
+  <PieChart.Header title="Sessions" />
   <PieChart.Slices cornerRadius={6} />
   <PieChart.Center defaultLabel="Sessions" />
+  <PieChart.Legend />
 </PieChart>
 ```
 
@@ -205,9 +231,10 @@ Three quarters of a turn rather than all of it, with the notch at the bottom whe
 
 ```tsx
 <PieChart data={storage} size={208} innerRadius={0.66} startAngle={-135} endAngle={135} padAngle={2}>
-  <PieChart.Header title="In use" legend />
+  <PieChart.Header title="In use" />
   <PieChart.Slices cornerRadius={4} />
   <PieChart.Center defaultLabel="Used" formatValue={(gb) => `${gb.toFixed(0)} GB`} />
+  <PieChart.Legend />
 </PieChart>
 ```
 
@@ -280,7 +307,7 @@ One undivided band while it waits, and then the pie unrolls clockwise as the dat
 | `value` | `string` | — | The readout. The largest thing on the card, and the first thing read. |
 | `caption` | `string` | — | One muted line under the value — a period, a comparison, a caveat. |
 | `labels` | `Record<string, string>` | — | Prettier names for the slices, keyed by their `label`. |
-| `legend` | `boolean` | `false` | Draw a swatch and a name per slice along the trailing edge. Prefer this to `PieChart.Legend` on a chart that has a header: that legend hangs off the bottom of the square, where it overlaps whatever is under the chart. |
+| `legend` | `boolean` | `false` | Draw a swatch and a name per slice along the trailing edge. For two or three short names. Past that use `PieChart.Legend`, which runs under the chart across the full width: a key of five long names crammed into the trailing corner of a header wraps to a column and leaves the title beside it a few points wide. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -302,7 +329,7 @@ The values are normalised against their sum, so they can be in any unit and any 
 
 ### Selecting, and reaching
 
-A slice can be pressed, but a slice worth two percent is not a touch target on a chart 208 points across. `PieChart.Legend` and `Header legend` put the same selection on a row of text, which is reachable at any share — prefer them, and treat pressing the dial itself as the shortcut rather than as the way in.
+A slice can be pressed, but a slice worth two percent is not a touch target on a chart 208 points across. `PieChart.Legend` puts the same selection on a row of text, which is reachable at any share — prefer it, and treat pressing the dial itself as the shortcut rather than as the way in.
 
 ### Under reduce-motion
 

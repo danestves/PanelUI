@@ -8881,9 +8881,9 @@ function PieBasicVersion() {
                   ? `${slice.label} · ${Math.round((slice.value / SPEND_TOTAL) * 100)}% of the month`
                   : 'August, across five categories'
               }
-              legend
             />
             <PieChart.Slices />
+            <PieChart.Legend className="px-4" />
           </PieChart>
         </Frame.Panel>
       </Frame>
@@ -8907,9 +8907,10 @@ function PieDonutVersion() {
         </Frame.Header>
         <Frame.Panel>
           <PieChart data={SPEND} size={PIE_SIZE} innerRadius={0.62} className="pb-4">
-            <PieChart.Header className={CHART_HEADER} title="August" legend />
+            <PieChart.Header className={CHART_HEADER} title="August" />
             <PieChart.Slices />
             <PieChart.Center formatValue={(value) => money(value)} />
+            <PieChart.Legend className="px-4" />
           </PieChart>
         </Frame.Panel>
       </Frame>
@@ -8945,9 +8946,10 @@ function PieSegmentsVersion() {
             activeIndex={active}
             onActiveIndexChange={setActive}
           >
-            <PieChart.Header className={CHART_HEADER} title="Sessions" legend />
+            <PieChart.Header className={CHART_HEADER} title="Sessions" />
             <PieChart.Slices cornerRadius={6} />
             <PieChart.Center defaultLabel="Sessions" />
+            <PieChart.Legend className="px-4" />
           </PieChart>
         </Frame.Panel>
       </Frame>
@@ -8982,12 +8984,13 @@ function PieDialVersion() {
             padAngle={2}
             className="pb-4"
           >
-            <PieChart.Header className={CHART_HEADER} title="In use" legend />
+            <PieChart.Header className={CHART_HEADER} title="In use" />
             <PieChart.Slices cornerRadius={4} />
             <PieChart.Center
               defaultLabel="Used"
               formatValue={(value) => `${value.toFixed(0)} GB`}
             />
+            <PieChart.Legend className="px-4" />
           </PieChart>
         </Frame.Panel>
       </Frame>
@@ -9024,12 +9027,13 @@ function PieLoadingVersion() {
             status={status}
             className="pb-4"
           >
-            <PieChart.Header className={CHART_HEADER} title="August" legend />
+            <PieChart.Header className={CHART_HEADER} title="August" />
             <PieChart.Skeleton />
             <PieChart.Slices />
             {status === 'ready' ? (
               <PieChart.Center formatValue={(value) => money(value)} />
             ) : null}
+            {status === 'ready' ? <PieChart.Legend className="px-4" /> : null}
           </PieChart>
         </Frame.Panel>
       </Frame>

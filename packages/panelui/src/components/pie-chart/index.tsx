@@ -76,8 +76,8 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 /** Milliseconds for a slice to lift out and settle back as it is selected. */
 const SELECT_DURATION = 180;
 
-/** Where a child is drawn: inside the SVG, over it, or above it entirely. */
-type Slot = 'svg' | 'overlay' | 'header';
+/** Where a child is drawn: inside the SVG, over it, above it, or under it. */
+type Slot = 'svg' | 'overlay' | 'header' | 'footer';
 
 /** Whether the chart is showing data or waiting for it. */
 export type PieChartStatus = 'loading' | 'ready';
@@ -365,13 +365,16 @@ const PieChartRoot = forwardRef<PieChartHandle, PieChartProps>(function PieChart
     ]
   );
 
-  const svg: ReactNode[] = [];
-  const overlay: ReactNode[] = [];
-  const header: ReactNode[] = [];
+  const slots: Record<Slot, ReactNode[]> = {
+    svg: [],
+    overlay: [],
+    header: [],
+    footer: [],
+  };
   Children.forEach(children, (child, index) => {
     if (!isValidElement(child)) return;
     const slot = (child.type as { slot?: Slot }).slot ?? 'overlay';
-    (slot === 'svg' ? svg : slot === 'header' ? header : overlay).push(
+    slots[slot in slots ? slot : 'overlay'].push(
       <ChildSlot key={index}>{child}</ChildSlot>
     );
   });
@@ -385,7 +388,7 @@ const PieChartRoot = forwardRef<PieChartHandle, PieChartProps>(function PieChart
        * laid out inside a box taller than the one it is drawn in.
        */}
       <View {...props} style={props.style} className={cn('w-full', className)}>
-        {header}
+        {slots.header}
         <View
           onLayout={onLayout}
           style={size ? { width: size, height: size } : { aspectRatio: 1 }}
@@ -394,23 +397,31 @@ const PieChartRoot = forwardRef<PieChartHandle, PieChartProps>(function PieChart
           {box > 0 ? (
             <>
               <Svg width={box} height={box}>
-                {svg}
+                {slots.svg}
               </Svg>
               {/*
-               * The centre and the legend sit over the SVG rather than inside
-               * it: both are text, and SVG text ignores the platform's text
-               * scaling and the theme's font.
+               * The centre sits over the SVG rather than inside it: it is text,
+               * and SVG text ignores the platform's text scaling and the
+               * theme's font.
                */}
               <View
                 pointerEvents="box-none"
                 style={{ position: 'absolute', width: box, height: box }}
                 className="items-center justify-center"
               >
-                {overlay}
+                {slots.overlay}
               </View>
             </>
           ) : null}
         </View>
+        {/*
+         * The key goes *under* the square, in flow, rather than in the corners
+         * left over inside it. A ring chart can get away with the corners
+         * because three arcs is a long key; a pie is routinely five or six
+         * slices with names like "Everything else", and a key of that size laid
+         * over the drawing either covers it or is squeezed to one letter a line.
+         */}
+        {slots.footer}
       </View>
     </PieChartContext.Provider>
   );
@@ -677,9 +688,14 @@ export interface PieChartLegendProps extends ViewProps {
 }
 
 /**
- * A swatch and a name per slice, pressable in the same way the slices are — the
- * legend is usually the easier target of the two, and a slice worth a couple of
- * percent is not a target at all.
+ * A swatch, a name and a share per slice, under the chart and across the width
+ * of it. Pressable in the same way the slices are — the legend is usually the
+ * easier target of the two, and a slice worth a couple of percent is not a
+ * target at all.
+ *
+ * It wraps rather than stacking, so five or six entries take two lines instead
+ * of six. A key is a lookup table, and a lookup table read down a column of one
+ * word each is a column the eye has to walk.
  */
 function PieChartLegend({ className, showValue = true, ...props }: PieChartLegendProps) {
   const { data, slices, colors, activeIndex, setActiveIndex } =
@@ -690,8 +706,10 @@ function PieChartLegend({ className, showValue = true, ...props }: PieChartLegen
   return (
     <View
       {...props}
-      pointerEvents="box-none"
-      className={cn('absolute -bottom-2 w-full gap-1', className)}
+      className={cn(
+        'w-full flex-row flex-wrap items-center justify-center gap-x-3 gap-y-1.5 pt-3',
+        className
+      )}
     >
       {data.map((slice, index) => {
         const percent = Math.round((slices[index]?.fraction ?? 0) * 100);
@@ -703,7 +721,7 @@ function PieChartLegend({ className, showValue = true, ...props }: PieChartLegen
             accessibilityLabel={`${slice.label}, ${percent} percent`}
             onPress={() => setActiveIndex(activeIndex === index ? -1 : index)}
             style={{ opacity: dimmed ? 0.4 : 1 }}
-            className="flex-row items-center gap-1.5"
+            className="max-w-full flex-row items-center gap-1.5"
           >
             <View
               style={{
@@ -713,7 +731,7 @@ function PieChartLegend({ className, showValue = true, ...props }: PieChartLegen
                 backgroundColor: colors[index],
               }}
             />
-            <Text size="xs" muted numberOfLines={1} className="flex-1">
+            <Text size="xs" muted numberOfLines={1} className="shrink">
               {slice.label}
             </Text>
             {showValue ? (
@@ -728,7 +746,7 @@ function PieChartLegend({ className, showValue = true, ...props }: PieChartLegen
   );
 }
 PieChartLegend.displayName = 'PieChart.Legend';
-PieChartLegend.slot = 'overlay' as const;
+PieChartLegend.slot = 'footer' as const;
 
 export interface PieChartHeaderProps extends ViewProps {
   className?: string;
@@ -741,9 +759,12 @@ export interface PieChartHeaderProps extends ViewProps {
   /** Prettier names for the slices, keyed by their `label`. */
   labels?: Record<string, string>;
   /**
-   * Draw a swatch and a name per slice along the trailing edge. Prefer this to
-   * `PieChart.Legend` on a chart that has a header: that legend hangs off the
-   * bottom of the square, where it overlaps whatever is under the chart.
+   * Draw a swatch and a name per slice along the trailing edge.
+   *
+   * For two or three short names. Past that use `PieChart.Legend`, which runs
+   * under the chart across the full width: a key of five long names crammed
+   * into the trailing corner of a header wraps to a column and leaves the title
+   * beside it a few points wide.
    */
   legend?: boolean;
   /** Trailing slot — a control, a badge, a range picker. Wins over `legend`. */
@@ -819,10 +840,14 @@ function PieChartHeader({
           </Text>
         ) : null}
       </View>
-      {/* Shrinkable, unlike a view's default in React Native. Held rigid, a
-          four-slice key takes the width it wants and the caption underneath
-          the value wraps to two lines to make room for it. */}
-      {trailing ? <View className="shrink pt-1">{trailing}</View> : null}
+      {/*
+       * Shrinkable, unlike a view's default in React Native — and capped, which
+       * shrinking alone does not achieve. The title column is `flex-1`, so its
+       * basis is zero and it lives on what is left over: a wrapping key with
+       * nothing stopping it takes the whole row and leaves the title a few
+       * points wide, which renders it one letter to a line.
+       */}
+      {trailing ? <View className="max-w-[55%] shrink pt-1">{trailing}</View> : null}
     </View>
   );
 }
