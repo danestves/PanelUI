@@ -339,6 +339,8 @@ export {
 export {
   ColorPicker,
   type ColorPickerProps,
+  type ColorPickerTriggerProps,
+  type ColorPickerContentProps,
   type ColorPickerFieldProps,
   type ColorPickerAreaProps,
   type ColorPickerWheelProps,
@@ -350,6 +352,7 @@ export {
   type ColorPickerPreviewProps,
   type ColorPickerSwatchesProps,
   type ColorPickerSize,
+  type ColorPickerPresentation,
 } from './components/color-picker';
 export {
   Combobox,

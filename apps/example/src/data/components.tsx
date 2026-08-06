@@ -4825,6 +4825,57 @@ function ColorPickerDemo() {
 }
 
 function ColorPickerCardVersion() {
+  const [accent, setAccent] = useState('#3b82f6');
+  const [surface, setSurface] = useState('#0f172a');
+
+  return (
+    <View className="w-full gap-3 p-4">
+      <Text size="sm" muted>
+        Press a row to open its picker.
+      </Text>
+
+      {/* Each row reads out the colour it would let you change, and is the
+          thing you press to change it. The controls arrive over the row rather
+          than under it, so two of them cost two rows of the screen instead of
+          two panels. */}
+      <ColorPicker value={accent} onValueChange={setAccent} presentation="popover">
+        <ColorPicker.Trigger>
+          <ColorPicker.Field label="Accent" />
+        </ColorPicker.Trigger>
+        <ColorPicker.Content>
+          <ColorPicker.Area height={220} />
+          <ColorPicker.Channel channel="hue" />
+          <ColorPicker.Hue />
+        </ColorPicker.Content>
+      </ColorPicker>
+
+      <ColorPicker value={surface} onValueChange={setSurface} presentation="popover">
+        <ColorPicker.Trigger>
+          <ColorPicker.Field label="Surface" />
+        </ColorPicker.Trigger>
+        <ColorPicker.Content>
+          <ColorPicker.Area height={220} />
+          <ColorPicker.Channel channel="hue" />
+          <ColorPicker.Hue />
+        </ColorPicker.Content>
+      </ColorPicker>
+
+      <Surface variant="secondary" padding="default" className="mt-2 gap-3 rounded-2xl">
+        <View className="h-24 w-full rounded-xl" style={{ backgroundColor: surface }}>
+          <View
+            className="m-3 h-9 w-24 rounded-lg"
+            style={{ backgroundColor: accent }}
+          />
+        </View>
+        <Text size="xs" muted>
+          {accent.toUpperCase()} on {surface.toUpperCase()}
+        </Text>
+      </Surface>
+    </View>
+  );
+}
+
+function ColorPickerInlineVersion() {
   const [color, setColor] = useState('#3b82f6');
 
   return (
@@ -4839,6 +4890,30 @@ function ColorPickerCardVersion() {
           <ColorPicker.Channel channel="hue" />
           <ColorPicker.Hue />
         </Surface>
+      </ColorPicker>
+    </View>
+  );
+}
+
+function ColorPickerSheetVersion() {
+  const [color, setColor] = useState('#22c55e');
+
+  return (
+    <View className="w-full gap-3 p-4">
+      <Text size="sm" muted>
+        The same picker, brought up from the bottom edge instead.
+      </Text>
+      <ColorPicker value={color} onValueChange={setColor} presentation="bottom-sheet">
+        <ColorPicker.Trigger>
+          <ColorPicker.Field label="Highlight" />
+        </ColorPicker.Trigger>
+        <ColorPicker.Content>
+          <ColorPicker.Area height={240} />
+          <ColorPicker.Channel channel="hue" />
+          <ColorPicker.Hue />
+          <ColorPicker.Channel channel="alpha" />
+          <ColorPicker.Alpha />
+        </ColorPicker.Content>
       </ColorPicker>
     </View>
   );
@@ -11861,8 +11936,23 @@ const CATALOGUE: ComponentEntry[] = [
         id: 'card',
         fullPage: true,
         description:
-          'A labelled strip over the square, and a readout naming the track under it.',
+          'Rows that read out a colour and open the picker over themselves when pressed.',
         render: () => <ColorPickerCardVersion />,
+      },
+      {
+        label: 'In a sheet',
+        id: 'sheet',
+        fullPage: true,
+        description: 'The same folded-away picker, brought up from the bottom edge.',
+        render: () => <ColorPickerSheetVersion />,
+      },
+      {
+        label: 'Inline panel',
+        id: 'inline',
+        fullPage: true,
+        description:
+          'A labelled strip over the square, and a readout naming the track under it.',
+        render: () => <ColorPickerInlineVersion />,
       },
       {
         label: 'Wheel',

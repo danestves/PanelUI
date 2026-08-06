@@ -28,6 +28,28 @@
  * a control with no alpha is one that has no `ColorPicker.Alpha`, not one with
  * a prop turned off.
  *
+ * ## Folding it away
+ *
+ * A picker is a page's worth of controls in service of one value, and that
+ * value is read far more often than it is changed — so `presentation` puts the
+ * controls behind the row that reads it out:
+ *
+ * ```tsx
+ * <ColorPicker value={accent} onValueChange={setAccent} presentation="popover">
+ *   <ColorPicker.Trigger>
+ *     <ColorPicker.Field label="Accent" />
+ *   </ColorPicker.Trigger>
+ *   <ColorPicker.Content>
+ *     <ColorPicker.Area />
+ *     <ColorPicker.Hue />
+ *   </ColorPicker.Content>
+ * </ColorPicker>
+ * ```
+ *
+ * `Content` re-provides the picker's context around what it holds, because the
+ * panel is portalled above the rest of the screen and is therefore no longer
+ * below the picker in the tree by the time the parts inside it go looking.
+ *
  * Works controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`).
  */
 import {
@@ -40,6 +62,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactElement,
   type ReactNode,
 } from 'react';
 import {
@@ -81,7 +104,9 @@ import {
   type ColorFormat,
   type HsvaColor,
 } from '../../utils/color';
+import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
+import { Popover, type PopoverContentProps } from '../popover';
 
 /** Settles a thumb that was moved by something other than a finger. */
 const TIMING = { duration: 140 } as const;
@@ -206,6 +231,16 @@ function useColorPicker(part: string) {
 /** Where a picker starts when it is handed a value it cannot read. */
 const FALLBACK: HsvaColor = { h: 0, s: 1, v: 1, a: 1 };
 
+/** How the controls get onto the screen. */
+export type ColorPickerPresentation = 'inline' | 'popover' | 'bottom-sheet';
+
+/**
+ * Floor for the panel's width when it takes the trigger's. A swatch row is a
+ * narrow trigger, and a square you drag on is not a control that survives being
+ * squeezed to match one.
+ */
+const CONTENT_MIN_WIDTH = 268;
+
 export interface ColorPickerProps extends Omit<ColorPickerVariantProps, 'disabled'> {
   className?: string;
   /** Controlled colour. Leave unset and pass `defaultValue` to run uncontrolled. */
@@ -233,6 +268,19 @@ export interface ColorPickerProps extends Omit<ColorPickerVariantProps, 'disable
    * buzz proportional to speed.
    */
   haptics?: boolean;
+  /**
+   * How the controls get onto the screen.
+   *
+   * `inline` stacks them where they are written, and is the default. The other
+   * two put them behind a `ColorPicker.Trigger` and draw them in a
+   * `ColorPicker.Content` — which is the arrangement a colour usually wants,
+   * since a picker is a page's worth of controls in service of one value that
+   * is looked at far more often than it is changed.
+   */
+  presentation?: ColorPickerPresentation;
+  /** Controlled open state of the panel. Ignored by `inline`. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   /** The parts, in the order they should stack. */
   children: ReactNode;
 }
@@ -249,6 +297,9 @@ const ColorPickerRoot = forwardRef<View, ColorPickerProps>(
       disabled = false,
       haptics = false,
       size = 'md',
+      presentation = 'inline',
+      open,
+      onOpenChange,
       children,
     },
     ref
@@ -319,6 +370,16 @@ const ColorPickerRoot = forwardRef<View, ColorPickerProps>(
       [hue, saturation, brightness, opacity, emit, format, disabled, haptics, size]
     );
 
+    if (presentation !== 'inline') {
+      return (
+        <ColorPickerContext.Provider value={context}>
+          <Popover open={open} onOpenChange={onOpenChange} presentation={presentation}>
+            {children}
+          </Popover>
+        </ColorPickerContext.Provider>
+      );
+    }
+
     return (
       <ColorPickerContext.Provider value={context}>
         <View ref={ref} className={slots.root({ className })} collapsable={false}>
@@ -330,6 +391,64 @@ const ColorPickerRoot = forwardRef<View, ColorPickerProps>(
 );
 
 ColorPickerRoot.displayName = 'ColorPicker';
+
+/* ------------------------------------------------------------------ *
+ * Trigger and Content — the picker folded away behind the value.
+ * ------------------------------------------------------------------ */
+
+export interface ColorPickerTriggerProps {
+  /** One element, cloned with an `onPress` that opens the panel. */
+  children: ReactElement<{ onPress?: (...args: unknown[]) => void }>;
+}
+
+/**
+ * What you press to open the picker. `ColorPicker.Field` is the obvious child —
+ * it already reads out the colour it would let you change — but anything that
+ * takes an `onPress` will do.
+ */
+function ColorPickerTrigger({ children }: ColorPickerTriggerProps) {
+  useColorPicker('ColorPicker.Trigger');
+  return <Popover.Trigger>{children}</Popover.Trigger>;
+}
+
+ColorPickerTrigger.displayName = 'ColorPicker.Trigger';
+
+export interface ColorPickerContentProps extends PopoverContentProps {}
+
+/**
+ * The panel the controls are drawn in.
+ *
+ * It re-provides the picker's context around its children, and has to: the
+ * panel is rendered through a portal, above everything else on the screen, so
+ * by the time the parts inside it look for the picker they are no longer
+ * anywhere below it in the tree. Without this the first `ColorPicker.Area`
+ * inside a popover would throw.
+ *
+ * Defaults to the trigger's width, floored, so a panel opened from a labelled
+ * strip lines up under it rather than announcing itself as a different object.
+ */
+function ColorPickerContent({
+  className,
+  width = 'trigger',
+  minWidth = CONTENT_MIN_WIDTH,
+  children,
+  ...props
+}: ColorPickerContentProps) {
+  const ctx = useColorPicker('ColorPicker.Content');
+
+  return (
+    <Popover.Content
+      width={width}
+      minWidth={minWidth}
+      className={cn('gap-3', className)}
+      {...props}
+    >
+      <ColorPickerContext.Provider value={ctx}>{children}</ColorPickerContext.Provider>
+    </Popover.Content>
+  );
+}
+
+ColorPickerContent.displayName = 'ColorPicker.Content';
 
 /* ------------------------------------------------------------------ *
  * The checkerboard behind anything translucent.
@@ -1083,6 +1202,14 @@ export interface ColorPickerFieldProps {
   showValue?: boolean;
   /** Extra classes for the swatch. */
   swatchClassName?: string;
+  /**
+   * Makes the strip pressable, and a button to a screen reader.
+   *
+   * Mostly you do not pass this yourself: `ColorPicker.Trigger` clones the
+   * strip with one, which is what turns the row into the thing that opens the
+   * picker.
+   */
+  onPress?: (...args: unknown[]) => void;
   /** Anything to put after the swatch — a copy button, a reset. */
   children?: ReactNode;
 }
@@ -1095,7 +1222,7 @@ export interface ColorPickerFieldProps {
  * A drag through a hundred frames of the same hex costs one render.
  */
 const ColorPickerField = forwardRef<View, ColorPickerFieldProps>(
-  ({ className, label, showValue = true, swatchClassName, children }, ref) => {
+  ({ className, label, showValue = true, swatchClassName, onPress, children }, ref) => {
     const ctx = useColorPicker('ColorPicker.Field');
     const slots = colorPickerVariants({ size: ctx.size });
     const diameter = FIELD_SWATCH[ctx.size];
@@ -1145,13 +1272,21 @@ const ColorPickerField = forwardRef<View, ColorPickerFieldProps>(
       ),
     }));
 
+    // Pressable only when it has somewhere to go. A row that highlights under
+    // a finger and then does nothing is a worse lie than a row that does not
+    // react at all.
+    const Row = onPress ? Pressable : View;
+
     return (
-      <View
+      <Row
         ref={ref}
+        onPress={onPress}
+        disabled={onPress ? ctx.disabled : undefined}
         className={slots.field({ className })}
         // One thing being read out, not three: a label, a value and a swatch
         // announced separately are three stops that each say a third of it.
         accessible
+        accessibilityRole={onPress ? 'button' : undefined}
         accessibilityLabel={label ? `${label}, ${printed}` : printed}
       >
         {label ? <Text className={slots.fieldLabel()}>{label}</Text> : null}
@@ -1168,7 +1303,7 @@ const ColorPickerField = forwardRef<View, ColorPickerFieldProps>(
           <Animated.View style={[StyleSheet.absoluteFill, fillStyle]} />
         </View>
         {children}
-      </View>
+      </Row>
     );
   }
 );
@@ -1606,6 +1741,8 @@ const ColorPickerWheel = forwardRef<View, ColorPickerWheelProps>(
 ColorPickerWheel.displayName = 'ColorPicker.Wheel';
 
 export const ColorPicker = Object.assign(ColorPickerRoot, {
+  Trigger: ColorPickerTrigger,
+  Content: ColorPickerContent,
   Field: ColorPickerField,
   Area: ColorPickerArea,
   Wheel: ColorPickerWheel,

@@ -1,6 +1,7 @@
 ---
 title: ColorPicker
 description: A colour chosen by dragging — a saturation square or a wheel, a hue scale, and opacity.
+status: updated
 ---
 
 A colour chosen by dragging, not by typing. The controls are the colour model made visible: a square where saturation runs across and brightness runs up — or a wheel where hue is the angle and saturation the radius — under scales for whichever channels the shape does not carry. Composition is the API — a picker with no opacity is one with no `ColorPicker.Alpha` in it, not one with a prop turned off.
@@ -34,15 +35,19 @@ npx panelui-cli@latest add color-picker
 ## Composition
 
 ```tsx
-<ColorPicker>
-  <ColorPicker.Field label="Accent" />   {/* the strip above everything */}
-  <ColorPicker.Swatches colors={[…]} />
-  <ColorPicker.Area />                    {/* …or <ColorPicker.Wheel /> */}
-  <ColorPicker.Channel channel="hue" />   {/* the readout above a track */}
-  <ColorPicker.Hue />
-  <ColorPicker.Brightness />
-  <ColorPicker.Alpha />
-  <ColorPicker.Preview showValue />
+<ColorPicker presentation="popover">
+  <ColorPicker.Trigger>
+    <ColorPicker.Field label="Accent" />  {/* the row that opens it */}
+  </ColorPicker.Trigger>
+  <ColorPicker.Content>                   {/* …or no Trigger/Content at all, */}
+    <ColorPicker.Swatches colors={[…]} /> {/* and the parts stack where they are */}
+    <ColorPicker.Area />                  {/* …or <ColorPicker.Wheel /> */}
+    <ColorPicker.Channel channel="hue" /> {/* the readout above a track */}
+    <ColorPicker.Hue />
+    <ColorPicker.Brightness />
+    <ColorPicker.Alpha />
+    <ColorPicker.Preview showValue />
+  </ColorPicker.Content>
 </ColorPicker>
 ```
 
@@ -50,7 +55,26 @@ Every part is optional and they render in the order you write them, so the layou
 
 The picker stores hue, saturation, value and alpha rather than the string it hands back. That is not an implementation detail you can ignore — it is why the thumb stays where you left it. A fully black colour is `#000` whatever hue and saturation produced it, so a picker that stored its own output would lose the thumb the moment you dragged into a corner and have nowhere to put it back.
 
+`Content` re-provides the picker's context around what it holds, and has to: the panel is drawn through a portal, above everything else on the screen, so by the time the parts inside it go looking for the picker they are no longer anywhere below it in the tree. That is why the controls go inside `ColorPicker.Content` rather than inside a `Popover` you assemble yourself.
+
 ## Examples
+
+### Folded away behind the row
+
+A picker is a page's worth of controls in service of one value, and that value is read far more often than it is changed. `presentation` puts the controls behind the row that reads it out, so two colours cost two rows rather than two panels. `bottom-sheet` is the same arrangement brought up from the bottom edge instead.
+
+```tsx
+<ColorPicker value={accent} onValueChange={setAccent} presentation="popover">
+  <ColorPicker.Trigger>
+    <ColorPicker.Field label="Accent" />
+  </ColorPicker.Trigger>
+  <ColorPicker.Content>
+    <ColorPicker.Area height={220} />
+    <ColorPicker.Channel channel="hue" />
+    <ColorPicker.Hue />
+  </ColorPicker.Content>
+</ColorPicker>
+```
 
 ### A labelled panel
 
@@ -150,6 +174,42 @@ There is no minimum picker. A control that only needs a hue is the hue scale and
 
 ### Accent card
 
+Rows that read out a colour and open the picker over themselves when pressed.
+
+```tsx
+<ColorPicker value={accent} onValueChange={setAccent} presentation="popover">
+  <ColorPicker.Trigger>
+    <ColorPicker.Field label="Accent" />
+  </ColorPicker.Trigger>
+  <ColorPicker.Content>
+    <ColorPicker.Area height={220} />
+    <ColorPicker.Channel channel="hue" />
+    <ColorPicker.Hue />
+  </ColorPicker.Content>
+</ColorPicker>
+```
+
+### In a sheet
+
+The same folded-away picker, brought up from the bottom edge.
+
+```tsx
+<ColorPicker value={color} onValueChange={setColor} presentation="bottom-sheet">
+  <ColorPicker.Trigger>
+    <ColorPicker.Field label="Highlight" />
+  </ColorPicker.Trigger>
+  <ColorPicker.Content>
+    <ColorPicker.Area height={240} />
+    <ColorPicker.Channel channel="hue" />
+    <ColorPicker.Hue />
+    <ColorPicker.Channel channel="alpha" />
+    <ColorPicker.Alpha />
+  </ColorPicker.Content>
+</ColorPicker>
+```
+
+### Inline panel
+
 A labelled strip over the square, and a readout naming the track under it.
 
 ```tsx
@@ -206,6 +266,9 @@ Hue around and saturation out, with brightness on a track of its own.
 | `format` | `ColorFormat` | `'hex'` | How the colour is written on the way out. `hex` gains an `#rrggbbaa` alpha pair, and the other two switch to their `a` forms, only when the colour is actually translucent. |
 | `disabled` | `boolean` | `false` |  |
 | `haptics` | `boolean` | `false` | A tick when a drag ends and when a preset is picked. Off by default — needs the optional `expo-haptics`, and is silent without it. There is no tick during a drag: a colour has no steps to cross, so a tick could only be a buzz proportional to speed. |
+| `presentation` | `ColorPickerPresentation` | `'inline'` | How the controls get onto the screen. `inline` stacks them where they are written, and is the default. The other two put them behind a `ColorPicker.Trigger` and draw them in a `ColorPicker.Content` — which is the arrangement a colour usually wants, since a picker is a page's worth of controls in service of one value that is looked at far more often than it is changed. |
+| `open` | `boolean` | — | Controlled open state of the panel. Ignored by `inline`. |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
 
 ### ColorPicker.Area
 
@@ -255,6 +318,7 @@ Hue around and saturation out, with brightness on a track of its own.
 | `label` | `string` | — | What the colour is for — "Accent", "Background", a layer name. |
 | `showValue` | `boolean` | — | Print the current colour beside the swatch, in the picker's `format`. On by default: the strip exists to say what the colour *is*, and a swatch alone cannot be read out, copied down or typed into a design tool. |
 | `swatchClassName` | `string` | — | Extra classes for the swatch. |
+| `onPress` | `(...args: unknown[]) => void` | — | Makes the strip pressable, and a button to a screen reader. Mostly you do not pass this yourself: `ColorPicker.Trigger` clones the strip with one, which is what turns the row into the thing that opens the picker. |
 
 ### ColorPicker.Channel
 
