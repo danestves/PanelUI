@@ -56,6 +56,14 @@
     "brand": false
   },
   {
+    "name": "BoldIcon",
+    "size": 16,
+    "viewBox": "0 0 24 24",
+    "fill": "none",
+    "markup": "<path d=\"M6 4h8a4 4 0 0 1 0 8H6zM6 12h9a4 4 0 0 1 0 8H6z\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />",
+    "brand": false
+  },
+  {
     "name": "BookmarkIcon",
     "size": 16,
     "viewBox": "0 0 24 24",
@@ -141,6 +149,14 @@
     "viewBox": "0 0 24 24",
     "fill": "none",
     "markup": "<circle cx=\"12\" cy=\"12\" r=\"9\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" /><path d=\"M12 7v5l3.5 2\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />",
+    "brand": false
+  },
+  {
+    "name": "CodeIcon",
+    "size": 16,
+    "viewBox": "0 0 24 24",
+    "fill": "none",
+    "markup": "<path d=\"m8 18-6-6 6-6M16 6l6 6-6 6\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />",
     "brand": false
   },
   {
@@ -232,6 +248,14 @@
     "brand": true
   },
   {
+    "name": "HeadingIcon",
+    "size": 16,
+    "viewBox": "0 0 24 24",
+    "fill": "none",
+    "markup": "<path d=\"M6 12h12M6 20V4M18 20V4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />",
+    "brand": false
+  },
+  {
     "name": "HeartIcon",
     "size": 16,
     "viewBox": "0 0 24 24",
@@ -256,6 +280,14 @@
     "brand": false
   },
   {
+    "name": "ItalicIcon",
+    "size": 16,
+    "viewBox": "0 0 24 24",
+    "fill": "none",
+    "markup": "<path d=\"M19 4h-9M14 20H5M15 4 9 20\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />",
+    "brand": false
+  },
+  {
     "name": "KeyboardIcon",
     "size": 16,
     "viewBox": "0 0 24 24",
@@ -277,6 +309,22 @@
     "viewBox": "0 0 24 24",
     "fill": "none",
     "markup": "<path d=\"m3 6 1.8 1.8L8 4.5M3 16l1.8 1.8L8 14.5\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" /><path d=\"M12 6.5h9M12 17.5h9\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" />",
+    "brand": false
+  },
+  {
+    "name": "ListIcon",
+    "size": 16,
+    "viewBox": "0 0 24 24",
+    "fill": "none",
+    "markup": "<path d=\"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />",
+    "brand": false
+  },
+  {
+    "name": "ListOrderedIcon",
+    "size": 16,
+    "viewBox": "0 0 24 24",
+    "fill": "none",
+    "markup": "<path d=\"M10 6h11M10 12h11M10 18h11M4 4h1v4M4 8h2M6 15a1.5 1.5 0 1 0-2-1.4M4 17l2-2M4 17h2\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />",
     "brand": false
   },
   {
@@ -389,6 +437,14 @@
     "viewBox": "0 0 24 24",
     "fill": "none",
     "markup": "<path d=\"M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM12 8v8M8 12h8\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />",
+    "brand": false
+  },
+  {
+    "name": "QuoteIcon",
+    "size": 16,
+    "viewBox": "0 0 24 24",
+    "fill": "none",
+    "markup": "<path d=\"M4 5v14M9 7h11M9 12h11M9 17h7\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />",
     "brand": false
   },
   {

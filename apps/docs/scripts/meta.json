@@ -295,6 +295,15 @@
       "addedIn": "0.25.0"
     }
   ],
+  "markdown-editor": [
+    "MarkdownEditor",
+    "A field for writing markdown, with a formatting toolbar and a rendered preview.",
+    "react native markdown editor preview toolbar",
+    {
+      "addedIn": "0.49.0",
+      "beta": true
+    }
+  ],
   "map": [
     "Map",
     "Vector map whose basemap is drawn from your theme tokens.",

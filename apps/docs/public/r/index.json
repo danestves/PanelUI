@@ -479,6 +479,20 @@
     ]
   },
   {
+    "name": "markdown-editor",
+    "type": "registry:ui",
+    "description": "A field for writing markdown, with a formatting toolbar and a rendered preview.",
+    "registryDependencies": [
+      "button",
+      "button-group",
+      "cn",
+      "icons",
+      "response",
+      "text",
+      "textarea"
+    ]
+  },
+  {
     "name": "marker",
     "type": "registry:ui",
     "description": "Inline note between conversation turns.",

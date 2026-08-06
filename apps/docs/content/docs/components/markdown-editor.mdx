@@ -1,0 +1,157 @@
+---
+title: MarkdownEditor
+description: A field for writing markdown, with a formatting toolbar and a rendered preview.
+status: beta
+---
+
+A field for writing markdown, and a way to see it rendered.
+
+Writing and reading are two modes here rather than two panes. Side by side is how this is done on a desktop and it does not survive the trip to a phone: two columns of a phone's width are two columns too narrow to read, and the keyboard covers the bottom half of the screen exactly when the writer is using it. So there is one pane and a switch, and the toolbar carries the switch because the toolbar is the one thing on screen in both modes.
+
+The preview is [Response](/docs/ai-components/response) — the same reader that renders a model's answer — so markdown means one thing across the library and there is one parser to be right rather than two to keep in step. It renders through `Typography`, `CodeBlock` and `Table`, which is to say through your app's own type and colours: a preview that looked like a document viewer would be showing the writer something they are not going to ship.
+
+## Installation
+
+MarkdownEditor ships with the library — no separate install.
+
+```tsx
+import { MarkdownEditor, Button, Text } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add markdown-editor
+```
+
+## Usage
+
+```tsx
+const [draft, setDraft] = useState('');
+
+<MarkdownEditor value={draft} onValueChange={setDraft} rows={12} />
+```
+
+## Composition
+
+```tsx
+<MarkdownEditor>
+  <MarkdownEditor.Toolbar />   {/* formatting, and the write/preview switch */}
+  <MarkdownEditor.Input />     {/* draws while writing */}
+  <MarkdownEditor.Preview />   {/* draws while previewing */}
+</MarkdownEditor>
+```
+
+Written without children the editor draws all three in that order, which is the whole component — so most uses need no parts at all. Write them out when you want to reorder them, drop one, or put something else on the toolbar row.
+
+## Examples
+
+### The whole component
+
+No children: the toolbar, the field and the preview in that order. `rows` sizes the field and `placeholder` goes to it.
+
+```tsx
+const [draft, setDraft] = useState('');
+
+<MarkdownEditor
+  value={draft}
+  onValueChange={setDraft}
+  rows={10}
+  placeholder="Write something…"
+/>
+```
+
+### Starting on the reading side
+
+`defaultMode` decides which pane opens first. Reading first suits a draft that already exists — a note being reviewed rather than written.
+
+```tsx
+<MarkdownEditor value={draft} onValueChange={setDraft} defaultMode="preview" />
+```
+
+### Choosing the actions, and adding to the row
+
+`actions` is the list, in the order you want them. The toolbar’s children sit beside the mode switch, for anything that belongs to the draft rather than to the text.
+
+```tsx
+<MarkdownEditor value={draft} onValueChange={setDraft}>
+  <MarkdownEditor.Toolbar actions={['bold', 'italic', 'link']}>
+    <Text size="xs" muted>{words} words</Text>
+  </MarkdownEditor.Toolbar>
+  <MarkdownEditor.Input rows={6} placeholder="Say something…" />
+  <MarkdownEditor.Preview emptyText="Write a line and switch to Preview." />
+</MarkdownEditor>
+```
+
+### A composer with no preview
+
+Leave `MarkdownEditor.Preview` out and turn the switch off with `showModeSwitch={false}`. What is left is a comment box whose toolbar formats and nothing else.
+
+```tsx
+<MarkdownEditor value={draft} onValueChange={setDraft}>
+  <MarkdownEditor.Toolbar showModeSwitch={false} />
+  <MarkdownEditor.Input rows={4} placeholder="Leave a comment…" />
+</MarkdownEditor>
+
+<Button fullWidth disabled={!draft.trim()} onPress={post}>Post</Button>
+```
+
+## API Reference
+
+### MarkdownEditor
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `string` | — | Controlled text. Leave unset and pass `defaultValue` to run uncontrolled. |
+| `defaultValue` | `string` | `''` | Starting text when uncontrolled. |
+| `onValueChange` | `(value: string) => void` | — |  |
+| `mode` | `MarkdownEditorMode` | — | Controlled pane. |
+| `defaultMode` | `MarkdownEditorMode` | `'write'` | Starting pane when uncontrolled. |
+| `onModeChange` | `(mode: MarkdownEditorMode) => void` | — |  |
+| `disabled` | `boolean` | `false` | Stop the field being edited and the toolbar being pressed. |
+| `placeholder` | `string` | — | Forwarded to the field when the editor draws its own. |
+| `rows` | `number` | — | Height of the field, in lines. Forwarded to the field the editor draws. |
+
+### MarkdownEditor.Toolbar
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `actions` | `MarkdownEditorAction[]` | — | Which formatting actions to offer, in the order given. |
+| `showModeSwitch` | `boolean` | — | Show the write/preview switch. On by default — a preview nobody can reach is a pane that does not exist. |
+
+### MarkdownEditor.Input
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### MarkdownEditor.Preview
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `emptyText` | `string` | — | What to show when there is nothing written yet. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Where the caret lands
+
+Every toolbar button is a function of the text and where the caret is in it, and what makes a formatting toolbar feel broken is never the characters it inserts — it is where the caret ends up afterwards. Three rules hold for all of them:
+
+- **Pressing twice undoes it.** A button that only ever adds is a button you can press once, and every press after that damages the text.
+- **A selection stays selected.** Bolding three words and then italicising the same three is two presses, not a press and a re-selection.
+- **With nothing selected, the caret lands where the writing goes** — between the new markers rather than after them.
+
+A line-level action — heading, list, quote — applies to every line the selection touches, even partly, and removes itself only when *all* of them already have it. A mixed block is a block someone is trying to make uniform, so the useful answer there is to add.
+
+### The field is monospaced, and does not correct you
+
+A markdown source is code as much as it is prose. Autocapitalisation and autocorrection are off, because an editor that capitalises the word after a fence, or rewrites a hyphen into an en dash, is an editor that quietly changes what the document renders as.
+
+### No platform markdown
+
+SwiftUI's `Text` can parse markdown and Jetpack Compose's cannot, so an editor backed by the platform would render on iOS and show a plain string on Android. The parser here is JavaScript and the output is React Native views, which is why the two platforms agree.

@@ -102,6 +102,7 @@ import {
   type LineChartHandle,
   Loader,
   type LoaderVariant,
+  MarkdownEditor,
   Marker,
   MaximizeIcon,
   Menu,
@@ -8328,6 +8329,101 @@ function AccordionKeepMountedDemo() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* MarkdownEditor                                                             */
+/* -------------------------------------------------------------------------- */
+
+const RELEASE_NOTE = `## What changed
+
+Swiping between tabs no longer re-draws the whole panel on every frame, which
+is what made a long list feel heavy on Android.
+
+- The fade while dragging is **iOS only** now
+- A committed swipe carries on without waiting for the next panel to mount
+- Changing tab no longer rebuilds the gesture
+
+> Upgrading is a version bump. Nothing here changes an API.
+
+Read \`useTabs\` if you drive the tabs yourself.`;
+
+/** The whole component, with nothing composed by hand. */
+function MarkdownEditorDemo() {
+  const [draft, setDraft] = useState(RELEASE_NOTE);
+
+  return (
+    <MarkdownEditor
+      value={draft}
+      onValueChange={setDraft}
+      rows={10}
+      placeholder="Write something…"
+      className="w-full"
+    />
+  );
+}
+
+/**
+ * The parts written out, with something extra on the toolbar row.
+ *
+ * The toolbar takes children, which land beside the mode switch — a count, a
+ * save state, anything that belongs to the draft rather than to the text.
+ */
+function MarkdownEditorComposedDemo() {
+  const [draft, setDraft] = useState('A short note, with a **bold** word in it.');
+  const words = draft.trim() ? draft.trim().split(/\s+/).length : 0;
+
+  return (
+    <MarkdownEditor value={draft} onValueChange={setDraft} className="w-full">
+      <MarkdownEditor.Toolbar actions={['bold', 'italic', 'link']}>
+        <Text size="xs" muted>
+          {words} {words === 1 ? 'word' : 'words'}
+        </Text>
+      </MarkdownEditor.Toolbar>
+      <MarkdownEditor.Input rows={6} placeholder="Say something…" />
+      <MarkdownEditor.Preview emptyText="Write a line and switch to Preview." />
+    </MarkdownEditor>
+  );
+}
+
+/** A composer with no preview at all — the toolbar keeps only its formatting. */
+function MarkdownEditorComposerDemo() {
+  const { toast } = useToast();
+  const [draft, setDraft] = useState('');
+
+  return (
+    <View className="w-full gap-3">
+      <MarkdownEditor value={draft} onValueChange={setDraft}>
+        <MarkdownEditor.Toolbar showModeSwitch={false} />
+        <MarkdownEditor.Input rows={4} placeholder="Leave a comment…" />
+      </MarkdownEditor>
+      <Button
+        fullWidth
+        disabled={!draft.trim()}
+        onPress={() => {
+          toast.show({ variant: 'success', label: 'Comment posted', duration: 2000 });
+          setDraft('');
+        }}
+      >
+        Post
+      </Button>
+    </View>
+  );
+}
+
+/** Starting on the reading side, for a draft that already exists. */
+function MarkdownEditorPreviewFirstDemo() {
+  const [draft, setDraft] = useState(RELEASE_NOTE);
+
+  return (
+    <MarkdownEditor
+      value={draft}
+      onValueChange={setDraft}
+      defaultMode="preview"
+      rows={10}
+      className="w-full"
+    />
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* ButtonGroup                                                                */
 /* -------------------------------------------------------------------------- */
 
@@ -13731,6 +13827,17 @@ const CATALOGUE: ComponentEntry[] = [
         description: 'Edge nodes coloured by state, spread across the world.',
         render: () => <UptimeMonitorBlock />,
       },
+    ],
+  },
+  {
+    slug: 'markdown-editor',
+    name: 'MarkdownEditor',
+    summary: 'A field for writing markdown, and a way to see it rendered',
+    demos: [
+      { label: 'The whole thing', render: () => <MarkdownEditorDemo /> },
+      { label: 'Reading first', render: () => <MarkdownEditorPreviewFirstDemo /> },
+      { label: 'Composed by hand', render: () => <MarkdownEditorComposedDemo /> },
+      { label: 'A comment box', render: () => <MarkdownEditorComposerDemo /> },
     ],
   },
   {
