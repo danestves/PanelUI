@@ -9,6 +9,52 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.48.0] — 2026-08-06
+
+### Added
+
+- **`Tree`** — a hierarchy you can open a level at a time: a file browser, a folder of settings, a
+  category picker, a table of contents. `Accordion` is the one-level version of the same idea and
+  stops there, because its items cannot hold items. A tree's can, to any depth, and everything that
+  follows from that is what the component owns — which node a row sits under, how far in it is
+  drawn, whether it is a branch at all, and which of its ancestors are open.
+
+  A closed branch is unmounted rather than hidden, so a tree costs what is *open* in it rather than
+  what is *in* it: a folder of ten thousand files that nobody has opened costs one row. An item is
+  a branch because it holds a `Tree.Group`, not because it was declared one, so there is no second
+  fact to keep true — with one exception, a branch whose children have not been fetched yet, which
+  has no group to be recognised by and so sets `hasChildren` to earn its chevron. The fetch itself
+  hangs off `onExpandedChange`.
+
+  Expansion and selection are separate pieces of state, because they answer separate questions —
+  which parts of the hierarchy are open, and which row is the chosen one — and a tree commonly
+  needs one without the other. Either can be controlled or left alone. Selection is off entirely
+  until `selectionMode` is set, and hands its value back in the shape it was given, a string when
+  `single` and an array when `multiple`, as `Accordion` does.
+
+  The chevron is pressable in its own right, so it opens a branch without selecting it. That is
+  what makes `expandOnPress={false}` usable: a sidebar where pressing a section navigates to it and
+  only the chevron opens it. On a leaf the chevron becomes an empty box of the same size, so a
+  file's name starts where a folder's name does. Parts: `Item`, `Trigger`, `Indicator`, `Icon`,
+  `Label`, `Actions`, `Group`, plus `size`, `showLines` and `indent` on the root.
+
+### Changed
+
+- **`Accordion` — `keepMounted`, for a body worth keeping.** A closed section unmounts its body,
+  which is right when the closed state should cost nothing and wrong when there is state inside it:
+  a half-filled form, a list scrolled to the middle, a video part-way through. Collapsing such a
+  section threw that away and reopening it started over.
+
+  `keepMounted` hides the body from layout instead of unmounting it. That is a real distinction and
+  not a cosmetic one — a hidden view takes up no room, so the item's height changes by exactly as
+  much as it would have on an unmount and the same layout transition plays. The two modes are
+  indistinguishable to look at, and everything inside the kept one stays alive. The hidden subtree
+  is taken out of the accessibility tree too, so a screen reader does not read out a section the
+  eye cannot see.
+
+  It goes on the accordion for every section, or on a single `Accordion.Content` for the one that
+  needs it; the prop on the content wins either way round. The default is unchanged.
+
 ## [0.47.0] — 2026-08-06
 
 ### Added
