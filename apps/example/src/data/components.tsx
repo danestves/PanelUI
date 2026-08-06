@@ -177,6 +177,7 @@ import {
   ToggleButtonGroup,
   Tooltip,
   TrashIcon,
+  Tree,
   Typography,
   hasNativeUI,
   useDirection,
@@ -8172,6 +8173,236 @@ function AccordionDemo({
   );
 }
 
+/**
+ * The demo `keepMounted` exists for: a body with something in it worth losing.
+ * Type into the field, collapse the section, open it again — the text is still
+ * there, because the body was hidden rather than unmounted.
+ */
+function AccordionKeepMountedDemo() {
+  return (
+    <View className="w-full gap-3">
+      <Accordion variant="surface" keepMounted defaultValue="note" className="w-full">
+        <Accordion.Item value="note">
+          <Accordion.Trigger>
+            <Accordion.Title>Delivery note</Accordion.Title>
+            <Accordion.Indicator />
+          </Accordion.Trigger>
+          <Accordion.Content>
+            <Textarea placeholder="Leave it with a neighbour…" />
+          </Accordion.Content>
+        </Accordion.Item>
+
+        <Accordion.Item value="gift">
+          <Accordion.Trigger>
+            <Accordion.Title>Gift message</Accordion.Title>
+            <Accordion.Indicator />
+          </Accordion.Trigger>
+          <Accordion.Content>
+            <Textarea placeholder="Happy birthday…" />
+          </Accordion.Content>
+        </Accordion.Item>
+      </Accordion>
+
+      <Text size="xs" muted>
+        Type into a field, collapse the section, then open it again.
+      </Text>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tree                                                                       */
+/* -------------------------------------------------------------------------- */
+
+type TreeNodeData = { value: string; label: string; children?: TreeNodeData[] };
+
+const PROJECT_TREE: TreeNodeData[] = [
+  {
+    value: 'src',
+    label: 'src',
+    children: [
+      {
+        value: 'src/components',
+        label: 'components',
+        children: [
+          { value: 'src/components/button.tsx', label: 'button.tsx' },
+          { value: 'src/components/tree.tsx', label: 'tree.tsx' },
+        ],
+      },
+      {
+        value: 'src/primitives',
+        label: 'primitives',
+        children: [{ value: 'src/primitives/text.tsx', label: 'text.tsx' }],
+      },
+      { value: 'src/index.ts', label: 'index.ts' },
+    ],
+  },
+  { value: 'package.json', label: 'package.json' },
+  { value: 'README.md', label: 'README.md' },
+];
+
+/**
+ * One recursive renderer, shared by every Tree demo — a tree in an app is
+ * almost always a walk over data rather than hand-written rows, so the demos
+ * are written the way the component is actually used.
+ *
+ * `Tree.Icon` is rendered for folders too, empty, so a file's name starts
+ * where a folder's name does instead of half a glyph further in.
+ */
+function TreeNodes({ nodes }: { nodes: TreeNodeData[] }) {
+  return (
+    <>
+      {nodes.map((node) => (
+        <Tree.Item key={node.value} value={node.value}>
+          <Tree.Trigger>
+            <Tree.Indicator />
+            <Tree.Icon>{node.children ? null : <FileIcon size={14} />}</Tree.Icon>
+            <Tree.Label>{node.label}</Tree.Label>
+          </Tree.Trigger>
+          {node.children ? (
+            <Tree.Group>
+              <TreeNodes nodes={node.children} />
+            </Tree.Group>
+          ) : null}
+        </Tree.Item>
+      ))}
+    </>
+  );
+}
+
+function TreeSelectionDemo({ mode }: { mode: 'single' | 'multiple' }) {
+  const [selected, setSelected] = useState<string | string[]>(mode === 'multiple' ? [] : '');
+  const chosen = Array.isArray(selected) ? selected : selected ? [selected] : [];
+
+  return (
+    <View className="w-full gap-3">
+      <Tree
+        selectionMode={mode}
+        value={selected}
+        onValueChange={setSelected}
+        defaultExpanded={['src', 'src/components']}
+        showLines
+      >
+        <TreeNodes nodes={PROJECT_TREE} />
+      </Tree>
+      <Text size="xs" muted>
+        {chosen.length ? chosen.join(', ') : 'Nothing selected'}
+      </Text>
+    </View>
+  );
+}
+
+const LAZY_CHILDREN: TreeNodeData[] = [
+  { value: 'archive/2024.zip', label: '2024.zip' },
+  { value: 'archive/2025.zip', label: '2025.zip' },
+];
+
+/**
+ * A branch whose contents are fetched the first time it opens. It has no
+ * `Tree.Group` to be recognised by until they arrive, so it says `hasChildren`
+ * to earn its chevron, and the fetch hangs off `onExpandedChange`.
+ */
+function TreeLazyDemo() {
+  const [expanded, setExpanded] = useState<string[]>([]);
+  const [loaded, setLoaded] = useState<TreeNodeData[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleExpandedChange = (next: string[]) => {
+    setExpanded(next);
+    if (next.includes('archive') && !loaded && !loading) {
+      setLoading(true);
+      setTimeout(() => {
+        setLoaded(LAZY_CHILDREN);
+        setLoading(false);
+      }, 900);
+    }
+  };
+
+  return (
+    <Tree expanded={expanded} onExpandedChange={handleExpandedChange} showLines>
+      <Tree.Item value="archive" hasChildren>
+        <Tree.Trigger>
+          <Tree.Indicator />
+          <Tree.Icon />
+          <Tree.Label>archive</Tree.Label>
+          <Tree.Actions>{loading ? <Spinner size="sm" /> : null}</Tree.Actions>
+        </Tree.Trigger>
+        {loaded ? (
+          <Tree.Group>
+            <TreeNodes nodes={loaded} />
+          </Tree.Group>
+        ) : null}
+      </Tree.Item>
+      <TreeNodes nodes={PROJECT_TREE.slice(1)} />
+    </Tree>
+  );
+}
+
+const NAV_TREE: Array<TreeNodeData & { count?: number }> = [
+  {
+    value: 'inbox',
+    label: 'Inbox',
+    children: [
+      { value: 'inbox/unread', label: 'Unread' },
+      { value: 'inbox/flagged', label: 'Flagged' },
+    ],
+  },
+  {
+    value: 'projects',
+    label: 'Projects',
+    children: [
+      { value: 'projects/panelui', label: 'PanelUI' },
+      { value: 'projects/docs', label: 'Docs' },
+    ],
+  },
+];
+
+const NAV_COUNTS: Record<string, number> = {
+  'inbox/unread': 12,
+  'inbox/flagged': 3,
+  'projects/panelui': 8,
+};
+
+/** A sidebar nav at `sm`, with a per-row count in the trailing slot. */
+function TreeNavDemo() {
+  const [active, setActive] = useState<string | string[]>('inbox/unread');
+
+  return (
+    <Tree
+      size="sm"
+      selectionMode="single"
+      value={active}
+      onValueChange={setActive}
+      defaultExpanded={['inbox', 'projects']}
+      expandOnPress={false}
+    >
+      {NAV_TREE.map((section) => (
+        <Tree.Item key={section.value} value={section.value}>
+          <Tree.Trigger>
+            <Tree.Indicator />
+            <Tree.Label>{section.label}</Tree.Label>
+          </Tree.Trigger>
+          <Tree.Group>
+            {section.children?.map((child) => (
+              <Tree.Item key={child.value} value={child.value}>
+                <Tree.Trigger>
+                  <Tree.Indicator />
+                  <Tree.Label>{child.label}</Tree.Label>
+                  <Tree.Actions>
+                    {NAV_COUNTS[child.value] ? (
+                      <Badge variant="secondary" count={NAV_COUNTS[child.value]} />
+                    ) : null}
+                  </Tree.Actions>
+                </Tree.Trigger>
+              </Tree.Item>
+            ))}
+          </Tree.Group>
+        </Tree.Item>
+      ))}
+    </Tree>
+  );
+}
+
 const STEP_DATA = [
   { title: 'Account', description: 'Create your login' },
   { title: 'Profile', description: 'Tell us about you' },
@@ -10838,6 +11069,7 @@ const CATALOGUE: ComponentEntry[] = [
         label: 'Multiple open',
         render: () => <AccordionDemo variant="surface" selectionMode="multiple" />,
       },
+      { label: 'Keeps its state', render: () => <AccordionKeepMountedDemo /> },
     ],
   },
   {
@@ -15583,6 +15815,33 @@ const CATALOGUE: ComponentEntry[] = [
           </Tooltip>
         ),
       },
+    ],
+  },
+  {
+    slug: 'tree',
+    name: 'Tree',
+    summary: 'A hierarchy you can open a level at a time',
+    demos: [
+      {
+        label: 'Default',
+        render: () => (
+          <Tree defaultExpanded={['src']}>
+            <TreeNodes nodes={PROJECT_TREE} />
+          </Tree>
+        ),
+      },
+      {
+        label: 'Guide lines',
+        render: () => (
+          <Tree defaultExpanded={['src', 'src/components']} showLines>
+            <TreeNodes nodes={PROJECT_TREE} />
+          </Tree>
+        ),
+      },
+      { label: 'Single selection', render: () => <TreeSelectionDemo mode="single" /> },
+      { label: 'Multiple selection', render: () => <TreeSelectionDemo mode="multiple" /> },
+      { label: 'Sidebar nav', render: () => <TreeNavDemo /> },
+      { label: 'Loads when opened', render: () => <TreeLazyDemo /> },
     ],
   },
   {

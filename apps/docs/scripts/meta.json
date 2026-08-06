@@ -2,7 +2,10 @@
   "accordion": [
     "Accordion",
     "Collapsible sections with single or multiple selection.",
-    "react native accordion"
+    "react native accordion",
+    {
+      "updatedIn": "0.48.0"
+    }
   ],
   "alert": [
     "Alert",
@@ -685,6 +688,14 @@
     {
       "addedIn": "0.43.0",
       "group": "charts"
+    }
+  ],
+  "tree": [
+    "Tree",
+    "A hierarchy you can open a level at a time.",
+    "react native tree view file explorer hierarchy",
+    {
+      "addedIn": "0.48.0"
     }
   ]
 }

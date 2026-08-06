@@ -9,6 +9,14 @@
  * `selectionMode` decides whether opening one section closes the others, which
  * also changes the shape of `value`: a string when single, an array when
  * multiple.
+ *
+ * A closed section costs nothing, because its body is unmounted. That is the
+ * right default and the wrong one for a body with state in it: a half-filled
+ * form, a list scrolled to the middle, a video part-way through. Collapsing
+ * such a section throws that away and reopening it starts over. `keepMounted`
+ * is the way out — the body stays mounted and is hidden from layout instead,
+ * so it takes up no room, the same layout transition carries the change, and
+ * everything inside is exactly where it was left.
  */
 import {
   Children,
@@ -90,6 +98,7 @@ interface AccordionContextValue {
   expanded: string[];
   toggle: (value: string) => void;
   variant: AccordionVariant;
+  keepMounted: boolean;
 }
 
 interface AccordionItemContextValue {
@@ -124,6 +133,13 @@ export interface AccordionProps extends ViewProps {
   onValueChange?: (value: string | string[]) => void;
   /** Hide the hairlines drawn between items. */
   hideSeparator?: boolean;
+  /**
+   * Keep every body mounted while its section is closed, so state inside it —
+   * a part-filled form, a scroll position, a running animation — survives being
+   * collapsed. Costs the render of every section up front; set it per section
+   * on `Accordion.Content` instead when only one of them needs it.
+   */
+  keepMounted?: boolean;
   children?: ReactNode;
 }
 
@@ -140,6 +156,7 @@ const AccordionRoot = forwardRef<View, AccordionProps>(
       defaultValue,
       onValueChange,
       hideSeparator = false,
+      keepMounted = false,
       children,
       ...props
     },
@@ -169,8 +186,8 @@ const AccordionRoot = forwardRef<View, AccordionProps>(
     );
 
     const context = useMemo(
-      () => ({ expanded, toggle, variant }),
-      [expanded, toggle, variant]
+      () => ({ expanded, toggle, variant, keepMounted }),
+      [expanded, toggle, variant, keepMounted]
     );
 
     const { root, separator } = accordionVariants({ variant });
@@ -299,6 +316,12 @@ AccordionIndicator.displayName = 'Accordion.Indicator';
 
 export interface AccordionContentProps extends ViewProps {
   className?: string;
+  /**
+   * Stay mounted while closed instead of unmounting, so state inside the body
+   * survives the section being collapsed. Overrides the accordion's own
+   * setting, either way round.
+   */
+  keepMounted?: boolean;
   children?: ReactNode;
 }
 
@@ -306,17 +329,36 @@ export interface AccordionContentProps extends ViewProps {
  * The collapsible body. Unmounts when closed, per the repo's convention for
  * conditionally shown content — the layout transition on the item animates
  * the height change.
+ *
+ * `keepMounted` swaps the unmount for `display: 'none'`, which is the one way
+ * to hide a view that also takes it out of Yoga's layout. That matters twice
+ * over: the item's height changes by exactly as much as it would have on an
+ * unmount, so the same layout transition plays and the two modes are
+ * indistinguishable to look at — and everything inside stays mounted, so a
+ * text field keeps what was typed into it. A hidden subtree is still in the
+ * accessibility tree, though, so it is explicitly taken out of that too;
+ * otherwise a screen reader would read out a section the eye cannot see.
  */
 const AccordionContent = forwardRef<View, AccordionContentProps>(
-  ({ className, children, ...props }, ref) => {
-    const { variant } = useAccordion('Accordion.Content');
+  ({ className, keepMounted, children, ...props }, ref) => {
+    const { variant, keepMounted: keepMountedDefault } = useAccordion('Accordion.Content');
     const { isExpanded } = useAccordionItem('Accordion.Content');
     const { content, contentText } = accordionVariants({ variant });
 
-    if (!isExpanded) return null;
+    const stayMounted = keepMounted ?? keepMountedDefault;
+    if (!isExpanded && !stayMounted) return null;
+
+    const isHidden = !isExpanded;
 
     return (
-      <View ref={ref} className={content({ className })} {...props}>
+      <View
+        ref={ref}
+        style={isHidden ? { display: 'none' } : undefined}
+        accessibilityElementsHidden={isHidden}
+        importantForAccessibility={isHidden ? 'no-hide-descendants' : 'auto'}
+        className={content({ className })}
+        {...props}
+      >
         {textChildren(children, (text) => (
           <Text className={contentText()}>{text}</Text>
         ))}
