@@ -244,7 +244,7 @@ With `swipeable`, dragging sideways on the panel moves to the next or previous t
 | `defaultValue` | `string` | — |  |
 | `variant` | `TabsVariant` | `'segmented'` | `segmented` is a chip travelling inside a recessed track, `underline` is a rule under the active tab, `pill` is a filled chip on the page. `expanding` is a row of icon pills where only the selected one is open: it widens to let its label out and closes again behind it. For a short row of destinations that are recognisable by their icons, where the labels would otherwise take the whole width to say things nobody rereads. Give every trigger an `icon` — a closed tab has nothing else. |
 | `keepMounted` | `boolean` | `false` | Keep inactive panels mounted and hidden instead of unmounting them, so a scroll position or a half-filled form survives a switch away and back. Costs the render of every panel up front. |
-| `swipeable` | `boolean` | `false` | Move between tabs by dragging sideways on the panel, as well as by pressing the triggers. Off by default, because a panel is allowed to contain something that already wants a horizontal drag — a carousel, a slider, a row that swipes open — and the two cannot both have it. Turn it on for panels of ordinary scrolling content, where it is the gesture people try first. |
+| `swipeable` | `boolean` | `false` | Move between tabs by dragging sideways on the panel, as well as by pressing the triggers. Off by default, because a panel is allowed to contain something that already wants a horizontal drag — a carousel, a slider, a row that swipes open — and the two cannot both have it. Turn it on for panels of ordinary scrolling content, where it is the gesture people try first. **It does not change what is mounted.** Only `keepMounted` decides that, with or without this — a swipe animates between two panels of which one is being unmounted and the other mounted for the first time, exactly as a press does. What it does change is that the mount now happens *while something is moving*, so a panel that is slow to build stops being a pause before it appears and starts being a stutter in the movement. If a swipe feels heavier than a press on the same tab set, the panel is expensive to mount; `keepMounted` is the answer, not turning this off. |
 
 ### Tabs.List
 
@@ -299,3 +299,11 @@ The label is never unmounted, only closed over: a row of unlabelled icons has no
 The opening is a curve rather than a spring, because it animates a width: every frame of it is a layout pass and the whole row moves with it, so a spring's overshoot slides the last word in, out and back in again and takes the row with it. The label's opacity trails the width rather than leading it — text drawn into a box narrower than itself is text with its end cut off.
 
 The width it opens to is measured from a second copy of the label, laid out once in a box wide enough not to constrain it and never drawn. The label cannot be measured where it sits, because the box it sits in is the box being resized.
+
+### What a swipe costs, and what it does not
+
+`swipeable` does not change what is mounted. Only `keepMounted` decides that, so a swipe animates between two panels of which one is being unmounted and the other mounted for the first time — exactly what a press does, and exactly as many panels as a press mounts.
+
+What it changes is *when* the mount happens: during a movement rather than before a still frame. A panel that is expensive to build — a long list, a chart, anything that measures itself — turns from a pause before it appears into a stutter in the slide. If swiping feels heavier than pressing on the same tab set, that is the panel's mount cost becoming visible, and `keepMounted` is the fix. Turning `swipeable` off only hides it.
+
+The drag itself moves the panel with a transform and nothing else, which costs the same whatever is inside it. On iOS the panel also fades as it travels; on Android it does not, because a view group there has no layer to fade and the alpha would be pushed down into every row on screen, re-drawing all of them on every frame of the gesture.

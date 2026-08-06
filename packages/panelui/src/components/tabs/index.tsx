@@ -36,6 +36,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  Platform,
   Pressable,
   ScrollView,
   View,
@@ -92,8 +93,18 @@ const SWIPE_RESISTANCE_AT_END = 0.16;
  * card: a panel on its way out is on its way out, and the one arriving comes
  * back up through the same fade. The two together read as a dissolve carried
  * by the movement, rather than as a gap between two slides.
+ *
+ * **iOS only, and that is not a compromise.** A transform is a property of the
+ * layer the panel is drawn into, so moving it costs nothing per frame however
+ * much is inside it. An opacity that changes every frame is not: on Android the
+ * panel's view group has no offscreen buffer to fade, so the alpha is pushed
+ * down into its children and the whole visible subtree is re-drawn on every
+ * frame of the drag. Behind a list that is thirty rows of text and images,
+ * which is what a tab panel usually is, that is the difference between a swipe
+ * that tracks the finger and one that stutters. iOS fades the layer itself and
+ * is unaffected.
  */
-const SWIPE_FADE = 0.75;
+const SWIPE_FADE = Platform.OS === 'ios' ? 0.75 : 0;
 
 /**
  * How far off its resting place a panel arriving by a *press* starts, as a
@@ -101,7 +112,7 @@ const SWIPE_FADE = 0.75;
  *
  * A press has no finger travel to continue from, so it is given a throw of its
  * own. A swipe does not use this: the panel it hands over to picks up exactly
- * where the outgoing one was let go — see `setValue`.
+ * one width from wherever the outgoing one has travelled to — see `setValue`.
  */
 const SWIPE_ENTER = 0.3;
 
@@ -291,6 +302,15 @@ export interface TabsProps extends ViewProps {
    * already wants a horizontal drag — a carousel, a slider, a row that swipes
    * open — and the two cannot both have it. Turn it on for panels of ordinary
    * scrolling content, where it is the gesture people try first.
+   *
+   * **It does not change what is mounted.** Only `keepMounted` decides that,
+   * with or without this — a swipe animates between two panels of which one is
+   * being unmounted and the other mounted for the first time, exactly as a
+   * press does. What it does change is that the mount now happens *while
+   * something is moving*, so a panel that is slow to build stops being a pause
+   * before it appears and starts being a stutter in the movement. If a swipe
+   * feels heavier than a press on the same tab set, the panel is expensive to
+   * mount; `keepMounted` is the answer, not turning this off.
    */
   swipeable?: boolean;
   children: ReactNode;
@@ -319,8 +339,26 @@ function TabsRoot({
   const isControlled = value !== undefined;
   const resolvedValue = isControlled ? value : internalValue;
 
+  /*
+   * The two things `setValue` reads that change on every switch, held where
+   * reading them does not make it a new function.
+   *
+   * With them in the dependency list, changing tab produced a new `setValue`,
+   * therefore a new context, therefore a new `step`, therefore a new pan
+   * gesture — which detaches and re-attaches the native recogniser on the same
+   * commit that mounts the arriving panel's contents. The busiest frame of the
+   * interaction was doing the one piece of work that had no reason to be there.
+   */
+  const tabsRef = useRef(tabs);
+  tabsRef.current = tabs;
+  const valueRef = useRef(resolvedValue);
+  valueRef.current = resolvedValue;
+
   const setValue = useCallback(
     (next: string, handover?: SwipeHandover) => {
+      const tabs = tabsRef.current;
+      const resolvedValue = valueRef.current;
+
       /*
        * The arriving panel starts on the side it is arriving from, and travels
        * in. Done here rather than in the panel because only the root knows
@@ -338,11 +376,13 @@ function TabsRoot({
           if (handover) {
             /*
              * A swipe hands over mid-movement, so the arriving panel starts a
-             * whole panel's width from wherever the outgoing one was let go —
+             * whole panel's width from wherever the outgoing one has got to —
              * which is where it *would* have been all along, had both been
-             * mounted. Adding to the displacement rather than replacing it is
-             * the entire difference between one continuous movement and a jump
-             * at the moment the finger lifts.
+             * mounted. Read live rather than captured, because the outgoing
+             * panel is still travelling while this runs: adding to the current
+             * displacement rather than replacing it is the whole difference
+             * between one continuous movement and a jump at the moment the
+             * arriving panel finishes mounting.
              */
             swipeOffset.value += direction * sign * panelWidth.value;
             swipeOffset.value = withSpring(0, {
@@ -361,16 +401,7 @@ function TabsRoot({
       if (!isControlled) setInternalValue(next);
       onValueChange?.(next);
     },
-    [
-      isControlled,
-      onValueChange,
-      swipeable,
-      tabs,
-      resolvedValue,
-      sign,
-      swipeOffset,
-      panelWidth,
-    ]
+    [isControlled, onValueChange, swipeable, sign, swipeOffset, panelWidth]
   );
 
   const registerLayout = useCallback((tab: string, layout: TabLayout) => {
@@ -781,13 +812,25 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
     count.value = tabs.length;
   }, [position, tabs.length, index, count]);
 
+  /*
+   * Same reason as `setValue` on the root: `step` is reached through the pan
+   * gesture, and a `step` that changes identity on every switch rebuilds the
+   * gesture on every switch. The two facts it needs are read at call time
+   * instead, which is when they are wanted anyway.
+   */
+  const tabsRef = useRef(tabs);
+  tabsRef.current = tabs;
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
   const step = useCallback(
     (delta: number, velocity: number) => {
-      const from = tabs.indexOf(value);
-      const next = tabs[from + delta];
+      const list = tabsRef.current;
+      const from = list.indexOf(valueRef.current);
+      const next = list[from + delta];
       if (next) setValue(next, { velocity });
     },
-    [tabs, value, setValue]
+    [setValue]
   );
 
   const pan = useMemo(
@@ -828,14 +871,31 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
             // Distance and speed can disagree — a flick back the way it came
             // reads as a cancel — so the direction comes from whichever of the
             // two crossed its threshold, speed first.
-            //
-            // No spring back to zero here: `setValue` on the root carries the
-            // displacement across to the arriving panel, and springing to rest
-            // first would undo it a frame before it happens.
-            runOnJS(step)(
-              fast ? (speed < 0 ? 1 : -1) : travel < 0 ? 1 : -1,
-              event.velocityX
-            );
+            const delta = fast ? (speed < 0 ? 1 : -1) : travel < 0 ? 1 : -1;
+
+            /*
+             * The outgoing panel carries on off the edge on the UI thread,
+             * immediately, rather than waiting to be told what happened.
+             *
+             * It used to hold wherever the finger left it until `setValue`
+             * landed — which is fine when React commits in a frame, and is a
+             * visible freeze when the arriving panel is expensive to mount, a
+             * list of any size being the usual case. The panel appeared to
+             * stick to the screen for exactly as long as the JS thread was
+             * busy, which reads as the swipe having dropped the gesture.
+             *
+             * `setValue` still places the arriving panel *relative* to this
+             * one, reading the offset live at commit time, so continuing the
+             * movement here does not desynchronise the handover: the panel
+             * that arrives is one width from wherever this one has got to,
+             * whenever that turns out to be.
+             */
+            offset.value = withSpring(-delta * sign * width.value, {
+              ...ENTER_SPRING,
+              velocity: event.velocityX,
+            });
+
+            runOnJS(step)(delta, event.velocityX);
             return;
           }
 
@@ -853,6 +913,11 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
   );
 
   const followStyle = useAnimatedStyle(() => {
+    // No `opacity` key at all when there is no fade, rather than a constant 1.
+    // Declaring it would still mark the property as animated and hand the view
+    // an alpha to composite every frame — the cost this is avoiding.
+    if (!SWIPE_FADE) return { transform: [{ translateX: offset.value }] };
+
     const span = width.value || 1;
     const travelled = Math.min(1, Math.abs(offset.value) / span);
     return {
@@ -893,7 +958,14 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
         const measured = event.nativeEvent.layout.width;
         if (measured > 0) width.value = measured;
       }}
-      style={[!active && { display: 'none' }, swipeable && followStyle, style]}
+      /*
+       * The follow style goes on the panel that is moving, and only that one.
+       * Under `keepMounted` every other panel is `display: none` and cannot be
+       * seen to move — but an animated style still subscribes them all to the
+       * offset, so a five-tab set ran five mappers per frame to reposition four
+       * views nobody was looking at.
+       */
+      style={[!active && { display: 'none' }, swipeable && active && followStyle, style]}
       pointerEvents={active ? 'auto' : 'none'}
       accessibilityElementsHidden={!active}
       importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}

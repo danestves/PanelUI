@@ -4487,107 +4487,107 @@
       ]
     }
   },
-  "tabs": {
-    "intro": "Segmented navigation with one indicator that springs between measured trigger positions. A single thing travelling is what makes a switch two tabs away read as one movement rather than as two states swapping.",
-    "usage": "<Tabs defaultValue=\"account\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"account\">Account</Tabs.Trigger>\n    <Tabs.Trigger value=\"password\">Password</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"account\">…</Tabs.Content>\n  <Tabs.Content value=\"password\">…</Tabs.Content>\n</Tabs>",
-    "parts": {
-      "List": "Holds the triggers and the animated indicator. Takes `scrollable` for more tabs than fit.",
-      "Trigger": "One tab, with optional `icon`, `badge` and `disabled`. Must be inside `Tabs.List`.",
-      "Content": "Panel for a tab. Unmounted while inactive unless the root sets `keepMounted`."
-    },
-    "anatomy": "<Tabs>\n  <Tabs.List>\n    <Tabs.Trigger value=\"…\">…</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"…\">…</Tabs.Content>\n</Tabs>",
-    "examples": [
-      {
-        "title": "Uncontrolled",
-        "description": "`defaultValue` is required — the tabs need a starting panel.",
-        "code": "<Tabs defaultValue=\"overview\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"overview\">Overview</Tabs.Trigger>\n    <Tabs.Trigger value=\"activity\">Activity</Tabs.Trigger>\n    <Tabs.Trigger value=\"settings\">Settings</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"overview\">\n    <Text>Usage and billing at a glance.</Text>\n  </Tabs.Content>\n  <Tabs.Content value=\"activity\">\n    <Text>Everything that happened this week.</Text>\n  </Tabs.Content>\n  <Tabs.Content value=\"settings\">\n    <Text>Names, members and integrations.</Text>\n  </Tabs.Content>\n</Tabs>"
+    "tabs": {
+      "intro": "Segmented navigation with one indicator that springs between measured trigger positions. A single thing travelling is what makes a switch two tabs away read as one movement rather than as two states swapping.",
+      "usage": "<Tabs defaultValue=\"account\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"account\">Account</Tabs.Trigger>\n    <Tabs.Trigger value=\"password\">Password</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"account\">…</Tabs.Content>\n  <Tabs.Content value=\"password\">…</Tabs.Content>\n</Tabs>",
+      "parts": {
+        "List": "Holds the triggers and the animated indicator. Takes `scrollable` for more tabs than fit.",
+        "Trigger": "One tab, with optional `icon`, `badge` and `disabled`. Must be inside `Tabs.List`.",
+        "Content": "Panel for a tab. Unmounted while inactive unless the root sets `keepMounted`."
       },
-      {
-        "title": "Controlled",
-        "description": "Needed when something outside the tab strip changes the panel — a deep link, or a button in one panel that jumps to another.",
-        "code": "const [tab, setTab] = useState('overview');\n\n<>\n  <Button onPress={() => setTab('settings')}>Go to settings</Button>\n\n  <Tabs value={tab} onValueChange={setTab} defaultValue=\"overview\">\n    {/* …list and content… */}\n  </Tabs>\n</>"
-      },
-      {
-        "title": "More tabs than fit",
-        "description": "A fixed row splits its width between the triggers, which crushes every label once there are more than about four. `scrollable` gives each trigger its natural width, puts the row in a horizontal scroller, and scrolls the active tab into view when it changes from elsewhere.",
-        "code": "<Tabs variant=\"underline\" defaultValue=\"overview\">\n  <Tabs.List scrollable>\n    {sections.map((s) => (\n      <Tabs.Trigger key={s.id} value={s.id}>{s.name}</Tabs.Trigger>\n    ))}\n  </Tabs.List>\n\n  {/* …content… */}\n</Tabs>",
-        "previewVideo": {
-          "src": "/previews/tabs-scrollable.mp4",
-          "poster": "/previews/tabs-scrollable-poster.jpg",
-          "alt": "Tabs — More tabs than fit.",
-          "width": 720,
-          "height": 350
-        }
-      },
-      {
-        "title": "Icons, badges and disabled tabs",
-        "description": "A count or a status goes in `badge` rather than into the children, so the label keeps its own typography. A disabled trigger is dimmed, unselectable, and announced as disabled.",
-        "code": "<Tabs.List>\n  <Tabs.Trigger value=\"inbox\" icon={<InboxIcon size={16} />}>\n    Inbox\n  </Tabs.Trigger>\n  <Tabs.Trigger value=\"activity\" badge={<Badge variant=\"secondary\">4</Badge>}>\n    Activity\n  </Tabs.Trigger>\n  <Tabs.Trigger value=\"archived\" disabled>\n    Archived\n  </Tabs.Trigger>\n</Tabs.List>"
-      },
-      {
-        "title": "Keeping panels mounted",
-        "description": "By default a panel is unmounted when you leave it, and a scroll position or a half-filled form goes with it. `keepMounted` renders every panel and hides the inactive ones — out of layout and out of the screen-reader order, but still there. It costs the render of every panel up front, so it is opt-in.",
-        "code": "<Tabs keepMounted defaultValue=\"draft\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"draft\">Draft</Tabs.Trigger>\n    <Tabs.Trigger value=\"preview\">Preview</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"draft\">\n    <Input label=\"Title\" value={title} onChangeText={setTitle} />\n  </Tabs.Content>\n  <Tabs.Content value=\"preview\">…</Tabs.Content>\n</Tabs>",
-        "preview": {
-          "src": "/previews/tabs-keep-panels-mounted.jpg",
-          "alt": "Tabs — Keeping panels mounted.",
-          "width": 1179,
-          "height": 801
-        }
-      },
-      {
-        "title": "Swiping between panels",
-        "description": "With `swipeable`, dragging sideways on the panel moves to the next or previous tab. The gesture only takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls. It is off by default: a panel may already contain something that wants a horizontal drag, and the two cannot both have it.",
-        "code": "<Tabs swipeable defaultValue=\"mon\">\n  <Tabs.List scrollable>\n    {days.map((day) => (\n      <Tabs.Trigger key={day.value} value={day.value}>\n        {day.label}\n      </Tabs.Trigger>\n    ))}\n  </Tabs.List>\n  {days.map((day) => (\n    <Tabs.Content key={day.value} value={day.value}>\n      <Card>…</Card>\n    </Tabs.Content>\n  ))}\n</Tabs>"
-      }
-    ],
-    "extraImports": [
-      "Text",
-      "Button",
-      "Input",
-      "Badge",
-      "PackageIcon",
-      "MessageCircleIcon",
-      "CalendarIcon"
-    ],
-    "variantCode": {
-      "variant": "{/* A chip travelling inside a recessed track — the default. */}\n<Tabs variant=\"segmented\" defaultValue=\"a\">…</Tabs>\n\n{/* A rule under the active tab, for a page-level switch. */}\n<Tabs variant=\"underline\" defaultValue=\"a\">…</Tabs>\n\n{/* A filled chip on the page, active label inverted against it. */}\n<Tabs variant=\"pill\" defaultValue=\"a\">…</Tabs>\n\n{/* Icon pills, only the selected one open. Every trigger needs an icon. */}\n<Tabs variant=\"expanding\" defaultValue=\"chats\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"home\" icon={<PackageIcon size={18} />}>Home</Tabs.Trigger>\n    <Tabs.Trigger value=\"chats\" icon={<MessageCircleIcon size={18} />}>Chats</Tabs.Trigger>\n    <Tabs.Trigger value=\"calendar\" icon={<CalendarIcon size={18} />}>Calendar</Tabs.Trigger>\n  </Tabs.List>\n</Tabs>"
-    },
-    "hideVariants": [
-      "scrollable"
-    ],
-    "variantMedia": {
-      "variant": [
+      "anatomy": "<Tabs>\n  <Tabs.List>\n    <Tabs.Trigger value=\"…\">…</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"…\">…</Tabs.Content>\n</Tabs>",
+      "examples": [
         {
+          "title": "Uncontrolled",
+          "description": "`defaultValue` is required — the tabs need a starting panel.",
+          "code": "<Tabs defaultValue=\"overview\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"overview\">Overview</Tabs.Trigger>\n    <Tabs.Trigger value=\"activity\">Activity</Tabs.Trigger>\n    <Tabs.Trigger value=\"settings\">Settings</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"overview\">\n    <Text>Usage and billing at a glance.</Text>\n  </Tabs.Content>\n  <Tabs.Content value=\"activity\">\n    <Text>Everything that happened this week.</Text>\n  </Tabs.Content>\n  <Tabs.Content value=\"settings\">\n    <Text>Names, members and integrations.</Text>\n  </Tabs.Content>\n</Tabs>"
+        },
+        {
+          "title": "Controlled",
+          "description": "Needed when something outside the tab strip changes the panel — a deep link, or a button in one panel that jumps to another.",
+          "code": "const [tab, setTab] = useState('overview');\n\n<>\n  <Button onPress={() => setTab('settings')}>Go to settings</Button>\n\n  <Tabs value={tab} onValueChange={setTab} defaultValue=\"overview\">\n    {/* …list and content… */}\n  </Tabs>\n</>"
+        },
+        {
+          "title": "More tabs than fit",
+          "description": "A fixed row splits its width between the triggers, which crushes every label once there are more than about four. `scrollable` gives each trigger its natural width, puts the row in a horizontal scroller, and scrolls the active tab into view when it changes from elsewhere.",
+          "code": "<Tabs variant=\"underline\" defaultValue=\"overview\">\n  <Tabs.List scrollable>\n    {sections.map((s) => (\n      <Tabs.Trigger key={s.id} value={s.id}>{s.name}</Tabs.Trigger>\n    ))}\n  </Tabs.List>\n\n  {/* …content… */}\n</Tabs>",
           "previewVideo": {
-            "src": "/previews/tabs-pill.mp4",
-            "poster": "/previews/tabs-pill-poster.jpg",
-            "alt": "Tabs — variant pill.",
+            "src": "/previews/tabs-scrollable.mp4",
+            "poster": "/previews/tabs-scrollable-poster.jpg",
+            "alt": "Tabs — More tabs than fit.",
             "width": 720,
-            "height": 368,
-            "caption": "pill"
+            "height": 350
           }
         },
         {
+          "title": "Icons, badges and disabled tabs",
+          "description": "A count or a status goes in `badge` rather than into the children, so the label keeps its own typography. A disabled trigger is dimmed, unselectable, and announced as disabled.",
+          "code": "<Tabs.List>\n  <Tabs.Trigger value=\"inbox\" icon={<InboxIcon size={16} />}>\n    Inbox\n  </Tabs.Trigger>\n  <Tabs.Trigger value=\"activity\" badge={<Badge variant=\"secondary\">4</Badge>}>\n    Activity\n  </Tabs.Trigger>\n  <Tabs.Trigger value=\"archived\" disabled>\n    Archived\n  </Tabs.Trigger>\n</Tabs.List>"
+        },
+        {
+          "title": "Keeping panels mounted",
+          "description": "By default a panel is unmounted when you leave it, and a scroll position or a half-filled form goes with it. `keepMounted` renders every panel and hides the inactive ones — out of layout and out of the screen-reader order, but still there. It costs the render of every panel up front, so it is opt-in.",
+          "code": "<Tabs keepMounted defaultValue=\"draft\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"draft\">Draft</Tabs.Trigger>\n    <Tabs.Trigger value=\"preview\">Preview</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"draft\">\n    <Input label=\"Title\" value={title} onChangeText={setTitle} />\n  </Tabs.Content>\n  <Tabs.Content value=\"preview\">…</Tabs.Content>\n</Tabs>",
           "preview": {
-            "src": "/previews/tabs-underline.jpg",
-            "alt": "Tabs — variant underline.",
+            "src": "/previews/tabs-keep-panels-mounted.jpg",
+            "alt": "Tabs — Keeping panels mounted.",
             "width": 1179,
-            "height": 639,
-            "caption": "underline"
+            "height": 801
           }
+        },
+        {
+          "title": "Swiping between panels",
+          "description": "With `swipeable`, dragging sideways on the panel moves to the next or previous tab. The gesture only takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls. It is off by default: a panel may already contain something that wants a horizontal drag, and the two cannot both have it.",
+          "code": "<Tabs swipeable defaultValue=\"mon\">\n  <Tabs.List scrollable>\n    {days.map((day) => (\n      <Tabs.Trigger key={day.value} value={day.value}>\n        {day.label}\n      </Tabs.Trigger>\n    ))}\n  </Tabs.List>\n  {days.map((day) => (\n    <Tabs.Content key={day.value} value={day.value}>\n      <Card>…</Card>\n    </Tabs.Content>\n  ))}\n</Tabs>"
         }
-      ]
+      ],
+      "extraImports": [
+        "Text",
+        "Button",
+        "Input",
+        "Badge",
+        "PackageIcon",
+        "MessageCircleIcon",
+        "CalendarIcon"
+      ],
+      "variantCode": {
+        "variant": "{/* A chip travelling inside a recessed track — the default. */}\n<Tabs variant=\"segmented\" defaultValue=\"a\">…</Tabs>\n\n{/* A rule under the active tab, for a page-level switch. */}\n<Tabs variant=\"underline\" defaultValue=\"a\">…</Tabs>\n\n{/* A filled chip on the page, active label inverted against it. */}\n<Tabs variant=\"pill\" defaultValue=\"a\">…</Tabs>\n\n{/* Icon pills, only the selected one open. Every trigger needs an icon. */}\n<Tabs variant=\"expanding\" defaultValue=\"chats\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"home\" icon={<PackageIcon size={18} />}>Home</Tabs.Trigger>\n    <Tabs.Trigger value=\"chats\" icon={<MessageCircleIcon size={18} />}>Chats</Tabs.Trigger>\n    <Tabs.Trigger value=\"calendar\" icon={<CalendarIcon size={18} />}>Calendar</Tabs.Trigger>\n  </Tabs.List>\n</Tabs>"
+      },
+      "hideVariants": [
+        "scrollable"
+      ],
+      "variantMedia": {
+        "variant": [
+          {
+            "previewVideo": {
+              "src": "/previews/tabs-pill.mp4",
+              "poster": "/previews/tabs-pill-poster.jpg",
+              "alt": "Tabs — variant pill.",
+              "width": 720,
+              "height": 368,
+              "caption": "pill"
+            }
+          },
+          {
+            "preview": {
+              "src": "/previews/tabs-underline.jpg",
+              "alt": "Tabs — variant underline.",
+              "width": 1179,
+              "height": 639,
+              "caption": "underline"
+            }
+          }
+        ]
+      },
+      "previewVideo": {
+        "src": "/previews/tabs.mp4",
+        "poster": "/previews/tabs-poster.jpg",
+        "alt": "The Tabs component, running in the example app.",
+        "width": 720,
+        "height": 584
+      },
+      "notes": "### Swiping\n\nA swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was.\n\nThe panel tracks the finger one to one. Only one panel is mounted at a time unless `keepMounted` is set, so there is nothing behind the one being dragged; instead of holding it back, the panel dims as it travels and the arriving one comes back up through the same fade. The movement carries the change, and the dissolve covers the gap.\n\nOn release the arriving panel picks up a whole panel's width from wherever the outgoing one was let go — which is where it would have been all along had both been mounted — and springs to rest carrying the speed the finger let go at. That is what makes a swipe one continuous movement rather than a drag followed by a separate slide. A tab changed by pressing a trigger has no travel to continue from, so it is given a shorter throw of its own, in the direction the tab sits.\n\nThe order swiped through is the order the triggers are **written** in, not the order they appear on screen. Under RTL those differ — the first tab is the rightmost — and a swipe towards the start of the reading direction goes to the previous tab in both.\n\nAt the first and last tab the panel still moves, but a sixth as far. A gesture that produces nothing at all is indistinguishable from one that was not received.\n\n### The expanding variant\n\nA row of icon pills where only the selected one is open: it widens to let its label out and closes again behind it. For a short row of destinations that are recognisable by their icons, where writing every label out takes the whole width to say four words nobody rereads after the first time.\n\nGive **every** trigger an `icon`. A closed tab has nothing else, and one without an icon closes to an empty pill.\n\nThere is no travelling indicator here, because every tab draws its own pill and a shape sliding underneath them would be invisible. The shape that moves is the open tab itself. The open pill sits one step further from the page than the closed ones — lighter in a dark theme, darker in a light one — which is what the tertiary surface token means, and why the selection is a surface rather than a colour.\n\nThe label is never unmounted, only closed over: a row of unlabelled icons has nothing for a screen reader to read out, and a label that mounted on selection would have no width to animate *from*, so the pill would jump to its open size and the text fade in inside it. Under the system's reduce-motion setting it opens and closes with no animation at all.\n\nThe opening is a curve rather than a spring, because it animates a width: every frame of it is a layout pass and the whole row moves with it, so a spring's overshoot slides the last word in, out and back in again and takes the row with it. The label's opacity trails the width rather than leading it — text drawn into a box narrower than itself is text with its end cut off.\n\nThe width it opens to is measured from a second copy of the label, laid out once in a box wide enough not to constrain it and never drawn. The label cannot be measured where it sits, because the box it sits in is the box being resized.\n\n### What a swipe costs, and what it does not\n\n`swipeable` does not change what is mounted. Only `keepMounted` decides that, so a swipe animates between two panels of which one is being unmounted and the other mounted for the first time — exactly what a press does, and exactly as many panels as a press mounts.\n\nWhat it changes is *when* the mount happens: during a movement rather than before a still frame. A panel that is expensive to build — a long list, a chart, anything that measures itself — turns from a pause before it appears into a stutter in the slide. If swiping feels heavier than pressing on the same tab set, that is the panel's mount cost becoming visible, and `keepMounted` is the fix. Turning `swipeable` off only hides it.\n\nThe drag itself moves the panel with a transform and nothing else, which costs the same whatever is inside it. On iOS the panel also fades as it travels; on Android it does not, because a view group there has no layer to fade and the alpha would be pushed down into every row on screen, re-drawing all of them on every frame of the gesture."
     },
-    "previewVideo": {
-      "src": "/previews/tabs.mp4",
-      "poster": "/previews/tabs-poster.jpg",
-      "alt": "The Tabs component, running in the example app.",
-      "width": 720,
-      "height": 584
-    },
-    "notes": "### Swiping\n\nA swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was.\n\nThe panel tracks the finger one to one. Only one panel is mounted at a time unless `keepMounted` is set, so there is nothing behind the one being dragged; instead of holding it back, the panel dims as it travels and the arriving one comes back up through the same fade. The movement carries the change, and the dissolve covers the gap.\n\nOn release the arriving panel picks up a whole panel's width from wherever the outgoing one was let go — which is where it would have been all along had both been mounted — and springs to rest carrying the speed the finger let go at. That is what makes a swipe one continuous movement rather than a drag followed by a separate slide. A tab changed by pressing a trigger has no travel to continue from, so it is given a shorter throw of its own, in the direction the tab sits.\n\nThe order swiped through is the order the triggers are **written** in, not the order they appear on screen. Under RTL those differ — the first tab is the rightmost — and a swipe towards the start of the reading direction goes to the previous tab in both.\n\nAt the first and last tab the panel still moves, but a sixth as far. A gesture that produces nothing at all is indistinguishable from one that was not received.\n\n### The expanding variant\n\nA row of icon pills where only the selected one is open: it widens to let its label out and closes again behind it. For a short row of destinations that are recognisable by their icons, where writing every label out takes the whole width to say four words nobody rereads after the first time.\n\nGive **every** trigger an `icon`. A closed tab has nothing else, and one without an icon closes to an empty pill.\n\nThere is no travelling indicator here, because every tab draws its own pill and a shape sliding underneath them would be invisible. The shape that moves is the open tab itself. The open pill sits one step further from the page than the closed ones — lighter in a dark theme, darker in a light one — which is what the tertiary surface token means, and why the selection is a surface rather than a colour.\n\nThe label is never unmounted, only closed over: a row of unlabelled icons has nothing for a screen reader to read out, and a label that mounted on selection would have no width to animate *from*, so the pill would jump to its open size and the text fade in inside it. Under the system's reduce-motion setting it opens and closes with no animation at all.\n\nThe opening is a curve rather than a spring, because it animates a width: every frame of it is a layout pass and the whole row moves with it, so a spring's overshoot slides the last word in, out and back in again and takes the row with it. The label's opacity trails the width rather than leading it — text drawn into a box narrower than itself is text with its end cut off.\n\nThe width it opens to is measured from a second copy of the label, laid out once in a box wide enough not to constrain it and never drawn. The label cannot be measured where it sits, because the box it sits in is the box being resized."
-  },
   "thinking-orb": {
     "intro": "A spinner says “busy”. This says *which kind of busy*: particles running tilted orbits for work in flight, a scan meridian sweeping a globe for a search, bands that scramble and click back for a solve. Six states, each a distinct silhouette in motion, so a glance is enough.",
     "usage": "<ThinkingOrb state=\"searching\" />\n\n// The small tuning, for a line of text.\n<ThinkingOrb state=\"working\" size={20} />",
