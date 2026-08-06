@@ -689,5 +689,13 @@
       "addedIn": "0.43.0",
       "group": "charts"
     }
+  ],
+  "tree": [
+    "Tree",
+    "A hierarchy you can open a level at a time.",
+    "react native tree view file explorer hierarchy",
+    {
+      "addedIn": "0.48.0"
+    }
   ]
 }

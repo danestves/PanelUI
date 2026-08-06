@@ -1048,6 +1048,16 @@
     ]
   },
   {
+    "name": "tree",
+    "type": "registry:ui",
+    "description": "A hierarchy you can open a level at a time.",
+    "registryDependencies": [
+      "icons",
+      "text",
+      "use-direction"
+    ]
+  },
+  {
     "name": "typography",
     "type": "registry:ui",
     "description": "Semantic text presets.",

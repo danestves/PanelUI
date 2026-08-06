@@ -815,6 +815,18 @@ export {
   type ToastCloseProps,
 } from './components/toast';
 export {
+  Tree,
+  type TreeProps,
+  type TreeItemProps,
+  type TreeTriggerProps,
+  type TreeIndicatorProps,
+  type TreeIconProps,
+  type TreeActionsProps,
+  type TreeGroupProps,
+  type TreeSize,
+  type TreeSelectionMode,
+} from './components/tree';
+export {
   Tooltip,
   type TooltipProps,
   type TooltipTriggerProps,
