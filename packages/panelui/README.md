@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 89 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 92 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -175,6 +175,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `BottomSheet` | Draggable sheet anchored to the bottom of the screen |
 | `Breadcrumb` | The trail of links back up the hierarchy to the current page |
 | `Button` | Pressable action with variants, sizes, loading state and icon slots |
+| `ButtonGroup` | Several buttons drawn as one control |
 | `Calendar` | A month of days, for picking one, several, or a range |
 | `Card` | Content surface with header, body and footer |
 | `Carousel` | A run of slides, one at a time, dragged with a finger |
@@ -188,6 +189,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Direction` | Reading direction for everything below it |
 | `Drawer` | Panel that slides in from an edge of the screen |
 | `EmptyState` | Placeholder for a list or screen with no content |
+| `Fab` | The floating action button, and the dial behind it |
 | `Field` | Layout and validation-state kit a form control composes into |
 | `Flow` | Pan-and-zoom canvas of draggable nodes joined by animated edges |
 | `Form` | Form state — values, validation and submission — with no form library underneath |
@@ -200,6 +202,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `LineChart` | Animated time series, drawn on the UI thread |
 | `Loader` | Nine loading animations behind one variant prop |
 | `Map` | Vector map whose basemap is drawn from your theme tokens |
+| `MarkdownEditor` | A field for writing markdown, with a toolbar and a preview |
 | `Marker` | Inline note between conversation turns |
 | `Menu` | The list of things you can do to something |
 | `Message` | Chat turn with avatar, bubble, header and footer |

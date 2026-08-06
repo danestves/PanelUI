@@ -9,6 +9,132 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.49.0] — 2026-08-06
+
+### Added
+
+- **`ButtonGroup`** — several buttons drawn as one control: a segmented run, a split action, a
+  toolbar down the side of a canvas. Nothing in the library drew a *joined* row of buttons before
+  this; `ToggleButtonGroup` is a spaced run of pills that owns its own selection, and `Tabs` is
+  navigation between panels.
+
+  The buttons stay buttons. Anything a `Button` does — an icon, a badge, a loading state, a
+  disabled segment, opening a `Popover` — it still does inside a group, because the group is a
+  container rather than a component that takes a list of items and renders them for you. A
+  list-of-items API has to grow a prop for every one of those things; this one has none of them.
+
+  `variant` and `size` pass down through context rather than by rewriting the children, which is
+  what lets a segment be a `Button` nested inside a `Popover.Trigger` — a split button — and still
+  belong to the run. A segment that wants to stand out sets its own and wins, which is all
+  "selected" needs to be once the shape around it is drawn. `orientation` turns the run and its
+  dividers; `fullWidth` shares the row equally; `attached={false}` keeps the shared props and drops
+  the shared shape.
+
+- **`MarkdownEditor`** — a field for writing markdown, with a formatting toolbar and a rendered
+  preview. Marked **beta**: the parts and their props are settled, but it has not had enough use to
+  promise they will not move.
+
+  Writing and reading are two modes rather than two panes. Side by side is a desktop layout, and it
+  does not survive the trip to a phone: two columns of a phone's width are two columns too narrow
+  to read, and the keyboard covers the bottom half of the screen exactly when the writer is using
+  it. One pane and a switch, and the toolbar carries the switch because it is the only thing on
+  screen in both modes.
+
+  The preview is `Response` — the same reader that renders a model's answer — so markdown means one
+  thing across the library and there is one parser to be right rather than two to keep in step. It
+  renders through `Typography`, `CodeBlock` and `Table`, which is to say through your own type and
+  colours.
+
+  The part that matters is where the caret lands. Every toolbar action is a pure function of the
+  text and the selection: pressing twice undoes it, a selection stays selected so it can be bolded
+  and then italicised, and with nothing selected the caret lands between the new markers rather
+  than after them. A line-level action applies to every line the selection touches and removes
+  itself only when all of them already have it, because a mixed block is a block somebody is trying
+  to make uniform.
+
+- **`Fab`** — the floating action button, and the speed dial behind it. Circular or `extended`, in
+  three sizes and four variants, pinned to any of three corners with `placement` and `offset`.
+
+  `Fab.Group` with `Fab.Action` children is the dial. The actions unfold one after another rather
+  than together, a few frames apart each, and every one carries its label — a column of unlabelled
+  circles is a quiz. The whole dial runs off one shared value on the UI thread, so closing it
+  halfway through opening runs the same value back down instead of leaving a queue of callbacks to
+  fire into a closed menu. Opening drops a scrim, which is both what says the dial is modal and
+  what catches the tap that closes it; the scrim and the buttons travel through the same portal, so
+  the backdrop can never end up on top of the dial it is behind.
+
+  Its documentation leads with when *not* to reach for it. A button floating over the content is a
+  button covering some of it, and a corner with three buttons in it is a toolbar in the wrong
+  place.
+
+- **Nine icons** — `FolderIcon` and `FolderOpenIcon`, and `BoldIcon`, `ItalicIcon`, `HeadingIcon`,
+  `ListIcon`, `ListOrderedIcon`, `QuoteIcon` and `CodeIcon` for a formatting toolbar.
+
+- **`ColorPicker` opens from the row that reads it out.** `presentation` takes `popover` or
+  `bottom-sheet` and folds the controls behind a `ColorPicker.Trigger`, drawn in a
+  `ColorPicker.Content`. A picker is a page's worth of controls in service of one value that is
+  looked at far more often than it is changed, so leaving the square permanently open under a
+  labelled strip spends a screen on something nobody is currently using — two colours cost two
+  panels. `inline` is still the default, so nothing already written changes. `ColorPicker.Field`
+  gains an `onPress` and becomes a button when it has one.
+
+- **`TimePicker` can turn its readout down.** `readout` takes `default`, `compact` or `none`. The
+  `ruler` face states its time in one large centred number, which is right when the scale is the
+  only thing on the panel and wrong under something that outranks it.
+
+- **`DateTimePicker` names its time half.** `timeLabel` is the word above the face.
+
+### Changed
+
+- **The date now outranks the time in `DateTimePicker`.** The panel is a month grid over a time
+  scale and the date is the coarse choice, but the ruler's 36pt readout stood against a month
+  caption of 16 and dates of 14 — the largest text in the panel for the smaller half of the value,
+  with nothing saying what the bottom half even was. The panel takes `readout="none"` and writes
+  the row itself: the half's name on one edge, its current value on the other, at a size that sits
+  under the date. The seam between the halves gets equal margin above and below rather than
+  clinging to the calendar.
+
+- **A folder row in `Tree` gets its own glyph.** `Tree.Icon` holds its width whether or not it has
+  anything in it, which is what keeps a folder's name and a file's name starting in the same place
+  — so a row that leaves it empty puts its label a whole box away from its own chevron while the
+  rows around it look right. The demos and the documented snippets now fill it on every row, and
+  the part's own docs say the slot is all-or-nothing.
+
+- **`GridItem`'s watermark fits the tile.** At 112 points against a 132-point row the background
+  glyph filled the tile corner to corner and competed with the number in front of it. Down to 72;
+  the corner it hangs off is unchanged.
+
+### Fixed
+
+- **Swiping between `Tabs` no longer re-draws the whole panel every frame** ([#28]). Reported as
+  jank on Android with a list in each panel, both when swiping and when pressing a trigger. Three
+  causes, none of them the one in the report — `swipeable` does not mount extra panels, only
+  `keepMounted` decides that.
+
+  A panel travelling under the finger also had its opacity animated. A transform is a layer
+  property and costs nothing per frame however much is inside it; an alpha that changes every frame
+  is not one on Android, where the view group has no offscreen buffer, so the value is pushed down
+  into the children and every visible row is re-drawn on every frame of the drag. The fade is now
+  iOS-only, where the layer fades itself and it is free.
+
+  The follow style was also applied to *every* mounted panel, so `keepMounted` ran one mapper per
+  panel per frame to reposition views that are `display: none` — which meant the obvious workaround
+  for a slow panel made the drag worse. It is now gated to the active one.
+
+  And a committed swipe left the panel parked wherever the finger let go until React had mounted
+  the arriving one, a stall exactly as long as the mount. The outgoing panel now carries on off the
+  edge on the UI thread immediately, and the arriving one is placed relative to wherever it has got
+  to, read live, so the handover stays continuous. Changing tab also no longer rebuilds the pan
+  gesture, which was detaching and re-attaching the native recogniser on the busiest frame of the
+  interaction.
+
+### Docs
+
+- The PieChart page opens with a recording of the component running, which it had neither a preview
+  nor a video for before.
+
+[#28]: https://github.com/panel-ui/PanelUI/issues/28
+
 ## [0.48.0] — 2026-08-06
 
 ### Added
