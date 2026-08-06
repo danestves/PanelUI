@@ -1906,7 +1906,7 @@
       {
         "title": "The layer behind the text",
         "description": "`GridItem.Background` fills the tile, sits under everything else, and takes no touches, so it can be written anywhere among the children without moving them. The tile clips it — it is meant to run off the edges.\n\nThis is what makes a bento grid read as a bento grid rather than as a wall of stat cards. A sparkline pinned to the bottom, an oversized icon hung off a corner, a photo: none of them are read for values, so none of them need axes.\n\nThe icon treatment survives being used on *every* tile, which most decoration does not. An icon that fits inside the tile is an icon; one that runs off two edges of it at a tenth of its opacity is a texture — and giving each tile its own subject in its own `--color-chart-*` tint means four of them read as four different things rather than as wallpaper.",
-        "code": "{/* A shape along the bottom. */}\n<GridItem colSpan={2}>\n  <GridItem.Background>\n    <View className=\"mt-auto h-20 w-full opacity-60\">\n      <LineChart data={week} compact aspectRatio={3.4}>\n        <LineChart.Area dataKey=\"v\" />\n        <LineChart.Line dataKey=\"v\" />\n      </LineChart>\n    </View>\n  </GridItem.Background>\n  <GridItem.Title>Requests</GridItem.Title>\n  <GridItem.Value>52.4k</GridItem.Value>\n</GridItem>\n\n{/* A watermark hung off the corner, tinted per tile. */}\n<GridItem>\n  <GridItem.Background>\n    <View className=\"absolute -bottom-6 -right-5 opacity-[0.14]\">\n      <SparklesIcon size={112} color={useCSSVariable('--color-chart-1')} />\n    </View>\n  </GridItem.Background>\n  <GridItem.Title>Cache hits</GridItem.Title>\n  <GridItem.Value>94%</GridItem.Value>\n</GridItem>"
+        "code": "{/* A shape along the bottom. */}\n<GridItem colSpan={2}>\n  <GridItem.Background>\n    <View className=\"mt-auto h-20 w-full opacity-60\">\n      <LineChart data={week} compact aspectRatio={3.4}>\n        <LineChart.Area dataKey=\"v\" />\n        <LineChart.Line dataKey=\"v\" />\n      </LineChart>\n    </View>\n  </GridItem.Background>\n  <GridItem.Title>Requests</GridItem.Title>\n  <GridItem.Value>52.4k</GridItem.Value>\n</GridItem>\n\n{/* A watermark hung off the corner, tinted per tile. */}\n<GridItem>\n  <GridItem.Background>\n    <View className=\"absolute -bottom-6 -right-5 opacity-[0.14]\">\n      <SparklesIcon size={72} color={useCSSVariable('--color-chart-1')} />\n    </View>\n  </GridItem.Background>\n  <GridItem.Title>Cache hits</GridItem.Title>\n  <GridItem.Value>94%</GridItem.Value>\n</GridItem>"
       },
       {
         "title": "Tiles that go somewhere",
@@ -6694,10 +6694,12 @@
   },
   "tree": {
     "intro": "A hierarchy you can open a level at a time — a file browser, a folder of settings, a category picker, a table of contents. Accordion is the one-level version of the same idea; a tree's items can hold items, to any depth. A closed branch renders nothing below it, so a tree costs what is open in it rather than what is in it.",
-    "usage": "<Tree defaultExpanded={['src']} selectionMode=\"single\" showLines>\n  <Tree.Item value=\"src\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Label>src</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"src/index.ts\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Icon><FileIcon size={14} /></Tree.Icon>\n          <Tree.Label>index.ts</Tree.Label>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>",
+    "usage": "<Tree defaultExpanded={['src']} selectionMode=\"single\" showLines>\n  <Tree.Item value=\"src\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Icon><FolderOpenIcon size={15} /></Tree.Icon>\n      <Tree.Label>src</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"src/index.ts\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Icon><FileIcon size={14} /></Tree.Icon>\n          <Tree.Label>index.ts</Tree.Label>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>",
     "extraImports": [
       "Badge",
       "FileIcon",
+      "FolderIcon",
+      "FolderOpenIcon",
       "Spinner",
       "Text"
     ],
