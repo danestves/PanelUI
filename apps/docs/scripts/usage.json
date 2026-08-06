@@ -5374,6 +5374,13 @@
   },
   "pie-chart": {
     "intro": "One whole, divided between its parts.\n\nEvery slice is a share of one total: the values are normalised against their sum, the angles come to a full turn, and a slice only means anything next to the others. That is the opposite claim to the [RingChart](/docs/charts/ring-chart) beside it, where each arc is measured against its own target and nothing has to add up.\n\nIt follows that a pie is the wrong shape for a great many things. Two numbers that do not belong to one whole, anything over time, anything a reader has to compare precisely — all of those are a bar chart, because an angle is the hardest quantity to read off a page and the fifth-largest slice of eleven is not a fact anybody is going to extract. Use it for a handful of parts of one obvious total, and put the number in the middle.",
+    "previewVideo": {
+      "src": "/previews/pie-chart.mp4",
+      "poster": "/previews/pie-chart-poster.jpg",
+      "alt": "The PieChart component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    },
     "usage": "<PieChart data={spend} size={208} innerRadius={0.62}>\n  <PieChart.Header title=\"August\" />\n  <PieChart.Slices />\n  <PieChart.Center />\n  <PieChart.Legend />\n</PieChart>",
     "extraImports": [
       "type PieDatum",
