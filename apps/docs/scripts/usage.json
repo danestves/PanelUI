@@ -6706,7 +6706,7 @@
       "Item": "One node. Its `value` identifies it in both the expanded and the selected state, and its depth is read from how deeply it is nested rather than declared.",
       "Trigger": "The node's row, and the thing you press. Pressing it selects the node, and opens it too unless `expandOnPress` is off.",
       "Indicator": "The chevron, which turns a quarter circle while the branch is open. It is pressable in its own right, so it opens a branch without selecting it. On a leaf it becomes an empty box of the same size, keeping the labels aligned.",
-      "Icon": "The leading glyph, between the chevron and the label.",
+      "Icon": "The leading glyph, between the chevron and the label. It holds its width whether or not you fill it, which is what keeps a folder's name and a file's name starting at the same place — so give every row in a tree an icon, or give none of them one. A row with an empty slot is the odd one out: its label sits a whole box away from its own chevron while the rows around it look right.",
       "Label": "The row's text.",
       "Actions": "The trailing slot: a count, a badge, a menu button for the node.",
       "Group": "The rows inside a branch — and the reason its item is a branch. Unmounts when the branch is closed."
@@ -6716,8 +6716,8 @@
     "examples": [
       {
         "title": "A file tree",
-        "description": "The default. `defaultExpanded` names the branches that start open; everything below a closed one has not rendered at all.",
-        "code": "<Tree defaultExpanded={['src']}>\n  <Tree.Item value=\"src\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Icon />\n      <Tree.Label>src</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"src/index.ts\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Icon><FileIcon size={14} /></Tree.Icon>\n          <Tree.Label>index.ts</Tree.Label>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>"
+        "description": "The default. `defaultExpanded` names the branches that start open; everything below a closed one has not rendered at all. Folders take a glyph of their own rather than an empty `Tree.Icon`, so a folder's name starts where the names of the files under it do.",
+        "code": "<Tree defaultExpanded={['src']}>\n  <Tree.Item value=\"src\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Icon><FolderOpenIcon size={15} /></Tree.Icon>\n      <Tree.Label>src</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"src/index.ts\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Icon><FileIcon size={14} /></Tree.Icon>\n          <Tree.Label>index.ts</Tree.Label>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>"
       },
       {
         "title": "Guide lines",

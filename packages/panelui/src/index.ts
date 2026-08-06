@@ -876,6 +876,8 @@ export {
   EyeIcon,
   FacebookIcon,
   FileIcon,
+  FolderIcon,
+  FolderOpenIcon,
   GoogleIcon,
   HeartIcon,
   IconColorProvider,

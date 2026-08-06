@@ -11,7 +11,7 @@ A hierarchy you can open a level at a time — a file browser, a folder of setti
 Tree ships with the library — no separate install.
 
 ```tsx
-import { Tree, Badge, FileIcon, Spinner, Text } from 'panelui-native';
+import { Tree, Badge, FileIcon, FolderIcon, FolderOpenIcon, Spinner, Text } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -27,6 +27,7 @@ npx panelui-cli@latest add tree
   <Tree.Item value="src">
     <Tree.Trigger>
       <Tree.Indicator />
+      <Tree.Icon><FolderOpenIcon size={15} /></Tree.Icon>
       <Tree.Label>src</Tree.Label>
     </Tree.Trigger>
     <Tree.Group>
@@ -66,14 +67,14 @@ An item is a branch because it holds a `Tree.Group`, not because it was declared
 
 ### A file tree
 
-The default. `defaultExpanded` names the branches that start open; everything below a closed one has not rendered at all.
+The default. `defaultExpanded` names the branches that start open; everything below a closed one has not rendered at all. Folders take a glyph of their own rather than an empty `Tree.Icon`, so a folder's name starts where the names of the files under it do.
 
 ```tsx
 <Tree defaultExpanded={['src']}>
   <Tree.Item value="src">
     <Tree.Trigger>
       <Tree.Indicator />
-      <Tree.Icon />
+      <Tree.Icon><FolderOpenIcon size={15} /></Tree.Icon>
       <Tree.Label>src</Tree.Label>
     </Tree.Trigger>
     <Tree.Group>

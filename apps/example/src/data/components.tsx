@@ -73,6 +73,8 @@ import {
   FileIcon,
   Flow,
   type FlowConnection,
+  FolderIcon,
+  FolderOpenIcon,
   Form,
   Frame,
   GoogleIcon,
@@ -8246,32 +8248,67 @@ const PROJECT_TREE: TreeNodeData[] = [
  * almost always a walk over data rather than hand-written rows, so the demos
  * are written the way the component is actually used.
  *
- * `Tree.Icon` is rendered for folders too, empty, so a file's name starts
- * where a folder's name does instead of half a glyph further in.
+ * Every row fills its `Tree.Icon`: a folder for a branch, a document for a
+ * leaf. An icon slot left empty is still a slot, so a folder whose glyph is
+ * missing pushes its name a full box away from its own chevron while the files
+ * under it line up correctly — the row reads as broken rather than as spaced.
+ * `expanded` is threaded down for the same reason the chevron turns: a folder
+ * that is open should look open.
  */
-function TreeNodes({ nodes }: { nodes: TreeNodeData[] }) {
+function TreeNodes({ nodes, expanded }: { nodes: TreeNodeData[]; expanded: string[] }) {
   return (
     <>
-      {nodes.map((node) => (
-        <Tree.Item key={node.value} value={node.value}>
-          <Tree.Trigger>
-            <Tree.Indicator />
-            <Tree.Icon>{node.children ? null : <FileIcon size={14} />}</Tree.Icon>
-            <Tree.Label>{node.label}</Tree.Label>
-          </Tree.Trigger>
-          {node.children ? (
-            <Tree.Group>
-              <TreeNodes nodes={node.children} />
-            </Tree.Group>
-          ) : null}
-        </Tree.Item>
-      ))}
+      {nodes.map((node) => {
+        const isOpen = expanded.includes(node.value);
+        return (
+          <Tree.Item key={node.value} value={node.value}>
+            <Tree.Trigger>
+              <Tree.Indicator />
+              <Tree.Icon>
+                {node.children ? (
+                  isOpen ? (
+                    <FolderOpenIcon size={15} />
+                  ) : (
+                    <FolderIcon size={15} />
+                  )
+                ) : (
+                  <FileIcon size={14} />
+                )}
+              </Tree.Icon>
+              <Tree.Label>{node.label}</Tree.Label>
+            </Tree.Trigger>
+            {node.children ? (
+              <Tree.Group>
+                <TreeNodes nodes={node.children} expanded={expanded} />
+              </Tree.Group>
+            ) : null}
+          </Tree.Item>
+        );
+      })}
     </>
+  );
+}
+
+/**
+ * The file tree, with and without guide lines. Expansion is controlled rather
+ * than left to `defaultExpanded` only because the rows need to know which
+ * folders are open to draw the right glyph; the component does not require it.
+ */
+function TreeFilesDemo({ showLines = false }: { showLines?: boolean }) {
+  const [expanded, setExpanded] = useState<string[]>(
+    showLines ? ['src', 'src/components'] : ['src']
+  );
+
+  return (
+    <Tree expanded={expanded} onExpandedChange={setExpanded} showLines={showLines}>
+      <TreeNodes nodes={PROJECT_TREE} expanded={expanded} />
+    </Tree>
   );
 }
 
 function TreeSelectionDemo({ mode }: { mode: 'single' | 'multiple' }) {
   const [selected, setSelected] = useState<string | string[]>(mode === 'multiple' ? [] : '');
+  const [expanded, setExpanded] = useState<string[]>(['src', 'src/components']);
   const chosen = Array.isArray(selected) ? selected : selected ? [selected] : [];
 
   return (
@@ -8280,10 +8317,11 @@ function TreeSelectionDemo({ mode }: { mode: 'single' | 'multiple' }) {
         selectionMode={mode}
         value={selected}
         onValueChange={setSelected}
-        defaultExpanded={['src', 'src/components']}
+        expanded={expanded}
+        onExpandedChange={setExpanded}
         showLines
       >
-        <TreeNodes nodes={PROJECT_TREE} />
+        <TreeNodes nodes={PROJECT_TREE} expanded={expanded} />
       </Tree>
       <Text size="xs" muted>
         {chosen.length ? chosen.join(', ') : 'Nothing selected'}
@@ -8323,17 +8361,23 @@ function TreeLazyDemo() {
       <Tree.Item value="archive" hasChildren>
         <Tree.Trigger>
           <Tree.Indicator />
-          <Tree.Icon />
+          <Tree.Icon>
+            {expanded.includes('archive') ? (
+              <FolderOpenIcon size={15} />
+            ) : (
+              <FolderIcon size={15} />
+            )}
+          </Tree.Icon>
           <Tree.Label>archive</Tree.Label>
           <Tree.Actions>{loading ? <Spinner size="sm" /> : null}</Tree.Actions>
         </Tree.Trigger>
         {loaded ? (
           <Tree.Group>
-            <TreeNodes nodes={loaded} />
+            <TreeNodes nodes={loaded} expanded={expanded} />
           </Tree.Group>
         ) : null}
       </Tree.Item>
-      <TreeNodes nodes={PROJECT_TREE.slice(1)} />
+      <TreeNodes nodes={PROJECT_TREE.slice(1)} expanded={expanded} />
     </Tree>
   );
 }
@@ -15822,22 +15866,8 @@ const CATALOGUE: ComponentEntry[] = [
     name: 'Tree',
     summary: 'A hierarchy you can open a level at a time',
     demos: [
-      {
-        label: 'Default',
-        render: () => (
-          <Tree defaultExpanded={['src']}>
-            <TreeNodes nodes={PROJECT_TREE} />
-          </Tree>
-        ),
-      },
-      {
-        label: 'Guide lines',
-        render: () => (
-          <Tree defaultExpanded={['src', 'src/components']} showLines>
-            <TreeNodes nodes={PROJECT_TREE} />
-          </Tree>
-        ),
-      },
+      { label: 'Default', render: () => <TreeFilesDemo /> },
+      { label: 'Guide lines', render: () => <TreeFilesDemo showLines /> },
       { label: 'Single selection', render: () => <TreeSelectionDemo mode="single" /> },
       { label: 'Multiple selection', render: () => <TreeSelectionDemo mode="multiple" /> },
       { label: 'Sidebar nav', render: () => <TreeNavDemo /> },
