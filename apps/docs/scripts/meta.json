@@ -2,7 +2,10 @@
   "accordion": [
     "Accordion",
     "Collapsible sections with single or multiple selection.",
-    "react native accordion"
+    "react native accordion",
+    {
+      "updatedIn": "0.48.0"
+    }
   ],
   "alert": [
     "Alert",

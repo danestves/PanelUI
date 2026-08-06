@@ -8172,6 +8172,43 @@ function AccordionDemo({
   );
 }
 
+/**
+ * The demo `keepMounted` exists for: a body with something in it worth losing.
+ * Type into the field, collapse the section, open it again — the text is still
+ * there, because the body was hidden rather than unmounted.
+ */
+function AccordionKeepMountedDemo() {
+  return (
+    <View className="w-full gap-3">
+      <Accordion variant="surface" keepMounted defaultValue="note" className="w-full">
+        <Accordion.Item value="note">
+          <Accordion.Trigger>
+            <Accordion.Title>Delivery note</Accordion.Title>
+            <Accordion.Indicator />
+          </Accordion.Trigger>
+          <Accordion.Content>
+            <Textarea placeholder="Leave it with a neighbour…" />
+          </Accordion.Content>
+        </Accordion.Item>
+
+        <Accordion.Item value="gift">
+          <Accordion.Trigger>
+            <Accordion.Title>Gift message</Accordion.Title>
+            <Accordion.Indicator />
+          </Accordion.Trigger>
+          <Accordion.Content>
+            <Textarea placeholder="Happy birthday…" />
+          </Accordion.Content>
+        </Accordion.Item>
+      </Accordion>
+
+      <Text size="xs" muted>
+        Type into a field, collapse the section, then open it again.
+      </Text>
+    </View>
+  );
+}
+
 const STEP_DATA = [
   { title: 'Account', description: 'Create your login' },
   { title: 'Profile', description: 'Tell us about you' },
@@ -10838,6 +10875,7 @@ const CATALOGUE: ComponentEntry[] = [
         label: 'Multiple open',
         render: () => <AccordionDemo variant="surface" selectionMode="multiple" />,
       },
+      { label: 'Keeps its state', render: () => <AccordionKeepMountedDemo /> },
     ],
   },
   {

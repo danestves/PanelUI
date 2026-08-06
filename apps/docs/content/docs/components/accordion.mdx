@@ -1,9 +1,10 @@
 ---
 title: Accordion
 description: Collapsible sections with single or multiple selection.
+status: updated
 ---
 
-Collapsible sections for FAQs, settings groups and anything that would otherwise need a long scroll. Expansion animates with a Reanimated layout transition, and the content unmounts when collapsed.
+Collapsible sections for FAQs, settings groups and anything that would otherwise need a long scroll. Expansion animates with a Reanimated layout transition, and the content unmounts when collapsed — or stays mounted and hidden, with `keepMounted`, when there is state inside it worth keeping.
 
 <PreviewVideo
   src="/previews/accordion.mp4"
@@ -18,7 +19,7 @@ Collapsible sections for FAQs, settings groups and anything that would otherwise
 Accordion ships with the library — no separate install.
 
 ```tsx
-import { Accordion, Text, Button } from 'panelui-native';
+import { Accordion, Text, Button, Textarea } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -61,7 +62,7 @@ npx panelui-cli@latest add accordion
 - **`Accordion.Trigger`** — The pressable header row. A bare string child is wrapped in the title style.
 - **`Accordion.Title`** — Heading text inside the trigger.
 - **`Accordion.Indicator`** — Chevron that rotates 180° while the item is open.
-- **`Accordion.Content`** — The collapsible body. Unmounts when closed.
+- **`Accordion.Content`** — The collapsible body. Unmounts when closed, unless `keepMounted` keeps it mounted and hidden from layout instead.
 
 ## Examples
 
@@ -142,6 +143,24 @@ A section that exists but cannot be opened yet — an upsell, or a step not reac
 </Accordion.Item>
 ```
 
+### Keeping a body's state
+
+A closed section is unmounted, so anything typed into it is gone when it reopens. `keepMounted` hides the body instead: it takes up no room and the same layout transition plays, but the field still holds what was typed.
+
+```tsx
+<Accordion variant="surface" keepMounted defaultValue="note">
+  <Accordion.Item value="note">
+    <Accordion.Trigger>
+      <Accordion.Title>Delivery note</Accordion.Title>
+      <Accordion.Indicator />
+    </Accordion.Trigger>
+    <Accordion.Content>
+      <Textarea placeholder="Leave it with a neighbour…" />
+    </Accordion.Content>
+  </Accordion.Item>
+</Accordion>
+```
+
 ## Variants
 
 ### `variant`
@@ -208,6 +227,7 @@ A section that exists but cannot be opened yet — an upsell, or a step not reac
 | `defaultValue` | `string \| string[]` | — |  |
 | `onValueChange` | `(value: string \| string[]) => void` | — |  |
 | `hideSeparator` | `boolean` | `false` | Hide the hairlines drawn between items. |
+| `keepMounted` | `boolean` | `false` | Keep every body mounted while its section is closed, so state inside it — a part-filled form, a scroll position, a running animation — survives being collapsed. Costs the render of every section up front; set it per section on `Accordion.Content` instead when only one of them needs it. |
 
 ### Accordion.Item
 
@@ -234,9 +254,12 @@ A section that exists but cannot be opened yet — an upsell, or a step not reac
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
+| `keepMounted` | `boolean` | `false` | Stay mounted while closed instead of unmounting, so state inside the body survives the section being collapsed. Overrides the accordion's own setting, either way round. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
 
 Pass an array to `value` / `defaultValue` with `selectionMode="multiple"`. `onValueChange` hands back whatever shape you gave it — a string in single mode, an array in multiple.
+
+`keepMounted` trades the cost of rendering every closed body up front for keeping what is inside them alive. Set it on the accordion for all of them, or on a single `Accordion.Content` for the one section that needs it — the prop on the content wins either way round.
