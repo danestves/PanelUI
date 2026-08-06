@@ -214,6 +214,16 @@ which is worse than the gap it filled.
 - `npm run docs` — start the docs site; `npm run build --workspace=docs` for a production build
 - Publish: bump version in `packages/panelui`, `npm run build`, `npm publish` (from that dir), tag `vX.Y.Z`
 
+### Never launch a simulator on your own
+
+**Do not boot the iOS Simulator, an Android emulator, or a device build unless the user asks for
+it in so many words.** Not to check a change, not to take a screenshot, not to confirm something
+renders. It takes over the machine, and deciding when to look at the app is the user's call.
+
+Verify with `npm run typecheck`, `npm run build` and `npm run docs:generate` instead, and say
+plainly which parts of a change are unverified until somebody runs it. When a change genuinely
+needs eyes on a device, ask; do not start one and report back.
+
 ## Git & release
 
 - **Every modification gets its own git commit.** Commit as soon as a logical unit of work is
