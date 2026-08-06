@@ -1,6 +1,7 @@
 ---
 title: TimePicker
 description: A time of day, as a wheel, a clock or a swipeable scale.
+status: updated
 ---
 
 A time of day behind a trigger, in one of three faces.
@@ -225,6 +226,31 @@ Pass a child and it is cloned with an `onPress` that opens the panel, so a field
 </TimePicker>
 ```
 
+### Turning the readout down
+
+The `ruler` face states its time in one large centred number, which is right when the scale is the only thing on the panel. Under something that outranks it — a calendar, a form row — that number is the largest text on screen standing for the smaller half of the answer. `compact` steps it down; `none` drops it, for a caller writing the time itself. The other two faces spell the time out in their own columns and hands and ignore this.
+
+```tsx
+<TimePicker layout="ruler" readout="compact" value={time} onValueChange={setTime} />
+
+{/* …or take it over entirely */}
+<TimePicker presentation="inline" layout="ruler" readout="none" … />
+```
+
+## Variants
+
+### `readout`
+
+- `default` *(default)*
+- `compact`
+- `none`
+
+```tsx
+<TimePicker readout="default">…</TimePicker>
+<TimePicker readout="compact">…</TimePicker>
+<TimePicker readout="none">…</TimePicker>
+```
+
 ## API Reference
 
 ### TimePicker
@@ -245,6 +271,7 @@ Pass a child and it is cloned with an `onPress` that opens the panel, so a field
 | `placeholder` | `string` | `DEFAULT_PLACEHOLDER` | What the trigger reads when nothing has been chosen. |
 | `format` | `(value: TimeValue) => string` | — | Override how the chosen time is written on the trigger. |
 | `locale` | `string` | — | BCP 47 tag for the time's text and the meridiem labels. |
+| `readout` | `TimePickerReadout` | `'default'` | How loudly the `ruler` face states the time it is on. The other two faces spell the time out in their own columns and hands, and ignore this. The big centred number is right when the scale is the only thing on the panel. Under something that outranks it — a calendar, a form row — it is the largest text on screen for the smaller half of the answer, so step it down with `compact` or take it over yourself with `none`. |
 | `disabled` | `boolean` | `false` | Stop the trigger opening it, and the faces from being scrolled. |
 | `className` | `string` | — |  |
 

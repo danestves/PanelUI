@@ -131,7 +131,8 @@
     "A day and a time of day, picked in one panel.",
     "react native date time picker component",
     {
-      "addedIn": "0.46.0"
+      "addedIn": "0.46.0",
+      "updatedIn": "0.49.0"
     }
   ],
   "dialog": [
@@ -531,7 +532,8 @@
     "A time of day, as a wheel, a clock or a swipeable scale.",
     "react native time picker",
     {
-      "addedIn": "0.36.0"
+      "addedIn": "0.36.0",
+      "updatedIn": "0.49.0"
     }
   ],
   "timeline": [

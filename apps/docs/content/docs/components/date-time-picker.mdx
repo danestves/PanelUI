@@ -131,6 +131,18 @@ Pass a child and it is cloned with an `onPress` that opens the panel, so a field
 </DateTimePicker>
 ```
 
+### Naming the time half
+
+The date half names itself with the month it is showing. The time half has nothing that would say what it is, so the panel writes a row above it — what it is on one edge, what it currently reads on the other. `timeLabel` is that word, for a panel in another language or one where the time means something more specific than the time.
+
+```tsx
+<DateTimePicker
+  value={when}
+  onValueChange={setWhen}
+  timeLabel="Arrives at"
+/>
+```
+
 ## API Reference
 
 ### DateTimePicker
@@ -159,6 +171,7 @@ Pass a child and it is cloned with an `onPress` that opens the panel, so a field
 | `locale` | `string` | — | BCP 47 tag for the month names, the time and the trigger's own text. |
 | `calendar` | `CalendarSystem` | `'gregory'` | Which calendar the months and day numbers are counted in. |
 | `doneLabel` | `string` | `'Done'` | Label on the button that closes the panel. |
+| `timeLabel` | `string` | `'Time'` | What the time half of the panel is called, above its face. The date half names itself with the month it is showing; the time half has nothing that would say what it is otherwise. |
 | `className` | `string` | — |  |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
@@ -182,3 +195,7 @@ The component's value is one `Date` carrying both halves, because that is what a
 ### When two fields are still the right answer
 
 If the day and the time are genuinely separate decisions — a recurring event's day-of-week and its time, a filter with an optional time — keep them apart. This component is for the case where one moment is being chosen and half of it is not an answer.
+
+### The time is written once, not twice
+
+The panel takes the ruler's own readout off (`readout="none"` on the TimePicker inside it) and states the time in the row above the scale instead. A month caption is 16pt and a date is 14pt; the ruler's readout on its own is 36pt, and left in place it would be the largest thing in the panel standing for the smaller half of the value. The row is the same fact at a size that sits under the date rather than over it.

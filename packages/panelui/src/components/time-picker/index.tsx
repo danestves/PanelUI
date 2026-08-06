@@ -116,6 +116,15 @@ const TICK_SPACING = 12;
 /** Settles the clock hands after a pick. Slow enough to be followed by eye. */
 const HAND_SPRING = { damping: 16, stiffness: 140, mass: 0.7 } as const;
 
+/**
+ * How loudly the ruler face states the time it is on.
+ *
+ * `default` is the big centred number, right when the scale is the only thing
+ * on the panel. `compact` steps it down to sit under something that outranks
+ * it, and `none` drops it for a caller that writes the time itself.
+ */
+export type TimePickerReadout = 'default' | 'compact' | 'none';
+
 const timePickerVariants = tv({
   slots: {
     panel: 'gap-3',
@@ -128,9 +137,19 @@ const timePickerVariants = tv({
     row: 'items-center justify-center',
     rowLabel: 'text-lg tabular-nums text-foreground',
     rowLabelSelected: 'font-semibold text-primary',
-    readout: 'text-center text-4xl font-semibold tabular-nums text-foreground',
+    readout: 'text-center font-semibold tabular-nums text-foreground',
     clock: 'flex-row items-center gap-4',
     footer: 'flex-row justify-end gap-2',
+  },
+  variants: {
+    readout: {
+      default: { readout: 'text-4xl' },
+      compact: { readout: 'text-xl' },
+      none: {},
+    },
+  },
+  defaultVariants: {
+    readout: 'default',
   },
 });
 
@@ -296,6 +315,8 @@ interface FaceProps {
   minuteStep: number;
   locale?: string;
   disabled?: boolean;
+  /** Ruler face only — the other two never draw a number of their own. */
+  readout?: TimePickerReadout;
 }
 
 function WheelFace({
@@ -573,8 +594,9 @@ function RulerFace({
   minuteStep,
   locale,
   disabled,
+  readout = 'default',
 }: FaceProps) {
-  const slots = timePickerVariants();
+  const slots = timePickerVariants({ readout });
   const ref = useRef<ScrollView>(null);
   const times = useMemo(() => timesOfDay(minuteStep), [minuteStep]);
   const index = Math.min(
@@ -638,10 +660,12 @@ function RulerFace({
   );
 
   return (
-    <View className="gap-4">
-      <Text className={slots.readout()}>
-        {formatTime(value, { hourCycle, locale })}
-      </Text>
+    <View className={readout === 'none' ? undefined : 'gap-4'}>
+      {readout === 'none' ? null : (
+        <Text className={slots.readout()}>
+          {formatTime(value, { hourCycle, locale })}
+        </Text>
+      )}
 
       <View className="relative h-14 justify-center" onLayout={onLayout}>
         <ScrollView
@@ -768,6 +792,16 @@ export interface TimePickerProps {
   format?: (value: TimeValue) => string;
   /** BCP 47 tag for the time's text and the meridiem labels. */
   locale?: string;
+  /**
+   * How loudly the `ruler` face states the time it is on. The other two faces
+   * spell the time out in their own columns and hands, and ignore this.
+   *
+   * The big centred number is right when the scale is the only thing on the
+   * panel. Under something that outranks it — a calendar, a form row — it is
+   * the largest text on screen for the smaller half of the answer, so step it
+   * down with `compact` or take it over yourself with `none`.
+   */
+  readout?: TimePickerReadout;
   /** Stop the trigger opening it, and the faces from being scrolled. */
   disabled?: boolean;
   className?: string;
@@ -803,6 +837,7 @@ function TimePickerRoot({
   placeholder = DEFAULT_PLACEHOLDER,
   format,
   locale,
+  readout = 'default',
   disabled = false,
   className,
   children,
@@ -867,6 +902,7 @@ function TimePickerRoot({
     minuteStep: step,
     locale,
     disabled,
+    readout,
   };
 
   if (presentation === 'inline') {

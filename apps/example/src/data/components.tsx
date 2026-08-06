@@ -1606,6 +1606,37 @@ function TimeEdgeButton({
 }
 
 /**
+ * The three sizes the ruler can state its own time at, one under the other.
+ *
+ * `default` is right when the scale is the only thing on the panel. Under
+ * something that outranks it the big number becomes the largest text on screen
+ * standing for the smaller half of an answer, which is what `compact` and
+ * `none` are for.
+ */
+function TimePickerReadoutDemo() {
+  const [time, setTime] = useState<TimeValue>({ hour: 14, minute: 30 });
+
+  return (
+    <View className="w-full gap-6">
+      {(['default', 'compact', 'none'] as const).map((readout) => (
+        <View key={readout} className="w-full gap-2">
+          <Text size="xs" muted>
+            readout=&quot;{readout}&quot;
+          </Text>
+          <TimePicker
+            presentation="inline"
+            layout="ruler"
+            readout={readout}
+            value={time}
+            onValueChange={setTime}
+          />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/**
  * A picker composed into a card rather than hidden behind a trigger.
  *
  * Two independent times behind one face — which is what a "single time or a
@@ -15765,6 +15796,7 @@ const CATALOGUE: ComponentEntry[] = [
       { label: 'Presentations', render: () => <TimePickerPresentationsDemo /> },
       { label: 'The wheel', render: () => <TimePickerWheelDemo /> },
       { label: 'The clock face', render: () => <TimePickerClockDemo /> },
+      { label: 'How loud the readout is', render: () => <TimePickerReadoutDemo /> },
       { label: 'Inline, inside a Frame', render: () => <TimePickerFrameDemo /> },
     ],
   },

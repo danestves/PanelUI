@@ -146,6 +146,12 @@ export interface DateTimePickerProps {
   calendar?: CalendarSystem;
   /** Label on the button that closes the panel. */
   doneLabel?: string;
+  /**
+   * What the time half of the panel is called, above its face. The date half
+   * names itself with the month it is showing; the time half has nothing that
+   * would say what it is otherwise.
+   */
+  timeLabel?: string;
   className?: string;
   /**
    * A trigger of your own. Given one, it is cloned with an `onPress` that opens
@@ -180,6 +186,7 @@ function DateTimePickerRoot({
   locale,
   calendar = 'gregory',
   doneLabel = 'Done',
+  timeLabel = 'Time',
   className,
   children,
 }: DateTimePickerProps) {
@@ -285,11 +292,37 @@ function DateTimePickerRoot({
         calendar={calendar}
       />
       {/* A hairline, not a gap. The two halves are one answer, and space alone
-          between them reads as two controls that happen to be stacked. */}
-      <View className="mt-1 border-t border-border pt-3">
+          between them reads as two controls that happen to be stacked — but
+          the same margin above and below it, so the rule sits between them
+          rather than clinging to the calendar. */}
+      <View className="mt-3 gap-3 border-t border-border pt-3">
+        {/*
+          The time half names itself and states its own value, because the
+          faces below it will not.
+
+          `readout="none"` takes the ruler's big centred number off the panel.
+          On its own that number is the answer and is sized like it; under a
+          month grid whose caption is 16pt and whose dates are 14pt, a 36pt
+          time is the largest thing on screen standing for the smaller half of
+          the value. Here it is a row instead: what it is on one edge, what it
+          currently says on the other, at a size that sits under the date
+          rather than over it.
+        */}
+        <View className="flex-row items-center justify-between gap-3">
+          <Text size="sm" muted>
+            {timeLabel}
+          </Text>
+          {/* Before either half is filled in there is still a time the panel
+              would commit — the same one a day picked on its own is given — so
+              the row states that rather than going blank. */}
+          <Text className="text-lg font-semibold tabular-nums text-foreground">
+            {formatTime(time ?? fallbackTime, { hourCycle, locale })}
+          </Text>
+        </View>
         <TimePicker
           presentation="inline"
           layout={layout}
+          readout="none"
           value={time}
           onValueChange={handleTime}
           hourCycle={hourCycle}
@@ -359,7 +392,10 @@ function DateTimePickerRoot({
             outside is not that: it is how a popover is *abandoned*.
           */}
           <Popover.Close>
-            <Button className={cn('mt-3 w-full self-center', !isSheet && 'max-w-[308px]')}>
+            <Button
+              className="mt-3 w-full self-center"
+              style={isSheet ? undefined : { maxWidth: PANEL_WIDTH }}
+            >
               {doneLabel}
             </Button>
           </Popover.Close>
