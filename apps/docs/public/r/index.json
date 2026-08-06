@@ -104,10 +104,19 @@
     "description": "Pressable action with variants, sizes, loading state and icon slots.",
     "registryDependencies": [
       "animated-pressable",
+      "cn",
       "icons",
       "native",
       "spinner",
       "text"
+    ]
+  },
+  {
+    "name": "button-group",
+    "type": "registry:ui",
+    "description": "Several buttons drawn as one control — a segmented run, a split action, a toolbar.",
+    "registryDependencies": [
+      "button"
     ]
   },
   {

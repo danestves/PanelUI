@@ -44,15 +44,19 @@ import {
   BottomSheet,
   Breadcrumb,
   Button,
+  ButtonGroup,
   Calendar,
   CalendarIcon,
   CodeBlock,
   Combobox,
+  CopyIcon,
+  CrosshairIcon,
   Card,
   Carousel,
   CardIcon,
   CheckIcon,
   Checkbox,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   Chip,
@@ -103,6 +107,7 @@ import {
   Menu,
   Message,
   MessageCircleIcon,
+  MinusIcon,
   MessageScroller,
   Plan,
   Reasoning,
@@ -116,6 +121,7 @@ import {
   PauseIcon,
   PencilIcon,
   PieChart,
+  PlusIcon,
   type PieDatum,
   PlayIcon,
   PlusSquareIcon,
@@ -134,6 +140,8 @@ import {
   type RingDatum,
   ReceiptIcon,
   RepeatIcon,
+  RotateCcwIcon,
+  RotateCwIcon,
   ScatterChart,
   Scrim,
   SearchIcon,
@@ -157,6 +165,7 @@ import {
   Slider,
   Soundwave,
   Spinner,
+  StarIcon,
   Steps,
   SunIcon,
   Surface,
@@ -8319,6 +8328,210 @@ function AccordionKeepMountedDemo() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* ButtonGroup                                                                */
+/* -------------------------------------------------------------------------- */
+
+const LIBRARY_VIEWS = [
+  { value: 'files', label: 'Files', icon: FileIcon },
+  { value: 'media', label: 'Media', icon: ImageIcon },
+  { value: 'saved', label: 'Saved', icon: BookmarkIcon },
+] as const;
+
+/**
+ * A run of segments where one of them is the current one.
+ *
+ * The group has no idea which — it joins buttons and passes down a variant.
+ * The selected segment says `secondary` for itself and wins, which is all
+ * "selected" needs to be when the surrounding shape is already drawn.
+ */
+function ButtonGroupViewsDemo() {
+  const [view, setView] = useState<string>('media');
+
+  return (
+    <ButtonGroup size="sm">
+      {LIBRARY_VIEWS.map(({ value, label, icon: Icon }) => (
+        <Button
+          key={value}
+          variant={view === value ? 'secondary' : 'ghost'}
+          startContent={<Icon size={15} />}
+          labelClassName={view === value ? 'font-semibold' : undefined}
+          onPress={() => setView(value)}
+        >
+          {label}
+        </Button>
+      ))}
+    </ButtonGroup>
+  );
+}
+
+/** Text alone, sharing the row equally — the shape a plan picker wants. */
+function ButtonGroupPlanDemo() {
+  const [plan, setPlan] = useState('year');
+
+  return (
+    <ButtonGroup fullWidth>
+      {[
+        { value: 'month', label: 'Monthly' },
+        { value: 'year', label: 'Annual' },
+        { value: 'forever', label: 'One-off' },
+      ].map(({ value, label }) => (
+        <Button
+          key={value}
+          variant={plan === value ? 'secondary' : 'ghost'}
+          onPress={() => setPlan(value)}
+        >
+          {label}
+        </Button>
+      ))}
+    </ButtonGroup>
+  );
+}
+
+/**
+ * A split action: the thing itself, and the other ways to do it.
+ *
+ * The chevron segment is a Button inside a `Popover.Trigger`, which is the
+ * case a group built out of a list of items cannot express — and the reason
+ * the group passes its variant and size down through context rather than by
+ * cloning its children.
+ */
+function ButtonGroupSplitDemo() {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+
+  const pick = (what: string) => {
+    setOpen(false);
+    toast.show({ variant: 'success', label: what, duration: 2000 });
+  };
+
+  return (
+    <ButtonGroup variant="outline">
+      <Button
+        startContent={<SendIcon size={16} />}
+        onPress={() => pick('Publishing now')}
+      >
+        Publish
+      </Button>
+      <Popover open={open} onOpenChange={setOpen}>
+        <Popover.Trigger>
+          <Button size="icon" accessibilityLabel="More ways to publish">
+            <ChevronDownIcon size={16} />
+          </Button>
+        </Popover.Trigger>
+        <Popover.Content align="end" className="w-56 p-1.5">
+          <Button variant="ghost" fullWidth className="justify-start" onPress={() => pick('Scheduled for tonight')}>
+            Schedule for later
+          </Button>
+          <Button variant="ghost" fullWidth className="justify-start" onPress={() => pick('Saved as a draft')}>
+            Save as draft
+          </Button>
+        </Popover.Content>
+      </Popover>
+    </ButtonGroup>
+  );
+}
+
+/** Segments that are not all available, and one that is busy. */
+function ButtonGroupStatesDemo() {
+  const [saving, setSaving] = useState(false);
+
+  const save = () => {
+    setSaving(true);
+    setTimeout(() => setSaving(false), 1600);
+  };
+
+  return (
+    <View className="w-full items-center gap-4">
+      <ButtonGroup variant="outline">
+        <Button startContent={<PencilIcon size={16} />}>Rename</Button>
+        <Button startContent={<CopyIcon size={16} />}>Duplicate</Button>
+        {/* Disabled fades the segment without taking it out of the run —
+            a shape with a hole in it is harder to read than a dim segment. */}
+        <Button startContent={<TrashIcon size={16} />} disabled>
+          Remove
+        </Button>
+      </ButtonGroup>
+
+      <ButtonGroup variant="outline">
+        <Button loading={saving} onPress={save}>
+          {saving ? 'Saving' : 'Save layout'}
+        </Button>
+        <Button size="icon" accessibilityLabel="Revert">
+          <RotateCcwIcon size={16} />
+        </Button>
+      </ButtonGroup>
+    </View>
+  );
+}
+
+/** A count carried inside a segment, beside the action it counts. */
+function ButtonGroupCountDemo() {
+  const [watching, setWatching] = useState(false);
+  const [stars, setStars] = useState(148);
+
+  return (
+    <View className="w-full items-center gap-4">
+      <ButtonGroup variant="outline">
+        <Button
+          startContent={<EyeIcon size={16} />}
+          endContent={<Badge variant="secondary" count={watching ? 25 : 24} />}
+          onPress={() => setWatching((on) => !on)}
+        >
+          {watching ? 'Watching' : 'Watch'}
+        </Button>
+        <Button size="icon" accessibilityLabel="Watch options">
+          <ChevronDownIcon size={16} />
+        </Button>
+      </ButtonGroup>
+
+      <ButtonGroup variant="outline">
+        <Button
+          startContent={<StarIcon size={16} />}
+          endContent={<Badge variant="warning" count={stars} />}
+          onPress={() => setStars((n) => n + 1)}
+        >
+          Star
+        </Button>
+        <Button size="icon" accessibilityLabel="Star options">
+          <ChevronDownIcon size={16} />
+        </Button>
+      </ButtonGroup>
+    </View>
+  );
+}
+
+/** The toolbar down the side of a canvas. */
+function ButtonGroupVerticalDemo() {
+  return (
+    <View className="w-full flex-row items-start justify-center gap-6">
+      <ButtonGroup orientation="vertical" variant="outline" size="icon">
+        <Button accessibilityLabel="Zoom in">
+          <PlusIcon size={16} />
+        </Button>
+        <Button accessibilityLabel="Zoom out">
+          <MinusIcon size={16} />
+        </Button>
+        <Button accessibilityLabel="Fit to screen">
+          <MaximizeIcon size={16} />
+        </Button>
+        <Button accessibilityLabel="Recentre">
+          <CrosshairIcon size={16} />
+        </Button>
+      </ButtonGroup>
+
+      <ButtonGroup orientation="vertical" variant="outline" size="icon">
+        <Button accessibilityLabel="Undo">
+          <RotateCcwIcon size={16} />
+        </Button>
+        <Button accessibilityLabel="Redo">
+          <RotateCwIcon size={16} />
+        </Button>
+      </ButtonGroup>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* Tree                                                                       */
 /* -------------------------------------------------------------------------- */
 
@@ -11860,6 +12073,50 @@ const CATALOGUE: ComponentEntry[] = [
               </View>
             </Card.Content>
           </Card>
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'button-group',
+    name: 'ButtonGroup',
+    summary: 'Several buttons drawn as one control',
+    demos: [
+      { label: 'A view switcher', render: () => <ButtonGroupViewsDemo /> },
+      { label: 'Sharing the row', render: () => <ButtonGroupPlanDemo /> },
+      { label: 'A split action', render: () => <ButtonGroupSplitDemo /> },
+      { label: 'Counts in a segment', render: () => <ButtonGroupCountDemo /> },
+      { label: 'Busy and unavailable', render: () => <ButtonGroupStatesDemo /> },
+      { label: 'Down the side', render: () => <ButtonGroupVerticalDemo /> },
+      {
+        label: 'Not joined',
+        render: () => (
+          <View className="w-full items-center gap-4">
+            {/* Same shared variant and size, no shared shape — a toolbar
+                rather than a segmented control. */}
+            <ButtonGroup attached={false} variant="outline" size="sm">
+              <Button startContent={<SearchIcon size={15} />}>Find</Button>
+              <Button startContent={<DownloadIcon size={15} />}>Export</Button>
+              <Button startContent={<ShareNodesIcon size={15} />}>Share</Button>
+            </ButtonGroup>
+            <Text size="xs" muted>
+              attached={'{false}'}
+            </Text>
+          </View>
+        ),
+      },
+      {
+        label: 'Sizes',
+        render: () => (
+          <View className="w-full items-center gap-4">
+            {(['sm', 'md', 'lg'] as const).map((size) => (
+              <ButtonGroup key={size} size={size} variant="outline">
+                <Button>Left</Button>
+                <Button>Middle</Button>
+                <Button>Right</Button>
+              </ButtonGroup>
+            ))}
+          </View>
         ),
       },
     ],

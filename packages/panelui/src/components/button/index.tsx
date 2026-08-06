@@ -1,4 +1,4 @@
-import { forwardRef, type ReactNode } from 'react';
+import { createContext, forwardRef, useContext, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
@@ -7,6 +7,7 @@ import {
   type AnimatedPressableProps,
 } from '../../primitives/animated-pressable';
 import { Text, textChildren } from '../../primitives/text';
+import { cn } from '../../utils/cn';
 import { IconColorProvider } from '../../icons';
 import { getNativeUI, getSwiftUIModifiers } from '../../native';
 import { Spinner } from '../spinner';
@@ -71,6 +72,65 @@ const buttonVariants = tv({
 });
 
 type ButtonVariantProps = VariantProps<typeof buttonVariants>;
+
+/** How a button looks. */
+export type ButtonVariant = NonNullable<ButtonVariantProps['variant']>;
+/** How big a button is. `icon` is a square. */
+export type ButtonSize = NonNullable<ButtonVariantProps['size']>;
+
+/* -------------------------------------------------------------------------- *
+ * Grouping
+ *
+ * A button reads this; `ButtonGroup` writes it. The context lives here rather
+ * than beside the group because the button is the consumer, and a component
+ * should not have to import the thing that contains it to find out that it is
+ * contained — which would also make the two import each other.
+ * -------------------------------------------------------------------------- */
+
+export interface ButtonGroupContextValue {
+  /** Fills in for a button that did not choose one. */
+  variant?: ButtonVariant;
+  /** Fills in for a button that did not choose one. */
+  size?: ButtonSize;
+  /** The buttons are joined into one shape, so each drops its own. */
+  attached: boolean;
+  /** Segments share the row equally. */
+  fullWidth: boolean;
+}
+
+const ButtonGroupContext = createContext<ButtonGroupContextValue | null>(null);
+
+/** Announces to every button below it that it is part of one control. */
+export function ButtonGroupProvider({
+  value,
+  children,
+}: {
+  value: ButtonGroupContextValue;
+  children: ReactNode;
+}) {
+  return <ButtonGroupContext.Provider value={value}>{children}</ButtonGroupContext.Provider>;
+}
+
+/** The enclosing group, if there is one. `null` for a button standing alone. */
+export function useButtonGroup(): ButtonGroupContextValue | null {
+  return useContext(ButtonGroupContext);
+}
+
+/**
+ * What an attached button gives up so the group can draw the shape once.
+ *
+ * The radius and the shadow go because the group owns both — a rounded,
+ * shadowed segment inside a rounded, shadowed container is two shapes where
+ * there should be one. The border stays but turns transparent rather than
+ * being removed: it is holding a pixel of the button's height, and dropping it
+ * would make an `outline` segment a hair shorter than a `ghost` one beside it.
+ *
+ * The press feedback changes too. A button on its own shrinks slightly when
+ * pressed, which inside a joined run would pull the segment away from its
+ * neighbours and show the container through the gap. A background is the same
+ * signal without the movement.
+ */
+const ATTACHED = 'rounded-none border-transparent shadow-none active:bg-accent';
 
 const SPINNER_SIZE = { sm: 'sm', md: 'sm', lg: 'md', icon: 'sm' } as const;
 
@@ -240,10 +300,28 @@ export const Button = forwardRef<View, ButtonProps>(
   ) => {
     const isDisabled = disabled || loading;
     const nativeUI = native ? getNativeUI() : null;
+
+    /*
+     * A group fills in what a button did not say for itself, and never
+     * overrides what it did: a run of buttons should look like one control
+     * without every segment repeating the same two props, and the odd segment
+     * that wants to stand out — the selected one, the destructive one — has to
+     * be able to say so.
+     *
+     * `native` is deliberately outside all of this. The platform draws that
+     * button, so it has no border, radius or shadow for a group to take over,
+     * and joining several of them would produce a row of platform buttons with
+     * a border drawn around it rather than a segmented control.
+     */
+    const group = useButtonGroup();
+    const attached = !native && group?.attached === true;
+    const resolvedVariant = variant ?? group?.variant;
+    const resolvedSize = size ?? group?.size;
+
     const { root, label, spinner } = buttonVariants({
-      variant,
-      size,
-      fullWidth,
+      variant: resolvedVariant,
+      size: resolvedSize,
+      fullWidth: fullWidth ?? (attached && group?.fullWidth),
       disabled: isDisabled,
     });
 
@@ -252,11 +330,11 @@ export const Button = forwardRef<View, ButtonProps>(
     // hardcode a hex that is wrong in one theme or the other.
     const themedColor = useCSSVariable(
       CONTENT_COLOR_VAR[
-        variant === 'destructive' ? 'primary' : (variant ?? 'primary')
+        resolvedVariant === 'destructive' ? 'primary' : (resolvedVariant ?? 'primary')
       ]
     );
     const contentColor =
-      variant === 'destructive'
+      resolvedVariant === 'destructive'
         ? '#ffffff'
         : typeof themedColor === 'string'
           ? themedColor
@@ -265,7 +343,7 @@ export const Button = forwardRef<View, ButtonProps>(
     if (nativeUI) {
       const { Host, Button: NativeButton, RNHostView } = nativeUI;
       const isStringLabel = typeof children === 'string';
-      const prominent = variant === 'primary' || variant === 'destructive';
+      const prominent = resolvedVariant === 'primary' || resolvedVariant === 'destructive';
 
       /*
        * Looks the portable props cannot ask for.
@@ -285,8 +363,10 @@ export const Button = forwardRef<View, ButtonProps>(
       const nativeModifiers = swiftUI
         ? [
             glass ? swiftUI.buttonStyle(prominent ? 'glassProminent' : 'glass') : null,
-            size === 'icon' ? swiftUI.buttonBorderShape('circle') : null,
-            isStringLabel ? swiftUI.controlSize(NATIVE_CONTROL_SIZE[size ?? 'md']) : null,
+            resolvedSize === 'icon' ? swiftUI.buttonBorderShape('circle') : null,
+            isStringLabel
+              ? swiftUI.controlSize(NATIVE_CONTROL_SIZE[resolvedSize ?? 'md'])
+              : null,
           ].filter(Boolean)
         : [];
 
@@ -303,7 +383,7 @@ export const Button = forwardRef<View, ButtonProps>(
         <Host matchContents>
           <NativeButton
             label={isStringLabel ? children : undefined}
-            variant={NATIVE_VARIANT[variant ?? 'primary']}
+            variant={NATIVE_VARIANT[resolvedVariant ?? 'primary']}
             disabled={isDisabled}
             /*
              * A square for an icon button, a height for a labelled one — and
@@ -316,9 +396,9 @@ export const Button = forwardRef<View, ButtonProps>(
              * the result.
              */
             style={
-              size === 'icon'
+              resolvedSize === 'icon'
                 ? { width: NATIVE_ICON_FRAME, height: NATIVE_ICON_FRAME }
-                : { height: NATIVE_HEIGHT[size ?? 'md'] }
+                : { height: NATIVE_HEIGHT[resolvedSize ?? 'md'] }
             }
             modifiers={nativeModifiers.length ? nativeModifiers : undefined}
             onPress={props.onPress}
@@ -337,7 +417,7 @@ export const Button = forwardRef<View, ButtonProps>(
                     sits on ends up off to one side of a circle that is not. */}
                 <View
                   style={
-                    size === 'icon'
+                    resolvedSize === 'icon'
                       ? {
                           padding: NATIVE_ICON_PADDING,
                           alignItems: 'center',
@@ -366,11 +446,13 @@ export const Button = forwardRef<View, ButtonProps>(
           accessibilityRole="button"
           accessibilityState={{ disabled: isDisabled, busy: loading }}
           disabled={isDisabled}
-          className={root({ className })}
+          // Before the spread, so a caller can still ask for the scale back.
+          pressScale={attached ? 1 : undefined}
+          className={root({ className: cn(attached && ATTACHED, className) })}
           {...props}
         >
           {loading ? (
-            <Spinner size={SPINNER_SIZE[size ?? 'md']} className={spinner()} />
+            <Spinner size={SPINNER_SIZE[resolvedSize ?? 'md']} className={spinner()} />
           ) : (
             startContent
           )}

@@ -124,7 +124,17 @@ export {
   type BreadcrumbSeparatorProps,
   type BreadcrumbEllipsisProps,
 } from './components/breadcrumb';
-export { Button, type ButtonProps } from './components/button';
+export {
+  Button,
+  type ButtonProps,
+  type ButtonVariant,
+  type ButtonSize,
+} from './components/button';
+export {
+  ButtonGroup,
+  type ButtonGroupProps,
+  type ButtonGroupOrientation,
+} from './components/button-group';
 export {
   ToggleButton,
   ToggleButtonGroup,
