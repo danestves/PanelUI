@@ -1,4 +1,63 @@
 {
+        "fab": {
+      "intro": "The floating action button: one screen, one thing it is mostly for.\n\nIt floats, which is the whole problem with it. A button pinned over the content is a button covering some of it, and the bottom-right corner of a scrolling list is exactly where the last row goes. So it is right when a screen has *one* action worth that trade and wrong when it has three — a corner with three buttons in it is a toolbar that has been put in the wrong place. Where a screen has several, the honest shapes are a [ButtonGroup](/docs/components/button-group) in a bar or, if one of them really does lead, this with a `Fab.Group` behind it.",
+      "usage": "<Fab\n  placement=\"bottom-right\"\n  icon={<PlusIcon size={24} />}\n  accessibilityLabel=\"New note\"\n  onPress={compose}\n/>",
+      "extraImports": [
+        "PlusIcon",
+        "PencilIcon",
+        "ImageIcon",
+        "PaperclipIcon",
+        "MicIcon",
+        "TrashIcon",
+        "SendIcon"
+      ],
+      "anatomy": "{/* on its own */}\n<Fab icon={…} accessibilityLabel=\"…\" onPress={…} />\n\n{/* or with a dial behind it */}\n<Fab.Group icon={…} accessibilityLabel=\"…\">\n  <Fab.Action icon={…} label=\"…\" onPress={…} />\n  <Fab.Action icon={…} label=\"…\" onPress={…} />\n</Fab.Group>",
+      "parts": {
+        "Group": "A trigger with actions behind it — the speed dial. It owns the open state, the scrim, and the quarter turn the trigger takes while it is open.",
+        "Action": "One choice in an open dial: a smaller round button with its label beside it. Pressing one closes the dial and then runs the action."
+      },
+      "partNotes": "`Fab.Action` only works inside a `Fab.Group` — it reads the dial's open progress to know when its own turn to unfold is, and throws outside one rather than rendering something that would never animate.",
+      "examples": [
+        {
+          "title": "Over a list",
+          "description": "The case it exists for. `placement` pins it to a corner against the nearest positioned ancestor, which on a screen means the screen — so give the content below it enough bottom padding to scroll clear. Nothing here can work out how tall your list is, and a button sitting on the last row forever is the failure people actually hit.",
+          "code": "<View className=\"flex-1\">\n  <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>\n    {/* …rows… */}\n  </ScrollView>\n\n  <Fab\n    placement=\"bottom-right\"\n    icon={<PlusIcon size={24} />}\n    accessibilityLabel=\"New note\"\n    haptics\n    onPress={compose}\n  />\n</View>"
+        },
+        {
+          "title": "Spelling the action out",
+          "description": "A lone glyph is a guess unless the glyph is a plus. `extended` turns the circle into a stadium and puts the label beside it — worth the width for anything a plus would not have said on its own.",
+          "code": "<Fab extended placement=\"bottom-right\" icon={<PencilIcon size={20} />}>\n  Write\n</Fab>"
+        },
+        {
+          "title": "A speed dial",
+          "description": "The actions unfold one after another rather than together — a few frames apart each, which is enough to read as a list opening instead of a menu appearing. Every one carries its label, because a column of unlabelled circles is a quiz.\n\nOpening drops a scrim over the screen. Not for looks: an open dial is modal — the next tap either picks something or closes it — and the scrim is both what says so and what catches the tap.",
+          "code": "<Fab.Group icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
+        },
+        {
+          "title": "In the flow instead of over it",
+          "description": "Leave `placement` out and it is an ordinary round button where you put it — for a screen that already has somewhere for it to sit, and for laying several out side by side.",
+          "code": "<View className=\"flex-row items-center gap-4\">\n  <Fab icon={<PlusIcon size={20} />} accessibilityLabel=\"Add\" />\n  <Fab variant=\"surface\" icon={<SearchIcon size={20} />} accessibilityLabel=\"Search\" />\n  <Fab variant=\"destructive\" icon={<TrashIcon size={20} />} accessibilityLabel=\"Delete\" />\n</View>"
+        }
+      ],
+      "notes": "### Give it a label\n\n`accessibilityLabel` is not optional in practice. An icon-only button reads out as nothing at all, and the plus that is obvious to someone looking at it says nothing to someone who is not. `Fab.Action` takes its label from `label`, so it is already covered.\n\n### The actions are unmounted while the dial is closed\n\nNot hidden. A column kept alive behind the trigger would still be in the accessibility tree, and a screen reader would walk into four buttons nobody can see.\n\n### One timing, not one per action\n\nThe whole dial runs off a single shared value, and each action works out its own share of it on the UI thread from its index. There is no chain of timeouts to fall out of step with itself when the dial is closed halfway through opening — closing simply runs the same value back down, and every action follows it.\n\n### The trigger turns rather than swapping\n\n`rotateOnOpen` gives the glyph a quarter circle while the dial is up, which is doing real work when the glyph is a plus: the same mark becomes a cross, so the button says *this closes now* without a second icon to swap in and animate between. Turn it off for a glyph that means something at one angle only.\n\n### A group draws itself above everything\n\nThe scrim and the buttons go through the same portal, scrim first. They have to travel together: portalled content is drawn above everything in the ordinary tree, so a portalled scrim over an in-place trigger would cover the trigger and its actions — the dial would open and immediately vanish behind its own backdrop.\n\nOne consequence worth knowing: a group's `offset` is measured from the screen's edges rather than from whatever it is written inside, which is what lets you declare it next to the content it belongs to instead of at the root of the screen. Add your safe-area inset to it if you want it clear of the home indicator. A plain `Fab` is not portalled and anchors to its nearest positioned ancestor, as an absolutely positioned view normally would.",
+      "versions": [
+        {
+          "title": "Over a list",
+          "description": "The case it exists for — one action pinned over content that scrolls under it.",
+          "code": "<View className=\"flex-1\">\n  <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>\n    {/* …rows… */}\n  </ScrollView>\n\n  <Fab\n    placement=\"bottom-right\"\n    icon={<PlusIcon size={24} />}\n    accessibilityLabel=\"New note\"\n    haptics\n    onPress={compose}\n  />\n</View>"
+        },
+        {
+          "title": "A speed dial",
+          "description": "Actions unfolding out of the button, over a screen that says the dial is modal.",
+          "code": "<Fab.Group icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
+        },
+        {
+          "title": "Where it parks",
+          "description": "The extended form, in each of the three corners it can take.",
+          "code": "<Fab extended placement={placement} icon={<PencilIcon size={20} />}>\n  Write\n</Fab>\n\n{/* placement is 'bottom-left' | 'bottom-center' | 'bottom-right' */}"
+        }
+      ]
+    },
     "markdown-editor": {
       "intro": "A field for writing markdown, and a way to see it rendered.\n\nWriting and reading are two modes here rather than two panes. Side by side is how this is done on a desktop and it does not survive the trip to a phone: two columns of a phone's width are two columns too narrow to read, and the keyboard covers the bottom half of the screen exactly when the writer is using it. So there is one pane and a switch, and the toolbar carries the switch because the toolbar is the one thing on screen in both modes.\n\nThe preview is [Response](/docs/ai-components/response) — the same reader that renders a model's answer — so markdown means one thing across the library and there is one parser to be right rather than two to keep in step. It renders through `Typography`, `CodeBlock` and `Table`, which is to say through your app's own type and colours: a preview that looked like a document viewer would be showing the writer something they are not going to ship.",
       "usage": "const [draft, setDraft] = useState('');\n\n<MarkdownEditor value={draft} onValueChange={setDraft} rows={12} />",

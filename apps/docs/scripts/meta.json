@@ -177,6 +177,14 @@
     "Placeholder for a list or screen with no content.",
     "react native empty state"
   ],
+  "fab": [
+    "Fab",
+    "The floating action button \u2014 one action pinned over the content, with an optional dial of others behind it.",
+    "react native floating action button fab speed dial",
+    {
+      "addedIn": "0.49.0"
+    }
+  ],
   "field": [
     "Field",
     "Layout and validation-state kit a form control composes into.",

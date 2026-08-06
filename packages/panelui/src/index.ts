@@ -175,6 +175,15 @@ export {
   type DirectionValue,
 } from './components/direction';
 export {
+  Fab,
+  type FabProps,
+  type FabGroupProps,
+  type FabActionProps,
+  type FabPlacement,
+  type FabSize,
+  type FabVariant,
+} from './components/fab';
+export {
   Flow,
   type FlowProps,
   type FlowNodeProps,
