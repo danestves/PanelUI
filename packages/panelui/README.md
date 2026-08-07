@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 92 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 93 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -185,6 +185,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `ColorPicker` | A colour chosen by dragging — a saturation square, a hue scale, and opacity |
 | `Combobox` | A text field that filters a list of options as you type |
 | `DatePicker` | A calendar behind a button |
+| `DateTimePicker` | A day and a time of day, picked in one panel |
 | `Dialog` | Modal dialog with a backdrop and footer actions |
 | `Direction` | Reading direction for everything below it |
 | `Drawer` | Panel that slides in from an edge of the screen |
@@ -194,10 +195,12 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Flow` | Pan-and-zoom canvas of draggable nodes joined by animated edges |
 | `Form` | Form state — values, validation and submission — with no form library underneath |
 | `Frame` | Widget shell — a card of rows sitting in a titled tray |
+| `GridItem` | Bento tiles, and the grid that places them |
 | `HeatmapChart` | Contribution grid with a themed colour ramp and a readout |
 | `Input` | Text field with label, description and error message |
 | `InputGroup` | Input with leading and trailing decorators |
 | `Item` | Row of media, text and actions for lists and settings |
+| `Kpi` | One number, what it is doing, and the shape it made getting there |
 | `Label` | Form field label with required, invalid and disabled states |
 | `LineChart` | Animated time series, drawn on the UI thread |
 | `Loader` | Nine loading animations behind one variant prop |
@@ -211,10 +214,13 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `OtpInput` | One-time-code field drawn as a row of separate cells |
 | `Pagination` | Paged navigation over a long result set |
 | `Panelside` | Collapsible side panel with its own search, groups and scenes |
+| `PieChart` | One whole, divided between its parts |
 | `Plan` | What an agent intends to do, before it does it |
 | `Popover` | Panel anchored to the element that opened it |
 | `Post` | Social card — author, body, media and the counts underneath |
 | `Progress` | Determinate and indeterminate progress bar |
+| `Questionnaire` | One question at a time, with progress, validation and a way back |
+| `RadarChart` | Several measures of one thing, drawn as one shape |
 | `RadioGroup` | Single-select list of options |
 | `Rating` | A row of stars to read or set a score |
 | `Reasoning` | An agent’s thinking, collapsed until you want it |
@@ -231,6 +237,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Signature` | Sign with a finger, and get the result back out as SVG or PNG |
 | `Skeleton` | Shimmer placeholder for loading content |
 | `Slider` | Pick a value, or a span, by dragging a thumb along a track |
+| `Sortable` | A list whose rows can be dragged into a different order |
 | `Soundwave` | What a voice looks like while an app listens |
 | `Sources` | The references behind an answer, behind a disclosure |
 | `Spinner` | Indeterminate loading indicator |
