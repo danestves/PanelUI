@@ -1,8 +1,34 @@
 import { createMDX } from 'fumadocs-mdx/next';
 
+/*
+ * Anything under `public/` is served `max-age=0, must-revalidate` unless it is
+ * told otherwise, so a reader moving through five pages re-requests the logo
+ * and every preview on each one — a 304 costs the same as a hit. A day of
+ * freshness makes that one request per asset per day, and a re-recorded
+ * preview keeps its filename, so a day is also the longest anyone waits to
+ * see a corrected one.
+ */
+const STATIC_CACHE = 'public, max-age=86400';
+
+const cached = (source) => ({
+  source,
+  headers: [{ key: 'Cache-Control', value: STATIC_CACHE }],
+});
+
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  async headers() {
+    return [
+      cached('/previews/:path*'),
+      cached('/diagrams/:path*'),
+      cached('/logo-light.png'),
+      cached('/logo-dark.png'),
+      cached('/logo-glow-light.png'),
+      cached('/logo-glow-dark.png'),
+      cached('/icon-512.png'),
+    ];
+  },
   /*
    * A docs URL follows the folder its page is filed in, so regrouping a
    * component moves it. Anything that has been published — the README, the
