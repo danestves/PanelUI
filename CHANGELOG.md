@@ -9,6 +9,73 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.50.0] — 2026-08-07
+
+### Added
+
+- **`Sortable`** — a list whose rows can be dragged into a different order. Marked **beta**: the
+  parts and their props are settled, but it has not had enough use to promise they will not move.
+
+  Nothing in the library let a person say *this one goes above that one*. `Swipe` acts on a row,
+  `Tree` opens one, `Table` sorts every row at once by a column — none of them arrange a playlist,
+  a set of form fields or a run of dashboard tiles, which is an order somebody chose rather than
+  one derived from the data.
+
+  The rows are never moved in the tree. Each one stays where it was laid out and is pushed around
+  with a transform: the difference between where its slot sits in the order being dragged and where
+  it sits in the order that was rendered. That is one subtraction per row per frame, on the UI
+  thread. Reordering the children instead would put a full reconciliation of the list on every slot
+  the finger crosses, which is the one thing a drag cannot afford.
+
+  Heights are measured rather than assumed, so a list with a two-line row in it lands in the right
+  slots — a fixed row height is the number that goes wrong the moment somebody adds that row. The
+  dragged row moves to the first slot whose middle it has passed, walking outwards from where it
+  started rather than scanning for the nearest one, because with rows of unequal height a
+  nearest-slot search can hand back a slot two places away and read on screen as a skip.
+
+  `onReorder` fires once the row has settled, not when the finger lifts: until the spring finishes
+  the row is in a slot the layout knows nothing about, and re-rendering there would relayout every
+  row underneath one that is still moving. By the time the callback runs the rows are already where
+  the new order puts them, so the re-render that follows changes nothing on screen.
+
+  The component never owns the order — it reports where a row was dropped and the list stays
+  yours to rearrange, because only you know what an id stands for. `reorderItems` applies the same
+  move to a list of whatever those ids name.
+
+  `activation` is `handle` by default, so a row with a button, a checkbox or a link on it keeps
+  working; `longPress` gives the whole row to the drag. Pass the scroller the list sits in and a
+  drag carried to the edge scrolls it, with the scrolled distance added back into the row's offset
+  so the row does not slide out from under the finger. `useSortableItem` tells a row of your own
+  whether it is the one in the air, as a plain boolean that changes twice in a drag rather than
+  once a frame.
+
+- **`Swipe.Group`** — several rows that agree only one of them is open at a time. A row knows when
+  it opens and has no way to hear that a sibling did, so a list of swipeable rows ends up with
+  three of them standing open at once — a state every list on the phone with this gesture goes out
+  of its way to avoid, and one that previously had to be fixed by holding a ref to every row.
+
+  Rows register themselves with the group rather than being found by walking children, so a row
+  nested inside anything at all still belongs: wrapped in an `Item.Group`, produced by a `map`, or
+  rendered by a component of your own. Nothing re-renders — the registry is a ref and closing a
+  sibling writes to that row's shared value, so opening a row still costs the springs it starts and
+  no React work.
+
+  `useSwipeGroup()` returns `closeAll`, for the cases a row cannot see either: a list that scrolls,
+  navigates away, or has just deleted the row that was open. `exclusive={false}` keeps the
+  container and the handle while letting several rows stand open.
+
+- **`GripVerticalIcon`** — the two columns of dots that mark a row as something to take hold of.
+
+- **`impactKnock`** — the haptic for a thing coming loose or landing, alongside the existing
+  selection tick. An impact rather than a selection because it marks a change of state rather than
+  a change of value: the finger is now holding something it was not holding a moment ago.
+
+### Docs
+
+- The README's component count had been stale since 0.49.0 and is now 93, with the six names its
+  category lists were missing: ButtonGroup, Fab, MarkdownEditor, Questionnaire, TextAnimation and
+  Sortable.
+
 ## [0.49.0] — 2026-08-06
 
 ### Added
