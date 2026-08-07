@@ -991,6 +991,28 @@ export function TrashIcon({ size = 16, color, ...props }: IconProps) {
   );
 }
 
+/**
+ * Two columns of dots — the grip on a row that can be dragged somewhere else.
+ *
+ * Dots rather than the stacked rules of a menu glyph, and two columns rather
+ * than one: the pattern has to read as a surface to take hold of from either
+ * side, and a single column reads as a divider instead.
+ */
+export function GripVerticalIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"
+        stroke={resolved}
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 /** An arrow into a tray — save the thing to a file. */
 export function DownloadIcon({ size = 16, color, ...props }: IconProps) {
   const resolved = useResolvedColor(color, '#737373');

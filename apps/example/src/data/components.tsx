@@ -166,6 +166,9 @@ import {
   type SignatureHandle,
   Skeleton,
   Slider,
+  Sortable,
+  reorderItems,
+  useSortableItem,
   Soundwave,
   Spinner,
   StarIcon,
@@ -11104,6 +11107,219 @@ function SwipeDeleteDemo() {
   );
 }
 
+/* -------------------------------------------------------------------------- *
+ * Sortable                                                                    *
+ * -------------------------------------------------------------------------- */
+
+/**
+ * The plain case: a checklist that has to be done in order, so the order is
+ * the content. Drag a grip and the rows underneath move out of the way.
+ */
+function SortableTasksDemo() {
+  const [tasks, setTasks] = useState([
+    { id: 'notes', title: 'Draft the release notes' },
+    { id: 'tag', title: 'Cut the tag' },
+    { id: 'publish', title: 'Publish to npm' },
+    { id: 'post', title: 'Post the changelog' },
+  ]);
+
+  return (
+    <Sortable
+      value={tasks.map((task) => task.id)}
+      onReorder={(_, { from, to }) => setTasks((t) => reorderItems(t, from, to))}
+      gap={8}
+      className="w-full"
+    >
+      {tasks.map((task, index) => (
+        <Sortable.Item key={task.id} id={task.id}>
+          <Item variant="outline">
+            <Item.Media variant="icon">
+              <Text size="sm" muted>
+                {index + 1}
+              </Text>
+            </Item.Media>
+            <Item.Content>
+              <Item.Title>{task.title}</Item.Title>
+            </Item.Content>
+            <Sortable.Handle />
+          </Item>
+        </Sortable.Item>
+      ))}
+    </Sortable>
+  );
+}
+
+/**
+ * No grip, because there is nothing else on these rows to press: a swatch and
+ * two lines of text. Hold one for a moment and it comes loose.
+ */
+function SortableLongPressDemo() {
+  const [colors, setColors] = useState([
+    { id: 'iris', name: 'Iris', hex: '#6366f1' },
+    { id: 'moss', name: 'Moss', hex: '#16a34a' },
+    { id: 'ember', name: 'Ember', hex: '#ea580c' },
+    { id: 'slate', name: 'Slate', hex: '#475569' },
+  ]);
+
+  return (
+    <View className="w-full gap-3">
+      <Text size="sm" muted>
+        Hold a row for a moment, then drag it.
+      </Text>
+      <Sortable
+        value={colors.map((color) => color.id)}
+        onReorder={(_, { from, to }) => setColors((c) => reorderItems(c, from, to))}
+        activation="longPress"
+        gap={8}
+        className="w-full"
+      >
+        {colors.map((color) => (
+          <Sortable.Item key={color.id} id={color.id}>
+            <Item variant="outline">
+              <View
+                className="h-9 w-9 rounded-lg"
+                style={{ backgroundColor: color.hex }}
+              />
+              <Item.Content>
+                <Item.Title>{color.name}</Item.Title>
+                <Item.Description>{color.hex}</Item.Description>
+              </Item.Content>
+            </Item>
+          </Sortable.Item>
+        ))}
+      </Sortable>
+    </View>
+  );
+}
+
+/**
+ * Rows of three different heights in one list — the case a fixed row height
+ * gets wrong. Every row reports its own, so each one lands in the slot its
+ * middle actually reached rather than the slot an assumed height predicted.
+ */
+function SortableMixedHeightsDemo() {
+  const [notes, setNotes] = useState([
+    { id: 'n1', title: 'Ship the registry fix', body: null as string | null },
+    {
+      id: 'n2',
+      title: 'Rewrite the theming page',
+      body: 'The token table is out of date in three places, and the dark-mode section still describes the old variable names.',
+    },
+    { id: 'n3', title: 'Answer the issue about Metro', body: null },
+    {
+      id: 'n4',
+      title: 'Record the previews',
+      body: 'Four components changed this week.',
+    },
+  ]);
+
+  return (
+    <Sortable
+      value={notes.map((note) => note.id)}
+      onReorder={(_, { from, to }) => setNotes((n) => reorderItems(n, from, to))}
+      gap={8}
+      className="w-full"
+    >
+      {notes.map((note) => (
+        <Sortable.Item key={note.id} id={note.id}>
+          <Item variant="outline">
+            <Item.Content>
+              <Item.Title>{note.title}</Item.Title>
+              {note.body ? <Item.Description>{note.body}</Item.Description> : null}
+            </Item.Content>
+            <Sortable.Handle />
+          </Item>
+        </Sortable.Item>
+      ))}
+    </Sortable>
+  );
+}
+
+/**
+ * `useSortableItem` from inside a row of the caller's own. `isActive` changes
+ * twice in a whole drag rather than once a frame, so styling from it is two
+ * renders and not sixty a second.
+ */
+function SortableActiveRow({ label }: { label: string }) {
+  const { index, isActive } = useSortableItem();
+
+  return (
+    <Item
+      variant="outline"
+      className={isActive ? 'border-primary bg-muted' : undefined}
+    >
+      <Item.Content>
+        <Item.Title>{label}</Item.Title>
+        <Item.Description>Position {index + 1}</Item.Description>
+      </Item.Content>
+      {isActive ? <Badge variant="secondary">Moving</Badge> : null}
+      <Sortable.Handle />
+    </Item>
+  );
+}
+
+function SortableActiveDemo() {
+  const [rows, setRows] = useState([
+    { id: 'r1', label: 'Overview' },
+    { id: 'r2', label: 'Usage' },
+    { id: 'r3', label: 'Examples' },
+    { id: 'r4', label: 'Props' },
+  ]);
+
+  return (
+    <Sortable
+      value={rows.map((row) => row.id)}
+      onReorder={(_, { from, to }) => setRows((r) => reorderItems(r, from, to))}
+      gap={8}
+      className="w-full"
+    >
+      {rows.map((row) => (
+        <Sortable.Item key={row.id} id={row.id}>
+          <SortableActiveRow label={row.label} />
+        </Sortable.Item>
+      ))}
+    </Sortable>
+  );
+}
+
+/**
+ * One row that cannot be picked up, and the rest still moving past it — which
+ * is the honest behaviour: refusing the drop as well would look like the drag
+ * had worked and then been undone.
+ */
+function SortableDisabledDemo() {
+  const [steps, setSteps] = useState([
+    { id: 's1', title: 'Install the package', fixed: true },
+    { id: 's2', title: 'Add the provider' },
+    { id: 's3', title: 'Import the theme' },
+    { id: 's4', title: 'Render a Button' },
+  ]);
+
+  return (
+    <Sortable
+      value={steps.map((step) => step.id)}
+      onReorder={(_, { from, to }) => setSteps((s) => reorderItems(s, from, to))}
+      gap={8}
+      className="w-full"
+    >
+      {steps.map((step) => (
+        <Sortable.Item key={step.id} id={step.id} disabled={step.fixed}>
+          <Item variant="outline">
+            <Item.Content>
+              <Item.Title>{step.title}</Item.Title>
+            </Item.Content>
+            {step.fixed ? (
+              <Badge variant="outline">Fixed</Badge>
+            ) : (
+              <Sortable.Handle />
+            )}
+          </Item>
+        </Sortable.Item>
+      ))}
+    </Sortable>
+  );
+}
+
 const SWIPE_MAIL = [
   { id: 'm1', from: 'Nadia Rahman', subject: 'Re: the Q3 numbers' },
   { id: 'm2', from: 'Build bot', subject: 'main is green again' },
@@ -15918,6 +16134,18 @@ const CATALOGUE: ComponentEntry[] = [
           </Card>
         ),
       },
+    ],
+  },
+  {
+    slug: 'sortable',
+    name: 'Sortable',
+    summary: 'A list whose rows can be dragged into a different order',
+    demos: [
+      { label: 'A list you can reorder', render: () => <SortableTasksDemo /> },
+      { label: 'Lifting on a long press', render: () => <SortableLongPressDemo /> },
+      { label: 'Rows of different heights', render: () => <SortableMixedHeightsDemo /> },
+      { label: 'A row that knows it is being carried', render: () => <SortableActiveDemo /> },
+      { label: 'A row that stays put', render: () => <SortableDisabledDemo /> },
     ],
   },
   {

@@ -728,5 +728,14 @@
     {
       "addedIn": "0.48.0"
     }
+  ],
+  "sortable": [
+    "Sortable",
+    "A list whose rows can be dragged into a different order.",
+    "react native drag to reorder sortable list",
+    {
+      "addedIn": "0.50.0",
+      "beta": true
+    }
   ]
 }

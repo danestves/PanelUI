@@ -1,0 +1,283 @@
+---
+title: Sortable
+description: A list whose rows can be dragged into a different order.
+status: beta
+---
+
+A list whose rows can be dragged into a different order. The rows stay exactly where they were laid out and are pushed around with transforms, so a drag costs one subtraction per row per frame on the UI thread and no React work at all.
+
+## Installation
+
+Sortable ships with the library — no separate install.
+
+```tsx
+import { Sortable, Item, Text, Badge, reorderItems, useSortableItem } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add sortable
+```
+
+## Usage
+
+```tsx
+const [tasks, setTasks] = useState(TASKS);
+
+<Sortable
+  value={tasks.map((task) => task.id)}
+  onReorder={(_, { from, to }) => setTasks((t) => reorderItems(t, from, to))}
+  gap={8}
+>
+  {tasks.map((task) => (
+    <Sortable.Item key={task.id} id={task.id}>
+      <Item variant="outline">
+        <Item.Content>
+          <Item.Title>{task.title}</Item.Title>
+        </Item.Content>
+        <Sortable.Handle />
+      </Item>
+    </Sortable.Item>
+  ))}
+</Sortable>
+```
+
+## Composition
+
+```tsx
+<Sortable value={ids} onReorder={…}>
+  <Sortable.Item id="…">
+    {/* the row itself — anything at all */}
+    <Sortable.Handle />   {/* the part that lifts it */}
+  </Sortable.Item>
+</Sortable>
+```
+
+`value` is the ids of the rows in the order they are rendered below, and the rows must be rendered in that order. The component never owns the order: it reports where a row was dropped and the list stays the caller's to rearrange, because the caller is the only one who knows what an id stands for. A `value` that disagreed with the children would put rows in places their content had not moved to.
+
+Each row registers itself, so `Sortable.Item` may be wrapped in anything — but the rows do have to be the direct flex children of the list, since their slots are measured from the layout. Put spacing on `gap` rather than in a class: the drag has to know how far apart the slots are.
+
+## Examples
+
+### A list you can reorder
+
+The whole of it. `value` is the current order, `onReorder` is told where the row landed, and `reorderItems` applies that move to the list the ids came from. The rows are ordinary `Item`s — anything at all can go inside a row, because the component only ever adds a transform to it.
+
+```tsx
+const [tasks, setTasks] = useState([
+  { id: 'a', title: 'Draft the release notes' },
+  { id: 'b', title: 'Cut the tag' },
+  { id: 'c', title: 'Publish to npm' },
+  { id: 'd', title: 'Post the changelog' },
+]);
+
+<Sortable
+  value={tasks.map((task) => task.id)}
+  onReorder={(_, { from, to }) => setTasks((t) => reorderItems(t, from, to))}
+  gap={8}
+>
+  {tasks.map((task, index) => (
+    <Sortable.Item key={task.id} id={task.id}>
+      <Item variant="outline">
+        <Item.Media variant="icon">
+          <Text size="sm" muted>{index + 1}</Text>
+        </Item.Media>
+        <Item.Content>
+          <Item.Title>{task.title}</Item.Title>
+        </Item.Content>
+        <Sortable.Handle />
+      </Item>
+    </Sortable.Item>
+  ))}
+</Sortable>
+```
+
+### Lifting on a long press
+
+`activation="longPress"` gives the whole row to the drag, so there is no grip to aim at. It suits a row with nothing else to press — a plain label, a photo, a colour. Where a row has a button, a checkbox or a link on it, keep the default: a long press on the whole row takes all of them.
+
+```tsx
+<Sortable
+  value={colors.map((color) => color.id)}
+  onReorder={(_, { from, to }) => setColors((c) => reorderItems(c, from, to))}
+  activation="longPress"
+  longPressDelay={200}
+  gap={8}
+>
+  {colors.map((color) => (
+    <Sortable.Item key={color.id} id={color.id}>
+      <Item variant="outline">
+        <Item.Media variant="icon" style={{ backgroundColor: color.hex }} />
+        <Item.Content>
+          <Item.Title>{color.name}</Item.Title>
+          <Item.Description>{color.hex}</Item.Description>
+        </Item.Content>
+      </Item>
+    </Sortable.Item>
+  ))}
+</Sortable>
+```
+
+### Rows of different heights
+
+Every row reports its own height, so a list of rows of unequal size lands in the right slots. Nothing has to be declared and no row height is assumed — the one number a fixed-height list always gets wrong is the two-line row somebody adds to it later.
+
+```tsx
+<Sortable
+  value={notes.map((note) => note.id)}
+  onReorder={(_, { from, to }) => setNotes((n) => reorderItems(n, from, to))}
+  gap={8}
+>
+  {notes.map((note) => (
+    <Sortable.Item key={note.id} id={note.id}>
+      <Item variant="outline" orientation={note.body ? 'vertical' : 'horizontal'}>
+        <Item.Content>
+          <Item.Title>{note.title}</Item.Title>
+          {note.body ? <Item.Description>{note.body}</Item.Description> : null}
+        </Item.Content>
+        <Sortable.Handle />
+      </Item>
+    </Sortable.Item>
+  ))}
+</Sortable>
+```
+
+### A list longer than the screen
+
+Given the scroller it sits in, a drag carried to the top or bottom edge scrolls it, so a long list can be reordered end to end without letting go. The ref has to come from `useAnimatedRef` and be attached to an `Animated.ScrollView` — the drag reads the offset on the UI thread, and an ordinary ref has nothing to read.
+
+```tsx
+const scrollRef = useAnimatedRef<Animated.ScrollView>();
+
+<Animated.ScrollView ref={scrollRef}>
+  <Sortable
+    value={rows.map((row) => row.id)}
+    onReorder={(_, { from, to }) => setRows((r) => reorderItems(r, from, to))}
+    scrollRef={scrollRef}
+    autoscrollThreshold={90}
+    gap={8}
+  >
+    {rows.map((row) => (
+      <Sortable.Item key={row.id} id={row.id}>
+        <Item variant="outline">
+          <Item.Content>
+            <Item.Title>{row.title}</Item.Title>
+          </Item.Content>
+          <Sortable.Handle />
+        </Item>
+      </Sortable.Item>
+    ))}
+  </Sortable>
+</Animated.ScrollView>
+```
+
+### A row that knows it is being carried
+
+`useSortableItem` gives a row its id, its index, and whether it is the one in the air. `isActive` is a plain boolean and changes twice in a drag rather than sixty times a second — set when the row is lifted, cleared when it lands — so styling from it costs two renders, not a frame's worth each frame.
+
+```tsx
+function Row({ label }) {
+  const { index, isActive } = useSortableItem();
+
+  return (
+    <Item variant="outline" className={isActive ? 'border-primary bg-muted' : undefined}>
+      <Item.Content>
+        <Item.Title>{label}</Item.Title>
+        <Item.Description>Position {index + 1}</Item.Description>
+      </Item.Content>
+      {isActive ? <Badge variant="secondary">Moving</Badge> : null}
+      <Sortable.Handle />
+    </Item>
+  );
+}
+
+<Sortable value={ids} onReorder={apply} gap={8}>
+  {rows.map((row) => (
+    <Sortable.Item key={row.id} id={row.id}>
+      <Row label={row.label} />
+    </Sortable.Item>
+  ))}
+</Sortable>
+```
+
+### A row that stays put
+
+`disabled` on a row stops it being picked up. The others still move past it — a row that cannot be dragged is not the same as a row that cannot be displaced, and pretending otherwise would mean silently refusing drops that looked like they worked. `disabled` on the list turns every row off at once.
+
+```tsx
+<Sortable value={ids} onReorder={apply} gap={8}>
+  {steps.map((step) => (
+    <Sortable.Item key={step.id} id={step.id} disabled={step.fixed}>
+      <Item variant="outline">
+        <Item.Content>
+          <Item.Title>{step.title}</Item.Title>
+        </Item.Content>
+        {step.fixed ? <Badge variant="outline">Fixed</Badge> : <Sortable.Handle />}
+      </Item>
+    </Sortable.Item>
+  ))}
+</Sortable>
+```
+
+## API Reference
+
+### Sortable
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `string[]` | — | The ids of the rows, in the order they are rendered below. It is the caller's array rather than the component's, because only the caller knows what an id stands for — an order held here that disagreed with the children would put rows in places their content had not moved to. |
+| `onReorder` | `(order: string[], details: SortableReorderDetails) => void` | — | Told the new order once the dropped row has settled, and where it came from and went. Rearrange your own list from `details` — `reorderItems` does exactly this move. |
+| `gap` | `number` | `0` | Space between rows, in points. A prop rather than a `gap` class because the drag has to know it: the slot a row lands in is measured, and a gap the component cannot read is a gap it drops rows into the middle of. |
+| `activation` | `SortableActivation` | `'handle'` | What lifts a row. `handle` is the default and the safer one — the rest of the row stays free to be pressed, and a list of rows with buttons on them still works. `longPress` gives the whole row to the drag. |
+| `longPressDelay` | `number` | `220` | How long `longPress` activation waits, in milliseconds. |
+| `haptics` | `boolean` | `true` | Knock when a row is lifted, tick as it passes each slot. On by default: a drag with no feedback under the finger is the interaction people give up on halfway through, unsure whether anything is happening. |
+| `disabled` | `boolean` | `false` | Turn every row's drag off and leave the list static. |
+| `scrollRef` | `AnimatedRef<Animated.ScrollView>` | — | The scroller the list sits in, from `useAnimatedRef`. Given one, a drag carried to the top or bottom edge scrolls it, so a list longer than the screen can be reordered end to end. Without it a drag stops at the edge, which is correct for a list that fits. |
+| `autoscrollThreshold` | `number` | `72` | Points from the scroller's edge at which the scrolling begins. |
+| `autoscrollSpeed` | `number` | `8` | Points per frame at the very edge, tapering to nothing at the threshold. |
+| `onDragStart` | `(id: string) => void` | — | Told which row was lifted, the moment it is. |
+| `onDragEnd` | `(id: string) => void` | — | Told when it lands, whether or not the order changed. |
+
+### Sortable.Item
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `id` | `string` | — | What this row is, and the id that appears in `value` and in the order handed back. Stable across renders — an id derived from the index changes the moment the list is reordered, and the rows lose track of themselves. |
+| `disabled` | `boolean` | `false` | Stop this row being picked up. The others still move past it, because a row that cannot be dragged is not the same as a row that cannot be displaced — a pinned row is a different feature, and pretending this one is it would mean silently refusing drops that look like they worked. |
+| `activeClassName` | `string` | — | Extra classes for the row while it is being carried. |
+
+### Sortable.Handle
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `accessibilityLabel` | `string` | `'Drag to reorder'` | What a screen reader calls the grip. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Why the drop is reported late
+
+`onReorder` fires when the row has finished settling, not when the finger lifts. Between those two moments the row is springing into a slot the layout does not know about yet, and re-rendering the list in the middle of that would relayout every row underneath one that is still moving. By the time the callback runs the rows are already where the new order puts them, so the re-render that follows changes nothing on screen.
+
+It also means the list is briefly out of step with `value` — for the length of one spring. Nothing else should be reading the order in that window, and `onDragEnd` fires at the same moment if you need to know a drag is over regardless of whether anything moved.
+
+### Ids have to be stable
+
+An id derived from the index changes the moment the list is reordered, and the rows lose track of themselves — the one being dragged becomes a different row halfway through the drag. Use whatever your data already calls itself.
+
+### Where a row lands
+
+The dragged row moves to the first slot whose middle it has passed, walking outwards from where it started rather than scanning the list for the nearest slot. With rows of unequal height a nearest-slot search can hand back a slot two places away that happens to be closer, which reads on screen as the row skipping one.
+
+### Reordering without the gesture
+
+A drag is invisible to a screen reader: there is nothing on screen to announce and no way to discover it from the row. Every row therefore publishes **Move up** and **Move down** as accessibility actions, which is the whole of the alternative path. They move the row one slot and report the drop straight away — nothing is in flight, so there is nothing to wait for.
+
+### What it is not
+
+One axis, and no virtualisation. The rows are laid out in a column and all of them are mounted, which is the right trade for the lists people actually reorder by hand — a playlist, a set of form fields, a run of dashboard tiles. A list long enough to need windowing is a list nobody is going to drag the length of.

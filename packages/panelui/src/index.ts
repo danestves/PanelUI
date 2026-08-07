@@ -796,6 +796,16 @@ export {
 } from './components/thinking-orb';
 export { Skeleton, type SkeletonProps } from './components/skeleton';
 export { Slider, type SliderProps } from './components/slider';
+export {
+  Sortable,
+  reorderItems,
+  useSortableItem,
+  type SortableProps,
+  type SortableItemProps,
+  type SortableHandleProps,
+  type SortableActivation,
+  type SortableReorderDetails,
+} from './components/sortable';
 export { Spinner, type SpinnerProps } from './components/spinner';
 export {
   Steps,
