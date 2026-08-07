@@ -1,6 +1,7 @@
 ---
 title: Swipe
 description: A row that slides aside to reveal the things you can do to it.
+status: updated
 ---
 
 A row that slides aside to reveal the things you can do to it. The actions sit behind the row rather than beside it, so nothing about the layout changes when one opens — the row is the only thing that moves, and it moves on the UI thread.
@@ -51,18 +52,22 @@ npx panelui-cli@latest add swipe
 ## Composition
 
 ```tsx
-<Swipe>
-  <Swipe.Start>
-    <Swipe.Action label="…" />
-  </Swipe.Start>
-  <Swipe.End>
-    <Swipe.Action label="…" />
-  </Swipe.End>
-  {/* the row itself — anything at all */}
-</Swipe>
+<Swipe.Group>
+  <Swipe>
+    <Swipe.Start>
+      <Swipe.Action label="…" />
+    </Swipe.Start>
+    <Swipe.End>
+      <Swipe.Action label="…" />
+    </Swipe.End>
+    {/* the row itself — anything at all */}
+  </Swipe>
+</Swipe.Group>
 ```
 
 The panels are markers, not containers. The root lifts their children out and lays them out itself, because it is the root that knows how wide the gap behind the row currently is — so a `className` on a panel styles nothing. Order does not matter: the panels are recognised by type, and everything else you pass is the row.
+
+`Swipe.Group` is the exception — it is a real container and does style the box around its children. Rows register themselves with it rather than being found by inspecting children, so a row nested inside anything at all still belongs to the group: wrapped in an `Item.Group`, produced by a `map`, or rendered by a component of your own.
 
 ## Examples
 
@@ -130,6 +135,41 @@ A panel on each side, with more than one tile on the end. The tiles pack against
     </Item.Content>
   </Item>
 </Swipe>
+```
+
+### One row open at a time
+
+`Swipe.Group` closes the other rows when one opens. A row knows when it opens and has no way to hear that a sibling did, so without something above them a list ends up with three rows standing open and a screen that reads as stuck — which is why every list on a phone that has this gesture behaves the way the group makes it behave. Rows register with the group rather than being counted as its children, so the `map` and the `Item.Group` in between change nothing.
+
+```tsx
+<Swipe.Group>
+  <Item.Group>
+    {mail.map((message) => (
+      <Swipe key={message.id} haptics>
+        <Swipe.End>
+          <Swipe.Action
+            icon={<BookmarkIcon />}
+            label="Archive"
+            color="info"
+            onPress={() => archive(message.id)}
+          />
+          <Swipe.Action
+            icon={<TrashIcon />}
+            label="Delete"
+            color="destructive"
+            onPress={() => remove(message.id)}
+          />
+        </Swipe.End>
+        <Item>
+          <Item.Content>
+            <Item.Title>{message.from}</Item.Title>
+            <Item.Description>{message.subject}</Item.Description>
+          </Item.Content>
+        </Item>
+      </Swipe>
+    ))}
+  </Item.Group>
+</Swipe.Group>
 ```
 
 ### Without the full swipe
@@ -238,6 +278,13 @@ The same row inside a right-to-left subtree. `Swipe.End` still means the edge te
 
 ## API Reference
 
+### Swipe.Group
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `exclusive` | `boolean` | — | Close the other rows when one opens. On by default — that is the whole reason to reach for a group. Turning it off keeps the container and the `useSwipeGroup` handle while letting several rows stand open at once. |
+
 ### Swipe.Action
 
 | Prop | Type | Default | Description |
@@ -275,6 +322,10 @@ A panel is exactly as wide as the gap the row has left behind — never wider, s
 ### Which action a full swipe fires
 
 The one furthest from the row, because that is the one the gesture travelled all the way to. On the end side that is the last tile declared, on the start side the first — in both cases the tile at the outer edge, whose colour the panel takes and which grows to fill the gap as the drag is carried past it. Put the destructive action there, or turn the behaviour off with `fullSwipe={false}`.
+
+### Closing every row at once
+
+`useSwipeGroup()` returns `closeAll`, which shuts every row in the enclosing `Swipe.Group`. It is the one thing a group knows that a single row cannot: a list that scrolls, navigates away, or has just deleted the row that was open wants all of them put back, and holding a ref to each row to do it by hand is bookkeeping the group is already doing. It reads a group from above it, so the component that calls it has to sit inside the `Swipe.Group` rather than be the thing rendering it. Outside a group it is inert rather than an error.
 
 ### Sharing the screen with a scroller
 

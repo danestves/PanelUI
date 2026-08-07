@@ -519,7 +519,8 @@
     "A row that slides aside to reveal the things you can do to it.",
     "react native swipe to delete list row actions",
     {
-      "addedIn": "0.35.0"
+      "addedIn": "0.35.0",
+      "updatedIn": "0.50.0"
     }
   ],
   "switch": [
@@ -726,6 +727,15 @@
     "react native tree view file explorer hierarchy",
     {
       "addedIn": "0.48.0"
+    }
+  ],
+  "sortable": [
+    "Sortable",
+    "A list whose rows can be dragged into a different order.",
+    "react native drag to reorder sortable list",
+    {
+      "addedIn": "0.50.0",
+      "beta": true
     }
   ]
 }

@@ -61,3 +61,24 @@ export function hasHaptics(): boolean {
 export function selectionTick(): void {
   void getHaptics()?.selectionAsync().catch(() => {});
 }
+
+/**
+ * The knock for a thing coming loose or landing — a row lifted out of a list,
+ * a card dropped into place.
+ *
+ * An impact rather than a selection because it marks a change of state rather
+ * than a change of value: the finger is now holding something it was not
+ * holding a moment ago, and the lightest feedback is not enough to say so.
+ * `medium` is the one that reads as picking something up without reading as an
+ * error.
+ *
+ * Falls back to a selection tick where the style constants are missing, and to
+ * nothing at all where the package is.
+ */
+export function impactKnock(): void {
+  const haptics = getHaptics();
+  if (!haptics) return;
+  void haptics
+    .impactAsync(haptics.ImpactFeedbackStyle?.Medium)
+    .catch(() => {});
+}

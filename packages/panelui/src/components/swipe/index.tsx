@@ -27,6 +27,11 @@
  *
  * Everything that moves runs on the UI thread. A row being dragged does not
  * re-render — the only React work in a swipe is the callback at the end of it.
+ *
+ * Rows in a `Swipe.Group` close each other, so only one of them is ever open.
+ * That is the behaviour of every list on the phone that has this gesture, and
+ * a row cannot arrange it alone: it knows when it opens and has no way to hear
+ * that a sibling did.
  */
 import {
   Children,
@@ -36,6 +41,7 @@ import {
   isValidElement,
   useCallback,
   useContext,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -95,6 +101,131 @@ interface SwipeContextValue {
 }
 
 const SwipeContext = createContext<SwipeContextValue | null>(null);
+
+/* -------------------------------------------------------------------------- */
+/* Group                                                                      */
+/* -------------------------------------------------------------------------- */
+
+interface SwipeGroupContextValue {
+  /** Take a slot in the group. Returns the function that gives it back. */
+  join: (row: SwipeGroupMember) => () => void;
+  /** Say that this row has opened, so every other one can put itself away. */
+  opened: (row: SwipeGroupMember) => void;
+  /** Shut every row in the group. */
+  closeAll: () => void;
+}
+
+interface SwipeGroupMember {
+  close: () => void;
+}
+
+const SwipeGroupContext = createContext<SwipeGroupContextValue | null>(null);
+
+export interface SwipeGroupProps extends ViewProps {
+  className?: string;
+  children?: ReactNode;
+  /**
+   * Close the other rows when one opens. On by default — that is the whole
+   * reason to reach for a group. Turning it off keeps the container and the
+   * `useSwipeGroup` handle while letting several rows stand open at once.
+   */
+  exclusive?: boolean;
+}
+
+/**
+ * Several rows that agree only one of them is open at a time.
+ *
+ * Every list of swipeable rows wants this, and every list has to be told: a
+ * row knows when it opens but has no way to learn that a sibling did, so
+ * without something above them a list ends up with three rows standing open
+ * and a screen that reads as broken. The mail, message and reminder lists on
+ * a phone all behave this way, and a list that does not is the odd one out.
+ *
+ * ```tsx
+ * <Swipe.Group>
+ *   {rows.map((row) => (
+ *     <Swipe key={row.id}>
+ *       <Swipe.End>
+ *         <Swipe.Action label="Delete" color="destructive" onPress={…} />
+ *       </Swipe.End>
+ *       <Item>…</Item>
+ *     </Swipe>
+ *   ))}
+ * </Swipe.Group>
+ * ```
+ *
+ * The rows register themselves rather than being found by inspecting children,
+ * so a row nested inside anything at all still belongs — wrapped in an
+ * `Item.Group`, produced by a `map`, rendered by a component of your own. The
+ * alternative, walking the tree for `Swipe` elements, only ever works for the
+ * one arrangement it was written against.
+ *
+ * Nothing here re-renders. The registry is a ref and closing a sibling writes
+ * to that row's shared value, so opening a row costs the springs it starts and
+ * no React work at all.
+ */
+const SwipeGroup = forwardRef<View, SwipeGroupProps>(
+  ({ className, children, exclusive = true, ...props }, ref) => {
+    /*
+     * A ref rather than state: membership changes as rows mount and unmount,
+     * and rendering the whole list again because one row arrived would undo
+     * the point of a component that never re-renders while it is dragged.
+     */
+    const members = useRef(new Set<SwipeGroupMember>());
+
+    const context = useMemo<SwipeGroupContextValue>(
+      () => ({
+        join: (row) => {
+          members.current.add(row);
+          return () => {
+            members.current.delete(row);
+          };
+        },
+        opened: (row) => {
+          if (!exclusive) return;
+          for (const other of members.current) {
+            if (other !== row) other.close();
+          }
+        },
+        closeAll: () => {
+          for (const row of members.current) row.close();
+        },
+      }),
+      [exclusive]
+    );
+
+    return (
+      <SwipeGroupContext.Provider value={context}>
+        <View ref={ref} className={className} {...props}>
+          {children}
+        </View>
+      </SwipeGroupContext.Provider>
+    );
+  }
+);
+SwipeGroup.displayName = 'Swipe.Group';
+
+/**
+ * Shut every row in the enclosing `Swipe.Group`.
+ *
+ * The one thing a group knows that a single row cannot: a list that scrolls,
+ * navigates away, or has just deleted the row that was open wants all of them
+ * put back, and holding a ref to each row to do it by hand is bookkeeping the
+ * group is already doing.
+ *
+ * ```tsx
+ * const { closeAll } = useSwipeGroup();
+ * <ScrollView onScrollBeginDrag={closeAll}>…</ScrollView>
+ * ```
+ *
+ * Outside a group it is inert rather than an error, so a row that is sometimes
+ * grouped and sometimes not does not need two versions of its parent.
+ */
+export function useSwipeGroup(): { closeAll: () => void } {
+  const group = useContext(SwipeGroupContext);
+  const closeAll = useCallback(() => group?.closeAll(), [group]);
+  return { closeAll };
+}
 
 /* -------------------------------------------------------------------------- */
 /* Action                                                                     */
@@ -440,6 +571,35 @@ const SwipeRoot = forwardRef<SwipeHandle, SwipeProps>(
       reportOpen(null);
     }, [offset, reportOpen]);
 
+    /*
+     * Membership in a `Swipe.Group`, if there is one above this row.
+     *
+     * The registered member is a stable object rather than the `close`
+     * function itself, because `close` changes identity whenever
+     * `onOpenChange` does and the group would then be holding a stale entry
+     * alongside a live one. The object never changes; what it closes is read
+     * off a ref at the moment it is asked.
+     */
+    const group = useContext(SwipeGroupContext);
+    const closeRef = useRef(close);
+    closeRef.current = close;
+    const member = useRef<SwipeGroupMember>({ close: () => closeRef.current() }).current;
+
+    useEffect(() => group?.join(member), [group, member]);
+
+    /**
+     * Told when this row settles open, so the group can put its siblings away.
+     * A row closing says nothing — the others are already closed, and telling
+     * them so would be a round of work per settle for no change.
+     */
+    const announce = useCallback(
+      (side: SwipeOpenSide) => {
+        reportOpen(side);
+        if (side !== null) group?.opened(member);
+      },
+      [reportOpen, group, member]
+    );
+
     useImperativeHandle(
       ref,
       () => ({
@@ -447,11 +607,11 @@ const SwipeRoot = forwardRef<SwipeHandle, SwipeProps>(
           const width = side === 'start' ? startWidth.value : endWidth.value;
           if (width === 0) return;
           offset.value = withSpring(side === 'start' ? width : -width, SPRING);
-          reportOpen(side);
+          announce(side);
         },
         close,
       }),
-      [offset, startWidth, endWidth, reportOpen, close]
+      [offset, startWidth, endWidth, announce, close]
     );
 
     /**
@@ -541,7 +701,7 @@ const SwipeRoot = forwardRef<SwipeHandle, SwipeProps>(
 
             if (projected > limit * OPEN_RATIO) {
               offset.value = withSpring(toStart ? limit : -limit, SPRING);
-              runOnJS(reportOpen)(side);
+              runOnJS(announce)(side);
             } else {
               offset.value = withSpring(0, SPRING);
               runOnJS(reportOpen)(null);
@@ -562,6 +722,7 @@ const SwipeRoot = forwardRef<SwipeHandle, SwipeProps>(
         fire,
         tick,
         reportOpen,
+        announce,
       ]
     );
 
@@ -681,6 +842,7 @@ const SwipeRoot = forwardRef<SwipeHandle, SwipeProps>(
 SwipeRoot.displayName = 'Swipe';
 
 export const Swipe = Object.assign(SwipeRoot, {
+  Group: SwipeGroup,
   Start: SwipeStart,
   End: SwipeEnd,
   Action: SwipeAction,

@@ -881,6 +881,16 @@
     ]
   },
   {
+    "name": "sortable",
+    "type": "registry:ui",
+    "description": "A list whose rows can be dragged into a different order.",
+    "registryDependencies": [
+      "cn",
+      "haptics",
+      "icons"
+    ]
+  },
+  {
     "name": "soundwave",
     "type": "registry:ui",
     "description": "What a voice looks like while an app listens.",
