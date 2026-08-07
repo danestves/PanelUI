@@ -90,17 +90,50 @@ import { cn } from '../../utils/cn';
 import { impactKnock, selectionTick } from '../../utils/haptics';
 
 /**
+ * Rows getting out of the way of the one being carried. Quick, because they
+ * are answering a finger that has already moved — a neighbour that ambles into
+ * its new slot reads as the list struggling to keep up with the drag.
+ */
+const DISPLACE = { damping: 22, stiffness: 300, mass: 0.7 } as const;
+
+/**
  * Settles a row into its slot. Stiffer and less bouncy than the library's
  * overlay springs: a row that overshoots its slot reads as having landed in
  * the wrong one and then corrected itself.
+ *
+ * The rest thresholds are loosened from the defaults on purpose. The drop is
+ * reported from this spring's completion, so the tolerance it finishes at is
+ * also how long the caller waits to hear about it — and the last hundredth of
+ * a point of travel is not something anybody can see.
  */
-const SPRING = { damping: 26, stiffness: 260, mass: 0.7 } as const;
+const LAND = {
+  damping: 26,
+  stiffness: 260,
+  mass: 0.7,
+  restDisplacementThreshold: 0.5,
+  restSpeedThreshold: 2,
+} as const;
 
-/** How much a lifted row grows. Enough to read as picked up, not as zoomed. */
-const LIFT_SCALE = 1.03;
+/**
+ * Coming loose, and settling back. Deliberately faster than `LAND`: the row
+ * has to be back at its own size by the time it arrives, or it finishes the
+ * drop full-sized and then shrinks, which reads as two separate movements.
+ */
+const LIFT = { damping: 20, stiffness: 400, mass: 0.5 } as const;
 
-/** How far the finger must travel on a handle before the drag takes over. */
-const HANDLE_SLOP = 4;
+/**
+ * How much a lifted row grows. Enough to read as picked up over a full-width
+ * row, where a larger jump would push the row past the edges of the list it
+ * came out of.
+ */
+const LIFT_SCALE = 1.05;
+
+/**
+ * How far the finger must travel on a handle before the drag takes over. In
+ * line with the rest of the library's pans: below about this, a list inside a
+ * scroller cannot be scrolled by a finger that happened to land on a grip.
+ */
+const HANDLE_SLOP = 10;
 
 /** What starts a drag. */
 export type SortableActivation = 'handle' | 'longPress';
@@ -237,6 +270,19 @@ interface SortableContextValue {
   activeId: SharedValue<string | null>;
   /** The active row's offset from where it was laid out. */
   translate: SharedValue<number>;
+  /**
+   * How far the active row has come loose: 0 sitting in the list, 1 carried.
+   * Driven from the gesture rather than derived from `activeId`, so the row
+   * starts settling back the moment the finger lifts instead of waiting for
+   * the drop to finish first.
+   */
+  lift: SharedValue<number>;
+  /**
+   * Which drag is in flight. Bumped on every lift and every drop, so a landing
+   * spring that is still running when the next drag begins can tell that the
+   * row is no longer its to put down.
+   */
+  dragSeq: SharedValue<number>;
   /** The finger's position on the screen, for the scroller to read. */
   fingerY: SharedValue<number>;
   /** The enclosing scroller's offset, or a constant 0 when there is none. */
@@ -393,6 +439,8 @@ function SortableRoot({
   const heights = useSharedValue<Record<string, number>>({});
   const activeId = useSharedValue<string | null>(null);
   const translate = useSharedValue(0);
+  const lift = useSharedValue(0);
+  const dragSeq = useSharedValue(0);
   const fingerY = useSharedValue(0);
 
   const [activeItem, setActiveItem] = useState<string | null>(null);
@@ -416,10 +464,11 @@ function SortableRoot({
     order.value = value;
     rendered.value = value;
     translate.value = 0;
+    lift.value = 0;
     // `value` is covered by `key`; depending on the array itself would fire
     // this on every render of the screen around it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, order, rendered, translate]);
+  }, [key, order, rendered, translate, lift]);
 
   const indices = useMemo(() => {
     const map = new Map<string, number>();
@@ -560,6 +609,8 @@ function SortableRoot({
       heights,
       activeId,
       translate,
+      lift,
+      dragSeq,
       fingerY,
       scrollOffset,
       scrollAtStart,
@@ -583,6 +634,8 @@ function SortableRoot({
       heights,
       activeId,
       translate,
+      lift,
+      dragSeq,
       fingerY,
       scrollOffset,
       scrollAtStart,
@@ -637,7 +690,11 @@ export interface SortableItemProps extends Omit<ViewProps, 'children'> {
    * is it would mean silently refusing drops that look like they worked.
    */
   disabled?: boolean;
-  /** Extra classes for the row while it is being carried. */
+  /**
+   * Extra classes for the row while it is being carried, applied last. A
+   * lifted row is given an opaque surface and a shadow so it is never drawn
+   * see-through over the rows it is passing; this is what overrides that.
+   */
   activeClassName?: string;
 }
 
@@ -663,6 +720,8 @@ function SortableItem({
     heights,
     activeId,
     translate,
+    lift,
+    dragSeq,
     fingerY,
     scrollOffset,
     scrollAtStart,
@@ -712,6 +771,19 @@ function SortableItem({
         translate.value = 0;
         order.value = [...rendered.value];
         fingerY.value = event.absoluteY;
+        /*
+         * Claims the row: a landing spring left over from the previous drop
+         * finds this number changed and leaves the row alone rather than
+         * putting down one that has just been picked back up.
+         */
+        dragSeq.value += 1;
+        /*
+         * Left at rest when motion is turned down, so the row does not grow.
+         * The surface and the shadow it gets in the same moment are not
+         * motion and stay either way — they are what stop the lifted row
+         * being see-through, which is not a preference.
+         */
+        lift.value = reducedMotion ? 0 : withSpring(1, LIFT);
         /*
          * Taken here rather than on the JS side: `notifyBegin` lands a frame
          * or more later, and by then a fast flick may already have moved the
@@ -763,20 +835,36 @@ function SortableItem({
           slotOffset(order.value, id, heights.value, gap) -
           slotOffset(rendered.value, id, heights.value, gap);
 
-        const land = (finished?: boolean) => {
+        /*
+         * Released here rather than once the row has landed, so the shrink and
+         * the drop are one movement. `LIFT` is the faster spring of the two,
+         * so the row is back at its own size a little before it arrives.
+         */
+        dragSeq.value += 1;
+        const seq = dragSeq.value;
+        lift.value = reducedMotion ? 0 : withSpring(0, LIFT);
+
+        /*
+         * Runs whether or not the spring finished. An interrupted spring used
+         * to leave `activeId` set, which left the row lifted for good and the
+         * drop unreported; `seq` is what tells the two cases apart, because
+         * the only interruption that should be ignored is the row being picked
+         * up again.
+         */
+        const land = () => {
           'worklet';
-          if (!finished) return;
+          if (dragSeq.value !== seq) return;
           activeId.value = null;
           runOnJS(notifySettled)(id);
         };
 
         if (reducedMotion) {
           translate.value = landing;
-          land(true);
+          land();
           return;
         }
 
-        translate.value = withSpring(landing, SPRING, land);
+        translate.value = withSpring(landing, LAND, land);
       });
 
     if (activation === 'longPress') return gesture.activateAfterLongPress(longPressDelay);
@@ -791,11 +879,13 @@ function SortableItem({
     activation,
     activeId,
     locked,
+    dragSeq,
     fingerY,
     gap,
     haptics,
     heights,
     id,
+    lift,
     longPressDelay,
     notifyBegin,
     notifySettled,
@@ -809,16 +899,18 @@ function SortableItem({
   ]);
 
   const style = useAnimatedStyle(() => {
-    const carried = activeId.value === id;
-
-    if (carried) {
+    /*
+     * Read rather than animated here. The springs live on `translate` and
+     * `lift`, which the gesture drives; starting one from inside the style
+     * instead would re-enter it on every frame of the drag, because this
+     * worklet re-runs every time the row it is carrying moves.
+     */
+    if (activeId.value === id) {
       return {
         transform: [
           { translateY: translate.value },
-          { scale: reducedMotion ? 1 : withSpring(LIFT_SCALE, SPRING) },
+          { scale: 1 + lift.value * (LIFT_SCALE - 1) },
         ],
-        zIndex: 1,
-        elevation: 1,
       };
     }
 
@@ -826,16 +918,20 @@ function SortableItem({
     const offset =
       slotOffset(order.value, id, map, gap) - slotOffset(rendered.value, id, map, gap);
 
+    /*
+     * Only animated while a drag is in flight, and the difference is the whole
+     * end of the drop. When the caller applies the reorder the rows move in
+     * the tree and every offset falls to zero on the same commit — springing
+     * to it would send the row that was just dropped sliding back across the
+     * distance it had travelled, in a slot it was already sitting in.
+     */
+    const settling = activeId.value === null;
+
     return {
       transform: [
-        { translateY: reducedMotion ? offset : withSpring(offset, SPRING) },
-        // Springs back rather than snapping: this branch takes over the frame
-        // the dropped row lands, and a step straight from the lifted scale to
-        // 1 reads as the row flinching at the end of the drop.
-        { scale: reducedMotion ? 1 : withSpring(1, SPRING) },
+        { translateY: settling || reducedMotion ? offset : withSpring(offset, DISPLACE) },
+        { scale: 1 },
       ],
-      zIndex: 0,
-      elevation: 0,
     };
   });
 
@@ -877,7 +973,23 @@ function SortableItem({
         if (event.nativeEvent.actionName === 'moveDown') step(id, 1);
       }}
       style={style}
-      className={cn('w-full', className, isActive && activeClassName)}
+      /*
+       * A carried row is drawn over the ones it is passing, so it has to have
+       * a surface of its own — the row itself is only a box around whatever
+       * the caller put inside it, and a good deal of what people put there
+       * (an outlined `Item`, a bare `View`) has no background at all. Without
+       * this the lifted row is see-through and the list can be read straight
+       * through the middle of it.
+       *
+       * After `className` so the surface holds whatever else the row is
+       * wearing, and before `activeClassName`, which is the way out.
+       */
+      className={cn(
+        'w-full',
+        className,
+        isActive && 'z-10 rounded-xl bg-card shadow-lg',
+        isActive && activeClassName
+      )}
       {...props}
     >
       {children}
