@@ -9,6 +9,56 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.51.1] — 2026-08-07
+
+0.50.0 was tagged but never reached npm, so upgrading from 0.49.0 brings **Sortable** with it —
+see the entry below this one for what it is.
+
+### Fixed
+
+- **`Sortable`** — a row being carried is no longer see-through. It is drawn over the rows it is
+  passing, and the row itself is only a box around whatever you put inside it; anything without a
+  background of its own — an outlined `Item`, a bare `View` — left the rest of the list readable
+  straight through the middle of it. A lifted row now takes an opaque surface and a shadow, and
+  `activeClassName` replaces them.
+
+- **`Sortable`** — the drop is one movement rather than two. The lift used to be released only
+  once the landing spring had finished, so the row arrived at full size and then shrank; it now
+  comes loose and settles back on a single value driven from the gesture, which starts returning
+  the moment the finger leaves.
+
+- **`Sortable`** — a dropped row no longer slides twice. Applying the reorder moves the rows in
+  the tree and drops every offset to zero on the same commit, and the spring on those offsets sent
+  the row that had just landed back across the distance it had travelled, in a slot it was already
+  sitting in. Offsets are only animated while a drag is in flight.
+
+- **`Sortable`** — an interrupted landing spring used to leave the row lifted for good and never
+  report the drop, so `onReorder` was silently lost. It now lands whether or not the spring
+  finished, and only stands aside when the row has genuinely been picked up again.
+
+- **`Sortable`** — the handle's activation slop was four points, the tightest pan in the library.
+  A list inside a scroller could not be scrolled by a finger that happened to land on a grip. It
+  is now in line with everything else.
+
+### Changed
+
+- **`Sortable`** — the springs are split in two: quick for the rows getting out of the way, near
+  critically damped for the landing, where overshoot reads as having landed in the wrong slot. The
+  lift is also a little more pronounced, because a three per cent step with no shadow under it was
+  not visible enough to say the row had come loose.
+
+### Docs
+
+- Screens and recordings for **ButtonGroup, Fab, GridItem, Kpi, MarkdownEditor, Pagination,
+  Questionnaire, Tree, PieChart, RadarChart and ScatterChart**. Nine of the eleven had no preview
+  at all, and none of them had one on a single example or version.
+
+- Ten new examples, written because a recording showed something no page had an entry for and a
+  caption under the wrong picture is worse than a gap: ButtonGroup's busy and disabled segments
+  and its three sizes, Fab's sizes and variants, GridItem's bento and its wall of watermarks,
+  Pagination at the small size, with a wider run and with a status line, and Tree selecting more
+  than one.
+
 ## [0.50.0] — 2026-08-07
 
 ### Added
