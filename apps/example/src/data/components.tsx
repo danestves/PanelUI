@@ -11104,6 +11104,65 @@ function SwipeDeleteDemo() {
   );
 }
 
+const SWIPE_MAIL = [
+  { id: 'm1', from: 'Nadia Rahman', subject: 'Re: the Q3 numbers' },
+  { id: 'm2', from: 'Build bot', subject: 'main is green again' },
+  { id: 'm3', from: 'Tomas Lind', subject: 'Lunch Thursday?' },
+  { id: 'm4', from: 'Registry', subject: 'Your domain renews in 14 days' },
+];
+
+/**
+ * The point of a group is the row you are *not* touching. Open one, then open
+ * another: the first puts itself away. Without the group all four stand open
+ * at once, which is the state every real inbox goes out of its way to avoid.
+ *
+ * The rows sit inside an `Item.Group` and come out of a `map`, neither of
+ * which the group can see — it works because each row registers itself rather
+ * than being counted as a child.
+ */
+function SwipeGroupDemo() {
+  const [log, setLog] = useState<string | null>(null);
+
+  return (
+    <View className="w-full gap-3">
+      <Swipe.Group className="overflow-hidden rounded-xl border border-border">
+        <Item.Group>
+          {SWIPE_MAIL.map((message, index) => (
+            <View key={message.id}>
+              <Swipe haptics>
+                <Swipe.End>
+                  <Swipe.Action
+                    icon={<BookmarkIcon />}
+                    label="Archive"
+                    color="info"
+                    onPress={() => setLog(`Archived ${message.from}.`)}
+                  />
+                  <Swipe.Action
+                    icon={<TrashIcon />}
+                    label="Delete"
+                    color="destructive"
+                    onPress={() => setLog(`Deleted ${message.from}.`)}
+                  />
+                </Swipe.End>
+                <Item>
+                  <Item.Content>
+                    <Item.Title>{message.from}</Item.Title>
+                    <Item.Description>{message.subject}</Item.Description>
+                  </Item.Content>
+                </Item>
+              </Swipe>
+              {index < SWIPE_MAIL.length - 1 ? <Item.Separator /> : null}
+            </View>
+          ))}
+        </Item.Group>
+      </Swipe.Group>
+      <Text size="sm" muted>
+        {log ?? 'Open one row, then another — the first closes itself.'}
+      </Text>
+    </View>
+  );
+}
+
 /**
  * A panel on each side, and more than one tile on the end — which is where the
  * rule about the outermost action earns its keep: Delete is the far tile, so it
@@ -16003,6 +16062,7 @@ const CATALOGUE: ComponentEntry[] = [
     demos: [
       { label: 'Swipe to delete', render: () => <SwipeDeleteDemo /> },
       { label: 'Both sides', render: () => <SwipeBothSidesDemo /> },
+      { label: 'One row open at a time', render: () => <SwipeGroupDemo /> },
       { label: 'Full swipe', render: () => <SwipeFullSwipeDemo /> },
       { label: 'Keeping the row open', render: () => <SwipeKeepOpenDemo /> },
       { label: 'Right to left', render: () => <SwipeRtlDemo /> },

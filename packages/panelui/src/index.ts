@@ -810,7 +810,9 @@ export {
 export { Surface, type SurfaceProps } from './components/surface';
 export {
   Swipe,
+  useSwipeGroup,
   type SwipeProps,
+  type SwipeGroupProps,
   type SwipePanelProps,
   type SwipeActionProps,
   type SwipeActionColor,

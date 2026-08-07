@@ -519,7 +519,8 @@
     "A row that slides aside to reveal the things you can do to it.",
     "react native swipe to delete list row actions",
     {
-      "addedIn": "0.35.0"
+      "addedIn": "0.35.0",
+      "updatedIn": "0.50.0"
     }
   ],
   "switch": [
