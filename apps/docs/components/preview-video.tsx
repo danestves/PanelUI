@@ -30,6 +30,11 @@ export interface PreviewVideoProps {
  * stop, so there it stays on its poster frame and gets its controls back:
  * still watchable, but only on purpose. That check is why this is a client
  * component while `Preview` is not.
+ *
+ * Nothing is fetched — not the file, not the poster — until the frame comes
+ * within a screen of the viewport. A page like Loader stacks ten of these,
+ * and playing all ten on load downloads ten recordings and animates ten
+ * videos to show the reader one.
  */
 export function PreviewVideo({
   src,
@@ -41,8 +46,28 @@ export function PreviewVideo({
 }: PreviewVideoProps) {
   const video = useRef<HTMLVideoElement>(null);
   const [reduced, setReduced] = useState(false);
+  const [near, setNear] = useState(false);
 
   useEffect(() => {
+    const element = video.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setNear(true);
+        observer.disconnect();
+      },
+      { rootMargin: '400px' },
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!near) return;
+
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const apply = () => {
@@ -63,7 +88,7 @@ export function PreviewVideo({
     apply();
     query.addEventListener('change', apply);
     return () => query.removeEventListener('change', apply);
-  }, []);
+  }, [near]);
 
   // A phone recording is far taller than it is wide, and at the image frame's
   // width it would be a page-long block. Cap portrait media to phone width.
@@ -73,15 +98,15 @@ export function PreviewVideo({
     <PreviewFrame caption={caption}>
       <video
         ref={video}
-        src={src}
-        poster={poster}
+        src={near ? src : undefined}
+        poster={near ? poster : undefined}
         width={width}
         height={height}
         aria-label={alt}
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="none"
         controls={reduced}
         className={`mx-auto h-auto w-full rounded-lg ${portrait ? 'max-w-[280px]' : 'max-w-md'}`}
       />

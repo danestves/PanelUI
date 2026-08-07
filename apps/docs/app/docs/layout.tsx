@@ -17,8 +17,17 @@ export default function Layout({ children }: { children: ReactNode }) {
       tree={source.pageTree}
       {...baseOptions}
       nav={{ ...baseOptions.nav, mode: 'top' }}
-      // The tree is two flat groups already; nothing should render a toggle.
-      sidebar={{ collapsible: false }}
+      /*
+       * The tree is two flat groups already; nothing should render a toggle.
+       *
+       * `prefetch` is off because the tree is ~90 links and every one of them
+       * is in the viewport at once. Left on, opening a single page fires an
+       * RSC request for most of the sidebar — pages the reader never asks
+       * for — and the router keys those by segment, so the same href is
+       * fetched again for each context it renders in. It was two thirds of
+       * the site's request volume.
+       */
+      sidebar={{ collapsible: false, prefetch: false }}
       tabMode="navbar"
     >
       {children}
