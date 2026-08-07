@@ -8,6 +8,14 @@ The floating action button: one screen, one thing it is mostly for.
 
 It floats, which is the whole problem with it. A button pinned over the content is a button covering some of it, and the bottom-right corner of a scrolling list is exactly where the last row goes. So it is right when a screen has *one* action worth that trade and wrong when it has three — a corner with three buttons in it is a toolbar that has been put in the wrong place. Where a screen has several, the honest shapes are a [ButtonGroup](/docs/components/button-group) in a bar or, if one of them really does lead, this with a `Fab.Group` behind it.
 
+<PreviewVideo
+  src="/previews/fab.mp4"
+  poster="/previews/fab-poster.jpg"
+  alt="The Fab component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Fab ships with the library — no separate install.
@@ -74,6 +82,13 @@ The case it exists for. `placement` pins it to a corner against the nearest posi
 
 A lone glyph is a guess unless the glyph is a plus. `extended` turns the circle into a stadium and puts the label beside it — worth the width for anything a plus would not have said on its own.
 
+<Preview
+  src="/previews/fab-spelling-the-action-out.jpg"
+  alt="Fab — Spelling the action out."
+  width={1179}
+  height={196}
+/>
+
 ```tsx
 <Fab extended placement="bottom-right" icon={<PencilIcon size={20} />}>
   Write
@@ -107,11 +122,59 @@ Leave `placement` out and it is an ordinary round button where you put it — fo
 </View>
 ```
 
+### The three sizes
+
+`size` is the diameter, and the glyph inside it is yours to scale — the button does not resize an icon it was handed, because an icon that is right at one size is rarely right at all three. `md` is the default and the one the platforms agree on.
+
+<Preview
+  src="/previews/fab-the-three-sizes.jpg"
+  alt="Fab — The three sizes."
+  width={1179}
+  height={255}
+/>
+
+```tsx
+{(['sm', 'md', 'lg'] as const).map((size) => (
+  <Fab
+    key={size}
+    size={size}
+    icon={<PlusIcon size={20} />}
+    accessibilityLabel="New"
+  />
+))}
+```
+
+### The variants
+
+`primary` is the filled one and the reason the component exists — a screen with one action worth floating should not be quiet about it. `secondary` and `surface` are for a dial's members and for a second button that must not compete; `destructive` is for the rare corner action that deletes something.
+
+<Preview
+  src="/previews/fab-the-variants.jpg"
+  alt="Fab — The variants."
+  width={1179}
+  height={218}
+/>
+
+```tsx
+<Fab icon={<PlusIcon size={20} />} accessibilityLabel="New" />
+<Fab variant="secondary" icon={<PencilIcon size={20} />} accessibilityLabel="Edit" />
+<Fab variant="surface" icon={<ImageIcon size={20} />} accessibilityLabel="Photos" />
+<Fab variant="destructive" icon={<TrashIcon size={20} />} accessibilityLabel="Delete" />
+```
+
 ## Versions
 
 ### Over a list
 
 The case it exists for — one action pinned over content that scrolls under it.
+
+<PreviewVideo
+  src="/previews/fab-over-a-list.mp4"
+  poster="/previews/fab-over-a-list-poster.jpg"
+  alt="Fab — Over a list."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <View className="flex-1">
@@ -133,6 +196,14 @@ The case it exists for — one action pinned over content that scrolls under it.
 
 Actions unfolding out of the button, over a screen that says the dial is modal.
 
+<PreviewVideo
+  src="/previews/fab.mp4"
+  poster="/previews/fab-poster.jpg"
+  alt="Fab — A speed dial."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Fab.Group icon={<PlusIcon size={24} />} accessibilityLabel="Add something" blur>
   <Fab.Action icon={<ImageIcon size={18} />} label="Photo" onPress={addPhoto} />
@@ -145,6 +216,14 @@ Actions unfolding out of the button, over a screen that says the dial is modal.
 ### Where it parks
 
 The extended form, in each of the three corners it can take.
+
+<PreviewVideo
+  src="/previews/fab-where-it-parks.mp4"
+  poster="/previews/fab-where-it-parks-poster.jpg"
+  alt="Fab — Where it parks."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Fab extended placement={placement} icon={<PencilIcon size={20} />}>

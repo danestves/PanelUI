@@ -9,6 +9,13 @@ A metric card is not a chart with a caption. The number is the message and the c
 
 The trend takes a number rather than a written string, so the component decides the direction and the colour instead of the call site keeping a minus sign and a red in step.
 
+<Preview
+  src="/previews/kpi.jpg"
+  alt="The Kpi component, running in the example app."
+  width={1179}
+  height={1190}
+/>
+
 ## Installation
 
 Kpi ships with the library — no separate install.
@@ -183,6 +190,13 @@ A card on its own surface is one metric. Several inside a `Frame` are one report
 
 Number and change on the left, the shape it made on the right.
 
+<Preview
+  src="/previews/kpi.jpg"
+  alt="Kpi — Overview."
+  width={1179}
+  height={1190}
+/>
+
 ```tsx
 <Frame>
   <Frame.Header>
@@ -210,6 +224,13 @@ Number and change on the left, the shape it made on the right.
 
 The shape under the number, and the shape beside it.
 
+<Preview
+  src="/previews/kpi-with-a-sparkline.jpg"
+  alt="Kpi — With a sparkline."
+  width={1179}
+  height={1035}
+/>
+
 ```tsx
 <Kpi colorIndex={1}>
   <Kpi.Header>
@@ -226,6 +247,13 @@ The shape under the number, and the shape beside it.
 ### With progress
 
 Targets, with an icon, a badge and a bar under each number.
+
+<Preview
+  src="/previews/kpi-with-progress.jpg"
+  alt="Kpi — With progress."
+  width={1179}
+  height={1177}
+/>
 
 ```tsx
 <Kpi surface={false} colorIndex={4}>
@@ -249,6 +277,13 @@ Targets, with an icon, a badge and a bar under each number.
 ### Several as one panel
 
 Divided by a rule rather than spaced apart, in a row and a column.
+
+<Preview
+  src="/previews/kpi-several-as-one-panel.jpg"
+  alt="Kpi — Several as one panel."
+  width={1179}
+  height={1098}
+/>
 
 ```tsx
 <Surface variant="secondary" padding="lg">

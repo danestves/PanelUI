@@ -9,6 +9,14 @@ Every other chart here spaces its points evenly along the x-axis, because their 
 
 Colours come from the `--color-chart-1` … `--color-chart-5` tokens, so a chart follows the active theme out of the box and is put on brand by overriding those five.
 
+<PreviewVideo
+  src="/previews/scatter-chart.mp4"
+  poster="/previews/scatter-chart-poster.jpg"
+  alt="The ScatterChart component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 ScatterChart ships with the library — no separate install.
@@ -138,6 +146,14 @@ Add `ScatterChart.Skeleton` and drive `status`. The placeholder is a still field
 
 A single series with both axes and a grid. `aspectRatio` defaults to `1`, which suits a scatter plot: neither axis is the important one, and a wide frame flattens a cloud into a band.
 
+<PreviewVideo
+  src="/previews/scatter-chart.mp4"
+  poster="/previews/scatter-chart-poster.jpg"
+  alt="ScatterChart — Basic."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Frame>
   <Frame.Header>
@@ -160,6 +176,14 @@ A single series with both axes and a grid. `aspectRatio` defaults to `1`, which 
 
 A third quantity on each point's area via `sizeKey`. Points are translucent by default so that overlapping ones read as denser rather than hiding each other — in a crowded region that overlap is the finding, and opaque dots erase it.
 
+<PreviewVideo
+  src="/previews/scatter-chart-bubbles.mp4"
+  poster="/previews/scatter-chart-bubbles-poster.jpg"
+  alt="ScatterChart — Bubbles."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <ScatterChart data={countries} xDataKey="income" aspectRatio={1.2}>
   <ScatterChart.Grid />
@@ -173,6 +197,14 @@ A third quantity on each point's area via `sizeKey`. Points are translucent by d
 ### Two series
 
 Two clouds sharing both domains, told apart by colour, with the key in a band above the plot. Touching selects the nearest point in either series.
+
+<PreviewVideo
+  src="/previews/scatter-chart-two-series.mp4"
+  poster="/previews/scatter-chart-two-series-poster.jpg"
+  alt="ScatterChart — Two series."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Frame>

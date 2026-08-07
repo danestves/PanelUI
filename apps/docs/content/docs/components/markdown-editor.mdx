@@ -10,6 +10,14 @@ Writing and reading are two modes here rather than two panes. Side by side is ho
 
 The preview is [Response](/docs/ai-components/response) — the same reader that renders a model's answer — so markdown means one thing across the library and there is one parser to be right rather than two to keep in step. It renders through `Typography`, `CodeBlock` and `Table`, which is to say through your app's own type and colours: a preview that looked like a document viewer would be showing the writer something they are not going to ship.
 
+<PreviewVideo
+  src="/previews/markdown-editor.mp4"
+  poster="/previews/markdown-editor-poster.jpg"
+  alt="The MarkdownEditor component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 MarkdownEditor ships with the library — no separate install.
@@ -50,6 +58,14 @@ Written without children the editor draws all three in that order, which is the 
 
 No children: the toolbar, the field and the preview in that order. `rows` sizes the field and `placeholder` goes to it.
 
+<PreviewVideo
+  src="/previews/markdown-editor.mp4"
+  poster="/previews/markdown-editor-poster.jpg"
+  alt="MarkdownEditor — The whole component."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [draft, setDraft] = useState('');
 
@@ -65,6 +81,13 @@ const [draft, setDraft] = useState('');
 
 `defaultMode` decides which pane opens first. Reading first suits a draft that already exists — a note being reviewed rather than written.
 
+<Preview
+  src="/previews/markdown-editor-starting-on-the-reading-side.jpg"
+  alt="MarkdownEditor — Starting on the reading side."
+  width={1179}
+  height={1348}
+/>
+
 ```tsx
 <MarkdownEditor value={draft} onValueChange={setDraft} defaultMode="preview" />
 ```
@@ -72,6 +95,13 @@ const [draft, setDraft] = useState('');
 ### Choosing the actions, and adding to the row
 
 `actions` is the list, in the order you want them. The toolbar’s children sit beside the mode switch, for anything that belongs to the draft rather than to the text.
+
+<Preview
+  src="/previews/markdown-editor-choosing-the-actions-and-adding-to-the-row.jpg"
+  alt="MarkdownEditor — Choosing the actions, and adding to the row."
+  width={1179}
+  height={673}
+/>
 
 ```tsx
 <MarkdownEditor value={draft} onValueChange={setDraft}>
@@ -86,6 +116,13 @@ const [draft, setDraft] = useState('');
 ### A composer with no preview
 
 Leave `MarkdownEditor.Preview` out and turn the switch off with `showModeSwitch={false}`. What is left is a comment box whose toolbar formats and nothing else.
+
+<Preview
+  src="/previews/markdown-editor-a-composer-with-no-preview.jpg"
+  alt="MarkdownEditor — A composer with no preview."
+  width={1179}
+  height={755}
+/>
 
 ```tsx
 <MarkdownEditor value={draft} onValueChange={setDraft}>

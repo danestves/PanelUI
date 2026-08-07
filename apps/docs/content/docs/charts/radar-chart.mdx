@@ -9,6 +9,13 @@ A radar answers a question a bar chart cannot: not *which of these is biggest* b
 
 That is also its limit, and worth knowing before you reach for it: the order of the axes changes the outline, and the outline is what people read. Two datasets are only comparable on one radar if their axes are in the same order, and a radar is the wrong chart entirely for data whose axes have no natural order.
 
+<Preview
+  src="/previews/radar-chart.jpg"
+  alt="The RadarChart component, running in the example app."
+  width={1179}
+  height={1038}
+/>
+
 ## Installation
 
 RadarChart ships with the library — no separate install.
@@ -150,6 +157,13 @@ const chart = useRef<RadarChartHandle>(null);
 
 A filled polygon on polygonal rings, with a dot at each vertex.
 
+<Preview
+  src="/previews/radar-chart.jpg"
+  alt="RadarChart — One profile."
+  width={1179}
+  height={1038}
+/>
+
 ```tsx
 <Frame>
   <Frame.Header>
@@ -172,6 +186,13 @@ A filled polygon on polygonal rings, with a dot at each vertex.
 
 Two profiles over each other, only the first of them filled.
 
+<Preview
+  src="/previews/radar-chart-two-compared.jpg"
+  alt="RadarChart — Two compared."
+  width={1179}
+  height={981}
+/>
+
 ```tsx
 <RadarChart data={profile} domain={[0, 100]}>
   <RadarChart.Grid />
@@ -186,6 +207,13 @@ Two profiles over each other, only the first of them filled.
 
 Circular rings and no fill, for reading a value off a spoke.
 
+<Preview
+  src="/previews/radar-chart-outline-on-circles.jpg"
+  alt="RadarChart — Outline on circles."
+  width={1179}
+  height={1246}
+/>
+
 ```tsx
 <RadarChart data={profile} domain={[0, 100]}>
   <RadarChart.Header title="Weakest axis" value="Cost" caption="48 of 100" />
@@ -198,6 +226,14 @@ Circular rings and no fill, for reading a value off a spoke.
 ### Switching the data
 
 Tabs under the chart change what it draws, and the outline travels.
+
+<PreviewVideo
+  src="/previews/radar-chart-switching-the-data.mp4"
+  poster="/previews/radar-chart-switching-the-data-poster.jpg"
+  alt="RadarChart — Switching the data."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <RadarChart data={quarters[period]} domain={[0, 100]}>

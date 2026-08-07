@@ -5,6 +5,14 @@ description: Paged navigation over a long result set.
 
 Moving through a result set one page at a time. The component owns the arithmetic and nothing else: give it how many pages there are and which one you are on, and it works out which numbers to show, where the gaps fall, and which controls are dead at the ends. It never fetches and never slices — the data is yours.
 
+<PreviewVideo
+  src="/previews/pagination.mp4"
+  poster="/previews/pagination-poster.jpg"
+  alt="The Pagination component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Pagination ships with the library — no separate install.
@@ -52,6 +60,14 @@ Given children, the root becomes a row with them on the leading edge and the con
 
 `count` is how many pages there are; pages are numbered from 1. Pass `page` to control the component, or leave it off and give `defaultPage` to let it keep its own. `onPageChange` is called with the page that was asked for, already clamped to `count`.
 
+<PreviewVideo
+  src="/previews/pagination.mp4"
+  poster="/previews/pagination-poster.jpg"
+  alt="Pagination — Basic."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [page, setPage] = useState(1);
 
@@ -62,6 +78,14 @@ const [page, setPage] = useState(1);
 
 The two arrows with `3 / 12` between them, for a footer with no room for a run of numbers. Digits and a slash rather than “Page 3 of 12”, so there is no sentence to translate.
 
+<PreviewVideo
+  src="/previews/pagination-compact.mp4"
+  poster="/previews/pagination-compact-poster.jpg"
+  alt="Pagination — Compact."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Pagination count={12} page={page} onPageChange={setPage} variant="compact" />
 ```
@@ -69,6 +93,13 @@ The two arrows with `3 / 12` between them, for a footer with no room for a run o
 ### Simple
 
 Labelled Previous and Next, and no numbers at all — for a flow you walk rather than jump around in: a wizard, an article, a set of onboarding cards.
+
+<Preview
+  src="/previews/pagination-simple.jpg"
+  alt="Pagination — Simple."
+  width={1179}
+  height={198}
+/>
 
 ```tsx
 <Pagination count={5} page={page} onPageChange={setPage} variant="simple" />
@@ -79,6 +110,14 @@ Labelled Previous and Next, and no numbers at all — for a flow you walk rather
 `siblings` is how many pages to keep either side of the current one, `boundaries` how many to pin at each end. The defaults draw about seven targets, which is what a phone fits; raise both on a tablet. The run is a fixed width rather than a sliding window, so the row does not reflow under the finger as you step through it — the number you were aiming at stays where it was.
 
 Tapping an ellipsis jumps `pageJump` pages towards the end its gap is on. A dead 44pt target in a row of live ones is something people tap and then think is broken. Widening the middle costs width somewhere: this drops a boundary and the two arrows to pay for it, which is what keeps nine targets on a phone screen.
+
+<PreviewVideo
+  src="/previews/pagination-a-long-set.mp4"
+  poster="/previews/pagination-a-long-set-poster.jpg"
+  alt="Pagination — A long set."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Pagination
@@ -95,6 +134,13 @@ Tapping an ellipsis jumps `pageJump` pages towards the end its gap is on. A dead
 ### Beside a table
 
 The component reports the page and the caller slices the rows, which is the division of labour the whole thing is built around. `Pagination.Status` answers the question a page number does not — how much is left — and sits on the leading edge with the controls opposite it.
+
+<Preview
+  src="/previews/pagination-beside-a-table.jpg"
+  alt="Pagination — Beside a table."
+  width={1179}
+  height={648}
+/>
 
 ```tsx
 const [page, setPage] = useState(1);
@@ -127,6 +173,61 @@ const rows = invoices.slice((page - 1) * pageSize, page * pageSize);
   onPageChange={setPage}
   disabled={isFetching}
 />
+```
+
+### Small
+
+`size="sm"` shrinks the targets and the gaps between them, for a row under a table rather than under a page. It is the size to reach for before dropping to `compact`: fewer points per target still lets somebody jump to page four, and the two arrows do not.
+
+<Preview
+  src="/previews/pagination-small.jpg"
+  alt="Pagination — Small."
+  width={1179}
+  height={180}
+/>
+
+```tsx
+<Pagination count={12} page={page} onPageChange={setPage} size="sm" />
+```
+
+### A wider run
+
+`siblings={2}` keeps two pages either side of the current one instead of one. Nine targets is as wide as a run goes on a phone, and the two arrows put it past the edge — so this trades them for the numbers, which is what asking for a wider run was for. A centred row that does not fit hangs off both ends.
+
+<Preview
+  src="/previews/pagination-a-wider-run.jpg"
+  alt="Pagination — A wider run."
+  width={1179}
+  height={183}
+/>
+
+```tsx
+<Pagination
+  count={240}
+  page={page}
+  onPageChange={setPage}
+  siblings={2}
+  boundaries={1}
+  size="sm"
+  controls={false}
+/>
+```
+
+### With a status line
+
+`Pagination.Status` says which rows these are, which is the question a page number does not answer. Give it `pageSize` and `total` and it reads the current page from the component around it, so the two can never disagree — the row count and the page are one piece of state.
+
+<Preview
+  src="/previews/pagination-with-a-status-line.jpg"
+  alt="Pagination — With a status line."
+  width={1179}
+  height={180}
+/>
+
+```tsx
+<Pagination count={12} page={page} onPageChange={setPage} variant="compact">
+  <Pagination.Status pageSize={20} total={240} />
+</Pagination>
 ```
 
 ## Variants

@@ -198,6 +198,14 @@ Once the status flips, the pie unrolls clockwise from the start of the dial — 
 
 Five parts of one obvious total, with a key beside them and the selected slice’s figures in the header.
 
+<PreviewVideo
+  src="/previews/pie-chart-basic.mp4"
+  poster="/previews/pie-chart-basic-poster.jpg"
+  alt="PieChart — Basic."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <PieChart data={spend} size={208} activeIndex={active} onActiveIndexChange={setActive}>
   <PieChart.Header value={money(slice ? slice.value : total)} caption={caption} />
@@ -209,6 +217,14 @@ Five parts of one obvious total, with a key beside them and the selected slice�
 ### Donut
 
 The hole is where the total goes — the one figure a pie can be read for exactly.
+
+<PreviewVideo
+  src="/previews/pie-chart-donut.mp4"
+  poster="/previews/pie-chart-donut-poster.jpg"
+  alt="PieChart — Donut."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <PieChart data={spend} size={208} innerRadius={0.62}>
@@ -223,6 +239,14 @@ The hole is where the total goes — the one figure a pie can be read for exactl
 
 Padded and rounded, with a floor under the slices too small to see. Email is a third of a percent of this traffic; without `minAngle` it is a hairline that reads as absent.
 
+<PreviewVideo
+  src="/previews/pie-chart-segments.mp4"
+  poster="/previews/pie-chart-segments-poster.jpg"
+  alt="PieChart — Segments."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <PieChart data={sources} size={208} innerRadius={0.58} padAngle={3} minAngle={6}>
   <PieChart.Header title="Sessions" />
@@ -235,6 +259,14 @@ Padded and rounded, with a floor under the slices too small to see. Email is a t
 ### Dial
 
 Three quarters of a turn rather than all of it, with the notch at the bottom where a dial has always had it.
+
+<PreviewVideo
+  src="/previews/pie-chart-dial.mp4"
+  poster="/previews/pie-chart-dial-poster.jpg"
+  alt="PieChart — Dial."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <PieChart data={storage} size={208} innerRadius={0.66} startAngle={-135} endAngle={135} padAngle={2}>

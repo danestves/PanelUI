@@ -10,6 +10,13 @@ The buttons stay buttons. Anything a [Button](/docs/components/button) does — 
 
 It is not a selection control. It joins buttons, and what they mean is yours: for a control that owns which one is on reach for [ToggleButtonGroup](/docs/components/toggle-button), and for switching between panels of content reach for [Tabs](/docs/components/tabs) — a segmented run that swaps a screen is navigation, and navigation should say so to a screen reader.
 
+<Preview
+  src="/previews/button-group.jpg"
+  alt="The ButtonGroup component, running in the example app."
+  width={1179}
+  height={194}
+/>
+
 ## Installation
 
 ButtonGroup ships with the library — no separate install.
@@ -40,6 +47,13 @@ npx panelui-cli@latest add button-group
 
 `variant` and `size` fill in for any button that did not choose its own, so a run of three does not repeat the same two props three times. The current segment says `secondary` for itself and wins — which is all “selected” needs to be once the surrounding shape is already drawn.
 
+<Preview
+  src="/previews/button-group.jpg"
+  alt="ButtonGroup — A view switcher."
+  width={1179}
+  height={194}
+/>
+
 ```tsx
 const [view, setView] = useState('media');
 
@@ -61,6 +75,13 @@ const [view, setView] = useState('media');
 
 `fullWidth` spans the container and splits it equally between the segments — equally, not by content. A row sized to its labels is a row whose divisions move when the labels change, and a picker whose thirds are different widths reads as though one of them matters more.
 
+<Preview
+  src="/previews/button-group-sharing-the-row.jpg"
+  alt="ButtonGroup — Sharing the row."
+  width={1179}
+  height={236}
+/>
+
 ```tsx
 <ButtonGroup fullWidth>
   <Button variant="ghost">Monthly</Button>
@@ -72,6 +93,14 @@ const [view, setView] = useState('media');
 ### A split action
 
 The thing itself, and the other ways to do it. The chevron segment is a `Button` inside a `Popover.Trigger` — a button nested inside something else — which still picks the group up, because the group passes its variant and size down through context rather than by rewriting the children it can see.
+
+<PreviewVideo
+  src="/previews/button-group-a-split-action.mp4"
+  poster="/previews/button-group-a-split-action-poster.jpg"
+  alt="ButtonGroup — A split action."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <ButtonGroup variant="outline">
@@ -93,6 +122,13 @@ The thing itself, and the other ways to do it. The chevron segment is a `Button`
 
 `endContent` takes a `Badge` the same way it would outside a group. Nothing about being in a run changes what a button can hold.
 
+<Preview
+  src="/previews/button-group-a-count-inside-a-segment.jpg"
+  alt="ButtonGroup — A count inside a segment."
+  width={1179}
+  height={435}
+/>
+
 ```tsx
 <ButtonGroup variant="outline">
   <Button
@@ -111,6 +147,13 @@ The thing itself, and the other ways to do it. The chevron segment is a `Button`
 
 `orientation="vertical"` stacks the run and turns the dividers with it. With `size="icon"` this is the toolbar beside a canvas.
 
+<Preview
+  src="/previews/button-group-down-the-side.jpg"
+  alt="ButtonGroup — Down the side."
+  width={1179}
+  height={613}
+/>
+
 ```tsx
 <ButtonGroup orientation="vertical" variant="outline" size="icon">
   <Button accessibilityLabel="Zoom in"><PlusIcon size={16} /></Button>
@@ -123,12 +166,71 @@ The thing itself, and the other ways to do it. The chevron segment is a `Button`
 
 `attached={false}` keeps the inherited variant and size and drops the joined shape, leaving a spaced row of ordinary buttons. A toolbar rather than a segmented control.
 
+<Preview
+  src="/previews/button-group-sharing-the-props-without-sharing-the-shape.jpg"
+  alt="ButtonGroup — Sharing the props without sharing the shape."
+  width={1179}
+  height={270}
+/>
+
 ```tsx
 <ButtonGroup attached={false} variant="outline" size="sm">
   <Button startContent={<SearchIcon size={15} />}>Find</Button>
   <Button startContent={<DownloadIcon size={15} />}>Export</Button>
   <Button startContent={<ShareNodesIcon size={15} />}>Share</Button>
 </ButtonGroup>
+```
+
+### Busy and unavailable
+
+A segment carries its own state. `loading` swaps its label for a spinner and stops it answering; `disabled` fades it and deafens it. Neither takes the segment out of the run — a joined shape with a hole in it is harder to read than a dim segment, and the row would resize under the finger as the state changed.
+
+<PreviewVideo
+  src="/previews/button-group-busy-and-unavailable.mp4"
+  poster="/previews/button-group-busy-and-unavailable-poster.jpg"
+  alt="ButtonGroup — Busy and unavailable."
+  width={720}
+  height={252}
+/>
+
+```tsx
+<ButtonGroup variant="outline">
+  <Button startContent={<PencilIcon size={16} />}>Rename</Button>
+  <Button startContent={<CopyIcon size={16} />}>Duplicate</Button>
+  <Button startContent={<TrashIcon size={16} />} disabled>
+    Remove
+  </Button>
+</ButtonGroup>
+
+<ButtonGroup variant="outline">
+  <Button loading={saving} onPress={save}>
+    {saving ? 'Saving' : 'Save layout'}
+  </Button>
+  <Button size="icon" accessibilityLabel="Revert">
+    <PlusIcon size={16} />
+  </Button>
+</ButtonGroup>
+```
+
+### Three sizes
+
+`size` on the group is the size of every segment in it, and it sets the height, the padding and the type together so the joined edges still meet. A segment that names its own size wins, which is how the chevron on a split action stays square while the rest of the run is not.
+
+<Preview
+  src="/previews/button-group-three-sizes.jpg"
+  alt="ButtonGroup — Three sizes."
+  width={1179}
+  height={571}
+/>
+
+```tsx
+{(['sm', 'md', 'lg'] as const).map((size) => (
+  <ButtonGroup key={size} size={size} variant="outline">
+    <Button>Left</Button>
+    <Button>Middle</Button>
+    <Button>Right</Button>
+  </ButtonGroup>
+))}
 ```
 
 ## Variants

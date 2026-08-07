@@ -6,6 +6,14 @@ status: new
 
 A hierarchy you can open a level at a time — a file browser, a folder of settings, a category picker, a table of contents. Accordion is the one-level version of the same idea; a tree's items can hold items, to any depth. A closed branch renders nothing below it, so a tree costs what is open in it rather than what is in it.
 
+<PreviewVideo
+  src="/previews/tree.mp4"
+  poster="/previews/tree-poster.jpg"
+  alt="The Tree component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Tree ships with the library — no separate install.
@@ -69,6 +77,14 @@ An item is a branch because it holds a `Tree.Group`, not because it was declared
 
 The default. `defaultExpanded` names the branches that start open; everything below a closed one has not rendered at all. Folders take a glyph of their own rather than an empty `Tree.Icon`, so a folder's name starts where the names of the files under it do.
 
+<PreviewVideo
+  src="/previews/tree.mp4"
+  poster="/previews/tree-poster.jpg"
+  alt="Tree — A file tree."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Tree defaultExpanded={['src']}>
   <Tree.Item value="src">
@@ -94,6 +110,13 @@ The default. `defaultExpanded` names the branches that start open; everything be
 
 `showLines` draws a hairline down each level, connecting a branch to the rows inside it. The indent is unchanged — the line lands midway through it rather than adding a step of its own.
 
+<Preview
+  src="/previews/tree-guide-lines.jpg"
+  alt="Tree — Guide lines."
+  width={1179}
+  height={787}
+/>
+
 ```tsx
 <Tree defaultExpanded={['src', 'src/components']} showLines>
   {/* …items… */}
@@ -103,6 +126,13 @@ The default. `defaultExpanded` names the branches that start open; everything be
 ### Selecting a node
 
 `selectionMode` turns the rows from expanders into choices. `single` keeps one selected; `multiple` switches `value` to an array.
+
+<Preview
+  src="/previews/tree-selecting-a-node.jpg"
+  alt="Tree — Selecting a node."
+  width={1179}
+  height={797}
+/>
 
 ```tsx
 const [selected, setSelected] = useState<string | string[]>('');
@@ -121,6 +151,13 @@ const [selected, setSelected] = useState<string | string[]>('');
 ### A sidebar nav
 
 `size="sm"` for a denser row, `expandOnPress={false}` so pressing a section selects it without opening it, and `Tree.Actions` for the unread count. The chevron still opens the section either way.
+
+<Preview
+  src="/previews/tree-a-sidebar-nav.jpg"
+  alt="Tree — A sidebar nav."
+  width={1179}
+  height={527}
+/>
 
 ```tsx
 <Tree size="sm" selectionMode="single" expandOnPress={false} defaultExpanded={['inbox']}>
@@ -146,6 +183,14 @@ const [selected, setSelected] = useState<string | string[]>('');
 
 `hasChildren` gives a chevron to a branch that has no `Tree.Group` yet, and `onExpandedChange` is where the fetch goes. The rows appear underneath once they arrive.
 
+<PreviewVideo
+  src="/previews/tree-a-branch-that-loads-when-opened.mp4"
+  poster="/previews/tree-a-branch-that-loads-when-opened-poster.jpg"
+  alt="Tree — A branch that loads when opened."
+  width={720}
+  height={422}
+/>
+
 ```tsx
 const [expanded, setExpanded] = useState<string[]>([]);
 const [files, setFiles] = useState<string[] | null>(null);
@@ -165,6 +210,32 @@ const [files, setFiles] = useState<string[] | null>(null);
     </Tree.Trigger>
     {files ? <Tree.Group>{/* …rows… */}</Tree.Group> : null}
   </Tree.Item>
+</Tree>
+```
+
+### Selecting more than one
+
+`selectionMode="multiple"` switches `value` from a string to an array, and a row toggles rather than replacing what was chosen. Selection and expansion stay separate: picking a folder does not open it, and opening one does not pick it.
+
+<Preview
+  src="/previews/tree-selecting-more-than-one.jpg"
+  alt="Tree — Selecting more than one."
+  width={1179}
+  height={804}
+/>
+
+```tsx
+const [selected, setSelected] = useState<string[]>([]);
+
+<Tree
+  selectionMode="multiple"
+  value={selected}
+  onValueChange={setSelected}
+  expanded={expanded}
+  onExpandedChange={setExpanded}
+  showLines
+>
+  {/* …items… */}
 </Tree>
 ```
 

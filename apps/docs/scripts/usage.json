@@ -26,7 +26,13 @@
         {
           "title": "Spelling the action out",
           "description": "A lone glyph is a guess unless the glyph is a plus. `extended` turns the circle into a stadium and puts the label beside it — worth the width for anything a plus would not have said on its own.",
-          "code": "<Fab extended placement=\"bottom-right\" icon={<PencilIcon size={20} />}>\n  Write\n</Fab>"
+          "code": "<Fab extended placement=\"bottom-right\" icon={<PencilIcon size={20} />}>\n  Write\n</Fab>",
+          "preview": {
+            "src": "/previews/fab-spelling-the-action-out.jpg",
+            "alt": "Fab — Spelling the action out.",
+            "width": 1179,
+            "height": 196
+          }
         },
         {
           "title": "A speed dial",
@@ -37,6 +43,28 @@
           "title": "In the flow instead of over it",
           "description": "Leave `placement` out and it is an ordinary round button where you put it — for a screen that already has somewhere for it to sit, and for laying several out side by side.",
           "code": "<View className=\"flex-row items-center gap-4\">\n  <Fab icon={<PlusIcon size={20} />} accessibilityLabel=\"Add\" />\n  <Fab variant=\"surface\" icon={<SearchIcon size={20} />} accessibilityLabel=\"Search\" />\n  <Fab variant=\"destructive\" icon={<TrashIcon size={20} />} accessibilityLabel=\"Delete\" />\n</View>"
+        },
+        {
+          "title": "The three sizes",
+          "description": "`size` is the diameter, and the glyph inside it is yours to scale — the button does not resize an icon it was handed, because an icon that is right at one size is rarely right at all three. `md` is the default and the one the platforms agree on.",
+          "code": "{(['sm', 'md', 'lg'] as const).map((size) => (\n  <Fab\n    key={size}\n    size={size}\n    icon={<PlusIcon size={20} />}\n    accessibilityLabel=\"New\"\n  />\n))}",
+          "preview": {
+            "src": "/previews/fab-the-three-sizes.jpg",
+            "alt": "Fab — The three sizes.",
+            "width": 1179,
+            "height": 255
+          }
+        },
+        {
+          "title": "The variants",
+          "description": "`primary` is the filled one and the reason the component exists — a screen with one action worth floating should not be quiet about it. `secondary` and `surface` are for a dial's members and for a second button that must not compete; `destructive` is for the rare corner action that deletes something.",
+          "code": "<Fab icon={<PlusIcon size={20} />} accessibilityLabel=\"New\" />\n<Fab variant=\"secondary\" icon={<PencilIcon size={20} />} accessibilityLabel=\"Edit\" />\n<Fab variant=\"surface\" icon={<ImageIcon size={20} />} accessibilityLabel=\"Photos\" />\n<Fab variant=\"destructive\" icon={<TrashIcon size={20} />} accessibilityLabel=\"Delete\" />",
+          "preview": {
+            "src": "/previews/fab-the-variants.jpg",
+            "alt": "Fab — The variants.",
+            "width": 1179,
+            "height": 218
+          }
         }
       ],
       "notes": "### Give it a label\n\n`accessibilityLabel` is not optional in practice. An icon-only button reads out as nothing at all, and the plus that is obvious to someone looking at it says nothing to someone who is not. `Fab.Action` takes its label from `label`, so it is already covered.\n\n### The actions are unmounted while the dial is closed\n\nNot hidden. A column kept alive behind the trigger would still be in the accessibility tree, and a screen reader would walk into four buttons nobody can see.\n\n### One timing, not one per action\n\nThe whole dial runs off a single shared value, and each action works out its own share of it on the UI thread from its index. There is no chain of timeouts to fall out of step with itself when the dial is closed halfway through opening — closing simply runs the same value back down, and every action follows it.\n\n### The trigger turns rather than swapping\n\n`rotateOnOpen` gives the glyph a quarter circle while the dial is up, which is doing real work when the glyph is a plus: the same mark becomes a cross, so the button says *this closes now* without a second icon to swap in and animate between. Turn it off for a glyph that means something at one angle only.\n\n### A group draws itself above everything\n\nThe scrim and the buttons go through the same portal, scrim first. They have to travel together: portalled content is drawn above everything in the ordinary tree, so a portalled scrim over an in-place trigger would cover the trigger and its actions — the dial would open and immediately vanish behind its own backdrop.\n\nOne consequence worth knowing: a group's `offset` is measured from the screen's edges rather than from whatever it is written inside, which is what lets you declare it next to the content it belongs to instead of at the root of the screen. Add your safe-area inset to it if you want it clear of the home indicator. A plain `Fab` is not portalled and anchors to its nearest positioned ancestor, as an absolutely positioned view normally would.",
@@ -44,19 +72,47 @@
         {
           "title": "Over a list",
           "description": "The case it exists for — one action pinned over content that scrolls under it.",
-          "code": "<View className=\"flex-1\">\n  <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>\n    {/* …rows… */}\n  </ScrollView>\n\n  <Fab\n    placement=\"bottom-right\"\n    icon={<PlusIcon size={24} />}\n    accessibilityLabel=\"New note\"\n    haptics\n    onPress={compose}\n  />\n</View>"
+          "code": "<View className=\"flex-1\">\n  <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>\n    {/* …rows… */}\n  </ScrollView>\n\n  <Fab\n    placement=\"bottom-right\"\n    icon={<PlusIcon size={24} />}\n    accessibilityLabel=\"New note\"\n    haptics\n    onPress={compose}\n  />\n</View>",
+          "previewVideo": {
+            "src": "/previews/fab-over-a-list.mp4",
+            "poster": "/previews/fab-over-a-list-poster.jpg",
+            "alt": "Fab — Over a list.",
+            "width": 720,
+            "height": 1560
+          }
         },
         {
           "title": "A speed dial",
           "description": "Actions unfolding out of the button, over a screen that says the dial is modal.",
-          "code": "<Fab.Group icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
+          "code": "<Fab.Group icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>",
+          "previewVideo": {
+            "src": "/previews/fab.mp4",
+            "poster": "/previews/fab-poster.jpg",
+            "alt": "Fab — A speed dial.",
+            "width": 720,
+            "height": 1560
+          }
         },
         {
           "title": "Where it parks",
           "description": "The extended form, in each of the three corners it can take.",
-          "code": "<Fab extended placement={placement} icon={<PencilIcon size={20} />}>\n  Write\n</Fab>\n\n{/* placement is 'bottom-left' | 'bottom-center' | 'bottom-right' */}"
+          "code": "<Fab extended placement={placement} icon={<PencilIcon size={20} />}>\n  Write\n</Fab>\n\n{/* placement is 'bottom-left' | 'bottom-center' | 'bottom-right' */}",
+          "previewVideo": {
+            "src": "/previews/fab-where-it-parks.mp4",
+            "poster": "/previews/fab-where-it-parks-poster.jpg",
+            "alt": "Fab — Where it parks.",
+            "width": 720,
+            "height": 1560
+          }
         }
-      ]
+      ],
+      "previewVideo": {
+        "src": "/previews/fab.mp4",
+        "poster": "/previews/fab-poster.jpg",
+        "alt": "The Fab component, running in the example app.",
+        "width": 720,
+        "height": 1560
+      }
     },
     "markdown-editor": {
       "intro": "A field for writing markdown, and a way to see it rendered.\n\nWriting and reading are two modes here rather than two panes. Side by side is how this is done on a desktop and it does not survive the trip to a phone: two columns of a phone's width are two columns too narrow to read, and the keyboard covers the bottom half of the screen exactly when the writer is using it. So there is one pane and a switch, and the toolbar carries the switch because the toolbar is the one thing on screen in both modes.\n\nThe preview is [Response](/docs/ai-components/response) — the same reader that renders a model's answer — so markdown means one thing across the library and there is one parser to be right rather than two to keep in step. It renders through `Typography`, `CodeBlock` and `Table`, which is to say through your app's own type and colours: a preview that looked like a document viewer would be showing the writer something they are not going to ship.",
@@ -76,25 +132,57 @@
         {
           "title": "The whole component",
           "description": "No children: the toolbar, the field and the preview in that order. `rows` sizes the field and `placeholder` goes to it.",
-          "code": "const [draft, setDraft] = useState('');\n\n<MarkdownEditor\n  value={draft}\n  onValueChange={setDraft}\n  rows={10}\n  placeholder=\"Write something…\"\n/>"
+          "code": "const [draft, setDraft] = useState('');\n\n<MarkdownEditor\n  value={draft}\n  onValueChange={setDraft}\n  rows={10}\n  placeholder=\"Write something…\"\n/>",
+          "previewVideo": {
+            "src": "/previews/markdown-editor.mp4",
+            "poster": "/previews/markdown-editor-poster.jpg",
+            "alt": "MarkdownEditor — The whole component.",
+            "width": 720,
+            "height": 1560
+          }
         },
         {
           "title": "Starting on the reading side",
           "description": "`defaultMode` decides which pane opens first. Reading first suits a draft that already exists — a note being reviewed rather than written.",
-          "code": "<MarkdownEditor value={draft} onValueChange={setDraft} defaultMode=\"preview\" />"
+          "code": "<MarkdownEditor value={draft} onValueChange={setDraft} defaultMode=\"preview\" />",
+          "preview": {
+            "src": "/previews/markdown-editor-starting-on-the-reading-side.jpg",
+            "alt": "MarkdownEditor — Starting on the reading side.",
+            "width": 1179,
+            "height": 1348
+          }
         },
         {
           "title": "Choosing the actions, and adding to the row",
           "description": "`actions` is the list, in the order you want them. The toolbar’s children sit beside the mode switch, for anything that belongs to the draft rather than to the text.",
-          "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar actions={['bold', 'italic', 'link']}>\n    <Text size=\"xs\" muted>{words} words</Text>\n  </MarkdownEditor.Toolbar>\n  <MarkdownEditor.Input rows={6} placeholder=\"Say something…\" />\n  <MarkdownEditor.Preview emptyText=\"Write a line and switch to Preview.\" />\n</MarkdownEditor>"
+          "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar actions={['bold', 'italic', 'link']}>\n    <Text size=\"xs\" muted>{words} words</Text>\n  </MarkdownEditor.Toolbar>\n  <MarkdownEditor.Input rows={6} placeholder=\"Say something…\" />\n  <MarkdownEditor.Preview emptyText=\"Write a line and switch to Preview.\" />\n</MarkdownEditor>",
+          "preview": {
+            "src": "/previews/markdown-editor-choosing-the-actions-and-adding-to-the-row.jpg",
+            "alt": "MarkdownEditor — Choosing the actions, and adding to the row.",
+            "width": 1179,
+            "height": 673
+          }
         },
         {
           "title": "A composer with no preview",
           "description": "Leave `MarkdownEditor.Preview` out and turn the switch off with `showModeSwitch={false}`. What is left is a comment box whose toolbar formats and nothing else.",
-          "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar showModeSwitch={false} />\n  <MarkdownEditor.Input rows={4} placeholder=\"Leave a comment…\" />\n</MarkdownEditor>\n\n<Button fullWidth disabled={!draft.trim()} onPress={post}>Post</Button>"
+          "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar showModeSwitch={false} />\n  <MarkdownEditor.Input rows={4} placeholder=\"Leave a comment…\" />\n</MarkdownEditor>\n\n<Button fullWidth disabled={!draft.trim()} onPress={post}>Post</Button>",
+          "preview": {
+            "src": "/previews/markdown-editor-a-composer-with-no-preview.jpg",
+            "alt": "MarkdownEditor — A composer with no preview.",
+            "width": 1179,
+            "height": 755
+          }
         }
       ],
-      "notes": "### Where the caret lands\n\nEvery toolbar button is a function of the text and where the caret is in it, and what makes a formatting toolbar feel broken is never the characters it inserts — it is where the caret ends up afterwards. Three rules hold for all of them:\n\n- **Pressing twice undoes it.** A button that only ever adds is a button you can press once, and every press after that damages the text.\n- **A selection stays selected.** Bolding three words and then italicising the same three is two presses, not a press and a re-selection.\n- **With nothing selected, the caret lands where the writing goes** — between the new markers rather than after them.\n\nA line-level action — heading, list, quote — applies to every line the selection touches, even partly, and removes itself only when *all* of them already have it. A mixed block is a block someone is trying to make uniform, so the useful answer there is to add.\n\n### The field is monospaced, and does not correct you\n\nA markdown source is code as much as it is prose. Autocapitalisation and autocorrection are off, because an editor that capitalises the word after a fence, or rewrites a hyphen into an en dash, is an editor that quietly changes what the document renders as.\n\n### No platform markdown\n\nSwiftUI's `Text` can parse markdown and Jetpack Compose's cannot, so an editor backed by the platform would render on iOS and show a plain string on Android. The parser here is JavaScript and the output is React Native views, which is why the two platforms agree."
+      "notes": "### Where the caret lands\n\nEvery toolbar button is a function of the text and where the caret is in it, and what makes a formatting toolbar feel broken is never the characters it inserts — it is where the caret ends up afterwards. Three rules hold for all of them:\n\n- **Pressing twice undoes it.** A button that only ever adds is a button you can press once, and every press after that damages the text.\n- **A selection stays selected.** Bolding three words and then italicising the same three is two presses, not a press and a re-selection.\n- **With nothing selected, the caret lands where the writing goes** — between the new markers rather than after them.\n\nA line-level action — heading, list, quote — applies to every line the selection touches, even partly, and removes itself only when *all* of them already have it. A mixed block is a block someone is trying to make uniform, so the useful answer there is to add.\n\n### The field is monospaced, and does not correct you\n\nA markdown source is code as much as it is prose. Autocapitalisation and autocorrection are off, because an editor that capitalises the word after a fence, or rewrites a hyphen into an en dash, is an editor that quietly changes what the document renders as.\n\n### No platform markdown\n\nSwiftUI's `Text` can parse markdown and Jetpack Compose's cannot, so an editor backed by the platform would render on iOS and show a plain string on Android. The parser here is JavaScript and the output is React Native views, which is why the two platforms agree.",
+      "previewVideo": {
+        "src": "/previews/markdown-editor.mp4",
+        "poster": "/previews/markdown-editor-poster.jpg",
+        "alt": "The MarkdownEditor component, running in the example app.",
+        "width": 720,
+        "height": 1560
+      }
     },
     "button-group": {
       "intro": "Several buttons drawn as one control — a segmented run, a split action, a toolbar down the side of a canvas.\n\nThe buttons stay buttons. Anything a [Button](/docs/components/button) does — an icon, a badge, a loading state, a disabled segment, opening a [Popover](/docs/components/popover) — it still does inside a group, because the group is a container rather than a component that takes a list of items and renders them for you. A list-of-items API has to grow a prop for every one of those things; this one has none of them and can do all of them.\n\nIt is not a selection control. It joins buttons, and what they mean is yours: for a control that owns which one is on reach for [ToggleButtonGroup](/docs/components/toggle-button), and for switching between panels of content reach for [Tabs](/docs/components/tabs) — a segmented run that swaps a screen is navigation, and navigation should say so to a screen reader.",
@@ -123,35 +211,101 @@
         {
           "title": "A view switcher",
           "description": "`variant` and `size` fill in for any button that did not choose its own, so a run of three does not repeat the same two props three times. The current segment says `secondary` for itself and wins — which is all “selected” needs to be once the surrounding shape is already drawn.",
-          "code": "const [view, setView] = useState('media');\n\n<ButtonGroup size=\"sm\">\n  {views.map(({ value, label, icon: Icon }) => (\n    <Button\n      key={value}\n      variant={view === value ? 'secondary' : 'ghost'}\n      startContent={<Icon size={15} />}\n      onPress={() => setView(value)}\n    >\n      {label}\n    </Button>\n  ))}\n</ButtonGroup>"
+          "code": "const [view, setView] = useState('media');\n\n<ButtonGroup size=\"sm\">\n  {views.map(({ value, label, icon: Icon }) => (\n    <Button\n      key={value}\n      variant={view === value ? 'secondary' : 'ghost'}\n      startContent={<Icon size={15} />}\n      onPress={() => setView(value)}\n    >\n      {label}\n    </Button>\n  ))}\n</ButtonGroup>",
+          "preview": {
+            "src": "/previews/button-group.jpg",
+            "alt": "ButtonGroup — A view switcher.",
+            "width": 1179,
+            "height": 194
+          }
         },
         {
           "title": "Sharing the row",
           "description": "`fullWidth` spans the container and splits it equally between the segments — equally, not by content. A row sized to its labels is a row whose divisions move when the labels change, and a picker whose thirds are different widths reads as though one of them matters more.",
-          "code": "<ButtonGroup fullWidth>\n  <Button variant=\"ghost\">Monthly</Button>\n  <Button variant=\"secondary\">Annual</Button>\n  <Button variant=\"ghost\">One-off</Button>\n</ButtonGroup>"
+          "code": "<ButtonGroup fullWidth>\n  <Button variant=\"ghost\">Monthly</Button>\n  <Button variant=\"secondary\">Annual</Button>\n  <Button variant=\"ghost\">One-off</Button>\n</ButtonGroup>",
+          "preview": {
+            "src": "/previews/button-group-sharing-the-row.jpg",
+            "alt": "ButtonGroup — Sharing the row.",
+            "width": 1179,
+            "height": 236
+          }
         },
         {
           "title": "A split action",
           "description": "The thing itself, and the other ways to do it. The chevron segment is a `Button` inside a `Popover.Trigger` — a button nested inside something else — which still picks the group up, because the group passes its variant and size down through context rather than by rewriting the children it can see.",
-          "code": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<SendIcon size={16} />}>Publish</Button>\n  <Popover>\n    <Popover.Trigger>\n      <Button size=\"icon\" accessibilityLabel=\"More ways to publish\">\n        <ChevronDownIcon size={16} />\n      </Button>\n    </Popover.Trigger>\n    <Popover.Content align=\"end\" className=\"w-56 p-1.5\">\n      {/* …the other ways… */}\n    </Popover.Content>\n  </Popover>\n</ButtonGroup>"
+          "code": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<SendIcon size={16} />}>Publish</Button>\n  <Popover>\n    <Popover.Trigger>\n      <Button size=\"icon\" accessibilityLabel=\"More ways to publish\">\n        <ChevronDownIcon size={16} />\n      </Button>\n    </Popover.Trigger>\n    <Popover.Content align=\"end\" className=\"w-56 p-1.5\">\n      {/* …the other ways… */}\n    </Popover.Content>\n  </Popover>\n</ButtonGroup>",
+          "previewVideo": {
+            "src": "/previews/button-group-a-split-action.mp4",
+            "poster": "/previews/button-group-a-split-action-poster.jpg",
+            "alt": "ButtonGroup — A split action.",
+            "width": 720,
+            "height": 1560
+          }
         },
         {
           "title": "A count inside a segment",
           "description": "`endContent` takes a `Badge` the same way it would outside a group. Nothing about being in a run changes what a button can hold.",
-          "code": "<ButtonGroup variant=\"outline\">\n  <Button\n    startContent={<StarIcon size={16} />}\n    endContent={<Badge variant=\"warning\" count={148} />}\n  >\n    Star\n  </Button>\n  <Button size=\"icon\" accessibilityLabel=\"Star options\">\n    <ChevronDownIcon size={16} />\n  </Button>\n</ButtonGroup>"
+          "code": "<ButtonGroup variant=\"outline\">\n  <Button\n    startContent={<StarIcon size={16} />}\n    endContent={<Badge variant=\"warning\" count={148} />}\n  >\n    Star\n  </Button>\n  <Button size=\"icon\" accessibilityLabel=\"Star options\">\n    <ChevronDownIcon size={16} />\n  </Button>\n</ButtonGroup>",
+          "preview": {
+            "src": "/previews/button-group-a-count-inside-a-segment.jpg",
+            "alt": "ButtonGroup — A count inside a segment.",
+            "width": 1179,
+            "height": 435
+          }
         },
         {
           "title": "Down the side",
           "description": "`orientation=\"vertical\"` stacks the run and turns the dividers with it. With `size=\"icon\"` this is the toolbar beside a canvas.",
-          "code": "<ButtonGroup orientation=\"vertical\" variant=\"outline\" size=\"icon\">\n  <Button accessibilityLabel=\"Zoom in\"><PlusIcon size={16} /></Button>\n  <Button accessibilityLabel=\"Zoom out\"><MinusIcon size={16} /></Button>\n  <Button accessibilityLabel=\"Fit to screen\"><MaximizeIcon size={16} /></Button>\n</ButtonGroup>"
+          "code": "<ButtonGroup orientation=\"vertical\" variant=\"outline\" size=\"icon\">\n  <Button accessibilityLabel=\"Zoom in\"><PlusIcon size={16} /></Button>\n  <Button accessibilityLabel=\"Zoom out\"><MinusIcon size={16} /></Button>\n  <Button accessibilityLabel=\"Fit to screen\"><MaximizeIcon size={16} /></Button>\n</ButtonGroup>",
+          "preview": {
+            "src": "/previews/button-group-down-the-side.jpg",
+            "alt": "ButtonGroup — Down the side.",
+            "width": 1179,
+            "height": 613
+          }
         },
         {
           "title": "Sharing the props without sharing the shape",
           "description": "`attached={false}` keeps the inherited variant and size and drops the joined shape, leaving a spaced row of ordinary buttons. A toolbar rather than a segmented control.",
-          "code": "<ButtonGroup attached={false} variant=\"outline\" size=\"sm\">\n  <Button startContent={<SearchIcon size={15} />}>Find</Button>\n  <Button startContent={<DownloadIcon size={15} />}>Export</Button>\n  <Button startContent={<ShareNodesIcon size={15} />}>Share</Button>\n</ButtonGroup>"
+          "code": "<ButtonGroup attached={false} variant=\"outline\" size=\"sm\">\n  <Button startContent={<SearchIcon size={15} />}>Find</Button>\n  <Button startContent={<DownloadIcon size={15} />}>Export</Button>\n  <Button startContent={<ShareNodesIcon size={15} />}>Share</Button>\n</ButtonGroup>",
+          "preview": {
+            "src": "/previews/button-group-sharing-the-props-without-sharing-the-shape.jpg",
+            "alt": "ButtonGroup — Sharing the props without sharing the shape.",
+            "width": 1179,
+            "height": 270
+          }
+        },
+        {
+          "title": "Busy and unavailable",
+          "description": "A segment carries its own state. `loading` swaps its label for a spinner and stops it answering; `disabled` fades it and deafens it. Neither takes the segment out of the run — a joined shape with a hole in it is harder to read than a dim segment, and the row would resize under the finger as the state changed.",
+          "code": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<PencilIcon size={16} />}>Rename</Button>\n  <Button startContent={<CopyIcon size={16} />}>Duplicate</Button>\n  <Button startContent={<TrashIcon size={16} />} disabled>\n    Remove\n  </Button>\n</ButtonGroup>\n\n<ButtonGroup variant=\"outline\">\n  <Button loading={saving} onPress={save}>\n    {saving ? 'Saving' : 'Save layout'}\n  </Button>\n  <Button size=\"icon\" accessibilityLabel=\"Revert\">\n    <PlusIcon size={16} />\n  </Button>\n</ButtonGroup>",
+          "previewVideo": {
+            "src": "/previews/button-group-busy-and-unavailable.mp4",
+            "poster": "/previews/button-group-busy-and-unavailable-poster.jpg",
+            "alt": "ButtonGroup — Busy and unavailable.",
+            "width": 720,
+            "height": 252
+          }
+        },
+        {
+          "title": "Three sizes",
+          "description": "`size` on the group is the size of every segment in it, and it sets the height, the padding and the type together so the joined edges still meet. A segment that names its own size wins, which is how the chevron on a split action stays square while the rest of the run is not.",
+          "code": "{(['sm', 'md', 'lg'] as const).map((size) => (\n  <ButtonGroup key={size} size={size} variant=\"outline\">\n    <Button>Left</Button>\n    <Button>Middle</Button>\n    <Button>Right</Button>\n  </ButtonGroup>\n))}",
+          "preview": {
+            "src": "/previews/button-group-three-sizes.jpg",
+            "alt": "ButtonGroup — Three sizes.",
+            "width": 1179,
+            "height": 571
+          }
         }
       ],
-      "notes": "### Why the container draws the border\n\nA joined run could be built by giving the first and last segments their corners, squaring the ones between, and collapsing every shared edge with a negative margin. That works on the web and is a stack of off-by-one problems on a phone: the hairlines land on different fractions of a pixel per device, and a run that wraps has no first or last segment any more.\n\nSo the group draws the shape once — one border, one radius, one shadow, clipped — and the buttons inside draw none of their own. The dividers are real one-pixel views the group puts between its children, which is why they are always exactly one pixel and always in the same place.\n\n### What a button gives up inside one\n\nIts radius and its shadow, because the group owns both. Its border turns transparent rather than being removed — it is holding a pixel of the button's height, and dropping it would leave an `outline` segment a hair shorter than a `ghost` one beside it.\n\nIts press feedback changes too. A button on its own shrinks slightly when pressed, which inside a joined run would pull the segment away from its neighbours and show the container through the gap, so an attached segment takes a background instead. Pass `pressScale` yourself to override that.\n\n### Native buttons are not grouped\n\nA `native` button is drawn by the platform, so it has no border, radius or shadow for the group to take over. Several of them in a row would be platform buttons with a border drawn around them rather than a segmented control, so a native button inside a group ignores it and stays exactly what it was."
+      "notes": "### Why the container draws the border\n\nA joined run could be built by giving the first and last segments their corners, squaring the ones between, and collapsing every shared edge with a negative margin. That works on the web and is a stack of off-by-one problems on a phone: the hairlines land on different fractions of a pixel per device, and a run that wraps has no first or last segment any more.\n\nSo the group draws the shape once — one border, one radius, one shadow, clipped — and the buttons inside draw none of their own. The dividers are real one-pixel views the group puts between its children, which is why they are always exactly one pixel and always in the same place.\n\n### What a button gives up inside one\n\nIts radius and its shadow, because the group owns both. Its border turns transparent rather than being removed — it is holding a pixel of the button's height, and dropping it would leave an `outline` segment a hair shorter than a `ghost` one beside it.\n\nIts press feedback changes too. A button on its own shrinks slightly when pressed, which inside a joined run would pull the segment away from its neighbours and show the container through the gap, so an attached segment takes a background instead. Pass `pressScale` yourself to override that.\n\n### Native buttons are not grouped\n\nA `native` button is drawn by the platform, so it has no border, radius or shadow for the group to take over. Several of them in a row would be platform buttons with a border drawn around them rather than a segmented control, so a native button inside a group ignores it and stays exactly what it was.",
+      "preview": {
+        "src": "/previews/button-group.jpg",
+        "alt": "The ButtonGroup component, running in the example app.",
+        "width": 1179,
+        "height": 194
+      }
     },
   "accordion": {
     "intro": "Collapsible sections for FAQs, settings groups and anything that would otherwise need a long scroll. Expansion animates with a Reanimated layout transition, and the content unmounts when collapsed — or stays mounted and hidden, with `keepMounted`, when there is state inside it worth keeping.",
@@ -2055,30 +2209,83 @@
       {
         "title": "Columns, gaps and the shape of a cell",
         "description": "`columns` is how many tracks wide the grid is and `gap` is the gutter, in points, both ways. The cell's height comes from `aspect` — width ÷ height, so `1` is square and anything above it is a letterbox. Give `rowHeight` instead when the grid should be a fixed size rather than driven by the width it was handed.\n\nEverything is set on the group, never on a tile: a tile that sized itself would not be in a grid.",
-        "code": "{/* Two square-ish tracks. */}\n<GridItem.Group columns={2} gap={12} aspect={1.6}>…</GridItem.Group>\n\n{/* Three narrow ones, at the smaller density. */}\n<GridItem.Group columns={3} gap={10} size=\"sm\">…</GridItem.Group>\n\n{/* Cells of a fixed height, whatever the width. */}\n<GridItem.Group columns={2} gap={12} rowHeight={120}>…</GridItem.Group>"
+        "code": "{/* Two square-ish tracks. */}\n<GridItem.Group columns={2} gap={12} aspect={1.6}>…</GridItem.Group>\n\n{/* Three narrow ones, at the smaller density. */}\n<GridItem.Group columns={3} gap={10} size=\"sm\">…</GridItem.Group>\n\n{/* Cells of a fixed height, whatever the width. */}\n<GridItem.Group columns={2} gap={12} rowHeight={120}>…</GridItem.Group>",
+        "preview": {
+          "src": "/previews/grid-item-columns-gaps-and-the-shape-of-a-cell.jpg",
+          "alt": "GridItem — Columns, gaps and the shape of a cell.",
+          "width": 1179,
+          "height": 744
+        }
       },
       {
         "title": "Spanning",
         "description": "`colSpan` and `rowSpan` are in cells. A tile asking for more columns than the grid has is clamped to the grid rather than overflowing it.\n\nTiles are placed in the order they are written, each into the first free cell it fits in, scanning row by row — the same rule a grid uses for anything it is not told where to put. Nothing already placed is moved, so a tall tile leaves a gap beside it that the following tiles fill.",
-        "code": "<GridItem.Group columns={3} gap={10}>\n  <GridItem rowSpan={2}>Two rows tall</GridItem>\n  <GridItem colSpan={2}>Two columns wide</GridItem>\n  <GridItem>Fills in beside the tall one</GridItem>\n  <GridItem>And so does this</GridItem>\n  <GridItem colSpan={3}>A full-width band under the rest</GridItem>\n</GridItem.Group>"
+        "code": "<GridItem.Group columns={3} gap={10}>\n  <GridItem rowSpan={2}>Two rows tall</GridItem>\n  <GridItem colSpan={2}>Two columns wide</GridItem>\n  <GridItem>Fills in beside the tall one</GridItem>\n  <GridItem>And so does this</GridItem>\n  <GridItem colSpan={3}>A full-width band under the rest</GridItem>\n</GridItem.Group>",
+        "preview": {
+          "src": "/previews/grid-item-spanning.jpg",
+          "alt": "GridItem — Spanning.",
+          "width": 1179,
+          "height": 1133
+        }
       },
       {
         "title": "The layer behind the text",
         "description": "`GridItem.Background` fills the tile, sits under everything else, and takes no touches, so it can be written anywhere among the children without moving them. The tile clips it — it is meant to run off the edges.\n\nThis is what makes a bento grid read as a bento grid rather than as a wall of stat cards. A sparkline pinned to the bottom, an oversized icon hung off a corner, a photo: none of them are read for values, so none of them need axes.\n\nThe icon treatment survives being used on *every* tile, which most decoration does not. An icon that fits inside the tile is an icon; one that runs off two edges of it at a tenth of its opacity is a texture — and giving each tile its own subject in its own `--color-chart-*` tint means four of them read as four different things rather than as wallpaper.",
-        "code": "{/* A shape along the bottom. */}\n<GridItem colSpan={2}>\n  <GridItem.Background>\n    <View className=\"mt-auto h-20 w-full opacity-60\">\n      <LineChart data={week} compact aspectRatio={3.4}>\n        <LineChart.Area dataKey=\"v\" />\n        <LineChart.Line dataKey=\"v\" />\n      </LineChart>\n    </View>\n  </GridItem.Background>\n  <GridItem.Title>Requests</GridItem.Title>\n  <GridItem.Value>52.4k</GridItem.Value>\n</GridItem>\n\n{/* A watermark hung off the corner, tinted per tile. */}\n<GridItem>\n  <GridItem.Background>\n    <View className=\"absolute -bottom-6 -right-5 opacity-[0.14]\">\n      <SparklesIcon size={72} color={useCSSVariable('--color-chart-1')} />\n    </View>\n  </GridItem.Background>\n  <GridItem.Title>Cache hits</GridItem.Title>\n  <GridItem.Value>94%</GridItem.Value>\n</GridItem>"
+        "code": "{/* A shape along the bottom. */}\n<GridItem colSpan={2}>\n  <GridItem.Background>\n    <View className=\"mt-auto h-20 w-full opacity-60\">\n      <LineChart data={week} compact aspectRatio={3.4}>\n        <LineChart.Area dataKey=\"v\" />\n        <LineChart.Line dataKey=\"v\" />\n      </LineChart>\n    </View>\n  </GridItem.Background>\n  <GridItem.Title>Requests</GridItem.Title>\n  <GridItem.Value>52.4k</GridItem.Value>\n</GridItem>\n\n{/* A watermark hung off the corner, tinted per tile. */}\n<GridItem>\n  <GridItem.Background>\n    <View className=\"absolute -bottom-6 -right-5 opacity-[0.14]\">\n      <SparklesIcon size={72} color={useCSSVariable('--color-chart-1')} />\n    </View>\n  </GridItem.Background>\n  <GridItem.Title>Cache hits</GridItem.Title>\n  <GridItem.Value>94%</GridItem.Value>\n</GridItem>",
+        "preview": {
+          "src": "/previews/grid-item-the-layer-behind-the-text.jpg",
+          "alt": "GridItem — The layer behind the text.",
+          "width": 1179,
+          "height": 927
+        }
       },
       {
         "title": "Tiles that go somewhere",
         "description": "Give a tile `onPress` and it renders as a pressable with the button role and the press animation; leave it off and it is a plain view, so a tile that is only showing a number does not announce itself as a button.\n\nA whole tile is a generous touch target, so put the affordance in the footer rather than making a small button inside it — the chevron says where the press goes and the tile is what receives it.",
-        "code": "<GridItem onPress={() => router.push('/billing')}>\n  <GridItem.Title>Billing</GridItem.Title>\n  <GridItem.Footer>\n    <Text size=\"xs\" className=\"flex-1 text-muted-foreground\">3 invoices due</Text>\n    <ChevronRightIcon size={14} />\n  </GridItem.Footer>\n</GridItem>"
+        "code": "<GridItem onPress={() => router.push('/billing')}>\n  <GridItem.Title>Billing</GridItem.Title>\n  <GridItem.Footer>\n    <Text size=\"xs\" className=\"flex-1 text-muted-foreground\">3 invoices due</Text>\n    <ChevronRightIcon size={14} />\n  </GridItem.Footer>\n</GridItem>",
+        "previewVideo": {
+          "src": "/previews/grid-item-tiles-that-go-somewhere.mp4",
+          "poster": "/previews/grid-item-tiles-that-go-somewhere-poster.jpg",
+          "alt": "GridItem — Tiles that go somewhere.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Nesting a grid inside a tile",
         "description": "A group inside a tile is a group like any other, and it measures the cell it was put in. That is how a bento gets a sub-rhythm — two small tiles stacked inside one cell of the outer grid — without the outer grid needing a notion of half a row. Use `variant=\"plain\"` on the tile holding it, so there is not a card inside a card.",
         "code": "<GridItem.Group columns={2} gap={12}>\n  <GridItem rowSpan={2}>…</GridItem>\n  <GridItem variant=\"plain\" className=\"p-0\">\n    <GridItem.Group columns={1} gap={12} rowHeight={54}>\n      <GridItem size=\"sm\">…</GridItem>\n      <GridItem size=\"sm\">…</GridItem>\n    </GridItem.Group>\n  </GridItem>\n</GridItem.Group>"
+      },
+      {
+        "title": "A bento of stats",
+        "description": "The shape the component is named for: one tile across the top and two under it, from `colSpan` alone. `rowHeight` is set from what the tallest tile has to hold rather than from the proportion that looked right — an icon, a title, a figure and a line under it — because a cell shorter than its contents clips the last of them.",
+        "code": "<GridItem.Group columns={2} gap={12} rowHeight={164}>\n  <GridItem colSpan={2}>\n    <GridItem.Media variant=\"icon\"><SparklesIcon size={18} /></GridItem.Media>\n    <GridItem.Title>Deploys</GridItem.Title>\n    <GridItem.Value>1,284</GridItem.Value>\n    <GridItem.Description numberOfLines={1}>\n      this week, across 12 projects\n    </GridItem.Description>\n  </GridItem>\n  <GridItem>\n    <GridItem.Title>Uptime</GridItem.Title>\n    <GridItem.Value>99.98%</GridItem.Value>\n    <GridItem.Footer><Badge variant=\"secondary\">30 days</Badge></GridItem.Footer>\n  </GridItem>\n  <GridItem variant=\"muted\">\n    <GridItem.Title>p95 latency</GridItem.Title>\n    <GridItem.Value>142ms</GridItem.Value>\n    <GridItem.Description numberOfLines={1}>down 18ms</GridItem.Description>\n  </GridItem>\n</GridItem.Group>",
+        "preview": {
+          "src": "/previews/grid-item.jpg",
+          "alt": "GridItem — A bento of stats.",
+          "width": 1179,
+          "height": 1096
+        }
+      },
+      {
+        "title": "A wall of watermarks",
+        "description": "The same trick as the layer behind the text, repeated until it is a texture rather than an illustration. Each glyph is hung off the bottom-right corner and cut by the tile it sits in: an icon that fits inside a tile is an icon, and one that runs off two of its edges is a background. Keep the opacity low enough that the figure over it never has to compete.",
+        "code": "<GridItem.Group columns={2} gap={12} rowHeight={132}>\n  {stats.map((stat) => (\n    <GridItem key={stat.label}>\n      <GridItem.Background>\n        <View className=\"absolute -bottom-6 -right-5 opacity-[0.14]\">\n          <SparklesIcon size={120} color={stat.tint} />\n        </View>\n      </GridItem.Background>\n      <GridItem.Title>{stat.label}</GridItem.Title>\n      <GridItem.Value>{stat.value}</GridItem.Value>\n      <GridItem.Footer>\n        <Text size=\"xs\" muted numberOfLines={1}>{stat.caption}</Text>\n      </GridItem.Footer>\n    </GridItem>\n  ))}\n</GridItem.Group>",
+        "preview": {
+          "src": "/previews/grid-item-a-wall-of-watermarks.jpg",
+          "alt": "GridItem — A wall of watermarks.",
+          "width": 1179,
+          "height": 908
+        }
       }
     ],
-    "notes": "### A tile's height is its cells, not its content\n\nThis is the trade the grid makes, and it is the right way round for a bento: a grid of boxes that each grew to fit their own text is not a grid. But it does mean content taller than its cell is clipped rather than pushing the tile down.\n\nSo set the cell from what the tallest tile has to hold, not from the shape that looked right. At the default density a tile carrying a media tile, a title, a value and a line under it needs about 164 points, and one carrying a title, a value and a footer about 130 — `rowHeight` says so directly, where `aspect` says it only once you know how wide a track came out. Then `numberOfLines` on the text, `size=\"sm\"`, or another row for anything still over.\n\n### It draws nothing until it has measured\n\nEvery tile is placed from the group's width, so there is one frame of an empty box before the grid appears — which is better than one frame of every tile piled on the origin. The group reserves its height as soon as it knows it, so nothing below it jumps.\n\n### Reading order is writing order\n\nTiles are placed row by row in the order they are written, and that is also the order they sit in the tree — so a screen reader walks them the same way the eye does. Reordering the visual grid means reordering the children, which is the only way the two can be guaranteed to agree.\n\n### When to use Item instead\n\nIf every entry is the same size and the list runs down the screen, it is a list, and [Item](/docs/components/item) is the shape for it — one that stacks, separates and grows with its content. Reach for a grid when the sizes are *deliberately* different, because that difference is the only thing a bento says that a list does not."
+    "notes": "### A tile's height is its cells, not its content\n\nThis is the trade the grid makes, and it is the right way round for a bento: a grid of boxes that each grew to fit their own text is not a grid. But it does mean content taller than its cell is clipped rather than pushing the tile down.\n\nSo set the cell from what the tallest tile has to hold, not from the shape that looked right. At the default density a tile carrying a media tile, a title, a value and a line under it needs about 164 points, and one carrying a title, a value and a footer about 130 — `rowHeight` says so directly, where `aspect` says it only once you know how wide a track came out. Then `numberOfLines` on the text, `size=\"sm\"`, or another row for anything still over.\n\n### It draws nothing until it has measured\n\nEvery tile is placed from the group's width, so there is one frame of an empty box before the grid appears — which is better than one frame of every tile piled on the origin. The group reserves its height as soon as it knows it, so nothing below it jumps.\n\n### Reading order is writing order\n\nTiles are placed row by row in the order they are written, and that is also the order they sit in the tree — so a screen reader walks them the same way the eye does. Reordering the visual grid means reordering the children, which is the only way the two can be guaranteed to agree.\n\n### When to use Item instead\n\nIf every entry is the same size and the list runs down the screen, it is a list, and [Item](/docs/components/item) is the shape for it — one that stacks, separates and grows with its content. Reach for a grid when the sizes are *deliberately* different, because that difference is the only thing a bento says that a list does not.",
+    "preview": {
+      "src": "/previews/grid-item.jpg",
+      "alt": "The GridItem component, running in the example app.",
+      "width": 1179,
+      "height": 1096
+    }
   },
   "item": {
     "intro": "A row of content: media on one side, a title and description in the middle, actions on the other.\n\nIt is the shape almost every list in an app already has — a settings row, a file in a picker, a member in a team list, a tool call in a transcript — so it exists as one composable primitive instead of being rebuilt per screen with slightly different padding each time.",
@@ -2900,35 +3107,108 @@
       {
         "title": "Basic",
         "description": "`count` is how many pages there are; pages are numbered from 1. Pass `page` to control the component, or leave it off and give `defaultPage` to let it keep its own. `onPageChange` is called with the page that was asked for, already clamped to `count`.",
-        "code": "const [page, setPage] = useState(1);\n\n<Pagination count={12} page={page} onPageChange={setPage} />"
+        "code": "const [page, setPage] = useState(1);\n\n<Pagination count={12} page={page} onPageChange={setPage} />",
+        "previewVideo": {
+          "src": "/previews/pagination.mp4",
+          "poster": "/previews/pagination-poster.jpg",
+          "alt": "Pagination — Basic.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Compact",
         "description": "The two arrows with `3 / 12` between them, for a footer with no room for a run of numbers. Digits and a slash rather than “Page 3 of 12”, so there is no sentence to translate.",
-        "code": "<Pagination count={12} page={page} onPageChange={setPage} variant=\"compact\" />"
+        "code": "<Pagination count={12} page={page} onPageChange={setPage} variant=\"compact\" />",
+        "previewVideo": {
+          "src": "/previews/pagination-compact.mp4",
+          "poster": "/previews/pagination-compact-poster.jpg",
+          "alt": "Pagination — Compact.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Simple",
         "description": "Labelled Previous and Next, and no numbers at all — for a flow you walk rather than jump around in: a wizard, an article, a set of onboarding cards.",
-        "code": "<Pagination count={5} page={page} onPageChange={setPage} variant=\"simple\" />"
+        "code": "<Pagination count={5} page={page} onPageChange={setPage} variant=\"simple\" />",
+        "preview": {
+          "src": "/previews/pagination-simple.jpg",
+          "alt": "Pagination — Simple.",
+          "width": 1179,
+          "height": 198
+        }
       },
       {
         "title": "A long set",
         "description": "`siblings` is how many pages to keep either side of the current one, `boundaries` how many to pin at each end. The defaults draw about seven targets, which is what a phone fits; raise both on a tablet. The run is a fixed width rather than a sliding window, so the row does not reflow under the finger as you step through it — the number you were aiming at stays where it was.\n\nTapping an ellipsis jumps `pageJump` pages towards the end its gap is on. A dead 44pt target in a row of live ones is something people tap and then think is broken. Widening the middle costs width somewhere: this drops a boundary and the two arrows to pay for it, which is what keeps nine targets on a phone screen.",
-        "code": "<Pagination\n  count={240}\n  page={page}\n  onPageChange={setPage}\n  siblings={2}\n  boundaries={1}\n  size=\"sm\"\n  controls={false}\n/>"
+        "code": "<Pagination\n  count={240}\n  page={page}\n  onPageChange={setPage}\n  siblings={2}\n  boundaries={1}\n  size=\"sm\"\n  controls={false}\n/>",
+        "previewVideo": {
+          "src": "/previews/pagination-a-long-set.mp4",
+          "poster": "/previews/pagination-a-long-set-poster.jpg",
+          "alt": "Pagination — A long set.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Beside a table",
         "description": "The component reports the page and the caller slices the rows, which is the division of labour the whole thing is built around. `Pagination.Status` answers the question a page number does not — how much is left — and sits on the leading edge with the controls opposite it.",
-        "code": "const [page, setPage] = useState(1);\nconst pageSize = 20;\nconst rows = invoices.slice((page - 1) * pageSize, page * pageSize);\n\n<Table variant=\"outline\" columns={columns}>\n  {/* …header, and a row per entry in `rows`… */}\n</Table>\n\n<Pagination\n  count={Math.ceil(invoices.length / pageSize)}\n  page={page}\n  onPageChange={setPage}\n  variant=\"compact\"\n  size=\"sm\"\n>\n  <Pagination.Status pageSize={pageSize} total={invoices.length} />\n</Pagination>"
+        "code": "const [page, setPage] = useState(1);\nconst pageSize = 20;\nconst rows = invoices.slice((page - 1) * pageSize, page * pageSize);\n\n<Table variant=\"outline\" columns={columns}>\n  {/* …header, and a row per entry in `rows`… */}\n</Table>\n\n<Pagination\n  count={Math.ceil(invoices.length / pageSize)}\n  page={page}\n  onPageChange={setPage}\n  variant=\"compact\"\n  size=\"sm\"\n>\n  <Pagination.Status pageSize={pageSize} total={invoices.length} />\n</Pagination>",
+        "preview": {
+          "src": "/previews/pagination-beside-a-table.jpg",
+          "alt": "Pagination — Beside a table.",
+          "width": 1179,
+          "height": 648
+        }
       },
       {
         "title": "While a page loads",
         "description": "`disabled` greys the row and deafens every target in it, which is what you want between asking for a page and having it — a second tap on the same arrow would otherwise queue a page you never see.",
         "code": "<Pagination\n  count={12}\n  page={page}\n  onPageChange={setPage}\n  disabled={isFetching}\n/>"
+      },
+      {
+        "title": "Small",
+        "description": "`size=\"sm\"` shrinks the targets and the gaps between them, for a row under a table rather than under a page. It is the size to reach for before dropping to `compact`: fewer points per target still lets somebody jump to page four, and the two arrows do not.",
+        "code": "<Pagination count={12} page={page} onPageChange={setPage} size=\"sm\" />",
+        "preview": {
+          "src": "/previews/pagination-small.jpg",
+          "alt": "Pagination — Small.",
+          "width": 1179,
+          "height": 180
+        }
+      },
+      {
+        "title": "A wider run",
+        "description": "`siblings={2}` keeps two pages either side of the current one instead of one. Nine targets is as wide as a run goes on a phone, and the two arrows put it past the edge — so this trades them for the numbers, which is what asking for a wider run was for. A centred row that does not fit hangs off both ends.",
+        "code": "<Pagination\n  count={240}\n  page={page}\n  onPageChange={setPage}\n  siblings={2}\n  boundaries={1}\n  size=\"sm\"\n  controls={false}\n/>",
+        "preview": {
+          "src": "/previews/pagination-a-wider-run.jpg",
+          "alt": "Pagination — A wider run.",
+          "width": 1179,
+          "height": 183
+        }
+      },
+      {
+        "title": "With a status line",
+        "description": "`Pagination.Status` says which rows these are, which is the question a page number does not answer. Give it `pageSize` and `total` and it reads the current page from the component around it, so the two can never disagree — the row count and the page are one piece of state.",
+        "code": "<Pagination count={12} page={page} onPageChange={setPage} variant=\"compact\">\n  <Pagination.Status pageSize={20} total={240} />\n</Pagination>",
+        "preview": {
+          "src": "/previews/pagination-with-a-status-line.jpg",
+          "alt": "Pagination — With a status line.",
+          "width": 1179,
+          "height": 180
+        }
       }
     ],
-    "notes": "Every target clears 44pt in both axes, which is the smallest a finger reliably hits. `size=\"sm\"` draws a tighter row and keeps that reach through `hitSlop` instead — the paint gets smaller, the touch area does not.\n\n### How wide a run can be\n\nThe run is a fixed number of targets, so `siblings` and `boundaries` decide the row's width and the container has no say in it. On a phone that ceiling is about nine targets at `size=\"sm\"`, and the two arrows cost two more — past that the row is wider than the screen. It is clipped to its own bounds rather than allowed to spill, because a centred row that overflows hangs the same distance past both edges and the leading number ends up half off the screen with nothing to say why. If a run is being cut, lower `siblings` or `boundaries`, or drop the arrows with `controls={false}` and let the numbers have the width.\n\nWhich arrowhead means “back” is a question about the reading direction: under `<Direction dir=\"rtl\">` the previous page is to the right, and the glyphs swap to match. Yoga mirrors the row itself; the arrowheads inside it have to be chosen.\n\n`paginationRange` is exported for a control of your own that has to lay out the same run — a jump bar, a scrubber. Two implementations of that arithmetic would drift.\n\nA page number past the end is clamped rather than honoured, so a `count` that shrinks under a controlled page — a filter narrowing the result set — lands on the last page instead of lighting nothing and disabling both arrows at once."
+    "notes": "Every target clears 44pt in both axes, which is the smallest a finger reliably hits. `size=\"sm\"` draws a tighter row and keeps that reach through `hitSlop` instead — the paint gets smaller, the touch area does not.\n\n### How wide a run can be\n\nThe run is a fixed number of targets, so `siblings` and `boundaries` decide the row's width and the container has no say in it. On a phone that ceiling is about nine targets at `size=\"sm\"`, and the two arrows cost two more — past that the row is wider than the screen. It is clipped to its own bounds rather than allowed to spill, because a centred row that overflows hangs the same distance past both edges and the leading number ends up half off the screen with nothing to say why. If a run is being cut, lower `siblings` or `boundaries`, or drop the arrows with `controls={false}` and let the numbers have the width.\n\nWhich arrowhead means “back” is a question about the reading direction: under `<Direction dir=\"rtl\">` the previous page is to the right, and the glyphs swap to match. Yoga mirrors the row itself; the arrowheads inside it have to be chosen.\n\n`paginationRange` is exported for a control of your own that has to lay out the same run — a jump bar, a scrubber. Two implementations of that arithmetic would drift.\n\nA page number past the end is clamped rather than honoured, so a `count` that shrinks under a controlled page — a filter narrowing the result set — lands on the last page instead of lighting nothing and disabling both arrows at once.",
+    "previewVideo": {
+      "src": "/previews/pagination.mp4",
+      "poster": "/previews/pagination-poster.jpg",
+      "alt": "The Pagination component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
   },
   "popover": {
     "intro": "A panel anchored to the thing that opened it.\n\nA dialog takes the screen and asks to be dealt with; a popover stays next to its trigger and keeps the context around it visible. That difference is the whole reason both exist, and it is why this one is positioned rather than centred.\n\nPlacement is a preference, not a promise. The trigger is measured in window coordinates when it is pressed, the panel measures itself on its first layout, and the two are reconciled against the safe area — so `placement=\"bottom\"` means *below, if below fits*. A trigger near the bottom of the screen opens upwards instead of off the edge.",
@@ -3094,17 +3374,36 @@
       {
         "title": "One answer at a time",
         "description": "The default shape: a required question, an optional one, and a footer that shows only the actions that apply to the question on screen.",
-        "code": "const questions = [\n  { name: 'direction', required: true },\n  { name: 'detail' },\n] as const;\n\nfunction Prototype() {\n  const [answers, setAnswers] = useState<QuestionnaireAnswers>({});\n\n  return (\n    <Questionnaire items={questions} onAnswersChange={setAnswers} onSubmit={save}>\n      <Questionnaire.Title>Prototype</Questionnaire.Title>\n      <Questionnaire.Progress />\n\n      <Questionnaire.Item name=\"direction\" required>\n        <Questionnaire.Question>What should we build next?</Questionnaire.Question>\n        <Questionnaire.Description>Choose the direction you want to see first.</Questionnaire.Description>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice\n            value=\"delegation\"\n            label=\"Delegation\"\n            description=\"Show how work moves to a specialist.\"\n          />\n          <Questionnaire.Choice value=\"prompts\" label=\"Question prompts\" />\n          <Questionnaire.Choice value=\"both\" label=\"Both together\" />\n        </Questionnaire.Choices>\n        <Questionnaire.Error />\n      </Questionnaire.Item>\n\n      <Questionnaire.Item name=\"detail\">\n        <Questionnaire.Question>How much detail?</Questionnaire.Question>\n        <Questionnaire.Description>Skip this one if you have not decided.</Questionnaire.Description>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice value=\"focused\" label=\"Focused\" />\n          <Questionnaire.Choice value=\"complete\" label=\"The complete flow\" />\n        </Questionnaire.Choices>\n      </Questionnaire.Item>\n\n      <Questionnaire.Footer>\n        <Questionnaire.Back />\n        <Questionnaire.Spacer />\n        <Questionnaire.Skip />\n        <Questionnaire.Next />\n        <Questionnaire.Submit />\n      </Questionnaire.Footer>\n    </Questionnaire>\n  );\n}"
+        "code": "const questions = [\n  { name: 'direction', required: true },\n  { name: 'detail' },\n] as const;\n\nfunction Prototype() {\n  const [answers, setAnswers] = useState<QuestionnaireAnswers>({});\n\n  return (\n    <Questionnaire items={questions} onAnswersChange={setAnswers} onSubmit={save}>\n      <Questionnaire.Title>Prototype</Questionnaire.Title>\n      <Questionnaire.Progress />\n\n      <Questionnaire.Item name=\"direction\" required>\n        <Questionnaire.Question>What should we build next?</Questionnaire.Question>\n        <Questionnaire.Description>Choose the direction you want to see first.</Questionnaire.Description>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice\n            value=\"delegation\"\n            label=\"Delegation\"\n            description=\"Show how work moves to a specialist.\"\n          />\n          <Questionnaire.Choice value=\"prompts\" label=\"Question prompts\" />\n          <Questionnaire.Choice value=\"both\" label=\"Both together\" />\n        </Questionnaire.Choices>\n        <Questionnaire.Error />\n      </Questionnaire.Item>\n\n      <Questionnaire.Item name=\"detail\">\n        <Questionnaire.Question>How much detail?</Questionnaire.Question>\n        <Questionnaire.Description>Skip this one if you have not decided.</Questionnaire.Description>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice value=\"focused\" label=\"Focused\" />\n          <Questionnaire.Choice value=\"complete\" label=\"The complete flow\" />\n        </Questionnaire.Choices>\n      </Questionnaire.Item>\n\n      <Questionnaire.Footer>\n        <Questionnaire.Back />\n        <Questionnaire.Spacer />\n        <Questionnaire.Skip />\n        <Questionnaire.Next />\n        <Questionnaire.Submit />\n      </Questionnaire.Footer>\n    </Questionnaire>\n  );\n}",
+        "previewVideo": {
+          "src": "/previews/questionnaire-one-answer-at-a-time.mp4",
+          "poster": "/previews/questionnaire-one-answer-at-a-time-poster.jpg",
+          "alt": "Questionnaire — One answer at a time.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Selecting more than one",
         "description": "`multiple` turns a question’s answers into a set rather than a choice, and its answer arrives as an array.",
-        "code": "<Questionnaire onAnswersChange={setAnswers}>\n  <Questionnaire.Progress />\n  <Questionnaire.Item name=\"signals\" required multiple>\n    <Questionnaire.Question>What should every update include?</Questionnaire.Question>\n    <Questionnaire.Description>Select all that apply.</Questionnaire.Description>\n    <Questionnaire.Choices>\n      <Questionnaire.Choice value=\"progress\" label=\"Progress\" />\n      <Questionnaire.Choice value=\"decisions\" label=\"Decisions\" />\n      <Questionnaire.Choice value=\"risks\" label=\"Risks\" />\n    </Questionnaire.Choices>\n    <Questionnaire.Error />\n  </Questionnaire.Item>\n  <Questionnaire.Footer>\n    <Questionnaire.Spacer />\n    <Questionnaire.Submit />\n  </Questionnaire.Footer>\n</Questionnaire>\n\n// answers.signals -> ['progress', 'risks']"
+        "code": "<Questionnaire onAnswersChange={setAnswers}>\n  <Questionnaire.Progress />\n  <Questionnaire.Item name=\"signals\" required multiple>\n    <Questionnaire.Question>What should every update include?</Questionnaire.Question>\n    <Questionnaire.Description>Select all that apply.</Questionnaire.Description>\n    <Questionnaire.Choices>\n      <Questionnaire.Choice value=\"progress\" label=\"Progress\" />\n      <Questionnaire.Choice value=\"decisions\" label=\"Decisions\" />\n      <Questionnaire.Choice value=\"risks\" label=\"Risks\" />\n    </Questionnaire.Choices>\n    <Questionnaire.Error />\n  </Questionnaire.Item>\n  <Questionnaire.Footer>\n    <Questionnaire.Spacer />\n    <Questionnaire.Submit />\n  </Questionnaire.Footer>\n</Questionnaire>\n\n// answers.signals -> ['progress', 'risks']",
+        "preview": {
+          "src": "/previews/questionnaire-selecting-more-than-one.jpg",
+          "alt": "Questionnaire — Selecting more than one.",
+          "width": 1179,
+          "height": 1266
+        }
       },
       {
         "title": "An answer that is not listed",
         "description": "Put a `Questionnaire.Input` among the choices. It holds whatever the question is answered with that none of the choices offers, so the two clear each other without either knowing the other is there.",
-        "code": "<Questionnaire.Item name=\"tool\" required>\n  <Questionnaire.Question>Where do you keep your notes?</Questionnaire.Question>\n  <Questionnaire.Choices>\n    <Questionnaire.Choice value=\"files\" label=\"Plain files\" />\n    <Questionnaire.Choice value=\"issues\" label=\"Issue tracker\" />\n    <Questionnaire.Input placeholder=\"Somewhere else…\" />\n  </Questionnaire.Choices>\n  <Questionnaire.Error />\n</Questionnaire.Item>"
+        "code": "<Questionnaire.Item name=\"tool\" required>\n  <Questionnaire.Question>Where do you keep your notes?</Questionnaire.Question>\n  <Questionnaire.Choices>\n    <Questionnaire.Choice value=\"files\" label=\"Plain files\" />\n    <Questionnaire.Choice value=\"issues\" label=\"Issue tracker\" />\n    <Questionnaire.Input placeholder=\"Somewhere else…\" />\n  </Questionnaire.Choices>\n  <Questionnaire.Error />\n</Questionnaire.Item>",
+        "preview": {
+          "src": "/previews/questionnaire-an-answer-that-is-not-listed.jpg",
+          "alt": "Questionnaire — An answer that is not listed.",
+          "width": 1179,
+          "height": 1083
+        }
       },
       {
         "title": "Leaving one out on purpose",
@@ -3114,7 +3413,13 @@
       {
         "title": "A letter beside every answer",
         "description": "Disabled answers are skipped rather than taking a letter with them, so the documentation below is `C`. The badge is an affordance, not a binding — React Native surfaces hardware key events only to a focused text field.",
-        "code": "<Questionnaire shortcuts=\"letters\">\n  <Questionnaire.Progress />\n  <Questionnaire.Item name=\"review\" required>\n    <Questionnaire.Question>What should be reviewed first?</Questionnaire.Question>\n    <Questionnaire.Choices>\n      <Questionnaire.Choice value=\"api\" label=\"The public API\" />\n      <Questionnaire.Choice value=\"tests\" label=\"Test coverage\" />\n      <Questionnaire.Choice value=\"perf\" label=\"Performance\" disabled />\n      <Questionnaire.Choice value=\"docs\" label=\"The documentation\" />\n    </Questionnaire.Choices>\n  </Questionnaire.Item>\n</Questionnaire>\n\n// shortcuts=\"numbers\" badges them 1, 2, 3 instead."
+        "code": "<Questionnaire shortcuts=\"letters\">\n  <Questionnaire.Progress />\n  <Questionnaire.Item name=\"review\" required>\n    <Questionnaire.Question>What should be reviewed first?</Questionnaire.Question>\n    <Questionnaire.Choices>\n      <Questionnaire.Choice value=\"api\" label=\"The public API\" />\n      <Questionnaire.Choice value=\"tests\" label=\"Test coverage\" />\n      <Questionnaire.Choice value=\"perf\" label=\"Performance\" disabled />\n      <Questionnaire.Choice value=\"docs\" label=\"The documentation\" />\n    </Questionnaire.Choices>\n  </Questionnaire.Item>\n</Questionnaire>\n\n// shortcuts=\"numbers\" badges them 1, 2, 3 instead.",
+        "preview": {
+          "src": "/previews/questionnaire-a-letter-beside-every-answer.jpg",
+          "alt": "Questionnaire — A letter beside every answer.",
+          "width": 1179,
+          "height": 1282
+        }
       },
       {
         "title": "Checking an answer against a schema",
@@ -3144,12 +3449,24 @@
       {
         "title": "Pips, numbers, or a count",
         "description": "`Questionnaire.Progress` draws a bar per question by default, filled up to the one being asked and widened on it. `numbers` counts them out instead — worth it where the reader will be sent back to a particular question, since a bar gives them nothing to go back *to*. `count` is the plain text. Both marked variants fall back to the count past eight questions, where neither is countable at a glance. Give it a function for anything else; it stays a progress bar to a screen reader either way.",
-        "code": "<Questionnaire.Progress />                    {/* ▬▬ ▪ ▪ ▪ */}\n<Questionnaire.Progress variant=\"numbers\" />  {/* ① ② ③ ④ */}\n<Questionnaire.Progress variant=\"count\" />    {/* Question 2 of 5 */}\n\n// Or build your own from the position:\n<Questionnaire.Progress>\n  {({ current, total }) => (\n    <Progress value={current} maxValue={total} className=\"w-24\" />\n  )}\n</Questionnaire.Progress>\n\n<Questionnaire.Progress>\n  {({ current, total }) => <Text size=\"sm\" muted>{total - current} to go</Text>}\n</Questionnaire.Progress>"
+        "code": "<Questionnaire.Progress />                    {/* ▬▬ ▪ ▪ ▪ */}\n<Questionnaire.Progress variant=\"numbers\" />  {/* ① ② ③ ④ */}\n<Questionnaire.Progress variant=\"count\" />    {/* Question 2 of 5 */}\n\n// Or build your own from the position:\n<Questionnaire.Progress>\n  {({ current, total }) => (\n    <Progress value={current} maxValue={total} className=\"w-24\" />\n  )}\n</Questionnaire.Progress>\n\n<Questionnaire.Progress>\n  {({ current, total }) => <Text size=\"sm\" muted>{total - current} to go</Text>}\n</Questionnaire.Progress>",
+        "preview": {
+          "src": "/previews/questionnaire-pips-numbers-or-a-count.jpg",
+          "alt": "Questionnaire — Pips, numbers, or a count.",
+          "width": 1179,
+          "height": 980
+        }
       },
       {
         "title": "Without the frame",
         "description": "The surrounding `Frame` is the component’s own. Turn it off for a questionnaire inside something that already draws a boundary, and the header, question and footer stack bare — keeping only their vertical rhythm, because the container is already holding them off the edges. Mind that container’s own insets: `Card.Content` is `p-6 pt-0` because it expects a `Card.Header` above it, so without one the progress row starts flush against the card’s top edge.",
-        "code": "<Card>\n  <Card.Content className=\"pt-6\">\n    <Questionnaire frame={false}>\n      <Questionnaire.Title>Timing</Questionnaire.Title>\n      <Questionnaire.Progress />\n      <Questionnaire.Item name=\"timing\" required>\n        <Questionnaire.Question>When should this ship?</Questionnaire.Question>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice value=\"week\" label=\"This week\" />\n          <Questionnaire.Choice value=\"cycle\" label=\"Next cycle\" />\n        </Questionnaire.Choices>\n      </Questionnaire.Item>\n      <Questionnaire.Footer>\n        <Questionnaire.Spacer />\n        <Questionnaire.Submit />\n      </Questionnaire.Footer>\n    </Questionnaire>\n  </Card.Content>\n</Card>"
+        "code": "<Card>\n  <Card.Content className=\"pt-6\">\n    <Questionnaire frame={false}>\n      <Questionnaire.Title>Timing</Questionnaire.Title>\n      <Questionnaire.Progress />\n      <Questionnaire.Item name=\"timing\" required>\n        <Questionnaire.Question>When should this ship?</Questionnaire.Question>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice value=\"week\" label=\"This week\" />\n          <Questionnaire.Choice value=\"cycle\" label=\"Next cycle\" />\n        </Questionnaire.Choices>\n      </Questionnaire.Item>\n      <Questionnaire.Footer>\n        <Questionnaire.Spacer />\n        <Questionnaire.Submit />\n      </Questionnaire.Footer>\n    </Questionnaire>\n  </Card.Content>\n</Card>",
+        "preview": {
+          "src": "/previews/questionnaire-without-the-frame.jpg",
+          "alt": "Questionnaire — Without the frame.",
+          "width": 1179,
+          "height": 1031
+        }
       },
       {
         "title": "In a bottom sheet",
@@ -3367,17 +3684,38 @@
       {
         "title": "Basic",
         "description": "A single series with both axes and a grid. `aspectRatio` defaults to `1`, which suits a scatter plot: neither axis is the important one, and a wide frame flattens a cloud into a band.",
-        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Spend vs Revenue</Frame.Title>\n    <Frame.Action>28 campaigns</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <ScatterChart data={campaigns} xDataKey=\"spend\" aspectRatio={1.2}>\n      <ScatterChart.Grid />\n      <ScatterChart.Points dataKey=\"revenue\" />\n      <ScatterChart.XAxis format={(v) => `$${Math.round(v / 1000)}k`} />\n      <ScatterChart.YAxis format={(v) => `$${Math.round(v / 1000)}k`} />\n      <ScatterChart.Tooltip formatTitle={(d) => String(d.name)} />\n    </ScatterChart>\n  </Frame.Panel>\n</Frame>"
+        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Spend vs Revenue</Frame.Title>\n    <Frame.Action>28 campaigns</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <ScatterChart data={campaigns} xDataKey=\"spend\" aspectRatio={1.2}>\n      <ScatterChart.Grid />\n      <ScatterChart.Points dataKey=\"revenue\" />\n      <ScatterChart.XAxis format={(v) => `$${Math.round(v / 1000)}k`} />\n      <ScatterChart.YAxis format={(v) => `$${Math.round(v / 1000)}k`} />\n      <ScatterChart.Tooltip formatTitle={(d) => String(d.name)} />\n    </ScatterChart>\n  </Frame.Panel>\n</Frame>",
+        "previewVideo": {
+          "src": "/previews/scatter-chart.mp4",
+          "poster": "/previews/scatter-chart-poster.jpg",
+          "alt": "ScatterChart — Basic.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Bubbles",
         "description": "A third quantity on each point's area via `sizeKey`. Points are translucent by default so that overlapping ones read as denser rather than hiding each other — in a crowded region that overlap is the finding, and opaque dots erase it.",
-        "code": "<ScatterChart data={countries} xDataKey=\"income\" aspectRatio={1.2}>\n  <ScatterChart.Grid />\n  <ScatterChart.Points dataKey=\"lifespan\" sizeKey=\"population\" sizeRange={[4, 18]} />\n  <ScatterChart.XAxis />\n  <ScatterChart.YAxis format={(v) => `${Math.round(v)} yrs`} />\n  <ScatterChart.Tooltip formatTitle={(d) => String(d.name)} />\n</ScatterChart>"
+        "code": "<ScatterChart data={countries} xDataKey=\"income\" aspectRatio={1.2}>\n  <ScatterChart.Grid />\n  <ScatterChart.Points dataKey=\"lifespan\" sizeKey=\"population\" sizeRange={[4, 18]} />\n  <ScatterChart.XAxis />\n  <ScatterChart.YAxis format={(v) => `${Math.round(v)} yrs`} />\n  <ScatterChart.Tooltip formatTitle={(d) => String(d.name)} />\n</ScatterChart>",
+        "previewVideo": {
+          "src": "/previews/scatter-chart-bubbles.mp4",
+          "poster": "/previews/scatter-chart-bubbles-poster.jpg",
+          "alt": "ScatterChart — Bubbles.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Two series",
         "description": "Two clouds sharing both domains, told apart by colour, with the key in a band above the plot. Touching selects the nearest point in either series.",
-        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Response by dose</Frame.Title>\n  </Frame.Header>\n  <Frame.Panel>\n    <ChartLegendRow>\n      <LegendDot colorIndex={1} label=\"Control\" />\n      <LegendDot colorIndex={2} label=\"Treated\" />\n    </ChartLegendRow>\n    <ScatterChart data={trials} xDataKey=\"dose\" aspectRatio={1.2}>\n      <ScatterChart.Grid />\n      <ScatterChart.Points dataKey=\"control\" colorIndex={1} />\n      <ScatterChart.Points dataKey=\"treated\" colorIndex={2} />\n      <ScatterChart.XAxis />\n      <ScatterChart.YAxis />\n      <ScatterChart.Tooltip />\n    </ScatterChart>\n  </Frame.Panel>\n</Frame>"
+        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Response by dose</Frame.Title>\n  </Frame.Header>\n  <Frame.Panel>\n    <ChartLegendRow>\n      <LegendDot colorIndex={1} label=\"Control\" />\n      <LegendDot colorIndex={2} label=\"Treated\" />\n    </ChartLegendRow>\n    <ScatterChart data={trials} xDataKey=\"dose\" aspectRatio={1.2}>\n      <ScatterChart.Grid />\n      <ScatterChart.Points dataKey=\"control\" colorIndex={1} />\n      <ScatterChart.Points dataKey=\"treated\" colorIndex={2} />\n      <ScatterChart.XAxis />\n      <ScatterChart.YAxis />\n      <ScatterChart.Tooltip />\n    </ScatterChart>\n  </Frame.Panel>\n</Frame>",
+        "previewVideo": {
+          "src": "/previews/scatter-chart-two-series.mp4",
+          "poster": "/previews/scatter-chart-two-series-poster.jpg",
+          "alt": "ScatterChart — Two series.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Loading",
@@ -3385,7 +3723,14 @@
         "code": "<ScatterChart data={campaigns} status={status} xDataKey=\"spend\" aspectRatio={1.2}>\n  <ScatterChart.Grid />\n  <ScatterChart.Skeleton />\n  <ScatterChart.Points dataKey=\"revenue\" />\n  <ScatterChart.XAxis />\n  <ScatterChart.YAxis />\n  <ScatterChart.Tooltip />\n</ScatterChart>"
       }
     ],
-    "notes": "### Why this one measures its x\n\nThe rest of the charts here place a point by its *position* in the data — the third row goes a third of the way across, whatever value it holds. That is right for a time series and wrong for a scatter plot, whose whole claim is that both coordinates are quantities. `xDataKey` must therefore point at a **number** here, not a label, and a row whose x is not a number is not plotted.\n\n### Finding a point with a finger\n\nA line chart's crosshair snaps to an x index. There is nothing to snap to here: there is no shared x, and two points can sit on the same one. So the nearest point is found by distance instead, on the UI thread, and only within `hitRadius` — a touch in an empty corner selects nothing rather than lighting up whichever point happens to be least far away.\n\nThe radius defaults to `32`, sized for a fingertip rather than for the dot. A scatter point is around 4 points across and the comfortable minimum touch target on both platforms is around 44, so without it the chart would only be usable with a mouse it will never see.\n\nOnly the identity of the winning point crosses back into JS, and only when it changes, so a drag across the plot costs a handful of re-renders rather than one per frame.\n\n### Neither axis is floored at zero\n\nAn area chart is floored at zero, because a filled region floating above the baseline reads as a shape rather than a quantity. A scatter plot is the opposite case: its subject is the *spread*, and forcing a cluster of values between 80 and 90 to share a frame with zero squashes it into a smudge in one corner and hides the very thing being plotted. Pass `xDomain` or `yDomain` when a fixed frame matters more than the spread.\n\n### Overlap is data\n\nPoints are drawn at 75% opacity by default, so a crowded region reads as darker rather than as one dot hiding several. Raise `opacity` to `1` only for a sparse plot where nothing overlaps.\n\n### Bubbles map area, not radius\n\n`sizeKey` maps its value onto each point's **area**. Mapping it to the radius instead — which is the easy mistake — means a point holding twice the value carries four times the ink, and the reader believes the larger figure.\n\n### Reading out the selected point\n\n`onActivePointChange` fires as the selection moves between points, and with `null` when the finger lifts. That is the one to use for a readout in the card header, because the header is outside the chart and a hook cannot reach up out of the subtree it is called in. `useScatterChart` is for something rendered *inside* the chart, which is the rarer case.\n\n### Sizing\n\nThe chart fills its parent's width and takes its height from `aspectRatio`. Do not set a height directly — the aspect ratio is what keeps the plot geometry stable while the layout settles. `aspectRatio` measures the plot, not the whole chart: the header sits above the drawing area rather than inside it.\n\n**Labels sit on what they name.** Each y label is centred on the grid line it belongs to, so `Grid`'s `rows` and `YAxis`'s `ticks` have to match, as `columns` and `XAxis`'s `ticks` do. All four default to `4`.\n\n### The points arrive where they belong\n\nThe other charts reveal by sweeping a clip across the plot, which suits a series that is read along the x-axis. A scatter plot is read as a field, and a wipe hands the reader a direction the data does not have. So there is no wipe here: each point grows into place on its own slice of one shared clock, slightly past its size and back to it, and the placeholder field dissolves underneath as they land. Set `animationDuration` to time the whole arrival, however many points there are — the stagger is taken out of that budget rather than added to it.\n\nUnder the system's reduce-motion setting the field is simply there, and the placeholder is cut rather than faded."
+    "notes": "### Why this one measures its x\n\nThe rest of the charts here place a point by its *position* in the data — the third row goes a third of the way across, whatever value it holds. That is right for a time series and wrong for a scatter plot, whose whole claim is that both coordinates are quantities. `xDataKey` must therefore point at a **number** here, not a label, and a row whose x is not a number is not plotted.\n\n### Finding a point with a finger\n\nA line chart's crosshair snaps to an x index. There is nothing to snap to here: there is no shared x, and two points can sit on the same one. So the nearest point is found by distance instead, on the UI thread, and only within `hitRadius` — a touch in an empty corner selects nothing rather than lighting up whichever point happens to be least far away.\n\nThe radius defaults to `32`, sized for a fingertip rather than for the dot. A scatter point is around 4 points across and the comfortable minimum touch target on both platforms is around 44, so without it the chart would only be usable with a mouse it will never see.\n\nOnly the identity of the winning point crosses back into JS, and only when it changes, so a drag across the plot costs a handful of re-renders rather than one per frame.\n\n### Neither axis is floored at zero\n\nAn area chart is floored at zero, because a filled region floating above the baseline reads as a shape rather than a quantity. A scatter plot is the opposite case: its subject is the *spread*, and forcing a cluster of values between 80 and 90 to share a frame with zero squashes it into a smudge in one corner and hides the very thing being plotted. Pass `xDomain` or `yDomain` when a fixed frame matters more than the spread.\n\n### Overlap is data\n\nPoints are drawn at 75% opacity by default, so a crowded region reads as darker rather than as one dot hiding several. Raise `opacity` to `1` only for a sparse plot where nothing overlaps.\n\n### Bubbles map area, not radius\n\n`sizeKey` maps its value onto each point's **area**. Mapping it to the radius instead — which is the easy mistake — means a point holding twice the value carries four times the ink, and the reader believes the larger figure.\n\n### Reading out the selected point\n\n`onActivePointChange` fires as the selection moves between points, and with `null` when the finger lifts. That is the one to use for a readout in the card header, because the header is outside the chart and a hook cannot reach up out of the subtree it is called in. `useScatterChart` is for something rendered *inside* the chart, which is the rarer case.\n\n### Sizing\n\nThe chart fills its parent's width and takes its height from `aspectRatio`. Do not set a height directly — the aspect ratio is what keeps the plot geometry stable while the layout settles. `aspectRatio` measures the plot, not the whole chart: the header sits above the drawing area rather than inside it.\n\n**Labels sit on what they name.** Each y label is centred on the grid line it belongs to, so `Grid`'s `rows` and `YAxis`'s `ticks` have to match, as `columns` and `XAxis`'s `ticks` do. All four default to `4`.\n\n### The points arrive where they belong\n\nThe other charts reveal by sweeping a clip across the plot, which suits a series that is read along the x-axis. A scatter plot is read as a field, and a wipe hands the reader a direction the data does not have. So there is no wipe here: each point grows into place on its own slice of one shared clock, slightly past its size and back to it, and the placeholder field dissolves underneath as they land. Set `animationDuration` to time the whole arrival, however many points there are — the stagger is taken out of that budget rather than added to it.\n\nUnder the system's reduce-motion setting the field is simply there, and the placeholder is cut rather than faded.",
+    "previewVideo": {
+      "src": "/previews/scatter-chart.mp4",
+      "poster": "/previews/scatter-chart-poster.jpg",
+      "alt": "The ScatterChart component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
   },
   "scroll-canvas": {
     "intro": "The counterpart to [ScrollText](/docs/components/scroll-text): the same scrubbed reveal applied to a picture. The frame stays where the layout puts it and the image moves *inside* it, which is what separates a parallax from a thing sliding about the page.",
@@ -5600,22 +5945,50 @@
       {
         "title": "Basic",
         "description": "Five parts of one obvious total, with a key beside them and the selected slice’s figures in the header.",
-        "code": "<PieChart data={spend} size={208} activeIndex={active} onActiveIndexChange={setActive}>\n  <PieChart.Header value={money(slice ? slice.value : total)} caption={caption} />\n  <PieChart.Slices />\n  <PieChart.Legend />\n</PieChart>"
+        "code": "<PieChart data={spend} size={208} activeIndex={active} onActiveIndexChange={setActive}>\n  <PieChart.Header value={money(slice ? slice.value : total)} caption={caption} />\n  <PieChart.Slices />\n  <PieChart.Legend />\n</PieChart>",
+        "previewVideo": {
+          "src": "/previews/pie-chart-basic.mp4",
+          "poster": "/previews/pie-chart-basic-poster.jpg",
+          "alt": "PieChart — Basic.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Donut",
         "description": "The hole is where the total goes — the one figure a pie can be read for exactly.",
-        "code": "<PieChart data={spend} size={208} innerRadius={0.62}>\n  <PieChart.Header title=\"August\" />\n  <PieChart.Slices />\n  <PieChart.Center formatValue={money} />\n  <PieChart.Legend />\n</PieChart>"
+        "code": "<PieChart data={spend} size={208} innerRadius={0.62}>\n  <PieChart.Header title=\"August\" />\n  <PieChart.Slices />\n  <PieChart.Center formatValue={money} />\n  <PieChart.Legend />\n</PieChart>",
+        "previewVideo": {
+          "src": "/previews/pie-chart-donut.mp4",
+          "poster": "/previews/pie-chart-donut-poster.jpg",
+          "alt": "PieChart — Donut.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Segments",
         "description": "Padded and rounded, with a floor under the slices too small to see. Email is a third of a percent of this traffic; without `minAngle` it is a hairline that reads as absent.",
-        "code": "<PieChart data={sources} size={208} innerRadius={0.58} padAngle={3} minAngle={6}>\n  <PieChart.Header title=\"Sessions\" />\n  <PieChart.Slices cornerRadius={6} />\n  <PieChart.Center defaultLabel=\"Sessions\" />\n  <PieChart.Legend />\n</PieChart>"
+        "code": "<PieChart data={sources} size={208} innerRadius={0.58} padAngle={3} minAngle={6}>\n  <PieChart.Header title=\"Sessions\" />\n  <PieChart.Slices cornerRadius={6} />\n  <PieChart.Center defaultLabel=\"Sessions\" />\n  <PieChart.Legend />\n</PieChart>",
+        "previewVideo": {
+          "src": "/previews/pie-chart-segments.mp4",
+          "poster": "/previews/pie-chart-segments-poster.jpg",
+          "alt": "PieChart — Segments.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Dial",
         "description": "Three quarters of a turn rather than all of it, with the notch at the bottom where a dial has always had it.",
-        "code": "<PieChart data={storage} size={208} innerRadius={0.66} startAngle={-135} endAngle={135} padAngle={2}>\n  <PieChart.Header title=\"In use\" />\n  <PieChart.Slices cornerRadius={4} />\n  <PieChart.Center defaultLabel=\"Used\" formatValue={(gb) => `${gb.toFixed(0)} GB`} />\n  <PieChart.Legend />\n</PieChart>"
+        "code": "<PieChart data={storage} size={208} innerRadius={0.66} startAngle={-135} endAngle={135} padAngle={2}>\n  <PieChart.Header title=\"In use\" />\n  <PieChart.Slices cornerRadius={4} />\n  <PieChart.Center defaultLabel=\"Used\" formatValue={(gb) => `${gb.toFixed(0)} GB`} />\n  <PieChart.Legend />\n</PieChart>",
+        "previewVideo": {
+          "src": "/previews/pie-chart-dial.mp4",
+          "poster": "/previews/pie-chart-dial-poster.jpg",
+          "alt": "PieChart — Dial.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Loading",
@@ -6787,25 +7160,55 @@
       {
         "title": "Overview",
         "description": "Number and change on the left, the shape it made on the right.",
-        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Overview</Frame.Title>\n    <Frame.Action>Last 30 days</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <Frame.Section>\n      <Kpi surface={false} colorIndex={1}>\n        <Kpi.Content layout=\"inline\">\n          <Kpi.Stat>\n            <Kpi.Title>Total Revenue</Kpi.Title>\n            <Kpi.Value>$317,904</Kpi.Value>\n            <Kpi.Trend value={7.8} caption=\"last 30d\" />\n          </Kpi.Stat>\n          <Kpi.Chart data={week} dataKey=\"v\" inline />\n        </Kpi.Content>\n      </Kpi>\n    </Frame.Section>\n  </Frame.Panel>\n</Frame>"
+        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Overview</Frame.Title>\n    <Frame.Action>Last 30 days</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <Frame.Section>\n      <Kpi surface={false} colorIndex={1}>\n        <Kpi.Content layout=\"inline\">\n          <Kpi.Stat>\n            <Kpi.Title>Total Revenue</Kpi.Title>\n            <Kpi.Value>$317,904</Kpi.Value>\n            <Kpi.Trend value={7.8} caption=\"last 30d\" />\n          </Kpi.Stat>\n          <Kpi.Chart data={week} dataKey=\"v\" inline />\n        </Kpi.Content>\n      </Kpi>\n    </Frame.Section>\n  </Frame.Panel>\n</Frame>",
+        "preview": {
+          "src": "/previews/kpi.jpg",
+          "alt": "Kpi — Overview.",
+          "width": 1179,
+          "height": 1190
+        }
       },
       {
         "title": "With a sparkline",
         "description": "The shape under the number, and the shape beside it.",
-        "code": "<Kpi colorIndex={1}>\n  <Kpi.Header>\n    <Kpi.Title>Total revenue</Kpi.Title>\n  </Kpi.Header>\n  <Kpi.Content>\n    <Kpi.Value>$317,904</Kpi.Value>\n    <Kpi.Trend value={7.8} />\n  </Kpi.Content>\n  <Kpi.Chart data={week} dataKey=\"v\" />\n</Kpi>"
+        "code": "<Kpi colorIndex={1}>\n  <Kpi.Header>\n    <Kpi.Title>Total revenue</Kpi.Title>\n  </Kpi.Header>\n  <Kpi.Content>\n    <Kpi.Value>$317,904</Kpi.Value>\n    <Kpi.Trend value={7.8} />\n  </Kpi.Content>\n  <Kpi.Chart data={week} dataKey=\"v\" />\n</Kpi>",
+        "preview": {
+          "src": "/previews/kpi-with-a-sparkline.jpg",
+          "alt": "Kpi — With a sparkline.",
+          "width": 1179,
+          "height": 1035
+        }
       },
       {
         "title": "With progress",
         "description": "Targets, with an icon, a badge and a bar under each number.",
-        "code": "<Kpi surface={false} colorIndex={4}>\n  <Kpi.Header>\n    <Kpi.Icon tone=\"good\">\n      <Target size={16} color={tint} />\n    </Kpi.Icon>\n    <Kpi.Title>Quarterly revenue</Kpi.Title>\n    <Kpi.Trend value={7.8} variant=\"badge\" />\n  </Kpi.Header>\n  <Kpi.Value>$317k</Kpi.Value>\n  <Kpi.Progress value={73} label=\"of $435k\" showValueLabel />\n  <Kpi.Footer>\n    <Text size=\"xs\" muted>\n      41 days left in the quarter\n    </Text>\n  </Kpi.Footer>\n</Kpi>"
+        "code": "<Kpi surface={false} colorIndex={4}>\n  <Kpi.Header>\n    <Kpi.Icon tone=\"good\">\n      <Target size={16} color={tint} />\n    </Kpi.Icon>\n    <Kpi.Title>Quarterly revenue</Kpi.Title>\n    <Kpi.Trend value={7.8} variant=\"badge\" />\n  </Kpi.Header>\n  <Kpi.Value>$317k</Kpi.Value>\n  <Kpi.Progress value={73} label=\"of $435k\" showValueLabel />\n  <Kpi.Footer>\n    <Text size=\"xs\" muted>\n      41 days left in the quarter\n    </Text>\n  </Kpi.Footer>\n</Kpi>",
+        "preview": {
+          "src": "/previews/kpi-with-progress.jpg",
+          "alt": "Kpi — With progress.",
+          "width": 1179,
+          "height": 1177
+        }
       },
       {
         "title": "Several as one panel",
         "description": "Divided by a rule rather than spaced apart, in a row and a column.",
-        "code": "<Surface variant=\"secondary\" padding=\"lg\">\n  <Kpi.Group>\n    {metrics.map((metric) => (\n      <Kpi key={metric.label} surface={false} colorIndex={metric.colorIndex}>\n        <Kpi.Title>{metric.label}</Kpi.Title>\n        <Kpi.Value className=\"text-2xl\">{metric.value}</Kpi.Value>\n        <Kpi.Trend value={metric.delta} className=\"self-start\" />\n      </Kpi>\n    ))}\n  </Kpi.Group>\n</Surface>"
+        "code": "<Surface variant=\"secondary\" padding=\"lg\">\n  <Kpi.Group>\n    {metrics.map((metric) => (\n      <Kpi key={metric.label} surface={false} colorIndex={metric.colorIndex}>\n        <Kpi.Title>{metric.label}</Kpi.Title>\n        <Kpi.Value className=\"text-2xl\">{metric.value}</Kpi.Value>\n        <Kpi.Trend value={metric.delta} className=\"self-start\" />\n      </Kpi>\n    ))}\n  </Kpi.Group>\n</Surface>",
+        "preview": {
+          "src": "/previews/kpi-several-as-one-panel.jpg",
+          "alt": "Kpi — Several as one panel.",
+          "width": 1179,
+          "height": 1098
+        }
       }
     ],
-    "notes": "The sparkline is a `LineChart` in `compact` mode — the same chart used everywhere else with its axis padding dropped, because there is no grid, no axis and no crosshair here and every point of padding is one the shape is not using.\n\n`inline` gives it a **fixed 128pt column** rather than a share of the row. A stack of stat cards has labels of every length — \"Revenue\" over \"New customers\" — and a chart taking whatever the text leaves would be a different width on every card in it. Fixed, the shapes line up down the right-hand edge, which is the only reason they are there to be compared.\n\n### Where the space goes\n\n`Kpi.Stat` exists because a title, a number and a change are one fact in three lines, and the card’s own spacing is for the gaps *between* facts. Writing the three straight into the card gives them the wider spacing and they stop reading as a unit.\n\nIt also matters for a row of them. `Kpi.Title` grows to fill a header row, and a growing child of a *column* absorbs that column’s leftover height — which would push each card’s number down by however much that card had spare, and land three numbers at three different heights. The title only grows inside `Kpi.Header`.\n\n### Colour\n\n`colorIndex` is set on the card rather than on the chart, so a row of cards can be given five different series colours without repeating the choice on every part inside them. It resolves through the `--color-chart-*` tokens, so the cards follow the theme.\n\nThe trend does not use it. A change is coloured by meaning — success or destructive — and a metric’s series colour has nothing to say about whether its number went the right way.\n\n### Accessibility\n\nA trend is announced as one string — *\"Up 7.8 percent, last 30d\"* — rather than as an arrow, a number and a caption a screen reader would read as three unrelated stops. The rules inside a `Group` are hidden from it: a divider between two metrics is decoration, and announcing it puts an unlabelled stop between them."
+    "notes": "The sparkline is a `LineChart` in `compact` mode — the same chart used everywhere else with its axis padding dropped, because there is no grid, no axis and no crosshair here and every point of padding is one the shape is not using.\n\n`inline` gives it a **fixed 128pt column** rather than a share of the row. A stack of stat cards has labels of every length — \"Revenue\" over \"New customers\" — and a chart taking whatever the text leaves would be a different width on every card in it. Fixed, the shapes line up down the right-hand edge, which is the only reason they are there to be compared.\n\n### Where the space goes\n\n`Kpi.Stat` exists because a title, a number and a change are one fact in three lines, and the card’s own spacing is for the gaps *between* facts. Writing the three straight into the card gives them the wider spacing and they stop reading as a unit.\n\nIt also matters for a row of them. `Kpi.Title` grows to fill a header row, and a growing child of a *column* absorbs that column’s leftover height — which would push each card’s number down by however much that card had spare, and land three numbers at three different heights. The title only grows inside `Kpi.Header`.\n\n### Colour\n\n`colorIndex` is set on the card rather than on the chart, so a row of cards can be given five different series colours without repeating the choice on every part inside them. It resolves through the `--color-chart-*` tokens, so the cards follow the theme.\n\nThe trend does not use it. A change is coloured by meaning — success or destructive — and a metric’s series colour has nothing to say about whether its number went the right way.\n\n### Accessibility\n\nA trend is announced as one string — *\"Up 7.8 percent, last 30d\"* — rather than as an arrow, a number and a caption a screen reader would read as three unrelated stops. The rules inside a `Group` are hidden from it: a divider between two metrics is decoration, and announcing it puts an unlabelled stop between them.",
+    "preview": {
+      "src": "/previews/kpi.jpg",
+      "alt": "The Kpi component, running in the example app.",
+      "width": 1179,
+      "height": 1190
+    }
   },
   "radar-chart": {
     "intro": "Several measures of one thing, on one shape.\n\nA radar answers a question a bar chart cannot: not *which of these is biggest* but *what shape is this*. Five scores read as five bars are five facts; read as a polygon they are a profile, and two profiles laid over each other are comparable at a glance in a way two groups of bars never are.\n\nThat is also its limit, and worth knowing before you reach for it: the order of the axes changes the outline, and the outline is what people read. Two datasets are only comparable on one radar if their axes are in the same order, and a radar is the wrong chart entirely for data whose axes have no natural order.",
@@ -6859,25 +7262,56 @@
       {
         "title": "One profile",
         "description": "A filled polygon on polygonal rings, with a dot at each vertex.",
-        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Skills</Frame.Title>\n    <Frame.Action>Self-assessed</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <View className=\"px-4 pb-4 pt-2\">\n      <RadarChart data={skills} domain={[0, 100]}>\n        <RadarChart.Grid />\n        <RadarChart.Axis />\n        <RadarChart.Series dataKey=\"score\" colorIndex={1} showDots />\n      </RadarChart>\n    </View>\n  </Frame.Panel>\n</Frame>"
+        "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Skills</Frame.Title>\n    <Frame.Action>Self-assessed</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <View className=\"px-4 pb-4 pt-2\">\n      <RadarChart data={skills} domain={[0, 100]}>\n        <RadarChart.Grid />\n        <RadarChart.Axis />\n        <RadarChart.Series dataKey=\"score\" colorIndex={1} showDots />\n      </RadarChart>\n    </View>\n  </Frame.Panel>\n</Frame>",
+        "preview": {
+          "src": "/previews/radar-chart.jpg",
+          "alt": "RadarChart — One profile.",
+          "width": 1179,
+          "height": 1038
+        }
       },
       {
         "title": "Two compared",
         "description": "Two profiles over each other, only the first of them filled.",
-        "code": "<RadarChart data={profile} domain={[0, 100]}>\n  <RadarChart.Grid />\n  <RadarChart.Axis />\n  <RadarChart.Series dataKey=\"you\" colorIndex={1} />\n  <RadarChart.Series dataKey=\"team\" colorIndex={2} fillOpacity={0} />\n  <RadarChart.Legend />\n</RadarChart>"
+        "code": "<RadarChart data={profile} domain={[0, 100]}>\n  <RadarChart.Grid />\n  <RadarChart.Axis />\n  <RadarChart.Series dataKey=\"you\" colorIndex={1} />\n  <RadarChart.Series dataKey=\"team\" colorIndex={2} fillOpacity={0} />\n  <RadarChart.Legend />\n</RadarChart>",
+        "preview": {
+          "src": "/previews/radar-chart-two-compared.jpg",
+          "alt": "RadarChart — Two compared.",
+          "width": 1179,
+          "height": 981
+        }
       },
       {
         "title": "Outline on circles",
         "description": "Circular rings and no fill, for reading a value off a spoke.",
-        "code": "<RadarChart data={profile} domain={[0, 100]}>\n  <RadarChart.Header title=\"Weakest axis\" value=\"Cost\" caption=\"48 of 100\" />\n  <RadarChart.Grid circular rings={5} />\n  <RadarChart.Axis fontSize={10} />\n  <RadarChart.Series dataKey=\"you\" colorIndex={3} fillOpacity={0} showDots />\n</RadarChart>"
+        "code": "<RadarChart data={profile} domain={[0, 100]}>\n  <RadarChart.Header title=\"Weakest axis\" value=\"Cost\" caption=\"48 of 100\" />\n  <RadarChart.Grid circular rings={5} />\n  <RadarChart.Axis fontSize={10} />\n  <RadarChart.Series dataKey=\"you\" colorIndex={3} fillOpacity={0} showDots />\n</RadarChart>",
+        "preview": {
+          "src": "/previews/radar-chart-outline-on-circles.jpg",
+          "alt": "RadarChart — Outline on circles.",
+          "width": 1179,
+          "height": 1246
+        }
       },
       {
         "title": "Switching the data",
         "description": "Tabs under the chart change what it draws, and the outline travels.",
-        "code": "<RadarChart data={quarters[period]} domain={[0, 100]}>\n  <RadarChart.Grid />\n  <RadarChart.Axis />\n  <RadarChart.Series dataKey=\"score\" colorIndex={1} showDots />\n</RadarChart>\n\n<Frame.Section className=\"px-4 py-3\">\n  <Tabs value={period} onValueChange={setPeriod} defaultValue=\"q3\">\n    <Tabs.List>\n      {PERIODS.map((entry) => (\n        <Tabs.Trigger key={entry.value} value={entry.value}>\n          {entry.label}\n        </Tabs.Trigger>\n      ))}\n    </Tabs.List>\n  </Tabs>\n</Frame.Section>"
+        "code": "<RadarChart data={quarters[period]} domain={[0, 100]}>\n  <RadarChart.Grid />\n  <RadarChart.Axis />\n  <RadarChart.Series dataKey=\"score\" colorIndex={1} showDots />\n</RadarChart>\n\n<Frame.Section className=\"px-4 py-3\">\n  <Tabs value={period} onValueChange={setPeriod} defaultValue=\"q3\">\n    <Tabs.List>\n      {PERIODS.map((entry) => (\n        <Tabs.Trigger key={entry.value} value={entry.value}>\n          {entry.label}\n        </Tabs.Trigger>\n      ))}\n    </Tabs.List>\n  </Tabs>\n</Frame.Section>",
+        "previewVideo": {
+          "src": "/previews/radar-chart-switching-the-data.mp4",
+          "poster": "/previews/radar-chart-switching-the-data-poster.jpg",
+          "alt": "RadarChart — Switching the data.",
+          "width": 720,
+          "height": 1560
+        }
       }
     ],
-    "notes": "Three axes is the minimum — two spokes are a line, not a shape — and past about eight the labels start colliding and the outline stops being readable as one form. Five or six is where this chart works.\n\n### Changing the data\n\nThe shape travels rather than jumping. Each vertex is tweened from where it was to where it is going over 420ms, and a switch made part way through another one carries on from the outline actually on screen rather than snapping back to start again.\n\nFixing `domain` matters most here. With a derived scale the rings move at the same moment the shape does, and a profile that got better looks identical to one that got worse.\n\n### The reveal\n\nThe polygons grow out of the centre rather than sweeping across, because a polar chart has no left-hand edge for a sweep to start from. It scales the **values**, not the group: a `scale` transform would grow the stroke and the dots along with the shape and arrive at the wrong stroke width.\n\nIt plays once on mount. `replay()` on the ref runs it again. Under *Reduce Motion* the shape is simply there.\n\n### It sizes itself\n\nEvery other chart here fills its container. This one does not, and the reason is that it is square: filling a panel makes a radar as tall as the panel is wide, which is twice the height of the wide chart beside it for the same five or six numbers. It takes a 180pt ring and centres. `size` moves that; `size={undefined}` with an `aspectRatio` goes back to filling the width.\n\n### Space for the labels\n\nAxis labels are horizontal text sitting outside a circle, which is why the view is **wider than it is tall**: the label at three o'clock needs its whole width to the right of the ring, while the one at twelve needs a single line above it. A square box either clips the sides or wastes the top and bottom.\n\nSVG clips at its viewport and does not reflow, so a label with nowhere to go would lose its tail with nothing to show it ever had one. The anchor is pulled back inside the view before drawing, which costs a couple of points of gap and is the cheaper of the two. For labels long enough to still crowd the shape, shorten them with `formatLabel` — and pass `compact` to reclaim the room entirely on a radar with no labels at all.\n\n### Colour\n\nSeries take the `--color-chart-*` tokens through `colorIndex`, the same ramp every other chart here uses, so the first series is the same colour as the first series on the chart beside it. The rings read `--color-border` and the labels `--color-muted-foreground`."
+    "notes": "Three axes is the minimum — two spokes are a line, not a shape — and past about eight the labels start colliding and the outline stops being readable as one form. Five or six is where this chart works.\n\n### Changing the data\n\nThe shape travels rather than jumping. Each vertex is tweened from where it was to where it is going over 420ms, and a switch made part way through another one carries on from the outline actually on screen rather than snapping back to start again.\n\nFixing `domain` matters most here. With a derived scale the rings move at the same moment the shape does, and a profile that got better looks identical to one that got worse.\n\n### The reveal\n\nThe polygons grow out of the centre rather than sweeping across, because a polar chart has no left-hand edge for a sweep to start from. It scales the **values**, not the group: a `scale` transform would grow the stroke and the dots along with the shape and arrive at the wrong stroke width.\n\nIt plays once on mount. `replay()` on the ref runs it again. Under *Reduce Motion* the shape is simply there.\n\n### It sizes itself\n\nEvery other chart here fills its container. This one does not, and the reason is that it is square: filling a panel makes a radar as tall as the panel is wide, which is twice the height of the wide chart beside it for the same five or six numbers. It takes a 180pt ring and centres. `size` moves that; `size={undefined}` with an `aspectRatio` goes back to filling the width.\n\n### Space for the labels\n\nAxis labels are horizontal text sitting outside a circle, which is why the view is **wider than it is tall**: the label at three o'clock needs its whole width to the right of the ring, while the one at twelve needs a single line above it. A square box either clips the sides or wastes the top and bottom.\n\nSVG clips at its viewport and does not reflow, so a label with nowhere to go would lose its tail with nothing to show it ever had one. The anchor is pulled back inside the view before drawing, which costs a couple of points of gap and is the cheaper of the two. For labels long enough to still crowd the shape, shorten them with `formatLabel` — and pass `compact` to reclaim the room entirely on a radar with no labels at all.\n\n### Colour\n\nSeries take the `--color-chart-*` tokens through `colorIndex`, the same ramp every other chart here uses, so the first series is the same colour as the first series on the chart beside it. The rings read `--color-border` and the labels `--color-muted-foreground`.",
+    "preview": {
+      "src": "/previews/radar-chart.jpg",
+      "alt": "The RadarChart component, running in the example app.",
+      "width": 1179,
+      "height": 1038
+    }
   },
   "tree": {
     "intro": "A hierarchy you can open a level at a time — a file browser, a folder of settings, a category picker, a table of contents. Accordion is the one-level version of the same idea; a tree's items can hold items, to any depth. A closed branch renders nothing below it, so a tree costs what is open in it rather than what is in it.",
@@ -6906,29 +7340,79 @@
       {
         "title": "A file tree",
         "description": "The default. `defaultExpanded` names the branches that start open; everything below a closed one has not rendered at all. Folders take a glyph of their own rather than an empty `Tree.Icon`, so a folder's name starts where the names of the files under it do.",
-        "code": "<Tree defaultExpanded={['src']}>\n  <Tree.Item value=\"src\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Icon><FolderOpenIcon size={15} /></Tree.Icon>\n      <Tree.Label>src</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"src/index.ts\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Icon><FileIcon size={14} /></Tree.Icon>\n          <Tree.Label>index.ts</Tree.Label>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>"
+        "code": "<Tree defaultExpanded={['src']}>\n  <Tree.Item value=\"src\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Icon><FolderOpenIcon size={15} /></Tree.Icon>\n      <Tree.Label>src</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"src/index.ts\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Icon><FileIcon size={14} /></Tree.Icon>\n          <Tree.Label>index.ts</Tree.Label>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>",
+        "previewVideo": {
+          "src": "/previews/tree.mp4",
+          "poster": "/previews/tree-poster.jpg",
+          "alt": "Tree — A file tree.",
+          "width": 720,
+          "height": 1560
+        }
       },
       {
         "title": "Guide lines",
         "description": "`showLines` draws a hairline down each level, connecting a branch to the rows inside it. The indent is unchanged — the line lands midway through it rather than adding a step of its own.",
-        "code": "<Tree defaultExpanded={['src', 'src/components']} showLines>\n  {/* …items… */}\n</Tree>"
+        "code": "<Tree defaultExpanded={['src', 'src/components']} showLines>\n  {/* …items… */}\n</Tree>",
+        "preview": {
+          "src": "/previews/tree-guide-lines.jpg",
+          "alt": "Tree — Guide lines.",
+          "width": 1179,
+          "height": 787
+        }
       },
       {
         "title": "Selecting a node",
         "description": "`selectionMode` turns the rows from expanders into choices. `single` keeps one selected; `multiple` switches `value` to an array.",
-        "code": "const [selected, setSelected] = useState<string | string[]>('');\n\n<Tree\n  selectionMode=\"single\"\n  value={selected}\n  onValueChange={setSelected}\n  defaultExpanded={['src']}\n  showLines\n>\n  {/* …items… */}\n</Tree>"
+        "code": "const [selected, setSelected] = useState<string | string[]>('');\n\n<Tree\n  selectionMode=\"single\"\n  value={selected}\n  onValueChange={setSelected}\n  defaultExpanded={['src']}\n  showLines\n>\n  {/* …items… */}\n</Tree>",
+        "preview": {
+          "src": "/previews/tree-selecting-a-node.jpg",
+          "alt": "Tree — Selecting a node.",
+          "width": 1179,
+          "height": 797
+        }
       },
       {
         "title": "A sidebar nav",
         "description": "`size=\"sm\"` for a denser row, `expandOnPress={false}` so pressing a section selects it without opening it, and `Tree.Actions` for the unread count. The chevron still opens the section either way.",
-        "code": "<Tree size=\"sm\" selectionMode=\"single\" expandOnPress={false} defaultExpanded={['inbox']}>\n  <Tree.Item value=\"inbox\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Label>Inbox</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"inbox/unread\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Label>Unread</Tree.Label>\n          <Tree.Actions><Badge variant=\"secondary\" count={12} /></Tree.Actions>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>"
+        "code": "<Tree size=\"sm\" selectionMode=\"single\" expandOnPress={false} defaultExpanded={['inbox']}>\n  <Tree.Item value=\"inbox\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Label>Inbox</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"inbox/unread\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Label>Unread</Tree.Label>\n          <Tree.Actions><Badge variant=\"secondary\" count={12} /></Tree.Actions>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>",
+        "preview": {
+          "src": "/previews/tree-a-sidebar-nav.jpg",
+          "alt": "Tree — A sidebar nav.",
+          "width": 1179,
+          "height": 527
+        }
       },
       {
         "title": "A branch that loads when opened",
         "description": "`hasChildren` gives a chevron to a branch that has no `Tree.Group` yet, and `onExpandedChange` is where the fetch goes. The rows appear underneath once they arrive.",
-        "code": "const [expanded, setExpanded] = useState<string[]>([]);\nconst [files, setFiles] = useState<string[] | null>(null);\n\n<Tree\n  expanded={expanded}\n  onExpandedChange={(next) => {\n    setExpanded(next);\n    if (next.includes('archive') && !files) fetchArchive().then(setFiles);\n  }}\n>\n  <Tree.Item value=\"archive\" hasChildren>\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Label>archive</Tree.Label>\n      <Tree.Actions>{!files ? <Spinner size=\"sm\" /> : null}</Tree.Actions>\n    </Tree.Trigger>\n    {files ? <Tree.Group>{/* …rows… */}</Tree.Group> : null}\n  </Tree.Item>\n</Tree>"
+        "code": "const [expanded, setExpanded] = useState<string[]>([]);\nconst [files, setFiles] = useState<string[] | null>(null);\n\n<Tree\n  expanded={expanded}\n  onExpandedChange={(next) => {\n    setExpanded(next);\n    if (next.includes('archive') && !files) fetchArchive().then(setFiles);\n  }}\n>\n  <Tree.Item value=\"archive\" hasChildren>\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Label>archive</Tree.Label>\n      <Tree.Actions>{!files ? <Spinner size=\"sm\" /> : null}</Tree.Actions>\n    </Tree.Trigger>\n    {files ? <Tree.Group>{/* …rows… */}</Tree.Group> : null}\n  </Tree.Item>\n</Tree>",
+        "previewVideo": {
+          "src": "/previews/tree-a-branch-that-loads-when-opened.mp4",
+          "poster": "/previews/tree-a-branch-that-loads-when-opened-poster.jpg",
+          "alt": "Tree — A branch that loads when opened.",
+          "width": 720,
+          "height": 422
+        }
+      },
+      {
+        "title": "Selecting more than one",
+        "description": "`selectionMode=\"multiple\"` switches `value` from a string to an array, and a row toggles rather than replacing what was chosen. Selection and expansion stay separate: picking a folder does not open it, and opening one does not pick it.",
+        "code": "const [selected, setSelected] = useState<string[]>([]);\n\n<Tree\n  selectionMode=\"multiple\"\n  value={selected}\n  onValueChange={setSelected}\n  expanded={expanded}\n  onExpandedChange={setExpanded}\n  showLines\n>\n  {/* …items… */}\n</Tree>",
+        "preview": {
+          "src": "/previews/tree-selecting-more-than-one.jpg",
+          "alt": "Tree — Selecting more than one.",
+          "width": 1179,
+          "height": 804
+        }
       }
-    ]
+    ],
+    "previewVideo": {
+      "src": "/previews/tree.mp4",
+      "poster": "/previews/tree-poster.jpg",
+      "alt": "The Tree component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
   },
   "sortable": {
     "intro": "A list whose rows can be dragged into a different order. The rows stay exactly where they were laid out and are pushed around with transforms, so a drag costs one subtraction per row per frame on the UI thread and no React work at all.",

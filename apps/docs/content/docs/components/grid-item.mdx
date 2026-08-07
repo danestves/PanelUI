@@ -9,6 +9,13 @@ Bento tiles, and the grid that places them.
 
 A wrapping row of views cannot do the last of those — wrapping puts whatever did not fit on a *new line*, so nothing ever tucks under a tall tile. So `GridItem.Group` measures itself, walks its children into the first free cell that fits each one, and positions them. Every tile is a whole number of cells, which is what makes the edges line up.
 
+<Preview
+  src="/previews/grid-item.jpg"
+  alt="The GridItem component, running in the example app."
+  width={1179}
+  height={1096}
+/>
+
 ## Installation
 
 GridItem ships with the library — no separate install.
@@ -72,6 +79,13 @@ npx panelui-cli@latest add grid-item
 
 Everything is set on the group, never on a tile: a tile that sized itself would not be in a grid.
 
+<Preview
+  src="/previews/grid-item-columns-gaps-and-the-shape-of-a-cell.jpg"
+  alt="GridItem — Columns, gaps and the shape of a cell."
+  width={1179}
+  height={744}
+/>
+
 ```tsx
 {/* Two square-ish tracks. */}
 <GridItem.Group columns={2} gap={12} aspect={1.6}>…</GridItem.Group>
@@ -88,6 +102,13 @@ Everything is set on the group, never on a tile: a tile that sized itself would 
 `colSpan` and `rowSpan` are in cells. A tile asking for more columns than the grid has is clamped to the grid rather than overflowing it.
 
 Tiles are placed in the order they are written, each into the first free cell it fits in, scanning row by row — the same rule a grid uses for anything it is not told where to put. Nothing already placed is moved, so a tall tile leaves a gap beside it that the following tiles fill.
+
+<Preview
+  src="/previews/grid-item-spanning.jpg"
+  alt="GridItem — Spanning."
+  width={1179}
+  height={1133}
+/>
 
 ```tsx
 <GridItem.Group columns={3} gap={10}>
@@ -106,6 +127,13 @@ Tiles are placed in the order they are written, each into the first free cell it
 This is what makes a bento grid read as a bento grid rather than as a wall of stat cards. A sparkline pinned to the bottom, an oversized icon hung off a corner, a photo: none of them are read for values, so none of them need axes.
 
 The icon treatment survives being used on *every* tile, which most decoration does not. An icon that fits inside the tile is an icon; one that runs off two edges of it at a tenth of its opacity is a texture — and giving each tile its own subject in its own `--color-chart-*` tint means four of them read as four different things rather than as wallpaper.
+
+<Preview
+  src="/previews/grid-item-the-layer-behind-the-text.jpg"
+  alt="GridItem — The layer behind the text."
+  width={1179}
+  height={927}
+/>
 
 ```tsx
 {/* A shape along the bottom. */}
@@ -140,6 +168,14 @@ Give a tile `onPress` and it renders as a pressable with the button role and the
 
 A whole tile is a generous touch target, so put the affordance in the footer rather than making a small button inside it — the chevron says where the press goes and the tile is what receives it.
 
+<PreviewVideo
+  src="/previews/grid-item-tiles-that-go-somewhere.mp4"
+  poster="/previews/grid-item-tiles-that-go-somewhere-poster.jpg"
+  alt="GridItem — Tiles that go somewhere."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <GridItem onPress={() => router.push('/billing')}>
   <GridItem.Title>Billing</GridItem.Title>
@@ -163,6 +199,70 @@ A group inside a tile is a group like any other, and it measures the cell it was
       <GridItem size="sm">…</GridItem>
     </GridItem.Group>
   </GridItem>
+</GridItem.Group>
+```
+
+### A bento of stats
+
+The shape the component is named for: one tile across the top and two under it, from `colSpan` alone. `rowHeight` is set from what the tallest tile has to hold rather than from the proportion that looked right — an icon, a title, a figure and a line under it — because a cell shorter than its contents clips the last of them.
+
+<Preview
+  src="/previews/grid-item.jpg"
+  alt="GridItem — A bento of stats."
+  width={1179}
+  height={1096}
+/>
+
+```tsx
+<GridItem.Group columns={2} gap={12} rowHeight={164}>
+  <GridItem colSpan={2}>
+    <GridItem.Media variant="icon"><SparklesIcon size={18} /></GridItem.Media>
+    <GridItem.Title>Deploys</GridItem.Title>
+    <GridItem.Value>1,284</GridItem.Value>
+    <GridItem.Description numberOfLines={1}>
+      this week, across 12 projects
+    </GridItem.Description>
+  </GridItem>
+  <GridItem>
+    <GridItem.Title>Uptime</GridItem.Title>
+    <GridItem.Value>99.98%</GridItem.Value>
+    <GridItem.Footer><Badge variant="secondary">30 days</Badge></GridItem.Footer>
+  </GridItem>
+  <GridItem variant="muted">
+    <GridItem.Title>p95 latency</GridItem.Title>
+    <GridItem.Value>142ms</GridItem.Value>
+    <GridItem.Description numberOfLines={1}>down 18ms</GridItem.Description>
+  </GridItem>
+</GridItem.Group>
+```
+
+### A wall of watermarks
+
+The same trick as the layer behind the text, repeated until it is a texture rather than an illustration. Each glyph is hung off the bottom-right corner and cut by the tile it sits in: an icon that fits inside a tile is an icon, and one that runs off two of its edges is a background. Keep the opacity low enough that the figure over it never has to compete.
+
+<Preview
+  src="/previews/grid-item-a-wall-of-watermarks.jpg"
+  alt="GridItem — A wall of watermarks."
+  width={1179}
+  height={908}
+/>
+
+```tsx
+<GridItem.Group columns={2} gap={12} rowHeight={132}>
+  {stats.map((stat) => (
+    <GridItem key={stat.label}>
+      <GridItem.Background>
+        <View className="absolute -bottom-6 -right-5 opacity-[0.14]">
+          <SparklesIcon size={120} color={stat.tint} />
+        </View>
+      </GridItem.Background>
+      <GridItem.Title>{stat.label}</GridItem.Title>
+      <GridItem.Value>{stat.value}</GridItem.Value>
+      <GridItem.Footer>
+        <Text size="xs" muted numberOfLines={1}>{stat.caption}</Text>
+      </GridItem.Footer>
+    </GridItem>
+  ))}
 </GridItem.Group>
 ```
 
