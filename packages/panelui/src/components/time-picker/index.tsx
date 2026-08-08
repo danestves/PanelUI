@@ -161,6 +161,12 @@ interface ColumnProps<T> {
   items: readonly T[];
   /** Index of the selected item. Drives the scroll position. */
   index: number;
+  /**
+   * Bumped every time the root has looked at a reported time, whether or not
+   * it accepted one. See `Column`'s resync effect for why the index alone is
+   * not enough to know a column is resting somewhere it should not be.
+   */
+  syncToken: number;
   onIndexChange: (index: number) => void;
   label: (item: T) => string;
   disabled?: boolean;
@@ -183,6 +189,7 @@ interface ColumnProps<T> {
 function Column<T>({
   items,
   index,
+  syncToken,
   onIndexChange,
   label,
   disabled,
@@ -208,11 +215,24 @@ function Column<T>({
     offset.value = event.contentOffset.y;
   });
 
+  /*
+   * Runs on the token as well as the index, and that is the whole point.
+   *
+   * A reported row can be refused — by `minTime`, by `maxTime`, or by a step
+   * the root rounds to. When it is, the value does not change, so `index` does
+   * not change either, and an effect watching the index alone never learns that
+   * anything happened. The column was left resting on a row the picker had not
+   * accepted, showing one time while reporting another, and no later drag could
+   * put it right: it had already recorded that row as where it sits.
+   *
+   * The token changes on every reported time, refused or not, so the column is
+   * always told to check itself, and the check is the same one it always was.
+   */
   useEffect(() => {
     if (index === resting.current) return;
     resting.current = index;
     ref.current?.scrollTo({ y: index * ROW_HEIGHT, animated: true });
-  }, [index]);
+  }, [index, syncToken]);
 
   const settle = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -284,11 +304,19 @@ function ColumnRow({
 }) {
   const slots = timePickerVariants();
 
+  /*
+   * The row either side of the centre stays a number you can read. It used to
+   * drop to just over half opacity and shrink by an eighth at one row out,
+   * which on a settling column reads as the digits smearing rather than as
+   * depth — and the neighbours are exactly the rows being compared against
+   * while choosing. The far rows still fall away, since that fall is what makes
+   * the column look like a wheel instead of a list.
+   */
   const style = useAnimatedStyle(() => {
     const distance = Math.abs(offset.value / ROW_HEIGHT - index);
     return {
-      opacity: interpolate(distance, [0, 1, 2], [1, 0.55, 0.2], 'clamp'),
-      transform: [{ scale: interpolate(distance, [0, 1], [1, 0.88], 'clamp') }],
+      opacity: interpolate(distance, [0, 1, 2], [1, 0.75, 0.25], 'clamp'),
+      transform: [{ scale: interpolate(distance, [0, 1], [1, 0.94], 'clamp') }],
     };
   });
 
@@ -311,6 +339,12 @@ function ColumnRow({
 interface FaceProps {
   value: TimeValue;
   onValueChange: (value: TimeValue) => void;
+  /**
+   * Bumped every time the root has looked at a reported time, so a face can
+   * tell "nothing changed because nothing was reported" from "nothing changed
+   * because what I reported was refused". Only the scrolling faces use it.
+   */
+  syncToken: number;
   hourCycle: HourCycle;
   minuteStep: number;
   locale?: string;
@@ -322,6 +356,7 @@ interface FaceProps {
 function WheelFace({
   value,
   onValueChange,
+  syncToken,
   hourCycle,
   minuteStep,
   locale,
@@ -376,7 +411,17 @@ function WheelFace({
   const setMeridiem = useCallback(
     (index: number) => {
       const next = index === 0 ? 'am' : 'pm';
-      if (next === meridiemOf(value.hour)) return;
+      /*
+       * Reported even when the column came back to the half it started on.
+       * Staying silent there left the root with nothing to answer, so a column
+       * dragged away and released short of a swap had no way to be told to sit
+       * back down — the other two columns had the same hole, and this is the
+       * same fix.
+       */
+      if (next === meridiemOf(value.hour)) {
+        onValueChange({ ...value });
+        return;
+      }
       onValueChange({
         ...value,
         hour: next === 'pm' ? value.hour + 12 : value.hour - 12,
@@ -397,6 +442,7 @@ function WheelFace({
       <Column
         items={hours}
         index={hourIndex}
+        syncToken={syncToken}
         onIndexChange={setHour}
         label={(hour) => (hourCycle === 24 ? padTwo(hour) : String(hour))}
         disabled={disabled}
@@ -406,6 +452,7 @@ function WheelFace({
       <Column
         items={minutes}
         index={minuteIndex}
+        syncToken={syncToken}
         onIndexChange={setMinute}
         label={padTwo}
         disabled={disabled}
@@ -416,6 +463,7 @@ function WheelFace({
         <Column
           items={meridiems}
           index={meridiemIndex}
+          syncToken={syncToken}
           onIndexChange={setMeridiem}
           label={(entry) => entry}
           disabled={disabled}
@@ -535,6 +583,7 @@ function handEnd(turn: number, length: number) {
 function ClockFaceLayout({
   value,
   onValueChange,
+  syncToken,
   hourCycle,
   minuteStep,
   locale,
@@ -561,6 +610,7 @@ function ClockFaceLayout({
       <Column
         items={times}
         index={index}
+        syncToken={syncToken}
         onIndexChange={setIndex}
         label={(time) => formatTime(time, { hourCycle, locale })}
         disabled={disabled}
@@ -590,6 +640,7 @@ function ClockFaceLayout({
 function RulerFace({
   value,
   onValueChange,
+  syncToken,
   hourCycle,
   minuteStep,
   locale,
@@ -622,11 +673,13 @@ function RulerFace({
     [times]
   );
 
+  // On the token as well as the index, for the reason given on the wheel's
+  // columns: a refused tick moves nothing, and the scale has to be told.
   useEffect(() => {
     if (index === resting.current) return;
     resting.current = index;
     ref.current?.scrollTo({ x: index * TICK_SPACING, animated: true });
-  }, [index]);
+  }, [index, syncToken]);
 
   const settle = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -879,8 +932,21 @@ function TimePickerRoot({
    * itself using — putting both here means every layout is bounded by the same
    * rule and none of them has to carry it.
    */
+  /*
+   * Counts times reported by a face, not times accepted.
+   *
+   * A face has no way of knowing that the row it landed on was bounded away or
+   * rounded to a different one — from where it stands, a refusal and a value
+   * that simply did not move are the same silence. Bumping this on every report
+   * gives the scrolling faces the one thing they were missing: something that
+   * changes when their answer was refused, so they can put themselves back on
+   * the row that actually holds.
+   */
+  const [settleSeq, setSettleSeq] = useState(0);
+
   const commit = useCallback(
     (next: TimeValue) => {
+      setSettleSeq((seq) => seq + 1);
       const bounded = clampTime(roundToStep(next, step), minTime, maxTime);
       if (isSameTime(bounded, selected)) return;
       if (!isValueControlled) setInternalValue(bounded);
@@ -898,6 +964,7 @@ function TimePickerRoot({
   const face: FaceProps = {
     value: draft,
     onValueChange: commit,
+    syncToken: settleSeq,
     hourCycle,
     minuteStep: step,
     locale,
