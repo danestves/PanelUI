@@ -76,6 +76,7 @@ import Animated, {
   scrollTo,
   useAnimatedRef,
   useAnimatedStyle,
+  useDerivedValue,
   useFrameCallback,
   useReducedMotion,
   useScrollViewOffset,
@@ -93,8 +94,14 @@ import { impactKnock, selectionTick } from '../../utils/haptics';
  * Rows getting out of the way of the one being carried. Quick, because they
  * are answering a finger that has already moved — a neighbour that ambles into
  * its new slot reads as the list struggling to keep up with the drag.
+ *
+ * Critically damped, and stiff. Both were wrong before: the spring overshot its
+ * slot and spent the rest of a third of a second coming back, so a row the
+ * finger had already passed was still visibly moving. A row getting out of the
+ * way has nothing to express by bouncing — it is not the thing being carried,
+ * and the fastest way to say "your place is free" is to be out of it.
  */
-const DISPLACE = { damping: 22, stiffness: 300, mass: 0.7 } as const;
+const DISPLACE = { damping: 28, stiffness: 400, mass: 0.5 } as const;
 
 /**
  * Settles a row into its slot. Stiffer and less bouncy than the library's
@@ -222,34 +229,114 @@ function slotCenter(
 }
 
 /**
- * Where the dragged row belongs now, given where its middle has reached.
+ * The order after a row has moved, with pinned rows left where they were.
+ *
+ * The move is applied first, to the whole list, so a carried row can be dragged
+ * *past* a pinned one — refusing the move instead would make a pinned row a
+ * wall, and a row that holds its place is not the same as a row nothing may
+ * cross. The pinned ids are then put back at the indices they occupy in the
+ * laid-out order, and everything else falls into the slots that are left, in
+ * the order the move produced.
+ *
+ * `laid` rather than `list` is what the fixed indices are read from, because
+ * that is the one order a pinned row is guaranteed to be correctly placed in:
+ * it is where it was rendered, and holding its slot is the whole point.
+ */
+function moveWithPinned(
+  list: readonly string[],
+  laid: readonly string[],
+  pinned: Record<string, boolean>,
+  id: string,
+  from: number,
+  to: number
+): string[] {
+  'worklet';
+  const moved = [...list];
+  moved.splice(from, 1);
+  moved.splice(to, 0, id);
+
+  const next: (string | undefined)[] = [];
+  let anyPinned = false;
+  for (let i = 0; i < moved.length; i += 1) next.push(undefined);
+  for (let i = 0; i < laid.length && i < next.length; i += 1) {
+    const at = laid[i];
+    if (at !== undefined && pinned[at]) {
+      next[i] = at;
+      anyPinned = true;
+    }
+  }
+  if (!anyPinned) return moved;
+
+  const free: string[] = [];
+  for (let i = 0; i < moved.length; i += 1) {
+    const at = moved[i];
+    if (at !== undefined && !pinned[at]) free.push(at);
+  }
+
+  const result: string[] = [];
+  let f = 0;
+  for (let i = 0; i < next.length; i += 1) {
+    const held = next[i];
+    if (held !== undefined) {
+      result.push(held);
+      continue;
+    }
+    const take = free[f];
+    f += 1;
+    if (take !== undefined) result.push(take);
+  }
+  return result;
+}
+
+/**
+ * Where the dragged row belongs now, given where its edges have reached.
  *
  * It walks outwards from the row's current slot and stops at the first
- * neighbour it has *not* passed the middle of, rather than scanning the whole
- * list for the nearest slot. The difference shows up with rows of unequal
- * height: scanning can hand back a slot two places away that happens to be
- * closer, which reads as the row skipping one.
+ * neighbour it has not reached, rather than scanning the whole list for the
+ * nearest slot. The difference shows up with rows of unequal height: scanning
+ * can hand back a slot two places away that happens to be closer, which reads
+ * as the row skipping one.
+ *
+ * What counts as reaching a neighbour is the *leading edge* of the carried row
+ * against that neighbour's middle — its bottom edge going down, its top edge
+ * going up. Comparing middle against middle, as this used to, means the finger
+ * has to travel a whole row before anything happens, because a row's middle
+ * starts a whole row away from its neighbour's: the list sat still through the
+ * first row of every drag and then moved all at once. Leading edge against
+ * middle halves that, and it is also the more natural reading — the rows get
+ * out of the way once the row being carried is over them, not once it is past
+ * them.
  */
 function targetIndex(
   order: readonly string[],
   current: number,
-  center: number,
+  top: number,
+  height: number,
   heights: Record<string, number>,
   gap: number
 ): number {
   'worklet';
-  if (center < slotCenter(order, current, heights, gap)) {
+  // Where the carried row's own slot begins, so the direction of travel is
+  // read from the row rather than from the sign of a gesture that may have
+  // changed its mind since.
+  const self = order[current];
+  const restingTop =
+    slotCenter(order, current, heights, gap) -
+    (self === undefined ? 0 : (heights[self] ?? 0)) / 2;
+
+  if (top < restingTop) {
     let target = current;
     for (let i = current - 1; i >= 0; i -= 1) {
-      if (center >= slotCenter(order, i, heights, gap)) break;
+      if (top >= slotCenter(order, i, heights, gap)) break;
       target = i;
     }
     return target;
   }
 
+  const bottom = top + height;
   let target = current;
   for (let i = current + 1; i < order.length; i += 1) {
-    if (center <= slotCenter(order, i, heights, gap)) break;
+    if (bottom <= slotCenter(order, i, heights, gap)) break;
     target = i;
   }
   return target;
@@ -266,6 +353,20 @@ interface SortableContextValue {
   rendered: SharedValue<string[]>;
   /** Measured row heights, keyed by id. */
   heights: SharedValue<Record<string, number>>;
+  /** Which ids hold their slot. Read on the UI thread while a drag resolves. */
+  pinned: SharedValue<Record<string, boolean>>;
+  /**
+   * How far each row is from where it was laid out, keyed by id.
+   *
+   * Derived once per rearrangement rather than worked out by each row for
+   * itself. Every row's style worklet re-runs on every frame of a drag — it
+   * closes over the value the carried row is riding on — so a row summing the
+   * heights above it twice per frame made the list cost the square of its
+   * length to drag, which is felt exactly when a list is long enough to be
+   * worth reordering by hand. This is invalidated by the same shared values it
+   * is built from, so a row changing height still puts it right.
+   */
+  offsets: SharedValue<Record<string, number>>;
   /** The row under the finger, or `null`. Also the settling row, until it lands. */
   activeId: SharedValue<string | null>;
   /** The active row's offset from where it was laid out. */
@@ -300,6 +401,8 @@ interface SortableContextValue {
   /** Index of each id in the rendered order. */
   indexOf: (id: string) => number;
   measured: (id: string, height: number) => void;
+  /** Register or clear a row's hold on its slot. */
+  setPinned: (id: string, value: boolean) => void;
   begin: (id: string) => void;
   settled: (id: string) => void;
   /** Move a row by whole slots — the path that is not a gesture. */
@@ -437,6 +540,7 @@ function SortableRoot({
   const order = useSharedValue<string[]>(value);
   const rendered = useSharedValue<string[]>(value);
   const heights = useSharedValue<Record<string, number>>({});
+  const pinned = useSharedValue<Record<string, boolean>>({});
   const activeId = useSharedValue<string | null>(null);
   const translate = useSharedValue(0);
   const lift = useSharedValue(0);
@@ -486,6 +590,47 @@ function SortableRoot({
     },
     [heights]
   );
+
+  const setPinned = useCallback(
+    (id: string, next: boolean) => {
+      if (Boolean(pinned.value[id]) === next) return;
+      pinned.value = { ...pinned.value, [id]: next };
+    },
+    [pinned]
+  );
+
+  /*
+   * Every row's distance from where it was laid out, in one pass.
+   *
+   * Two prefix sums — one over the order being dragged, one over the order the
+   * children are actually in — and the difference between them per id. Rebuilt
+   * when a swap changes `order`, when a drop resets both, or when a row reports
+   * a new height, and at no other time; a drag that is only moving the carried
+   * row does not touch it at all.
+   */
+  const offsets = useDerivedValue<Record<string, number>>(() => {
+    const map = heights.value;
+    const target: Record<string, number> = {};
+    const list = order.value;
+    let at = 0;
+    for (let i = 0; i < list.length; i += 1) {
+      const id = list[i];
+      if (id === undefined) continue;
+      target[id] = at;
+      at += (map[id] ?? 0) + gap;
+    }
+
+    const result: Record<string, number> = {};
+    const laid = rendered.value;
+    at = 0;
+    for (let i = 0; i < laid.length; i += 1) {
+      const id = laid[i];
+      if (id === undefined) continue;
+      result[id] = (target[id] ?? at) - at;
+      at += (map[id] ?? 0) + gap;
+    }
+    return result;
+  }, [gap]);
 
   /* ---------------------------------------------------------------------- */
   /* Autoscroll                                                             */
@@ -607,6 +752,8 @@ function SortableRoot({
       order,
       rendered,
       heights,
+      pinned,
+      offsets,
       activeId,
       translate,
       lift,
@@ -623,6 +770,7 @@ function SortableRoot({
       activeItem,
       indexOf,
       measured,
+      setPinned,
       begin,
       settled,
       step,
@@ -632,6 +780,8 @@ function SortableRoot({
       order,
       rendered,
       heights,
+      pinned,
+      offsets,
       activeId,
       translate,
       lift,
@@ -648,6 +798,7 @@ function SortableRoot({
       activeItem,
       indexOf,
       measured,
+      setPinned,
       begin,
       settled,
       step,
@@ -686,10 +837,20 @@ export interface SortableItemProps extends Omit<ViewProps, 'children'> {
   /**
    * Stop this row being picked up. The others still move past it, because a
    * row that cannot be dragged is not the same as a row that cannot be
-   * displaced — a pinned row is a different feature, and pretending this one
-   * is it would mean silently refusing drops that look like they worked.
+   * displaced — that is what `pinned` is for, and conflating the two would mean
+   * silently refusing drops that look like they worked.
    */
   disabled?: boolean;
+  /**
+   * Hold this row's place in the list. It cannot be picked up, and — unlike a
+   * `disabled` row — nothing else can take its slot either: the rows being
+   * dragged reorder among the places left over, and one carried past this row
+   * goes around it rather than through it.
+   *
+   * For the row that means something by being where it is. A header, a total, a
+   * step that has to come first.
+   */
+  pinned?: boolean;
   /**
    * Extra classes for the row while it is being carried, applied last. A
    * lifted row is given an opaque surface and a shadow so it is never drawn
@@ -711,6 +872,7 @@ function SortableItem({
   id,
   children,
   disabled = false,
+  pinned = false,
   ...props
 }: SortableItemProps) {
   const root = useSortableRoot('Sortable.Item');
@@ -718,6 +880,8 @@ function SortableItem({
     order,
     rendered,
     heights,
+    pinned: pinnedIds,
+    offsets,
     activeId,
     translate,
     lift,
@@ -733,13 +897,23 @@ function SortableItem({
     activeItem,
     indexOf,
     measured,
+    setPinned,
     begin,
     settled,
     step,
   } = root;
 
-  /** A row is undraggable if either it or the whole list says so. */
-  const locked = root.disabled || disabled;
+  /** A row is undraggable if it, the whole list, or its own pin says so. */
+  const locked = root.disabled || disabled || pinned;
+
+  /*
+   * Published to the root so the drag can read it on the UI thread. A pin is
+   * resolved while a finger is moving, where the props of a row two places away
+   * are not reachable.
+   */
+  useEffect(() => {
+    setPinned(id, pinned);
+  }, [id, pinned, setPinned]);
   const index = indexOf(id);
   const isActive = activeItem === id;
 
@@ -811,13 +985,20 @@ function SortableItem({
         if (current < 0) return;
 
         const top = slotOffset(rendered.value, id, map, gap) + translate.value;
-        const center = top + (map[id] ?? 0) / 2;
-        const to = targetIndex(list, current, center, map, gap);
+        const to = targetIndex(list, current, top, map[id] ?? 0, map, gap);
         if (to === current) return;
 
-        const next = [...list];
-        next.splice(current, 1);
-        next.splice(to, 0, id);
+        const next = moveWithPinned(
+          list,
+          rendered.value,
+          pinnedIds.value,
+          id,
+          current,
+          to
+        );
+        // A move that only pinned rows could have absorbed leaves the order
+        // exactly as it was, and there is nothing to feel or to redraw.
+        if (next[current] === id) return;
         order.value = next;
 
         if (haptics) runOnJS(notifyTick)();
@@ -914,9 +1095,14 @@ function SortableItem({
       };
     }
 
-    const map = heights.value;
-    const offset =
-      slotOffset(order.value, id, map, gap) - slotOffset(rendered.value, id, map, gap);
+    /*
+     * Read, not worked out. This worklet re-runs on every frame of a drag —
+     * it closes over the value the carried row rides on — so summing the
+     * heights above this row here, twice, made a list cost the square of its
+     * length to drag. The root derives every row's offset in one pass instead,
+     * and only when the arrangement actually changes.
+     */
+    const offset = offsets.value[id] ?? 0;
 
     /*
      * Only animated while a drag is in flight, and the difference is the whole

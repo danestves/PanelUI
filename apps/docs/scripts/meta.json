@@ -743,7 +743,7 @@
     "react native drag to reorder sortable list",
     {
       "addedIn": "0.50.0",
-      "updatedIn": "0.51.1",
+      "updatedIn": "0.53.0",
       "beta": true
     }
   ]

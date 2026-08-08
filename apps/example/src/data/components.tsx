@@ -11479,9 +11479,9 @@ function SortableActiveDemo() {
 }
 
 /**
- * One row that cannot be picked up, and the rest still moving past it — which
- * is the honest behaviour: refusing the drop as well would look like the drag
- * had worked and then been undone.
+ * One row that holds its place. Install has to come first to mean anything, so
+ * it keeps the top slot and the other three reorder among the rest — a row
+ * carried past it goes around it rather than pushing it down.
  */
 function SortableDisabledDemo() {
   const [steps, setSteps] = useState([
@@ -11499,7 +11499,7 @@ function SortableDisabledDemo() {
       className="w-full"
     >
       {steps.map((step) => (
-        <Sortable.Item key={step.id} id={step.id} disabled={step.fixed}>
+        <Sortable.Item key={step.id} id={step.id} pinned={step.fixed}>
           <Item variant="outline">
             <Item.Content>
               <Item.Title>{step.title}</Item.Title>

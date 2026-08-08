@@ -201,14 +201,35 @@ function Row({ label }) {
 </Sortable>
 ```
 
+### A row that cannot be picked up
+
+`disabled` on a row stops it being dragged. The others still move past it — a row that cannot be dragged is not the same as a row that cannot be displaced, and pretending otherwise would mean silently refusing drops that looked like they worked. `disabled` on the list turns every row off at once. For a row that keeps its slot as well, see below.
+
+```tsx
+<Sortable value={ids} onReorder={apply} gap={8}>
+  {rows.map((row) => (
+    <Sortable.Item key={row.id} id={row.id} disabled={row.locked}>
+      <Item variant="outline">
+        <Item.Content>
+          <Item.Title>{row.title}</Item.Title>
+        </Item.Content>
+        {row.locked ? <Badge variant="outline">Locked</Badge> : <Sortable.Handle />}
+      </Item>
+    </Sortable.Item>
+  ))}
+</Sortable>
+```
+
 ### A row that stays put
 
-`disabled` on a row stops it being picked up. The others still move past it — a row that cannot be dragged is not the same as a row that cannot be displaced, and pretending otherwise would mean silently refusing drops that looked like they worked. `disabled` on the list turns every row off at once.
+`pinned` is the stronger one: the row cannot be picked up, and nothing else can take its place either. The rows that do move reorder among the slots left over, so a step that has to come first still does once the rest have been rearranged.
+
+It is not a wall. A row can be carried across a pinned one — it goes around it rather than pushing it down — which is what separates a pinned row from a list split in two. It simply never gives up where it is.
 
 ```tsx
 <Sortable value={ids} onReorder={apply} gap={8}>
   {steps.map((step) => (
-    <Sortable.Item key={step.id} id={step.id} disabled={step.fixed}>
+    <Sortable.Item key={step.id} id={step.id} pinned={step.fixed}>
       <Item variant="outline">
         <Item.Content>
           <Item.Title>{step.title}</Item.Title>
@@ -246,7 +267,8 @@ function Row({ label }) {
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `id` | `string` | — | What this row is, and the id that appears in `value` and in the order handed back. Stable across renders — an id derived from the index changes the moment the list is reordered, and the rows lose track of themselves. |
-| `disabled` | `boolean` | `false` | Stop this row being picked up. The others still move past it, because a row that cannot be dragged is not the same as a row that cannot be displaced — a pinned row is a different feature, and pretending this one is it would mean silently refusing drops that look like they worked. |
+| `disabled` | `boolean` | `false` | Stop this row being picked up. The others still move past it, because a row that cannot be dragged is not the same as a row that cannot be displaced — that is what `pinned` is for, and conflating the two would mean silently refusing drops that look like they worked. |
+| `pinned` | `boolean` | `false` | Hold this row's place in the list. It cannot be picked up, and — unlike a `disabled` row — nothing else can take its slot either: the rows being dragged reorder among the places left over, and one carried past this row goes around it rather than through it. For the row that means something by being where it is. A header, a total, a step that has to come first. |
 | `activeClassName` | `string` | — | Extra classes for the row while it is being carried, applied last. A lifted row is given an opaque surface and a shadow so it is never drawn see-through over the rows it is passing; this is what overrides that. |
 
 ### Sortable.Handle
