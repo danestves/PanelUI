@@ -76,12 +76,22 @@ const ARROW_SIZE = 12;
 export type PopoverPlacement = 'top' | 'bottom' | 'left' | 'right';
 export type PopoverAlign = 'start' | 'center' | 'end';
 
-interface TriggerRect {
+/**
+ * The rectangle the panel is placed against, in window coordinates.
+ *
+ * Normally the trigger's own bounds. A zero-sized rect is meaningful too: it
+ * anchors the panel to a single point, which is what a menu opened by a long
+ * press on arbitrary content needs — there the interesting position is where
+ * the finger landed, not the bounds of whatever it landed on.
+ */
+export interface PopoverAnchorRect {
   x: number;
   y: number;
   width: number;
   height: number;
 }
+
+type TriggerRect = PopoverAnchorRect;
 
 interface PopoverContextValue {
   open: boolean;
@@ -108,6 +118,38 @@ function usePopover(component: string): PopoverContextValue {
     throw new Error(`${component} must be used within a <Popover>`);
   }
   return context;
+}
+
+export interface PopoverAnchorControls {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  /**
+   * Place the panel against an explicit rect rather than against a measured
+   * trigger. Pass a zero-sized rect to anchor it to a point.
+   */
+  anchorTo: (rect: PopoverAnchorRect) => void;
+}
+
+/**
+ * For a trigger that opens the panel on something other than a plain press, or
+ * anchors it to something other than its own bounds.
+ *
+ * `Popover.Trigger` covers the ordinary case — press the thing, measure the
+ * thing, open next to it. A component built on this one may need neither half
+ * of that: a context menu opens on a long press and belongs at the point the
+ * finger landed. Rather than have it own a second copy of the placing,
+ * flipping and edge-clamping this file already does, it borrows them by
+ * setting the anchor itself.
+ *
+ * Only useful inside a `Popover`, which is the same rule every other part here
+ * follows.
+ */
+export function usePopoverAnchor(component: string): PopoverAnchorControls {
+  const { open, setOpen, setTrigger } = usePopover(component);
+  return useMemo(
+    () => ({ open, setOpen, anchorTo: setTrigger }),
+    [open, setOpen, setTrigger]
+  );
 }
 
 export interface PopoverProps {
@@ -271,6 +313,18 @@ export interface PopoverContentProps extends ViewProps {
    * not, so it is safe to pass either way.
    */
   blur?: boolean;
+  /**
+   * Dim the screen behind the panel.
+   *
+   * Off by default: a popover is a panel *beside* something, and dimming the
+   * page says the thing behind it has stopped being available — which is a
+   * dialog's claim, not a popover's. Worth turning on when the panel is the
+   * only thing that matters while it is up, which is what a menu opened on the
+   * content itself is. Ignored under `blur`, which draws its own dim.
+   */
+  scrim?: boolean;
+  /** The dim's classes, when `scrim` is set. */
+  scrimClassName?: string;
   children?: ReactNode;
 }
 
@@ -288,6 +342,8 @@ function PopoverContent({
   background,
   dismissible = true,
   blur = false,
+  scrim = false,
+  scrimClassName = 'bg-black/30',
   children,
   onLayout: onLayoutProp,
   style,
@@ -458,8 +514,14 @@ function PopoverContent({
       <PopoverContext.Provider value={context}>
         <View className="absolute inset-0">
           {/* A popover does not dim the screen by default — the backdrop is
-              there only to catch the outside tap. `blur` opts into a frost. */}
-          {blur ? <Scrim blur intensity={20} dimClassName="bg-black/30" /> : null}
+              there only to catch the outside tap. `blur` opts into a frost,
+              `scrim` into a plain dim; the frost already draws one of its own,
+              so asking for both is not two dims. */}
+          {blur ? (
+            <Scrim blur intensity={20} dimClassName={scrimClassName} />
+          ) : scrim ? (
+            <Scrim dimClassName={scrimClassName} />
+          ) : null}
           <Pressable
             accessibilityLabel="Close"
             className="absolute inset-0"

@@ -6101,6 +6101,70 @@
       "height": 1560
     }
   },
+  "context-menu": {
+    "intro": "The actions that belong to a piece of content, reached by pressing and holding it. A `Menu` hangs off a control that exists to be opened — a ⋯ button, a toolbar item. A context menu has no such control: the target is the content itself, and holding it is how you get at what can be done to it.\n\nThe rows are `Menu`'s rows, not a second set styled to match, so the two ways of reaching a list of verbs cannot drift apart.",
+    "usage": "<ContextMenu>\n  <ContextMenu.Trigger haptics>\n    <Card>\n      <Card.Content className=\"p-4\">\n        <Text>Hold this card.</Text>\n      </Card.Content>\n    </Card>\n  </ContextMenu.Trigger>\n\n  <ContextMenu.Content>\n    <ContextMenu.Item icon={<ShareNodesIcon size={16} />}>Share</ContextMenu.Item>\n    <ContextMenu.Item icon={<CopyIcon size={16} />}>Copy</ContextMenu.Item>\n    <ContextMenu.Separator />\n    <ContextMenu.Item variant=\"destructive\" icon={<ShieldAlertIcon size={16} />}>\n      Report\n    </ContextMenu.Item>\n  </ContextMenu.Content>\n</ContextMenu>",
+    "extraImports": [
+      "Card",
+      "Text",
+      "Item",
+      "ShareNodesIcon",
+      "CopyIcon",
+      "SparklesIcon",
+      "ShieldAlertIcon",
+      "BookmarkIcon",
+      "TrashIcon",
+      "PencilIcon"
+    ],
+    "anatomy": "<ContextMenu>\n  <ContextMenu.Trigger>…</ContextMenu.Trigger>\n  <ContextMenu.Content>\n    <ContextMenu.Label>…</ContextMenu.Label>\n    <ContextMenu.Item>…</ContextMenu.Item>\n    <ContextMenu.Separator />\n    <ContextMenu.CheckboxItem>…</ContextMenu.CheckboxItem>\n    <ContextMenu.Sub>\n      <ContextMenu.SubTrigger>…</ContextMenu.SubTrigger>\n      <ContextMenu.SubContent>…</ContextMenu.SubContent>\n    </ContextMenu.Sub>\n  </ContextMenu.Content>\n</ContextMenu>",
+    "parts": {
+      "Trigger": "Wraps the content the actions belong to and opens the menu when it is held. The content need not be pressable, and is not cloned or altered. Also what gets measured under `anchor=\"target\"`.",
+      "Content": "The panel, and what a screen reader announces as a menu. Opens from the anchor rather than centred on it, over a dimmed screen.",
+      "Background": "The panel's surface, drawn behind every row and outside its scroller. Pass your own to put a gradient, an image or a blur under the rows.",
+      "Label": "Non-interactive heading over a run of rows.",
+      "Item": "One row. Dismisses the menu once it has run, unless `closeOnSelect` says otherwise.",
+      "CheckboxItem": "A row carrying a state rather than an action. Keeps the menu open by default.",
+      "RadioGroup": "A run of rows of which exactly one is chosen.",
+      "RadioItem": "One option inside a `ContextMenu.RadioGroup`.",
+      "Separator": "Hairline between two runs of rows.",
+      "Sub": "Groups a `ContextMenu.SubTrigger` with the rows it reveals.",
+      "SubTrigger": "The row that opens a submenu. Its chevron turns to point down once open.",
+      "SubContent": "The rows a submenu reveals, opening in place rather than flying out sideways."
+    },
+    "examples": [
+      {
+        "title": "Actions on a message",
+        "description": "The case this exists for. The panel opens where the finger landed, so it belongs to the bubble that was held rather than to the middle of it.",
+        "code": "<ContextMenu>\n  <ContextMenu.Trigger haptics>\n    <Message>\n      <Message.Bubble>\n        <Message.Bubble.Content>\n          Would you like an interactive web-based todo application?\n        </Message.Bubble.Content>\n      </Message.Bubble>\n    </Message>\n  </ContextMenu.Trigger>\n\n  <ContextMenu.Content>\n    <ContextMenu.Item icon={<SparklesIcon size={16} />} onSelect={askAboutSelection}>\n      Ask AI\n    </ContextMenu.Item>\n    <ContextMenu.Item icon={<ShareNodesIcon size={16} />} onSelect={share}>\n      Share\n    </ContextMenu.Item>\n    <ContextMenu.Item icon={<CopyIcon size={16} />} onSelect={copy}>\n      Copy\n    </ContextMenu.Item>\n\n    <ContextMenu.Separator />\n\n    <ContextMenu.Item\n      variant=\"destructive\"\n      icon={<ShieldAlertIcon size={16} />}\n      onSelect={report}\n    >\n      Report\n    </ContextMenu.Item>\n  </ContextMenu.Content>\n</ContextMenu>"
+      },
+      {
+        "title": "Alongside a press of its own",
+        "description": "The target usually already does something when tapped. Pass that to the trigger rather than to the content inside it, and the two gestures are told apart before either fires — a hold that opens the menu never also counts as a tap.",
+        "code": "<ContextMenu>\n  <ContextMenu.Trigger haptics onPress={() => router.push(`/notes/${note.id}`)}>\n    <Item>\n      <Item.Content>\n        <Item.Title>{note.title}</Item.Title>\n        <Item.Description>{note.excerpt}</Item.Description>\n      </Item.Content>\n    </Item>\n  </ContextMenu.Trigger>\n\n  <ContextMenu.Content>\n    <ContextMenu.Item icon={<PencilIcon size={16} />} onSelect={rename}>\n      Rename\n    </ContextMenu.Item>\n    <ContextMenu.Item icon={<BookmarkIcon size={16} />} onSelect={pin}>\n      Pin to top\n    </ContextMenu.Item>\n    <ContextMenu.Separator />\n    <ContextMenu.Item variant=\"destructive\" icon={<TrashIcon size={16} />} onSelect={remove}>\n      Delete\n    </ContextMenu.Item>\n  </ContextMenu.Content>\n</ContextMenu>"
+      },
+      {
+        "title": "Lined up with the row instead",
+        "description": "`anchor=\"target\"` places the panel against the whole trigger rather than the press point. Better for something small and list-shaped, where a panel lining up with the row reads as belonging to it; worse for a large target, where the press point is the only part you know the reader was looking at.",
+        "code": "<ContextMenu>\n  <ContextMenu.Trigger anchor=\"target\" haptics>\n    <Item>\n      <Item.Content>\n        <Item.Title>Design review</Item.Title>\n      </Item.Content>\n    </Item>\n  </ContextMenu.Trigger>\n\n  <ContextMenu.Content align=\"end\">\n    <ContextMenu.Item onSelect={duplicate}>Duplicate</ContextMenu.Item>\n    <ContextMenu.Item onSelect={archive}>Archive</ContextMenu.Item>\n  </ContextMenu.Content>\n</ContextMenu>"
+      },
+      {
+        "title": "How long the hold has to be",
+        "description": "`delay` is the hold in milliseconds and `slop` how far the finger may drift while holding, in points. The defaults suit a target inside a scroller: long enough not to fire on the way to a scroll, loose enough that a thumb resting still does not cancel it. Tighten `slop` only for a target that is not scrollable.",
+        "code": "{/* Quicker, and stricter about staying put. */}\n<ContextMenu.Trigger delay={220} slop={6} haptics>\n  …\n</ContextMenu.Trigger>\n\n{/* Nothing opens the menu, and the short press stops firing too. */}\n<ContextMenu.Trigger disabled>…</ContextMenu.Trigger>"
+      },
+      {
+        "title": "Rows that carry a state",
+        "description": "The same rows `Menu` has, because they are the same components. A checkbox row keeps the panel open by default — a setting is something people toggle twice.",
+        "code": "const [pinned, setPinned] = useState(false);\n\n<ContextMenu>\n  <ContextMenu.Trigger haptics>{…}</ContextMenu.Trigger>\n\n  <ContextMenu.Content>\n    <ContextMenu.Label>This thread</ContextMenu.Label>\n    <ContextMenu.CheckboxItem checked={pinned} onCheckedChange={setPinned}>\n      Pinned\n    </ContextMenu.CheckboxItem>\n\n    <ContextMenu.Separator />\n\n    <ContextMenu.Label>Notify me</ContextMenu.Label>\n    <ContextMenu.RadioGroup value={notify} onValueChange={setNotify}>\n      <ContextMenu.RadioItem value=\"all\">Every reply</ContextMenu.RadioItem>\n      <ContextMenu.RadioItem value=\"mentions\">Mentions only</ContextMenu.RadioItem>\n      <ContextMenu.RadioItem value=\"none\">Nothing</ContextMenu.RadioItem>\n    </ContextMenu.RadioGroup>\n  </ContextMenu.Content>\n</ContextMenu>"
+      },
+      {
+        "title": "Too many actions for a panel",
+        "description": "`presentation=\"bottom-sheet\"` moves the same rows into a sheet, which is the better answer once there are more verbs than fit comfortably at a fingertip. The trigger is unchanged — it is still a hold.",
+        "code": "<ContextMenu presentation=\"bottom-sheet\">\n  <ContextMenu.Trigger haptics>{…}</ContextMenu.Trigger>\n\n  <ContextMenu.Content>\n    <ContextMenu.Item icon={<ShareNodesIcon size={16} />}>Share</ContextMenu.Item>\n    <ContextMenu.Item icon={<CopyIcon size={16} />}>Copy link</ContextMenu.Item>\n    <ContextMenu.Item icon={<BookmarkIcon size={16} />}>Save</ContextMenu.Item>\n    <ContextMenu.Separator />\n    <ContextMenu.Item variant=\"destructive\" icon={<TrashIcon size={16} />}>\n      Delete\n    </ContextMenu.Item>\n  </ContextMenu.Content>\n</ContextMenu>"
+      }
+    ],
+    "notes": "### It is a Menu\n\n`ContextMenu.Item` and `Menu.Item` are the same component, not two that look alike. So are the separator, the label, the checkbox and radio rows, the submenu and the panel's background. The destructive colour, the press-in scale, the indicator column and the dismiss-on-select rule are defined once, and cannot come to differ between the ⋯ button and the hold.\n\nThe panel is `Menu`'s, which is `Popover`'s, so edge-flipping, safe-area clamping, scrolling a long list and `presentation=\"bottom-sheet\"` all arrive already working. What this component adds is the two things a menu opened on content needs and a menu opened from a button does not: the hold, and where the panel goes.\n\nAnything documented on the [Menu](/docs/components/menu) page for a row is true of the row here.\n\n### Anchored to the finger\n\nA toolbar menu is placed against its trigger, because the trigger is small and its position is the only sensible answer. A context menu's target is often most of the screen — a whole message, a whole card — and the middle of it is not where the press was.\n\nSo the anchor is the press point, and the panel opens down and to the right of it rather than centred on it: centring would put half the panel back under the hand that opened it. The gap to the anchor is nearly closed for the same reason, so the panel reads as coming out of the press rather than floating near it.\n\nA point is simply a zero-sized anchor rectangle, which is why none of the placing, flipping or clamping needed a second code path for it. Near the bottom of the screen the panel opens upwards, exactly as a popover does.\n\n### The hold, and the press underneath it\n\nThe target usually has a press of its own — open the thread, play the video, follow the link — and the two must not both fire.\n\nThe hold and the tap are handed to the gesture recogniser as alternatives, so it decides between them up front rather than after the fact. That is why the short press belongs on the trigger, as `onPress`, and not on the content inside it: a press handler further down is outside the arbitration and can still fire on the way to a hold.\n\nIt is also what lets the target be anything at all. Nothing is cloned onto the child and no pressable is required, so a plain bubble, card or image works — which is most of what content-native actions are attached to.\n\n### The dim, and why a popover has none\n\nThe screen dims behind the panel, which a plain `Popover` does not do. A popover is a panel *beside* something and the page behind it is still live; a context menu is modal in practice, because the content underneath is what the actions are *about*. The dim is what says so, and tapping it dismisses.\n\n### Holding has no edge\n\nA press has a moment you can feel — something moves under the finger. A hold does not, so until the panel appears there is nothing telling anyone the hold has been long enough. `haptics` on the trigger ticks the moment the hold is accepted, which is why it is worth setting more often than not. It needs the optional `expo-haptics` and is silent without it.\n\n### Accessibility\n\nThe panel is announced as a menu and its rows as menu items, and it takes the Android back button while it is up. A hold is not a gesture every reader can perform, though, and it is invisible — nothing on screen says the content has actions. Where the actions matter, give them a second way in: the same rows in a `Menu` behind a visible ⋯ button costs nothing, since they are the same components."
+  },
   "menu": {
     "intro": "The list of things you can do to something.\n\nA menu is not a select, and the difference is what the rows *are*. A select's rows are values: picking one answers a question the form asked, and the trigger then shows the answer. A menu's rows are verbs — rename, duplicate, delete — and the trigger goes on saying the same thing afterwards, because nothing about it was chosen.\n\nThe panel is a `Popover` underneath, so a menu inherits its measuring, flipping and edge-clamping rather than owning a second copy of them. A menu near the bottom of the screen opens upwards, and `presentation=\"bottom-sheet\"` moves the same rows into a sheet.",
     "usage": "<Menu>\n  <Menu.Trigger>\n    <Button variant=\"outline\">Options</Button>\n  </Menu.Trigger>\n  <Menu.Content align=\"start\" width={224}>\n    <Menu.Item icon={<PencilIcon size={16} />} shortcut=\"⌘R\">\n      Rename\n    </Menu.Item>\n    <Menu.Separator />\n    <Menu.Item variant=\"destructive\" icon={<TrashIcon size={16} />}>\n      Delete\n    </Menu.Item>\n  </Menu.Content>\n</Menu>",

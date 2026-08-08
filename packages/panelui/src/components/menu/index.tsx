@@ -341,7 +341,7 @@ export interface MenuBackgroundProps extends ViewProps {
  * `overflow-hidden` on the panel is what keeps whatever that is inside the
  * corner radius.
  */
-function MenuBackground({ className, children, ...props }: MenuBackgroundProps) {
+export function MenuBackground({ className, children, ...props }: MenuBackgroundProps) {
   const { background } = menuVariants();
 
   return (
@@ -365,7 +365,7 @@ export interface MenuLabelProps extends ViewProps {
 }
 
 /** Non-interactive heading over a run of rows. */
-function MenuLabel({ className, inset, children, ...props }: MenuLabelProps) {
+export function MenuLabel({ className, inset, children, ...props }: MenuLabelProps) {
   const { label } = menuVariants({ inset });
 
   return (
@@ -384,7 +384,7 @@ export interface MenuSeparatorProps extends ViewProps {
 }
 
 /** Hairline between two runs of rows. */
-function MenuSeparator({ className, ...props }: MenuSeparatorProps) {
+export function MenuSeparator({ className, ...props }: MenuSeparatorProps) {
   const { separator } = menuVariants();
 
   return (
@@ -435,7 +435,7 @@ export interface MenuItemProps extends Omit<PressableProps, 'children' | 'style'
  * that a row which is disabled or which opts out via `closeOnSelect` behaves
  * the same either way.
  */
-function MenuItem({
+export function MenuItem({
   className,
   children,
   icon,
@@ -540,7 +540,7 @@ export interface MenuCheckboxItemProps extends Omit<MenuItemProps, 'icon' | 'ins
  * deliberately so: a set of toggles is nearly always set more than one at a
  * time, and closing after each one turns three taps into six.
  */
-function MenuCheckboxItem({
+export function MenuCheckboxItem({
   checked = false,
   onCheckedChange,
   onSelect,
@@ -592,7 +592,7 @@ export interface MenuRadioGroupProps extends ViewProps {
 }
 
 /** A run of rows of which exactly one is chosen. */
-function MenuRadioGroup({ value, onValueChange, className, children, ...props }: MenuRadioGroupProps) {
+export function MenuRadioGroup({ value, onValueChange, className, children, ...props }: MenuRadioGroupProps) {
   const context = useMemo(
     () => ({ value, select: (next: string) => onValueChange?.(next) }),
     [value, onValueChange]
@@ -616,7 +616,7 @@ export interface MenuRadioItemProps extends Omit<MenuItemProps, 'icon' | 'inset'
 }
 
 /** One option inside a `Menu.RadioGroup`. */
-function MenuRadioItem({
+export function MenuRadioItem({
   value,
   indicator = 'check',
   onSelect,
@@ -694,7 +694,7 @@ export interface MenuSubProps {
 }
 
 /** Groups a `Menu.SubTrigger` with the rows it reveals. */
-function MenuSub({ children, defaultOpen = false, open, onOpenChange }: MenuSubProps) {
+export function MenuSub({ children, defaultOpen = false, open, onOpenChange }: MenuSubProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isControlled = open !== undefined;
   const resolved = isControlled ? open : internalOpen;
@@ -723,7 +723,7 @@ export interface MenuSubTriggerProps
  * point down once open, so the row states which way its rows will appear
  * rather than only that it has some.
  */
-function MenuSubTrigger({ className, children, icon, onSelect, ...props }: MenuSubTriggerProps) {
+export function MenuSubTrigger({ className, children, icon, onSelect, ...props }: MenuSubTriggerProps) {
   const { open, toggle } = useMenuSub('Menu.SubTrigger');
   const sign = useDirectionSign();
   const direction = useDirection();
@@ -790,7 +790,7 @@ export interface MenuSubContentProps extends ViewProps {
  * would otherwise report the animated height back, and the panel would settle
  * at whatever it happened to measure on the first frame.
  */
-function MenuSubContent({ className, children, ...props }: MenuSubContentProps) {
+export function MenuSubContent({ className, children, ...props }: MenuSubContentProps) {
   const { open } = useMenuSub('Menu.SubContent');
   const reducedMotion = useReducedMotion();
   const [height, setHeight] = useState(0);
@@ -841,6 +841,13 @@ MenuSub.displayName = 'Menu.Sub';
 MenuSubTrigger.displayName = 'Menu.SubTrigger';
 MenuSubContent.displayName = 'Menu.SubContent';
 
+/*
+ * The parts above are exported individually as well as hung off `Menu`, and the
+ * reason is `ContextMenu`: it presents these same components as its own rows, so
+ * the emitted type declarations for it have to be able to name them. `Menu` is
+ * still the only thing the package exports, so nothing about how these are
+ * reached from outside has changed.
+ */
 export const Menu = Object.assign(MenuRoot, {
   Trigger: MenuTrigger,
   Content: MenuContent,

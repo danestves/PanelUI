@@ -50,6 +50,7 @@ import {
   CalendarIcon,
   CodeBlock,
   Combobox,
+  ContextMenu,
   CopyIcon,
   CrosshairIcon,
   Card,
@@ -5427,6 +5428,122 @@ function SwipeableTabsDemo() {
         </Tabs.Content>
       ))}
     </Tabs>
+  );
+}
+
+/**
+ * A chat bubble whose actions are reached by holding it.
+ *
+ * The panel opens where the finger landed, so on a bubble this wide it belongs
+ * to the part that was pressed rather than to the middle of it.
+ */
+function ContextMenuMessageDemo() {
+  const [last, setLast] = useState<string | null>(null);
+
+  return (
+    <View className="w-full gap-3 py-2">
+      <ContextMenu>
+        <ContextMenu.Trigger haptics>
+          <Card>
+            <Card.Content className="p-4">
+              <Text>
+                Would you like an interactive web-based todo application, or a
+                command-line one?
+              </Text>
+            </Card.Content>
+          </Card>
+        </ContextMenu.Trigger>
+
+        <ContextMenu.Content>
+          <ContextMenu.Item
+            icon={<SparklesIcon size={16} />}
+            onSelect={() => setLast('Ask AI')}
+          >
+            Ask AI
+          </ContextMenu.Item>
+          <ContextMenu.Item
+            icon={<ShareNodesIcon size={16} />}
+            onSelect={() => setLast('Share')}
+          >
+            Share
+          </ContextMenu.Item>
+          <ContextMenu.Item icon={<CopyIcon size={16} />} onSelect={() => setLast('Copy')}>
+            Copy
+          </ContextMenu.Item>
+
+          <ContextMenu.Separator />
+
+          <ContextMenu.Item
+            variant="destructive"
+            icon={<ShieldAlertIcon size={16} />}
+            onSelect={() => setLast('Report')}
+          >
+            Report
+          </ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu>
+
+      <Text size="xs" muted>
+        {last ? `Chose: ${last}` : 'Press and hold the card.'}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * A row that does something when tapped and something else when held.
+ *
+ * The tap is on the trigger rather than on the row inside it, which is what
+ * lets the recogniser choose between the two before either has fired.
+ */
+function ContextMenuRowDemo() {
+  const [status, setStatus] = useState('Tap to open, hold for actions.');
+  const [pinned, setPinned] = useState(false);
+
+  return (
+    <View className="w-full gap-3 py-2">
+      <ContextMenu>
+        <ContextMenu.Trigger
+          anchor="target"
+          haptics
+          onPress={() => setStatus('Tapped — opened the note.')}
+        >
+          <Item variant="outline">
+            <Item.Content>
+              <Item.Title>Design review</Item.Title>
+              <Item.Description>Edited 20 minutes ago</Item.Description>
+            </Item.Content>
+          </Item>
+        </ContextMenu.Trigger>
+
+        <ContextMenu.Content align="end">
+          <ContextMenu.Item
+            icon={<PencilIcon size={16} />}
+            onSelect={() => setStatus('Held — chose Rename.')}
+          >
+            Rename
+          </ContextMenu.Item>
+          {/* A checkbox row keeps the panel open: a setting is something people
+              toggle twice. */}
+          <ContextMenu.CheckboxItem checked={pinned} onCheckedChange={setPinned}>
+            Pinned
+          </ContextMenu.CheckboxItem>
+          <ContextMenu.Separator />
+          <ContextMenu.Item
+            variant="destructive"
+            icon={<TrashIcon size={16} />}
+            onSelect={() => setStatus('Held — chose Delete.')}
+          >
+            Delete
+          </ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu>
+
+      <Text size="xs" muted>
+        {status}
+        {pinned ? ' · pinned' : ''}
+      </Text>
+    </View>
   );
 }
 
@@ -14654,6 +14771,44 @@ const CATALOGUE: ComponentEntry[] = [
                 </Menu.Item>
               </Menu.Content>
             </Menu>
+          </View>
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'context-menu',
+    name: 'ContextMenu',
+    summary: 'Actions for a piece of content, opened by holding it',
+    demos: [
+      { label: 'Holding a message', render: () => <ContextMenuMessageDemo /> },
+      { label: 'A tap and a hold on one row', render: () => <ContextMenuRowDemo /> },
+      {
+        label: 'As a bottom sheet',
+        render: () => (
+          <View className="w-full py-2">
+            {/* Once there are more verbs than sit comfortably at a fingertip,
+                the same rows read better in a sheet. The trigger is unchanged. */}
+            <ContextMenu presentation="bottom-sheet">
+              <ContextMenu.Trigger haptics>
+                <Card>
+                  <Card.Content className="p-4">
+                    <Text>Hold for a sheet of actions.</Text>
+                  </Card.Content>
+                </Card>
+              </ContextMenu.Trigger>
+              <ContextMenu.Content>
+                <ContextMenu.Item icon={<ShareNodesIcon size={16} />}>Share</ContextMenu.Item>
+                <ContextMenu.Item icon={<CopyIcon size={16} />}>Copy link</ContextMenu.Item>
+                <ContextMenu.Item icon={<BookmarkIcon size={16} />}>
+                  Save for later
+                </ContextMenu.Item>
+                <ContextMenu.Separator />
+                <ContextMenu.Item variant="destructive" icon={<TrashIcon size={16} />}>
+                  Delete
+                </ContextMenu.Item>
+              </ContextMenu.Content>
+            </ContextMenu>
           </View>
         ),
       },
