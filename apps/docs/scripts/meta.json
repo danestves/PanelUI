@@ -45,6 +45,15 @@
       "group": "charts"
     }
   ],
+  "candlestick-chart": [
+    "CandlestickChart",
+    "Open, high, low and close for a period, drawn as one mark.",
+    "react native candlestick chart ohlc",
+    {
+      "addedIn": "0.53.0",
+      "group": "charts"
+    }
+  ],
   "bottom-sheet": [
     "BottomSheet",
     "Draggable sheet anchored to the bottom of the screen.",

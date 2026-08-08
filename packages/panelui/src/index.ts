@@ -107,6 +107,21 @@ export {
   type BarChartOrientation,
 } from './components/bar-chart';
 export {
+  CandlestickChart,
+  useCandlestickChart,
+  type CandlestickChartProps,
+  type CandlestickChartHandle,
+  type CandlestickChartHeaderProps,
+  type CandlestickChartGridProps,
+  type CandlestickChartCandlesProps,
+  type CandlestickChartXAxisProps,
+  type CandlestickChartYAxisProps,
+  type CandlestickChartTooltipProps,
+  type CandlestickChartLegendProps,
+  type CandlestickChartDatum,
+  type CandlestickChartStatus,
+} from './components/candlestick-chart';
+export {
   BottomSheet,
   type BottomSheetProps,
   type BottomSheetContentProps,

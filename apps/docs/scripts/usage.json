@@ -5810,6 +5810,69 @@
       "height": 688
     }
   },
+  "candlestick-chart": {
+    "intro": "Open, high, low and close for a period, drawn as one mark. The body spans open to close and is filled by direction — green when the period closed at or above where it opened, red when it closed below — and the wick behind it spans the low to the high.\n\nComposed the way every chart here is: the grid, the candles, the axes and the readout are separate children, so a chart that wants no grid simply does not have one.",
+    "usage": "<CandlestickChart data={sessions} xDataKey=\"day\">\n  <CandlestickChart.Grid />\n  <CandlestickChart.Candles />\n  <CandlestickChart.YAxis />\n  <CandlestickChart.XAxis />\n  <CandlestickChart.Tooltip />\n</CandlestickChart>",
+    "extraImports": [
+      "Frame",
+      "Text"
+    ],
+    "anatomy": "<CandlestickChart>\n  <CandlestickChart.Header />       {/* title, readout and key, above the plot */}\n  <CandlestickChart.Grid />         {/* lines across the price axis */}\n  <CandlestickChart.Candles />      {/* the marks */}\n  <CandlestickChart.XAxis />        {/* period labels, under the candles */}\n  <CandlestickChart.YAxis />        {/* price labels, down the side */}\n  <CandlestickChart.Legend />\n  <CandlestickChart.Tooltip />      {/* the drag, and the readout */}\n</CandlestickChart>",
+    "parts": {
+      "Header": "The strip above the plot: what the chart is of, what it currently reads, and what the two colours mean. The value is passed in rather than derived, so one header can show the last close when nothing is pressed and a session's close when something is.",
+      "Grid": "Lines across the price axis, so a candle can be read against a number and not only against the candle beside it.",
+      "Candles": "The marks. Every rising body is a subpath of one path and every falling body of another, so the chart is four animated props a frame whether it holds twenty periods or two hundred.",
+      "XAxis": "Period labels under the candles. Real text, so they follow the theme's font and the platform's text scaling.",
+      "YAxis": "Price labels down the side. The chart reserves a gutter for them, rather than drawing them over the plot.",
+      "Legend": "The two colours and what they mean, floated over the plot. Prefer `Header`'s `legend` on a chart that has a header.",
+      "Tooltip": "The drag that selects a period, and the card that reports its four prices and its change."
+    },
+    "examples": [
+      {
+        "title": "A run of sessions",
+        "description": "The whole component. Each row carries `open`, `high`, `low` and `close`; `onActiveIndexChange` reports the period under the finger, which is how a readout above the plot gets its value.",
+        "code": "const sessions = [\n  { day: '1 Sep', open: 182.4, high: 185.1, low: 181.2, close: 184.6 },\n  { day: '2 Sep', open: 184.6, high: 186.0, low: 182.9, close: 183.1 },\n  // …\n];\n\n<CandlestickChart\n  data={sessions}\n  xDataKey=\"day\"\n  aspectRatio={1.5}\n  onActiveIndexChange={(_index, datum) => setActive(datum)}\n>\n  <CandlestickChart.Header\n    title=\"NWM · Daily\"\n    value={price(active?.close ?? last.close)}\n    legend\n  />\n  <CandlestickChart.Grid />\n  <CandlestickChart.Candles />\n  <CandlestickChart.YAxis />\n  <CandlestickChart.XAxis />\n  <CandlestickChart.Tooltip formatValue={price} />\n</CandlestickChart>"
+      },
+      {
+        "title": "Naming the four columns",
+        "description": "The four prices are read from `open`, `high`, `low` and `close` by default. Point them at whatever the data already calls them rather than reshaping it on the way in.",
+        "code": "<CandlestickChart\n  data={bars}\n  xDataKey=\"t\"\n  openDataKey=\"o\"\n  highDataKey=\"h\"\n  lowDataKey=\"l\"\n  closeDataKey=\"c\"\n>\n  <CandlestickChart.Candles />\n</CandlestickChart>"
+      },
+      {
+        "title": "Colours of your own",
+        "description": "Green and red are the defaults because up and down are not two series — they are two states of one, and the convention for them is older than any palette. Both are overridable for a chart that has to match something else.",
+        "code": "<CandlestickChart.Candles\n  risingColor=\"#2dd4bf\"\n  fallingColor=\"#fb7185\"\n  cornerRadius={2}\n/>"
+      },
+      {
+        "title": "Sized for a card",
+        "description": "No axes and a wider gap between the candles, for a chart that is a glance rather than a screen. `candleGap` is a fraction of each period's slice, so the proportions hold at any width.",
+        "code": "<CandlestickChart data={recent} xDataKey=\"day\" aspectRatio={1.9} candleGap={0.42}>\n  <CandlestickChart.Header value={price(last.close)} caption={change} />\n  <CandlestickChart.Candles cornerRadius={2} />\n  <CandlestickChart.XAxis />\n</CandlestickChart>"
+      },
+      {
+        "title": "Waiting for the series",
+        "description": "`status=\"loading\"` draws flat placeholder candles and grows them into the real ones when it turns `ready`. One component throughout, rather than a spinner swapped for a chart — swapping loses the transition.",
+        "code": "<CandlestickChart data={sessions} xDataKey=\"day\" status={status}>\n  <CandlestickChart.Grid />\n  <CandlestickChart.Candles />\n  <CandlestickChart.XAxis />\n</CandlestickChart>"
+      }
+    ],
+    "versions": [
+      {
+        "title": "Sessions",
+        "description": "Thirty sessions, with a readout that follows the finger.",
+        "code": "<CandlestickChart data={sessions} xDataKey=\"day\" aspectRatio={1.5}>\n  <CandlestickChart.Header title=\"NWM · Daily\" value={price(shown.close)} legend />\n  <CandlestickChart.Grid />\n  <CandlestickChart.Candles />\n  <CandlestickChart.YAxis />\n  <CandlestickChart.XAxis />\n  <CandlestickChart.Tooltip formatValue={price} />\n</CandlestickChart>"
+      },
+      {
+        "title": "No axes",
+        "description": "The last ten, sized for a card rather than for a screen.",
+        "code": "<CandlestickChart data={recent} xDataKey=\"day\" aspectRatio={1.9} candleGap={0.42}>\n  <CandlestickChart.Header value={price(last.close)} caption={change} />\n  <CandlestickChart.Candles cornerRadius={2} />\n  <CandlestickChart.XAxis />\n</CandlestickChart>"
+      },
+      {
+        "title": "Loading",
+        "description": "Placeholder candles growing into the real ones.",
+        "code": "<CandlestickChart data={recent} xDataKey=\"day\" status={status}>\n  <CandlestickChart.Header title=\"NWM · Daily\" value={status === 'loading' ? '—' : price(last.close)} />\n  <CandlestickChart.Grid />\n  <CandlestickChart.Candles />\n  <CandlestickChart.XAxis />\n</CandlestickChart>"
+      }
+    ],
+    "notes": "### Why the axis does not reach zero\n\nA bar chart's axis has to, because a bar compares *lengths* and a bar cropped at the bottom is a length that lies. A candle compares nothing to zero. What is being read is the distance between four numbers that sit close together and usually far from the origin — a share at 180 that moved between 178 and 183 is a chart of that five-point span, and forcing zero onto the axis compresses the whole thing into a band at the top and every candle in it into a dash.\n\nSo the domain runs from the lowest low to the highest high, with a tenth of the span as margin at each end so the extremes are not drawn on the frame. `yDomain` fixes it outright.\n\n### Colour is direction, not identity\n\nThere is one thing plotted, so there is no series list and no colour per series. The two colours are the two states of that one thing, and they come from the theme's success and destructive tokens rather than from the chart palette — that palette is picked so several series can be told apart, which is not what green and red are doing here.\n\n### What it costs to draw\n\nEvery rising body is a subpath of one path and every falling body of another, and the wicks likewise. Four animated props a frame whether the chart holds twenty periods or two hundred. The candle under the finger is drawn once more over the top rather than splitting all four paths in two, and only the *index* crosses to JavaScript while a finger is moving.\n\n### Periods, not points\n\nA candle owns a slice of the width rather than sitting on a point, so the finger is inside whichever slice it lands on. `candleGap` is the fraction of that slice left empty — a fraction rather than a pixel gap, so a chart of thirty periods and a chart of six look like the same chart.\n\n### Labels thin themselves\n\nA chart of thirty sessions gives each about eleven points, which is not a date. The axis asks the plot how much room there is and keeps every nth label, spaced far enough apart that no two touch. `ticks` overrides the count where a particular one is wanted.\n\n### Reduced motion\n\nThe grow-in and the domain tween are both skipped, and the chart draws straight to its final shape.\n\n**`aspectRatio` measures the plot, not the whole chart.** The header sits outside the measured box, so a chart with a readout above it keeps the shape it asked for instead of losing as much height as the readout took."
+  },
   "area-chart": {
     "intro": "Filled bands over time, stacked or overlaid.\n\nThis is not `LineChart.Area`. Shading under a line is one series saying *this is the shape of the thing*; an area chart answers *what is it made of* — and that needs stacking, where each band sits on the running total of the ones below it, so the top edge is the whole and each thickness is a share.",
     "usage": "<AreaChart data={traffic} xDataKey=\"hour\" stacked>\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.Area dataKey=\"search\" colorIndex={2} />\n  <AreaChart.XAxis />\n  <AreaChart.Tooltip />\n</AreaChart>",

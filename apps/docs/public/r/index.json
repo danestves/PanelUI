@@ -132,6 +132,16 @@
     ]
   },
   {
+    "name": "candlestick-chart",
+    "type": "registry:ui",
+    "description": "Open, high, low and close for a period, drawn as one mark.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "card",
     "type": "registry:ui",
     "description": "Content surface with header, body and footer.",

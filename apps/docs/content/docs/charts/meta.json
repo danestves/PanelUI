@@ -3,6 +3,7 @@
   "pages": [
     "area-chart",
     "bar-chart",
+    "candlestick-chart",
     "heatmap-chart",
     "line-chart",
     "pie-chart",
