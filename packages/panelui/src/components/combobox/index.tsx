@@ -296,6 +296,13 @@ function eachOption(children: ReactNode, visit: (option: ComboboxItemProps) => v
  * A group is rebuilt around whatever survives inside it and dropped when that
  * is nothing — a heading over no options reads as a section that failed to load
  * rather than one the query emptied.
+ *
+ * Every kept node is given a key on the way out. This walk builds a plain array
+ * rather than going through `Children.map`, which is the one that hands out keys
+ * of its own, so options written as literal JSX — the ordinary way to write a
+ * short, fixed list — arrive here with none. An option's `value` is already
+ * unique within a list, and a group is named by its label, so both key
+ * themselves; an explicit key on the element still wins.
  */
 function filterOptions(
   children: ReactNode,
@@ -303,20 +310,31 @@ function filterOptions(
 ): ReactNode[] {
   const kept: ReactNode[] = [];
 
-  Children.forEach(children, (child) => {
+  Children.forEach(children, (child, index) => {
     if (!isValidElement(child)) return;
 
     if (child.type === ComboboxGroup) {
       const props = child.props as ComboboxGroupProps;
       const inner = filterOptions(props.children, matches);
       if (inner.length) {
-        kept.push(cloneElement(child as ReactElement<ComboboxGroupProps>, {}, inner));
+        kept.push(
+          cloneElement(
+            child as ReactElement<ComboboxGroupProps>,
+            { key: child.key ?? `group:${props.label ?? index}` },
+            inner
+          )
+        );
       }
       return;
     }
 
     if (child.type === ComboboxItem && matches(child.props as ComboboxItemProps)) {
-      kept.push(child);
+      const props = child.props as ComboboxItemProps;
+      kept.push(
+        cloneElement(child as ReactElement<ComboboxItemProps>, {
+          key: child.key ?? `option:${props.value}`,
+        })
+      );
     }
   });
 
@@ -549,13 +567,66 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
    * that lifts its content clear of the keyboard moves the field after it was
    * measured, and the list would stay at the old position. Re-measure whenever
    * the keyboard's height changes while the list is open.
+   *
+   * Except while the list is being dragged. The list dismisses the keyboard on
+   * drag, so the first finger movement changes the keyboard's height, which
+   * lands a new anchor, which recomputes the panel's `top` *and* its
+   * `maxHeight` — the panel resizes and moves under the finger that is
+   * scrolling it, which is the stutter. The measurement is only stale once the
+   * keyboard has finished leaving, so it is deferred to the end of the drag,
+   * which is also the first moment it can be taken correctly.
    */
-  useEffect(() => {
-    if (!open || presentation !== 'overlay') return;
+  const draggingList = useRef(false);
+  const anchorStale = useRef(false);
+
+  const remeasure = useCallback(() => {
     fieldRef.current?.measureInWindow((x, y, width, height) =>
       setAnchor({ x, y, width, height })
     );
-  }, [open, presentation, keyboardHeight]);
+  }, []);
+
+  useEffect(() => {
+    if (!open || presentation !== 'overlay') return;
+    if (draggingList.current) {
+      anchorStale.current = true;
+      return;
+    }
+    remeasure();
+  }, [open, presentation, keyboardHeight, remeasure]);
+
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelSettle = useCallback(() => {
+    if (settleTimer.current === null) return;
+    clearTimeout(settleTimer.current);
+    settleTimer.current = null;
+  }, []);
+
+  const onListDragStart = useCallback(() => {
+    cancelSettle();
+    draggingList.current = true;
+  }, [cancelSettle]);
+
+  const onListSettled = useCallback(() => {
+    cancelSettle();
+    draggingList.current = false;
+    if (!anchorStale.current) return;
+    anchorStale.current = false;
+    remeasure();
+  }, [cancelSettle, remeasure]);
+
+  /*
+   * A fling ends the drag and then keeps moving, and momentum begins a frame
+   * *after* the drag ends — so the end of the drag cannot tell the two apart by
+   * itself. It arms a short timer instead, which momentum starting cancels; a
+   * drag that stops dead has no momentum to cancel it and settles on the timer.
+   */
+  const onListDragEnd = useCallback(() => {
+    cancelSettle();
+    settleTimer.current = setTimeout(onListSettled, 80);
+  }, [cancelSettle, onListSettled]);
+
+  useEffect(() => cancelSettle, [cancelSettle]);
 
   /*
    * A single-select field shows the chosen option's label when it is not being
@@ -751,6 +822,13 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
       // option would be swallowed by the keyboard dismissing first.
       keyboardShouldPersistTaps="always"
       keyboardDismissMode="on-drag"
+      // Both ends are wired: a slow drag that stops where it started never
+      // gets a momentum event, and a fling reports the drag ending long before
+      // the list has stopped.
+      onScrollBeginDrag={onListDragStart}
+      onScrollEndDrag={onListDragEnd}
+      onMomentumScrollBegin={cancelSettle}
+      onMomentumScrollEnd={onListSettled}
     >
       <View className="gap-1">{body}</View>
     </ScrollView>
