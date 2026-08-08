@@ -4907,18 +4907,6 @@ function ColorPickerCardVersion() {
           <ColorPicker.Hue />
         </ColorPicker.Content>
       </ColorPicker>
-
-      <Surface variant="secondary" padding="default" className="mt-2 gap-3 rounded-2xl">
-        <View className="h-24 w-full rounded-xl" style={{ backgroundColor: surface }}>
-          <View
-            className="m-3 h-9 w-24 rounded-lg"
-            style={{ backgroundColor: accent }}
-          />
-        </View>
-        <Text size="xs" muted>
-          {accent.toUpperCase()} on {surface.toUpperCase()}
-        </Text>
-      </Surface>
     </View>
   );
 }
@@ -4971,18 +4959,28 @@ function ColorPickerWheelVersion() {
   const [color, setColor] = useState('#f97316');
 
   return (
-    <View className="w-full gap-4 p-4">
+    <View className="w-full gap-3 p-4">
+      <Text size="sm" muted>
+        Press the row to open its picker.
+      </Text>
+
       {/* Hue runs around and saturation runs out, so brightness has nowhere
-          left to go on the disc and takes a track of its own. */}
-      <ColorPicker value={color} onValueChange={setColor}>
-        <ColorPicker.Field label="Brand" />
-        <View className="py-2">
-          <ColorPicker.Wheel />
-        </View>
-        <ColorPicker.Channel channel="brightness" />
-        <ColorPicker.Brightness />
-        <ColorPicker.Channel channel="alpha" />
-        <ColorPicker.Alpha />
+          left to go on the disc and takes a track of its own. Behind a row, the
+          way the square is: the disc is a way of picking a colour, not a
+          different kind of control that has to live in the page. */}
+      <ColorPicker value={color} onValueChange={setColor} presentation="popover">
+        <ColorPicker.Trigger>
+          <ColorPicker.Field label="Brand" />
+        </ColorPicker.Trigger>
+        <ColorPicker.Content>
+          <View className="items-center py-2">
+            <ColorPicker.Wheel />
+          </View>
+          <ColorPicker.Channel channel="brightness" />
+          <ColorPicker.Brightness />
+          <ColorPicker.Channel channel="alpha" />
+          <ColorPicker.Alpha />
+        </ColorPicker.Content>
       </ColorPicker>
     </View>
   );

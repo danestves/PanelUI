@@ -224,16 +224,20 @@ A labelled strip over the square, and a readout naming the track under it.
 
 ### Wheel
 
-Hue around and saturation out, with brightness on a track of its own.
+Hue around and saturation out, with brightness on a track of its own — folded away behind a row, the way the square is. The disc is a way of picking a colour rather than a different kind of control that has to live in the page.
 
 ```tsx
-<ColorPicker value={color} onValueChange={setColor}>
-  <ColorPicker.Field label="Brand" />
-  <ColorPicker.Wheel />
-  <ColorPicker.Channel channel="brightness" />
-  <ColorPicker.Brightness />
-  <ColorPicker.Channel channel="alpha" />
-  <ColorPicker.Alpha />
+<ColorPicker value={color} onValueChange={setColor} presentation="popover">
+  <ColorPicker.Trigger>
+    <ColorPicker.Field label="Brand" />
+  </ColorPicker.Trigger>
+  <ColorPicker.Content>
+    <ColorPicker.Wheel />
+    <ColorPicker.Channel channel="brightness" />
+    <ColorPicker.Brightness />
+    <ColorPicker.Channel channel="alpha" />
+    <ColorPicker.Alpha />
+  </ColorPicker.Content>
 </ColorPicker>
 ```
 
