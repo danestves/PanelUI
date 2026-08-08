@@ -21,7 +21,19 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { router } from 'expo-router';
-import { DollarSign, Target } from 'lucide-react-native';
+import {
+  Bookmark,
+  Copy,
+  DollarSign,
+  Flag,
+  Link2,
+  Pencil,
+  Share2,
+  Sparkles,
+  Target,
+  TextSelect,
+  Trash2,
+} from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   FlatList,
@@ -5432,8 +5444,8 @@ function SwipeableTabsDemo() {
 /**
  * A chat bubble whose actions are reached by holding it.
  *
- * The panel opens where the finger landed, so on a bubble this wide it belongs
- * to the part that was pressed rather than to the middle of it.
+ * The panel opens above the press, so the hand that opened it is not sitting
+ * over the rows it is meant to be reading.
  */
 function ContextMenuMessageDemo() {
   const [last, setLast] = useState<string | null>(null);
@@ -5454,26 +5466,29 @@ function ContextMenuMessageDemo() {
 
         <ContextMenu.Content>
           <ContextMenu.Item
-            icon={<SparklesIcon size={16} />}
+            icon={<Sparkles size={18} />}
             onSelect={() => setLast('Ask AI')}
           >
             Ask AI
           </ContextMenu.Item>
-          <ContextMenu.Item
-            icon={<ShareNodesIcon size={16} />}
-            onSelect={() => setLast('Share')}
-          >
+          <ContextMenu.Item icon={<Share2 size={18} />} onSelect={() => setLast('Share')}>
             Share
           </ContextMenu.Item>
-          <ContextMenu.Item icon={<CopyIcon size={16} />} onSelect={() => setLast('Copy')}>
+          <ContextMenu.Item icon={<Copy size={18} />} onSelect={() => setLast('Copy')}>
             Copy
+          </ContextMenu.Item>
+          <ContextMenu.Item
+            icon={<TextSelect size={18} />}
+            onSelect={() => setLast('Select text')}
+          >
+            Select text
           </ContextMenu.Item>
 
           <ContextMenu.Separator />
 
           <ContextMenu.Item
             variant="destructive"
-            icon={<ShieldAlertIcon size={16} />}
+            icon={<Flag size={18} />}
             onSelect={() => setLast('Report')}
           >
             Report
@@ -5483,6 +5498,65 @@ function ContextMenuMessageDemo() {
 
       <Text size="xs" muted>
         {last ? `Chose: ${last}` : 'Press and hold the card.'}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * The held card lifted off the page while its actions are up.
+ *
+ * `ContextMenu.Preview` draws the trigger's own content again over the dimmed
+ * screen, and anchors the panel to it — so what is being acted on stays visible
+ * and stays put, instead of being one of several cards behind a scrim.
+ */
+function ContextMenuPreviewDemo() {
+  const [last, setLast] = useState<string | null>(null);
+
+  return (
+    <View className="w-full gap-3 py-2">
+      <ContextMenu>
+        <ContextMenu.Trigger haptics>
+          <Card>
+            <Card.Content className="gap-1 p-4">
+              <Text className="font-semibold">Coastal path, Tuesday</Text>
+              <Text size="sm" muted>
+                14.2 km · 3h 40m · 260 m climbed
+              </Text>
+            </Card.Content>
+          </Card>
+        </ContextMenu.Trigger>
+
+        <ContextMenu.Content>
+          <ContextMenu.Preview />
+
+          <ContextMenu.Item
+            icon={<Bookmark size={18} />}
+            onSelect={() => setLast('Save')}
+          >
+            Save
+          </ContextMenu.Item>
+          <ContextMenu.Item icon={<Link2 size={18} />} onSelect={() => setLast('Copy link')}>
+            Copy link
+          </ContextMenu.Item>
+          <ContextMenu.Item icon={<Share2 size={18} />} onSelect={() => setLast('Share')}>
+            Share
+          </ContextMenu.Item>
+
+          <ContextMenu.Separator />
+
+          <ContextMenu.Item
+            variant="destructive"
+            icon={<Trash2 size={18} />}
+            onSelect={() => setLast('Delete')}
+          >
+            Delete
+          </ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu>
+
+      <Text size="xs" muted>
+        {last ? `Chose: ${last}` : 'Hold the card — it comes forward with the menu.'}
       </Text>
     </View>
   );
@@ -5516,7 +5590,7 @@ function ContextMenuRowDemo() {
 
         <ContextMenu.Content align="end">
           <ContextMenu.Item
-            icon={<PencilIcon size={16} />}
+            icon={<Pencil size={18} />}
             onSelect={() => setStatus('Held — chose Rename.')}
           >
             Rename
@@ -5529,7 +5603,7 @@ function ContextMenuRowDemo() {
           <ContextMenu.Separator />
           <ContextMenu.Item
             variant="destructive"
-            icon={<TrashIcon size={16} />}
+            icon={<Trash2 size={18} />}
             onSelect={() => setStatus('Held — chose Delete.')}
           >
             Delete
@@ -5540,6 +5614,114 @@ function ContextMenuRowDemo() {
       <Text size="xs" muted>
         {status}
         {pinned ? ' · pinned' : ''}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * The same menu opened four ways, so the two knobs can be compared side by side.
+ *
+ * `placement` picks the side of the press the panel opens on and `align` where
+ * it sits along the other axis. Neither is a promise: a panel with no room on
+ * the side it asked for flips to the other, and one that would run off an edge
+ * is clamped back inside the safe area — so the last row here behaves like the
+ * first once it is held near the bottom of the screen.
+ */
+function ContextMenuPlacementDemo() {
+  const places: {
+    label: string;
+    placement: 'top' | 'bottom';
+    align: 'start' | 'center' | 'end';
+    anchor?: 'point' | 'target';
+  }[] = [
+    { label: 'Down from the press', placement: 'bottom', align: 'start' },
+    { label: 'Down, centred', placement: 'bottom', align: 'center' },
+    { label: 'Up from the press', placement: 'top', align: 'start' },
+    { label: 'Lined up with the row', placement: 'bottom', align: 'end', anchor: 'target' },
+  ];
+
+  return (
+    <View className="w-full gap-2 py-2">
+      {places.map((place) => (
+        <ContextMenu key={place.label}>
+          <ContextMenu.Trigger haptics anchor={place.anchor ?? 'point'}>
+            <Item variant="outline">
+              <Item.Content>
+                <Item.Title>{place.label}</Item.Title>
+                <Item.Description>
+                  placement=&quot;{place.placement}&quot; · align=&quot;{place.align}&quot;
+                </Item.Description>
+              </Item.Content>
+            </Item>
+          </ContextMenu.Trigger>
+
+          <ContextMenu.Content placement={place.placement} align={place.align}>
+            <ContextMenu.Item icon={<Share2 size={18} />}>Share</ContextMenu.Item>
+            <ContextMenu.Item icon={<Copy size={18} />}>Copy</ContextMenu.Item>
+            <ContextMenu.Item icon={<Bookmark size={18} />}>Save</ContextMenu.Item>
+          </ContextMenu.Content>
+        </ContextMenu>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * The same rows brought up from the bottom edge instead.
+ *
+ * The target is a list row rather than a card, because the sheet is what a
+ * context menu turns into once there are more verbs than sit comfortably at a
+ * fingertip — and that is the case in a list, where the panel would otherwise
+ * cover the rows either side of the one being acted on. A `Label` names what
+ * is being acted on, which a sheet needs and an anchored panel does not: the
+ * sheet is nowhere near the row it came from.
+ */
+function ContextMenuSheetDemo() {
+  const [last, setLast] = useState<string | null>(null);
+
+  return (
+    <View className="w-full gap-3 py-2">
+      <ContextMenu presentation="bottom-sheet">
+        <ContextMenu.Trigger haptics>
+          <Item variant="outline">
+            <Item.Content>
+              <Item.Title>Quarterly report.pdf</Item.Title>
+              <Item.Description>2.4 MB · shared with 6 people</Item.Description>
+            </Item.Content>
+          </Item>
+        </ContextMenu.Trigger>
+
+        <ContextMenu.Content>
+          <ContextMenu.Label>Quarterly report.pdf</ContextMenu.Label>
+          <ContextMenu.Item icon={<Share2 size={18} />} onSelect={() => setLast('Share')}>
+            Share
+          </ContextMenu.Item>
+          <ContextMenu.Item icon={<Link2 size={18} />} onSelect={() => setLast('Copy link')}>
+            Copy link
+          </ContextMenu.Item>
+          <ContextMenu.Item
+            icon={<Bookmark size={18} />}
+            onSelect={() => setLast('Save for later')}
+          >
+            Save for later
+          </ContextMenu.Item>
+          <ContextMenu.Item icon={<Pencil size={18} />} onSelect={() => setLast('Rename')}>
+            Rename
+          </ContextMenu.Item>
+          <ContextMenu.Separator />
+          <ContextMenu.Item
+            variant="destructive"
+            icon={<Trash2 size={18} />}
+            onSelect={() => setLast('Delete')}
+          >
+            Delete
+          </ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu>
+
+      <Text size="xs" muted>
+        {last ? `Chose: ${last}` : 'Press and hold the row.'}
       </Text>
     </View>
   );
@@ -14780,36 +14962,10 @@ const CATALOGUE: ComponentEntry[] = [
     summary: 'Actions for a piece of content, opened by holding it',
     demos: [
       { label: 'Holding a message', render: () => <ContextMenuMessageDemo /> },
+      { label: 'The held card, lifted', render: () => <ContextMenuPreviewDemo /> },
       { label: 'A tap and a hold on one row', render: () => <ContextMenuRowDemo /> },
-      {
-        label: 'As a bottom sheet',
-        render: () => (
-          <View className="w-full py-2">
-            {/* Once there are more verbs than sit comfortably at a fingertip,
-                the same rows read better in a sheet. The trigger is unchanged. */}
-            <ContextMenu presentation="bottom-sheet">
-              <ContextMenu.Trigger haptics>
-                <Card>
-                  <Card.Content className="p-4">
-                    <Text>Hold for a sheet of actions.</Text>
-                  </Card.Content>
-                </Card>
-              </ContextMenu.Trigger>
-              <ContextMenu.Content>
-                <ContextMenu.Item icon={<ShareNodesIcon size={16} />}>Share</ContextMenu.Item>
-                <ContextMenu.Item icon={<CopyIcon size={16} />}>Copy link</ContextMenu.Item>
-                <ContextMenu.Item icon={<BookmarkIcon size={16} />}>
-                  Save for later
-                </ContextMenu.Item>
-                <ContextMenu.Separator />
-                <ContextMenu.Item variant="destructive" icon={<TrashIcon size={16} />}>
-                  Delete
-                </ContextMenu.Item>
-              </ContextMenu.Content>
-            </ContextMenu>
-          </View>
-        ),
-      },
+      { label: 'Where the panel goes', render: () => <ContextMenuPlacementDemo /> },
+      { label: 'As a bottom sheet', render: () => <ContextMenuSheetDemo /> },
     ],
   },
   {

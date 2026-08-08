@@ -387,6 +387,8 @@ export {
   type ContextMenuProps,
   type ContextMenuTriggerProps,
   type ContextMenuContentProps,
+  type ContextMenuItemProps,
+  type ContextMenuPreviewProps,
   type ContextMenuAnchor,
 } from './components/context-menu';
 export {
