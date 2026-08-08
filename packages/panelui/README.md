@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 93 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 94 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -184,6 +184,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `CodeBlock` | Syntax-highlighted code with a header and a copy button |
 | `ColorPicker` | A colour chosen by dragging — a saturation square, a hue scale, and opacity |
 | `Combobox` | A text field that filters a list of options as you type |
+| `ContextMenu` | Actions for a piece of content, opened by holding it |
 | `DatePicker` | A calendar behind a button |
 | `DateTimePicker` | A day and a time of day, picked in one panel |
 | `Dialog` | Modal dialog with a backdrop and footer actions |

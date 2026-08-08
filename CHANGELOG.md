@@ -9,6 +9,61 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.52.0] — 2026-08-08
+
+### Added
+
+- **`ContextMenu`** — the actions that belong to a piece of content, reached by holding it. A
+  `Menu` hangs off a control that exists to be opened; a context menu has no such control, so the
+  target is the content itself — a message, a card, a list row.
+
+  Its rows *are* `Menu`'s rows, the same components rather than a second set styled to match, so
+  the destructive colour, the press-in scale and the dismiss-on-select rule cannot drift between
+  the two ways of reaching a list of verbs. The panel is `Menu`'s, so edge-flipping, safe-area
+  clamping, submenus and `presentation="bottom-sheet"` all work from the first line.
+
+  What it adds is the two things a menu opened on content needs. The panel is anchored to the
+  press point rather than to the target, because a context menu's target is often most of the
+  screen and the middle of a whole message is not where the finger was — `anchor="target"` opts
+  into the other behaviour for something small and list-shaped. And the hold and the tap are given
+  to the gesture recogniser as alternatives, so a target that already does something when tapped
+  keeps doing it and a hold never also counts as a press. Pass that tap as `onPress` on the
+  trigger, not on the content inside it.
+
+  `delay` and `slop` set how long the hold is and how far a finger may drift during it; `haptics`
+  ticks as the hold is accepted, which is worth setting, because a hold has no edge you can feel
+  and until the panel appears nothing says it has been long enough.
+
+- **`Popover`** — a `scrim` prop, for a dim behind the panel without a blur. A popover leaves the
+  page behind it live and so does not dim by default; a menu opened on the content itself is modal
+  in practice, and the dim is what says so.
+
+- **`Popover`** — `usePopoverAnchor`, for building a trigger that opens the panel on something
+  other than a press, or anchors it somewhere other than its own bounds. It is how `ContextMenu`
+  borrows the placing, flipping and clamping instead of owning a second copy of them.
+
+### Fixed
+
+- **`Tabs`** — `keepMounted` now has a setting that helps a panel whose content sizes itself.
+  Hiding a kept panel with `display: none` also takes it out of layout, so it is mounted at zero
+  size: a virtualised list inside one asks its parent how tall it is, is told nothing, and renders
+  no rows. Its first real render still landed on the frame the tab became visible — the stall the
+  flag looks like it should have removed, and the reason switching cost the same with it on or off.
+
+  `keepMounted="measured"` keeps a hidden panel laid out at the full size of the tab set, hiding it
+  by not drawing it rather than by removing it from layout. A list inside it measures, renders and
+  settles while still hidden, so becoming visible costs nothing.
+
+  It is a third setting rather than a redefinition, and it is off by default, because the trade is
+  real: every kept panel lays out and draws, so a five-tab set builds five panels of rows to show
+  one. Reach for it when a panel is slow to appear *and* its content measures itself.
+
+### Docs
+
+- **`Tabs`** — the `swipeable` notes sent a reader with an expensive panel to `keepMounted`, which
+  was the one thing that could not fix it. They now say which setting actually keeps a panel's
+  content built.
+
 ## [0.51.1] — 2026-08-07
 
 0.50.0 was tagged but never reached npm, so upgrading from 0.49.0 brings **Sortable** with it —

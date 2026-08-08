@@ -383,6 +383,13 @@ export {
   type ComboboxPresentation,
 } from './components/combobox';
 export {
+  ContextMenu,
+  type ContextMenuProps,
+  type ContextMenuTriggerProps,
+  type ContextMenuContentProps,
+  type ContextMenuAnchor,
+} from './components/context-menu';
+export {
   Drawer,
   type DrawerProps,
   type DrawerTriggerProps,
@@ -608,6 +615,7 @@ export {
 } from './components/message';
 export {
   Popover,
+  usePopoverAnchor,
   type PopoverProps,
   type PopoverTriggerProps,
   type PopoverContentProps,
@@ -616,6 +624,8 @@ export {
   type PopoverPlacement,
   type PopoverAlign,
   type PopoverPresentation,
+  type PopoverAnchorRect,
+  type PopoverAnchorControls,
 } from './components/popover';
 export {
   Post,

@@ -24,6 +24,7 @@ import { router } from 'expo-router';
 import { DollarSign, Target } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  FlatList,
   Image,
   Pressable,
   ScrollView,
@@ -49,6 +50,7 @@ import {
   CalendarIcon,
   CodeBlock,
   Combobox,
+  ContextMenu,
   CopyIcon,
   CrosshairIcon,
   Card,
@@ -5426,6 +5428,202 @@ function SwipeableTabsDemo() {
         </Tabs.Content>
       ))}
     </Tabs>
+  );
+}
+
+/**
+ * A chat bubble whose actions are reached by holding it.
+ *
+ * The panel opens where the finger landed, so on a bubble this wide it belongs
+ * to the part that was pressed rather than to the middle of it.
+ */
+function ContextMenuMessageDemo() {
+  const [last, setLast] = useState<string | null>(null);
+
+  return (
+    <View className="w-full gap-3 py-2">
+      <ContextMenu>
+        <ContextMenu.Trigger haptics>
+          <Card>
+            <Card.Content className="p-4">
+              <Text>
+                Would you like an interactive web-based todo application, or a
+                command-line one?
+              </Text>
+            </Card.Content>
+          </Card>
+        </ContextMenu.Trigger>
+
+        <ContextMenu.Content>
+          <ContextMenu.Item
+            icon={<SparklesIcon size={16} />}
+            onSelect={() => setLast('Ask AI')}
+          >
+            Ask AI
+          </ContextMenu.Item>
+          <ContextMenu.Item
+            icon={<ShareNodesIcon size={16} />}
+            onSelect={() => setLast('Share')}
+          >
+            Share
+          </ContextMenu.Item>
+          <ContextMenu.Item icon={<CopyIcon size={16} />} onSelect={() => setLast('Copy')}>
+            Copy
+          </ContextMenu.Item>
+
+          <ContextMenu.Separator />
+
+          <ContextMenu.Item
+            variant="destructive"
+            icon={<ShieldAlertIcon size={16} />}
+            onSelect={() => setLast('Report')}
+          >
+            Report
+          </ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu>
+
+      <Text size="xs" muted>
+        {last ? `Chose: ${last}` : 'Press and hold the card.'}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * A row that does something when tapped and something else when held.
+ *
+ * The tap is on the trigger rather than on the row inside it, which is what
+ * lets the recogniser choose between the two before either has fired.
+ */
+function ContextMenuRowDemo() {
+  const [status, setStatus] = useState('Tap to open, hold for actions.');
+  const [pinned, setPinned] = useState(false);
+
+  return (
+    <View className="w-full gap-3 py-2">
+      <ContextMenu>
+        <ContextMenu.Trigger
+          anchor="target"
+          haptics
+          onPress={() => setStatus('Tapped — opened the note.')}
+        >
+          <Item variant="outline">
+            <Item.Content>
+              <Item.Title>Design review</Item.Title>
+              <Item.Description>Edited 20 minutes ago</Item.Description>
+            </Item.Content>
+          </Item>
+        </ContextMenu.Trigger>
+
+        <ContextMenu.Content align="end">
+          <ContextMenu.Item
+            icon={<PencilIcon size={16} />}
+            onSelect={() => setStatus('Held — chose Rename.')}
+          >
+            Rename
+          </ContextMenu.Item>
+          {/* A checkbox row keeps the panel open: a setting is something people
+              toggle twice. */}
+          <ContextMenu.CheckboxItem checked={pinned} onCheckedChange={setPinned}>
+            Pinned
+          </ContextMenu.CheckboxItem>
+          <ContextMenu.Separator />
+          <ContextMenu.Item
+            variant="destructive"
+            icon={<TrashIcon size={16} />}
+            onSelect={() => setStatus('Held — chose Delete.')}
+          >
+            Delete
+          </ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu>
+
+      <Text size="xs" muted>
+        {status}
+        {pinned ? ' · pinned' : ''}
+      </Text>
+    </View>
+  );
+}
+
+/** Rows for the kept-panel demo. Long enough that building them is visible. */
+const KEPT_PANEL_ROWS = Array.from({ length: 400 }, (_, index) => ({
+  id: String(index),
+  title: `Rule ${index + 1}`,
+  detail: `${['Allow', 'Deny', 'Redirect'][index % 3]} · priority ${index + 1}`,
+}));
+
+/**
+ * The two settings of `keepMounted` that differ, side by side.
+ *
+ * `true` hides an inactive panel with `display: none`, which lays it out at zero
+ * size — so a virtualised list inside one renders no rows, and its whole first
+ * render lands on the frame the tab is switched to. `'measured'` keeps the panel
+ * at full size while hidden, so the list is already built by then.
+ *
+ * The lists here are deliberately long: the difference is a stall on switching,
+ * and a panel of four cards is built too fast to feel either way.
+ */
+function KeptPanelTabsDemo() {
+  const [measured, setMeasured] = useState(true);
+  const panels = ['users', 'domains', 'routing'];
+
+  return (
+    <View className="flex-1 gap-3 px-4 pt-3">
+      <ToggleButtonGroup
+        value={measured ? ['measured'] : []}
+        onValueChange={(value) => setMeasured(value.includes('measured'))}
+        size="sm"
+      >
+        <ToggleButton id="measured">keepMounted=&quot;measured&quot;</ToggleButton>
+      </ToggleButtonGroup>
+
+      <Text size="xs" muted>
+        {measured
+          ? 'Panels stay laid out while hidden — each list is already built, so switching is immediate.'
+          : 'Panels are hidden with display: none — each list builds on the frame you switch to it.'}
+      </Text>
+
+      {/*
+        Remounted when the setting changes, so a panel built under one setting
+        is never measured under the other — otherwise the lists left over from
+        `measured` would make `true` look just as fast.
+      */}
+      <Tabs
+        key={measured ? 'measured' : 'true'}
+        defaultValue="users"
+        keepMounted={measured ? 'measured' : true}
+        swipeable
+        className="flex-1"
+      >
+        <Tabs.List>
+          {panels.map((panel) => (
+            <Tabs.Trigger key={panel} value={panel} className="capitalize">
+              {panel}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+
+        {panels.map((panel) => (
+          <Tabs.Content key={panel} value={panel} className="flex-1">
+            <FlatList
+              data={KEPT_PANEL_ROWS}
+              keyExtractor={(row) => `${panel}-${row.id}`}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <Item>
+                  <Item.Content>
+                    <Item.Title>{item.title}</Item.Title>
+                    <Item.Description>{item.detail}</Item.Description>
+                  </Item.Content>
+                </Item>
+              )}
+            />
+          </Tabs.Content>
+        ))}
+      </Tabs>
+    </View>
   );
 }
 
@@ -14579,6 +14777,44 @@ const CATALOGUE: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'context-menu',
+    name: 'ContextMenu',
+    summary: 'Actions for a piece of content, opened by holding it',
+    demos: [
+      { label: 'Holding a message', render: () => <ContextMenuMessageDemo /> },
+      { label: 'A tap and a hold on one row', render: () => <ContextMenuRowDemo /> },
+      {
+        label: 'As a bottom sheet',
+        render: () => (
+          <View className="w-full py-2">
+            {/* Once there are more verbs than sit comfortably at a fingertip,
+                the same rows read better in a sheet. The trigger is unchanged. */}
+            <ContextMenu presentation="bottom-sheet">
+              <ContextMenu.Trigger haptics>
+                <Card>
+                  <Card.Content className="p-4">
+                    <Text>Hold for a sheet of actions.</Text>
+                  </Card.Content>
+                </Card>
+              </ContextMenu.Trigger>
+              <ContextMenu.Content>
+                <ContextMenu.Item icon={<ShareNodesIcon size={16} />}>Share</ContextMenu.Item>
+                <ContextMenu.Item icon={<CopyIcon size={16} />}>Copy link</ContextMenu.Item>
+                <ContextMenu.Item icon={<BookmarkIcon size={16} />}>
+                  Save for later
+                </ContextMenu.Item>
+                <ContextMenu.Separator />
+                <ContextMenu.Item variant="destructive" icon={<TrashIcon size={16} />}>
+                  Delete
+                </ContextMenu.Item>
+              </ContextMenu.Content>
+            </ContextMenu>
+          </View>
+        ),
+      },
+    ],
+  },
+  {
     slug: 'message-scroller',
     name: 'MessageScroller',
     summary: 'Scroll behaviour a chat transcript needs',
@@ -16550,6 +16786,14 @@ const CATALOGUE: ComponentEntry[] = [
       {
         label: 'Icons that open',
         render: () => <ExpandingTabsDemo />,
+      },
+      {
+        label: 'Panels that keep their size',
+        id: 'kept-panels',
+        fullPage: true,
+        description:
+          'Long lists in every panel, switched with keepMounted at "measured" and at true.',
+        render: () => <KeptPanelTabsDemo />,
       },
     ],
   },

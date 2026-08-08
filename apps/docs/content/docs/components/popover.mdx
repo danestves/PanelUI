@@ -237,6 +237,8 @@ Set `presentation="bottom-sheet"` on the root and the same content opens in a dr
 | `background` | `ReactNode` | — | A layer drawn inside the panel, behind its content — and, crucially, outside its scroller, so that a surface does not scroll away with the rows on top of it. Pair it with `unstyled` to own the panel's appearance. |
 | `dismissible` | `boolean` | `true` | Tap outside the panel closes it. Default true. |
 | `blur` | `boolean` | `false` | Frost the background behind the panel instead of dimming it. Uses `expo-blur` when installed and falls back to the dimmed scrim when it is not, so it is safe to pass either way. |
+| `scrim` | `boolean` | `false` | Dim the screen behind the panel. Off by default: a popover is a panel *beside* something, and dimming the page says the thing behind it has stopped being available — which is a dialog's claim, not a popover's. Worth turning on when the panel is the only thing that matters while it is up, which is what a menu opened on the content itself is. Ignored under `blur`, which draws its own dim. |
+| `scrimClassName` | `string` | `'bg-black/30'` | The dim's classes, when `scrim` is set. |
 
 ### Popover.Arrow
 

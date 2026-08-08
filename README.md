@@ -28,7 +28,7 @@
 ---
 
 **PanelUI is an open-source React Native UI component library for Expo apps**, styled with
-Tailwind CSS v4 and animated with Reanimated 4. **93 accessible, typed components** — buttons,
+Tailwind CSS v4 and animated with Reanimated 4. **94 accessible, typed components** — buttons,
 inputs, forms, dialogs, bottom sheets, charts, calendars, maps and a set of AI chat components —
 in one coherent visual language, with light and dark themes out of the box.
 
@@ -122,7 +122,7 @@ Every component takes `className`, so anything can be restyled with Tailwind cla
 
 ## Components
 
-**93 components**, documented with live examples and full props tables at
+**94 components**, documented with live examples and full props tables at
 **[panelui.dev/docs](https://panelui.dev/docs)**.
 
 - **Layout & content** — Card, Frame, Surface, Item, GridItem, Separator, Typography, Table,
@@ -130,8 +130,8 @@ Every component takes `className`, so anything can be restyled with Tailwind cla
 - **Forms & inputs** — Form, Field, Input, Textarea, InputGroup, NumberInput, OtpInput, Select,
   Combobox, Checkbox, RadioGroup, Switch, Slider, Rating, Signature, ColorPicker, DatePicker,
   TimePicker, DateTimePicker, Calendar, Label, MarkdownEditor, Questionnaire
-- **Actions & navigation** — Button, ButtonGroup, ToggleButton, Fab, Menu, Swipe, Sortable, Tabs,
-  Breadcrumb, Pagination, SectionRail, Panelside, Tree, Chip, Badge
+- **Actions & navigation** — Button, ButtonGroup, ToggleButton, Fab, Menu, ContextMenu, Swipe,
+  Sortable, Tabs, Breadcrumb, Pagination, SectionRail, Panelside, Tree, Chip, Badge
 - **Overlays & feedback** — Dialog, BottomSheet, Drawer, Popover, Tooltip, Toast, Alert,
   Progress, Spinner, Loader
 - **Data visualisation** — LineChart, AreaChart, BarChart, ScatterChart, PieChart, RingChart,

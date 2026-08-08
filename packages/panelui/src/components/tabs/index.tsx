@@ -140,6 +140,16 @@ const MEASURE_WIDTH = 400;
 
 export type TabsVariant = 'segmented' | 'underline' | 'pill' | 'expanding';
 
+/**
+ * How much of an inactive panel survives a switch away from it.
+ *
+ * `false` unmounts it. `true` keeps it mounted but takes it out of layout, so
+ * it costs nothing to have around. `'measured'` keeps it laid out at full size
+ * as well — the expensive option, and the only one a child that sizes itself
+ * from its parent can be built inside while it is hidden.
+ */
+export type TabsKeepMounted = boolean | 'measured';
+
 const tabsVariants = tv({
   slots: {
     list: 'flex-row',
@@ -246,7 +256,7 @@ interface TabsContextValue {
   variant: TabsVariant;
   scrollable: boolean;
   setScrollable: (scrollable: boolean) => void;
-  keepMounted: boolean;
+  keepMounted: TabsKeepMounted;
   swipeable: boolean;
   /**
    * How far the visible panel is displaced from its resting place, in points.
@@ -292,8 +302,29 @@ export interface TabsProps extends ViewProps {
    * Keep inactive panels mounted and hidden instead of unmounting them, so a
    * scroll position or a half-filled form survives a switch away and back.
    * Costs the render of every panel up front.
+   *
+   * `true` hides a kept panel with `display: none`, which also takes it out of
+   * layout: it is mounted, but it has no size. That is what makes it cheap, and
+   * it is enough for a panel whose content sizes itself — a column of views, a
+   * form, a `ScrollView` of known children.
+   *
+   * It is *not* enough for a child that decides what to render by measuring the
+   * space it has been given. A virtualised list asks its parent how tall it is
+   * and fills that many rows; asked inside a panel of zero height it answers
+   * zero rows, and the whole first render still lands on the frame the tab
+   * becomes visible — the stall this flag looks like it should have avoided.
+   *
+   * `'measured'` is for that case. A kept panel stays laid out at the full size
+   * of the tab set, and is hidden by not being drawn rather than by being
+   * removed from layout: a list inside it measures, renders its rows and
+   * settles while it is still hidden, so becoming visible costs nothing.
+   *
+   * The trade is real and is why it is not the default — every kept panel lays
+   * out and draws, up front and on every size change, so a five-tab set builds
+   * five panels' worth of rows to show one. Reach for it when a panel is slow
+   * to appear and its content is virtualised; leave it at `true` otherwise.
    */
-  keepMounted?: boolean;
+  keepMounted?: TabsKeepMounted;
   /**
    * Move between tabs by dragging sideways on the panel, as well as by
    * pressing the triggers.
@@ -310,7 +341,9 @@ export interface TabsProps extends ViewProps {
    * something is moving*, so a panel that is slow to build stops being a pause
    * before it appears and starts being a stutter in the movement. If a swipe
    * feels heavier than a press on the same tab set, the panel is expensive to
-   * mount; `keepMounted` is the answer, not turning this off.
+   * mount — and the answer is whichever `keepMounted` actually keeps its
+   * content built, which for a virtualised list is `'measured'` rather than
+   * `true`. Turning this off hides the cost rather than removing it.
    */
   swipeable?: boolean;
   children: ReactNode;
@@ -929,10 +962,40 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
   if (!active && !context.keepMounted) return null;
 
   /*
+   * Under `keepMounted='measured'` a hidden panel keeps its size instead of
+   * losing it. It is taken out of the flow and stretched over the tab set, so
+   * it is laid out at the same size as the visible panel without contributing
+   * its height to the parent, and it is hidden by being transparent rather
+   * than by `display: none`.
+   *
+   * That distinction is the whole point: `display: none` lays a panel out at
+   * zero size, and a child that sizes itself from its parent — a virtualised
+   * list deciding how many rows to render — renders nothing at all inside one.
+   * Given a real size while still hidden, it builds its rows now rather than on
+   * the frame the tab is switched to.
+   *
+   * `opacity: 0` is set once and never animated, so it costs a composite and
+   * not a per-frame redraw; the negative `zIndex` keeps it behind the visible
+   * panel rather than over it, whatever order the panels are written in.
+   */
+  const measured = context.keepMounted === 'measured';
+  const hiddenStyle = measured
+    ? ({
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        opacity: 0,
+        zIndex: -1,
+      } as const)
+    : ({ display: 'none' } as const);
+
+  /*
    * Hidden rather than unmounted under `keepMounted`, and hidden thoroughly:
-   * `display: none` takes it out of layout, and the accessibility props take
-   * it out of the reading order too. A screen reader walking through three
-   * panels of a tab set it cannot see is worse than no tabs at all.
+   * it is not drawn, it takes no touches, and the accessibility props take it
+   * out of the reading order too. A screen reader walking through three panels
+   * of a tab set it cannot see is worse than no tabs at all.
    */
   const panel = (
     <Animated.View
@@ -953,19 +1016,21 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
         // window would be most of the way across it.
         //
         // Zero is ignored. Every panel reports into the same value, and a
-        // kept-mounted one is `display: none` — it measures as nothing, and
-        // letting it say so would leave the visible panel with no width.
+        // panel kept with `display: none` measures as nothing — letting it say
+        // so would leave the visible panel with no width. A `'measured'` one
+        // is stretched over the tab set and reports the same width as the
+        // visible panel, so it is agreeing rather than overwriting.
         const measured = event.nativeEvent.layout.width;
         if (measured > 0) width.value = measured;
       }}
       /*
        * The follow style goes on the panel that is moving, and only that one.
-       * Under `keepMounted` every other panel is `display: none` and cannot be
-       * seen to move — but an animated style still subscribes them all to the
-       * offset, so a five-tab set ran five mappers per frame to reposition four
-       * views nobody was looking at.
+       * Under `keepMounted` every other panel is hidden and cannot be seen to
+       * move — but an animated style still subscribes them all to the offset,
+       * so a five-tab set ran five mappers per frame to reposition four views
+       * nobody was looking at.
        */
-      style={[!active && { display: 'none' }, swipeable && active && followStyle, style]}
+      style={[!active && hiddenStyle, swipeable && active && followStyle, style]}
       pointerEvents={active ? 'auto' : 'none'}
       accessibilityElementsHidden={!active}
       importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
@@ -976,9 +1041,10 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
     </Animated.View>
   );
 
-  // Only the visible panel carries the gesture. A kept-mounted panel is
-  // `display: none` and takes no touches anyway, but attaching a detector to
-  // each of them would put several competing recognisers in the same tree.
+  // Only the visible panel carries the gesture. A kept-mounted panel takes no
+  // touches anyway — `pointerEvents` is off on it whichever way it is hidden —
+  // but attaching a detector to each of them would put several competing
+  // recognisers in the same tree.
   if (!swipeable || !active) return panel;
 
   return <GestureDetector gesture={pan}>{panel}</GestureDetector>;

@@ -545,7 +545,7 @@
     "Segmented navigation with an animated indicator.",
     "react native tabs",
     {
-      "updatedIn": "0.49.0"
+      "updatedIn": "0.52.0"
     }
   ],
   "textarea": [
@@ -662,6 +662,14 @@
     {
       "addedIn": "0.37.0",
       "updatedIn": "0.43.0"
+    }
+  ],
+  "context-menu": [
+    "ContextMenu",
+    "Actions for a piece of content, opened by holding it.",
+    "react native context menu long press",
+    {
+      "addedIn": "0.52.0"
     }
   ],
   "plan": [

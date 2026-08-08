@@ -142,7 +142,7 @@ A count or a status goes in `badge` rather than into the children, so the label 
 
 ### Keeping panels mounted
 
-By default a panel is unmounted when you leave it, and a scroll position or a half-filled form goes with it. `keepMounted` renders every panel and hides the inactive ones — out of layout and out of the screen-reader order, but still there. It costs the render of every panel up front, so it is opt-in.
+By default a panel is unmounted when you leave it, and a scroll position or a half-filled form goes with it. `keepMounted` renders every panel and hides the inactive ones — not drawn, not touchable, out of the screen-reader order, but still there. It costs the render of every panel up front, so it is opt-in. Pass `"measured"` instead of `true` when a hidden panel needs to keep its **size** as well, which is what a virtualised list inside one needs in order to render any rows at all.
 
 <Preview
   src="/previews/tabs-keep-panels-mounted.jpg"
@@ -243,8 +243,8 @@ With `swipeable`, dragging sideways on the panel moves to the next or previous t
 | `onValueChange` | `(value: string) => void` | — |  |
 | `defaultValue` | `string` | — |  |
 | `variant` | `TabsVariant` | `'segmented'` | `segmented` is a chip travelling inside a recessed track, `underline` is a rule under the active tab, `pill` is a filled chip on the page. `expanding` is a row of icon pills where only the selected one is open: it widens to let its label out and closes again behind it. For a short row of destinations that are recognisable by their icons, where the labels would otherwise take the whole width to say things nobody rereads. Give every trigger an `icon` — a closed tab has nothing else. |
-| `keepMounted` | `boolean` | `false` | Keep inactive panels mounted and hidden instead of unmounting them, so a scroll position or a half-filled form survives a switch away and back. Costs the render of every panel up front. |
-| `swipeable` | `boolean` | `false` | Move between tabs by dragging sideways on the panel, as well as by pressing the triggers. Off by default, because a panel is allowed to contain something that already wants a horizontal drag — a carousel, a slider, a row that swipes open — and the two cannot both have it. Turn it on for panels of ordinary scrolling content, where it is the gesture people try first. **It does not change what is mounted.** Only `keepMounted` decides that, with or without this — a swipe animates between two panels of which one is being unmounted and the other mounted for the first time, exactly as a press does. What it does change is that the mount now happens *while something is moving*, so a panel that is slow to build stops being a pause before it appears and starts being a stutter in the movement. If a swipe feels heavier than a press on the same tab set, the panel is expensive to mount; `keepMounted` is the answer, not turning this off. |
+| `keepMounted` | `TabsKeepMounted` | `false` | Keep inactive panels mounted and hidden instead of unmounting them, so a scroll position or a half-filled form survives a switch away and back. Costs the render of every panel up front. `true` hides a kept panel with `display: none`, which also takes it out of layout: it is mounted, but it has no size. That is what makes it cheap, and it is enough for a panel whose content sizes itself — a column of views, a form, a `ScrollView` of known children. It is *not* enough for a child that decides what to render by measuring the space it has been given. A virtualised list asks its parent how tall it is and fills that many rows; asked inside a panel of zero height it answers zero rows, and the whole first render still lands on the frame the tab becomes visible — the stall this flag looks like it should have avoided. `'measured'` is for that case. A kept panel stays laid out at the full size of the tab set, and is hidden by not being drawn rather than by being removed from layout: a list inside it measures, renders its rows and settles while it is still hidden, so becoming visible costs nothing. The trade is real and is why it is not the default — every kept panel lays out and draws, up front and on every size change, so a five-tab set builds five panels' worth of rows to show one. Reach for it when a panel is slow to appear and its content is virtualised; leave it at `true` otherwise. |
+| `swipeable` | `boolean` | `false` | Move between tabs by dragging sideways on the panel, as well as by pressing the triggers. Off by default, because a panel is allowed to contain something that already wants a horizontal drag — a carousel, a slider, a row that swipes open — and the two cannot both have it. Turn it on for panels of ordinary scrolling content, where it is the gesture people try first. **It does not change what is mounted.** Only `keepMounted` decides that, with or without this — a swipe animates between two panels of which one is being unmounted and the other mounted for the first time, exactly as a press does. What it does change is that the mount now happens *while something is moving*, so a panel that is slow to build stops being a pause before it appears and starts being a stutter in the movement. If a swipe feels heavier than a press on the same tab set, the panel is expensive to mount — and the answer is whichever `keepMounted` actually keeps its content built, which for a virtualised list is `'measured'` rather than `true`. Turning this off hides the cost rather than removing it. |
 
 ### Tabs.List
 
@@ -304,6 +304,38 @@ The width it opens to is measured from a second copy of the label, laid out once
 
 `swipeable` does not change what is mounted. Only `keepMounted` decides that, so a swipe animates between two panels of which one is being unmounted and the other mounted for the first time — exactly what a press does, and exactly as many panels as a press mounts.
 
-What it changes is *when* the mount happens: during a movement rather than before a still frame. A panel that is expensive to build — a long list, a chart, anything that measures itself — turns from a pause before it appears into a stutter in the slide. If swiping feels heavier than pressing on the same tab set, that is the panel's mount cost becoming visible, and `keepMounted` is the fix. Turning `swipeable` off only hides it.
+What it changes is *when* the mount happens: during a movement rather than before a still frame. A panel that is expensive to build — a long list, a chart, anything that measures itself — turns from a pause before it appears into a stutter in the slide. If swiping feels heavier than pressing on the same tab set, that is the panel's mount cost becoming visible, and the fix is whichever `keepMounted` actually keeps that panel's content built — see below. Turning `swipeable` off only hides it.
 
 The drag itself moves the panel with a transform and nothing else, which costs the same whatever is inside it. On iOS the panel also fades as it travels; on Android it does not, because a view group there has no layer to fade and the alpha would be pushed down into every row on screen, re-drawing all of them on every frame of the gesture.
+
+### What `keepMounted` keeps
+
+`keepMounted` has three settings, and they differ in how much of a hidden panel is left standing.
+
+`false`, the default, unmounts an inactive panel. Its state goes with it: a scroll position, a half-filled form, a loaded page of results are all gone by the time you come back.
+
+`true` keeps the panel mounted and hides it with `display: none`. State survives, and it is cheap — but `display: none` also takes the panel **out of layout**, so it is mounted at zero size.
+
+That last part matters more than it sounds. A child that decides what to render by measuring the space it was given — a virtualised list asking its parent how tall it is, then filling that many rows — measures zero inside a hidden panel, and renders no rows. Its first real render still happens on the frame the tab becomes visible, which is the stall `keepMounted` looks like it should have removed. With the flag on or off, the tab change costs the same.
+
+`'measured'` is the setting for that case. A kept panel stays laid out at the full size of the tab set and is hidden by not being drawn, rather than by being removed from layout. A list inside it measures properly, renders its rows and settles while it is still hidden, so becoming visible costs nothing.
+
+```tsx
+<Tabs defaultValue="users" keepMounted="measured" swipeable>
+  <Tabs.List>
+    <Tabs.Trigger value="users">Users</Tabs.Trigger>
+    <Tabs.Trigger value="domains">Domains</Tabs.Trigger>
+  </Tabs.List>
+
+  <Tabs.Content value="users">
+    <FlashList data={users} renderItem={renderUser} />
+  </Tabs.Content>
+  <Tabs.Content value="domains">
+    <FlashList data={domains} renderItem={renderDomain} />
+  </Tabs.Content>
+</Tabs>
+```
+
+The trade is real, and is why it is not the default: every kept panel lays out and draws, up front and again on every size change, so a five-tab set builds five panels' worth of rows in order to show one. It buys a smooth tab change with a slower first render of the screen.
+
+So: leave it at `false` unless panel state needs to survive, `true` when it does, and `'measured'` when a panel is slow to appear *and* its content sizes itself from the space it is given. A hidden panel is never drawn, never touchable and never in the accessibility tree under any of the three.
