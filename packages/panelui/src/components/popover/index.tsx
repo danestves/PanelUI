@@ -72,6 +72,16 @@ const DEFAULT_OFFSET = 8;
 const SCREEN_MARGIN = 12;
 /** Side of the arrow square before it is rotated 45°. */
 const ARROW_SIZE = 12;
+/**
+ * Headroom the sheet presentation leaves for the close button.
+ *
+ * That button floats over the sheet's top-end corner rather than sitting in the
+ * flow, so nothing below it is pushed out of its way. The sheet's own padding
+ * and grabber put the first child 24 points down; the button's lower edge is at
+ * 44. This is the difference, plus a little air — enough that a panel's first
+ * row clears the button instead of being drawn under it.
+ */
+const SHEET_CLOSE_CLEARANCE = 24;
 
 export type PopoverPlacement = 'top' | 'bottom' | 'left' | 'right';
 export type PopoverAlign = 'start' | 'center' | 'end';
@@ -490,9 +500,7 @@ function PopoverContent({
                 width === 'full' || width === 'trigger' ? { width: '100%' } : null,
                 typeof width === 'number' ? { width } : null,
                 minWidth === undefined ? null : { minWidth },
-                // Clear of the close button, which floats over the top-end
-                // corner of the sheet rather than sitting in the flow.
-                { paddingTop: 8 },
+                { paddingTop: SHEET_CLOSE_CLEARANCE },
                 style,
               ]}
             >
