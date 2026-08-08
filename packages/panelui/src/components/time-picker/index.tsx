@@ -153,6 +153,58 @@ const timePickerVariants = tv({
   },
 });
 
+/**
+ * The times a face may offer, and where a value sits among them.
+ *
+ * A scale or a list that runs the whole day while the picker only accepts part
+ * of it is a control that invites a choice in order to refuse it: the finger
+ * reaches the end, the root clamps, and the row springs back to where it
+ * started having said nothing about why. Offering only what will be accepted
+ * means the end of the scale *is* the last bookable time, and dragging to it
+ * picks it.
+ *
+ * The position is the nearest row rather than a division, because a filtered
+ * list no longer starts at midnight and its indices are its own.
+ */
+function useBoundedTimes(
+  minuteStep: number,
+  minTime: TimeValue | undefined,
+  maxTime: TimeValue | undefined,
+  value: TimeValue
+) {
+  const times = useMemo(() => {
+    const all = timesOfDay(minuteStep);
+    if (!minTime && !maxTime) return all;
+    const low = minTime ? timeToMinutes(minTime) : Number.NEGATIVE_INFINITY;
+    const high = maxTime ? timeToMinutes(maxTime) : Number.POSITIVE_INFINITY;
+    const kept = all.filter((time) => {
+      const at = timeToMinutes(time);
+      return at >= low && at <= high;
+    });
+    // A span too narrow to contain a single step would leave nothing to scroll.
+    // The bounds are the caller's mistake there, and an empty face is worse.
+    return kept.length > 0 ? kept : all;
+  }, [minuteStep, minTime, maxTime]);
+
+  const index = useMemo(() => {
+    const target = timeToMinutes(value);
+    let nearest = 0;
+    let smallest = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < times.length; i += 1) {
+      const time = times[i];
+      if (!time) continue;
+      const away = Math.abs(timeToMinutes(time) - target);
+      if (away < smallest) {
+        smallest = away;
+        nearest = i;
+      }
+    }
+    return nearest;
+  }, [times, value]);
+
+  return { times, index };
+}
+
 /* -------------------------------------------------------------------------- */
 /* One snapping column                                                        */
 /* -------------------------------------------------------------------------- */
@@ -242,9 +294,19 @@ function Column<T>({
     settleTimer.current = null;
   }, []);
 
+  /*
+   * Unanimated, and that is load-bearing rather than a matter of taste.
+   *
+   * An animated programmatic scroll raises the same begin and end momentum
+   * events a finger does, so the correction reports itself as a gesture, which
+   * commits, which corrects again — the column rides up and down and never
+   * settles. Placing it outright raises nothing, so the correction ends where
+   * it starts. It is also the honest movement: this is the row that was always
+   * holding, not a journey to it.
+   */
   const snapTo = useCallback((to: number) => {
     resting.current = to;
-    ref.current?.scrollTo({ y: to * ROW_HEIGHT, animated: true });
+    ref.current?.scrollTo({ y: to * ROW_HEIGHT, animated: false });
   }, []);
 
   /*
@@ -438,6 +500,14 @@ interface FaceProps {
   syncToken: number;
   hourCycle: HourCycle;
   minuteStep: number;
+  /**
+   * The span the picker will accept, so a face that lists whole times can
+   * offer only those. A face that does not list whole times — the wheel, whose
+   * columns each hold one part of one — ignores these and is corrected by the
+   * root instead.
+   */
+  minTime?: TimeValue;
+  maxTime?: TimeValue;
   locale?: string;
   disabled?: boolean;
   /** Ruler face only — the other two never draw a number of their own. */
@@ -677,15 +747,13 @@ function ClockFaceLayout({
   syncToken,
   hourCycle,
   minuteStep,
+  minTime,
+  maxTime,
   locale,
   disabled,
 }: FaceProps) {
   const slots = timePickerVariants();
-  const times = useMemo(() => timesOfDay(minuteStep), [minuteStep]);
-  const index = Math.min(
-    times.length - 1,
-    Math.round(timeToMinutes(value) / minuteStep)
-  );
+  const { times, index } = useBoundedTimes(minuteStep, minTime, maxTime, value);
 
   const setIndex = useCallback(
     (next: number) => {
@@ -734,17 +802,15 @@ function RulerFace({
   syncToken,
   hourCycle,
   minuteStep,
+  minTime,
+  maxTime,
   locale,
   disabled,
   readout = 'default',
 }: FaceProps) {
   const slots = timePickerVariants({ readout });
   const ref = useRef<ScrollView>(null);
-  const times = useMemo(() => timesOfDay(minuteStep), [minuteStep]);
-  const index = Math.min(
-    times.length - 1,
-    Math.round(timeToMinutes(value) / minuteStep)
-  );
+  const { times, index } = useBoundedTimes(minuteStep, minTime, maxTime, value);
   const resting = useRef(index);
   /*
    * Measured, not assumed: the scroller is narrower than the panel by whatever
@@ -780,9 +846,11 @@ function RulerFace({
     settleTimer.current = null;
   }, []);
 
+  // Unanimated, for the reason given on the wheel's columns: an animated
+  // programmatic scroll reports itself as a gesture and the correction loops.
   const snapTo = useCallback((to: number) => {
     resting.current = to;
-    ref.current?.scrollTo({ x: to * TICK_SPACING, animated: true });
+    ref.current?.scrollTo({ x: to * TICK_SPACING, animated: false });
   }, []);
 
   useEffect(() => {
@@ -1085,22 +1153,28 @@ function TimePickerRoot({
    * rule and none of them has to carry it.
    */
   /*
-   * Counts times reported by a face, not times accepted.
+   * Counts refusals, not reports.
    *
-   * A face has no way of knowing that the row it landed on was bounded away or
-   * rounded to a different one — from where it stands, a refusal and a value
-   * that simply did not move are the same silence. Bumping this on every report
-   * gives the scrolling faces the one thing they were missing: something that
-   * changes when their answer was refused, so they can put themselves back on
+   * A face has no way of knowing that the row it landed on was bounded away by
+   * `minTime` or `maxTime`, or rounded to a different one by the step — from
+   * where it stands, a refusal and a value that simply did not move are the
+   * same silence. This changes when a report was refused, which is the one
+   * thing the faces were missing, and is what lets a column put itself back on
    * the row that actually holds.
+   *
+   * Only on refusal, though. Bumping it on every report re-rendered all three
+   * columns each time any one of them settled, for no answer any of them
+   * needed.
    */
-  const [settleSeq, setSettleSeq] = useState(0);
+  const [refusals, setRefusals] = useState(0);
 
   const commit = useCallback(
     (next: TimeValue) => {
-      setSettleSeq((seq) => seq + 1);
       const bounded = clampTime(roundToStep(next, step), minTime, maxTime);
-      if (isSameTime(bounded, selected)) return;
+      if (isSameTime(bounded, selected)) {
+        setRefusals((count) => count + 1);
+        return;
+      }
       if (!isValueControlled) setInternalValue(bounded);
       onValueChange?.(bounded);
     },
@@ -1116,8 +1190,10 @@ function TimePickerRoot({
   const face: FaceProps = {
     value: draft,
     onValueChange: commit,
-    syncToken: settleSeq,
+    syncToken: refusals,
     hourCycle,
+    minTime,
+    maxTime,
     minuteStep: step,
     locale,
     disabled,
