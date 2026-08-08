@@ -409,6 +409,23 @@ function PopoverContent({
       : requestedWidth;
 
   /*
+   * The floor also has to reach a panel sized to its own contents, which is the
+   * case it matters most in — a panel with a width already knows how wide it is.
+   *
+   * Folding it into `width` would be wrong: that pins the panel open at exactly
+   * the floor and stops it growing for content that needs more. It is a real
+   * minimum instead, left off when there is nothing to enforce so a content-fit
+   * panel keeps shrinking to fit.
+   *
+   * Without this a `content-fit` panel takes its width from whatever inside it
+   * is *not* flexible. A row of a flexible label and a fixed glyph collapses to
+   * the glyph, and the panel comes up as a strip of icons with the words
+   * squeezed out of it.
+   */
+  const resolvedMinWidth =
+    minWidth === undefined ? undefined : Math.min(minWidth, available);
+
+  /*
    * The cap is what keeps a tall panel reachable. `place` clamps the panel
    * inside the bounds, but a panel taller than the bounds cannot be clamped
    * into them — it gets pinned to the top edge and the rest runs off the
@@ -556,6 +573,7 @@ function PopoverContent({
               maxWidth: bounds.right - bounds.left,
               maxHeight: resolvedMaxHeight,
               width: resolvedWidth,
+              minWidth: resolvedMinWidth,
             }}
           >
             <Animated.View
