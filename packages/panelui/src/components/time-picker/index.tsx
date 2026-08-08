@@ -216,6 +216,38 @@ function Column<T>({
   });
 
   /*
+   * Whether the list is still moving, and whether it owes itself a correction
+   * once it stops.
+   *
+   * Nothing may scroll the column programmatically while it is gliding. A
+   * `scrollTo` issued against a running deceleration fights it, and the list
+   * stops dead somewhere between two rows and takes no further touches — a
+   * flick reads as the wheel freezing. So a correction that arrives mid-flight
+   * is remembered rather than performed, and applied at the moment the list
+   * comes to rest.
+   */
+  const moving = useRef(false);
+  const owedResync = useRef(false);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // The effect below closes over `index`; `atRest` runs from a scroll handler
+  // long after that render, so it needs the current one rather than the one it
+  // captured.
+  const latestIndex = useRef(index);
+  latestIndex.current = index;
+
+  const cancelTimer = useCallback(() => {
+    if (settleTimer.current === null) return;
+    clearTimeout(settleTimer.current);
+    settleTimer.current = null;
+  }, []);
+
+  const snapTo = useCallback((to: number) => {
+    resting.current = to;
+    ref.current?.scrollTo({ y: to * ROW_HEIGHT, animated: true });
+  }, []);
+
+  /*
    * Runs on the token as well as the index, and that is the whole point.
    *
    * A reported row can be refused — by `minTime`, by `maxTime`, or by a step
@@ -230,21 +262,77 @@ function Column<T>({
    */
   useEffect(() => {
     if (index === resting.current) return;
-    resting.current = index;
-    ref.current?.scrollTo({ y: index * ROW_HEIGHT, animated: true });
-  }, [index, syncToken]);
+    if (moving.current) {
+      owedResync.current = true;
+      return;
+    }
+    snapTo(index);
+  }, [index, syncToken, snapTo]);
 
-  const settle = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const next = Math.round(event.nativeEvent.contentOffset.y / ROW_HEIGHT);
+  /** The list has genuinely stopped. Pay off a correction if one is owed. */
+  const atRest = useCallback(() => {
+    cancelTimer();
+    moving.current = false;
+    if (!owedResync.current) return;
+    owedResync.current = false;
+    if (latestIndex.current !== resting.current) snapTo(latestIndex.current);
+  }, [cancelTimer, snapTo]);
+
+  const startMoving = useCallback(() => {
+    cancelTimer();
+    moving.current = true;
+  }, [cancelTimer]);
+
+  const settleAt = useCallback(
+    (y: number) => {
+      const next = Math.round(y / ROW_HEIGHT);
       const clamped = Math.min(Math.max(next, 0), items.length - 1);
       if (clamped === resting.current) return;
       resting.current = clamped;
+      /*
+       * This report supersedes any correction that was owed. The correction was
+       * worked out against a row the column has now left, and paying it off
+       * afterwards would drag the column back to a row nobody chose.
+       */
+      owedResync.current = false;
       selectionTick();
       onIndexChange(clamped);
     },
     [items.length, onIndexChange]
   );
+
+  /*
+   * A flick reports once, when it stops — not twice.
+   *
+   * Momentum begins a frame *after* the drag ends, so the end of a drag cannot
+   * tell a flick from a release by itself. It arms a short timer, and momentum
+   * starting cancels it; a drag that stops dead has no momentum to cancel it
+   * and settles on the timer. Reporting the release offset directly, as this
+   * used to, committed a row the finger was in the middle of flying past, and
+   * the picker then had two answers for one gesture.
+   */
+  const onDragEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const y = event.nativeEvent.contentOffset.y;
+      cancelTimer();
+      settleTimer.current = setTimeout(() => {
+        settleAt(y);
+        atRest();
+      }, 80);
+    },
+    [atRest, cancelTimer, settleAt]
+  );
+
+  const onMomentumEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      cancelTimer();
+      settleAt(event.nativeEvent.contentOffset.y);
+      atRest();
+    },
+    [atRest, cancelTimer, settleAt]
+  );
+
+  useEffect(() => cancelTimer, [cancelTimer]);
 
   const selectedItem = items[index];
 
@@ -262,11 +350,14 @@ function Column<T>({
       snapToOffsets={snapToOffsets}
       disableIntervalMomentum
       decelerationRate="fast"
-      /* Both, because only one of them fires: a flick ends in momentum, and a
-         slow drag released on a snap point ends without any. Missing the drag
-         case leaves a column that looks settled and has reported nothing. */
-      onMomentumScrollEnd={settle}
-      onScrollEndDrag={settle}
+      /* Both ends are wired, because only one of them fires: a flick ends in
+         momentum, and a slow drag released on a snap point ends without any.
+         Missing the drag case leaves a column that looks settled and has
+         reported nothing. */
+      onScrollBeginDrag={startMoving}
+      onScrollEndDrag={onDragEnd}
+      onMomentumScrollBegin={startMoving}
+      onMomentumScrollEnd={onMomentumEnd}
       /* The rows fade rather than unmount, so a recycled row would pop in at
          full opacity mid-scroll. A day of minutes is 60 views; keeping them
          all is cheaper than the flicker. */
@@ -673,26 +764,85 @@ function RulerFace({
     [times]
   );
 
-  // On the token as well as the index, for the reason given on the wheel's
-  // columns: a refused tick moves nothing, and the scale has to be told.
+  // The scale runs the same rest-and-resync machinery the wheel's columns do,
+  // on the other axis and for the same two reasons: a refused tick moves
+  // nothing and has to be corrected, and a correction must never be scrolled
+  // into a scale that is still gliding.
+  const moving = useRef(false);
+  const owedResync = useRef(false);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestIndex = useRef(index);
+  latestIndex.current = index;
+
+  const cancelTimer = useCallback(() => {
+    if (settleTimer.current === null) return;
+    clearTimeout(settleTimer.current);
+    settleTimer.current = null;
+  }, []);
+
+  const snapTo = useCallback((to: number) => {
+    resting.current = to;
+    ref.current?.scrollTo({ x: to * TICK_SPACING, animated: true });
+  }, []);
+
   useEffect(() => {
     if (index === resting.current) return;
-    resting.current = index;
-    ref.current?.scrollTo({ x: index * TICK_SPACING, animated: true });
-  }, [index, syncToken]);
+    if (moving.current) {
+      owedResync.current = true;
+      return;
+    }
+    snapTo(index);
+  }, [index, syncToken, snapTo]);
 
-  const settle = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const next = Math.round(event.nativeEvent.contentOffset.x / TICK_SPACING);
+  const atRest = useCallback(() => {
+    cancelTimer();
+    moving.current = false;
+    if (!owedResync.current) return;
+    owedResync.current = false;
+    if (latestIndex.current !== resting.current) snapTo(latestIndex.current);
+  }, [cancelTimer, snapTo]);
+
+  const startMoving = useCallback(() => {
+    cancelTimer();
+    moving.current = true;
+  }, [cancelTimer]);
+
+  const settleAt = useCallback(
+    (x: number) => {
+      const next = Math.round(x / TICK_SPACING);
       const clamped = Math.min(Math.max(next, 0), times.length - 1);
       if (clamped === resting.current) return;
       resting.current = clamped;
+      owedResync.current = false;
       selectionTick();
       const time = times[clamped];
       if (time) onValueChange(time);
     },
     [onValueChange, times]
   );
+
+  const onDragEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const x = event.nativeEvent.contentOffset.x;
+      cancelTimer();
+      settleTimer.current = setTimeout(() => {
+        settleAt(x);
+        atRest();
+      }, 80);
+    },
+    [atRest, cancelTimer, settleAt]
+  );
+
+  const onMomentumEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      cancelTimer();
+      settleAt(event.nativeEvent.contentOffset.x);
+      atRest();
+    },
+    [atRest, cancelTimer, settleAt]
+  );
+
+  useEffect(() => cancelTimer, [cancelTimer]);
 
   const stepsPerHour = Math.max(1, Math.round(60 / minuteStep));
 
@@ -731,8 +881,10 @@ function RulerFace({
           snapToOffsets={snapToOffsets}
           disableIntervalMomentum
           decelerationRate="fast"
-          onMomentumScrollEnd={settle}
-          onScrollEndDrag={settle}
+          onScrollBeginDrag={startMoving}
+          onScrollEndDrag={onDragEnd}
+          onMomentumScrollBegin={startMoving}
+          onMomentumScrollEnd={onMomentumEnd}
           accessibilityRole="adjustable"
           accessibilityLabel="Time"
           accessibilityValue={{ text: formatTime(value, { hourCycle, locale }) }}
