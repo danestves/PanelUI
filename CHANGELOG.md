@@ -9,6 +9,110 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.53.0] — 2026-08-09
+
+### Added
+
+- **`CandlestickChart`** — open, high, low and close for a period, drawn as one mark. The body
+  spans open to close and is filled by direction, and the wick behind it spans the low to the
+  high. Composed the way every chart here is, so the grid, the candles, the axes and the readout
+  are separate children, and it takes the same drag, the same reveal and the same header.
+
+  Three things had to differ from the charts it sits beside. **Its axis does not reach zero** — a
+  bar compares lengths, so a bar cropped at the bottom is a length that lies, but a candle
+  compares nothing to zero. What is being read is the distance between four numbers that sit
+  close together and far from the origin, and forcing zero onto that axis turns every candle into
+  a dash. **Colour is direction rather than identity**: there is one thing plotted, so the two
+  colours are its two states, taken from the theme's success and destructive tokens instead of
+  the chart palette. And it **draws in four paths, not four per candle**, so two hundred periods
+  cost the same four animated props a frame as twenty.
+
+- **`ContextMenu.Preview`** — the held content, lifted off the dimmed page while its actions are
+  up. It is for a list, where otherwise the thing being acted on is one card among several behind
+  a scrim with the panel floating over all of them. It draws the trigger's own children, so
+  nothing is described twice, and it takes no touches — the actions are in the panel, and a
+  second live copy of a pressable card would be a second place to press.
+
+- **`Sortable`** — a `pinned` prop, the feature `disabled` had been standing in for and was never
+  able to be. A pinned row cannot be picked up and nothing can take its place: the rows that do
+  move reorder among the slots left over, so a step that has to come first still does. It is not
+  a wall — a row can be carried across a pinned one, going around it rather than pushing it down.
+  `disabled` keeps its own meaning, which is only that a row cannot be lifted.
+
+### Changed
+
+- **`ContextMenu`** — rows read verb first, glyph last, and are taller. `Menu` puts the glyph in
+  front, where a column of them is what the eye runs down to find a row; a context menu is not
+  read that way, since it arrives under the hand that opened it and what is being scanned is the
+  words. A glyph is now painted to match its label, including the red of a destructive row, so an
+  icon set that defaults to `currentColor` — which React Native will not draw at all — no longer
+  has to be coloured by hand at every call site.
+
+- **`Sortable`** — rows get out of the way at once. The swap used to be triggered by the carried
+  row's middle reaching a neighbour's middle, and a row's middle starts a whole row away from its
+  neighbour's, so the finger had to travel a full row before anything happened: the list sat still
+  through the first row of every drag and then moved all at once. It is now the carried row's
+  leading edge against the neighbour's middle, which halves that and is the more natural reading
+  anyway. The spring the neighbours ride was also underdamped and is now critically damped.
+
+- **`TimePicker`** — a picker given `minTime` or `maxTime` no longer offers times it will refuse.
+  The ruler and the clock's list now hold only the times inside the span, so the end of the scale
+  is the last time that can be picked and dragging to it picks it. Previously it drew the whole
+  day, clamped whatever you chose, and sprang back without saying why.
+
+### Fixed
+
+- **`Popover`** — the width floor now reaches a panel sized to its own contents, which is the one
+  case it was for. A panel given a width already knows how wide it is; `minWidth` was being
+  dropped on exactly the panels that needed it, so a panel took its width from the only
+  non-flexible thing in a row. A menu of a flexible label beside a fixed glyph came up as a narrow
+  strip of icons with the words squeezed out of it entirely.
+
+- **`Popover`** — a panel in a sheet no longer starts under the close button. The eight points the
+  sheet presentation reserved were never enough: the sheet's own padding and grabber put the first
+  child 24 points down and the button's lower edge is at 44, so the top of every panel was drawn
+  under it.
+
+- **`Combobox`** — options written as literal JSX are keyed when a query narrows them. The filter
+  builds a plain array, which is not the path that hands out keys, so a short fixed list — the
+  ordinary way to write one — arrived unkeyed and React said so.
+
+- **`Combobox`** — the panel no longer moves under a scrolling finger. Dragging the list dismisses
+  the keyboard, the keyboard's height changing re-measures the field, and a new anchor recomputed
+  both the panel's top edge and its maximum height, so the thing being scrolled resized and moved
+  under the finger doing it.
+
+- **`TimePicker`** — a refused drag puts the column back. A reported row can be bounded away or
+  rounded to a different one, and when it was the value did not change, so nothing told the column
+  anything had happened — it was left showing one time and holding another, and no later drag
+  could put it right.
+
+- **`TimePicker`** — a flick reports once, when it stops. It used to report twice: at the offset
+  the finger left, which is a row it is in the middle of flying past, and again where it actually
+  stopped. The first was committed, so the picker briefly held a time nobody chose. A correction
+  arriving mid-glide could also jam the list — a programmatic scroll against a running
+  deceleration fights it, and the wheel stopped dead between two rows and took no further touches.
+
+- **`Sortable`** — dragging a long list no longer costs the square of its length. Each row worked
+  out its own offset by summing the heights above it, twice, in a worklet that re-runs on every
+  frame of a drag. The root derives every row's offset in one pass, and only when the arrangement
+  changes.
+
+- **`TimePicker`** — the row either side of the centre stays readable. It used to drop to just
+  over half opacity and shrink by an eighth, which on a settling column reads as the digits
+  smearing — and those are exactly the rows being compared against while choosing.
+
+### Docs
+
+- **`ColorPicker`** — the accent card version drops the block that painted the two chosen colours
+  over each other; both rows already print the colour they change. The wheel version now opens
+  over its row like the square does, so the two versions differ in the thing that actually differs
+  between them.
+
+- **`ContextMenu`** — the bottom-sheet example holds a list row rather than a card, which is the
+  case a sheet is actually for, and carries a `Label` naming what it is acting on, since a sheet
+  is nowhere near the row it came from. A new example shows the placements side by side.
+
 ## [0.52.0] — 2026-08-08
 
 ### Added
