@@ -9,6 +9,44 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.54.0] — 2026-08-09
+
+### Added
+
+- **`TagInput`** — a field whose value is a list of tokens rather than a string. The tags are
+  whatever gets typed, which is the whole distinction from `Combobox` in `multiple` mode: a
+  Combobox picks from a set of options you supply, so it needs a list, a filter and a surface to
+  float that list on. A tag field has none of those, so it carries none of that machinery and
+  never opens a portal.
+
+  A tag is committed by return, by any of `delimiters` (a comma by default — which is what makes
+  a pasted `design, research, ops` land as three tags rather than one), or by `blurBehavior` when
+  the field loses focus mid-word. Three rules can turn a tag away — `max`, a duplicate, or a
+  `validate` that returned `false` — and each calls `onReject` with the reason. That callback
+  exists because a tag that is silently dropped is indistinguishable from one that was never
+  finished typing.
+
+  `renderTag` hands the token back to the caller, `chipVariant` picks the resting colour,
+  `showCount` puts the count against `max` under the field, and `readOnly` keeps the tags while
+  taking the input and every ✕ away.
+
+### Changed
+
+- **A backspace on a field full of chips now marks the last one before it takes it.** In
+  `Combobox` under `mode="multiple"`, and in the new `TagInput`, backspace on an empty field
+  turns the last chip `destructive` and only a second backspace removes it. A held backspace
+  repeats, and a field that deleted on the first one would empty itself in the time it takes to
+  notice — the mark is the beat that lets you stop. Typing anything, or leaving the field, takes
+  the mark off again.
+
+  The chip is also now removed by position rather than by value, so a repeated label — which
+  `allowCustomValue` makes possible — loses the one that was marked instead of both.
+
+### Docs
+
+- The component lists in both READMEs and the docs index had drifted a release behind. They now
+  carry `CandlestickChart` and `TagInput`, and the counts are right again.
+
 ## [0.53.0] — 2026-08-09
 
 ### Added
