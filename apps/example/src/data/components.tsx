@@ -13,6 +13,7 @@ import Animated, {
   FadeOutDown,
   runOnJS,
   useAnimatedKeyboard,
+  useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -11837,7 +11838,7 @@ function SortableActiveDemo() {
  * it keeps the top slot and the other three reorder among the rest — a row
  * carried past it goes around it rather than pushing it down.
  */
-function SortableDisabledDemo() {
+function SortablePinnedDemo() {
   const [steps, setSteps] = useState([
     { id: 's1', title: 'Install the package', fixed: true },
     { id: 's2', title: 'Add the provider' },
@@ -11867,6 +11868,104 @@ function SortableDisabledDemo() {
         </Sortable.Item>
       ))}
     </Sortable>
+  );
+}
+
+/**
+ * A row that cannot be picked up, which is not the same as one that holds its
+ * place. Email address stays where the drag leaves it: the others still move
+ * past it and it is carried along with them — it simply has no grip of its own.
+ */
+function SortableDisabledDemo() {
+  const [fields, setFields] = useState([
+    { id: 'f1', title: 'Email address', locked: true },
+    { id: 'f2', title: 'Display name' },
+    { id: 'f3', title: 'Company' },
+    { id: 'f4', title: 'Phone number' },
+  ]);
+
+  return (
+    <Sortable
+      value={fields.map((field) => field.id)}
+      onReorder={(_, { from, to }) => setFields((f) => reorderItems(f, from, to))}
+      gap={8}
+      className="w-full"
+    >
+      {fields.map((field) => (
+        <Sortable.Item key={field.id} id={field.id} disabled={field.locked}>
+          <Item variant="outline">
+            <Item.Content>
+              <Item.Title>{field.title}</Item.Title>
+            </Item.Content>
+            {field.locked ? <Badge variant="secondary">Locked</Badge> : null}
+            <Sortable.Handle />
+          </Item>
+        </Sortable.Item>
+      ))}
+    </Sortable>
+  );
+}
+
+const SORTABLE_TRACKS = [
+  'Opening titles',
+  'The long walk',
+  'Nightfall',
+  'Something borrowed',
+  'A room upstairs',
+  'Weather over the bay',
+  'Two trains',
+  'The argument',
+  'Reprise',
+  'Last light',
+  'Winter, briefly',
+  'The letter',
+  'Coastline',
+  'Everything after',
+  'Closing titles',
+];
+
+/**
+ * A list longer than the screen. `scrollRef` hands the component the scroller
+ * it sits in, so a row carried to the top or bottom edge scrolls it and the
+ * list can be reordered end to end — without one a drag stops where the screen
+ * does, and the row you wanted at the top has nowhere left to go.
+ */
+function SortableScrollDemo() {
+  const scroller = useAnimatedRef<Animated.ScrollView>();
+  const [tracks, setTracks] = useState(
+    SORTABLE_TRACKS.map((title, index) => ({ id: `t${index}`, title }))
+  );
+
+  return (
+    <Animated.ScrollView
+      ref={scroller}
+      contentContainerClassName="px-5 pb-10"
+      showsVerticalScrollIndicator={false}
+    >
+      <Sortable
+        value={tracks.map((track) => track.id)}
+        onReorder={(_, { from, to }) => setTracks((t) => reorderItems(t, from, to))}
+        scrollRef={scroller}
+        gap={8}
+        className="w-full"
+      >
+        {tracks.map((track, index) => (
+          <Sortable.Item key={track.id} id={track.id}>
+            <Item variant="outline">
+              <Item.Media variant="icon">
+                <Text size="sm" muted>
+                  {index + 1}
+                </Text>
+              </Item.Media>
+              <Item.Content>
+                <Item.Title>{track.title}</Item.Title>
+              </Item.Content>
+              <Sortable.Handle />
+            </Item>
+          </Sortable.Item>
+        ))}
+      </Sortable>
+    </Animated.ScrollView>
   );
 }
 
@@ -16736,7 +16835,15 @@ const CATALOGUE: ComponentEntry[] = [
       { label: 'Lifting on a long press', render: () => <SortableLongPressDemo /> },
       { label: 'Rows of different heights', render: () => <SortableMixedHeightsDemo /> },
       { label: 'A row that knows it is being carried', render: () => <SortableActiveDemo /> },
-      { label: 'A row that stays put', render: () => <SortableDisabledDemo /> },
+      { label: 'A row that stays put', render: () => <SortablePinnedDemo /> },
+      { label: 'A row that cannot be picked up', render: () => <SortableDisabledDemo /> },
+      {
+        label: 'A list longer than the screen',
+        id: 'autoscroll',
+        description: 'Carry a row to the top or bottom edge and the list scrolls under it.',
+        fullPage: true,
+        render: () => <SortableScrollDemo />,
+      },
     ],
   },
   {

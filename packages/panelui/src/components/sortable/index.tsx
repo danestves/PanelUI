@@ -583,18 +583,32 @@ function SortableRoot({
 
   const indexOf = useCallback((id: string) => indices.get(id) ?? -1, [indices]);
 
+  /*
+   * Both maps are accumulated in a ref and then published, rather than built by
+   * reading the shared value back and spreading it. Every row reports its
+   * layout in the same batch on mount, and a write to `.value` is not visible
+   * to the next read in that batch — so a read-modify-write there has all the
+   * rows spreading the same empty map and only the last one surviving. A list
+   * that knows one row's height puts every slot a gap apart, and the first
+   * drag drops the row at the end of the list.
+   */
+  const measuredHeights = useRef<Record<string, number>>({});
+  const pinnedFlags = useRef<Record<string, boolean>>({});
+
   const measured = useCallback(
     (id: string, height: number) => {
-      if (heights.value[id] === height) return;
-      heights.value = { ...heights.value, [id]: height };
+      if (measuredHeights.current[id] === height) return;
+      measuredHeights.current = { ...measuredHeights.current, [id]: height };
+      heights.value = measuredHeights.current;
     },
     [heights]
   );
 
   const setPinned = useCallback(
     (id: string, next: boolean) => {
-      if (Boolean(pinned.value[id]) === next) return;
-      pinned.value = { ...pinned.value, [id]: next };
+      if (Boolean(pinnedFlags.current[id]) === next) return;
+      pinnedFlags.current = { ...pinnedFlags.current, [id]: next };
+      pinned.value = pinnedFlags.current;
     },
     [pinned]
   );
@@ -1031,10 +1045,15 @@ function SortableItem({
          * drop unreported; `seq` is what tells the two cases apart, because
          * the only interruption that should be ignored is the row being picked
          * up again.
+         *
+         * `activeId` is checked as well as `seq` because reporting the drop is
+         * itself what interrupts the spring: the caller applies the reorder,
+         * and the reset that follows puts `translate` back to rest, which ends
+         * the animation and calls this a second time under the same `seq`.
          */
         const land = () => {
           'worklet';
-          if (dragSeq.value !== seq) return;
+          if (dragSeq.value !== seq || activeId.value === null) return;
           activeId.value = null;
           runOnJS(notifySettled)(id);
         };
@@ -1142,17 +1161,27 @@ function SortableItem({
    * no way to discover it from the row. Moving by whole slots is published as
    * an accessibility action instead, which is the only path to reordering for
    * someone who is not dragging anything.
+   *
+   * The actions sit wherever the drag does. A handle list keeps them on the
+   * grip, which is an element in its own right; put here they would never be
+   * offered, because the actions of a view that is not itself an accessibility
+   * element are not reachable, and a row full of text is not one. A long-press
+   * list has no grip and gives the whole row to the drag, so the row becomes
+   * the element — which is what a screen reader wants from a row in any case.
    */
-  const a11y = locked
-    ? undefined
-    : [
+  const carriesActions = activation === 'longPress' && !locked;
+
+  const a11y = carriesActions
+    ? [
         { name: 'moveUp', label: 'Move up' },
         { name: 'moveDown', label: 'Move down' },
-      ];
+      ]
+    : undefined;
 
   const row = (
     <Animated.View
       onLayout={onLayout}
+      accessible={carriesActions}
       accessibilityActions={a11y}
       onAccessibilityAction={(event) => {
         if (event.nativeEvent.actionName === 'moveUp') step(id, -1);
@@ -1224,7 +1253,7 @@ function SortableHandle({
   accessibilityLabel = 'Drag to reorder',
   ...props
 }: SortableHandleProps) {
-  const { activation, disabled: rootDisabled } = useSortableRoot('Sortable.Handle');
+  const { activation, disabled: rootDisabled, step } = useSortableRoot('Sortable.Handle');
   const item = useContext(SortableItemContext);
 
   /*
@@ -1235,17 +1264,44 @@ function SortableHandle({
   const muted = useCSSVariable('--color-muted-foreground');
   const tint = typeof muted === 'string' ? muted : undefined;
 
+  const locked = rootDisabled || item?.disabled;
+
+  /*
+   * `adjustable` promises an element that answers a swipe up or down, and the
+   * promise was never kept: the grip published the role and nothing else, so
+   * the one part of a row a screen reader could reach did nothing at all.
+   * Moving by whole slots is what it was always meant to do. The same move is
+   * offered as a named action too, because a swipe says nothing about which
+   * way the row is going to travel.
+   */
+  const move = (delta: number) => {
+    if (locked || !item) return;
+    step(item.id, delta);
+  };
+
   const glyph = (
     <View
       accessible
       accessibilityRole="adjustable"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled: rootDisabled || item?.disabled }}
-      className={cn(
-        'items-center justify-center px-2 py-1.5',
-        (rootDisabled || item?.disabled) && 'opacity-40',
-        className
-      )}
+      accessibilityState={{ disabled: locked }}
+      accessibilityValue={item ? { text: `Position ${item.index + 1}` } : undefined}
+      accessibilityActions={
+        locked
+          ? undefined
+          : [
+              { name: 'increment' },
+              { name: 'decrement' },
+              { name: 'moveUp', label: 'Move up' },
+              { name: 'moveDown', label: 'Move down' },
+            ]
+      }
+      onAccessibilityAction={(event) => {
+        const action = event.nativeEvent.actionName;
+        if (action === 'increment' || action === 'moveUp') move(-1);
+        if (action === 'decrement' || action === 'moveDown') move(1);
+      }}
+      className={cn('items-center justify-center px-2 py-1.5', locked && 'opacity-40', className)}
       {...props}
     >
       <IconColorProvider color={tint}>

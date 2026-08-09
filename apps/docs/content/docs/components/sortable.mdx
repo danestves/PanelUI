@@ -298,7 +298,9 @@ The dragged row moves to the first slot whose middle it has passed, walking outw
 
 ### Reordering without the gesture
 
-A drag is invisible to a screen reader: there is nothing on screen to announce and no way to discover it from the row. Every row therefore publishes **Move up** and **Move down** as accessibility actions, which is the whole of the alternative path. They move the row one slot and report the drop straight away — nothing is in flight, so there is nothing to wait for.
+A drag is invisible to a screen reader: there is nothing on screen to announce and no way to discover it from the row. **Move up** and **Move down** are published as accessibility actions instead. They move the row one slot and report the drop straight away — nothing is in flight, so there is nothing to wait for.
+
+They sit wherever the drag does. A list that lifts from a grip puts them on `Sortable.Handle`, which is an element in its own right: it answers a swipe up or down with the same move and announces the position the row is currently in. A list that lifts on a long press has no grip and gives the whole row to the drag, so the row carries them and is read as a single element.
 
 ### What a lifted row looks like
 

@@ -46,6 +46,7 @@
     },
     "scheme": "panelui",
     "plugins": [
+      "./plugins/with-ui-scene.ts",
       "expo-router",
       [
         "expo-audio",
