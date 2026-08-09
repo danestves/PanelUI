@@ -583,18 +583,32 @@ function SortableRoot({
 
   const indexOf = useCallback((id: string) => indices.get(id) ?? -1, [indices]);
 
+  /*
+   * Both maps are accumulated in a ref and then published, rather than built by
+   * reading the shared value back and spreading it. Every row reports its
+   * layout in the same batch on mount, and a write to `.value` is not visible
+   * to the next read in that batch — so a read-modify-write there has all the
+   * rows spreading the same empty map and only the last one surviving. A list
+   * that knows one row's height puts every slot a gap apart, and the first
+   * drag drops the row at the end of the list.
+   */
+  const measuredHeights = useRef<Record<string, number>>({});
+  const pinnedFlags = useRef<Record<string, boolean>>({});
+
   const measured = useCallback(
     (id: string, height: number) => {
-      if (heights.value[id] === height) return;
-      heights.value = { ...heights.value, [id]: height };
+      if (measuredHeights.current[id] === height) return;
+      measuredHeights.current = { ...measuredHeights.current, [id]: height };
+      heights.value = measuredHeights.current;
     },
     [heights]
   );
 
   const setPinned = useCallback(
     (id: string, next: boolean) => {
-      if (Boolean(pinned.value[id]) === next) return;
-      pinned.value = { ...pinned.value, [id]: next };
+      if (Boolean(pinnedFlags.current[id]) === next) return;
+      pinnedFlags.current = { ...pinnedFlags.current, [id]: next };
+      pinned.value = pinnedFlags.current;
     },
     [pinned]
   );
