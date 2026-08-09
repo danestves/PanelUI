@@ -1045,10 +1045,15 @@ function SortableItem({
          * drop unreported; `seq` is what tells the two cases apart, because
          * the only interruption that should be ignored is the row being picked
          * up again.
+         *
+         * `activeId` is checked as well as `seq` because reporting the drop is
+         * itself what interrupts the spring: the caller applies the reorder,
+         * and the reset that follows puts `translate` back to rest, which ends
+         * the animation and calls this a second time under the same `seq`.
          */
         const land = () => {
           'worklet';
-          if (dragSeq.value !== seq) return;
+          if (dragSeq.value !== seq || activeId.value === null) return;
           activeId.value = null;
           runOnJS(notifySettled)(id);
         };
