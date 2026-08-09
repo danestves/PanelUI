@@ -1,0 +1,234 @@
+---
+title: TagInput
+description: A field whose value is a list of tokens rather than a string.
+status: new
+---
+
+A field whose value is a list of tokens rather than a string. The tags are whatever gets typed — labels on a task, recipients on a message, keywords on a post.
+
+That is the whole distinction from [Combobox](/docs/components/combobox) in `multiple` mode. A Combobox picks from a set of options you supply, so it needs a list, a filter and a surface to float that list on. A tag field has no options and no list, so it carries none of that machinery and never opens a portal.
+
+## Installation
+
+TagInput ships with the library — no separate install.
+
+```tsx
+import { TagInput, Card } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add tag-input
+```
+
+## Usage
+
+```tsx
+<TagInput
+  label="Topics"
+  value={topics}
+  onValueChange={setTopics}
+  placeholder="Add a topic"
+  clearable
+/>
+```
+
+## Examples
+
+### Typing tags
+
+Return or a comma ends a tag. Backspace on an empty field marks the last one; a second backspace takes it.
+
+```tsx
+const [tags, setTags] = useState(['expo', 'reanimated']);
+
+<TagInput
+  label="Topics"
+  value={tags}
+  onValueChange={setTags}
+  placeholder="Add a topic"
+  description="Return or a comma ends a tag."
+  clearable
+/>
+```
+
+### A capped list
+
+`max` stops the list at four and `onReject` says why, since a tag that is silently dropped looks like one that was never finished.
+
+```tsx
+const [tags, setTags] = useState(['urgent', 'billing']);
+const [refused, setRefused] = useState(null);
+
+<TagInput
+  label="Labels"
+  value={tags}
+  onValueChange={(next) => {
+    setRefused(null);
+    setTags(next);
+  }}
+  max={4}
+  showCount
+  placeholder="Add a label"
+  errorMessage={refused ?? undefined}
+  onReject={(tag, reason) =>
+    setRefused(
+      reason === 'max'
+        ? `Four labels is the limit — “${tag}” was not added.`
+        : `“${tag}” is already on the list.`
+    )
+  }
+/>
+```
+
+### Deciding what counts
+
+`validate` decides what may become a tag at all. Several delimiters, because addresses get pasted separated by any of them.
+
+```tsx
+const [recipients, setRecipients] = useState(['ana@example.com']);
+const [error, setError] = useState(null);
+
+<TagInput
+  label="Recipients"
+  value={recipients}
+  onValueChange={(next) => {
+    setError(null);
+    setRecipients(next);
+  }}
+  chipVariant="info"
+  keyboardType="email-address"
+  placeholder="name@example.com"
+  delimiters={[',', ' ', ';']}
+  validate={(tag) => tag.includes('@') && tag.includes('.')}
+  onReject={(tag) => setError(`“${tag}” is not an email address.`)}
+  errorMessage={error ?? undefined}
+/>
+```
+
+### Filled, inside a card
+
+A second border beside the card's own reads as a seam, so the field carries a background instead.
+
+```tsx
+<Card className="w-full">
+  <Card.Content className="gap-4 p-4">
+    <TagInput
+      variant="filled"
+      label="Skills"
+      defaultValue={['typescript', 'swift']}
+      placeholder="Add a skill"
+    />
+  </Card.Content>
+</Card>
+```
+
+### Read-only and disabled
+
+`readOnly` keeps the tags and takes the input away; `disabled` dims the whole field.
+
+```tsx
+<TagInput label="Read-only" readOnly defaultValue={['locked', 'archived']} />
+
+<TagInput
+  label="Disabled"
+  disabled
+  defaultValue={['unavailable']}
+  placeholder="Add a tag"
+/>
+```
+
+## Variants
+
+### `variant`
+
+- `outline` *(default)*
+- `filled`
+
+```tsx
+<TagInput variant="outline" label="Topics" placeholder="Add a topic" />
+<TagInput variant="filled" label="Topics" placeholder="Add a topic" />
+```
+
+### `size`
+
+- `sm`
+- `md` *(default)*
+- `lg`
+
+```tsx
+<TagInput size="sm" defaultValue={['small']} placeholder="Small" />
+<TagInput size="md" defaultValue={['medium']} placeholder="Medium" />
+<TagInput size="lg" defaultValue={['large']} placeholder="Large" />
+```
+
+## API Reference
+
+### TagInput
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — | Classes for the field box — the bordered container the tags sit in. |
+| `containerClassName` | `string` | — | Classes for the outer column that also holds the label and the error. |
+| `value` | `string[]` | — | The tags, controlled. Pair it with `onValueChange`. |
+| `defaultValue` | `string[]` | — | The tags to start with, when the field keeps its own value. |
+| `onValueChange` | `(tags: string[]) => void` | — | Called with the whole list whenever a tag is added or removed. |
+| `inputValue` | `string` | — | The text being typed, controlled. Only needed to drive the draft from outside — the tags themselves are `value`. |
+| `onInputValueChange` | `(text: string) => void` | — | Called as the draft text changes, before it becomes a tag. |
+| `label` | `string` | — | The label above the field, and what the input is announced as. |
+| `description` | `string` | — | A line under the field, replaced by `errorMessage` when there is one. |
+| `errorMessage` | `string` | — | Error message. When set, the field renders in its invalid state. |
+| `isRequired` | `boolean` | — | Marks the field required — an asterisk on the label, and the a11y state. |
+| `disabled` | `boolean` | `false` | Dims the field and stops it being reached at all. |
+| `readOnly` | `boolean` | `false` | Shows the tags but takes away the input and the ✕ on each one. |
+| `max` | `number` | — | The most tags the field accepts. Past it nothing more is committed and `onReject` is called with `'max'`, unless `allowOverflow` is set. |
+| `allowOverflow` | `boolean` | `false` | Let the list go past `max` anyway. The field reports itself invalid while it is over, which is the point: some forms want the count shown as wrong rather than the typing refused. |
+| `allowDuplicates` | `boolean` | `false` | Accept a tag the list already holds. Off by default. |
+| `delimiters` | `string[]` | — | Characters that end a tag as they are typed. A comma by default, which is what makes a pasted `a, b, c` land as three tags rather than one. |
+| `blurBehavior` | `TagBlurBehavior` | `'add'` | What happens to text still in the field when it loses focus. `add` commits it and clears it if it was accepted, leaving it in place if it was not, so a rejected word is still there to fix. `clear` drops it. `keep` leaves it exactly as typed. |
+| `validate` | `(tag: string, tags: string[]) => boolean` | — | Decide whether a tag may be added, given the list it would join. Return `false` to turn it away — `onReject` is then called with `'invalid'`. |
+| `onReject` | `(tag: string, reason: TagRejection) => void` | — | Called when a tag was turned away, with the reason it was. |
+| `chipVariant` | `ChipVariant` | `'default'` | Which Chip variant the tags are drawn as. |
+| `renderTag` | `(tag: string, index: number) => ReactNode` | — | Draw the tag yourself — an avatar before the label, a count after it. |
+| `clearable` | `boolean` | `false` | A ✕ at the end of the field that empties it. |
+| `showCount` | `boolean` | `false` | Shows `3 / 8` under the field. Needs `max`. |
+| `haptics` | `boolean` | `false` | A tick under the finger as a tag lands or leaves. Off by default — needs the optional `expo-haptics`, and is silent without it. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Three ways a tag gets committed
+
+Return commits what has been typed. So does any of `delimiters` — a comma by default — which is what makes pasting `design, research, ops` land as three tags rather than one long one. Pass several to accept more than one separator, or `delimiters={[]}` to make return the only way in.
+
+`blurBehavior` decides what a field that loses focus mid-word does with the leftover. `add` (the default) commits it and clears it *if it was accepted*, leaving it in place if it was not, so a rejected word is still there to fix. `clear` drops it. `keep` leaves it exactly as typed.
+
+Every tag is trimmed, and empty text is never committed — so a trailing comma adds nothing.
+
+### Backspace asks first
+
+Backspace on an empty field marks the last tag rather than taking it: the tag turns `destructive`, and a second backspace removes it. A held backspace repeats, and a field that deleted on the first one would empty itself in the time it takes to notice — the mark is the beat that lets you stop. Typing anything, or leaving the field, takes the mark off again.
+
+[Combobox](/docs/components/combobox) in `multiple` mode does the same with its chips, so the reflex carries between the two.
+
+### Turning a tag away
+
+Three rules can refuse a tag, and each one calls `onReject` with the reason it did:
+
+- `duplicate` — the list already holds it. Set `allowDuplicates` to accept it anyway. The comparison is exact, so `Design` and `design` are two different tags.
+- `max` — the list is full. `allowOverflow` lets it go past the limit instead, and the field then reports itself invalid while it is over, which is the point: some forms want the count shown as wrong rather than the typing refused.
+- `invalid` — `validate` returned `false` for it, given the list it would have joined.
+
+Nothing is announced on its own. `onReject` exists because a tag that is silently dropped is indistinguishable from one that was never finished — pair it with `errorMessage` to say what happened.
+
+### The value, and the draft
+
+`value` is the tags; `inputValue` is the text still being typed. Both are optional and both fall back to state the field keeps itself, so the common case controls the tags alone and never touches the draft.
+
+`showCount` puts `3 / 8` under the field and turns `destructive` once the list is over `max`. It needs `max` — a count with no limit to count towards says nothing.
+
+### Read-only and disabled
+
+`readOnly` keeps the tags and takes away the input and the ✕ on each one, which is the right shape for a summary of a filter someone else set. `disabled` dims the whole field and stops it being reached at all.

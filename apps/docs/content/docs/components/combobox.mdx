@@ -1,6 +1,7 @@
 ---
 title: Combobox
 description: A text field that filters a list of options as you type.
+status: updated
 ---
 
 A text field that filters a list of options as you type. The difference from Select is where the typing happens: a Select is a button that opens a list, and its optional filter lives inside that list once it is open. A Combobox is the field itself — you are already typing when the options appear, which is what you want when the value is something you know the name of rather than something you expect to recognise by scrolling.
@@ -246,7 +247,7 @@ There is deliberately no sheet presentation. A sheet takes the bottom of the scr
 
 `mode="multiple"` draws the chosen options as removable chips in front of the input and keeps the list open between picks, so several can be taken in a row. The value is an array there and a single string otherwise — the type follows `mode`, so nothing has to be cast.
 
-Picking an already-chosen option removes it, which is the only way to undo a pick without reaching for its chip. Backspace on an empty field takes the last chip back: the same reflex that deletes a character, extended to the thing in front of the cursor when there is no character left to delete.
+Picking an already-chosen option removes it, which is the only way to undo a pick without reaching for its chip. Backspace on an empty field reaches the thing in front of the cursor when there is no character left to delete — but it marks that chip first, turning it `destructive`, and only a second backspace takes it. A held backspace repeats, and a field that removed on the first one would empty itself in the time it takes to notice. Typing anything, or leaving the field, takes the mark off again. [TagInput](/docs/components/tag-input) does the same, so the reflex carries between the two.
 
 ### Filtering, and turning it off
 
