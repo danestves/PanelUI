@@ -515,6 +515,14 @@ export {
 } from './components/pie-chart';
 export { Textarea, type TextareaProps } from './components/textarea';
 export {
+  TagInput,
+  type TagInputProps,
+  type TagInputVariant,
+  type TagInputSize,
+  type TagBlurBehavior,
+  type TagRejection,
+} from './components/tag-input';
+export {
   Item,
   type ItemProps,
   type ItemGroupProps,

@@ -557,6 +557,14 @@
       "updatedIn": "0.52.0"
     }
   ],
+  "tag-input": [
+    "TagInput",
+    "A field whose value is a list of tokens rather than a string.",
+    "react native tag input chips",
+    {
+      "addedIn": "0.54.0"
+    }
+  ],
   "textarea": [
     "Textarea",
     "Text field that runs to several lines, sized in rows.",
@@ -670,7 +678,7 @@
     "react native combobox autocomplete",
     {
       "addedIn": "0.37.0",
-      "updatedIn": "0.43.0"
+      "updatedIn": "0.54.0"
     }
   ],
   "context-menu": [

@@ -1001,6 +1001,18 @@
     ]
   },
   {
+    "name": "tag-input",
+    "type": "registry:ui",
+    "description": "A field whose value is a list of tokens rather than a string.",
+    "registryDependencies": [
+      "chip",
+      "haptics",
+      "icons",
+      "label",
+      "text"
+    ]
+  },
+  {
     "name": "task",
     "type": "registry:ui",
     "description": "One step an agent took, and what it did while it was there.",

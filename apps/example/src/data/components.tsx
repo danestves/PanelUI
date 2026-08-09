@@ -194,6 +194,7 @@ import {
   Switch,
   Table,
   Tabs,
+  TagInput,
   Task,
   Text,
   TextAnimation,
@@ -4332,6 +4333,91 @@ function ComboboxTagsDemo() {
         Type something that is not on the list and press return to keep it.
       </Text>
     </View>
+  );
+}
+
+/**
+ * The plain tag field: no list, no suggestions, and the value is whatever gets
+ * typed. Return commits a tag, so does the comma, and backspace on an empty
+ * field marks the last one before a second backspace takes it.
+ */
+function TagInputDemo() {
+  const [tags, setTags] = useState<string[]>(['expo', 'reanimated']);
+
+  return (
+    <View className="w-full gap-3">
+      <TagInput
+        label="Topics"
+        value={tags}
+        onValueChange={setTags}
+        placeholder="Add a topic"
+        description="Return or a comma ends a tag."
+        clearable
+      />
+      <Text size="sm" muted>
+        {tags.length ? tags.join(' · ') : 'No topics yet'}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * A capped list that says why it stopped. `onReject` is the only way to tell
+ * the difference between a tag that was refused and one the user never
+ * finished typing.
+ */
+function TagInputLimitDemo() {
+  const [tags, setTags] = useState<string[]>(['urgent', 'billing']);
+  const [refused, setRefused] = useState<string | null>(null);
+
+  return (
+    <TagInput
+      label="Labels"
+      value={tags}
+      onValueChange={(next) => {
+        setRefused(null);
+        setTags(next);
+      }}
+      max={4}
+      showCount
+      placeholder="Add a label"
+      errorMessage={refused ?? undefined}
+      onReject={(tag, reason) =>
+        setRefused(
+          reason === 'max'
+            ? `Four labels is the limit — “${tag}” was not added.`
+            : `“${tag}” is already on the list.`
+        )
+      }
+    />
+  );
+}
+
+/**
+ * `validate` decides what counts as a tag at all. Anything without an @ is
+ * turned away, and the field says so rather than silently swallowing it.
+ */
+function TagInputValidateDemo() {
+  const [recipients, setRecipients] = useState<string[]>(['ana@example.com']);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <TagInput
+      label="Recipients"
+      value={recipients}
+      onValueChange={(next) => {
+        setError(null);
+        setRecipients(next);
+      }}
+      chipVariant="info"
+      keyboardType="email-address"
+      placeholder="name@example.com"
+      delimiters={[',', ' ', ';']}
+      validate={(tag) => tag.includes('@') && tag.includes('.')}
+      onReject={(tag) => setError(`“${tag}” is not an email address.`)}
+      errorMessage={error ?? undefined}
+      description="A comma, a space or a semicolon ends an address."
+    />
   );
 }
 
@@ -17245,6 +17331,61 @@ const CATALOGUE: ComponentEntry[] = [
         description:
           'A one-row composer that grows as the message does and rides the keyboard up.',
         render: () => <TextareaComposerDemo />,
+      },
+    ],
+  },
+  {
+    slug: 'tag-input',
+    name: 'TagInput',
+    summary: 'A field whose value is a list of tokens',
+    demos: [
+      { label: 'Typing tags', render: () => <TagInputDemo /> },
+      { label: 'A capped list', render: () => <TagInputLimitDemo /> },
+      { label: 'Deciding what counts', render: () => <TagInputValidateDemo /> },
+      {
+        label: 'Sizes',
+        render: () => (
+          <View className="w-full gap-4">
+            <TagInput size="sm" defaultValue={['small']} placeholder="Small" />
+            <TagInput size="md" defaultValue={['medium']} placeholder="Medium" />
+            <TagInput size="lg" defaultValue={['large']} placeholder="Large" />
+          </View>
+        ),
+      },
+      {
+        label: 'Filled',
+        render: () => (
+          // `filled` inside a card: a second border beside the card's own reads
+          // as a seam, so the field carries a background instead.
+          <Card className="w-full">
+            <Card.Content className="gap-4 p-4">
+              <TagInput
+                variant="filled"
+                label="Skills"
+                defaultValue={['typescript', 'swift']}
+                placeholder="Add a skill"
+              />
+            </Card.Content>
+          </Card>
+        ),
+      },
+      {
+        label: 'States',
+        render: () => (
+          <View className="w-full gap-4">
+            <TagInput
+              label="Read-only"
+              readOnly
+              defaultValue={['locked', 'archived']}
+            />
+            <TagInput
+              label="Disabled"
+              disabled
+              defaultValue={['unavailable']}
+              placeholder="Add a tag"
+            />
+          </View>
+        ),
       },
     ],
   },
