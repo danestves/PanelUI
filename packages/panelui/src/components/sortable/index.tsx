@@ -1161,17 +1161,27 @@ function SortableItem({
    * no way to discover it from the row. Moving by whole slots is published as
    * an accessibility action instead, which is the only path to reordering for
    * someone who is not dragging anything.
+   *
+   * The actions sit wherever the drag does. A handle list keeps them on the
+   * grip, which is an element in its own right; put here they would never be
+   * offered, because the actions of a view that is not itself an accessibility
+   * element are not reachable, and a row full of text is not one. A long-press
+   * list has no grip and gives the whole row to the drag, so the row becomes
+   * the element — which is what a screen reader wants from a row in any case.
    */
-  const a11y = locked
-    ? undefined
-    : [
+  const carriesActions = activation === 'longPress' && !locked;
+
+  const a11y = carriesActions
+    ? [
         { name: 'moveUp', label: 'Move up' },
         { name: 'moveDown', label: 'Move down' },
-      ];
+      ]
+    : undefined;
 
   const row = (
     <Animated.View
       onLayout={onLayout}
+      accessible={carriesActions}
       accessibilityActions={a11y}
       onAccessibilityAction={(event) => {
         if (event.nativeEvent.actionName === 'moveUp') step(id, -1);
@@ -1243,7 +1253,7 @@ function SortableHandle({
   accessibilityLabel = 'Drag to reorder',
   ...props
 }: SortableHandleProps) {
-  const { activation, disabled: rootDisabled } = useSortableRoot('Sortable.Handle');
+  const { activation, disabled: rootDisabled, step } = useSortableRoot('Sortable.Handle');
   const item = useContext(SortableItemContext);
 
   /*
@@ -1254,17 +1264,44 @@ function SortableHandle({
   const muted = useCSSVariable('--color-muted-foreground');
   const tint = typeof muted === 'string' ? muted : undefined;
 
+  const locked = rootDisabled || item?.disabled;
+
+  /*
+   * `adjustable` promises an element that answers a swipe up or down, and the
+   * promise was never kept: the grip published the role and nothing else, so
+   * the one part of a row a screen reader could reach did nothing at all.
+   * Moving by whole slots is what it was always meant to do. The same move is
+   * offered as a named action too, because a swipe says nothing about which
+   * way the row is going to travel.
+   */
+  const move = (delta: number) => {
+    if (locked || !item) return;
+    step(item.id, delta);
+  };
+
   const glyph = (
     <View
       accessible
       accessibilityRole="adjustable"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled: rootDisabled || item?.disabled }}
-      className={cn(
-        'items-center justify-center px-2 py-1.5',
-        (rootDisabled || item?.disabled) && 'opacity-40',
-        className
-      )}
+      accessibilityState={{ disabled: locked }}
+      accessibilityValue={item ? { text: `Position ${item.index + 1}` } : undefined}
+      accessibilityActions={
+        locked
+          ? undefined
+          : [
+              { name: 'increment' },
+              { name: 'decrement' },
+              { name: 'moveUp', label: 'Move up' },
+              { name: 'moveDown', label: 'Move down' },
+            ]
+      }
+      onAccessibilityAction={(event) => {
+        const action = event.nativeEvent.actionName;
+        if (action === 'increment' || action === 'moveUp') move(-1);
+        if (action === 'decrement' || action === 'moveDown') move(1);
+      }}
+      className={cn('items-center justify-center px-2 py-1.5', locked && 'opacity-40', className)}
       {...props}
     >
       <IconColorProvider color={tint}>
