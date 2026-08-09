@@ -489,6 +489,15 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
   const [internalQuery, setInternalQuery] = useState(defaultInputValue);
   const query = inputValue !== undefined ? inputValue : internalQuery;
 
+  /*
+   * Which chip a second backspace would take, in `multiple` mode. A held
+   * backspace repeats, and a field that removed on the first one would empty
+   * itself in the time it takes to notice — the mark is the beat that lets you
+   * stop. It is an index rather than a value because the same label can appear
+   * twice once the caller allows a custom value that matches an option.
+   */
+  const [marked, setMarked] = useState<number | null>(null);
+
   /** The selection as a list, which is the shape everything downstream wants. */
   const values = useMemo(() => {
     if (selection == null) return [];
@@ -742,11 +751,37 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
     [selection, commit]
   );
 
+  /**
+   * Removal by position, which is what the backspace mark holds. Removing by
+   * value would take both of a repeated label rather than the marked one.
+   */
+  const removeAt = useCallback(
+    (index: number) => {
+      const current = Array.isArray(selection) ? selection : [];
+      if (index < 0 || index >= current.length) return;
+      commit(
+        current.filter((_, position) => position !== index) as ComboboxSelection[Mode]
+      );
+    },
+    [selection, commit]
+  );
+
   const clear = useCallback(() => {
     setQuery('');
+    setMarked(null);
     commit((multiple ? [] : undefined) as ComboboxSelection[Mode]);
     inputRef.current?.focus();
   }, [setQuery, commit, multiple]);
+
+  /*
+   * The chips can also change from outside — a form reset, a pick undone in the
+   * list — which would leave the mark pointing past the end of them. A stale
+   * mark is a chip deleted by a backspace meant for the one that used to be
+   * there.
+   */
+  useEffect(() => {
+    if (marked !== null && marked >= values.length) setMarked(null);
+  }, [marked, values.length]);
 
   const context = useMemo<ComboboxContextValue>(
     () => ({ values, onSelect: (next) => select(next) }),
@@ -847,10 +882,14 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
     >
       <View className={slots.fieldContent()}>
         {multiple
-          ? values.map((entry) => (
+          ? values.map((entry, index) => (
               <Chip
                 key={entry}
                 size="sm"
+                // The marked chip turns destructive rather than growing an
+                // outline: it is about to be deleted, and that is the one
+                // colour in the theme that already means exactly that.
+                variant={marked === index ? 'destructive' : 'default'}
                 // A chip is `self-start` by default, which overrides the row's
                 // `items-center` and leaves it riding high against the input.
                 // Inside a field it is one of several things sharing a line.
@@ -867,6 +906,9 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
           className={slots.input()}
           value={query}
           onChangeText={(next) => {
+            // Typing takes the mark off: the backspace that would have removed
+            // a chip has been overtaken by a new query.
+            setMarked(null);
             setQuery(next);
             if (!open) openList();
           }}
@@ -874,20 +916,31 @@ function ComboboxRoot<Mode extends ComboboxMode = 'single'>({
             setFocused(true);
             if (openOnFocus) openList();
           }}
-          onBlur={() => setFocused(false)}
+          onBlur={() => {
+            setFocused(false);
+            setMarked(null);
+          }}
           onSubmitEditing={submit}
           onKeyPress={({ nativeEvent }) => {
-            // Backspace on an empty field takes the last chip back — the same
-            // reflex that deletes a character, extended to the thing in front
-            // of the cursor when there is no character left to delete.
-            if (
-              multiple &&
-              nativeEvent.key === 'Backspace' &&
-              query.length === 0 &&
-              values.length > 0
-            ) {
-              remove(values[values.length - 1]!);
+            if (!multiple) return;
+            if (nativeEvent.key !== 'Backspace') {
+              setMarked(null);
+              return;
             }
+            // There is still a character in front of the cursor: backspace
+            // means what it always means, and the chips are none of its
+            // business.
+            if (query.length > 0 || values.length === 0) return;
+
+            // Backspace on an empty field reaches the thing in front of the
+            // cursor when there is no character left to delete — but it marks
+            // that chip first, and only the next one takes it.
+            if (marked !== null && marked < values.length) {
+              removeAt(marked);
+              setMarked(null);
+              return;
+            }
+            setMarked(values.length - 1);
           }}
           editable={!disabled}
           // Android lays a single-line input's text against the top of its box
