@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 94 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 96 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -177,6 +177,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Button` | Pressable action with variants, sizes, loading state and icon slots |
 | `ButtonGroup` | Several buttons drawn as one control |
 | `Calendar` | A month of days, for picking one, several, or a range |
+| `CandlestickChart` | Open, high, low and close for a period, drawn as one mark |
 | `Card` | Content surface with header, body and footer |
 | `Carousel` | A run of slides, one at a time, dragged with a finger |
 | `Checkbox` | Animated checkbox, as a row or a selectable card |
@@ -248,6 +249,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Switch` | Animated on/off toggle |
 | `Table` | Rows and columns that stay lined up, with sortable headers |
 | `Tabs` | Segmented navigation with an animated indicator |
+| `TagInput` | A field whose value is a list of tokens rather than a string |
 | `Task` | A step an agent is working through, with its files |
 | `TextAnimation` | Five ways a piece of text or a number arrives |
 | `Textarea` | Multi-line text field that can grow with its content |
