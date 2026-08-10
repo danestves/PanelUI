@@ -157,11 +157,21 @@ export function InstallTabs({ kind = 'expo', packages }: InstallTabsProps): Reac
         ))}
       </div>
 
-      {/* Keyed on the command so the copy button's "copied" state does not
-          carry over onto a different command after a tab change. */}
+      {/*
+       * Keyed on the command so the copy button's "copied" state does not
+       * carry over onto a different command after a tab change.
+       *
+       * `px-4` on the code, because the block's own horizontal padding comes
+       * from a rule on the `.line` spans Shiki emits — and there is no Shiki
+       * here, just a string. 16px is what that rule resolves to, so this lines
+       * the command up with the tab labels above it and with every other code
+       * block on the site. Borrowing the `.shiki` class instead would bring a
+       * colour rule pointing at a variable that only exists on highlighted
+       * output.
+       */}
       <CodeBlock key={command} allowCopy className="m-0 rounded-none border-0">
         <Pre>
-          <code>{command}</code>
+          <code className="px-4">{command}</code>
         </Pre>
       </CodeBlock>
     </div>
