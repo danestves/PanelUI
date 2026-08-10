@@ -1,0 +1,84 @@
+# Publishes panelui-native to npm when a GitHub release is published.
+#
+# The release is the trigger rather than the tag, so publishing stays the last
+# deliberate step of the existing flow — bump, changelog, tag, cut the release —
+# instead of firing the moment a tag is pushed, where a typo is already on npm
+# before anyone has read it.
+#
+# Authentication is npm Trusted Publishing: the job asks GitHub for an OIDC
+# token and npm exchanges it for a short-lived one, so there is no credential in
+# this repository to leak or rotate, and the published package carries a
+# provenance attestation naming this workflow and commit.
+#
+# One-time setup on npmjs.com, without which every run fails at the last step:
+#   panelui-native -> Settings -> Trusted Publisher -> GitHub Actions
+#   Organization or user: panel-ui
+#   Repository:           PanelUI
+#   Workflow filename:    publish.yml
+name: Publish
+
+on:
+  release:
+    types: [published]
+  # A dry run on demand, so the whole path — install, typecheck, build, version
+  # check, pack — can be exercised without putting anything on the registry.
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Pack and verify without publishing'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write # required for trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      # Node 22 ships npm 10, which has no trusted publishing. Without this the
+      # publish step fails asking for a token that deliberately does not exist.
+      - name: Use an npm that can publish with OIDC
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build library
+        run: npm run build
+
+      # The only thing standing between a mistyped tag and a wrong version on
+      # npm, which cannot be taken back — npm does not allow a version to be
+      # republished, even after an unpublish.
+      - name: Check the tag matches the package version
+        if: github.event_name == 'release'
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(node -p "require('./packages/panelui/package.json').version")"
+          if [ "$tag" != "$version" ]; then
+            echo "::error::Release tag ${GITHUB_REF_NAME} does not match packages/panelui/package.json (${version}). Fix one of them and re-cut the release."
+            exit 1
+          fi
+          echo "Publishing ${version} from ${GITHUB_REF_NAME}."
+
+      - name: Publish
+        if: github.event_name == 'release'
+        run: npm publish --provenance --access public
+        working-directory: packages/panelui
+
+      - name: Dry run
+        if: github.event_name == 'workflow_dispatch'
+        run: npm publish --dry-run --access public
+        working-directory: packages/panelui
