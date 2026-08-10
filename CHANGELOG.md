@@ -9,7 +9,77 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.56.0] — 2026-08-10
+
+### Added
+
+- **`HexChart`** — a whole broken into parts, counted out in cells. Every series holds a number of
+  hexagons proportional to its share of the total, so a series worth a tenth *looks* like a tenth
+  and can be confirmed as one by counting.
+
+  That is the reason to reach for it over the `PieChart` beside it. A pie asks the reader to
+  compare angles, which is the hardest quantity there is to judge by eye; this asks them to
+  compare counts, which anyone can check by looking. What it gives up is the small end — every
+  cell is a whole unit, so a series worth half a cell either rounds up or disappears. It is for
+  shares of a few percent and up, not for a long tail.
+
+  `shape` picks the arrangement. `grid` is reading order and fills every cell, which is the
+  countable one: someone checking that the second series really is a quarter can count a row and
+  multiply. `blob` grows the series out from the middle of the field instead — smallest in the
+  centre, each larger one wrapped around it — which shows the shape of the split at a glance.
+  Its ragged edge comes from a hash of each cell's own coordinates rather than a random number,
+  so a re-render is not an animation and the same data draws the same honeycomb every time.
+
+  Cell counts are apportioned by largest remainder, so the parts add up to the budget exactly.
+  Rounding each share on its own does not: three equal parts of a hundred round to 33 each and
+  leave one over, and a spare cell in a honeycomb is a cell of some colour that nothing in the
+  data accounts for.
+
+  `columns` is the one knob for how fine the grid is, `density` how much of the field a blob
+  fills, and the parts are the ones every chart here has — `Header`, `Cells`, `Tooltip`, `Legend`
+  and `Skeleton`. Colours come from the `--color-chart-*` tokens like every other chart.
+
+### Changed
+
+- **Releases are now published from CI.** A published GitHub release builds and publishes the
+  package through npm's trusted publishing, so every version from this one on carries a
+  provenance attestation naming the workflow and the commit it was built from. Nothing changes
+  about how the package is consumed; it is verifiable now in a way it was not.
+
+### Fixed
+
+- **`Tour`'s card no longer warns about a fought-over opacity.** The card carried an entering
+  animation and an inline opacity on the same view — the fade on the way in, and the gate holding
+  the card invisible for the frame it is measured in — and Reanimated warned that a layout
+  animation may overwrite a property the style also sets. Which of them won was never something
+  to rely on. The animation and the placement now sit on an outer view and the measurement and
+  the gate on an inner one.
+
+### Docs
+
+- **A new [Charts](https://panelui.dev/docs/customization/charts) page under Customization.** The
+  five-colour series ramp was named in passing on the Colors page and shown in a theme block on
+  the Theming page, and pulled together nowhere — so "put every chart in my app on brand" had no
+  answer to link to. It covers the ramp and its ordering, which part of each chart takes a
+  `colorIndex`, the two charts that are deliberately not a series ramp, the override block in the
+  shape Uniwind actually requires, and the weight and fill props that separate series without
+  spending another colour on them.
+
+- **`Tour` gains a worked version for a screen taller than the screen** — the one case the
+  component cannot handle by itself. Each step records where it sits during layout and
+  `onStepChange` scrolls it back into view before the spotlight goes looking. The existing
+  scroller example was writing pixel offsets down by hand, which is right until somebody adds a
+  paragraph above one; it now measures them the same way.
+
+- **The showcase app has an "All charts" screen**, reached from a row above the component list:
+  one example of every chart on one screen, each rendered exactly as its own page renders it.
+  Choosing a chart is a decision about shape, and a list of names is the one thing that cannot
+  help with that.
+
 ## [0.55.0] — 2026-08-10
+
+*Never published. Its changes first shipped in 0.56.0 above — `npm install panelui-native@0.55.0`
+will not resolve.*
 
 ### Added
 
