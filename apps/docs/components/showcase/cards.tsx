@@ -1,17 +1,12 @@
 import {
-  ActivityIcon,
   BellIcon,
-  BookOpenIcon,
-  CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   FileTextIcon,
-  LifeBuoyIcon,
+  ImageIcon,
   SearchIcon,
   SendHorizontalIcon,
-  TargetIcon,
-  UsersIcon,
-  WalletIcon,
+  XIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -273,34 +268,6 @@ function Chip({
   );
 }
 
-/** Item — the list row: media, text, action. */
-function Item({
-  icon: Icon,
-  title,
-  description,
-  action,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description?: string;
-  action?: React.ReactNode;
-}) {
-  return (
-    <span className="flex w-full flex-row items-center gap-3 rounded-xl p-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted">
-        <Icon className="size-4 text-muted-foreground" />
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-sm font-medium text-foreground">{title}</span>
-        {description ? (
-          <span className="truncate text-xs text-muted-foreground">{description}</span>
-        ) : null}
-      </span>
-      {action}
-    </span>
-  );
-}
-
 function Avatar({ initials, className }: { initials: string; className?: string }) {
   return (
     <span
@@ -362,20 +329,80 @@ export function ControlsCard() {
   );
 }
 
-/** Item — the list row, in the two groups a settings screen puts them in. */
-export function ItemsCard() {
+/**
+ * Attachment — file rows in the three states they pass through: uploading with
+ * a hairline of progress along the bottom edge, done, and failed with the
+ * border carrying the failure so it reads at a glance down a list.
+ */
+export function AttachmentCard() {
+  const files = [
+    {
+      icon: ImageIcon,
+      name: 'launch-hero@2x.png',
+      meta: 'PNG · 1.8 MB',
+      state: 'uploading' as const,
+      progress: 62,
+    },
+    {
+      icon: FileTextIcon,
+      name: 'sales-dashboard.pdf',
+      meta: 'PDF · 2.4 MB',
+      state: 'done' as const,
+      progress: 0,
+    },
+    {
+      icon: FileTextIcon,
+      name: 'q3-forecast.xlsx',
+      meta: 'Upload failed',
+      state: 'error' as const,
+      progress: 0,
+    },
+  ];
+
   return (
-    <Card className="p-2">
-      <span className="px-3 pb-1 pt-2 text-xs font-medium text-muted-foreground">Planning</span>
-      <Item icon={FileTextIcon} title="Documents" description="14 files" />
-      <Item icon={WalletIcon} title="Budget" description="Updated today" />
-      <Item icon={TargetIcon} title="Goals" description="3 active" />
-      <Item icon={CalendarIcon} title="Calendar" description="Next: Friday" />
-      <span className="mt-2 px-3 pb-1 pt-2 text-xs font-medium text-muted-foreground">Support</span>
-      <Item icon={LifeBuoyIcon} title="Help Center" />
-      <Item icon={BookOpenIcon} title="Documentation" />
-      <Item icon={ActivityIcon} title="Status" action={<Badge variant="success">Live</Badge>} />
-      <Item icon={UsersIcon} title="Community" />
+    <Card className="gap-3 p-4">
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Attachments
+      </span>
+      {files.map(({ icon: Icon, name, meta, state, progress }) => (
+        <div
+          key={name}
+          className={cn(
+            'relative w-full overflow-hidden rounded-xl border p-4',
+            state === 'error' ? 'border-destructive' : 'border-border'
+          )}
+        >
+          <div className="flex w-full flex-row items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted">
+              <Icon className="size-4 text-muted-foreground" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span
+                className={cn(
+                  'truncate text-base font-medium',
+                  state === 'error' ? 'text-destructive' : 'text-foreground'
+                )}
+              >
+                {name}
+              </span>
+              <span
+                className={cn(
+                  'truncate text-sm',
+                  state === 'error' ? 'text-destructive' : 'text-muted-foreground'
+                )}
+              >
+                {meta}
+              </span>
+            </span>
+            <XIcon className="size-4 shrink-0 text-muted-foreground" />
+          </div>
+          {state === 'uploading' ? (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-muted">
+              <span className="block h-full bg-primary" style={{ width: `${progress}%` }} />
+            </span>
+          ) : null}
+        </div>
+      ))}
     </Card>
   );
 }

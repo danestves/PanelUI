@@ -9,7 +9,7 @@ import {
   ControlsCard,
   FormCard,
   CalendarCard,
-  ItemsCard,
+  AttachmentCard,
   KpiCard,
   SlidersCard,
   TableCard,
@@ -76,7 +76,8 @@ export function Showcase(): React.ReactElement {
             <div className="grid grid-cols-1 items-start gap-5 [zoom:0.85] sm:grid-cols-2 lg:grid-cols-4">
               <div className="flex flex-col gap-5">
                 <ControlsCard />
-                <ItemsCard />
+                <AttachmentCard />
+                <TimelineCard />
               </div>
               <div className="flex flex-col gap-5">
                 <AreaChartCard />
@@ -86,7 +87,6 @@ export function Showcase(): React.ReactElement {
               <div className="flex flex-col gap-5">
                 <FormCard />
                 <SlidersCard />
-                <TimelineCard />
                 <AlertCard />
               </div>
               <div className="flex flex-col gap-5">
