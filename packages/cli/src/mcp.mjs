@@ -1,0 +1,369 @@
+/**
+ * An MCP server over the PanelUI registry, so an agent can look a component up
+ * before it writes code that uses one.
+ *
+ * The transport is written out here rather than taken from the SDK. This
+ * package has no dependencies on purpose — running it with npx should download
+ * a few kilobytes, not a tree — and stdio MCP is JSON-RPC 2.0, one message per
+ * line, which is about forty lines of that budget. If the protocol grows
+ * something this cannot express, that is the moment to reconsider, not before.
+ *
+ * Everything it answers comes from the same registry the `add` command
+ * installs from, so the source an agent reads is the source it would get.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+import { DEFAULT_REGISTRY, readConfig } from './config.mjs';
+
+/**
+ * The version we speak. The spec says to answer with the client's version when
+ * we support it and ours when we do not, so a newer client downgrades rather
+ * than failing.
+ */
+const PROTOCOL_VERSION = '2025-06-18';
+
+const { default: pkg } = await import('../package.json', { with: { type: 'json' } });
+
+/* ------------------------------------------------------------------ *
+ * The registry, through the same fetch the CLI uses.
+ * ------------------------------------------------------------------ */
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`Registry returned ${response.status} for ${url}`);
+  return response.json();
+}
+
+function registryFor(options) {
+  return options.registry ?? readConfig(options.cwd)?.registry ?? DEFAULT_REGISTRY;
+}
+
+/** The docs site behind a registry, for the markdown a component's page has. */
+function docsOrigin(registry) {
+  return registry.replace(/\/r\/?$/, '');
+}
+
+/* ------------------------------------------------------------------ *
+ * The tools.
+ * ------------------------------------------------------------------ */
+
+const TOOLS = [
+  {
+    name: 'panelui_list_components',
+    description:
+      'List every component, primitive, hook and utility in the PanelUI registry, with a one-line description of each. Start here when you do not know what exists.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['ui', 'lib', 'hook', 'theme'],
+          description: 'Only items of this kind. Omit for everything.',
+        },
+      },
+    },
+  },
+  {
+    name: 'panelui_search_components',
+    description:
+      'Search the registry by name and description — "sheet", "chart", "date". Use this before writing custom UI, to check whether the component already exists.',
+    inputSchema: {
+      type: 'object',
+      properties: { query: { type: 'string', description: 'What you are looking for.' } },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'panelui_view_component',
+    description:
+      "A registry item in full: its description, the components it depends on, the npm packages it needs, and every file's complete source. Read this before using a component, so the props and compound parts are the real ones.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Registry name, e.g. "button" or "bottom-sheet".' },
+        includeSource: {
+          type: 'boolean',
+          description: 'Include the file contents. Defaults to true.',
+        },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'panelui_get_component_docs',
+    description:
+      "A component's documentation page as markdown: anatomy, every prop with its type, the variants, and worked examples. Prefer this over guessing an API.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Component slug, e.g. "select".' },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'panelui_get_add_command',
+    description: 'The command that copies these components into the project.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        names: { type: 'array', items: { type: 'string' }, description: 'Registry names.' },
+      },
+      required: ['names'],
+    },
+  },
+  {
+    name: 'panelui_get_project_info',
+    description:
+      'How this project is set up: whether it is an Expo app, whether PanelUI is installed as a package or copied in, where components land, which CSS entry Metro compiles, and which components have already been added. Read this first — it decides how the code you write should import things.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+];
+
+async function callTool(name, args, options) {
+  const registry = registryFor(options);
+
+  switch (name) {
+    case 'panelui_list_components': {
+      const index = await fetchJson(`${registry}/index.json`);
+      const items = args.type
+        ? index.filter((item) => item.type === `registry:${args.type}`)
+        : index;
+      return items
+        .map((item) => `${item.name} (${item.type.replace('registry:', '')}) — ${item.description}`)
+        .join('\n');
+    }
+
+    case 'panelui_search_components': {
+      const index = await fetchJson(`${registry}/index.json`);
+      const needle = String(args.query).toLowerCase();
+      const hits = index.filter(
+        (item) =>
+          item.name.includes(needle) || item.description.toLowerCase().includes(needle)
+      );
+      if (!hits.length) return `Nothing matches "${args.query}".`;
+      return hits.map((item) => `${item.name} — ${item.description}`).join('\n');
+    }
+
+    case 'panelui_view_component': {
+      const item = await fetchJson(`${registry}/${args.name}.json`);
+      if (!item) return `No registry item called "${args.name}".`;
+
+      const lines = [
+        `# ${item.name}`,
+        item.description,
+        '',
+        `Type: ${item.type}`,
+        `Depends on: ${item.registryDependencies?.join(', ') || 'nothing else in the registry'}`,
+        `npm dependencies: ${item.dependencies?.join(', ') || 'none'}`,
+        `Optional npm dependencies: ${item.optionalDependencies?.join(', ') || 'none'}`,
+      ];
+
+      if (args.includeSource !== false) {
+        for (const file of item.files) {
+          lines.push('', `## ${file.path}`, '', '```tsx', file.content, '```');
+        }
+      }
+
+      return lines.join('\n');
+    }
+
+    case 'panelui_get_component_docs': {
+      const url = `${docsOrigin(registry)}/llms.mdx/components/${args.name}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        return `No documentation page at ${url}. The component may be filed under charts, ai-components or form — try panelui_view_component instead.`;
+      }
+      return response.text();
+    }
+
+    case 'panelui_get_add_command':
+      return `npx panelui-cli@latest add ${args.names.join(' ')}`;
+
+    case 'panelui_get_project_info':
+      return JSON.stringify(projectInfo(options.cwd), null, 2);
+
+    default:
+      throw new Error(`Unknown tool: ${name}`);
+  }
+}
+
+/**
+ * What an agent needs to know before it writes a line: which of the two ways
+ * of consuming the library this project uses, and where things go.
+ */
+function projectInfo(cwd) {
+  const pkgPath = path.join(cwd, 'package.json');
+  const hasPackageJson = fs.existsSync(pkgPath);
+  const manifest = hasPackageJson ? JSON.parse(fs.readFileSync(pkgPath, 'utf8')) : {};
+  const deps = { ...manifest.dependencies, ...manifest.devDependencies };
+  const config = hasPackageJson ? readConfig(cwd) : null;
+
+  const componentsDir = config
+    ? path.join(cwd, (config.aliases?.components ?? '@/components/ui').replace(/^[@~]\//, ''))
+    : null;
+
+  return {
+    cwd,
+    isExpo: 'expo' in deps,
+    // The two ways in. They can both be true; a project that installs the
+    // package and forks one component is a normal thing to be.
+    installedAsPackage: 'panelui-native' in deps,
+    usesCopiedSource: Boolean(config),
+    hasTypeScript: 'typescript' in deps || fs.existsSync(path.join(cwd, 'tsconfig.json')),
+    packageManager: manifest.packageManager ?? null,
+    registry: config?.registry ?? DEFAULT_REGISTRY,
+    aliases: config?.aliases ?? null,
+    cssEntry: config?.css ?? null,
+    componentsDir: componentsDir && fs.existsSync(componentsDir) ? componentsDir : null,
+    addedComponents:
+      componentsDir && fs.existsSync(componentsDir)
+        ? fs
+            .readdirSync(componentsDir)
+            .filter((file) => /\.tsx?$/.test(file))
+            .map((file) => file.replace(/\.tsx?$/, ''))
+            .sort()
+        : [],
+    reanimated: deps['react-native-reanimated'] ?? null,
+    uniwind: deps.uniwind ?? null,
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * JSON-RPC 2.0 over stdio, one message per line.
+ * ------------------------------------------------------------------ */
+
+function send(message) {
+  process.stdout.write(JSON.stringify(message) + '\n');
+}
+
+/*
+ * A client that goes away mid-write gives us EPIPE, which is an unhandled
+ * 'error' on the socket and takes the process down with a stack trace. There
+ * is nothing to report to — the thing that would read it is what closed — so
+ * this exits quietly instead.
+ */
+process.stdout.on('error', (err) => {
+  if (err.code === 'EPIPE') process.exit(0);
+  throw err;
+});
+
+function result(id, value) {
+  send({ jsonrpc: '2.0', id, result: value });
+}
+
+function failure(id, code, message) {
+  send({ jsonrpc: '2.0', id, error: { code, message } });
+}
+
+async function handle(message, options) {
+  const { id, method, params = {} } = message;
+
+  // A notification has no id and takes no reply — `notifications/initialized`
+  // is the one every client sends, and answering it is a protocol error.
+  if (id === undefined) return;
+
+  switch (method) {
+    case 'initialize':
+      return result(id, {
+        protocolVersion:
+          typeof params.protocolVersion === 'string' ? params.protocolVersion : PROTOCOL_VERSION,
+        capabilities: { tools: {} },
+        serverInfo: { name: 'panelui', version: pkg.version },
+        instructions:
+          'PanelUI components for Expo. Call panelui_get_project_info first — it says whether ' +
+          'to import from the `panelui-native` package or from copied source, and which ' +
+          'components already exist. Then panelui_search_components before writing any custom ' +
+          'UI, and panelui_get_component_docs before using one.',
+      });
+
+    case 'tools/list':
+      return result(id, { tools: TOOLS });
+
+    case 'tools/call':
+      try {
+        const text = await callTool(params.name, params.arguments ?? {}, options);
+        return result(id, { content: [{ type: 'text', text }] });
+      } catch (err) {
+        // A failed tool is reported as a result with isError, not as a
+        // protocol error: the model is supposed to see it and try something
+        // else, and a JSON-RPC error never reaches it.
+        return result(id, {
+          content: [{ type: 'text', text: `${err.message}` }],
+          isError: true,
+        });
+      }
+
+    case 'ping':
+      return result(id, {});
+
+    default:
+      return failure(id, -32601, `Method not found: ${method}`);
+  }
+}
+
+export async function mcp(options) {
+  process.stdin.setEncoding('utf8');
+
+  let buffer = '';
+  for await (const chunk of process.stdin) {
+    buffer += chunk;
+
+    let newline;
+    while ((newline = buffer.indexOf('\n')) !== -1) {
+      const line = buffer.slice(0, newline).trim();
+      buffer = buffer.slice(newline + 1);
+      if (!line) continue;
+
+      let message;
+      try {
+        message = JSON.parse(line);
+      } catch {
+        failure(null, -32700, 'Parse error');
+        continue;
+      }
+
+      await handle(message, options);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * `mcp init` — the config file, per editor.
+ * ------------------------------------------------------------------ */
+
+const EDITOR_CONFIGS = {
+  claude: { file: '.mcp.json', label: 'Claude Code' },
+  cursor: { file: '.cursor/mcp.json', label: 'Cursor' },
+  vscode: { file: '.vscode/mcp.json', label: 'VS Code' },
+};
+
+const SERVER_ENTRY = { command: 'npx', args: ['-y', 'panelui-cli@latest', 'mcp'] };
+
+/**
+ * Merge the server into whatever config is already there rather than replacing
+ * it — these files usually have other servers in them, and losing those is not
+ * a reasonable price for adding one.
+ */
+export function mcpInit(options, editor = 'claude') {
+  const target = EDITOR_CONFIGS[editor];
+  if (!target) {
+    throw new Error(
+      `Unknown editor "${editor}". Try: ${Object.keys(EDITOR_CONFIGS).join(', ')}.`
+    );
+  }
+
+  const file = path.join(options.cwd, target.file);
+  const existing = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
+
+  // VS Code names the map `servers`; everyone else uses `mcpServers`.
+  const key = editor === 'vscode' ? 'servers' : 'mcpServers';
+  existing[key] = { ...existing[key], panelui: SERVER_ENTRY };
+
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(existing, null, 2) + '\n');
+
+  return { file: target.file, label: target.label };
+}

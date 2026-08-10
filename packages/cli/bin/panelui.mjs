@@ -8,6 +8,7 @@
 import process from 'node:process';
 import { add, list } from '../src/add.mjs';
 import { init } from '../src/init.mjs';
+import { mcp, mcpInit } from '../src/mcp.mjs';
 import { CliError, bold, dim, error, info } from '../src/ui.mjs';
 
 const HELP = `
@@ -21,6 +22,9 @@ ${bold('Commands')}
                        In an existing one, set it up to receive components.
   add <name...>        Copy components in, with everything they depend on
   list                 Show everything available
+  mcp                  Run the MCP server, so an agent can read the registry
+  mcp init [editor]    Write the server into an editor's config
+                       claude | cursor | vscode
 
 ${bold('Options')}
   --yes, -y            Accept every prompt
@@ -41,6 +45,7 @@ ${bold('Examples')}
   npx panelui-cli@latest init --template starter --name my-app --theme moon
   npx panelui-cli@latest add button
   npx panelui-cli@latest add item message --yes
+  npx panelui-cli@latest mcp init cursor
 `;
 
 function parseArgs(argv) {
@@ -132,6 +137,16 @@ async function main() {
     case 'list':
     case 'ls':
       await list(options);
+      break;
+    case 'mcp':
+      if (rest[0] === 'init') {
+        const { file, label } = mcpInit(options, rest[1]);
+        info(`Wrote the PanelUI server into ${bold(file)} for ${label}.`);
+        break;
+      }
+      // No banner, no colours: stdout is the protocol here, and anything
+      // written to it that is not a JSON-RPC message breaks the session.
+      await mcp(options);
       break;
     default:
       throw new CliError(`Unknown command: ${command}`);
