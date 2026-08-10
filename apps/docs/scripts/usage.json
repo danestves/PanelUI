@@ -4697,6 +4697,46 @@
       "height": 176
     }
   },
+  "tour": {
+    "intro": "A walkthrough that introduces a screen one control at a time. It dims everything, cuts a hole around one control and puts a card beside it, then moves the hole to the next control.\n\nThe hole is the point. A caption on its own has to describe where to look, and “the button at the top right” is a sentence people read twice and still get wrong.",
+    "usage": "<Tour open={onboarding} onOpenChange={setOnboarding}>\n  <Tour.Step\n    order={0}\n    title=\"Your conversations\"\n    description=\"Everything waiting for a reply lands in this list.\"\n  >\n    <Card>{/* … */}</Card>\n  </Tour.Step>\n\n  <Tour.Step\n    order={1}\n    title=\"Start something new\"\n    description=\"A message to anyone, from anywhere in the app.\"\n  >\n    <Button>New message</Button>\n  </Tour.Step>\n</Tour>",
+    "parts": {
+      "Step": "Wraps the control a step is about, and is what gets measured. `order` puts it in the sequence."
+    },
+    "partNotes": "A step stays mounted whether the tour is running or not — it is a description of a control that is already on the screen, not something that appears with the walkthrough. Its wrapper is a plain view with no sizing of its own, so put layout classes on the step rather than on the control inside it.",
+    "anatomy": "<Tour>\n  <Tour.Step order={0} title=\"…\" description=\"…\">\n    {/* the control this step is about */}\n  </Tour.Step>\n</Tour>",
+    "notes": "`order` is the author's numbering of the walkthrough, not the tree's — a tour usually crosses a header, a list and a tab bar in an order the layout knows nothing about. It is also what the controlled `step` prop refers to, so the two stay in the same units. Steps sort themselves by it.\n\nTargets are measured in window coordinates each time their step becomes current, and again when the window changes size, so a rotation mid-tour re-places the spotlight rather than stranding it. The one case this cannot fix by itself is a target that has scrolled out of view: scroll it back in `onStepChange`, which fires with the step about to be shown and lands before the measurement.\n\nA step whose target cannot be measured — one whose control has gone — gets no hole and a card in the middle of the screen. Dimming everything and saying nothing about where to look is honest; cutting a hole at the origin is not.\n\nAndroid's back button ends a dismissible tour rather than navigating away from it, and the whole overlay respects reduced motion: the spotlight jumps between targets instead of travelling.",
+    "examples": [
+      {
+        "title": "Round targets",
+        "description": "`shape=\"circle\"` squares the hole around the target's centre, which is what keeps it round rather than letting it collapse into a slot. Set it on the tour for a screen of round controls, or on the one step that needs it.",
+        "code": "<Tour open={running} onOpenChange={setRunning} shape=\"circle\" padding={10}>\n  <Tour.Step order={0} title=\"You\" description=\"Your profile, and everything under it.\">\n    <Avatar fallback=\"KA\" />\n  </Tour.Step>\n  <Tour.Step order={1} title=\"What you saved\" description=\"Anything you bookmark shows up here.\">\n    <Button variant=\"secondary\" size=\"icon\" accessibilityLabel=\"Saved\">\n      <BookmarkIcon size={20} />\n    </Button>\n  </Tour.Step>\n</Tour>"
+      },
+      {
+        "title": "A step that asks you to try it",
+        "description": "`interactive` leaves the spotlit control pressable, so the walkthrough can ask you to use the thing rather than read about it. Advancing stays the app's call — the target keeps its own `onPress`.",
+        "code": "const [step, setStep] = useState(0);\n\n<Tour open={running} onOpenChange={setRunning} step={step} onStepChange={setStep} interactive>\n  <Tour.Step order={0} title=\"Press it\" description=\"Go on — the button still works under the dim.\" shape=\"circle\">\n    <Button\n      size=\"icon\"\n      accessibilityLabel=\"Add one\"\n      onPress={() => {\n        setCount((current) => current + 1);\n        if (step === 0) setStep(1);\n      }}\n    >\n      <PlusIcon size={20} />\n    </Button>\n  </Tour.Step>\n\n  <Tour.Step order={1} title=\"And there it is\" description=\"The count went up by one.\">\n    <Text size=\"lg\" weight=\"semibold\">{count}</Text>\n  </Tour.Step>\n</Tour>"
+      },
+      {
+        "title": "A target inside a scroller",
+        "description": "The tour measures on the frame after `onStepChange`, so a scroll issued there lands first and the spotlight arrives where the target does.",
+        "code": "const scroller = useRef<ScrollView>(null);\nconst offsets = { 0: 0, 1: 320, 2: 720 };\n\n<ScrollView ref={scroller}>\n  <Tour\n    open={running}\n    onOpenChange={setRunning}\n    onStepChange={(order) => scroller.current?.scrollTo({ y: offsets[order], animated: false })}\n  >\n    {/* …steps… */}\n  </Tour>\n</ScrollView>"
+      },
+      {
+        "title": "Its own words",
+        "description": "The card's controls read in English by default. `labels` replaces any of them, and `showSkip` and `showProgress` take them away.",
+        "code": "<Tour\n  open={running}\n  onOpenChange={setRunning}\n  showProgress={false}\n  labels={{ next: 'Siguiente', back: 'Atrás', done: 'Listo', skip: 'Omitir', close: 'Cerrar' }}\n>\n  {/* …steps… */}\n</Tour>"
+      }
+    ],
+    "extraImports": [
+      "Avatar",
+      "Button",
+      "Card",
+      "Text",
+      "BookmarkIcon",
+      "PlusIcon"
+    ]
+  },
   "steps": {
     "intro": "A stepper for multi-step flows. Steps does not own your flow — it reflects whatever step your app says is active.",
     "usage": "<Steps value={step} onValueChange={setStep}>\n  {items.map((item, index) => (\n    <Steps.Item key={item.title} step={index} className=\"flex-1\">\n      <Steps.Trigger>\n        <Steps.Indicator />\n        <Steps.Title>{item.title}</Steps.Title>\n      </Steps.Trigger>\n    </Steps.Item>\n  ))}\n</Steps>",

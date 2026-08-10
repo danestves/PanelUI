@@ -920,6 +920,14 @@ export {
   type TooltipVariant,
 } from './components/tooltip';
 export {
+  Tour,
+  type TourProps,
+  type TourStepProps,
+  type TourShape,
+  type TourPlacement,
+  type TourLabels,
+} from './components/tour';
+export {
   Typography,
   type TypographyProps,
   type TypographyType,
