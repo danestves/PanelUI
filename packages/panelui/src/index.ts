@@ -259,6 +259,20 @@ export {
   type HeatmapLayout,
 } from './components/heatmap-chart';
 export {
+  HexChart,
+  useHexChart,
+  type HexChartProps,
+  type HexChartHandle,
+  type HexChartHeaderProps,
+  type HexChartCellsProps,
+  type HexChartTooltipProps,
+  type HexChartLegendProps,
+  type HexChartSkeletonProps,
+  type HexChartStatus,
+  type HexDatum,
+  type HexShape,
+} from './components/hex-chart';
+export {
   Map,
   useMap,
   hasMapLibre,

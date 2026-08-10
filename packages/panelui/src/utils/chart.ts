@@ -504,6 +504,242 @@ export function radarPath(
   return `${path}Z`;
 }
 
+/**
+ * A pointy-top hexagon's metrics, from the radius of the circle through its
+ * corners.
+ *
+ * Pointy-top rather than flat-top because it is the rows that have to tile: a
+ * row of pointy-top cells has a straight top and bottom edge, so the next row
+ * nests into it by half a cell and the field reads as a honeycomb. Flat-top
+ * cells tile by column instead, which gives the same shape turned a quarter
+ * turn and a field that is taller than it is wide for the same cell count.
+ */
+export interface HexMetrics {
+  /** Centre to corner. */
+  radius: number;
+  /** Across the flats — the full width of one cell. */
+  width: number;
+  /** Point to point — the full height of one cell. */
+  height: number;
+  /** Centre to centre along a row. */
+  stepX: number;
+  /**
+   * Centre to centre between rows. Three quarters of the height, not all of
+   * it: consecutive rows interlock, and each one only costs the height of the
+   * cell less the point it slots into.
+   */
+  stepY: number;
+}
+
+export function hexMetrics(radius: number): HexMetrics {
+  'worklet';
+  const width = Math.sqrt(3) * radius;
+  return { radius, width, height: radius * 2, stepX: width, stepY: radius * 1.5 };
+}
+
+/** The cell radius that fits `columns` of them across `width`. */
+export function hexRadiusFor(width: number, columns: number): number {
+  'worklet';
+  if (width <= 0 || columns <= 0) return 0;
+  // Half a cell wider than the columns alone: the odd rows are offset by that
+  // much, and a radius derived without it runs them off the right edge.
+  return width / (columns + 0.5) / Math.sqrt(3);
+}
+
+/** How many rows of cells fit in `height`. */
+export function hexRowsFor(height: number, metrics: HexMetrics): number {
+  'worklet';
+  if (height <= 0 || metrics.stepY <= 0) return 0;
+  return Math.max(1, Math.floor((height - metrics.height / 4) / metrics.stepY));
+}
+
+/** The centre of the cell at `column`, `row`, with odd rows nested half a cell right. */
+export function hexCenter(
+  column: number,
+  row: number,
+  metrics: HexMetrics,
+  left: number,
+  top: number
+): ChartPoint {
+  'worklet';
+  const offset = row % 2 === 1 ? metrics.stepX / 2 : 0;
+  return {
+    x: left + metrics.stepX / 2 + offset + column * metrics.stepX,
+    y: top + metrics.radius + row * metrics.stepY,
+  };
+}
+
+/**
+ * One hexagon as a closed path.
+ *
+ * Corners are turns from twelve o'clock like everything else polar in this
+ * file, which puts the first one straight up — the definition of pointy-top.
+ *
+ * The coordinates are rounded to two decimals because these paths are
+ * concatenated by the hundred: a field is one path string per series rather
+ * than one node per cell, and full float precision would make each of those
+ * strings several times longer for a difference no display can resolve.
+ */
+export function hexPath(cx: number, cy: number, radius: number): string {
+  'worklet';
+  if (radius <= 0) return '';
+  let d = '';
+  for (let corner = 0; corner < 6; corner += 1) {
+    const point = polarPoint(cx, cy, radius, corner / 6);
+    d += `${corner === 0 ? 'M' : 'L'}${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+  }
+  return `${d}Z`;
+}
+
+/**
+ * A number in 0…1 from a pair of coordinates, the same one every time.
+ *
+ * `Math.random` would give the honeycomb a different edge on every render,
+ * which turns a re-render into an animation nobody asked for and means the
+ * same data never screenshots twice.
+ */
+export function hashUnit(a: number, b: number): number {
+  'worklet';
+  let h = Math.imul(a + 1, 374761393) ^ Math.imul(b + 1, 668265263);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
+ * How many cells each value gets out of `budget`, by largest remainder.
+ *
+ * Rounding each share on its own does not add up — three equal parts of a
+ * hundred round to 33 each and leave one over — and a spare cell in a
+ * honeycomb is not a rounding error the reader can shrug off, it is a cell of
+ * some colour that nothing in the data accounts for. Flooring every share and
+ * then handing the leftovers to the largest fractions spends the budget
+ * exactly, and spends it on the series with the strongest claim to each one.
+ */
+export function shareCounts(values: number[], budget: number): number[] {
+  const total = values.reduce((sum, value) => sum + Math.max(0, value), 0);
+  if (total <= 0 || budget <= 0) return values.map(() => 0);
+
+  const exact = values.map((value) => (Math.max(0, value) / total) * budget);
+  const counts = exact.map((value) => Math.floor(value));
+  // Every fraction is under one, so there is always less than one cell per
+  // series left over and a single pass down the order places all of them. The
+  // clamp is against float drift in the sum rather than against the maths.
+  const spare = Math.min(
+    budget - counts.reduce((sum, count) => sum + count, 0),
+    values.length
+  );
+
+  const byFraction = exact
+    .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+    .sort((a, b) => b.fraction - a.fraction || a.index - b.index);
+
+  for (let i = 0; i < spare; i += 1) {
+    const index = byFraction[i]!.index;
+    counts[index] = counts[index]! + 1;
+  }
+  return counts;
+}
+
+/** How the filled cells are arranged in the field. */
+export type HexShape = 'blob' | 'grid';
+
+export interface HexCell {
+  column: number;
+  row: number;
+}
+
+/** How far off its ring a cell may be nudged, in field widths. About one cell. */
+const BLOB_WOBBLE = 0.09;
+
+/**
+ * Every cell of the field, in the order the series fill it.
+ *
+ * `grid` is reading order, which is the honest arrangement: counting cells off
+ * a row is something a reader can actually do. `blob` grows out from the middle
+ * instead, which counts for nothing but shows the shape of the split at a
+ * glance — the smallest series in the centre with each larger one wrapped
+ * around it.
+ *
+ * Two things make the blob look grown rather than stamped. Distance is measured
+ * in the field's own proportions, so a wide field grows a wide blob instead of
+ * a circle with empty shoulders either side of it; and each cell's distance is
+ * nudged by a hash of its own coordinates, so the boundary between two series
+ * comes out ragged instead of as a clean arc. The nudge is a hash and not a
+ * random number, so the same data draws the same honeycomb every time.
+ *
+ * Computed once per layout rather than per frame, so it is a plain function.
+ */
+export function hexFillOrder(columns: number, rows: number, shape: HexShape): HexCell[] {
+  const cells: HexCell[] = [];
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      cells.push({ column, row });
+    }
+  }
+  if (shape === 'grid' || columns < 2 || rows < 2) return cells;
+
+  const midColumn = (columns - 1) / 2;
+  const midRow = (rows - 1) / 2;
+
+  return cells
+    .map((cell) => {
+      // Odd rows sit half a cell right, and a distance measured without that
+      // leans the whole blob to one side.
+      const column = cell.column + (cell.row % 2 === 1 ? 0.5 : 0);
+      const dx = (column - midColumn) / columns;
+      const dy = (cell.row - midRow) / rows;
+      const wobble = (hashUnit(cell.column, cell.row) - 0.5) * BLOB_WOBBLE;
+      return { cell, key: Math.sqrt(dx * dx + dy * dy) + wobble };
+    })
+    .sort((a, b) => a.key - b.key)
+    .map((entry) => entry.cell);
+}
+
+/**
+ * The cell under a point, or null when the point is between cells or outside
+ * the field.
+ *
+ * Only three rows can be near any y, and one column near any x within a row, so
+ * this checks six candidates rather than solving the cube-rounding — the same
+ * answer, and short enough to read.
+ */
+export function hexAt(
+  x: number,
+  y: number,
+  metrics: HexMetrics,
+  left: number,
+  top: number,
+  columns: number,
+  rows: number
+): HexCell | null {
+  'worklet';
+  if (metrics.radius <= 0) return null;
+
+  const approximateRow = Math.round((y - top - metrics.radius) / metrics.stepY);
+  let best: HexCell | null = null;
+  let bestDistance = Infinity;
+
+  for (let row = approximateRow - 1; row <= approximateRow + 1; row += 1) {
+    if (row < 0 || row >= rows) continue;
+    const offset = row % 2 === 1 ? metrics.stepX / 2 : 0;
+    const column = Math.round((x - left - metrics.stepX / 2 - offset) / metrics.stepX);
+    if (column < 0 || column >= columns) continue;
+
+    const centre = hexCenter(column, row, metrics, left, top);
+    const dx = x - centre.x;
+    const dy = y - centre.y;
+    const distance = dx * dx + dy * dy;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = { column, row };
+    }
+  }
+
+  // Further than a radius from the nearest centre is outside the honeycomb, not
+  // a near miss worth rounding into it.
+  return best !== null && bestDistance <= metrics.radius * metrics.radius ? best : null;
+}
+
 /** The numbers of one column, with anything unusable left as a gap. */
 export function columnValues(
   data: Record<string, unknown>[],
