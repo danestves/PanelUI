@@ -12,7 +12,11 @@ import {
   useThemeMode,
 } from 'panelui-native';
 import { ScreenHeader } from '../../src/components/screen-header';
-import { COMPONENTS, type ComponentEntry } from '../../src/data/components';
+import {
+  CHART_SHOWCASE,
+  COMPONENTS,
+  type ComponentEntry,
+} from '../../src/data/components';
 
 function ComponentRow({ entry, tint }: { entry: ComponentEntry; tint: string }) {
   return (
@@ -26,6 +30,33 @@ function ComponentRow({ entry, tint }: { entry: ComponentEntry; tint: string }) 
         <Text size="lg">{entry.name}</Text>
         <Text size="sm" muted>
           {entry.summary}
+        </Text>
+      </View>
+      <ChevronRightIcon size={18} color={tint} />
+    </Pressable>
+  );
+}
+
+/**
+ * The one section above the A–Z.
+ *
+ * Charts are the group people arrive at without knowing which one they want,
+ * because choosing between them is a decision about shape rather than about
+ * name — and a list of names is exactly the thing that cannot help with that.
+ * So they get a door of their own, and everything else stays in the list.
+ */
+function AllChartsRow({ tint }: { tint: string }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`All charts. One example of each of the ${CHART_SHOWCASE.length} charts.`}
+      onPress={() => router.push('/components/all-charts')}
+      className="mx-5 mb-2 mt-1 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-4 active:bg-muted"
+    >
+      <View className="flex-1">
+        <Text size="lg">All charts</Text>
+        <Text size="sm" muted>
+          {`One example of each of the ${CHART_SHOWCASE.length} charts`}
         </Text>
       </View>
       <ChevronRightIcon size={18} color={tint} />
@@ -57,6 +88,10 @@ export default function ComponentListScreen() {
         data={results}
         keyExtractor={(entry) => entry.slug}
         renderItem={({ item }) => <ComponentRow entry={item} tint={tint} />}
+        // Only over the whole catalogue. Above a filtered list it is a door to
+        // ten charts sitting on top of the two results somebody searched for,
+        // and above an empty one it is a door over the words "nothing matches".
+        ListHeaderComponent={query.trim() ? null : <AllChartsRow tint={tint} />}
         ItemSeparatorComponent={() => <View className="mx-5 h-px bg-border" />}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}

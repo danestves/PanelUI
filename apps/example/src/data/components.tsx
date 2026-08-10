@@ -18389,3 +18389,158 @@ export const COMPONENTS: ComponentEntry[] = [...CATALOGUE].sort((a, b) =>
 export const COMPONENTS_BY_SLUG: Record<string, ComponentEntry> = Object.fromEntries(
   COMPONENTS.map((entry) => [entry.slug, entry])
 );
+
+/* -------------------------------------------------------------------------- */
+/* The chart gallery                                                          */
+/* -------------------------------------------------------------------------- */
+
+export interface ChartShowcaseEntry {
+  /** The component's slug, so a card can open its page. */
+  slug: string;
+  name: string;
+  /** What this chart is for, in one line. */
+  summary: string;
+  render: () => ReactNode;
+}
+
+/**
+ * One example of every chart, on one screen.
+ *
+ * Written for this size rather than borrowed from the version demos above.
+ * Those are laid out to fill a screen — a header, axes on both sides, a legend
+ * — and shrinking one into a card leaves a chart whose furniture is bigger than
+ * its data. What a reader wants from a gallery is the *shape*: enough of each
+ * chart to recognise it and decide which one they came for.
+ *
+ * So the axes mostly come off, the headers come off entirely — the card the
+ * gallery draws already says what each one is — and what is left is the mark
+ * that makes the chart what it is.
+ */
+export const CHART_SHOWCASE: ChartShowcaseEntry[] = [
+  {
+    slug: 'area-chart',
+    name: 'AreaChart',
+    summary: 'Filled bands over time, stacked or overlaid',
+    render: () => (
+      <AreaChart data={AREA_TRAFFIC} xDataKey="hour" stacked aspectRatio={2.2}>
+        <AreaChart.Area dataKey="direct" />
+        <AreaChart.Area dataKey="search" colorIndex={2} />
+        <AreaChart.Area dataKey="social" colorIndex={3} />
+      </AreaChart>
+    ),
+  },
+  {
+    slug: 'bar-chart',
+    name: 'BarChart',
+    summary: 'Categories compared by length',
+    render: () => (
+      <BarChart data={BAR_REVENUE} xDataKey="month" aspectRatio={2.2}>
+        <BarChart.Bar dataKey="revenue" />
+        <BarChart.Bar dataKey="costs" colorIndex={2} />
+        <BarChart.XAxis />
+      </BarChart>
+    ),
+  },
+  {
+    slug: 'candlestick-chart',
+    name: 'CandlestickChart',
+    summary: 'Open, high, low and close, as one mark',
+    render: () => (
+      <CandlestickChart
+        data={CANDLE_SESSIONS.slice(-12)}
+        xDataKey="day"
+        aspectRatio={2.2}
+        candleGap={0.42}
+      >
+        <CandlestickChart.Candles cornerRadius={2} />
+      </CandlestickChart>
+    ),
+  },
+  {
+    slug: 'heatmap-chart',
+    name: 'HeatmapChart',
+    summary: 'A grid coloured by how much happened',
+    render: () => (
+      <View className="py-2">
+        <HeatmapChart data={HEATMAP_QUARTER} layout="fill" weekStartDay={1} gap={4}>
+          <HeatmapChart.Cells cornerRadius={3} />
+        </HeatmapChart>
+      </View>
+    ),
+  },
+  {
+    slug: 'hex-chart',
+    name: 'HexChart',
+    summary: 'A whole broken into parts, counted out in cells',
+    render: () => (
+      <HexChart data={ATTRIBUTION} aspectRatio={2.2} columns={23}>
+        <HexChart.Cells />
+      </HexChart>
+    ),
+  },
+  {
+    slug: 'line-chart',
+    name: 'LineChart',
+    summary: 'A time series, drawn on the UI thread',
+    render: () => (
+      <LineChart data={REVENUE} xDataKey="month" aspectRatio={2.2}>
+        <LineChart.Grid />
+        <LineChart.Area dataKey="revenue" />
+        <LineChart.Line dataKey="revenue" />
+        <LineChart.XAxis ticks={4} />
+      </LineChart>
+    ),
+  },
+  {
+    slug: 'pie-chart',
+    name: 'PieChart',
+    summary: 'One whole, divided between its parts',
+    render: () => (
+      <View className="items-center py-3">
+        <PieChart data={SPEND} size={132} innerRadius={0.62}>
+          <PieChart.Slices cornerRadius={3} />
+          <PieChart.Center defaultLabel="Spend" />
+        </PieChart>
+      </View>
+    ),
+  },
+  {
+    slug: 'radar-chart',
+    name: 'RadarChart',
+    summary: 'Several measures of one thing, as one shape',
+    render: () => (
+      <View className="px-4 py-2">
+        <RadarChart data={RADAR_SKILLS} domain={[0, 100]}>
+          <RadarChart.Grid />
+          <RadarChart.Axis />
+          <RadarChart.Series dataKey="score" colorIndex={1} showDots />
+        </RadarChart>
+      </View>
+    ),
+  },
+  {
+    slug: 'ring-chart',
+    name: 'RingChart',
+    summary: 'Arcs, each measured against its own target',
+    render: () => (
+      <View className="items-center py-3">
+        <RingChart data={BUDGETS} size={132} strokeWidth={11}>
+          <RingChart.Ring index={0} />
+          <RingChart.Ring index={1} colorIndex={2} />
+          <RingChart.Ring index={2} colorIndex={3} />
+        </RingChart>
+      </View>
+    ),
+  },
+  {
+    slug: 'scatter-chart',
+    name: 'ScatterChart',
+    summary: 'Two quantities against each other',
+    render: () => (
+      <ScatterChart data={CAMPAIGNS} xDataKey="spend" aspectRatio={2.2}>
+        <ScatterChart.Grid />
+        <ScatterChart.Points dataKey="revenue" />
+      </ScatterChart>
+    ),
+  },
+];
