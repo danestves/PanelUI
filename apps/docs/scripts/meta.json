@@ -4,13 +4,17 @@
     "Collapsible sections with single or multiple selection.",
     "react native accordion",
     {
-      "updatedIn": "0.48.0"
+      "updatedIn": "0.48.0",
+      "category": "layout"
     }
   ],
   "alert": [
     "Alert",
     "Status message with a built-in icon.",
-    "react native alert component"
+    "react native alert component",
+    {
+      "category": "feedback"
+    }
   ],
   "area-chart": [
     "AreaChart",
@@ -24,17 +28,26 @@
   "attachment": [
     "Attachment",
     "File row with upload states, built on Item.",
-    "react native file attachment"
+    "react native file attachment",
+    {
+      "category": "media"
+    }
   ],
   "avatar": [
     "Avatar",
     "User image with an initials fallback and an optional badge overlay.",
-    "react native avatar"
+    "react native avatar",
+    {
+      "category": "media"
+    }
   ],
   "badge": [
     "Badge",
     "Compact status label, dot, or notification count.",
-    "react native badge"
+    "react native badge",
+    {
+      "category": "feedback"
+    }
   ],
   "bar-chart": [
     "BarChart",
@@ -59,7 +72,8 @@
     "Draggable sheet anchored to the bottom of the screen.",
     "react native bottom sheet",
     {
-      "updatedIn": "0.26.0"
+      "updatedIn": "0.26.0",
+      "category": "overlays"
     }
   ],
   "breadcrumb": [
@@ -67,7 +81,8 @@
     "The trail of links back up the hierarchy to the current page.",
     "react native breadcrumb navigation",
     {
-      "addedIn": "0.23.0"
+      "addedIn": "0.23.0",
+      "category": "navigation"
     }
   ],
   "button": [
@@ -75,15 +90,17 @@
     "Pressable action with variants, sizes, loading state and icon slots.",
     "react native button",
     {
-      "updatedIn": "0.49.0"
+      "updatedIn": "0.49.0",
+      "category": "actions"
     }
   ],
   "button-group": [
     "ButtonGroup",
-    "Several buttons drawn as one control \u2014 a segmented run, a split action, a toolbar.",
+    "Several buttons drawn as one control — a segmented run, a split action, a toolbar.",
     "react native button group segmented control split button",
     {
-      "addedIn": "0.49.0"
+      "addedIn": "0.49.0",
+      "category": "actions"
     }
   ],
   "card": [
@@ -91,7 +108,8 @@
     "Content surface with header, body and footer.",
     "react native card",
     {
-      "updatedIn": "0.44.0"
+      "updatedIn": "0.44.0",
+      "category": "layout"
     }
   ],
   "calendar": [
@@ -100,7 +118,8 @@
     "react native calendar component",
     {
       "addedIn": "0.27.0",
-      "updatedIn": "0.32.0"
+      "updatedIn": "0.32.0",
+      "category": "forms"
     }
   ],
   "carousel": [
@@ -108,7 +127,8 @@
     "A run of slides, one at a time, dragged with a finger.",
     "react native carousel",
     {
-      "addedIn": "0.27.0"
+      "addedIn": "0.27.0",
+      "category": "layout"
     }
   ],
   "checkbox": [
@@ -116,7 +136,8 @@
     "Animated checkbox, as a row or a selectable card.",
     "react native checkbox",
     {
-      "updatedIn": "0.18.0"
+      "updatedIn": "0.18.0",
+      "category": "forms"
     }
   ],
   "chip": [
@@ -124,7 +145,8 @@
     "Interactive pill — a filter, a tag, or a removable token.",
     "react native chip",
     {
-      "addedIn": "0.13.0"
+      "addedIn": "0.13.0",
+      "category": "actions"
     }
   ],
   "color-picker": [
@@ -133,7 +155,8 @@
     "react native color picker",
     {
       "addedIn": "0.42.0",
-      "updatedIn": "0.49.0"
+      "updatedIn": "0.49.0",
+      "category": "forms"
     }
   ],
   "date-picker": [
@@ -142,7 +165,8 @@
     "react native date picker",
     {
       "addedIn": "0.27.0",
-      "updatedIn": "0.30.0"
+      "updatedIn": "0.30.0",
+      "category": "forms"
     }
   ],
   "date-time-picker": [
@@ -151,7 +175,8 @@
     "react native date time picker component",
     {
       "addedIn": "0.46.0",
-      "updatedIn": "0.49.0"
+      "updatedIn": "0.49.0",
+      "category": "forms"
     }
   ],
   "dialog": [
@@ -159,7 +184,8 @@
     "Modal dialog with a backdrop and footer actions.",
     "react native modal dialog",
     {
-      "updatedIn": "0.26.0"
+      "updatedIn": "0.26.0",
+      "category": "overlays"
     }
   ],
   "direction": [
@@ -168,7 +194,8 @@
     "react native rtl support",
     {
       "addedIn": "0.15.0",
-      "updatedIn": "0.41.0"
+      "updatedIn": "0.41.0",
+      "category": "layout"
     }
   ],
   "drawer": [
@@ -177,20 +204,25 @@
     "react native drawer component",
     {
       "addedIn": "0.33.0",
-      "updatedIn": "0.41.0"
+      "updatedIn": "0.41.0",
+      "category": "overlays"
     }
   ],
   "empty-state": [
     "EmptyState",
     "Placeholder for a list or screen with no content.",
-    "react native empty state"
+    "react native empty state",
+    {
+      "category": "feedback"
+    }
   ],
   "fab": [
     "Fab",
-    "The floating action button \u2014 one action pinned over the content, with an optional dial of others behind it.",
+    "The floating action button — one action pinned over the content, with an optional dial of others behind it.",
     "react native floating action button fab speed dial",
     {
-      "addedIn": "0.49.0"
+      "addedIn": "0.49.0",
+      "category": "actions"
     }
   ],
   "field": [
@@ -198,7 +230,8 @@
     "Layout and validation-state kit a form control composes into.",
     "react native form field",
     {
-      "addedIn": "0.17.0"
+      "addedIn": "0.17.0",
+      "category": "forms"
     }
   ],
   "form": [
@@ -208,7 +241,8 @@
     {
       "group": "form",
       "addedIn": "0.17.0",
-      "updatedIn": "0.38.0"
+      "updatedIn": "0.38.0",
+      "category": "forms"
     }
   ],
   "flow": [
@@ -217,7 +251,8 @@
     "react native node graph flow diagram",
     {
       "addedIn": "0.19.0",
-      "updatedIn": "0.21.0"
+      "updatedIn": "0.21.0",
+      "category": "data"
     }
   ],
   "frame": [
@@ -225,7 +260,8 @@
     "Widget shell — a card of rows sitting in a titled tray.",
     "react native list section",
     {
-      "updatedIn": "0.19.0"
+      "updatedIn": "0.19.0",
+      "category": "layout"
     }
   ],
   "heatmap-chart": [
@@ -252,20 +288,25 @@
     "Text field with label, description and error message.",
     "react native text input",
     {
-      "updatedIn": "0.38.0"
+      "updatedIn": "0.38.0",
+      "category": "forms"
     }
   ],
   "input-group": [
     "InputGroup",
     "Input with leading and trailing decorators.",
-    "react native input group"
+    "react native input group",
+    {
+      "category": "forms"
+    }
   ],
   "number-input": [
     "NumberInput",
     "Numeric field stepped by buttons or typed by hand.",
     "react native number input stepper",
     {
-      "addedIn": "0.22.0"
+      "addedIn": "0.22.0",
+      "category": "forms"
     }
   ],
   "otp-input": [
@@ -273,7 +314,8 @@
     "One-time-code field drawn as a row of separate cells.",
     "react native otp input",
     {
-      "addedIn": "0.18.0"
+      "addedIn": "0.18.0",
+      "category": "forms"
     }
   ],
   "pagination": [
@@ -282,7 +324,8 @@
     "react native pagination component",
     {
       "addedIn": "0.39.0",
-      "updatedIn": "0.41.0"
+      "updatedIn": "0.41.0",
+      "category": "navigation"
     }
   ],
   "grid-item": [
@@ -290,18 +333,25 @@
     "Bento tiles, and the grid that places them.",
     "react native bento grid tile component",
     {
-      "addedIn": "0.46.0"
+      "addedIn": "0.46.0",
+      "category": "layout"
     }
   ],
   "item": [
     "Item",
     "Row of media, text and actions for lists and settings.",
-    "react native list item component"
+    "react native list item component",
+    {
+      "category": "layout"
+    }
   ],
   "label": [
     "Label",
     "Form field label with required, invalid and disabled states.",
-    "react native form label"
+    "react native form label",
+    {
+      "category": "forms"
+    }
   ],
   "line-chart": [
     "LineChart",
@@ -317,7 +367,8 @@
     "Nine loading animations behind one variant prop.",
     "react native loading animation spinner",
     {
-      "addedIn": "0.25.0"
+      "addedIn": "0.25.0",
+      "category": "feedback"
     }
   ],
   "markdown-editor": [
@@ -325,7 +376,8 @@
     "A field for writing markdown, with a formatting toolbar and a rendered preview.",
     "react native markdown editor preview toolbar",
     {
-      "addedIn": "0.49.0"
+      "addedIn": "0.49.0",
+      "category": "forms"
     }
   ],
   "map": [
@@ -335,7 +387,8 @@
     {
       "addedIn": "0.24.0",
       "updatedIn": "0.41.0",
-      "alpha": true
+      "alpha": true,
+      "category": "data"
     }
   ],
   "menu": [
@@ -344,33 +397,42 @@
     "react native dropdown menu",
     {
       "addedIn": "0.29.0",
-      "updatedIn": "0.43.0"
+      "updatedIn": "0.43.0",
+      "category": "actions"
     }
   ],
   "marker": [
     "Marker",
     "Inline note between conversation turns.",
-    "react native chat status row"
+    "react native chat status row",
+    {
+      "category": "feedback"
+    }
   ],
   "message": [
     "Message",
     "Chat turn with avatar, bubble, header and footer.",
     "react native chat message component",
     {
-      "updatedIn": "0.16.0"
+      "updatedIn": "0.16.0",
+      "category": "media"
     }
   ],
   "message-scroller": [
     "MessageScroller",
     "Scroll behaviour a chat transcript needs.",
-    "react native chat scroll"
+    "react native chat scroll",
+    {
+      "category": "media"
+    }
   ],
   "popover": [
     "Popover",
     "Panel anchored to the element that opened it.",
     "react native popover",
     {
-      "updatedIn": "0.30.0"
+      "updatedIn": "0.30.0",
+      "category": "overlays"
     }
   ],
   "progress": [
@@ -378,7 +440,8 @@
     "Determinate and indeterminate progress bar.",
     "react native progress bar",
     {
-      "updatedIn": "0.35.0"
+      "updatedIn": "0.35.0",
+      "category": "feedback"
     }
   ],
   "questionnaire": [
@@ -386,20 +449,25 @@
     "One question at a time, with progress, validation and a way back.",
     "react native questionnaire survey form",
     {
-      "addedIn": "0.47.0"
+      "addedIn": "0.47.0",
+      "category": "forms"
     }
   ],
   "radio-group": [
     "RadioGroup",
     "Single-select list of options.",
-    "react native radio button"
+    "react native radio button",
+    {
+      "category": "forms"
+    }
   ],
   "rating": [
     "Rating",
     "A row of stars to read or set a score.",
     "react native star rating",
     {
-      "addedIn": "0.20.0"
+      "addedIn": "0.20.0",
+      "category": "forms"
     }
   ],
   "pie-chart": [
@@ -435,20 +503,25 @@
     "Image frame whose contents move as you scroll.",
     "react native parallax image",
     {
-      "addedIn": "0.14.0"
+      "addedIn": "0.14.0",
+      "category": "layout"
     }
   ],
   "scroll-fade": [
     "ScrollFade",
     "Fades the edges of a scroll container.",
-    "react native scroll fade"
+    "react native scroll fade",
+    {
+      "category": "layout"
+    }
   ],
   "scroll-text": [
     "ScrollText",
     "Text that resolves word by word as you scroll.",
     "react native scroll text animation",
     {
-      "addedIn": "0.14.0"
+      "addedIn": "0.14.0",
+      "category": "media"
     }
   ],
   "text-animation": [
@@ -456,7 +529,8 @@
     "Five ways a piece of text or a number arrives.",
     "react native typewriter animated counter text animation",
     {
-      "addedIn": "0.41.0"
+      "addedIn": "0.41.0",
+      "category": "media"
     }
   ],
   "section-rail": [
@@ -465,7 +539,8 @@
     "react native table of contents",
     {
       "addedIn": "0.11.0",
-      "updatedIn": "0.43.0"
+      "updatedIn": "0.43.0",
+      "category": "navigation"
     }
   ],
   "select": [
@@ -473,7 +548,8 @@
     "Picker shown in a bottom sheet, expanded in place, or floating over the page.",
     "expo select component",
     {
-      "updatedIn": "0.37.0"
+      "updatedIn": "0.37.0",
+      "category": "forms"
     }
   ],
   "separator": [
@@ -481,7 +557,8 @@
     "Horizontal or vertical rule between content, optionally labelled.",
     "react native separator",
     {
-      "updatedIn": "0.23.0"
+      "updatedIn": "0.23.0",
+      "category": "layout"
     }
   ],
   "shimmer": [
@@ -498,33 +575,42 @@
     "react native signature pad draw",
     {
       "addedIn": "0.19.0",
-      "updatedIn": "0.21.0"
+      "updatedIn": "0.21.0",
+      "category": "forms"
     }
   ],
   "skeleton": [
     "Skeleton",
     "Shimmer placeholder for loading content.",
-    "react native skeleton loader"
+    "react native skeleton loader",
+    {
+      "category": "feedback"
+    }
   ],
   "slider": [
     "Slider",
     "Pick a value, or a span, by dragging a thumb along a track.",
     "react native slider",
     {
-      "updatedIn": "0.42.0"
+      "updatedIn": "0.42.0",
+      "category": "forms"
     }
   ],
   "spinner": [
     "Spinner",
     "Indeterminate loading indicator.",
-    "react native spinner"
+    "react native spinner",
+    {
+      "category": "feedback"
+    }
   ],
   "tour": [
     "Tour",
     "A walkthrough that introduces a screen one control at a time.",
     "react native onboarding tour spotlight coach mark walkthrough",
     {
-      "addedIn": "0.55.0"
+      "addedIn": "0.55.0",
+      "category": "navigation"
     }
   ],
   "steps": [
@@ -532,13 +618,17 @@
     "Stepper for multi-step flows.",
     "react native stepper",
     {
-      "updatedIn": "0.55.0"
+      "updatedIn": "0.55.0",
+      "category": "navigation"
     }
   ],
   "surface": [
     "Surface",
     "Elevated container with a variant ladder.",
-    "react native surface container"
+    "react native surface container",
+    {
+      "category": "layout"
+    }
   ],
   "swipe": [
     "Swipe",
@@ -546,7 +636,8 @@
     "react native swipe to delete list row actions",
     {
       "addedIn": "0.35.0",
-      "updatedIn": "0.50.0"
+      "updatedIn": "0.50.0",
+      "category": "actions"
     }
   ],
   "switch": [
@@ -554,7 +645,8 @@
     "Animated on/off toggle.",
     "react native switch",
     {
-      "updatedIn": "0.22.0"
+      "updatedIn": "0.22.0",
+      "category": "forms"
     }
   ],
   "table": [
@@ -563,7 +655,8 @@
     "react native table component",
     {
       "addedIn": "0.31.0",
-      "updatedIn": "0.39.0"
+      "updatedIn": "0.39.0",
+      "category": "data"
     }
   ],
   "tabs": [
@@ -571,7 +664,8 @@
     "Segmented navigation with an animated indicator.",
     "react native tabs",
     {
-      "updatedIn": "0.52.0"
+      "updatedIn": "0.52.0",
+      "category": "navigation"
     }
   ],
   "tag-input": [
@@ -579,7 +673,8 @@
     "A field whose value is a list of tokens rather than a string.",
     "react native tag input chips",
     {
-      "addedIn": "0.54.0"
+      "addedIn": "0.54.0",
+      "category": "forms"
     }
   ],
   "textarea": [
@@ -587,7 +682,8 @@
     "Text field that runs to several lines, sized in rows.",
     "react native textarea",
     {
-      "addedIn": "0.30.0"
+      "addedIn": "0.30.0",
+      "category": "forms"
     }
   ],
   "time-picker": [
@@ -596,25 +692,33 @@
     "react native time picker",
     {
       "addedIn": "0.36.0",
-      "updatedIn": "0.49.0"
+      "updatedIn": "0.49.0",
+      "category": "forms"
     }
   ],
   "timeline": [
     "Timeline",
     "Vertical sequence of events.",
-    "react native timeline"
+    "react native timeline",
+    {
+      "category": "data"
+    }
   ],
   "toast": [
     "Toast",
     "Transient notification queue with swipe to dismiss.",
-    "react native toast"
+    "react native toast",
+    {
+      "category": "overlays"
+    }
   ],
   "toggle-button": [
     "ToggleButton",
     "A button that stays down, on its own or in a group.",
     "react native toggle button",
     {
-      "addedIn": "0.11.0"
+      "addedIn": "0.11.0",
+      "category": "actions"
     }
   ],
   "tooltip": [
@@ -623,7 +727,8 @@
     "react native tooltip",
     {
       "addedIn": "0.26.0",
-      "updatedIn": "0.30.0"
+      "updatedIn": "0.30.0",
+      "category": "overlays"
     }
   ],
   "typography": [
@@ -631,7 +736,8 @@
     "Semantic text presets.",
     "react native typography",
     {
-      "updatedIn": "0.16.0"
+      "updatedIn": "0.16.0",
+      "category": "layout"
     }
   ],
   "thinking-orb": [
@@ -695,7 +801,8 @@
     "react native combobox autocomplete",
     {
       "addedIn": "0.37.0",
-      "updatedIn": "0.54.0"
+      "updatedIn": "0.54.0",
+      "category": "forms"
     }
   ],
   "context-menu": [
@@ -704,7 +811,8 @@
     "react native context menu long press",
     {
       "addedIn": "0.52.0",
-      "updatedIn": "0.53.0"
+      "updatedIn": "0.53.0",
+      "category": "actions"
     }
   ],
   "plan": [
@@ -722,7 +830,8 @@
     "A social card — author, body, media and the counts underneath, with the votes animated.",
     "react native social post card component",
     {
-      "addedIn": "0.32.0"
+      "addedIn": "0.32.0",
+      "category": "media"
     }
   ],
   "response": [
@@ -751,7 +860,8 @@
     "react native kpi metric stat card",
     {
       "addedIn": "0.43.0",
-      "updatedIn": "0.46.0"
+      "updatedIn": "0.46.0",
+      "category": "data"
     }
   ],
   "radar-chart": [
@@ -768,7 +878,8 @@
     "A hierarchy you can open a level at a time.",
     "react native tree view file explorer hierarchy",
     {
-      "addedIn": "0.48.0"
+      "addedIn": "0.48.0",
+      "category": "navigation"
     }
   ],
   "sortable": [
@@ -778,7 +889,8 @@
     {
       "addedIn": "0.50.0",
       "updatedIn": "0.53.0",
-      "beta": true
+      "beta": true,
+      "category": "navigation"
     }
   ]
 }

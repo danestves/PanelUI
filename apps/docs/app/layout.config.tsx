@@ -53,7 +53,10 @@ export const baseOptions: BaseLayoutProps = {
     {
       type: 'main',
       text: 'Components',
-      url: '/docs/components/button',
+      // The index, not Button. This link is "show me what there is", and
+      // answering it by dropping the reader into one arbitrary component's
+      // page made them work out the rest from the sidebar.
+      url: '/docs/components',
       active: 'nested-url',
     },
     {

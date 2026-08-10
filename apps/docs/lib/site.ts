@@ -1,7 +1,4 @@
-import aiComponents from '@/content/docs/ai-components/meta.json';
-import charts from '@/content/docs/charts/meta.json';
-import components from '@/content/docs/components/meta.json';
-import form from '@/content/docs/form/meta.json';
+import meta from '@/scripts/meta.json';
 
 /**
  * How many components the library ships, counted rather than written down.
@@ -9,18 +6,15 @@ import form from '@/content/docs/form/meta.json';
  * It was written down three times, and by the time anyone noticed, the social
  * card claimed 26, the meta description and the JSON-LD claimed 39, and the
  * library shipped 74. A number that appears in marketing copy is exactly the
- * number nobody remembers to update, so this is read off the sidebar groups
- * `scripts/gen.mjs` generates: add a component, run `docs:generate`, and every
- * surface that quotes the count follows on the next build.
+ * number nobody remembers to update, so this is counted from the file the
+ * documentation is generated from: a component is counted because it has a
+ * page, which is the thing the number is claiming.
  *
- * These four groups are the ones holding things you render. Hooks and utilities
- * are documented in their own groups and deliberately not counted here.
+ * Counted here rather than off the generated sidebar groups, which is where it
+ * used to come from: those hold pages, and one of the pages is now the
+ * components index, which is not a component.
  */
-export const componentCount =
-  components.pages.length +
-  charts.pages.length +
-  aiComponents.pages.length +
-  form.pages.length;
+export const componentCount = Object.keys(meta).length;
 
 /** Canonical site metadata, used by every page's SEO tags and the sitemap. */
 export const site = {

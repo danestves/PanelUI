@@ -21,6 +21,35 @@ const GROUPS = {
 };
 const DEFAULT_GROUP = 'components';
 
+/**
+ * The sections of the components index, in the order it prints them, each with
+ * the sentence that goes under its heading.
+ *
+ * A component's section comes from the `category` in its meta.json options —
+ * except for the charts and the AI components, which already say what they are
+ * through their group and would only be saying it twice.
+ */
+const CATEGORIES = {
+  actions: ['Actions', 'The things a screen can be told to do, and the controls that ask.'],
+  forms: ['Forms and input', 'Everything that takes a value from someone and hands it back typed.'],
+  overlays: ['Overlays', 'Surfaces that arrive over the page and leave again.'],
+  navigation: ['Navigation', 'Moving between places, and showing where you are in them.'],
+  layout: ['Layout and structure', 'The surfaces the rest of it sits on.'],
+  data: ['Data', 'Rows, sequences and numbers, laid out to be read.'],
+  charts: ['Charts', 'Series drawn on the UI thread, one file each, no chart library.'],
+  feedback: ['Feedback and status', 'Saying what happened, what is happening, and what is missing.'],
+  media: ['Media and motion', 'Pictures, conversation and things that move.'],
+  ai: ['AI components', 'The parts an assistant interface is built from.'],
+};
+
+/** Which section of the index a component belongs in. */
+function categoryOf(entry) {
+  const group = groupOf(entry);
+  if (group === 'charts') return 'charts';
+  if (group === 'ai-components') return 'ai';
+  return entry[3]?.category ?? 'layout';
+}
+
 /** The version being documented, for the sidebar dots below. */
 const libVersion = JSON.parse(
   fs.readFileSync(path.join(ROOT, 'packages/panelui/package.json'), 'utf8')
@@ -336,21 +365,67 @@ Every part also accepts the underlying React Native props (\`ViewProps\` or \`Te
  * places a component is listed disagreed as a result, since the landing page
  * has always sorted its own copy.
  */
+/*
+ * The components index at /docs/components — every component the library has,
+ * in sections, on one page.
+ *
+ * Generated for the same reason the pages are: a hand-written index of a
+ * hundred links is a list that is wrong by the next release, and this is the
+ * page a reader lands on to find out whether the thing they want exists. It is
+ * also most of what links the component pages together, which is what a
+ * crawler follows.
+ */
+const indexSections = Object.entries(CATEGORIES)
+  .map(([category, [heading, lede]]) => {
+    const entries = Object.entries(meta)
+      .filter(([, entry]) => categoryOf(entry) === category)
+      .sort(([, a], [, b]) => a[0].localeCompare(b[0]));
+    if (!entries.length) return null;
+
+    const cards = entries
+      .map(
+        ([slug, entry]) =>
+          `  <Card title="${entry[0]}" href="/docs/${groupOf(entry)}/${slug}">\n` +
+          `    ${entry[1]}\n  </Card>`
+      )
+      .join('\n');
+
+    return `## ${heading}\n\n${lede}\n\n<Cards>\n${cards}\n</Cards>`;
+  })
+  .filter(Boolean);
+
+const indexPage = [
+  `---
+title: Components
+description: Every component in PanelUI, by what it is for — ${Object.keys(meta).length} of them, each with its anatomy, props and variants.
+---`,
+  `All ${Object.keys(meta).length} components, grouped by the job they do. Every page covers the ` +
+    `anatomy, every prop and every variant, read straight from the library's TypeScript so it ` +
+    `cannot drift from the code.`,
+  ...indexSections,
+].join('\n\n');
+
+fs.writeFileSync(path.join(contentDir, 'components', 'index.mdx'), indexPage + '\n');
+
 for (const [group, title] of Object.entries(GROUPS)) {
   const pages = Object.entries(meta)
     .filter(([, entry]) => groupOf(entry) === group)
     .sort(([, a], [, b]) => a[0].localeCompare(b[0]))
     .map(([slug]) => slug);
 
+  // The index leads its own group, and is not a component — hence `pages`
+  // rather than the component list wherever a count is wanted.
+  const listed = group === 'components' ? ['index', ...pages] : pages;
+
   const dir = path.join(contentDir, group);
   fs.writeFileSync(
     path.join(dir, 'meta.json'),
-    JSON.stringify({ title, pages }, null, 2) + '\n'
+    JSON.stringify({ title, pages: listed }, null, 2) + '\n'
   );
 
-  const keep = new Set([...pages.map((slug) => `${slug}.mdx`), 'meta.json']);
+  const keep = new Set([...listed.map((slug) => `${slug}.mdx`), 'meta.json']);
   for (const file of fs.readdirSync(dir)) {
     if (!keep.has(file)) fs.rmSync(path.join(dir, file));
   }
 }
-console.log('wrote', count, 'component pages');
+console.log('wrote', count, 'component pages and the index');
