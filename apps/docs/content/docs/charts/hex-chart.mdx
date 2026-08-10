@@ -10,6 +10,14 @@ Every series holds a number of hexagons proportional to its share of the total, 
 
 What it gives up is the small end. Every cell is a whole unit, so a series worth half a cell either rounds up to a full one or disappears. Use it for shares of a few percent and up, not for a long tail.
 
+<PreviewVideo
+  src="/previews/hex-chart.mp4"
+  poster="/previews/hex-chart-poster.jpg"
+  alt="The HexChart component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 HexChart ships with the library — no separate install.
@@ -154,6 +162,14 @@ See [Charts](/docs/customization/charts) for the ramp and how to change it.
 
 The whole card: the total above, the honeycomb, and the key under it. Pressing a cell or a key entry moves the readout onto that campaign.
 
+<PreviewVideo
+  src="/previews/hex-chart-attribution.mp4"
+  poster="/previews/hex-chart-attribution-poster.jpg"
+  alt="HexChart — Attribution."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Frame>
   <Frame.Header>
@@ -182,6 +198,14 @@ The whole card: the total above, the honeycomb, and the key under it. Pressing a
 ### Waffle
 
 `shape="grid"` instead: reading order, every cell used, and a split a reader can count off a row.
+
+<PreviewVideo
+  src="/previews/hex-chart-waffle.mp4"
+  poster="/previews/hex-chart-waffle-poster.jpg"
+  alt="HexChart — Waffle."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <HexChart data={attribution} shape="grid" columns={16} aspectRatio={1.8}>

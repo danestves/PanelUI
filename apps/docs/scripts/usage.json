@@ -1,6 +1,13 @@
 {
   "hex-chart": {
     "intro": "A whole broken into parts, counted out in cells.\n\nEvery series holds a number of hexagons proportional to its share of the total, so a series worth a tenth looks like a tenth — and can be *confirmed* as one, by counting. That is the difference between this and the [PieChart](/docs/charts/pie-chart) beside it: a pie asks the reader to compare angles, which is the hardest quantity there is to judge by eye, and this asks them to compare counts.\n\nWhat it gives up is the small end. Every cell is a whole unit, so a series worth half a cell either rounds up to a full one or disappears. Use it for shares of a few percent and up, not for a long tail.",
+    "previewVideo": {
+      "src": "/previews/hex-chart.mp4",
+      "poster": "/previews/hex-chart-poster.jpg",
+      "alt": "The HexChart component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    },
     "usage": "<HexChart data={attribution}>\n  <HexChart.Header title=\"Attributed revenue\" value=\"£6,750\" />\n  <HexChart.Cells />\n  <HexChart.Tooltip />\n  <HexChart.Legend />\n</HexChart>",
     "extraImports": [
       "type HexDatum",
@@ -46,11 +53,25 @@
       {
         "title": "Attribution",
         "description": "The whole card: the total above, the honeycomb, and the key under it. Pressing a cell or a key entry moves the readout onto that campaign.",
+        "previewVideo": {
+          "src": "/previews/hex-chart-attribution.mp4",
+          "poster": "/previews/hex-chart-attribution-poster.jpg",
+          "alt": "HexChart — Attribution.",
+          "width": 720,
+          "height": 1560
+        },
         "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Attributed revenue</Frame.Title>\n    <Frame.Action>View full report</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <HexChart\n      data={attribution}\n      activeIndex={active}\n      onActiveIndexChange={setActive}\n    >\n      <HexChart.Header\n        className=\"px-4 pt-3.5\"\n        value={money(source ? source.value : total)}\n        caption={source ? source.label : 'Across four campaigns'}\n      />\n      <HexChart.Cells />\n      <HexChart.Tooltip formatValue={money} showCells />\n      <HexChart.Legend className=\"px-4 pb-3.5\" />\n    </HexChart>\n  </Frame.Panel>\n</Frame>"
       },
       {
         "title": "Waffle",
         "description": "`shape=\"grid\"` instead: reading order, every cell used, and a split a reader can count off a row.",
+        "previewVideo": {
+          "src": "/previews/hex-chart-waffle.mp4",
+          "poster": "/previews/hex-chart-waffle-poster.jpg",
+          "alt": "HexChart — Waffle.",
+          "width": 720,
+          "height": 1560
+        },
         "code": "<HexChart data={attribution} shape=\"grid\" columns={16} aspectRatio={1.8}>\n  <HexChart.Header\n    className=\"px-4 pt-3.5\"\n    value={money(total)}\n    caption=\"One cell is about half a percent\"\n  />\n  <HexChart.Cells />\n  <HexChart.Tooltip formatValue={money} />\n  <HexChart.Legend className=\"px-4 pb-3.5\" />\n</HexChart>"
       },
       {
