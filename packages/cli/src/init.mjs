@@ -134,7 +134,7 @@ export async function init(options) {
  * in a template, so this is a copy, a rename and an install rather than a
  * sequence of edits that can each fail on their own.
  */
-async function create(options) {
+export async function create(options) {
   const cwd = options.cwd;
 
   info('');

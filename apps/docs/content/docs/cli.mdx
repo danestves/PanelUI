@@ -33,14 +33,12 @@ npx panelui-cli@latest add item
 
 Run this once, in the root of an Expo app:
 
-```bash
-npx panelui-cli@latest init
-```
+<InstallTabs kind="dlx" packages="panelui-cli@latest init" />
 
 <Callout>
   In an **empty** directory the same command does the other job instead: it starts a new app from
-  a template, with the theme, the tab bar and the whole pipeline already wired. See
-  [Templates](/docs/templates).
+  a template, with the theme, the tab bar and the whole pipeline already wired — which is also
+  what `npx create-panelui-app@latest` does. See [Templates](/docs/templates).
 </Callout>
 
 It writes `panelui.json`, copies the design tokens to `theme.css`, wires your CSS entry and

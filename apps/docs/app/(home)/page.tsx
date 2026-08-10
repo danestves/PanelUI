@@ -37,7 +37,16 @@ export const metadata: Metadata = {
   alternates: { canonical: absoluteUrl('/') },
 };
 
-const INSTALL = 'npx expo install panelui-native';
+/**
+ * The one command that works from nothing.
+ *
+ * It used to be `npx expo install panelui-native`, which is the right line on
+ * the installation page's step 1 and the wrong one here: a visitor who has not
+ * got an app yet copies it into an empty folder and gets a package with no
+ * project around it. Same reason `npm install react` is not what react.dev
+ * puts under its headline.
+ */
+const INSTALL = 'npx create-panelui-app@latest';
 
 const FEATURES = [
   {

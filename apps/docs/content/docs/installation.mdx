@@ -1,17 +1,34 @@
 ---
 title: Installation
-description: Install PanelUI in an Expo app, step by step — packages, Metro config, CSS entry and the provider, with a fix for every error you might hit.
+description: Install PanelUI in an Expo app — a new one in a single command, an existing one in six steps, with a fix for every error you might hit.
 ---
 
-<Callout title="Starting from nothing?">
-  `npx panelui-cli@latest init` in an empty directory writes a working Expo app with all of
-  this already done — a theme, a native tab bar and the Metro pipeline. See
-  [Templates](/docs/templates). The rest of this page is for adding PanelUI to an app you
-  already have.
-</Callout>
+There are two ways in, and which one you want depends on whether the app exists yet.
 
-PanelUI needs four things: the **packages**, a **Metro plugin**, a **CSS entry file**, and the
-**provider** at the root of your app. Five steps, all copy-paste.
+## Requirements
+
+- **Expo SDK 57+** and React Native 0.86.
+- **Node 20+**.
+- No Xcode, no Android Studio, no `prebuild`. PanelUI is pure TypeScript with no native modules,
+  so it runs in Expo Go.
+
+## Option 1: a new project
+
+One command. It writes a working Expo app with everything on this page already done — the Metro
+pipeline, the CSS entry, the provider, a theme, and a screen with components on it:
+
+<InstallTabs kind="create" packages="create-panelui-app" />
+
+It asks which template you want (`starter` or `minimal`), what the app is called, and which
+theme to start on; pass `--template`, `--name`, `--theme` and `--yes` to answer in advance. See
+[Templates](/docs/templates) for what each one contains.
+
+That is the whole of it — skip to [Restart and check](#6-restart-and-check) to see it running.
+
+## Option 2: an existing project
+
+Six steps. PanelUI needs the **package**, its **peer dependencies**, a **Metro plugin**, a **CSS
+entry file** and the **provider** at the root of your app.
 
 If something does not work at the end of it, [Troubleshooting](#troubleshooting) lists the errors
 people actually hit and the fix for each — it is worth a look before you retrace your steps.
@@ -22,37 +39,53 @@ people actually hit and the fix for each — it is worth a look before you retra
   supported, and you can mix them.
 </Callout>
 
-## Requirements
+No app yet, and you would rather not use the template? Make one first, and come back:
 
-- **Expo SDK 57+** and React Native 0.86.
-- **Node 20+**.
-- No Xcode, no Android Studio, no `prebuild`. PanelUI is pure TypeScript with no native modules,
-  so it runs in Expo Go.
+<InstallTabs kind="create" packages="create-expo-app" />
 
-No app yet? Make one first, and come back:
+## 1. Install PanelUI
 
-```bash
-npx create-expo-app@latest my-app
-cd my-app
-```
+<InstallTabs kind="expo" packages="panelui-native" />
 
-## 1. Install the packages
+`tailwind-variants`, `tailwind-merge` and `clsx` are real dependencies of the package and arrive
+with it. The next step is the ones that cannot.
 
-```bash
-npx expo install panelui-native uniwind tailwindcss @react-native-masked-view/masked-view expo-linear-gradient react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-svg react-native-worklets
-```
+## 2. Install the peer dependencies
+
+These are peer dependencies rather than dependencies because your app has to own the versions —
+one copy of Reanimated per app, matched to your SDK. Install all nine:
+
+<InstallTabs
+  kind="expo"
+  packages="uniwind tailwindcss react-native-reanimated react-native-worklets react-native-gesture-handler react-native-safe-area-context react-native-svg @react-native-masked-view/masked-view expo-linear-gradient"
+/>
 
 <Callout type="warn" title="Install all of them, including the ones you think you don't need">
   Metro resolves every import in the library when it builds your bundle, not when you first render
   a component. Leave one out and the **first bundle fails** with `Unable to resolve module …` — for
-  a component you may never use. Use `npx expo install` rather than `npm install` so the versions
-  match your SDK.
+  a component you may never use.
 </Callout>
 
-That is the complete list. Everything else PanelUI needs (`tailwind-variants`, `tailwind-merge`,
-`clsx`) is a real dependency and arrives on its own.
+<Callout title="Why `expo install` and not a pinned version">
+  `expo install` asks the installed SDK which version of each package it was built against, so
+  these resolve to versions that work together on *your* SDK. Pinning them by hand produces the
+  version mismatch the pinning was meant to prevent, one SDK upgrade later. The floors below are
+  what the package requires; the SDK picks the rest.
+</Callout>
 
-### Optional extras
+| Package | Minimum | Why |
+| --- | --- | --- |
+| `uniwind` | 1.0.0 | The Tailwind engine — compiles the classes and applies theme changes natively |
+| `tailwindcss` | 4.0.0 | The v4 engine Uniwind builds on |
+| `react-native-reanimated` | 3.0.0 | Every animation in the library, on the UI thread |
+| `react-native-worklets` | — | Reanimated 4's own runtime. Not PanelUI's peer; it is here because Reanimated needs it |
+| `react-native-gesture-handler` | 2.0.0 | Sheets, sliders, swipes, the colour picker |
+| `react-native-safe-area-context` | 4.0.0 | Insets for overlays and the provider's background |
+| `react-native-svg` | 15.0.0 | Charts, signature, loaders, icons |
+| `@react-native-masked-view/masked-view` | 0.3.0 | Shimmer, scroll fades, text animation |
+| `expo-linear-gradient` | 13.0.0 | Gradients in charts, scrims and fades |
+
+### Optional dependencies
 
 Each of these is reached through a guarded import, so the library works without it and the
 feature simply stays quiet. Install one when you want what it unlocks.
@@ -65,8 +98,9 @@ feature simply stays quiet. Install one when you want what it unlocks.
 | `react-native-keyboard-controller` | Keyboard avoidance that behaves on Android — `avoidKeyboard` on Input, and [`useKeyboardAvoidance`](/docs/hooks/use-keyboard-avoidance) |
 | `expo-file-system`, `react-native-view-shot` | Exporting a [Signature](/docs/components/signature) as a file or an image |
 | `@expo/ui` | [Native platform controls](/docs/native) behind Button, Switch, Slider, Select and BottomSheet |
+| `@maplibre/maplibre-react-native` | The [Map](/docs/components/map) component |
 
-## 2. Add `metro.config.js`
+## 3. Add `metro.config.js`
 
 Uniwind compiles your Tailwind classes at bundle time, so it has to wrap the Metro config.
 
@@ -104,7 +138,7 @@ module.exports = withUniwindConfig(config, {
 
   Nothing checks this path. Point it at a file that does not exist and Metro still bundles, the app
   still launches, and **not one class resolves** — no `flex-1`, so views collapse to nothing and you
-  get a blank screen, with Uniwind warning that it cannot find `--color-background`. Step 3 ends by
+  get a blank screen, with Uniwind warning that it cannot find `--color-background`. Step 4 ends by
   asking you to check this line against the file you actually edited; it is worth doing.
 </Callout>
 
@@ -130,7 +164,7 @@ config.resolver.nodeModulesPaths = [
 
 </Callout>
 
-## 3. Add the imports to `global.css`
+## 4. Add the imports to `global.css`
 
 <Callout type="warn" title="Look for this file before you create one">
   An app made by `create-expo-app` **already has `src/global.css`** — a handful of web font
@@ -153,7 +187,7 @@ The first three lines bring in Tailwind, Uniwind's native layer, and PanelUI's d
 `@source` line tells Tailwind to scan PanelUI's own class names so its styles end up in your
 bundle — without it your classes work and PanelUI's components come out unstyled.
 
-**Now go back and check `cssEntryFile` in step 2 names this exact file.** `'./src/global.css'` for
+**Now go back and check `cssEntryFile` in step 3 names this exact file.** `'./src/global.css'` for
 the file above — the default in the snippet, since that is where `create-expo-app` puts it. If you
 kept your CSS somewhere else, this is the line that has to change, and a mismatch is silent.
 
@@ -170,7 +204,7 @@ kept your CSS somewhere else, this is the line that has to change, and a mismatc
 
 </Callout>
 
-## 4. Import the CSS and add the provider
+## 5. Import the CSS and add the provider
 
 The import goes in your app's entry file, once, at the top — it is what pulls the compiled styles
 into the bundle. `PanelUIProvider` wraps everything below it.
@@ -240,7 +274,7 @@ root of the app is enough — do not nest a second one.
 You do **not** need a `babel.config.js`. Expo's default preset already wires up the worklets
 plugin that Reanimated needs. If you have one for other reasons, keep `babel-preset-expo` in it.
 
-## 5. Restart and check
+## 6. Restart and check
 
 Metro reads its config once, at startup, so start it fresh:
 
@@ -343,7 +377,7 @@ long as it is covered by your `tsconfig.json` `include`.
 
 ### `Unable to resolve module @react-native-masked-view/masked-view` (or `expo-linear-gradient`)
 
-A required package is missing. Run the [install command](#1-install-the-packages) again — all of
+A required package is missing. Run the [peer dependencies](#2-install-the-peer-dependencies) again — all of
 it, not just the package named in the error. Metro resolves every import in the library, so this
 happens even for components you do not use.
 
@@ -389,7 +423,7 @@ runtime.
 
 The `@source` line in `global.css` is missing, or its relative path does not land on
 `node_modules/panelui-native/src`. See
-[the table in step 3](#3-add-the-imports-to-globalcss) — the path is relative to the CSS file, not
+[the table in step 4](#4-add-the-imports-to-globalcss) — the path is relative to the CSS file, not
 to the project root.
 
 ### `Theme … is missing variable …`

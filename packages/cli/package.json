@@ -6,6 +6,12 @@
   "bin": {
     "panelui-cli": "bin/panelui.mjs"
   },
+  "//exports": "Subpaths, so create-panelui-app can call the scaffolder directly instead of re-launching this CLI through npx. Anything not listed here is private.",
+  "exports": {
+    "./init": "./src/init.mjs",
+    "./ui": "./src/ui.mjs",
+    "./package.json": "./package.json"
+  },
   "files": [
     "bin",
     "src",

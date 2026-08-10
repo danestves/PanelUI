@@ -4,6 +4,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Diagram } from '@/components/diagram';
 import { IconGallery } from '@/components/icon-gallery';
+import { InstallTabs } from '@/components/install-tabs';
 import { Preview } from '@/components/preview';
 import { PreviewVideo } from '@/components/preview-video';
 import type { MDXComponents } from 'mdx/types';
@@ -19,6 +20,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Steps,
     Diagram,
     IconGallery,
+    InstallTabs,
     Preview,
     PreviewVideo,
     ...components,

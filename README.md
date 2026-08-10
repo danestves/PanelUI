@@ -52,10 +52,17 @@ no Android Studio.
 
 ## Getting started
 
-Needs an Expo SDK 57+ app and Node 20+.
+Needs Node 20+. A new app, with everything below already done:
 
 ```bash
-npx expo install panelui-native uniwind tailwindcss @react-native-masked-view/masked-view expo-linear-gradient react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-svg react-native-worklets
+npx create-panelui-app@latest
+```
+
+Adding it to an app you already have, on Expo SDK 57+:
+
+```bash
+npx expo install panelui-native
+npx expo install uniwind tailwindcss react-native-reanimated react-native-worklets react-native-gesture-handler react-native-safe-area-context react-native-svg @react-native-masked-view/masked-view expo-linear-gradient
 ```
 
 Then three files — a Metro config, a CSS entry and the provider. The
