@@ -1,0 +1,203 @@
+---
+title: Charts
+description: The five-colour series ramp every chart draws from, how a series picks its colour, and what to change to put a whole app's charts on brand.
+---
+
+Ten charts, one ramp. Nothing in the library names a colour for a series — a `LineChart` does not
+know it is blue, it knows it is *series one*, and what series one resolves to is decided by the
+active theme. That is what makes a theme switch restyle every chart in an app rather than only the
+ones somebody remembered to update.
+
+Which means putting every chart in your product on brand is five lines of CSS, and it means a
+chart with a hex in it is a chart that has quietly opted out of all of this.
+
+## The ramp
+
+Five tokens, `--color-chart-1` through `--color-chart-5`, **ordered by prominence**. `chart-1` is
+the series the chart is about, and every theme starts it on that family's own accent; each further
+series takes the next.
+
+They are a separate ramp from the status colours on purpose, and the difference is worth holding
+onto: a status colour *means* something — this failed, this is fine — while a series colour only
+has to be told apart from the other four. Reaching for `destructive` to draw a series called
+"Churn" borrows a meaning the reader will apply to every red thing on the screen.
+
+| Token | Panel light | Panel dark |
+| --- | --- | --- |
+| `--color-chart-1` | `#262626` | `#fafafa` |
+| `--color-chart-2` | `#3b82f6` | `#60a5fa` |
+| `--color-chart-3` | `#10b981` | `#34d399` |
+| `--color-chart-4` | `#f59e0b` | `#fbbf24` |
+| `--color-chart-5` | `#8b5cf6` | `#a78bfa` |
+
+Every theme defines its own five. See [Theming](/docs/customization/theming) for the full set.
+
+## Which part takes which
+
+A series-drawing part picks its token with `colorIndex`, and defaults to the next one along:
+
+```tsx
+<LineChart data={traffic} xDataKey="month">
+  <LineChart.Line dataKey="organic" />                 {/* chart-1 */}
+  <LineChart.Line dataKey="paid" colorIndex={2} />     {/* chart-2 */}
+  <LineChart.Line dataKey="referral" colorIndex={3} /> {/* chart-3 */}
+</LineChart>
+```
+
+| Chart | The part that takes `colorIndex` |
+| --- | --- |
+| [LineChart](/docs/charts/line-chart) | `Line`, `Area` |
+| [AreaChart](/docs/charts/area-chart) | `Area` |
+| [BarChart](/docs/charts/bar-chart) | `Bar` |
+| [ScatterChart](/docs/charts/scatter-chart) | `Points` |
+| [RadarChart](/docs/charts/radar-chart) | `Series` |
+| [RingChart](/docs/charts/ring-chart) | `Ring` |
+
+[PieChart](/docs/charts/pie-chart) and [HexChart](/docs/charts/hex-chart) take their colours from
+the data instead, walking the ramp in order — their parts are one series each, so there is no
+per-part slot to put an index in.
+
+Two charts are not a series ramp at all, and both are right to be:
+
+- **[HeatmapChart](/docs/charts/heatmap-chart)** derives a five-step ramp from a single base
+  colour — one measure at five intensities is not five series.
+- **[CandlestickChart](/docs/charts/candlestick-chart)** uses `--color-success` and
+  `--color-destructive`. Up and down are not two series, they are two states of one, and that
+  convention is older than any palette.
+
+## Putting every chart on brand
+
+Redefine the five in your own `global.css`, in the same `@variant` shape the library uses, and
+every chart in the app follows — including the ones you have not written yet.
+
+```css title="global.css"
+@import 'panelui-native/theme.css';
+
+@layer theme {
+  :root {
+    @variant light {
+      --color-chart-1: #c2410c;
+      --color-chart-2: #ea580c;
+      --color-chart-3: #f59e0b;
+      --color-chart-4: #16a34a;
+      --color-chart-5: #2563eb;
+    }
+    @variant dark {
+      --color-chart-1: #fb923c;
+      --color-chart-2: #fdba74;
+      --color-chart-3: #fcd34d;
+      --color-chart-4: #4ade80;
+      --color-chart-5: #60a5fa;
+    }
+  }
+}
+```
+
+The `@variant` shape is not optional — see [Changing a colour](/docs/customization/colors#changing-a-colour)
+for why the web's `:root` / `.dark` pattern does not work here. If your app ships the other four
+themes, the same block takes `moon`, `moon-dark`, `grass` and `grass-dark` alongside these two.
+
+<Callout type="warn">
+  Set light *and* dark. A ramp defined only in `light` leaves every dark theme on the library's
+  defaults, which is the kind of thing nobody notices until a screenshot goes out.
+</Callout>
+
+Two things worth getting right while you are in there. **Keep them in order of prominence** — the
+ordering is a promise every chart relies on to decide what the eye lands on first. And **check
+them against the dark background as well as the light one**: a ramp picked on white routinely has
+two colours that collapse into each other at dark-mode brightness.
+
+## One series, one colour
+
+Where a series has to be a particular colour — a brand, a category the reader already associates
+with a colour, a comparison against something drawn elsewhere in the same colour — name it
+directly. `color` beats `colorIndex` wherever both exist.
+
+```tsx
+<LineChart data={traffic} xDataKey="month">
+  <LineChart.Line dataKey="ours" color="#2563eb" />
+  <LineChart.Line dataKey="theirs" colorIndex={5} />
+</LineChart>
+```
+
+On the charts whose colours come from the data, it goes on the datum:
+
+```tsx
+const attribution: HexDatum[] = [
+  { label: 'Renewals', value: 3420, color: '#2563eb' },
+  { label: 'New', value: 1880 },       // chart-2
+  { label: 'Expansion', value: 840 },  // chart-3
+];
+```
+
+<Callout type="info">
+  `color` takes a literal colour, not a token name — the one exception is `HeatmapChart`, whose
+  `color` and `emptyColor` accept either, so `color="--color-chart-3"` recolours the ramp *and*
+  keeps following the theme. Everywhere else, a token name is a string the renderer cannot
+  resolve. To follow the theme, change the token rather than naming it.
+</Callout>
+
+## The furniture
+
+Grids, axes and tooltips are not series and do not draw from the ramp. They default to
+`--color-border` for rules and the muted foreground for labels, and each takes a `color` of its
+own — so a chart's furniture can be dialled back without touching its data.
+
+```tsx
+<LineChart data={traffic} xDataKey="month">
+  <LineChart.Grid color="rgba(0,0,0,0.04)" rows={3} />
+  <LineChart.Line dataKey="organic" />
+  <LineChart.XAxis ticks={4} />
+  <LineChart.Tooltip color="#94a3b8" />
+</LineChart>
+```
+
+Most also take an `opacity`, which is usually the better knob: it keeps the rule following the
+theme instead of pinning it to a colour that was chosen against one background.
+
+## Weight, fill and shape
+
+Colour is not the only thing that separates one series from another, and on a small chart it is
+often not the most effective. These are per-part, and they are the same idea — say less, or say it
+more quietly:
+
+| Prop | Where | What it does |
+| --- | --- | --- |
+| `strokeWidth` | `Line`, `RadarChart.Series`, `RingChart` | How heavy the stroke is |
+| `fillOpacity` | `AreaChart.Area`, `RadarChart.Series` | How solid the fill under it is |
+| `dimOpacity` | `PieChart.Slices`, `HexChart.Cells` | How far the others fade when one is selected |
+| `cornerRadius` | `PieChart.Slices`, `CandlestickChart.Candles`, `HeatmapChart.Cells` | How round each mark is |
+| `emptyColor` | `HexChart.Cells`, `HeatmapChart.Cells` | The cells with nothing in them |
+| `shape` | `HexChart` | Whether the cells cluster or fill in reading order |
+
+A chart of four overlaid series reads better as one heavy line and three light ones than as four
+of equal weight in four colours. The ramp says *which* series; the weight says which one matters.
+
+## Resolving a colour yourself
+
+Anything drawing outside the component tree — an SVG of your own beside a chart, a native control,
+a gradient — needs the resolved string rather than a class. `useCSSVariable` gives it, and
+re-resolves on a theme change.
+
+```tsx
+import { useCSSVariable } from 'uniwind';
+
+const series = useCSSVariable('--color-chart-1');
+
+// Undefined until the stylesheet has been read, so anything painting on the
+// first frame needs a fallback rather than a crash.
+<Svg>
+  <Path fill={typeof series === 'string' ? series : '#3b82f6'} />
+</Svg>
+```
+
+That guard is the idiom throughout the library — it is how every chart resolves its own grid and
+series colours. See [Theming](/docs/customization/theming#reading-a-token-in-javascript) for the
+rest of it.
+
+## The rule
+
+Never a raw hex in a chart you want to keep. It is the same rule
+[Colors](/docs/customization/colors) opens with, and charts are where it is easiest to break and
+hardest to spot: a series pinned to `#1e293b` looks deliberate in light mode and is invisible in
+dark, and nothing about the call site says so. Name the token, change the token.
