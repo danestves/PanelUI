@@ -9,6 +9,53 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.55.0] — 2026-08-10
+
+### Added
+
+- **`Tour`** *(alpha)* — a walkthrough that introduces a screen one control at a time. Nothing in
+  the library covered first-run guidance: an empty state explains a screen before there is
+  anything on it, and a tour explains it once there is. It dims everything, cuts a hole around
+  one control and puts a card beside it, then moves the hole to the next control.
+
+  The hole is the reason to reach for it rather than for a sequence of tooltips. A caption on its
+  own has to describe where to look, and "the button at the top right" is a sentence people read
+  twice and still get wrong.
+
+  A `Tour.Step` wraps the control it is about, so the two live together in the tree and a step
+  whose target is deleted goes with it instead of pointing at empty space. `order` sequences the
+  steps and is the author's numbering rather than the tree's, because a walkthrough usually
+  crosses a header, a list and a tab bar in an order the layout knows nothing about.
+
+  Targets are measured each time their step comes up and again when the window changes size, so
+  rotating the device mid-tour re-places the spotlight rather than stranding it. A target that
+  has scrolled out of view is the one case the component cannot fix by itself, so `onStepChange`
+  fires with the step about to be shown and the measurement waits a frame for whatever it
+  scrolls.
+
+  `shape="circle"` squares the hole around a round control, `interactive` leaves the spotlit
+  control pressable for the walkthrough that asks you to try the step, and `labels` replaces the
+  card's words. It is marked alpha because the card's own composition is the part still likely to
+  move.
+
+### Changed
+
+- **A stepper's connectors now come with its steps.** Every `Steps` in this repo carried the same
+  line — `{index < items.length - 1 ? <Steps.Separator /> : null}` — because the connector was
+  the author's to place and the last one was the author's to leave off. `Breadcrumb` settled that
+  argument for its own separators long ago; `Steps` now follows it. The root counts the items it
+  holds and each one draws the connector to the next.
+
+  Existing code renders exactly as it did: an item holding its own `Steps.Separator` keeps it and
+  gets no second one. The new `separators={false}` turns the automatic ones off for a stepper
+  that wants none.
+
+- **A step now says where it sits.** Counting the items is also what lets a screen reader reaching
+  the middle of a wizard hear "Payment, step 2 of 3, completed" — the position and the state,
+  which are what the circle and its fill convey to everyone else. It is announced as an
+  accessibility value rather than a label, because a label there would replace the step's own
+  title with its number.
+
 ## [0.54.0] — 2026-08-09
 
 ### Added

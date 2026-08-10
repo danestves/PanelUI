@@ -513,10 +513,22 @@
     "Indeterminate loading indicator.",
     "react native spinner"
   ],
+  "tour": [
+    "Tour",
+    "A walkthrough that introduces a screen one control at a time.",
+    "react native onboarding tour spotlight coach mark walkthrough",
+    {
+      "addedIn": "0.55.0",
+      "alpha": true
+    }
+  ],
   "steps": [
     "Steps",
     "Stepper for multi-step flows.",
-    "react native stepper"
+    "react native stepper",
+    {
+      "updatedIn": "0.55.0"
+    }
   ],
   "surface": [
     "Surface",

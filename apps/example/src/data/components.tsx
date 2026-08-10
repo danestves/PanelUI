@@ -210,6 +210,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
+  Tour,
   TrashIcon,
   Tree,
   Typography,
@@ -9536,7 +9537,6 @@ function StepsDemo() {
             <Steps.Trigger>
               <Steps.Indicator />
             </Steps.Trigger>
-            {index < STEP_DATA.length - 1 ? <Steps.Separator /> : null}
           </Steps.Item>
         ))}
       </Steps>
@@ -12706,6 +12706,168 @@ function QuestionnaireSheetVersion() {
 /* -------------------------------------------------------------------------- */
 /* Catalogue                                                                  */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * A miniature screen for the tour to walk through.
+ *
+ * The point of a tour is that it points at things that are already there, so
+ * the demo needs a screen with things on it rather than three buttons in a row.
+ * This is the smallest one that still has a header, a body and an action —
+ * enough for the spotlight to travel a real distance between steps.
+ */
+function TourDemo() {
+  const [running, setRunning] = useState(false);
+
+  return (
+    <View className="w-full gap-4">
+      <Tour open={running} onOpenChange={setRunning}>
+        <View className="flex-row items-center justify-between">
+          <Text weight="semibold">Inbox</Text>
+          <Tour.Step
+            order={1}
+            title="Filter what you see"
+            description="Unread, flagged, or everything at once."
+            shape="circle"
+          >
+            <Button variant="ghost" size="icon" accessibilityLabel="Filter">
+              <SearchIcon size={20} />
+            </Button>
+          </Tour.Step>
+        </View>
+
+        <Tour.Step
+          order={0}
+          title="Your conversations"
+          description="Everything waiting for a reply lands in this list."
+          radius={16}
+        >
+          <Card>
+            <Card.Content className="gap-2">
+              {[
+                { name: 'Ana Ruiz', initials: 'AR' },
+                { name: 'Deploy bot', initials: 'DB' },
+                { name: 'Marta Silva', initials: 'MS' },
+              ].map((person) => (
+                <View key={person.name} className="flex-row items-center gap-3">
+                  <Avatar size="sm" fallback={person.initials} />
+                  <Text size="sm">{person.name}</Text>
+                </View>
+              ))}
+            </Card.Content>
+          </Card>
+        </Tour.Step>
+
+        <Tour.Step
+          order={2}
+          title="Start something new"
+          description="A message to anyone, from anywhere in the app."
+        >
+          <Button onPress={() => {}}>New message</Button>
+        </Tour.Step>
+      </Tour>
+
+      <Button variant="outline" onPress={() => setRunning(true)}>
+        Start the tour
+      </Button>
+    </View>
+  );
+}
+
+/** `shape="circle"` for the controls that are round to begin with. */
+function TourCircleDemo() {
+  const [running, setRunning] = useState(false);
+
+  return (
+    <View className="w-full gap-4">
+      <Tour open={running} onOpenChange={setRunning} shape="circle" padding={10}>
+        <View className="flex-row items-center justify-center gap-6">
+          <Tour.Step order={0} title="You" description="Your profile, and everything under it.">
+            <Avatar fallback="KA" />
+          </Tour.Step>
+          <Tour.Step
+            order={1}
+            title="What you saved"
+            description="Anything you bookmark shows up here."
+          >
+            <Button variant="secondary" size="icon" accessibilityLabel="Saved">
+              <BookmarkIcon size={20} />
+            </Button>
+          </Tour.Step>
+          <Tour.Step order={2} title="Alerts" description="What the app is allowed to interrupt you for.">
+            <Button variant="secondary" size="icon" accessibilityLabel="Alerts">
+              <BellIcon size={20} />
+            </Button>
+          </Tour.Step>
+        </View>
+      </Tour>
+
+      <Button variant="outline" onPress={() => setRunning(true)}>
+        Start the tour
+      </Button>
+    </View>
+  );
+}
+
+/**
+ * `interactive` leaves the spotlit control pressable, so the walkthrough can
+ * ask you to use it rather than read about it. Advancing is the app's call:
+ * the target's own `onPress` moves the tour on.
+ */
+function TourInteractiveDemo() {
+  const [running, setRunning] = useState(false);
+  const [step, setStep] = useState(0);
+  const [count, setCount] = useState(0);
+
+  return (
+    <View className="w-full gap-4">
+      <Tour
+        open={running}
+        onOpenChange={setRunning}
+        step={step}
+        onStepChange={setStep}
+        interactive
+        showSkip={false}
+      >
+        <View className="items-center gap-4">
+          <Tour.Step
+            order={0}
+            title="Press it"
+            description="Go on — the button still works under the dim."
+            shape="circle"
+          >
+            <Button
+              variant="primary"
+              size="icon"
+              accessibilityLabel="Add one"
+              onPress={() => {
+                setCount((current) => current + 1);
+                if (running && step === 0) setStep(1);
+              }}
+            >
+              <PlusIcon size={20} />
+            </Button>
+          </Tour.Step>
+
+          <Tour.Step order={1} title="And there it is" description="The count went up by one.">
+            <Text size="lg" weight="semibold">
+              {count}
+            </Text>
+          </Tour.Step>
+        </View>
+      </Tour>
+
+      <Button
+        variant="outline"
+        onPress={() => {
+          setStep(0);
+          setRunning(true);
+        }}
+      >
+        Start the tour
+      </Button>
+    </View>
+  );
+}
 
 const CATALOGUE: ComponentEntry[] = [
   {
@@ -17041,7 +17203,6 @@ const CATALOGUE: ComponentEntry[] = [
                     <Steps.Description>{step.description}</Steps.Description>
                   </View>
                 </Steps.Trigger>
-                {index < STEP_DATA.length - 1 ? <Steps.Separator /> : null}
               </Steps.Item>
             ))}
           </Steps>
@@ -17059,7 +17220,6 @@ const CATALOGUE: ComponentEntry[] = [
                     <Steps.Title>{step.title}</Steps.Title>
                   </View>
                 </Steps.Trigger>
-                {index < STEP_DATA.length - 1 ? <Steps.Separator /> : null}
               </Steps.Item>
             ))}
           </Steps>
@@ -17874,6 +18034,16 @@ const CATALOGUE: ComponentEntry[] = [
         description: 'Platform picker, sheet and buttons inside the panel — needs @expo/ui.',
         render: () => <PanelsideNativeBlock />,
       },
+    ],
+  },
+  {
+    slug: 'tour',
+    name: 'Tour',
+    summary: 'A walkthrough that introduces a screen one control at a time',
+    demos: [
+      { label: 'A walkthrough', render: () => <TourDemo /> },
+      { label: 'Round targets', render: () => <TourCircleDemo /> },
+      { label: 'Try it yourself', render: () => <TourInteractiveDemo /> },
     ],
   },
 ];

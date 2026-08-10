@@ -259,6 +259,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Toast` | Transient notification queue with swipe to dismiss |
 | `ToggleButton` | A button that stays down, on its own or in a group |
 | `Tooltip` | A small label that names the control under your finger |
+| `Tour` | A walkthrough that introduces a screen one control at a time |
 | `Tree` | A hierarchy you can open a level at a time |
 | `Typography` | Semantic text presets |
 

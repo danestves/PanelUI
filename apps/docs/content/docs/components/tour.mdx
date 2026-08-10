@@ -1,0 +1,188 @@
+---
+title: Tour
+description: A walkthrough that introduces a screen one control at a time.
+status: alpha
+---
+
+A walkthrough that introduces a screen one control at a time. It dims everything, cuts a hole around one control and puts a card beside it, then moves the hole to the next control.
+
+The hole is the point. A caption on its own has to describe where to look, and “the button at the top right” is a sentence people read twice and still get wrong.
+
+## Installation
+
+Tour ships with the library — no separate install.
+
+```tsx
+import { Tour, Avatar, Button, Card, Text, BookmarkIcon, PlusIcon } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add tour
+```
+
+## Usage
+
+```tsx
+<Tour open={onboarding} onOpenChange={setOnboarding}>
+  <Tour.Step
+    order={0}
+    title="Your conversations"
+    description="Everything waiting for a reply lands in this list."
+  >
+    <Card>{/* … */}</Card>
+  </Tour.Step>
+
+  <Tour.Step
+    order={1}
+    title="Start something new"
+    description="A message to anyone, from anywhere in the app."
+  >
+    <Button>New message</Button>
+  </Tour.Step>
+</Tour>
+```
+
+## Composition
+
+```tsx
+<Tour>
+  <Tour.Step order={0} title="…" description="…">
+    {/* the control this step is about */}
+  </Tour.Step>
+</Tour>
+```
+
+A step stays mounted whether the tour is running or not — it is a description of a control that is already on the screen, not something that appears with the walkthrough. Its wrapper is a plain view with no sizing of its own, so put layout classes on the step rather than on the control inside it.
+
+## Examples
+
+### Round targets
+
+`shape="circle"` squares the hole around the target's centre, which is what keeps it round rather than letting it collapse into a slot. Set it on the tour for a screen of round controls, or on the one step that needs it.
+
+```tsx
+<Tour open={running} onOpenChange={setRunning} shape="circle" padding={10}>
+  <Tour.Step order={0} title="You" description="Your profile, and everything under it.">
+    <Avatar fallback="KA" />
+  </Tour.Step>
+  <Tour.Step order={1} title="What you saved" description="Anything you bookmark shows up here.">
+    <Button variant="secondary" size="icon" accessibilityLabel="Saved">
+      <BookmarkIcon size={20} />
+    </Button>
+  </Tour.Step>
+</Tour>
+```
+
+### A step that asks you to try it
+
+`interactive` leaves the spotlit control pressable, so the walkthrough can ask you to use the thing rather than read about it. Advancing stays the app's call — the target keeps its own `onPress`.
+
+```tsx
+const [step, setStep] = useState(0);
+
+<Tour open={running} onOpenChange={setRunning} step={step} onStepChange={setStep} interactive>
+  <Tour.Step order={0} title="Press it" description="Go on — the button still works under the dim." shape="circle">
+    <Button
+      size="icon"
+      accessibilityLabel="Add one"
+      onPress={() => {
+        setCount((current) => current + 1);
+        if (step === 0) setStep(1);
+      }}
+    >
+      <PlusIcon size={20} />
+    </Button>
+  </Tour.Step>
+
+  <Tour.Step order={1} title="And there it is" description="The count went up by one.">
+    <Text size="lg" weight="semibold">{count}</Text>
+  </Tour.Step>
+</Tour>
+```
+
+### A target inside a scroller
+
+The tour measures on the frame after `onStepChange`, so a scroll issued there lands first and the spotlight arrives where the target does.
+
+```tsx
+const scroller = useRef<ScrollView>(null);
+const offsets = { 0: 0, 1: 320, 2: 720 };
+
+<ScrollView ref={scroller}>
+  <Tour
+    open={running}
+    onOpenChange={setRunning}
+    onStepChange={(order) => scroller.current?.scrollTo({ y: offsets[order], animated: false })}
+  >
+    {/* …steps… */}
+  </Tour>
+</ScrollView>
+```
+
+### Its own words
+
+The card's controls read in English by default. `labels` replaces any of them, and `showSkip` and `showProgress` take them away.
+
+```tsx
+<Tour
+  open={running}
+  onOpenChange={setRunning}
+  showProgress={false}
+  labels={{ next: 'Siguiente', back: 'Atrás', done: 'Listo', skip: 'Omitir', close: 'Cerrar' }}
+>
+  {/* …steps… */}
+</Tour>
+```
+
+## API Reference
+
+### Tour
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open` | `boolean` | — | Whether the walkthrough is running. |
+| `defaultOpen` | `boolean` | `false` | Whether it is running when uncontrolled. |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
+| `step` | `number` | — | The current step's `order`, controlled. Note that this is the author's numbering and not a position in the sequence — the two differ as soon as a step is conditional. |
+| `defaultStep` | `number` | — | Where an uncontrolled tour starts. Defaults to the lowest `order`. |
+| `onStepChange` | `(step: number) => void` | — | Fires with the `order` about to be shown, before it is. This is where a target inside a scroller is brought back into view: the step is measured on the next frame, so a `scrollTo` issued here lands first. |
+| `onFinish` | `() => void` | — | The last step was acknowledged. |
+| `onSkip` | `() => void` | — | The tour was ended early — the skip control, the backdrop, or Android back. |
+| `padding` | `number` | `DEFAULT_PADDING` | Room left around every target, in pixels. 8 by default. A step may override it. |
+| `radius` | `number` | `DEFAULT_RADIUS` | Corner radius of a rectangular cutout, in pixels. 12 by default. A step may override it. |
+| `shape` | `TourShape` | `'rect'` | Shape of every cutout. A step may override it. |
+| `placement` | `TourPlacement` | `'auto'` | Which side of the target the card prefers. `auto` puts it below when below fits and above when it does not, which is the only behaviour that survives a target near an edge. |
+| `dismissible` | `boolean` | `true` | Ending the tour by pressing the dimmed area, or Android back. Default true. |
+| `showProgress` | `boolean` | `true` | Show "2 of 5" above the step's title. Default true. |
+| `showSkip` | `boolean` | `true` | Show the skip control. Default true. |
+| `interactive` | `boolean` | `false` | Leave the spotlit control pressable. Off by default: a tour is usually read rather than used, and a control that reacts under the dim invites people to start doing the thing before they have been told what it does. Turn it on for the walkthrough that asks you to try the step — the target keeps its own `onPress`, so advancing the tour from it is the app's call. |
+| `overlayColor` | `string` | `DEFAULT_OVERLAY` | The dim laid over everything outside the cutout. Black at 66% by default — dark enough that the hole reads as the only lit thing, light enough that the screen behind it is still recognisable as the screen you were on. |
+| `labels` | `TourLabels` | — | The words on the card's controls. |
+| `cardClassName` | `string` | — | Extra classes for the card. |
+
+### Tour.Step
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `order` | `number` | — | Where this step falls in the walkthrough. The author's numbering rather than the tree's, and unique within a tour — two steps sharing an order means one of them replaces the other. |
+| `title` | `string` | — | The step's heading. |
+| `description` | `string` | — | The sentence under it. |
+| `shape` | `TourShape` | — | Shape of this step's cutout, overriding the tour's. |
+| `padding` | `number` | — | Room around this target, overriding the tour's. |
+| `radius` | `number` | — | Corner radius of this cutout, overriding the tour's. |
+| `placement` | `TourPlacement` | — | Which side of this target the card prefers, overriding the tour's. |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+`order` is the author's numbering of the walkthrough, not the tree's — a tour usually crosses a header, a list and a tab bar in an order the layout knows nothing about. It is also what the controlled `step` prop refers to, so the two stay in the same units. Steps sort themselves by it.
+
+Targets are measured in window coordinates each time their step becomes current, and again when the window changes size, so a rotation mid-tour re-places the spotlight rather than stranding it. The one case this cannot fix by itself is a target that has scrolled out of view: scroll it back in `onStepChange`, which fires with the step about to be shown and lands before the measurement.
+
+A step whose target cannot be measured — one whose control has gone — gets no hole and a card in the middle of the screen. Dimming everything and saying nothing about where to look is honest; cutting a hole at the origin is not.
+
+Android's back button ends a dismissible tour rather than navigating away from it, and the whole overlay respects reduced motion: the spotlight jumps between targets instead of travelling.

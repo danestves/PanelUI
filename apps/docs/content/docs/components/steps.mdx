@@ -1,6 +1,7 @@
 ---
 title: Steps
 description: Stepper for multi-step flows.
+status: updated
 ---
 
 A stepper for multi-step flows. Steps does not own your flow — it reflects whatever step your app says is active.
@@ -37,7 +38,6 @@ npx panelui-cli@latest add steps
         <Steps.Indicator />
         <Steps.Title>{item.title}</Steps.Title>
       </Steps.Trigger>
-      {index < items.length - 1 ? <Steps.Separator /> : null}
     </Steps.Item>
   ))}
 </Steps>
@@ -53,7 +53,6 @@ npx panelui-cli@latest add steps
       <Steps.Title>…</Steps.Title>
       <Steps.Description>…</Steps.Description>
     </Steps.Trigger>
-    <Steps.Separator />
   </Steps.Item>
 </Steps>
 ```
@@ -63,31 +62,29 @@ npx panelui-cli@latest add steps
 - **`Steps.Indicator`** — The circle — step number, a check once complete, a spinner while loading.
 - **`Steps.Title`** — Step heading.
 - **`Steps.Description`** — Supporting line.
-- **`Steps.Separator`** — Connector to the next step. Place it inside the item so it can read that item's state.
+- **`Steps.Separator`** — Connector to the next step. Every item draws one already — write it only to dress a particular connector, inside the item whose state it reads.
 
 ## Examples
 
 ### A horizontal wizard
 
-`value` is the index of the current step; anything before it is completed.
+`value` is the index of the current step; anything before it is completed. The connector between one item and the next comes with the item.
 
 ```tsx
 const [step, setStep] = useState(1);
 
 <Steps value={step} onValueChange={setStep}>
-  <Steps.Item step={0}>
+  <Steps.Item step={0} className="flex-1">
     <Steps.Trigger>
       <Steps.Indicator />
       <Steps.Title>Account</Steps.Title>
     </Steps.Trigger>
-    <Steps.Separator />
   </Steps.Item>
-  <Steps.Item step={1}>
+  <Steps.Item step={1} className="flex-1">
     <Steps.Trigger>
       <Steps.Indicator />
       <Steps.Title>Payment</Steps.Title>
     </Steps.Trigger>
-    <Steps.Separator />
   </Steps.Item>
   <Steps.Item step={2}>
     <Steps.Trigger>
@@ -117,7 +114,6 @@ const [step, setStep] = useState(1);
         <Steps.Description>We only read metadata.</Steps.Description>
       </View>
     </Steps.Trigger>
-    <Steps.Separator />
   </Steps.Item>
   {/* …more items… */}
 </Steps>
@@ -180,6 +176,7 @@ const [step, setStep] = useState(1);
 | `value` | `number` | — | Active step, controlled. |
 | `onValueChange` | `(value: number) => void` | — |  |
 | `orientation` | `StepsOrientation` | `horizontal` |  |
+| `separators` | `boolean` | `true` | Draw the connector between one item and the next. On by default — an item that holds its own `Steps.Separator` is left alone either way, so this is for a stepper that wants no connectors at all rather than for one that places them by hand. |
 
 ### Steps.Item
 
@@ -214,3 +211,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 ## Notes
 
 Steps are zero-based internally but the indicator renders them as 1, 2, 3.
+
+The connectors are drawn for you: the root counts the items it holds and every one but the last joins to the next, so there is no separator to forget or leave dangling. Pass `separators={false}` for a stepper with none, or put a `Steps.Separator` inside an item to dress that one connector yourself — an item that has its own keeps it and gets no second.
+
+Knowing the count is also what lets a step say where it sits: a screen reader reaching the middle of a wizard hears the step's title, then its position and state — “Payment, step 2 of 3, completed”.

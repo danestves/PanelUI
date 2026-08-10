@@ -1131,6 +1131,19 @@
     ]
   },
   {
+    "name": "tour",
+    "type": "registry:ui",
+    "description": "A walkthrough that introduces a screen one control at a time.",
+    "registryDependencies": [
+      "button",
+      "cn",
+      "icons",
+      "portal",
+      "text",
+      "use-back-handler"
+    ]
+  },
+  {
     "name": "tree",
     "type": "registry:ui",
     "description": "A hierarchy you can open a level at a time.",
