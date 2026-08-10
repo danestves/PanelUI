@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
+import { useTheme } from 'next-themes';
 import { MoonIcon, SunIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -8,10 +9,17 @@ import { cn } from '@/lib/utils';
  * The theme picker over the home page's component previews, and the element
  * the previews are themed by.
  *
- * The tokens live on this wrapper rather than on `<html>`, so picking Moon
- * restyles the previews and leaves the page around them in whatever the reader
- * chose. A visitor comparing the three families should not have the navigation
- * change colour under them to do it.
+ * The two halves of it are deliberately different in reach:
+ *
+ * - **The family** — Panel, Moon, Grass — lands on this wrapper as tokens, so
+ *   picking one restyles the previews and leaves the page around them alone.
+ *   A visitor comparing three palettes should not have the navigation change
+ *   colour under them to do it, and there is no such thing as a Moon docs site
+ *   to switch to anyway.
+ * - **Light and dark** is the reader's own setting, and there is only one of
+ *   it. Two dark switches on a page that disagree is worse than either, so
+ *   this one is the site's: it drives the same state the toggle in the
+ *   navigation does, and the previews follow it.
  *
  * Only the picker is interactive, so only the picker is a client component —
  * the previews are passed in as `children` and stay server-rendered.
@@ -43,21 +51,19 @@ function themeName(family: Family, mode: Mode): string {
 
 export function Themer({ children }: { children: ReactNode }): React.ReactElement {
   const [family, setFamily] = useState<Family>('panel');
-  const [mode, setMode] = useState<Mode>('light');
+  const { resolvedTheme, setTheme } = useTheme();
 
   /*
-   * Start on whatever the page is already in, so the previews do not open in
-   * daylight for a reader who chose dark. It has to be an effect: the class is
-   * written to <html> by the theme provider after hydration, and reading it
-   * during render would give the server one answer and the browser another.
-   *
-   * From then on the two are independent — the point of this control is to
-   * look at a theme the page is not in.
+   * `resolvedTheme` is undefined until the provider has read the stored choice
+   * and the OS setting, which happens after hydration. Rendering light until
+   * then keeps the server's markup and the browser's first pass identical;
+   * `mounted` is what stops the button claiming "Light" for that one frame on
+   * a page the reader keeps in dark.
    */
-  useEffect(() => {
-    if (document.documentElement.classList.contains('dark')) setMode('dark');
-  }, []);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
+  const mode: Mode = mounted && resolvedTheme === 'dark' ? 'dark' : 'light';
   const theme = themeName(family, mode);
 
   return (
@@ -94,8 +100,9 @@ export function Themer({ children }: { children: ReactNode }): React.ReactElemen
 
         <button
           type="button"
-          onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}
+          onClick={() => setTheme(mode === 'dark' ? 'light' : 'dark')}
           aria-pressed={mode === 'dark'}
+          aria-label={`Switch the site to ${mode === 'dark' ? 'light' : 'dark'} mode`}
           className="flex cursor-pointer items-center gap-2 rounded-full border bg-card px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           {mode === 'dark' ? (
