@@ -151,6 +151,7 @@ import {
   type PostVote,
   Portal,
   Progress,
+  QRCode,
   Questionnaire,
   type QuestionnaireAnswers,
   RadarChart,
@@ -13156,6 +13157,78 @@ function Filler({ lines }: { lines: number }) {
   );
 }
 
+/** The framed version: the bordered panel, and a line saying what it does. */
+function QRCodeFramedVersion() {
+  return (
+    <View className="flex-1 items-center justify-center gap-4 p-4">
+      <QRCode value="https://panelui.dev" size="lg">
+        <QRCode.Frame>
+          <QRCode.Body>
+            <QRCode.Canvas />
+          </QRCode.Body>
+        </QRCode.Frame>
+        <QRCode.Caption>Scan to open the documentation</QRCode.Caption>
+      </QRCode>
+    </View>
+  );
+}
+
+/** The header frame: a title strip over the code, and the string under it. */
+function QRCodeHeaderVersion() {
+  return (
+    <View className="flex-1 items-center justify-center gap-4 p-4">
+      <QRCode value="https://panelui.dev/pair/8f2a41" size="lg">
+        <QRCode.Frame>
+          <QRCode.Header>
+            <QRCode.Title>Pair a device</QRCode.Title>
+            <QRCode.Description>Point the camera at this code</QRCode.Description>
+          </QRCode.Header>
+          <QRCode.Body>
+            <QRCode.Canvas />
+          </QRCode.Body>
+        </QRCode.Frame>
+        {/* The way through for anyone whose camera is the thing being set up. */}
+        <QRCode.Value />
+      </QRCode>
+    </View>
+  );
+}
+
+/** Folded away behind a row, the way the colour picker folds away. */
+function QRCodePopoverVersion() {
+  return (
+    <View className="flex-1 justify-center gap-4 p-4">
+      <Card>
+        <Card.Header>
+          <Card.Title>Share this page</Card.Title>
+          <Card.Description>Anyone with the code can open it.</Card.Description>
+        </Card.Header>
+        <Card.Footer>
+          <QRCode value="https://panelui.dev" presentation="popover">
+            <QRCode.Trigger>
+              <Button variant="outline">Show QR code</Button>
+            </QRCode.Trigger>
+            <QRCode.Content>
+              <QRCode.Canvas />
+              <QRCode.Caption>Scan to open the docs</QRCode.Caption>
+            </QRCode.Content>
+          </QRCode>
+        </Card.Footer>
+      </Card>
+
+      <QRCode value="WIFI:T:WPA;S:PanelUI Guest;P:hunter2;;" presentation="bottom-sheet" size="lg">
+        <QRCode.Trigger>
+          <Button>Join the network</Button>
+        </QRCode.Trigger>
+        <QRCode.Content>
+          <QRCode.Canvas />
+          <QRCode.Caption>Scan to join PanelUI Guest</QRCode.Caption>
+        </QRCode.Content>
+      </QRCode>
+    </View>
+  );
+}
+
 const CATALOGUE: ComponentEntry[] = [
   {
     slug: 'accordion',
@@ -16114,6 +16187,77 @@ const CATALOGUE: ComponentEntry[] = [
               </Popover.Content>
             </Popover>
           </View>
+        ),
+      },
+    ],
+  },
+  {
+    slug: 'qr-code',
+    name: 'QRCode',
+    summary: 'A string a camera can read',
+    demos: [
+      {
+        label: 'Framed',
+        id: 'framed',
+        fullPage: true,
+        description: 'The code in a bordered panel, with a line under it saying what it does.',
+        render: () => <QRCodeFramedVersion />,
+      },
+      {
+        label: 'With a header',
+        id: 'header',
+        fullPage: true,
+        description: 'A title strip over the code, and the encoded string underneath.',
+        render: () => <QRCodeHeaderVersion />,
+      },
+      {
+        label: 'Folded away',
+        id: 'popover',
+        fullPage: true,
+        description: 'Behind a button, brought up in a popover or a sheet when it is wanted.',
+        render: () => <QRCodePopoverVersion />,
+      },
+      {
+        label: 'Sizes',
+        render: () => (
+          <View className="w-full items-center gap-6">
+            <QRCode value="https://panelui.dev" size="sm">
+              <QRCode.Canvas />
+            </QRCode>
+            <QRCode value="https://panelui.dev" size="md">
+              <QRCode.Canvas />
+            </QRCode>
+          </View>
+        ),
+      },
+      {
+        label: 'Error correction',
+        render: () => (
+          <View className="w-full flex-row items-center justify-around">
+            <QRCode value="https://panelui.dev" size="sm" errorCorrection="L">
+              <QRCode.Canvas />
+              <QRCode.Caption>L</QRCode.Caption>
+            </QRCode>
+            <QRCode value="https://panelui.dev" size="sm" errorCorrection="H">
+              <QRCode.Canvas />
+              <QRCode.Caption>H</QRCode.Caption>
+            </QRCode>
+          </View>
+        ),
+      },
+      {
+        label: 'With a mark',
+        render: () => (
+          <QRCode value="https://panelui.dev" size="lg">
+            <QRCode.Frame>
+              <QRCode.Body>
+                <QRCode.Canvas />
+                <QRCode.Logo>
+                  <Avatar fallback="P" size="sm" />
+                </QRCode.Logo>
+              </QRCode.Body>
+            </QRCode.Frame>
+          </QRCode>
         ),
       },
     ],

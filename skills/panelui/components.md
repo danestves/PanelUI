@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-98 components. The **Docs** column is the path under
+99 components. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -138,6 +138,7 @@ remember is a guess.
 | `Message` | Chat turn with avatar, bubble, header and footer. | `components/message` |
 | `MessageScroller` | Scroll behaviour a chat transcript needs. | `components/message-scroller` |
 | `Post` | A social card — author, body, media and the counts underneath, with the votes animated. | `components/post` |
+| `QRCode` | A string a camera can read — framed, titled, or folded away behind a button. | `components/qr-code` |
 | `ScrollText` | Text that resolves word by word as you scroll. | `components/scroll-text` |
 | `TextAnimation` | Five ways a piece of text or a number arrives. | `components/text-animation` |
 

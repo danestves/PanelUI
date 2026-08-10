@@ -683,6 +683,22 @@ export {
 } from './components/post';
 export { Progress, type ProgressProps } from './components/progress';
 export {
+  QRCode,
+  type QRCodeProps,
+  type QRCodeCanvasProps,
+  type QRCodeFrameProps,
+  type QRCodeHeaderProps,
+  type QRCodeBodyProps,
+  type QRCodeCaptionProps,
+  type QRCodeValueProps,
+  type QRCodeLogoProps,
+  type QRCodeTriggerProps,
+  type QRCodeContentProps,
+  type QRCodeSize,
+  type QRCodePresentation,
+  type ErrorCorrectionLevel,
+} from './components/qr-code';
+export {
   Questionnaire,
   type QuestionnaireProps,
   type QuestionnaireTitleProps,

@@ -82,314 +82,314 @@
     ],
     "notes": "Cell counts are apportioned by largest remainder, so the parts add up to the budget exactly. Rounding each share on its own does not: three equal parts of a hundred round to 33 each and leave one over, and a spare cell in a honeycomb is not a rounding error a reader can shrug off — it is a cell of some colour that nothing in the data accounts for.\n\nEvery cell belonging to a series is concatenated into a single path, so a two-hundred-cell chart is six nodes rather than two hundred, whatever the cell count. That is also why the reveal is a growing clip rather than a per-cell stagger: the cells are no longer separate things to stagger. A blob is uncovered by an ellipse growing from the centre of the field, in the field's own proportions, so it arrives in the order it was filled in; a grid wipes across, for the same reason.\n\nSelection is by press rather than by hover. There is no equivalent of a pointer resting somewhere without committing, so a chart that only revealed its numbers on hover would never reveal them at all.\n\nThe reveal runs once, when the data first arrives, and does not replay on every refresh — repeating it on each update turns a data change into an animation. Re-run it by hand through the ref's `replay()`, and it is skipped entirely under reduced motion."
   },
-        "fab": {
-      "intro": "The floating action button: one screen, one thing it is mostly for.\n\nIt floats, which is the whole problem with it. A button pinned over the content is a button covering some of it, and the bottom-right corner of a scrolling list is exactly where the last row goes. So it is right when a screen has *one* action worth that trade and wrong when it has three — a corner with three buttons in it is a toolbar that has been put in the wrong place. Where a screen has several, the honest shapes are a [ButtonGroup](/docs/components/button-group) in a bar or, if one of them really does lead, this with a `Fab.Group` behind it.",
-      "usage": "<Fab\n  placement=\"bottom-right\"\n  icon={<PlusIcon size={24} />}\n  accessibilityLabel=\"New note\"\n  onPress={compose}\n/>",
-      "extraImports": [
-        "PlusIcon",
-        "PencilIcon",
-        "ImageIcon",
-        "PaperclipIcon",
-        "MicIcon",
-        "TrashIcon",
-        "SendIcon"
-      ],
-      "anatomy": "{/* on its own */}\n<Fab icon={…} accessibilityLabel=\"…\" onPress={…} />\n\n{/* or with a dial behind it */}\n<Fab.Group icon={…} accessibilityLabel=\"…\">\n  <Fab.Action icon={…} label=\"…\" onPress={…} />\n  <Fab.Action icon={…} label=\"…\" onPress={…} />\n</Fab.Group>",
-      "parts": {
-        "Group": "A trigger with actions behind it — the speed dial. It owns the open state, the scrim, and the quarter turn the trigger takes while it is open.",
-        "Action": "One choice in an open dial: a smaller round button with its label beside it. Pressing one closes the dial and then runs the action."
+  "fab": {
+    "intro": "The floating action button: one screen, one thing it is mostly for.\n\nIt floats, which is the whole problem with it. A button pinned over the content is a button covering some of it, and the bottom-right corner of a scrolling list is exactly where the last row goes. So it is right when a screen has *one* action worth that trade and wrong when it has three — a corner with three buttons in it is a toolbar that has been put in the wrong place. Where a screen has several, the honest shapes are a [ButtonGroup](/docs/components/button-group) in a bar or, if one of them really does lead, this with a `Fab.Group` behind it.",
+    "usage": "<Fab\n  placement=\"bottom-right\"\n  icon={<PlusIcon size={24} />}\n  accessibilityLabel=\"New note\"\n  onPress={compose}\n/>",
+    "extraImports": [
+      "PlusIcon",
+      "PencilIcon",
+      "ImageIcon",
+      "PaperclipIcon",
+      "MicIcon",
+      "TrashIcon",
+      "SendIcon"
+    ],
+    "anatomy": "{/* on its own */}\n<Fab icon={…} accessibilityLabel=\"…\" onPress={…} />\n\n{/* or with a dial behind it */}\n<Fab.Group icon={…} accessibilityLabel=\"…\">\n  <Fab.Action icon={…} label=\"…\" onPress={…} />\n  <Fab.Action icon={…} label=\"…\" onPress={…} />\n</Fab.Group>",
+    "parts": {
+      "Group": "A trigger with actions behind it — the speed dial. It owns the open state, the scrim, and the quarter turn the trigger takes while it is open.",
+      "Action": "One choice in an open dial: a smaller round button with its label beside it. Pressing one closes the dial and then runs the action."
+    },
+    "partNotes": "`Fab.Action` only works inside a `Fab.Group` — it reads the dial's open progress to know when its own turn to unfold is, and throws outside one rather than rendering something that would never animate.",
+    "examples": [
+      {
+        "title": "Over a list",
+        "description": "The case it exists for. `placement` pins it to a corner against the nearest positioned ancestor, which on a screen means the screen — so give the content below it enough bottom padding to scroll clear. Nothing here can work out how tall your list is, and a button sitting on the last row forever is the failure people actually hit.",
+        "code": "<View className=\"flex-1\">\n  <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>\n    {/* …rows… */}\n  </ScrollView>\n\n  <Fab\n    placement=\"bottom-right\"\n    icon={<PlusIcon size={24} />}\n    accessibilityLabel=\"New note\"\n    haptics\n    onPress={compose}\n  />\n</View>"
       },
-      "partNotes": "`Fab.Action` only works inside a `Fab.Group` — it reads the dial's open progress to know when its own turn to unfold is, and throws outside one rather than rendering something that would never animate.",
-      "examples": [
-        {
-          "title": "Over a list",
-          "description": "The case it exists for. `placement` pins it to a corner against the nearest positioned ancestor, which on a screen means the screen — so give the content below it enough bottom padding to scroll clear. Nothing here can work out how tall your list is, and a button sitting on the last row forever is the failure people actually hit.",
-          "code": "<View className=\"flex-1\">\n  <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>\n    {/* …rows… */}\n  </ScrollView>\n\n  <Fab\n    placement=\"bottom-right\"\n    icon={<PlusIcon size={24} />}\n    accessibilityLabel=\"New note\"\n    haptics\n    onPress={compose}\n  />\n</View>"
-        },
-        {
-          "title": "Spelling the action out",
-          "description": "A lone glyph is a guess unless the glyph is a plus. `extended` turns the circle into a stadium and puts the label beside it — worth the width for anything a plus would not have said on its own.",
-          "code": "<Fab extended placement=\"bottom-right\" icon={<PencilIcon size={20} />}>\n  Write\n</Fab>",
-          "preview": {
-            "src": "/previews/fab-spelling-the-action-out.jpg",
-            "alt": "Fab — Spelling the action out.",
-            "width": 1179,
-            "height": 196
-          }
-        },
-        {
-          "title": "A speed dial",
-          "description": "The actions unfold one after another rather than together — a few frames apart each, which is enough to read as a list opening instead of a menu appearing. Every one carries its label, because a column of unlabelled circles is a quiz.\n\nOpening drops a scrim over the screen. Not for looks: an open dial is modal — the next tap either picks something or closes it — and the scrim is both what says so and what catches the tap.",
-          "code": "<Fab.Group icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
-        },
-        {
-          "title": "In the flow instead of over it",
-          "description": "Leave `placement` out and it is an ordinary round button where you put it — for a screen that already has somewhere for it to sit, and for laying several out side by side.",
-          "code": "<View className=\"flex-row items-center gap-4\">\n  <Fab icon={<PlusIcon size={20} />} accessibilityLabel=\"Add\" />\n  <Fab variant=\"surface\" icon={<SearchIcon size={20} />} accessibilityLabel=\"Search\" />\n  <Fab variant=\"destructive\" icon={<TrashIcon size={20} />} accessibilityLabel=\"Delete\" />\n</View>"
-        },
-        {
-          "title": "The three sizes",
-          "description": "`size` is the diameter, and the glyph inside it is yours to scale — the button does not resize an icon it was handed, because an icon that is right at one size is rarely right at all three. `md` is the default and the one the platforms agree on.",
-          "code": "{(['sm', 'md', 'lg'] as const).map((size) => (\n  <Fab\n    key={size}\n    size={size}\n    icon={<PlusIcon size={20} />}\n    accessibilityLabel=\"New\"\n  />\n))}",
-          "preview": {
-            "src": "/previews/fab-the-three-sizes.jpg",
-            "alt": "Fab — The three sizes.",
-            "width": 1179,
-            "height": 255
-          }
-        },
-        {
-          "title": "The variants",
-          "description": "`primary` is the filled one and the reason the component exists — a screen with one action worth floating should not be quiet about it. `secondary` and `surface` are for a dial's members and for a second button that must not compete; `destructive` is for the rare corner action that deletes something.",
-          "code": "<Fab icon={<PlusIcon size={20} />} accessibilityLabel=\"New\" />\n<Fab variant=\"secondary\" icon={<PencilIcon size={20} />} accessibilityLabel=\"Edit\" />\n<Fab variant=\"surface\" icon={<ImageIcon size={20} />} accessibilityLabel=\"Photos\" />\n<Fab variant=\"destructive\" icon={<TrashIcon size={20} />} accessibilityLabel=\"Delete\" />",
-          "preview": {
-            "src": "/previews/fab-the-variants.jpg",
-            "alt": "Fab — The variants.",
-            "width": 1179,
-            "height": 218
-          }
+      {
+        "title": "Spelling the action out",
+        "description": "A lone glyph is a guess unless the glyph is a plus. `extended` turns the circle into a stadium and puts the label beside it — worth the width for anything a plus would not have said on its own.",
+        "code": "<Fab extended placement=\"bottom-right\" icon={<PencilIcon size={20} />}>\n  Write\n</Fab>",
+        "preview": {
+          "src": "/previews/fab-spelling-the-action-out.jpg",
+          "alt": "Fab — Spelling the action out.",
+          "width": 1179,
+          "height": 196
         }
-      ],
-      "notes": "### Give it a label\n\n`accessibilityLabel` is not optional in practice. An icon-only button reads out as nothing at all, and the plus that is obvious to someone looking at it says nothing to someone who is not. `Fab.Action` takes its label from `label`, so it is already covered.\n\n### The actions are unmounted while the dial is closed\n\nNot hidden. A column kept alive behind the trigger would still be in the accessibility tree, and a screen reader would walk into four buttons nobody can see.\n\n### One timing, not one per action\n\nThe whole dial runs off a single shared value, and each action works out its own share of it on the UI thread from its index. There is no chain of timeouts to fall out of step with itself when the dial is closed halfway through opening — closing simply runs the same value back down, and every action follows it.\n\n### The trigger turns rather than swapping\n\n`rotateOnOpen` gives the glyph a quarter circle while the dial is up, which is doing real work when the glyph is a plus: the same mark becomes a cross, so the button says *this closes now* without a second icon to swap in and animate between. Turn it off for a glyph that means something at one angle only.\n\n### A group draws itself above everything\n\nThe scrim and the buttons go through the same portal, scrim first. They have to travel together: portalled content is drawn above everything in the ordinary tree, so a portalled scrim over an in-place trigger would cover the trigger and its actions — the dial would open and immediately vanish behind its own backdrop.\n\nOne consequence worth knowing: a group's `offset` is measured from the screen's edges rather than from whatever it is written inside, which is what lets you declare it next to the content it belongs to instead of at the root of the screen. Add your safe-area inset to it if you want it clear of the home indicator. A plain `Fab` is not portalled and anchors to its nearest positioned ancestor, as an absolutely positioned view normally would.",
-      "versions": [
-        {
-          "title": "Over a list",
-          "description": "The case it exists for — one action pinned over content that scrolls under it.",
-          "code": "<View className=\"flex-1\">\n  <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>\n    {/* …rows… */}\n  </ScrollView>\n\n  <Fab\n    placement=\"bottom-right\"\n    icon={<PlusIcon size={24} />}\n    accessibilityLabel=\"New note\"\n    haptics\n    onPress={compose}\n  />\n</View>",
-          "previewVideo": {
-            "src": "/previews/fab-over-a-list.mp4",
-            "poster": "/previews/fab-over-a-list-poster.jpg",
-            "alt": "Fab — Over a list.",
-            "width": 720,
-            "height": 1560
-          }
-        },
-        {
-          "title": "A speed dial",
-          "description": "Actions unfolding out of the button, over a screen that says the dial is modal.",
-          "code": "<Fab.Group icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>",
-          "previewVideo": {
-            "src": "/previews/fab.mp4",
-            "poster": "/previews/fab-poster.jpg",
-            "alt": "Fab — A speed dial.",
-            "width": 720,
-            "height": 1560
-          }
-        },
-        {
-          "title": "Where it parks",
-          "description": "The extended form, in each of the three corners it can take.",
-          "code": "<Fab extended placement={placement} icon={<PencilIcon size={20} />}>\n  Write\n</Fab>\n\n{/* placement is 'bottom-left' | 'bottom-center' | 'bottom-right' */}",
-          "previewVideo": {
-            "src": "/previews/fab-where-it-parks.mp4",
-            "poster": "/previews/fab-where-it-parks-poster.jpg",
-            "alt": "Fab — Where it parks.",
-            "width": 720,
-            "height": 1560
-          }
-        }
-      ],
-      "previewVideo": {
-        "src": "/previews/fab.mp4",
-        "poster": "/previews/fab-poster.jpg",
-        "alt": "The Fab component, running in the example app.",
-        "width": 720,
-        "height": 1560
-      }
-    },
-    "markdown-editor": {
-      "intro": "A field for writing markdown, and a way to see it rendered.\n\nWriting and reading are two modes here rather than two panes. Side by side is how this is done on a desktop and it does not survive the trip to a phone: two columns of a phone's width are two columns too narrow to read, and the keyboard covers the bottom half of the screen exactly when the writer is using it. So there is one pane and a switch, and the toolbar carries the switch because the toolbar is the one thing on screen in both modes.\n\nThe preview is [Response](/docs/ai-components/response) — the same reader that renders a model's answer — so markdown means one thing across the library and there is one parser to be right rather than two to keep in step. It renders through `Typography`, `CodeBlock` and `Table`, which is to say through your app's own type and colours: a preview that looked like a document viewer would be showing the writer something they are not going to ship.",
-      "usage": "const [draft, setDraft] = useState('');\n\n<MarkdownEditor value={draft} onValueChange={setDraft} rows={12} />",
-      "extraImports": [
-        "Button",
-        "Text"
-      ],
-      "anatomy": "<MarkdownEditor>\n  <MarkdownEditor.Toolbar />   {/* formatting, and the write/preview switch */}\n  <MarkdownEditor.Input />     {/* draws while writing */}\n  <MarkdownEditor.Preview />   {/* draws while previewing */}\n</MarkdownEditor>",
-      "parts": {
-        "Toolbar": "The formatting actions and the switch between writing and reading. `actions` chooses which actions appear and in what order; `showModeSwitch` drops the switch for an editor with no preview. It takes children too, which land beside the switch — a word count, a save state, a submit.",
-        "Input": "The field the markdown is written in — a `Textarea`, so everything that accepts applies. It renders nothing while the preview is up.",
-        "Preview": "The draft, rendered. It renders nothing while the field is up, which is what makes the two one pane rather than two."
       },
-      "partNotes": "Written without children the editor draws all three in that order, which is the whole component — so most uses need no parts at all. Write them out when you want to reorder them, drop one, or put something else on the toolbar row.",
-      "examples": [
-        {
-          "title": "The whole component",
-          "description": "No children: the toolbar, the field and the preview in that order. `rows` sizes the field and `placeholder` goes to it.",
-          "code": "const [draft, setDraft] = useState('');\n\n<MarkdownEditor\n  value={draft}\n  onValueChange={setDraft}\n  rows={10}\n  placeholder=\"Write something…\"\n/>",
-          "previewVideo": {
-            "src": "/previews/markdown-editor.mp4",
-            "poster": "/previews/markdown-editor-poster.jpg",
-            "alt": "MarkdownEditor — The whole component.",
-            "width": 720,
-            "height": 1560
-          }
-        },
-        {
-          "title": "Starting on the reading side",
-          "description": "`defaultMode` decides which pane opens first. Reading first suits a draft that already exists — a note being reviewed rather than written.",
-          "code": "<MarkdownEditor value={draft} onValueChange={setDraft} defaultMode=\"preview\" />",
-          "preview": {
-            "src": "/previews/markdown-editor-starting-on-the-reading-side.jpg",
-            "alt": "MarkdownEditor — Starting on the reading side.",
-            "width": 1179,
-            "height": 1348
-          }
-        },
-        {
-          "title": "Choosing the actions, and adding to the row",
-          "description": "`actions` is the list, in the order you want them. The toolbar’s children sit beside the mode switch, for anything that belongs to the draft rather than to the text.",
-          "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar actions={['bold', 'italic', 'link']}>\n    <Text size=\"xs\" muted>{words} words</Text>\n  </MarkdownEditor.Toolbar>\n  <MarkdownEditor.Input rows={6} placeholder=\"Say something…\" />\n  <MarkdownEditor.Preview emptyText=\"Write a line and switch to Preview.\" />\n</MarkdownEditor>",
-          "preview": {
-            "src": "/previews/markdown-editor-choosing-the-actions-and-adding-to-the-row.jpg",
-            "alt": "MarkdownEditor — Choosing the actions, and adding to the row.",
-            "width": 1179,
-            "height": 673
-          }
-        },
-        {
-          "title": "A composer with no preview",
-          "description": "Leave `MarkdownEditor.Preview` out and turn the switch off with `showModeSwitch={false}`. What is left is a comment box whose toolbar formats and nothing else.",
-          "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar showModeSwitch={false} />\n  <MarkdownEditor.Input rows={4} placeholder=\"Leave a comment…\" />\n</MarkdownEditor>\n\n<Button fullWidth disabled={!draft.trim()} onPress={post}>Post</Button>",
-          "preview": {
-            "src": "/previews/markdown-editor-a-composer-with-no-preview.jpg",
-            "alt": "MarkdownEditor — A composer with no preview.",
-            "width": 1179,
-            "height": 755
-          }
+      {
+        "title": "A speed dial",
+        "description": "The actions unfold one after another rather than together — a few frames apart each, which is enough to read as a list opening instead of a menu appearing. Every one carries its label, because a column of unlabelled circles is a quiz.\n\nOpening drops a scrim over the screen. Not for looks: an open dial is modal — the next tap either picks something or closes it — and the scrim is both what says so and what catches the tap.",
+        "code": "<Fab.Group icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
+      },
+      {
+        "title": "In the flow instead of over it",
+        "description": "Leave `placement` out and it is an ordinary round button where you put it — for a screen that already has somewhere for it to sit, and for laying several out side by side.",
+        "code": "<View className=\"flex-row items-center gap-4\">\n  <Fab icon={<PlusIcon size={20} />} accessibilityLabel=\"Add\" />\n  <Fab variant=\"surface\" icon={<SearchIcon size={20} />} accessibilityLabel=\"Search\" />\n  <Fab variant=\"destructive\" icon={<TrashIcon size={20} />} accessibilityLabel=\"Delete\" />\n</View>"
+      },
+      {
+        "title": "The three sizes",
+        "description": "`size` is the diameter, and the glyph inside it is yours to scale — the button does not resize an icon it was handed, because an icon that is right at one size is rarely right at all three. `md` is the default and the one the platforms agree on.",
+        "code": "{(['sm', 'md', 'lg'] as const).map((size) => (\n  <Fab\n    key={size}\n    size={size}\n    icon={<PlusIcon size={20} />}\n    accessibilityLabel=\"New\"\n  />\n))}",
+        "preview": {
+          "src": "/previews/fab-the-three-sizes.jpg",
+          "alt": "Fab — The three sizes.",
+          "width": 1179,
+          "height": 255
         }
-      ],
-      "notes": "### Where the caret lands\n\nEvery toolbar button is a function of the text and where the caret is in it, and what makes a formatting toolbar feel broken is never the characters it inserts — it is where the caret ends up afterwards. Three rules hold for all of them:\n\n- **Pressing twice undoes it.** A button that only ever adds is a button you can press once, and every press after that damages the text.\n- **A selection stays selected.** Bolding three words and then italicising the same three is two presses, not a press and a re-selection.\n- **With nothing selected, the caret lands where the writing goes** — between the new markers rather than after them.\n\nA line-level action — heading, list, quote — applies to every line the selection touches, even partly, and removes itself only when *all* of them already have it. A mixed block is a block someone is trying to make uniform, so the useful answer there is to add.\n\n### The field is monospaced, and does not correct you\n\nA markdown source is code as much as it is prose. Autocapitalisation and autocorrection are off, because an editor that capitalises the word after a fence, or rewrites a hyphen into an en dash, is an editor that quietly changes what the document renders as.\n\n### No platform markdown\n\nSwiftUI's `Text` can parse markdown and Jetpack Compose's cannot, so an editor backed by the platform would render on iOS and show a plain string on Android. The parser here is JavaScript and the output is React Native views, which is why the two platforms agree.",
-      "previewVideo": {
-        "src": "/previews/markdown-editor.mp4",
-        "poster": "/previews/markdown-editor-poster.jpg",
-        "alt": "The MarkdownEditor component, running in the example app.",
-        "width": 720,
-        "height": 1560
-      }
-    },
-    "button-group": {
-      "intro": "Several buttons drawn as one control — a segmented run, a split action, a toolbar down the side of a canvas.\n\nThe buttons stay buttons. Anything a [Button](/docs/components/button) does — an icon, a badge, a loading state, a disabled segment, opening a [Popover](/docs/components/popover) — it still does inside a group, because the group is a container rather than a component that takes a list of items and renders them for you. A list-of-items API has to grow a prop for every one of those things; this one has none of them and can do all of them.\n\nIt is not a selection control. It joins buttons, and what they mean is yours: for a control that owns which one is on reach for [ToggleButtonGroup](/docs/components/toggle-button), and for switching between panels of content reach for [Tabs](/docs/components/tabs) — a segmented run that swaps a screen is navigation, and navigation should say so to a screen reader.",
-      "usage": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<PencilIcon size={16} />}>Rename</Button>\n  <Button startContent={<CopyIcon size={16} />}>Duplicate</Button>\n  <Button startContent={<TrashIcon size={16} />} disabled>Remove</Button>\n</ButtonGroup>",
-      "extraImports": [
-        "Button",
-        "Badge",
-        "Popover",
-        "Text",
-        "PencilIcon",
-        "CopyIcon",
-        "TrashIcon",
-        "FileIcon",
-        "ImageIcon",
-        "BookmarkIcon",
-        "SendIcon",
-        "ChevronDownIcon",
-        "StarIcon",
-        "EyeIcon",
-        "PlusIcon",
-        "MinusIcon",
-        "MaximizeIcon",
-        "CrosshairIcon"
-      ],
-      "examples": [
-        {
-          "title": "A view switcher",
-          "description": "`variant` and `size` fill in for any button that did not choose its own, so a run of three does not repeat the same two props three times. The current segment says `secondary` for itself and wins — which is all “selected” needs to be once the surrounding shape is already drawn.",
-          "code": "const [view, setView] = useState('media');\n\n<ButtonGroup size=\"sm\">\n  {views.map(({ value, label, icon: Icon }) => (\n    <Button\n      key={value}\n      variant={view === value ? 'secondary' : 'ghost'}\n      startContent={<Icon size={15} />}\n      onPress={() => setView(value)}\n    >\n      {label}\n    </Button>\n  ))}\n</ButtonGroup>",
-          "preview": {
-            "src": "/previews/button-group.jpg",
-            "alt": "ButtonGroup — A view switcher.",
-            "width": 1179,
-            "height": 194
-          }
-        },
-        {
-          "title": "Sharing the row",
-          "description": "`fullWidth` spans the container and splits it equally between the segments — equally, not by content. A row sized to its labels is a row whose divisions move when the labels change, and a picker whose thirds are different widths reads as though one of them matters more.",
-          "code": "<ButtonGroup fullWidth>\n  <Button variant=\"ghost\">Monthly</Button>\n  <Button variant=\"secondary\">Annual</Button>\n  <Button variant=\"ghost\">One-off</Button>\n</ButtonGroup>",
-          "preview": {
-            "src": "/previews/button-group-sharing-the-row.jpg",
-            "alt": "ButtonGroup — Sharing the row.",
-            "width": 1179,
-            "height": 236
-          }
-        },
-        {
-          "title": "A split action",
-          "description": "The thing itself, and the other ways to do it. The chevron segment is a `Button` inside a `Popover.Trigger` — a button nested inside something else — which still picks the group up, because the group passes its variant and size down through context rather than by rewriting the children it can see.",
-          "code": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<SendIcon size={16} />}>Publish</Button>\n  <Popover>\n    <Popover.Trigger>\n      <Button size=\"icon\" accessibilityLabel=\"More ways to publish\">\n        <ChevronDownIcon size={16} />\n      </Button>\n    </Popover.Trigger>\n    <Popover.Content align=\"end\" className=\"w-56 p-1.5\">\n      {/* …the other ways… */}\n    </Popover.Content>\n  </Popover>\n</ButtonGroup>",
-          "previewVideo": {
-            "src": "/previews/button-group-a-split-action.mp4",
-            "poster": "/previews/button-group-a-split-action-poster.jpg",
-            "alt": "ButtonGroup — A split action.",
-            "width": 720,
-            "height": 1560
-          }
-        },
-        {
-          "title": "A count inside a segment",
-          "description": "`endContent` takes a `Badge` the same way it would outside a group. Nothing about being in a run changes what a button can hold.",
-          "code": "<ButtonGroup variant=\"outline\">\n  <Button\n    startContent={<StarIcon size={16} />}\n    endContent={<Badge variant=\"warning\" count={148} />}\n  >\n    Star\n  </Button>\n  <Button size=\"icon\" accessibilityLabel=\"Star options\">\n    <ChevronDownIcon size={16} />\n  </Button>\n</ButtonGroup>",
-          "preview": {
-            "src": "/previews/button-group-a-count-inside-a-segment.jpg",
-            "alt": "ButtonGroup — A count inside a segment.",
-            "width": 1179,
-            "height": 435
-          }
-        },
-        {
-          "title": "Down the side",
-          "description": "`orientation=\"vertical\"` stacks the run and turns the dividers with it. With `size=\"icon\"` this is the toolbar beside a canvas.",
-          "code": "<ButtonGroup orientation=\"vertical\" variant=\"outline\" size=\"icon\">\n  <Button accessibilityLabel=\"Zoom in\"><PlusIcon size={16} /></Button>\n  <Button accessibilityLabel=\"Zoom out\"><MinusIcon size={16} /></Button>\n  <Button accessibilityLabel=\"Fit to screen\"><MaximizeIcon size={16} /></Button>\n</ButtonGroup>",
-          "preview": {
-            "src": "/previews/button-group-down-the-side.jpg",
-            "alt": "ButtonGroup — Down the side.",
-            "width": 1179,
-            "height": 613
-          }
-        },
-        {
-          "title": "Sharing the props without sharing the shape",
-          "description": "`attached={false}` keeps the inherited variant and size and drops the joined shape, leaving a spaced row of ordinary buttons. A toolbar rather than a segmented control.",
-          "code": "<ButtonGroup attached={false} variant=\"outline\" size=\"sm\">\n  <Button startContent={<SearchIcon size={15} />}>Find</Button>\n  <Button startContent={<DownloadIcon size={15} />}>Export</Button>\n  <Button startContent={<ShareNodesIcon size={15} />}>Share</Button>\n</ButtonGroup>",
-          "preview": {
-            "src": "/previews/button-group-sharing-the-props-without-sharing-the-shape.jpg",
-            "alt": "ButtonGroup — Sharing the props without sharing the shape.",
-            "width": 1179,
-            "height": 270
-          }
-        },
-        {
-          "title": "Busy and unavailable",
-          "description": "A segment carries its own state. `loading` swaps its label for a spinner and stops it answering; `disabled` fades it and deafens it. Neither takes the segment out of the run — a joined shape with a hole in it is harder to read than a dim segment, and the row would resize under the finger as the state changed.",
-          "code": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<PencilIcon size={16} />}>Rename</Button>\n  <Button startContent={<CopyIcon size={16} />}>Duplicate</Button>\n  <Button startContent={<TrashIcon size={16} />} disabled>\n    Remove\n  </Button>\n</ButtonGroup>\n\n<ButtonGroup variant=\"outline\">\n  <Button loading={saving} onPress={save}>\n    {saving ? 'Saving' : 'Save layout'}\n  </Button>\n  <Button size=\"icon\" accessibilityLabel=\"Revert\">\n    <PlusIcon size={16} />\n  </Button>\n</ButtonGroup>",
-          "previewVideo": {
-            "src": "/previews/button-group-busy-and-unavailable.mp4",
-            "poster": "/previews/button-group-busy-and-unavailable-poster.jpg",
-            "alt": "ButtonGroup — Busy and unavailable.",
-            "width": 720,
-            "height": 252
-          }
-        },
-        {
-          "title": "Three sizes",
-          "description": "`size` on the group is the size of every segment in it, and it sets the height, the padding and the type together so the joined edges still meet. A segment that names its own size wins, which is how the chevron on a split action stays square while the rest of the run is not.",
-          "code": "{(['sm', 'md', 'lg'] as const).map((size) => (\n  <ButtonGroup key={size} size={size} variant=\"outline\">\n    <Button>Left</Button>\n    <Button>Middle</Button>\n    <Button>Right</Button>\n  </ButtonGroup>\n))}",
-          "preview": {
-            "src": "/previews/button-group-three-sizes.jpg",
-            "alt": "ButtonGroup — Three sizes.",
-            "width": 1179,
-            "height": 571
-          }
+      },
+      {
+        "title": "The variants",
+        "description": "`primary` is the filled one and the reason the component exists — a screen with one action worth floating should not be quiet about it. `secondary` and `surface` are for a dial's members and for a second button that must not compete; `destructive` is for the rare corner action that deletes something.",
+        "code": "<Fab icon={<PlusIcon size={20} />} accessibilityLabel=\"New\" />\n<Fab variant=\"secondary\" icon={<PencilIcon size={20} />} accessibilityLabel=\"Edit\" />\n<Fab variant=\"surface\" icon={<ImageIcon size={20} />} accessibilityLabel=\"Photos\" />\n<Fab variant=\"destructive\" icon={<TrashIcon size={20} />} accessibilityLabel=\"Delete\" />",
+        "preview": {
+          "src": "/previews/fab-the-variants.jpg",
+          "alt": "Fab — The variants.",
+          "width": 1179,
+          "height": 218
         }
-      ],
-      "notes": "### Why the container draws the border\n\nA joined run could be built by giving the first and last segments their corners, squaring the ones between, and collapsing every shared edge with a negative margin. That works on the web and is a stack of off-by-one problems on a phone: the hairlines land on different fractions of a pixel per device, and a run that wraps has no first or last segment any more.\n\nSo the group draws the shape once — one border, one radius, one shadow, clipped — and the buttons inside draw none of their own. The dividers are real one-pixel views the group puts between its children, which is why they are always exactly one pixel and always in the same place.\n\n### What a button gives up inside one\n\nIts radius and its shadow, because the group owns both. Its border turns transparent rather than being removed — it is holding a pixel of the button's height, and dropping it would leave an `outline` segment a hair shorter than a `ghost` one beside it.\n\nIts press feedback changes too. A button on its own shrinks slightly when pressed, which inside a joined run would pull the segment away from its neighbours and show the container through the gap, so an attached segment takes a background instead. Pass `pressScale` yourself to override that.\n\n### Native buttons are not grouped\n\nA `native` button is drawn by the platform, so it has no border, radius or shadow for the group to take over. Several of them in a row would be platform buttons with a border drawn around them rather than a segmented control, so a native button inside a group ignores it and stays exactly what it was.",
-      "preview": {
-        "src": "/previews/button-group.jpg",
-        "alt": "The ButtonGroup component, running in the example app.",
-        "width": 1179,
-        "height": 194
       }
+    ],
+    "notes": "### Give it a label\n\n`accessibilityLabel` is not optional in practice. An icon-only button reads out as nothing at all, and the plus that is obvious to someone looking at it says nothing to someone who is not. `Fab.Action` takes its label from `label`, so it is already covered.\n\n### The actions are unmounted while the dial is closed\n\nNot hidden. A column kept alive behind the trigger would still be in the accessibility tree, and a screen reader would walk into four buttons nobody can see.\n\n### One timing, not one per action\n\nThe whole dial runs off a single shared value, and each action works out its own share of it on the UI thread from its index. There is no chain of timeouts to fall out of step with itself when the dial is closed halfway through opening — closing simply runs the same value back down, and every action follows it.\n\n### The trigger turns rather than swapping\n\n`rotateOnOpen` gives the glyph a quarter circle while the dial is up, which is doing real work when the glyph is a plus: the same mark becomes a cross, so the button says *this closes now* without a second icon to swap in and animate between. Turn it off for a glyph that means something at one angle only.\n\n### A group draws itself above everything\n\nThe scrim and the buttons go through the same portal, scrim first. They have to travel together: portalled content is drawn above everything in the ordinary tree, so a portalled scrim over an in-place trigger would cover the trigger and its actions — the dial would open and immediately vanish behind its own backdrop.\n\nOne consequence worth knowing: a group's `offset` is measured from the screen's edges rather than from whatever it is written inside, which is what lets you declare it next to the content it belongs to instead of at the root of the screen. Add your safe-area inset to it if you want it clear of the home indicator. A plain `Fab` is not portalled and anchors to its nearest positioned ancestor, as an absolutely positioned view normally would.",
+    "versions": [
+      {
+        "title": "Over a list",
+        "description": "The case it exists for — one action pinned over content that scrolls under it.",
+        "code": "<View className=\"flex-1\">\n  <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>\n    {/* …rows… */}\n  </ScrollView>\n\n  <Fab\n    placement=\"bottom-right\"\n    icon={<PlusIcon size={24} />}\n    accessibilityLabel=\"New note\"\n    haptics\n    onPress={compose}\n  />\n</View>",
+        "previewVideo": {
+          "src": "/previews/fab-over-a-list.mp4",
+          "poster": "/previews/fab-over-a-list-poster.jpg",
+          "alt": "Fab — Over a list.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "A speed dial",
+        "description": "Actions unfolding out of the button, over a screen that says the dial is modal.",
+        "code": "<Fab.Group icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>",
+        "previewVideo": {
+          "src": "/previews/fab.mp4",
+          "poster": "/previews/fab-poster.jpg",
+          "alt": "Fab — A speed dial.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "Where it parks",
+        "description": "The extended form, in each of the three corners it can take.",
+        "code": "<Fab extended placement={placement} icon={<PencilIcon size={20} />}>\n  Write\n</Fab>\n\n{/* placement is 'bottom-left' | 'bottom-center' | 'bottom-right' */}",
+        "previewVideo": {
+          "src": "/previews/fab-where-it-parks.mp4",
+          "poster": "/previews/fab-where-it-parks-poster.jpg",
+          "alt": "Fab — Where it parks.",
+          "width": 720,
+          "height": 1560
+        }
+      }
+    ],
+    "previewVideo": {
+      "src": "/previews/fab.mp4",
+      "poster": "/previews/fab-poster.jpg",
+      "alt": "The Fab component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
+  },
+  "markdown-editor": {
+    "intro": "A field for writing markdown, and a way to see it rendered.\n\nWriting and reading are two modes here rather than two panes. Side by side is how this is done on a desktop and it does not survive the trip to a phone: two columns of a phone's width are two columns too narrow to read, and the keyboard covers the bottom half of the screen exactly when the writer is using it. So there is one pane and a switch, and the toolbar carries the switch because the toolbar is the one thing on screen in both modes.\n\nThe preview is [Response](/docs/ai-components/response) — the same reader that renders a model's answer — so markdown means one thing across the library and there is one parser to be right rather than two to keep in step. It renders through `Typography`, `CodeBlock` and `Table`, which is to say through your app's own type and colours: a preview that looked like a document viewer would be showing the writer something they are not going to ship.",
+    "usage": "const [draft, setDraft] = useState('');\n\n<MarkdownEditor value={draft} onValueChange={setDraft} rows={12} />",
+    "extraImports": [
+      "Button",
+      "Text"
+    ],
+    "anatomy": "<MarkdownEditor>\n  <MarkdownEditor.Toolbar />   {/* formatting, and the write/preview switch */}\n  <MarkdownEditor.Input />     {/* draws while writing */}\n  <MarkdownEditor.Preview />   {/* draws while previewing */}\n</MarkdownEditor>",
+    "parts": {
+      "Toolbar": "The formatting actions and the switch between writing and reading. `actions` chooses which actions appear and in what order; `showModeSwitch` drops the switch for an editor with no preview. It takes children too, which land beside the switch — a word count, a save state, a submit.",
+      "Input": "The field the markdown is written in — a `Textarea`, so everything that accepts applies. It renders nothing while the preview is up.",
+      "Preview": "The draft, rendered. It renders nothing while the field is up, which is what makes the two one pane rather than two."
     },
+    "partNotes": "Written without children the editor draws all three in that order, which is the whole component — so most uses need no parts at all. Write them out when you want to reorder them, drop one, or put something else on the toolbar row.",
+    "examples": [
+      {
+        "title": "The whole component",
+        "description": "No children: the toolbar, the field and the preview in that order. `rows` sizes the field and `placeholder` goes to it.",
+        "code": "const [draft, setDraft] = useState('');\n\n<MarkdownEditor\n  value={draft}\n  onValueChange={setDraft}\n  rows={10}\n  placeholder=\"Write something…\"\n/>",
+        "previewVideo": {
+          "src": "/previews/markdown-editor.mp4",
+          "poster": "/previews/markdown-editor-poster.jpg",
+          "alt": "MarkdownEditor — The whole component.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "Starting on the reading side",
+        "description": "`defaultMode` decides which pane opens first. Reading first suits a draft that already exists — a note being reviewed rather than written.",
+        "code": "<MarkdownEditor value={draft} onValueChange={setDraft} defaultMode=\"preview\" />",
+        "preview": {
+          "src": "/previews/markdown-editor-starting-on-the-reading-side.jpg",
+          "alt": "MarkdownEditor — Starting on the reading side.",
+          "width": 1179,
+          "height": 1348
+        }
+      },
+      {
+        "title": "Choosing the actions, and adding to the row",
+        "description": "`actions` is the list, in the order you want them. The toolbar’s children sit beside the mode switch, for anything that belongs to the draft rather than to the text.",
+        "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar actions={['bold', 'italic', 'link']}>\n    <Text size=\"xs\" muted>{words} words</Text>\n  </MarkdownEditor.Toolbar>\n  <MarkdownEditor.Input rows={6} placeholder=\"Say something…\" />\n  <MarkdownEditor.Preview emptyText=\"Write a line and switch to Preview.\" />\n</MarkdownEditor>",
+        "preview": {
+          "src": "/previews/markdown-editor-choosing-the-actions-and-adding-to-the-row.jpg",
+          "alt": "MarkdownEditor — Choosing the actions, and adding to the row.",
+          "width": 1179,
+          "height": 673
+        }
+      },
+      {
+        "title": "A composer with no preview",
+        "description": "Leave `MarkdownEditor.Preview` out and turn the switch off with `showModeSwitch={false}`. What is left is a comment box whose toolbar formats and nothing else.",
+        "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar showModeSwitch={false} />\n  <MarkdownEditor.Input rows={4} placeholder=\"Leave a comment…\" />\n</MarkdownEditor>\n\n<Button fullWidth disabled={!draft.trim()} onPress={post}>Post</Button>",
+        "preview": {
+          "src": "/previews/markdown-editor-a-composer-with-no-preview.jpg",
+          "alt": "MarkdownEditor — A composer with no preview.",
+          "width": 1179,
+          "height": 755
+        }
+      }
+    ],
+    "notes": "### Where the caret lands\n\nEvery toolbar button is a function of the text and where the caret is in it, and what makes a formatting toolbar feel broken is never the characters it inserts — it is where the caret ends up afterwards. Three rules hold for all of them:\n\n- **Pressing twice undoes it.** A button that only ever adds is a button you can press once, and every press after that damages the text.\n- **A selection stays selected.** Bolding three words and then italicising the same three is two presses, not a press and a re-selection.\n- **With nothing selected, the caret lands where the writing goes** — between the new markers rather than after them.\n\nA line-level action — heading, list, quote — applies to every line the selection touches, even partly, and removes itself only when *all* of them already have it. A mixed block is a block someone is trying to make uniform, so the useful answer there is to add.\n\n### The field is monospaced, and does not correct you\n\nA markdown source is code as much as it is prose. Autocapitalisation and autocorrection are off, because an editor that capitalises the word after a fence, or rewrites a hyphen into an en dash, is an editor that quietly changes what the document renders as.\n\n### No platform markdown\n\nSwiftUI's `Text` can parse markdown and Jetpack Compose's cannot, so an editor backed by the platform would render on iOS and show a plain string on Android. The parser here is JavaScript and the output is React Native views, which is why the two platforms agree.",
+    "previewVideo": {
+      "src": "/previews/markdown-editor.mp4",
+      "poster": "/previews/markdown-editor-poster.jpg",
+      "alt": "The MarkdownEditor component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
+  },
+  "button-group": {
+    "intro": "Several buttons drawn as one control — a segmented run, a split action, a toolbar down the side of a canvas.\n\nThe buttons stay buttons. Anything a [Button](/docs/components/button) does — an icon, a badge, a loading state, a disabled segment, opening a [Popover](/docs/components/popover) — it still does inside a group, because the group is a container rather than a component that takes a list of items and renders them for you. A list-of-items API has to grow a prop for every one of those things; this one has none of them and can do all of them.\n\nIt is not a selection control. It joins buttons, and what they mean is yours: for a control that owns which one is on reach for [ToggleButtonGroup](/docs/components/toggle-button), and for switching between panels of content reach for [Tabs](/docs/components/tabs) — a segmented run that swaps a screen is navigation, and navigation should say so to a screen reader.",
+    "usage": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<PencilIcon size={16} />}>Rename</Button>\n  <Button startContent={<CopyIcon size={16} />}>Duplicate</Button>\n  <Button startContent={<TrashIcon size={16} />} disabled>Remove</Button>\n</ButtonGroup>",
+    "extraImports": [
+      "Button",
+      "Badge",
+      "Popover",
+      "Text",
+      "PencilIcon",
+      "CopyIcon",
+      "TrashIcon",
+      "FileIcon",
+      "ImageIcon",
+      "BookmarkIcon",
+      "SendIcon",
+      "ChevronDownIcon",
+      "StarIcon",
+      "EyeIcon",
+      "PlusIcon",
+      "MinusIcon",
+      "MaximizeIcon",
+      "CrosshairIcon"
+    ],
+    "examples": [
+      {
+        "title": "A view switcher",
+        "description": "`variant` and `size` fill in for any button that did not choose its own, so a run of three does not repeat the same two props three times. The current segment says `secondary` for itself and wins — which is all “selected” needs to be once the surrounding shape is already drawn.",
+        "code": "const [view, setView] = useState('media');\n\n<ButtonGroup size=\"sm\">\n  {views.map(({ value, label, icon: Icon }) => (\n    <Button\n      key={value}\n      variant={view === value ? 'secondary' : 'ghost'}\n      startContent={<Icon size={15} />}\n      onPress={() => setView(value)}\n    >\n      {label}\n    </Button>\n  ))}\n</ButtonGroup>",
+        "preview": {
+          "src": "/previews/button-group.jpg",
+          "alt": "ButtonGroup — A view switcher.",
+          "width": 1179,
+          "height": 194
+        }
+      },
+      {
+        "title": "Sharing the row",
+        "description": "`fullWidth` spans the container and splits it equally between the segments — equally, not by content. A row sized to its labels is a row whose divisions move when the labels change, and a picker whose thirds are different widths reads as though one of them matters more.",
+        "code": "<ButtonGroup fullWidth>\n  <Button variant=\"ghost\">Monthly</Button>\n  <Button variant=\"secondary\">Annual</Button>\n  <Button variant=\"ghost\">One-off</Button>\n</ButtonGroup>",
+        "preview": {
+          "src": "/previews/button-group-sharing-the-row.jpg",
+          "alt": "ButtonGroup — Sharing the row.",
+          "width": 1179,
+          "height": 236
+        }
+      },
+      {
+        "title": "A split action",
+        "description": "The thing itself, and the other ways to do it. The chevron segment is a `Button` inside a `Popover.Trigger` — a button nested inside something else — which still picks the group up, because the group passes its variant and size down through context rather than by rewriting the children it can see.",
+        "code": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<SendIcon size={16} />}>Publish</Button>\n  <Popover>\n    <Popover.Trigger>\n      <Button size=\"icon\" accessibilityLabel=\"More ways to publish\">\n        <ChevronDownIcon size={16} />\n      </Button>\n    </Popover.Trigger>\n    <Popover.Content align=\"end\" className=\"w-56 p-1.5\">\n      {/* …the other ways… */}\n    </Popover.Content>\n  </Popover>\n</ButtonGroup>",
+        "previewVideo": {
+          "src": "/previews/button-group-a-split-action.mp4",
+          "poster": "/previews/button-group-a-split-action-poster.jpg",
+          "alt": "ButtonGroup — A split action.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "A count inside a segment",
+        "description": "`endContent` takes a `Badge` the same way it would outside a group. Nothing about being in a run changes what a button can hold.",
+        "code": "<ButtonGroup variant=\"outline\">\n  <Button\n    startContent={<StarIcon size={16} />}\n    endContent={<Badge variant=\"warning\" count={148} />}\n  >\n    Star\n  </Button>\n  <Button size=\"icon\" accessibilityLabel=\"Star options\">\n    <ChevronDownIcon size={16} />\n  </Button>\n</ButtonGroup>",
+        "preview": {
+          "src": "/previews/button-group-a-count-inside-a-segment.jpg",
+          "alt": "ButtonGroup — A count inside a segment.",
+          "width": 1179,
+          "height": 435
+        }
+      },
+      {
+        "title": "Down the side",
+        "description": "`orientation=\"vertical\"` stacks the run and turns the dividers with it. With `size=\"icon\"` this is the toolbar beside a canvas.",
+        "code": "<ButtonGroup orientation=\"vertical\" variant=\"outline\" size=\"icon\">\n  <Button accessibilityLabel=\"Zoom in\"><PlusIcon size={16} /></Button>\n  <Button accessibilityLabel=\"Zoom out\"><MinusIcon size={16} /></Button>\n  <Button accessibilityLabel=\"Fit to screen\"><MaximizeIcon size={16} /></Button>\n</ButtonGroup>",
+        "preview": {
+          "src": "/previews/button-group-down-the-side.jpg",
+          "alt": "ButtonGroup — Down the side.",
+          "width": 1179,
+          "height": 613
+        }
+      },
+      {
+        "title": "Sharing the props without sharing the shape",
+        "description": "`attached={false}` keeps the inherited variant and size and drops the joined shape, leaving a spaced row of ordinary buttons. A toolbar rather than a segmented control.",
+        "code": "<ButtonGroup attached={false} variant=\"outline\" size=\"sm\">\n  <Button startContent={<SearchIcon size={15} />}>Find</Button>\n  <Button startContent={<DownloadIcon size={15} />}>Export</Button>\n  <Button startContent={<ShareNodesIcon size={15} />}>Share</Button>\n</ButtonGroup>",
+        "preview": {
+          "src": "/previews/button-group-sharing-the-props-without-sharing-the-shape.jpg",
+          "alt": "ButtonGroup — Sharing the props without sharing the shape.",
+          "width": 1179,
+          "height": 270
+        }
+      },
+      {
+        "title": "Busy and unavailable",
+        "description": "A segment carries its own state. `loading` swaps its label for a spinner and stops it answering; `disabled` fades it and deafens it. Neither takes the segment out of the run — a joined shape with a hole in it is harder to read than a dim segment, and the row would resize under the finger as the state changed.",
+        "code": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<PencilIcon size={16} />}>Rename</Button>\n  <Button startContent={<CopyIcon size={16} />}>Duplicate</Button>\n  <Button startContent={<TrashIcon size={16} />} disabled>\n    Remove\n  </Button>\n</ButtonGroup>\n\n<ButtonGroup variant=\"outline\">\n  <Button loading={saving} onPress={save}>\n    {saving ? 'Saving' : 'Save layout'}\n  </Button>\n  <Button size=\"icon\" accessibilityLabel=\"Revert\">\n    <PlusIcon size={16} />\n  </Button>\n</ButtonGroup>",
+        "previewVideo": {
+          "src": "/previews/button-group-busy-and-unavailable.mp4",
+          "poster": "/previews/button-group-busy-and-unavailable-poster.jpg",
+          "alt": "ButtonGroup — Busy and unavailable.",
+          "width": 720,
+          "height": 252
+        }
+      },
+      {
+        "title": "Three sizes",
+        "description": "`size` on the group is the size of every segment in it, and it sets the height, the padding and the type together so the joined edges still meet. A segment that names its own size wins, which is how the chevron on a split action stays square while the rest of the run is not.",
+        "code": "{(['sm', 'md', 'lg'] as const).map((size) => (\n  <ButtonGroup key={size} size={size} variant=\"outline\">\n    <Button>Left</Button>\n    <Button>Middle</Button>\n    <Button>Right</Button>\n  </ButtonGroup>\n))}",
+        "preview": {
+          "src": "/previews/button-group-three-sizes.jpg",
+          "alt": "ButtonGroup — Three sizes.",
+          "width": 1179,
+          "height": 571
+        }
+      }
+    ],
+    "notes": "### Why the container draws the border\n\nA joined run could be built by giving the first and last segments their corners, squaring the ones between, and collapsing every shared edge with a negative margin. That works on the web and is a stack of off-by-one problems on a phone: the hairlines land on different fractions of a pixel per device, and a run that wraps has no first or last segment any more.\n\nSo the group draws the shape once — one border, one radius, one shadow, clipped — and the buttons inside draw none of their own. The dividers are real one-pixel views the group puts between its children, which is why they are always exactly one pixel and always in the same place.\n\n### What a button gives up inside one\n\nIts radius and its shadow, because the group owns both. Its border turns transparent rather than being removed — it is holding a pixel of the button's height, and dropping it would leave an `outline` segment a hair shorter than a `ghost` one beside it.\n\nIts press feedback changes too. A button on its own shrinks slightly when pressed, which inside a joined run would pull the segment away from its neighbours and show the container through the gap, so an attached segment takes a background instead. Pass `pressScale` yourself to override that.\n\n### Native buttons are not grouped\n\nA `native` button is drawn by the platform, so it has no border, radius or shadow for the group to take over. Several of them in a row would be platform buttons with a border drawn around them rather than a segmented control, so a native button inside a group ignores it and stays exactly what it was.",
+    "preview": {
+      "src": "/previews/button-group.jpg",
+      "alt": "The ButtonGroup component, running in the example app.",
+      "width": 1179,
+      "height": 194
+    }
+  },
   "accordion": {
     "intro": "Collapsible sections for FAQs, settings groups and anything that would otherwise need a long scroll. Expansion animates with a Reanimated layout transition, and the content unmounts when collapsed — or stays mounted and hidden, with `keepMounted`, when there is state inside it worth keeping.",
     "usage": "<Accordion selectionMode=\"single\" defaultValue=\"shipping\">\n  <Accordion.Item value=\"shipping\">\n    <Accordion.Trigger>\n      <Accordion.Title>How long does shipping take?</Accordion.Title>\n      <Accordion.Indicator />\n    </Accordion.Trigger>\n    <Accordion.Content>\n      Standard delivery arrives in three to five working days.\n    </Accordion.Content>\n  </Accordion.Item>\n</Accordion>",
@@ -1378,50 +1378,50 @@
       "height": 1560
     }
   },
-    "date-time-picker": {
-      "intro": "A day and a time of day, picked in one panel and carried in one `Date`.\n\nA date field beside a time field is two decisions the reader has to make separately and then hold together — and the two halves can disagree, which is how a booking ends up on the right day at a time that has already passed. Here the calendar and the scale are the same panel over one value, so what is on screen is the answer rather than two thirds of it.\n\nThe layout follows from that: the calendar is the coarse choice and takes the room, the time sits under it behind a hairline, and one Done finishes both.",
-      "usage": "const [when, setWhen] = useState<Date>();\n\n<DateTimePicker value={when} onValueChange={setWhen} />",
-      "extraImports": [
-        "Frame",
-        "Text"
-      ],
-      "parts": {
-        "Trigger": "Wrap your own trigger in it to replace the default button. It is `Popover.Trigger` — the same part `DatePicker` and `TimePicker` re-export, so a field row written for one works for all three."
-      },
-      "examples": [
-        {
-          "title": "One value, filled in from either end",
-          "description": "`onValueChange` fires on every change to either half, not on Done — Done closes the panel, it does not decide anything the caller has not already been told.\n\nThe halves can be filled in either order. A day picked first takes the top of the current hour until the time is touched; a time picked first means **today**, because a time is not a `Date` without a day and the day the reader is looking at is the only defensible guess. The alternative — emitting nothing until both halves have been touched — is a form that silently does nothing when you use it in the order it did not expect.",
-          "code": "const [when, setWhen] = useState<Date>();\n\n<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  placeholder=\"Pick a date and time\"\n/>"
-        },
-        {
-          "title": "Where the panel goes",
-          "description": "`popover` anchors it to the trigger and is the default. `bottom-sheet` is usually the better answer on a phone: a calendar and a scale stacked is a tall panel, and a sheet has the height to give it. `dialog` is for when the appointment *is* the decision on the screen. `inline` renders the panel bare, for composing into a Frame or a form.",
-          "code": "<DateTimePicker presentation=\"bottom-sheet\" />\n\n<DateTimePicker presentation=\"dialog\" />\n\n{/* Bare, inside something of your own. */}\n<Frame>\n  <Frame.Header><Frame.Title>Book a fitting</Frame.Title></Frame.Header>\n  <Frame.Panel>\n    <View className=\"p-3\">\n      <DateTimePicker presentation=\"inline\" value={when} onValueChange={setWhen} />\n    </View>\n  </Frame.Panel>\n</Frame>"
-        },
-        {
-          "title": "Which face the time is picked on",
-          "description": "`ruler` by default rather than the wheel. Under a month grid the panel is already tall, and the wheel is five rows of it; the ruler is one readout over a scale, reads at arm's length, and is the one face that fits under a calendar without the whole thing needing to scroll.\n\nWhere the exact minute matters more than the height, the other two faces are a prop away and produce the same value.",
-          "code": "{/* The default. */}\n<DateTimePicker layout=\"ruler\" />\n\n{/* Any minute in the day, two flicks away. */}\n<DateTimePicker layout=\"wheel\" minuteStep={5} hourCycle={24} />\n\n{/* A face beside a list of slots. */}\n<DateTimePicker layout=\"clock\" minuteStep={30} />"
-        },
-        {
-          "title": "Bounding it on both axes",
-          "description": "`minDate` and `maxDate` bound the calendar; `minTime` and `maxTime` bound the time of day, and `minuteStep` decides how finely it can be landed on. A picker that offers a slot nobody can be given is a picker that has to reject it afterwards, which is the same rejection arriving later and less usefully.\n\nThe bounds are independent, so this reads as \"any day in the next three weeks, between nine and half past five\" — which is what opening hours are.",
-          "code": "<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  minDate={today}\n  maxDate={threeWeeksOut}\n  minTime={{ hour: 9, minute: 0 }}\n  maxTime={{ hour: 17, minute: 30 }}\n  minuteStep={30}\n/>"
-        },
-        {
-          "title": "A trigger of your own",
-          "description": "Pass a child and it is cloned with an `onPress` that opens the panel, so a field row, a list item or an icon button can stand in for the default button without this component knowing what any of them look like.",
-          "code": "<DateTimePicker value={when} onValueChange={setWhen}>\n  <Item onPress={() => {}}>\n    <Item.Content>\n      <Item.Title>Starts</Item.Title>\n      <Item.Description>{when ? format(when) : 'Not set'}</Item.Description>\n    </Item.Content>\n    <ChevronRightIcon size={16} />\n  </Item>\n</DateTimePicker>"
-        },
-        {
-          "title": "Naming the time half",
-          "description": "The date half names itself with the month it is showing. The time half has nothing that would say what it is, so the panel writes a row above it — what it is on one edge, what it currently reads on the other. `timeLabel` is that word, for a panel in another language or one where the time means something more specific than the time.",
-          "code": "<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  timeLabel=\"Arrives at\"\n/>"
-        }
-      ],
-      "notes": "### It does not close on the date\n\n[DatePicker](/docs/components/date-picker) closes as soon as a single day is tapped, because at that point there is nothing left to say. Here there is: the day is half the value, and closing on it would hide the other half at the moment it became relevant.\n\nSo the panel stays until Done — in every presentation, including the popover, which is the one place `DatePicker` has no Done button at all. Tapping outside still dismisses it, but that is how a popover is *abandoned*, and something has to say when both halves are settled.\n\n### The panel is a fixed width\n\nThat is what lets the two halves line up. A month grid and a time scale that each measured themselves would be two boxes of slightly different widths stacked on each other, and the seam shows at any size. The hairline between them is a hairline rather than a gap for the same reason: space alone reads as two controls that happen to be near each other.\n\n### The value is a `Date`, the time is not\n\nThe component's value is one `Date` carrying both halves, because that is what a caller stores and sends. Inside, and in `minTime` / `maxTime`, a time of day is `{ hour, minute }` on a 24-hour clock — a `Date` cannot hold a time without also holding a day, and the two conversions that forces on every caller are where the daylight-saving bugs live. `hourCycle` decides whether a meridiem is shown; it does not change what is stored.\n\n### When two fields are still the right answer\n\nIf the day and the time are genuinely separate decisions — a recurring event's day-of-week and its time, a filter with an optional time — keep them apart. This component is for the case where one moment is being chosen and half of it is not an answer.\n\n### The time is written once, not twice\n\nThe panel takes the ruler's own readout off (`readout=\"none\"` on the TimePicker inside it) and states the time in the row above the scale instead. A month caption is 16pt and a date is 14pt; the ruler's readout on its own is 36pt, and left in place it would be the largest thing in the panel standing for the smaller half of the value. The row is the same fact at a size that sits under the date rather than over it."
+  "date-time-picker": {
+    "intro": "A day and a time of day, picked in one panel and carried in one `Date`.\n\nA date field beside a time field is two decisions the reader has to make separately and then hold together — and the two halves can disagree, which is how a booking ends up on the right day at a time that has already passed. Here the calendar and the scale are the same panel over one value, so what is on screen is the answer rather than two thirds of it.\n\nThe layout follows from that: the calendar is the coarse choice and takes the room, the time sits under it behind a hairline, and one Done finishes both.",
+    "usage": "const [when, setWhen] = useState<Date>();\n\n<DateTimePicker value={when} onValueChange={setWhen} />",
+    "extraImports": [
+      "Frame",
+      "Text"
+    ],
+    "parts": {
+      "Trigger": "Wrap your own trigger in it to replace the default button. It is `Popover.Trigger` — the same part `DatePicker` and `TimePicker` re-export, so a field row written for one works for all three."
     },
+    "examples": [
+      {
+        "title": "One value, filled in from either end",
+        "description": "`onValueChange` fires on every change to either half, not on Done — Done closes the panel, it does not decide anything the caller has not already been told.\n\nThe halves can be filled in either order. A day picked first takes the top of the current hour until the time is touched; a time picked first means **today**, because a time is not a `Date` without a day and the day the reader is looking at is the only defensible guess. The alternative — emitting nothing until both halves have been touched — is a form that silently does nothing when you use it in the order it did not expect.",
+        "code": "const [when, setWhen] = useState<Date>();\n\n<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  placeholder=\"Pick a date and time\"\n/>"
+      },
+      {
+        "title": "Where the panel goes",
+        "description": "`popover` anchors it to the trigger and is the default. `bottom-sheet` is usually the better answer on a phone: a calendar and a scale stacked is a tall panel, and a sheet has the height to give it. `dialog` is for when the appointment *is* the decision on the screen. `inline` renders the panel bare, for composing into a Frame or a form.",
+        "code": "<DateTimePicker presentation=\"bottom-sheet\" />\n\n<DateTimePicker presentation=\"dialog\" />\n\n{/* Bare, inside something of your own. */}\n<Frame>\n  <Frame.Header><Frame.Title>Book a fitting</Frame.Title></Frame.Header>\n  <Frame.Panel>\n    <View className=\"p-3\">\n      <DateTimePicker presentation=\"inline\" value={when} onValueChange={setWhen} />\n    </View>\n  </Frame.Panel>\n</Frame>"
+      },
+      {
+        "title": "Which face the time is picked on",
+        "description": "`ruler` by default rather than the wheel. Under a month grid the panel is already tall, and the wheel is five rows of it; the ruler is one readout over a scale, reads at arm's length, and is the one face that fits under a calendar without the whole thing needing to scroll.\n\nWhere the exact minute matters more than the height, the other two faces are a prop away and produce the same value.",
+        "code": "{/* The default. */}\n<DateTimePicker layout=\"ruler\" />\n\n{/* Any minute in the day, two flicks away. */}\n<DateTimePicker layout=\"wheel\" minuteStep={5} hourCycle={24} />\n\n{/* A face beside a list of slots. */}\n<DateTimePicker layout=\"clock\" minuteStep={30} />"
+      },
+      {
+        "title": "Bounding it on both axes",
+        "description": "`minDate` and `maxDate` bound the calendar; `minTime` and `maxTime` bound the time of day, and `minuteStep` decides how finely it can be landed on. A picker that offers a slot nobody can be given is a picker that has to reject it afterwards, which is the same rejection arriving later and less usefully.\n\nThe bounds are independent, so this reads as \"any day in the next three weeks, between nine and half past five\" — which is what opening hours are.",
+        "code": "<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  minDate={today}\n  maxDate={threeWeeksOut}\n  minTime={{ hour: 9, minute: 0 }}\n  maxTime={{ hour: 17, minute: 30 }}\n  minuteStep={30}\n/>"
+      },
+      {
+        "title": "A trigger of your own",
+        "description": "Pass a child and it is cloned with an `onPress` that opens the panel, so a field row, a list item or an icon button can stand in for the default button without this component knowing what any of them look like.",
+        "code": "<DateTimePicker value={when} onValueChange={setWhen}>\n  <Item onPress={() => {}}>\n    <Item.Content>\n      <Item.Title>Starts</Item.Title>\n      <Item.Description>{when ? format(when) : 'Not set'}</Item.Description>\n    </Item.Content>\n    <ChevronRightIcon size={16} />\n  </Item>\n</DateTimePicker>"
+      },
+      {
+        "title": "Naming the time half",
+        "description": "The date half names itself with the month it is showing. The time half has nothing that would say what it is, so the panel writes a row above it — what it is on one edge, what it currently reads on the other. `timeLabel` is that word, for a panel in another language or one where the time means something more specific than the time.",
+        "code": "<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  timeLabel=\"Arrives at\"\n/>"
+      }
+    ],
+    "notes": "### It does not close on the date\n\n[DatePicker](/docs/components/date-picker) closes as soon as a single day is tapped, because at that point there is nothing left to say. Here there is: the day is half the value, and closing on it would hide the other half at the moment it became relevant.\n\nSo the panel stays until Done — in every presentation, including the popover, which is the one place `DatePicker` has no Done button at all. Tapping outside still dismisses it, but that is how a popover is *abandoned*, and something has to say when both halves are settled.\n\n### The panel is a fixed width\n\nThat is what lets the two halves line up. A month grid and a time scale that each measured themselves would be two boxes of slightly different widths stacked on each other, and the seam shows at any size. The hairline between them is a hairline rather than a gap for the same reason: space alone reads as two controls that happen to be near each other.\n\n### The value is a `Date`, the time is not\n\nThe component's value is one `Date` carrying both halves, because that is what a caller stores and sends. Inside, and in `minTime` / `maxTime`, a time of day is `{ hour, minute }` on a 24-hour clock — a `Date` cannot hold a time without also holding a day, and the two conversions that forces on every caller are where the daylight-saving bugs live. `hourCycle` decides whether a meridiem is shown; it does not change what is stored.\n\n### When two fields are still the right answer\n\nIf the day and the time are genuinely separate decisions — a recurring event's day-of-week and its time, a filter with an optional time — keep them apart. This component is for the case where one moment is being chosen and half of it is not an answer.\n\n### The time is written once, not twice\n\nThe panel takes the ruler's own readout off (`readout=\"none\"` on the TimePicker inside it) and states the time in the row above the scale instead. A month caption is 16pt and a date is 14pt; the ruler's readout on its own is 36pt, and left in place it would be the largest thing in the panel standing for the smaller half of the value. The row is the same fact at a size that sits under the date rather than over it."
+  },
   "dialog": {
     "intro": "A modal dialog. Mounts through a portal and unmounts after its exit animation.",
     "usage": "<Dialog>\n  <Dialog.Trigger>\n    <Button variant=\"outline\">Delete</Button>\n  </Dialog.Trigger>\n  <Dialog.Content>\n    <Dialog.Title>Delete project?</Dialog.Title>\n    <Dialog.Description>\n      This action cannot be undone.\n    </Dialog.Description>\n    <Dialog.Footer>\n      <Dialog.Close>\n        <Button size=\"sm\" variant=\"ghost\">Cancel</Button>\n      </Dialog.Close>\n      <Dialog.Close>\n        <Button size=\"sm\" variant=\"destructive\">Delete</Button>\n      </Dialog.Close>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
@@ -5149,107 +5149,107 @@
       ]
     }
   },
-    "tabs": {
-      "intro": "Segmented navigation with one indicator that springs between measured trigger positions. A single thing travelling is what makes a switch two tabs away read as one movement rather than as two states swapping.",
-      "usage": "<Tabs defaultValue=\"account\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"account\">Account</Tabs.Trigger>\n    <Tabs.Trigger value=\"password\">Password</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"account\">…</Tabs.Content>\n  <Tabs.Content value=\"password\">…</Tabs.Content>\n</Tabs>",
-      "parts": {
-        "List": "Holds the triggers and the animated indicator. Takes `scrollable` for more tabs than fit.",
-        "Trigger": "One tab, with optional `icon`, `badge` and `disabled`. Must be inside `Tabs.List`.",
-        "Content": "Panel for a tab. Unmounted while inactive unless the root sets `keepMounted`."
-      },
-      "anatomy": "<Tabs>\n  <Tabs.List>\n    <Tabs.Trigger value=\"…\">…</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"…\">…</Tabs.Content>\n</Tabs>",
-      "examples": [
-        {
-          "title": "Uncontrolled",
-          "description": "`defaultValue` is required — the tabs need a starting panel.",
-          "code": "<Tabs defaultValue=\"overview\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"overview\">Overview</Tabs.Trigger>\n    <Tabs.Trigger value=\"activity\">Activity</Tabs.Trigger>\n    <Tabs.Trigger value=\"settings\">Settings</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"overview\">\n    <Text>Usage and billing at a glance.</Text>\n  </Tabs.Content>\n  <Tabs.Content value=\"activity\">\n    <Text>Everything that happened this week.</Text>\n  </Tabs.Content>\n  <Tabs.Content value=\"settings\">\n    <Text>Names, members and integrations.</Text>\n  </Tabs.Content>\n</Tabs>"
-        },
-        {
-          "title": "Controlled",
-          "description": "Needed when something outside the tab strip changes the panel — a deep link, or a button in one panel that jumps to another.",
-          "code": "const [tab, setTab] = useState('overview');\n\n<>\n  <Button onPress={() => setTab('settings')}>Go to settings</Button>\n\n  <Tabs value={tab} onValueChange={setTab} defaultValue=\"overview\">\n    {/* …list and content… */}\n  </Tabs>\n</>"
-        },
-        {
-          "title": "More tabs than fit",
-          "description": "A fixed row splits its width between the triggers, which crushes every label once there are more than about four. `scrollable` gives each trigger its natural width, puts the row in a horizontal scroller, and scrolls the active tab into view when it changes from elsewhere.",
-          "code": "<Tabs variant=\"underline\" defaultValue=\"overview\">\n  <Tabs.List scrollable>\n    {sections.map((s) => (\n      <Tabs.Trigger key={s.id} value={s.id}>{s.name}</Tabs.Trigger>\n    ))}\n  </Tabs.List>\n\n  {/* …content… */}\n</Tabs>",
-          "previewVideo": {
-            "src": "/previews/tabs-scrollable.mp4",
-            "poster": "/previews/tabs-scrollable-poster.jpg",
-            "alt": "Tabs — More tabs than fit.",
-            "width": 720,
-            "height": 350
-          }
-        },
-        {
-          "title": "Icons, badges and disabled tabs",
-          "description": "A count or a status goes in `badge` rather than into the children, so the label keeps its own typography. A disabled trigger is dimmed, unselectable, and announced as disabled.",
-          "code": "<Tabs.List>\n  <Tabs.Trigger value=\"inbox\" icon={<InboxIcon size={16} />}>\n    Inbox\n  </Tabs.Trigger>\n  <Tabs.Trigger value=\"activity\" badge={<Badge variant=\"secondary\">4</Badge>}>\n    Activity\n  </Tabs.Trigger>\n  <Tabs.Trigger value=\"archived\" disabled>\n    Archived\n  </Tabs.Trigger>\n</Tabs.List>"
-        },
-        {
-          "title": "Keeping panels mounted",
-          "description": "By default a panel is unmounted when you leave it, and a scroll position or a half-filled form goes with it. `keepMounted` renders every panel and hides the inactive ones — not drawn, not touchable, out of the screen-reader order, but still there. It costs the render of every panel up front, so it is opt-in. Pass `\"measured\"` instead of `true` when a hidden panel needs to keep its **size** as well, which is what a virtualised list inside one needs in order to render any rows at all.",
-          "code": "<Tabs keepMounted defaultValue=\"draft\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"draft\">Draft</Tabs.Trigger>\n    <Tabs.Trigger value=\"preview\">Preview</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"draft\">\n    <Input label=\"Title\" value={title} onChangeText={setTitle} />\n  </Tabs.Content>\n  <Tabs.Content value=\"preview\">…</Tabs.Content>\n</Tabs>",
-          "preview": {
-            "src": "/previews/tabs-keep-panels-mounted.jpg",
-            "alt": "Tabs — Keeping panels mounted.",
-            "width": 1179,
-            "height": 801
-          }
-        },
-        {
-          "title": "Swiping between panels",
-          "description": "With `swipeable`, dragging sideways on the panel moves to the next or previous tab. The gesture only takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls. It is off by default: a panel may already contain something that wants a horizontal drag, and the two cannot both have it.",
-          "code": "<Tabs swipeable defaultValue=\"mon\">\n  <Tabs.List scrollable>\n    {days.map((day) => (\n      <Tabs.Trigger key={day.value} value={day.value}>\n        {day.label}\n      </Tabs.Trigger>\n    ))}\n  </Tabs.List>\n  {days.map((day) => (\n    <Tabs.Content key={day.value} value={day.value}>\n      <Card>…</Card>\n    </Tabs.Content>\n  ))}\n</Tabs>"
-        }
-      ],
-      "extraImports": [
-        "Text",
-        "Button",
-        "Input",
-        "Badge",
-        "PackageIcon",
-        "MessageCircleIcon",
-        "CalendarIcon"
-      ],
-      "variantCode": {
-        "variant": "{/* A chip travelling inside a recessed track — the default. */}\n<Tabs variant=\"segmented\" defaultValue=\"a\">…</Tabs>\n\n{/* A rule under the active tab, for a page-level switch. */}\n<Tabs variant=\"underline\" defaultValue=\"a\">…</Tabs>\n\n{/* A filled chip on the page, active label inverted against it. */}\n<Tabs variant=\"pill\" defaultValue=\"a\">…</Tabs>\n\n{/* Icon pills, only the selected one open. Every trigger needs an icon. */}\n<Tabs variant=\"expanding\" defaultValue=\"chats\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"home\" icon={<PackageIcon size={18} />}>Home</Tabs.Trigger>\n    <Tabs.Trigger value=\"chats\" icon={<MessageCircleIcon size={18} />}>Chats</Tabs.Trigger>\n    <Tabs.Trigger value=\"calendar\" icon={<CalendarIcon size={18} />}>Calendar</Tabs.Trigger>\n  </Tabs.List>\n</Tabs>"
-      },
-      "hideVariants": [
-        "scrollable"
-      ],
-      "variantMedia": {
-        "variant": [
-          {
-            "previewVideo": {
-              "src": "/previews/tabs-pill.mp4",
-              "poster": "/previews/tabs-pill-poster.jpg",
-              "alt": "Tabs — variant pill.",
-              "width": 720,
-              "height": 368,
-              "caption": "pill"
-            }
-          },
-          {
-            "preview": {
-              "src": "/previews/tabs-underline.jpg",
-              "alt": "Tabs — variant underline.",
-              "width": 1179,
-              "height": 639,
-              "caption": "underline"
-            }
-          }
-        ]
-      },
-      "previewVideo": {
-        "src": "/previews/tabs.mp4",
-        "poster": "/previews/tabs-poster.jpg",
-        "alt": "The Tabs component, running in the example app.",
-        "width": 720,
-        "height": 584
-      },
-      "notes": "### Swiping\n\nA swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was.\n\nThe panel tracks the finger one to one. Only one panel is mounted at a time unless `keepMounted` is set, so there is nothing behind the one being dragged; instead of holding it back, the panel dims as it travels and the arriving one comes back up through the same fade. The movement carries the change, and the dissolve covers the gap.\n\nOn release the arriving panel picks up a whole panel's width from wherever the outgoing one was let go — which is where it would have been all along had both been mounted — and springs to rest carrying the speed the finger let go at. That is what makes a swipe one continuous movement rather than a drag followed by a separate slide. A tab changed by pressing a trigger has no travel to continue from, so it is given a shorter throw of its own, in the direction the tab sits.\n\nThe order swiped through is the order the triggers are **written** in, not the order they appear on screen. Under RTL those differ — the first tab is the rightmost — and a swipe towards the start of the reading direction goes to the previous tab in both.\n\nAt the first and last tab the panel still moves, but a sixth as far. A gesture that produces nothing at all is indistinguishable from one that was not received.\n\n### The expanding variant\n\nA row of icon pills where only the selected one is open: it widens to let its label out and closes again behind it. For a short row of destinations that are recognisable by their icons, where writing every label out takes the whole width to say four words nobody rereads after the first time.\n\nGive **every** trigger an `icon`. A closed tab has nothing else, and one without an icon closes to an empty pill.\n\nThere is no travelling indicator here, because every tab draws its own pill and a shape sliding underneath them would be invisible. The shape that moves is the open tab itself. The open pill sits one step further from the page than the closed ones — lighter in a dark theme, darker in a light one — which is what the tertiary surface token means, and why the selection is a surface rather than a colour.\n\nThe label is never unmounted, only closed over: a row of unlabelled icons has nothing for a screen reader to read out, and a label that mounted on selection would have no width to animate *from*, so the pill would jump to its open size and the text fade in inside it. Under the system's reduce-motion setting it opens and closes with no animation at all.\n\nThe opening is a curve rather than a spring, because it animates a width: every frame of it is a layout pass and the whole row moves with it, so a spring's overshoot slides the last word in, out and back in again and takes the row with it. The label's opacity trails the width rather than leading it — text drawn into a box narrower than itself is text with its end cut off.\n\nThe width it opens to is measured from a second copy of the label, laid out once in a box wide enough not to constrain it and never drawn. The label cannot be measured where it sits, because the box it sits in is the box being resized.\n\n### What a swipe costs, and what it does not\n\n`swipeable` does not change what is mounted. Only `keepMounted` decides that, so a swipe animates between two panels of which one is being unmounted and the other mounted for the first time — exactly what a press does, and exactly as many panels as a press mounts.\n\nWhat it changes is *when* the mount happens: during a movement rather than before a still frame. A panel that is expensive to build — a long list, a chart, anything that measures itself — turns from a pause before it appears into a stutter in the slide. If swiping feels heavier than pressing on the same tab set, that is the panel's mount cost becoming visible, and the fix is whichever `keepMounted` actually keeps that panel's content built \u2014 see below. Turning `swipeable` off only hides it.\n\nThe drag itself moves the panel with a transform and nothing else, which costs the same whatever is inside it. On iOS the panel also fades as it travels; on Android it does not, because a view group there has no layer to fade and the alpha would be pushed down into every row on screen, re-drawing all of them on every frame of the gesture.\n\n### What `keepMounted` keeps\n\n`keepMounted` has three settings, and they differ in how much of a hidden panel is left standing.\n\n`false`, the default, unmounts an inactive panel. Its state goes with it: a scroll position, a half-filled form, a loaded page of results are all gone by the time you come back.\n\n`true` keeps the panel mounted and hides it with `display: none`. State survives, and it is cheap \u2014 but `display: none` also takes the panel **out of layout**, so it is mounted at zero size.\n\nThat last part matters more than it sounds. A child that decides what to render by measuring the space it was given \u2014 a virtualised list asking its parent how tall it is, then filling that many rows \u2014 measures zero inside a hidden panel, and renders no rows. Its first real render still happens on the frame the tab becomes visible, which is the stall `keepMounted` looks like it should have removed. With the flag on or off, the tab change costs the same.\n\n`'measured'` is the setting for that case. A kept panel stays laid out at the full size of the tab set and is hidden by not being drawn, rather than by being removed from layout. A list inside it measures properly, renders its rows and settles while it is still hidden, so becoming visible costs nothing.\n\n```tsx\n<Tabs defaultValue=\"users\" keepMounted=\"measured\" swipeable>\n  <Tabs.List>\n    <Tabs.Trigger value=\"users\">Users</Tabs.Trigger>\n    <Tabs.Trigger value=\"domains\">Domains</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"users\">\n    <FlashList data={users} renderItem={renderUser} />\n  </Tabs.Content>\n  <Tabs.Content value=\"domains\">\n    <FlashList data={domains} renderItem={renderDomain} />\n  </Tabs.Content>\n</Tabs>\n```\n\nThe trade is real, and is why it is not the default: every kept panel lays out and draws, up front and again on every size change, so a five-tab set builds five panels' worth of rows in order to show one. It buys a smooth tab change with a slower first render of the screen.\n\nSo: leave it at `false` unless panel state needs to survive, `true` when it does, and `'measured'` when a panel is slow to appear *and* its content sizes itself from the space it is given. A hidden panel is never drawn, never touchable and never in the accessibility tree under any of the three."
+  "tabs": {
+    "intro": "Segmented navigation with one indicator that springs between measured trigger positions. A single thing travelling is what makes a switch two tabs away read as one movement rather than as two states swapping.",
+    "usage": "<Tabs defaultValue=\"account\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"account\">Account</Tabs.Trigger>\n    <Tabs.Trigger value=\"password\">Password</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"account\">…</Tabs.Content>\n  <Tabs.Content value=\"password\">…</Tabs.Content>\n</Tabs>",
+    "parts": {
+      "List": "Holds the triggers and the animated indicator. Takes `scrollable` for more tabs than fit.",
+      "Trigger": "One tab, with optional `icon`, `badge` and `disabled`. Must be inside `Tabs.List`.",
+      "Content": "Panel for a tab. Unmounted while inactive unless the root sets `keepMounted`."
     },
+    "anatomy": "<Tabs>\n  <Tabs.List>\n    <Tabs.Trigger value=\"…\">…</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"…\">…</Tabs.Content>\n</Tabs>",
+    "examples": [
+      {
+        "title": "Uncontrolled",
+        "description": "`defaultValue` is required — the tabs need a starting panel.",
+        "code": "<Tabs defaultValue=\"overview\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"overview\">Overview</Tabs.Trigger>\n    <Tabs.Trigger value=\"activity\">Activity</Tabs.Trigger>\n    <Tabs.Trigger value=\"settings\">Settings</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"overview\">\n    <Text>Usage and billing at a glance.</Text>\n  </Tabs.Content>\n  <Tabs.Content value=\"activity\">\n    <Text>Everything that happened this week.</Text>\n  </Tabs.Content>\n  <Tabs.Content value=\"settings\">\n    <Text>Names, members and integrations.</Text>\n  </Tabs.Content>\n</Tabs>"
+      },
+      {
+        "title": "Controlled",
+        "description": "Needed when something outside the tab strip changes the panel — a deep link, or a button in one panel that jumps to another.",
+        "code": "const [tab, setTab] = useState('overview');\n\n<>\n  <Button onPress={() => setTab('settings')}>Go to settings</Button>\n\n  <Tabs value={tab} onValueChange={setTab} defaultValue=\"overview\">\n    {/* …list and content… */}\n  </Tabs>\n</>"
+      },
+      {
+        "title": "More tabs than fit",
+        "description": "A fixed row splits its width between the triggers, which crushes every label once there are more than about four. `scrollable` gives each trigger its natural width, puts the row in a horizontal scroller, and scrolls the active tab into view when it changes from elsewhere.",
+        "code": "<Tabs variant=\"underline\" defaultValue=\"overview\">\n  <Tabs.List scrollable>\n    {sections.map((s) => (\n      <Tabs.Trigger key={s.id} value={s.id}>{s.name}</Tabs.Trigger>\n    ))}\n  </Tabs.List>\n\n  {/* …content… */}\n</Tabs>",
+        "previewVideo": {
+          "src": "/previews/tabs-scrollable.mp4",
+          "poster": "/previews/tabs-scrollable-poster.jpg",
+          "alt": "Tabs — More tabs than fit.",
+          "width": 720,
+          "height": 350
+        }
+      },
+      {
+        "title": "Icons, badges and disabled tabs",
+        "description": "A count or a status goes in `badge` rather than into the children, so the label keeps its own typography. A disabled trigger is dimmed, unselectable, and announced as disabled.",
+        "code": "<Tabs.List>\n  <Tabs.Trigger value=\"inbox\" icon={<InboxIcon size={16} />}>\n    Inbox\n  </Tabs.Trigger>\n  <Tabs.Trigger value=\"activity\" badge={<Badge variant=\"secondary\">4</Badge>}>\n    Activity\n  </Tabs.Trigger>\n  <Tabs.Trigger value=\"archived\" disabled>\n    Archived\n  </Tabs.Trigger>\n</Tabs.List>"
+      },
+      {
+        "title": "Keeping panels mounted",
+        "description": "By default a panel is unmounted when you leave it, and a scroll position or a half-filled form goes with it. `keepMounted` renders every panel and hides the inactive ones — not drawn, not touchable, out of the screen-reader order, but still there. It costs the render of every panel up front, so it is opt-in. Pass `\"measured\"` instead of `true` when a hidden panel needs to keep its **size** as well, which is what a virtualised list inside one needs in order to render any rows at all.",
+        "code": "<Tabs keepMounted defaultValue=\"draft\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"draft\">Draft</Tabs.Trigger>\n    <Tabs.Trigger value=\"preview\">Preview</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"draft\">\n    <Input label=\"Title\" value={title} onChangeText={setTitle} />\n  </Tabs.Content>\n  <Tabs.Content value=\"preview\">…</Tabs.Content>\n</Tabs>",
+        "preview": {
+          "src": "/previews/tabs-keep-panels-mounted.jpg",
+          "alt": "Tabs — Keeping panels mounted.",
+          "width": 1179,
+          "height": 801
+        }
+      },
+      {
+        "title": "Swiping between panels",
+        "description": "With `swipeable`, dragging sideways on the panel moves to the next or previous tab. The gesture only takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls. It is off by default: a panel may already contain something that wants a horizontal drag, and the two cannot both have it.",
+        "code": "<Tabs swipeable defaultValue=\"mon\">\n  <Tabs.List scrollable>\n    {days.map((day) => (\n      <Tabs.Trigger key={day.value} value={day.value}>\n        {day.label}\n      </Tabs.Trigger>\n    ))}\n  </Tabs.List>\n  {days.map((day) => (\n    <Tabs.Content key={day.value} value={day.value}>\n      <Card>…</Card>\n    </Tabs.Content>\n  ))}\n</Tabs>"
+      }
+    ],
+    "extraImports": [
+      "Text",
+      "Button",
+      "Input",
+      "Badge",
+      "PackageIcon",
+      "MessageCircleIcon",
+      "CalendarIcon"
+    ],
+    "variantCode": {
+      "variant": "{/* A chip travelling inside a recessed track — the default. */}\n<Tabs variant=\"segmented\" defaultValue=\"a\">…</Tabs>\n\n{/* A rule under the active tab, for a page-level switch. */}\n<Tabs variant=\"underline\" defaultValue=\"a\">…</Tabs>\n\n{/* A filled chip on the page, active label inverted against it. */}\n<Tabs variant=\"pill\" defaultValue=\"a\">…</Tabs>\n\n{/* Icon pills, only the selected one open. Every trigger needs an icon. */}\n<Tabs variant=\"expanding\" defaultValue=\"chats\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"home\" icon={<PackageIcon size={18} />}>Home</Tabs.Trigger>\n    <Tabs.Trigger value=\"chats\" icon={<MessageCircleIcon size={18} />}>Chats</Tabs.Trigger>\n    <Tabs.Trigger value=\"calendar\" icon={<CalendarIcon size={18} />}>Calendar</Tabs.Trigger>\n  </Tabs.List>\n</Tabs>"
+    },
+    "hideVariants": [
+      "scrollable"
+    ],
+    "variantMedia": {
+      "variant": [
+        {
+          "previewVideo": {
+            "src": "/previews/tabs-pill.mp4",
+            "poster": "/previews/tabs-pill-poster.jpg",
+            "alt": "Tabs — variant pill.",
+            "width": 720,
+            "height": 368,
+            "caption": "pill"
+          }
+        },
+        {
+          "preview": {
+            "src": "/previews/tabs-underline.jpg",
+            "alt": "Tabs — variant underline.",
+            "width": 1179,
+            "height": 639,
+            "caption": "underline"
+          }
+        }
+      ]
+    },
+    "previewVideo": {
+      "src": "/previews/tabs.mp4",
+      "poster": "/previews/tabs-poster.jpg",
+      "alt": "The Tabs component, running in the example app.",
+      "width": 720,
+      "height": 584
+    },
+    "notes": "### Swiping\n\nA swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was.\n\nThe panel tracks the finger one to one. Only one panel is mounted at a time unless `keepMounted` is set, so there is nothing behind the one being dragged; instead of holding it back, the panel dims as it travels and the arriving one comes back up through the same fade. The movement carries the change, and the dissolve covers the gap.\n\nOn release the arriving panel picks up a whole panel's width from wherever the outgoing one was let go — which is where it would have been all along had both been mounted — and springs to rest carrying the speed the finger let go at. That is what makes a swipe one continuous movement rather than a drag followed by a separate slide. A tab changed by pressing a trigger has no travel to continue from, so it is given a shorter throw of its own, in the direction the tab sits.\n\nThe order swiped through is the order the triggers are **written** in, not the order they appear on screen. Under RTL those differ — the first tab is the rightmost — and a swipe towards the start of the reading direction goes to the previous tab in both.\n\nAt the first and last tab the panel still moves, but a sixth as far. A gesture that produces nothing at all is indistinguishable from one that was not received.\n\n### The expanding variant\n\nA row of icon pills where only the selected one is open: it widens to let its label out and closes again behind it. For a short row of destinations that are recognisable by their icons, where writing every label out takes the whole width to say four words nobody rereads after the first time.\n\nGive **every** trigger an `icon`. A closed tab has nothing else, and one without an icon closes to an empty pill.\n\nThere is no travelling indicator here, because every tab draws its own pill and a shape sliding underneath them would be invisible. The shape that moves is the open tab itself. The open pill sits one step further from the page than the closed ones — lighter in a dark theme, darker in a light one — which is what the tertiary surface token means, and why the selection is a surface rather than a colour.\n\nThe label is never unmounted, only closed over: a row of unlabelled icons has nothing for a screen reader to read out, and a label that mounted on selection would have no width to animate *from*, so the pill would jump to its open size and the text fade in inside it. Under the system's reduce-motion setting it opens and closes with no animation at all.\n\nThe opening is a curve rather than a spring, because it animates a width: every frame of it is a layout pass and the whole row moves with it, so a spring's overshoot slides the last word in, out and back in again and takes the row with it. The label's opacity trails the width rather than leading it — text drawn into a box narrower than itself is text with its end cut off.\n\nThe width it opens to is measured from a second copy of the label, laid out once in a box wide enough not to constrain it and never drawn. The label cannot be measured where it sits, because the box it sits in is the box being resized.\n\n### What a swipe costs, and what it does not\n\n`swipeable` does not change what is mounted. Only `keepMounted` decides that, so a swipe animates between two panels of which one is being unmounted and the other mounted for the first time — exactly what a press does, and exactly as many panels as a press mounts.\n\nWhat it changes is *when* the mount happens: during a movement rather than before a still frame. A panel that is expensive to build — a long list, a chart, anything that measures itself — turns from a pause before it appears into a stutter in the slide. If swiping feels heavier than pressing on the same tab set, that is the panel's mount cost becoming visible, and the fix is whichever `keepMounted` actually keeps that panel's content built — see below. Turning `swipeable` off only hides it.\n\nThe drag itself moves the panel with a transform and nothing else, which costs the same whatever is inside it. On iOS the panel also fades as it travels; on Android it does not, because a view group there has no layer to fade and the alpha would be pushed down into every row on screen, re-drawing all of them on every frame of the gesture.\n\n### What `keepMounted` keeps\n\n`keepMounted` has three settings, and they differ in how much of a hidden panel is left standing.\n\n`false`, the default, unmounts an inactive panel. Its state goes with it: a scroll position, a half-filled form, a loaded page of results are all gone by the time you come back.\n\n`true` keeps the panel mounted and hides it with `display: none`. State survives, and it is cheap — but `display: none` also takes the panel **out of layout**, so it is mounted at zero size.\n\nThat last part matters more than it sounds. A child that decides what to render by measuring the space it was given — a virtualised list asking its parent how tall it is, then filling that many rows — measures zero inside a hidden panel, and renders no rows. Its first real render still happens on the frame the tab becomes visible, which is the stall `keepMounted` looks like it should have removed. With the flag on or off, the tab change costs the same.\n\n`'measured'` is the setting for that case. A kept panel stays laid out at the full size of the tab set and is hidden by not being drawn, rather than by being removed from layout. A list inside it measures properly, renders its rows and settles while it is still hidden, so becoming visible costs nothing.\n\n```tsx\n<Tabs defaultValue=\"users\" keepMounted=\"measured\" swipeable>\n  <Tabs.List>\n    <Tabs.Trigger value=\"users\">Users</Tabs.Trigger>\n    <Tabs.Trigger value=\"domains\">Domains</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"users\">\n    <FlashList data={users} renderItem={renderUser} />\n  </Tabs.Content>\n  <Tabs.Content value=\"domains\">\n    <FlashList data={domains} renderItem={renderDomain} />\n  </Tabs.Content>\n</Tabs>\n```\n\nThe trade is real, and is why it is not the default: every kept panel lays out and draws, up front and again on every size change, so a five-tab set builds five panels' worth of rows in order to show one. It buys a smooth tab change with a slower first render of the screen.\n\nSo: leave it at `false` unless panel state needs to survive, `true` when it does, and `'measured'` when a panel is slow to appear *and* its content sizes itself from the space it is given. A hidden panel is never drawn, never touchable and never in the accessibility tree under any of the three."
+  },
   "thinking-orb": {
     "intro": "A spinner says “busy”. This says *which kind of busy*: particles running tilted orbits for work in flight, a scan meridian sweeping a globe for a search, bands that scramble and click back for a solve. Six states, each a distinct silhouette in motion, so a glance is enough.",
     "usage": "<ThinkingOrb state=\"searching\" />\n\n// The small tuning, for a line of text.\n<ThinkingOrb state=\"working\" size={20} />",
@@ -6448,8 +6448,8 @@
       },
       {
         "title": "Where the panel goes",
-        "description": "`placement` picks the side of the press the panel opens on, `align` where it sits along the other axis. Neither is a promise: with no room on the side it asked for the panel flips to the other, and one that would run off an edge is clamped back inside the safe area \u2014 so a menu held near the bottom of the screen opens upwards without being asked to.",
-        "code": "{/* Down and from the press \u2014 the default. */}\n<ContextMenu.Content />\n\n{/* Centred on the press instead. */}\n<ContextMenu.Content align=\"center\" />\n\n{/* Above it. */}\n<ContextMenu.Content placement=\"top\" />\n\n{/* Lined up with the row rather than with the finger. */}\n<ContextMenu.Trigger anchor=\"target\">{\u2026}</ContextMenu.Trigger>\n<ContextMenu.Content align=\"end\" />"
+        "description": "`placement` picks the side of the press the panel opens on, `align` where it sits along the other axis. Neither is a promise: with no room on the side it asked for the panel flips to the other, and one that would run off an edge is clamped back inside the safe area — so a menu held near the bottom of the screen opens upwards without being asked to.",
+        "code": "{/* Down and from the press — the default. */}\n<ContextMenu.Content />\n\n{/* Centred on the press instead. */}\n<ContextMenu.Content align=\"center\" />\n\n{/* Above it. */}\n<ContextMenu.Content placement=\"top\" />\n\n{/* Lined up with the row rather than with the finger. */}\n<ContextMenu.Trigger anchor=\"target\">{…}</ContextMenu.Trigger>\n<ContextMenu.Content align=\"end\" />"
       },
       {
         "title": "The held card, lifted",
@@ -7219,122 +7219,122 @@
       "height": 1560
     }
   },
-    "time-picker": {
-      "intro": "A time of day behind a trigger, in one of three faces.\n\nThe value is `{ hour, minute }` on a 24-hour clock whatever the face shows. A 12-hour display is a rendering choice, and storing 7pm as `{ hour: 7 }` plus a meridiem flag would put that flag into every comparison downstream.\n\nThe three layouts exist because “pick a time” is three different tasks. `wheel` is the precise one — any minute in the day is two or three flicks away. `clock` picks a *slot* rather than a time, and its face answers “morning or evening?” faster than reading digits. `ruler` is the coarse one, and the only one that reads at arm's length, which makes it the one for a sheet with a thumb on it.\n\nAll three produce the same value and take the same props, so swapping between them is a one-word change.",
-      "usage": "const [time, setTime] = useState<TimeValue>();\n\n<TimePicker value={time} onValueChange={setTime} />",
-      "extraImports": [
-        "Button",
-        "ClockIcon",
-        "Frame",
-        "ToggleButton",
-        "ToggleButtonGroup",
-        "formatTime",
-        "type TimeValue"
-      ],
-      "parts": {
-        "Trigger": "Wraps a trigger of your own and opens the panel on press. Pass a child to the picker instead and it is wrapped for you."
-      },
-      "examples": [
-        {
-          "title": "A time",
-          "description": "The trigger reads back the chosen time and falls back to the placeholder. Nothing chosen yet means the wheel opens near the current hour rather than at midnight — an unset picker still has to open somewhere plausible.",
-          "code": "const [time, setTime] = useState<TimeValue>();\n\n<TimePicker value={time} onValueChange={setTime} />",
-          "previewVideo": {
-            "src": "/previews/time-picker-a-time.mp4",
-            "poster": "/previews/time-picker-a-time-poster.jpg",
-            "alt": "TimePicker — A time.",
-            "width": 720,
-            "height": 1560
-          }
-        },
-        {
-          "title": "A 24-hour clock",
-          "description": "`hourCycle={24}` drops the meridiem column entirely and writes hours 00–23. The stored value does not change: it was always on a 24-hour clock.",
-          "code": "<TimePicker value={time} onValueChange={setTime} hourCycle={24} />"
-        },
-        {
-          "title": "Slots, not times",
-          "description": "A `minuteStep` turns the wheel into a list of the times you actually offer. Half-hour slots is four rows of scrolling instead of sixty.",
-          "code": "<TimePicker value={time} onValueChange={setTime} minuteStep={30} />"
-        },
-        {
-          "title": "Within opening hours",
-          "description": "`minTime` and `maxTime` bound the value rather than the scroll. A face reports the row it landed on and the picker clamps it, so every layout is bounded by the same rule and a value outside the span comes back as the nearest one inside it.",
-          "code": "<TimePicker\n  value={time}\n  onValueChange={setTime}\n  minTime={{ hour: 9, minute: 0 }}\n  maxTime={{ hour: 17, minute: 30 }}\n  minuteStep={15}\n/>"
-        },
-        {
-          "title": "The clock face",
-          "description": "A face beside a list of times. The hands sweep to the selection rather than jumping, because the face’s whole job is to say *when in the day* the highlighted row is — and a hand that jumps gives that away one row at a time.",
-          "code": "<TimePicker layout=\"clock\" value={time} onValueChange={setTime} />",
-          "previewVideo": {
-            "src": "/previews/time-picker-the-clock-face.mp4",
-            "poster": "/previews/time-picker-the-clock-face-poster.jpg",
-            "alt": "TimePicker — The clock face.",
-            "width": 720,
-            "height": 1560
-          }
-        },
-        {
-          "title": "The ruler, in a sheet",
-          "description": "One large readout over a scale you swipe. It is the layout that reads at arm's length, so it is the one for a sheet — where the panel takes the full width and the Done button with it, because a sheet's outside is only the strip above it.",
-          "code": "<TimePicker\n  layout=\"ruler\"\n  presentation=\"bottom-sheet\"\n  value={time}\n  onValueChange={setTime}\n/>",
-          "previewVideo": {
-            "src": "/previews/time-picker-the-ruler-in-a-sheet.mp4",
-            "poster": "/previews/time-picker-the-ruler-in-a-sheet-poster.jpg",
-            "alt": "TimePicker — The ruler, in a sheet.",
-            "width": 720,
-            "height": 1560
-          }
-        },
-        {
-          "title": "The four presentations",
-          "description": "`presentation` decides where the picker opens, and the choice is about how much of the screen the answer is worth. `popover` keeps the field in view and is the default; `dialog` takes the middle of the screen for a choice that is the whole point of the step; `bottom-sheet` puts it under the thumb, which is what a scale you swipe wants; and `inline` opens nothing at all, for a picker that is part of a form rather than behind it.",
-          "code": "<TimePicker presentation=\"popover\" value={time} onValueChange={setTime} />\n<TimePicker presentation=\"dialog\" … />\n<TimePicker presentation=\"bottom-sheet\" … />\n<TimePicker presentation=\"inline\" … />",
-          "previewVideo": {
-            "src": "/previews/time-picker-the-four-presentations.mp4",
-            "poster": "/previews/time-picker-the-four-presentations-poster.jpg",
-            "alt": "TimePicker — The four presentations.",
-            "width": 720,
-            "height": 1560
-          }
-        },
-        {
-          "title": "In a dialog",
-          "description": "The same panel over a frosted screen. Worth it when the time *is* the decision on the screen — the blur says that in a way a dim does not, and falls back to the dim where expo-blur is not installed.",
-          "code": "<TimePicker presentation=\"dialog\" value={time} onValueChange={setTime} />"
-        },
-        {
-          "title": "Inline, inside a Frame",
-          "description": "`inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own. The toggle goes outside the card: it chooses *which* time the card is editing, which is a decision about the card rather than a control inside it.",
-          "code": "const [edge, setEdge] = useState('start');\n\n<View className=\"gap-3\">\n  <ToggleButtonGroup\n    selectionMode=\"single\"\n    size=\"sm\"\n    value={[edge]}\n    onValueChange={(next) => setEdge(next[0] ?? 'start')}\n    className=\"w-full justify-between px-1\"\n  >\n    <ToggleButton id=\"start\">Starts</ToggleButton>\n    <ToggleButton id=\"end\">Ends</ToggleButton>\n  </ToggleButtonGroup>\n\n  <Frame>\n    <Frame.Header>\n      <Frame.Title>Time</Frame.Title>\n      <Frame.Action>\n        {formatTime(start)} – {formatTime(end)}\n      </Frame.Action>\n    </Frame.Header>\n    <Frame.Panel>\n      <Frame.Section className=\"items-center\">\n        <TimePicker\n          presentation=\"inline\"\n          layout=\"clock\"\n          value={edge === 'start' ? start : end}\n          onValueChange={edge === 'start' ? setStart : setEnd}\n        />\n      </Frame.Section>\n    </Frame.Panel>\n  </Frame>\n</View>",
-          "previewVideo": {
-            "src": "/previews/time-picker-inline-inside-a-frame.mp4",
-            "poster": "/previews/time-picker-inline-inside-a-frame-poster.jpg",
-            "alt": "TimePicker — Inline, inside a Frame.",
-            "width": 720,
-            "height": 1560
-          }
-        },
-        {
-          "title": "Your own trigger",
-          "description": "Pass a child and it is cloned with an `onPress` that opens the panel, so a field row or an icon button can stand in for the default button.",
-          "code": "<TimePicker value={time} onValueChange={setTime}>\n  <Button variant=\"ghost\" size=\"icon\" accessibilityLabel=\"Choose a time\">\n    <ClockIcon size={18} />\n  </Button>\n</TimePicker>"
-        },
-        {
-          "title": "Turning the readout down",
-          "description": "The `ruler` face states its time in one large centred number, which is right when the scale is the only thing on the panel. Under something that outranks it — a calendar, a form row — that number is the largest text on screen standing for the smaller half of the answer. `compact` steps it down; `none` drops it, for a caller writing the time itself. The other two faces spell the time out in their own columns and hands and ignore this.",
-          "code": "<TimePicker layout=\"ruler\" readout=\"compact\" value={time} onValueChange={setTime} />\n\n{/* …or take it over entirely */}\n<TimePicker presentation=\"inline\" layout=\"ruler\" readout=\"none\" … />"
-        }
-      ],
-      "notes": "**The value is always 0–23.** `displayHour` and `hourFromDisplay` are exported alongside it if you need the face's own numbering, but nothing stored should be in it.\n\n**`minuteStep` defaults per layout.** `wheel` steps by 1, `clock` by 30 and `ruler` by 15 — the two that scroll the whole day at once need a coarser grid to be usable. Pass it explicitly and the layout stops mattering.\n\n**A chosen time off the step is rounded, not rejected.** At a 30-minute step 7:29 is a finger that stopped just short of half past, not a request for seven o'clock.\n\n**Every face is a scroll view.** Momentum, deceleration and fling physics come from the platform, and the selection is the row it comes to rest on. That is also why the panel needs a definite width, which the presentations give it.\n\n**The sheet gets a Done button and the popover does not.** A popover is dismissed by tapping anywhere outside it, which is most of the screen; a sheet's outside is the strip above it, and a scale under your thumb needs somewhere deliberate to finish.",
-      "previewVideo": {
-        "src": "/previews/time-picker.mp4",
-        "poster": "/previews/time-picker-poster.jpg",
-        "alt": "The TimePicker component, running in the example app.",
-        "width": 720,
-        "height": 1560
-      }
+  "time-picker": {
+    "intro": "A time of day behind a trigger, in one of three faces.\n\nThe value is `{ hour, minute }` on a 24-hour clock whatever the face shows. A 12-hour display is a rendering choice, and storing 7pm as `{ hour: 7 }` plus a meridiem flag would put that flag into every comparison downstream.\n\nThe three layouts exist because “pick a time” is three different tasks. `wheel` is the precise one — any minute in the day is two or three flicks away. `clock` picks a *slot* rather than a time, and its face answers “morning or evening?” faster than reading digits. `ruler` is the coarse one, and the only one that reads at arm's length, which makes it the one for a sheet with a thumb on it.\n\nAll three produce the same value and take the same props, so swapping between them is a one-word change.",
+    "usage": "const [time, setTime] = useState<TimeValue>();\n\n<TimePicker value={time} onValueChange={setTime} />",
+    "extraImports": [
+      "Button",
+      "ClockIcon",
+      "Frame",
+      "ToggleButton",
+      "ToggleButtonGroup",
+      "formatTime",
+      "type TimeValue"
+    ],
+    "parts": {
+      "Trigger": "Wraps a trigger of your own and opens the panel on press. Pass a child to the picker instead and it is wrapped for you."
     },
+    "examples": [
+      {
+        "title": "A time",
+        "description": "The trigger reads back the chosen time and falls back to the placeholder. Nothing chosen yet means the wheel opens near the current hour rather than at midnight — an unset picker still has to open somewhere plausible.",
+        "code": "const [time, setTime] = useState<TimeValue>();\n\n<TimePicker value={time} onValueChange={setTime} />",
+        "previewVideo": {
+          "src": "/previews/time-picker-a-time.mp4",
+          "poster": "/previews/time-picker-a-time-poster.jpg",
+          "alt": "TimePicker — A time.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "A 24-hour clock",
+        "description": "`hourCycle={24}` drops the meridiem column entirely and writes hours 00–23. The stored value does not change: it was always on a 24-hour clock.",
+        "code": "<TimePicker value={time} onValueChange={setTime} hourCycle={24} />"
+      },
+      {
+        "title": "Slots, not times",
+        "description": "A `minuteStep` turns the wheel into a list of the times you actually offer. Half-hour slots is four rows of scrolling instead of sixty.",
+        "code": "<TimePicker value={time} onValueChange={setTime} minuteStep={30} />"
+      },
+      {
+        "title": "Within opening hours",
+        "description": "`minTime` and `maxTime` bound the value rather than the scroll. A face reports the row it landed on and the picker clamps it, so every layout is bounded by the same rule and a value outside the span comes back as the nearest one inside it.",
+        "code": "<TimePicker\n  value={time}\n  onValueChange={setTime}\n  minTime={{ hour: 9, minute: 0 }}\n  maxTime={{ hour: 17, minute: 30 }}\n  minuteStep={15}\n/>"
+      },
+      {
+        "title": "The clock face",
+        "description": "A face beside a list of times. The hands sweep to the selection rather than jumping, because the face’s whole job is to say *when in the day* the highlighted row is — and a hand that jumps gives that away one row at a time.",
+        "code": "<TimePicker layout=\"clock\" value={time} onValueChange={setTime} />",
+        "previewVideo": {
+          "src": "/previews/time-picker-the-clock-face.mp4",
+          "poster": "/previews/time-picker-the-clock-face-poster.jpg",
+          "alt": "TimePicker — The clock face.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "The ruler, in a sheet",
+        "description": "One large readout over a scale you swipe. It is the layout that reads at arm's length, so it is the one for a sheet — where the panel takes the full width and the Done button with it, because a sheet's outside is only the strip above it.",
+        "code": "<TimePicker\n  layout=\"ruler\"\n  presentation=\"bottom-sheet\"\n  value={time}\n  onValueChange={setTime}\n/>",
+        "previewVideo": {
+          "src": "/previews/time-picker-the-ruler-in-a-sheet.mp4",
+          "poster": "/previews/time-picker-the-ruler-in-a-sheet-poster.jpg",
+          "alt": "TimePicker — The ruler, in a sheet.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "The four presentations",
+        "description": "`presentation` decides where the picker opens, and the choice is about how much of the screen the answer is worth. `popover` keeps the field in view and is the default; `dialog` takes the middle of the screen for a choice that is the whole point of the step; `bottom-sheet` puts it under the thumb, which is what a scale you swipe wants; and `inline` opens nothing at all, for a picker that is part of a form rather than behind it.",
+        "code": "<TimePicker presentation=\"popover\" value={time} onValueChange={setTime} />\n<TimePicker presentation=\"dialog\" … />\n<TimePicker presentation=\"bottom-sheet\" … />\n<TimePicker presentation=\"inline\" … />",
+        "previewVideo": {
+          "src": "/previews/time-picker-the-four-presentations.mp4",
+          "poster": "/previews/time-picker-the-four-presentations-poster.jpg",
+          "alt": "TimePicker — The four presentations.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "In a dialog",
+        "description": "The same panel over a frosted screen. Worth it when the time *is* the decision on the screen — the blur says that in a way a dim does not, and falls back to the dim where expo-blur is not installed.",
+        "code": "<TimePicker presentation=\"dialog\" value={time} onValueChange={setTime} />"
+      },
+      {
+        "title": "Inline, inside a Frame",
+        "description": "`inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own. The toggle goes outside the card: it chooses *which* time the card is editing, which is a decision about the card rather than a control inside it.",
+        "code": "const [edge, setEdge] = useState('start');\n\n<View className=\"gap-3\">\n  <ToggleButtonGroup\n    selectionMode=\"single\"\n    size=\"sm\"\n    value={[edge]}\n    onValueChange={(next) => setEdge(next[0] ?? 'start')}\n    className=\"w-full justify-between px-1\"\n  >\n    <ToggleButton id=\"start\">Starts</ToggleButton>\n    <ToggleButton id=\"end\">Ends</ToggleButton>\n  </ToggleButtonGroup>\n\n  <Frame>\n    <Frame.Header>\n      <Frame.Title>Time</Frame.Title>\n      <Frame.Action>\n        {formatTime(start)} – {formatTime(end)}\n      </Frame.Action>\n    </Frame.Header>\n    <Frame.Panel>\n      <Frame.Section className=\"items-center\">\n        <TimePicker\n          presentation=\"inline\"\n          layout=\"clock\"\n          value={edge === 'start' ? start : end}\n          onValueChange={edge === 'start' ? setStart : setEnd}\n        />\n      </Frame.Section>\n    </Frame.Panel>\n  </Frame>\n</View>",
+        "previewVideo": {
+          "src": "/previews/time-picker-inline-inside-a-frame.mp4",
+          "poster": "/previews/time-picker-inline-inside-a-frame-poster.jpg",
+          "alt": "TimePicker — Inline, inside a Frame.",
+          "width": 720,
+          "height": 1560
+        }
+      },
+      {
+        "title": "Your own trigger",
+        "description": "Pass a child and it is cloned with an `onPress` that opens the panel, so a field row or an icon button can stand in for the default button.",
+        "code": "<TimePicker value={time} onValueChange={setTime}>\n  <Button variant=\"ghost\" size=\"icon\" accessibilityLabel=\"Choose a time\">\n    <ClockIcon size={18} />\n  </Button>\n</TimePicker>"
+      },
+      {
+        "title": "Turning the readout down",
+        "description": "The `ruler` face states its time in one large centred number, which is right when the scale is the only thing on the panel. Under something that outranks it — a calendar, a form row — that number is the largest text on screen standing for the smaller half of the answer. `compact` steps it down; `none` drops it, for a caller writing the time itself. The other two faces spell the time out in their own columns and hands and ignore this.",
+        "code": "<TimePicker layout=\"ruler\" readout=\"compact\" value={time} onValueChange={setTime} />\n\n{/* …or take it over entirely */}\n<TimePicker presentation=\"inline\" layout=\"ruler\" readout=\"none\" … />"
+      }
+    ],
+    "notes": "**The value is always 0–23.** `displayHour` and `hourFromDisplay` are exported alongside it if you need the face's own numbering, but nothing stored should be in it.\n\n**`minuteStep` defaults per layout.** `wheel` steps by 1, `clock` by 30 and `ruler` by 15 — the two that scroll the whole day at once need a coarser grid to be usable. Pass it explicitly and the layout stops mattering.\n\n**A chosen time off the step is rounded, not rejected.** At a 30-minute step 7:29 is a finger that stopped just short of half past, not a request for seven o'clock.\n\n**Every face is a scroll view.** Momentum, deceleration and fling physics come from the platform, and the selection is the row it comes to rest on. That is also why the panel needs a definite width, which the presentations give it.\n\n**The sheet gets a Done button and the popover does not.** A popover is dismissed by tapping anywhere outside it, which is most of the screen; a sheet's outside is the strip above it, and a scale under your thumb needs somewhere deliberate to finish.",
+    "previewVideo": {
+      "src": "/previews/time-picker.mp4",
+      "poster": "/previews/time-picker-poster.jpg",
+      "alt": "The TimePicker component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    }
+  },
   "combobox": {
     "intro": "A text field that filters a list of options as you type. The difference from Select is where the typing happens: a Select is a button that opens a list, and its optional filter lives inside that list once it is open. A Combobox is the field itself — you are already typing when the options appear, which is what you want when the value is something you know the name of rather than something you expect to recognise by scrolling.",
     "extraImports": "Label",
@@ -7344,7 +7344,7 @@
       "Item": "One option. `value` identifies it, `label` is what is shown and what the filter matches on, `description` adds a second line, `start` draws something before the label, and `disabled` keeps it listed but unselectable.",
       "Group": "A titled run of options. Presentational only — a grouped Combobox reports the same values a flat one would."
     },
-    "notes": "### Choosing a presentation\n\n`overlay` (the default) floats the list through a portal, anchored under the field and flipped above it when the keyboard leaves no room below. Nothing else on the screen moves. `contentWidth` and `offset` apply here only.\n\n`inline` expands the list in normal layout flow instead, pushing what is below it down. Reach for it in a form where nothing should be covered.\n\nThere is deliberately no sheet presentation. A sheet takes the bottom of the screen, which is where the keyboard already is, and the field you are typing into would end up behind one or the other. Select can offer a sheet because its trigger stops mattering once the list is open; a Combobox's never does.\n\n### One value or several\n\n`mode=\"multiple\"` draws the chosen options as removable chips in front of the input and keeps the list open between picks, so several can be taken in a row. The value is an array there and a single string otherwise — the type follows `mode`, so nothing has to be cast.\n\nPicking an already-chosen option removes it, which is the only way to undo a pick without reaching for its chip. Backspace on an empty field reaches the thing in front of the cursor when there is no character left to delete \u2014 but it marks that chip first, turning it `destructive`, and only a second backspace takes it. A held backspace repeats, and a field that removed on the first one would empty itself in the time it takes to notice. Typing anything, or leaving the field, takes the mark off again. [TagInput](/docs/components/tag-input) does the same, so the reflex carries between the two.\n\n### Filtering, and turning it off\n\nFiltering happens in the component by default, matching case-insensitively on any part of an option's label. Pass a function to `filter` to match on something else — a description, an alias list, an initialism.\n\nPass `filter={false}` when the options come from a server that is doing the matching itself. The field then renders exactly what it was given, because a second filter over results it cannot see the query behind would only remove correct answers. Pair it with the controlled `inputValue` / `onInputValueChange` so the query can drive the request, and with `loading` so the list says it is working rather than saying there are no matches.\n\n### Values it does not know about\n\n`allowCustomValue` lets the typed text become the value when it matches no option, committed on return. That turns the list into a set of suggestions rather than the set of legal answers, which is what a tag field is.\n\n### Inside a scroll view\n\nAn `overlay` list is portalled out of the tree, so a screen-level scroll view is not one of its ancestors and taps on the options reach them directly.\n\nAn `inline` list is not. It stays where it is rendered, which means the scroll view around it decides what happens to a tap that lands while the keyboard is up — and the default is to spend it dismissing the keyboard. Set `keyboardShouldPersistTaps=\"handled\"` on that scroll view, or the first tap on an option will be swallowed and the option will only take on the second.\n\n```tsx\n<ScrollView keyboardShouldPersistTaps=\"handled\">\n  <Combobox presentation=\"inline\" … />\n</ScrollView>\n```\n\n### Accessibility\n\nThe field is announced as a combobox that owns an expandable list, so the chips and the input read as parts of one control rather than as loose siblings, and the open state is announced on a role where it means something. The floating list is a modal layer: it takes the Android back button and hides the page behind it from the accessibility tree, so a screen reader cannot walk out of an open list into content it is covering.",
+    "notes": "### Choosing a presentation\n\n`overlay` (the default) floats the list through a portal, anchored under the field and flipped above it when the keyboard leaves no room below. Nothing else on the screen moves. `contentWidth` and `offset` apply here only.\n\n`inline` expands the list in normal layout flow instead, pushing what is below it down. Reach for it in a form where nothing should be covered.\n\nThere is deliberately no sheet presentation. A sheet takes the bottom of the screen, which is where the keyboard already is, and the field you are typing into would end up behind one or the other. Select can offer a sheet because its trigger stops mattering once the list is open; a Combobox's never does.\n\n### One value or several\n\n`mode=\"multiple\"` draws the chosen options as removable chips in front of the input and keeps the list open between picks, so several can be taken in a row. The value is an array there and a single string otherwise — the type follows `mode`, so nothing has to be cast.\n\nPicking an already-chosen option removes it, which is the only way to undo a pick without reaching for its chip. Backspace on an empty field reaches the thing in front of the cursor when there is no character left to delete — but it marks that chip first, turning it `destructive`, and only a second backspace takes it. A held backspace repeats, and a field that removed on the first one would empty itself in the time it takes to notice. Typing anything, or leaving the field, takes the mark off again. [TagInput](/docs/components/tag-input) does the same, so the reflex carries between the two.\n\n### Filtering, and turning it off\n\nFiltering happens in the component by default, matching case-insensitively on any part of an option's label. Pass a function to `filter` to match on something else — a description, an alias list, an initialism.\n\nPass `filter={false}` when the options come from a server that is doing the matching itself. The field then renders exactly what it was given, because a second filter over results it cannot see the query behind would only remove correct answers. Pair it with the controlled `inputValue` / `onInputValueChange` so the query can drive the request, and with `loading` so the list says it is working rather than saying there are no matches.\n\n### Values it does not know about\n\n`allowCustomValue` lets the typed text become the value when it matches no option, committed on return. That turns the list into a set of suggestions rather than the set of legal answers, which is what a tag field is.\n\n### Inside a scroll view\n\nAn `overlay` list is portalled out of the tree, so a screen-level scroll view is not one of its ancestors and taps on the options reach them directly.\n\nAn `inline` list is not. It stays where it is rendered, which means the scroll view around it decides what happens to a tap that lands while the keyboard is up — and the default is to spend it dismissing the keyboard. Set `keyboardShouldPersistTaps=\"handled\"` on that scroll view, or the first tap on an option will be swallowed and the option will only take on the second.\n\n```tsx\n<ScrollView keyboardShouldPersistTaps=\"handled\">\n  <Combobox presentation=\"inline\" … />\n</ScrollView>\n```\n\n### Accessibility\n\nThe field is announced as a combobox that owns an expandable list, so the chips and the input read as parts of one control rather than as loose siblings, and the open state is announced on a role where it means something. The floating list is a modal layer: it takes the Android back button and hides the page behind it from the accessibility tree, so a screen reader cannot walk out of an open list into content it is covering.",
     "examples": [
       {
         "title": "Filter as you type",
@@ -7378,98 +7378,98 @@
       }
     ]
   },
-    "color-picker": {
-      "intro": "A colour chosen by dragging, not by typing. The controls are the colour model made visible: a square where saturation runs across and brightness runs up — or a wheel where hue is the angle and saturation the radius — under scales for whichever channels the shape does not carry. Composition is the API — a picker with no opacity is one with no `ColorPicker.Alpha` in it, not one with a prop turned off.\n\nNothing about a drag crosses to JavaScript. The four channels are shared values, and the hue behind the square, both thumb fills and the preview swatch are colours computed from them on the UI thread; the picked colour bridges back on change and again on release, the same as any other input here.",
-      "usage": "<ColorPicker defaultValue=\"#22c55e\" onValueCommit={setBrand}>\n  <ColorPicker.Area />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>",
-      "extraImports": [
-        "Button",
-        "Card",
-        "Text",
-        "Surface"
-      ],
-      "anatomy": "<ColorPicker presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Accent\" />  {/* the row that opens it */}\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>                   {/* …or no Trigger/Content at all, */}\n    <ColorPicker.Swatches colors={[…]} /> {/* and the parts stack where they are */}\n    <ColorPicker.Area />                  {/* …or <ColorPicker.Wheel /> */}\n    <ColorPicker.Channel channel=\"hue\" /> {/* the readout above a track */}\n    <ColorPicker.Hue />\n    <ColorPicker.Brightness />\n    <ColorPicker.Alpha />\n    <ColorPicker.Preview showValue />\n  </ColorPicker.Content>\n</ColorPicker>",
-      "parts": {
-        "Trigger": "What you press to open the picker, when `presentation` is not `inline`. Takes one element and clones it with an `onPress` — `ColorPicker.Field` is the obvious child, since it already reads out the colour it would let you change.",
-        "Content": "The panel the controls are drawn in. It takes the trigger's width by default, floored so a narrow row cannot squeeze the square, and everything `Popover.Content` accepts works here too.",
-        "Area": "The square: saturation across it, brightness up it, under the current hue. The thumb sits centred on the colour it has picked rather than nudged inside the edge, so a fully saturated corner is reachable and looks reachable.",
-        "Hue": "The hue scale, drawn as a gradient through the six corners of the colour wheel and back to red.",
-        "Alpha": "Opacity, over a checkerboard that says *nothing here*. The ramp is a gradient used as a mask over a solid fill of the current colour, so changing the colour above never re-declares a gradient's props from React.",
-        "Preview": "A swatch of the result, optionally with the colour written beside it. Takes children, for a copy button or a caption.",
-        "Swatches": "Presets. Tapping one sets every channel at once, and the ring marks the one that is currently exact.",
-        "Field": "The strip above the controls: what is being picked on the leading edge, what it currently is and a swatch of it on the trailing one. The value is built on the UI thread and only crosses to JavaScript when the rounded string changes, so a drag through a hundred frames of one hex costs one render.",
-        "Wheel": "The square bent into a circle — hue is the angle, saturation is the distance out. Interchangeable with `Area`: it reads the same channels, so a picker is a wheel *instead of* a square rather than as well as one. It carries no brightness, which is what `Brightness` is for.",
-        "Channel": "The line above a track: the number on the leading edge, what it names on the trailing one. Degrees for hue, a percentage for the rest.",
-        "Brightness": "Black to the current colour at full brightness. The square already carries brightness, so this is for pickers built around the wheel, which does not."
-      },
-      "partNotes": "Every part is optional and they render in the order you write them, so the layout is yours: presets above the square, the preview at the top, opacity left out entirely.\n\nThe picker stores hue, saturation, value and alpha rather than the string it hands back. That is not an implementation detail you can ignore — it is why the thumb stays where you left it. A fully black colour is `#000` whatever hue and saturation produced it, so a picker that stored its own output would lose the thumb the moment you dragged into a corner and have nowhere to put it back.\n\n`Content` re-provides the picker's context around what it holds, and has to: the panel is drawn through a portal, above everything else on the screen, so by the time the parts inside it go looking for the picker they are no longer anywhere below it in the tree. That is why the controls go inside `ColorPicker.Content` rather than inside a `Popover` you assemble yourself.",
-      "examples": [
-        {
-          "title": "Folded away behind the row",
-          "description": "A picker is a page's worth of controls in service of one value, and that value is read far more often than it is changed. `presentation` puts the controls behind the row that reads it out, so two colours cost two rows rather than two panels. `bottom-sheet` is the same arrangement brought up from the bottom edge instead.",
-          "code": "<ColorPicker value={accent} onValueChange={setAccent} presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Accent\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Area height={220} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </ColorPicker.Content>\n</ColorPicker>"
-        },
-        {
-          "title": "A labelled panel",
-          "description": "The layout the parts are shaped for: a strip that names the colour and prints it, the square, then a readout naming the track under it. Every piece is optional and none of them knows about the others — this is a composition, not a variant.",
-          "code": "<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Field label=\"Accent\" />\n  <Surface variant=\"secondary\" padding=\"sm\" className=\"gap-3 rounded-2xl\">\n    <ColorPicker.Area height={280} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </Surface>\n</ColorPicker>"
-        },
-        {
-          "title": "A wheel instead of a square",
-          "description": "Swap `Area` for `Wheel` and hue becomes the angle, saturation the radius. Brightness then has no dimension left on the disc, so it takes a track of its own — a wheel without one can only ever pick bright colours.",
-          "code": "<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Field label=\"Brand\" />\n  <ColorPicker.Wheel />\n  <ColorPicker.Channel channel=\"brightness\" />\n  <ColorPicker.Brightness />\n</ColorPicker>"
-        },
-        {
-          "title": "Controlled",
-          "description": "Hold the colour in state and apply it to something. `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change writes anywhere.",
-          "code": "const [color, setColor] = useState('#22c55e');\n\n<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Area />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>\n\n<Button className=\"w-full\" style={{ backgroundColor: color }}>\n  Save theme\n</Button>"
-        },
-        {
-          "title": "With opacity",
-          "description": "Add `ColorPicker.Alpha` and the colour gains a fourth channel. `format` decides how it is written: `hex` grows an `#rrggbbaa` pair and the other two switch to their `a` forms, but only once the colour is actually translucent — an opaque colour written with a trailing `ff` is the same colour spelled in a way half the parsers in the world reject.",
-          "code": "<ColorPicker defaultValue=\"rgba(59, 130, 246, 0.6)\" format=\"rgb\" onValueCommit={save}>\n  <ColorPicker.Area height={150} />\n  <ColorPicker.Hue />\n  <ColorPicker.Alpha />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
-        },
-        {
-          "title": "Presets first",
-          "description": "Most colour choices are one of eight, and the square is for the ninth. Putting `ColorPicker.Swatches` above it makes the common case a single tap without hiding the rest. Unreadable strings are dropped rather than rendered as black — a row of presets with a mystery black one in it is worse than a shorter row.",
-          "code": "<ColorPicker defaultValue=\"#f97316\" onValueCommit={setColor} size=\"sm\">\n  <ColorPicker.Swatches\n    colors={['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#0f172a']}\n  />\n  <ColorPicker.Area height={120} />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
-        },
-        {
-          "title": "Just a hue",
-          "description": "There is no minimum picker. A control that only needs a hue is the hue scale and nothing else, and it still reports a full colour.",
-          "code": "<ColorPicker defaultValue=\"#3b82f6\" onValueChange={setAccent}>\n  <ColorPicker.Hue />\n</ColorPicker>"
-        },
-        {
-          "title": "Disabled",
-          "code": "<ColorPicker defaultValue=\"#64748b\" disabled>\n  <ColorPicker.Area height={110} />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
-        }
-      ],
-      "variantCode": {
-        "size": "<ColorPicker size=\"sm\" defaultValue=\"#8b5cf6\">…</ColorPicker>\n<ColorPicker size=\"md\" defaultValue=\"#8b5cf6\">…</ColorPicker>\n<ColorPicker size=\"lg\" defaultValue=\"#8b5cf6\">…</ColorPicker>"
-      },
-      "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). Both read `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`, `hsl()` and `hsla()`; a string the picker cannot read leaves it on the colour it already has, rather than snapping to black.\n\n`ColorPicker.Preview`'s printed value is built on the UI thread and only crosses to JavaScript when it differs from the last one, so a drag that is not changing the rounded value costs nothing.\n\nThe square is adjustable to a screen reader in both axes: increment and decrement move saturation, and a **Brighter** / **Darker** pair moves brightness. Hue and opacity are adjustable on their own. Their spoken values update when a drag ends rather than during it — nobody is listening to the middle of a gesture, and a value that re-announced every frame would be a hundred announcements for one drag.\n\nThe conversion helpers the picker is built on are exported too — `parseColor`, `formatColor`, `hsvToHex`, `hsvToRgb`, `rgbToHsv`, `hsvToHsl`, `hsvToCss` and `isValidColor`. Every one is a worklet, so they can be called from an animated style as well as from ordinary code.\n\n### The wheel, and what it cannot carry\n\nA square holds two channels because it has two axes. A wheel holds two as well — an angle and a radius — so swapping one for the other trades brightness for a shape, not for a third channel. `ColorPicker.Brightness` is the track that takes it back; a wheel without one can only pick colours at full brightness.\n\nThe wheel is deliberately **not mirrored under RTL**, unlike the square and the tracks. Those have a start and an end, so they have a direction to be read in. A wheel has neither: reversing which way round the spectrum runs would move every colour somewhere else without making any of them easier to find.\n\nThere is no conic gradient to draw a hue ring with, so it is approximated by 120 solid wedges given a hair of overlap — three degrees each is under a pixel of colour step at any size this is drawn at, and the overlap stops the seams reading as lighter spokes. The ring is built once at module scope: it is the same wheel in every picker.",
-      "versions": [
-        {
-          "title": "Accent card",
-          "description": "Rows that read out a colour and open the picker over themselves when pressed.",
-          "code": "<ColorPicker value={accent} onValueChange={setAccent} presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Accent\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Area height={220} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </ColorPicker.Content>\n</ColorPicker>"
-        },
-        {
-          "title": "In a sheet",
-          "description": "The same folded-away picker, brought up from the bottom edge.",
-          "code": "<ColorPicker value={color} onValueChange={setColor} presentation=\"bottom-sheet\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Highlight\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Area height={240} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n    <ColorPicker.Channel channel=\"alpha\" />\n    <ColorPicker.Alpha />\n  </ColorPicker.Content>\n</ColorPicker>"
-        },
-        {
-          "title": "Inline panel",
-          "description": "A labelled strip over the square, and a readout naming the track under it.",
-          "code": "<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Field label=\"Accent\" />\n  <Surface variant=\"secondary\" padding=\"sm\" className=\"gap-3 rounded-2xl\">\n    <ColorPicker.Area height={280} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </Surface>\n</ColorPicker>"
-        },
-        {
-          "title": "Wheel",
-          "description": "Hue around and saturation out, with brightness on a track of its own — folded away behind a row, the way the square is. The disc is a way of picking a colour rather than a different kind of control that has to live in the page.",
-          "code": "<ColorPicker value={color} onValueChange={setColor} presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Brand\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Wheel />\n    <ColorPicker.Channel channel=\"brightness\" />\n    <ColorPicker.Brightness />\n    <ColorPicker.Channel channel=\"alpha\" />\n    <ColorPicker.Alpha />\n  </ColorPicker.Content>\n</ColorPicker>"
-        }
-      ]
+  "color-picker": {
+    "intro": "A colour chosen by dragging, not by typing. The controls are the colour model made visible: a square where saturation runs across and brightness runs up — or a wheel where hue is the angle and saturation the radius — under scales for whichever channels the shape does not carry. Composition is the API — a picker with no opacity is one with no `ColorPicker.Alpha` in it, not one with a prop turned off.\n\nNothing about a drag crosses to JavaScript. The four channels are shared values, and the hue behind the square, both thumb fills and the preview swatch are colours computed from them on the UI thread; the picked colour bridges back on change and again on release, the same as any other input here.",
+    "usage": "<ColorPicker defaultValue=\"#22c55e\" onValueCommit={setBrand}>\n  <ColorPicker.Area />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>",
+    "extraImports": [
+      "Button",
+      "Card",
+      "Text",
+      "Surface"
+    ],
+    "anatomy": "<ColorPicker presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Accent\" />  {/* the row that opens it */}\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>                   {/* …or no Trigger/Content at all, */}\n    <ColorPicker.Swatches colors={[…]} /> {/* and the parts stack where they are */}\n    <ColorPicker.Area />                  {/* …or <ColorPicker.Wheel /> */}\n    <ColorPicker.Channel channel=\"hue\" /> {/* the readout above a track */}\n    <ColorPicker.Hue />\n    <ColorPicker.Brightness />\n    <ColorPicker.Alpha />\n    <ColorPicker.Preview showValue />\n  </ColorPicker.Content>\n</ColorPicker>",
+    "parts": {
+      "Trigger": "What you press to open the picker, when `presentation` is not `inline`. Takes one element and clones it with an `onPress` — `ColorPicker.Field` is the obvious child, since it already reads out the colour it would let you change.",
+      "Content": "The panel the controls are drawn in. It takes the trigger's width by default, floored so a narrow row cannot squeeze the square, and everything `Popover.Content` accepts works here too.",
+      "Area": "The square: saturation across it, brightness up it, under the current hue. The thumb sits centred on the colour it has picked rather than nudged inside the edge, so a fully saturated corner is reachable and looks reachable.",
+      "Hue": "The hue scale, drawn as a gradient through the six corners of the colour wheel and back to red.",
+      "Alpha": "Opacity, over a checkerboard that says *nothing here*. The ramp is a gradient used as a mask over a solid fill of the current colour, so changing the colour above never re-declares a gradient's props from React.",
+      "Preview": "A swatch of the result, optionally with the colour written beside it. Takes children, for a copy button or a caption.",
+      "Swatches": "Presets. Tapping one sets every channel at once, and the ring marks the one that is currently exact.",
+      "Field": "The strip above the controls: what is being picked on the leading edge, what it currently is and a swatch of it on the trailing one. The value is built on the UI thread and only crosses to JavaScript when the rounded string changes, so a drag through a hundred frames of one hex costs one render.",
+      "Wheel": "The square bent into a circle — hue is the angle, saturation is the distance out. Interchangeable with `Area`: it reads the same channels, so a picker is a wheel *instead of* a square rather than as well as one. It carries no brightness, which is what `Brightness` is for.",
+      "Channel": "The line above a track: the number on the leading edge, what it names on the trailing one. Degrees for hue, a percentage for the rest.",
+      "Brightness": "Black to the current colour at full brightness. The square already carries brightness, so this is for pickers built around the wheel, which does not."
     },
+    "partNotes": "Every part is optional and they render in the order you write them, so the layout is yours: presets above the square, the preview at the top, opacity left out entirely.\n\nThe picker stores hue, saturation, value and alpha rather than the string it hands back. That is not an implementation detail you can ignore — it is why the thumb stays where you left it. A fully black colour is `#000` whatever hue and saturation produced it, so a picker that stored its own output would lose the thumb the moment you dragged into a corner and have nowhere to put it back.\n\n`Content` re-provides the picker's context around what it holds, and has to: the panel is drawn through a portal, above everything else on the screen, so by the time the parts inside it go looking for the picker they are no longer anywhere below it in the tree. That is why the controls go inside `ColorPicker.Content` rather than inside a `Popover` you assemble yourself.",
+    "examples": [
+      {
+        "title": "Folded away behind the row",
+        "description": "A picker is a page's worth of controls in service of one value, and that value is read far more often than it is changed. `presentation` puts the controls behind the row that reads it out, so two colours cost two rows rather than two panels. `bottom-sheet` is the same arrangement brought up from the bottom edge instead.",
+        "code": "<ColorPicker value={accent} onValueChange={setAccent} presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Accent\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Area height={220} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </ColorPicker.Content>\n</ColorPicker>"
+      },
+      {
+        "title": "A labelled panel",
+        "description": "The layout the parts are shaped for: a strip that names the colour and prints it, the square, then a readout naming the track under it. Every piece is optional and none of them knows about the others — this is a composition, not a variant.",
+        "code": "<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Field label=\"Accent\" />\n  <Surface variant=\"secondary\" padding=\"sm\" className=\"gap-3 rounded-2xl\">\n    <ColorPicker.Area height={280} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </Surface>\n</ColorPicker>"
+      },
+      {
+        "title": "A wheel instead of a square",
+        "description": "Swap `Area` for `Wheel` and hue becomes the angle, saturation the radius. Brightness then has no dimension left on the disc, so it takes a track of its own — a wheel without one can only ever pick bright colours.",
+        "code": "<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Field label=\"Brand\" />\n  <ColorPicker.Wheel />\n  <ColorPicker.Channel channel=\"brightness\" />\n  <ColorPicker.Brightness />\n</ColorPicker>"
+      },
+      {
+        "title": "Controlled",
+        "description": "Hold the colour in state and apply it to something. `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change writes anywhere.",
+        "code": "const [color, setColor] = useState('#22c55e');\n\n<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Area />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>\n\n<Button className=\"w-full\" style={{ backgroundColor: color }}>\n  Save theme\n</Button>"
+      },
+      {
+        "title": "With opacity",
+        "description": "Add `ColorPicker.Alpha` and the colour gains a fourth channel. `format` decides how it is written: `hex` grows an `#rrggbbaa` pair and the other two switch to their `a` forms, but only once the colour is actually translucent — an opaque colour written with a trailing `ff` is the same colour spelled in a way half the parsers in the world reject.",
+        "code": "<ColorPicker defaultValue=\"rgba(59, 130, 246, 0.6)\" format=\"rgb\" onValueCommit={save}>\n  <ColorPicker.Area height={150} />\n  <ColorPicker.Hue />\n  <ColorPicker.Alpha />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
+      },
+      {
+        "title": "Presets first",
+        "description": "Most colour choices are one of eight, and the square is for the ninth. Putting `ColorPicker.Swatches` above it makes the common case a single tap without hiding the rest. Unreadable strings are dropped rather than rendered as black — a row of presets with a mystery black one in it is worse than a shorter row.",
+        "code": "<ColorPicker defaultValue=\"#f97316\" onValueCommit={setColor} size=\"sm\">\n  <ColorPicker.Swatches\n    colors={['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#0f172a']}\n  />\n  <ColorPicker.Area height={120} />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
+      },
+      {
+        "title": "Just a hue",
+        "description": "There is no minimum picker. A control that only needs a hue is the hue scale and nothing else, and it still reports a full colour.",
+        "code": "<ColorPicker defaultValue=\"#3b82f6\" onValueChange={setAccent}>\n  <ColorPicker.Hue />\n</ColorPicker>"
+      },
+      {
+        "title": "Disabled",
+        "code": "<ColorPicker defaultValue=\"#64748b\" disabled>\n  <ColorPicker.Area height={110} />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
+      }
+    ],
+    "variantCode": {
+      "size": "<ColorPicker size=\"sm\" defaultValue=\"#8b5cf6\">…</ColorPicker>\n<ColorPicker size=\"md\" defaultValue=\"#8b5cf6\">…</ColorPicker>\n<ColorPicker size=\"lg\" defaultValue=\"#8b5cf6\">…</ColorPicker>"
+    },
+    "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). Both read `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`, `hsl()` and `hsla()`; a string the picker cannot read leaves it on the colour it already has, rather than snapping to black.\n\n`ColorPicker.Preview`'s printed value is built on the UI thread and only crosses to JavaScript when it differs from the last one, so a drag that is not changing the rounded value costs nothing.\n\nThe square is adjustable to a screen reader in both axes: increment and decrement move saturation, and a **Brighter** / **Darker** pair moves brightness. Hue and opacity are adjustable on their own. Their spoken values update when a drag ends rather than during it — nobody is listening to the middle of a gesture, and a value that re-announced every frame would be a hundred announcements for one drag.\n\nThe conversion helpers the picker is built on are exported too — `parseColor`, `formatColor`, `hsvToHex`, `hsvToRgb`, `rgbToHsv`, `hsvToHsl`, `hsvToCss` and `isValidColor`. Every one is a worklet, so they can be called from an animated style as well as from ordinary code.\n\n### The wheel, and what it cannot carry\n\nA square holds two channels because it has two axes. A wheel holds two as well — an angle and a radius — so swapping one for the other trades brightness for a shape, not for a third channel. `ColorPicker.Brightness` is the track that takes it back; a wheel without one can only pick colours at full brightness.\n\nThe wheel is deliberately **not mirrored under RTL**, unlike the square and the tracks. Those have a start and an end, so they have a direction to be read in. A wheel has neither: reversing which way round the spectrum runs would move every colour somewhere else without making any of them easier to find.\n\nThere is no conic gradient to draw a hue ring with, so it is approximated by 120 solid wedges given a hair of overlap — three degrees each is under a pixel of colour step at any size this is drawn at, and the overlap stops the seams reading as lighter spokes. The ring is built once at module scope: it is the same wheel in every picker.",
+    "versions": [
+      {
+        "title": "Accent card",
+        "description": "Rows that read out a colour and open the picker over themselves when pressed.",
+        "code": "<ColorPicker value={accent} onValueChange={setAccent} presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Accent\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Area height={220} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </ColorPicker.Content>\n</ColorPicker>"
+      },
+      {
+        "title": "In a sheet",
+        "description": "The same folded-away picker, brought up from the bottom edge.",
+        "code": "<ColorPicker value={color} onValueChange={setColor} presentation=\"bottom-sheet\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Highlight\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Area height={240} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n    <ColorPicker.Channel channel=\"alpha\" />\n    <ColorPicker.Alpha />\n  </ColorPicker.Content>\n</ColorPicker>"
+      },
+      {
+        "title": "Inline panel",
+        "description": "A labelled strip over the square, and a readout naming the track under it.",
+        "code": "<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Field label=\"Accent\" />\n  <Surface variant=\"secondary\" padding=\"sm\" className=\"gap-3 rounded-2xl\">\n    <ColorPicker.Area height={280} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </Surface>\n</ColorPicker>"
+      },
+      {
+        "title": "Wheel",
+        "description": "Hue around and saturation out, with brightness on a track of its own — folded away behind a row, the way the square is. The disc is a way of picking a colour rather than a different kind of control that has to live in the page.",
+        "code": "<ColorPicker value={color} onValueChange={setColor} presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Brand\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Wheel />\n    <ColorPicker.Channel channel=\"brightness\" />\n    <ColorPicker.Brightness />\n    <ColorPicker.Channel channel=\"alpha\" />\n    <ColorPicker.Alpha />\n  </ColorPicker.Content>\n</ColorPicker>"
+      }
+    ]
+  },
   "kpi": {
     "intro": "One number, and what it is doing.\n\nA metric card is not a chart with a caption. The number is the message and the chart is the footnote, so the parts are sized and ordered around that: a title that stays quiet, a value that does not, a trend that says which way and by how much, and a sparkline small enough to admit that nobody is reading values off it.\n\nThe trend takes a number rather than a written string, so the component decides the direction and the colour instead of the call site keeping a minus sign and a red in step.",
     "usage": "<Kpi colorIndex={1}>\n  <Kpi.Content layout=\"inline\">\n    <Kpi.Stat>\n      <Kpi.Title>Total Revenue</Kpi.Title>\n      <Kpi.Value>$317,904</Kpi.Value>\n      <Kpi.Trend value={7.8} caption=\"last 30d\" />\n    </Kpi.Stat>\n    <Kpi.Chart data={week} dataKey=\"v\" inline />\n  </Kpi.Content>\n</Kpi>",
@@ -7833,5 +7833,86 @@
       }
     ],
     "notes": "### Why the drop is reported late\n\n`onReorder` fires when the row has finished settling, not when the finger lifts. Between those two moments the row is springing into a slot the layout does not know about yet, and re-rendering the list in the middle of that would relayout every row underneath one that is still moving. By the time the callback runs the rows are already where the new order puts them, so the re-render that follows changes nothing on screen.\n\nIt also means the list is briefly out of step with `value` — for the length of one spring. Nothing else should be reading the order in that window, and `onDragEnd` fires at the same moment if you need to know a drag is over regardless of whether anything moved.\n\n### Ids have to be stable\n\nAn id derived from the index changes the moment the list is reordered, and the rows lose track of themselves — the one being dragged becomes a different row halfway through the drag. Use whatever your data already calls itself.\n\n### Where a row lands\n\nThe dragged row moves to the first slot whose middle it has passed, walking outwards from where it started rather than scanning the list for the nearest slot. With rows of unequal height a nearest-slot search can hand back a slot two places away that happens to be closer, which reads on screen as the row skipping one.\n\n### Reordering without the gesture\n\nA drag is invisible to a screen reader: there is nothing on screen to announce and no way to discover it from the row. **Move up** and **Move down** are published as accessibility actions instead. They move the row one slot and report the drop straight away — nothing is in flight, so there is nothing to wait for.\n\nThey sit wherever the drag does. A list that lifts from a grip puts them on `Sortable.Handle`, which is an element in its own right: it answers a swipe up or down with the same move and announces the position the row is currently in. A list that lifts on a long press has no grip and gives the whole row to the drag, so the row carries them and is read as a single element.\n\n### What a lifted row looks like\n\nA row being carried is drawn over the ones it is passing, so the component gives it a surface of its own — an opaque background, a shadow, and a small step up in scale. That is not decoration. `Sortable.Item` is only a box around whatever you put inside it, and plenty of what goes in a list row has no background of its own; without a surface the lifted row is see-through, and the rest of the list can be read straight through the middle of it.\n\nIt comes loose and settles back on one spring driven from the gesture, so the row starts returning to its own size the moment the finger leaves rather than once it has landed — the shrink and the drop are one movement instead of two in a row. `activeClassName` replaces any of it.\n\n### What it is not\n\nOne axis, and no virtualisation. The rows are laid out in a column and all of them are mounted, which is the right trade for the lists people actually reorder by hand — a playlist, a set of form fields, a run of dashboard tiles. A list long enough to need windowing is a list nobody is going to drag the length of."
+  },
+  "qr-code": {
+    "intro": "A string, drawn as something a camera can read. Give it a `value` and compose the shape around it: a bare code, a code in a bordered panel, a panel with a title over it, or a code folded away behind a button and brought up in a popover.\n\nThe encoding is ours and has no dependency behind it — the version grows to fit whatever you pass, and the whole code is drawn as a single path rather than one node per module, which for a dense code is the difference between appearing and appearing eventually.",
+    "usage": "<QRCode value=\"https://panelui.dev\">\n  <QRCode.Frame>\n    <QRCode.Canvas />\n  </QRCode.Frame>\n  <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n</QRCode>",
+    "extraImports": [
+      "Button",
+      "Text",
+      "Avatar"
+    ],
+    "anatomy": "<QRCode value=\"…\" presentation=\"popover\">\n  <QRCode.Trigger>                    {/* …or no Trigger/Content at all, */}\n    <Button>Show the code</Button>    {/* and the parts draw where they are */}\n  </QRCode.Trigger>\n  <QRCode.Content>\n    <QRCode.Frame>                    {/* the bordered panel */}\n      <QRCode.Header>                 {/* the strip across the top of it */}\n        <QRCode.Title>Pair a device</QRCode.Title>\n        <QRCode.Description>Point the camera here</QRCode.Description>\n      </QRCode.Header>\n      <QRCode.Body>                   {/* the padded area under it */}\n        <QRCode.Canvas />             {/* the code itself */}\n        <QRCode.Logo>…</QRCode.Logo>  {/* clears a square in the middle */}\n      </QRCode.Body>\n    </QRCode.Frame>\n    <QRCode.Caption>Expires in 5 minutes</QRCode.Caption>\n    <QRCode.Value />                  {/* the string, for anyone who cannot scan */}\n  </QRCode.Content>\n</QRCode>",
+    "parts": {
+      "Canvas": "The code. Takes `pixelSize`, `color` and `backgroundColor` when the defaults are wrong, and otherwise draws itself at the root's `size` in the theme's foreground on the theme's card. The quiet zone is painted rather than left transparent — a scanner needs it lighter than the code, and whatever happens to be behind it is not a guarantee of that.",
+      "Frame": "The bordered panel the code sits in. With a `QRCode.Header` above it the header takes the top and the body the rest; with nothing else in it, it is a padded card.",
+      "Header": "The strip across the top of a frame. `QRCode.Title` and `QRCode.Description` go in it.",
+      "Title": "The line naming what the code is for.",
+      "Description": "The muted line under the title.",
+      "Body": "The padded area a frame centres the code in.",
+      "Caption": "A line under the code saying what scanning it does.",
+      "Value": "The encoded string, selectable, on one line unless you pass `full`. For someone who cannot scan — which includes the person setting up the camera.",
+      "Logo": "Content for a cleared square in the middle of the code. Its presence is what clears the square, and what raises the error-correction level when the one asked for could not afford the loss.",
+      "Trigger": "What opens a `popover` or `bottom-sheet` code. Its child has to accept `onPress`.",
+      "Content": "The panel the code is drawn in when it is not drawn in place. Everything `Popover.Content` accepts works here too."
+    },
+    "partNotes": "The order and the presence of the parts are yours — a bare `<QRCode.Canvas />` with nothing around it is a perfectly good QR code, and everything else is optional shape.\n\n`QRCode.Content` re-provides the context inside itself. Portal content mounts under the portal host rather than under the element that opened it, so a provider outside the popover is not an ancestor of what is in it.",
+    "examples": [
+      {
+        "title": "In a frame",
+        "description": "The bordered panel, and a line under it saying what it does.",
+        "code": "<QRCode value=\"https://panelui.dev\">\n  <QRCode.Frame>\n    <QRCode.Body>\n      <QRCode.Canvas />\n    </QRCode.Body>\n  </QRCode.Frame>\n  <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n</QRCode>"
+      },
+      {
+        "title": "With a header",
+        "description": "A title and a description over the code, inside the same panel.",
+        "code": "<QRCode value=\"https://panelui.dev/pair/8f2a\" size=\"lg\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>Pair a device</QRCode.Title>\n      <QRCode.Description>Point the camera at this code</QRCode.Description>\n    </QRCode.Header>\n    <QRCode.Body>\n      <QRCode.Canvas />\n    </QRCode.Body>\n  </QRCode.Frame>\n  <QRCode.Value />\n</QRCode>"
+      },
+      {
+        "title": "Folded away behind a button",
+        "description": "The same code, brought up over the page when it is wanted and not before.",
+        "code": "<QRCode value=\"https://panelui.dev\" presentation=\"popover\">\n  <QRCode.Trigger>\n    <Button variant=\"outline\">Show QR code</Button>\n  </QRCode.Trigger>\n  <QRCode.Content>\n    <QRCode.Canvas />\n    <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n  </QRCode.Content>\n</QRCode>"
+      },
+      {
+        "title": "Up from the bottom edge",
+        "description": "The same thing in a sheet, which is the shape a phone wants for something you hold up to another screen.",
+        "code": "<QRCode value=\"https://panelui.dev\" presentation=\"bottom-sheet\" size=\"lg\">\n  <QRCode.Trigger>\n    <Button>Share</Button>\n  </QRCode.Trigger>\n  <QRCode.Content>\n    <QRCode.Canvas />\n    <QRCode.Caption>Anyone with this code can open the page</QRCode.Caption>\n  </QRCode.Content>\n</QRCode>"
+      },
+      {
+        "title": "With a mark in the middle",
+        "description": "A logo clears a square of modules; the error correction is raised to cover the loss.",
+        "code": "<QRCode value=\"https://panelui.dev\" size=\"lg\">\n  <QRCode.Frame>\n    <QRCode.Body>\n      <QRCode.Canvas />\n      <QRCode.Logo>\n        <Avatar fallback=\"P\" size=\"sm\" />\n      </QRCode.Logo>\n    </QRCode.Body>\n  </QRCode.Frame>\n</QRCode>"
+      },
+      {
+        "title": "A WiFi network",
+        "description": "Not every code is a URL. This one joins a network when it is scanned.",
+        "code": "<QRCode\n  value=\"WIFI:T:WPA;S:PanelUI Guest;P:hunter2;;\"\n  errorCorrection=\"Q\"\n>\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>PanelUI Guest</QRCode.Title>\n      <QRCode.Description>Scan to join the network</QRCode.Description>\n    </QRCode.Header>\n    <QRCode.Body>\n      <QRCode.Canvas />\n    </QRCode.Body>\n  </QRCode.Frame>\n</QRCode>"
+      },
+      {
+        "title": "Bare",
+        "code": "<QRCode value=\"https://panelui.dev\" size=\"sm\">\n  <QRCode.Canvas />\n</QRCode>"
+      }
+    ],
+    "variantCode": {
+      "size": "<QRCode value=\"https://panelui.dev\" size=\"sm\">\n  <QRCode.Canvas />\n</QRCode>\n<QRCode value=\"https://panelui.dev\" size=\"md\">\n  <QRCode.Canvas />\n</QRCode>\n<QRCode value=\"https://panelui.dev\" size=\"lg\">\n  <QRCode.Canvas />\n</QRCode>"
+    },
+    "notes": "The encoding is byte mode, so `value` can be anything — a URL, a WiFi string, a vCard, Japanese. It is encoded as UTF-8, which every reader in circulation understands.\n\nThe QR **version** — the module count, 21×21 up to 177×177 — is chosen as the smallest that fits what you passed. That means a code visibly gets denser as its content grows, which is usually what you want and occasionally is not: pass `version` to pin it, and the component will tell you at runtime if the content stops fitting.\n\n### Error correction, and what it is for\n\n`errorCorrection` decides how much of the code can be lost and still read: `L` about 7%, `M` 15% (the default), `Q` 25%, `H` 30%. The correction is not free — the redundancy takes modules, so a higher level is a denser code at the same physical size, and a denser code is one a camera has to get closer to.\n\n`M` is the default because a code on a screen is not being damaged by anything. Raise it when the code will be printed, put on something curved, or covered in the middle — and a `QRCode.Logo` raises it for you if the level you asked for could not afford the square it clears.\n\n### Making it scannable\n\nThree things decide whether a code reads, and none of them is the code:\n\n- **The quiet zone.** Four modules of clear space all round, which `QRCode.Canvas` draws and paints. Do not clip it, and do not put the code flush against a border.\n- **Contrast, the right way round.** Dark modules on a light field. The component follows the theme, so a dark theme gives you a light code on a dark card — which most scanners now handle, but if a code has to work on every device, pass `color` and `backgroundColor` explicitly.\n- **Size.** A code needs roughly one point per module at arm's length. `sm` is 128 points, which is fine for a version 2 code and marginal for a version 10 one; `lg` is 240.\n\n### Accessibility\n\nThe canvas has an image role and a label naming what it encodes, so a screen reader announces the destination rather than \"image\". `QRCode.Value` puts the same string on screen as selectable text, which is the way through for anyone whose camera is the thing being set up.",
+    "versions": [
+      {
+        "title": "Framed",
+        "description": "The code in its bordered panel, with a caption under it.",
+        "code": "<QRCode value=\"https://panelui.dev\" size=\"lg\">\n  <QRCode.Frame>\n    <QRCode.Body>\n      <QRCode.Canvas />\n    </QRCode.Body>\n  </QRCode.Frame>\n  <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n</QRCode>"
+      },
+      {
+        "title": "Titled",
+        "description": "A header strip over the code, naming what scanning it does.",
+        "code": "<QRCode value=\"https://panelui.dev/pair/8f2a\" size=\"lg\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>Pair a device</QRCode.Title>\n      <QRCode.Description>Point the camera at this code</QRCode.Description>\n    </QRCode.Header>\n    <QRCode.Body>\n      <QRCode.Canvas />\n    </QRCode.Body>\n  </QRCode.Frame>\n  <QRCode.Value />\n</QRCode>"
+      },
+      {
+        "title": "In a popover",
+        "description": "Folded away behind a row until it is wanted, the way a colour picker folds away.",
+        "code": "<QRCode value=\"https://panelui.dev\" presentation=\"popover\">\n  <QRCode.Trigger>\n    <Button variant=\"outline\">Show QR code</Button>\n  </QRCode.Trigger>\n  <QRCode.Content>\n    <QRCode.Canvas />\n    <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n  </QRCode.Content>\n</QRCode>"
+      }
+    ]
   }
 }

@@ -715,6 +715,16 @@
     ]
   },
   {
+    "name": "qr-code",
+    "type": "registry:ui",
+    "description": "A string a camera can read — framed, titled, or folded away behind a button.",
+    "registryDependencies": [
+      "cn",
+      "popover",
+      "text"
+    ]
+  },
+  {
     "name": "questionnaire",
     "type": "registry:ui",
     "description": "One question at a time, with progress, validation and a way back.",

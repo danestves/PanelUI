@@ -892,5 +892,14 @@
       "beta": true,
       "category": "navigation"
     }
+  ],
+  "qr-code": [
+    "QRCode",
+    "A string a camera can read — framed, titled, or folded away behind a button.",
+    "react native qr code generator scan",
+    {
+      "addedIn": "0.57.0",
+      "category": "media"
+    }
   ]
 }
