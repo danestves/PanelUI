@@ -15,11 +15,33 @@ const cached = (source) => ({
   headers: [{ key: 'Cache-Control', value: STATIC_CACHE }],
 });
 
+/*
+ * Where an agent should look, advertised in the response rather than only in a
+ * page it would have to be told to read (RFC 8288).
+ *
+ * Four things, and all of them already existed — the catalogue of the APIs
+ * this site has, the OpenAPI description of them, the whole site as markdown,
+ * and the MCP server card. The header is what makes them findable from a
+ * single request to any page.
+ */
+const AGENT_LINKS = [
+  '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
+  '</openapi.json>; rel="service-desc"; type="application/openapi+json"',
+  '</llms.txt>; rel="service-doc"; type="text/plain"',
+  '</.well-known/mcp/server.json>; rel="mcp-server"; type="application/json"',
+].join(', ');
+
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
   async headers() {
     return [
+      {
+        // Every HTML route. The excluded paths are the ones that are
+        // themselves the answer, and would be pointing at themselves.
+        source: '/((?!_next|previews|diagrams|r/|api/|llms).*)',
+        headers: [{ key: 'Link', value: AGENT_LINKS }],
+      },
       cached('/previews/:path*'),
       cached('/diagrams/:path*'),
       cached('/logo-light.png'),
