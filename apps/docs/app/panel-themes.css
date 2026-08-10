@@ -1,0 +1,421 @@
+/*
+ * The three theme families, in their web form, scoped to an element rather
+ * than to the document.
+ *
+ * `apps/docs/app/global.css` already routes every Tailwind colour through
+ * `@theme inline { --color-card: var(--card) }`, so the utility resolves the
+ * raw token wherever it is used. Redeclaring those tokens on one element
+ * therefore retints everything inside it and nothing outside it — which is
+ * what lets a preview show Moon while the page around it stays in the reader's
+ * own light or dark.
+ *
+ * The values are the ones in `packages/panelui/theme.css`, so a preview and
+ * the component it is previewing are the same colours rather than a
+ * near-match. When that file changes, this one changes with it.
+ *
+ * `--radius` is part of a family, not decoration: `@theme inline` derives the
+ * whole radius scale from it, so setting it here is what makes Grass rounder
+ * than Panel in the preview the same way it is on a device.
+ *
+ * The six names are the library's own theme names, so an attribute value here
+ * is a value `setTheme()` would accept.
+ */
+
+/* ------------------------------------------------------------------ *
+ * Panel — the default. Neutral greys, moderate corners.
+ * ------------------------------------------------------------------ */
+
+[data-panel-theme='light'] {
+  --radius: 0.625rem;
+
+  --background: #ffffff;
+  --foreground: #262626;
+
+  --card: #ffffff;
+  --card-foreground: #262626;
+
+  --popover: #ffffff;
+  --popover-foreground: #262626;
+
+  --overlay: #ffffff;
+  --overlay-foreground: #262626;
+
+  --primary: #262626;
+  --primary-foreground: #fafafa;
+
+  --secondary: rgba(0, 0, 0, 0.06);
+  --secondary-foreground: #262626;
+
+  --muted: rgba(0, 0, 0, 0.06);
+  --muted-foreground: #686868;
+
+  --accent: rgba(0, 0, 0, 0.06);
+  --accent-foreground: #262626;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #b91c1c;
+
+  --info: #3b82f6;
+  --info-foreground: #1d4ed8;
+
+  --success: #10b981;
+  --success-foreground: #047857;
+
+  --warning: #f59e0b;
+  --warning-foreground: #b45309;
+
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.1);
+  --ring: #a3a3a3;
+
+  --surface: #f7f7f7;
+  --surface-secondary: #f1f1f1;
+  --surface-tertiary: #eaeaea;
+  --skeleton: rgba(0, 0, 0, 0.1);
+
+  --info-soft: rgba(59, 130, 246, 0.1);
+  --info-subtle: rgba(59, 130, 246, 0.08);
+  --success-soft: rgba(16, 185, 129, 0.1);
+  --success-subtle: rgba(16, 185, 129, 0.08);
+  --warning-soft: rgba(245, 158, 11, 0.1);
+  --warning-subtle: rgba(245, 158, 11, 0.08);
+  --destructive-soft: rgba(239, 68, 68, 0.1);
+  --destructive-subtle: rgba(239, 68, 68, 0.08);
+
+  --chart-1: #262626;
+  --chart-2: #3b82f6;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #8b5cf6;
+}
+
+[data-panel-theme='dark'] {
+  --radius: 0.625rem;
+
+  --background: #141414;
+  --foreground: #f5f5f5;
+
+  --card: #191919;
+  --card-foreground: #f5f5f5;
+
+  --popover: #1d1d1d;
+  --popover-foreground: #f5f5f5;
+
+  --overlay: #232323;
+  --overlay-foreground: #f5f5f5;
+
+  --primary: #f5f5f5;
+  --primary-foreground: #262626;
+
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #f5f5f5;
+
+  --muted: rgba(255, 255, 255, 0.08);
+  --muted-foreground: #878787;
+
+  --accent: rgba(255, 255, 255, 0.08);
+  --accent-foreground: #f5f5f5;
+
+  --destructive: #f15757;
+  --destructive-foreground: #f87171;
+
+  --info: #3b82f6;
+  --info-foreground: #60a5fa;
+
+  --success: #10b981;
+  --success-foreground: #34d399;
+
+  --warning: #f59e0b;
+  --warning-foreground: #fbbf24;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #737373;
+
+  --surface: #1c1c1c;
+  --surface-secondary: #222222;
+  --surface-tertiary: #282828;
+  --skeleton: rgba(255, 255, 255, 0.13);
+
+  --info-soft: rgba(59, 130, 246, 0.06);
+  --info-subtle: rgba(59, 130, 246, 0.16);
+  --success-soft: rgba(16, 185, 129, 0.06);
+  --success-subtle: rgba(16, 185, 129, 0.16);
+  --warning-soft: rgba(245, 158, 11, 0.06);
+  --warning-subtle: rgba(245, 158, 11, 0.16);
+  --destructive-soft: rgba(241, 87, 87, 0.06);
+  --destructive-subtle: rgba(241, 87, 87, 0.16);
+
+  --chart-1: #fafafa;
+  --chart-2: #60a5fa;
+  --chart-3: #34d399;
+  --chart-4: #fbbf24;
+  --chart-5: #a78bfa;
+}
+
+/* ------------------------------------------------------------------ *
+ * Moon — a lavender accent, tight corners, elevation carried by
+ * barely-separated surfaces and hairlines rather than by shadow.
+ * ------------------------------------------------------------------ */
+
+[data-panel-theme='moon'] {
+  --radius: 0.75rem;
+
+  --background: #ffffff;
+  --foreground: #08090a;
+
+  --card: #ffffff;
+  --card-foreground: #08090a;
+
+  --popover: #ffffff;
+  --popover-foreground: #08090a;
+
+  --overlay: #ffffff;
+  --overlay-foreground: #08090a;
+
+  --primary: #5e6ad2;
+  --primary-foreground: #ffffff;
+
+  --secondary: rgba(0, 0, 0, 0.05);
+  --secondary-foreground: #08090a;
+
+  --muted: rgba(0, 0, 0, 0.05);
+  --muted-foreground: #6b6f76;
+
+  --accent: rgba(0, 0, 0, 0.06);
+  --accent-foreground: #08090a;
+
+  --destructive: #eb5757;
+  --destructive-foreground: #c62b30;
+
+  --info: #4ea7fc;
+  --info-foreground: #0b6ec4;
+
+  --success: #27a644;
+  --success-foreground: #1c7a32;
+
+  --warning: #f2c94c;
+  --warning-foreground: #8a6d0b;
+
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.12);
+  --ring: #5e6ad2;
+
+  --surface: #f5f6f6;
+  --surface-secondary: #f6f7f7;
+  --surface-tertiary: #eeeff1;
+  --skeleton: rgba(0, 0, 0, 0.07);
+
+  --info-soft: rgba(78, 167, 252, 0.1);
+  --info-subtle: rgba(78, 167, 252, 0.08);
+  --success-soft: rgba(39, 166, 68, 0.1);
+  --success-subtle: rgba(39, 166, 68, 0.08);
+  --warning-soft: rgba(242, 201, 76, 0.14);
+  --warning-subtle: rgba(242, 201, 76, 0.1);
+  --destructive-soft: rgba(235, 87, 87, 0.1);
+  --destructive-subtle: rgba(235, 87, 87, 0.08);
+
+  --chart-1: #5e6ad2;
+  --chart-2: #4ea7fc;
+  --chart-3: #27a644;
+  --chart-4: #f2c94c;
+  --chart-5: #7a7fad;
+}
+
+[data-panel-theme='moon-dark'] {
+  --radius: 0.75rem;
+
+  --background: #010102;
+  --foreground: #f7f8f8;
+
+  --card: #0f1011;
+  --card-foreground: #f7f8f8;
+
+  --popover: #141516;
+  --popover-foreground: #f7f8f8;
+
+  --overlay: #18191a;
+  --overlay-foreground: #f7f8f8;
+
+  --primary: #5e6ad2;
+  --primary-foreground: #ffffff;
+
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: #f7f8f8;
+
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: #8a8f98;
+
+  --accent: rgba(255, 255, 255, 0.08);
+  --accent-foreground: #f7f8f8;
+
+  --destructive: #eb5757;
+  --destructive-foreground: #ff8a8a;
+
+  --info: #4ea7fc;
+  --info-foreground: #8ec5ff;
+
+  --success: #27a644;
+  --success-foreground: #4cc061;
+
+  --warning: #f2c94c;
+  --warning-foreground: #f5d97a;
+
+  /* Opaque, not translucent: the surface ladder is only a few points wide, so
+     a border mixed with what is under it reads as a different line on each. */
+  --border: #23252a;
+  --input: #34343a;
+  --ring: #5e6ad2;
+
+  --surface: #0f1011;
+  --surface-secondary: #141516;
+  --surface-tertiary: #18191a;
+  --skeleton: rgba(255, 255, 255, 0.08);
+
+  --info-soft: rgba(78, 167, 252, 0.16);
+  --info-subtle: rgba(78, 167, 252, 0.1);
+  --success-soft: rgba(39, 166, 68, 0.18);
+  --success-subtle: rgba(39, 166, 68, 0.12);
+  --warning-soft: rgba(242, 201, 76, 0.16);
+  --warning-subtle: rgba(242, 201, 76, 0.1);
+  --destructive-soft: rgba(235, 87, 87, 0.16);
+  --destructive-subtle: rgba(235, 87, 87, 0.1);
+
+  --chart-1: #5e6ad2;
+  --chart-2: #4ea7fc;
+  --chart-3: #27a644;
+  --chart-4: #f2c94c;
+  --chart-5: #7a7fad;
+}
+
+/* ------------------------------------------------------------------ *
+ * Grass — a green accent on warm neutrals, with generous corners.
+ * ------------------------------------------------------------------ */
+
+[data-panel-theme='grass'] {
+  --radius: 0.875rem;
+
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --card: #ffffff;
+  --card-foreground: #171717;
+
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+
+  --overlay: #ffffff;
+  --overlay-foreground: #171717;
+
+  --primary: #24b47e;
+  --primary-foreground: #ffffff;
+
+  --secondary: rgba(0, 0, 0, 0.05);
+  --secondary-foreground: #171717;
+
+  --muted: rgba(0, 0, 0, 0.05);
+  --muted-foreground: #707070;
+
+  --accent: rgba(62, 207, 142, 0.1);
+  --accent-foreground: #16794c;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #b91c1c;
+
+  --info: #3b82f6;
+  --info-foreground: #1d4ed8;
+
+  --success: #24b47e;
+  --success-foreground: #16794c;
+
+  --warning: #f59e0b;
+  --warning-foreground: #b45309;
+
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.1);
+  --ring: #3ecf8e;
+
+  --surface: #f8f9fa;
+  --surface-secondary: #f1f3f5;
+  --surface-tertiary: #e9ecef;
+  --skeleton: rgba(0, 0, 0, 0.08);
+
+  --info-soft: rgba(59, 130, 246, 0.1);
+  --info-subtle: rgba(59, 130, 246, 0.08);
+  --success-soft: rgba(36, 180, 126, 0.1);
+  --success-subtle: rgba(36, 180, 126, 0.08);
+  --warning-soft: rgba(245, 158, 11, 0.1);
+  --warning-subtle: rgba(245, 158, 11, 0.08);
+  --destructive-soft: rgba(239, 68, 68, 0.1);
+  --destructive-subtle: rgba(239, 68, 68, 0.08);
+
+  --chart-1: #24b47e;
+  --chart-2: #1f2937;
+  --chart-3: #2563eb;
+  --chart-4: #f59e0b;
+  --chart-5: #db2777;
+}
+
+[data-panel-theme='grass-dark'] {
+  --radius: 0.875rem;
+
+  --background: #1c1c1c;
+  --foreground: #ededed;
+
+  --card: #1f1f1f;
+  --card-foreground: #ededed;
+
+  --popover: #232323;
+  --popover-foreground: #ededed;
+
+  --overlay: #2a2a2a;
+  --overlay-foreground: #ededed;
+
+  --primary: #3ecf8e;
+  --primary-foreground: #052e1b;
+
+  --secondary: rgba(255, 255, 255, 0.07);
+  --secondary-foreground: #ededed;
+
+  --muted: rgba(255, 255, 255, 0.07);
+  --muted-foreground: #8f8f8f;
+
+  --accent: rgba(62, 207, 142, 0.12);
+  --accent-foreground: #3ecf8e;
+
+  --destructive: #f15757;
+  --destructive-foreground: #f87171;
+
+  --info: #3b82f6;
+  --info-foreground: #60a5fa;
+
+  --success: #3ecf8e;
+  --success-foreground: #4ade80;
+
+  --warning: #f59e0b;
+  --warning-foreground: #fbbf24;
+
+  --border: rgba(255, 255, 255, 0.07);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #3ecf8e;
+
+  --surface: #242424;
+  --surface-secondary: #2a2a2a;
+  --surface-tertiary: #303030;
+  --skeleton: rgba(255, 255, 255, 0.11);
+
+  --info-soft: rgba(59, 130, 246, 0.08);
+  --info-subtle: rgba(59, 130, 246, 0.16);
+  --success-soft: rgba(62, 207, 142, 0.08);
+  --success-subtle: rgba(62, 207, 142, 0.16);
+  --warning-soft: rgba(245, 158, 11, 0.08);
+  --warning-subtle: rgba(245, 158, 11, 0.16);
+  --destructive-soft: rgba(241, 87, 87, 0.08);
+  --destructive-subtle: rgba(241, 87, 87, 0.16);
+
+  --chart-1: #3ecf8e;
+  --chart-2: #ededed;
+  --chart-3: #60a5fa;
+  --chart-4: #fbbf24;
+  --chart-5: #f472b6;
+}

@@ -24,11 +24,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { CopyInstall } from '@/components/copy-install';
+import { Showcase } from '@/components/showcase';
 import { absoluteUrl, site } from '@/lib/site';
 import meta from '@/scripts/meta.json';
-
-/** `[name, summary, keyword]`, optionally followed by an options object. */
-type MetaEntry = [string, string, string, { group?: string }?];
 
 export const metadata: Metadata = {
   // `absolute` because this title already carries the brand. A plain string
@@ -75,28 +73,14 @@ const FEATURES = [
 ];
 
 /**
- * Read from the same file the documentation is generated from, rather than
- * listed here.
+ * Counted from the same file the documentation is generated from, rather than
+ * written here.
  *
- * The count was already derived from this list, which only moved the problem:
- * the list itself was written by hand, so it went stale every time a component
- * shipped and quietly took the headline number down with it. A component now
- * appears here because it has a page, which is the thing the number is
- * actually claiming.
- *
- * The group decides the URL as well as the sidebar section, so it is read
- * rather than assumed — an entry filed under `ai-components` does not live at
- * `/docs/components/…`.
+ * The number was once kept beside a hand-written list, which meant it went
+ * stale every time a component shipped. A component is counted now because it
+ * has a page, which is the thing the number is actually claiming.
  */
-const COMPONENTS = Object.entries(meta as unknown as Record<string, MetaEntry>)
-  .map(([slug, [name, , , options]]) => ({
-    slug,
-    name,
-    href: `/docs/${options?.group ?? 'components'}/${slug}`,
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name));
-
-const COMPONENT_COUNT = COMPONENTS.length;
+const COMPONENT_COUNT = Object.keys(meta).length;
 
 const THEMES = [
   { name: 'Panel', body: 'The default — neutral greys, moderate corners.', swatch: '#262626' },
@@ -193,6 +177,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <Showcase />
+
       {/* Features */}
       <section className="border-t px-6 py-20" id="features">
         <div className="mx-auto flex max-w-5xl flex-col gap-10">
@@ -217,35 +203,6 @@ export default function HomePage() {
               </Card>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Components */}
-      <section className="border-t px-6 py-20" id="components">
-        <div className="mx-auto flex max-w-5xl flex-col gap-8">
-          <div className="flex flex-col gap-2">
-            <h2 className="font-heading text-3xl font-semibold tracking-tight">
-              {COMPONENT_COUNT} components, documented
-            </h2>
-            <p className="max-w-2xl text-muted-foreground">
-              Each page covers the anatomy, every prop, and the variants — read straight from
-              the library's TypeScript, so it cannot drift from the code.
-            </p>
-          </div>
-
-          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            {COMPONENTS.map(({ name, slug, href }) => (
-              <li key={slug}>
-                <Link
-                  href={href}
-                  className="flex items-center justify-between rounded-lg border bg-card px-4 py-3 text-sm transition-colors hover:bg-accent"
-                >
-                  {name}
-                  <ArrowRightIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                </Link>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 
@@ -310,6 +267,9 @@ export default function HomePage() {
           <nav className="flex gap-6" aria-label="Footer">
             <Link href="/docs" className="hover:text-foreground">
               Documentation
+            </Link>
+            <Link href="/docs/components" className="hover:text-foreground">
+              Components
             </Link>
             <Link href={site.npm} className="hover:text-foreground">
               npm
