@@ -45,7 +45,7 @@ import {
   type ReactNode,
 } from 'react';
 import { View, type ViewProps } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
@@ -58,9 +58,13 @@ export type { ErrorCorrectionLevel };
 const qrCodeVariants = tv({
   slots: {
     root: 'items-center gap-3',
-    frame: 'overflow-hidden rounded-2xl border border-border bg-card',
-    header: 'w-full gap-0.5 px-4 pb-3 pt-4',
-    body: 'items-center p-4',
+    // The widget shell every chart in the library is shown in: a titled tray
+    // with the card flush inside it. A code is the same kind of thing — one
+    // object with a label over it — so it is the same shape.
+    frame: 'w-full overflow-hidden rounded-3xl border border-border bg-surface',
+    header: 'w-full flex-row items-center justify-between gap-3 px-4 pb-3 pt-2.5',
+    // Flush left, right and bottom: the shell's own edge is already there.
+    panel: 'relative items-center justify-center overflow-hidden rounded-t-2xl border-t border-border bg-card p-4',
     caption: 'text-center text-sm text-muted-foreground',
     value: 'text-center text-xs text-muted-foreground',
   },
@@ -97,9 +101,22 @@ const TOLERANCE: Record<ErrorCorrectionLevel, number> = { L: 0.07, M: 0.15, Q: 0
 /** Ascending, so "the next level up" is a step through this. */
 const LEVELS: ErrorCorrectionLevel[] = ['L', 'M', 'Q', 'H'];
 
-/** How much of the code a logo of this fraction covers, plus its margin. */
+/** How much of the code a logo of this fraction covers. */
 function coverage(logoFraction: number) {
   return logoFraction * logoFraction;
+}
+
+/**
+ * The cleared square, in module coordinates.
+ *
+ * Both the canvas and the logo compute it from this, so the hole and the thing
+ * filling it are the same square. Two nearly-equal calculations is how you get
+ * a dark ring around a logo, which is the failure the screenshot showed.
+ */
+function holeBounds(matrixSize: number, logoFraction: number) {
+  const from = Math.floor((matrixSize * (1 - logoFraction)) / 2);
+  const to = Math.ceil((matrixSize * (1 + logoFraction)) / 2);
+  return { from, to };
 }
 
 /**
@@ -239,23 +256,38 @@ export interface QRCodeCanvasProps extends Omit<ViewProps, 'children'> {
   className?: string;
   /** Side length in points. Defaults to the size variant's. */
   pixelSize?: number;
-  /** Dark modules. Defaults to the theme's foreground. */
+  /** Dark modules. See the note below before overriding this. */
   color?: string;
-  /** The quiet zone and the gaps. Defaults to the theme's card surface. */
+  /** The plate the modules sit on. See the note below. */
   backgroundColor?: string;
 }
+
+/**
+ * Dark modules on a light plate, whatever the theme is doing.
+ *
+ * This is the one place in the library that does not follow the tokens, and it
+ * is deliberate. A QR code is not a surface — it is a thing a camera has to
+ * read, and readers expect dark on light. Inverted, a code is rejected outright
+ * by a good share of scanners and found late by most of the rest, which turns a
+ * dark theme into a bug report about a code that "sometimes does not work".
+ *
+ * On a light theme the plate is white on a near-white card, which looks like
+ * nothing at all — correct, and the intended outcome. On a dark theme it reads
+ * as a light plate holding a code, which is the shape everyone recognises.
+ *
+ * `color` and `backgroundColor` override both, for a code that is definitely
+ * being read by something you control.
+ */
+const PLATE = '#ffffff';
+const MODULE = '#111111';
 
 const QRCodeCanvas = forwardRef<View, QRCodeCanvasProps>(
   ({ className, pixelSize, color, backgroundColor, ...props }, ref) => {
     const { matrix, error, value, size, logoFraction } = useQRCode('QRCode.Canvas');
-    const [foreground, card] = useCSSVariable(['--color-foreground', '--color-card']) as (
-      | string
-      | undefined
-    )[];
 
     const side = pixelSize ?? CANVAS_SIZE[size];
-    const dark = color ?? foreground;
-    const light = backgroundColor ?? card;
+    const dark = color ?? MODULE;
+    const light = backgroundColor ?? PLATE;
 
     /*
      * One path for every dark module.
@@ -267,12 +299,7 @@ const QRCodeCanvas = forwardRef<View, QRCodeCanvasProps>(
     const path = useMemo(() => {
       if (!matrix) return '';
 
-      const hole = logoFraction
-        ? {
-            from: Math.floor((matrix.size * (1 - logoFraction)) / 2),
-            to: Math.ceil((matrix.size * (1 + logoFraction)) / 2),
-          }
-        : null;
+      const hole = logoFraction ? holeBounds(matrix.size, logoFraction) : null;
 
       let d = '';
       for (let y = 0; y < matrix.size; y++) {
@@ -318,8 +345,10 @@ const QRCodeCanvas = forwardRef<View, QRCodeCanvasProps>(
       >
         <Svg width="100%" height="100%" viewBox={`0 0 ${grid} ${grid}`}>
           {/* Painted, not left transparent: a scanner needs the quiet zone to
-              be lighter than the code, and "whatever is behind it" is not. */}
-          <Path d={`M0 0h${grid}v${grid}h-${grid}z`} fill={light} />
+              be lighter than the code, and "whatever is behind it" is not.
+              Rounded, because at this point it is an object on the card rather
+              than a rectangle of paper. */}
+          <Rect x={0} y={0} width={grid} height={grid} rx={2.5} fill={light} />
           <Path d={path} fill={dark} />
         </Svg>
       </View>
@@ -338,9 +367,8 @@ export interface QRCodeFrameProps extends ViewProps {
 }
 
 /**
- * The bordered panel a code sits in. With a `QRCode.Header` above it the
- * header takes the top of the panel and the code the rest; without one it is
- * just a padded card.
+ * The tray the code sits in — the same widget shell the charts use: a titled
+ * strip, and a card flush inside it holding the thing itself.
  */
 const QRCodeFrame = forwardRef<View, QRCodeFrameProps>(
   ({ className, children, ...props }, ref) => {
@@ -359,7 +387,11 @@ export interface QRCodeHeaderProps extends ViewProps {
   children?: ReactNode;
 }
 
-/** The strip across the top of a frame: a title, and usually a line under it. */
+/**
+ * The strip across the top of the tray. `QRCode.Title` takes the flexible
+ * side and `QRCode.Action` the end, so a long title truncates rather than
+ * shoving the trailing slot off the edge.
+ */
 const QRCodeHeader = forwardRef<View, QRCodeHeaderProps>(
   ({ className, children, ...props }, ref) => {
     const { slots } = useQRCode('QRCode.Header');
@@ -372,45 +404,94 @@ const QRCodeHeader = forwardRef<View, QRCodeHeaderProps>(
 );
 QRCodeHeader.displayName = 'QRCode.Header';
 
-const QRCodeTitle = forwardRef<Text, { className?: string; children?: ReactNode }>(
-  ({ className, children }, ref) => (
-    <Text ref={ref as never} size="base" weight="semibold" className={className}>
-      {children}
-    </Text>
-  )
-);
-QRCodeTitle.displayName = 'QRCode.Title';
-
-const QRCodeDescription = forwardRef<Text, { className?: string; children?: ReactNode }>(
-  ({ className, children }, ref) => (
-    <Text ref={ref as never} size="sm" muted className={className}>
-      {children}
-    </Text>
-  )
-);
-QRCodeDescription.displayName = 'QRCode.Description';
-
-export interface QRCodeBodyProps extends ViewProps {
+export interface QRCodeTitleProps {
   className?: string;
   children?: ReactNode;
 }
 
-/** The padded area under a header that the code is centred in. */
-const QRCodeBody = forwardRef<View, QRCodeBodyProps>(
+/** What the code is for. Muted — it is a caption on the tray, not a heading. */
+function QRCodeTitle({ className, children }: QRCodeTitleProps) {
+  useQRCode('QRCode.Title');
+  return (
+    <Text size="sm" muted numberOfLines={1} className={cn('min-w-0 shrink', className)}>
+      {children}
+    </Text>
+  );
+}
+QRCodeTitle.displayName = 'QRCode.Title';
+
+export interface QRCodeActionProps extends ViewProps {
+  className?: string;
+  children?: ReactNode;
+}
+
+/**
+ * The trailing slot on the header row — an expiry, a count, a button. A plain
+ * string draws as muted text; anything else draws as itself.
+ */
+const QRCodeAction = forwardRef<View, QRCodeActionProps>(
   ({ className, children, ...props }, ref) => {
-    const { slots } = useQRCode('QRCode.Body');
+    useQRCode('QRCode.Action');
     return (
-      <View ref={ref} className={slots.body({ className })} {...props}>
+      <View
+        ref={ref}
+        className={cn('shrink-0 flex-row items-center gap-2', className)}
+        {...props}
+      >
+        {typeof children === 'string' ? (
+          <Text size="sm" muted>
+            {children}
+          </Text>
+        ) : (
+          children
+        )}
+      </View>
+    );
+  }
+);
+QRCodeAction.displayName = 'QRCode.Action';
+
+export interface QRCodePanelProps extends ViewProps {
+  className?: string;
+  children?: ReactNode;
+}
+
+/**
+ * The card the code is drawn on, flush inside the tray. It is also what the
+ * logo positions itself against, so a `QRCode.Logo` belongs in here beside the
+ * canvas rather than anywhere else.
+ */
+const QRCodePanel = forwardRef<View, QRCodePanelProps>(
+  ({ className, children, ...props }, ref) => {
+    const { slots } = useQRCode('QRCode.Panel');
+    return (
+      <View ref={ref} className={slots.panel({ className })} {...props}>
         {children}
       </View>
     );
   }
 );
-QRCodeBody.displayName = 'QRCode.Body';
+QRCodePanel.displayName = 'QRCode.Panel';
 
 /* ------------------------------------------------------------------ *
  * The readouts.
  * ------------------------------------------------------------------ */
+
+export interface QRCodeDescriptionProps {
+  className?: string;
+  children?: ReactNode;
+}
+
+/** A muted line inside the panel, under the code. */
+function QRCodeDescription({ className, children }: QRCodeDescriptionProps) {
+  useQRCode('QRCode.Description');
+  return (
+    <Text size="sm" muted className={cn('text-center', className)}>
+      {children}
+    </Text>
+  );
+}
+QRCodeDescription.displayName = 'QRCode.Description';
 
 export interface QRCodeCaptionProps {
   className?: string;
@@ -498,18 +579,39 @@ function hasLogo(children: ReactNode): boolean {
  */
 const QRCodeLogo = forwardRef<View, QRCodeLogoProps>(
   ({ className, children, ...props }, ref) => {
-    const { size } = useQRCode('QRCode.Logo');
-    const side = CANVAS_SIZE[size] * LOGO_FRACTION;
+    const { size, matrix } = useQRCode('QRCode.Logo');
+    if (!matrix) return null;
+
+    /*
+     * Sized from the same square the canvas cleared, in the same units.
+     *
+     * Taking a flat 25% of the canvas instead is close, but not equal — the
+     * hole is a whole number of modules and the canvas is not necessarily
+     * divisible by them, so the two disagreed by a module or so and the
+     * difference showed as a dark ring around the logo.
+     */
+    const { from, to } = holeBounds(matrix.size, LOGO_FRACTION);
+    const grid = matrix.size + QUIET_ZONE * 2;
+    const box = ((to - from) / grid) * CANVAS_SIZE[size];
 
     return (
+      // `inset-0` and centred, not `absolute` with nothing else: an absolute
+      // box with no offsets takes its parent's alignment, which put the logo
+      // at the top of the panel rather than over the middle of the code.
       <View
-        ref={ref}
         pointerEvents="none"
-        className={cn('absolute items-center justify-center', className)}
-        style={{ width: side, height: side }}
-        {...props}
+        className="absolute bottom-0 left-0 right-0 top-0 items-center justify-center"
       >
-        {children}
+        <View
+          ref={ref}
+          // The plate colour, so the square reads as part of the code rather
+          // than as a hole cut in it — and rounded, matching the plate.
+          className={cn('items-center justify-center overflow-hidden rounded-md', className)}
+          style={{ width: box, height: box, backgroundColor: PLATE }}
+          {...props}
+        >
+          {children}
+        </View>
       </View>
     );
   }
@@ -550,8 +652,9 @@ export const QRCode = Object.assign(QRCodeRoot, {
   Frame: QRCodeFrame,
   Header: QRCodeHeader,
   Title: QRCodeTitle,
+  Action: QRCodeAction,
+  Panel: QRCodePanel,
   Description: QRCodeDescription,
-  Body: QRCodeBody,
   Caption: QRCodeCaption,
   Value: QRCodeValue,
   Logo: QRCodeLogo,

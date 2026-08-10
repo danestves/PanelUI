@@ -27,7 +27,12 @@ npx panelui-cli@latest add qr-code
 ```tsx
 <QRCode value="https://panelui.dev">
   <QRCode.Frame>
-    <QRCode.Canvas />
+    <QRCode.Header>
+      <QRCode.Title>Documentation</QRCode.Title>
+    </QRCode.Header>
+    <QRCode.Panel>
+      <QRCode.Canvas />
+    </QRCode.Panel>
   </QRCode.Frame>
   <QRCode.Caption>Scan to open the docs</QRCode.Caption>
 </QRCode>
@@ -37,22 +42,22 @@ npx panelui-cli@latest add qr-code
 
 ```tsx
 <QRCode value="…" presentation="popover">
-  <QRCode.Trigger>                    {/* …or no Trigger/Content at all, */}
-    <Button>Show the code</Button>    {/* and the parts draw where they are */}
+  <QRCode.Trigger>                      {/* …or no Trigger/Content at all, */}
+    <Button>Show the code</Button>      {/* and the parts draw where they are */}
   </QRCode.Trigger>
   <QRCode.Content>
-    <QRCode.Frame>                    {/* the bordered panel */}
-      <QRCode.Header>                 {/* the strip across the top of it */}
+    <QRCode.Frame>                      {/* the tray */}
+      <QRCode.Header>                   {/* the strip across the top of it */}
         <QRCode.Title>Pair a device</QRCode.Title>
-        <QRCode.Description>Point the camera here</QRCode.Description>
+        <QRCode.Action>Expires in 5m</QRCode.Action>
       </QRCode.Header>
-      <QRCode.Body>                   {/* the padded area under it */}
-        <QRCode.Canvas />             {/* the code itself */}
-        <QRCode.Logo>…</QRCode.Logo>  {/* clears a square in the middle */}
-      </QRCode.Body>
+      <QRCode.Panel>                    {/* the card the code is drawn on */}
+        <QRCode.Canvas />               {/* the code itself */}
+        <QRCode.Logo>…</QRCode.Logo>    {/* clears a square in the middle */}
+      </QRCode.Panel>
     </QRCode.Frame>
-    <QRCode.Caption>Expires in 5 minutes</QRCode.Caption>
-    <QRCode.Value />                  {/* the string, for anyone who cannot scan */}
+    <QRCode.Caption>Scan to open the docs</QRCode.Caption>
+    <QRCode.Value />                    {/* the string, for anyone who cannot scan */}
   </QRCode.Content>
 </QRCode>
 ```
@@ -65,33 +70,37 @@ The order and the presence of the parts are yours — a bare `<QRCode.Canvas />`
 
 ### In a frame
 
-The bordered panel, and a line under it saying what it does.
+The tray, its title strip, and a line under the whole thing.
 
 ```tsx
-<QRCode value="https://panelui.dev">
+<QRCode value="https://panelui.dev" size="lg">
   <QRCode.Frame>
-    <QRCode.Body>
+    <QRCode.Header>
+      <QRCode.Title>Documentation</QRCode.Title>
+      <QRCode.Action>panelui.dev</QRCode.Action>
+    </QRCode.Header>
+    <QRCode.Panel>
       <QRCode.Canvas />
-    </QRCode.Body>
+    </QRCode.Panel>
   </QRCode.Frame>
   <QRCode.Caption>Scan to open the docs</QRCode.Caption>
 </QRCode>
 ```
 
-### With a header
+### With something in the header
 
-A title and a description over the code, inside the same panel.
+The trailing slot takes whatever the title needs qualifying with — here, how long the code is good for.
 
 ```tsx
-<QRCode value="https://panelui.dev/pair/8f2a" size="lg">
+<QRCode value="https://panelui.dev/pair/8f2a41" size="lg">
   <QRCode.Frame>
     <QRCode.Header>
       <QRCode.Title>Pair a device</QRCode.Title>
-      <QRCode.Description>Point the camera at this code</QRCode.Description>
+      <QRCode.Action>Expires in 5m</QRCode.Action>
     </QRCode.Header>
-    <QRCode.Body>
+    <QRCode.Panel>
       <QRCode.Canvas />
-    </QRCode.Body>
+    </QRCode.Panel>
   </QRCode.Frame>
   <QRCode.Value />
 </QRCode>
@@ -131,17 +140,20 @@ The same thing in a sheet, which is the shape a phone wants for something you ho
 
 ### With a mark in the middle
 
-A logo clears a square of modules; the error correction is raised to cover the loss.
+A logo clears a square of modules and fills it; the error correction is raised to cover the loss.
 
 ```tsx
 <QRCode value="https://panelui.dev" size="lg">
   <QRCode.Frame>
-    <QRCode.Body>
+    <QRCode.Header>
+      <QRCode.Title>PanelUI</QRCode.Title>
+    </QRCode.Header>
+    <QRCode.Panel>
       <QRCode.Canvas />
       <QRCode.Logo>
         <Avatar fallback="P" size="sm" />
       </QRCode.Logo>
-    </QRCode.Body>
+    </QRCode.Panel>
   </QRCode.Frame>
 </QRCode>
 ```
@@ -151,23 +163,23 @@ A logo clears a square of modules; the error correction is raised to cover the l
 Not every code is a URL. This one joins a network when it is scanned.
 
 ```tsx
-<QRCode
-  value="WIFI:T:WPA;S:PanelUI Guest;P:hunter2;;"
-  errorCorrection="Q"
->
+<QRCode value="WIFI:T:WPA;S:PanelUI Guest;P:hunter2;;" size="lg">
   <QRCode.Frame>
     <QRCode.Header>
       <QRCode.Title>PanelUI Guest</QRCode.Title>
-      <QRCode.Description>Scan to join the network</QRCode.Description>
+      <QRCode.Action>WPA2</QRCode.Action>
     </QRCode.Header>
-    <QRCode.Body>
+    <QRCode.Panel>
       <QRCode.Canvas />
-    </QRCode.Body>
+    </QRCode.Panel>
   </QRCode.Frame>
+  <QRCode.Caption>Scan to join the network</QRCode.Caption>
 </QRCode>
 ```
 
 ### Bare
+
+No tray, no caption — the code and nothing else.
 
 ```tsx
 <QRCode value="https://panelui.dev" size="sm">
@@ -179,33 +191,37 @@ Not every code is a URL. This one joins a network when it is scanned.
 
 ### Framed
 
-The code in its bordered panel, with a caption under it.
+The tray, the title strip, and the code on the card inside it.
 
 ```tsx
 <QRCode value="https://panelui.dev" size="lg">
   <QRCode.Frame>
-    <QRCode.Body>
+    <QRCode.Header>
+      <QRCode.Title>Documentation</QRCode.Title>
+      <QRCode.Action>panelui.dev</QRCode.Action>
+    </QRCode.Header>
+    <QRCode.Panel>
       <QRCode.Canvas />
-    </QRCode.Body>
+    </QRCode.Panel>
   </QRCode.Frame>
   <QRCode.Caption>Scan to open the docs</QRCode.Caption>
 </QRCode>
 ```
 
-### Titled
+### With a header
 
-A header strip over the code, naming what scanning it does.
+A trailing slot in the header, and the encoded string underneath.
 
 ```tsx
-<QRCode value="https://panelui.dev/pair/8f2a" size="lg">
+<QRCode value="https://panelui.dev/pair/8f2a41" size="lg">
   <QRCode.Frame>
     <QRCode.Header>
       <QRCode.Title>Pair a device</QRCode.Title>
-      <QRCode.Description>Point the camera at this code</QRCode.Description>
+      <QRCode.Action>Expires in 5m</QRCode.Action>
     </QRCode.Header>
-    <QRCode.Body>
+    <QRCode.Panel>
       <QRCode.Canvas />
-    </QRCode.Body>
+    </QRCode.Panel>
   </QRCode.Frame>
   <QRCode.Value />
 </QRCode>
@@ -267,8 +283,8 @@ Folded away behind a row until it is wanted, the way a colour picker folds away.
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `pixelSize` | `number` | — | Side length in points. Defaults to the size variant's. |
-| `color` | `string` | — | Dark modules. Defaults to the theme's foreground. |
-| `backgroundColor` | `string` | — | The quiet zone and the gaps. Defaults to the theme's card surface. |
+| `color` | `string` | — | Dark modules. See the note below before overriding this. |
+| `backgroundColor` | `string` | — | The plate the modules sit on. See the note below. |
 
 ### QRCode.Frame
 
@@ -282,7 +298,25 @@ Folded away behind a row until it is wanted, the way a colour picker folds away.
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
-### QRCode.Body
+### QRCode.Title
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### QRCode.Action
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### QRCode.Panel
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### QRCode.Description
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -326,7 +360,7 @@ The QR **version** — the module count, 21×21 up to 177×177 — is chosen as 
 Three things decide whether a code reads, and none of them is the code:
 
 - **The quiet zone.** Four modules of clear space all round, which `QRCode.Canvas` draws and paints. Do not clip it, and do not put the code flush against a border.
-- **Contrast, the right way round.** Dark modules on a light field. The component follows the theme, so a dark theme gives you a light code on a dark card — which most scanners now handle, but if a code has to work on every device, pass `color` and `backgroundColor` explicitly.
+- **Contrast, the right way round.** Dark modules on a light field, and `QRCode.Canvas` draws that way whatever the theme is doing. It is the one thing in the library that ignores the tokens, and it is deliberate: inverted, a code is rejected outright by a good share of scanners and found late by most of the rest, which turns a dark theme into a bug report about a code that "sometimes does not work". On a light theme the plate is white on a near-white card and reads as nothing at all, which is the intended outcome. `color` and `backgroundColor` override both.
 - **Size.** A code needs roughly one point per module at arm's length. `sm` is 128 points, which is fine for a version 2 code and marginal for a version 10 one; `lg` is 240.
 
 ### Accessibility

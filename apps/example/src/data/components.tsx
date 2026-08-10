@@ -13157,15 +13157,19 @@ function Filler({ lines }: { lines: number }) {
   );
 }
 
-/** The framed version: the bordered panel, and a line saying what it does. */
+/** The framed version: the tray, its title strip, and the code on the card. */
 function QRCodeFramedVersion() {
   return (
     <View className="flex-1 items-center justify-center gap-4 p-4">
       <QRCode value="https://panelui.dev" size="lg">
         <QRCode.Frame>
-          <QRCode.Body>
+          <QRCode.Header>
+            <QRCode.Title>Documentation</QRCode.Title>
+            <QRCode.Action>panelui.dev</QRCode.Action>
+          </QRCode.Header>
+          <QRCode.Panel>
             <QRCode.Canvas />
-          </QRCode.Body>
+          </QRCode.Panel>
         </QRCode.Frame>
         <QRCode.Caption>Scan to open the documentation</QRCode.Caption>
       </QRCode>
@@ -13173,7 +13177,7 @@ function QRCodeFramedVersion() {
   );
 }
 
-/** The header frame: a title strip over the code, and the string under it. */
+/** The header frame, with the trailing slot carrying how long it is good for. */
 function QRCodeHeaderVersion() {
   return (
     <View className="flex-1 items-center justify-center gap-4 p-4">
@@ -13181,11 +13185,15 @@ function QRCodeHeaderVersion() {
         <QRCode.Frame>
           <QRCode.Header>
             <QRCode.Title>Pair a device</QRCode.Title>
-            <QRCode.Description>Point the camera at this code</QRCode.Description>
+            <QRCode.Action>Expires in 5m</QRCode.Action>
           </QRCode.Header>
-          <QRCode.Body>
+          <QRCode.Panel>
             <QRCode.Canvas />
-          </QRCode.Body>
+            {/* The mark clears its own square; the correction level covers it. */}
+            <QRCode.Logo>
+              <Avatar fallback="P" size="sm" />
+            </QRCode.Logo>
+          </QRCode.Panel>
         </QRCode.Frame>
         {/* The way through for anyone whose camera is the thing being set up. */}
         <QRCode.Value />
@@ -16207,7 +16215,7 @@ const CATALOGUE: ComponentEntry[] = [
         label: 'With a header',
         id: 'header',
         fullPage: true,
-        description: 'A title strip over the code, and the encoded string underneath.',
+        description: 'A title strip with a trailing slot, a mark in the middle, and the string underneath.',
         render: () => <QRCodeHeaderVersion />,
       },
       {
@@ -16250,12 +16258,15 @@ const CATALOGUE: ComponentEntry[] = [
         render: () => (
           <QRCode value="https://panelui.dev" size="lg">
             <QRCode.Frame>
-              <QRCode.Body>
+              <QRCode.Header>
+                <QRCode.Title>PanelUI</QRCode.Title>
+              </QRCode.Header>
+              <QRCode.Panel>
                 <QRCode.Canvas />
                 <QRCode.Logo>
                   <Avatar fallback="P" size="sm" />
                 </QRCode.Logo>
-              </QRCode.Body>
+              </QRCode.Panel>
             </QRCode.Frame>
           </QRCode>
         ),
