@@ -6012,6 +6012,13 @@
   },
   "candlestick-chart": {
     "intro": "Open, high, low and close for a period, drawn as one mark. The body spans open to close and is filled by direction — green when the period closed at or above where it opened, red when it closed below — and the wick behind it spans the low to the high.\n\nComposed the way every chart here is: the grid, the candles, the axes and the readout are separate children, so a chart that wants no grid simply does not have one.",
+    "previewVideo": {
+      "src": "/previews/candlestick-chart.mp4",
+      "poster": "/previews/candlestick-chart-poster.jpg",
+      "alt": "The CandlestickChart component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    },
     "usage": "<CandlestickChart data={sessions} xDataKey=\"day\">\n  <CandlestickChart.Grid />\n  <CandlestickChart.Candles />\n  <CandlestickChart.YAxis />\n  <CandlestickChart.XAxis />\n  <CandlestickChart.Tooltip />\n</CandlestickChart>",
     "extraImports": [
       "Frame",
@@ -6058,11 +6065,24 @@
       {
         "title": "Sessions",
         "description": "Thirty sessions, with a readout that follows the finger.",
+        "previewVideo": {
+          "src": "/previews/candlestick-chart-sessions.mp4",
+          "poster": "/previews/candlestick-chart-sessions-poster.jpg",
+          "alt": "CandlestickChart — Sessions.",
+          "width": 720,
+          "height": 1560
+        },
         "code": "<CandlestickChart data={sessions} xDataKey=\"day\" aspectRatio={1.5}>\n  <CandlestickChart.Header title=\"NWM · Daily\" value={price(shown.close)} legend />\n  <CandlestickChart.Grid />\n  <CandlestickChart.Candles />\n  <CandlestickChart.YAxis />\n  <CandlestickChart.XAxis />\n  <CandlestickChart.Tooltip formatValue={price} />\n</CandlestickChart>"
       },
       {
         "title": "No axes",
         "description": "The last ten, sized for a card rather than for a screen.",
+        "preview": {
+          "src": "/previews/candlestick-chart-no-axes.jpg",
+          "alt": "CandlestickChart — No axes.",
+          "width": 1179,
+          "height": 1064
+        },
         "code": "<CandlestickChart data={recent} xDataKey=\"day\" aspectRatio={1.9} candleGap={0.42}>\n  <CandlestickChart.Header value={price(last.close)} caption={change} />\n  <CandlestickChart.Candles cornerRadius={2} />\n  <CandlestickChart.XAxis />\n</CandlestickChart>"
       },
       {

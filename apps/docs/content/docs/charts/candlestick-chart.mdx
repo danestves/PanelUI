@@ -7,6 +7,14 @@ Open, high, low and close for a period, drawn as one mark. The body spans open t
 
 Composed the way every chart here is: the grid, the candles, the axes and the readout are separate children, so a chart that wants no grid simply does not have one.
 
+<PreviewVideo
+  src="/previews/candlestick-chart.mp4"
+  poster="/previews/candlestick-chart-poster.jpg"
+  alt="The CandlestickChart component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 CandlestickChart ships with the library — no separate install.
@@ -146,6 +154,14 @@ No axes and a wider gap between the candles, for a chart that is a glance rather
 
 Thirty sessions, with a readout that follows the finger.
 
+<PreviewVideo
+  src="/previews/candlestick-chart-sessions.mp4"
+  poster="/previews/candlestick-chart-sessions-poster.jpg"
+  alt="CandlestickChart — Sessions."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <CandlestickChart data={sessions} xDataKey="day" aspectRatio={1.5}>
   <CandlestickChart.Header title="NWM · Daily" value={price(shown.close)} legend />
@@ -160,6 +176,13 @@ Thirty sessions, with a readout that follows the finger.
 ### No axes
 
 The last ten, sized for a card rather than for a screen.
+
+<Preview
+  src="/previews/candlestick-chart-no-axes.jpg"
+  alt="CandlestickChart — No axes."
+  width={1179}
+  height={1064}
+/>
 
 ```tsx
 <CandlestickChart data={recent} xDataKey="day" aspectRatio={1.9} candleGap={0.42}>
