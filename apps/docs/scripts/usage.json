@@ -6998,6 +6998,13 @@
   },
   "panelside": {
     "intro": "The navigation pattern an assistant app uses: a button in the corner, and the screen slides across, shrinks, rounds its corners and dims — revealing a panel of destinations and history that was behind it all along. The app never disappears, so going back is a tap on the thing you were just looking at.\n\nIt is not a Drawer with different styling. A drawer mounts through a portal, which puts it above the app by construction and leaves the app content somewhere else in the tree, unreachable — there is nothing to push. Panelside renders inline and owns both halves, which is why the part of your app that moves has to be named.",
+    "previewVideo": {
+      "src": "/previews/panelside.mp4",
+      "poster": "/previews/panelside-poster.jpg",
+      "alt": "The Panelside component, running in the example app.",
+      "width": 720,
+      "height": 1560
+    },
     "usage": "<Panelside>\n  <Panelside.Panel>\n    <Panelside.Header title=\"Assistant\">\n      <Panelside.Search value={query} onChangeText={setQuery} />\n    </Panelside.Header>\n\n    <Panelside.Content>\n      <Panelside.Group>\n        <Panelside.GroupLabel>Recents</Panelside.GroupLabel>\n        <Panelside.Item label=\"Migrating the design tokens\" />\n      </Panelside.Group>\n    </Panelside.Content>\n\n    <Panelside.Footer>\n      <Panelside.Cta label=\"New chat\" onPress={compose} />\n    </Panelside.Footer>\n  </Panelside.Panel>\n\n  <Panelside.Scene>\n    <Panelside.Trigger />\n    <Conversation />\n  </Panelside.Scene>\n</Panelside>",
     "extraImports": [
       "Avatar",

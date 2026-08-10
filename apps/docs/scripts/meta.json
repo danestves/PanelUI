@@ -108,8 +108,7 @@
     "A run of slides, one at a time, dragged with a finger.",
     "react native carousel",
     {
-      "addedIn": "0.27.0",
-      "alpha": true
+      "addedIn": "0.27.0"
     }
   ],
   "checkbox": [
@@ -326,8 +325,7 @@
     "A field for writing markdown, with a formatting toolbar and a rendered preview.",
     "react native markdown editor preview toolbar",
     {
-      "addedIn": "0.49.0",
-      "beta": true
+      "addedIn": "0.49.0"
     }
   ],
   "map": [
@@ -388,8 +386,7 @@
     "One question at a time, with progress, validation and a way back.",
     "react native questionnaire survey form",
     {
-      "addedIn": "0.47.0",
-      "alpha": true
+      "addedIn": "0.47.0"
     }
   ],
   "radio-group": [
@@ -527,8 +524,7 @@
     "A walkthrough that introduces a screen one control at a time.",
     "react native onboarding tour spotlight coach mark walkthrough",
     {
-      "addedIn": "0.55.0",
-      "alpha": true
+      "addedIn": "0.55.0"
     }
   ],
   "steps": [
@@ -735,8 +731,7 @@
     "react native ai streaming markdown renderer",
     {
       "group": "ai-components",
-      "addedIn": "0.32.0",
-      "beta": true
+      "addedIn": "0.32.0"
     }
   ],
   "panelside": [
