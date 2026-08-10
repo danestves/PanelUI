@@ -27,15 +27,23 @@ Zero native code, so it runs in Expo Go.
 ## Quick start
 
 Needs an Expo SDK 57+ app and Node 20+. No Xcode, no Android Studio, no `prebuild` — PanelUI has
-no native modules, so it runs in Expo Go. No app yet? `npx create-expo-app@latest my-app`.
+no native modules, so it runs in Expo Go.
 
-Five steps. The full walkthrough, with a fix for every error people hit, is at
-**[panelui.dev/docs/installation](https://panelui.dev/docs/installation)**.
+No app yet? `npx create-panelui-app@latest` writes one with every step below already done.
 
-### 1. Install the packages
+Six steps for an app you already have. The full walkthrough, with a fix for every error people
+hit, is at **[panelui.dev/docs/installation](https://panelui.dev/docs/installation)**.
+
+### 1. Install PanelUI
 
 ```sh
-npx expo install panelui-native uniwind tailwindcss @react-native-masked-view/masked-view expo-linear-gradient react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-svg react-native-worklets
+npx expo install panelui-native
+```
+
+### 2. Install the peer dependencies
+
+```sh
+npx expo install uniwind tailwindcss react-native-reanimated react-native-worklets react-native-gesture-handler react-native-safe-area-context react-native-svg @react-native-masked-view/masked-view expo-linear-gradient
 ```
 
 Install all of them, including the ones you think you don't need. Metro resolves every import in
@@ -48,7 +56,7 @@ overlay backdrops), `expo-clipboard` (`useCopyToClipboard`), `react-native-keybo
 (keyboard avoidance on Android), `expo-file-system` + `react-native-view-shot` (Signature export),
 `@expo/ui` (native platform controls).
 
-### 2. Add `metro.config.js`
+### 3. Add `metro.config.js`
 
 **In the root of your project, next to `package.json`** — not in `app/`, not in `src/`. A Metro
 config anywhere else is silently ignored and none of your classes will do anything. A fresh Expo
@@ -76,7 +84,7 @@ module.exports = withUniwindConfig(config, {
 app still launches, and not one class resolves — no `flex-1`, so views collapse and you get a blank
 screen with `Uniwind - We couldn't find your variable --color-background`.
 
-### 3. Add the imports to `global.css`
+### 4. Add the imports to `global.css`
 
 **Look for this file before you create one** — an app made by `create-expo-app` already has
 `src/global.css`. Add these lines at the top of it and leave the rest below. A second CSS file at
@@ -96,7 +104,7 @@ hence the `../` above, from `src/`. From the project root it is `'./node_modules
 `src/styles/` it is `'../../node_modules/…'`. Get it wrong and your own classes work while
 PanelUI's components come out unstyled. Whichever file you used is what `cssEntryFile` must name.
 
-### 4. Import the CSS and add the provider
+### 5. Import the CSS and add the provider
 
 At the top of your app's entry file. The default template uses Expo Router with routes under
 `src/`, so there is usually no `App.tsx` — the entry is `src/app/_layout.tsx`, and it already
@@ -134,7 +142,7 @@ overlays, and the toast viewport. One at the root is enough — don't nest a sec
 You do **not** need a `babel.config.js`; Expo's default preset already wires the worklets plugin
 Reanimated needs.
 
-### 5. Restart
+### 6. Restart
 
 ```sh
 npx expo start --clear
