@@ -12870,7 +12870,10 @@ function TourDemo() {
           radius={16}
         >
           <Card>
-            <Card.Content className="gap-2">
+            {/* `p-4` rather than the default: Card.Content is `p-6 pt-0`,
+                which assumes a Card.Header above it, and there is none here —
+                so without this the three rows sit against the top border. */}
+            <Card.Content className="gap-2 p-4">
               {[
                 { name: 'Ana Ruiz', initials: 'AR' },
                 { name: 'Deploy bot', initials: 'DB' },

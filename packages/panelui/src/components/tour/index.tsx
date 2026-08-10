@@ -608,86 +608,100 @@ function TourOverlay({
         </Svg>
       </Animated.View>
 
+      {/*
+       * Two views, and the split is not cosmetic. The entering animation
+       * drives opacity, and so does the gate below that hides the card for the
+       * frame it is being measured in — put on one view they fight, and
+       * Reanimated says so: a layout animation may overwrite a property the
+       * style also sets, and which of them wins is not something to rely on.
+       * The outer view owns the animation and the placement; the inner one
+       * owns the measurement and the gate.
+       */}
       <Animated.View
         key={active?.order ?? 'none'}
-        onLayout={onCardLayout}
         entering={reducedMotion ? undefined : FadeIn.duration(200)}
-        accessibilityViewIsModal
-        accessibilityLiveRegion="polite"
         style={{
           position: 'absolute',
           left: card.left,
           top: card.top,
           width: card.width,
-          // Placed off the first frame's opacity rather than off the screen:
-          // the card has to be laid out to be measured, and its height is what
-          // decides whether it goes above the target or below it.
-          opacity: cardHeight === null ? 0 : 1,
         }}
-        className={cn(
-          'gap-3 rounded-2xl border border-border bg-overlay p-4 shadow-lg',
-          cardClassName
-        )}
       >
-        {dismissible ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            accessibilityLabel={words.close}
-            onPress={onSkip}
-            className="absolute end-1 top-1 h-9 w-9"
-          >
-            <XIcon size={16} />
-          </Button>
-        ) : null}
-
-        <View className="gap-1 pe-8">
-          {showProgress && total > 1 && index >= 0 ? (
-            <Text
-              size="xs"
-              muted
-              accessibilityLabel={`Step ${index + 1} of ${total}`}
-            >{`${index + 1} of ${total}`}</Text>
-          ) : null}
-          {active?.title ? (
-            <Text
-              accessibilityRole="header"
-              weight="semibold"
-              className="text-overlay-foreground"
+        <View
+          onLayout={onCardLayout}
+          accessibilityViewIsModal
+          accessibilityLiveRegion="polite"
+          style={{
+            // Held off the first frame's opacity rather than off the screen:
+            // the card has to be laid out to be measured, and its height is
+            // what decides whether it goes above the target or below it.
+            opacity: cardHeight === null ? 0 : 1,
+          }}
+          className={cn(
+            'gap-3 rounded-2xl border border-border bg-overlay p-4 shadow-lg',
+            cardClassName
+          )}
+        >
+          {dismissible ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              accessibilityLabel={words.close}
+              onPress={onSkip}
+              className="absolute end-1 top-1 h-9 w-9"
             >
-              {active.title}
-            </Text>
+              <XIcon size={16} />
+            </Button>
           ) : null}
-          {active?.description ? (
-            <Text size="sm" muted>
-              {active.description}
-            </Text>
-          ) : null}
-        </View>
 
-        <View className="flex-row items-center justify-between gap-2">
-          <View className="flex-row items-center gap-1">
-            {showSkip && !isLast ? (
-              <Button variant="ghost" size="sm" onPress={onSkip}>
-                {words.skip}
-              </Button>
+          <View className="gap-1 pe-8">
+            {showProgress && total > 1 && index >= 0 ? (
+              <Text
+                size="xs"
+                muted
+                accessibilityLabel={`Step ${index + 1} of ${total}`}
+              >{`${index + 1} of ${total}`}</Text>
+            ) : null}
+            {active?.title ? (
+              <Text
+                accessibilityRole="header"
+                weight="semibold"
+                className="text-overlay-foreground"
+              >
+                {active.title}
+              </Text>
+            ) : null}
+            {active?.description ? (
+              <Text size="sm" muted>
+                {active.description}
+              </Text>
             ) : null}
           </View>
 
-          <View className="flex-row items-center gap-2">
-            {!isFirst ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onPress={onBack}
-                startContent={<ChevronLeftIcon size={16} />}
-              >
-                {words.back}
+          <View className="flex-row items-center justify-between gap-2">
+            <View className="flex-row items-center gap-1">
+              {showSkip && !isLast ? (
+                <Button variant="ghost" size="sm" onPress={onSkip}>
+                  {words.skip}
+                </Button>
+              ) : null}
+            </View>
+
+            <View className="flex-row items-center gap-2">
+              {!isFirst ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onPress={onBack}
+                  startContent={<ChevronLeftIcon size={16} />}
+                >
+                  {words.back}
+                </Button>
+              ) : null}
+              <Button variant="primary" size="sm" onPress={onNext}>
+                {isLast ? words.done : words.next}
               </Button>
-            ) : null}
-            <Button variant="primary" size="sm" onPress={onNext}>
-              {isLast ? words.done : words.next}
-            </Button>
+            </View>
           </View>
         </View>
       </Animated.View>
