@@ -417,6 +417,16 @@
     ]
   },
   {
+    "name": "hex-chart",
+    "type": "registry:ui",
+    "description": "A whole broken into parts, counted out in cells.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "icons",
     "type": "registry:ui",
     "description": "The icon set, plus the colour context components use to tint them.",

@@ -105,6 +105,7 @@ import {
   type HeatmapCell,
   type HeatmapColumn,
   buildHeatmapCalendar,
+  HexChart,
   InfoIcon,
   Input,
   InputGroup,
@@ -10529,6 +10530,133 @@ function RingChartTilesVersion() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* HexChart                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Four campaigns and the revenue each was credited with. Deliberately a long
+ * split rather than an even one — an honest honeycomb has one series holding
+ * half the field and one holding a corner of it, and a set of four near-equal
+ * numbers would show none of what the arrangement is for.
+ */
+const ATTRIBUTION = [
+  { label: 'Stir in strength', value: 3420 },
+  { label: 'Healthier every day', value: 1880 },
+  { label: 'Iron boost Q3', value: 840 },
+  { label: 'Ambassador program', value: 610 },
+];
+
+const ATTRIBUTED = ATTRIBUTION.reduce((total, source) => total + source.value, 0);
+
+/** The whole card: the total above, the honeycomb, and the key under it. */
+function HexChartAttributionVersion() {
+  const [active, setActive] = useState(-1);
+  const source = active >= 0 ? ATTRIBUTION[active] : null;
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Attributed revenue</Frame.Title>
+          <Frame.Action>View full report</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <HexChart
+            data={ATTRIBUTION}
+            activeIndex={active}
+            onActiveIndexChange={setActive}
+          >
+            {/* The readout follows the selection and falls back to the total,
+                which is why it is passed in rather than derived by the header. */}
+            <HexChart.Header
+              className={CHART_HEADER}
+              value={money(source ? source.value : ATTRIBUTED)}
+              caption={source ? source.label : 'Across four campaigns'}
+            />
+            <HexChart.Cells />
+            <HexChart.Tooltip formatValue={money} showCells />
+            <HexChart.Legend className="px-4 pb-3.5" />
+          </HexChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * `shape="grid"` instead, which fills every cell in reading order.
+ *
+ * The countable arrangement: a reader who wants to check that the second series
+ * really is a quarter can count a row and multiply. The blob cannot be checked
+ * that way, and does not ask to be.
+ */
+function HexChartWaffleVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Attributed revenue</Frame.Title>
+          <Frame.Action>Every cell used</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <HexChart data={ATTRIBUTION} shape="grid" columns={16} aspectRatio={1.8}>
+            <HexChart.Header
+              className={CHART_HEADER}
+              value={money(ATTRIBUTED)}
+              caption="One cell is about half a percent"
+            />
+            <HexChart.Cells />
+            <HexChart.Tooltip formatValue={money} />
+            <HexChart.Legend className="px-4 pb-3.5" />
+          </HexChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * Waiting for the split, with the field already drawn.
+ *
+ * The denominator is not what is loading — the shape of the chart is known
+ * before its numbers are — so the field is there from the first frame and only
+ * the colours arrive.
+ */
+function HexChartLoadingVersion() {
+  const [status, setStatus] = useState<'loading' | 'ready'>('loading');
+
+  return (
+    <View className="flex-1 justify-center gap-4 p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Attributed revenue</Frame.Title>
+          <Frame.Action>{status === 'loading' ? 'Loading' : 'Live'}</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <HexChart data={ATTRIBUTION} status={status}>
+            <HexChart.Header
+              className={CHART_HEADER}
+              value={status === 'loading' ? '—' : money(ATTRIBUTED)}
+              caption="Across four campaigns"
+            />
+            <HexChart.Skeleton />
+            <HexChart.Cells />
+            <HexChart.Legend className="px-4 pb-3.5" />
+          </HexChart>
+        </Frame.Panel>
+      </Frame>
+
+      <Button
+        variant="outline"
+        onPress={() => setStatus(status === 'loading' ? 'ready' : 'loading')}
+      >
+        {status === 'loading' ? 'Load the split' : 'Back to loading'}
+      </Button>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* GridItem                                                                   */
 /* -------------------------------------------------------------------------- */
 
@@ -14556,6 +14684,35 @@ const CATALOGUE: ComponentEntry[] = [
         fullPage: true,
         description: 'Rows that are hours rather than days — when the week actually lands.',
         render: () => <HeatmapPunchcardVersion />,
+      },
+    ],
+  },
+  {
+    slug: 'hex-chart',
+    name: 'HexChart',
+    summary: 'A whole broken into parts, counted out in cells',
+    layout: 'pager',
+    demos: [
+      {
+        label: 'Attribution',
+        id: 'attribution',
+        fullPage: true,
+        description: 'Press a cell or a key entry, and the readout follows the selection.',
+        render: () => <HexChartAttributionVersion />,
+      },
+      {
+        label: 'Waffle',
+        id: 'waffle',
+        fullPage: true,
+        description: 'Reading order and every cell used, for a split worth counting off.',
+        render: () => <HexChartWaffleVersion />,
+      },
+      {
+        label: 'Loading',
+        id: 'loading',
+        fullPage: true,
+        description: 'The field is drawn before the split is known, and the colours fill in.',
+        render: () => <HexChartLoadingVersion />,
       },
     ],
   },

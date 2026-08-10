@@ -239,6 +239,15 @@
       "group": "charts"
     }
   ],
+  "hex-chart": [
+    "HexChart",
+    "A whole broken into parts, counted out in cells.",
+    "react native hex honeycomb waffle chart",
+    {
+      "addedIn": "0.56.0",
+      "group": "charts"
+    }
+  ],
   "input": [
     "Input",
     "Text field with label, description and error message.",

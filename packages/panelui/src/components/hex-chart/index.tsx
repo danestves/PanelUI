@@ -142,8 +142,12 @@ interface HexPlan {
   field: string;
   /** Cells per series, index-aligned with the data. */
   counts: number[];
-  /** The middle of each series' cells, for a label to sit on. */
-  centroids: ChartPoint[];
+  /**
+   * Where a label for each series goes: the middle of its cells across, and
+   * the top of them down. A label centred on the cells would cover the ones it
+   * is naming, so it is hung above them instead.
+   */
+  labelAnchors: ChartPoint[];
   /** Which series owns each cell, by `row * columns + column`. `-1` is unfilled. */
   owners: number[];
 }
@@ -152,7 +156,7 @@ const EMPTY_PLAN: HexPlan = {
   paths: [],
   field: '',
   counts: [],
-  centroids: [],
+  labelAnchors: [],
   owners: [],
 };
 
@@ -350,7 +354,7 @@ const HexChartRoot = forwardRef<HexChartHandle, HexChartProps>(function HexChart
     const radius = metrics.radius * (1 - Math.max(0, Math.min(cellGap, 0.5)));
     const owners = new Array<number>(capacity).fill(-1);
     const paths = data.map(() => '');
-    const sums = data.map(() => ({ x: 0, y: 0 }));
+    const sums = data.map(() => ({ x: 0, highest: Infinity }));
 
     let cursor = 0;
     for (const series of sequence) {
@@ -362,7 +366,7 @@ const HexChartRoot = forwardRef<HexChartHandle, HexChartProps>(function HexChart
         const centre = hexCenter(cell.column, cell.row, metrics, left, top);
         paths[series] += hexPath(centre.x, centre.y, radius);
         sums[series]!.x += centre.x;
-        sums[series]!.y += centre.y;
+        sums[series]!.highest = Math.min(sums[series]!.highest, centre.y);
       }
     }
 
@@ -375,13 +379,16 @@ const HexChartRoot = forwardRef<HexChartHandle, HexChartProps>(function HexChart
       }
     }
 
-    const centroids = sums.map((sum, index) => {
+    const labelAnchors = sums.map((sum, index) => {
       const count = counts[index] ?? 0;
-      if (count <= 0) return { x: left + fieldWidth / 2, y: top + fieldHeight / 2 };
-      return { x: sum.x / count, y: sum.y / count };
+      if (count <= 0) return { x: left + fieldWidth / 2, y: top };
+      // The top edge of the series' highest cell, not its centre — the anchor
+      // is what the label is hung *from*, and half a cell of overlap is still
+      // overlap.
+      return { x: sum.x / count, y: sum.highest - metrics.radius };
     });
 
-    return { paths, field, counts, centroids, owners };
+    return { paths, field, counts, labelAnchors, owners };
   }, [
     data,
     metrics,
@@ -649,26 +656,23 @@ export interface HexChartTooltipProps {
   className?: string;
 }
 
-/**
- * The label's box, in points.
- *
- * Fixed rather than measured, so it can be centred on a cell in the same pass
- * that positions it. Measuring it first would mean a frame with the label in
- * the wrong place, and the text inside is a formatted number and a percentage —
- * a width that is known in advance far more reliably than it is worth
- * discovering.
- */
-const LABEL_WIDTH = 128;
-const LABEL_HEIGHT = 26;
+/** Clearance between the label and the cells it is naming. */
+const LABEL_GAP = 6;
 
 /**
  * The press target over the honeycomb, and the label that names what was
  * pressed.
  *
- * The label sits on the middle of the selected series' cells rather than where
- * the finger landed. A blob is one connected region, so its middle is a place
- * that means something — and a label pinned under the touch would be under the
- * finger, which is the one part of the chart nobody can see.
+ * The label hangs *above* the selected series rather than on it: it is centred
+ * across that series' cells and sits clear of the highest one, so the cells
+ * being read are never underneath the thing reading them. Two other places it
+ * could go are both worse — under the finger is the one part of the chart
+ * nobody can see, and on the middle of the series covers the mass the reader
+ * just asked about.
+ *
+ * A series reaching the top of the field pushes the label back inside it, which
+ * is the one case it does overlap. That series is the largest one, and its
+ * topmost cells are the part of it a reader is least likely to be counting.
  *
  * A press on an unfilled cell clears the selection, the same as pressing the
  * selected series again. Everything outside the honeycomb is "none of them",
@@ -708,7 +712,7 @@ function HexChartTooltip({ formatValue, showCells = false, className }: HexChart
 
   if (status === 'loading' || width <= 0) return null;
 
-  const centre = series ? plan.centroids[activeIndex] : null;
+  const anchor = series ? plan.labelAnchors[activeIndex] : null;
   const percent = series && total > 0 ? Math.round((Math.max(0, series.value) / total) * 100) : 0;
 
   return (
@@ -720,45 +724,109 @@ function HexChartTooltip({ formatValue, showCells = false, className }: HexChart
         }
         style={{ position: 'absolute', left: 0, top: 0, width, height }}
       />
-      {series && centre ? (
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            width: LABEL_WIDTH,
-            height: LABEL_HEIGHT,
-            // Centred on the series' middle, then clamped inside the field so a
-            // series whose cells sit against an edge does not get a label
-            // hanging off it.
-            left: Math.max(0, Math.min(width - LABEL_WIDTH, centre.x - LABEL_WIDTH / 2)),
-            top: Math.max(0, Math.min(height - LABEL_HEIGHT, centre.y - LABEL_HEIGHT / 2)),
-          }}
-          className={cn(
-            'flex-row items-center justify-center gap-1.5 rounded-lg border border-border bg-overlay px-2 shadow-md',
-            className
-          )}
-        >
-          <View
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: colors[activeIndex],
-            }}
-          />
-          <Text size="xs" weight="medium" numberOfLines={1}>
-            {format(series.value, series)}
-          </Text>
-          <Text size="xs" muted numberOfLines={1}>
-            {showCells ? `${percent}% · ${plan.counts[activeIndex] ?? 0} cells` : `${percent}%`}
-          </Text>
-        </View>
+      {series && anchor ? (
+        // Keyed on the selection so the label remounts, and measures itself
+        // again, whenever what it has to say changes length.
+        <HexChartLabel
+          key={activeIndex}
+          anchor={anchor}
+          width={width}
+          height={height}
+          color={colors[activeIndex]}
+          value={format(series.value, series)}
+          detail={
+            showCells
+              ? `${percent}% · ${plan.counts[activeIndex] ?? 0} cells`
+              : `${percent}%`
+          }
+          className={className}
+        />
       ) : null}
     </>
   );
 }
 HexChartTooltip.displayName = 'HexChart.Tooltip';
 HexChartTooltip.slot = 'overlay' as const;
+
+/**
+ * The label itself, sized by its contents and placed once it knows its size.
+ *
+ * A fixed box would be simpler to place, and it is what a crosshair label on a
+ * time series gets away with — there the text is one formatted number and its
+ * width is known within a few points. Here it is a value, a percentage and
+ * sometimes a cell count, and a currency total in the millions is half again as
+ * wide as a compact one. A box that does not fit its text does not clip it in
+ * React Native, it lets it run out of the corner, so the width has to come from
+ * the text rather than the other way round.
+ *
+ * Which means one frame where the size is not known yet. That frame is spent at
+ * zero opacity rather than in the wrong place — the same trade the walkthrough
+ * card makes, and for the same reason: a label that arrives correct is better
+ * than one that arrives early and jumps.
+ */
+function HexChartLabel({
+  anchor,
+  width,
+  height,
+  color,
+  value,
+  detail,
+  className,
+}: {
+  anchor: ChartPoint;
+  width: number;
+  height: number;
+  color: string | undefined;
+  value: string;
+  detail: string;
+  className?: string;
+}) {
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+
+  const placed = size
+    ? {
+        // Centred across the series and hung above it, then clamped inside the
+        // field so one whose cells sit against an edge does not get a label
+        // hanging off it.
+        left: Math.max(0, Math.min(width - size.width, anchor.x - size.width / 2)),
+        top: Math.max(0, Math.min(height - size.height, anchor.y - LABEL_GAP - size.height)),
+      }
+    : { left: 0, top: 0 };
+
+  return (
+    <View
+      pointerEvents="none"
+      onLayout={(event) => {
+        const { width: w, height: h } = event.nativeEvent.layout;
+        setSize((current) =>
+          current && Math.abs(current.width - w) < 1 && Math.abs(current.height - h) < 1
+            ? current
+            : { width: w, height: h }
+        );
+      }}
+      style={{
+        position: 'absolute',
+        ...placed,
+        opacity: size ? 1 : 0,
+        // Never wider than the field, so a very long value wraps or ellipsises
+        // inside the label instead of widening it off the edge.
+        maxWidth: width,
+      }}
+      className={cn(
+        'flex-row items-center gap-1.5 rounded-lg border border-border bg-overlay px-2 py-1 shadow-md',
+        className
+      )}
+    >
+      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
+      <Text size="xs" weight="medium" numberOfLines={1} className="shrink">
+        {value}
+      </Text>
+      <Text size="xs" muted numberOfLines={1} className="shrink">
+        {detail}
+      </Text>
+    </View>
+  );
+}
 
 export interface HexChartLegendProps extends ViewProps {
   className?: string;

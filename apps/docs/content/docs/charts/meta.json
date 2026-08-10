@@ -5,6 +5,7 @@
     "bar-chart",
     "candlestick-chart",
     "heatmap-chart",
+    "hex-chart",
     "line-chart",
     "pie-chart",
     "radar-chart",
