@@ -9536,7 +9536,6 @@ function StepsDemo() {
             <Steps.Trigger>
               <Steps.Indicator />
             </Steps.Trigger>
-            {index < STEP_DATA.length - 1 ? <Steps.Separator /> : null}
           </Steps.Item>
         ))}
       </Steps>
@@ -17041,7 +17040,6 @@ const CATALOGUE: ComponentEntry[] = [
                     <Steps.Description>{step.description}</Steps.Description>
                   </View>
                 </Steps.Trigger>
-                {index < STEP_DATA.length - 1 ? <Steps.Separator /> : null}
               </Steps.Item>
             ))}
           </Steps>
@@ -17059,7 +17057,6 @@ const CATALOGUE: ComponentEntry[] = [
                     <Steps.Title>{step.title}</Steps.Title>
                   </View>
                 </Steps.Trigger>
-                {index < STEP_DATA.length - 1 ? <Steps.Separator /> : null}
               </Steps.Item>
             ))}
           </Steps>

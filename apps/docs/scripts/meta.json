@@ -516,7 +516,10 @@
   "steps": [
     "Steps",
     "Stepper for multi-step flows.",
-    "react native stepper"
+    "react native stepper",
+    {
+      "updatedIn": "0.55.0"
+    }
   ],
   "surface": [
     "Surface",

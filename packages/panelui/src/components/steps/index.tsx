@@ -14,10 +14,24 @@
  * Steps does not own your flow: it reflects whatever step your app says is
  * active. Pass `value` to control it, or `defaultValue` to let it manage
  * its own.
+ *
+ * The connectors are the component's job, not yours. The root counts the items
+ * it holds and each one draws the connector to the next, so a stepper is just
+ * its steps — there is no separator to forget, mis-order, or leave dangling
+ * past the last stop. An item that contains its own `Steps.Separator` keeps it
+ * and gets no second one, so hand-placed connectors still work; `separators`
+ * turns the automatic ones off wholesale.
+ *
+ * Knowing the count is also what lets a step say where it sits. A screen reader
+ * reaching the middle of a wizard hears "Payment, step 2 of 3, completed" —
+ * the position and the state, which are the two things the circle and its fill
+ * convey to everyone else.
  */
 import {
+  Children,
   createContext,
   forwardRef,
+  isValidElement,
   useCallback,
   useContext,
   useMemo,
@@ -91,6 +105,7 @@ interface StepsContextValue {
   activeStep: number;
   setActiveStep: (step: number) => void;
   orientation: StepsOrientation;
+  separators: boolean;
 }
 
 interface StepItemContextValue {
@@ -100,8 +115,23 @@ interface StepItemContextValue {
   isLoading: boolean;
 }
 
+/**
+ * Where an item sits among its siblings, published by the root.
+ *
+ * Deliberately not the item's own `step` prop: that is the author's numbering
+ * of the flow and may skip, repeat or start anywhere, while the connector and
+ * the "2 of 3" announcement both need the position in the row as rendered.
+ * Absent when an item is used outside a root that maps its children, which is
+ * why every reader of it has a fallback.
+ */
+interface StepPositionContextValue {
+  position: number;
+  total: number;
+}
+
 const StepsContext = createContext<StepsContextValue | null>(null);
 const StepItemContext = createContext<StepItemContextValue | null>(null);
+const StepPositionContext = createContext<StepPositionContextValue | null>(null);
 
 function useSteps(component: string): StepsContextValue {
   const context = useContext(StepsContext);
@@ -127,6 +157,13 @@ export interface StepsProps extends ViewProps {
   value?: number;
   onValueChange?: (value: number) => void;
   orientation?: StepsOrientation;
+  /**
+   * Draw the connector between one item and the next. On by default — an item
+   * that holds its own `Steps.Separator` is left alone either way, so this is
+   * for a stepper that wants no connectors at all rather than for one that
+   * places them by hand.
+   */
+  separators?: boolean;
   children?: ReactNode;
 }
 
@@ -138,6 +175,7 @@ const StepsRoot = forwardRef<View, StepsProps>(
       value,
       onValueChange,
       orientation = 'horizontal',
+      separators = true,
       children,
       ...props
     },
@@ -156,16 +194,37 @@ const StepsRoot = forwardRef<View, StepsProps>(
     );
 
     const context = useMemo(
-      () => ({ activeStep, setActiveStep, orientation }),
-      [activeStep, setActiveStep, orientation]
+      () => ({ activeStep, setActiveStep, orientation, separators }),
+      [activeStep, setActiveStep, orientation, separators]
     );
 
     const { root } = stepsVariants({ orientation });
 
+    /*
+     * Items are counted here rather than registered by each one on mount,
+     * because the count has to be right on the first frame: a connector that
+     * appears after the last item and disappears once the registrations land
+     * is a visible flicker on every mount. Reading the children gives the whole
+     * row at once, and a Provider adds no host view, so wrapping an item in one
+     * leaves the flex layout exactly as it was.
+     */
+    const nodes = Children.toArray(textChildren(children));
+    const total = nodes.filter((node) => isValidElement(node) && node.type === StepsItem).length;
+    let position = -1;
+
     return (
       <StepsContext.Provider value={context}>
         <View ref={ref} className={root({ className })} {...props}>
-          {textChildren(children)}
+          {nodes.map((node) => {
+            if (!isValidElement(node) || node.type !== StepsItem) return node;
+            position += 1;
+            const placement = { position, total };
+            return (
+              <StepPositionContext.Provider key={node.key ?? position} value={placement}>
+                {node}
+              </StepPositionContext.Provider>
+            );
+          })}
         </View>
       </StepsContext.Provider>
     );
@@ -190,7 +249,8 @@ const StepsItem = forwardRef<View, StepsItemProps>(
     { className, step, completed = false, disabled = false, loading = false, children, ...props },
     ref
   ) => {
-    const { activeStep, orientation } = useSteps('Steps.Item');
+    const { activeStep, orientation, separators } = useSteps('Steps.Item');
+    const placement = useContext(StepPositionContext);
 
     const isLoading = loading && step === activeStep;
     const state: StepState =
@@ -209,10 +269,23 @@ const StepsItem = forwardRef<View, StepsItemProps>(
 
     const { item } = stepsVariants({ orientation, state });
 
+    /*
+     * The last item has nothing to connect to, and one placed by hand is the
+     * author's — adding a second beside it would double the line rather than
+     * replace it. Only the top level is inspected, which is where a connector
+     * has to be anyway: it is a sibling of the trigger, not something buried
+     * inside it.
+     */
+    const isLast = placement ? placement.position === placement.total - 1 : true;
+    const hasOwnSeparator = Children.toArray(children).some(
+      (child) => isValidElement(child) && child.type === StepsSeparator
+    );
+
     return (
       <StepItemContext.Provider value={context}>
         <View ref={ref} className={item({ className })} {...props}>
           {textChildren(children)}
+          {separators && !isLast && !hasOwnSeparator ? <StepsSeparator /> : null}
         </View>
       </StepItemContext.Provider>
     );
@@ -225,18 +298,38 @@ export interface StepsTriggerProps extends ViewProps {
   children?: ReactNode;
 }
 
+/** What each state is called when a screen reader reaches the step. */
+const STATE_WORDS: Record<StepState, string> = {
+  completed: 'completed',
+  active: 'current step',
+  loading: 'in progress',
+  inactive: 'not started',
+};
+
 /** Makes its item selectable. Omit it for a read-only stepper. */
 const StepsTrigger = forwardRef<View, StepsTriggerProps>(
   ({ className, children, ...props }, ref) => {
     const { setActiveStep, orientation } = useSteps('Steps.Trigger');
     const { step, state, isDisabled } = useStepItem('Steps.Trigger');
+    const placement = useContext(StepPositionContext);
     const { trigger } = stepsVariants({ orientation, state, isDisabled });
+
+    /*
+     * Said as a value rather than a label, because the label is the step's own
+     * title and the circle beside it — text the trigger already merges. An
+     * `accessibilityLabel` here would replace all of that with the position,
+     * trading the name of the step for its number; a value is read after it.
+     */
+    const position = placement
+      ? `step ${placement.position + 1} of ${placement.total}, ${STATE_WORDS[state]}`
+      : STATE_WORDS[state];
 
     return (
       <Pressable
         ref={ref}
         accessibilityRole="button"
         accessibilityState={{ disabled: isDisabled, selected: state === 'active' }}
+        accessibilityValue={{ text: position }}
         disabled={isDisabled}
         onPress={() => setActiveStep(step)}
         className={trigger({ className })}
@@ -310,11 +403,13 @@ export interface StepsSeparatorProps extends ViewProps {
 }
 
 /**
- * The connector between two steps. Fills with the primary colour once the
- * step before it is complete.
+ * The connector between two steps. Fills with the primary colour once the step
+ * before it is complete.
  *
- * Place it inside a Steps.Item so it can read that item's state — the
- * separator after step 1 goes solid when step 1 is done.
+ * Every item draws one automatically, so this is only worth writing to dress a
+ * particular connector — an item that holds its own keeps it and gets no
+ * second. It belongs inside a `Steps.Item` either way, so it can read that
+ * item's state: the connector after step 1 goes solid when step 1 is done.
  */
 const StepsSeparator = forwardRef<View, StepsSeparatorProps>(
   ({ className, ...props }, ref) => {
