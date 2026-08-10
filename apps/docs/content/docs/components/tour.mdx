@@ -8,6 +8,14 @@ A walkthrough that introduces a screen one control at a time. It dims everything
 
 The hole is the point. A caption on its own has to describe where to look, and “the button at the top right” is a sentence people read twice and still get wrong.
 
+<PreviewVideo
+  src="/previews/tour.mp4"
+  poster="/previews/tour-poster.jpg"
+  alt="The Tour component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Tour ships with the library — no separate install.
@@ -58,9 +66,68 @@ A step stays mounted whether the tour is running or not — it is a description 
 
 ## Examples
 
+### A walkthrough
+
+The ordinary case, and the one to start from. Steps wrap the controls they are about wherever those live — a header button, a card in a list, an action at the bottom — and `order` puts them in the sequence the screen should be read in rather than the one the tree happens to mount them in.
+
+Nothing is placed by hand. The hole travels to each target and the card settles above or below it depending on which side has room.
+
+<PreviewVideo
+  src="/previews/tour-a-walkthrough.mp4"
+  poster="/previews/tour-a-walkthrough-poster.jpg"
+  alt="Tour — A walkthrough."
+  width={720}
+  height={1560}
+/>
+
+```tsx
+const [running, setRunning] = useState(false);
+
+<Tour open={running} onOpenChange={setRunning}>
+  <View className="flex-row items-center justify-between">
+    <Text weight="semibold">Inbox</Text>
+    <Tour.Step
+      order={1}
+      title="Filter what you see"
+      description="Unread, flagged, or everything at once."
+      shape="circle"
+    >
+      <Button variant="ghost" size="icon" accessibilityLabel="Filter">
+        <SearchIcon size={20} />
+      </Button>
+    </Tour.Step>
+  </View>
+
+  <Tour.Step
+    order={0}
+    title="Your conversations"
+    description="Everything waiting for a reply lands in this list."
+    radius={16}
+  >
+    <Card>{/* … */}</Card>
+  </Tour.Step>
+
+  <Tour.Step
+    order={2}
+    title="Start something new"
+    description="A message to anyone, from anywhere in the app."
+  >
+    <Button onPress={compose}>New message</Button>
+  </Tour.Step>
+</Tour>
+```
+
 ### Round targets
 
 `shape="circle"` squares the hole around the target's centre, which is what keeps it round rather than letting it collapse into a slot. Set it on the tour for a screen of round controls, or on the one step that needs it.
+
+<PreviewVideo
+  src="/previews/tour-round-targets.mp4"
+  poster="/previews/tour-round-targets-poster.jpg"
+  alt="Tour — Round targets."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Tour open={running} onOpenChange={setRunning} shape="circle" padding={10}>
@@ -78,6 +145,14 @@ A step stays mounted whether the tour is running or not — it is a description 
 ### A step that asks you to try it
 
 `interactive` leaves the spotlit control pressable, so the walkthrough can ask you to use the thing rather than read about it. Advancing stays the app's call — the target keeps its own `onPress`.
+
+<PreviewVideo
+  src="/previews/tour-a-step-that-asks-you-to-try-it.mp4"
+  poster="/previews/tour-a-step-that-asks-you-to-try-it-poster.jpg"
+  alt="Tour — A step that asks you to try it."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const [step, setStep] = useState(0);
