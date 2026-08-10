@@ -4760,6 +4760,13 @@
     }
   },
   "tour": {
+    "versions": [
+      {
+        "title": "Across a scroll",
+        "description": "A walkthrough of a screen taller than the screen. A target that has scrolled out of view has no rect worth measuring, so the step brings it back first: every step records where it sits during layout, and `onStepChange` — which fires with the step about to be shown — scrolls there before the spotlight goes looking.\n\nThe scroll is not animated, and that is deliberate. The overlay measures its target a frame after the step changes, which catches a jump and is far too early to catch a three-hundred-millisecond glide; the hole would settle over whatever the content was passing through at the time. Under a dimmed screen the jump is not what the eye is following anyway — the spotlight travelling to the new target is.\n\nKeep the steps as direct children of the scroller. The `y` a step reports at layout is its offset within its parent, which is the content container only while nothing sits in between.",
+        "code": "const scroller = useRef<ScrollView>(null);\nconst offsets = useRef<Record<number, number>>({});\n\n<Tour\n  open={running}\n  onOpenChange={setRunning}\n  onStepChange={(order) => {\n    const y = offsets.current[order];\n    if (y === undefined) return;\n    // Short of the target, so it lands with some of its screen around it.\n    scroller.current?.scrollTo({ y: Math.max(0, y - 96), animated: false });\n  }}\n>\n  <ScrollView ref={scroller}>\n    <Tour.Step\n      order={0}\n      onLayout={(event) => {\n        offsets.current[0] = event.nativeEvent.layout.y;\n      }}\n      title=\"Everyone in here\"\n      description=\"Who has access, and what they can reach.\"\n    >\n      <Card>{/* … */}</Card>\n    </Tour.Step>\n\n    {/* …more of the screen, and the steps further down it… */}\n  </ScrollView>\n</Tour>"
+      }
+    ],
     "intro": "A walkthrough that introduces a screen one control at a time. It dims everything, cuts a hole around one control and puts a card beside it, then moves the hole to the next control.\n\nThe hole is the point. A caption on its own has to describe where to look, and “the button at the top right” is a sentence people read twice and still get wrong.",
     "usage": "<Tour open={onboarding} onOpenChange={setOnboarding}>\n  <Tour.Step\n    order={0}\n    title=\"Your conversations\"\n    description=\"Everything waiting for a reply lands in this list.\"\n  >\n    <Card>{/* … */}</Card>\n  </Tour.Step>\n\n  <Tour.Step\n    order={1}\n    title=\"Start something new\"\n    description=\"A message to anyone, from anywhere in the app.\"\n  >\n    <Button>New message</Button>\n  </Tour.Step>\n</Tour>",
     "parts": {
@@ -4781,8 +4788,8 @@
       },
       {
         "title": "A target inside a scroller",
-        "description": "The tour measures on the frame after `onStepChange`, so a scroll issued there lands first and the spotlight arrives where the target does.",
-        "code": "const scroller = useRef<ScrollView>(null);\nconst offsets = { 0: 0, 1: 320, 2: 720 };\n\n<ScrollView ref={scroller}>\n  <Tour\n    open={running}\n    onOpenChange={setRunning}\n    onStepChange={(order) => scroller.current?.scrollTo({ y: offsets[order], animated: false })}\n  >\n    {/* …steps… */}\n  </Tour>\n</ScrollView>"
+        "description": "The tour measures on the frame after `onStepChange`, so a scroll issued there lands first and the spotlight arrives where the target does. Have each step record where it sits during layout rather than writing the offsets down — a hand-written `320` is right until somebody adds a paragraph above it. See [Across a scroll](#across-a-scroll) for the whole screen, and for why the scroll is not animated.",
+        "code": "const scroller = useRef<ScrollView>(null);\nconst offsets = useRef<Record<number, number>>({});\n\n<ScrollView ref={scroller}>\n  <Tour\n    open={running}\n    onOpenChange={setRunning}\n    onStepChange={(order) => {\n      const y = offsets.current[order];\n      if (y !== undefined) scroller.current?.scrollTo({ y, animated: false });\n    }}\n  >\n    <Tour.Step\n      order={0}\n      onLayout={(event) => {\n        offsets.current[0] = event.nativeEvent.layout.y;\n      }}\n      title=\"Everyone in here\"\n      description=\"Who has access, and what they can reach.\"\n    >\n      {/* the control this step is about */}\n    </Tour.Step>\n\n    {/* …the rest of the screen, and the steps further down it… */}\n  </Tour>\n</ScrollView>"
       },
       {
         "title": "Its own words",

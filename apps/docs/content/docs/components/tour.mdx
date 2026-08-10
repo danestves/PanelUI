@@ -104,19 +104,33 @@ const [step, setStep] = useState(0);
 
 ### A target inside a scroller
 
-The tour measures on the frame after `onStepChange`, so a scroll issued there lands first and the spotlight arrives where the target does.
+The tour measures on the frame after `onStepChange`, so a scroll issued there lands first and the spotlight arrives where the target does. Have each step record where it sits during layout rather than writing the offsets down — a hand-written `320` is right until somebody adds a paragraph above it. See [Across a scroll](#across-a-scroll) for the whole screen, and for why the scroll is not animated.
 
 ```tsx
 const scroller = useRef<ScrollView>(null);
-const offsets = { 0: 0, 1: 320, 2: 720 };
+const offsets = useRef<Record<number, number>>({});
 
 <ScrollView ref={scroller}>
   <Tour
     open={running}
     onOpenChange={setRunning}
-    onStepChange={(order) => scroller.current?.scrollTo({ y: offsets[order], animated: false })}
+    onStepChange={(order) => {
+      const y = offsets.current[order];
+      if (y !== undefined) scroller.current?.scrollTo({ y, animated: false });
+    }}
   >
-    {/* …steps… */}
+    <Tour.Step
+      order={0}
+      onLayout={(event) => {
+        offsets.current[0] = event.nativeEvent.layout.y;
+      }}
+      title="Everyone in here"
+      description="Who has access, and what they can reach."
+    >
+      {/* the control this step is about */}
+    </Tour.Step>
+
+    {/* …the rest of the screen, and the steps further down it… */}
   </Tour>
 </ScrollView>
 ```
@@ -133,6 +147,47 @@ The card's controls read in English by default. `labels` replaces any of them, a
   labels={{ next: 'Siguiente', back: 'Atrás', done: 'Listo', skip: 'Omitir', close: 'Cerrar' }}
 >
   {/* …steps… */}
+</Tour>
+```
+
+## Versions
+
+### Across a scroll
+
+A walkthrough of a screen taller than the screen. A target that has scrolled out of view has no rect worth measuring, so the step brings it back first: every step records where it sits during layout, and `onStepChange` — which fires with the step about to be shown — scrolls there before the spotlight goes looking.
+
+The scroll is not animated, and that is deliberate. The overlay measures its target a frame after the step changes, which catches a jump and is far too early to catch a three-hundred-millisecond glide; the hole would settle over whatever the content was passing through at the time. Under a dimmed screen the jump is not what the eye is following anyway — the spotlight travelling to the new target is.
+
+Keep the steps as direct children of the scroller. The `y` a step reports at layout is its offset within its parent, which is the content container only while nothing sits in between.
+
+```tsx
+const scroller = useRef<ScrollView>(null);
+const offsets = useRef<Record<number, number>>({});
+
+<Tour
+  open={running}
+  onOpenChange={setRunning}
+  onStepChange={(order) => {
+    const y = offsets.current[order];
+    if (y === undefined) return;
+    // Short of the target, so it lands with some of its screen around it.
+    scroller.current?.scrollTo({ y: Math.max(0, y - 96), animated: false });
+  }}
+>
+  <ScrollView ref={scroller}>
+    <Tour.Step
+      order={0}
+      onLayout={(event) => {
+        offsets.current[0] = event.nativeEvent.layout.y;
+      }}
+      title="Everyone in here"
+      description="Who has access, and what they can reach."
+    >
+      <Card>{/* … */}</Card>
+    </Tour.Step>
+
+    {/* …more of the screen, and the steps further down it… */}
+  </ScrollView>
 </Tour>
 ```
 

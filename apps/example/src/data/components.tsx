@@ -43,6 +43,7 @@ import {
   ScrollView,
   useWindowDimensions,
   View,
+  type LayoutChangeEvent,
 } from 'react-native';
 import {
   Accordion,
@@ -13000,6 +13001,161 @@ function TourInteractiveDemo() {
   );
 }
 
+/**
+ * A walkthrough of a screen taller than the screen.
+ *
+ * The one case a tour cannot handle by itself: a target that has scrolled out
+ * of view has no rect worth measuring, so the step has to bring it back first.
+ * `onStepChange` fires with the step about to be shown, which is the moment to
+ * do it — every step records where it sits during layout, and the handler
+ * scrolls there before the spotlight goes looking.
+ *
+ * The scroll is deliberately not animated. The overlay measures its target a
+ * frame after the step changes, which is early enough to catch a jump and far
+ * too early to catch a three-hundred-millisecond glide — the hole would settle
+ * over wherever the content was passing through at the time. Under a dimmed
+ * screen the jump is not what the eye is following anyway; the spotlight
+ * travelling to the new target is.
+ */
+function TourScrollingDemo() {
+  const [running, setRunning] = useState(false);
+  const scroller = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
+
+  // Where each step sits down the content, filled in as the rows lay out. A
+  // ref rather than state: nothing renders from it, and a set-state per row
+  // during layout is a re-render per row for no visible difference.
+  const offsets = useRef<Record<number, number>>({});
+  const remember = (order: number) => (event: LayoutChangeEvent) => {
+    offsets.current[order] = event.nativeEvent.layout.y;
+  };
+
+  return (
+    <View className="flex-1">
+      <Tour
+        open={running}
+        onOpenChange={setRunning}
+        onStepChange={(order) => {
+          const y = offsets.current[order];
+          if (y === undefined) return;
+          // Short of the target rather than flush with it, so the step lands
+          // with some of the screen it belongs to still around it.
+          scroller.current?.scrollTo({ y: Math.max(0, y - 96), animated: false });
+        }}
+      >
+        <ScrollView
+          ref={scroller}
+          contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 120, gap: 16 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text size="xl" weight="bold">
+            Workspace
+          </Text>
+
+          {/* The steps are direct children of the scroller, so the `y` each one
+              reports at layout is its offset down the content — which is
+              exactly what scrollTo takes. Nested a level deeper it would be an
+              offset within whatever it was nested in. */}
+          <Tour.Step
+            order={0}
+            onLayout={remember(0)}
+            title="Everyone in here"
+            description="Who has access, and what they can reach."
+            radius={16}
+          >
+            <Card>
+              <Card.Content className="gap-3 p-4">
+                {[
+                  { name: 'Ana Ruiz', role: 'Admin', initials: 'AR' },
+                  { name: 'Marta Silva', role: 'Editor', initials: 'MS' },
+                  { name: 'Tom Byrne', role: 'Viewer', initials: 'TB' },
+                ].map((person) => (
+                  <View key={person.name} className="flex-row items-center gap-3">
+                    <Avatar size="sm" fallback={person.initials} />
+                    <Text size="sm" className="flex-1">
+                      {person.name}
+                    </Text>
+                    <Badge variant="secondary">{person.role}</Badge>
+                  </View>
+                ))}
+              </Card.Content>
+            </Card>
+          </Tour.Step>
+
+          <Filler lines={7} />
+
+          <Tour.Step
+            order={1}
+            onLayout={remember(1)}
+            title="What gets sent"
+            description="Turn off anything you would rather not hear about."
+            radius={16}
+          >
+            <Card>
+              <Card.Content className="gap-4 p-4">
+                <Text weight="semibold">Notifications</Text>
+                <NotificationRow label="Mentions" initial />
+                <NotificationRow label="Weekly digest" />
+              </Card.Content>
+            </Card>
+          </Tour.Step>
+
+          <Filler lines={9} />
+
+          <Tour.Step
+            order={2}
+            onLayout={remember(2)}
+            title="The one that cannot be undone"
+            description="Right at the bottom, where it belongs."
+          >
+            <Button variant="destructive" onPress={() => {}}>
+              Delete workspace
+            </Button>
+          </Tour.Step>
+        </ScrollView>
+      </Tour>
+
+      {/* Pinned, so the walkthrough can be restarted from wherever the last
+          one left the scroll. */}
+      <View
+        pointerEvents="box-none"
+        className="absolute inset-x-0 bottom-0 px-5"
+        style={{ paddingBottom: insets.bottom + 20 }}
+      >
+        <Button onPress={() => setRunning(true)}>Start the walkthrough</Button>
+      </View>
+    </View>
+  );
+}
+
+/** One switch row, holding its own state — Switch is controlled. */
+function NotificationRow({ label, initial = false }: { label: string; initial?: boolean }) {
+  const [on, setOn] = useState(initial);
+  return (
+    <View className="flex-row items-center justify-between gap-4">
+      <Text size="sm" className="flex-1">
+        {label}
+      </Text>
+      <Switch value={on} onValueChange={setOn} />
+    </View>
+  );
+}
+
+/** Filler paragraphs, so the steps are genuinely a scroll apart. */
+function Filler({ lines }: { lines: number }) {
+  return (
+    <View className="gap-2">
+      {Array.from({ length: lines }, (_, index) => (
+        <View
+          key={index}
+          className="h-3 rounded-full bg-muted"
+          style={{ width: `${68 + ((index * 37) % 30)}%` }}
+        />
+      ))}
+    </View>
+  );
+}
+
 const CATALOGUE: ComponentEntry[] = [
   {
     slug: 'accordion',
@@ -18204,6 +18360,14 @@ const CATALOGUE: ComponentEntry[] = [
       { label: 'A walkthrough', render: () => <TourDemo /> },
       { label: 'Round targets', render: () => <TourCircleDemo /> },
       { label: 'Try it yourself', render: () => <TourInteractiveDemo /> },
+      {
+        label: 'Across a scroll',
+        id: 'scrolling',
+        fullPage: true,
+        description:
+          'A screen taller than the screen: each step scrolls its target back into view first.',
+        render: () => <TourScrollingDemo />,
+      },
     ],
   },
 ];
