@@ -47,20 +47,27 @@ function ComponentRow({ entry, tint }: { entry: ComponentEntry; tint: string }) 
  */
 function AllChartsRow({ tint }: { tint: string }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`All charts. One example of each of the ${CHART_SHOWCASE.length} charts.`}
-      onPress={() => router.push('/components/all-charts')}
-      className="mx-5 mb-2 mt-1 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-4 active:bg-muted"
-    >
-      <View className="flex-1">
-        <Text size="lg">All charts</Text>
-        <Text size="sm" muted>
-          {`One example of each of the ${CHART_SHOWCASE.length} charts`}
-        </Text>
-      </View>
-      <ChevronRightIcon size={18} color={tint} />
-    </Pressable>
+    // Built from the same parts as a component row, so it reads as the first
+    // entry in the list rather than as a banner sitting on top of one.
+    <>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`All charts. One example of each of the ${CHART_SHOWCASE.length} charts.`}
+        onPress={() => router.push('/components/all-charts')}
+        className="flex-row items-center gap-3 px-5 py-4 active:bg-muted"
+      >
+        <View className="flex-1">
+          <Text size="lg">All charts</Text>
+          <Text size="sm" muted>
+            {`One example of each of the ${CHART_SHOWCASE.length} charts`}
+          </Text>
+        </View>
+        <ChevronRightIcon size={18} color={tint} />
+      </Pressable>
+      {/* The list's separator only goes between items, so the one under this
+          row has to come with it. */}
+      <View className="mx-5 h-px bg-border" />
+    </>
   );
 }
 
