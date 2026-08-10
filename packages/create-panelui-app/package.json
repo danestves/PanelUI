@@ -14,7 +14,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "panelui-cli": "^0.2.0"
+    "panelui-cli": "^0.3.0"
   },
   "keywords": [
     "react-native",

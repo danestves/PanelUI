@@ -9,6 +9,98 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.57.0] — 2026-08-11
+
+### Added
+
+- **`QRCode`** — a string, drawn as something a camera can read. Composition is the API, as
+  everywhere else here: a bare `QRCode.Canvas` is a QR code, a `QRCode.Frame` around it is the
+  widget shell the charts are shown in, and a `QRCode.Trigger` with a `QRCode.Content` folds it
+  away behind a button until it is wanted — a popover, or a sheet on a phone, the same way
+  `ColorPicker` folds away.
+
+  The encoder is vendored rather than installed. A component that needs an npm package to draw
+  itself is one the CLI has to install on someone's behalf, and every project that copies the
+  source in inherits it; QR encoding is a few hundred lines of arithmetic that has not changed
+  since 2000, so it is cheaper to own. Byte mode, versions 1–40, all four correction levels, and
+  UTF-8 — so a `value` can be a URL, a WiFi string, a vCard or Japanese.
+
+  It was checked rather than eyeballed, which matters more here than usual: a QR code that is
+  nearly right does not scan, and nothing about looking at one tells you which kind it is. The
+  codewords and the Reed–Solomon check bytes were compared byte for byte against a reference
+  implementation, and every code produced was decoded back to its input by a real decoder across
+  versions 1 to 25 and all four levels. Two bugs came out of that — the finder pattern drew its
+  own separator dark, and the alignment positions came out descending, which put a pattern over
+  the top-left finder and left the bottom-right one off entirely.
+
+  The whole matrix draws as a single `<Path>`. A version 10 code is three and a half thousand
+  modules, and half of them dark as a `<Rect>` each is seventeen hundred native views for a
+  picture that never changes.
+
+  Two decisions worth knowing about. **The code is drawn dark-on-light whatever the theme is
+  doing** — the one place in the library that ignores the tokens, because a QR code is not a
+  surface but a thing a camera has to read, and inverted it is rejected outright by a good share
+  of scanners. And **`QRCode.Logo` clears the modules it covers** rather than drawing over them,
+  then raises the error-correction level if the one you asked for could not afford the loss; a
+  logo on an `L` code is a logo on a code that has stopped working.
+
+- **An MCP server**, as `npx panelui-cli@latest mcp`. Six tools over the same registry `add`
+  installs from, so the source an agent quotes is the source you would get: project info first,
+  then search, list, view, docs and the add command. `mcp init` writes it into `.mcp.json`,
+  `.cursor/mcp.json` or `.vscode/mcp.json`, merging rather than replacing. No dependencies — the
+  stdio transport is JSON-RPC over newline-delimited lines, which is about forty of them.
+
+- **A skill for coding agents**, installable with `npx skills add panel-ui/PanelUI`. What an agent
+  needs to not get this wrong: which of the two ways in a project uses, and therefore what an
+  import should look like; the rules that are not negotiable, each with a wrong/right pair; the
+  six themes and the radius scale a family brings with it. Its component list is generated from
+  the same file the documentation is, because a skill naming a component that does not exist is
+  worse than one naming none.
+
+### Changed
+
+- **The install story is one story.** The home page said `npx expo install panelui-native`, the
+  installation page said that plus nine more packages on one line, and neither answered "I do not
+  have an app yet". There are now two paths: **`npx create-panelui-app@latest`** for a new
+  project — a new package, a thin front on the scaffolder `panelui-cli` already had, so
+  `npm create`, `pnpm create`, `yarn create` and `bun create` all resolve it — and, for an
+  existing one, the package followed by its peer dependencies as a separate step that explains
+  what each of the nine is for and why `expo install` rather than a pinned range.
+
+  Every command on the site now has npm, pnpm, yarn and bun forms, and the choice is remembered
+  across every block and every page.
+
+- **`panelui-cli` 0.3.0** — the `mcp` command, and an `exports` map so `create-panelui-app` can
+  call the scaffolder directly rather than re-launching the CLI through `npx`.
+
+- **The home page shows the components instead of listing them.** The section that was ninety-eight
+  names in a grid is now previews of what they look like, over a picker for the three theme
+  families. Those links moved somewhere better: **`/docs/components`**, a generated index grouping
+  every component by the job it does.
+
+- The web token set matches the native one. The elevation ladder (`--surface` and its two steps)
+  and the tinted status fills (`-soft`, `-subtle`) exist on both sides now, so a preview can use
+  the token its component uses instead of an approximation in greys.
+
+### Fixed
+
+- The sitemap said every one of its 130 URLs had changed on the day of the build, every build.
+  A crawler uses that to decide what to look at again, and a signal that says "all of it, always"
+  is one it learns to ignore — which is part of why 49 component pages were sitting in Search
+  Console's "discovered, currently not indexed". It now comes from git, and gives 62 distinct
+  dates instead of one.
+
+### Docs
+
+- **`/docs/skills`** documents the skill and the MCP server.
+- Agent discovery: `Link` headers on every HTML route, `/.well-known/api-catalog`,
+  `/openapi.json` describing the registry and the search endpoint, `/.well-known/mcp/server.json`,
+  `Content-Signal` in robots.txt, and `Accept: text/markdown` returning any page as markdown at
+  its own URL. All of it describes things that already existed and were only undiscoverable. The
+  OAuth discovery documents the same report asked for are deliberately absent — PanelUI has no
+  accounts, no tokens and no protected endpoints, and those files would describe an
+  authentication system that does not exist.
+
 ## [0.56.0] — 2026-08-10
 
 ### Added
