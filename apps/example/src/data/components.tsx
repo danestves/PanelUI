@@ -99,6 +99,8 @@ import {
   FolderOpenIcon,
   Form,
   Frame,
+  FunnelChart,
+  type FunnelDatum,
   GoogleIcon,
   GridItem,
   HeartIcon,
@@ -11874,6 +11876,219 @@ function SwipeDeleteDemo() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* FunnelChart                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** A week of checkout, from the people who saw a product to the ones who paid. */
+const CHECKOUT: FunnelDatum[] = [
+  { label: 'Product viewed', value: 41800 },
+  { label: 'Added to basket', value: 18240 },
+  { label: 'Checkout started', value: 9420 },
+  { label: 'Payment entered', value: 6180 },
+  { label: 'Order placed', value: 5240 },
+];
+
+/** A hiring pipeline, which drops far harder and is the case for a floor. */
+const PIPELINE: FunnelDatum[] = [
+  { label: 'Applied', value: 1240 },
+  { label: 'Screened', value: 420 },
+  { label: 'Interviewed', value: 96 },
+  { label: 'Offered', value: 18 },
+  { label: 'Hired', value: 11 },
+];
+
+/** Funnel stages are counts of people, and a count reads with its separators. */
+const people = (value: number) => value.toLocaleString();
+
+/** The plain funnel: five steps, each labelled with what it converted at. */
+function FunnelBasicVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Checkout</Frame.Title>
+          <Frame.Action>Last 7 days</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <FunnelChart data={CHECKOUT} className="pb-4">
+            <FunnelChart.Header
+              className={CHART_HEADER}
+              title="Product viewed"
+              value={people(CHECKOUT[0]!.value)}
+              caption="13% of them placed an order"
+            />
+            <FunnelChart.Stages />
+            <FunnelChart.Labels />
+          </FunnelChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * The same run read the other way: every stage against the top of the funnel
+ * rather than against the step above it.
+ *
+ * Both readings are true and they answer different questions. "Ninety percent
+ * of the people who entered a card placed the order" is about that one step;
+ * "thirteen percent of everyone who looked bought something" is about the
+ * whole thing. Selecting a stage puts both in the header.
+ */
+function FunnelConversionVersion() {
+  const [active, setActive] = useState(-1);
+  const stage = active >= 0 ? CHECKOUT[active] : null;
+  const previous = active > 0 ? CHECKOUT[active - 1] : null;
+  const share = stage ? stage.value / CHECKOUT[0]!.value : 1;
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Where they go</Frame.Title>
+          <Frame.Action>Tap a stage</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <FunnelChart
+            data={CHECKOUT}
+            className="pb-4"
+            cornerRadius={6}
+            gap={6}
+            activeIndex={active}
+            onActiveIndexChange={setActive}
+          >
+            <FunnelChart.Header
+              className={CHART_HEADER}
+              title={stage ? stage.label : 'Everyone who looked'}
+              value={people(stage ? stage.value : CHECKOUT[0]!.value)}
+              caption={
+                previous && stage
+                  ? `${Math.round((stage.value / previous.value) * 100)}% of ${previous.label.toLowerCase()} · ${Math.round(share * 100)}% of all`
+                  : 'Five steps, 13% of the way through'
+              }
+            />
+            <FunnelChart.Stages />
+            <FunnelChart.Labels share="top" />
+          </FunnelChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * A pipeline that ends at eleven out of twelve hundred, which is what the floor
+ * under the narrow stages is for: at true width the last two are hairlines,
+ * and a hairline reads as nothing happening rather than as something rare.
+ *
+ * Left-aligned, because a taper hanging off one edge is easier to compare down
+ * a column than one narrowing from both.
+ */
+function FunnelPipelineVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Hiring</Frame.Title>
+          <Frame.Action>This quarter</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <FunnelChart
+            data={PIPELINE}
+            align="start"
+            minWidth={0.16}
+            cornerRadius={4}
+            className="pb-4"
+          >
+            <FunnelChart.Header
+              className={CHART_HEADER}
+              title="Applications"
+              value={people(PIPELINE[0]!.value)}
+              caption="11 hires, from 1,240 applications"
+            />
+            <FunnelChart.Stages />
+            <FunnelChart.Labels />
+          </FunnelChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * The compact card: the run is the shape and the reading is underneath it.
+ *
+ * For a dashboard tile where the funnel is one of six things on the screen and
+ * a row of labels across each stage would be more text than tile.
+ */
+function FunnelCompactVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Signup</Frame.Title>
+        </Frame.Header>
+        <Frame.Panel>
+          <FunnelChart
+            data={CHECKOUT.slice(0, 4)}
+            stageHeight={28}
+            gap={3}
+            cornerRadius={4}
+            className="p-4"
+          >
+            <FunnelChart.Stages />
+            <FunnelChart.Legend />
+          </FunnelChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** The waiting state: one plain taper, with no invented drop-off in it. */
+function FunnelLoadingVersion() {
+  const [status, setStatus] = useState<'loading' | 'ready'>('loading');
+
+  useEffect(() => {
+    if (status !== 'loading') return;
+    const timer = setTimeout(() => setStatus('ready'), 1500);
+    return () => clearTimeout(timer);
+  }, [status]);
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Checkout</Frame.Title>
+          <Frame.Action>
+            <Button size="sm" variant="ghost" onPress={() => setStatus('loading')}>
+              Reload
+            </Button>
+          </Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <FunnelChart
+            data={status === 'loading' ? [] : CHECKOUT}
+            status={status}
+            cornerRadius={6}
+            className="pb-4"
+          >
+            <FunnelChart.Header
+              className={CHART_HEADER}
+              title="Product viewed"
+              value={status === 'loading' ? '—' : people(CHECKOUT[0]!.value)}
+            />
+            <FunnelChart.Skeleton />
+            <FunnelChart.Stages />
+            <FunnelChart.Labels />
+          </FunnelChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
 /* -------------------------------------------------------------------------- *
  * Sortable                                                                    *
  * -------------------------------------------------------------------------- */
@@ -16761,6 +16976,49 @@ const CATALOGUE: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'funnel-chart',
+    name: 'FunnelChart',
+    summary: 'Where a population drained away, one step at a time',
+    layout: 'pager',
+    demos: [
+      {
+        label: 'Basic',
+        id: 'basic',
+        fullPage: true,
+        description: 'Five steps of a checkout, each labelled with what it converted at.',
+        render: () => <FunnelBasicVersion />,
+      },
+      {
+        label: 'Conversion',
+        id: 'conversion',
+        fullPage: true,
+        description: 'Every stage against the top of the funnel, and both readings in the header.',
+        render: () => <FunnelConversionVersion />,
+      },
+      {
+        label: 'Pipeline',
+        id: 'pipeline',
+        fullPage: true,
+        description: 'A hard drop-off, left-aligned, with a floor under the stages too small to see.',
+        render: () => <FunnelPipelineVersion />,
+      },
+      {
+        label: 'Compact',
+        id: 'compact',
+        fullPage: true,
+        description: 'The run as a shape, with the reading in a key underneath it.',
+        render: () => <FunnelCompactVersion />,
+      },
+      {
+        label: 'Loading',
+        id: 'loading',
+        fullPage: true,
+        description: 'One plain taper while it waits, because an invented drop-off is a lie.',
+        render: () => <FunnelLoadingVersion />,
+      },
+    ],
+  },
+  {
     slug: 'pie-chart',
     name: 'PieChart',
     summary: 'One whole, divided between its parts',
@@ -18563,6 +18821,7 @@ export const CHART_SLUGS = [
   'area-chart',
   'bar-chart',
   'pie-chart',
+  'funnel-chart',
   'hex-chart',
   'ring-chart',
   'radar-chart',

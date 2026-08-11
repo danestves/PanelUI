@@ -1,0 +1,263 @@
+---
+title: FunnelChart
+description: Where a population drained away, one step at a time.
+status: new
+---
+
+Where a population drained away, one step at a time.
+
+Every stage is a subset of the one above it, in the order the steps happen. That is a much stronger claim than a bar chart makes, and it is what makes the interesting number not any stage's value but the ratio between two of them: how many of the people who started checking out entered a card, and how many of everyone who looked ended up paying.
+
+## Installation
+
+FunnelChart ships with the library — no separate install.
+
+```tsx
+import { FunnelChart, type FunnelDatum, Frame } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add funnel-chart
+```
+
+## Usage
+
+```tsx
+<FunnelChart data={checkout}>
+  <FunnelChart.Header title="Product viewed" value="41,800" />
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+</FunnelChart>
+```
+
+## Composition
+
+```tsx
+<FunnelChart data={…}>
+  <FunnelChart.Header />      {/* the strip above the run */}
+  <FunnelChart.Skeleton />    {/* the plain taper it waits behind */}
+  <FunnelChart.Stages />      {/* the trapezoids themselves */}
+  <FunnelChart.Labels />      {/* a row per stage, laid over the run */}
+  <FunnelChart.Legend />      {/* a key underneath, for a chart without labels */}
+</FunnelChart>
+```
+
+- **`FunnelChart.Header`** — The strip above the run — what the funnel is of, what it reads, and room for a control. The chart introducing itself, as distinct from the caption on the card around it.
+- **`FunnelChart.Stages`** — The trapezoids. One part rather than one per stage: a stage’s bottom edge is the next stage’s width, so they cannot be configured apart without the taper coming apart with them.
+- **`FunnelChart.Labels`** — A row per stage laid over the run: its name, its value and how it converted. Spans the full width rather than sitting inside the shape, and is pressable, because the stages with the worst drop-off are the narrowest and neither text nor a fingertip fits in them.
+- **`FunnelChart.Legend`** — A swatch, a name and a share per stage, under the run. For a compact chart drawn without `Labels`, where the run is a shape and the reading is underneath it.
+- **`FunnelChart.Skeleton`** — The waiting state: one plain taper over the whole run, undivided. A placeholder split would be an invented drop-off, and nobody can tell an invented one from a real one until it changes under them.
+
+## Examples
+
+### The data
+
+Steps in the order they happen, top first. The order is yours and never the chart’s — stages are a process, and sorting them by size would destroy the only thing the chart is asserting.
+
+```tsx
+const checkout: FunnelDatum[] = [
+  { label: 'Product viewed', value: 41800 },
+  { label: 'Added to basket', value: 18240 },
+  { label: 'Checkout started', value: 9420 },
+  { label: 'Payment entered', value: 6180 },
+  { label: 'Order placed', value: 5240 },
+];
+```
+
+### Which conversion the labels report
+
+Two true readings of one run, answering different questions. `previous` is the drop from the stage above — the step-by-step reading a funnel is usually built for, and the default. `top` is the share of the first stage, which is the summary figure. The first stage has nothing above it, so it carries no caption under `previous`.
+
+```tsx
+<FunnelChart data={checkout}>
+  <FunnelChart.Stages />
+  <FunnelChart.Labels share="top" />
+</FunnelChart>
+```
+
+### Selecting a stage
+
+Press a stage, its label row, or its entry in the legend, and the others dim. Pressing it again clears the selection. Control it from outside with `activeIndex` and `onActiveIndexChange` when the header — or anything else on the screen — has to stay in step.
+
+```tsx
+const [active, setActive] = useState(-1);
+const stage = active >= 0 ? checkout[active] : null;
+
+<FunnelChart data={checkout} activeIndex={active} onActiveIndexChange={setActive}>
+  <FunnelChart.Header
+    title={stage ? stage.label : 'Everyone who looked'}
+    value={(stage ?? checkout[0]).value.toLocaleString()}
+  />
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+</FunnelChart>
+```
+
+### A hard drop-off
+
+Eleven hires out of twelve hundred applications. At true width the last two stages are hairlines, and a hairline reads as nothing happening rather than as something rare — `minWidth` is the floor that keeps them visible, applied only to stages that have something in them. `align="start"` hangs the taper off the leading edge, which is easier to compare down a column than one narrowing from both sides.
+
+```tsx
+<FunnelChart data={pipeline} align="start" minWidth={0.16} cornerRadius={4}>
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+</FunnelChart>
+```
+
+### Compact, with a key instead of labels
+
+For a dashboard tile where the funnel is one of six things on the screen and a row of labels across every stage would be more text than tile.
+
+```tsx
+<FunnelChart data={checkout} stageHeight={28} gap={3} cornerRadius={4}>
+  <FunnelChart.Stages />
+  <FunnelChart.Legend />
+</FunnelChart>
+```
+
+### While the numbers are still coming
+
+`status="loading"` draws the taper and nothing else. An empty chart in that state still reserves a run’s worth of height, so the card does not jump when the data lands.
+
+```tsx
+<FunnelChart data={ready ? checkout : []} status={ready ? 'ready' : 'loading'}>
+  <FunnelChart.Skeleton />
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+</FunnelChart>
+```
+
+## Versions
+
+### Basic
+
+Five steps of a checkout, each labelled with what it converted at.
+
+```tsx
+<FunnelChart data={checkout}>
+  <FunnelChart.Header title="Product viewed" value="41,800" caption="13% of them placed an order" />
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+</FunnelChart>
+```
+
+### Conversion
+
+Every stage measured against the top of the funnel, with both readings in the header as one is selected.
+
+```tsx
+<FunnelChart data={checkout} cornerRadius={6} gap={6} activeIndex={active} onActiveIndexChange={setActive}>
+  <FunnelChart.Header title={stage?.label ?? 'Everyone who looked'} value={value} caption={caption} />
+  <FunnelChart.Stages />
+  <FunnelChart.Labels share="top" />
+</FunnelChart>
+```
+
+### Pipeline
+
+A hard drop-off, left-aligned, with a floor under the stages too small to see.
+
+```tsx
+<FunnelChart data={pipeline} align="start" minWidth={0.16} cornerRadius={4}>
+  <FunnelChart.Header title="Applications" value="1,240" caption="11 hires, from 1,240 applications" />
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+</FunnelChart>
+```
+
+### Compact
+
+The run as a shape, with the reading in a key underneath it.
+
+```tsx
+<FunnelChart data={checkout.slice(0, 4)} stageHeight={28} gap={3} cornerRadius={4}>
+  <FunnelChart.Stages />
+  <FunnelChart.Legend />
+</FunnelChart>
+```
+
+### Loading
+
+One plain taper while it waits, because an invented drop-off is a lie.
+
+```tsx
+<FunnelChart data={status === 'loading' ? [] : checkout} status={status} cornerRadius={6}>
+  <FunnelChart.Header title="Product viewed" value={status === 'loading' ? '—' : '41,800'} />
+  <FunnelChart.Skeleton />
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+</FunnelChart>
+```
+
+## API Reference
+
+### FunnelChart
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `data` | `FunnelDatum[]` | — | The steps, top to bottom, in the order they happen. Never reordered. |
+| `stageHeight` | `number` | `52` | Height of one stage, in points. The run is as tall as its stages need. |
+| `gap` | `number` | `4` | Space between one stage and the next, in points. |
+| `align` | `FunnelAlign` | `'center'` | Which edge the taper hangs off. `center` narrows from both sides; `start` keeps the leading edge straight and takes it all off the trailing one, which is the shape to use when the labels run down the same side. |
+| `minWidth` | `number` | `0.1` | The narrowest a non-zero stage is drawn, as a share of the full width. A stage worth a fifth of a percent of the top is a hairline: it reads as missing rather than as small, and "missing" is a different claim. The floor is only applied to stages that have something in them — a genuine zero is drawn as nothing, because there it is the truth. |
+| `cornerRadius` | `number` | `0` | Rounds the corners of every stage, in points. |
+| `color` | `string` | — | The funnel's hue. Defaults to the first chart token. |
+| `animationDuration` | `number` | `900` | Milliseconds for the funnel to fill, top to bottom. |
+| `status` | `FunnelChartStatus` | `'ready'` | `loading` draws one plain muted taper until the data arrives. |
+| `activeIndex` | `number` | — | Selected stage. Leave unset to let the chart track it. |
+| `onActiveIndexChange` | `(index: number) => void` | — | Fires with the selected stage, or `-1` when the selection is cleared. |
+
+### FunnelChart.Stages
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dimOpacity` | `number` | — | Opacity of the stages that are not selected, once one is. |
+
+### FunnelChart.Skeleton
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `color` | `string` | — |  |
+
+### FunnelChart.Labels
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `formatValue` | `(value: number, stage: FunnelDatum) => string` | — | Format the number on the trailing edge. Defaults to a compact number. |
+| `share` | `FunnelShare` | `'previous'` | Which conversion the muted figure reports. `previous` is the drop from the stage above — the number a funnel is usually read for. `top` is the share of the first stage, which is what a summary wants. The first stage has no stage above it, so it carries nothing under `previous`. |
+
+### FunnelChart.Legend
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `showValue` | `boolean` | `true` | Show each stage's share of the first one beside its name. |
+
+### FunnelChart.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | — | Small line above the value — what the funnel is of. |
+| `value` | `string` | — | The readout. The largest thing on the card, and the first thing read. |
+| `caption` | `string` | — | One muted line under the value — a period, a comparison, a caveat. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### One hue, not five
+
+The stages are drawn in a single colour that fades down the run. They are one quantity at successive moments, not five unrelated series, and five hues would say they were — the reader would start looking for what "the green one" means. Set `color` on the chart to change the hue, or `color` on a single stage to pull it out of the fade at full strength: the step where the money is taken, the one the report is about.
+
+### A stage wider than its parent
+
+Widths are measured against the largest value in the run rather than against the first. In a well-formed funnel those are the same number. Where they are not — a stage that somehow counted more people than the step before it — the stage is drawn as given, wider than its parent, because that is a real data problem and a chart that quietly clamped it would be hiding the one thing worth seeing.
+
+### When not to reach for it
+
+A funnel asserts that each stage is a subset of the one above it. If that is not true of your data — categories that merely happen to be sorted, quantities measured at the same moment, anything a reader might want to compare exactly — it is a bar chart, where the comparison is a length and lengths are read exactly. Four to six stages is the range a funnel reads well in; past that the lower ones are all floor and the shape stops carrying the information.

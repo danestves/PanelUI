@@ -1,6 +1,7 @@
 ---
 title: Progress
 description: Determinate and indeterminate progress bar.
+status: updated
 ---
 
 A progress bar, determinate or indeterminate, animated on the UI thread. Reads its value against a range you set, and captions itself with a label and a value readout when the bar needs a heading.
@@ -164,7 +165,7 @@ For work with no measurable progress. The animation runs on the UI thread and st
 | `value` | `number` | `0` | Where the work has got to, somewhere between `minValue` and `maxValue`. Ignored when `indeterminate` is set. |
 | `minValue` | `number` | `0` | The bottom of the range — the value at which the bar reads as empty. Defaults to `0`. |
 | `maxValue` | `number` | `100` | The top of the range — the value at which the bar reads as full. Defaults to `100`, so a bare percentage keeps working with neither bound set. |
-| `indeterminate` | `boolean` | `false` | Show a looping animation for unknown-duration work. |
+| `indeterminate` | `boolean` | `false` | Show a looping animation for unknown-duration work. Under the platform's reduce-motion setting the bar fills the track and pulses instead of travelling across it, so it still reads as running. |
 | `indicatorClassName` | `string` | — | Extra classes for the moving indicator. |
 | `label` | `string` | — | Caption drawn above the track, on the left. Supplying it (or `showValueLabel`) wraps the bar in a header row; the track alone renders otherwise. |
 | `showValueLabel` | `boolean` | `false` | Draw the percentage above the track, on the right. Hidden while `indeterminate` — there is nothing meaningful to show. |
@@ -176,7 +177,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
-`value` is read against `minValue` and `maxValue`, which default to `0` and `100` — a percentage needs neither. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. The animation runs on the UI thread and stops when reduce-motion is on.
+`value` is read against `minValue` and `maxValue`, which default to `0` and `100` — a percentage needs neither. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. The animation runs on the UI thread. Under reduce motion the fill lands on its value rather than springing to it, and the indeterminate bar fills the track and pulses in place instead of travelling across it — a bar that stopped moving would read as a bar that had hung, which is the one thing an indeterminate bar exists to rule out.
 
 ### Writing the value
 

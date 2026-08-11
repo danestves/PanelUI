@@ -4,6 +4,7 @@
     "area-chart",
     "bar-chart",
     "candlestick-chart",
+    "funnel-chart",
     "heatmap-chart",
     "hex-chart",
     "line-chart",
