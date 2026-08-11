@@ -9,6 +9,53 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.59.0] — 2026-08-11
+
+### Changed
+
+- **`FunnelChart` is drawn as one ribbon across the card, and reads in three places.** The stack
+  of full-width blocks with a row of text laid over each had two faults, and they had the same
+  root. A stage's fill and the label on it resolve to the same token family, so wherever the shape
+  reached under a row the text vanished into it — and the first stage of a funnel is a hundred
+  percent of itself, so it always reached. And the name, the count and the conversion shared one
+  line, which makes that line as wide as all three: on a phone the name was the one that gave way,
+  and a reader was left with "Checkout st…" against a number.
+
+  So the stages now divide the width between them and the shape is a single ribbon symmetrical
+  about the centre line — each band as tall as its value where it starts and the next stage's
+  where it ends, sides curved so consecutive bands meet flush and the run reads as one narrowing
+  channel rather than a row of separate shapes. Each band is drawn concentrically, from a wide
+  faint ring to a tight near-solid core, which gives the edge a falloff and leaves a low-opacity
+  band for text to sit on. Stages grow out of the centre line one after another, in the order they
+  happen. The readings split three ways: the count above the band, the name below it, and the
+  conversion in a filled pill on the band itself — the one reading that sits over the shape, so it
+  is punched out of its own background and stays legible whatever the fill is doing underneath.
+
+- **`FunnelChart.Legend` is a row per stage.** Names down one column, numbers down another. The
+  stages are a sequence and a wrapped centred line loses that — the order is only implied by the
+  order the names happen to be read in, and a long one breaks across lines that no longer align.
+  `layout="inline"` keeps the old arrangement where the names are short enough for it.
+
+### Removed
+
+- **`FunnelChart`'s `align` and `cornerRadius`.** A ribbon has no leading edge to hang off and no
+  corners to turn; `edges` chooses between curved sides and straight diagonals instead.
+- **`FunnelChart`'s `orientation`.** It shipped with a vertical run for one release and the layout
+  was carrying the design: down the screen a stage is a row, so its count and its name compete with
+  the shape for the same width, and both the shape and the names come off worse. Across the card a
+  stage is a column and each reading has that column to itself.
+
+### Migration
+
+- `stageHeight` is now `stageSize`, and is optional — left unset the stages divide the card's
+  width between them, which is what a run across a card almost always wants.
+- `crossSize` is now `height`: how deep the ribbon tapers, the one measurement a set of counts
+  cannot supply.
+- Keep stage names short. A stage gets a column of the card's width, so five across a phone is
+  about seventy points each.
+- New: `layers` for the depth of the halo, `edges` for curved or straight sides, `staggerDelay`
+  for the wait between one stage arriving and the next.
+
 ## [0.58.0] — 2026-08-11
 
 ### Added

@@ -270,7 +270,8 @@
     "react native funnel chart conversion",
     {
       "addedIn": "0.58.0",
-      "group": "charts"
+      "group": "charts",
+      "updatedIn": "0.59.0"
     }
   ],
   "heatmap-chart": [
