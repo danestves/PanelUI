@@ -83,17 +83,28 @@ const REVEAL_DURATION = 180;
 /** The spring the tick lands with — the same one the checkbox uses. */
 const TICK_SPRING = { damping: 15, stiffness: 300, mass: 0.5 } as const;
 
-/** How far from the bottom edge the action bar sits, in points. */
+/** How far a floating action bar sits from the edges, in points. */
 const DEFAULT_BAR_OFFSET = 16;
+
+/**
+ * Fill a height that is offered, and take the content's own when none is.
+ *
+ * `flexBasis: 'auto'` rather than the `0` that `flex: 1` sets. A `flex: 1` box
+ * inside a parent of indefinite height resolves to *nothing* — its basis is
+ * zero and there is no free space to grow into — so a selection list dropped
+ * into a scrolling page would collapse to a hairline instead of showing its
+ * rows.
+ */
+const FILL = { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' } as const;
 
 const selectionVariants = tv({
   slots: {
     circle: 'h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground',
     fill: 'absolute inset-0 items-center justify-center rounded-full bg-primary',
-    header: 'flex-row items-center gap-3 px-4 py-3',
-    title: 'flex-1 text-base font-medium text-foreground',
-    bar: 'flex-row items-center justify-around rounded-2xl border border-border bg-popover px-2 py-2 shadow-lg',
-    action: 'flex-1 items-center gap-1 rounded-xl px-3 py-2',
+    header: 'h-14 flex-row items-center gap-3 border-b border-border px-4',
+    title: 'flex-1 text-center text-base font-semibold text-foreground',
+    bar: 'flex-row items-stretch',
+    action: 'flex-1 items-center justify-center gap-1.5 px-2 py-3',
     actionLabel: 'text-xs font-medium text-foreground',
   },
   variants: {
@@ -106,6 +117,21 @@ const selectionVariants = tv({
     disabled: {
       true: { action: 'opacity-[0.44]' },
     },
+    /**
+     * Flush to the bottom edge, or lifted off it.
+     *
+     * `bar` is the platform shape — full width against the edge, a hairline
+     * along the top, and the same background as the screen's own chrome. It is
+     * the default because it is what a list with a selection in it does on both
+     * platforms, and because it does not take width away from the list.
+     */
+    placement: {
+      bar: { bar: 'border-t border-border bg-popover' },
+      floating: { bar: 'rounded-2xl border border-border bg-popover shadow-lg' },
+    },
+  },
+  defaultVariants: {
+    placement: 'bar',
   },
 });
 
@@ -315,7 +341,7 @@ function SelectionModeRoot({
 
   return (
     <SelectionModeContext.Provider value={context}>
-      <View className={cn('flex-1', className)} {...props}>
+      <View style={FILL} className={className} {...props}>
         {textChildren(children)}
       </View>
     </SelectionModeContext.Provider>
@@ -445,7 +471,7 @@ function SelectionModeItem({
           if (disabled || showing) return;
           enter(value);
         }}
-        className={cn('flex-row items-center gap-3', className)}
+        className={cn('flex-row items-center gap-3 px-4 py-2', className)}
         {...props}
       >
         {showing ? (
@@ -456,7 +482,15 @@ function SelectionModeItem({
             <SelectionModeIndicator value={value} />
           </Animated.View>
         ) : null}
-        <View className="flex-1">{textChildren(children)}</View>
+        {/*
+         * `minWidth: 0` as well as growing. Without it a long title refuses to
+         * be narrower than its own text, pushes the row past the screen and
+         * takes the layout with it — which is what a flex child does by
+         * default, and why a name ends up broken across lines mid-word.
+         */}
+        <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
+          {textChildren(children)}
+        </View>
       </Pressable>
     </SelectionModeItemContext.Provider>
   );
@@ -508,31 +542,42 @@ function SelectionModeHeader({
         textChildren(children)
       ) : (
         <>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Cancel selection"
-            onPress={exit}
-            hitSlop={8}
-          >
-            <XIcon size={22} />
-          </Pressable>
+          {/*
+           * The two ends are the same width, so the title between them is
+           * centred on the screen rather than on whatever is left over. A title
+           * that shifts sideways as the count goes from 9 to 10 reads as the
+           * header being rebuilt.
+           */}
+          <View className="w-20 items-start">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Cancel selection"
+              onPress={exit}
+              hitSlop={12}
+            >
+              <XIcon size={24} />
+            </Pressable>
+          </View>
 
-          <Text className={slots.title()}>
+          <Text numberOfLines={1} className={slots.title()}>
             {count > 0 ? `${title} (${count})` : title}
           </Text>
 
-          {hideSelectAll || total === 0 ? null : (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ checked: allSelected }}
-              onPress={allSelected ? clear : selectAll}
-              hitSlop={8}
-            >
-              <Text size="sm" weight="medium" className="text-primary">
-                {allSelected ? 'Clear' : 'Select all'}
-              </Text>
-            </Pressable>
-          )}
+          <View className="w-20 items-end">
+            {hideSelectAll || total === 0 ? null : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={allSelected ? 'Clear selection' : 'Select all'}
+                accessibilityState={{ checked: allSelected }}
+                onPress={allSelected ? clear : selectAll}
+                hitSlop={12}
+              >
+                <Text size="sm" weight="medium" className="text-primary">
+                  {allSelected ? 'Clear' : 'All'}
+                </Text>
+              </Pressable>
+            )}
+          </View>
         </>
       )}
     </Animated.View>
@@ -543,10 +588,18 @@ function SelectionModeHeader({
  * Bar
  * -------------------------------------------------------------------------- */
 
-export interface SelectionModeBarProps extends ViewProps {
+export interface SelectionModeBarProps
+  extends ViewProps,
+    Pick<SelectionVariantProps, 'placement'> {
   className?: string;
-  /** Distance from the bottom edge, in points. Add your safe-area inset. */
-  offset?: number;
+  /**
+   * Room under the actions, in points — your safe-area inset.
+   *
+   * A bar against the bottom edge sits over the home indicator on a phone that
+   * has one, and an action under a home indicator is an action that takes two
+   * tries. `floating` uses it as the gap on all four sides instead.
+   */
+  inset?: number;
   /**
    * Keep the bar up with nothing picked.
    *
@@ -558,15 +611,22 @@ export interface SelectionModeBarProps extends ViewProps {
 }
 
 /**
- * The actions, floating over the bottom of the list.
+ * The actions, across the bottom of the list.
  *
- * Over rather than under, because the list is as long as it is and a bar in the
- * flow would be somewhere off the end of it. Pad the bottom of your list so the
- * last row can clear this — nothing here can work out how tall the list is.
+ * Over the list rather than under it, because the list is as long as it is and
+ * a bar in the flow would be somewhere off the end of it. **Pad the bottom of
+ * your list so the last row can clear this** — nothing here can work out how
+ * tall the list is.
+ *
+ * Flush to the edge by default. A bar inset from the sides is a card floating
+ * over a list, which reads as something that arrived rather than as the mode
+ * the screen is in — and it takes width away from the actions, which are the
+ * one row of controls on screen that must not be cramped.
  */
 function SelectionModeBar({
   className,
-  offset = DEFAULT_BAR_OFFSET,
+  placement,
+  inset = 0,
   showWhenEmpty = false,
   children,
   style,
@@ -574,19 +634,29 @@ function SelectionModeBar({
 }: SelectionModeBarProps) {
   const { active, count } = useSelectionMode();
   const reducedMotion = useReducedMotion();
-  const slots = selectionVariants({});
+  const floating = placement === 'floating';
+  const slots = selectionVariants({ placement });
 
   if (!active || (count === 0 && !showWhenEmpty)) return null;
+
+  const edge = floating ? inset || DEFAULT_BAR_OFFSET : 0;
 
   return (
     <Animated.View
       entering={reducedMotion ? FadeIn : SlideInDown.duration(220)}
       exiting={reducedMotion ? FadeOut : SlideOutDown.duration(180)}
-      pointerEvents="box-none"
-      style={[{ position: 'absolute', left: offset, right: offset, bottom: offset }, style]}
+      style={[{ position: 'absolute', left: edge, right: edge, bottom: edge }, style]}
       {...props}
     >
-      <View className={cn(slots.bar(), className)}>{textChildren(children)}</View>
+      <View
+        // Padding rather than a margin, so the bar's own background runs all
+        // the way to the edge and the safe area is filled rather than left as a
+        // stripe of whatever is behind it.
+        style={floating ? undefined : { paddingBottom: inset }}
+        className={cn(slots.bar(), className)}
+      >
+        {textChildren(children)}
+      </View>
     </Animated.View>
   );
 }

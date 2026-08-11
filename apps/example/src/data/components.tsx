@@ -18877,14 +18877,14 @@ function SelectionModeDemo() {
   const threads = SELECTION_THREADS.filter((thread) => !gone.includes(thread.id));
 
   return (
-    <View className="h-96 overflow-hidden rounded-xl border border-border">
+    <View style={{ height: 380 }} className="w-full overflow-hidden rounded-xl border border-border">
       <SelectionMode
         values={threads.map((thread) => thread.id)}
         selected={selected}
         onSelectedChange={setSelected}
       >
         <SelectionMode.Header title="Choose" />
-        <ScrollView contentContainerClassName="gap-1 p-2 pb-24">
+        <ScrollView contentContainerClassName="py-2 pb-24">
           {threads.map((thread) => (
             <SelectionMode.Item key={thread.id} value={thread.id}>
               <Item>
@@ -18930,7 +18930,7 @@ function SelectionModeAlwaysOnDemo() {
   const [selected, setSelected] = useState<string[]>(['mila']);
 
   return (
-    <View className="h-72 overflow-hidden rounded-xl border border-border">
+    <View style={{ height: 300 }} className="w-full overflow-hidden rounded-xl border border-border">
       <SelectionMode
         defaultActive
         max={3}
@@ -18939,7 +18939,7 @@ function SelectionModeAlwaysOnDemo() {
         onSelectedChange={setSelected}
       >
         <SelectionMode.Header title="Attach" />
-        <ScrollView contentContainerClassName="gap-1 p-2">
+        <ScrollView contentContainerClassName="py-2">
           {SELECTION_THREADS.map((thread) => (
             <SelectionMode.Item key={thread.id} value={thread.id}>
               <Item>

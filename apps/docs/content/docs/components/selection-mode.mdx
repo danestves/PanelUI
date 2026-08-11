@@ -131,6 +131,38 @@ A screen that exists only to pick things — an attachment picker, a share sheet
 </SelectionMode>
 ```
 
+### A bar that floats instead
+
+For a list that does not run to the bottom of the screen,  lifts the bar off the edge into a rounded card. Flush is the default because it does not take width away from the actions, which are the one row of controls on screen that should not be cramped.
+
+```tsx
+<SelectionMode.Bar placement="floating" inset={insets.bottom}>
+  <SelectionMode.Action icon={<TrashIcon size={20} />} destructive onPress={remove}>
+    Delete
+  </SelectionMode.Action>
+</SelectionMode.Bar>
+```
+
+## Variants
+
+### `destructive`
+
+- `true`
+
+```tsx
+<SelectionMode destructive="true">…</SelectionMode>
+```
+
+### `placement`
+
+- `bar` *(default)*
+- `floating`
+
+```tsx
+<SelectionMode placement="bar">…</SelectionMode>
+<SelectionMode placement="floating">…</SelectionMode>
+```
+
 ## API Reference
 
 ### SelectionMode
@@ -178,7 +210,7 @@ A screen that exists only to pick things — an attachment picker, a share sheet
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `offset` | `number` | `DEFAULT_BAR_OFFSET` | Distance from the bottom edge, in points. Add your safe-area inset. |
+| `inset` | `number` | `0` | Room under the actions, in points — your safe-area inset. A bar against the bottom edge sits over the home indicator on a phone that has one, and an action under a home indicator is an action that takes two tries. `floating` uses it as the gap on all four sides instead. |
 | `showWhenEmpty` | `boolean` | `false` | Keep the bar up with nothing picked. Off by default: every action on it needs something to act on, and a row of buttons that all refuse is worse than a row that is not there yet. |
 
 ### SelectionMode.Action
@@ -200,9 +232,13 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 A square box is a form control somebody is filling in; a round one is a thing they are picking out of a list. [Checkbox](/docs/components/checkbox) is the first of those and stays square — this is the second.
 
-### Pad the bottom of your list
+### The bar sits against the bottom edge
 
-`SelectionMode.Bar` floats over the list rather than sitting under it, because the list is as long as it is and a bar in the flow would be somewhere off the end of it. Nothing here can work out how tall your list is, so give it bottom padding — `contentContainerClassName="pb-24"` — or the last row sits under the bar forever.
+Full width, flush to the edge, with a hairline along the top — the shape a list with a selection in it uses on both platforms. `placement="floating"` lifts it off the edge into a rounded card instead, for a list that does not reach the bottom of the screen.
+
+Pass `inset` with your safe-area bottom inset. A bar against the edge sits over the home indicator otherwise, and an action under a home indicator is an action that takes two tries.
+
+It is drawn over the list rather than under it, because the list is as long as it is and a bar in the flow would be somewhere off the end of it. Nothing here can work out how tall your list is, so give the list bottom padding — `contentContainerClassName="pb-24"` — or the last row sits under the bar forever.
 
 ### The bar is hidden until something is picked
 
@@ -215,3 +251,7 @@ Every action on it needs something to act on, and a row of buttons that all refu
 ### Selection is a set of values
 
 Ids, never indices or elements. A list that reorders, pages in more rows or drops one underneath the reader would invalidate anything positional, and ids are also the shape the action at the end needs.
+
+### Give it a height
+
+The root fills a height it is offered and takes its content's height when it is not, so it works both inside a screen and inside a [BottomSheet](/docs/components/bottom-sheet). What it cannot do is fill a parent that has no height itself — put it in a container with `flex-1`, or give it a fixed height, the same as any list.
