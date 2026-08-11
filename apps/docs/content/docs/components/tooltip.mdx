@@ -3,11 +3,13 @@ title: Tooltip
 description: A small label that names the control under your finger.
 ---
 
-A small label that names the thing under your finger.
+A small label naming the control under your finger.
 
-A popover is a panel you open and deal with; a tooltip is a whisper. It carries a word or two about what a control does, appears without taking the screen, and goes away on its own. That is why it is inverted rather than surface-coloured, why it is not dismissed with a scrim, and why it hides itself after a beat instead of waiting to be told.
+A [Popover](/docs/components/popover) is a panel you open and deal with; a tooltip is a whisper. It carries a word or two, appears without taking the screen, and goes away on its own — which is why it is inverted rather than surface-coloured, is not dismissed with a scrim, and hides itself after a beat.
 
-On touch there is no hover to open it, so the gesture is a long press by default — the platform's own "tell me more" — with `openOn="press"` for the cases where a tap should reveal it instead. Placement is a preference, not a promise: `placement="top"` means *above, if above fits*, and a trigger near the top edge shows its tooltip below.
+**On touch there is no hover**, so the gesture is a long press by default — the platform's own "tell me more" — with `openOn="press"` where a tap should reveal it instead.
+
+Placement is a preference, not a promise: `placement="top"` means *above, if above fits*, and a trigger near the top edge shows its tooltip below.
 
 <Preview
   src="/previews/tooltip.jpg"

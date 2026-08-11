@@ -3,7 +3,11 @@ title: Accordion
 description: Collapsible sections with single or multiple selection.
 ---
 
-Collapsible sections for FAQs, settings groups and anything that would otherwise need a long scroll. Expansion animates with a Reanimated layout transition, and the content unmounts when collapsed — or stays mounted and hidden, with `keepMounted`, when there is state inside it worth keeping.
+Collapsible sections, for FAQs, settings groups and anything that would otherwise be a long scroll.
+
+Expansion animates with a Reanimated layout transition, and collapsed content unmounts. Pass `keepMounted` when there is state inside a section worth keeping — a half-filled form, a scroll position — at the cost of rendering every section up front.
+
+For a hierarchy more than one level deep, use [Tree](/docs/components/tree).
 
 <PreviewVideo
   src="/previews/accordion.mp4"

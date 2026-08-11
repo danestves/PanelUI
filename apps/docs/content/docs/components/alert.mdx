@@ -3,7 +3,11 @@ title: Alert
 description: Status message with a built-in icon.
 ---
 
-A status message. `Alert.Indicator` resolves both the icon and its colour from the alert's variant, so it follows the active theme without you passing either.
+A status message: something the reader needs to know about the screen they are on.
+
+`Alert.Indicator` resolves both the icon and its colour from the alert's variant, so neither is passed in and both follow the active theme.
+
+Use it for a condition that persists on the page. For something transient that arrives and leaves, use [Toast](/docs/components/toast).
 
 <Preview
   src="/previews/alert.jpg"

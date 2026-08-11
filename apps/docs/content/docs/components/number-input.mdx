@@ -3,7 +3,13 @@ title: NumberInput
 description: Numeric field stepped by buttons or typed by hand.
 ---
 
-A number stepped by a − and a + at the ends, or typed straight into the field in the middle — because past a handful of steps, tapping to a value is worse than typing it, and a good numeric control keeps both doors open. The two ends repeat when held, after a short delay and then faster, so walking from 0 to 200 is a press rather than two hundred of them. Everything reconciles through a single value that is clamped to `min`/`max` and snapped to `step`.
+A number stepped by a − and a + at the ends, or typed straight into the field between them.
+
+Both doors stay open on purpose: past a handful of steps, tapping to a value is worse than typing it.
+
+The ends repeat when held — after a short delay, then faster — so walking from 0 to 200 is a press rather than two hundred. Everything reconciles through a single value, clamped to `min`/`max` and snapped to `step`.
+
+For a value picked along a range rather than counted, use [Slider](/docs/components/slider).
 
 <Preview
   src="/previews/number-input.jpg"

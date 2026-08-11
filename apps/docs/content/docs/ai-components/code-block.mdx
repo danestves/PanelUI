@@ -3,9 +3,11 @@ title: CodeBlock
 description: A fenced snippet, syntax-coloured and scrolled sideways.
 ---
 
-A fenced snippet, syntax-coloured and scrolled sideways. Code does not wrap: wrapping a line puts the continuation under the indentation and the two stop meaning different things, so the body scrolls horizontally instead — which on a phone is the only honest way to show a ninety-column line.
+A fenced snippet, syntax-coloured and scrolled sideways.
 
-The highlighter ships inside the component: a single pass of regex over the languages a chat actually streams, with no grammar, no worker and no dependency. Colours come from the theme's `--color-code-*` tokens, so a snippet follows light and dark like everything else.
+**Code does not wrap.** Wrapping a line puts the continuation under the indentation and the two stop meaning different things, so the body scrolls horizontally instead — which on a phone is the only honest way to show a ninety-column line.
+
+The highlighter ships inside the component: one pass of regex over the languages a chat actually streams, with no grammar, no worker and no dependency. Colours come from the theme's `--color-code-*` tokens.
 
 <PreviewVideo
   src="/previews/code-block.mp4"

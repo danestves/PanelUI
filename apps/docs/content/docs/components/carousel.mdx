@@ -5,9 +5,9 @@ description: A run of slides, one at a time, dragged with a finger.
 
 A run of slides, shown one at a time and moved with a finger.
 
-Everything is driven from one value: the position in the run, as a fractional index. `2.4` is two-fifths of the way from the third slide to the fourth, and every slide places itself from its own distance to that number. A drag writes to it, a spring settles it onto a whole slide, and the dots read it.
+Everything is driven from one number: the position in the run, as a fractional index. `2.4` is two-fifths of the way from the third slide to the fourth. A drag writes to it, a spring settles it onto a whole slide, and the dots read it.
 
-That is why the track is a gesture rather than a paging scroll view. A scroll view would serve the plain track well enough, but `coverflow` and `stack` do not lay their slides along a track at all — they hold them in one place and pull them apart with transforms, so there would be nothing to scroll. One mechanism all four layouts read beats a native scroller for one of them and something else for the rest.
+**The track is a gesture rather than a paging scroll view**, because the `coverflow` and `stack` layouts do not lay their slides along a track at all — they hold them in one place and pull them apart with transforms, so there would be nothing for a scroll view to scroll.
 
 <PreviewVideo
   src="/previews/carousel.mp4"

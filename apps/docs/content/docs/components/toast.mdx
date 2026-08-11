@@ -3,9 +3,11 @@ title: Toast
 description: Transient notification queue with swipe to dismiss.
 ---
 
-A transient notification. The queue lives outside React, so `toast.show()` works from anywhere — API clients, event handlers, code with no component around it.
+A transient notification, with a queue and swipe to dismiss.
 
-`PanelUIProvider` mounts the viewport for you.
+The queue lives outside React, so `toast.show()` works from anywhere — API clients, event handlers, code with no component around it. `PanelUIProvider` mounts the viewport for you.
+
+Use it for something that happened and needs no response. For a condition that persists on the screen, use [Alert](/docs/components/alert).
 
 ## Installation
 

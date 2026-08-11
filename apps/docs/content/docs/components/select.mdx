@@ -3,7 +3,11 @@ title: Select
 description: Picker shown in a bottom sheet, expanded in place, or floating over the page.
 ---
 
-A picker with one trigger and three ways of showing its options: a bottom sheet, a list expanded in place, or a panel floating over the page. Which is right depends on what surrounds the trigger rather than on what the options are, so it is one prop rather than three components.
+A picker with one trigger and three ways of showing its options: a bottom sheet, a list expanded in place, or a panel floating over the page.
+
+Which is right depends on what surrounds the trigger rather than on what the options are, so it is one `presentation` prop rather than three components.
+
+Use it when the reader recognises the option by seeing it. When they know the name and would rather type it, use [Combobox](/docs/components/combobox); when there are only a few options and all of them should be visible, use [RadioGroup](/docs/components/radio-group).
 
 <PreviewVideo
   src="/previews/select.mp4"

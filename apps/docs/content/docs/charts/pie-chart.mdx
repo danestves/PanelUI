@@ -3,11 +3,13 @@ title: PieChart
 description: One whole, divided between its parts.
 ---
 
-One whole, divided between its parts.
+One total, divided between its parts.
 
-Every slice is a share of one total: the values are normalised against their sum, the angles come to a full turn, and a slice only means anything next to the others. That is the opposite claim to the [RingChart](/docs/charts/ring-chart) beside it, where each arc is measured against its own target and nothing has to add up.
+Every slice is a share of the same whole: the values are normalised against their sum and the angles come to a full turn, so a slice only means anything next to the others.
 
-It follows that a pie is the wrong shape for a great many things. Two numbers that do not belong to one whole, anything over time, anything a reader has to compare precisely — all of those are a bar chart, because an angle is the hardest quantity to read off a page and the fifth-largest slice of eleven is not a fact anybody is going to extract. Use it for a handful of parts of one obvious total, and put the number in the middle.
+**It is the wrong shape for a great many things.** Two numbers that do not belong to one whole, anything over time, and anything the reader has to compare precisely are all a [BarChart](/docs/charts/bar-chart) — an angle is the hardest quantity to read off a page, and the fifth-largest slice of eleven is not a fact anybody will extract.
+
+Use it for a handful of parts of one obvious total, and put the number in the middle. For values measured against their own targets rather than against each other, use a [RingChart](/docs/charts/ring-chart); for shares confirmed by counting, a [HexChart](/docs/charts/hex-chart).
 
 <PreviewVideo
   src="/previews/pie-chart.mp4"

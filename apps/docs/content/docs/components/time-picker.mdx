@@ -5,11 +5,11 @@ description: A time of day, as a wheel, a clock or a swipeable scale.
 
 A time of day behind a trigger, in one of three faces.
 
-The value is `{ hour, minute }` on a 24-hour clock whatever the face shows. A 12-hour display is a rendering choice, and storing 7pm as `{ hour: 7 }` plus a meridiem flag would put that flag into every comparison downstream.
+The value is `{ hour, minute }` on a 24-hour clock whatever the face shows. A 12-hour display is a rendering choice; storing 7pm as `{ hour: 7 }` plus a meridiem flag would put that flag into every comparison downstream.
 
-The three layouts exist because “pick a time” is three different tasks. `wheel` is the precise one — any minute in the day is two or three flicks away. `clock` picks a *slot* rather than a time, and its face answers “morning or evening?” faster than reading digits. `ruler` is the coarse one, and the only one that reads at arm's length, which makes it the one for a sheet with a thumb on it.
+The three layouts exist because "pick a time" is three tasks. `wheel` is the precise one — any minute in the day is two or three flicks away. `clock` picks a *slot* rather than a time, and answers "morning or evening?" faster than digits. `ruler` is the coarse one, and the only one that reads at arm's length.
 
-All three produce the same value and take the same props, so swapping between them is a one-word change.
+All three produce the same value and take the same props, so swapping between them is a one-word change. For a day and a time together, use [DateTimePicker](/docs/components/date-time-picker).
 
 <PreviewVideo
   src="/previews/time-picker.mp4"

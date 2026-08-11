@@ -5,9 +5,11 @@ description: The list of things you can do to something.
 
 The list of things you can do to something.
 
-A menu is not a select, and the difference is what the rows *are*. A select's rows are values: picking one answers a question the form asked, and the trigger then shows the answer. A menu's rows are verbs — rename, duplicate, delete — and the trigger goes on saying the same thing afterwards, because nothing about it was chosen.
+A menu is not a [Select](/docs/components/select), and the difference is what the rows *are*. A select's rows are values: picking one answers a question the form asked, and the trigger then shows the answer. A menu's rows are verbs — rename, duplicate, delete — and the trigger goes on saying the same thing afterwards, because nothing about it was chosen.
 
-The panel is a `Popover` underneath, so a menu inherits its measuring, flipping and edge-clamping rather than owning a second copy of them. A menu near the bottom of the screen opens upwards, and `presentation="bottom-sheet"` moves the same rows into a sheet.
+The panel is a [Popover](/docs/components/popover) underneath, so a menu inherits its measuring, flipping and edge-clamping rather than owning a second copy. A menu near the bottom of the screen opens upwards, and `presentation="bottom-sheet"` moves the same rows into a sheet.
+
+To reach the same rows by holding the content itself, use [ContextMenu](/docs/components/context-menu).
 
 ## Installation
 

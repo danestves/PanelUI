@@ -3,9 +3,9 @@ title: Attachment
 description: File row with upload states, built on Item.
 ---
 
-A file, with its upload life.
+A file, and where it has got to in being uploaded.
 
-A file in a chat composer or an upload list is the same row shape `Item` already draws — media, a name, a size, a remove button — so this is that row, not a second one. What it adds is the part `Item` has no opinion on: the file's *state*. A file is picked, then uploading, then processing, then done or failed, and each has to look different or the reader cannot tell a stuck upload from a finished one.
+The row shape is [Item](/docs/components/item)'s — media, a name, a size, a remove button — so this is that row rather than a second one that looks like it. What it adds is the file's *state*: picked, uploading, processing, done, failed. Each has to look different, or a stuck upload is indistinguishable from a finished one.
 
 <Preview
   src="/previews/attachment.jpg"

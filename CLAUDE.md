@@ -88,6 +88,37 @@ the library source into `api.json`; `gen.mjs` merges it with the hand-written `u
 `npm run docs:generate --workspace=docs`, which also rebuilds the registry. See
 `apps/docs/scripts/README.md` for what each `usage.json` key becomes.
 
+### Write a guide, not an argument
+
+Docs prose is there to be *used*. A reader arrives with a decision to make — should I use this,
+and how — and the page has to answer it in the order they need it:
+
+1. **What it is for**, in a plain sentence. Not an aphorism, not a fragment.
+2. **The trade-off or constraint**, stated. "It needs a height to fill."
+3. **The workaround**, where there is one. "Pad the bottom of the list."
+4. **The alternatives**, linked. "For one row's actions, use Swipe."
+
+Those are four separate statements, and keeping them separate is the whole point — a reader
+skimming for the constraint should find it as its own paragraph, not buried in the middle of a
+sentence that is also making a case.
+
+What to stop doing, because all of it was here and a user filed an issue about it:
+
+- **No aphoristic openers.** "It floats, which is the whole problem with it." Say what it does.
+- **No arguing towards a verdict.** State the constraint and move on; the reader did not come
+  for the reasoning that produced the API, they came to use it.
+- **No rhetorical flourishes** — "a column of unlabelled circles is a quiz", "the failure people
+  actually hit", "which is the honest shape". They read as an assistant thinking out loud.
+- **Don't restate the summary as the first line.** `meta.json` already carries it; the intro
+  repeating it verbatim wastes the one line most readers read.
+
+Say *why* where the why changes what somebody does — "the baseline stays zero, because a bar
+cropped at the bottom is a length that lies" earns its place. Cut it where it only justifies a
+decision already made.
+
+This applies to `intro`, `examples[].description`, `notes` and `parts` in `usage.json`, to prop
+JSDoc (which becomes the props table), and to `CHANGELOG.md` entries.
+
 ### meta.json entries: group, addedIn, updatedIn and alpha
 
 A `scripts/meta.json` entry is `[name, summary, keyword]`, optionally followed by an options

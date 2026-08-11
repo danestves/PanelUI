@@ -3,7 +3,11 @@ title: Form
 description: Form state — values, validation and submission — with no form library underneath.
 ---
 
-`useForm` holds a form's values, errors, touched state and submission lifecycle — built on `useReducer`, no form library underneath. `Form` and `Form.Field` bind that state to a control without threading `form` through every field by hand.
+Form state — values, errors, touched state and the submission lifecycle — with no form library underneath.
+
+`useForm` holds it, built on `useReducer`. `Form` and `Form.Field` bind that state to a control, so `form` does not have to be threaded through every field by hand.
+
+For the layout around a control rather than its state, use [Field](/docs/components/field).
 
 <Preview
   src="/previews/form.jpg"

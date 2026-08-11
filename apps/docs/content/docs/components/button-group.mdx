@@ -3,11 +3,11 @@ title: ButtonGroup
 description: Several buttons drawn as one control — a segmented run, a split action, a toolbar.
 ---
 
-Several buttons drawn as one control — a segmented run, a split action, a toolbar down the side of a canvas.
+Several buttons drawn as one control: a segmented run, a split action, a toolbar down the side of a canvas.
 
-The buttons stay buttons. Anything a [Button](/docs/components/button) does — an icon, a badge, a loading state, a disabled segment, opening a [Popover](/docs/components/popover) — it still does inside a group, because the group is a container rather than a component that takes a list of items and renders them for you. A list-of-items API has to grow a prop for every one of those things; this one has none of them and can do all of them.
+The buttons stay [Button](/docs/components/button)s. Anything a button does — an icon, a badge, a loading state, a disabled segment, opening a [Popover](/docs/components/popover) — it still does inside a group, because the group is a container rather than a component that takes a list of items and renders them for you.
 
-It is not a selection control. It joins buttons, and what they mean is yours: for a control that owns which one is on reach for [ToggleButtonGroup](/docs/components/toggle-button), and for switching between panels of content reach for [Tabs](/docs/components/tabs) — a segmented run that swaps a screen is navigation, and navigation should say so to a screen reader.
+**It is not a selection control**, and it does not track which button is on. Use [ToggleButtonGroup](/docs/components/toggle-button) when the control owns which one is selected, and [Tabs](/docs/components/tabs) when the buttons switch between panels of content — a segmented run that swaps a screen is navigation, and it should say so to a screen reader.
 
 <Preview
   src="/previews/button-group.jpg"

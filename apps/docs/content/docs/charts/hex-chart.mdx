@@ -3,11 +3,11 @@ title: HexChart
 description: A whole broken into parts, counted out in cells.
 ---
 
-A whole broken into parts, counted out in cells.
+A total broken into parts, counted out in cells.
 
-Every series holds a number of hexagons proportional to its share of the total, so a series worth a tenth looks like a tenth — and can be *confirmed* as one, by counting. That is the difference between this and the [PieChart](/docs/charts/pie-chart) beside it: a pie asks the reader to compare angles, which is the hardest quantity there is to judge by eye, and this asks them to compare counts.
+Each series gets a number of hexagons proportional to its share, so a series worth a tenth of the total is a tenth of the cells — and the reader can confirm it by counting rather than by judging an angle.
 
-What it gives up is the small end. Every cell is a whole unit, so a series worth half a cell either rounds up to a full one or disappears. Use it for shares of a few percent and up, not for a long tail.
+**The limit is the small end.** Every cell is a whole unit, so a series worth less than half a cell rounds away to nothing. Use it for shares of a few percent and up. For a long tail of small values, use a [BarChart](/docs/charts/bar-chart); for the same total split by angle rather than by count, use a [PieChart](/docs/charts/pie-chart).
 
 <PreviewVideo
   src="/previews/hex-chart.mp4"

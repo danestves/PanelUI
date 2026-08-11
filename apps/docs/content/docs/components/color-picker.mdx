@@ -3,9 +3,13 @@ title: ColorPicker
 description: A colour chosen by dragging — a saturation square or a wheel, a hue scale, and opacity.
 ---
 
-A colour chosen by dragging, not by typing. The controls are the colour model made visible: a square where saturation runs across and brightness runs up — or a wheel where hue is the angle and saturation the radius — under scales for whichever channels the shape does not carry. Composition is the API — a picker with no opacity is one with no `ColorPicker.Alpha` in it, not one with a prop turned off.
+A colour chosen by dragging rather than typed.
 
-Nothing about a drag crosses to JavaScript. The four channels are shared values, and the hue behind the square, both thumb fills and the preview swatch are colours computed from them on the UI thread; the picked colour bridges back on change and again on release, the same as any other input here.
+The controls are the colour model made visible: a square where saturation runs across and brightness runs up, or a wheel where hue is the angle and saturation the radius, under scales for whichever channels the shape does not carry.
+
+**Composition is the API.** A picker with no opacity is one with no `ColorPicker.Alpha` in it, not one with a prop turned off.
+
+Nothing about a drag crosses to JavaScript: the four channels are shared values, and the hue behind the square, both thumb fills and the preview swatch are computed from them on the UI thread. The picked colour bridges back on change and again on release.
 
 ## Installation
 

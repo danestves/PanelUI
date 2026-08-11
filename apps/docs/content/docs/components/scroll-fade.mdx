@@ -3,9 +3,11 @@ title: ScrollFade
 description: Fades the edges of a scroll container.
 ---
 
-Fades the edges of a scroll container, so content looks like it passes under the boundary rather than being cut off.
+Fades the edges of a scroll container, so content passes under the boundary rather than being cut off at it.
 
-A fading edge is also an affordance: it means there is more content behind it. Scroll position, content size and viewport size are held in shared values and read by the fades on the UI thread, so scrolling never re-renders React.
+A fading edge is also an affordance: it means there is more content behind it.
+
+Scroll position, content size and viewport size are held in shared values and read by the fades on the UI thread, so scrolling never re-renders React.
 
 ## Installation
 

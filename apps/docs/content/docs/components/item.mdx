@@ -5,7 +5,9 @@ description: Row of media, text and actions for lists and settings.
 
 A row of content: media on one side, a title and description in the middle, actions on the other.
 
-It is the shape almost every list in an app already has — a settings row, a file in a picker, a member in a team list, a tool call in a transcript — so it exists as one composable primitive instead of being rebuilt per screen with slightly different padding each time.
+It is the shape almost every list in an app already has — a settings row, a file in a picker, a member in a team list — so it exists once as a composable primitive instead of being rebuilt per screen with slightly different padding each time.
+
+For tiles of different sizes rather than rows, use [GridItem](/docs/components/grid-item).
 
 <Preview
   src="/previews/item.jpg"

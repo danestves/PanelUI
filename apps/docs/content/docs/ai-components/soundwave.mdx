@@ -3,9 +3,11 @@ title: Soundwave
 description: What a voice looks like while an app listens.
 ---
 
-Draws the level of a voice, in four looks: capsules over a microphone button, a metering strip for a transcript, a travelling wave for a reply being spoken, and an ambient glow that fills a screen.
+What a voice looks like while an app is listening, in four looks: capsules over a microphone button, a metering strip for a transcript, a travelling wave for a reply being spoken, and an ambient glow that fills a screen.
 
-It draws a level; it does not record one. Your app owns the recorder and hands over a number between 0 and 1 — so there is no audio dependency here, and the same component works against a real meter, a synthesised one, or a remote peer's. With no level at all it animates plausible motion for the current `state`, which is enough to build and review a voice screen before any audio exists.
+**It draws a level; it does not record one.** Your app owns the recorder and hands over a number between 0 and 1, so there is no audio dependency here and the same component works against a real meter, a synthesised one, or a remote peer's.
+
+With no level at all it animates plausible motion for the current `state`, which is enough to build and review a voice screen before any audio exists.
 
 <PreviewVideo
   src="/previews/soundwave.mp4"

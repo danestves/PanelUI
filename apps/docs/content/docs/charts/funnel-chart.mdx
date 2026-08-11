@@ -6,9 +6,11 @@ status: new
 
 Where a population drained away, one step at a time.
 
-Every stage is a subset of the one above it, in the order the steps happen. That is a much stronger claim than a bar chart makes, and it is what makes the interesting number not any stage’s value but the ratio between two of them: how many of the people who started checking out entered a card, and how many of everyone who looked ended up paying.
+Every stage is a subset of the one above it, in the order the steps happen. That is a stronger claim than a bar chart makes, and it is what makes the interesting number the *ratio* between two stages rather than any stage's value: how many of the people who started checking out entered a card.
 
-It is drawn as one ribbon running across the card rather than a stack of blocks — the stages divide the width between them, and each band is as tall as its value where it starts and as tall as the next stage’s where it ends, with sides curved so consecutive bands meet flush and the run reads as a single narrowing channel.
+It is drawn as one ribbon across the card. The stages divide the width between them, each band is as tall as its value where it starts and as tall as the next stage's where it ends, and the sides curve so the run reads as a single narrowing channel.
+
+**Only use it when each stage really is a subset of the last.** For categories that do not nest, use a [BarChart](/docs/charts/bar-chart).
 
 ## Installation
 

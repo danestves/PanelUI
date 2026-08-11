@@ -3,7 +3,13 @@ title: Input
 description: Text field with label, description and error message.
 ---
 
-A text field with an optional label, description and error message. Its focus border crosses between colours on the UI thread rather than snapping, and it comes in two backgrounds and three heights. Passing `errorMessage` puts the field in its invalid state and replaces the description.
+A text field with an optional label, description and error message.
+
+Its focus border crosses between colours on the UI thread rather than snapping, and it comes in two backgrounds and three heights.
+
+Passing `errorMessage` puts the field in its invalid state and replaces the description — so the two never appear together and the error is not competing with help text.
+
+For several lines, use [Textarea](/docs/components/textarea); for a field with something attached to either end, use [InputGroup](/docs/components/input-group).
 
 <Preview
   src="/previews/input.jpg"

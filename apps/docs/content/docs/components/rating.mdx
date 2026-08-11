@@ -3,7 +3,11 @@ title: Rating
 description: A row of stars to read or set a score.
 ---
 
-A row of stars you can read or set. Read-only it shows a score; interactive it is an input — tap a star for a whole value, or with `precision={0.5}` press the left half of a star for a half. Partial fills are drawn by clipping a filled star over an empty one of the same shape, so a half star is exactly half. The fill is animated on the UI thread: setting a value springs the stars to it, and a drag follows the finger without a spring so it never lags.
+A row of stars, to read a score or to set one.
+
+Read-only it shows a score; interactive it is an input — tap a star for a whole value, or with `precision={0.5}` press the left half of a star for a half.
+
+Partial fills are drawn by clipping a filled star over an empty one of the same shape, so a half star is exactly half. Setting a value springs the stars to it, and a drag follows the finger without a spring so it never lags.
 
 <PreviewVideo
   src="/previews/rating.mp4"

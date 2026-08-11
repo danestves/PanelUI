@@ -3,11 +3,13 @@ title: ScatterChart
 description: Two quantities against each other, to show how they relate.
 ---
 
-Two quantities plotted against each other, drawn and animated on the UI thread.
+Two quantities plotted against each other, to show how they relate.
 
-Every other chart here spaces its points evenly along the x-axis, because their x is a position — twelve months are twelve equal steps whatever the gaps between the dates behind them. A scatter plot is the one shape where that is wrong. Both coordinates are measured, and the reader is being asked to look for a relationship between them; spread the points evenly and the relationship is the one thing you have thrown away. So this chart carries an x-domain as well as a y-domain, and tweens both when the data changes.
+Every other chart here spaces its points evenly along the x-axis, because their x is a position — twelve months are twelve equal steps whatever the gaps between the dates behind them. A scatter plot is the one shape where that is wrong: both coordinates are measured, and spreading the points evenly throws away the relationship the reader is being asked to look for.
 
-Colours come from the `--color-chart-1` … `--color-chart-5` tokens, so a chart follows the active theme out of the box and is put on brand by overriding those five.
+So this chart carries an x-domain as well as a y-domain, and tweens both when the data changes.
+
+Colours come from the `--color-chart-1` … `--color-chart-5` tokens.
 
 <PreviewVideo
   src="/previews/scatter-chart.mp4"

@@ -5,9 +5,9 @@ description: Panel anchored to the element that opened it.
 
 A panel anchored to the thing that opened it.
 
-A dialog takes the screen and asks to be dealt with; a popover stays next to its trigger and keeps the context around it visible. That difference is the whole reason both exist, and it is why this one is positioned rather than centred.
+Use it when the context around the trigger has to stay visible. A [Dialog](/docs/components/dialog) takes the screen and asks to be dealt with; a popover stays beside its trigger.
 
-Placement is a preference, not a promise. The trigger is measured in window coordinates when it is pressed, the panel measures itself on its first layout, and the two are reconciled against the safe area — so `placement="bottom"` means *below, if below fits*. A trigger near the bottom of the screen opens upwards instead of off the edge.
+**Placement is a preference, not a promise.** The trigger is measured in window coordinates when it is pressed, the panel measures itself on its first layout, and the two are reconciled against the safe area — so `placement="bottom"` means *below, if below fits*, and a trigger near the bottom of the screen opens upwards instead of off the edge.
 
 <Preview
   src="/previews/popover.jpg"

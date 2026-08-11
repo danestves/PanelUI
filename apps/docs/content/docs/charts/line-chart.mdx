@@ -5,9 +5,11 @@ description: Animated time series, drawn on the UI thread.
 
 A time series, drawn and animated on the UI thread.
 
-The chart is composed rather than configured: the grid, each series, the axis and the crosshair are separate children, so a chart that wants no grid simply does not have one. A single component with twenty booleans is how charts end up unreadable at the call site.
+The chart is composed rather than configured: the grid, each series, the axis and the crosshair are separate children, so a chart that wants no grid simply does not have one. A single component with twenty booleans is how charts become unreadable at the call site.
 
-Colours come from the `--color-chart-1` … `--color-chart-5` tokens, so a chart follows the active theme out of the box and is put on brand by overriding those five. Nothing in it hardcodes a colour.
+Colours come from the `--color-chart-1` … `--color-chart-5` tokens, so a chart follows the active theme and is put on brand by overriding those five. Nothing in it hardcodes a colour.
+
+For what a series is *made of* rather than its shape, use an [AreaChart](/docs/charts/area-chart).
 
 <PreviewVideo
   src="/previews/line-chart.mp4"
