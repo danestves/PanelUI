@@ -48,14 +48,21 @@
  * modal — the next tap either picks something or closes it — and a scrim is what
  * says so, as well as what catches the tap that closes it.
  *
- * A group draws itself through a portal, above everything else — the scrim and
- * the buttons together, so the backdrop cannot end up on top of the dial it is
- * behind. That means its `offset` is measured from the screen's edges rather
- * than from whatever it is written inside, which is what lets it be declared
- * next to the content it belongs to instead of at the root of the screen.
+ * ## Where a group has to be written
+ *
+ * A `Fab.Group` draws its scrim and its buttons as two absolutely positioned
+ * siblings in whatever it is written inside, so put it in the screen's root
+ * container. That is where its `offset` is measured from, and it is what the
+ * scrim covers.
+ *
+ * It stays in the screen's own view tree rather than being lifted out of it,
+ * which is the part that matters after navigation: pushing a screen over this
+ * one hides the dial with everything else on it. A group lifted to the top of
+ * the app would still be drawn over the screen that replaced it.
  */
 import {
   Children,
+  cloneElement,
   createContext,
   forwardRef,
   isValidElement,
@@ -63,6 +70,7 @@ import {
   useContext,
   useMemo,
   useState,
+  type ReactElement,
   type ReactNode,
 } from 'react';
 import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
@@ -76,8 +84,8 @@ import Animated, {
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
+import { useBackHandler } from '../../hooks/use-back-handler';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
-import { Portal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
@@ -271,6 +279,9 @@ FabRoot.displayName = 'Fab';
  * Group — the speed dial
  * -------------------------------------------------------------------------- */
 
+/** Whatever was written as a dial child, and the one prop a slot reaches for. */
+type PressableChild = ReactElement<{ onPress?: () => void }>;
+
 interface FabGroupContextValue {
   /** 0 closed, 1 open. Every action reads it and its own index off it. */
   progress: SharedValue<number>;
@@ -324,10 +335,11 @@ export interface FabGroupProps extends Omit<ViewProps, 'children'> {
 /**
  * A trigger with actions behind it.
  *
- * The scrim goes through a portal so it covers the screen rather than the
- * group's own corner of it; the actions do not, because they belong to the
- * button and have to stay above the scrim in the same coordinate space as the
- * trigger they unfold from.
+ * The scrim and the dial are two absolutely positioned siblings written into
+ * the group's own parent — the scrim first, so the dial is drawn over it. Both
+ * are laid out against that parent, which is why a group belongs in the
+ * screen's root container: it is what `offset` is measured from and what the
+ * scrim covers.
  */
 const FabGroup = forwardRef<View, FabGroupProps>(
   (
@@ -363,7 +375,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
       [openProp, onOpenChange]
     );
 
-    const actions = Children.toArray(children).filter(isValidElement);
+    const actions = Children.toArray(children).filter(isValidElement) as PressableChild[];
     /*
      * The count, pulled out as a plain number before any worklet sees it.
      *
@@ -406,28 +418,32 @@ const FabGroup = forwardRef<View, FabGroupProps>(
       setOpen(!open);
     }, [haptics, open, setOpen]);
 
+    // An open dial owns the back button: back should shut it, not leave it
+    // standing over the screen underneath.
+    useBackHandler(open, close);
+
     /*
-     * The scrim and the buttons go through the same portal, in that order.
+     * Two absolutely positioned siblings, scrim first, both in the group's own
+     * parent — which is why a group belongs in the screen's root container.
      *
-     * They have to travel together. Portalled content is drawn above
-     * everything in the ordinary tree, so a portalled scrim over an
-     * in-place trigger covers the trigger and its actions — the dial opens
-     * and immediately disappears behind its own backdrop. One portal, scrim
-     * first, keeps the stacking honest: within it they are siblings, and the
-     * later sibling wins.
+     * This used to go through a portal, and the portal was the bug. Portalled
+     * content is mounted at the app root, above the router, and is removed only
+     * when the component that declared it unmounts. A stack keeps the screen
+     * you pushed from mounted, so a group declared on that screen carried on
+     * drawing over every screen after it — open or closed, since the trigger
+     * travelled through the portal too.
      *
-     * The provider goes inside the portalled subtree for the same reason
-     * every other overlay here re-provides its context — the portal renders
-     * its children at the host, which is nowhere below this component, so a
-     * `Fab.Action` looking for the dial would not find it.
+     * Ordering is the reason the portal was reached for in the first place: a
+     * scrim that covers the screen must not cover the dial it belongs to. As
+     * siblings it comes out right for free — the scrim is written first and the
+     * dial after it, and the later sibling draws on top.
      *
-     * One consequence worth knowing: `offset` is measured from the screen's
-     * edges rather than from whatever this is written inside. That is what a
-     * floating button wants, and it is why a group can be declared next to
-     * the content it belongs to instead of at the root of the screen.
+     * Nothing remounts when the dial opens. The trigger is in the same place in
+     * the tree either way, so opening adds the scrim and the actions and leaves
+     * the button alone.
      */
     return (
-      <Portal>
+      <>
         {open ? (
           // Catches the tap that closes the dial, and says it is modal.
           <Pressable
@@ -478,7 +494,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
             </FabRoot>
           </View>
         </FabGroupContext.Provider>
-      </Portal>
+      </>
     );
   }
 );
@@ -491,8 +507,27 @@ FabGroup.displayName = 'Fab.Group';
  * The stagger runs bottom-up: the action nearest the trigger arrives first,
  * which is the order a hand travelling away from the button meets them in.
  */
-function FabActionSlot({ index, children }: { index: number; children: ReactNode }) {
-  const { progress, count } = useFabGroup('Fab.Action');
+function FabActionSlot({ index, children }: { index: number; children: PressableChild }) {
+  const { progress, count, close } = useFabGroup('Fab.Action');
+
+  /*
+   * Whatever is in the slot closes the dial when it is pressed.
+   *
+   * `Fab.Action` does this itself, but a plain `Fab` written as a child is a
+   * perfectly reasonable thing to reach for and knows nothing about the dial it
+   * is in. Left alone it runs its action — navigating, usually — with the dial
+   * still open behind it. Wrapping the handler here covers both, and closing
+   * twice is closing once.
+   */
+  const { onPress } = children.props;
+  const child = onPress
+    ? cloneElement(children, {
+        onPress: () => {
+          close();
+          onPress();
+        },
+      })
+    : children;
 
   const style = useAnimatedStyle(() => {
     const steps = Math.max(1, count);
@@ -505,7 +540,7 @@ function FabActionSlot({ index, children }: { index: number; children: ReactNode
     };
   });
 
-  return <Animated.View style={style}>{children}</Animated.View>;
+  return <Animated.View style={style}>{child}</Animated.View>;
 }
 
 /* -------------------------------------------------------------------------- *
