@@ -228,7 +228,6 @@ export {
   type FunnelChartSkeletonProps,
   type FunnelChartStatus,
   type FunnelDatum,
-  type FunnelOrientation,
   type FunnelEdges,
   type FunnelLegendLayout,
   type FunnelShare,

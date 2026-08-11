@@ -19,6 +19,12 @@
       "skillPath": "skills/productivity/grill-me/SKILL.md",
       "computedHash": "f361db4e15e6bfd562a9282b1dccda513910a50061f9e838ce017be9c69dde3f"
     },
+    "remotion-best-practices": {
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "skillPath": "skills/remotion-best-practices/SKILL.md",
+      "computedHash": "636a0a8b0298042797882dffe1edf93b48ad510817ca063c86177fc12d6582c5"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",

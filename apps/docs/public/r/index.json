@@ -397,7 +397,8 @@
     "registryDependencies": [
       "chart",
       "cn",
-      "text"
+      "text",
+      "use-direction"
     ]
   },
   {

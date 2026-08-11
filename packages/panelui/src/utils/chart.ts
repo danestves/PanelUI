@@ -767,8 +767,8 @@ export function columnValues(
  * diagonal. The sides are the only curved part — the ends stay square, so a
  * band's end lines up exactly with the next band's start.
  *
- * `vertical` swaps the axes: the run goes down the screen and the band is wide
- * across it, rather than along it and tall.
+ * The run goes across, so `offset` and `length` are horizontal and the band is
+ * `head` and `tail` tall about `middle`.
  */
 export function ribbonPath(
   offset: number,
@@ -776,35 +776,30 @@ export function ribbonPath(
   head: number,
   tail: number,
   middle: number,
-  curve: number,
-  vertical: boolean
+  curve: number
 ): string {
   'worklet';
   if (length <= 0 || (head <= 0 && tail <= 0)) return '';
 
-  // Points are named along the run and across it; this is the only place that
-  // knows which of those is x and which is y.
-  const at = (along: number, across: number) =>
-    vertical ? `${across},${along}` : `${along},${across}`;
-
   const start = offset;
   const end = offset + length;
+  const topStart = middle - head;
+  const topEnd = middle - tail;
+  const bottomStart = middle + head;
+  const bottomEnd = middle + tail;
 
   if (!(curve > 0)) {
-    return `M${at(start, middle - head)}L${at(end, middle - tail)}L${at(
-      end,
-      middle + tail
-    )}L${at(start, middle + head)}Z`;
+    return `M${start},${topStart}L${end},${topEnd}L${end},${bottomEnd}L${start},${bottomStart}Z`;
   }
 
   const near = start + length * curve;
   const far = end - length * curve;
 
   return (
-    `M${at(start, middle - head)}` +
-    `C${at(near, middle - head)},${at(far, middle - tail)},${at(end, middle - tail)}` +
-    `L${at(end, middle + tail)}` +
-    `C${at(far, middle + tail)},${at(near, middle + head)},${at(start, middle + head)}` +
+    `M${start},${topStart}` +
+    `C${near},${topStart},${far},${topEnd},${end},${topEnd}` +
+    `L${end},${bottomEnd}` +
+    `C${far},${bottomEnd},${near},${bottomStart},${start},${bottomStart}` +
     `Z`
   );
 }

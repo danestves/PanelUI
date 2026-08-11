@@ -6,7 +6,9 @@ status: new
 
 Where a population drained away, one step at a time.
 
-Every stage is a subset of the one above it, in the order the steps happen. That is a much stronger claim than a bar chart makes, and it is what makes the interesting number not any stage's value but the ratio between two of them: how many of the people who started checking out entered a card, and how many of everyone who looked ended up paying.
+Every stage is a subset of the one above it, in the order the steps happen. That is a much stronger claim than a bar chart makes, and it is what makes the interesting number not any stage’s value but the ratio between two of them: how many of the people who started checking out entered a card, and how many of everyone who looked ended up paying.
+
+It is drawn as one ribbon running across the card rather than a stack of blocks — the stages divide the width between them, and each band is as tall as its value where it starts and as tall as the next stage’s where it ends, with sides curved so consecutive bands meet flush and the run reads as a single narrowing channel.
 
 ## Installation
 
@@ -37,49 +39,83 @@ npx panelui-cli@latest add funnel-chart
 ```tsx
 <FunnelChart data={…}>
   <FunnelChart.Header />      {/* the strip above the run */}
-  <FunnelChart.Skeleton />    {/* the plain taper it waits behind */}
-  <FunnelChart.Stages />      {/* the trapezoids themselves */}
-  <FunnelChart.Labels />      {/* a row per stage, laid over the run */}
+  <FunnelChart.Skeleton />    {/* the plain ribbon it waits behind */}
+  <FunnelChart.Stages />      {/* the ribbon itself */}
+  <FunnelChart.Labels />      {/* the count, the pill and the name, per stage */}
   <FunnelChart.Legend />      {/* a key underneath, for a chart without labels */}
 </FunnelChart>
 ```
 
 - **`FunnelChart.Header`** — The strip above the run — what the funnel is of, what it reads, and room for a control. The chart introducing itself, as distinct from the caption on the card around it.
-- **`FunnelChart.Stages`** — The trapezoids. One part rather than one per stage: a stage’s bottom edge is the next stage’s width, so they cannot be configured apart without the taper coming apart with them.
-- **`FunnelChart.Labels`** — A row per stage laid over the run: its name, its value and how it converted. Spans the full width rather than sitting inside the shape, and is pressable, because the stages with the worst drop-off are the narrowest and neither text nor a fingertip fits in them.
-- **`FunnelChart.Legend`** — A swatch, a name and a share per stage, under the run. For a compact chart drawn without `Labels`, where the run is a shape and the reading is underneath it.
-- **`FunnelChart.Skeleton`** — The waiting state: one plain taper over the whole run, undivided. A placeholder split would be an invented drop-off, and nobody can tell an invented one from a real one until it changes under them.
+- **`FunnelChart.Stages`** — The ribbon. One part rather than one per stage: a stage’s near edge is the previous stage’s far edge, so they cannot be configured apart without the shape coming apart with them. Each band is drawn concentrically, from a wide faint ring to a tight near-solid core.
+- **`FunnelChart.Labels`** — The readings, arranged around the ribbon: the count above the band, the name under it, and the conversion in a pill on the band itself. Three places rather than one line, because a name, a count and a percentage sharing a row make a row as wide as all three — and at the width a phone has, it is the name that gives way.
+- **`FunnelChart.Legend`** — A swatch, a name and a reading per stage, under the run. For a compact chart drawn without `Labels`, where the run is a shape and the reading is underneath it. A row each by default, because the stages are a sequence and a wrapped centred line loses the order.
+- **`FunnelChart.Skeleton`** — The waiting state: one plain ribbon over the whole run, undivided. A placeholder split would be an invented drop-off, and nobody can tell an invented one from a real one until it changes under them.
 
 ## Examples
 
 ### The data
 
-Steps in the order they happen, top first. The order is yours and never the chart’s — stages are a process, and sorting them by size would destroy the only thing the chart is asserting.
+Steps in the order they happen, first one first. The order is yours and never the chart’s — stages are a process, and sorting them by size would destroy the only thing the chart is asserting.
+
+Keep the names short. A stage gets a column of the card’s width and no more, so five across a phone is about seventy points each, and a name that does not fit under one is a name the reader never gets to read.
 
 ```tsx
 const checkout: FunnelDatum[] = [
-  { label: 'Product viewed', value: 41800 },
-  { label: 'Added to basket', value: 18240 },
-  { label: 'Checkout started', value: 9420 },
-  { label: 'Payment entered', value: 6180 },
-  { label: 'Order placed', value: 5240 },
+  { label: 'Viewed', value: 41800 },
+  { label: 'Basket', value: 18240 },
+  { label: 'Checkout', value: 9420 },
+  { label: 'Payment', value: 6180 },
+  { label: 'Paid', value: 5240 },
 ];
 ```
 
-### Which conversion the labels report
+### How deep it tapers
 
-Two true readings of one run, answering different questions. `previous` is the drop from the stage above — the step-by-step reading a funnel is usually built for, and the default. `top` is the share of the first stage, which is the summary figure. The first stage has nothing above it, so it carries no caption under `previous`.
+`height` is the one measurement the data cannot supply. The run is as wide as the card and the stages divide that between them, but nothing in a set of counts says how far the ribbon should taper through — so it is a decision. Everything else follows from it: the count and the name each take a fixed share of the height at the top and bottom, and the ribbon is centred in what is left.
+
+```tsx
+<FunnelChart data={checkout} height={240}>
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+</FunnelChart>
+```
+
+### Which conversion the pill reports
+
+Two true readings of one run, answering different questions. `top` is the share of the first stage — the default, because every stage has one and they read along the run as a single falling series. `previous` is the drop from the stage above, which is the step-by-step reading; the first stage has nothing above it, so it carries no pill.
 
 ```tsx
 <FunnelChart data={checkout}>
   <FunnelChart.Stages />
-  <FunnelChart.Labels share="top" />
+  <FunnelChart.Labels share="previous" />
 </FunnelChart>
+```
+
+### Rings, and drawing the shape flat
+
+`layers` is how many concentric rings each band is drawn as: tall and faint on the outside through to a tight near-solid core, which is what gives the ribbon an edge that falls off rather than stopping dead. Raise it and the shape reads as light; `layers={1}` draws it once, flat. `edges="straight"` replaces the curved sides with plain diagonals, which is the honest shape for a drop worth seeing as a corner.
+
+```tsx
+<FunnelChart data={pipeline} layers={1} edges="straight">
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+</FunnelChart>
+```
+
+### Pulling one stage out of the fade
+
+The run is one hue that fades along it, because the stages are one quantity at successive moments. A `color` on a single stage takes it out of that fade and draws it at full strength — for the step where the money is taken, or the one the report is about. A colour per stage would say they were unrelated series.
+
+```tsx
+const data = checkout.map((stage) =>
+  stage.label === 'Paid' ? { ...stage, color: '#34d399' } : stage
+);
 ```
 
 ### Selecting a stage
 
-Press a stage, its label row, or its entry in the legend, and the others dim. Pressing it again clears the selection. Control it from outside with `activeIndex` and `onActiveIndexChange` when the header — or anything else on the screen — has to stay in step.
+Press a band, its column, or its entry in the legend, and its rings spread while the others dim. Pressing it again clears the selection. Control it from outside with `activeIndex` and `onActiveIndexChange` when the header — or anything else on the screen — has to stay in step.
 
 ```tsx
 const [active, setActive] = useState(-1);
@@ -97,10 +133,10 @@ const stage = active >= 0 ? checkout[active] : null;
 
 ### A hard drop-off
 
-Eleven hires out of twelve hundred applications. At true width the last two stages are hairlines, and a hairline reads as nothing happening rather than as something rare — `minWidth` is the floor that keeps them visible, applied only to stages that have something in them. `align="start"` hangs the taper off the leading edge, which is easier to compare down a column than one narrowing from both sides.
+Eleven hires out of twelve hundred applications. At true height the last two stages are hairlines, and a hairline reads as nothing happening rather than as something rare — `minWidth` is the floor that keeps them visible, applied only to stages that have something in them.
 
 ```tsx
-<FunnelChart data={pipeline} align="start" minWidth={0.16} cornerRadius={4}>
+<FunnelChart data={pipeline} minWidth={0.16} edges="straight" layers={1}>
   <FunnelChart.Stages />
   <FunnelChart.Labels />
 </FunnelChart>
@@ -108,10 +144,10 @@ Eleven hires out of twelve hundred applications. At true width the last two stag
 
 ### Compact, with a key instead of labels
 
-For a dashboard tile where the funnel is one of six things on the screen and a row of labels across every stage would be more text than tile.
+For a dashboard tile where the funnel is one of six things on the screen and a reading around every stage would be more text than tile. The key is a row per stage by default; `layout="inline"` runs them together and wraps, where the names are short enough for it.
 
 ```tsx
-<FunnelChart data={checkout} stageHeight={28} gap={3} cornerRadius={4}>
+<FunnelChart data={signup} height={120} gap={3}>
   <FunnelChart.Stages />
   <FunnelChart.Legend />
 </FunnelChart>
@@ -119,7 +155,7 @@ For a dashboard tile where the funnel is one of six things on the screen and a r
 
 ### While the numbers are still coming
 
-`status="loading"` draws the taper and nothing else. An empty chart in that state still reserves a run’s worth of height, so the card does not jump when the data lands.
+`status="loading"` draws the ribbon and nothing else. An empty chart in that state still reserves the run’s height and a plausible number of stages, so the card does not jump when the data lands.
 
 ```tsx
 <FunnelChart data={ready ? checkout : []} status={ready ? 'ready' : 'loading'}>
@@ -145,23 +181,35 @@ Five steps of a checkout, each labelled with what it converted at.
 
 ### Conversion
 
-Every stage measured against the top of the funnel, with both readings in the header as one is selected.
+Each step measured against the one above it, with both readings in the header as one is selected.
 
 ```tsx
-<FunnelChart data={checkout} cornerRadius={6} gap={6} activeIndex={active} onActiveIndexChange={setActive}>
+<FunnelChart data={checkout} gap={6} activeIndex={active} onActiveIndexChange={setActive}>
   <FunnelChart.Header title={stage?.label ?? 'Everyone who looked'} value={value} caption={caption} />
   <FunnelChart.Stages />
-  <FunnelChart.Labels share="top" />
+  <FunnelChart.Labels share="previous" />
 </FunnelChart>
 ```
 
 ### Pipeline
 
-A hard drop-off, left-aligned, with a floor under the stages too small to see.
+A hard drop-off, drawn flat, with a floor under the stages too small to see.
 
 ```tsx
-<FunnelChart data={pipeline} align="start" minWidth={0.16} cornerRadius={4}>
+<FunnelChart data={pipeline} minWidth={0.16} edges="straight" layers={1}>
   <FunnelChart.Header title="Applications" value="1,240" caption="11 hires, from 1,240 applications" />
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+</FunnelChart>
+```
+
+### Glow
+
+A deeper halo, and one stage pulled out of the fade into its own colour.
+
+```tsx
+<FunnelChart data={highlighted} layers={5} height={230}>
+  <FunnelChart.Header title="Order placed" value="5,240" caption="The one stage worth its own colour" />
   <FunnelChart.Stages />
   <FunnelChart.Labels />
 </FunnelChart>
@@ -172,7 +220,7 @@ A hard drop-off, left-aligned, with a floor under the stages too small to see.
 The run as a shape, with the reading in a key underneath it.
 
 ```tsx
-<FunnelChart data={checkout.slice(0, 4)} stageHeight={28} gap={3} cornerRadius={4}>
+<FunnelChart data={signup} height={120} gap={3}>
   <FunnelChart.Stages />
   <FunnelChart.Legend />
 </FunnelChart>
@@ -180,10 +228,10 @@ The run as a shape, with the reading in a key underneath it.
 
 ### Loading
 
-One plain taper while it waits, because an invented drop-off is a lie.
+One plain ribbon while it waits, because an invented drop-off is a lie.
 
 ```tsx
-<FunnelChart data={status === 'loading' ? [] : checkout} status={status} cornerRadius={6}>
+<FunnelChart data={status === 'loading' ? [] : checkout} status={status}>
   <FunnelChart.Header title="Product viewed" value={status === 'loading' ? '—' : '41,800'} />
   <FunnelChart.Skeleton />
   <FunnelChart.Stages />
@@ -198,15 +246,17 @@ One plain taper while it waits, because an invented drop-off is a lie.
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `data` | `FunnelDatum[]` | — | The steps, top to bottom, in the order they happen. Never reordered. |
-| `stageHeight` | `number` | `52` | Height of one stage, in points. The run is as tall as its stages need. |
+| `data` | `FunnelDatum[]` | — | The steps, in the order they happen. Never reordered. |
+| `height` | `number` | `DEFAULT_HEIGHT` | How tall the run is drawn, in points. The run is as wide as it is given and as deep as this: the width is the card's, but nothing in the data says how far the ribbon should taper through, so it is a decision rather than a measurement. |
+| `stageSize` | `number` | — | How wide one stage is, in points. Left unset the stages divide the width between them, which is nearly always what a run across a card wants. Worth setting only to make a run stop short of the edge. |
 | `gap` | `number` | `4` | Space between one stage and the next, in points. |
-| `align` | `FunnelAlign` | `'center'` | Which edge the taper hangs off. `center` narrows from both sides; `start` keeps the leading edge straight and takes it all off the trailing one, which is the shape to use when the labels run down the same side. |
-| `minWidth` | `number` | `0.1` | The narrowest a non-zero stage is drawn, as a share of the full width. A stage worth a fifth of a percent of the top is a hairline: it reads as missing rather than as small, and "missing" is a different claim. The floor is only applied to stages that have something in them — a genuine zero is drawn as nothing, because there it is the truth. |
-| `cornerRadius` | `number` | `0` | Rounds the corners of every stage, in points. |
+| `layers` | `number` | `DEFAULT_LAYERS` | Concentric rings drawn per stage, faint and wide on the outside through to a near-solid core. `1` draws the band once, flat. |
+| `edges` | `FunnelEdges` | `'curved'` | Whether the sides of a band are curves or straight diagonals. |
+| `minWidth` | `number` | `0.1` | The shortest a non-zero stage is drawn, as a share of the tallest. A stage worth a fifth of a percent of the first is a hairline: it reads as missing rather than as small, and "missing" is a different claim. The floor is only applied to stages that have something in them — a genuine zero is drawn as nothing, because there it is the truth. |
 | `color` | `string` | — | The funnel's hue. Defaults to the first chart token. |
-| `animationDuration` | `number` | `900` | Milliseconds for the funnel to fill, top to bottom. |
-| `status` | `FunnelChartStatus` | `'ready'` | `loading` draws one plain muted taper until the data arrives. |
+| `animationDuration` | `number` | `700` | Milliseconds for one stage to grow. |
+| `staggerDelay` | `number` | `STAGGER` | Milliseconds between one stage starting and the next. `0` for all at once. |
+| `status` | `FunnelChartStatus` | `'ready'` | `loading` draws one plain muted ribbon until the data arrives. |
 | `activeIndex` | `number` | — | Selected stage. Leave unset to let the chart track it. |
 | `onActiveIndexChange` | `(index: number) => void` | — | Fires with the selected stage, or `-1` when the selection is cleared. |
 
@@ -227,15 +277,20 @@ One plain taper while it waits, because an invented drop-off is a lie.
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `formatValue` | `(value: number, stage: FunnelDatum) => string` | — | Format the number on the trailing edge. Defaults to a compact number. |
-| `share` | `FunnelShare` | `'previous'` | Which conversion the muted figure reports. `previous` is the drop from the stage above — the number a funnel is usually read for. `top` is the share of the first stage, which is what a summary wants. The first stage has no stage above it, so it carries nothing under `previous`. |
+| `formatValue` | `(value: number, stage: FunnelDatum) => string` | — | Format the count. Defaults to a compact number. |
+| `formatShare` | `(share: number, stage: FunnelDatum) => string` | — | Format the conversion in the pill. Defaults to a whole percent. |
+| `share` | `FunnelShare` | `'top'` | Which conversion the pill reports. `top` is the share of the first stage, which every stage has and which reads along the run as one falling series. `previous` is the drop from the stage above — the step-by-step reading, where the first stage has nothing above it and so carries no pill. |
+| `showValue` | `boolean` | `true` | Show the count above the ribbon. |
+| `showLabel` | `boolean` | `true` | Show the stage's name under the ribbon. |
 
 ### FunnelChart.Legend
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `showValue` | `boolean` | `true` | Show each stage's share of the first one beside its name. |
+| `layout` | `FunnelLegendLayout` | `'list'` | `list` gives every stage a row of its own, with the names down one column and the numbers down another. `inline` runs them together across the width and wraps, which is the denser arrangement where the names are short. |
+| `showValue` | `boolean` | `true` | Show each stage's reading beside its name. |
+| `formatValue` | `(value: number, stage: FunnelDatum) => string` | — | Format the value in a `list` key. Defaults to a compact number. |
 
 ### FunnelChart.Header
 
@@ -250,14 +305,22 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+### Why the readings are split three ways
+
+A stage has three things worth saying about it — what it is called, how many were left at it, and what it converted at — and putting all three on one line makes that line as wide as all three together. At the width a phone actually has, something has to give, and it is always the name: a reader is left with “Checkout st…” next to a number that means nothing without it.
+
+So the count goes above the band, the name under it, and the conversion in a pill on the band itself. Each has the stage’s whole column to itself. The two text strips take a fixed share of the height and the ribbon takes the rest, centred in it, so the tallest stage reaches exactly to the words at both ends — no strip of nothing between the shape and the text, and no shape creeping under it.
+
+The pill is filled rather than bare text for the same reason: it is the one reading that sits *over* the shape, where the fill behind it is the same token family the text would be drawn in. Punched out of its own background, it reads whatever the band is doing underneath.
+
 ### One hue, not five
 
-The stages are drawn in a single colour that fades down the run. They are one quantity at successive moments, not five unrelated series, and five hues would say they were — the reader would start looking for what "the green one" means. Set `color` on the chart to change the hue, or `color` on a single stage to pull it out of the fade at full strength: the step where the money is taken, the one the report is about.
+The stages are drawn in a single colour that fades along the run. They are one quantity at successive moments, not five unrelated series, and five hues would say they were — the reader would start looking for what “the green one” means. Set `color` on the chart to change the hue, or `color` on a single stage to pull it out of the fade at full strength.
 
-### A stage wider than its parent
+### A stage larger than its parent
 
-Widths are measured against the largest value in the run rather than against the first. In a well-formed funnel those are the same number. Where they are not — a stage that somehow counted more people than the step before it — the stage is drawn as given, wider than its parent, because that is a real data problem and a chart that quietly clamped it would be hiding the one thing worth seeing.
+Heights are measured against the largest value in the run rather than against the first. In a well-formed funnel those are the same number. Where they are not — a stage that somehow counted more people than the step before it — the stage is drawn as given, taller than its parent, because that is a real data problem and a chart that quietly clamped it would be hiding the one thing worth seeing.
 
 ### When not to reach for it
 
-A funnel asserts that each stage is a subset of the one above it. If that is not true of your data — categories that merely happen to be sorted, quantities measured at the same moment, anything a reader might want to compare exactly — it is a bar chart, where the comparison is a length and lengths are read exactly. Four to six stages is the range a funnel reads well in; past that the lower ones are all floor and the shape stops carrying the information.
+A funnel asserts that each stage is a subset of the one above it. If that is not true of your data — categories that merely happen to be sorted, quantities measured at the same moment, anything a reader might want to compare exactly — it is a bar chart, where the comparison is a length and lengths are read exactly. Four to six stages is the range a funnel reads well in; past that the columns are too narrow to name and the lower stages are all floor.

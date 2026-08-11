@@ -11881,35 +11881,36 @@ function SwipeDeleteDemo() {
 /* -------------------------------------------------------------------------- */
 
 /** A week of checkout, from the people who saw a product to the ones who paid. */
-const CHECKOUT: FunnelDatum[] = [
-  { label: 'Product viewed', value: 41800 },
-  { label: 'Added to basket', value: 18240 },
-  { label: 'Checkout started', value: 9420 },
-  { label: 'Payment entered', value: 6180 },
-  { label: 'Order placed', value: 5240 },
-];
-
 /**
- * A signup run with short names, for the horizontal chart.
+ * A week of checkout, from the people who saw a product to the ones who paid.
  *
- * Turned across the card a stage gets a column rather than a row, and a column
- * is as wide as the card divided by the stages — so the names have to be short
- * enough to sit under one.
+ * The names are short because a stage gets a column of the card's width and no
+ * more: five of them across a phone is about seventy points each, and a name
+ * that does not fit under one is a name the reader never gets to read.
  */
-const SIGNUP: FunnelDatum[] = [
-  { label: 'Visited', value: 24600 },
-  { label: 'Signed up', value: 8400 },
-  { label: 'Activated', value: 3900 },
-  { label: 'Paid', value: 1120 },
+const CHECKOUT: FunnelDatum[] = [
+  { label: 'Viewed', value: 41800 },
+  { label: 'Basket', value: 18240 },
+  { label: 'Checkout', value: 9420 },
+  { label: 'Payment', value: 6180 },
+  { label: 'Paid', value: 5240 },
 ];
 
 /** A hiring pipeline, which drops far harder and is the case for a floor. */
 const PIPELINE: FunnelDatum[] = [
   { label: 'Applied', value: 1240 },
   { label: 'Screened', value: 420 },
-  { label: 'Interviewed', value: 96 },
-  { label: 'Offered', value: 18 },
+  { label: 'Phone', value: 96 },
+  { label: 'Offer', value: 18 },
   { label: 'Hired', value: 11 },
+];
+
+/** A signup run of four steps, for the chart drawn without its labels. */
+const SIGNUP: FunnelDatum[] = [
+  { label: 'Visited', value: 24600 },
+  { label: 'Signed up', value: 8400 },
+  { label: 'Activated', value: 3900 },
+  { label: 'Paid', value: 1120 },
 ];
 
 /** Funnel stages are counts of people, and a count reads with its separators. */
@@ -11925,7 +11926,7 @@ function FunnelBasicVersion() {
           <Frame.Action>Last 7 days</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
-          <FunnelChart data={CHECKOUT} className="pb-4">
+          <FunnelChart data={CHECKOUT} className="px-2 pb-4">
             <FunnelChart.Header
               className={CHART_HEADER}
               title="Product viewed"
@@ -11966,7 +11967,7 @@ function FunnelConversionVersion() {
         <Frame.Panel>
           <FunnelChart
             data={CHECKOUT}
-            className="pb-4"
+            className="px-2 pb-4"
             gap={6}
             activeIndex={active}
             onActiveIndexChange={setActive}
@@ -11992,11 +11993,12 @@ function FunnelConversionVersion() {
 
 /**
  * A pipeline that ends at eleven out of twelve hundred, which is what the floor
- * under the narrow stages is for: at true width the last two are hairlines,
+ * under the narrow stages is for: at true height the last two are hairlines,
  * and a hairline reads as nothing happening rather than as something rare.
  *
- * Drawn with straight edges and a single layer. A drop this hard is the whole
- * point of the chart, and the curve softens exactly the corner worth seeing.
+ * Drawn flat, with straight sides and a single ring. A drop this hard is the
+ * whole point of the chart, and the curve softens exactly the corner worth
+ * seeing.
  */
 function FunnelPipelineVersion() {
   return (
@@ -12012,7 +12014,7 @@ function FunnelPipelineVersion() {
             minWidth={0.16}
             edges="straight"
             layers={1}
-            className="pb-4"
+            className="px-2 pb-4"
           >
             <FunnelChart.Header
               className={CHART_HEADER}
@@ -12030,28 +12032,36 @@ function FunnelPipelineVersion() {
 }
 
 /**
- * The run turned across the card: counts above the ribbon, names below it, and
- * the whole height to taper through.
+ * More rings, more room, and one stage pulled out of the fade.
  *
- * The arrangement a wide card wants, and the reason the labels are not one
- * fixed layout — turning the run turns where its readings go, because a column
- * of text beside a horizontal ribbon would have nothing to line up with.
+ * `layers` is the depth of the halo — at five the edge falls off over most of
+ * the band and the ribbon reads as light rather than as a shape. Giving a stage
+ * its own `color` takes it out of the run's fade at full strength, which is how
+ * you point at the step the report is actually about.
  */
-function FunnelWideVersion() {
+function FunnelGlowVersion() {
   return (
     <View className="flex-1 justify-center p-4">
       <Frame className="w-full">
         <Frame.Header>
-          <Frame.Title>Signup</Frame.Title>
-          <Frame.Action>Last 30 days</Frame.Action>
+          <Frame.Title>Checkout</Frame.Title>
+          <Frame.Action>The step that pays</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
           <FunnelChart
-            data={SIGNUP}
-            orientation="horizontal"
-            crossSize={190}
-            className="p-4"
+            data={CHECKOUT.map((stage) =>
+              stage.label === 'Paid' ? { ...stage, color: '#34d399' } : stage
+            )}
+            layers={5}
+            height={230}
+            className="px-2 pb-4"
           >
+            <FunnelChart.Header
+              className={CHART_HEADER}
+              title="Order placed"
+              value={people(CHECKOUT[4]!.value)}
+              caption="The one stage worth its own colour"
+            />
             <FunnelChart.Stages />
             <FunnelChart.Labels />
           </FunnelChart>
@@ -12065,22 +12075,17 @@ function FunnelWideVersion() {
  * The compact card: the run is the shape and the reading is underneath it.
  *
  * For a dashboard tile where the funnel is one of six things on the screen and
- * a row of labels across each stage would be more text than tile.
+ * a reading around every stage would be more text than tile.
  */
 function FunnelCompactVersion() {
   return (
     <View className="flex-1 justify-center p-4">
       <Frame className="w-full">
         <Frame.Header>
-          <Frame.Title>Checkout</Frame.Title>
+          <Frame.Title>Signup</Frame.Title>
         </Frame.Header>
         <Frame.Panel>
-          <FunnelChart
-            data={CHECKOUT.slice(0, 4)}
-            stageSize={30}
-            gap={3}
-            className="p-4"
-          >
+          <FunnelChart data={SIGNUP} height={120} gap={3} className="p-4">
             <FunnelChart.Stages />
             <FunnelChart.Legend />
           </FunnelChart>
@@ -12090,7 +12095,7 @@ function FunnelCompactVersion() {
   );
 }
 
-/** The waiting state: one plain taper, with no invented drop-off in it. */
+/** The waiting state: one plain ribbon, with no invented drop-off in it. */
 function FunnelLoadingVersion() {
   const [status, setStatus] = useState<'loading' | 'ready'>('loading');
 
@@ -12115,7 +12120,7 @@ function FunnelLoadingVersion() {
           <FunnelChart
             data={status === 'loading' ? [] : CHECKOUT}
             status={status}
-            className="pb-4"
+            className="px-2 pb-4"
           >
             <FunnelChart.Header
               className={CHART_HEADER}
@@ -17046,11 +17051,11 @@ const CATALOGUE: ComponentEntry[] = [
         render: () => <FunnelPipelineVersion />,
       },
       {
-        label: 'Wide',
-        id: 'wide',
+        label: 'Glow',
+        id: 'glow',
         fullPage: true,
-        description: 'The run turned across the card, with the counts above it and the names below.',
-        render: () => <FunnelWideVersion />,
+        description: 'A deeper halo, and one stage pulled out of the fade into its own colour.',
+        render: () => <FunnelGlowVersion />,
       },
       {
         label: 'Compact',
