@@ -10,6 +10,12 @@
 # this repository to leak or rotate, and the published package carries a
 # provenance attestation naming this workflow and commit.
 #
+# This is the library's workflow only. The CLI packages are versioned
+# separately and released under their own tag prefixes — see publish-cli.yml,
+# which is why the job below skips any tag that is not a plain `vX.Y.Z`.
+# Without that, a `cli-v0.4.0` release would reach the version check here,
+# compare "cli-v0.4.0" against the library's version and fail the run.
+#
 # One-time setup on npmjs.com, without which every run fails at the last step:
 #   panelui-native -> Settings -> Trusted Publisher -> GitHub Actions
 #   Organization or user: panel-ui
@@ -36,6 +42,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref_name, 'v')
     steps:
       - uses: actions/checkout@v4
 

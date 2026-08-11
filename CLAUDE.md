@@ -212,7 +212,8 @@ which is worse than the gap it filled.
 - `npm run typecheck` — typecheck all workspaces
 - `npm run build` — build the library with react-native-builder-bob (output: `lib/`)
 - `npm run docs` — start the docs site; `npm run build --workspace=docs` for a production build
-- Publish: bump version in `packages/panelui`, `npm run build`, `npm publish` (from that dir), tag `vX.Y.Z`
+- Publish: **nobody runs `npm publish` by hand.** Cutting a GitHub release publishes the package
+  it is tagged for — see below.
 
 ### Never launch a simulator on your own
 
@@ -257,12 +258,28 @@ If the answer is yes, then and only then:
    old answer.
 2. Write the release's `CHANGELOG.md` entry (see below) and commit it with the bump.
 3. Push, then tag `vX.Y.Z` and cut the GitHub release from that changelog entry.
-4. **Remind the user to run `npm publish`.** Never publish to npm autonomously — that stays the
-   user's call whatever they answered above.
 
-Tagging and the GitHub release are outward-facing, so confirm before the first one in a session
-unless the user has already said to go ahead. Their answer to the release question counts as that
-go-ahead for the release they just approved, and for that one only.
+**Publishing is the release's job, not a command anybody types.** `.github/workflows/publish.yml`
+fires on `release: published`, checks the tag against `packages/panelui/package.json`, builds, and
+publishes with provenance over npm Trusted Publishing — there is no npm token in this repository.
+So cutting the release *is* publishing, and step 3 is the last one. Never run `npm publish` by
+hand; the version will already be on the registry and the second attempt fails.
+
+**The CLI packages are released separately**, by `.github/workflows/publish-cli.yml`, and versioned
+independently of the library and of each other. Which package a release is for comes from its tag:
+
+| Tag | Publishes |
+| --- | --- |
+| `vX.Y.Z` | `packages/panelui` → `panelui-native` |
+| `cli-vX.Y.Z` | `packages/cli` → `panelui-cli` |
+| `create-vX.Y.Z` | `packages/create-panelui-app` → `create-panelui-app` |
+
+`create-panelui-app` depends on `panelui-cli`, so a breaking change to the `panelui-cli/init` or
+`panelui-cli/ui` subpath exports needs both released, cli first.
+
+Tagging and the GitHub release are outward-facing — and now publish — so confirm before the first
+one in a session unless the user has already said to go ahead. Their answer to the release question
+counts as that go-ahead for the release they just approved, and for that one only.
 
 ### Release notes
 

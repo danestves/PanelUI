@@ -1,0 +1,120 @@
+# Publishes panelui-cli and create-panelui-app to npm when a GitHub release is
+# published, in the same shape as publish.yml does for the library.
+#
+# The two are versioned independently of panelui-native and of each other, so
+# which package a release is for is read off the tag's prefix rather than
+# guessed:
+#
+#   cli-vX.Y.Z      -> packages/cli                  (panelui-cli)
+#   create-vX.Y.Z   -> packages/create-panelui-app   (create-panelui-app)
+#   vX.Y.Z          -> the library, which publish.yml handles
+#
+# A release whose tag matches none of those publishes nothing and says so,
+# rather than failing — a tag can perfectly well exist for something that is not
+# a package.
+#
+# Authentication is npm Trusted Publishing: the job asks GitHub for an OIDC
+# token and npm exchanges it for a short-lived one, so there is no credential in
+# this repository to leak or rotate, and each package carries a provenance
+# attestation naming this workflow and commit.
+#
+# One-time setup on npmjs.com, without which every run fails at the last step.
+# Both packages need it, and both name *this* file rather than publish.yml:
+#   panelui-cli        -> Settings -> Trusted Publisher -> GitHub Actions
+#   create-panelui-app -> Settings -> Trusted Publisher -> GitHub Actions
+#   Organization or user: panel-ui
+#   Repository:           PanelUI
+#   Workflow filename:    publish-cli.yml
+name: Publish CLI
+
+on:
+  release:
+    types: [published]
+  # A dry run on demand, so the whole path — install, check, pack — can be
+  # exercised for both packages without putting anything on the registry.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required for trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      # Node 22 ships npm 10, which has no trusted publishing. Without this the
+      # publish step fails asking for a token that deliberately does not exist.
+      - name: Use an npm that can publish with OIDC
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Which package, if any, this release is for.
+      - name: Read the package out of the tag
+        id: target
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          case "$tag" in
+            cli-v*)    dir=packages/cli;                name=panelui-cli;        version="${tag#cli-v}" ;;
+            create-v*) dir=packages/create-panelui-app; name=create-panelui-app; version="${tag#create-v}" ;;
+            *)         dir=; name=; version= ;;
+          esac
+          {
+            echo "dir=$dir"
+            echo "name=$name"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+          if [ -z "$dir" ]; then
+            echo "::notice::${tag} is not a CLI release tag — nothing to publish here."
+          else
+            echo "::notice::${tag} -> ${name} from ${dir}."
+          fi
+
+      # Neither package is built — they ship the .mjs files as they are — so
+      # this is the only thing standing between a syntax error and a release
+      # that cannot be run. `npm publish` would not have noticed.
+      - name: Parse every shipped module
+        if: github.event_name == 'workflow_dispatch' || steps.target.outputs.dir != ''
+        run: |
+          for dir in packages/cli packages/create-panelui-app; do
+            echo "checking $dir"
+            find "$dir" -name '*.mjs' -not -path '*/node_modules/*' -print0 \
+              | xargs -0 -r -n1 node --check
+          done
+
+      # The only thing standing between a mistyped tag and a wrong version on
+      # npm, which cannot be taken back — npm does not allow a version to be
+      # republished, even after an unpublish.
+      - name: Check the tag matches the package version
+        if: github.event_name == 'release' && steps.target.outputs.dir != ''
+        run: |
+          tag="${{ steps.target.outputs.version }}"
+          version="$(node -p "require('./${{ steps.target.outputs.dir }}/package.json').version")"
+          if [ "$tag" != "$version" ]; then
+            echo "::error::Release tag ${GITHUB_REF_NAME} does not match ${{ steps.target.outputs.dir }}/package.json (${version}). Fix one of them and re-cut the release."
+            exit 1
+          fi
+          echo "Publishing ${{ steps.target.outputs.name }} ${version} from ${GITHUB_REF_NAME}."
+
+      - name: Publish
+        if: github.event_name == 'release' && steps.target.outputs.dir != ''
+        run: npm publish --provenance --access public
+        working-directory: ${{ steps.target.outputs.dir }}
+
+      # Both packages, so a dispatch exercises the whole path rather than
+      # whichever one happened to be released last.
+      - name: Dry run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          for dir in packages/cli packages/create-panelui-app; do
+            (cd "$dir" && npm publish --dry-run --access public)
+          done
