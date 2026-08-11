@@ -16,27 +16,38 @@
  * </Tabs>
  * ```
  *
- * **Swiping.** Only the visible panel is mounted, so a drag has nothing behind
- * it to reveal. The panel still tracks the finger one to one and dims as it
- * goes, and the panel arriving comes back up through the same fade — the
- * movement carries the change and the dissolve covers the gap. On release the
- * arriving panel picks up a whole panel's width from wherever the outgoing one
- * was let go, so the two views draw one continuous movement between them. The
- * displacement lives on the root for exactly that reason: a value belonging to
- * either panel would be destroyed at the handover.
+ * **Swiping puts the panels in a row.** With `swipeable`, the panels are laid
+ * out side by side in a strip as wide as all of them, inside a viewport that
+ * shows one at a time, and moving between tabs is that strip translating. The
+ * neighbours are therefore already built and already the right size before the
+ * finger arrives at them, which is the whole point: a panel that has to be
+ * mounted and measured at the moment it becomes visible is a panel that stalls
+ * there, and it stalls for exactly as long as it takes to build.
+ *
+ * One shared value carries the strip's position, in panels rather than points,
+ * and it is the only thing that decides where the strip is. A press springs it,
+ * a drag sets it, and neither waits for React: the value the tab set reports is
+ * updated alongside the movement, not ahead of it.
+ *
+ * A swipeable tab set therefore needs a height to fill, the same as any pager.
+ * Give it one — `flex-1` on the tab set, or a fixed height — or the strip has
+ * nothing to lay its panels out in.
  */
 import {
+  Children,
   createContext,
+  Fragment,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
+  type ReactElement,
   type ReactNode,
 } from 'react';
 import {
-  Platform,
   Pressable,
   ScrollView,
   View,
@@ -55,7 +66,6 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
-  type SharedValue,
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
 import { useDirectionSign } from '../../hooks/use-direction';
@@ -73,50 +83,19 @@ const SPRING = { damping: 24, stiffness: 300, mass: 0.7 } as const;
 const SWIPE_ACTIVATE_X = 12;
 const SWIPE_FAIL_Y = 8;
 
-/** A swipe past this share of the panel's width changes tab on release. */
+/** A swipe past this share of a panel's width changes tab on release. */
 const SWIPE_DISTANCE_RATIO = 0.25;
-/** …or past this speed, however short it was. */
+/** …or past this speed, however short it was, in points per second. */
 const SWIPE_VELOCITY = 500;
 
 /**
- * How much of the finger's travel the panel follows at the ends of the row,
- * where there is nowhere for it to go. Everywhere else it follows all of it.
+ * How much of the finger's travel the strip follows at the ends of the row,
+ * where there is no further panel to bring on. Everywhere else it follows all
+ * of it.
  */
 const SWIPE_RESISTANCE_AT_END = 0.16;
 
-/**
- * How far the panel fades as it is dragged, at a full panel's width.
- *
- * Tracking the finger one to one leaves the space behind the panel empty,
- * because the panels are separate views and only the visible one is mounted.
- * Dimming as it goes is what keeps that from reading as a hole punched in the
- * card: a panel on its way out is on its way out, and the one arriving comes
- * back up through the same fade. The two together read as a dissolve carried
- * by the movement, rather than as a gap between two slides.
- *
- * **iOS only, and that is not a compromise.** A transform is a property of the
- * layer the panel is drawn into, so moving it costs nothing per frame however
- * much is inside it. An opacity that changes every frame is not: on Android the
- * panel's view group has no offscreen buffer to fade, so the alpha is pushed
- * down into its children and the whole visible subtree is re-drawn on every
- * frame of the drag. Behind a list that is thirty rows of text and images,
- * which is what a tab panel usually is, that is the difference between a swipe
- * that tracks the finger and one that stutters. iOS fades the layer itself and
- * is unaffected.
- */
-const SWIPE_FADE = Platform.OS === 'ios' ? 0.75 : 0;
-
-/**
- * How far off its resting place a panel arriving by a *press* starts, as a
- * share of the panel's width.
- *
- * A press has no finger travel to continue from, so it is given a throw of its
- * own. A swipe does not use this: the panel it hands over to picks up exactly
- * one width from wherever the outgoing one has travelled to — see `setValue`.
- */
-const SWIPE_ENTER = 0.3;
-
-/** The arriving panel is springier than the one being dragged back into place. */
+/** The spring the strip settles on, whether it was thrown or pressed. */
 const ENTER_SPRING = { damping: 22, stiffness: 240, mass: 0.6 } as const;
 
 /** How far the label's reveal is from its own width, in points — the gap after the icon. */
@@ -143,12 +122,24 @@ export type TabsVariant = 'segmented' | 'underline' | 'pill' | 'expanding';
 /**
  * How much of an inactive panel survives a switch away from it.
  *
- * `false` unmounts it. `true` keeps it mounted but takes it out of layout, so
- * it costs nothing to have around. `'measured'` keeps it laid out at full size
- * as well — the expensive option, and the only one a child that sizes itself
- * from its parent can be built inside while it is hidden.
+ * `false` unmounts it. `true` keeps it mounted.
+ *
+ * `'measured'` meant "keep it mounted *and* laid out at a real size", which was
+ * a distinction only a tab set of separately hidden panels had to make. In a
+ * swipeable tab set every panel in the strip is laid out at a real size
+ * already, so it is the same as `true` there and is kept only so that passing
+ * it does not break.
+ *
+ * @see TabsProps.keepMounted
  */
 export type TabsKeepMounted = boolean | 'measured';
+
+/**
+ * `'disable-all'` turns off every animation in the tab set — the indicator, the
+ * strip, and an expanding tab's reveal — including the ones its parts run
+ * themselves.
+ */
+export type TabsAnimation = 'disable-all';
 
 const tabsVariants = tv({
   slots: {
@@ -228,48 +219,24 @@ interface TabLayout {
   width: number;
 }
 
-/**
- * What a swipe hands over to the tab it commits to: where the finger left the
- * outgoing panel, and how fast it was still going. Absent when the tab was
- * changed by pressing a trigger, which has neither.
- */
-interface SwipeHandover {
-  /** Points per second at the moment of release, in the panel's own axis. */
-  velocity: number;
-}
-
 interface TabsContextValue {
   value: string;
-  setValue: (value: string, handover?: SwipeHandover) => void;
+  setValue: (value: string) => void;
   registerLayout: (value: string, layout: TabLayout) => void;
   layouts: Record<string, TabLayout>;
-  /**
-   * Every tab in the order it was declared, which is the order a swipe moves
-   * through them. Kept separately from `layouts` because that is a map keyed
-   * by value and its order is whatever the layout pass happened to produce —
-   * and because under RTL the leftmost trigger is the last one, so a position
-   * cannot stand in for a place in the sequence either.
-   */
-  tabs: string[];
-  registerTab: (value: string) => void;
-  unregisterTab: (value: string) => void;
   variant: TabsVariant;
   scrollable: boolean;
   setScrollable: (scrollable: boolean) => void;
   keepMounted: TabsKeepMounted;
-  swipeable: boolean;
   /**
-   * How far the visible panel is displaced from its resting place, in points.
+   * Whether the panels are in a strip rather than stacked in place.
    *
-   * It lives on the root rather than on a panel because the outgoing and
-   * incoming panels are different views, and a value that belonged to either
-   * of them would be destroyed at the moment of the handover. Shared, the
-   * displacement survives it: the panel being let go and the panel arriving
-   * are one continuous movement, drawn by two views in turn.
+   * A panel in a strip is positioned by the strip and sized by the box it is
+   * put in, so it does no hiding of its own — which is the whole difference
+   * between the two modes as far as `Tabs.Content` is concerned.
    */
-  swipeOffset: SharedValue<number>;
-  /** The visible panel's measured width, which the throw above is a share of. */
-  panelWidth: SharedValue<number>;
+  pager: boolean;
+  animationDisabled: boolean;
 }
 
 const TabsContext = createContext<TabsContextValue | null>(null);
@@ -299,34 +266,24 @@ export interface TabsProps extends ViewProps {
    */
   variant?: TabsVariant;
   /**
-   * Keep inactive panels mounted and hidden instead of unmounting them, so a
-   * scroll position or a half-filled form survives a switch away and back.
-   * Costs the render of every panel up front.
+   * Mount every panel up front instead of only the ones that have been
+   * reached, so a scroll position or a half-filled form is there from the
+   * start rather than from the first visit.
    *
-   * `true` hides a kept panel with `display: none`, which also takes it out of
-   * layout: it is mounted, but it has no size. That is what makes it cheap, and
-   * it is enough for a panel whose content sizes itself — a column of views, a
-   * form, a `ScrollView` of known children.
+   * Usually unnecessary. A panel that has been shown once stays mounted for
+   * the life of the tab set either way, and with `swipeable` the panels on
+   * each side of the active one are mounted before you get to them. What this
+   * adds is the panels you have *not* been near — the fourth tab of four —
+   * which costs their render at startup and buys nothing until somebody opens
+   * them.
    *
-   * It is *not* enough for a child that decides what to render by measuring the
-   * space it has been given. A virtualised list asks its parent how tall it is
-   * and fills that many rows; asked inside a panel of zero height it answers
-   * zero rows, and the whole first render still lands on the frame the tab
-   * becomes visible — the stall this flag looks like it should have avoided.
-   *
-   * `'measured'` is for that case. A kept panel stays laid out at the full size
-   * of the tab set, and is hidden by not being drawn rather than by being
-   * removed from layout: a list inside it measures, renders its rows and
-   * settles while it is still hidden, so becoming visible costs nothing.
-   *
-   * The trade is real and is why it is not the default — every kept panel lays
-   * out and draws, up front and on every size change, so a five-tab set builds
-   * five panels' worth of rows to show one. Reach for it when a panel is slow
-   * to appear and its content is virtualised; leave it at `true` otherwise.
+   * Turn it on when a panel has to be live while it is off screen: a form that
+   * must validate as another tab is edited, a chart that has to be ready to
+   * print, a subscription that must not miss a message.
    */
   keepMounted?: TabsKeepMounted;
   /**
-   * Move between tabs by dragging sideways on the panel, as well as by
+   * Move between tabs by dragging sideways on the panels, as well as by
    * pressing the triggers.
    *
    * Off by default, because a panel is allowed to contain something that
@@ -334,19 +291,70 @@ export interface TabsProps extends ViewProps {
    * open — and the two cannot both have it. Turn it on for panels of ordinary
    * scrolling content, where it is the gesture people try first.
    *
-   * **It does not change what is mounted.** Only `keepMounted` decides that,
-   * with or without this — a swipe animates between two panels of which one is
-   * being unmounted and the other mounted for the first time, exactly as a
-   * press does. What it does change is that the mount now happens *while
-   * something is moving*, so a panel that is slow to build stops being a pause
-   * before it appears and starts being a stutter in the movement. If a swipe
-   * feels heavier than a press on the same tab set, the panel is expensive to
-   * mount — and the answer is whichever `keepMounted` actually keeps its
-   * content built, which for a virtualised list is `'measured'` rather than
-   * `true`. Turning this off hides the cost rather than removing it.
+   * **It changes how the panels are laid out.** They go side by side in a strip
+   * that is as wide as all of them, and the tab set shows one panel of it at a
+   * time. So the panel on each side of the active one is built and sized before
+   * you swipe to it, which is what stops a heavy panel — a virtualised list, a
+   * chart — from stalling on the frame it becomes visible.
+   *
+   * **It needs a height to fill**, the same as any pager: `flex-1` on the tab
+   * set, or a fixed height. Without one the strip has no room to lay its panels
+   * out in, and a list inside a panel of no height renders no rows. In
+   * development the tab set says so rather than rendering nothing.
    */
   swipeable?: boolean;
+  /**
+   * Turn the tab set's animations off — the indicator, the strip, and an
+   * expanding tab's reveal.
+   *
+   * For a screen that is already animating something more important, and as a
+   * blunt instrument on a device that cannot afford them. The system's own
+   * reduce-motion setting is honoured without this.
+   */
+  animation?: TabsAnimation;
   children: ReactNode;
+}
+
+/**
+ * Pulls the panels out of the children, keeping everything else where it was.
+ *
+ * A pager has to lay its panels out together, and they are written wherever
+ * they read best — usually after the list, sometimes inside a fragment from a
+ * `map`. So they are found rather than required to be somewhere: fragments are
+ * flattened through, `Tabs.Content` elements are collected in the order they
+ * appear, and every other child is left exactly where it was written.
+ *
+ * A panel that is *not* reachable this way — wrapped in a component of your own
+ * — is not found, and the tab set falls back to showing one panel at a time.
+ * Silently losing it would be worse than not paging it.
+ */
+function collectPanels(children: ReactNode): {
+  rest: ReactNode[];
+  panels: ReactElement<TabsContentProps>[];
+} {
+  const rest: ReactNode[] = [];
+  const panels: ReactElement<TabsContentProps>[] = [];
+
+  const walk = (nodes: ReactNode) => {
+    Children.forEach(nodes, (child) => {
+      if (!isValidElement(child)) {
+        if (child !== null && child !== undefined && child !== false) rest.push(child);
+        return;
+      }
+      if (child.type === Fragment) {
+        walk((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      if (child.type === TabsContent) {
+        panels.push(child as ReactElement<TabsContentProps>);
+        return;
+      }
+      rest.push(child);
+    });
+  };
+
+  walk(children);
+  return { rest, panels };
 }
 
 function TabsRoot({
@@ -357,84 +365,25 @@ function TabsRoot({
   variant = 'segmented',
   keepMounted = false,
   swipeable = false,
+  animation,
   children,
   ...props
 }: TabsProps) {
   const [internalValue, setInternalValue] = useState(defaultValue);
   const [layouts, setLayouts] = useState<Record<string, TabLayout>>({});
-  const [tabs, setTabs] = useState<string[]>([]);
-  const swipeOffset = useSharedValue(0);
-  const panelWidth = useSharedValue(0);
-  const sign = useDirectionSign();
   // Published by the List rather than the root, because it is the List that
   // decides whether it scrolls — but the Triggers below it need to know.
   const [scrollable, setScrollable] = useState(false);
   const isControlled = value !== undefined;
   const resolvedValue = isControlled ? value : internalValue;
-
-  /*
-   * The two things `setValue` reads that change on every switch, held where
-   * reading them does not make it a new function.
-   *
-   * With them in the dependency list, changing tab produced a new `setValue`,
-   * therefore a new context, therefore a new `step`, therefore a new pan
-   * gesture — which detaches and re-attaches the native recogniser on the same
-   * commit that mounts the arriving panel's contents. The busiest frame of the
-   * interaction was doing the one piece of work that had no reason to be there.
-   */
-  const tabsRef = useRef(tabs);
-  tabsRef.current = tabs;
-  const valueRef = useRef(resolvedValue);
-  valueRef.current = resolvedValue;
+  const animationDisabled = animation === 'disable-all';
 
   const setValue = useCallback(
-    (next: string, handover?: SwipeHandover) => {
-      const tabs = tabsRef.current;
-      const resolvedValue = valueRef.current;
-
-      /*
-       * The arriving panel starts on the side it is arriving from, and travels
-       * in. Done here rather than in the panel because only the root knows
-       * both the tab being left and the tab being gone to — a panel knows
-       * which one it is, not which one it replaced — and because a tab changed
-       * by pressing a trigger deserves the same movement as one changed by
-       * swiping to it. Without it the two read as different features.
-       */
-      if (swipeable) {
-        const from = tabs.indexOf(resolvedValue);
-        const to = tabs.indexOf(next);
-        if (from !== -1 && to !== -1 && from !== to) {
-          const direction = to > from ? 1 : -1;
-
-          if (handover) {
-            /*
-             * A swipe hands over mid-movement, so the arriving panel starts a
-             * whole panel's width from wherever the outgoing one has got to —
-             * which is where it *would* have been all along, had both been
-             * mounted. Read live rather than captured, because the outgoing
-             * panel is still travelling while this runs: adding to the current
-             * displacement rather than replacing it is the whole difference
-             * between one continuous movement and a jump at the moment the
-             * arriving panel finishes mounting.
-             */
-            swipeOffset.value += direction * sign * panelWidth.value;
-            swipeOffset.value = withSpring(0, {
-              ...ENTER_SPRING,
-              // Carried across too, so a flick keeps its speed instead of
-              // stopping dead and starting again from rest.
-              velocity: handover.velocity,
-            });
-          } else {
-            swipeOffset.value = direction * sign * panelWidth.value * SWIPE_ENTER;
-            swipeOffset.value = withSpring(0, ENTER_SPRING);
-          }
-        }
-      }
-
+    (next: string) => {
       if (!isControlled) setInternalValue(next);
       onValueChange?.(next);
     },
-    [isControlled, onValueChange, swipeable, sign, swipeOffset, panelWidth]
+    [isControlled, onValueChange]
   );
 
   const registerLayout = useCallback((tab: string, layout: TabLayout) => {
@@ -448,16 +397,16 @@ function TabsRoot({
   }, []);
 
   /*
-   * Triggers add themselves on mount, so the order is React's child order —
-   * the order they are written in, which is the order they are read in.
+   * The panels are the sequence.
+   *
+   * They are read straight out of the children, in the order they are written,
+   * which is available on the first render and cannot disagree with what is on
+   * screen. The triggers used to register themselves to build this, which meant
+   * the order arrived a commit late and every mount and unmount of a trigger
+   * re-rendered every panel.
    */
-  const registerTab = useCallback((tab: string) => {
-    setTabs((current) => (current.includes(tab) ? current : [...current, tab]));
-  }, []);
-
-  const unregisterTab = useCallback((tab: string) => {
-    setTabs((current) => current.filter((entry) => entry !== tab));
-  }, []);
+  const { rest, panels } = useMemo(() => collectPanels(children), [children]);
+  const paged = swipeable && panels.length > 0;
 
   const context = useMemo(
     () => ({
@@ -465,45 +414,303 @@ function TabsRoot({
       setValue,
       registerLayout,
       layouts,
-      tabs,
-      registerTab,
-      unregisterTab,
       variant,
       scrollable,
       setScrollable,
       keepMounted,
-      swipeable,
-      swipeOffset,
-      panelWidth,
+      pager: paged,
+      animationDisabled,
     }),
     [
       resolvedValue,
       setValue,
       registerLayout,
       layouts,
-      tabs,
-      registerTab,
-      unregisterTab,
       variant,
       scrollable,
       keepMounted,
-      swipeable,
-      swipeOffset,
-      panelWidth,
+      paged,
+      animationDisabled,
     ]
   );
 
   return (
     <TabsContext.Provider value={context}>
       <View className={cn('gap-3', className)} {...props}>
-        {textChildren(children)}
+        {textChildren(paged ? rest : children)}
+        {paged ? (
+          <TabsPager
+            panels={panels}
+            value={resolvedValue}
+            setValue={setValue}
+            keepMounted={!!keepMounted}
+            animationDisabled={animationDisabled}
+          />
+        ) : null}
       </View>
     </TabsContext.Provider>
   );
 }
 
+/**
+ * The panels, side by side, behind a window one panel wide.
+ *
+ * Everything about the movement lives on `position`, measured in panels rather
+ * than points: the strip is at `-position × width`, a drag sets it, a press
+ * springs it, and it is the only thing that says where the strip is. Nothing
+ * here waits for React to commit before moving, which is what the old
+ * arrangement did — it mounted the arriving panel and animated it in on the
+ * same frame, so the movement was only as smooth as the mount was quick.
+ */
+function TabsPager({
+  panels,
+  value,
+  setValue,
+  keepMounted,
+  animationDisabled,
+}: {
+  panels: ReactElement<TabsContentProps>[];
+  value: string;
+  setValue: (value: string) => void;
+  keepMounted: boolean;
+  animationDisabled: boolean;
+}) {
+  const sign = useDirectionSign();
+  const reducedMotion = useReducedMotion();
+  const still = animationDisabled || reducedMotion;
+
+  const order = useMemo(() => panels.map((panel) => panel.props.value), [panels]);
+  const count = panels.length;
+  // An unknown value shows the first panel rather than none of them: a tab set
+  // with nothing in it is a harder thing to debug than one showing the wrong tab.
+  const active = Math.max(0, order.indexOf(value));
+
+  const [width, setWidth] = useState(0);
+  const position = useSharedValue(active);
+  const widthValue = useSharedValue(0);
+  const countValue = useSharedValue(count);
+  const start = useSharedValue(active);
+  /** 1 between a drag activating and it being finalised, 0 otherwise. */
+  const dragging = useSharedValue(0);
+
+  useEffect(() => {
+    widthValue.value = width;
+    countValue.value = count;
+  }, [width, count, widthValue, countValue]);
+
+  /*
+   * Which panels have been built, and it only ever grows.
+   *
+   * A panel that has been reached stays mounted for the life of the tab set,
+   * so a tab is slow at most once. That is what `keepMounted` was reached for
+   * and could not deliver, because it decided mounting and hiding together and
+   * the hiding took the panel's size away.
+   */
+  const [reached, setReached] = useState<number[]>(() => [active]);
+  if (!reached.includes(active)) {
+    // During render, not in an effect: a press on a far tab has to have its
+    // panel in this commit, or the strip travels to an empty box.
+    setReached((current) => (current.includes(active) ? current : [...current, active]));
+  }
+
+  useEffect(() => {
+    const wanted = keepMounted
+      ? Array.from({ length: count }, (_, index) => index)
+      : [active - 1, active + 1].filter((index) => index >= 0 && index < count);
+
+    /*
+     * The neighbours arrive a tick late, on purpose.
+     *
+     * They are what makes a swipe cost nothing — the panel you are swiping
+     * towards is already built — but mounting them in the same commit as the
+     * active one puts three panels' worth of work on the frame the tab set
+     * first appears. A timeout of zero is enough to let that frame out.
+     */
+    const timer = setTimeout(() => {
+      setReached((current) => {
+        const missing = wanted.filter((index) => !current.includes(index));
+        return missing.length > 0 ? [...current, ...missing] : current;
+      });
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [active, count, keepMounted]);
+
+  /*
+   * Which tab the strip has already been sprung to by a swipe.
+   *
+   * A swipe moves the strip and *then* reports the change, so by the time the
+   * value arrives the movement is under way with the flick's speed in it.
+   * Springing again from the effect below would restart it from rest, which is
+   * the flick visibly losing its throw halfway across.
+   *
+   * The index rather than a flag, so a change that never came back — a
+   * controlled parent that ignored the swipe — cannot swallow the next press.
+   */
+  const sprungTo = useRef<number | null>(null);
+  const orderRef = useRef(order);
+  orderRef.current = order;
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  useEffect(() => {
+    const already = sprungTo.current;
+    sprungTo.current = null;
+    if (already === active) return;
+
+    if (still || width === 0) {
+      position.value = active;
+      return;
+    }
+    position.value = withSpring(active, ENTER_SPRING);
+  }, [active, still, width, position]);
+
+  const commit = useCallback(
+    (index: number) => {
+      const next = orderRef.current[index];
+      if (next === undefined || next === valueRef.current) return;
+      sprungTo.current = index;
+      setValue(next);
+    },
+    [setValue]
+  );
+
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        // Sideways past the threshold takes the gesture; any real vertical
+        // travel hands it back, so a panel that scrolls still scrolls.
+        .activeOffsetX([-SWIPE_ACTIVATE_X, SWIPE_ACTIVATE_X])
+        .failOffsetY([-SWIPE_FAIL_Y, SWIPE_FAIL_Y])
+        .onStart(() => {
+          // On activation rather than on touch-down, so a tap that never
+          // becomes a drag never claims a starting point. Rounded, so a drag
+          // begun while the last one is still settling starts from the tab it
+          // is settling on.
+          dragging.value = 1;
+          start.value = Math.round(position.value);
+        })
+        .onUpdate((event) => {
+          const span = widthValue.value;
+          if (span === 0) return;
+          const last = countValue.value - 1;
+          const raw = start.value - (event.translationX * sign) / span;
+
+          // Past either end there is no panel to bring on, so the strip gives
+          // a little and then stops, rather than pulling a blank into view.
+          if (raw < 0) position.value = raw * SWIPE_RESISTANCE_AT_END;
+          else if (raw > last) position.value = last + (raw - last) * SWIPE_RESISTANCE_AT_END;
+          else position.value = raw;
+        })
+        .onEnd((event) => {
+          const span = widthValue.value;
+          if (span === 0) return;
+          const last = countValue.value - 1;
+          const from = start.value;
+          const moved = position.value - from;
+          // Points per second becomes panels per second, which is the unit the
+          // spring that finishes the movement is working in.
+          const speed = (-event.velocityX * sign) / span;
+
+          let target = from;
+          // Speed first: distance and speed can disagree, and a flick back the
+          // way it came reads as a cancel however far it had already got.
+          if (Math.abs(event.velocityX) > SWIPE_VELOCITY) {
+            target = from + (speed > 0 ? 1 : -1);
+          } else if (Math.abs(moved) > SWIPE_DISTANCE_RATIO) {
+            target = from + (moved > 0 ? 1 : -1);
+          }
+          if (target < 0) target = 0;
+          if (target > last) target = last;
+
+          position.value = withSpring(target, { ...ENTER_SPRING, velocity: speed });
+          if (target !== from) runOnJS(commit)(target);
+        })
+        .onFinalize((_event, success) => {
+          // A cancelled gesture never reaches `onEnd`, and would otherwise
+          // leave the strip wherever the finger abandoned it. Only for a drag
+          // that actually started: this also runs for every touch that never
+          // became one, and springing to the rounded position there would
+          // interrupt a press's own movement with a tap on the panel.
+          if (dragging.value === 1 && !success) {
+            position.value = withSpring(start.value, ENTER_SPRING);
+          }
+          dragging.value = 0;
+        }),
+    [sign, commit, position, start, dragging, widthValue, countValue]
+  );
+
+  const strip = useAnimatedStyle(() => ({
+    transform: [{ translateX: -position.value * widthValue.value * sign }],
+  }));
+
+  const onLayout = useCallback((event: LayoutChangeEvent) => {
+    const measured = event.nativeEvent.layout;
+    if (measured.width > 0) setWidth(measured.width);
+
+    if (__DEV__ && measured.width > 0 && measured.height === 0) {
+      console.warn(
+        '[PanelUI] <Tabs swipeable> has no height to fill, so its panels have nowhere ' +
+          'to be laid out. Give the tab set a height — `className="flex-1"` on <Tabs>, ' +
+          'or a fixed height — the same as any pager needs.'
+      );
+    }
+  }, []);
+
+  /*
+   * A strip cannot be laid out before the width of one panel is known, so the
+   * first render is the active panel on its own, filling the window. The strip
+   * takes over on the next frame, and every frame after it.
+   */
+  if (width === 0) {
+    return (
+      <View style={PAGER_VIEWPORT} onLayout={onLayout}>
+        {panels[active]}
+      </View>
+    );
+  }
+
+  return (
+    <View style={PAGER_VIEWPORT} onLayout={onLayout}>
+      <GestureDetector gesture={pan}>
+        <Animated.View
+          style={[FILL, { flexDirection: 'row', width: width * count }, strip]}
+        >
+          {panels.map((panel, index) => (
+            <View key={order[index]} style={[FILL, { width }]}>
+              {reached.includes(index) ? panel : null}
+            </View>
+          ))}
+        </Animated.View>
+      </GestureDetector>
+    </View>
+  );
+}
+
+/**
+ * Fill a height that is offered, and take the content's own when none is.
+ *
+ * `flexBasis: 'auto'` rather than the `0` that `flex: 1` sets, and it is on
+ * every box between the tab set and a panel — viewport, strip, panel — because
+ * one `flex: 1` anywhere in that chain breaks both cases at once. A `flex: 1`
+ * box inside a parent of indefinite height resolves to *nothing*: its basis is
+ * zero and there is no free space to grow into. So the tab set that had not
+ * been given a height would collapse, and take every panel with it — which is
+ * the same zero-height failure that made a kept panel useless to a list, one
+ * level up.
+ *
+ * With `auto` the chain resolves both ways. Given a height, the panels fill it
+ * and a virtualised list inside one has a real size to build against. Given
+ * none, the strip is as tall as its tallest panel and every panel stretches to
+ * match, so switching tabs does not change the tab set's height either.
+ */
+const FILL = { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' } as const;
+
+/** The window the strip moves behind, one panel wide. */
+const PAGER_VIEWPORT = { ...FILL, overflow: 'hidden' } as const;
+
 function TabsIndicator() {
-  const { value, layouts, variant } = useTabs('Tabs.List');
+  const { value, layouts, variant, animationDisabled } = useTabs('Tabs.List');
   const x = useSharedValue(0);
   const width = useSharedValue(0);
   const initialized = useSharedValue(0);
@@ -517,7 +724,7 @@ function TabsIndicator() {
   useEffect(() => {
     if (!layout) return;
 
-    if (initialized.value === 0) {
+    if (initialized.value === 0 || animationDisabled) {
       // First measurement snaps into place; there is nothing to animate from.
       x.value = layout.x;
       width.value = layout.width;
@@ -526,7 +733,7 @@ function TabsIndicator() {
       x.value = withSpring(layout.x, SPRING);
       width.value = withSpring(layout.width, SPRING);
     }
-  }, [layout?.x, layout?.width, x, width, initialized, layout]);
+  }, [layout?.x, layout?.width, x, width, initialized, animationDisabled, layout]);
 
   const style = useAnimatedStyle(() => ({
     opacity: initialized.value,
@@ -635,15 +842,6 @@ function TabsTrigger({
     [context, value]
   );
 
-  // Separate from the layout registration above, and earlier than it: a swipe
-  // needs to know the sequence, which is known at mount, not the positions,
-  // which are not known until the row has been laid out.
-  const { registerTab, unregisterTab } = context;
-  useEffect(() => {
-    registerTab(value);
-    return () => unregisterTab(value);
-  }, [value, registerTab, unregisterTab]);
-
   if (context.variant === 'expanding') {
     return (
       <ExpandingTrigger
@@ -651,6 +849,7 @@ function TabsTrigger({
         disabled={disabled}
         icon={icon}
         badge={badge}
+        still={context.animationDisabled}
         labelClassName={slots.label()}
         className={cn(slots.trigger(), className)}
         onLayout={handleLayout}
@@ -699,6 +898,7 @@ function ExpandingTrigger({
   disabled,
   icon,
   badge,
+  still,
   className,
   labelClassName,
   onLayout,
@@ -709,6 +909,7 @@ function ExpandingTrigger({
   disabled: boolean;
   icon?: ReactNode;
   badge?: ReactNode;
+  still: boolean;
   className: string;
   labelClassName: string;
   onLayout: (event: LayoutChangeEvent) => void;
@@ -720,7 +921,7 @@ function ExpandingTrigger({
   const open = useSharedValue(active ? 1 : 0);
 
   useEffect(() => {
-    if (reducedMotion) {
+    if (reducedMotion || still) {
       open.value = active ? 1 : 0;
       return;
     }
@@ -738,7 +939,7 @@ function ExpandingTrigger({
       duration: EXPAND_DURATION,
       easing: Easing.bezier(0.2, 0, 0, 1),
     });
-  }, [active, reducedMotion, open]);
+  }, [active, reducedMotion, still, open]);
 
   const reveal = useAnimatedStyle(() => ({
     width: (labelWidth + LABEL_GAP) * open.value,
@@ -826,211 +1027,51 @@ export interface TabsContentProps extends ViewProps {
 function TabsContent({ className, value, children, style, ...props }: TabsContentProps) {
   const context = useTabs('Tabs.Content');
   const active = context.value === value;
-  const {
-    tabs,
-    setValue,
-    swipeable,
-    swipeOffset: offset,
-    panelWidth: width,
-  } = context;
-  const sign = useDirectionSign();
-  // Read on the UI thread while the finger is down, so the resistance at the
-  // ends is known without a round trip to JavaScript.
-  const index = useSharedValue(0);
-  const count = useSharedValue(0);
-
-  const position = tabs.indexOf(value);
-  useEffect(() => {
-    index.value = position;
-    count.value = tabs.length;
-  }, [position, tabs.length, index, count]);
 
   /*
-   * Same reason as `setValue` on the root: `step` is reached through the pan
-   * gesture, and a `step` that changes identity on every switch rebuilds the
-   * gesture on every switch. The two facts it needs are read at call time
-   * instead, which is when they are wanted anyway.
+   * In a strip, a panel does no hiding and no moving.
+   *
+   * It is positioned by the strip and sized by the box it was put in, so all
+   * that is left to it is to fill that box and to stay out of the screen
+   * reader's way while it is off screen. Everything else this used to do — the
+   * displacement, the fade, the gesture, the two ways of being hidden — was
+   * work to make one panel stand in for a row of them, and the row is real now.
    */
-  const tabsRef = useRef(tabs);
-  tabsRef.current = tabs;
-  const valueRef = useRef(value);
-  valueRef.current = value;
-
-  const step = useCallback(
-    (delta: number, velocity: number) => {
-      const list = tabsRef.current;
-      const from = list.indexOf(valueRef.current);
-      const next = list[from + delta];
-      if (next) setValue(next, { velocity });
-    },
-    [setValue]
-  );
-
-  const pan = useMemo(
-    () =>
-      Gesture.Pan()
-        // Sideways past the threshold takes the gesture; any real vertical
-        // travel hands it back, so a panel that scrolls still scrolls.
-        .activeOffsetX([-SWIPE_ACTIVATE_X, SWIPE_ACTIVATE_X])
-        .failOffsetY([-SWIPE_FAIL_Y, SWIPE_FAIL_Y])
-        .onUpdate((event) => {
-          // Positive is "towards the previous tab" in reading order, which is
-          // rightwards under LTR and leftwards under RTL.
-          const travel = event.translationX * sign;
-          const atEnd =
-            (travel > 0 && index.value === 0) ||
-            (travel < 0 && index.value >= count.value - 1);
-          /*
-           * One to one, except at the ends. The panel is under the finger for
-           * the whole of the drag, which is what lets the handover on release
-           * continue the movement rather than restart it — and a panel that
-           * moved a third as far as the finger never felt attached to it in
-           * the first place.
-           */
-          offset.value = atEnd
-            ? event.translationX * SWIPE_RESISTANCE_AT_END
-            : event.translationX;
-        })
-        .onEnd((event) => {
-          const travel = event.translationX * sign;
-          const speed = event.velocityX * sign;
-          const far = Math.abs(travel) > width.value * SWIPE_DISTANCE_RATIO;
-          const fast = Math.abs(speed) > SWIPE_VELOCITY;
-          const atEnd =
-            (travel > 0 && index.value === 0) ||
-            (travel < 0 && index.value >= count.value - 1);
-
-          if ((far || fast) && !atEnd) {
-            // Distance and speed can disagree — a flick back the way it came
-            // reads as a cancel — so the direction comes from whichever of the
-            // two crossed its threshold, speed first.
-            const delta = fast ? (speed < 0 ? 1 : -1) : travel < 0 ? 1 : -1;
-
-            /*
-             * The outgoing panel carries on off the edge on the UI thread,
-             * immediately, rather than waiting to be told what happened.
-             *
-             * It used to hold wherever the finger left it until `setValue`
-             * landed — which is fine when React commits in a frame, and is a
-             * visible freeze when the arriving panel is expensive to mount, a
-             * list of any size being the usual case. The panel appeared to
-             * stick to the screen for exactly as long as the JS thread was
-             * busy, which reads as the swipe having dropped the gesture.
-             *
-             * `setValue` still places the arriving panel *relative* to this
-             * one, reading the offset live at commit time, so continuing the
-             * movement here does not desynchronise the handover: the panel
-             * that arrives is one width from wherever this one has got to,
-             * whenever that turns out to be.
-             */
-            offset.value = withSpring(-delta * sign * width.value, {
-              ...ENTER_SPRING,
-              velocity: event.velocityX,
-            });
-
-            runOnJS(step)(delta, event.velocityX);
-            return;
-          }
-
-          // Nothing changed hands, so this panel simply comes back — with the
-          // speed it was let go at, so a cancelled flick decelerates rather
-          // than stopping and being pulled.
-          offset.value = withSpring(0, { ...SPRING, velocity: event.velocityX });
-        })
-        .onFinalize((_event, success) => {
-          // A cancelled gesture never reaches `onEnd`, and would otherwise
-          // leave the panel wherever the finger abandoned it.
-          if (!success) offset.value = withSpring(0, SPRING);
-        }),
-    [sign, step, offset, width, index, count]
-  );
-
-  const followStyle = useAnimatedStyle(() => {
-    // No `opacity` key at all when there is no fade, rather than a constant 1.
-    // Declaring it would still mark the property as animated and hand the view
-    // an alpha to composite every frame — the cost this is avoiding.
-    if (!SWIPE_FADE) return { transform: [{ translateX: offset.value }] };
-
-    const span = width.value || 1;
-    const travelled = Math.min(1, Math.abs(offset.value) / span);
-    return {
-      transform: [{ translateX: offset.value }],
-      opacity: 1 - SWIPE_FADE * travelled,
-    };
-  });
+  if (context.pager) {
+    return (
+      <View
+        style={[PAGER_PANEL, style]}
+        accessibilityElementsHidden={!active}
+        importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
+        className={className}
+        {...props}
+      >
+        {textChildren(children)}
+      </View>
+    );
+  }
 
   if (!active && !context.keepMounted) return null;
-
-  /*
-   * Under `keepMounted='measured'` a hidden panel keeps its size instead of
-   * losing it. It is taken out of the flow and stretched over the tab set, so
-   * it is laid out at the same size as the visible panel without contributing
-   * its height to the parent, and it is hidden by being transparent rather
-   * than by `display: none`.
-   *
-   * That distinction is the whole point: `display: none` lays a panel out at
-   * zero size, and a child that sizes itself from its parent — a virtualised
-   * list deciding how many rows to render — renders nothing at all inside one.
-   * Given a real size while still hidden, it builds its rows now rather than on
-   * the frame the tab is switched to.
-   *
-   * `opacity: 0` is set once and never animated, so it costs a composite and
-   * not a per-frame redraw; the negative `zIndex` keeps it behind the visible
-   * panel rather than over it, whatever order the panels are written in.
-   */
-  const measured = context.keepMounted === 'measured';
-  const hiddenStyle = measured
-    ? ({
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        opacity: 0,
-        zIndex: -1,
-      } as const)
-    : ({ display: 'none' } as const);
 
   /*
    * Hidden rather than unmounted under `keepMounted`, and hidden thoroughly:
    * it is not drawn, it takes no touches, and the accessibility props take it
    * out of the reading order too. A screen reader walking through three panels
    * of a tab set it cannot see is worse than no tabs at all.
+   *
+   * `display: none` takes it out of layout as well, so a kept panel costs
+   * nothing to have around — and can hold nothing that needs a size while it is
+   * hidden. That is what `swipeable` is for: in a strip every panel has one.
    */
-  const panel = (
+  return (
     <Animated.View
-      /*
-       * Only worth animating when the panel is genuinely arriving. A kept
-       * panel is already there; fading it in every time it is revealed would
-       * undo the point of keeping it.
-       *
-       * And never alongside the swipe: an entering layout animation owns the
-       * view's style for the length of it and will overwrite an animated style
-       * touching the same view, so the fade would eat the slide. When panels
-       * move, the movement is the entrance.
-       */
-      entering={context.keepMounted || swipeable ? undefined : FadeIn.duration(150)}
-      onLayout={(event: LayoutChangeEvent) => {
-        // The thresholds are a share of the panel, not of the screen: a tab
-        // set inside a card is narrower than the window, and a quarter of the
-        // window would be most of the way across it.
-        //
-        // Zero is ignored. Every panel reports into the same value, and a
-        // panel kept with `display: none` measures as nothing — letting it say
-        // so would leave the visible panel with no width. A `'measured'` one
-        // is stretched over the tab set and reports the same width as the
-        // visible panel, so it is agreeing rather than overwriting.
-        const measured = event.nativeEvent.layout.width;
-        if (measured > 0) width.value = measured;
-      }}
-      /*
-       * The follow style goes on the panel that is moving, and only that one.
-       * Under `keepMounted` every other panel is hidden and cannot be seen to
-       * move — but an animated style still subscribes them all to the offset,
-       * so a five-tab set ran five mappers per frame to reposition four views
-       * nobody was looking at.
-       */
-      style={[!active && hiddenStyle, swipeable && active && followStyle, style]}
+      // Only worth animating when the panel is genuinely arriving. A kept panel
+      // is already there; fading it in every time it is revealed would undo the
+      // point of keeping it.
+      entering={
+        context.keepMounted || context.animationDisabled ? undefined : FadeIn.duration(150)
+      }
+      style={[!active && HIDDEN_PANEL, style]}
       pointerEvents={active ? 'auto' : 'none'}
       accessibilityElementsHidden={!active}
       importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
@@ -1040,15 +1081,13 @@ function TabsContent({ className, value, children, style, ...props }: TabsConten
       {textChildren(children)}
     </Animated.View>
   );
-
-  // Only the visible panel carries the gesture. A kept-mounted panel takes no
-  // touches anyway — `pointerEvents` is off on it whichever way it is hidden —
-  // but attaching a detector to each of them would put several competing
-  // recognisers in the same tree.
-  if (!swipeable || !active) return panel;
-
-  return <GestureDetector gesture={pan}>{panel}</GestureDetector>;
 }
+
+/** A panel in the strip fills the box the strip put it in. */
+const PAGER_PANEL = { ...FILL, width: '100%' } as const;
+
+/** …and one that is kept without a strip is mounted, but takes up no room. */
+const HIDDEN_PANEL = { display: 'none' } as const;
 
 export const Tabs = Object.assign(TabsRoot, {
   List: TabsList,

@@ -1,9 +1,12 @@
 ---
 title: Tabs
 description: Segmented navigation with an animated indicator.
+status: updated
 ---
 
-Segmented navigation with one indicator that springs between measured trigger positions. A single thing travelling is what makes a switch two tabs away read as one movement rather than as two states swapping.
+Switch between panels of content that belong to the same screen. One indicator slides between the triggers, so moving two tabs at once reads as a single movement rather than two states swapping.
+
+Use it when the panels are alternatives and the reader picks one. It is not navigation — a tab set announces itself to a screen reader as a tab set, and moving between screens belongs to your router. For a row of buttons that *do* something rather than switch something, use [ButtonGroup](/docs/components/button-group); for a control that owns which option is on, use [ToggleButtonGroup](/docs/components/toggle-button).
 
 <PreviewVideo
   src="/previews/tabs.mp4"
@@ -139,9 +142,9 @@ A count or a status goes in `badge` rather than into the children, so the label 
 </Tabs.List>
 ```
 
-### Keeping panels mounted
+### Panels that stay built
 
-By default a panel is unmounted when you leave it, and a scroll position or a half-filled form goes with it. `keepMounted` renders every panel and hides the inactive ones — not drawn, not touchable, out of the screen-reader order, but still there. It costs the render of every panel up front, so it is opt-in. Pass `"measured"` instead of `true` when a hidden panel needs to keep its **size** as well, which is what a virtualised list inside one needs in order to render any rows at all.
+A panel that has been shown once stays mounted, so a scroll position or a half-filled form is there when you come back to it — no flag needed. `keepMounted` goes further and mounts the panels you have *not* opened, at startup: reach for it when a panel has to be doing something while it is off screen, and leave it alone otherwise.
 
 <Preview
   src="/previews/tabs-keep-panels-mounted.jpg"
@@ -166,10 +169,12 @@ By default a panel is unmounted when you leave it, and a scroll position or a ha
 
 ### Swiping between panels
 
-With `swipeable`, dragging sideways on the panel moves to the next or previous tab. The gesture only takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls. It is off by default: a panel may already contain something that wants a horizontal drag, and the two cannot both have it.
+With `swipeable`, the panels sit side by side in a strip and dragging sideways moves it. The neighbouring panels are built before you reach them, which is what keeps a heavy panel from stalling on the frame it appears. The gesture takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls.
+
+A swipeable tab set needs a height to lay its strip out in — `flex-1` here, or a fixed height. It is off by default because a panel may already contain something that wants a horizontal drag, and the two cannot both have it.
 
 ```tsx
-<Tabs swipeable defaultValue="mon">
+<Tabs swipeable defaultValue="mon" className="flex-1">
   <Tabs.List scrollable>
     {days.map((day) => (
       <Tabs.Trigger key={day.value} value={day.value}>
@@ -179,7 +184,7 @@ With `swipeable`, dragging sideways on the panel moves to the next or previous t
   </Tabs.List>
   {days.map((day) => (
     <Tabs.Content key={day.value} value={day.value}>
-      <Card>…</Card>
+      <FlashList data={day.entries} renderItem={renderEntry} />
     </Tabs.Content>
   ))}
 </Tabs>
@@ -242,8 +247,9 @@ With `swipeable`, dragging sideways on the panel moves to the next or previous t
 | `onValueChange` | `(value: string) => void` | — |  |
 | `defaultValue` | `string` | — |  |
 | `variant` | `TabsVariant` | `'segmented'` | `segmented` is a chip travelling inside a recessed track, `underline` is a rule under the active tab, `pill` is a filled chip on the page. `expanding` is a row of icon pills where only the selected one is open: it widens to let its label out and closes again behind it. For a short row of destinations that are recognisable by their icons, where the labels would otherwise take the whole width to say things nobody rereads. Give every trigger an `icon` — a closed tab has nothing else. |
-| `keepMounted` | `TabsKeepMounted` | `false` | Keep inactive panels mounted and hidden instead of unmounting them, so a scroll position or a half-filled form survives a switch away and back. Costs the render of every panel up front. `true` hides a kept panel with `display: none`, which also takes it out of layout: it is mounted, but it has no size. That is what makes it cheap, and it is enough for a panel whose content sizes itself — a column of views, a form, a `ScrollView` of known children. It is *not* enough for a child that decides what to render by measuring the space it has been given. A virtualised list asks its parent how tall it is and fills that many rows; asked inside a panel of zero height it answers zero rows, and the whole first render still lands on the frame the tab becomes visible — the stall this flag looks like it should have avoided. `'measured'` is for that case. A kept panel stays laid out at the full size of the tab set, and is hidden by not being drawn rather than by being removed from layout: a list inside it measures, renders its rows and settles while it is still hidden, so becoming visible costs nothing. The trade is real and is why it is not the default — every kept panel lays out and draws, up front and on every size change, so a five-tab set builds five panels' worth of rows to show one. Reach for it when a panel is slow to appear and its content is virtualised; leave it at `true` otherwise. |
-| `swipeable` | `boolean` | `false` | Move between tabs by dragging sideways on the panel, as well as by pressing the triggers. Off by default, because a panel is allowed to contain something that already wants a horizontal drag — a carousel, a slider, a row that swipes open — and the two cannot both have it. Turn it on for panels of ordinary scrolling content, where it is the gesture people try first. **It does not change what is mounted.** Only `keepMounted` decides that, with or without this — a swipe animates between two panels of which one is being unmounted and the other mounted for the first time, exactly as a press does. What it does change is that the mount now happens *while something is moving*, so a panel that is slow to build stops being a pause before it appears and starts being a stutter in the movement. If a swipe feels heavier than a press on the same tab set, the panel is expensive to mount — and the answer is whichever `keepMounted` actually keeps its content built, which for a virtualised list is `'measured'` rather than `true`. Turning this off hides the cost rather than removing it. |
+| `keepMounted` | `TabsKeepMounted` | `false` | Mount every panel up front instead of only the ones that have been reached, so a scroll position or a half-filled form is there from the start rather than from the first visit. Usually unnecessary. A panel that has been shown once stays mounted for the life of the tab set either way, and with `swipeable` the panels on each side of the active one are mounted before you get to them. What this adds is the panels you have *not* been near — the fourth tab of four — which costs their render at startup and buys nothing until somebody opens them. Turn it on when a panel has to be live while it is off screen: a form that must validate as another tab is edited, a chart that has to be ready to print, a subscription that must not miss a message. |
+| `swipeable` | `boolean` | `false` | Move between tabs by dragging sideways on the panels, as well as by pressing the triggers. Off by default, because a panel is allowed to contain something that already wants a horizontal drag — a carousel, a slider, a row that swipes open — and the two cannot both have it. Turn it on for panels of ordinary scrolling content, where it is the gesture people try first. **It changes how the panels are laid out.** They go side by side in a strip that is as wide as all of them, and the tab set shows one panel of it at a time. So the panel on each side of the active one is built and sized before you swipe to it, which is what stops a heavy panel — a virtualised list, a chart — from stalling on the frame it becomes visible. **It needs a height to fill**, the same as any pager: `flex-1` on the tab set, or a fixed height. Without one the strip has no room to lay its panels out in, and a list inside a panel of no height renders no rows. In development the tab set says so rather than rendering nothing. |
+| `animation` | `TabsAnimation` | — | Turn the tab set's animations off — the indicator, the strip, and an expanding tab's reveal. For a screen that is already animating something more important, and as a blunt instrument on a device that cannot afford them. The system's own reduce-motion setting is honoured without this. |
 
 ### Tabs.List
 
@@ -273,68 +279,56 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
-### Swiping
+### Swiping puts the panels in a row
 
-A swipe changes tab on release, not while the finger is down — it commits once the drag has passed a quarter of the panel's width, or once it is moving faster than 500pt/s however short it was.
+With `swipeable`, the panels are laid out side by side in a strip as wide as all of them, and the tab set is a window showing one panel of it at a time. Moving between tabs is that strip sliding. A press and a drag do the same thing to it, so they produce the same movement.
 
-The panel tracks the finger one to one. Only one panel is mounted at a time unless `keepMounted` is set, so there is nothing behind the one being dragged; instead of holding it back, the panel dims as it travels and the arriving one comes back up through the same fade. The movement carries the change, and the dissolve covers the gap.
+The panel on each side of the active one is built before you get to it. That is the point of the arrangement: a panel that is only created when it becomes visible is a panel that stalls at the moment it becomes visible, for as long as it takes to build — and for a virtualised list or a chart, that is long enough to see.
 
-On release the arriving panel picks up a whole panel's width from wherever the outgoing one was let go — which is where it would have been all along had both been mounted — and springs to rest carrying the speed the finger let go at. That is what makes a swipe one continuous movement rather than a drag followed by a separate slide. A tab changed by pressing a trigger has no travel to continue from, so it is given a shorter throw of its own, in the direction the tab sits.
+Without `swipeable`, one panel is shown at a time in place, and the panels are neither laid out together nor built ahead.
 
-The order swiped through is the order the triggers are **written** in, not the order they appear on screen. Under RTL those differ — the first tab is the rightmost — and a swipe towards the start of the reading direction goes to the previous tab in both.
+### A swipeable tab set needs a height
 
-At the first and last tab the panel still moves, but a sixth as far. A gesture that produces nothing at all is indistinguishable from one that was not received.
+Give it one, the same as any pager:
+
+```tsx
+<Tabs swipeable defaultValue="users" className="flex-1">
+```
+
+The strip lays its panels out inside the height it is given. Without one there is nothing to lay them out in, and a virtualised list inside a panel of no height renders no rows — the failure looks like the tab set being empty rather than like a missing style. In development the tab set warns when this happens.
+
+If you do not give it a height, the strip is as tall as its tallest panel and every panel stretches to match. That works for panels of ordinary content, and it means switching tabs does not change the tab set's height.
+
+### What a swipe commits on
+
+A drag changes tab on release, not while the finger is down. It commits once the drag has passed a quarter of a panel's width, or once it is moving faster than 500pt/s however short it was. Distance and speed can disagree — a flick back the way it came reads as a cancel — and speed decides.
+
+The gesture takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls.
+
+The order swiped through is the order the `Tabs.Content` panels are **written** in. Under RTL the first tab is the rightmost, and a swipe towards the start of the reading direction goes to the previous tab either way.
+
+At the first and last tab the strip still moves, but a sixth as far. A gesture that produces nothing at all is indistinguishable from one that was not received.
+
+### What `keepMounted` is for
+
+A panel that has been shown once stays mounted for the life of the tab set, whether or not this is set. So state that has to survive a *visit* — a scroll position, a half-filled form — survives without it.
+
+`keepMounted` mounts the panels you have not been near, at startup instead of on arrival. Turn it on when a panel has to be live while it is off screen: a form that validates as another tab is edited, a subscription that must not miss a message. It costs those panels' render up front and buys nothing until somebody opens them.
+
+`keepMounted="measured"` was the way to keep a hidden panel's size, back when a kept panel was hidden with `display: none` and so had none. In a swipeable tab set every panel in the strip has a real size already. It still works and means the same as `true`.
 
 ### The expanding variant
 
-A row of icon pills where only the selected one is open: it widens to let its label out and closes again behind it. For a short row of destinations that are recognisable by their icons, where writing every label out takes the whole width to say four words nobody rereads after the first time.
+A row of icon pills where only the selected one is open: it widens to let its label out and closes again behind it. For a short row of destinations recognisable by their icons, where writing every label out spends the whole width on words nobody rereads.
 
 Give **every** trigger an `icon`. A closed tab has nothing else, and one without an icon closes to an empty pill.
 
-There is no travelling indicator here, because every tab draws its own pill and a shape sliding underneath them would be invisible. The shape that moves is the open tab itself. The open pill sits one step further from the page than the closed ones — lighter in a dark theme, darker in a light one — which is what the tertiary surface token means, and why the selection is a surface rather than a colour.
+There is no travelling indicator here. Every tab draws its own pill, so a shape sliding underneath them would be invisible; the shape that moves is the open tab itself. The open pill sits one step further from the page than the closed ones — lighter in a dark theme, darker in a light one.
 
-The label is never unmounted, only closed over: a row of unlabelled icons has nothing for a screen reader to read out, and a label that mounted on selection would have no width to animate *from*, so the pill would jump to its open size and the text fade in inside it. Under the system's reduce-motion setting it opens and closes with no animation at all.
+The label is never unmounted, only closed over: a row of unlabelled icons gives a screen reader nothing to read, and a label that mounted on selection would have no width to animate from, so the pill would jump to its open size with the text fading in inside it.
 
-The opening is a curve rather than a spring, because it animates a width: every frame of it is a layout pass and the whole row moves with it, so a spring's overshoot slides the last word in, out and back in again and takes the row with it. The label's opacity trails the width rather than leading it — text drawn into a box narrower than itself is text with its end cut off.
+### Turning the animations off
 
-The width it opens to is measured from a second copy of the label, laid out once in a box wide enough not to constrain it and never drawn. The label cannot be measured where it sits, because the box it sits in is the box being resized.
+`animation="disable-all"` stops the indicator, the strip and the expanding reveal. For a screen already animating something more important, or a device that cannot afford them.
 
-### What a swipe costs, and what it does not
-
-`swipeable` does not change what is mounted. Only `keepMounted` decides that, so a swipe animates between two panels of which one is being unmounted and the other mounted for the first time — exactly what a press does, and exactly as many panels as a press mounts.
-
-What it changes is *when* the mount happens: during a movement rather than before a still frame. A panel that is expensive to build — a long list, a chart, anything that measures itself — turns from a pause before it appears into a stutter in the slide. If swiping feels heavier than pressing on the same tab set, that is the panel's mount cost becoming visible, and the fix is whichever `keepMounted` actually keeps that panel's content built — see below. Turning `swipeable` off only hides it.
-
-The drag itself moves the panel with a transform and nothing else, which costs the same whatever is inside it. On iOS the panel also fades as it travels; on Android it does not, because a view group there has no layer to fade and the alpha would be pushed down into every row on screen, re-drawing all of them on every frame of the gesture.
-
-### What `keepMounted` keeps
-
-`keepMounted` has three settings, and they differ in how much of a hidden panel is left standing.
-
-`false`, the default, unmounts an inactive panel. Its state goes with it: a scroll position, a half-filled form, a loaded page of results are all gone by the time you come back.
-
-`true` keeps the panel mounted and hides it with `display: none`. State survives, and it is cheap — but `display: none` also takes the panel **out of layout**, so it is mounted at zero size.
-
-That last part matters more than it sounds. A child that decides what to render by measuring the space it was given — a virtualised list asking its parent how tall it is, then filling that many rows — measures zero inside a hidden panel, and renders no rows. Its first real render still happens on the frame the tab becomes visible, which is the stall `keepMounted` looks like it should have removed. With the flag on or off, the tab change costs the same.
-
-`'measured'` is the setting for that case. A kept panel stays laid out at the full size of the tab set and is hidden by not being drawn, rather than by being removed from layout. A list inside it measures properly, renders its rows and settles while it is still hidden, so becoming visible costs nothing.
-
-```tsx
-<Tabs defaultValue="users" keepMounted="measured" swipeable>
-  <Tabs.List>
-    <Tabs.Trigger value="users">Users</Tabs.Trigger>
-    <Tabs.Trigger value="domains">Domains</Tabs.Trigger>
-  </Tabs.List>
-
-  <Tabs.Content value="users">
-    <FlashList data={users} renderItem={renderUser} />
-  </Tabs.Content>
-  <Tabs.Content value="domains">
-    <FlashList data={domains} renderItem={renderDomain} />
-  </Tabs.Content>
-</Tabs>
-```
-
-The trade is real, and is why it is not the default: every kept panel lays out and draws, up front and again on every size change, so a five-tab set builds five panels' worth of rows in order to show one. It buys a smooth tab change with a slower first render of the screen.
-
-So: leave it at `false` unless panel state needs to survive, `true` when it does, and `'measured'` when a panel is slow to appear *and* its content sizes itself from the space it is given. A hidden panel is never drawn, never touchable and never in the accessibility tree under any of the three.
+The system's own reduce-motion setting is honoured without it.

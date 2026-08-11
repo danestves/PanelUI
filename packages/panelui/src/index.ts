@@ -348,6 +348,9 @@ export {
   type TabsListProps,
   type TabsTriggerProps,
   type TabsContentProps,
+  type TabsVariant,
+  type TabsKeepMounted,
+  type TabsAnimation,
 } from './components/tabs';
 export {
   Table,

@@ -348,9 +348,9 @@
       "cn",
       "haptics",
       "icons",
-      "portal",
       "scrim",
-      "text"
+      "text",
+      "use-back-handler"
     ]
   },
   {

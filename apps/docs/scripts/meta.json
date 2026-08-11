@@ -222,7 +222,8 @@
     "react native floating action button fab speed dial",
     {
       "addedIn": "0.49.0",
-      "category": "actions"
+      "category": "actions",
+      "updatedIn": "0.60.0"
     }
   ],
   "field": [
@@ -674,7 +675,7 @@
     "Segmented navigation with an animated indicator.",
     "react native tabs",
     {
-      "updatedIn": "0.52.0",
+      "updatedIn": "0.60.0",
       "category": "navigation"
     }
   ],
