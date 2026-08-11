@@ -5,6 +5,7 @@ import { Geist_Mono, Inter } from 'next/font/google';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@/components/google-analytics';
+import { WebMcp } from '@/components/web-mcp';
 import { absoluteUrl, site } from '@/lib/site';
 import { cn } from "@/lib/utils";
 
@@ -116,6 +117,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         */}
         <Analytics />
         <GoogleAnalytics />
+        {/*
+          Offers the registry and the docs to an agent driving the browser.
+          Renders nothing, and does nothing at all in a browser without the
+          API — which is most of them.
+        */}
+        <WebMcp />
       </body>
     </html>
   );

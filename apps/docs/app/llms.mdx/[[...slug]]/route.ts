@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { approximateTokens } from '@/lib/llms-index';
 import { source } from '@/lib/source';
 
 /**
@@ -21,7 +22,15 @@ export async function GET(
   const content = await page.data.getText('raw');
 
   return new Response(content, {
-    headers: { 'Content-Type': 'text/markdown; charset=utf-8' },
+    headers: {
+      'Content-Type': 'text/markdown; charset=utf-8',
+      // Roughly how much of a context window this page costs, so an agent can
+      // decide whether to spend the request before making it.
+      'X-Markdown-Tokens': String(approximateTokens(content)),
+      // The docs page's own URL negotiates to this one, so a shared cache has
+      // to key on Accept or a browser gets somebody else's markdown.
+      Vary: 'Accept',
+    },
   });
 }
 

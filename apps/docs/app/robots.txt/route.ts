@@ -28,9 +28,14 @@ Disallow: /api/
 
 Sitemap: ${absoluteUrl('/sitemap.xml')}
 
-# For agents: every page as markdown, and the component registry.
-# ${absoluteUrl('/llms.txt')}
-# ${absoluteUrl('/.well-known/api-catalog')}
+# For agents. Every page is also available as markdown: ask for
+# "Accept: text/markdown" at the page's own URL, or use the paths below.
+# ${absoluteUrl('/llms.txt')}                          the documentation index
+# ${absoluteUrl('/.well-known/api-catalog')}     every API here
+# ${absoluteUrl('/.well-known/agent-card.json')}    what this site can do
+# ${absoluteUrl('/.well-known/agent-skills/index.json')}
+# ${absoluteUrl('/.well-known/mcp/server-card.json')}
+# ${absoluteUrl('/auth.md')}                           there is no authentication
 `;
 
 export function GET(): Response {

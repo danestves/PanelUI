@@ -28,7 +28,13 @@ const AGENT_LINKS = [
   '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
   '</openapi.json>; rel="service-desc"; type="application/openapi+json"',
   '</llms.txt>; rel="service-doc"; type="text/plain"',
+  '</llms.md>; rel="alternate"; type="text/markdown"',
   '</.well-known/mcp/server.json>; rel="mcp-server"; type="application/json"',
+  '</.well-known/agent-card.json>; rel="describedby"; type="application/json"',
+  '</.well-known/agent-skills/index.json>; rel="describedby"; type="application/json"',
+  // RFC 9728's own rel, so a client that got an unexpected 401 from anywhere
+  // on this domain can find out immediately that nothing here issues tokens.
+  '</.well-known/oauth-protected-resource>; rel="oauth-protected-resource"; type="application/json"',
 ].join(', ');
 
 /** @type {import('next').NextConfig} */

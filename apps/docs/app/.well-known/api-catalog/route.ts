@@ -25,6 +25,24 @@ export function GET(): Response {
         'service-desc': [{ href: absoluteUrl('/openapi.json'), type: 'application/openapi+json' }],
         'service-doc': [{ href: absoluteUrl('/docs'), type: 'text/html' }],
       },
+      /*
+       * The site itself, and the documents describing what it is rather than
+       * what it serves — the agent card, the MCP server, the skill index, and
+       * the two that answer "how do I authenticate" with "you do not".
+       */
+      {
+        anchor: absoluteUrl('/'),
+        'service-doc': [{ href: absoluteUrl('/llms.txt'), type: 'text/plain' }],
+        describedby: [
+          { href: absoluteUrl('/.well-known/agent-card.json'), type: 'application/json' },
+          { href: absoluteUrl('/.well-known/mcp/server-card.json'), type: 'application/json' },
+          { href: absoluteUrl('/.well-known/agent-skills/index.json'), type: 'application/json' },
+        ],
+        'oauth-protected-resource': [
+          { href: absoluteUrl('/.well-known/oauth-protected-resource'), type: 'application/json' },
+        ],
+        author: [{ href: absoluteUrl('/auth.md'), type: 'text/markdown' }],
+      },
     ],
   };
 
