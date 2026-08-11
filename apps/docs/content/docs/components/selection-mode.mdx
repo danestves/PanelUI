@@ -1,21 +1,23 @@
 ---
 title: SelectionMode
-description: Pick several rows out of a list, with a count and a bar of actions.
+description: Pick several things at once, on a screen or in a sheet.
 status: alpha
 ---
 
-Turn a list into one you can pick several things out of — messages to archive, files to move, photos to delete.
+Pick several things at once — messages to archive, people to share with, colours to apply, files to move.
 
-It wraps your rows rather than replacing them. `SelectionMode.Item` adds the circle on the left and takes over what a press means; what the row looks like stays whatever you put inside it, so the same component works for a chat list, a file list and a grid of photos.
+It comes two ways round. **On a screen it is a mode**: the list is there to be read, and a long press turns it into one you can pick from. **In a sheet it is a picker**: `SelectionMode.Sheet` was opened in order to choose something, so it is choosing from the moment it appears, with the actions in the sheet's footer.
 
-It is a mode, and that is the thing to be careful with: while it is on, a tap picks a row instead of opening it. Keep [SelectionMode.Header](#composition) on screen so the reader can always see they are in it and get out. For picking one option out of a list, use [Select](/docs/components/select) or [RadioGroup](/docs/components/radio-group); for one row and the things you can do to it, use [Swipe](/docs/components/swipe).
+`SelectionMode.Item` wraps whatever you put in it rather than replacing it — a row, an avatar, a colour swatch, a slide thumbnail — so one component covers all of those without a prop for each.
+
+For picking *one* thing, use [Select](/docs/components/select) or [RadioGroup](/docs/components/radio-group). For one row and the things you can do to it, use [Swipe](/docs/components/swipe).
 
 ## Installation
 
 SelectionMode ships with the library — no separate install.
 
 ```tsx
-import { SelectionMode, Item, Avatar } from 'panelui-native';
+import { SelectionMode, Item, Avatar, Text } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -27,45 +29,35 @@ npx panelui-cli@latest add selection-mode
 ## Usage
 
 ```tsx
+const [open, setOpen] = useState(false);
 const [selected, setSelected] = useState<string[]>([]);
 
 <SelectionMode
-  values={threads.map((thread) => thread.id)}
+  values={people.map((person) => person.id)}
   selected={selected}
   onSelectedChange={setSelected}
 >
-  <SelectionMode.Header title="Choose" />
-
-  <FlashList
-    data={threads}
-    keyExtractor={(thread) => thread.id}
-    renderItem={({ item }) => (
-      <SelectionMode.Item value={item.id} onPress={() => open(item)}>
+  <SelectionMode.Sheet open={open} onOpenChange={setOpen} title="Share with">
+    {people.map((person) => (
+      <SelectionMode.Item key={person.id} value={person.id}>
         <Item>
           <Item.Media>
-            <Avatar source={{ uri: item.avatar }} />
+            <Avatar fallback={person.initials} />
           </Item.Media>
           <Item.Content>
-            <Item.Title>{item.name}</Item.Title>
-            <Item.Description>{item.preview}</Item.Description>
+            <Item.Title>{person.name}</Item.Title>
+            <Item.Description>{person.handle}</Item.Description>
           </Item.Content>
         </Item>
       </SelectionMode.Item>
-    )}
-    contentContainerClassName="pb-24"
-  />
+    ))}
 
-  <SelectionMode.Bar>
-    <SelectionMode.Action icon={<MailOpenIcon size={20} />} onPress={markRead} exitOnPress>
-      Read
-    </SelectionMode.Action>
-    <SelectionMode.Action icon={<ArchiveIcon size={20} />} onPress={archive} exitOnPress>
-      Archive
-    </SelectionMode.Action>
-    <SelectionMode.Action icon={<TrashIcon size={20} />} destructive onPress={remove} exitOnPress>
-      Delete
-    </SelectionMode.Action>
-  </SelectionMode.Bar>
+    <SelectionMode.Bar>
+      <SelectionMode.Action icon={<SendIcon size={20} />} onPress={share}>
+        Send
+      </SelectionMode.Action>
+    </SelectionMode.Bar>
+  </SelectionMode.Sheet>
 </SelectionMode>
 ```
 
@@ -73,14 +65,21 @@ const [selected, setSelected] = useState<string[]>([]);
 
 ```tsx
 <SelectionMode>
+  {/* on a screen */}
   <SelectionMode.Header />
   <SelectionMode.Item>
     <SelectionMode.Indicator />
-    {/* your row */}
+    {/* your item */}
   </SelectionMode.Item>
   <SelectionMode.Bar>
     <SelectionMode.Action />
   </SelectionMode.Bar>
+
+  {/* …or in a sheet */}
+  <SelectionMode.Sheet>
+    <SelectionMode.Item />
+    <SelectionMode.Bar />
+  </SelectionMode.Sheet>
 </SelectionMode>
 ```
 
@@ -88,31 +87,73 @@ Every part except the root reads the selection from context, so they all throw o
 
 ## Examples
 
-### Entering and leaving
+### Anything, not just rows
 
-A long press on a row turns the mode on and picks that row — entering with nothing picked leaves the reader in a changed list with nothing to show for it. Leaving is always available: the cancel in the header, or the Android back button. Leaving clears the selection, so it cannot come back the next time the mode is entered; control `selected` yourself to keep it.
+An item is a wrapper, so what it holds is yours. A person is an avatar and a name; a colour is a swatch and a name; a slide is a thumbnail. Nothing about the component changes between them — only what is written inside the item.
 
 ```tsx
-<SelectionMode values={ids} onSelectedChange={setSelected}>
+<SelectionMode.Sheet open={open} onOpenChange={setOpen} title="Palette">
+  {palette.map((color) => (
+    <SelectionMode.Item key={color.id} value={color.id}>
+      <View className="flex-row items-center gap-3 py-1">
+        <View style={{ backgroundColor: color.hex }} className="h-8 w-8 rounded-lg" />
+        <Text weight="medium">{color.name}</Text>
+      </View>
+    </SelectionMode.Item>
+  ))}
+
+  <SelectionMode.Bar>
+    <SelectionMode.Action icon={<CheckIcon size={20} />} onPress={apply}>
+      Apply
+    </SelectionMode.Action>
+  </SelectionMode.Bar>
+</SelectionMode.Sheet>
+```
+
+### On a screen, as a mode
+
+A list that is there to be read, that you occasionally act on several rows of. A long press enters and picks the row that was pressed; the header says the mode is on and is the way out of it; the bar sits against the bottom edge. Leaving clears the selection, so it cannot come back the next time — control `selected` yourself to keep it.
+
+```tsx
+<SelectionMode
+  values={messages.map((message) => message.id)}
+  selected={selected}
+  onSelectedChange={setSelected}
+>
   <SelectionMode.Header title="Choose" />
-  {/* … */}
+
+  <FlashList
+    data={messages}
+    keyExtractor={(message) => message.id}
+    renderItem={({ item }) => (
+      <SelectionMode.Item value={item.id} onPress={() => open(item)}>
+        <Item>…</Item>
+      </SelectionMode.Item>
+    )}
+    contentContainerClassName="pb-24"
+  />
+
+  <SelectionMode.Bar inset={insets.bottom}>
+    <SelectionMode.Action icon={<TrashIcon size={20} />} destructive exitOnPress onPress={remove}>
+      Delete
+    </SelectionMode.Action>
+  </SelectionMode.Bar>
 </SelectionMode>
 ```
 
 ### Select all, and a limit
 
-Pass `values` and the header can pick everything at once, and say how many there are. `max` caps it — a row that would go over the cap does not toggle on, and select all stops at the limit rather than refusing, because somebody who asked for all of them and can have twenty wants the twenty.
+Pass `values` and the header can pick everything at once. `max` caps it — a row that would go over the cap does not toggle on, and select all stops at the limit rather than refusing, because somebody who asked for all of them and can have twenty wants the twenty.
 
 ```tsx
-<SelectionMode values={photos.map((photo) => photo.id)} max={20}>
-  <SelectionMode.Header title="Choose photos" />
-  {/* … */}
+<SelectionMode values={slides.map((slide) => slide.id)} max={20}>
+  <SelectionMode.Sheet open={open} onOpenChange={setOpen} title="Slides" />
 </SelectionMode>
 ```
 
-### A row that cannot be picked
+### An item that cannot be picked
 
-`disabled` keeps a row out of the mode entirely — it will not start one, and it cannot be picked once one is running. For the things in a list that are not among the things being chosen between: a section header, an advert, a "load more".
+`disabled` keeps an item out of the selection entirely — it will not start a mode, and it cannot be picked once one is running. For the things in a list that are not among the things being chosen between: a section header, an advert, a "load more".
 
 ```tsx
 <SelectionMode.Item value={row.id} disabled={row.type === 'header'}>
@@ -120,20 +161,9 @@ Pass `values` and the header can pick everything at once, and say how many there
 </SelectionMode.Item>
 ```
 
-### Always in selection
-
-A screen that exists only to pick things — an attachment picker, a share sheet — has no mode to enter. Set `defaultActive` and the circles are there from the start; `alwaysShowIndicator` on an item does the same for one row.
-
-```tsx
-<SelectionMode defaultActive values={ids} onSelectedChange={setSelected}>
-  <SelectionMode.Header title="Attach" hideSelectAll />
-  {/* … */}
-</SelectionMode>
-```
-
 ### A bar that floats instead
 
-For a list that does not run to the bottom of the screen,  lifts the bar off the edge into a rounded card. Flush is the default because it does not take width away from the actions, which are the one row of controls on screen that should not be cramped.
+On a screen, `placement="floating"` lifts the bar off the edge into a rounded card — for a list that does not run to the bottom of the screen. Flush is the default because it does not take width away from the actions. In a sheet the bar is the footer and this does not apply.
 
 ```tsx
 <SelectionMode.Bar placement="floating" inset={insets.bottom}>
@@ -224,21 +254,36 @@ For a list that does not run to the bottom of the screen,  lifts the bar off the
 | `disabled` | `boolean` | `false` |  |
 | `labelClassName` | `string` | — | Extra classes for the label. |
 
+### SelectionMode.Sheet
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `open` | `boolean` | — | Controlled open state of the sheet. |
+| `defaultOpen` | `boolean` | — |  |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
+| `title` | `string` | `'Select'` | The word in front of the count. |
+| `hideSelectAll` | `boolean` | `false` | Hide the select-all control. |
+
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
 
+### Which presentation
+
+Use the **sheet** when choosing is the whole reason the surface exists — a share sheet, a palette, an attachment picker. Use the **on-screen mode** when the list has a life of its own and picking is something you occasionally do to it.
+
+They are the same component and the same state; only the presentation differs. In a sheet there is no long press and no cancel button — the sheet dismisses itself — and the bar sits in the footer rather than over the list.
+
 ### The circle is round for a reason
 
-A square box is a form control somebody is filling in; a round one is a thing they are picking out of a list. [Checkbox](/docs/components/checkbox) is the first of those and stays square — this is the second.
+A square box is a form control somebody is filling in; a round one is a thing they are picking out of a set. [Checkbox](/docs/components/checkbox) is the first of those and stays square.
 
-### The bar sits against the bottom edge
+### On a screen, pad the bottom of your list
 
-Full width, flush to the edge, with a hairline along the top — the shape a list with a selection in it uses on both platforms. `placement="floating"` lifts it off the edge into a rounded card instead, for a list that does not reach the bottom of the screen.
+`SelectionMode.Bar` is drawn over the list rather than under it, because the list is as long as it is and a bar in the flow would be somewhere off the end of it. Nothing here can work out how tall your list is, so give it bottom padding — `contentContainerClassName="pb-24"` — or the last row sits under the bar forever.
 
-Pass `inset` with your safe-area bottom inset. A bar against the edge sits over the home indicator otherwise, and an action under a home indicator is an action that takes two tries.
-
-It is drawn over the list rather than under it, because the list is as long as it is and a bar in the flow would be somewhere off the end of it. Nothing here can work out how tall your list is, so give the list bottom padding — `contentContainerClassName="pb-24"` — or the last row sits under the bar forever.
+Pass `inset` with your safe-area bottom inset, or the bar sits over the home indicator.
 
 ### The bar is hidden until something is picked
 
@@ -246,12 +291,12 @@ Every action on it needs something to act on, and a row of buttons that all refu
 
 ### Actions are handed the selection
 
-`onPress` receives the picked values, so the common case needs no other wiring. Leaving the mode afterwards is `exitOnPress`, and it is opt-in because whether the list still makes sense depends on what you just did to it — deleting means leaving, marking read might not.
+`onPress` receives the picked values, so the common case needs no other wiring. Leaving afterwards is `exitOnPress`, and it is opt-in because whether the list still makes sense depends on what you just did to it — deleting means leaving, marking read might not.
 
 ### Selection is a set of values
 
-Ids, never indices or elements. A list that reorders, pages in more rows or drops one underneath the reader would invalidate anything positional, and ids are also the shape the action at the end needs.
+Ids, never indices or elements. A list that reorders, pages in more items or drops one underneath the reader would invalidate anything positional, and ids are also the shape the action at the end needs.
 
 ### Give it a height
 
-The root fills a height it is offered and takes its content's height when it is not, so it works both inside a screen and inside a [BottomSheet](/docs/components/bottom-sheet). What it cannot do is fill a parent that has no height itself — put it in a container with `flex-1`, or give it a fixed height, the same as any list.
+The root fills a height it is offered and takes its content's height when there is none. What it cannot do is fill a parent that has no height itself — put it in a container with `flex-1`, or give it a fixed height, the same as any list. In a sheet the sheet handles this.

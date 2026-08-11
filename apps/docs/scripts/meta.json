@@ -915,7 +915,7 @@
   ],
   "selection-mode": [
     "SelectionMode",
-    "Pick several rows out of a list, with a count and a bar of actions.",
+    "Pick several things at once, on a screen or in a sheet.",
     "react native multi select list selection mode checkboxes bulk actions",
     {
       "addedIn": "0.60.0",

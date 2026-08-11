@@ -18,7 +18,7 @@ remember is a guess.
 | `ContextMenu` | Actions for a piece of content, opened by holding it. | `components/context-menu` |
 | `Fab` | The floating action button — one action pinned over the content, with an optional dial of others behind it. | `components/fab` |
 | `Menu` | The list of things you can do to something. | `components/menu` |
-| `SelectionMode` *(alpha)* | Pick several rows out of a list, with a count and a bar of actions. | `components/selection-mode` |
+| `SelectionMode` *(alpha)* | Pick several things at once, on a screen or in a sheet. | `components/selection-mode` |
 | `Swipe` | A row that slides aside to reveal the things you can do to it. | `components/swipe` |
 | `ToggleButton` | A button that stays down, on its own or in a group. | `components/toggle-button` |
 

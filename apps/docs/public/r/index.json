@@ -887,9 +887,10 @@
   {
     "name": "selection-mode",
     "type": "registry:ui",
-    "description": "Pick several rows out of a list, with a count and a bar of actions.",
+    "description": "Pick several things at once, on a screen or in a sheet.",
     "registryDependencies": [
       "animated-pressable",
+      "bottom-sheet",
       "cn",
       "haptics",
       "icons",

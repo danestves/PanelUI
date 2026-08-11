@@ -20,14 +20,22 @@
  * </SelectionMode>
  * ```
  *
- * ## The rows stay yours
+ * ## Two ways to present it
  *
- * `SelectionMode.Item` wraps a row rather than replacing it. It adds the circle
- * on the left and takes over what a press means; what the row looks like is
- * whatever you put inside, which is the only way this can work across a chat
- * list, a file list and a grid of photos without growing a prop for each.
+ * On a screen it is a *mode*: the list is there to be read, and a long press
+ * turns it into one you can pick from. In a sheet it is a *picker*:
+ * `SelectionMode.Sheet` was opened in order to choose something, so it is
+ * choosing from the moment it appears, with the actions in the sheet's footer.
  *
- * ## It is a mode, and modes have to be obvious
+ * ## The items stay yours
+ *
+ * `SelectionMode.Item` wraps whatever you put in it rather than replacing it.
+ * It adds the circle and takes over what a press means; what the item looks
+ * like is yours. That is what lets one component hold a row of people, a grid
+ * of colours, a run of slides and a list of files without growing a prop for
+ * each of them.
+ *
+ * ## A mode has to be obvious
  *
  * There are two states and the list behaves differently in each: normally a tap
  * opens a row, and in selection a tap picks it. That is only safe if leaving is
@@ -47,7 +55,9 @@
  * the action at the end needs — deleting takes ids.
  */
 import {
+  Children,
   createContext,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -76,6 +86,7 @@ import { AnimatedPressable } from '../../primitives/animated-pressable';
 import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
+import { BottomSheet } from '../bottom-sheet';
 
 /** How long the circle takes to come and go, in milliseconds. */
 const REVEAL_DURATION = 180;
@@ -153,6 +164,14 @@ interface SelectionModeContextValue {
   total: number;
   max?: number;
   haptics: boolean;
+  /**
+   * Whether the selection is being presented in a sheet.
+   *
+   * A sheet is opened *in order to* pick something, so there is no mode to
+   * enter and nothing to long-press for — and the action bar belongs to the
+   * sheet's footer rather than floating over the screen.
+   */
+  sheet: boolean;
 }
 
 const SelectionModeContext = createContext<SelectionModeContextValue | null>(null);
@@ -321,6 +340,7 @@ function SelectionModeRoot({
       total,
       max,
       haptics,
+      sheet: false,
     }),
     [
       active,
@@ -444,7 +464,7 @@ function SelectionModeItem({
   children,
   ...props
 }: SelectionModeItemProps) {
-  const { active, enter, toggle, isSelected } = useSelectionMode();
+  const { active, enter, toggle, isSelected, sheet } = useSelectionMode();
   const selected = isSelected(value);
   const showing = alwaysShowIndicator || active;
   const reducedMotion = useReducedMotion();
@@ -467,7 +487,7 @@ function SelectionModeItem({
           if (showing) toggle(value);
           else onPress?.();
         }}
-        onLongPress={() => {
+        onLongPress={sheet ? undefined : () => {
           if (disabled || showing) return;
           enter(value);
         }}
@@ -525,7 +545,8 @@ function SelectionModeHeader({
   children,
   ...props
 }: SelectionModeHeaderProps) {
-  const { active, exit, count, total, allSelected, selectAll, clear } = useSelectionMode();
+  const { active, exit, count, total, allSelected, selectAll, clear, sheet } =
+    useSelectionMode();
   const reducedMotion = useReducedMotion();
   const slots = selectionVariants({});
 
@@ -549,14 +570,18 @@ function SelectionModeHeader({
            * header being rebuilt.
            */}
           <View className="w-20 items-start">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Cancel selection"
-              onPress={exit}
-              hitSlop={12}
-            >
-              <XIcon size={24} />
-            </Pressable>
+            {/* A sheet dismisses itself — by its handle, its scrim or the back
+                gesture — so a second way out inside it is one too many. */}
+            {sheet ? null : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Cancel selection"
+                onPress={exit}
+                hitSlop={12}
+              >
+                <XIcon size={24} />
+              </Pressable>
+            )}
           </View>
 
           <Text numberOfLines={1} className={slots.title()}>
@@ -632,12 +657,26 @@ function SelectionModeBar({
   style,
   ...props
 }: SelectionModeBarProps) {
-  const { active, count } = useSelectionMode();
+  const { active, count, sheet } = useSelectionMode();
   const reducedMotion = useReducedMotion();
   const floating = placement === 'floating';
   const slots = selectionVariants({ placement });
 
   if (!active || (count === 0 && !showWhenEmpty)) return null;
+
+  /*
+   * In a sheet the bar is the sheet's footer: it is already at the bottom of
+   * something, already the width of it, and the footer draws the rule above it.
+   * Positioning it absolutely there would take it out of the sheet's layout and
+   * hang it over the content instead of under it.
+   */
+  if (sheet) {
+    return (
+      <View className={cn(slots.bar(), 'border-t-0', className)} {...props}>
+        {textChildren(children)}
+      </View>
+    );
+  }
 
   const edge = floating ? inset || DEFAULT_BAR_OFFSET : 0;
 
@@ -733,7 +772,118 @@ function SelectionModeAction({
   );
 }
 
+/* -------------------------------------------------------------------------- *
+ * Sheet
+ * -------------------------------------------------------------------------- */
+
+export interface SelectionModeSheetProps {
+  className?: string;
+  /** Controlled open state of the sheet. */
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** The word in front of the count. */
+  title?: string;
+  /** Hide the select-all control. */
+  hideSelectAll?: boolean;
+  /**
+   * The things to pick between, and optionally a `SelectionMode.Bar` of
+   * actions. The bar is lifted into the sheet's footer wherever it is written.
+   */
+  children: ReactNode;
+}
+
+/**
+ * The whole selection, presented in a bottom sheet.
+ *
+ * A picker rather than a mode. The list on a screen has to be *turned into* one
+ * you can pick from — hence the long press, the cancel and the count — but a
+ * sheet was opened in order to pick something, so it is picking from the moment
+ * it appears and there is nothing to enter or leave.
+ *
+ * What goes in it is anything: a column of friends, a grid of colours, a run of
+ * slides. `SelectionMode.Item` wraps whatever you give it, so the sheet does
+ * not need to know what it is holding.
+ *
+ * ```tsx
+ * <SelectionMode values={ids} selected={selected} onSelectedChange={setSelected}>
+ *   <SelectionMode.Sheet open={open} onOpenChange={setOpen} title="Share with">
+ *     {people.map((person) => (
+ *       <SelectionMode.Item key={person.id} value={person.id}>
+ *         <Item>…</Item>
+ *       </SelectionMode.Item>
+ *     ))}
+ *     <SelectionMode.Bar>
+ *       <SelectionMode.Action icon={<SendIcon size={20} />} onPress={share}>Send</SelectionMode.Action>
+ *     </SelectionMode.Bar>
+ *   </SelectionMode.Sheet>
+ * </SelectionMode>
+ * ```
+ */
+function SelectionModeSheet({
+  className,
+  open,
+  defaultOpen,
+  onOpenChange,
+  title = 'Select',
+  hideSelectAll = false,
+  children,
+}: SelectionModeSheetProps) {
+  const parent = useSelectionMode();
+
+  /*
+   * The bar is pulled out of the children and put in the sheet's footer,
+   * wherever it was written. A footer is a place in the sheet's layout rather
+   * than a thing you can position into from the middle of the body — and
+   * writing the bar last, after the items, is how it reads.
+   */
+  const { bar, rest } = useMemo(() => {
+    const others: ReactNode[] = [];
+    let found: ReactNode = null;
+    Children.forEach(children, (child) => {
+      if (isValidElement(child) && child.type === SelectionModeBar) found = child;
+      else others.push(child);
+    });
+    return { bar: found, rest: others };
+  }, [children]);
+
+  // Picking from the moment it opens: a sheet is not a mode to be entered.
+  const context = useMemo<SelectionModeContextValue>(
+    () => ({ ...parent, active: true, sheet: true }),
+    [parent]
+  );
+
+  return (
+    <BottomSheet open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+      <BottomSheet.Content className={className}>
+        {/*
+         * The provider goes *inside* the sheet's content, not around the sheet.
+         *
+         * A sheet renders its content through a portal, which mounts it at the
+         * app root — nowhere below this component. A provider wrapped around
+         * the outside is therefore not an ancestor of anything in the sheet,
+         * and every part inside it throws for want of a context that is on
+         * screen but in the wrong branch of the tree.
+         */}
+        <SelectionModeContext.Provider value={context}>
+          <BottomSheet.Header>
+            {/* The sheet already draws the rule and the padding. */}
+            <SelectionModeHeader
+              title={title}
+              hideSelectAll={hideSelectAll}
+              className="h-auto border-b-0 px-0"
+            />
+          </BottomSheet.Header>
+          <BottomSheet.Body>{textChildren(rest)}</BottomSheet.Body>
+          {bar ? <BottomSheet.Footer>{bar}</BottomSheet.Footer> : null}
+        </SelectionModeContext.Provider>
+      </BottomSheet.Content>
+    </BottomSheet>
+  );
+}
+
 SelectionModeRoot.displayName = 'SelectionMode';
+SelectionModeSheet.displayName = 'SelectionMode.Sheet';
 SelectionModeItem.displayName = 'SelectionMode.Item';
 SelectionModeIndicator.displayName = 'SelectionMode.Indicator';
 SelectionModeHeader.displayName = 'SelectionMode.Header';
@@ -741,6 +891,7 @@ SelectionModeBar.displayName = 'SelectionMode.Bar';
 SelectionModeAction.displayName = 'SelectionMode.Action';
 
 export const SelectionMode = Object.assign(SelectionModeRoot, {
+  Sheet: SelectionModeSheet,
   Item: SelectionModeItem,
   Indicator: SelectionModeIndicator,
   Header: SelectionModeHeader,
