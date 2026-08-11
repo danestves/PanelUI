@@ -11889,6 +11889,20 @@ const CHECKOUT: FunnelDatum[] = [
   { label: 'Order placed', value: 5240 },
 ];
 
+/**
+ * A signup run with short names, for the horizontal chart.
+ *
+ * Turned across the card a stage gets a column rather than a row, and a column
+ * is as wide as the card divided by the stages — so the names have to be short
+ * enough to sit under one.
+ */
+const SIGNUP: FunnelDatum[] = [
+  { label: 'Visited', value: 24600 },
+  { label: 'Signed up', value: 8400 },
+  { label: 'Activated', value: 3900 },
+  { label: 'Paid', value: 1120 },
+];
+
 /** A hiring pipeline, which drops far harder and is the case for a floor. */
 const PIPELINE: FunnelDatum[] = [
   { label: 'Applied', value: 1240 },
@@ -11928,8 +11942,8 @@ function FunnelBasicVersion() {
 }
 
 /**
- * The same run read the other way: every stage against the top of the funnel
- * rather than against the step above it.
+ * The same run read the other way: every stage against the step above it
+ * rather than against the top of the funnel.
  *
  * Both readings are true and they answer different questions. "Ninety percent
  * of the people who entered a card placed the order" is about that one step;
@@ -11953,7 +11967,6 @@ function FunnelConversionVersion() {
           <FunnelChart
             data={CHECKOUT}
             className="pb-4"
-            cornerRadius={6}
             gap={6}
             activeIndex={active}
             onActiveIndexChange={setActive}
@@ -11969,7 +11982,7 @@ function FunnelConversionVersion() {
               }
             />
             <FunnelChart.Stages />
-            <FunnelChart.Labels share="top" />
+            <FunnelChart.Labels share="previous" />
           </FunnelChart>
         </Frame.Panel>
       </Frame>
@@ -11982,8 +11995,8 @@ function FunnelConversionVersion() {
  * under the narrow stages is for: at true width the last two are hairlines,
  * and a hairline reads as nothing happening rather than as something rare.
  *
- * Left-aligned, because a taper hanging off one edge is easier to compare down
- * a column than one narrowing from both.
+ * Drawn with straight edges and a single layer. A drop this hard is the whole
+ * point of the chart, and the curve softens exactly the corner worth seeing.
  */
 function FunnelPipelineVersion() {
   return (
@@ -11996,9 +12009,9 @@ function FunnelPipelineVersion() {
         <Frame.Panel>
           <FunnelChart
             data={PIPELINE}
-            align="start"
             minWidth={0.16}
-            cornerRadius={4}
+            edges="straight"
+            layers={1}
             className="pb-4"
           >
             <FunnelChart.Header
@@ -12007,6 +12020,38 @@ function FunnelPipelineVersion() {
               value={people(PIPELINE[0]!.value)}
               caption="11 hires, from 1,240 applications"
             />
+            <FunnelChart.Stages />
+            <FunnelChart.Labels />
+          </FunnelChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * The run turned across the card: counts above the ribbon, names below it, and
+ * the whole height to taper through.
+ *
+ * The arrangement a wide card wants, and the reason the labels are not one
+ * fixed layout — turning the run turns where its readings go, because a column
+ * of text beside a horizontal ribbon would have nothing to line up with.
+ */
+function FunnelWideVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Signup</Frame.Title>
+          <Frame.Action>Last 30 days</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <FunnelChart
+            data={SIGNUP}
+            orientation="horizontal"
+            crossSize={190}
+            className="p-4"
+          >
             <FunnelChart.Stages />
             <FunnelChart.Labels />
           </FunnelChart>
@@ -12027,14 +12072,13 @@ function FunnelCompactVersion() {
     <View className="flex-1 justify-center p-4">
       <Frame className="w-full">
         <Frame.Header>
-          <Frame.Title>Signup</Frame.Title>
+          <Frame.Title>Checkout</Frame.Title>
         </Frame.Header>
         <Frame.Panel>
           <FunnelChart
             data={CHECKOUT.slice(0, 4)}
-            stageHeight={28}
+            stageSize={30}
             gap={3}
-            cornerRadius={4}
             className="p-4"
           >
             <FunnelChart.Stages />
@@ -12071,7 +12115,6 @@ function FunnelLoadingVersion() {
           <FunnelChart
             data={status === 'loading' ? [] : CHECKOUT}
             status={status}
-            cornerRadius={6}
             className="pb-4"
           >
             <FunnelChart.Header
@@ -16992,15 +17035,22 @@ const CATALOGUE: ComponentEntry[] = [
         label: 'Conversion',
         id: 'conversion',
         fullPage: true,
-        description: 'Every stage against the top of the funnel, and both readings in the header.',
+        description: 'Each step against the one above it, and both readings in the header.',
         render: () => <FunnelConversionVersion />,
       },
       {
         label: 'Pipeline',
         id: 'pipeline',
         fullPage: true,
-        description: 'A hard drop-off, left-aligned, with a floor under the stages too small to see.',
+        description: 'A hard drop-off, drawn flat, with a floor under the stages too small to see.',
         render: () => <FunnelPipelineVersion />,
+      },
+      {
+        label: 'Wide',
+        id: 'wide',
+        fullPage: true,
+        description: 'The run turned across the card, with the counts above it and the names below.',
+        render: () => <FunnelWideVersion />,
       },
       {
         label: 'Compact',

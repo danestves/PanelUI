@@ -228,7 +228,9 @@ export {
   type FunnelChartSkeletonProps,
   type FunnelChartStatus,
   type FunnelDatum,
-  type FunnelAlign,
+  type FunnelOrientation,
+  type FunnelEdges,
+  type FunnelLegendLayout,
   type FunnelShare,
 } from './components/funnel-chart';
 export {

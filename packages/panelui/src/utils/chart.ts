@@ -753,69 +753,58 @@ export function columnValues(
 }
 
 /**
- * A four-sided band with a width at the top and another at the bottom: one
- * stage of a funnel.
+ * One length of a funnel: a band symmetrical about a centre line, `head` wide
+ * at one end and `tail` wide at the other.
  *
- * Given as two widths and a side to hang them off rather than as four corners,
- * because that is the shape of the data — a stage knows what it is worth and
- * what the next one is worth, and where the taper hangs is a property of the
- * whole chart. `anchor` is where the narrowing happens from: `0` keeps the left
- * edge straight and takes it all off the right, `0.5` takes half off each side,
- * `1` keeps the right edge.
+ * Given as two half-extents about a middle rather than as four corners, because
+ * that is the shape of the data — a stage knows what it is worth and what the
+ * next one is worth, and the taper between them is the drop.
  *
- * The corners are pulled back along their own edges and turned with a quadratic
- * through the corner itself, rather than an arc: a trapezoid's corners are not
- * right angles, so no single radius describes them and an arc would need a
- * different centre for each one. The pull-back is capped at half the shorter
- * edge, which is what stops a radius larger than a nearly-empty stage from
- * folding the shape inside out.
+ * `curve` is how far along the band the control points reach, as a fraction of
+ * its length. Past `0.5` the two reach beyond each other, which is what turns
+ * the join from a diagonal into the S the eye reads as a single continuous
+ * funnel rather than a stack of separate trapezoids; `0` gives the straight
+ * diagonal. The sides are the only curved part — the ends stay square, so a
+ * band's end lines up exactly with the next band's start.
+ *
+ * `vertical` swaps the axes: the run goes down the screen and the band is wide
+ * across it, rather than along it and tall.
  */
-export function trapezoidPath(
-  left: number,
-  top: number,
-  bottom: number,
-  topWidth: number,
-  bottomWidth: number,
-  span: number,
-  anchor: number,
-  radius: number
+export function ribbonPath(
+  offset: number,
+  length: number,
+  head: number,
+  tail: number,
+  middle: number,
+  curve: number,
+  vertical: boolean
 ): string {
   'worklet';
-  if (bottom <= top || (topWidth <= 0 && bottomWidth <= 0)) return '';
+  if (length <= 0 || (head <= 0 && tail <= 0)) return '';
 
-  const topLeft = left + (span - topWidth) * anchor;
-  const bottomLeft = left + (span - bottomWidth) * anchor;
-  const corners = [
-    { x: topLeft, y: top },
-    { x: topLeft + topWidth, y: top },
-    { x: bottomLeft + bottomWidth, y: bottom },
-    { x: bottomLeft, y: bottom },
-  ];
+  // Points are named along the run and across it; this is the only place that
+  // knows which of those is x and which is y.
+  const at = (along: number, across: number) =>
+    vertical ? `${across},${along}` : `${along},${across}`;
 
-  if (!(radius > 0)) {
-    return `M${corners[0]!.x},${corners[0]!.y}L${corners[1]!.x},${corners[1]!.y}L${corners[2]!.x},${corners[2]!.y}L${corners[3]!.x},${corners[3]!.y}Z`;
+  const start = offset;
+  const end = offset + length;
+
+  if (!(curve > 0)) {
+    return `M${at(start, middle - head)}L${at(end, middle - tail)}L${at(
+      end,
+      middle + tail
+    )}L${at(start, middle + head)}Z`;
   }
 
-  let d = '';
-  for (let i = 0; i < 4; i += 1) {
-    const previous = corners[(i + 3) % 4]!;
-    const corner = corners[i]!;
-    const next = corners[(i + 1) % 4]!;
+  const near = start + length * curve;
+  const far = end - length * curve;
 
-    const inX = previous.x - corner.x;
-    const inY = previous.y - corner.y;
-    const outX = next.x - corner.x;
-    const outY = next.y - corner.y;
-    const inLength = Math.sqrt(inX * inX + inY * inY) || 1;
-    const outLength = Math.sqrt(outX * outX + outY * outY) || 1;
-    const r = Math.min(radius, inLength / 2, outLength / 2);
-
-    const fromX = corner.x + (inX / inLength) * r;
-    const fromY = corner.y + (inY / inLength) * r;
-    const toX = corner.x + (outX / outLength) * r;
-    const toY = corner.y + (outY / outLength) * r;
-
-    d += `${i === 0 ? 'M' : 'L'}${fromX},${fromY}Q${corner.x},${corner.y} ${toX},${toY}`;
-  }
-  return `${d}Z`;
+  return (
+    `M${at(start, middle - head)}` +
+    `C${at(near, middle - head)},${at(far, middle - tail)},${at(end, middle - tail)}` +
+    `L${at(end, middle + tail)}` +
+    `C${at(far, middle + tail)},${at(near, middle + head)},${at(start, middle + head)}` +
+    `Z`
+  );
 }
