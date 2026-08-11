@@ -333,6 +333,16 @@ export {
   type SelectPresentation,
 } from './components/select';
 export {
+  SelectionMode,
+  useSelectionMode,
+  type SelectionModeProps,
+  type SelectionModeItemProps,
+  type SelectionModeIndicatorProps,
+  type SelectionModeHeaderProps,
+  type SelectionModeBarProps,
+  type SelectionModeActionProps,
+} from './components/selection-mode';
+export {
   SectionRail,
   type SectionRailProps,
   type SectionRailTriggerProps,

@@ -912,5 +912,15 @@
       "addedIn": "0.57.0",
       "category": "media"
     }
+  ],
+  "selection-mode": [
+    "SelectionMode",
+    "Pick several rows out of a list, with a count and a bar of actions.",
+    "react native multi select list selection mode checkboxes bulk actions",
+    {
+      "addedIn": "0.60.0",
+      "alpha": true,
+      "category": "actions"
+    }
   ]
 }

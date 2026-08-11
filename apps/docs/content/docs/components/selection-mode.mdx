@@ -1,0 +1,217 @@
+---
+title: SelectionMode
+description: Pick several rows out of a list, with a count and a bar of actions.
+status: alpha
+---
+
+Turn a list into one you can pick several things out of — messages to archive, files to move, photos to delete.
+
+It wraps your rows rather than replacing them. `SelectionMode.Item` adds the circle on the left and takes over what a press means; what the row looks like stays whatever you put inside it, so the same component works for a chat list, a file list and a grid of photos.
+
+It is a mode, and that is the thing to be careful with: while it is on, a tap picks a row instead of opening it. Keep [SelectionMode.Header](#composition) on screen so the reader can always see they are in it and get out. For picking one option out of a list, use [Select](/docs/components/select) or [RadioGroup](/docs/components/radio-group); for one row and the things you can do to it, use [Swipe](/docs/components/swipe).
+
+## Installation
+
+SelectionMode ships with the library — no separate install.
+
+```tsx
+import { SelectionMode, Item, Avatar } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add selection-mode
+```
+
+## Usage
+
+```tsx
+const [selected, setSelected] = useState<string[]>([]);
+
+<SelectionMode
+  values={threads.map((thread) => thread.id)}
+  selected={selected}
+  onSelectedChange={setSelected}
+>
+  <SelectionMode.Header title="Choose" />
+
+  <FlashList
+    data={threads}
+    keyExtractor={(thread) => thread.id}
+    renderItem={({ item }) => (
+      <SelectionMode.Item value={item.id} onPress={() => open(item)}>
+        <Item>
+          <Item.Media>
+            <Avatar source={{ uri: item.avatar }} />
+          </Item.Media>
+          <Item.Content>
+            <Item.Title>{item.name}</Item.Title>
+            <Item.Description>{item.preview}</Item.Description>
+          </Item.Content>
+        </Item>
+      </SelectionMode.Item>
+    )}
+    contentContainerClassName="pb-24"
+  />
+
+  <SelectionMode.Bar>
+    <SelectionMode.Action icon={<MailOpenIcon size={20} />} onPress={markRead} exitOnPress>
+      Read
+    </SelectionMode.Action>
+    <SelectionMode.Action icon={<ArchiveIcon size={20} />} onPress={archive} exitOnPress>
+      Archive
+    </SelectionMode.Action>
+    <SelectionMode.Action icon={<TrashIcon size={20} />} destructive onPress={remove} exitOnPress>
+      Delete
+    </SelectionMode.Action>
+  </SelectionMode.Bar>
+</SelectionMode>
+```
+
+## Composition
+
+```tsx
+<SelectionMode>
+  <SelectionMode.Header />
+  <SelectionMode.Item>
+    <SelectionMode.Indicator />
+    {/* your row */}
+  </SelectionMode.Item>
+  <SelectionMode.Bar>
+    <SelectionMode.Action />
+  </SelectionMode.Bar>
+</SelectionMode>
+```
+
+Every part except the root reads the selection from context, so they all throw outside a `SelectionMode` rather than rendering something inert. `useSelectionMode()` is the same context, for a header or a count of your own.
+
+## Examples
+
+### Entering and leaving
+
+A long press on a row turns the mode on and picks that row — entering with nothing picked leaves the reader in a changed list with nothing to show for it. Leaving is always available: the cancel in the header, or the Android back button. Leaving clears the selection, so it cannot come back the next time the mode is entered; control `selected` yourself to keep it.
+
+```tsx
+<SelectionMode values={ids} onSelectedChange={setSelected}>
+  <SelectionMode.Header title="Choose" />
+  {/* … */}
+</SelectionMode>
+```
+
+### Select all, and a limit
+
+Pass `values` and the header can pick everything at once, and say how many there are. `max` caps it — a row that would go over the cap does not toggle on, and select all stops at the limit rather than refusing, because somebody who asked for all of them and can have twenty wants the twenty.
+
+```tsx
+<SelectionMode values={photos.map((photo) => photo.id)} max={20}>
+  <SelectionMode.Header title="Choose photos" />
+  {/* … */}
+</SelectionMode>
+```
+
+### A row that cannot be picked
+
+`disabled` keeps a row out of the mode entirely — it will not start one, and it cannot be picked once one is running. For the things in a list that are not among the things being chosen between: a section header, an advert, a "load more".
+
+```tsx
+<SelectionMode.Item value={row.id} disabled={row.type === 'header'}>
+  {/* … */}
+</SelectionMode.Item>
+```
+
+### Always in selection
+
+A screen that exists only to pick things — an attachment picker, a share sheet — has no mode to enter. Set `defaultActive` and the circles are there from the start; `alwaysShowIndicator` on an item does the same for one row.
+
+```tsx
+<SelectionMode defaultActive values={ids} onSelectedChange={setSelected}>
+  <SelectionMode.Header title="Attach" hideSelectAll />
+  {/* … */}
+</SelectionMode>
+```
+
+## API Reference
+
+### SelectionMode
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `values` | `string[]` | — | Every value that can be picked, in list order. Only "select all" and the "n of m" in the header need it — picking rows one at a time works without it. Give it the same ids you give the list. |
+| `active` | `boolean` | — | Controlled selection mode. Leave it out and a long press turns it on. |
+| `defaultActive` | `boolean` | `false` | Whether selection mode starts on. |
+| `onActiveChange` | `(active: boolean) => void` | — |  |
+| `selected` | `string[]` | — | Controlled selection. |
+| `defaultSelected` | `string[]` | — |  |
+| `onSelectedChange` | `(selected: string[]) => void` | — |  |
+| `max` | `number` | — | The most that can be picked at once. A row that would go over it does not toggle on, and "select all" stops at the limit rather than refusing. Leave it out for no limit. |
+| `haptics` | `boolean` | `false` | A tick when a row is picked and when the mode is entered. Off by default — needs the optional `expo-haptics`, and is silent without it. |
+
+### SelectionMode.Indicator
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `string` | — | Which row this stands for. Defaults to the row it is inside. |
+
+### SelectionMode.Item
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `string` | — | This row's id. What ends up in `selected`. |
+| `onPress` | `() => void` | — | What the row does when it is pressed and the mode is off. |
+| `disabled` | `boolean` | `false` | Stop this row entering selection mode, and being picked once in it. For a header row, an advert, a "load more" — anything in the list that is not one of the things being chosen between. |
+| `alwaysShowIndicator` | `boolean` | `false` | Draw the circle without waiting for the mode. |
+
+### SelectionMode.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | `'Select'` | The word in front of the count. |
+| `hideSelectAll` | `boolean` | `false` | Hide the select-all control, for a list where picking everything is wrong. |
+
+### SelectionMode.Bar
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `offset` | `number` | `DEFAULT_BAR_OFFSET` | Distance from the bottom edge, in points. Add your safe-area inset. |
+| `showWhenEmpty` | `boolean` | `false` | Keep the bar up with nothing picked. Off by default: every action on it needs something to act on, and a row of buttons that all refuse is worse than a row that is not there yet. |
+
+### SelectionMode.Action
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `icon` | `ReactNode` | — | The glyph above the label. |
+| `onPress` | `(selected: string[]) => void` | — | What it does. Handed the selection, so the common case needs no other wiring — and leaving the mode afterwards is up to you, because whether the list still makes sense depends on what you did to it. |
+| `exitOnPress` | `boolean` | `false` | Leave selection mode after the action runs. |
+| `disabled` | `boolean` | `false` |  |
+| `labelClassName` | `string` | — | Extra classes for the label. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### The circle is round for a reason
+
+A square box is a form control somebody is filling in; a round one is a thing they are picking out of a list. [Checkbox](/docs/components/checkbox) is the first of those and stays square — this is the second.
+
+### Pad the bottom of your list
+
+`SelectionMode.Bar` floats over the list rather than sitting under it, because the list is as long as it is and a bar in the flow would be somewhere off the end of it. Nothing here can work out how tall your list is, so give it bottom padding — `contentContainerClassName="pb-24"` — or the last row sits under the bar forever.
+
+### The bar is hidden until something is picked
+
+Every action on it needs something to act on, and a row of buttons that all refuse is worse than a row that has not appeared yet. Pass `showWhenEmpty` if you would rather it were there the whole time.
+
+### Actions are handed the selection
+
+`onPress` receives the picked values, so the common case needs no other wiring. Leaving the mode afterwards is `exitOnPress`, and it is opt-in because whether the list still makes sense depends on what you just did to it — deleting means leaving, marking read might not.
+
+### Selection is a set of values
+
+Ids, never indices or elements. A list that reorders, pages in more rows or drops one underneath the reader would invalidate anything positional, and ids are also the shape the action at the end needs.

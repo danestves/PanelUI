@@ -175,6 +175,7 @@ import {
   ShieldCheckIcon,
   SparklesIcon,
   Select,
+  SelectionMode,
   ScrollCanvas,
   ScrollFade,
   ScrollProgress,
@@ -16720,6 +16721,15 @@ const CATALOGUE: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'selection-mode',
+    name: 'SelectionMode',
+    summary: 'Pick several rows out of a list, with a count and a bar of actions',
+    demos: [
+      { label: 'Long press to start', render: () => <SelectionModeDemo /> },
+      { label: 'Always selecting, capped at three', render: () => <SelectionModeAlwaysOnDemo /> },
+    ],
+  },
+  {
     slug: 'select',
     name: 'Select',
     summary: 'Picker shown in a sheet, in place, or floating over the page',
@@ -18849,6 +18859,103 @@ const CATALOGUE: ComponentEntry[] = [
  * had charts filed under L and Item under O — so the order is derived from the
  * names the list prints and cannot drift again.
  */
+/* -------------------------------------------------------------------------- *
+ * SelectionMode
+ * -------------------------------------------------------------------------- */
+
+const SELECTION_THREADS = [
+  { id: 'vip', name: 'HelloTalk VIP', preview: 'Welcome back! Your membership…' },
+  { id: 'class', name: '1-on-1 LiveClass', preview: 'Learn real-life expressions in…' },
+  { id: 'mila', name: 'Mila', preview: 'Hey, bro' },
+  { id: 'mari', name: 'Mari', preview: 'Sorry for late' },
+  { id: 'sam', name: 'Sam', preview: 'Sent you the file' },
+];
+
+function SelectionModeDemo() {
+  const [selected, setSelected] = useState<string[]>([]);
+  const [gone, setGone] = useState<string[]>([]);
+  const threads = SELECTION_THREADS.filter((thread) => !gone.includes(thread.id));
+
+  return (
+    <View className="h-96 overflow-hidden rounded-xl border border-border">
+      <SelectionMode
+        values={threads.map((thread) => thread.id)}
+        selected={selected}
+        onSelectedChange={setSelected}
+      >
+        <SelectionMode.Header title="Choose" />
+        <ScrollView contentContainerClassName="gap-1 p-2 pb-24">
+          {threads.map((thread) => (
+            <SelectionMode.Item key={thread.id} value={thread.id}>
+              <Item>
+                <Item.Media>
+                  <Avatar fallback={thread.name.slice(0, 2).toUpperCase()} />
+                </Item.Media>
+                <Item.Content>
+                  <Item.Title>{thread.name}</Item.Title>
+                  <Item.Description>{thread.preview}</Item.Description>
+                </Item.Content>
+              </Item>
+            </SelectionMode.Item>
+          ))}
+          {threads.length === 0 ? (
+            <Text size="sm" muted className="p-6 text-center">
+              All gone. Long press a row to start — reload the demo to bring them back.
+            </Text>
+          ) : null}
+        </ScrollView>
+
+        <SelectionMode.Bar>
+          <SelectionMode.Action icon={<CheckIcon size={20} />} exitOnPress onPress={() => {}}>
+            Read
+          </SelectionMode.Action>
+          <SelectionMode.Action icon={<FolderIcon size={20} />} exitOnPress onPress={() => {}}>
+            Archive
+          </SelectionMode.Action>
+          <SelectionMode.Action
+            icon={<TrashIcon size={20} />}
+            destructive
+            exitOnPress
+            onPress={(ids) => setGone((current) => [...current, ...ids])}
+          >
+            Delete
+          </SelectionMode.Action>
+        </SelectionMode.Bar>
+      </SelectionMode>
+    </View>
+  );
+}
+
+function SelectionModeAlwaysOnDemo() {
+  const [selected, setSelected] = useState<string[]>(['mila']);
+
+  return (
+    <View className="h-72 overflow-hidden rounded-xl border border-border">
+      <SelectionMode
+        defaultActive
+        max={3}
+        values={SELECTION_THREADS.map((thread) => thread.id)}
+        selected={selected}
+        onSelectedChange={setSelected}
+      >
+        <SelectionMode.Header title="Attach" />
+        <ScrollView contentContainerClassName="gap-1 p-2">
+          {SELECTION_THREADS.map((thread) => (
+            <SelectionMode.Item key={thread.id} value={thread.id}>
+              <Item>
+                <Item.Content>
+                  <Item.Title>{thread.name}</Item.Title>
+                </Item.Content>
+              </Item>
+            </SelectionMode.Item>
+          ))}
+        </ScrollView>
+      </SelectionMode>
+    </View>
+  );
+}
+
+
 export const COMPONENTS: ComponentEntry[] = [...CATALOGUE].sort((a, b) =>
   a.name.localeCompare(b.name)
 );

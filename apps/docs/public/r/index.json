@@ -885,6 +885,19 @@
     ]
   },
   {
+    "name": "selection-mode",
+    "type": "registry:ui",
+    "description": "Pick several rows out of a list, with a count and a bar of actions.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "haptics",
+      "icons",
+      "text",
+      "use-back-handler"
+    ]
+  },
+  {
     "name": "separator",
     "type": "registry:ui",
     "description": "Horizontal or vertical rule between content, optionally labelled.",
