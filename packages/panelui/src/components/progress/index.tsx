@@ -5,6 +5,7 @@ import Animated, {
   cancelAnimation,
   interpolate,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSpring,
@@ -18,6 +19,12 @@ import { cn } from '../../utils/cn';
 const SPRING = { damping: 20, stiffness: 180, mass: 0.6 } as const;
 /** Fraction of the track covered by the sliding bar in indeterminate mode. */
 const INDETERMINATE_WIDTH = 0.4;
+/** Milliseconds for the bar to cross the track once. */
+const SWEEP_DURATION = 1100;
+/** Milliseconds for one half of the fade that stands in for the sweep. */
+const PULSE_DURATION = 900;
+/** How far down the fade goes. Faint enough to read as a pulse, not a flicker. */
+const PULSE_FLOOR = 0.35;
 
 const progressVariants = tv({
   slots: {
@@ -67,7 +74,11 @@ export interface ProgressProps
    * to `100`, so a bare percentage keeps working with neither bound set.
    */
   maxValue?: number;
-  /** Show a looping animation for unknown-duration work. */
+  /**
+   * Show a looping animation for unknown-duration work. Under the platform's
+   * reduce-motion setting the bar fills the track and pulses instead of
+   * travelling across it, so it still reads as running.
+   */
   indeterminate?: boolean;
   /** Extra classes for the moving indicator. */
   indicatorClassName?: string;
@@ -156,6 +167,10 @@ function formatValue(
  * the work is actually counted in: bytes uploaded, seats filled, points
  * scored. Nothing has to be converted to a percent on the way in, and the
  * screen reader is told the real range rather than a derived one.
+ *
+ * Reduce motion is honoured in both modes: the fill lands on its value rather
+ * than springing to it, and the indeterminate bar pulses in place rather than
+ * crossing the track.
  */
 export const Progress = forwardRef<View, ProgressProps>(
   (
@@ -185,43 +200,78 @@ export const Progress = forwardRef<View, ProgressProps>(
     const target = fractionOf(value, minValue, maxValue);
     const progress = useSharedValue(target);
     const slide = useSharedValue(0);
+    const reducedMotion = useReducedMotion();
 
     /**
-     * The loop is tied to `indeterminate` alone. Restarting it whenever the
-     * value moved used to leave `withRepeat` cycling from wherever the bar had
-     * got to, so a bar that kept receiving values while looping ended up
-     * sweeping a shrinking sliver of the track instead of crossing it.
+     * The loop is tied to `indeterminate` and to how much motion is wanted.
+     * Restarting it whenever the value moved used to leave `withRepeat`
+     * cycling from wherever the bar had got to, so a bar that kept receiving
+     * values while looping ended up sweeping a shrinking sliver of the track
+     * instead of crossing it.
+     *
+     * Under reduce motion the same loop drives a fade rather than a journey
+     * across the track. Freezing it outright is the other option and it is the
+     * wrong one: a bar that stops moving reads as a bar that has hung, which is
+     * the one thing an indeterminate bar exists to rule out. Reduce motion asks
+     * for less travel, not for less news — so the travel goes and the pulse
+     * stays, running slower than the sweep it replaces.
      */
     useEffect(() => {
       if (!indeterminate) return undefined;
       slide.value = 0;
       slide.value = withRepeat(
-        withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, {
+          duration: reducedMotion ? PULSE_DURATION : SWEEP_DURATION,
+          easing: Easing.inOut(Easing.ease),
+        }),
         -1,
-        false
+        // The sweep restarts at the left edge; the fade turns around, because a
+        // pulse that snapped back to full brightness would be the flicker the
+        // setting is there to avoid.
+        reducedMotion
       );
       return () => cancelAnimation(slide);
-    }, [indeterminate, slide]);
+    }, [indeterminate, reducedMotion, slide]);
 
     // The fill follows the value, and picks up from wherever the loop left it
-    // when a bar stops being indeterminate mid-flight.
+    // when a bar stops being indeterminate mid-flight. Reduce motion lands on
+    // the value instead of springing to it — the number is the information, and
+    // the overshoot is decoration.
     useEffect(() => {
       if (indeterminate) return;
-      progress.value = withSpring(target, SPRING);
-    }, [indeterminate, target, progress]);
+      progress.value = reducedMotion ? target : withSpring(target, SPRING);
+    }, [indeterminate, target, progress, reducedMotion]);
 
     const onLayout = (event: LayoutChangeEvent) => {
       trackWidth.value = event.nativeEvent.layout.width;
     };
 
+    /*
+     * Both styles set every property either of them sets. The two are swapped
+     * on the same view when a bar stops being indeterminate, and an animated
+     * property that one style drops is not reset by the other — it is simply
+     * left at whatever it was last given, which would strand a half-faded bar
+     * at that opacity for the rest of its life.
+     */
     const determinateStyle = useAnimatedStyle(() => ({
       width: trackWidth.value * progress.value,
+      opacity: 1,
+      transform: [{ translateX: 0 }],
     }));
 
     const indeterminateStyle = useAnimatedStyle(() => {
+      if (reducedMotion) {
+        // Nothing travels: the whole track carries the bar and the bar breathes.
+        return {
+          width: trackWidth.value,
+          opacity: interpolate(slide.value, [0, 1], [1, PULSE_FLOOR]),
+          transform: [{ translateX: 0 }],
+        };
+      }
       const barWidth = trackWidth.value * INDETERMINATE_WIDTH;
       return {
         width: barWidth,
+        opacity: 1,
         transform: [
           {
             // The loop travels the way the text does. Yoga mirrors the track
@@ -253,6 +303,9 @@ export const Progress = forwardRef<View, ProgressProps>(
         ref={ref}
         accessibilityRole="progressbar"
         accessibilityLabel={label}
+        // Indeterminate has no value to announce, so `busy` is the only thing
+        // separating "working, length unknown" from "empty and going nowhere".
+        accessibilityState={indeterminate ? { busy: true } : undefined}
         accessibilityValue={
           indeterminate
             ? undefined
