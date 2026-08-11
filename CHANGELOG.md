@@ -9,6 +9,97 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.60.0] — 2026-08-11
+
+### Added
+
+- **`SelectionMode` — pick several things at once, on a screen or in a sheet.** Messages to
+  archive, people to share with, colours to apply, files to move. On a screen it is a mode: the
+  list is there to be read, and a long press turns it into one you can pick from. In a sheet it
+  is a picker — `SelectionMode.Sheet` was opened in order to choose, so it is choosing from the
+  moment it appears, with the actions in the sheet's footer.
+
+  `SelectionMode.Item` wraps whatever you give it rather than replacing it, so one component
+  holds a row of people, a grid of colours and a run of slides. `SelectionMode.Group` is the
+  rounded card that holds them, with `columns` for a grid, and `indicator="ring"` draws the
+  selection around a swatch instead of beside it. Ships **alpha**: the shape is right, but it
+  has not been through enough lists to promise the props will not move.
+
+- **`animation="disable-all"` on `Tabs`**, which stops the indicator, the panel strip and the
+  expanding reveal together. For a screen already animating something more important, or a
+  device that cannot afford them. The system's reduce-motion setting is honoured without it.
+
+### Changed
+
+- **A swipeable `Tabs` is a real pager.** The panels are laid out side by side in a strip as
+  wide as all of them, behind a window one panel wide, and moving between tabs is that strip
+  translating. The panels either side of the active one are therefore built and sized *before*
+  you reach them.
+
+  This is the fix for a long-running report of tab changes stalling with a virtualised list in
+  each panel ([#28]). The cause was never the swipe: each panel was an independent sibling and
+  only the active one was in the layout, so the arriving panel was mounted *and measured* during
+  the transition and did its first render on the frame it became visible. A press paid the same
+  cost — the swipe only put a movement next to it.
+
+  Mounting is also sticky now: a panel that has been reached stays mounted for the life of the
+  tab set, so a tab is slow at most once, with no flag set.
+
+### Fixed
+
+- **`Fab.Group` no longer draws over every screen you navigate to** ([#29]). It rendered through
+  a portal, which mounts at the app root above the router and is only removed when the declaring
+  component unmounts — and a stack keeps the screen you pushed from mounted. It was the only
+  overlay here that portalled unconditionally, so it leaked even while closed. The scrim and the
+  dial are now two absolutely positioned siblings in the group's own parent, so a group belongs
+  to its screen and leaves with it. Write one in the screen's root container.
+
+- **Anything in a `Fab.Group` action slot closes the dial when pressed**, not only `Fab.Action`.
+  A plain `Fab` written as a child is a reasonable thing to reach for, and it used to run its
+  action — navigating, usually — with the dial still standing open behind it. An open dial also
+  takes the Android back button now.
+
+- **`keepMounted` on `Tabs` does what it says.** `true` used to hide with `display: none`, which
+  lays a panel out at zero size, so a virtualised list inside one rendered no rows and was
+  mounted-but-unbuilt. `'measured'` kept the size but stretched the panel against the tab set's
+  root, which only has a height if the tab set was given one — undocumented, so it measured zero
+  too. Neither could do the thing they were reached for.
+
+### Docs
+
+- **Every component page is written as a guide rather than as an argument.** A user reported that
+  the prose read like an assistant thinking out loud, and sent a rewrite of the Fab page to show
+  the difference. All 101 intros now follow that shape — what it is for, the trade-off, the
+  workaround, the alternatives — as separate statements rather than one argued paragraph. Around
+  twenty pages also gained the cross-link they were missing, because "when should I use the other
+  one" is the question an intro is for.
+
+- **An alpha or beta component says so on its own page**, not only as a pill in the sidebar.
+  Somebody arriving from a search result never sees the sidebar entry, and "this API is still
+  moving" is not a thing to learn after building against it.
+
+- **panelui.dev answers the questions an agent arrives asking.** A request for `Accept:
+  text/markdown` at the site root returns markdown rather than plain text — the one thing that
+  was keeping the site off Level 3 on agent-readiness checks — and the site now serves an MCP
+  server card, an A2A agent card, an agent-skills index with per-artifact digests, and `auth.md`
+  saying plainly that everything here is public and takes no token.
+
+### Migration
+
+- **A swipeable `Tabs` needs a height to lay its strip out in** — `className="flex-1"` on the tab
+  set, or a fixed height — the same as any pager. Without one the strip falls back to the height
+  of its tallest panel, which is right for ordinary content and not enough for a virtualised
+  list. It warns in development rather than rendering nothing.
+
+- **`keepMounted="measured"` still works and now means the same as `true`.** Every panel in a
+  strip is measured already, so the distinction it drew no longer exists.
+
+- **Write a `Fab.Group` in the screen's root container.** That parent is what `offset` is
+  measured from and what the scrim covers.
+
+[#28]: https://github.com/panel-ui/PanelUI/issues/28
+[#29]: https://github.com/panel-ui/PanelUI/issues/29
+
 ## [0.59.0] — 2026-08-11
 
 ### Changed

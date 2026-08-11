@@ -199,12 +199,29 @@ for (const [slug, entry] of Object.entries(meta)) {
 
   const status = statusOf(options);
 
+  /*
+   * The alpha and beta marks, said on the page as well as in the sidebar.
+   *
+   * The sidebar pill is what a reader browsing the list sees; somebody who
+   * arrives from a search engine or a link never sees the sidebar entry at all,
+   * and "this API is still moving" is not something to learn after building
+   * against it. Only the two settled-ness marks — a `new` or `updated` dot is
+   * news rather than a warning, and does not need saying twice.
+   */
+  const MATURITY = {
+    alpha: 'Alpha — the API is still moving. Expect it to change in a minor release.',
+    beta: 'Beta — the API has settled, but has not seen enough use to promise it will not move again.',
+  };
+  const maturity = MATURITY[status]
+    ? `\n\n<Callout type="warn">${MATURITY[status]}</Callout>`
+    : '';
+
   sections.push(`---
 title: ${name}
 description: ${summary}${status ? `\nstatus: ${status}` : ''}
 ---
 
-${u.intro ?? summary}${preview}
+${u.intro ?? summary}${maturity}${preview}
 
 ## Installation
 
