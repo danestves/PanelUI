@@ -24,3 +24,11 @@ jobs:
 
       - name: Build library
         run: npm run build
+
+      - name: CLI tests
+        run: |
+          if grep -R --include='*.test.mjs' -nE '\.only[[:space:]]*\(' packages/cli/test; then
+            echo 'Focused tests are not allowed in CI.'
+            exit 1
+          fi
+          node --test packages/cli/test/*.test.mjs
