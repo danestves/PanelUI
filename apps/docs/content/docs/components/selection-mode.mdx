@@ -77,7 +77,9 @@ const [selected, setSelected] = useState<string[]>([]);
 
   {/* …or in a sheet */}
   <SelectionMode.Sheet>
-    <SelectionMode.Item />
+    <SelectionMode.Group>
+      <SelectionMode.Item />
+    </SelectionMode.Group>
     <SelectionMode.Bar />
   </SelectionMode.Sheet>
 </SelectionMode>
@@ -89,18 +91,20 @@ Every part except the root reads the selection from context, so they all throw o
 
 ### Anything, not just rows
 
-An item is a wrapper, so what it holds is yours. A person is an avatar and a name; a colour is a swatch and a name; a slide is a thumbnail. Nothing about the component changes between them — only what is written inside the item.
+An item is a wrapper, so what it holds is yours. Group them in a card for rows, or pass `columns` for a grid of things recognised by sight — a swatch, a thumbnail, a slide. `indicator="ring"` draws the selection around the item instead of beside it, because a circle next to a colour is a second thing to look at.
 
 ```tsx
 <SelectionMode.Sheet open={open} onOpenChange={setOpen} title="Palette">
-  {palette.map((color) => (
-    <SelectionMode.Item key={color.id} value={color.id}>
-      <View className="flex-row items-center gap-3 py-1">
-        <View style={{ backgroundColor: color.hex }} className="h-8 w-8 rounded-lg" />
-        <Text weight="medium">{color.name}</Text>
-      </View>
-    </SelectionMode.Item>
-  ))}
+  <SelectionMode.Group columns={5} gap={14}>
+    {palette.map((color) => (
+      <SelectionMode.Item key={color.id} value={color.id} indicator="ring">
+        <View
+          style={{ backgroundColor: color.hex, aspectRatio: 1 }}
+          className="w-full rounded-full"
+        />
+      </SelectionMode.Item>
+    ))}
+  </SelectionMode.Group>
 
   <SelectionMode.Bar>
     <SelectionMode.Action icon={<CheckIcon size={20} />} onPress={apply}>
@@ -226,6 +230,16 @@ On a screen, `placement="floating"` lifts the bar off the edge into a rounded ca
 | `onPress` | `() => void` | — | What the row does when it is pressed and the mode is off. |
 | `disabled` | `boolean` | `false` | Stop this row entering selection mode, and being picked once in it. For a header row, an advert, a "load more" — anything in the list that is not one of the things being chosen between. |
 | `alwaysShowIndicator` | `boolean` | `false` | Draw the circle without waiting for the mode. |
+| `indicator` | `'leading' \| 'ring' \| 'none'` | `'leading'` | How being picked is drawn. `leading` puts the circle in front of the item, which is what a row wants. `ring` draws a ring around whatever you gave it instead — for a swatch, a thumbnail or a photo, where a circle beside it would be a second thing to look at and the item itself can carry the state. `none` draws nothing and leaves it to you; read `useSelectionMode().isSelected`. |
+
+### SelectionMode.Group
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `columns` | `number` | — | Lay the items out in a grid this many across instead of stacking them. For things recognised by sight rather than read — swatches, thumbnails, slides. A grid of six colours is one glance; the same six as rows is a scroll. |
+| `gap` | `number` | `12` | Space between items in a grid, in points. |
+| `separators` | `boolean` | `true` | Hairlines between stacked items. On by default; off in a grid. |
 
 ### SelectionMode.Header
 
@@ -264,10 +278,19 @@ On a screen, `placement="floating"` lifts the bar off the edge into a rounded ca
 | `onOpenChange` | `(open: boolean) => void` | — |  |
 | `title` | `string` | `'Select'` | The word in front of the count. |
 | `hideSelectAll` | `boolean` | `false` | Hide the select-all control. |
+| `size` | `'auto' \| 'half' \| 'full'` | `'half'` | How tall the sheet opens. `half` by default, and deliberately not `auto`. A sheet that sizes to its content gives its scrolling body no height to fill, and a list inside a box of no height draws nothing — which looks like an empty sheet rather than like a missing style. A selection is a list; give it the room. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
+
+### The sheet is half-height by default
+
+Not `auto`. A sheet that sizes to its content gives its scrolling body no height to fill, and a list in a box of no height draws nothing — which reads as an empty sheet rather than as a missing style. Pass `size="full"` for a long list, or `size="auto"` only when the sheet really is a handful of rows.
+
+### Group the items
+
+`SelectionMode.Group` is the rounded card with rules between its rows. One card of options reads as a set; the same rows loose on the sheet background read as a list that has not finished loading.
 
 ### Which presentation
 

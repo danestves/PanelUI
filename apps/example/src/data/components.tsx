@@ -18961,19 +18961,21 @@ function SelectionModeSheetPeopleDemo() {
         onSelectedChange={setSelected}
       >
         <SelectionMode.Sheet open={open} onOpenChange={setOpen} title="Share with">
-          {SELECTION_PEOPLE.map((person) => (
-            <SelectionMode.Item key={person.id} value={person.id}>
-              <Item>
-                <Item.Media>
-                  <Avatar fallback={person.name.slice(0, 2).toUpperCase()} />
-                </Item.Media>
-                <Item.Content>
-                  <Item.Title>{person.name}</Item.Title>
-                  <Item.Description>{person.handle}</Item.Description>
-                </Item.Content>
-              </Item>
-            </SelectionMode.Item>
-          ))}
+          <SelectionMode.Group>
+            {SELECTION_PEOPLE.map((person) => (
+              <SelectionMode.Item key={person.id} value={person.id}>
+                <Item>
+                  <Item.Media>
+                    <Avatar fallback={person.name.slice(0, 2).toUpperCase()} />
+                  </Item.Media>
+                  <Item.Content>
+                    <Item.Title>{person.name}</Item.Title>
+                    <Item.Description>{person.handle}</Item.Description>
+                  </Item.Content>
+                </Item>
+              </SelectionMode.Item>
+            ))}
+          </SelectionMode.Group>
           <SelectionMode.Bar>
             <SelectionMode.Action
               icon={<CheckIcon size={20} />}
@@ -19004,17 +19006,16 @@ function SelectionModeSheetColorsDemo() {
         onSelectedChange={setSelected}
       >
         <SelectionMode.Sheet open={open} onOpenChange={setOpen} title="Palette">
-          {SELECTION_COLORS.map((color) => (
-            <SelectionMode.Item key={color.id} value={color.id}>
-              <View className="flex-row items-center gap-3 py-1">
+          <SelectionMode.Group columns={5} gap={14}>
+            {SELECTION_COLORS.map((color) => (
+              <SelectionMode.Item key={color.id} value={color.id} indicator="ring">
                 <View
-                  style={{ backgroundColor: color.hex }}
-                  className="h-8 w-8 rounded-lg"
+                  style={{ backgroundColor: color.hex, aspectRatio: 1 }}
+                  className="w-full rounded-full"
                 />
-                <Text weight="medium">{color.name}</Text>
-              </View>
-            </SelectionMode.Item>
-          ))}
+              </SelectionMode.Item>
+            ))}
+          </SelectionMode.Group>
           <SelectionMode.Bar>
             <SelectionMode.Action
               icon={<CheckIcon size={20} />}

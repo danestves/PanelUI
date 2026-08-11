@@ -114,13 +114,16 @@ const selectionVariants = tv({
     fill: 'absolute inset-0 items-center justify-center rounded-full bg-primary',
     header: 'h-14 flex-row items-center gap-3 border-b border-border px-4',
     title: 'flex-1 text-center text-base font-semibold text-foreground',
+    close: 'h-10 w-10 items-center justify-center rounded-full bg-muted',
+    group: 'overflow-hidden rounded-2xl bg-card',
+    ring: 'rounded-full border-2 border-transparent p-0.5',
     bar: 'flex-row items-stretch',
     action: 'flex-1 items-center justify-center gap-1.5 px-2 py-3',
     actionLabel: 'text-xs font-medium text-foreground',
   },
   variants: {
     selected: {
-      true: { circle: 'border-primary' },
+      true: { circle: 'border-primary', ring: 'border-foreground' },
     },
     destructive: {
       true: { actionLabel: 'text-destructive' },
@@ -444,6 +447,16 @@ export interface SelectionModeItemProps extends Omit<ViewProps, 'children'> {
   disabled?: boolean;
   /** Draw the circle without waiting for the mode. */
   alwaysShowIndicator?: boolean;
+  /**
+   * How being picked is drawn.
+   *
+   * `leading` puts the circle in front of the item, which is what a row wants.
+   * `ring` draws a ring around whatever you gave it instead — for a swatch, a
+   * thumbnail or a photo, where a circle beside it would be a second thing to
+   * look at and the item itself can carry the state. `none` draws nothing and
+   * leaves it to you; read `useSelectionMode().isSelected`.
+   */
+  indicator?: 'leading' | 'ring' | 'none';
   children: ReactNode;
 }
 
@@ -461,6 +474,7 @@ function SelectionModeItem({
   onPress,
   disabled = false,
   alwaysShowIndicator = false,
+  indicator = 'leading',
   children,
   ...props
 }: SelectionModeItemProps) {
@@ -491,28 +505,126 @@ function SelectionModeItem({
           if (disabled || showing) return;
           enter(value);
         }}
-        className={cn('flex-row items-center gap-3 px-4 py-2', className)}
+        className={cn(
+          indicator === 'leading' ? 'flex-row items-center gap-3 px-4 py-2.5' : '',
+          className
+        )}
         {...props}
       >
-        {showing ? (
-          <Animated.View
-            entering={reducedMotion ? undefined : FadeIn.duration(REVEAL_DURATION)}
-            exiting={reducedMotion ? undefined : FadeOut.duration(REVEAL_DURATION)}
-          >
-            <SelectionModeIndicator value={value} />
-          </Animated.View>
-        ) : null}
-        {/*
-         * `minWidth: 0` as well as growing. Without it a long title refuses to
-         * be narrower than its own text, pushes the row past the screen and
-         * takes the layout with it — which is what a flex child does by
-         * default, and why a name ends up broken across lines mid-word.
-         */}
-        <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
-          {textChildren(children)}
-        </View>
+        {indicator === 'leading' ? (
+          <>
+            {showing ? (
+              <Animated.View
+                entering={reducedMotion ? undefined : FadeIn.duration(REVEAL_DURATION)}
+                exiting={reducedMotion ? undefined : FadeOut.duration(REVEAL_DURATION)}
+              >
+                <SelectionModeIndicator value={value} />
+              </Animated.View>
+            ) : null}
+            {/*
+             * `minWidth: 0` as well as growing. Without it a long title refuses
+             * to be narrower than its own text, pushes the row past the screen
+             * and takes the layout with it — which is what a flex child does by
+             * default, and why a name ends up broken across lines mid-word.
+             */}
+            <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
+              {textChildren(children)}
+            </View>
+          </>
+        ) : indicator === 'ring' && showing ? (
+          <View className={selectionVariants({ selected }).ring()}>
+            {textChildren(children)}
+          </View>
+        ) : (
+          textChildren(children)
+        )}
       </Pressable>
     </SelectionModeItemContext.Provider>
+  );
+}
+
+/* -------------------------------------------------------------------------- *
+ * Group
+ * -------------------------------------------------------------------------- */
+
+export interface SelectionModeGroupProps extends ViewProps {
+  className?: string;
+  /**
+   * Lay the items out in a grid this many across instead of stacking them.
+   *
+   * For things recognised by sight rather than read — swatches, thumbnails,
+   * slides. A grid of six colours is one glance; the same six as rows is a
+   * scroll.
+   */
+  columns?: number;
+  /** Space between items in a grid, in points. */
+  gap?: number;
+  /** Hairlines between stacked items. On by default; off in a grid. */
+  separators?: boolean;
+  children: ReactNode;
+}
+
+/**
+ * A rounded card holding a run of items.
+ *
+ * Grouping is what makes a sheet of choices readable: one card of options with
+ * hairlines between them reads as a set, and the same rows loose on the sheet's
+ * background read as a list that has not finished loading. It is also what the
+ * platform's own sheets do.
+ *
+ * Stacked by default, with a rule between each item. Pass `columns` for a grid.
+ */
+function SelectionModeGroup({
+  className,
+  columns,
+  gap = 12,
+  separators = true,
+  children,
+  style,
+  ...props
+}: SelectionModeGroupProps) {
+  const items = Children.toArray(children).filter(Boolean);
+  const slots = selectionVariants({});
+
+  if (columns && columns > 0) {
+    /*
+     * The gap is padding inside each cell, not `gap` on the row.
+     *
+     * A row of cells `100 / columns` wide with a gap between them is wider than
+     * the row by the gaps, so the last column wraps and the grid loses a
+     * column. Padding inside the cell keeps every cell an exact share of the
+     * width, and the negative margin cancels the outer half so the grid still
+     * sits flush against whatever it is in.
+     */
+    const half = gap / 2;
+    return (
+      <View
+        style={[{ flexDirection: 'row', flexWrap: 'wrap', margin: -half }, style]}
+        className={className}
+        {...props}
+      >
+        {items.map((item, index) => (
+          <View key={index} style={{ width: `${100 / columns}%`, padding: half }}>
+            {item}
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  return (
+    <View className={cn(slots.group(), className)} style={style} {...props}>
+      {items.map((item, index) => (
+        <View key={index}>
+          {separators && index > 0 ? (
+            // Inset from the left so the rule starts under the text rather than
+            // under the circle, which is what a grouped list does.
+            <View className="ml-14 h-px bg-border" />
+          ) : null}
+          {item}
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -578,8 +690,9 @@ function SelectionModeHeader({
                 accessibilityLabel="Cancel selection"
                 onPress={exit}
                 hitSlop={12}
+                className={slots.close()}
               >
-                <XIcon size={24} />
+                <XIcon size={20} />
               </Pressable>
             )}
           </View>
@@ -787,6 +900,15 @@ export interface SelectionModeSheetProps {
   /** Hide the select-all control. */
   hideSelectAll?: boolean;
   /**
+   * How tall the sheet opens.
+   *
+   * `half` by default, and deliberately not `auto`. A sheet that sizes to its
+   * content gives its scrolling body no height to fill, and a list inside a box
+   * of no height draws nothing — which looks like an empty sheet rather than
+   * like a missing style. A selection is a list; give it the room.
+   */
+  size?: 'auto' | 'half' | 'full';
+  /**
    * The things to pick between, and optionally a `SelectionMode.Bar` of
    * actions. The bar is lifted into the sheet's footer wherever it is written.
    */
@@ -827,6 +949,7 @@ function SelectionModeSheet({
   onOpenChange,
   title = 'Select',
   hideSelectAll = false,
+  size = 'half',
   children,
 }: SelectionModeSheetProps) {
   const parent = useSelectionMode();
@@ -855,7 +978,7 @@ function SelectionModeSheet({
 
   return (
     <BottomSheet open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
-      <BottomSheet.Content className={className}>
+      <BottomSheet.Content size={size} className={className}>
         {/*
          * The provider goes *inside* the sheet's content, not around the sheet.
          *
@@ -874,7 +997,9 @@ function SelectionModeSheet({
               className="h-auto border-b-0 px-0"
             />
           </BottomSheet.Header>
-          <BottomSheet.Body>{textChildren(rest)}</BottomSheet.Body>
+          <BottomSheet.Body contentContainerStyle={{ gap: 16, paddingBottom: 8 }}>
+            {textChildren(rest)}
+          </BottomSheet.Body>
           {bar ? <BottomSheet.Footer>{bar}</BottomSheet.Footer> : null}
         </SelectionModeContext.Provider>
       </BottomSheet.Content>
@@ -885,6 +1010,7 @@ function SelectionModeSheet({
 SelectionModeRoot.displayName = 'SelectionMode';
 SelectionModeSheet.displayName = 'SelectionMode.Sheet';
 SelectionModeItem.displayName = 'SelectionMode.Item';
+SelectionModeGroup.displayName = 'SelectionMode.Group';
 SelectionModeIndicator.displayName = 'SelectionMode.Indicator';
 SelectionModeHeader.displayName = 'SelectionMode.Header';
 SelectionModeBar.displayName = 'SelectionMode.Bar';
@@ -892,6 +1018,7 @@ SelectionModeAction.displayName = 'SelectionMode.Action';
 
 export const SelectionMode = Object.assign(SelectionModeRoot, {
   Sheet: SelectionModeSheet,
+  Group: SelectionModeGroup,
   Item: SelectionModeItem,
   Indicator: SelectionModeIndicator,
   Header: SelectionModeHeader,
