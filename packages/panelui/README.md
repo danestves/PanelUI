@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 96 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 100 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -205,8 +205,10 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Flow` | Pan-and-zoom canvas of draggable nodes joined by animated edges |
 | `Form` | Form state — values, validation and submission — with no form library underneath |
 | `Frame` | Widget shell — a card of rows sitting in a titled tray |
+| `FunnelChart` | Where a population drained away, one step at a time |
 | `GridItem` | Bento tiles, and the grid that places them |
 | `HeatmapChart` | Contribution grid with a themed colour ramp and a readout |
+| `HexChart` | A whole broken into parts, counted out in cells |
 | `Input` | Text field with label, description and error message |
 | `InputGroup` | Input with leading and trailing decorators |
 | `Item` | Row of media, text and actions for lists and settings |
@@ -229,6 +231,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Popover` | Panel anchored to the element that opened it |
 | `Post` | Social card — author, body, media and the counts underneath |
 | `Progress` | Determinate and indeterminate progress bar |
+| `QRCode` | A string a camera can read — framed, titled, or folded away behind a button |
 | `Questionnaire` | One question at a time, with progress, validation and a way back |
 | `RadarChart` | Several measures of one thing, drawn as one shape |
 | `RadioGroup` | Single-select list of options |

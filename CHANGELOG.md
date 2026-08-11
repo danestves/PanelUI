@@ -9,6 +9,35 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.58.0] — 2026-08-11
+
+### Added
+
+- **`FunnelChart`** — where a population drained away, one step at a time. Each stage is a
+  trapezoid running from its own width down to the next stage's, so the taper is continuous and
+  the slope between two stages *is* the drop between them. `FunnelChart.Labels` lays a row across
+  each stage rather than fitting text inside it, because the stages with the worst drop-off are
+  the narrowest and neither text nor a fingertip fits in them; `minWidth` puts a floor under those
+  stages so a rare outcome reads as rare rather than as absent. One hue fading down the run rather
+  than a colour per stage — the stages are one quantity at successive moments, not five series.
+  A `FunnelChart.Legend` replaces the labels on a compact card, and `status="loading"` draws a
+  single undivided taper, since an invented drop-off is worse than none.
+
+### Changed
+
+- **Reduce motion is honoured by `Progress`.** The determinate fill lands on its value instead of
+  springing to it, and the indeterminate bar fills the track and pulses in place instead of
+  crossing it. Freezing it outright was the other option and it is the wrong one: a bar that stops
+  moving reads as a bar that has hung, which is the single thing an indeterminate bar exists to
+  rule out. The track also carries `busy` while indeterminate — with no value to announce, that is
+  all that separated "working, length unknown" from "empty".
+
+### Fixed
+
+- **A `Progress` bar that turned determinate mid-fade kept the fade.** The two animated styles now
+  each set every property either of them sets, so neither can strand the bar at the other's
+  opacity.
+
 ## [0.57.0] — 2026-08-11
 
 ### Added

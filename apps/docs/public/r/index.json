@@ -391,6 +391,16 @@
     ]
   },
   {
+    "name": "funnel-chart",
+    "type": "registry:ui",
+    "description": "Where a population drained away, one step at a time.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "grid-item",
     "type": "registry:ui",
     "description": "Bento tiles, and the grid that places them.",

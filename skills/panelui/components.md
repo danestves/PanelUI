@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-99 components. The **Docs** column is the path under
+100 components. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -108,6 +108,7 @@ remember is a guess.
 | `AreaChart` | Filled bands over time, stacked or overlaid. | `charts/area-chart` |
 | `BarChart` | Categories compared by length, grouped or stacked. | `charts/bar-chart` |
 | `CandlestickChart` | Open, high, low and close for a period, drawn as one mark. | `charts/candlestick-chart` |
+| `FunnelChart` | Where a population drained away, one step at a time. | `charts/funnel-chart` |
 | `HeatmapChart` | Contribution grid with a themed colour ramp and a readout. | `charts/heatmap-chart` |
 | `HexChart` | A whole broken into parts, counted out in cells. | `charts/hex-chart` |
 | `LineChart` | Animated time series, drawn on the UI thread. | `charts/line-chart` |

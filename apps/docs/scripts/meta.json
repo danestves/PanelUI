@@ -264,6 +264,15 @@
       "category": "layout"
     }
   ],
+  "funnel-chart": [
+    "FunnelChart",
+    "Where a population drained away, one step at a time.",
+    "react native funnel chart conversion",
+    {
+      "addedIn": "0.58.0",
+      "group": "charts"
+    }
+  ],
   "heatmap-chart": [
     "HeatmapChart",
     "Contribution grid with a themed colour ramp and a readout.",
@@ -440,7 +449,7 @@
     "Determinate and indeterminate progress bar.",
     "react native progress bar",
     {
-      "updatedIn": "0.35.0",
+      "updatedIn": "0.58.0",
       "category": "feedback"
     }
   ],

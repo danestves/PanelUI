@@ -129,7 +129,7 @@ Every component takes `className`, so anything can be restyled with Tailwind cla
 
 ## Components
 
-**97 components**, documented with live examples and full props tables at
+**100 components**, documented with live examples and full props tables at
 **[panelui.dev/docs](https://panelui.dev/docs)**.
 
 - **Layout & content** — Card, Frame, Surface, Item, GridItem, Separator, Typography, Table,
@@ -142,7 +142,8 @@ Every component takes `className`, so anything can be restyled with Tailwind cla
 - **Overlays & feedback** — Dialog, BottomSheet, Drawer, Popover, Tooltip, Toast, Alert, Tour,
   Progress, Spinner, Loader
 - **Data visualisation** — LineChart, AreaChart, BarChart, ScatterChart, CandlestickChart,
-  PieChart, RingChart, RadarChart, HeatmapChart, Kpi, Map, Marker, Flow
+  PieChart, FunnelChart, RingChart, RadarChart, HeatmapChart, HexChart, Kpi, Map, Marker, Flow,
+  QRCode
 - **AI components** — Message, MessageScroller, Response, Reasoning, Plan, Task, Sources,
   CodeBlock, Shimmer, ThinkingOrb, Soundwave
 - **Social** — Post, Avatar, Attachment

@@ -751,3 +751,71 @@ export function columnValues(
     return typeof value === 'number' && !Number.isNaN(value) ? value : null;
   });
 }
+
+/**
+ * A four-sided band with a width at the top and another at the bottom: one
+ * stage of a funnel.
+ *
+ * Given as two widths and a side to hang them off rather than as four corners,
+ * because that is the shape of the data — a stage knows what it is worth and
+ * what the next one is worth, and where the taper hangs is a property of the
+ * whole chart. `anchor` is where the narrowing happens from: `0` keeps the left
+ * edge straight and takes it all off the right, `0.5` takes half off each side,
+ * `1` keeps the right edge.
+ *
+ * The corners are pulled back along their own edges and turned with a quadratic
+ * through the corner itself, rather than an arc: a trapezoid's corners are not
+ * right angles, so no single radius describes them and an arc would need a
+ * different centre for each one. The pull-back is capped at half the shorter
+ * edge, which is what stops a radius larger than a nearly-empty stage from
+ * folding the shape inside out.
+ */
+export function trapezoidPath(
+  left: number,
+  top: number,
+  bottom: number,
+  topWidth: number,
+  bottomWidth: number,
+  span: number,
+  anchor: number,
+  radius: number
+): string {
+  'worklet';
+  if (bottom <= top || (topWidth <= 0 && bottomWidth <= 0)) return '';
+
+  const topLeft = left + (span - topWidth) * anchor;
+  const bottomLeft = left + (span - bottomWidth) * anchor;
+  const corners = [
+    { x: topLeft, y: top },
+    { x: topLeft + topWidth, y: top },
+    { x: bottomLeft + bottomWidth, y: bottom },
+    { x: bottomLeft, y: bottom },
+  ];
+
+  if (!(radius > 0)) {
+    return `M${corners[0]!.x},${corners[0]!.y}L${corners[1]!.x},${corners[1]!.y}L${corners[2]!.x},${corners[2]!.y}L${corners[3]!.x},${corners[3]!.y}Z`;
+  }
+
+  let d = '';
+  for (let i = 0; i < 4; i += 1) {
+    const previous = corners[(i + 3) % 4]!;
+    const corner = corners[i]!;
+    const next = corners[(i + 1) % 4]!;
+
+    const inX = previous.x - corner.x;
+    const inY = previous.y - corner.y;
+    const outX = next.x - corner.x;
+    const outY = next.y - corner.y;
+    const inLength = Math.sqrt(inX * inX + inY * inY) || 1;
+    const outLength = Math.sqrt(outX * outX + outY * outY) || 1;
+    const r = Math.min(radius, inLength / 2, outLength / 2);
+
+    const fromX = corner.x + (inX / inLength) * r;
+    const fromY = corner.y + (inY / inLength) * r;
+    const toX = corner.x + (outX / outLength) * r;
+    const toY = corner.y + (outY / outLength) * r;
+
+    d += `${i === 0 ? 'M' : 'L'}${fromX},${fromY}Q${corner.x},${corner.y} ${toX},${toY}`;
+  }
+  return `${d}Z`;
+}

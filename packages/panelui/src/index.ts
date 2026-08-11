@@ -217,6 +217,21 @@ export {
   type FlowPoint,
 } from './components/flow';
 export {
+  FunnelChart,
+  useFunnelChart,
+  type FunnelChartProps,
+  type FunnelChartHandle,
+  type FunnelChartHeaderProps,
+  type FunnelChartStagesProps,
+  type FunnelChartLabelsProps,
+  type FunnelChartLegendProps,
+  type FunnelChartSkeletonProps,
+  type FunnelChartStatus,
+  type FunnelDatum,
+  type FunnelAlign,
+  type FunnelShare,
+} from './components/funnel-chart';
+export {
   Frame,
   type FrameProps,
   type FrameRootProps,

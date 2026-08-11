@@ -1979,6 +1979,82 @@
       "variant": "{/* The default: a card flush inside a shell, with the header in the strip above it. */}\n<Frame variant=\"default\">…</Frame>\n\n{/* No shell — for a Frame inside a card that already draws a border,\n    where the shell’s own edge just inside it reads as a double line. */}\n<Card>\n  <Card.Content className=\"p-4\">\n    <Frame variant=\"plain\">\n      <Frame.Panel>…</Frame.Panel>\n    </Frame>\n  </Card.Content>\n</Card>"
     }
   },
+  "funnel-chart": {
+    "intro": "Where a population drained away, one step at a time.\n\nEvery stage is a subset of the one above it, in the order the steps happen. That is a much stronger claim than a bar chart makes, and it is what makes the interesting number not any stage's value but the ratio between two of them: how many of the people who started checking out entered a card, and how many of everyone who looked ended up paying.",
+    "usage": "<FunnelChart data={checkout}>\n  <FunnelChart.Header title=\"Product viewed\" value=\"41,800\" />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>",
+    "extraImports": [
+      "type FunnelDatum",
+      "Frame"
+    ],
+    "anatomy": "<FunnelChart data={…}>\n  <FunnelChart.Header />      {/* the strip above the run */}\n  <FunnelChart.Skeleton />    {/* the plain taper it waits behind */}\n  <FunnelChart.Stages />      {/* the trapezoids themselves */}\n  <FunnelChart.Labels />      {/* a row per stage, laid over the run */}\n  <FunnelChart.Legend />      {/* a key underneath, for a chart without labels */}\n</FunnelChart>",
+    "parts": {
+      "Header": "The strip above the run — what the funnel is of, what it reads, and room for a control. The chart introducing itself, as distinct from the caption on the card around it.",
+      "Stages": "The trapezoids. One part rather than one per stage: a stage’s bottom edge is the next stage’s width, so they cannot be configured apart without the taper coming apart with them.",
+      "Labels": "A row per stage laid over the run: its name, its value and how it converted. Spans the full width rather than sitting inside the shape, and is pressable, because the stages with the worst drop-off are the narrowest and neither text nor a fingertip fits in them.",
+      "Legend": "A swatch, a name and a share per stage, under the run. For a compact chart drawn without `Labels`, where the run is a shape and the reading is underneath it.",
+      "Skeleton": "The waiting state: one plain taper over the whole run, undivided. A placeholder split would be an invented drop-off, and nobody can tell an invented one from a real one until it changes under them."
+    },
+    "examples": [
+      {
+        "title": "The data",
+        "description": "Steps in the order they happen, top first. The order is yours and never the chart’s — stages are a process, and sorting them by size would destroy the only thing the chart is asserting.",
+        "code": "const checkout: FunnelDatum[] = [\n  { label: 'Product viewed', value: 41800 },\n  { label: 'Added to basket', value: 18240 },\n  { label: 'Checkout started', value: 9420 },\n  { label: 'Payment entered', value: 6180 },\n  { label: 'Order placed', value: 5240 },\n];"
+      },
+      {
+        "title": "Which conversion the labels report",
+        "description": "Two true readings of one run, answering different questions. `previous` is the drop from the stage above — the step-by-step reading a funnel is usually built for, and the default. `top` is the share of the first stage, which is the summary figure. The first stage has nothing above it, so it carries no caption under `previous`.",
+        "code": "<FunnelChart data={checkout}>\n  <FunnelChart.Stages />\n  <FunnelChart.Labels share=\"top\" />\n</FunnelChart>"
+      },
+      {
+        "title": "Selecting a stage",
+        "description": "Press a stage, its label row, or its entry in the legend, and the others dim. Pressing it again clears the selection. Control it from outside with `activeIndex` and `onActiveIndexChange` when the header — or anything else on the screen — has to stay in step.",
+        "code": "const [active, setActive] = useState(-1);\nconst stage = active >= 0 ? checkout[active] : null;\n\n<FunnelChart data={checkout} activeIndex={active} onActiveIndexChange={setActive}>\n  <FunnelChart.Header\n    title={stage ? stage.label : 'Everyone who looked'}\n    value={(stage ?? checkout[0]).value.toLocaleString()}\n  />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+      },
+      {
+        "title": "A hard drop-off",
+        "description": "Eleven hires out of twelve hundred applications. At true width the last two stages are hairlines, and a hairline reads as nothing happening rather than as something rare — `minWidth` is the floor that keeps them visible, applied only to stages that have something in them. `align=\"start\"` hangs the taper off the leading edge, which is easier to compare down a column than one narrowing from both sides.",
+        "code": "<FunnelChart data={pipeline} align=\"start\" minWidth={0.16} cornerRadius={4}>\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+      },
+      {
+        "title": "Compact, with a key instead of labels",
+        "description": "For a dashboard tile where the funnel is one of six things on the screen and a row of labels across every stage would be more text than tile.",
+        "code": "<FunnelChart data={checkout} stageHeight={28} gap={3} cornerRadius={4}>\n  <FunnelChart.Stages />\n  <FunnelChart.Legend />\n</FunnelChart>"
+      },
+      {
+        "title": "While the numbers are still coming",
+        "description": "`status=\"loading\"` draws the taper and nothing else. An empty chart in that state still reserves a run’s worth of height, so the card does not jump when the data lands.",
+        "code": "<FunnelChart data={ready ? checkout : []} status={ready ? 'ready' : 'loading'}>\n  <FunnelChart.Skeleton />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+      }
+    ],
+    "versions": [
+      {
+        "title": "Basic",
+        "description": "Five steps of a checkout, each labelled with what it converted at.",
+        "code": "<FunnelChart data={checkout}>\n  <FunnelChart.Header title=\"Product viewed\" value=\"41,800\" caption=\"13% of them placed an order\" />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+      },
+      {
+        "title": "Conversion",
+        "description": "Every stage measured against the top of the funnel, with both readings in the header as one is selected.",
+        "code": "<FunnelChart data={checkout} cornerRadius={6} gap={6} activeIndex={active} onActiveIndexChange={setActive}>\n  <FunnelChart.Header title={stage?.label ?? 'Everyone who looked'} value={value} caption={caption} />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels share=\"top\" />\n</FunnelChart>"
+      },
+      {
+        "title": "Pipeline",
+        "description": "A hard drop-off, left-aligned, with a floor under the stages too small to see.",
+        "code": "<FunnelChart data={pipeline} align=\"start\" minWidth={0.16} cornerRadius={4}>\n  <FunnelChart.Header title=\"Applications\" value=\"1,240\" caption=\"11 hires, from 1,240 applications\" />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+      },
+      {
+        "title": "Compact",
+        "description": "The run as a shape, with the reading in a key underneath it.",
+        "code": "<FunnelChart data={checkout.slice(0, 4)} stageHeight={28} gap={3} cornerRadius={4}>\n  <FunnelChart.Stages />\n  <FunnelChart.Legend />\n</FunnelChart>"
+      },
+      {
+        "title": "Loading",
+        "description": "One plain taper while it waits, because an invented drop-off is a lie.",
+        "code": "<FunnelChart data={status === 'loading' ? [] : checkout} status={status} cornerRadius={6}>\n  <FunnelChart.Header title=\"Product viewed\" value={status === 'loading' ? '—' : '41,800'} />\n  <FunnelChart.Skeleton />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+      }
+    ],
+    "notes": "### One hue, not five\n\nThe stages are drawn in a single colour that fades down the run. They are one quantity at successive moments, not five unrelated series, and five hues would say they were — the reader would start looking for what \"the green one\" means. Set `color` on the chart to change the hue, or `color` on a single stage to pull it out of the fade at full strength: the step where the money is taken, the one the report is about.\n\n### A stage wider than its parent\n\nWidths are measured against the largest value in the run rather than against the first. In a well-formed funnel those are the same number. Where they are not — a stage that somehow counted more people than the step before it — the stage is drawn as given, wider than its parent, because that is a real data problem and a chart that quietly clamped it would be hiding the one thing worth seeing.\n\n### When not to reach for it\n\nA funnel asserts that each stage is a subset of the one above it. If that is not true of your data — categories that merely happen to be sorted, quantities measured at the same moment, anything a reader might want to compare exactly — it is a bar chart, where the comparison is a length and lengths are read exactly. Four to six stages is the range a funnel reads well in; past that the lower ones are all floor and the shape stops carrying the information."
+  },
   "heatmap-chart": {
     "intro": "A calendar of bins shaded by how much happened in each — one column per period, one row per bin inside it. It answers “when was this busy” at a glance, which no line can: a year of daily numbers plotted as a series is a hairball, and as a grid it is a pattern.",
     "previewVideo": {
@@ -3360,7 +3436,7 @@
   "progress": {
     "intro": "A progress bar, determinate or indeterminate, animated on the UI thread. Reads its value against a range you set, and captions itself with a label and a value readout when the bar needs a heading.",
     "usage": "<Progress value={uploaded} />\n<Progress value={70} color=\"success\" size=\"lg\" />\n<Progress value={1250} maxValue={2000} label=\"Budget\" showValueLabel />\n<Progress indeterminate color=\"info\" />",
-    "notes": "`value` is read against `minValue` and `maxValue`, which default to `0` and `100` — a percentage needs neither. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. The animation runs on the UI thread and stops when reduce-motion is on.\n\n### Writing the value\n\n`formatOptions` renders the readout through `Intl.NumberFormat`. A `percent` style is given how far along the bar is; every other style is given the value itself, so a currency or a byte count comes out as the quantity it is rather than as a proportion of the range. `valueLabel` replaces the whole thing when the text is not a number at all.\n\nWhatever the readout says is also what a screen reader is told, alongside the real range — so a bar counting seats reads \"18 of 24\" rather than \"75\".",
+    "notes": "`value` is read against `minValue` and `maxValue`, which default to `0` and `100` — a percentage needs neither. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. The animation runs on the UI thread. Under reduce motion the fill lands on its value rather than springing to it, and the indeterminate bar fills the track and pulses in place instead of travelling across it — a bar that stopped moving would read as a bar that had hung, which is the one thing an indeterminate bar exists to rule out.\n\n### Writing the value\n\n`formatOptions` renders the readout through `Intl.NumberFormat`. A `percent` style is given how far along the bar is; every other style is given the value itself, so a currency or a byte count comes out as the quantity it is rather than as a proportion of the range. `valueLabel` replaces the whole thing when the text is not a number at all.\n\nWhatever the readout says is also what a screen reader is told, alongside the real range — so a bar counting seats reads \"18 of 24\" rather than \"75\".",
     "examples": [
       {
         "title": "Determinate",
