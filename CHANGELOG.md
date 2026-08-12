@@ -9,6 +9,19 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.61.1] — 2026-08-12
+
+### Fixed
+
+- **`TreemapChart` labels are readable on every theme.** They were drawn in fixed white, which is
+  a colour the chart has no say in — the tiles take their hue from `--color-chart-1`, and three of
+  the six themes shipped here put that somewhere pale enough to swallow a white label whole. Each
+  label now takes its colour from the tile as drawn: the hue composited with what is behind the
+  chart at that tile's own strength, then white or near-black. White is kept wherever it still
+  holds up, so the mid-tone hues look the way they did and only the pale tiles turn over. A
+  label can change colour partway down one chart's ramp, which is correct rather than a glitch —
+  a tile faded towards a dark background is a dark tile.
+
 ## [0.61.0] — 2026-08-12
 
 ### Added
