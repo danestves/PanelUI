@@ -34,14 +34,14 @@ const footerVariants = tv({
      * Whether the footer draws a surface of its own.
      *
      * `plain` is part of the card: same background, padding continuing from the
-     * content above it. `panel` is a band — a rule across the top, a step of
-     * tint, and the card's own bottom corners — so the buttons read as the
-     * card's actions rather than as the last thing in its body. Use it when the
-     * footer is what somebody does with the card, not more of what it says.
+     * content above it. `panel` is a band set into it — a rule across the top,
+     * a step darker, and the card's own bottom corners — so the buttons read as
+     * the card's actions rather than as the last thing in its body. Use it when
+     * the footer is what somebody does with the card, not more of what it says.
      */
     variant: {
       plain: 'p-6 pt-0',
-      panel: 'rounded-b-2xl border-t border-border bg-muted p-6',
+      panel: 'rounded-b-2xl border-t border-border bg-inset p-6',
     },
   },
   defaultVariants: {

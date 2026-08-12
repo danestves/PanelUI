@@ -56,6 +56,18 @@
    */
   --color-overlay: unset;
   --color-overlay-foreground: unset;
+  /*
+   * A band set *into* a surface rather than raised off it — the footer of
+   * actions under a card or a dialog.
+   *
+   * A translucent black in every theme, rather than a colour of its own,
+   * because it has to come out darker than whatever it is drawn on and that
+   * changes: a card, a popover, or a surface the caller passed in. `--color-
+   * muted` cannot do this job — it is white in a dark theme, so the band it
+   * draws floats forward instead of sinking, which is the opposite of what a
+   * footer is saying.
+   */
+  --color-inset: unset;
   --color-primary: unset;
   --color-primary-foreground: unset;
   --color-secondary: unset;
@@ -194,6 +206,8 @@
 
       --color-overlay: #ffffff;
       --color-overlay-foreground: #262626;
+      /* the sunken band under a card or dialog: black at 3.5% */
+      --color-inset: rgba(0, 0, 0, 0.035);
 
       --color-primary: #262626;
       --color-primary-foreground: #fafafa;
@@ -289,6 +303,8 @@
       /* color-mix(background 92%, white) — one step past the popover */
       --color-overlay: #232323;
       --color-overlay-foreground: #f5f5f5;
+      /* the sunken band under a card or dialog: black at 22% */
+      --color-inset: rgba(0, 0, 0, 0.22);
 
       --color-primary: #f5f5f5;
       --color-primary-foreground: #262626;
@@ -413,6 +429,8 @@
 
       --color-overlay: #ffffff;
       --color-overlay-foreground: #08090a;
+      /* the sunken band under a card or dialog: black at 3.5% */
+      --color-inset: rgba(0, 0, 0, 0.035);
 
       --color-primary: #5e6ad2;
       --color-primary-foreground: #ffffff;
@@ -496,6 +514,8 @@
 
       --color-overlay: #18191a;
       --color-overlay-foreground: #f7f8f8;
+      /* the sunken band under a card or dialog: black at 22% */
+      --color-inset: rgba(0, 0, 0, 0.22);
 
       --color-primary: #5e6ad2;
       --color-primary-foreground: #ffffff;
@@ -583,6 +603,8 @@
 
       --color-overlay: #ffffff;
       --color-overlay-foreground: #171717;
+      /* the sunken band under a card or dialog: black at 3.5% */
+      --color-inset: rgba(0, 0, 0, 0.035);
 
       /* Brand green is too light for white text; light mode uses the
          darker ramp step so the contrast ratio holds. */
@@ -668,6 +690,8 @@
 
       --color-overlay: #2a2a2a;
       --color-overlay-foreground: #ededed;
+      /* the sunken band under a card or dialog: black at 22% */
+      --color-inset: rgba(0, 0, 0, 0.22);
 
       --color-primary: #3ecf8e;
       --color-primary-foreground: #052e1b;

@@ -179,14 +179,14 @@ const dialogFooterVariants = tv({
      * Whether the footer draws a surface of its own.
      *
      * `plain` is part of the dialog: same background, sitting under the content
-     * with a gap above it. `panel` is a band — a rule across the top, a step of
-     * tint, and the dialog's own bottom corners — which separates what the
-     * dialog says from what you can do about it. Worth it on a dialog with a
-     * form in it, where the buttons are otherwise one more row of the form.
+     * with a gap above it. `panel` is a band set into it — a rule across the
+     * top, a step darker, and the dialog's own bottom corners — which separates
+     * what the dialog says from what you can do about it. Worth it on a dialog
+     * with a form in it, where the buttons are otherwise one more row of it.
      */
     variant: {
       plain: 'mt-4',
-      panel: 'mt-5 rounded-b-2xl border-t border-border bg-muted',
+      panel: 'mt-5 rounded-b-2xl border-t border-border bg-inset',
     },
   },
   defaultVariants: {

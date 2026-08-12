@@ -43,6 +43,9 @@
   --overlay: var(--color-white);
   --overlay-foreground: var(--color-neutral-800);
 
+  /* the sunken band under a card or dialog: black at 3.5% */
+  --inset: --alpha(var(--color-black) / 3.5%);
+
   /* syntax colours */
   --code-keyword: #8250df;
   --code-string: #0a7d55;
@@ -138,6 +141,9 @@
   --overlay: color-mix(in srgb, var(--background) 92%, var(--color-white));
   --overlay-foreground: var(--color-neutral-100);
 
+  /* the sunken band under a card or dialog: black at 22% */
+  --inset: --alpha(var(--color-black) / 22%);
+
   /* syntax colours */
   --code-keyword: #d2a8ff;
   --code-string: #7ee787;
@@ -227,6 +233,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-overlay: var(--overlay);
   --color-overlay-foreground: var(--overlay-foreground);
+  --color-inset: var(--inset);
   --color-code-keyword: var(--code-keyword);
   --color-code-string: var(--code-string);
   --color-code-number: var(--code-number);
