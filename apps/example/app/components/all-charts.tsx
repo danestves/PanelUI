@@ -25,17 +25,35 @@ import { CHART_SHOWCASE, type ComponentEntry } from '../../src/data/components';
  * beside it — `/components/all-charts` reaches this rather than looking for a
  * component slugged "all-charts".
  */
-function ChartCard({ entry, tint }: { entry: ComponentEntry; tint: string }) {
+/**
+ * One chart, under its name.
+ *
+ * The spacing here is the whole job: a name has a chart above it and a chart
+ * below it, and it belongs to exactly one of them. So the space above it is
+ * several times the space under it, and a rule sits in that space — without
+ * both, the eye reads the name as a caption on the chart it has just finished
+ * looking at.
+ */
+function ChartCard({
+  entry,
+  tint,
+  first,
+}: {
+  entry: ComponentEntry;
+  tint: string;
+  first: boolean;
+}) {
   const version = entry.demos[0];
   if (!version) return null;
 
   return (
-    <View className="gap-1">
+    <View>
+      {first ? null : <View className="mb-7 h-px bg-border" />}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${entry.name}. ${entry.summary}. Opens the component.`}
         onPress={() => router.push(`/components/${entry.slug}`)}
-        className="flex-row items-center gap-2 px-5 active:opacity-60"
+        className="mb-2 flex-row items-center gap-2 px-5 active:opacity-60"
       >
         <Text size="sm" weight="semibold" className="flex-1">
           {entry.name}
@@ -65,15 +83,21 @@ export default function AllChartsScreen() {
   return (
     <View className="flex-1">
       <ScreenHeader title="All charts" showBack />
+      {/*
+       * No `gap` on the scroller. Each entry owns the space above its own name,
+       * because that space is what says which chart the name belongs to — a gap
+       * between entries divides it evenly between the two, which is exactly the
+       * reading that was wrong.
+       */}
       <ScrollView
-        contentContainerStyle={{ paddingBottom: insets.bottom + 32, gap: 8 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text size="sm" muted className="px-5 pb-2">
+        <Text size="sm" muted className="px-5 pb-6">
           {`${CHART_SHOWCASE.length} charts, one example each. Tap a name for its versions and props.`}
         </Text>
-        {CHART_SHOWCASE.map((entry) => (
-          <ChartCard key={entry.slug} entry={entry} tint={tint} />
+        {CHART_SHOWCASE.map((entry, index) => (
+          <ChartCard key={entry.slug} entry={entry} tint={tint} first={index === 0} />
         ))}
       </ScrollView>
     </View>
