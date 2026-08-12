@@ -66,7 +66,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Pressable, View, type ViewProps } from 'react-native';
+import { Pressable, ScrollView, View, type ViewProps } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -83,6 +83,7 @@ import { useCSSVariable } from 'uniwind';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { CheckIcon, IconColorProvider, XIcon } from '../../icons';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
+import { Collapse } from '../../primitives/collapse';
 import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
@@ -90,6 +91,15 @@ import { BottomSheet } from '../bottom-sheet';
 
 /** How long the circle takes to come and go, in milliseconds. */
 const REVEAL_DURATION = 180;
+
+/**
+ * The circle's width, and the gap after it — both in points, and both mirrors
+ * of classes on the parts below (`h-6 w-6`, `gap-3`). Written out because the
+ * circle's slot is animated between nothing and its full size, and an animation
+ * needs the number rather than the class.
+ */
+const INDICATOR_SIZE = 24;
+const ROW_GAP = 12;
 
 /** The spring the tick lands with — the same one the checkbox uses. */
 const TICK_SPRING = { damping: 15, stiffness: 300, mass: 0.5 } as const;
@@ -120,10 +130,22 @@ const selectionVariants = tv({
     bar: 'flex-row items-stretch',
     action: 'flex-1 items-center justify-center gap-1.5 px-2 py-3',
     actionLabel: 'text-xs font-medium text-foreground',
+    groupLabel: 'pb-2 ps-1',
   },
   variants: {
     selected: {
       true: { circle: 'border-primary', ring: 'border-foreground' },
+    },
+    /**
+     * The action laid out along its label instead of above it.
+     *
+     * A screen's bar carries three or four actions side by side, so each one is
+     * a narrow column and the label belongs under the glyph. A sheet's footer
+     * usually carries one, full width — stacked there it is a tall block that
+     * costs the list a row of its own for no gain.
+     */
+    compact: {
+      true: { action: 'flex-row gap-2 px-4 py-2.5', actionLabel: 'text-sm' },
     },
     destructive: {
       true: { actionLabel: 'text-destructive' },
@@ -485,6 +507,33 @@ function SelectionModeItem({
 
   const context = useMemo(() => ({ value }), [value]);
 
+  /*
+   * The circle's arrival and departure, as width rather than as opacity.
+   *
+   * Fading a circle that has already been taken out of the row's layout fades
+   * it over content that has finished moving: the row snaps left the frame the
+   * mode ends, and a ghost of the circle dissolves where it used to be. The
+   * space is what the reader sees change, so the space is what animates, and
+   * the negative margin takes the row's own gap with it — a zero-width child
+   * still costs a gap, so without it the row would still jump the last twelve
+   * points.
+   */
+  const reveal = useSharedValue(showing ? 1 : 0);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      reveal.value = showing ? 1 : 0;
+      return;
+    }
+    reveal.value = withTiming(showing ? 1 : 0, { duration: REVEAL_DURATION });
+  }, [showing, reducedMotion, reveal]);
+
+  const slotStyle = useAnimatedStyle(() => ({
+    width: reveal.value * INDICATOR_SIZE,
+    opacity: reveal.value,
+    marginEnd: (reveal.value - 1) * ROW_GAP,
+  }));
+
   return (
     <SelectionModeItemContext.Provider value={context}>
       <Pressable
@@ -513,14 +562,9 @@ function SelectionModeItem({
       >
         {indicator === 'leading' ? (
           <>
-            {showing ? (
-              <Animated.View
-                entering={reducedMotion ? undefined : FadeIn.duration(REVEAL_DURATION)}
-                exiting={reducedMotion ? undefined : FadeOut.duration(REVEAL_DURATION)}
-              >
-                <SelectionModeIndicator value={value} />
-              </Animated.View>
-            ) : null}
+            <Animated.View style={slotStyle} className="overflow-hidden">
+              <SelectionModeIndicator value={value} />
+            </Animated.View>
             {/*
              * `minWidth: 0` as well as growing. Without it a long title refuses
              * to be narrower than its own text, pushes the row past the screen
@@ -555,11 +599,37 @@ export interface SelectionModeGroupProps extends ViewProps {
    * For things recognised by sight rather than read — swatches, thumbnails,
    * slides. A grid of six colours is one glance; the same six as rows is a
    * scroll.
+   *
+   * Ignored when `horizontal` is set.
    */
   columns?: number;
-  /** Space between items in a grid, in points. */
+  /**
+   * Lay the items out in one row that scrolls sideways.
+   *
+   * For a strip of small things next to other controls — swatches above a
+   * slider, filters above a list. A grid of the same items claims as many rows
+   * as it needs and pushes everything below it off the sheet; a strip costs one
+   * row whatever the count.
+   *
+   * Wins over `columns`, which asks for the opposite arrangement.
+   */
+  horizontal?: boolean;
+  /** How wide each item is in a horizontal strip, in points. */
+  itemWidth?: number;
+  /** Space between items in a grid or a strip, in points. */
   gap?: number;
-  /** Hairlines between stacked items. On by default; off in a grid. */
+  /**
+   * A caption above the items, on the leading edge.
+   *
+   * Worth setting on anything picked by sight. A strip of colours with nothing
+   * in front of it is a row of circles the reader has to work out the purpose
+   * of, and a screen reader has nothing at all to announce it by — so this is
+   * also the group's accessibility label.
+   */
+  label?: string;
+  /** Extra classes for that caption. */
+  labelClassName?: string;
+  /** Hairlines between stacked items. On by default; off in a grid or a strip. */
   separators?: boolean;
   children: ReactNode;
 }
@@ -577,7 +647,11 @@ export interface SelectionModeGroupProps extends ViewProps {
 function SelectionModeGroup({
   className,
   columns,
+  horizontal = false,
+  itemWidth = 44,
   gap = 12,
+  label,
+  labelClassName,
   separators = true,
   children,
   style,
@@ -585,6 +659,49 @@ function SelectionModeGroup({
 }: SelectionModeGroupProps) {
   const items = Children.toArray(children).filter(Boolean);
   const slots = selectionVariants({});
+
+  /**
+   * The caption, and the wrapper that carries it. A group with no `label` is
+   * the view it always was, so nothing gains a level of nesting for a prop it
+   * did not pass.
+   */
+  const captioned = (content: ReactNode) =>
+    label === undefined ? (
+      content
+    ) : (
+      <View accessibilityLabel={label}>
+        <Text size="sm" weight="medium" muted className={cn(slots.groupLabel(), labelClassName)}>
+          {label}
+        </Text>
+        {content}
+      </View>
+    );
+
+  if (horizontal) {
+    /*
+     * `gap` on the row rather than padding inside each cell, which is the
+     * opposite of the grid below. A strip is not dividing a fixed width between
+     * its items, so there is no wrap to protect against — and the gap has to be
+     * between them rather than around them, or the strip starts inset from
+     * whatever it is in.
+     */
+    return captioned(
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ flexDirection: 'row', gap }}
+        style={style}
+        className={className}
+        {...props}
+      >
+        {items.map((item, index) => (
+          <View key={index} style={{ width: itemWidth }}>
+            {item}
+          </View>
+        ))}
+      </ScrollView>
+    );
+  }
 
   if (columns && columns > 0) {
     /*
@@ -597,7 +714,7 @@ function SelectionModeGroup({
      * sits flush against whatever it is in.
      */
     const half = gap / 2;
-    return (
+    return captioned(
       <View
         style={[{ flexDirection: 'row', flexWrap: 'wrap', margin: -half }, style]}
         className={className}
@@ -612,7 +729,7 @@ function SelectionModeGroup({
     );
   }
 
-  return (
+  return captioned(
     <View className={cn(slots.group(), className)} style={style} {...props}>
       {items.map((item, index) => (
         <View key={index}>
@@ -659,16 +776,23 @@ function SelectionModeHeader({
 }: SelectionModeHeaderProps) {
   const { active, exit, count, total, allSelected, selectAll, clear, sheet } =
     useSelectionMode();
-  const reducedMotion = useReducedMotion();
   const slots = selectionVariants({});
 
-  if (!active) return null;
-
+  /*
+   * Collapsed rather than unmounted.
+   *
+   * A fade on a view that has already been taken out of the flow fades nothing
+   * — the list under it has jumped up 56 points on the frame the mode ended,
+   * and what is left dissolving is a header nobody is looking at any more.
+   * Giving up the height *is* the transition, so that is the part that animates.
+   */
   return (
-    <Animated.View
-      entering={reducedMotion ? undefined : FadeIn.duration(REVEAL_DURATION)}
-      exiting={reducedMotion ? undefined : FadeOut.duration(REVEAL_DURATION)}
+    <Collapse
+      open={active}
+      duration={REVEAL_DURATION}
       className={cn(slots.header(), className)}
+      accessibilityElementsHidden={!active}
+      importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
       {...props}
     >
       {children ? (
@@ -718,7 +842,7 @@ function SelectionModeHeader({
           </View>
         </>
       )}
-    </Animated.View>
+    </Collapse>
   );
 }
 
@@ -854,12 +978,13 @@ function SelectionModeAction({
   children,
   ...props
 }: SelectionModeActionProps) {
-  const { selected, exit, count } = useSelectionMode();
+  const { selected, exit, count, sheet } = useSelectionMode();
   const destructiveColor = useCSSVariable('--color-destructive');
   // Nothing picked is nothing to act on, so the action is off rather than
   // pressable-and-inert.
   const off = disabled || count === 0;
-  const slots = selectionVariants({ destructive, disabled: off });
+  // A sheet's footer is one action wide, not four, so it lies down.
+  const slots = selectionVariants({ destructive, disabled: off, compact: sheet });
 
   return (
     <AnimatedPressable
@@ -902,10 +1027,15 @@ export interface SelectionModeSheetProps {
   /**
    * How tall the sheet opens.
    *
-   * `half` by default, and deliberately not `auto`. A sheet that sizes to its
+   * `full` by default, and deliberately not `auto`. A sheet that sizes to its
    * content gives its scrolling body no height to fill, and a list inside a box
    * of no height draws nothing — which looks like an empty sheet rather than
-   * like a missing style. A selection is a list; give it the room.
+   * like a missing style.
+   *
+   * Full rather than half because a picker spends a header and a footer before
+   * it draws a single row. At half a screen that leaves four or five rows for
+   * the thing the sheet was opened to do, and the reader scrolls a list that
+   * would have fitted. Pass `half` for a sheet of two or three choices.
    */
   size?: 'auto' | 'half' | 'full';
   /**
@@ -949,7 +1079,7 @@ function SelectionModeSheet({
   onOpenChange,
   title = 'Select',
   hideSelectAll = false,
-  size = 'half',
+  size = 'full',
   children,
 }: SelectionModeSheetProps) {
   const parent = useSelectionMode();
@@ -978,7 +1108,14 @@ function SelectionModeSheet({
 
   return (
     <BottomSheet open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
-      <BottomSheet.Content size={size} className={className}>
+      {/*
+       * No close button. The sheet's own sits in the top trailing corner, which
+       * is where the header puts "All" — two targets a few points apart, one of
+       * which throws the selection away. The sheet is still dismissed by its
+       * handle, by the scrim and by the back gesture, which is the same reason
+       * the header does not draw an X of its own in here.
+       */}
+      <BottomSheet.Content size={size} showClose={false} className={className}>
         {/*
          * The provider goes *inside* the sheet's content, not around the sheet.
          *

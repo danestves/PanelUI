@@ -19545,9 +19545,17 @@ function SelectionModeSheetPeopleDemo() {
   );
 }
 
+/**
+ * A sheet of small things picked by sight, with a second control under them.
+ *
+ * The swatches run sideways rather than wrapping: a strip costs one row
+ * whatever the count, so what follows it stays on the sheet instead of being
+ * pushed off by a grid claiming as many rows as it needs.
+ */
 function SelectionModeSheetColorsDemo() {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>(['c1', 'c3']);
+  const [opacity, setOpacity] = useState(80);
 
   return (
     <View className="w-full gap-3">
@@ -19561,7 +19569,7 @@ function SelectionModeSheetColorsDemo() {
         onSelectedChange={setSelected}
       >
         <SelectionMode.Sheet open={open} onOpenChange={setOpen} title="Palette">
-          <SelectionMode.Group columns={5} gap={14}>
+          <SelectionMode.Group horizontal label="Colour" itemWidth={44} gap={14}>
             {SELECTION_COLORS.map((color) => (
               <SelectionMode.Item key={color.id} value={color.id} indicator="ring">
                 <View
@@ -19571,6 +19579,15 @@ function SelectionModeSheetColorsDemo() {
               </SelectionMode.Item>
             ))}
           </SelectionMode.Group>
+
+          <Slider
+            label="Opacity"
+            showValue
+            value={opacity}
+            onValueChange={setOpacity}
+            formatValue={(value) => `${Math.round(value)}%`}
+          />
+
           <SelectionMode.Bar>
             <SelectionMode.Action
               icon={<CheckIcon size={20} />}
