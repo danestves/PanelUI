@@ -8073,5 +8073,67 @@
       }
     ],
     "notes": "### The sheet is half-height by default\n\nNot `auto`. A sheet that sizes to its content gives its scrolling body no height to fill, and a list in a box of no height draws nothing — which reads as an empty sheet rather than as a missing style. Pass `size=\"full\"` for a long list, or `size=\"auto\"` only when the sheet really is a handful of rows.\n\n### Group the items\n\n`SelectionMode.Group` is the rounded card with rules between its rows. One card of options reads as a set; the same rows loose on the sheet background read as a list that has not finished loading.\n\n### Which presentation\n\nUse the **sheet** when choosing is the whole reason the surface exists — a share sheet, a palette, an attachment picker. Use the **on-screen mode** when the list has a life of its own and picking is something you occasionally do to it.\n\nThey are the same component and the same state; only the presentation differs. In a sheet there is no long press and no cancel button — the sheet dismisses itself — and the bar sits in the footer rather than over the list.\n\n### The circle is round for a reason\n\nA square box is a form control somebody is filling in; a round one is a thing they are picking out of a set. [Checkbox](/docs/components/checkbox) is the first of those and stays square.\n\n### On a screen, pad the bottom of your list\n\n`SelectionMode.Bar` is drawn over the list rather than under it, because the list is as long as it is and a bar in the flow would be somewhere off the end of it. Nothing here can work out how tall your list is, so give it bottom padding — `contentContainerClassName=\"pb-24\"` — or the last row sits under the bar forever.\n\nPass `inset` with your safe-area bottom inset, or the bar sits over the home indicator.\n\n### The bar is hidden until something is picked\n\nEvery action on it needs something to act on, and a row of buttons that all refuse is worse than a row that has not appeared yet. Pass `showWhenEmpty` if you would rather it were there the whole time.\n\n### Actions are handed the selection\n\n`onPress` receives the picked values, so the common case needs no other wiring. Leaving afterwards is `exitOnPress`, and it is opt-in because whether the list still makes sense depends on what you just did to it — deleting means leaving, marking read might not.\n\n### Selection is a set of values\n\nIds, never indices or elements. A list that reorders, pages in more items or drops one underneath the reader would invalidate anything positional, and ids are also the shape the action at the end needs.\n\n### Give it a height\n\nThe root fills a height it is offered and takes its content's height when there is none. What it cannot do is fill a parent that has no height itself — put it in a container with `flex-1`, or give it a fixed height, the same as any list. In a sheet the sheet handles this."
+  },
+  "treemap-chart": {
+    "intro": "Use it to show what a total is made of when there are too many parts for a dial. Each tile is one part, and its area is its share of the whole.\n\nThe count is the thing that decides between the two. Up to about six parts a [PieChart](/docs/charts/pie-chart) is easier to read and more familiar. Past that its small slices become slivers with nowhere to put a name, while a rectangle can still be read at a tenth the size and has a flat side to write on.\n\nWhat a treemap cannot do is precision. People compare areas badly, so nobody should be reading values off the tiles — it is for ranking and grouping at a glance, and the numbers belong in the labels and the readout.",
+    "usage": "<TreemapChart data={spend}>\n  <TreemapChart.Header title=\"Spend\" value=\"£48,200\" />\n  <TreemapChart.Tiles />\n  <TreemapChart.Labels />\n  <TreemapChart.Tooltip />\n</TreemapChart>",
+    "extraImports": [
+      "Card",
+      "Text"
+    ],
+    "anatomy": "<TreemapChart>\n  <TreemapChart.Header />                {/* title and total, above the box */}\n  <TreemapChart.Tiles />                 {/* the rectangles */}\n  <TreemapChart.Skeleton />              {/* while status=\"loading\" */}\n  <TreemapChart.Labels />                {/* names, on the tiles with room */}\n  <TreemapChart.Tooltip />               {/* readout for the selected tile */}\n  <TreemapChart.Legend />                {/* swatches, under the box */}\n</TreemapChart>",
+    "parts": {
+      "Header": "The strip above the box — what the total is of, and what it reads.",
+      "Tiles": "The rectangles. One part rather than one per datum: a tile’s box is decided by every tile before it in its row.",
+      "Skeleton": "The box undivided, with a sweep across it, shown while `status=\"loading\"`.",
+      "Labels": "Names and readings, as real text over the tiles that have room for them.",
+      "Tooltip": "The readout for the selected tile. This is how the small ones are read.",
+      "Legend": "A swatch and a name per tile, under the box. Pressable in the same way the tiles are."
+    },
+    "examples": [
+      {
+        "title": "A spending breakdown",
+        "description": "Tiles are sorted largest first and laid out squarified, so the biggest part lands in one corner and the run reads outwards from it.",
+        "code": "<TreemapChart data={spend}>\n  <TreemapChart.Header title=\"Spend this month\" value=\"£48,200\" />\n  <TreemapChart.Tiles />\n  <TreemapChart.Labels />\n  <TreemapChart.Tooltip />\n</TreemapChart>"
+      },
+      {
+        "title": "A long tail",
+        "description": "`maxTiles` keeps the largest few and gathers everything else into one tile. A phone-width treemap runs out of legible tiles somewhere around twenty, and past that the tail is texture — one tile saying how much it is worth is more use than forty nobody can read or hit.\n\nThe tail is gathered rather than dropped, because dropping it would rescale what is left and every remaining tile would silently claim a larger share than it has.",
+        "code": "<TreemapChart data={countries} maxTiles={8} otherLabel=\"Rest of world\">\n  <TreemapChart.Tiles />\n  <TreemapChart.Labels showShare />\n  <TreemapChart.Tooltip />\n  <TreemapChart.Legend />\n</TreemapChart>"
+      },
+      {
+        "title": "Picking one out",
+        "description": "A tile can be given its own `color`, and it is drawn at full strength while the rest keep the ramp. For the one part being discussed, or the one over budget.\n\nSelecting is built in: tap a tile and the others dim. Pass `activeIndex` and `onActiveIndexChange` to drive it from outside, or read it inside the chart with `useTreemapChart()`.",
+        "code": "<TreemapChart\n  data={budget}\n  activeIndex={selected}\n  onActiveIndexChange={setSelected}\n>\n  <TreemapChart.Tiles dimOpacity={0.2} />\n  <TreemapChart.Labels />\n  <TreemapChart.Legend />\n</TreemapChart>"
+      },
+      {
+        "title": "Loading, and then data",
+        "description": "Add `TreemapChart.Skeleton` and drive `status`. The box is drawn undivided with a highlight travelling across it, then the tiles grow out of their own centres when it turns `ready`.\n\nUndivided on purpose: placeholder tiles would be a made-up split, and a reader has no way to tell an invented one from a real one until it changes under them.",
+        "code": "<TreemapChart data={data} status={status}>\n  <TreemapChart.Skeleton />\n  <TreemapChart.Tiles />\n  <TreemapChart.Labels />\n</TreemapChart>"
+      }
+    ],
+    "notes": "Tiles are sorted largest first because the layout needs them that way. The row test assumes a descending run — given a large tile beside a small one it has no good row to make, and the chart comes out as slivers. `sort={false}` is there for when the given order is itself the message, and the shapes will suffer for it.\n\nA tile smaller than `minLabelSize` on either side is left blank by `Labels`. A name clipped to two letters is not a shorter name but a different word, so those tiles are read through `Tooltip` instead — which is the reason to include it even on a chart whose large tiles are all labelled.\n\nNegative values are treated as zero. There is no way to draw an area smaller than none, and scaling around it would misstate every other tile.\n\nThe layout runs when the data or the box changes, not per frame. `squarifyLayout` is exported for laying something else out on the same grid.",
+    "versions": [
+      {
+        "title": "Basic",
+        "description": "Eight parts of one bill, each labelled with what it cost.",
+        "code": "<TreemapChart data={spend}>\n  <TreemapChart.Header title=\"Total this month\" value=\"£48,200\" caption=\"Compute is 38% of it\" />\n  <TreemapChart.Tiles />\n  <TreemapChart.Labels formatValue={money} />\n  <TreemapChart.Tooltip formatValue={money} />\n</TreemapChart>"
+      },
+      {
+        "title": "Long tail",
+        "description": "Twenty-two countries, eight named and the rest gathered into one tile, with a legend that stops after six.",
+        "code": "<TreemapChart data={countries} maxTiles={9} otherLabel=\"Rest of world\">\n  <TreemapChart.Header title=\"Sessions\" value=\"196,320\" />\n  <TreemapChart.Tiles />\n  <TreemapChart.Labels showShare />\n  <TreemapChart.Tooltip />\n  <TreemapChart.Legend limit={6} />\n</TreemapChart>"
+      },
+      {
+        "title": "Selection",
+        "description": "One line in its own colour, and the header reading whichever tile is picked. `activeIndex` counts the tiles as laid out — largest first — so reading the selection back means looking it up in that order.",
+        "code": "<TreemapChart data={budget} activeIndex={selected} onActiveIndexChange={setSelected}>\n  <TreemapChart.Header title={picked?.label ?? 'Committed'} value={money(picked?.value ?? total)} />\n  <TreemapChart.Tiles dimOpacity={0.2} />\n  <TreemapChart.Labels formatValue={money} />\n  <TreemapChart.Legend />\n</TreemapChart>"
+      },
+      {
+        "title": "Loading",
+        "description": "One plain box while it waits, because an invented split is a lie.",
+        "code": "<TreemapChart data={status === 'loading' ? [] : spend} status={status}>\n  <TreemapChart.Header title=\"Total this month\" value={status === 'loading' ? '—' : money(total)} />\n  <TreemapChart.Skeleton />\n  <TreemapChart.Tiles />\n  <TreemapChart.Labels formatValue={money} />\n</TreemapChart>"
+      }
+    ]
   }
 }

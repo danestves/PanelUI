@@ -924,5 +924,14 @@
       "alpha": true,
       "category": "actions"
     }
+  ],
+  "treemap-chart": [
+    "TreemapChart",
+    "A total, cut into the parts it is made of, sized by area.",
+    "react native treemap chart",
+    {
+      "addedIn": "0.61.0",
+      "group": "charts"
+    }
   ]
 }

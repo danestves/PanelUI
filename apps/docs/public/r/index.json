@@ -1199,6 +1199,16 @@
     ]
   },
   {
+    "name": "treemap-chart",
+    "type": "registry:ui",
+    "description": "A total, cut into the parts it is made of, sized by area.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "typography",
     "type": "registry:ui",
     "description": "Semantic text presets.",

@@ -11,6 +11,7 @@
     "pie-chart",
     "radar-chart",
     "ring-chart",
-    "scatter-chart"
+    "scatter-chart",
+    "treemap-chart"
   ]
 }

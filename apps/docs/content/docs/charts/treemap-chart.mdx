@@ -1,0 +1,253 @@
+---
+title: TreemapChart
+description: A total, cut into the parts it is made of, sized by area.
+status: new
+---
+
+Use it to show what a total is made of when there are too many parts for a dial. Each tile is one part, and its area is its share of the whole.
+
+The count is the thing that decides between the two. Up to about six parts a [PieChart](/docs/charts/pie-chart) is easier to read and more familiar. Past that its small slices become slivers with nowhere to put a name, while a rectangle can still be read at a tenth the size and has a flat side to write on.
+
+What a treemap cannot do is precision. People compare areas badly, so nobody should be reading values off the tiles — it is for ranking and grouping at a glance, and the numbers belong in the labels and the readout.
+
+## Installation
+
+TreemapChart ships with the library — no separate install.
+
+```tsx
+import { TreemapChart, Card, Text } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add treemap-chart
+```
+
+## Usage
+
+```tsx
+<TreemapChart data={spend}>
+  <TreemapChart.Header title="Spend" value="£48,200" />
+  <TreemapChart.Tiles />
+  <TreemapChart.Labels />
+  <TreemapChart.Tooltip />
+</TreemapChart>
+```
+
+## Composition
+
+```tsx
+<TreemapChart>
+  <TreemapChart.Header />                {/* title and total, above the box */}
+  <TreemapChart.Tiles />                 {/* the rectangles */}
+  <TreemapChart.Skeleton />              {/* while status="loading" */}
+  <TreemapChart.Labels />                {/* names, on the tiles with room */}
+  <TreemapChart.Tooltip />               {/* readout for the selected tile */}
+  <TreemapChart.Legend />                {/* swatches, under the box */}
+</TreemapChart>
+```
+
+- **`TreemapChart.Header`** — The strip above the box — what the total is of, and what it reads.
+- **`TreemapChart.Tiles`** — The rectangles. One part rather than one per datum: a tile’s box is decided by every tile before it in its row.
+- **`TreemapChart.Labels`** — Names and readings, as real text over the tiles that have room for them.
+- **`TreemapChart.Tooltip`** — The readout for the selected tile. This is how the small ones are read.
+- **`TreemapChart.Legend`** — A swatch and a name per tile, under the box. Pressable in the same way the tiles are.
+- **`TreemapChart.Skeleton`** — The box undivided, with a sweep across it, shown while `status="loading"`.
+
+## Examples
+
+### A spending breakdown
+
+Tiles are sorted largest first and laid out squarified, so the biggest part lands in one corner and the run reads outwards from it.
+
+```tsx
+<TreemapChart data={spend}>
+  <TreemapChart.Header title="Spend this month" value="£48,200" />
+  <TreemapChart.Tiles />
+  <TreemapChart.Labels />
+  <TreemapChart.Tooltip />
+</TreemapChart>
+```
+
+### A long tail
+
+`maxTiles` keeps the largest few and gathers everything else into one tile. A phone-width treemap runs out of legible tiles somewhere around twenty, and past that the tail is texture — one tile saying how much it is worth is more use than forty nobody can read or hit.
+
+The tail is gathered rather than dropped, because dropping it would rescale what is left and every remaining tile would silently claim a larger share than it has.
+
+```tsx
+<TreemapChart data={countries} maxTiles={8} otherLabel="Rest of world">
+  <TreemapChart.Tiles />
+  <TreemapChart.Labels showShare />
+  <TreemapChart.Tooltip />
+  <TreemapChart.Legend />
+</TreemapChart>
+```
+
+### Picking one out
+
+A tile can be given its own `color`, and it is drawn at full strength while the rest keep the ramp. For the one part being discussed, or the one over budget.
+
+Selecting is built in: tap a tile and the others dim. Pass `activeIndex` and `onActiveIndexChange` to drive it from outside, or read it inside the chart with `useTreemapChart()`.
+
+```tsx
+<TreemapChart
+  data={budget}
+  activeIndex={selected}
+  onActiveIndexChange={setSelected}
+>
+  <TreemapChart.Tiles dimOpacity={0.2} />
+  <TreemapChart.Labels />
+  <TreemapChart.Legend />
+</TreemapChart>
+```
+
+### Loading, and then data
+
+Add `TreemapChart.Skeleton` and drive `status`. The box is drawn undivided with a highlight travelling across it, then the tiles grow out of their own centres when it turns `ready`.
+
+Undivided on purpose: placeholder tiles would be a made-up split, and a reader has no way to tell an invented one from a real one until it changes under them.
+
+```tsx
+<TreemapChart data={data} status={status}>
+  <TreemapChart.Skeleton />
+  <TreemapChart.Tiles />
+  <TreemapChart.Labels />
+</TreemapChart>
+```
+
+## Versions
+
+### Basic
+
+Eight parts of one bill, each labelled with what it cost.
+
+```tsx
+<TreemapChart data={spend}>
+  <TreemapChart.Header title="Total this month" value="£48,200" caption="Compute is 38% of it" />
+  <TreemapChart.Tiles />
+  <TreemapChart.Labels formatValue={money} />
+  <TreemapChart.Tooltip formatValue={money} />
+</TreemapChart>
+```
+
+### Long tail
+
+Twenty-two countries, eight named and the rest gathered into one tile, with a legend that stops after six.
+
+```tsx
+<TreemapChart data={countries} maxTiles={9} otherLabel="Rest of world">
+  <TreemapChart.Header title="Sessions" value="196,320" />
+  <TreemapChart.Tiles />
+  <TreemapChart.Labels showShare />
+  <TreemapChart.Tooltip />
+  <TreemapChart.Legend limit={6} />
+</TreemapChart>
+```
+
+### Selection
+
+One line in its own colour, and the header reading whichever tile is picked. `activeIndex` counts the tiles as laid out — largest first — so reading the selection back means looking it up in that order.
+
+```tsx
+<TreemapChart data={budget} activeIndex={selected} onActiveIndexChange={setSelected}>
+  <TreemapChart.Header title={picked?.label ?? 'Committed'} value={money(picked?.value ?? total)} />
+  <TreemapChart.Tiles dimOpacity={0.2} />
+  <TreemapChart.Labels formatValue={money} />
+  <TreemapChart.Legend />
+</TreemapChart>
+```
+
+### Loading
+
+One plain box while it waits, because an invented split is a lie.
+
+```tsx
+<TreemapChart data={status === 'loading' ? [] : spend} status={status}>
+  <TreemapChart.Header title="Total this month" value={status === 'loading' ? '—' : money(total)} />
+  <TreemapChart.Skeleton />
+  <TreemapChart.Tiles />
+  <TreemapChart.Labels formatValue={money} />
+</TreemapChart>
+```
+
+## API Reference
+
+### TreemapChart
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `data` | `TreemapDatum[]` | — | The parts of the total, in any order. Sorted by the chart unless told not to. |
+| `aspectRatio` | `number` | `DEFAULT_ASPECT` | Width ÷ height of the box the tiles fill. |
+| `gap` | `number` | `3` | Space between one tile and the next, in points. |
+| `cornerRadius` | `number` | `6` | Corner radius of a tile, in points. |
+| `sort` | `boolean` | `true` | Sort the tiles largest first. On by default, and worth leaving on. The row test assumes a descending run — given a large tile next to a small one it has no good row to make, and the chart comes out as slivers. Turn it off only where the given order is itself the message. |
+| `maxTiles` | `number` | — | Keep the largest `maxTiles` and gather the rest into one. A phone-width treemap runs out of legible tiles somewhere around twenty. Past that the tail is texture, and one tile that says how much the tail is worth is more use than forty that cannot be read or hit. |
+| `otherLabel` | `string` | `'Other'` | What the gathered tile is called. |
+| `color` | `string` | — | The ramp's hue. Defaults to the first chart token. |
+| `minLabelSize` | `number` | `DEFAULT_MIN_LABEL` | Smallest side, in points, a tile needs before `Labels` writes on it. A name clipped to two letters is not a shorter name, it is a different word. Tiles under this are left blank and read through the readout. |
+| `animationDuration` | `number` | `520` | Milliseconds for one tile to grow. |
+| `staggerDelay` | `number` | `STAGGER` | Milliseconds between one tile starting and the next. `0` for all at once. |
+| `status` | `TreemapChartStatus` | `'ready'` | `loading` draws the box undivided until the data arrives. |
+| `activeIndex` | `number` | — | Selected tile, indexed as laid out. Leave unset to let the chart track it. |
+| `onActiveIndexChange` | `(index: number) => void` | — | Fires with the selected tile, or `-1` when the selection is cleared. |
+
+### TreemapChart.Tiles
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dimOpacity` | `number` | — | Opacity of the tiles that are not selected, once one is. |
+
+### TreemapChart.Skeleton
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `duration` | `number` | — | Milliseconds for one pass of the sweep. |
+| `color` | `string` | — |  |
+
+### TreemapChart.Labels
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `showValue` | `boolean` | `true` | Show each tile's value under its name. |
+| `showShare` | `boolean` | `false` | Show each tile's share of the total under its name. |
+| `formatValue` | `(value: number, tile: TreemapTile) => string` | — | Format the value. Defaults to a compact number. |
+| `className` | `string` | — |  |
+
+### TreemapChart.Tooltip
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `formatValue` | `(value: number, tile: TreemapTile) => string` | — | Format the value. Defaults to a compact number. |
+| `className` | `string` | — |  |
+
+### TreemapChart.Legend
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `limit` | `number` | — | How many tiles to name before stopping. The rest are left to the chart. |
+| `showShare` | `boolean` | `true` | Show each tile's share beside its name. |
+
+### TreemapChart.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | — | Small line above the value — what the total is of. |
+| `value` | `string` | — | The readout. The largest thing on the card, and the first thing read. |
+| `caption` | `string` | — | One muted line under the value — a period, a comparison, a caveat. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+Tiles are sorted largest first because the layout needs them that way. The row test assumes a descending run — given a large tile beside a small one it has no good row to make, and the chart comes out as slivers. `sort={false}` is there for when the given order is itself the message, and the shapes will suffer for it.
+
+A tile smaller than `minLabelSize` on either side is left blank by `Labels`. A name clipped to two letters is not a shorter name but a different word, so those tiles are read through `Tooltip` instead — which is the reason to include it even on a chart whose large tiles are all labelled.
+
+Negative values are treated as zero. There is no way to draw an area smaller than none, and scaling around it would misstate every other tile.
+
+The layout runs when the data or the box changes, not per frame. `squarifyLayout` is exported for laying something else out on the same grid.
