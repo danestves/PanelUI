@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/surface.svg?title=PanelUI&amp;subtitle=High-performance+React+Native+components+for+Expo&amp;logo=https%3A%2F%2Fraw.githubusercontent.com%2Fpanel-ui%2FPanelUI%2Fmain%2F.github%2Fassets%2Flogo-dark.png&amp;mode=dark&amp;align=left&amp;font=geist-mono&amp;border=false" />
-    <img alt="PanelUI — high-performance React Native components for Expo" src="https://shieldcn.dev/header/surface.svg?title=PanelUI&amp;subtitle=High-performance+React+Native+components+for+Expo&amp;logo=https%3A%2F%2Fraw.githubusercontent.com%2Fpanel-ui%2FPanelUI%2Fmain%2F.github%2Fassets%2Flogo-light.png&amp;mode=light&amp;align=left&amp;font=geist-mono&amp;border=false" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/surface.svg?title=PanelUI&amp;subtitle=High-performance+React+Native+components+for+Expo&amp;logo=https%3A%2F%2Fraw.githubusercontent.com%2Fpanel-ui%2FPanelUI%2Fmain%2F.github%2Fassets%2Flogo-dark.png&amp;mode=dark&amp;align=center&amp;font=geist-mono&amp;border=false" />
+    <img alt="PanelUI — high-performance React Native components for Expo" src="https://shieldcn.dev/header/surface.svg?title=PanelUI&amp;subtitle=High-performance+React+Native+components+for+Expo&amp;logo=https%3A%2F%2Fraw.githubusercontent.com%2Fpanel-ui%2FPanelUI%2Fmain%2F.github%2Fassets%2Flogo-light.png&amp;mode=light&amp;align=center&amp;font=geist-mono&amp;border=false" />
   </picture>
 </p>
 
