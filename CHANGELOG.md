@@ -9,6 +9,49 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.61.0] — 2026-08-12
+
+### Added
+
+- **`TreemapChart` — a total, cut into the parts it is made of, sized by area.** A dial carries
+  five or six slices before the small ones become slivers with nowhere to write a name. A share
+  drawn as a rectangle can be read at a tenth the size and has a flat side to put the name on,
+  so past about six parts this is the chart that still works. Spend by service, traffic by
+  country, disk by folder.
+
+  The layout is squarified: rows laid across whichever side of the remaining space is shorter,
+  each taking another tile only while that makes its worst rectangle less elongated. Tiles are
+  sorted largest first by the chart, because the row test assumes a descending run — given a
+  large tile beside a small one it has no good row to make. `maxTiles` keeps the largest few and
+  gathers the rest into one tile rather than dropping them, which would rescale what is left and
+  leave every remaining tile claiming a larger share than it has.
+
+  Parts: `Header`, `Tiles`, `Labels`, `Tooltip`, `Legend`, `Skeleton`. Tiles too small for a
+  name are left blank and read through the readout — a name clipped to two letters is a
+  different word, not a shorter one.
+
+- **`AreaChart.Skeleton` and `BarChart.Skeleton`.** Both charts took a `status` prop and neither
+  drew anything for it, so `status="loading"` rendered an empty plot — the same picture a chart
+  whose values are all zero draws. They now have the placeholder LineChart has had all along,
+  with the same travelling highlight: a low band on the baseline for the area, short equal stubs
+  for the bars. The stubs count the rows when there are rows, and take `bars` when there are not.
+
+### Fixed
+
+- **Compact numbers past a million.** `compactNumber` is the default label formatter for every
+  chart here and it stopped at `M`: a billion came out as `1000.0M` and a trillion as
+  `1000000.0M`, which is the number the suffix exists to avoid. It also could not carry, so
+  999,999 rounded to `1000.0k` instead of `1M`. Both fixed, and `B` and `T` added.
+
+- **Axis ticks lose their trailing `.0`** — `12k` rather than `12.0k`. A decimal place that is
+  always zero is precision the tick does not have, and an axis label is the one place in a chart
+  with no room to spare.
+
+### Docs
+
+- BarChart's `status` prop no longer promises "a row of flat placeholder bars" that never
+  existed. It says what it does, and points at the new `Skeleton`.
+
 ## [0.60.0] — 2026-08-11
 
 ### Added
