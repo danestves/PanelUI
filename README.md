@@ -1,20 +1,17 @@
 <p align="center">
-  <img src=".github/assets/logo.png" alt="PanelUI logo" width="140" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/graph.svg?title=PanelUI&amp;subtitle=High-performance+React+Native+components+for+Expo&amp;logo=https%3A%2F%2Fraw.githubusercontent.com%2Fpanel-ui%2FPanelUI%2Fmain%2F.github%2Fassets%2Flogo-dark.png&amp;mode=dark&amp;align=left&amp;font=geist-mono&amp;border=false" />
+    <img alt="PanelUI — high-performance React Native components for Expo" src="https://shieldcn.dev/header/graph.svg?title=PanelUI&amp;subtitle=High-performance+React+Native+components+for+Expo&amp;logo=https%3A%2F%2Fraw.githubusercontent.com%2Fpanel-ui%2FPanelUI%2Fmain%2F.github%2Fassets%2Flogo-light.png&amp;mode=light&amp;align=left&amp;font=geist-mono&amp;border=false" />
+  </picture>
 </p>
 
-<h1 align="center">PanelUI</h1>
+<p align="center">
+  <a href="https://www.npmjs.com/package/panelui-native"><img alt="npm version and monthly downloads" src="https://shieldcn.dev/group/npm/v/panelui-native+npm/dm/panelui-native.svg?variant=branded&amp;size=xs" /></a>
+  <a href="https://github.com/panel-ui/PanelUI"><img alt="GitHub stars, license, contributors and last commit" src="https://shieldcn.dev/group/github/panel-ui/PanelUI/stars+github/panel-ui/PanelUI/license+github/panel-ui/PanelUI/contributors+github/panel-ui/PanelUI/last-commit.svg?variant=branded&amp;size=xs" /></a>
+</p>
 
 <p align="center">
-  High-performance React Native components for Expo.<br />
   Semantic design tokens · Tailwind v4 via Uniwind · Reanimated on the UI thread.
-</p>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/panelui-native"><img src="https://img.shields.io/npm/v/panelui-native?style=flat-square" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/panelui-native"><img src="https://img.shields.io/npm/dm/panelui-native?style=flat-square" alt="npm downloads per month" /></a>
-  <a href="https://github.com/panel-ui/PanelUI/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
-  <img src="https://img.shields.io/badge/platforms-iOS%20%7C%20Android-black?style=flat-square" alt="Platforms: iOS and Android" />
-  <img src="https://img.shields.io/badge/Expo-SDK%2057%2B-000?style=flat-square&logo=expo" alt="Expo SDK 57+" />
 </p>
 
 <p align="center">
@@ -208,6 +205,20 @@ Read **[CONTRIBUTING.md](CONTRIBUTING.md)** before opening a pull request, and p
   **[request a component](https://github.com/panel-ui/PanelUI/issues/new?template=feature_request.yml)**
 - **[Ask a question](https://github.com/panel-ui/PanelUI/discussions)** in Discussions
 - Star the repo if PanelUI is useful to you — it is how other people find it
+
+## Contributors
+
+Thank you to everyone who has shipped something here. If you would like to join them,
+**[CONTRIBUTING.md](CONTRIBUTING.md)** is the place to start.
+
+<p align="center">
+  <a href="https://github.com/panel-ui/PanelUI/graphs/contributors">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/contributors/panel-ui/PanelUI.svg?title=false&amp;preset=transparent&amp;border=false&amp;mode=dark" />
+      <img alt="PanelUI contributors" src="https://shieldcn.dev/contributors/panel-ui/PanelUI.svg?title=false&amp;preset=transparent&amp;border=false&amp;mode=light" />
+    </picture>
+  </a>
+</p>
 
 ## License
 
