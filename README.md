@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/graph.svg?title=PanelUI&amp;subtitle=High-performance+React+Native+components+for+Expo&amp;logo=https%3A%2F%2Fraw.githubusercontent.com%2Fpanel-ui%2FPanelUI%2Fmain%2F.github%2Fassets%2Flogo-dark.png&amp;mode=dark&amp;align=left&amp;font=geist-mono&amp;border=false" />
-    <img alt="PanelUI — high-performance React Native components for Expo" src="https://shieldcn.dev/header/graph.svg?title=PanelUI&amp;subtitle=High-performance+React+Native+components+for+Expo&amp;logo=https%3A%2F%2Fraw.githubusercontent.com%2Fpanel-ui%2FPanelUI%2Fmain%2F.github%2Fassets%2Flogo-light.png&amp;mode=light&amp;align=left&amp;font=geist-mono&amp;border=false" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/surface.svg?title=PanelUI&amp;subtitle=High-performance+React+Native+components+for+Expo&amp;logo=https%3A%2F%2Fraw.githubusercontent.com%2Fpanel-ui%2FPanelUI%2Fmain%2F.github%2Fassets%2Flogo-dark.png&amp;mode=dark&amp;align=left&amp;font=geist-mono&amp;border=false" />
+    <img alt="PanelUI — high-performance React Native components for Expo" src="https://shieldcn.dev/header/surface.svg?title=PanelUI&amp;subtitle=High-performance+React+Native+components+for+Expo&amp;logo=https%3A%2F%2Fraw.githubusercontent.com%2Fpanel-ui%2FPanelUI%2Fmain%2F.github%2Fassets%2Flogo-light.png&amp;mode=light&amp;align=left&amp;font=geist-mono&amp;border=false" />
   </picture>
 </p>
 
@@ -34,7 +34,7 @@ no Android Studio.
 
 ## Why PanelUI
 
-- ⚡ **Fast styling** — [Uniwind](https://github.com/jonlepage/uniwind) brings Tailwind v4 to React
+- ⚡ **Fast styling** — [Uniwind](https://uniwind.dev) brings Tailwind v4 to React
   Native with no Babel transform, around 2.4–3× faster than the alternatives.
 - 🧵 **UI-thread animations** — press feedback, switches, sheets, dialogs and tabs all run on the
   UI thread with Reanimated 4. No JS-thread jank.
