@@ -517,6 +517,16 @@
     ]
   },
   {
+    "name": "live-line-chart",
+    "type": "registry:ui",
+    "description": "A reading that keeps arriving, against a window that keeps moving.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "loader",
     "type": "registry:ui",
     "description": "Nine loading animations behind one variant prop.",

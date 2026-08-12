@@ -8,6 +8,7 @@
     "heatmap-chart",
     "hex-chart",
     "line-chart",
+    "live-line-chart",
     "pie-chart",
     "polar-area-chart",
     "radar-chart",

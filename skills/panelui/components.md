@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-103 components. The **Docs** column is the path under
+104 components. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -113,6 +113,7 @@ remember is a guess.
 | `HeatmapChart` | Contribution grid with a themed colour ramp and a readout. | `charts/heatmap-chart` |
 | `HexChart` | A whole broken into parts, counted out in cells. | `charts/hex-chart` |
 | `LineChart` | Animated time series, drawn on the UI thread. | `charts/line-chart` |
+| `LiveLineChart` | A reading that keeps arriving, against a window that keeps moving. | `charts/live-line-chart` |
 | `PieChart` | One whole, divided between its parts. | `charts/pie-chart` |
 | `PolarAreaChart` | Several readings on one scale, compared as wedges. | `charts/polar-area-chart` |
 | `RadarChart` | Several measures of one thing, drawn as one shape. | `charts/radar-chart` |

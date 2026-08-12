@@ -557,6 +557,25 @@ export {
   type PieDatum,
 } from './components/pie-chart';
 export {
+  LiveLineChart,
+  useLiveLineChart,
+  type LiveLineChartProps,
+  type LiveLineChartHandle,
+  type LiveLineChartHeaderProps,
+  type LiveLineChartGridProps,
+  type LiveLineChartAreaProps,
+  type LiveLineChartLineProps,
+  type LiveLineChartTipProps,
+  type LiveLineChartXAxisProps,
+  type LiveLineChartYAxisProps,
+  type LiveLineChartTooltipProps,
+  type LiveLineChartSkeletonProps,
+  type LiveLineChartStatus,
+  type LiveLineMomentum,
+  type LiveLineMomentumColors,
+  type LiveLinePoint,
+} from './components/live-line-chart';
+export {
   PolarAreaChart,
   usePolarAreaChart,
   type PolarAreaChartProps,

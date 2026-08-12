@@ -942,5 +942,14 @@
       "addedIn": "0.62.0",
       "group": "charts"
     }
+  ],
+  "live-line-chart": [
+    "LiveLineChart",
+    "A reading that keeps arriving, against a window that keeps moving.",
+    "react native live streaming realtime line chart",
+    {
+      "addedIn": "0.62.0",
+      "group": "charts"
+    }
   ]
 }
