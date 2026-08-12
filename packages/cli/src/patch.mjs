@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { aliasToDir, projectPath, validateConfigPaths } from './config.mjs';
-import { confirm, dim, printAddition, step, success, warn } from './ui.mjs';
+import { confirm, dim, fail, printAddition, step, success, warn } from './ui.mjs';
 
 /**
  * The CSS entry Uniwind compiles.
@@ -244,8 +244,7 @@ export async function installDependencies(
   const result = spawnSync(bin, args, { cwd, stdio: 'inherit', shell: process.platform === 'win32' });
 
   if (result.status !== 0) {
-    warn('Install failed. Run the command above yourself.');
-    return;
+    fail('Dependency installation failed.', 'Run the command above yourself.');
   }
 
   success('Dependencies installed');
