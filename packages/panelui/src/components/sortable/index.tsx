@@ -563,16 +563,26 @@ function SortableRoot({
    * the transforms that were holding rows in their new slots are no longer
    * needed — the layout puts them there now. Both orders are reset together,
    * which is what makes the re-render after a drop invisible.
+   *
+   * During render, and not in an effect. An effect runs *after* the commit that
+   * moved the rows, so for the frame in between, the dropped row sat in its new
+   * slot still carrying the transform that had carried it there — drawn a whole
+   * row's height away from where it belongs, which is what the flash after a
+   * drop was. Written here it lands on the same commit as the reorder, and there
+   * is no frame in which the two disagree.
+   *
+   * Writing a shared value is not React state, so this is not a render with a
+   * side effect on the tree; the ref is only there to make it happen once per
+   * change of order rather than on every render of the screen around it.
    */
-  useEffect(() => {
+  const applied = useRef(key);
+  if (applied.current !== key) {
+    applied.current = key;
     order.value = value;
     rendered.value = value;
     translate.value = 0;
     lift.value = 0;
-    // `value` is covered by `key`; depending on the array itself would fire
-    // this on every render of the screen around it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, order, rendered, translate, lift]);
+  }
 
   const indices = useMemo(() => {
     const map = new Map<string, number>();
