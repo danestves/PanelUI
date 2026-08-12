@@ -67,7 +67,14 @@ import Animated, {
 import Svg, { Circle, G, Line, Path } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
-import { compactNumber, inkOn, polarPoint, useSeriesColor, wedgePath } from '../../utils/chart';
+import {
+  compactNumber,
+  inkOn,
+  polarPoint,
+  seriesColorAt,
+  useSeriesColor,
+  wedgePath,
+} from '../../utils/chart';
 import { cn } from '../../utils/cn';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -335,7 +342,7 @@ const PolarAreaChartRoot = forwardRef<PolarAreaChartHandle, PolarAreaChartProps>
     const c5 = useSeriesColor(undefined, 5);
     const palette = useMemo(() => [c1, c2, c3, c4, c5], [c1, c2, c3, c4, c5]);
     const colors = useMemo(
-      () => data.map((datum, index) => datum.color ?? palette[index % palette.length]!),
+      () => data.map((datum, index) => datum.color ?? seriesColorAt(palette, index)),
       [data, palette]
     );
 

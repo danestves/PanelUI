@@ -201,6 +201,8 @@ Every wedge takes the same angle, and there is no prop to change that. The angle
 
 `maxValue` defaults to the largest value rounded up to a round number, so the outermost ring lands on 150 rather than on 147. Set it by hand to compare two dials.
 
+There are five chart colour tokens. Past the fifth wedge the palette is walked again a tone further along rather than repeated, so no two wedges are the same colour — a chart whose job is telling parts apart cannot hand two of them one colour. Give a wedge its own `color` to override this.
+
 A wedge shorter than `minRadius` is left unlabelled by `Labels` — the number would sit outside the wedge it belongs to, beside a neighbour it does not describe. Those are read through `Tooltip` and the legend, which is the reason to include one of them.
 
 Labels take their colour from the wedge under them, white on a dark one and near-black on a light one. Chart colours come from the theme and can land anywhere on the scale.

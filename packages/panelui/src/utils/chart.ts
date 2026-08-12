@@ -130,6 +130,50 @@ const INK_FLOOR = 3;
  * the colour it was given. Compositing happens in gamma space, the way the
  * renderer does it, before the luminance is taken.
  */
+/** A colour moved `amount` of the way towards white, or towards black when negative. */
+function tone(color: string, amount: number): string {
+  const rgb = channelsOf(color);
+  if (!rgb) return color;
+
+  const target = amount >= 0 ? 255 : 0;
+  const t = Math.min(Math.abs(amount), 0.85);
+  const [r, g, b] = rgb.map((c) => Math.round(c + (target - c) * t));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+/**
+ * The colour for the `index`th thing in a chart that draws an unbounded number
+ * of them.
+ *
+ * There are five series tokens, and a chart is routinely asked to draw six
+ * things. Taking the palette modulo its length hands two of them the identical
+ * colour, which in a chart whose whole job is telling parts apart is a bug the
+ * theme decides the severity of — on a theme whose first token is green, the
+ * sixth wedge is a second green one.
+ *
+ * So each further lap through the palette is drawn a step further along a tone
+ * run, keeping the theme's own hues rather than inventing new ones.
+ *
+ * The run goes *away* from whichever end the colour already sits near, and
+ * always in that one direction. Alternating lighter and darker would be the
+ * obvious thing and it reintroduces the bug on the themes that matter: a token
+ * of `#fafafa` lightened is `#fafafa` back again, so the second lap of a
+ * near-white palette entry is the same colour it was trying not to be.
+ */
+export function seriesColorAt(palette: string[], index: number): string {
+  if (!palette.length) return FALLBACK_SERIES[0]!;
+
+  const base = palette[index % palette.length]!;
+  const lap = Math.floor(index / palette.length);
+  if (lap <= 0) return base;
+
+  const rgb = channelsOf(base);
+  const away = rgb && luminanceOf(rgb) > 0.4 ? -1 : 1;
+  // Each lap covers two thirds of what is left, so every one lands somewhere
+  // the last did not.
+  return tone(base, away * (1 - 0.66 ** lap));
+}
+
 export function inkOn(fill: string, behind?: string, opacity = 1): ChartInk {
   const front = channelsOf(fill);
   if (!front) return LIGHT_INK;
