@@ -13,6 +13,9 @@ import {
   aliasToDir,
   defaultConfig,
   detectProject,
+  projectPath as resolveProjectPath,
+  validateConfigPaths,
+  validateProjectName,
   readConfig,
   writeConfig,
 } from './config.mjs';
@@ -94,6 +97,8 @@ export async function init(options) {
     config.css = await ask('Which file is your CSS entry?', config.css);
   }
 
+  validateConfigPaths(config);
+
   step(`Write ${CONFIG_FILE}`);
   if (!options.dryRun) {
     writeConfig(cwd, config);
@@ -103,7 +108,7 @@ export async function init(options) {
   // The tokens are global rather than per component — every class name in the
   // library resolves through them — so they come in whole, once.
   const theme = await fetchItem(config.registry, 'theme');
-  const themePath = path.join(cwd, config.theme);
+  const themePath = resolveProjectPath(cwd, config.theme, 'Theme path');
   const themeExists = fs.existsSync(themePath);
 
   if (themeExists && !options.overwrite) {
@@ -149,11 +154,12 @@ export async function create(options) {
       ))
     : await select('Which template?', TEMPLATES, { assumeYes: options.yes });
 
-  const projectName =
+  const projectName = validateProjectName(
     options.name ??
-    (options.yes
-      ? template.defaultProjectName
-      : await ask('What is it called?', template.defaultProjectName));
+      (options.yes
+        ? template.defaultProjectName
+        : await ask('What is it called?', template.defaultProjectName))
+  );
 
   const theme = options.theme
     ? (THEMES.find((entry) => entry.id === options.theme) ??
@@ -177,7 +183,7 @@ export async function create(options) {
     { assumeYes: options.yes }
   );
 
-  const projectPath = path.join(cwd, projectName);
+  const projectPath = resolveProjectPath(cwd, projectName, 'Project name');
   if (fs.existsSync(projectPath) && fs.readdirSync(projectPath).length > 0) {
     fail(`${projectName}/ already exists and is not empty.`, 'Pick another name.');
   }
@@ -197,6 +203,7 @@ export async function create(options) {
   // The config the `add` command reads. A generated project already has the
   // directories it names, so nothing here is a question.
   const config = defaultConfig(options.registry ?? DEFAULT_REGISTRY);
+  validateConfigPaths(config);
   writeConfig(projectPath, config);
   success(`Wrote ${CONFIG_FILE}`);
 
