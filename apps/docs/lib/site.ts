@@ -46,6 +46,14 @@ export const site = {
    * point at its own property instead of reporting into this one.
    */
   analyticsId: process.env.NEXT_PUBLIC_GA_ID ?? 'G-B7QYTQH288',
+  /**
+   * OpenPanel client ID. Public in the same way the measurement ID above is —
+   * it ships in the page source — but there is no default, so a fork or a
+   * preview deploy that has not set it simply does not report anywhere. The
+   * matching client secret is server-only and must never be given a
+   * NEXT_PUBLIC_ name.
+   */
+  openPanelClientId: process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID,
 } as const;
 
 /** Absolute URL for a path, for canonical tags and the sitemap. */

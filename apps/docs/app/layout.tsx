@@ -5,6 +5,7 @@ import { Geist_Mono, Inter } from 'next/font/google';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@/components/google-analytics';
+import { OpenPanel } from '@/components/openpanel';
 import { WebMcp } from '@/components/web-mcp';
 import { absoluteUrl, site } from '@/lib/site';
 import { cn } from "@/lib/utils";
@@ -106,17 +107,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="isolate flex min-h-screen flex-col font-sans antialiased">
         <RootProvider>{children}</RootProvider>
         {/*
-          Both mount once here, because the root layout wraps every page and
-          nothing else should mount either again.
+          All three mount once here, because the root layout wraps every page
+          and nothing else should mount any of them again.
 
-          Two of them on purpose, measuring different things. Vercel Web
+          Three of them on purpose, measuring different things. Vercel Web
           Analytics is cookieless and needs no consent banner, so it is the one
           that will still be counting for visitors who decline or block the
-          other; Google Analytics is what gives the long tail — acquisition,
-          search terms, the funnel — that the Vercel dashboard does not.
+          others; Google Analytics is what gives the long tail — acquisition,
+          search terms, the funnel — that the Vercel dashboard does not;
+          OpenPanel is the product-analytics view, where a question is about
+          which components people actually read rather than where they arrived
+          from.
         */}
         <Analytics />
         <GoogleAnalytics />
+        <OpenPanel />
         {/*
           Offers the registry and the docs to an agent driving the browser.
           Renders nothing, and does nothing at all in a browser without the
