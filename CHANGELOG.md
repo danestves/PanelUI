@@ -9,6 +9,53 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.62.0] — 2026-08-12
+
+### Added
+
+- **`PolarAreaChart` — several readings on one scale, compared as wedges.** Every wedge takes an
+  equal slice of the dial and its radius carries the reading, so the values need not add up to
+  anything. That is the line between this and a pie, where the angles are the quantity and have to
+  come to a full turn: six unrelated measurements belong here, six parts of one budget belong
+  there.
+
+  `scale` decides what the radius means, and the two answers are different charts. The default
+  puts the value on the radius, so a reading can be counted off the rings — at the cost of a wedge
+  worth twice another covering four times the area. `scale="area"` puts it on the square root
+  instead: nothing is overstated, and the rings stop being evenly spaced. The grid is drawn
+  through the same conversion either way, so a ring is always where its value falls.
+
+  Parts: `Header`, `Grid`, `Wedges`, `Labels`, `Tooltip`, `Legend`, `Skeleton`. Labels take their
+  colour from the wedge under them, and a wedge too short to hold its number is left blank and
+  read through the readout instead.
+
+- **`LiveLineChart` — a reading that keeps arriving, against a window that keeps moving.** Every
+  other chart here draws a fixed dataset against an index-based x-axis, so none of them could show
+  a number that is still coming in. This one places each reading at the time it carries, which
+  makes the gaps between readings part of what is drawn.
+
+  The window is tied to the wall clock rather than to the data, so the line drifts left whether or
+  not anything is arriving and a stalled feed reads as a flat run reaching back from the tip. Tie
+  it to arrivals instead and a stall is indistinguishable from a steady value, which are opposite
+  facts. That costs a frame callback while the chart is mounted — the only thing in the library
+  that animates without an interaction or a change of data. It stops on unmount, on `paused` and
+  on `status="loading"`, and never starts under reduced motion.
+
+  Parts: `Header`, `Grid`, `Area`, `Line`, `Tip`, `XAxis`, `YAxis`, `Tooltip`, `Skeleton`, with a
+  pulsing tip, a gradient fill, optional momentum colours and a crosshair that is pinned to the
+  moment it was put on rather than to a place on screen.
+
+### Fixed
+
+- **`PolarAreaChart` no longer hands two wedges the same colour.** There are five chart tokens and
+  a dial is routinely asked to draw six things; taking the palette modulo its length gave the
+  sixth wedge the first one's colour, which on a theme whose first token is green is two green
+  wedges. Each further lap through the palette is now drawn a step along a tone run, away from
+  whichever end the colour already sits near — alternating lighter and darker is the obvious
+  approach and it puts the bug straight back on the dark theme, where `--color-chart-1` is
+  `#fafafa`. `PieChart`, `RingChart` and `HexChart` still cycle; the shared helper is there when
+  they are changed over.
+
 ## [0.61.1] — 2026-08-12
 
 ### Fixed
