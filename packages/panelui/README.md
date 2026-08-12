@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 100 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 102 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -245,6 +245,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `ScrollText` | Text that resolves word by word as you scroll |
 | `SectionRail` | Floating section navigator for a long screen |
 | `Select` | Picker shown in a bottom sheet, expanded in place, or floating over the page, with an optional filter |
+| `SelectionMode` | Pick several rows out of a list, on a screen or in a sheet |
 | `Separator` | Horizontal or vertical rule between content, optionally labelled |
 | `Shimmer` | Animated highlight sweeping across content |
 | `Signature` | Sign with a finger, and get the result back out as SVG or PNG |
@@ -272,6 +273,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Tooltip` | A small label that names the control under your finger |
 | `Tour` | A walkthrough that introduces a screen one control at a time |
 | `Tree` | A hierarchy you can open a level at a time |
+| `TreemapChart` | A total, cut into the parts it is made of, sized by area |
 | `Typography` | Semantic text presets |
 
 Plus `PanelUIProvider`, `Portal`, `AnimatedPressable`, `KeyboardAvoider`, `ScrollProgress`,
