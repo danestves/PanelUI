@@ -12000,7 +12000,7 @@ function LiveLineReadbackVersion() {
             <LiveLineChart.YAxis />
             <LiveLineChart.Area />
             <LiveLineChart.Line />
-            <LiveLineChart.Tip badge={false} />
+            <LiveLineChart.Tip />
             <LiveLineChart.Tooltip />
             <LiveLineChart.XAxis />
           </LiveLineChart>

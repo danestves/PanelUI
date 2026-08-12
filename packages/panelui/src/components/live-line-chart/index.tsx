@@ -331,7 +331,7 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
       values.value = points.map((point) => point.value);
     }, [points, times, values]);
 
-    const latest = points.length ? points[points.length - 1]! : null;
+    const liveLatest = points.length ? points[points.length - 1]! : null;
 
     /*
      * The extent of what is *visible*, not of everything kept: a spike that has
@@ -339,9 +339,9 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
      * settles back to a flat line squeezed against the bottom of a plot scaled
      * for something that happened a minute ago.
      */
-    const extent = useMemo<[number, number]>(() => {
+    const liveExtent = useMemo<[number, number]>(() => {
       if (yDomain) return yDomain;
-      const from = (latest?.time ?? Date.now()) - windowMs;
+      const from = (liveLatest?.time ?? Date.now()) - windowMs;
       let min = Infinity;
       let max = -Infinity;
       for (const point of points) {
@@ -353,7 +353,25 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
       if (min === max) return [min - 1, max + 1];
       const headroom = (max - min) * 0.12;
       return [min - headroom, max + headroom];
-    }, [points, latest, windowMs, yDomain]);
+    }, [points, liveLatest, windowMs, yDomain]);
+
+    /*
+     * `paused` has to hold the whole picture still, not only the clock.
+     *
+     * Readings keep arriving while it is held — that is the point of holding it
+     * — and both of these are derived from the newest one. Left live, the axis
+     * goes on rescaling under a frozen line and the tip goes on chasing a
+     * reading that is now off the right-hand edge, so a held chart carries on
+     * moving in two of the three ways it can.
+     */
+    const held = useRef<{ extent: [number, number]; latest: LiveLinePoint | null } | null>(
+      null
+    );
+    const heldMomentum = useRef<LiveLineMomentum>('flat');
+    if (!paused) held.current = { extent: liveExtent, latest: liveLatest };
+
+    const extent = paused && held.current ? held.current.extent : liveExtent;
+    const latest = paused && held.current ? held.current.latest : liveLatest;
 
     useEffect(() => {
       if (loading) return;
@@ -403,13 +421,18 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
       [now]
     );
 
-    const momentum = useMemo<LiveLineMomentum>(() => {
+    const liveMomentum = useMemo<LiveLineMomentum>(() => {
       if (points.length < 2) return 'flat';
       const recent = points.slice(-6);
-      const span = Math.abs(extent[1] - extent[0]) || 1;
+      const span = Math.abs(liveExtent[1] - liveExtent[0]) || 1;
       const change = (recent[recent.length - 1]!.value - recent[0]!.value) / span;
       return change > 0.04 ? 'up' : change < -0.04 ? 'down' : 'flat';
-    }, [points, extent]);
+    }, [points, liveExtent]);
+
+    // Held with the rest of the picture: a frozen line changing colour under
+    // readings that are not on it is the same bug wearing a different coat.
+    if (!paused) heldMomentum.current = liveMomentum;
+    const momentum = paused ? heldMomentum.current : liveMomentum;
 
     const base = useSeriesColor(color, 1);
     const successToken = useCSSVariable('--color-success');
@@ -706,7 +729,14 @@ LiveLineChartArea.displayName = 'LiveLineChart.Area';
 LiveLineChartArea.layer = 'svg' as Layer;
 
 export interface LiveLineChartTipProps {
-  /** Show the current reading beside the dot. */
+  /**
+   * Show the current reading in a badge beside the dot.
+   *
+   * Off by default. The badge is a floating card, which is the shape a reader
+   * has learnt means "you touched something" — sitting there unasked it reads
+   * as a tooltip nobody opened. Turn it on where the chart has no header to put
+   * the reading in, and it becomes the only place the number is written.
+   */
   badge?: boolean;
   /** Ring the dot with a repeating pulse. */
   pulse?: boolean;
@@ -727,13 +757,24 @@ export interface LiveLineChartTipProps {
  * ignores the platform's text scaling and the theme's font.
  */
 function LiveLineChartTip({
-  badge = true,
+  badge = false,
   pulse = true,
   formatValue,
   className,
 }: LiveLineChartTipProps) {
-  const { plot, times, values, now, windowMs, domainMin, domainMax, status, color, latest } =
-    useChart('LiveLineChart.Tip');
+  const {
+    plot,
+    times,
+    values,
+    now,
+    windowMs,
+    domainMin,
+    domainMax,
+    status,
+    color,
+    latest,
+    activePoint,
+  } = useChart('LiveLineChart.Tip');
   const reducedMotion = useReducedMotion();
   const beat = useSharedValue(0);
 
@@ -752,14 +793,28 @@ function LiveLineChartTip({
 
     const xMax = now.value;
     const xMin = xMax - windowMs;
-    const time = times.value[count - 1]!;
+
+    // The newest reading *on the plot*, which is not the newest reading held: a
+    // paused window keeps taking them in behind its right-hand edge, and the
+    // line stops at the edge, so a tip tracking the array would walk away from
+    // the end of the line it is supposed to be the end of.
+    let index = -1;
+    for (let i = count - 1; i >= 0; i -= 1) {
+      if (times.value[i]! <= xMax) {
+        index = i;
+        break;
+      }
+    }
+    if (index < 0) return { opacity: 0 };
+
+    const time = times.value[index]!;
     // A feed that stopped longer ago than the window is wide has nothing left
     // on the plot. The line is clipped away at that point, and a dot left
     // hanging past the edge would be the only mark still claiming otherwise.
     if (time < xMin) return { opacity: 0 };
 
     const x = xAt(time, plot, xMin, xMax);
-    const y = yOf(values.value[count - 1]!, plot, domainMin.value, domainMax.value);
+    const y = yOf(values.value[index]!, plot, domainMin.value, domainMax.value);
     return {
       opacity: 1,
       transform: [{ translateX: x - TIP / 2 }, { translateY: y - TIP / 2 }],
@@ -805,7 +860,12 @@ function LiveLineChartTip({
           backgroundColor: color,
         }}
       />
-      {badge ? (
+      {/*
+       * Never while the crosshair is out. That readout is the reading being
+       * asked for, and a second card a finger's width away answering a
+       * different question is two answers to one gesture.
+       */}
+      {badge && !activePoint ? (
         <View
           style={{ position: 'absolute', right: TIP + 8, top: -6 }}
           className={cn('rounded-md border border-border bg-popover px-1.5 py-0.5', className)}

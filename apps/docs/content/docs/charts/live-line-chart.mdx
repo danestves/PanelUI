@@ -57,7 +57,7 @@ npx panelui-cli@latest add live-line-chart
 - **`LiveLineChart.Grid`** — The horizontal rules the readings are judged against.
 - **`LiveLineChart.Area`** — The gradient fill under the line. Its own part, so a chart that wants the shape without the weight of a filled band does not have one.
 - **`LiveLineChart.Line`** — The line, rebuilt on the UI thread every frame the window moves.
-- **`LiveLineChart.Tip`** — The dot at the leading end and the current reading beside it. It rides the newest reading rather than the right-hand edge.
+- **`LiveLineChart.Tip`** — The dot at the leading end. It rides the newest reading rather than the right-hand edge. Pass `badge` to write the current reading beside it — off by default, since a floating card nobody opened reads as a tooltip.
 - **`LiveLineChart.XAxis`** — How far back the plot reaches, labelled as offsets from now.
 - **`LiveLineChart.YAxis`** — The value scale. Declaring one widens the left gutter so its labels have somewhere to sit.
 - **`LiveLineChart.Tooltip`** — Drag back through the window to read a reading that has already gone past.
@@ -129,7 +129,7 @@ A reading can scroll off the window while it is being read. The crosshair goes w
 
 ### Holding the window still
 
-`paused` freezes the clock where it is. Readings still arrive and are still kept — it is the window that stops, so what is on screen holds still long enough to be talked about. Clearing it jumps the window back to the present.
+`paused` freezes the window where it is. Readings still arrive and are still kept — it is the window that stops, so what is on screen holds still long enough to be talked about, axis and tip included. Clearing it jumps the window back to the present.
 
 ```tsx
 <LiveLineChart data={points} paused={held}>
@@ -189,7 +189,7 @@ A reading can scroll off the window while it is being read. The crosshair goes w
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `badge` | `boolean` | `true` | Show the current reading beside the dot. |
+| `badge` | `boolean` | `false` | Show the current reading in a badge beside the dot. Off by default. The badge is a floating card, which is the shape a reader has learnt means "you touched something" — sitting there unasked it reads as a tooltip nobody opened. Turn it on where the chart has no header to put the reading in, and it becomes the only place the number is written. |
 | `pulse` | `boolean` | `true` | Ring the dot with a repeating pulse. |
 | `formatValue` | `(value: number) => string` | — | Format the badge. Defaults to a compact number. |
 | `className` | `string` | — |  |
@@ -238,6 +238,10 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 ## Notes
 
 The y-axis follows what is *visible*, not everything kept. A spike that has scrolled off the left edge stops holding the axis open, so a feed that settles is not left flat against the bottom of a plot scaled for something that happened a minute ago. Pass `yDomain` to fix it instead.
+
+`Tip` draws a dot and nothing else unless `badge` is passed. The badge is a floating card, which is the shape a reader has learnt means they touched something — sitting there unasked it reads as a tooltip that opened by itself. Turn it on for a chart with no header to put the reading in. It hides itself while the crosshair is out either way, so there is never a second card answering a different question.
+
+`paused` holds the whole picture, not only the clock. Readings keep arriving behind the frozen edge, and the y-axis, the tip and the momentum colour are all derived from the newest one — left live they would go on rescaling, chasing and recolouring under a line that has stopped, which is a held chart that is still moving.
 
 The tip rides the newest reading rather than the right-hand edge. Pinning it to the edge would hold it still and steady, which is the picture of a feed that is working.
 
