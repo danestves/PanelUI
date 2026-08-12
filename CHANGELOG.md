@@ -9,6 +9,95 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.63.0] — 2026-08-12
+
+### Added
+
+- **`Plot` — a chart you compose out of its marks.** Every other chart here answers one question
+  completely and decides everything else for you, which is what makes them good and also what
+  makes them a wall: the chart that is not in the box is a chart you go without. `Plot` decides
+  nothing. It measures a box, resolves one scale, and hands both to whatever marks are put in it,
+  drawn in the order they are written.
+
+  Parts: `Header`, `Legend`, `Grid`, `Area`, `Bars`, `Line`, `Dots`, `Rule`, `Layer`, `Overlay`,
+  `XAxis`, `YAxis`, `Cursor`, `Tooltip`. The domain is derived from every mark at once, so two
+  marks on one plot share an axis and stay comparable — and both of them have to be in the same
+  unit, because there is no second axis and there is not going to be one.
+
+  Where the built-in marks end, `Plot.Layer` begins: its children go into the SVG tree and
+  `usePlot()` gives them the plot box, the tweening domain and the reveal. The scale functions —
+  `xOf`, `xAt`, `bandOf`, `yOf`, `linePath`, `areaPath`, `barPath`, `segment`, `compactNumber` —
+  are exported with it, and every one is a worklet, so a mark you write is rebuilt on the UI
+  thread on the frames the built-in ones are rather than laid over them a frame late.
+
+  `yDomain` takes `'auto'` for either end, so a baseline can be pinned at zero while the top still
+  follows the data. A plot containing `Plot.Bars` gets zero in its derived domain whether the data
+  reaches it or not: a bar's length is measured from zero, and an axis that skips it draws
+  near-identical columns for numbers that differ by half.
+
+  Alpha — the parts are settled, the names the geometry comes out under are not. Every chart page
+  now links here for the chart it is not.
+
+- **`--color-inset`, and a `variant` on `Card.Footer` and `Dialog.Footer`.** `variant="panel"`
+  draws the footer as a band set into the component: a rule across the top, a step darker, and the
+  component's own bottom corners. It separates what a card or dialog says from what you can do
+  about it, which matters most when the body is a form — buttons on the same surface, directly
+  under the last field, read as one more field.
+
+  The new token is a translucent black in every theme rather than a colour of its own, because it
+  has to come out darker than whatever it is drawn on and that changes. `--color-muted` cannot do
+  the job: it is white in a dark theme, so the band it draws floats forward instead of sinking.
+
+- **`horizontal` and `label` on `SelectionMode.Group`.** `horizontal` lays the items out in one
+  sideways-scrolling strip, which costs a single row whatever the count — a grid claims as many
+  rows as it needs and pushes whatever follows off the sheet. `label` puts a caption on the leading
+  edge, and is what a screen reader announces the group by; a row of unlabelled circles had nothing.
+
+### Changed
+
+- **Chart entrances start when they are asked to.** The reveal ran on a hard symmetric easing that
+  had drawn 7% of the chart a third of the way through its run — at 900 to 1100ms, a visible pause
+  before anything happened. It now eases out, and the durations come down with it since there is no
+  longer a dead third to sit through. Affects every chart; nothing about the shapes or colours
+  changes.
+
+- **`SelectionMode.Sheet` opens full-height by default.** A picker spends a header and a footer
+  before it draws a single row, so at half the screen the list it was opened for got four or five.
+  Pass `size="half"` for a sheet of two or three choices. Its action also lies down in a sheet's
+  footer instead of standing up, and the sheet no longer draws its own close button a few points
+  from the header's "All" — one of those two threw the selection away.
+
+- **`SectionRail` bars step down either side of the active one.** One long bar in a column of
+  identical short ones says which section you are in but not where it sits in the run, which took
+  counting. The neighbours now keep part of the active bar's length and brightness and the rest
+  drop back, so the silhouette carries the position.
+
+### Fixed
+
+- **`Sortable` no longer flashes the dropped row in its old slot.** The reset that clears the drag
+  transforms ran in an effect, and an effect runs after the commit that moved the rows — so one
+  painted frame had the row in its new slot still carrying the transform that had carried it there.
+
+- **`SectionRail` ticks once per jump.** Tapping a section in the panel scrolls the screen, and the
+  handler driving the active section reported every section passed on the way, each of which was
+  felt and briefly highlighted. It now waits for the section that was actually asked for.
+
+- **`CandlestickChart`'s Loading version comes back.** Its timer ran on an empty dependency list,
+  so "Load again" put the chart into `loading` and nothing took it out. Five charts — area, bar,
+  line, candlestick and radar — also armed their reveal once and never again, so a chart returned
+  to `ready` appeared fully drawn on the frame the data landed.
+
+- **Leaving `SelectionMode` is a movement.** The header used to fade while its 56 points had
+  already left the flow, so the list jumped and a ghost dissolved over the gap; it now gives up its
+  height, and the rows' circles do the same, taking the row's own gap with them.
+
+### Docs
+
+- `CandlestickChart`'s `status` prop claimed to draw placeholder candles while it waits. It never
+  has, deliberately — a placeholder candle is four made-up prices — and the prop now says so.
+
+- The theming page's paste-and-edit block carries `--color-inset`.
+
 ## [0.62.0] — 2026-08-12
 
 ### Added
