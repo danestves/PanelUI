@@ -1,6 +1,7 @@
 ---
 title: HexChart
 description: A whole broken into parts, counted out in cells.
+status: updated
 ---
 
 A total broken into parts, counted out in cells.
@@ -8,6 +9,8 @@ A total broken into parts, counted out in cells.
 Each series gets a number of hexagons proportional to its share, so a series worth a tenth of the total is a tenth of the cells — and the reader can confirm it by counting rather than by judging an angle.
 
 **The limit is the small end.** Every cell is a whole unit, so a series worth less than half a cell rounds away to nothing. Use it for shares of a few percent and up. For a long tail of small values, use a [BarChart](/docs/charts/bar-chart); for the same total split by angle rather than by count, use a [PieChart](/docs/charts/pie-chart).
+
+**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
 
 <PreviewVideo
   src="/previews/hex-chart.mp4"
@@ -249,7 +252,7 @@ The denominator is not what is loading — the shape of the chart is known befor
 | `density` | `number` | `0.55` | How much of the field the series fill, 0 to 1. Only meaningful with `shape="blob"`, where the unfilled cells are the margin the blob is read against; a `grid` fills every cell, because a waffle with a ragged last row is a waffle that has stopped being countable. |
 | `shape` | `HexShape` | `'blob'` | How the filled cells are arranged. |
 | `cellGap` | `number` | `0.14` | The gap between cells, as a share of the cell radius. Given as a share so the field keeps its proportions at whatever size it is measured at. |
-| `animationDuration` | `number` | `900` | Milliseconds for the honeycomb to fill in. |
+| `animationDuration` | `number` | `620` | Milliseconds for the honeycomb to fill in. |
 | `status` | `HexChartStatus` | `'ready'` | `loading` draws the field with nothing divided up yet. |
 | `activeIndex` | `number` | — | Selected series. Leave unset to let the chart track it. |
 | `onActiveIndexChange` | `(index: number) => void` | — | Fires with the selected series, or `-1` when the selection is cleared. |

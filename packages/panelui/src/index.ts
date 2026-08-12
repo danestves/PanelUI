@@ -591,6 +591,52 @@ export {
   type PolarAreaScale,
   type PolarAreaDatum,
 } from './components/polar-area-chart';
+export {
+  Plot,
+  usePlot,
+  usePlotCursor,
+  type PlotProps,
+  type PlotHandle,
+  type PlotGeometry,
+  type PlotHeaderProps,
+  type PlotLegendProps,
+  type PlotGridProps,
+  type PlotSeriesProps,
+  type PlotLineProps,
+  type PlotAreaProps,
+  type PlotBarsProps,
+  type PlotDotsProps,
+  type PlotRuleProps,
+  type PlotLayerProps,
+  type PlotOverlayProps,
+  type PlotXAxisProps,
+  type PlotYAxisProps,
+  type PlotCursorProps,
+  type PlotTooltipProps,
+  type PlotDatum,
+  type PlotStatus,
+  type PlotCurve,
+  type PlotScale,
+  type PlotBound,
+  type PlotBox,
+} from './components/plot';
+/*
+ * The scale functions, alongside the component they exist for. Every one is a
+ * worklet, which is what lets a mark somebody writes themselves be rebuilt on
+ * the UI thread on the same frames `Plot`'s own are.
+ */
+export {
+  areaPath,
+  bandOf,
+  barPath,
+  compactNumber,
+  linePath,
+  segment,
+  xAt,
+  xOf,
+  yOf,
+  type ChartPoint,
+} from './components/plot';
 export { Textarea, type TextareaProps } from './components/textarea';
 export {
   TagInput,

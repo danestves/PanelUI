@@ -19,7 +19,7 @@ For picking *one* thing, use [Select](/docs/components/select) or [RadioGroup](/
 SelectionMode ships with the library — no separate install.
 
 ```tsx
-import { SelectionMode, Item, Avatar, Text } from 'panelui-native';
+import { SelectionMode, Item, Avatar, Text, Slider } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -179,7 +179,41 @@ On a screen, `placement="floating"` lifts the bar off the edge into a rounded ca
 </SelectionMode.Bar>
 ```
 
+### A strip of swatches, and a control under it
+
+`horizontal` is for small things picked by sight when something else has to share the sheet with them. A grid of the same swatches claims as many rows as it needs and pushes whatever follows off the bottom.
+
+`label` names the strip. A row of unlabelled circles is a row a reader has to work out the purpose of, and a screen reader has nothing at all to announce it by.
+
+```tsx
+<SelectionMode.Sheet open={open} onOpenChange={setOpen} title="Palette">
+  <SelectionMode.Group horizontal label="Colour" itemWidth={44} gap={14}>
+    {colors.map((color) => (
+      <SelectionMode.Item key={color.id} value={color.id} indicator="ring">
+        <View style={{ backgroundColor: color.hex, aspectRatio: 1 }} className="w-full rounded-full" />
+      </SelectionMode.Item>
+    ))}
+  </SelectionMode.Group>
+
+  <Slider label="Opacity" showValue value={opacity} onValueChange={setOpacity} />
+
+  <SelectionMode.Bar>
+    <SelectionMode.Action icon={<CheckIcon size={20} />} onPress={() => setOpen(false)}>
+      Apply
+    </SelectionMode.Action>
+  </SelectionMode.Bar>
+</SelectionMode.Sheet>
+```
+
 ## Variants
+
+### `compact`
+
+- `true`
+
+```tsx
+<SelectionMode compact="true">…</SelectionMode>
+```
 
 ### `destructive`
 
@@ -239,9 +273,13 @@ On a screen, `placement="floating"` lifts the bar off the edge into a rounded ca
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `columns` | `number` | — | Lay the items out in a grid this many across instead of stacking them. For things recognised by sight rather than read — swatches, thumbnails, slides. A grid of six colours is one glance; the same six as rows is a scroll. |
-| `gap` | `number` | `12` | Space between items in a grid, in points. |
-| `separators` | `boolean` | `true` | Hairlines between stacked items. On by default; off in a grid. |
+| `columns` | `number` | — | Lay the items out in a grid this many across instead of stacking them. For things recognised by sight rather than read — swatches, thumbnails, slides. A grid of six colours is one glance; the same six as rows is a scroll. Ignored when `horizontal` is set. |
+| `horizontal` | `boolean` | `false` | Lay the items out in one row that scrolls sideways. For a strip of small things next to other controls — swatches above a slider, filters above a list. A grid of the same items claims as many rows as it needs and pushes everything below it off the sheet; a strip costs one row whatever the count. Wins over `columns`, which asks for the opposite arrangement. |
+| `itemWidth` | `number` | `44` | How wide each item is in a horizontal strip, in points. |
+| `gap` | `number` | `12` | Space between items in a grid or a strip, in points. |
+| `label` | `string` | — | A caption above the items, on the leading edge. Worth setting on anything picked by sight. A strip of colours with nothing in front of it is a row of circles the reader has to work out the purpose of, and a screen reader has nothing at all to announce it by — so this is also the group's accessibility label. |
+| `labelClassName` | `string` | — | Extra classes for that caption. |
+| `separators` | `boolean` | `true` | Hairlines between stacked items. On by default; off in a grid or a strip. |
 
 ### SelectionMode.Header
 
@@ -280,7 +318,7 @@ On a screen, `placement="floating"` lifts the bar off the edge into a rounded ca
 | `onOpenChange` | `(open: boolean) => void` | — |  |
 | `title` | `string` | `'Select'` | The word in front of the count. |
 | `hideSelectAll` | `boolean` | `false` | Hide the select-all control. |
-| `size` | `'auto' \| 'half' \| 'full'` | `'half'` | How tall the sheet opens. `half` by default, and deliberately not `auto`. A sheet that sizes to its content gives its scrolling body no height to fill, and a list inside a box of no height draws nothing — which looks like an empty sheet rather than like a missing style. A selection is a list; give it the room. |
+| `size` | `'auto' \| 'half' \| 'full'` | `'full'` | How tall the sheet opens. `full` by default, and deliberately not `auto`. A sheet that sizes to its content gives its scrolling body no height to fill, and a list inside a box of no height draws nothing — which looks like an empty sheet rather than like a missing style. Full rather than half because a picker spends a header and a footer before it draws a single row. At half a screen that leaves four or five rows for the thing the sheet was opened to do, and the reader scrolls a list that would have fitted. Pass `half` for a sheet of two or three choices. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 

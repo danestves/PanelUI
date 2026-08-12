@@ -1,6 +1,7 @@
 ---
 title: PieChart
 description: One whole, divided between its parts.
+status: updated
 ---
 
 One total, divided between its parts.
@@ -10,6 +11,8 @@ Every slice is a share of the same whole: the values are normalised against thei
 **It is the wrong shape for a great many things.** Two numbers that do not belong to one whole, anything over time, and anything the reader has to compare precisely are all a [BarChart](/docs/charts/bar-chart) — an angle is the hardest quantity to read off a page, and the fifth-largest slice of eleven is not a fact anybody will extract.
 
 Use it for a handful of parts of one obvious total, and put the number in the middle. For values measured against their own targets rather than against each other, use a [RingChart](/docs/charts/ring-chart); for shares confirmed by counting, a [HexChart](/docs/charts/hex-chart).
+
+**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
 
 <PreviewVideo
   src="/previews/pie-chart.mp4"
@@ -305,7 +308,7 @@ One undivided band while it waits, and then the pie unrolls clockwise as the dat
 | `endAngle` | `number` | `360` | Where the last one ends, on the same clock. Leaving a turn's worth between the two gives a closed pie; anything less leaves a gap and reads as a dial. |
 | `padAngle` | `number` | `0` | Gap between one slice and the next, in degrees. |
 | `minAngle` | `number` | `0` | The smallest angle any non-zero slice is drawn at, in degrees. A slice worth a fifth of a percent is a hairline nobody can see and nobody can press, so it reads as missing rather than as small — and "missing" is a different claim from "nearly none". The angle it borrows comes off the others in proportion, so the turn still closes. |
-| `animationDuration` | `number` | `900` | Milliseconds for the pie to unroll. |
+| `animationDuration` | `number` | `620` | Milliseconds for the pie to unroll. |
 | `status` | `PieChartStatus` | `'ready'` | `loading` draws a plain muted ring until the data arrives. |
 | `activeIndex` | `number` | — | Selected slice. Leave unset to let the chart track it. |
 | `onActiveIndexChange` | `(index: number) => void` | — | Fires with the selected slice, or `-1` when the selection is cleared. |

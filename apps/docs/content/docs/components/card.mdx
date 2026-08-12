@@ -1,6 +1,7 @@
 ---
 title: Card
 description: Content surface with header, body and footer.
+status: updated
 ---
 
 A content surface with a header, a body and a footer.
@@ -65,7 +66,7 @@ npx panelui-cli@latest add card
 - **`Card.Title`** — Card heading.
 - **`Card.Description`** — Muted supporting line.
 - **`Card.Content`** — Main body.
-- **`Card.Footer`** — Row of actions.
+- **`Card.Footer`** — Row of actions. `variant="panel"` draws it as a band set into the card instead — a rule across the top, a step darker, and the card's own bottom corners — for a footer that is what somebody does with the card rather than more of what it says.
 
 ## Examples
 
@@ -175,6 +176,41 @@ Card as the shell around a short form.
 </Card>
 ```
 
+### Actions on their own surface
+
+`variant="panel"` puts the buttons on a band of their own, divided from the body by a rule and a step of shade.
+
+The case it exists for is a card whose body is a form. Buttons on the same surface, directly under the last field, read as one more field — and submitting is not the same kind of thing as filling something in.
+
+```tsx
+<Card>
+  <Card.Header>
+    <Card.Title>Login to your account</Card.Title>
+    <Card.Description>Enter your email below to login to your account.</Card.Description>
+  </Card.Header>
+  <Card.Content className="gap-4">
+    <Input label="Email" placeholder="m@example.com" />
+    <Input label="Password" secureTextEntry />
+  </Card.Content>
+  <Card.Footer variant="panel" className="flex-col gap-2">
+    <Button fullWidth>Login</Button>
+    <Button fullWidth variant="outline">Login with Google</Button>
+  </Card.Footer>
+</Card>
+```
+
+## Variants
+
+### `variant`
+
+- `plain` *(default)*
+- `panel`
+
+```tsx
+<Card variant="plain">…</Card>
+<Card variant="panel">…</Card>
+```
+
 ## API Reference
 
 ### Card
@@ -182,6 +218,16 @@ Card as the shell around a short form.
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
+
+### Card.Footer
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `Header` | `CardHeader,` | — |  |
+| `Title` | `CardTitle,` | — |  |
+| `Description` | `CardDescription,` | — |  |
+| `Content` | `CardContent,` | — |  |
+| `Footer` | `CardFooter,` | — |  |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 

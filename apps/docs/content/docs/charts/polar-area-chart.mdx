@@ -10,6 +10,8 @@ The values need not add up to anything. That is what separates it from a [PieCha
 
 It is not the chart for reading values off precisely. Length along a shared baseline is easier to compare than distance from a centre, so a reader ranking the middle three wedges is guessing. Put the numbers on the wedges with `Labels`, or use a [BarChart](/docs/charts/bar-chart).
 
+**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
+
 <PreviewVideo
   src="/previews/polar-area-chart.mp4"
   poster="/previews/polar-area-chart-poster.jpg"
@@ -207,7 +209,7 @@ One plain disc while it waits. Placeholder wedges would be an invented set of re
 | `startAngle` | `number` | `0` | Where the first wedge starts, in degrees clockwise from twelve o'clock. |
 | `padAngle` | `number` | `0` | Gap between wedges, in degrees. |
 | `status` | `PolarAreaChartStatus` | `'ready'` | `loading` draws the dial undivided, with nothing split up yet. |
-| `animationDuration` | `number` | `800` | Milliseconds for the wedges to grow out of the centre. |
+| `animationDuration` | `number` | `620` | Milliseconds for the wedges to grow out of the centre. |
 | `activeIndex` | `number` | — | The selected wedge, to drive the selection from outside. |
 | `onActiveIndexChange` | `(index: number) => void` | — |  |
 

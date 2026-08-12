@@ -1,6 +1,7 @@
 ---
 title: SectionRail
 description: Floating section navigator for a long screen.
+status: updated
 ---
 
 A floating navigator for a long screen: short bars pinned to one edge, one per section, that expand into a labelled panel when touched.
@@ -60,7 +61,7 @@ npx panelui-cli@latest add section-rail
 ```
 
 - **`SectionRail.Trigger`** — The collapsed rail. One press target over the whole stack of bars, because a hairline is not something anyone can hit.
-- **`SectionRail.Bar`** — One section, drawn as a bar. Widens and brightens when it is the active one; a deeper `level` draws a shorter bar.
+- **`SectionRail.Bar`** — One section, drawn as a bar. The active one is longest and brightest, the bars either side of it keep part of that, and the rest sit at the resting length — so the silhouette says roughly how far down the run you are without anybody counting bars. A deeper `level` draws a shorter bar.
 - **`SectionRail.Content`** — The expanded panel, mounted through a portal so it floats over everything and unmounted after it fades out.
 - **`SectionRail.Item`** — A labelled row in the panel, indented to match its bar.
 

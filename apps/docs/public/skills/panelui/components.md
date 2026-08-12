@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-104 components. The **Docs** column is the path under
+105 components. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -115,6 +115,7 @@ remember is a guess.
 | `LineChart` | Animated time series, drawn on the UI thread. | `charts/line-chart` |
 | `LiveLineChart` | A reading that keeps arriving, against a window that keeps moving. | `charts/live-line-chart` |
 | `PieChart` | One whole, divided between its parts. | `charts/pie-chart` |
+| `Plot` *(alpha)* | A chart you assemble out of its marks. | `charts/plot` |
 | `PolarAreaChart` | Several readings on one scale, compared as wedges. | `charts/polar-area-chart` |
 | `RadarChart` | Several measures of one thing, drawn as one shape. | `charts/radar-chart` |
 | `RingChart` | Concentric arcs, each measured against its own target. | `charts/ring-chart` |

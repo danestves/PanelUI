@@ -1,6 +1,7 @@
 ---
 title: Dialog
 description: Modal dialog with a backdrop and footer actions.
+status: updated
 ---
 
 A modal dialog with a backdrop and footer actions.
@@ -22,7 +23,7 @@ Use it when the reader has to deal with something before carrying on. When the s
 Dialog ships with the library — no separate install.
 
 ```tsx
-import { Dialog, Button, Input } from 'panelui-native';
+import { Dialog, Button, Input, View } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -74,7 +75,7 @@ npx panelui-cli@latest add dialog
 - **`Dialog.Content`** — The dialog surface, rendered in a portal.
 - **`Dialog.Title`** — Required for accessibility.
 - **`Dialog.Description`** — Supporting text.
-- **`Dialog.Footer`** — Row of actions.
+- **`Dialog.Footer`** — Row of actions, aligned to the trailing edge. `variant="panel"` draws it as a band instead — a rule across the top, a step darker, and the dialog's own bottom corners, bleeding out through the dialog's padding to reach its edges.
 - **`Dialog.Close`** — Clones its child and closes the dialog on press.
 
 ## Examples
@@ -146,6 +147,48 @@ Pass `blur` to frost the screen behind the dialog instead of dimming it. It uses
 </Dialog>
 ```
 
+### Actions on their own surface
+
+`variant="panel"` separates what the dialog says from what you can do about it.
+
+Worth it on a dialog with a form in it, where the buttons are otherwise the last row of the form. A dialog that only asks a question does not need it — there is nothing there for the band to divide.
+
+```tsx
+<Dialog>
+  <Dialog.Trigger>
+    <Button variant="outline">Edit profile</Button>
+  </Dialog.Trigger>
+  <Dialog.Content>
+    <Dialog.Title>Edit profile</Dialog.Title>
+    <Dialog.Description>Make changes to your profile here.</Dialog.Description>
+    <View className="gap-4 py-4">
+      <Input label="Name" defaultValue="Pedro Duarte" />
+      <Input label="Username" defaultValue="@peduarte" />
+    </View>
+    <Dialog.Footer variant="panel">
+      <Dialog.Close>
+        <Button size="sm" variant="outline">Cancel</Button>
+      </Dialog.Close>
+      <Dialog.Close>
+        <Button size="sm">Save changes</Button>
+      </Dialog.Close>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog>
+```
+
+## Variants
+
+### `variant`
+
+- `plain` *(default)*
+- `panel`
+
+```tsx
+<Dialog variant="plain">…</Dialog>
+<Dialog variant="panel">…</Dialog>
+```
+
 ## API Reference
 
 ### Dialog
@@ -163,5 +206,11 @@ Pass `blur` to frost the screen behind the dialog instead of dimming it. It uses
 | `className` | `string` | — |  |
 | `dismissible` | `boolean` | `true` | Tap on the backdrop closes the dialog. Default true. |
 | `blur` | `boolean` | `false` | Frost the screen behind the dialog instead of dimming it. Uses `expo-blur` when installed and falls back to the dim when it is not, so it is safe to pass either way. |
+
+### Dialog.Footer
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.

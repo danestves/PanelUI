@@ -9,6 +9,7 @@ import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from '
 import Animated, {
   cancelAnimation,
   Easing,
+  useAnimatedProps,
   FadeInDown,
   FadeOutDown,
   runOnJS,
@@ -145,6 +146,9 @@ import {
   PauseIcon,
   PencilIcon,
   PieChart,
+  Plot,
+  usePlot,
+  yOf,
   PlusIcon,
   PolarAreaChart,
   type PieDatum,
@@ -233,7 +237,11 @@ import {
   useThemeMode,
   useToast,
 } from 'panelui-native';
+import { Path as SvgPath } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
+
+/** For the custom `Plot` mark below — an SVG path whose `d` is set on the UI thread. */
+const AnimatedPath = Animated.createAnimatedComponent(SvgPath);
 import {
   formatClock,
   useVoiceRecorder,
@@ -12599,6 +12607,218 @@ function TreemapLoadingVersion() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Plot                                                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Half a year of trading.
+ *
+ * Revenue and costs are both money, which is what makes them worth drawing on
+ * one axis: the gap between the two marks is the margin, and reading it off the
+ * chart is the whole reason to combine them. `orders` is here for a caption to
+ * quote and is deliberately *not* drawn — a count and a currency share no scale,
+ * and a line of hundreds under columns of tens of thousands is a line lying flat
+ * on the floor of the plot.
+ */
+const PLOT_QUARTER = [
+  { month: 'Jan', revenue: 18400, costs: 13100, orders: 310 },
+  { month: 'Feb', revenue: 21200, costs: 14600, orders: 352 },
+  { month: 'Mar', revenue: 19800, costs: 15200, orders: 341 },
+  { month: 'Apr', revenue: 26100, costs: 17400, orders: 418 },
+  { month: 'May', revenue: 24700, costs: 18100, orders: 402 },
+  { month: 'Jun', revenue: 31500, costs: 19300, orders: 486 },
+];
+
+const PLOT_TARGET = 28000;
+
+/**
+ * The combination: columns and a line over them, on one scale.
+ *
+ * Nothing in the library ships this as a component of its own, which is the
+ * point — it is two marks written one after the other, and the order they are
+ * written is the order they are drawn.
+ */
+function PlotCombinationVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Trading</Frame.Title>
+          <Frame.Action>First half</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <Plot
+            data={PLOT_QUARTER}
+            xDataKey="month"
+            aspectRatio={1.7}
+            className="px-3 pb-3"
+          >
+            <Plot.Header
+              className={CHART_HEADER}
+              title="Revenue"
+              value={money(PLOT_QUARTER.reduce((sum, row) => sum + row.revenue, 0))}
+            />
+            <Plot.Legend
+              className={CHART_HEADER}
+              labels={{ revenue: 'Revenue', costs: 'Costs' }}
+            />
+            <Plot.Grid />
+            <Plot.Bars dataKey="revenue" colorIndex={2} />
+            <Plot.Line dataKey="costs" colorIndex={1} curve="linear" />
+            <Plot.Dots dataKey="costs" colorIndex={1} />
+            <Plot.YAxis />
+            <Plot.XAxis ticks={6} />
+          </Plot>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * A baseline pinned at zero, and a reference line across it.
+ *
+ * `yDomain={[0, 'auto']}` is the case the fixed pair cannot express: the bottom
+ * is held where a length has to start, and the top still follows whatever the
+ * data does.
+ */
+function PlotPinnedVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Against target</Frame.Title>
+          <Frame.Action>{money(PLOT_TARGET)}</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <Plot
+            data={PLOT_QUARTER}
+            xDataKey="month"
+            yDomain={[0, 'auto']}
+            aspectRatio={1.7}
+            className="px-3 pb-3"
+          >
+            <Plot.Header className={CHART_HEADER} title="Revenue by month" />
+            <Plot.Grid />
+            <Plot.Bars dataKey="revenue" colorIndex={2} />
+            <Plot.Rule y={PLOT_TARGET} label="Target" />
+            <Plot.YAxis format={(value) => money(Math.round(value))} />
+            <Plot.XAxis ticks={6} />
+          </Plot>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * A mark the library does not ship, drawn on the chart's own geometry.
+ *
+ * `Plot.Layer` puts it in the SVG tree and `usePlot` hands it the box and the
+ * tweening domain, so it is rebuilt on the UI thread on the frames the built-in
+ * marks are — not laid over them a frame late.
+ */
+function BandBetween({ low, high }: { low: number; high: number }) {
+  const { plot, domainMin, domainMax } = usePlot();
+  const tint = useCSSVariable('--color-chart-3');
+
+  const animatedProps = useAnimatedProps(() => {
+    const min = domainMin.value;
+    const max = domainMax.value;
+    if (max === min) return { d: '' };
+    const top = yOf(high, plot, min, max);
+    const bottom = yOf(low, plot, min, max);
+    return {
+      d: `M${plot.left},${top}H${plot.left + plot.width}V${bottom}H${plot.left}Z`,
+    };
+  });
+
+  return (
+    <AnimatedPath
+      animatedProps={animatedProps}
+      fill={typeof tint === 'string' ? tint : '#34d399'}
+      fillOpacity={0.14}
+    />
+  );
+}
+
+function PlotCustomMarkVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Inside the band</Frame.Title>
+          <Frame.Action>A mark of your own</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <Plot
+            data={PLOT_QUARTER}
+            xDataKey="month"
+            aspectRatio={1.7}
+            className="px-3 pb-3"
+          >
+            <Plot.Header
+              className={CHART_HEADER}
+              title="Revenue"
+              caption="Shaded where the month was within the plan"
+            />
+            <Plot.Grid />
+            {/* Written first, so it is drawn under the series. */}
+            <Plot.Layer>
+              <BandBetween low={20000} high={28000} />
+            </Plot.Layer>
+            <Plot.Area dataKey="revenue" />
+            <Plot.Line dataKey="revenue" />
+            <Plot.YAxis />
+            <Plot.XAxis ticks={6} />
+          </Plot>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** The cursor, and a readout in the card's header rather than over the plot. */
+function PlotCursorVersion() {
+  const [active, setActive] = useState(-1);
+  const row = active >= 0 ? PLOT_QUARTER[active] : null;
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Drag across it</Frame.Title>
+          <Frame.Action>{row ? row.month : 'First half'}</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <Plot
+            data={PLOT_QUARTER}
+            xDataKey="month"
+            aspectRatio={1.7}
+            className="px-3 pb-3"
+            onActiveIndexChange={setActive}
+          >
+            <Plot.Header
+              className={CHART_HEADER}
+              title={row ? `${row.orders} orders` : 'Revenue'}
+              value={money(row ? row.revenue : PLOT_QUARTER[PLOT_QUARTER.length - 1]!.revenue)}
+            />
+            <Plot.Grid />
+            <Plot.Area dataKey="revenue" />
+            <Plot.Line dataKey="revenue" />
+            <Plot.Dots dataKey="revenue" />
+            <Plot.YAxis />
+            <Plot.XAxis ticks={6} />
+            <Plot.Cursor />
+            <Plot.Tooltip formatValue={(value) => money(value)} />
+          </Plot>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
 /* -------------------------------------------------------------------------- *
  * Sortable                                                                    *
  * -------------------------------------------------------------------------- */
@@ -17644,6 +17864,42 @@ const CATALOGUE: ComponentEntry[] = [
     ],
   },
   {
+    slug: 'plot',
+    name: 'Plot',
+    summary: 'A chart you assemble out of its marks',
+    layout: 'pager',
+    demos: [
+      {
+        label: 'Combination',
+        id: 'combination',
+        fullPage: true,
+        description: 'Columns and a line over them, on one shared scale.',
+        render: () => <PlotCombinationVersion />,
+      },
+      {
+        label: 'A pinned baseline',
+        id: 'pinned',
+        fullPage: true,
+        description: 'Zero held at the bottom, the top left to follow the data, and a target across it.',
+        render: () => <PlotPinnedVersion />,
+      },
+      {
+        label: 'A mark of your own',
+        id: 'custom-mark',
+        fullPage: true,
+        description: 'A shaded band nothing here ships, drawn on the chart’s own geometry.',
+        render: () => <PlotCustomMarkVersion />,
+      },
+      {
+        label: 'Cursor and readout',
+        id: 'cursor',
+        fullPage: true,
+        description: 'A drag resolves the row under the finger; the card’s header reads it.',
+        render: () => <PlotCursorVersion />,
+      },
+    ],
+  },
+  {
     slug: 'pie-chart',
     name: 'PieChart',
     summary: 'One whole, divided between its parts',
@@ -19716,6 +19972,7 @@ export const COMPONENTS_BY_SLUG: Record<string, ComponentEntry> = Object.fromEnt
  * stop matching is the day the gallery starts lying about what you get.
  */
 export const CHART_SLUGS = [
+  'plot',
   'line-chart',
   'area-chart',
   'bar-chart',

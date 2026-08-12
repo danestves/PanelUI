@@ -1,6 +1,7 @@
 ---
 title: LineChart
 description: Animated time series, drawn on the UI thread.
+status: updated
 ---
 
 A time series, drawn and animated on the UI thread.
@@ -10,6 +11,8 @@ The chart is composed rather than configured: the grid, each series, the axis an
 Colours come from the `--color-chart-1` … `--color-chart-5` tokens, so a chart follows the active theme and is put on brand by overriding those five. Nothing in it hardcodes a colour.
 
 For what a series is *made of* rather than its shape, use an [AreaChart](/docs/charts/area-chart).
+
+**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
 
 <PreviewVideo
   src="/previews/line-chart.mp4"
@@ -410,7 +413,7 @@ Four series across the chart token ramp. They share one y-domain, so they stay c
 | `xDataKey` | `string` | `'date'` | Key holding the x label. Used by the axis and the crosshair readout. |
 | `status` | `LineChartStatus` | `'ready'` | `loading` draws a flat skeleton with a sweep running along it, and morphs into the real series when it turns `ready`. One component throughout, rather than a spinner swapped for a chart — swapping loses the transition. |
 | `aspectRatio` | `number` | `2` | Width ÷ height. `2` is the wide card shape; `1.6` suits a narrow column. |
-| `animationDuration` | `number` | `1100` | Milliseconds for the reveal on mount. |
+| `animationDuration` | `number` | `700` | Milliseconds for the reveal on mount. |
 | `domainDuration` | `number` | `500` | Milliseconds for the y-axis to settle after the data changes. |
 | `yDomain` | `[number, number]` | — | Fix the y-axis instead of deriving it from the data. |
 | `curve` | `LineChartCurve` | `'monotone'` | `monotone` never overshoots between points; `linear` joins them straight. |

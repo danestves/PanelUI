@@ -10,6 +10,8 @@ Composed the way every chart here is: the grid, each series, the axes and the re
 
 **The baseline is zero and stays zero.** A [LineChart](/docs/charts/line-chart) may crop its axis to the range the data occupies, because its job is to show change. A bar's job is to compare lengths, and a bar cropped at the bottom is a length that lies — twice as tall no longer means twice as much.
 
+**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
+
 <PreviewVideo
   src="/previews/bar-chart.mp4"
   poster="/previews/bar-chart-poster.jpg"
@@ -212,7 +214,7 @@ Horizontal bars, for category names that need the room.
 | `xDataKey` | `string` | `'name'` | Key holding the category label. Used by the axis and the readout. |
 | `status` | `BarChartStatus` | `'ready'` | `loading` holds the bars at the baseline and grows them into the real ones when it turns `ready`. One component throughout, rather than a spinner swapped for a chart — swapping loses the transition. Add a `BarChart.Skeleton` for something to stand in the plot meanwhile. |
 | `aspectRatio` | `number` | `2` | Width ÷ height. `2` is the wide card shape. |
-| `animationDuration` | `number` | `1100` | Milliseconds for the bars to grow in on mount. |
+| `animationDuration` | `number` | `700` | Milliseconds for the bars to grow in on mount. |
 | `domainDuration` | `number` | `500` | Milliseconds for the value axis to settle after the data changes. |
 | `yDomain` | `[number, number]` | — | Fix the value axis instead of deriving it. Note that the derived domain always includes zero, and a domain that does not is a bar chart whose lengths cannot be compared — pass this only when you mean it. |
 | `orientation` | `BarChartOrientation` | `'vertical'` | `vertical` grows the bars upward; `horizontal` grows them rightward. |

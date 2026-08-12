@@ -1,6 +1,7 @@
 ---
 title: CandlestickChart
 description: Open, high, low and close for a period, drawn as one mark.
+status: updated
 ---
 
 Open, high, low and close for a period, drawn as one mark.
@@ -8,6 +9,8 @@ Open, high, low and close for a period, drawn as one mark.
 The body spans open to close and is filled by direction — green when the period closed at or above where it opened, red when it closed below — and the wick behind it spans the low to the high.
 
 Composed the way every chart here is: the grid, the candles, the axes and the readout are separate children.
+
+**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
 
 <PreviewVideo
   src="/previews/candlestick-chart.mp4"
@@ -220,9 +223,9 @@ Placeholder candles growing into the real ones.
 | `highDataKey` | `string` | `'high'` | Key holding the period's high. |
 | `lowDataKey` | `string` | `'low'` | Key holding the period's low. |
 | `closeDataKey` | `string` | `'close'` | Key holding the closing price. |
-| `status` | `CandlestickChartStatus` | `'ready'` | `loading` draws a row of flat placeholder candles and grows them into the real ones when it turns `ready`. One component throughout, rather than a spinner swapped for a chart — swapping loses the transition. |
+| `status` | `CandlestickChartStatus` | `'ready'` | `loading` leaves the plot empty — the frame, the grid and the header stay, and no candles are drawn. Turning `ready` grows them in left to right. Nothing stands in for the candles while they are missing. A placeholder candle is four made-up prices, and a reader has no way to tell an invented one from a real one until it changes under them. |
 | `aspectRatio` | `number` | `1.6` | Width ÷ height. `1.6` suits a chart this dense better than `2`. |
-| `animationDuration` | `number` | `1100` | Milliseconds for the candles to grow in on mount. |
+| `animationDuration` | `number` | `700` | Milliseconds for the candles to grow in on mount. |
 | `domainDuration` | `number` | `500` | Milliseconds for the price axis to settle after the data changes. |
 | `yDomain` | `[number, number]` | — | Fix the price axis instead of deriving it from the lows and highs. Note that the derived domain deliberately does *not* include zero — see the notes on why a candle's axis is not a bar's. |
 | `candleGap` | `number` | `0.3` | Fraction of each period's slice left empty, `0` to `1`. A fraction rather than a pixel gap so the proportions hold at any width. |

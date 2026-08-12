@@ -693,6 +693,16 @@
     ]
   },
   {
+    "name": "plot",
+    "type": "registry:ui",
+    "description": "A chart you assemble out of its marks.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "polar-area-chart",
     "type": "registry:ui",
     "description": "Several readings on one scale, compared as wedges.",
@@ -912,6 +922,7 @@
       "animated-pressable",
       "bottom-sheet",
       "cn",
+      "collapse",
       "haptics",
       "icons",
       "text",

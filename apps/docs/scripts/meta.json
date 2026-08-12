@@ -23,7 +23,7 @@
     {
       "addedIn": "0.25.0",
       "group": "charts",
-      "updatedIn": "0.61.0"
+      "updatedIn": "0.63.0"
     }
   ],
   "attachment": [
@@ -57,7 +57,7 @@
     {
       "addedIn": "0.25.0",
       "group": "charts",
-      "updatedIn": "0.61.0"
+      "updatedIn": "0.63.0"
     }
   ],
   "candlestick-chart": [
@@ -66,7 +66,8 @@
     "react native candlestick chart ohlc",
     {
       "addedIn": "0.53.0",
-      "group": "charts"
+      "group": "charts",
+      "updatedIn": "0.63.0"
     }
   ],
   "bottom-sheet": [
@@ -110,7 +111,7 @@
     "Content surface with header, body and footer.",
     "react native card",
     {
-      "updatedIn": "0.44.0",
+      "updatedIn": "0.63.0",
       "category": "layout"
     }
   ],
@@ -186,7 +187,7 @@
     "Modal dialog with a backdrop and footer actions.",
     "react native modal dialog",
     {
-      "updatedIn": "0.26.0",
+      "updatedIn": "0.63.0",
       "category": "overlays"
     }
   ],
@@ -293,7 +294,8 @@
     "react native hex honeycomb waffle chart",
     {
       "addedIn": "0.56.0",
-      "group": "charts"
+      "group": "charts",
+      "updatedIn": "0.63.0"
     }
   ],
   "input": [
@@ -371,7 +373,7 @@
     "Animated time series, drawn on the UI thread.",
     "react native line chart",
     {
-      "updatedIn": "0.45.0",
+      "updatedIn": "0.63.0",
       "group": "charts"
     }
   ],
@@ -489,7 +491,8 @@
     "react native pie donut chart",
     {
       "addedIn": "0.46.0",
-      "group": "charts"
+      "group": "charts",
+      "updatedIn": "0.63.0"
     }
   ],
   "ring-chart": [
@@ -498,7 +501,7 @@
     "react native ring chart radial progress gauge",
     {
       "addedIn": "0.25.0",
-      "updatedIn": "0.40.0",
+      "updatedIn": "0.63.0",
       "group": "charts"
     }
   ],
@@ -552,7 +555,7 @@
     "react native table of contents",
     {
       "addedIn": "0.11.0",
-      "updatedIn": "0.43.0",
+      "updatedIn": "0.63.0",
       "category": "navigation"
     }
   ],
@@ -883,7 +886,8 @@
     "react native radar chart spider web",
     {
       "addedIn": "0.43.0",
-      "group": "charts"
+      "group": "charts",
+      "updatedIn": "0.63.0"
     }
   ],
   "tree": [
@@ -922,7 +926,8 @@
     {
       "addedIn": "0.60.0",
       "alpha": true,
-      "category": "actions"
+      "category": "actions",
+      "updatedIn": "0.63.0"
     }
   ],
   "treemap-chart": [
@@ -940,7 +945,8 @@
     "react native polar area chart rose",
     {
       "addedIn": "0.62.0",
-      "group": "charts"
+      "group": "charts",
+      "updatedIn": "0.63.0"
     }
   ],
   "live-line-chart": [
@@ -950,6 +956,16 @@
     {
       "addedIn": "0.62.0",
       "group": "charts"
+    }
+  ],
+  "plot": [
+    "Plot",
+    "A chart you assemble out of its marks.",
+    "react native composable custom chart builder",
+    {
+      "group": "charts",
+      "addedIn": "0.63.0",
+      "alpha": true
     }
   ]
 }

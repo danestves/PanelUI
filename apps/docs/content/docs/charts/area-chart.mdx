@@ -8,6 +8,8 @@ Filled bands over time, stacked or overlaid.
 
 **This is not `LineChart.Area`.** Shading under a line is one series saying *this is the shape of the thing*. An area chart answers *what is it made of*, and that needs stacking — each band sits on the running total of the ones below it, so the top edge is the whole and each thickness is a share.
 
+**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
+
 <PreviewVideo
   src="/previews/area-chart.mp4"
   poster="/previews/area-chart-poster.jpg"
@@ -195,7 +197,7 @@ Alternatives rather than parts, so the fills go translucent and both bands stay 
 | `xDataKey` | `string` | `'date'` | Key holding the x label. Used by the axis and the crosshair readout. |
 | `status` | `AreaChartStatus` | `'ready'` | `loading` holds the bands flat and grows them into the real ones when it turns `ready`. Add an `AreaChart.Skeleton` for something to stand in the plot meanwhile. |
 | `aspectRatio` | `number` | `2` | Width ÷ height. `2` is the wide card shape. |
-| `animationDuration` | `number` | `1100` | Milliseconds for the reveal on mount. |
+| `animationDuration` | `number` | `700` | Milliseconds for the reveal on mount. |
 | `domainDuration` | `number` | `500` | Milliseconds for the y-axis to settle after the data changes. |
 | `yDomain` | `[number, number]` | — | Fix the y-axis instead of deriving it from the data. |
 | `stacked` | `boolean` | `false` | Sit each band on the running total of the ones below it, so the top edge is the whole and each thickness is a share. The order the `Area` children are declared in is the stacking order, bottom first. Unstacked, the bands overlay and their fills are translucent — the right reading when the series are alternatives rather than parts of a total. |
