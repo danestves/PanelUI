@@ -246,6 +246,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 Tiles are sorted largest first because the layout needs them that way. The row test assumes a descending run — given a large tile beside a small one it has no good row to make, and the chart comes out as slivers. `sort={false}` is there for when the given order is itself the message, and the shapes will suffer for it.
 
+Labels take their colour from the tile under them — white on a dark tile, near-black on a light one. Chart colours are set by the theme and can land anywhere on the scale, so a fixed white label would disappear on a pale one. A tile faded down the ramp is judged as it is drawn, blended with what is behind the chart, rather than by the colour it started as.
+
 A tile smaller than `minLabelSize` on either side is left blank by `Labels`. A name clipped to two letters is not a shorter name but a different word, so those tiles are read through `Tooltip` instead — which is the reason to include it even on a chart whose large tiles are all labelled.
 
 Negative values are treated as zero. There is no way to draw an area smaller than none, and scaling around it would misstate every other tile.

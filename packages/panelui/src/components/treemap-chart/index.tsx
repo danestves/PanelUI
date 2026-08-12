@@ -87,7 +87,7 @@ import Animated, {
 import Svg, { Defs, G, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
-import { compactNumber, useSeriesColor } from '../../utils/chart';
+import { compactNumber, inkOn, useSeriesColor } from '../../utils/chart';
 import { cn } from '../../utils/cn';
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
@@ -894,6 +894,11 @@ export interface TreemapChartLabelsProps {
  * alternative is a name clipped to its first two letters, which is not a
  * shorter name but a different word, and a chart of those is a chart nobody can
  * read. Those tiles are read through `Tooltip` instead.
+ *
+ * Each label takes its colour from the tile under it rather than from the
+ * theme. A tile is the chart's own hue, and a theme is free to set that hue
+ * anywhere on the scale — a fixed white label vanishes on a pale one, and the
+ * foreground token would be the wrong colour on half the tiles in either mode.
  */
 function TreemapChartLabels({
   showValue = true,
@@ -903,8 +908,17 @@ function TreemapChartLabels({
 }: TreemapChartLabelsProps) {
   const { tiles, minLabelSize, status, activeIndex, setActiveIndex } =
     useChart('TreemapChart.Labels');
+  /*
+   * The tiles down the ramp are drawn part-transparent, so what a label sits on
+   * is the hue blended with whatever is behind the chart. Read against the
+   * background token: a chart on a card is a shade off it, and no tile's
+   * verdict turns on that much.
+   */
+  const backdrop = useCSSVariable('--color-background');
 
   if (status === 'loading' || !tiles.length) return null;
+
+  const behind = typeof backdrop === 'string' ? backdrop : undefined;
 
   const format = formatValue ?? ((value: number) => compactNumber(value));
 
@@ -913,6 +927,7 @@ function TreemapChartLabels({
       {tiles.map((tile, index) => {
         if (tile.width < minLabelSize || tile.height < minLabelSize) return null;
         const percent = Math.round(tile.share * 100);
+        const ink = inkOn(tile.color, behind, tile.strength);
         return (
           <Pressable
             key={`${tile.label}-${index}`}
@@ -929,26 +944,21 @@ function TreemapChartLabels({
             }}
             className={cn('justify-start p-2', className)}
           >
-            {/*
-             * White rather than the foreground token: the tiles are the chart's
-             * own hue at full strength, and text that follows the theme would
-             * be dark-on-dark in one mode and unreadable in the other.
-             */}
             <Text
               size="xs"
               weight="semibold"
               numberOfLines={1}
-              style={{ color: '#fff' }}
+              style={{ color: ink.color }}
             >
               {tile.label}
             </Text>
             {showValue ? (
-              <Text size="xs" numberOfLines={1} style={{ color: 'rgba(255,255,255,0.82)' }}>
+              <Text size="xs" numberOfLines={1} style={{ color: ink.muted }}>
                 {format(tile.value, tile)}
               </Text>
             ) : null}
             {showShare ? (
-              <Text size="xs" numberOfLines={1} style={{ color: 'rgba(255,255,255,0.82)' }}>
+              <Text size="xs" numberOfLines={1} style={{ color: ink.muted }}>
                 {percent}%
               </Text>
             ) : null}
