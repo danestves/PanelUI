@@ -269,7 +269,7 @@ const HexChartRoot = forwardRef<HexChartHandle, HexChartProps>(function HexChart
     density = 0.55,
     shape = 'blob',
     cellGap = 0.14,
-    animationDuration = 900,
+    animationDuration = 620,
     status = 'ready',
     activeIndex: activeIndexProp,
     onActiveIndexChange,
@@ -413,7 +413,7 @@ const HexChartRoot = forwardRef<HexChartHandle, HexChartProps>(function HexChart
       reveal.value = 0;
       reveal.value = withTiming(1, {
         duration: animationDuration,
-        easing: Easing.bezier(0.85, 0, 0.15, 1),
+        easing: Easing.out(Easing.cubic),
       });
     },
     [reducedMotion, animationDuration, reveal]

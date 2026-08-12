@@ -167,7 +167,7 @@ const RingChartRoot = forwardRef<RingChartHandle, RingChartProps>(function RingC
     ringGap = 6,
     startAngle = 0,
     endAngle = 360,
-    animationDuration = 1100,
+    animationDuration = 700,
     activeIndex: activeIndexProp,
     onActiveIndexChange,
     children,
@@ -219,7 +219,7 @@ const RingChartRoot = forwardRef<RingChartHandle, RingChartProps>(function RingC
       reveal.value = 0;
       reveal.value = withTiming(1, {
         duration: animationDuration,
-        easing: Easing.bezier(0.85, 0, 0.15, 1),
+        easing: Easing.out(Easing.cubic),
       });
     },
     [reducedMotion, animationDuration, reveal]

@@ -10124,9 +10124,10 @@ function CandlestickChartLoadingVersion() {
   const [status, setStatus] = useState<'loading' | 'ready'>('loading');
 
   useEffect(() => {
+    if (status !== 'loading') return;
     const timer = setTimeout(() => setStatus('ready'), 1400);
     return () => clearTimeout(timer);
-  }, []);
+  }, [status]);
 
   return (
     <View className="flex-1 justify-center gap-3 p-4">

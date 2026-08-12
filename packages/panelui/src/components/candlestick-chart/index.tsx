@@ -249,9 +249,12 @@ export interface CandlestickChartProps extends ViewProps {
   /** Key holding the closing price. */
   closeDataKey?: string;
   /**
-   * `loading` draws a row of flat placeholder candles and grows them into the
-   * real ones when it turns `ready`. One component throughout, rather than a
-   * spinner swapped for a chart — swapping loses the transition.
+   * `loading` leaves the plot empty — the frame, the grid and the header stay,
+   * and no candles are drawn. Turning `ready` grows them in left to right.
+   *
+   * Nothing stands in for the candles while they are missing. A placeholder
+   * candle is four made-up prices, and a reader has no way to tell an invented
+   * one from a real one until it changes under them.
    */
   status?: CandlestickChartStatus;
   /** Width ÷ height. `1.6` suits a chart this dense better than `2`. */
@@ -323,7 +326,7 @@ const CandlestickChartRoot = forwardRef<CandlestickChartHandle, CandlestickChart
       closeDataKey = 'close',
       status = 'ready',
       aspectRatio = 1.6,
-      animationDuration = 1100,
+      animationDuration = 700,
       domainDuration = 500,
       yDomain,
       candleGap = 0.3,
@@ -427,17 +430,27 @@ const CandlestickChartRoot = forwardRef<CandlestickChartHandle, CandlestickChart
         reveal.value = 0;
         reveal.value = withTiming(1, {
           duration: animationDuration,
-          easing: Easing.bezier(0.85, 0, 0.15, 1),
+          easing: Easing.out(Easing.cubic),
         });
       },
       [reducedMotion, animationDuration, reveal]
     );
 
     useEffect(() => {
-      if (revealed.current || loading || plot.width <= 0 || !data.length) return;
+      /*
+       * Going back to `loading` arms the reveal again. Without this a chart
+       * that is refetched comes back fully drawn on the frame the data lands,
+       * which reads as the loading state having been for nothing.
+       */
+      if (loading) {
+        revealed.current = false;
+        reveal.value = 0;
+        return;
+      }
+      if (revealed.current || plot.width <= 0 || !data.length) return;
       revealed.current = true;
       playReveal();
-    }, [loading, plot.width, data.length, playReveal]);
+    }, [loading, plot.width, data.length, playReveal, reveal]);
 
     useImperativeHandle(ref, () => ({ replay: playReveal }), [playReveal]);
 

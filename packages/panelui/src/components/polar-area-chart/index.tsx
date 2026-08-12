@@ -233,7 +233,7 @@ const PolarAreaChartRoot = forwardRef<PolarAreaChartHandle, PolarAreaChartProps>
       startAngle = 0,
       padAngle = 0,
       status = 'ready',
-      animationDuration = 800,
+      animationDuration = 620,
       activeIndex: activeIndexProp,
       onActiveIndexChange,
       children,
@@ -311,7 +311,7 @@ const PolarAreaChartRoot = forwardRef<PolarAreaChartHandle, PolarAreaChartProps>
         reveal.value = 0;
         reveal.value = withTiming(1, {
           duration: animationDuration,
-          easing: Easing.bezier(0.85, 0, 0.15, 1),
+          easing: Easing.out(Easing.cubic),
         });
       },
       [reducedMotion, animationDuration, reveal]

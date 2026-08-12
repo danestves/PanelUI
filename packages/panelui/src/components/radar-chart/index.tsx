@@ -85,7 +85,7 @@ const LABEL_ROOM = { x: 62, y: 26 };
 const BARE_ROOM = { x: 6, y: 6 };
 
 /** How long the polygons take to grow out of the centre. */
-const REVEAL_DURATION = 900;
+const REVEAL_DURATION = 620;
 /** …and how long one profile takes to travel to the next when the data changes. */
 const MORPH_DURATION = 420;
 
@@ -312,17 +312,27 @@ const RadarChartRoot = forwardRef<RadarChartHandle, RadarChartProps>(
         reveal.value = 0;
         reveal.value = withTiming(1, {
           duration: animationDuration,
-          easing: Easing.bezier(0.85, 0, 0.15, 1),
+          easing: Easing.out(Easing.cubic),
         });
       },
       [reducedMotion, animationDuration, reveal]
     );
 
     useEffect(() => {
-      if (revealed.current || loading || radius <= 0 || !data.length) return;
+      /*
+       * Going back to `loading` arms the reveal again. Without this a chart
+       * that is refetched comes back fully drawn on the frame the data lands,
+       * which reads as the loading state having been for nothing.
+       */
+      if (loading) {
+        revealed.current = false;
+        reveal.value = 0;
+        return;
+      }
+      if (revealed.current || radius <= 0 || !data.length) return;
       revealed.current = true;
       playReveal();
-    }, [loading, radius, data.length, playReveal]);
+    }, [loading, radius, data.length, playReveal, reveal]);
 
     useImperativeHandle(ref, () => ({ replay: playReveal }), [playReveal]);
 

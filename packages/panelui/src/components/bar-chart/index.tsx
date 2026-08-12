@@ -245,7 +245,7 @@ const BarChartRoot = forwardRef<BarChartHandle, BarChartProps>(function BarChart
     xDataKey = 'name',
     status = 'ready',
     aspectRatio = 2,
-    animationDuration = 1100,
+    animationDuration = 700,
     domainDuration = 500,
     yDomain,
     orientation = 'vertical',
@@ -374,17 +374,27 @@ const BarChartRoot = forwardRef<BarChartHandle, BarChartProps>(function BarChart
       reveal.value = 0;
       reveal.value = withTiming(1, {
         duration: animationDuration,
-        easing: Easing.bezier(0.85, 0, 0.15, 1),
+        easing: Easing.out(Easing.cubic),
       });
     },
     [reducedMotion, animationDuration, reveal]
   );
 
   useEffect(() => {
-    if (revealed.current || loading || plot.width <= 0 || !data.length) return;
+    /*
+     * Going back to `loading` arms the reveal again. Without this a chart that
+     * is refetched comes back fully drawn on the frame the data lands, which
+     * reads as the loading state having been for nothing.
+     */
+    if (loading) {
+      revealed.current = false;
+      reveal.value = 0;
+      return;
+    }
+    if (revealed.current || plot.width <= 0 || !data.length) return;
     revealed.current = true;
     playReveal();
-  }, [loading, plot.width, data.length, playReveal]);
+  }, [loading, plot.width, data.length, playReveal, reveal]);
 
   useImperativeHandle(ref, () => ({ replay: playReveal }), [playReveal]);
 

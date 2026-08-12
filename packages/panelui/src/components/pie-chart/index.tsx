@@ -206,7 +206,7 @@ const PieChartRoot = forwardRef<PieChartHandle, PieChartProps>(function PieChart
     endAngle = 360,
     padAngle = 0,
     minAngle = 0,
-    animationDuration = 900,
+    animationDuration = 620,
     status = 'ready',
     activeIndex: activeIndexProp,
     onActiveIndexChange,
@@ -290,7 +290,7 @@ const PieChartRoot = forwardRef<PieChartHandle, PieChartProps>(function PieChart
       reveal.value = 0;
       reveal.value = withTiming(1, {
         duration: animationDuration,
-        easing: Easing.bezier(0.85, 0, 0.15, 1),
+        easing: Easing.out(Easing.cubic),
       });
     },
     [reducedMotion, animationDuration, reveal]
