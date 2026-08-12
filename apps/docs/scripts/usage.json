@@ -6036,10 +6036,11 @@
       "Card",
       "Text"
     ],
-    "anatomy": "<BarChart>\n  <BarChart.Grid />                     {/* lines across the value axis */}\n  <BarChart.Bar dataKey=\"…\" />          {/* one per series */}\n  <BarChart.XAxis />                    {/* category labels, under the bands */}\n  <BarChart.YAxis />                    {/* value labels, down the side */}\n  <BarChart.Legend />\n  <BarChart.Tooltip />                  {/* the drag, and the readout */}\n</BarChart>",
+    "anatomy": "<BarChart>\n  <BarChart.Grid />                     {/* lines across the value axis */}\n  <BarChart.Bar dataKey=\"…\" />          {/* one per series */}\n  <BarChart.Skeleton />                 {/* while status=\"loading\" */}\n  <BarChart.XAxis />                    {/* category labels, under the bands */}\n  <BarChart.YAxis />                    {/* value labels, down the side */}\n  <BarChart.Legend />\n  <BarChart.Tooltip />                  {/* the drag, and the readout */}\n</BarChart>",
     "parts": {
       "Grid": "Lines across the value axis, so a bar can be read against a number and not only against the bar beside it.",
       "Bar": "One series. Every bar in it is a subpath of a single animated path, split in two so the band under the finger keeps full ink while the rest fade.",
+      "Skeleton": "A row of short, equal stubs on the baseline with a sweep across them, shown while `status=\"loading\"`.",
       "XAxis": "Category labels under the bands. Real text, so they follow the theme’s font and the platform’s text scaling.",
       "YAxis": "Value labels down the side. The chart reserves a gutter for them, rather than drawing them over the plot.",
       "Legend": "A swatch and a name per series.",
@@ -6076,6 +6077,11 @@
         "title": "Bars that would round to nothing",
         "description": "`minBarLength` floors a non-zero bar at a length you can see. A value too small to draw still happened, and a bar of no height says it did not.",
         "code": "<BarChart data={errors} xDataKey=\"day\" minBarLength={2}>\n  <BarChart.Bar dataKey=\"count\" colorIndex={4} />\n  <BarChart.XAxis />\n</BarChart>"
+      },
+      {
+        "title": "Loading, and then data",
+        "description": "Add `BarChart.Skeleton` and drive `status`. While loading, a row of short equal stubs sits on the baseline with a highlight travelling across them; on `ready` the real bars grow out of it.\n\nThe stubs are equal because a placeholder with a distribution in it cannot be told from a real one until it changes. They count the rows when there are rows to count, and default to seven when the data has not arrived — pass `bars` to say otherwise.\n\nWithout the skeleton the plot is empty while loading, which is the same picture a chart of zeroes draws.",
+        "code": "<BarChart data={data} status={status} xDataKey=\"month\">\n  <BarChart.Grid />\n  <BarChart.Skeleton bars={6} />\n  <BarChart.Bar dataKey=\"revenue\" />\n  <BarChart.XAxis />\n</BarChart>"
       }
     ],
     "versions": [
@@ -6196,10 +6202,11 @@
       "Card",
       "Text"
     ],
-    "anatomy": "<AreaChart>\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"…\" />        {/* one per series, bottom first */}\n  <AreaChart.XAxis />\n  <AreaChart.YAxis />\n  <AreaChart.Legend />\n  <AreaChart.Tooltip />                 {/* crosshair, dots and readout */}\n</AreaChart>",
+    "anatomy": "<AreaChart>\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"…\" />        {/* one per series, bottom first */}\n  <AreaChart.Skeleton />                 {/* while status=\"loading\" */}\n  <AreaChart.XAxis />\n  <AreaChart.YAxis />\n  <AreaChart.Legend />\n  <AreaChart.Tooltip />                 {/* crosshair, dots and readout */}\n</AreaChart>",
     "parts": {
       "Grid": "Horizontal rules, so a band can be read against a number.",
       "Area": "One filled band, with the line along its top edge. The fill is a downward gradient by default, so the top edge stays the darkest thing in the band.",
+      "Skeleton": "A low band on the baseline with a sweep across it, shown while `status=\"loading\"`.",
       "XAxis": "The x labels. Real text, so they follow the theme’s font and the platform’s text scaling.",
       "YAxis": "Value labels down the side. The chart reserves a gutter for them rather than drawing them over the plot.",
       "Legend": "A swatch and a name per series, reversed for a stack so the key reads in the order the bands appear.",
@@ -6225,6 +6232,11 @@
         "title": "Reading the total above the chart",
         "description": "A stack’s headline number is the sum of its bands at that point, which the chart does not compute for you — it is your data, and only you know whether the sum means anything.",
         "code": "const [active, setActive] = useState(null);\nconst total = active ? active.direct + active.search + active.social : null;\n\n<Text size=\"sm\" muted>\n  {active ? `${active.hour} · ${total.toLocaleString()} sessions` : 'Drag to read an hour.'}\n</Text>\n\n<AreaChart data={traffic} xDataKey=\"hour\" stacked onActiveIndexChange={(i, d) => setActive(d)}>\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.Tooltip />\n</AreaChart>"
+      },
+      {
+        "title": "Loading, and then data",
+        "description": "Add `AreaChart.Skeleton` and drive `status`. While loading, a flat band sits along the baseline with a highlight travelling across it; on `ready` the real bands grow out of it.\n\nWithout the skeleton the plot is empty while loading, which is the same picture a chart of zeroes draws.",
+        "code": "<AreaChart data={data} status={status} xDataKey=\"hour\" stacked>\n  <AreaChart.Grid />\n  <AreaChart.Skeleton />\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.Area dataKey=\"search\" colorIndex={2} />\n  <AreaChart.XAxis />\n</AreaChart>"
       }
     ],
     "versions": [

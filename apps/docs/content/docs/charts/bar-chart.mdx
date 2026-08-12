@@ -1,6 +1,7 @@
 ---
 title: BarChart
 description: Categories compared by length, grouped or stacked.
+status: updated
 ---
 
 Categories compared by length, grouped or stacked, drawn and animated on the UI thread.
@@ -48,6 +49,7 @@ npx panelui-cli@latest add bar-chart
 <BarChart>
   <BarChart.Grid />                     {/* lines across the value axis */}
   <BarChart.Bar dataKey="…" />          {/* one per series */}
+  <BarChart.Skeleton />                 {/* while status="loading" */}
   <BarChart.XAxis />                    {/* category labels, under the bands */}
   <BarChart.YAxis />                    {/* value labels, down the side */}
   <BarChart.Legend />
@@ -58,6 +60,7 @@ npx panelui-cli@latest add bar-chart
 - **`BarChart.Header`** — See props below.
 - **`BarChart.Grid`** — Lines across the value axis, so a bar can be read against a number and not only against the bar beside it.
 - **`BarChart.Bar`** — One series. Every bar in it is a subpath of a single animated path, split in two so the band under the finger keeps full ink while the rest fade.
+- **`BarChart.Skeleton`** — A row of short, equal stubs on the baseline with a sweep across them, shown while `status="loading"`.
 - **`BarChart.XAxis`** — Category labels under the bands. Real text, so they follow the theme’s font and the platform’s text scaling.
 - **`BarChart.YAxis`** — Value labels down the side. The chart reserves a gutter for them, rather than drawing them over the plot.
 - **`BarChart.Tooltip`** — The drag that selects a band, and the card that reports it.
@@ -144,6 +147,23 @@ const [active, setActive] = useState(null);
 </BarChart>
 ```
 
+### Loading, and then data
+
+Add `BarChart.Skeleton` and drive `status`. While loading, a row of short equal stubs sits on the baseline with a highlight travelling across them; on `ready` the real bars grow out of it.
+
+The stubs are equal because a placeholder with a distribution in it cannot be told from a real one until it changes. They count the rows when there are rows to count, and default to seven when the data has not arrived — pass `bars` to say otherwise.
+
+Without the skeleton the plot is empty while loading, which is the same picture a chart of zeroes draws.
+
+```tsx
+<BarChart data={data} status={status} xDataKey="month">
+  <BarChart.Grid />
+  <BarChart.Skeleton bars={6} />
+  <BarChart.Bar dataKey="revenue" />
+  <BarChart.XAxis />
+</BarChart>
+```
+
 ## Versions
 
 ### Grouped and stacked
@@ -190,7 +210,7 @@ Horizontal bars, for category names that need the room.
 | `className` | `string` | — |  |
 | `data` | `BarChartDatum[]` | — | The rows. Each one is a band along the category axis. |
 | `xDataKey` | `string` | `'name'` | Key holding the category label. Used by the axis and the readout. |
-| `status` | `BarChartStatus` | `'ready'` | `loading` draws a row of flat placeholder bars and grows them into the real ones when it turns `ready`. One component throughout, rather than a spinner swapped for a chart — swapping loses the transition. |
+| `status` | `BarChartStatus` | `'ready'` | `loading` holds the bars at the baseline and grows them into the real ones when it turns `ready`. One component throughout, rather than a spinner swapped for a chart — swapping loses the transition. Add a `BarChart.Skeleton` for something to stand in the plot meanwhile. |
 | `aspectRatio` | `number` | `2` | Width ÷ height. `2` is the wide card shape. |
 | `animationDuration` | `number` | `1100` | Milliseconds for the bars to grow in on mount. |
 | `domainDuration` | `number` | `500` | Milliseconds for the value axis to settle after the data changes. |
@@ -223,6 +243,14 @@ Horizontal bars, for category names that need the room.
 | `color` | `string` | — | Explicit colour. Defaults to the `--color-chart-*` token for `colorIndex`. |
 | `colorIndex` | `SeriesColorIndex` | — | Which of the five chart tokens to take. |
 | `cornerRadius` | `number` | `4` | Corner radius, overriding the chart's. |
+
+### BarChart.Skeleton
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `bars` | `number` | — | How many placeholder bars to draw. Defaults to one per row, and to seven when the data has not arrived — the count is the one thing a loading chart can be honest about only if it already has the rows. |
+| `duration` | `number` | — | Milliseconds for one pass of the sweep. |
+| `color` | `string` | — |  |
 
 ### BarChart.XAxis
 
