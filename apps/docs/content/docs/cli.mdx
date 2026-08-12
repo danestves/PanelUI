@@ -62,6 +62,11 @@ Every write shows you what it would add and asks first. Pass `--yes` to accept e
 
 Change the aliases and imports are rewritten to match on the way in.
 
+Aliases are directories inside the project: letters, numbers, dots, dashes and underscores,
+separated by `/`, after an optional `@/`, `~/` or `./`. Anything else is refused. The alias is
+written between the quotes of every import in every file copied in, so it has to be a path and
+nothing else.
+
 ## Adding components
 
 ```bash

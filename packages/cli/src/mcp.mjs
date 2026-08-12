@@ -14,7 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { DEFAULT_REGISTRY, readConfig } from './config.mjs';
+import { DEFAULT_REGISTRY, aliasToDir, projectPath, readConfig } from './config.mjs';
 
 /**
  * The version we speak. The spec says to answer with the client's version when
@@ -190,6 +190,19 @@ async function callTool(name, args, options) {
   }
 }
 
+/** Where components live, or null when the config does not say something usable. */
+function safeComponentsDir(cwd, config) {
+  try {
+    return projectPath(
+      cwd,
+      aliasToDir(config.aliases?.components ?? '@/components/ui'),
+      'Components path'
+    );
+  } catch {
+    return null;
+  }
+}
+
 /**
  * What an agent needs to know before it writes a line: which of the two ways
  * of consuming the library this project uses, and where things go.
@@ -201,9 +214,15 @@ function projectInfo(cwd) {
   const deps = { ...manifest.dependencies, ...manifest.devDependencies };
   const config = hasPackageJson ? readConfig(cwd) : null;
 
-  const componentsDir = config
-    ? path.join(cwd, (config.aliases?.components ?? '@/components/ui').replace(/^[@~]\//, ''))
-    : null;
+  /*
+   * Contained like every other configured path, even though nothing here
+   * writes: what is read is listed back to an agent, and an alias pointing at
+   * a directory outside the project turns a question about this project into
+   * a listing of somewhere else. An unusable alias reports nothing rather than
+   * throwing — the rest of the answer is still worth having, and this is the
+   * call an agent makes before it knows anything at all.
+   */
+  const componentsDir = config ? safeComponentsDir(cwd, config) : null;
 
   return {
     cwd,

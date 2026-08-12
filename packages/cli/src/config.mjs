@@ -56,17 +56,51 @@ export function writeConfig(cwd, config) {
   fs.writeFileSync(configPath(cwd), JSON.stringify(config, null, 2) + '\n');
 }
 
+/** What one segment of an alias may be made of. */
+const ALIAS_SEGMENT = /^[A-Za-z0-9._-]+$/;
+
+/**
+ * Check an alias and hand back its tidied form.
+ *
+ * An alias is not only a directory. `applyAliases` splices it into the source
+ * it writes, between the quotes of an import — so an alias carrying a quote or
+ * a newline closes that string early and the rest of it is code in a file the
+ * project will build and run. Containment does not catch that: the injected
+ * text never reaches the filesystem, it becomes an instruction.
+ *
+ * So the characters are held to what a directory name is actually made of,
+ * rather than to what cannot escape. Trailing slashes are dropped instead of
+ * refused — `@/components/ui/` is a typo with an obvious reading, and `init`
+ * asks for these at a prompt.
+ */
+export function validateAlias(alias) {
+  if (typeof alias !== 'string') {
+    fail('Alias paths must be relative directories.');
+  }
+
+  const tidied = alias.trim().replace(/\/+$/, '');
+  const body = tidied.replace(/^@\//, '').replace(/^~\//, '').replace(/^\.\//, '');
+
+  // `..` reads as a segment here, so the containment check below is what
+  // refuses it — the character set alone would let it through.
+  if (body && !body.split('/').every((segment) => ALIAS_SEGMENT.test(segment))) {
+    fail(
+      `Alias "${alias}" is not a directory path.`,
+      'Use letters, numbers, dots, dashes and underscores, separated by /.'
+    );
+  }
+
+  validateRelativePath(body, 'Alias path', { allowEmpty: true });
+  return tidied;
+}
+
 /**
  * Turn an alias into a real directory. `@/components/ui` → `components/ui`,
  * following the `@/*` → `./*` mapping Expo's base tsconfig already sets up.
  */
 export function aliasToDir(alias) {
-  if (typeof alias !== 'string') {
-    fail('Alias paths must be relative directories.');
-  }
-
-  const directory = alias.replace(/^@\//, '').replace(/^~\//, '').replace(/^\.\//, '');
-  return validateRelativePath(directory, 'Alias path', { allowEmpty: true });
+  const tidied = validateAlias(alias);
+  return tidied.replace(/^@\//, '').replace(/^~\//, '').replace(/^\.\//, '');
 }
 
 /** Rejects paths that could escape a project on the current platform or Windows. */
@@ -166,7 +200,7 @@ export function applyAliases(content, config) {
   let output = content;
 
   for (const [key, canonical] of Object.entries(CANONICAL_ALIASES)) {
-    const target = aliases[key];
+    const target = aliases[key] && validateAlias(aliases[key]);
     if (target && target !== canonical) {
       output = output.replaceAll(`'${canonical}/`, `'${target}/`);
     }
