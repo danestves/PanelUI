@@ -10,6 +10,14 @@ The values need not add up to anything. That is what separates it from a [PieCha
 
 It is not the chart for reading values off precisely. Length along a shared baseline is easier to compare than distance from a centre, so a reader ranking the middle three wedges is guessing. Put the numbers on the wedges with `Labels`, or use a [BarChart](/docs/charts/bar-chart).
 
+<PreviewVideo
+  src="/previews/polar-area-chart.mp4"
+  poster="/previews/polar-area-chart-poster.jpg"
+  alt="The PolarAreaChart component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 PolarAreaChart ships with the library — no separate install.
@@ -117,6 +125,71 @@ Tap a wedge and the others dim. Pass `activeIndex` and `onActiveIndexChange` to 
   <PolarAreaChart.Labels />
   <PolarAreaChart.Tooltip />
   <PolarAreaChart.Legend />
+</PolarAreaChart>
+```
+
+## Versions
+
+### Basic
+
+Equal angles, and the radius carrying the reading. The selected wedge's figures go in the header, which sits outside the dial and so is driven by `activeIndex`.
+
+<PreviewVideo
+  src="/previews/polar-area-chart-basic.mp4"
+  poster="/previews/polar-area-chart-basic-poster.jpg"
+  alt="PolarAreaChart — Basic."
+  width={720}
+  height={1560}
+/>
+
+```tsx
+<PolarAreaChart
+  data={latency}
+  size={232}
+  activeIndex={active}
+  onActiveIndexChange={setActive}
+>
+  <PolarAreaChart.Header value={`${region ? region.value : 97} ms`} caption={caption} />
+  <PolarAreaChart.Grid />
+  <PolarAreaChart.Wedges cornerRadius={4} />
+  <PolarAreaChart.Labels />
+  <PolarAreaChart.Legend />
+</PolarAreaChart>
+```
+
+### Area scale
+
+The same six readings with the area carrying them instead of the radius. The dial flattens, because nothing is overstated any more — and the rings bunch outwards, since they still mark even steps of the value.
+
+<PreviewVideo
+  src="/previews/polar-area-chart-area-scale.mp4"
+  poster="/previews/polar-area-chart-area-scale-poster.jpg"
+  alt="PolarAreaChart — Area scale."
+  width={720}
+  height={1560}
+/>
+
+```tsx
+<PolarAreaChart data={latency} size={232} scale="area">
+  <PolarAreaChart.Header title="Same six readings" />
+  <PolarAreaChart.Grid rings={5} />
+  <PolarAreaChart.Wedges cornerRadius={4} />
+  <PolarAreaChart.Labels />
+  <PolarAreaChart.Legend />
+</PolarAreaChart>
+```
+
+### Loading
+
+One plain disc while it waits. Placeholder wedges would be an invented set of readings, and nobody can tell an invented one from a real one until it changes under them.
+
+```tsx
+<PolarAreaChart data={latency} size={232} status={status}>
+  <PolarAreaChart.Header title="Response times" />
+  <PolarAreaChart.Grid />
+  <PolarAreaChart.Skeleton />
+  <PolarAreaChart.Wedges cornerRadius={4} />
+  <PolarAreaChart.Labels />
 </PolarAreaChart>
 ```
 
