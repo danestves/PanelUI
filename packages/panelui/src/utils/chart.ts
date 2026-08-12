@@ -36,12 +36,166 @@ export function useSeriesColor(
   return explicit ?? (typeof token === 'string' ? token : FALLBACK_SERIES[index - 1]!);
 }
 
-/** `12.4k` rather than `12400` — a readout has one line to say it in. */
+/**
+ * The `r, g, b` of a colour string, or `null` for one that cannot be read.
+ *
+ * Hex and `rgb()` / `rgba()` only, which is every form a theme token and a
+ * series colour take. A `null` is the caller's signal to keep whatever it
+ * would have used anyway, rather than a guess that could be the wrong end of
+ * the scale.
+ */
+function channelsOf(color: string): [number, number, number] | null {
+  const value = color.trim().toLowerCase();
+
+  if (value.startsWith('#')) {
+    const body =
+      value.length === 4 || value.length === 5
+        ? value
+            .slice(1, 4)
+            .split('')
+            .map((digit) => digit + digit)
+            .join('')
+        : value.slice(1, 7);
+    if (body.length !== 6 || /[^0-9a-f]/.test(body)) return null;
+    return [
+      parseInt(body.slice(0, 2), 16),
+      parseInt(body.slice(2, 4), 16),
+      parseInt(body.slice(4, 6), 16),
+    ];
+  }
+
+  const fn = /^rgba?\(([^)]+)\)$/.exec(value);
+  if (!fn) return null;
+
+  const parts = fn[1]!.split(/[\s,/]+/).filter(Boolean);
+  if (parts.length < 3) return null;
+
+  const channels = parts.slice(0, 3).map((raw) => {
+    const n = parseFloat(raw);
+    if (Number.isNaN(n)) return null;
+    return raw.endsWith('%') ? (n / 100) * 255 : n;
+  });
+
+  return channels.some((c) => c === null)
+    ? null
+    : (channels as [number, number, number]);
+}
+
+/** One channel, undone from the sRGB transfer curve. */
+function linear(value: number): number {
+  const c = Math.min(1, Math.max(0, value / 255));
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+}
+
+/** Relative luminance, 0 for black and 1 for white. */
+function luminanceOf(rgb: [number, number, number]): number {
+  return 0.2126 * linear(rgb[0]) + 0.7152 * linear(rgb[1]) + 0.0722 * linear(rgb[2]);
+}
+
+/** Text laid over a fill: the solid colour and the softer one under it. */
+export interface ChartInk {
+  color: string;
+  muted: string;
+}
+
+const LIGHT_INK: ChartInk = { color: '#ffffff', muted: 'rgba(255,255,255,0.82)' };
+const DARK_INK: ChartInk = { color: '#0a0a0a', muted: 'rgba(10,10,10,0.82)' };
+
+/**
+ * The contrast ratio white keeps on a fill before the label is turned over.
+ *
+ * 3:1, which is the bar for bold text at this size. Higher and the mid-tone
+ * hues every theme uses for its second series onwards flip to dark text as
+ * well, which is a different chart rather than a legible one; lower and the
+ * pale fills this exists for stay unreadable.
+ */
+const INK_FLOOR = 3;
+
+/**
+ * The text colour to lay over `fill`: white while white can be read on it,
+ * near-black once it cannot.
+ *
+ * Neither the fill nor the theme can decide this on its own. A series colour is
+ * a colour, not a mode — a theme is free to make it near-white, and a fixed
+ * white label on it disappears while the foreground token would be just as
+ * wrong on the next tile along.
+ *
+ * White is kept wherever it holds up, rather than always taking whichever ink
+ * scores higher. Charts are drawn white-on-hue, and turning over every tile
+ * that a darker label would technically suit changes what the chart looks like
+ * to fix the two that were unreadable.
+ *
+ * `behind` and `opacity` are for a fill drawn part-transparent: what the reader
+ * sees is the blend, and a half-strength tile on a pale ground is lighter than
+ * the colour it was given. Compositing happens in gamma space, the way the
+ * renderer does it, before the luminance is taken.
+ */
+export function inkOn(fill: string, behind?: string, opacity = 1): ChartInk {
+  const front = channelsOf(fill);
+  if (!front) return LIGHT_INK;
+
+  const alpha = Math.min(1, Math.max(0, opacity));
+  const ground = alpha < 1 && behind ? channelsOf(behind) : null;
+  const seen: [number, number, number] = ground
+    ? [
+        alpha * front[0] + (1 - alpha) * ground[0],
+        alpha * front[1] + (1 - alpha) * ground[1],
+        alpha * front[2] + (1 - alpha) * ground[2],
+      ]
+    : front;
+
+  return 1.05 / (luminanceOf(seen) + 0.05) >= INK_FLOOR ? LIGHT_INK : DARK_INK;
+}
+
+/** The suffixes, smallest first. Each one is a thousand of the one before it. */
+const MAGNITUDES = ['k', 'M', 'B', 'T'] as const;
+
+/** Drop the zeros a fixed decimal count left behind: `12.0` is `12`. */
+function trimZeros(text: string): string {
+  return text.includes('.') ? text.replace(/\.?0+$/, '') : text;
+}
+
+/**
+ * One decimal while the mantissa is a single digit, none after that.
+ *
+ * `1.2k` and `12k` rather than `1.2k` and `12.4k`: the second decimal place is
+ * spurious precision on a tick, and the label has one line to fit in.
+ */
+function mantissa(value: number): string {
+  return trimZeros(value.toFixed(Math.abs(value) < 10 ? 1 : 0));
+}
+
+/** `12k` rather than `12400` — a readout has one line to say it in. */
 export function compactNumber(value: number): string {
+  if (!Number.isFinite(value)) return String(value);
+
   const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  if (abs < 1_000) {
+    if (Number.isInteger(value)) return String(value);
+    // Below one, a single decimal rounds most values to `0`, which reads as
+    // nothing rather than as a small number.
+    return trimZeros(value.toFixed(abs < 1 ? 2 : 1));
+  }
+
+  let index = 0;
+  let scaled = value / 1_000;
+  while (Math.abs(scaled) >= 1_000 && index < MAGNITUDES.length - 1) {
+    scaled /= 1_000;
+    index += 1;
+  }
+
+  /*
+   * Rounding can push a mantissa over a thousand — 999,999 is `1000.0k` on the
+   * way in, which is a thousand thousands written the long way. Formatting
+   * first and promoting after is what makes it `1M`.
+   */
+  let text = mantissa(scaled);
+  if (Math.abs(Number(text)) >= 1_000 && index < MAGNITUDES.length - 1) {
+    index += 1;
+    text = mantissa(scaled / 1_000);
+  }
+
+  return `${text}${MAGNITUDES[index]}`;
 }
 
 /** The drawable box inside a chart, after its padding is taken off. */

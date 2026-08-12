@@ -957,6 +957,23 @@ export {
   type ToastCloseProps,
 } from './components/toast';
 export {
+  TreemapChart,
+  useTreemapChart,
+  squarifyLayout,
+  type TreemapChartProps,
+  type TreemapChartHandle,
+  type TreemapChartStatus,
+  type TreemapDatum,
+  type TreemapTile,
+  type TreemapRect,
+  type TreemapChartTilesProps,
+  type TreemapChartLabelsProps,
+  type TreemapChartTooltipProps,
+  type TreemapChartLegendProps,
+  type TreemapChartHeaderProps,
+  type TreemapChartSkeletonProps,
+} from './components/treemap-chart';
+export {
   Tree,
   type TreeProps,
   type TreeItemProps,

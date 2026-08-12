@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { aliasToDir } from './config.mjs';
+import { aliasToDir, projectPath, validateConfigPaths } from './config.mjs';
 import { confirm, dim, fail, printAddition, step, success, warn } from './ui.mjs';
 
 /**
@@ -19,7 +19,8 @@ import { confirm, dim, fail, printAddition, step, success, warn } from './ui.mjs
  * miserable thing to debug.
  */
 export async function patchCss(cwd, config, { assumeYes, dryRun }) {
-  const cssPath = path.join(cwd, config.css ?? 'global.css');
+  validateConfigPaths(config);
+  const cssPath = projectPath(cwd, config.css ?? 'global.css', 'CSS path');
   const exists = fs.existsSync(cssPath);
   const current = exists ? fs.readFileSync(cssPath, 'utf8') : '';
 

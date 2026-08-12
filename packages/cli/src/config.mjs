@@ -27,7 +27,7 @@ export function defaultConfig(registry = DEFAULT_REGISTRY) {
 }
 
 export function configPath(cwd) {
-  return path.join(cwd, CONFIG_FILE);
+  return projectPath(cwd, CONFIG_FILE, 'Configuration path');
 }
 
 export function readConfig(cwd) {
@@ -61,7 +61,76 @@ export function writeConfig(cwd, config) {
  * following the `@/*` → `./*` mapping Expo's base tsconfig already sets up.
  */
 export function aliasToDir(alias) {
-  return alias.replace(/^@\//, '').replace(/^~\//, '').replace(/^\.\//, '');
+  if (typeof alias !== 'string') {
+    fail('Alias paths must be relative directories.');
+  }
+
+  const directory = alias.replace(/^@\//, '').replace(/^~\//, '').replace(/^\.\//, '');
+  return validateRelativePath(directory, 'Alias path', { allowEmpty: true });
+}
+
+/** Rejects paths that could escape a project on the current platform or Windows. */
+export function validateRelativePath(value, label = 'Path', { allowEmpty = false } = {}) {
+  if (typeof value !== 'string' || value.includes('\0')) {
+    fail(`${label} must be a relative path.`);
+  }
+
+  if (!value && !allowEmpty) {
+    fail(`${label} must not be empty.`);
+  }
+
+  if (
+    path.isAbsolute(value) ||
+    path.win32.isAbsolute(value) ||
+    /^[a-zA-Z]:/.test(value) ||
+    value.split(/[\\/]+/).includes('..')
+  ) {
+    fail(`${label} must stay inside the project.`);
+  }
+
+  return value;
+}
+
+/** Resolve a user or registry path, refusing anything outside the project root. */
+export function projectPath(cwd, relativePath, label = 'Path') {
+  const root = path.resolve(cwd);
+  const destination = path.resolve(root, validateRelativePath(relativePath, label));
+  const relative = path.relative(root, destination);
+
+  if (!relative || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    fail(`${label} must stay inside the project.`);
+  }
+
+  return destination;
+}
+
+/** A scaffold name must produce exactly one child directory, on every platform. */
+export function validateProjectName(name) {
+  if (
+    typeof name !== 'string' ||
+    !name.trim() ||
+    name === '.' ||
+    name === '..' ||
+    name.includes('\0') ||
+    /[\\/]/.test(name) ||
+    path.isAbsolute(name) ||
+    path.win32.isAbsolute(name) ||
+    /^[a-zA-Z]:/.test(name)
+  ) {
+    fail('Project name must be a single directory name inside the current folder.');
+  }
+
+  return name;
+}
+
+/** Validate every configured path before it reaches a filesystem write boundary. */
+export function validateConfigPaths(config) {
+  const aliases = { ...CANONICAL_ALIASES, ...(config.aliases ?? {}) };
+  aliasToDir(aliases.components);
+  aliasToDir(aliases.lib);
+  aliasToDir(aliases.hooks);
+  validateRelativePath(config.css ?? 'global.css', 'CSS path');
+  validateRelativePath(config.theme ?? 'theme.css', 'Theme path');
 }
 
 /**
@@ -69,18 +138,23 @@ export function aliasToDir(alias) {
  * are `ui/…`, `lib/…`, `hooks/…` or a bare `theme.css`.
  */
 export function targetPath(cwd, config, registryPath) {
+  const safeRegistryPath = validateRelativePath(registryPath, 'Registry file path');
+  if (safeRegistryPath.includes('\\')) {
+    fail('Registry file paths must use forward slashes.');
+  }
+
   const aliases = { ...CANONICAL_ALIASES, ...(config.aliases ?? {}) };
-  const [group, ...rest] = registryPath.split('/');
+  const [group, ...rest] = safeRegistryPath.split('/');
 
   if (rest.length === 0) {
     // theme.css and anything else at the root goes where the config says.
-    return path.join(cwd, config.theme ?? registryPath);
+    return projectPath(cwd, config.theme ?? safeRegistryPath, 'Theme path');
   }
 
   const alias =
     group === 'ui' ? aliases.components : group === 'lib' ? aliases.lib : aliases.hooks;
 
-  return path.join(cwd, aliasToDir(alias), ...rest);
+  return projectPath(cwd, path.join(aliasToDir(alias), ...rest), 'Registry file path');
 }
 
 /**

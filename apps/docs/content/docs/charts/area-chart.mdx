@@ -1,6 +1,7 @@
 ---
 title: AreaChart
 description: Filled bands over time, stacked or overlaid.
+status: updated
 ---
 
 Filled bands over time, stacked or overlaid.
@@ -47,6 +48,7 @@ npx panelui-cli@latest add area-chart
 <AreaChart>
   <AreaChart.Grid />
   <AreaChart.Area dataKey="…" />        {/* one per series, bottom first */}
+  <AreaChart.Skeleton />                 {/* while status="loading" */}
   <AreaChart.XAxis />
   <AreaChart.YAxis />
   <AreaChart.Legend />
@@ -57,6 +59,7 @@ npx panelui-cli@latest add area-chart
 - **`AreaChart.Header`** — See props below.
 - **`AreaChart.Grid`** — Horizontal rules, so a band can be read against a number.
 - **`AreaChart.Area`** — One filled band, with the line along its top edge. The fill is a downward gradient by default, so the top edge stays the darkest thing in the band.
+- **`AreaChart.Skeleton`** — A low band on the baseline with a sweep across it, shown while `status="loading"`.
 - **`AreaChart.XAxis`** — The x labels. Real text, so they follow the theme’s font and the platform’s text scaling.
 - **`AreaChart.YAxis`** — Value labels down the side. The chart reserves a gutter for them rather than drawing them over the plot.
 - **`AreaChart.Tooltip`** — The crosshair, the drag that drives it, and a dot riding the top edge of every band.
@@ -124,6 +127,22 @@ const total = active ? active.direct + active.search + active.social : null;
 </AreaChart>
 ```
 
+### Loading, and then data
+
+Add `AreaChart.Skeleton` and drive `status`. While loading, a flat band sits along the baseline with a highlight travelling across it; on `ready` the real bands grow out of it.
+
+Without the skeleton the plot is empty while loading, which is the same picture a chart of zeroes draws.
+
+```tsx
+<AreaChart data={data} status={status} xDataKey="hour" stacked>
+  <AreaChart.Grid />
+  <AreaChart.Skeleton />
+  <AreaChart.Area dataKey="direct" />
+  <AreaChart.Area dataKey="search" colorIndex={2} />
+  <AreaChart.XAxis />
+</AreaChart>
+```
+
 ## Versions
 
 ### Stacked
@@ -174,7 +193,7 @@ Alternatives rather than parts, so the fills go translucent and both bands stay 
 | `className` | `string` | — |  |
 | `data` | `AreaChartDatum[]` | — | The rows. Each one is a point along the x-axis. |
 | `xDataKey` | `string` | `'date'` | Key holding the x label. Used by the axis and the crosshair readout. |
-| `status` | `AreaChartStatus` | `'ready'` | `loading` draws a flat skeleton and grows into the real bands on `ready`. |
+| `status` | `AreaChartStatus` | `'ready'` | `loading` holds the bands flat and grows them into the real ones when it turns `ready`. Add an `AreaChart.Skeleton` for something to stand in the plot meanwhile. |
 | `aspectRatio` | `number` | `2` | Width ÷ height. `2` is the wide card shape. |
 | `animationDuration` | `number` | `1100` | Milliseconds for the reveal on mount. |
 | `domainDuration` | `number` | `500` | Milliseconds for the y-axis to settle after the data changes. |
@@ -204,6 +223,13 @@ Alternatives rather than parts, so the fills go translucent and both bands stay 
 | `gradientToOpacity` | `number` | `0` | Opacity at the bottom. `0` fades the band out; match `fillOpacity` for a flat fill. |
 | `showLine` | `boolean` | `true` | Draw the line along the top edge of the band. |
 | `strokeWidth` | `number` | `2` | Thickness of that line. |
+
+### AreaChart.Skeleton
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `duration` | `number` | — | Milliseconds for one pass of the sweep. |
+| `color` | `string` | — |  |
 
 ### AreaChart.XAxis
 
