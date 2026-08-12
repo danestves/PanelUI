@@ -9,6 +9,15 @@ import { fileURLToPath } from 'node:url';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'panelui-cli-install-failure-'));
 after(() => fs.rmSync(tempDir, { recursive: true, force: true }));
 
+const here = path.dirname(fileURLToPath(import.meta.url));
+/*
+ * The templates as they are in this checkout. Without this the scaffold falls
+ * back to cloning the repository, so a test of a local code path would need
+ * the network and would build its project from whatever is on main rather
+ * than from the branch under test.
+ */
+const templates = path.resolve(here, '../../../templates');
+
 test('init exits without readiness output when dependency installation fails', { skip: process.platform === 'win32' }, () => {
   const binDir = path.join(tempDir, 'bin');
   fs.mkdirSync(binDir);
@@ -16,7 +25,7 @@ test('init exits without readiness output when dependency installation fails', {
   fs.writeFileSync(fakeNpm, '#!/bin/sh\necho forced installer failure >&2\nexit 23\n');
   fs.chmodSync(fakeNpm, 0o755);
 
-  const cli = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../bin/panelui.mjs');
+  const cli = path.resolve(here, '../bin/panelui.mjs');
   const result = spawnSync(
     process.execPath,
     [
@@ -34,7 +43,11 @@ test('init exits without readiness output when dependency installation fails', {
     ],
     {
       encoding: 'utf8',
-      env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` },
+      env: {
+        ...process.env,
+        PATH: `${binDir}${path.delimiter}${process.env.PATH}`,
+        PANELUI_TEMPLATE_DIR: templates,
+      },
     }
   );
 
