@@ -28,7 +28,9 @@
  * everywhere it is not drawing, so the content underneath still scrolls.
  */
 import {
+  Children,
   createContext,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -60,6 +62,27 @@ const BAR_WIDTH = 16;
 const BAR_LEVEL_STEP = 4;
 /** How much wider the active bar gets, so position is readable at a glance. */
 const BAR_ACTIVE_EXTRA = 8;
+/**
+ * How much of that extra the bars either side of the active one keep.
+ *
+ * The rail is read by shape, and one long bar in a column of identical short
+ * ones only says *which* one — it takes a second look to see where that is in
+ * the run. A step down on each side gives the active bar a slope to sit on, so
+ * position is legible from the silhouette alone.
+ *
+ * Only the immediate neighbours. Two steps of falloff is a taper down the whole
+ * rail, which reads as a gradient the bars happen to sit in rather than as a
+ * mark on one of them.
+ */
+const BAR_NEIGHBOUR = 0.45;
+/** Opacity of a bar with nothing near it, and how much proximity adds. */
+const BAR_REST_OPACITY = 0.32;
+/**
+ * How long a jump from the panel is given to arrive before the rail starts
+ * ticking again. Long enough for a scroll across a whole screen, short enough
+ * that a jump which never lands does not mute the next one.
+ */
+const JUMP_TIMEOUT = 900;
 /** Indent per level in the expanded panel. */
 const ITEM_INDENT = 12;
 /**
@@ -92,6 +115,18 @@ interface SectionRailContextValue {
 }
 
 const SectionRailContext = createContext<SectionRailContextValue | null>(null);
+
+/**
+ * The bars' values, in the order they are written.
+ *
+ * A bar knows whether it is the active one; it cannot know how far it is *from*
+ * the active one, which is what the falloff either side needs. The trigger
+ * reads it off its own children — the only place in the tree where the run is
+ * visible at all — rather than having each bar register itself, since a
+ * registration order is whatever order the rows happened to mount in and the
+ * rail is drawn in the order they were written.
+ */
+const SectionRailBarsContext = createContext<string[]>([]);
 
 function useSectionRail(component: string): SectionRailContextValue {
   const context = useContext(SectionRailContext);
@@ -157,6 +192,7 @@ function SectionRailRoot({
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const insets = useSafeAreaInsets();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const jumpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isControlled = valueProp !== undefined;
   const value = isControlled ? valueProp : internalValue;
@@ -177,16 +213,46 @@ function SectionRailRoot({
 
   const close = useCallback(() => setOpen(false), [setOpen]);
 
-  // A pending close must not fire after the rail has gone.
+  // A pending close, or a jump still being waited on, must not fire after the
+  // rail has gone.
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
+      if (jumpTimer.current) clearTimeout(jumpTimer.current);
     },
     []
   );
 
+  /*
+   * The section a tap asked for, while the screen is still travelling to it.
+   *
+   * A jump is animated, so the scroll handler driving `value` reports every
+   * section the screen passes on the way — each of which is a change of section
+   * as far as the tick below can tell. One tap became two or three ticks, and
+   * the panel lit up a row nobody chose. Nothing between the tap and the
+   * arrival is a section the reader went to, so nothing between them ticks.
+   */
+  const jumpTo = useRef<string | null>(null);
+
+  const endJump = useCallback(() => {
+    jumpTo.current = null;
+    if (jumpTimer.current) {
+      clearTimeout(jumpTimer.current);
+      jumpTimer.current = null;
+    }
+  }, []);
+
   const handleValueChange = useCallback(
     (next: string) => {
+      jumpTo.current = next;
+      if (jumpTimer.current) clearTimeout(jumpTimer.current);
+      /*
+       * A backstop, not the normal way out. A jump to a section the scroller
+       * cannot reach — the last one on a screen shorter than the viewport —
+       * never arrives, and without this the rail would stay silent for good.
+       */
+      jumpTimer.current = setTimeout(endJump, JUMP_TIMEOUT);
+
       if (!isControlled) setInternalValue(next);
       onValueChange?.(next);
 
@@ -197,7 +263,7 @@ function SectionRailRoot({
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => setOpen(false), closeDelay);
     },
-    [isControlled, onValueChange, closeDelay, setOpen]
+    [isControlled, onValueChange, closeDelay, setOpen, endJump]
   );
 
   /*
@@ -208,13 +274,21 @@ function SectionRailRoot({
    */
   const ticked = useRef(false);
   useEffect(() => {
-    if (!haptics) return;
     if (!ticked.current) {
       ticked.current = true;
       return;
     }
-    selectionTick();
-  }, [value, haptics]);
+
+    const target = jumpTo.current;
+    if (target !== null) {
+      // Still on the way. Only the section that was asked for ends the jump,
+      // and only it is worth feeling.
+      if (value !== target) return;
+      endJump();
+    }
+
+    if (haptics) selectionTick();
+  }, [value, haptics, endJump]);
 
   const context = useMemo(
     () => ({
@@ -269,6 +343,22 @@ export interface SectionRailTriggerProps extends ViewProps {
 function SectionRailTrigger({ className, children, ...props }: SectionRailTriggerProps) {
   const { open, setOpen, placement } = useSectionRail('SectionRail.Trigger');
 
+  /*
+   * The run of bars, read off the children. Only the values are taken, so a bar
+   * wrapped in anything of the caller's is simply not found and falls back to
+   * drawing itself from `selected` alone.
+   */
+  const values = useMemo(() => {
+    const found: string[] = [];
+    Children.forEach(children, (child) => {
+      if (isValidElement(child) && child.type === SectionRailBar) {
+        const value = (child.props as SectionRailBarProps).value;
+        if (typeof value === 'string') found.push(value);
+      }
+    });
+    return found;
+  }, [children]);
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -284,7 +374,9 @@ function SectionRailTrigger({ className, children, ...props }: SectionRailTrigge
       )}
       {...props}
     >
-      {textChildren(children)}
+      <SectionRailBarsContext.Provider value={values}>
+        {textChildren(children)}
+      </SectionRailBarsContext.Provider>
     </Pressable>
   );
 }
@@ -297,29 +389,56 @@ export interface SectionRailBarProps {
   level?: number;
 }
 
-/** One section, drawn as a bar. Widens and brightens when it is the active one. */
+/**
+ * One section, drawn as a bar.
+ *
+ * Three lengths rather than two: the active bar is longest and brightest, the
+ * bars either side of it keep a share of that, and everything further away sits
+ * at the resting length. What the reader gets from the extra step is *where* in
+ * the run they are without counting bars — the slope points at the middle of it.
+ */
 function SectionRailBar({ className, value, level = 0 }: SectionRailBarProps) {
   const { value: active } = useSectionRail('SectionRail.Bar');
+  const values = useContext(SectionRailBarsContext);
   const selected = active === value;
 
   const restColor = useCSSVariable('--color-muted-foreground');
   const activeColor = useCSSVariable('--color-foreground');
 
+  /*
+   * How near this bar is to the one that is active: 1 for the active bar itself,
+   * a share of it for its neighbours, 0 for the rest. A bar the trigger did not
+   * find — one the caller wrapped in something of their own — has no position to
+   * measure from, so it falls back to the plain selected-or-not it always had.
+   */
+  const index = values.indexOf(value);
+  const activeIndex = active === undefined ? -1 : values.indexOf(active);
+  const proximity =
+    index < 0 || activeIndex < 0
+      ? selected
+        ? 1
+        : 0
+      : Math.abs(index - activeIndex) === 0
+        ? 1
+        : Math.abs(index - activeIndex) === 1
+          ? BAR_NEIGHBOUR
+          : 0;
+
   const base = Math.max(BAR_WIDTH - level * BAR_LEVEL_STEP, 6);
-  const progress = useSharedValue(selected ? 1 : 0);
+  const progress = useSharedValue(proximity);
 
   useEffect(() => {
-    progress.value = withSpring(selected ? 1 : 0, SPRING);
-  }, [selected, progress]);
+    progress.value = withSpring(proximity, SPRING);
+  }, [proximity, progress]);
 
   const idle = typeof restColor === 'string' ? restColor : '#818181';
   const on = typeof activeColor === 'string' ? activeColor : '#f5f5f5';
 
   const style = useAnimatedStyle(() => ({
     width: base + progress.value * BAR_ACTIVE_EXTRA,
-    // The inactive bars are dim on purpose — the rail is a position
-    // indicator, so only one of them is meant to be read.
-    opacity: 0.4 + progress.value * 0.6,
+    // The far bars are dim on purpose — the rail is a position indicator, so
+    // only the part of it the reader is in is meant to be read.
+    opacity: BAR_REST_OPACITY + progress.value * (1 - BAR_REST_OPACITY),
     backgroundColor: interpolateColor(progress.value, [0, 1], [idle, on]),
   }));
 
