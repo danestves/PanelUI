@@ -1,9 +1,9 @@
 ---
 title: Charts
-description: The five-colour series ramp every chart draws from, how a series picks its colour, and what to change to put a whole app's charts on brand.
+description: The five-colour series ramp every chart draws from, how a series picks its colour, what to change to put a whole app's charts on brand, and how to build a chart the library does not ship.
 ---
 
-Ten charts, one ramp. Nothing in the library names a colour for a series — a `LineChart` does not
+Every chart, one ramp. Nothing in the library names a colour for a series — a `LineChart` does not
 know it is blue, it knows it is *series one*, and what series one resolves to is decided by the
 active theme. That is what makes a theme switch restyle every chart in an app rather than only the
 ones somebody remembered to update.
@@ -52,6 +52,7 @@ A series-drawing part picks its token with `colorIndex`, and defaults to the nex
 | [ScatterChart](/docs/charts/scatter-chart) | `Points` |
 | [RadarChart](/docs/charts/radar-chart) | `Series` |
 | [RingChart](/docs/charts/ring-chart) | `Ring` |
+| [Plot](/docs/charts/plot) | `Line`, `Area`, `Bars`, `Dots` |
 
 [PieChart](/docs/charts/pie-chart) and [HexChart](/docs/charts/hex-chart) take their colours from
 the data instead, walking the ramp in order — their parts are one series each, so there is no
@@ -172,6 +173,97 @@ more quietly:
 
 A chart of four overlaid series reads better as one heavy line and three light ones than as four
 of equal weight in four colours. The ramp says *which* series; the weight says which one matters.
+
+## When the shape is what you need to change
+
+Everything above changes how a chart *looks*. None of it changes what a chart *is* — a `BarChart`
+draws bars, and there is no prop that puts a line over them or a shaded band behind them.
+
+[Plot](/docs/charts/plot) is for that. It is the same drawing machinery with nothing decided: it
+measures a box, resolves one scale, and draws whatever marks you put in it, in the order you write
+them. Columns with a line over them, a series against a reference band, a mark that exists nowhere
+in this library — all of them are children.
+
+```tsx
+<Plot data={months} xDataKey="month" aspectRatio={1.7}>
+  <Plot.Header title="Revenue" value={money(total)} />
+  <Plot.Legend labels={{ revenue: 'Revenue', costs: 'Costs' }} />
+  <Plot.Grid />
+  <Plot.Bars dataKey="revenue" colorIndex={2} />
+  <Plot.Line dataKey="costs" colorIndex={1} curve="linear" />
+  <Plot.Dots dataKey="costs" colorIndex={1} />
+  <Plot.YAxis />
+  <Plot.XAxis ticks={6} />
+</Plot>
+```
+
+The marks take `color` and `colorIndex` exactly as the built-in charts do, so a composed chart
+follows the same ramp and the same theme switch as everything beside it.
+
+### A mark of your own
+
+Where the built-in marks run out, `Plot.Layer` puts your children into the SVG tree and `usePlot()`
+hands them the resolved geometry — the plot box, the tweening y-domain, the reveal. The scale
+functions ship with it and every one is a worklet, so a mark you write is rebuilt on the UI thread
+on the same frames the built-in marks are, rather than laid over them a frame late.
+
+```tsx
+import Animated, { useAnimatedProps } from 'react-native-reanimated';
+import { Path } from 'react-native-svg';
+import { Plot, usePlot, yOf } from 'panelui-native';
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+/** A shaded band between two values — nothing in the library draws this. */
+function BandBetween({ low, high }: { low: number; high: number }) {
+  const { plot, domainMin, domainMax } = usePlot();
+  const tint = useCSSVariable('--color-chart-3');
+
+  const animatedProps = useAnimatedProps(() => {
+    const min = domainMin.value;
+    const max = domainMax.value;
+    if (max === min) return { d: '' };
+    const top = yOf(high, plot, min, max);
+    const bottom = yOf(low, plot, min, max);
+    return { d: `M${plot.left},${top}H${plot.left + plot.width}V${bottom}H${plot.left}Z` };
+  });
+
+  return (
+    <AnimatedPath
+      animatedProps={animatedProps}
+      fill={typeof tint === 'string' ? tint : '#34d399'}
+      fillOpacity={0.14}
+    />
+  );
+}
+
+<Plot data={months} xDataKey="month">
+  <Plot.Grid />
+  {/* Written before the series, so it is drawn behind them. */}
+  <Plot.Layer>
+    <BandBetween low={20000} high={28000} />
+  </Plot.Layer>
+  <Plot.Area dataKey="revenue" />
+  <Plot.Line dataKey="revenue" />
+</Plot>
+```
+
+Anything that is text or takes a touch goes in `Plot.Overlay` instead, which is a React Native view
+laid over the drawing. SVG text ignores the platform's text scaling and the theme's font, and a
+gesture handler cannot be attached to an SVG node at all.
+
+<Callout type="warn">
+  Both marks on a plot share one axis, so both have to be in the same unit. Revenue and costs are
+  money and the gap between them is the margin; revenue and *order counts* are not, and hundreds
+  under tens of thousands is a line lying flat along the floor of the plot. There is no secondary
+  axis — draw the second quantity as its own chart.
+</Callout>
+
+Reach for a named chart first. [LineChart](/docs/charts/line-chart),
+[BarChart](/docs/charts/bar-chart) and the rest carry decisions `Plot` leaves to you — where the
+baseline belongs, what a gap in a series means, how a loading state should read — and a chart
+assembled by hand has to make every one of them again. `Plot` is marked alpha for the same reason
+its parts are settled and its geometry names are not.
 
 ## Resolving a colour yourself
 
