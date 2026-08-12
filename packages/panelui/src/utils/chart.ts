@@ -36,12 +36,55 @@ export function useSeriesColor(
   return explicit ?? (typeof token === 'string' ? token : FALLBACK_SERIES[index - 1]!);
 }
 
-/** `12.4k` rather than `12400` — a readout has one line to say it in. */
+/** The suffixes, smallest first. Each one is a thousand of the one before it. */
+const MAGNITUDES = ['k', 'M', 'B', 'T'] as const;
+
+/** Drop the zeros a fixed decimal count left behind: `12.0` is `12`. */
+function trimZeros(text: string): string {
+  return text.includes('.') ? text.replace(/\.?0+$/, '') : text;
+}
+
+/**
+ * One decimal while the mantissa is a single digit, none after that.
+ *
+ * `1.2k` and `12k` rather than `1.2k` and `12.4k`: the second decimal place is
+ * spurious precision on a tick, and the label has one line to fit in.
+ */
+function mantissa(value: number): string {
+  return trimZeros(value.toFixed(Math.abs(value) < 10 ? 1 : 0));
+}
+
+/** `12k` rather than `12400` — a readout has one line to say it in. */
 export function compactNumber(value: number): string {
+  if (!Number.isFinite(value)) return String(value);
+
   const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  if (abs < 1_000) {
+    if (Number.isInteger(value)) return String(value);
+    // Below one, a single decimal rounds most values to `0`, which reads as
+    // nothing rather than as a small number.
+    return trimZeros(value.toFixed(abs < 1 ? 2 : 1));
+  }
+
+  let index = 0;
+  let scaled = value / 1_000;
+  while (Math.abs(scaled) >= 1_000 && index < MAGNITUDES.length - 1) {
+    scaled /= 1_000;
+    index += 1;
+  }
+
+  /*
+   * Rounding can push a mantissa over a thousand — 999,999 is `1000.0k` on the
+   * way in, which is a thousand thousands written the long way. Formatting
+   * first and promoting after is what makes it `1M`.
+   */
+  let text = mantissa(scaled);
+  if (Math.abs(Number(text)) >= 1_000 && index < MAGNITUDES.length - 1) {
+    index += 1;
+    text = mantissa(scaled / 1_000);
+  }
+
+  return `${text}${MAGNITUDES[index]}`;
 }
 
 /** The drawable box inside a chart, after its padding is taken off. */
