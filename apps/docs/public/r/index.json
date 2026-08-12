@@ -683,6 +683,16 @@
     ]
   },
   {
+    "name": "polar-area-chart",
+    "type": "registry:ui",
+    "description": "Several readings on one scale, compared as wedges.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
+  },
+  {
     "name": "popover",
     "type": "registry:ui",
     "description": "Panel anchored to the element that opened it.",

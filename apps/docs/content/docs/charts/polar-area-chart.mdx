@@ -1,0 +1,208 @@
+---
+title: PolarAreaChart
+description: Several readings on one scale, compared as wedges.
+status: new
+---
+
+Use it to compare several readings taken on the same scale. Every wedge gets an equal slice of the dial and its radius carries the reading, so the outline of the dial is the shape of the data.
+
+The values need not add up to anything. That is what separates it from a [PieChart](/docs/charts/pie-chart), where the angles are the quantity and have to come to a full turn — six unrelated measurements belong here, six parts of one budget belong there.
+
+It is not the chart for reading values off precisely. Length along a shared baseline is easier to compare than distance from a centre, so a reader ranking the middle three wedges is guessing. Put the numbers on the wedges with `Labels`, or use a [BarChart](/docs/charts/bar-chart).
+
+## Installation
+
+PolarAreaChart ships with the library — no separate install.
+
+```tsx
+import { PolarAreaChart, type PolarAreaDatum, Frame } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add polar-area-chart
+```
+
+## Usage
+
+```tsx
+<PolarAreaChart data={scores}>
+  <PolarAreaChart.Header title="Response times" />
+  <PolarAreaChart.Grid />
+  <PolarAreaChart.Wedges />
+  <PolarAreaChart.Labels />
+  <PolarAreaChart.Legend />
+</PolarAreaChart>
+```
+
+## Composition
+
+```tsx
+<PolarAreaChart>
+  <PolarAreaChart.Header />     {/* title and reading, above the dial */}
+  <PolarAreaChart.Grid />       {/* the rings the wedges are read against */}
+  <PolarAreaChart.Wedges />     {/* the wedges */}
+  <PolarAreaChart.Skeleton />   {/* while status="loading" */}
+  <PolarAreaChart.Labels />     {/* the reading on each wedge with room for it */}
+  <PolarAreaChart.Tooltip />    {/* readout for the selected wedge */}
+  <PolarAreaChart.Legend />     {/* swatches and readings, under the dial */}
+</PolarAreaChart>
+```
+
+- **`PolarAreaChart.Header`** — The strip above the dial — what the chart is of, what it reads, and optionally a key for the colours.
+- **`PolarAreaChart.Grid`** — The rings. Each one stands for an even step of the value and sits where that value falls, which under `scale="area"` is not an even step of the radius.
+- **`PolarAreaChart.Wedges`** — The wedges. One part rather than one per datum: they share a dial, a maximum and a scale, and a wedge with its own maximum would be drawing a lie.
+- **`PolarAreaChart.Labels`** — The reading on each wedge, as real text over the SVG. Wedges too short to hold one are left blank.
+- **`PolarAreaChart.Tooltip`** — The readout for the selected wedge. This is how the short ones are named.
+- **`PolarAreaChart.Legend`** — A swatch, a name and a reading per wedge, under the dial. Pressable in the same way the wedges are.
+- **`PolarAreaChart.Skeleton`** — The dial as one plain disc, shown while `status="loading"`.
+
+## Examples
+
+### Readings on one scale
+
+Equal angles, and the radius carries the value. The rings are the scale — four of them by default, the outermost standing for `maxValue`.
+
+```tsx
+<PolarAreaChart data={latency}>
+  <PolarAreaChart.Header title="p95 response time" caption="Across six regions, in ms" />
+  <PolarAreaChart.Grid />
+  <PolarAreaChart.Wedges cornerRadius={4} />
+  <PolarAreaChart.Labels />
+  <PolarAreaChart.Legend />
+</PolarAreaChart>
+```
+
+### Area rather than radius
+
+`scale="area"` puts the value on the square root of the radius, so the ink a wedge covers is proportional to what it is worth. Use it where the dial is being read as a picture rather than counted off the rings — with the default the largest wedge covers four times the area of one worth half as much, and area is what the eye adds up first.
+
+The rings still mark even steps of the value, so they stop being evenly spaced.
+
+```tsx
+<PolarAreaChart data={latency} scale="area">
+  <PolarAreaChart.Grid rings={5} />
+  <PolarAreaChart.Wedges />
+  <PolarAreaChart.Labels />
+  <PolarAreaChart.Legend />
+</PolarAreaChart>
+```
+
+### Two dials, one maximum
+
+Pass `maxValue` to compare one dial against another. Left to itself each chart derives its own maximum from its own data, so the largest wedge reaches the edge on both and two different readings look identical.
+
+```tsx
+<PolarAreaChart data={thisWeek} maxValue={200}>
+  <PolarAreaChart.Header title="This week" />
+  <PolarAreaChart.Grid />
+  <PolarAreaChart.Wedges />
+  <PolarAreaChart.Labels />
+</PolarAreaChart>
+```
+
+### Selecting one out
+
+Tap a wedge and the others dim. Pass `activeIndex` and `onActiveIndexChange` to drive it from outside — that is how a reading gets into the header, which sits outside the dial — or read it inside the chart with `usePolarAreaChart()`.
+
+```tsx
+<PolarAreaChart
+  data={latency}
+  activeIndex={selected}
+  onActiveIndexChange={setSelected}
+>
+  <PolarAreaChart.Grid />
+  <PolarAreaChart.Wedges dimOpacity={0.2} />
+  <PolarAreaChart.Labels />
+  <PolarAreaChart.Tooltip />
+  <PolarAreaChart.Legend />
+</PolarAreaChart>
+```
+
+## API Reference
+
+### PolarAreaChart
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `data` | `PolarAreaDatum[]` | — | One entry per wedge, drawn in the order they are listed. |
+| `size` | `number` | — | Diameter in points. Left out, the chart fills its column as a square. |
+| `maxValue` | `number` | — | The value the outermost ring stands for. Defaults to the largest value rounded up to a round number. Fix it to compare two dials against each other — the same reading has to be the same distance out on both, and a maximum derived per chart makes the largest wedge of each one reach the edge whatever it is worth. |
+| `scale` | `PolarAreaScale` | `'radius'` | Whether the radius or the area carries the value. |
+| `startAngle` | `number` | `0` | Where the first wedge starts, in degrees clockwise from twelve o'clock. |
+| `padAngle` | `number` | `0` | Gap between wedges, in degrees. |
+| `status` | `PolarAreaChartStatus` | `'ready'` | `loading` draws the dial undivided, with nothing split up yet. |
+| `animationDuration` | `number` | `800` | Milliseconds for the wedges to grow out of the centre. |
+| `activeIndex` | `number` | — | The selected wedge, to drive the selection from outside. |
+| `onActiveIndexChange` | `(index: number) => void` | — |  |
+
+### PolarAreaChart.Wedges
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `cornerRadius` | `number` | `0` | Rounds the four turns of each wedge, in points. |
+| `dimOpacity` | `number` | `0.35` | Opacity of the wedges that are not selected, once one is. |
+
+### PolarAreaChart.Grid
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rings` | `number` | — | How many rings, including the outermost. |
+| `color` | `string` | — | Overrides the themed hairline colour. |
+| `spokes` | `boolean` | — | Draw a line from the centre out along each wedge's edge. |
+
+### PolarAreaChart.Labels
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `formatValue` | `(value: number, datum: PolarAreaDatum) => string` | — | Format the value. Defaults to a compact number. |
+| `minRadius` | `number` | `DEFAULT_MIN_LABEL_RADIUS` | Wedges reaching less far than this, in points, are left unlabelled. |
+| `className` | `string` | — |  |
+
+### PolarAreaChart.Tooltip
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `formatValue` | `(value: number, datum: PolarAreaDatum) => string` | — | Format the value. Defaults to a compact number. |
+| `className` | `string` | — |  |
+
+### PolarAreaChart.Legend
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `showValue` | `boolean` | `true` | Show each wedge's reading beside its name. |
+| `formatValue` | `(value: number, datum: PolarAreaDatum) => string` | — | Format the value. Defaults to a compact number. |
+
+### PolarAreaChart.Skeleton
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `color` | `string` | — |  |
+
+### PolarAreaChart.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `string` | — | Small line above the value — what the chart is of. |
+| `value` | `string` | — | The readout. The largest thing on the card, and the first thing read. |
+| `caption` | `string` | — | One muted line under the value — a period, a comparison, a caveat. |
+| `labels` | `Record<string, string>` | — | Prettier names for the wedges, keyed by their `label`. |
+| `legend` | `boolean` | `false` | Draw a swatch and a name per wedge along the trailing edge. For two or three short names. Past that use `PolarAreaChart.Legend`, which runs under the dial across the full width. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+Every wedge takes the same angle, and there is no prop to change that. The angle and the radius moving together would be two quantities in one mark, with no way to read either.
+
+`maxValue` defaults to the largest value rounded up to a round number, so the outermost ring lands on 150 rather than on 147. Set it by hand to compare two dials.
+
+A wedge shorter than `minRadius` is left unlabelled by `Labels` — the number would sit outside the wedge it belongs to, beside a neighbour it does not describe. Those are read through `Tooltip` and the legend, which is the reason to include one of them.
+
+Labels take their colour from the wedge under them, white on a dark one and near-black on a light one. Chart colours come from the theme and can land anywhere on the scale.
+
+Negative values are treated as zero. There is no distance shorter than none, and scaling around it would misstate every other wedge.

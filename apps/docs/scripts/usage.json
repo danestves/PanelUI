@@ -8135,5 +8135,46 @@
         "code": "<TreemapChart data={status === 'loading' ? [] : spend} status={status}>\n  <TreemapChart.Header title=\"Total this month\" value={status === 'loading' ? '—' : money(total)} />\n  <TreemapChart.Skeleton />\n  <TreemapChart.Tiles />\n  <TreemapChart.Labels formatValue={money} />\n</TreemapChart>"
       }
     ]
+  },
+  "polar-area-chart": {
+    "intro": "Use it to compare several readings taken on the same scale. Every wedge gets an equal slice of the dial and its radius carries the reading, so the outline of the dial is the shape of the data.\n\nThe values need not add up to anything. That is what separates it from a [PieChart](/docs/charts/pie-chart), where the angles are the quantity and have to come to a full turn — six unrelated measurements belong here, six parts of one budget belong there.\n\nIt is not the chart for reading values off precisely. Length along a shared baseline is easier to compare than distance from a centre, so a reader ranking the middle three wedges is guessing. Put the numbers on the wedges with `Labels`, or use a [BarChart](/docs/charts/bar-chart).",
+    "usage": "<PolarAreaChart data={scores}>\n  <PolarAreaChart.Header title=\"Response times\" />\n  <PolarAreaChart.Grid />\n  <PolarAreaChart.Wedges />\n  <PolarAreaChart.Labels />\n  <PolarAreaChart.Legend />\n</PolarAreaChart>",
+    "extraImports": [
+      "type PolarAreaDatum",
+      "Frame"
+    ],
+    "anatomy": "<PolarAreaChart>\n  <PolarAreaChart.Header />     {/* title and reading, above the dial */}\n  <PolarAreaChart.Grid />       {/* the rings the wedges are read against */}\n  <PolarAreaChart.Wedges />     {/* the wedges */}\n  <PolarAreaChart.Skeleton />   {/* while status=\"loading\" */}\n  <PolarAreaChart.Labels />     {/* the reading on each wedge with room for it */}\n  <PolarAreaChart.Tooltip />    {/* readout for the selected wedge */}\n  <PolarAreaChart.Legend />     {/* swatches and readings, under the dial */}\n</PolarAreaChart>",
+    "parts": {
+      "Header": "The strip above the dial — what the chart is of, what it reads, and optionally a key for the colours.",
+      "Grid": "The rings. Each one stands for an even step of the value and sits where that value falls, which under `scale=\"area\"` is not an even step of the radius.",
+      "Wedges": "The wedges. One part rather than one per datum: they share a dial, a maximum and a scale, and a wedge with its own maximum would be drawing a lie.",
+      "Labels": "The reading on each wedge, as real text over the SVG. Wedges too short to hold one are left blank.",
+      "Tooltip": "The readout for the selected wedge. This is how the short ones are named.",
+      "Legend": "A swatch, a name and a reading per wedge, under the dial. Pressable in the same way the wedges are.",
+      "Skeleton": "The dial as one plain disc, shown while `status=\"loading\"`."
+    },
+    "examples": [
+      {
+        "title": "Readings on one scale",
+        "description": "Equal angles, and the radius carries the value. The rings are the scale — four of them by default, the outermost standing for `maxValue`.",
+        "code": "<PolarAreaChart data={latency}>\n  <PolarAreaChart.Header title=\"p95 response time\" caption=\"Across six regions, in ms\" />\n  <PolarAreaChart.Grid />\n  <PolarAreaChart.Wedges cornerRadius={4} />\n  <PolarAreaChart.Labels />\n  <PolarAreaChart.Legend />\n</PolarAreaChart>"
+      },
+      {
+        "title": "Area rather than radius",
+        "description": "`scale=\"area\"` puts the value on the square root of the radius, so the ink a wedge covers is proportional to what it is worth. Use it where the dial is being read as a picture rather than counted off the rings — with the default the largest wedge covers four times the area of one worth half as much, and area is what the eye adds up first.\n\nThe rings still mark even steps of the value, so they stop being evenly spaced.",
+        "code": "<PolarAreaChart data={latency} scale=\"area\">\n  <PolarAreaChart.Grid rings={5} />\n  <PolarAreaChart.Wedges />\n  <PolarAreaChart.Labels />\n  <PolarAreaChart.Legend />\n</PolarAreaChart>"
+      },
+      {
+        "title": "Two dials, one maximum",
+        "description": "Pass `maxValue` to compare one dial against another. Left to itself each chart derives its own maximum from its own data, so the largest wedge reaches the edge on both and two different readings look identical.",
+        "code": "<PolarAreaChart data={thisWeek} maxValue={200}>\n  <PolarAreaChart.Header title=\"This week\" />\n  <PolarAreaChart.Grid />\n  <PolarAreaChart.Wedges />\n  <PolarAreaChart.Labels />\n</PolarAreaChart>"
+      },
+      {
+        "title": "Selecting one out",
+        "description": "Tap a wedge and the others dim. Pass `activeIndex` and `onActiveIndexChange` to drive it from outside — that is how a reading gets into the header, which sits outside the dial — or read it inside the chart with `usePolarAreaChart()`.",
+        "code": "<PolarAreaChart\n  data={latency}\n  activeIndex={selected}\n  onActiveIndexChange={setSelected}\n>\n  <PolarAreaChart.Grid />\n  <PolarAreaChart.Wedges dimOpacity={0.2} />\n  <PolarAreaChart.Labels />\n  <PolarAreaChart.Tooltip />\n  <PolarAreaChart.Legend />\n</PolarAreaChart>"
+      }
+    ],
+    "notes": "Every wedge takes the same angle, and there is no prop to change that. The angle and the radius moving together would be two quantities in one mark, with no way to read either.\n\n`maxValue` defaults to the largest value rounded up to a round number, so the outermost ring lands on 150 rather than on 147. Set it by hand to compare two dials.\n\nA wedge shorter than `minRadius` is left unlabelled by `Labels` — the number would sit outside the wedge it belongs to, beside a neighbour it does not describe. Those are read through `Tooltip` and the legend, which is the reason to include one of them.\n\nLabels take their colour from the wedge under them, white on a dark one and near-black on a light one. Chart colours come from the theme and can land anywhere on the scale.\n\nNegative values are treated as zero. There is no distance shorter than none, and scaling around it would misstate every other wedge."
   }
 }

@@ -556,6 +556,22 @@ export {
   type PieChartStatus,
   type PieDatum,
 } from './components/pie-chart';
+export {
+  PolarAreaChart,
+  usePolarAreaChart,
+  type PolarAreaChartProps,
+  type PolarAreaChartHandle,
+  type PolarAreaChartHeaderProps,
+  type PolarAreaChartGridProps,
+  type PolarAreaChartWedgesProps,
+  type PolarAreaChartLabelsProps,
+  type PolarAreaChartTooltipProps,
+  type PolarAreaChartLegendProps,
+  type PolarAreaChartSkeletonProps,
+  type PolarAreaChartStatus,
+  type PolarAreaScale,
+  type PolarAreaDatum,
+} from './components/polar-area-chart';
 export { Textarea, type TextareaProps } from './components/textarea';
 export {
   TagInput,

@@ -933,5 +933,14 @@
       "addedIn": "0.61.0",
       "group": "charts"
     }
+  ],
+  "polar-area-chart": [
+    "PolarAreaChart",
+    "Several readings on one scale, compared as wedges.",
+    "react native polar area chart rose",
+    {
+      "addedIn": "0.62.0",
+      "group": "charts"
+    }
   ]
 }

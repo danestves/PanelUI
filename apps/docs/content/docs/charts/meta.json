@@ -9,6 +9,7 @@
     "hex-chart",
     "line-chart",
     "pie-chart",
+    "polar-area-chart",
     "radar-chart",
     "ring-chart",
     "scatter-chart",
