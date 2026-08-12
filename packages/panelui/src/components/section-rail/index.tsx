@@ -61,7 +61,7 @@ const SPRING = { damping: 20, stiffness: 260, mass: 0.6 } as const;
 const BAR_WIDTH = 16;
 const BAR_LEVEL_STEP = 4;
 /** How much wider the active bar gets, so position is readable at a glance. */
-const BAR_ACTIVE_EXTRA = 8;
+const BAR_ACTIVE_EXTRA = 12;
 /**
  * How much of that extra the bars either side of the active one keep.
  *
