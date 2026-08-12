@@ -12,6 +12,7 @@ import {
 } from 'react';
 import { Pressable, View, type ViewProps } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
+import { tv, type VariantProps } from 'tailwind-variants';
 import { Portal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
@@ -129,6 +130,8 @@ function DialogContent({
           entering={ZoomIn.springify().damping(18).stiffness(250).mass(0.6)}
           exiting={FadeOut.duration(120)}
           accessibilityViewIsModal
+          // `p-5` is `DIALOG_PADDING` above — a panel footer bleeds back out
+          // through exactly this much, so the two move together.
           className={cn(
             'w-full max-w-sm gap-1.5 rounded-2xl border border-border bg-popover p-5 shadow-lg',
             className
@@ -163,10 +166,60 @@ const DialogDescription = forwardRef<React.ElementRef<typeof Text>, TextProps>(
 );
 DialogDescription.displayName = 'Dialog.Description';
 
-function DialogFooter({ className, ...props }: ViewProps & { className?: string }) {
+/**
+ * The dialog's padding, in points. The panel footer bleeds back out through it,
+ * so the two have to agree — a mismatch is a band inset from one edge.
+ */
+const DIALOG_PADDING = 20;
+
+const dialogFooterVariants = tv({
+  base: 'flex-row items-center justify-end gap-2',
+  variants: {
+    /**
+     * Whether the footer draws a surface of its own.
+     *
+     * `plain` is part of the dialog: same background, sitting under the content
+     * with a gap above it. `panel` is a band — a rule across the top, a step of
+     * tint, and the dialog's own bottom corners — which separates what the
+     * dialog says from what you can do about it. Worth it on a dialog with a
+     * form in it, where the buttons are otherwise one more row of the form.
+     */
+    variant: {
+      plain: 'mt-4',
+      panel: 'mt-5 rounded-b-2xl border-t border-border bg-muted',
+    },
+  },
+  defaultVariants: {
+    variant: 'plain',
+  },
+});
+
+export interface DialogFooterProps extends ViewProps, VariantProps<typeof dialogFooterVariants> {
+  className?: string;
+}
+
+function DialogFooter({ className, variant, style, ...props }: DialogFooterProps) {
   return (
     <View
-      className={cn('mt-4 flex-row items-center justify-end gap-2', className)}
+      /*
+       * The bleed is a style rather than a class because it is arithmetic on the
+       * dialog's own padding, and a class would be a second copy of that number
+       * waiting to disagree with the first.
+       */
+      style={
+        variant === 'panel'
+          ? [
+              {
+                marginHorizontal: -DIALOG_PADDING,
+                marginBottom: -DIALOG_PADDING,
+                paddingHorizontal: DIALOG_PADDING,
+                paddingVertical: 16,
+              },
+              style,
+            ]
+          : style
+      }
+      className={cn(dialogFooterVariants({ variant }), className)}
       {...props}
     />
   );

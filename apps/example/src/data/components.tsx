@@ -14629,6 +14629,35 @@ const CATALOGUE: ComponentEntry[] = [
         ),
       },
       {
+        label: 'Actions on their own surface',
+        render: () => (
+          /*
+           * `variant="panel"` puts the buttons on a band of their own, so what
+           * the card asks for is separated from what it says. It is the shape
+           * that suits a card whose body is a form: without it the buttons read
+           * as one more field.
+           */
+          <Card className="w-full">
+            <Card.Header>
+              <Card.Title>Login to your account</Card.Title>
+              <Card.Description>
+                Enter your email below to login to your account.
+              </Card.Description>
+            </Card.Header>
+            <Card.Content className="gap-4">
+              <Input label="Email" placeholder="m@example.com" />
+              <Input label="Password" placeholder="••••••••" secureTextEntry />
+            </Card.Content>
+            <Card.Footer variant="panel" className="flex-col gap-2">
+              <Button fullWidth>Login</Button>
+              <Button fullWidth variant="outline">
+                Login with Google
+              </Button>
+            </Card.Footer>
+          </Card>
+        ),
+      },
+      {
         label: 'Horizontal',
         render: () => (
           <Card className="w-full overflow-hidden">
@@ -14966,6 +14995,38 @@ const CATALOGUE: ComponentEntry[] = [
               <Dialog.Footer>
                 <Dialog.Close>
                   <Button size="sm">Got it</Button>
+                </Dialog.Close>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog>
+        ),
+      },
+      {
+        label: 'Actions on their own surface',
+        render: () => (
+          <Dialog>
+            <Dialog.Trigger>
+              <Button variant="outline">Edit profile</Button>
+            </Dialog.Trigger>
+            <Dialog.Content>
+              <Dialog.Title>Edit profile</Dialog.Title>
+              <Dialog.Description>
+                Make changes to your profile here. Save when you're done.
+              </Dialog.Description>
+              <View className="gap-4 py-4">
+                <Input label="Name" defaultValue="Pedro Duarte" />
+                <Input label="Username" defaultValue="@peduarte" />
+              </View>
+              {/* `variant="panel"` bleeds a tinted band out to the dialog's own
+                  edges, so the buttons are not read as the last field. */}
+              <Dialog.Footer variant="panel">
+                <Dialog.Close>
+                  <Button size="sm" variant="outline">
+                    Cancel
+                  </Button>
+                </Dialog.Close>
+                <Dialog.Close>
+                  <Button size="sm">Save changes</Button>
                 </Dialog.Close>
               </Dialog.Footer>
             </Dialog.Content>

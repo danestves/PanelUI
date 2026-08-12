@@ -23,12 +23,39 @@
  */
 import { forwardRef } from 'react';
 import { View, type ViewProps } from 'react-native';
+import { tv, type VariantProps } from 'tailwind-variants';
 import { cn } from '../../utils/cn';
 import { Text, type TextProps } from '../../primitives/text';
+
+const footerVariants = tv({
+  base: 'flex-row items-center gap-2',
+  variants: {
+    /**
+     * Whether the footer draws a surface of its own.
+     *
+     * `plain` is part of the card: same background, padding continuing from the
+     * content above it. `panel` is a band — a rule across the top, a step of
+     * tint, and the card's own bottom corners — so the buttons read as the
+     * card's actions rather than as the last thing in its body. Use it when the
+     * footer is what somebody does with the card, not more of what it says.
+     */
+    variant: {
+      plain: 'p-6 pt-0',
+      panel: 'rounded-b-2xl border-t border-border bg-muted p-6',
+    },
+  },
+  defaultVariants: {
+    variant: 'plain',
+  },
+});
 
 export interface CardProps extends ViewProps {
   className?: string;
 }
+
+export interface CardFooterProps
+  extends CardProps,
+    VariantProps<typeof footerVariants> {}
 
 const CardRoot = forwardRef<View, CardProps>(({ className, ...props }, ref) => (
   <View
@@ -69,13 +96,11 @@ const CardContent = forwardRef<View, CardProps>(({ className, ...props }, ref) =
 ));
 CardContent.displayName = 'Card.Content';
 
-const CardFooter = forwardRef<View, CardProps>(({ className, ...props }, ref) => (
-  <View
-    ref={ref}
-    className={cn('flex-row items-center gap-2 p-6 pt-0', className)}
-    {...props}
-  />
-));
+const CardFooter = forwardRef<View, CardFooterProps>(
+  ({ className, variant, ...props }, ref) => (
+    <View ref={ref} className={cn(footerVariants({ variant }), className)} {...props} />
+  )
+);
 CardFooter.displayName = 'Card.Footer';
 
 export const Card = Object.assign(CardRoot, {
