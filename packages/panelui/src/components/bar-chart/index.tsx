@@ -52,15 +52,17 @@ import { StyleSheet, View, type LayoutChangeEvent, type ViewProps } from 'react-
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
+  cancelAnimation,
   runOnJS,
   useAnimatedProps,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withRepeat,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import Svg, { G, Line as SvgLine, Path } from 'react-native-svg';
+import Svg, { Defs, G, Line as SvgLine, LinearGradient, Path, Stop } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
 import {
@@ -75,6 +77,7 @@ import {
 import { cn } from '../../utils/cn';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 /** Room left around the plot for the axis labels. */
 const PADDING = { top: 12, right: 10, bottom: 22, left: 10 };
@@ -163,9 +166,10 @@ export interface BarChartProps extends ViewProps {
   /** Key holding the category label. Used by the axis and the readout. */
   xDataKey?: string;
   /**
-   * `loading` draws a row of flat placeholder bars and grows them into the real
-   * ones when it turns `ready`. One component throughout, rather than a spinner
-   * swapped for a chart — swapping loses the transition.
+   * `loading` holds the bars at the baseline and grows them into the real ones
+   * when it turns `ready`. One component throughout, rather than a spinner
+   * swapped for a chart — swapping loses the transition. Add a
+   * `BarChart.Skeleton` for something to stand in the plot meanwhile.
    */
   status?: BarChartStatus;
   /** Width ÷ height. `2` is the wide card shape. */
@@ -738,6 +742,112 @@ function BarChartBar({ dataKey, color, colorIndex = 1, cornerRadius }: BarChartB
 BarChartBar.displayName = 'BarChart.Bar';
 BarChartBar.layer = 'svg' as Layer;
 
+/** How much of the value axis a placeholder bar takes. */
+const SKELETON_LENGTH = 0.22;
+
+/** Bands to draw when there is no data yet to count them from. */
+const SKELETON_BARS = 7;
+
+export interface BarChartSkeletonProps {
+  /**
+   * How many placeholder bars to draw. Defaults to one per row, and to seven
+   * when the data has not arrived — the count is the one thing a loading
+   * chart can be honest about only if it already has the rows.
+   */
+  bars?: number;
+  /** Milliseconds for one pass of the sweep. */
+  duration?: number;
+  color?: string;
+}
+
+/**
+ * The loading state: a row of short, equal stubs on the baseline, with a
+ * highlight travelling across them.
+ *
+ * Equal on purpose. Placeholder bars of differing heights are a distribution
+ * the reader has no way to tell from the real one until it changes under them,
+ * so these say only how many bars there will be and where the baseline is.
+ *
+ * The sweep is the part that carries the meaning. Without it a chart waiting
+ * for data and a chart whose values are all zero draw the same picture, and
+ * the reader is left to guess which one they are looking at.
+ */
+function BarChartSkeleton({ bars, duration = 1400, color }: BarChartSkeletonProps) {
+  const { plot, status, orientation, data, barGap, barWidth, cornerRadius } =
+    useChart('BarChart.Skeleton');
+  const token = useCSSVariable('--color-skeleton');
+  const base = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
+  const highlight = useSeriesColor(undefined, 1);
+
+  const sweep = useSharedValue(0);
+  const reducedMotion = useReducedMotion();
+  const loading = status === 'loading';
+
+  useEffect(() => {
+    if (!loading || reducedMotion) {
+      cancelAnimation(sweep);
+      sweep.value = 0;
+      return;
+    }
+    sweep.value = 0;
+    sweep.value = withRepeat(withTiming(1, { duration, easing: Easing.linear }), -1, false);
+    return () => cancelAnimation(sweep);
+  }, [loading, reducedMotion, duration, sweep]);
+
+  // The band travels by moving the gradient's own endpoints, so the whole
+  // effect is two numbers changing on the UI thread.
+  const animatedProps = useAnimatedProps(() => ({
+    x1: `${(sweep.value * 1.4 - 0.4) * 100}%`,
+    x2: `${(sweep.value * 1.4 - 0.4 + 0.4) * 100}%`,
+  }));
+
+  const horizontal = orientation === 'horizontal';
+  const total = Math.max(1, bars ?? (data.length || SKELETON_BARS));
+
+  const d = useMemo(() => {
+    if (plot.width <= 0 || plot.height <= 0) return '';
+
+    // The same two axes the bars use: `along` is the category one, `across`
+    // the value one, so a sideways chart is this code with the pair swapped.
+    const along = horizontal ? plot.height : plot.width;
+    const alongStart = horizontal ? plot.top : plot.left;
+    const across = horizontal ? plot.width : plot.height;
+
+    const band = along / total;
+    const usable = band * (1 - barGap);
+    const thickness = Math.min(barWidth ?? usable, usable);
+    const length = across * SKELETON_LENGTH;
+
+    let path = '';
+    for (let i = 0; i < total; i += 1) {
+      const lead = alongStart + i * band + (band - thickness) / 2;
+      path += horizontal
+        ? barPath(plot.left, lead, length, thickness, cornerRadius, 'right')
+        : barPath(lead, plot.top + plot.height - length, thickness, length, cornerRadius, 'up');
+    }
+    return path;
+  }, [plot, horizontal, total, barGap, barWidth, cornerRadius]);
+
+  if (!loading || !d) return null;
+
+  const gradientId = 'panelui-bar-skeleton';
+
+  return (
+    <G>
+      <Defs>
+        <AnimatedLinearGradient id={gradientId} animatedProps={animatedProps} y1="0" y2="0">
+          <Stop offset="0" stopColor={base} />
+          <Stop offset="0.5" stopColor={highlight} stopOpacity={0.55} />
+          <Stop offset="1" stopColor={base} />
+        </AnimatedLinearGradient>
+      </Defs>
+      <Path d={d} fill={`url(#${gradientId})`} />
+    </G>
+  );
+}
+BarChartSkeleton.displayName = 'BarChart.Skeleton';
+BarChartSkeleton.layer = 'svg' as Layer;
+
 /* -------------------------------------------------------------------------- */
 /* Overlay layer                                                              */
 /* -------------------------------------------------------------------------- */
@@ -1201,6 +1311,7 @@ export const BarChart = Object.assign(BarChartRoot, {
   Header: BarChartHeader,
   Grid: BarChartGrid,
   Bar: BarChartBar,
+  Skeleton: BarChartSkeleton,
   XAxis: BarChartXAxis,
   YAxis: BarChartYAxis,
   Tooltip: BarChartTooltip,

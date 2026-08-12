@@ -47,11 +47,13 @@ import { StyleSheet, View, type LayoutChangeEvent, type ViewProps } from 'react-
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
+  cancelAnimation,
   runOnJS,
   useAnimatedProps,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withRepeat,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
@@ -85,6 +87,7 @@ import { cn } from '../../utils/cn';
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 const PADDING = { top: 12, right: 10, bottom: 22, left: 10 };
 const LABEL_WIDTH = 132;
@@ -160,7 +163,11 @@ export interface AreaChartProps extends ViewProps {
   data: AreaChartDatum[];
   /** Key holding the x label. Used by the axis and the crosshair readout. */
   xDataKey?: string;
-  /** `loading` draws a flat skeleton and grows into the real bands on `ready`. */
+  /**
+   * `loading` holds the bands flat and grows them into the real ones when it
+   * turns `ready`. Add an `AreaChart.Skeleton` for something to stand in the
+   * plot meanwhile.
+   */
   status?: AreaChartStatus;
   /** Width ÷ height. `2` is the wide card shape. */
   aspectRatio?: number;
@@ -623,6 +630,83 @@ function AreaChartArea({
 }
 AreaChartArea.displayName = 'AreaChart.Area';
 AreaChartArea.layer = 'svg' as Layer;
+
+/** How much of the plot's height the resting band takes. */
+const SKELETON_BAND = 0.18;
+
+export interface AreaChartSkeletonProps {
+  /** Milliseconds for one pass of the sweep. */
+  duration?: number;
+  color?: string;
+}
+
+/**
+ * The loading state: a low band along the baseline with a highlight travelling
+ * across it.
+ *
+ * Flat on purpose. A placeholder with a shape in it is a shape the reader has
+ * no way to tell from the real one until it changes under them, so the band
+ * says only where the series will be and how tall the plot is.
+ *
+ * The sweep is the part that carries the meaning. Without it a chart waiting
+ * for data and a chart whose values are all zero draw the same picture, and
+ * the reader is left to guess which one they are looking at.
+ */
+function AreaChartSkeleton({ duration = 1400, color }: AreaChartSkeletonProps) {
+  const { plot, status } = useChart('AreaChart.Skeleton');
+  const token = useCSSVariable('--color-skeleton');
+  const base = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
+  const highlight = useSeriesColor(undefined, 1);
+
+  const sweep = useSharedValue(0);
+  const reducedMotion = useReducedMotion();
+  const loading = status === 'loading';
+
+  useEffect(() => {
+    if (!loading || reducedMotion) {
+      cancelAnimation(sweep);
+      sweep.value = 0;
+      return;
+    }
+    sweep.value = 0;
+    sweep.value = withRepeat(withTiming(1, { duration, easing: Easing.linear }), -1, false);
+    return () => cancelAnimation(sweep);
+  }, [loading, reducedMotion, duration, sweep]);
+
+  // The band travels by moving the gradient's own endpoints, so the whole
+  // effect is two numbers changing on the UI thread.
+  const animatedProps = useAnimatedProps(() => ({
+    x1: `${(sweep.value * 1.4 - 0.4) * 100}%`,
+    x2: `${(sweep.value * 1.4 - 0.4 + 0.4) * 100}%`,
+  }));
+
+  if (!loading) return null;
+
+  const height = plot.height * SKELETON_BAND;
+  const top = plot.top + plot.height - height;
+  const gradientId = 'panelui-area-skeleton';
+
+  return (
+    <G>
+      <Defs>
+        <AnimatedLinearGradient id={gradientId} animatedProps={animatedProps} y1="0" y2="0">
+          <Stop offset="0" stopColor={base} />
+          <Stop offset="0.5" stopColor={highlight} stopOpacity={0.55} />
+          <Stop offset="1" stopColor={base} />
+        </AnimatedLinearGradient>
+      </Defs>
+      <Rect
+        x={plot.left}
+        y={top}
+        width={plot.width}
+        height={height}
+        fill={`url(#${gradientId})`}
+      />
+    </G>
+  );
+}
+AreaChartSkeleton.displayName = 'AreaChart.Skeleton';
+AreaChartSkeleton.layer = 'svg' as Layer;
 
 /* -------------------------------------------------------------------------- */
 /* Overlay layer                                                              */
@@ -1140,6 +1224,7 @@ export const AreaChart = Object.assign(AreaChartRoot, {
   Header: AreaChartHeader,
   Grid: AreaChartGrid,
   Area: AreaChartArea,
+  Skeleton: AreaChartSkeleton,
   XAxis: AreaChartXAxis,
   YAxis: AreaChartYAxis,
   Tooltip: AreaChartTooltip,
