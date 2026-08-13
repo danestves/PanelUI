@@ -5,6 +5,7 @@ import { Geist_Mono, Inter } from 'next/font/google';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@/components/google-analytics';
+import { LayoutLink } from '@/components/layout-link';
 import { OpenPanel } from '@/components/openpanel';
 import { WebMcp } from '@/components/web-mcp';
 import { absoluteUrl, site } from '@/lib/site';
@@ -105,7 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       {/* `isolate` keeps Base UI portals layering against this root. */}
       <body className="isolate flex min-h-screen flex-col font-sans antialiased">
-        <RootProvider>{children}</RootProvider>
+        <RootProvider components={{ Link: LayoutLink }}>{children}</RootProvider>
         {/*
           All three mount once here, because the root layout wraps every page
           and nothing else should mount any of them again.

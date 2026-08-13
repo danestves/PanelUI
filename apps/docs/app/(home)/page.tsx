@@ -274,10 +274,10 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
           <p>MIT © Khalid Abdi</p>
           <nav className="flex gap-6" aria-label="Footer">
-            <Link href="/docs" className="hover:text-foreground">
+            <Link href="/docs" prefetch={false} className="hover:text-foreground">
               Documentation
             </Link>
-            <Link href="/docs/components" className="hover:text-foreground">
+            <Link href="/docs/components" prefetch={false} className="hover:text-foreground">
               Components
             </Link>
             <Link href={site.npm} className="hover:text-foreground">
