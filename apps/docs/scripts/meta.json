@@ -93,7 +93,7 @@
     "Pressable action with variants, sizes, loading state and icon slots.",
     "react native button",
     {
-      "updatedIn": "0.49.0",
+      "updatedIn": "0.65.0",
       "category": "actions"
     }
   ],
@@ -131,7 +131,8 @@
     "react native carousel",
     {
       "addedIn": "0.27.0",
-      "category": "layout"
+      "category": "layout",
+      "updatedIn": "0.65.0"
     }
   ],
   "checkbox": [
@@ -139,7 +140,7 @@
     "Animated checkbox, as a row or a selectable card.",
     "react native checkbox",
     {
-      "updatedIn": "0.18.0",
+      "updatedIn": "0.65.0",
       "category": "forms"
     }
   ],
@@ -235,7 +236,8 @@
     "react native form field",
     {
       "addedIn": "0.17.0",
-      "category": "forms"
+      "category": "forms",
+      "updatedIn": "0.65.0"
     }
   ],
   "form": [
@@ -255,7 +257,7 @@
     "react native node graph flow diagram",
     {
       "addedIn": "0.19.0",
-      "updatedIn": "0.21.0",
+      "updatedIn": "0.65.0",
       "category": "data"
     }
   ],
@@ -401,7 +403,7 @@
     "react native map maplibre markers clusters",
     {
       "addedIn": "0.24.0",
-      "updatedIn": "0.41.0",
+      "updatedIn": "0.65.0",
       "alpha": true,
       "category": "data"
     }
@@ -473,7 +475,8 @@
     "Single-select list of options.",
     "react native radio button",
     {
-      "category": "forms"
+      "category": "forms",
+      "updatedIn": "0.65.0"
     }
   ],
   "rating": [
@@ -661,7 +664,7 @@
     "Animated on/off toggle.",
     "react native switch",
     {
-      "updatedIn": "0.22.0",
+      "updatedIn": "0.65.0",
       "category": "forms"
     }
   ],
@@ -708,7 +711,7 @@
     "react native time picker",
     {
       "addedIn": "0.36.0",
-      "updatedIn": "0.49.0",
+      "updatedIn": "0.65.0",
       "category": "forms"
     }
   ],
@@ -905,7 +908,7 @@
     "react native drag to reorder sortable list",
     {
       "addedIn": "0.50.0",
-      "updatedIn": "0.53.0",
+      "updatedIn": "0.65.0",
       "beta": true,
       "category": "navigation"
     }

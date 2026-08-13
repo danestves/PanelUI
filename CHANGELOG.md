@@ -9,6 +9,60 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.65.0] — 2026-08-13
+
+An accessibility release. Several controls were reachable but not operable — a screen reader could
+find them and had no way to change them — and the fixes to that are the bulk of what is here.
+
+### Added
+
+- **A screen reader can now work `TimePicker`, `Flow` and `Sortable`.** All three carried the roles
+  that promise adjustment without the actions that perform it. The time columns take increment and
+  decrement and report their position in the range; a `Flow` node takes move, activate and — given
+  the new `onDelete` — delete, moving in the same graph coordinates and group bounds as a drag, with
+  `accessibilityMoveStep` setting the distance; a `Sortable` row crosses a pinned neighbour by the
+  same rule a dragged one does, instead of stopping at it.
+- **`Flow.Handle` takes `accessibilityLabel`.** A node lists its connections as actions built from
+  the handles registered around it — "Connect output to Database, input" — so a connection can be
+  made without tracing a path across the canvas. The label is what those actions say.
+- **`Map.GeoJSON` and `Map.Cluster` take `accessibility`.** It reads the same inline data the layer
+  draws and produces a screen-reader list beside the map, where activating an entry calls the
+  layer's `onPress` with that feature. `Map.Marker` documents `accessibilityLabel`, and the new
+  `MapFeatureAccessibility` type is exported.
+- **`Switch` takes `accessibilityLabel`, `accessibilityHint` and `accessibilityLabelledBy`.** A
+  switch inside a `Field` had no accessible name at all: the label beside it was a sibling with no
+  relationship to it. `Field` now publishes the ids of its title, description and error for a
+  control to point at.
+- **Every solid surface has a foreground token that is legible on it.** `--color-*-solid-foreground`
+  for `destructive`, `info`, `success` and `warning`. `Badge`, `Button`, `Fab` and `Swipe` use them,
+  and all thirty surface/text pairs across the six themes clear the AA 4.5:1 floor.
+
+### Changed
+
+- **A controlled `Carousel` no longer moves without being told to.** A swipe or an arrow returned
+  the run to a new slide immediately and told the owner afterwards, so a controlled carousel that
+  rejected the change was already showing it. The run now returns to whatever `index` says and
+  travels once that value changes.
+- **The compact controls reach a 48dp target.** `Button`, `Checkbox`, `RadioGroup` and `Switch` were
+  between 20 and 44 across. The controls are the size they were — the room is around them, so
+  nothing in an existing layout moves.
+
+### Fixed
+
+- **A `NumberInput` step written in scientific notation is read correctly.** `1e-7` was measured as
+  two decimals rather than seven, so a value snapped to a coarser step than it asked for. Steps
+  finer than fifteen decimals keep their value instead of rounding to zero.
+- **Charts and `Flow` draw the same on the server and in the client.** Gradient and clip ids came
+  from `Math.random`, so the markup the server sent never matched what the client produced.
+- **Android stops reading the page behind a modal.** A `Dialog`, `BottomSheet` or `Drawer` now hides
+  the app from assistive technology while it is open, and a nested modal closing does not un-hide it
+  early.
+- **`Sortable` keeps its pinned rows where they were** for every move, not only for drags.
+- **A field's validation cannot be overtaken by its own stale result.** A slow validator that
+  resolved after the value changed committed an error belonging to the old one, and two submits
+  fired in the same tick both ran `onSubmit`.
+- **`Icon` imports no longer pull the whole icon set** into a bundle by way of `KPI` and `Menu`.
+
 ## [0.64.0] — 2026-08-13
 
 ### Added
