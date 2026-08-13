@@ -89,6 +89,7 @@ import { useCSSVariable } from 'uniwind';
 import { GripVerticalIcon, IconColorProvider } from '../../icons';
 import { cn } from '../../utils/cn';
 import { impactKnock, selectionTick } from '../../utils/haptics';
+import { moveWithPinned, stepWithPinned } from './reorder';
 
 /**
  * Rows getting out of the way of the one being carried. Quick, because they
@@ -226,66 +227,6 @@ function slotCenter(
   }
   const self = order[index];
   return offset + (self === undefined ? 0 : (heights[self] ?? 0)) / 2;
-}
-
-/**
- * The order after a row has moved, with pinned rows left where they were.
- *
- * The move is applied first, to the whole list, so a carried row can be dragged
- * *past* a pinned one — refusing the move instead would make a pinned row a
- * wall, and a row that holds its place is not the same as a row nothing may
- * cross. The pinned ids are then put back at the indices they occupy in the
- * laid-out order, and everything else falls into the slots that are left, in
- * the order the move produced.
- *
- * `laid` rather than `list` is what the fixed indices are read from, because
- * that is the one order a pinned row is guaranteed to be correctly placed in:
- * it is where it was rendered, and holding its slot is the whole point.
- */
-function moveWithPinned(
-  list: readonly string[],
-  laid: readonly string[],
-  pinned: Record<string, boolean>,
-  id: string,
-  from: number,
-  to: number
-): string[] {
-  'worklet';
-  const moved = [...list];
-  moved.splice(from, 1);
-  moved.splice(to, 0, id);
-
-  const next: (string | undefined)[] = [];
-  let anyPinned = false;
-  for (let i = 0; i < moved.length; i += 1) next.push(undefined);
-  for (let i = 0; i < laid.length && i < next.length; i += 1) {
-    const at = laid[i];
-    if (at !== undefined && pinned[at]) {
-      next[i] = at;
-      anyPinned = true;
-    }
-  }
-  if (!anyPinned) return moved;
-
-  const free: string[] = [];
-  for (let i = 0; i < moved.length; i += 1) {
-    const at = moved[i];
-    if (at !== undefined && !pinned[at]) free.push(at);
-  }
-
-  const result: string[] = [];
-  let f = 0;
-  for (let i = 0; i < next.length; i += 1) {
-    const held = next[i];
-    if (held !== undefined) {
-      result.push(held);
-      continue;
-    }
-    const take = free[f];
-    f += 1;
-    if (take !== undefined) result.push(take);
-  }
-  return result;
 }
 
 /**
@@ -760,15 +701,22 @@ function SortableRoot({
       const current = rendered.value.indexOf(id);
       if (current < 0) return;
 
-      const to = current + delta;
-      if (to < 0 || to >= rendered.value.length) return;
+      const next = stepWithPinned(
+        rendered.value,
+        rendered.value,
+        pinned.value,
+        id,
+        current,
+        delta
+      );
+      const to = next.indexOf(id);
+      if (to === current) return;
 
-      const next = reorderItems(rendered.value, current, to);
       order.value = next;
       if (haptics) selectionTick();
       onReorder?.(next, { id, from: current, to });
     },
-    [haptics, onReorder, order, rendered]
+    [haptics, onReorder, order, pinned, rendered]
   );
 
   const context = useMemo<SortableContextValue>(
