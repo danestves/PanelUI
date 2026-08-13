@@ -1,0 +1,37 @@
+---
+title: useDirection and useDirectionSign
+description: Read the nearest LTR or RTL direction for layout and gesture maths.
+---
+
+These hooks read the direction established by [`Direction`](/docs/components/direction). Outside a
+provider they fall back to React Native's device-wide `I18nManager` setting.
+
+## useDirection
+
+Returns `'ltr'` or `'rtl'`. Use it when React Native cannot infer a value from Yoga layout alone,
+such as paragraph alignment or an explicitly directed label.
+
+```tsx
+import { useDirection } from 'panelui-native';
+
+const direction = useDirection();
+const textAlign = direction === 'rtl' ? 'right' : 'left';
+```
+
+## useDirectionSign
+
+Returns `1` for LTR and `-1` for RTL. Multiply directional offsets, drag translations or sweep
+angles by it instead of repeating conditional sign logic.
+
+```tsx
+import { useDirectionSign } from 'panelui-native';
+
+const direction = useDirectionSign();
+const translated = gesture.translationX * direction;
+```
+
+| Export | Type | Description |
+| --- | --- | --- |
+| `useDirection` | `() => 'ltr' \| 'rtl'` | Current provider or device direction. |
+| `useDirectionSign` | `() => 1 \| -1` | Numeric multiplier for directional maths. |
+| `DirectionValue` | `'ltr' \| 'rtl'` | Public direction type. |

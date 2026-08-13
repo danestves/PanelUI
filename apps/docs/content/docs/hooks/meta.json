@@ -2,6 +2,7 @@
   "title": "Hooks",
   "pages": [
     "use-copy-to-clipboard",
+    "use-direction",
     "use-disclosure",
     "use-breakpoint",
     "use-keyboard",
