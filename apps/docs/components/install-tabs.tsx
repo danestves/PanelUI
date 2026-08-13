@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useId, useRef, useSyncExternalStore } from 'react';
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import { cn } from '@/lib/utils';
+import { tabIndexForKey } from './composite-keyboard';
 
 /**
  * An install command, in the four package managers.
@@ -133,18 +134,43 @@ export interface InstallTabsProps {
 export function InstallTabs({ kind = 'expo', packages }: InstallTabsProps): React.ReactElement {
   const manager = useSyncExternalStore(subscribe, read, readServer);
   const onSelect = useCallback((next: PackageManager) => select(next), []);
-  const command = commandFor(manager, kind, packages);
+  const instanceId = useId();
+  const tabRefs = useRef<Partial<Record<PackageManager, HTMLButtonElement | null>>>({});
+
+  const onTabKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>, name: PackageManager) => {
+      const nextIndex = tabIndexForKey(event.key, MANAGERS.indexOf(name), MANAGERS.length);
+      if (nextIndex === undefined) return;
+      event.preventDefault();
+      const next = MANAGERS[nextIndex];
+      onSelect(next);
+      tabRefs.current[next]?.focus();
+    },
+    [onSelect]
+  );
 
   return (
     <div className="not-prose my-4 overflow-hidden rounded-xl border bg-card">
-      <div role="tablist" aria-label="Package manager" className="flex flex-row border-b bg-muted/40">
+      <div
+        role="tablist"
+        aria-label="Package manager"
+        aria-orientation="horizontal"
+        className="flex flex-row border-b bg-muted/40"
+      >
         {MANAGERS.map((name) => (
           <button
             key={name}
+            ref={(node) => {
+              tabRefs.current[name] = node;
+            }}
             type="button"
             role="tab"
+            id={`${instanceId}-tab-${name}`}
+            aria-controls={`${instanceId}-panel-${name}`}
             aria-selected={manager === name}
+            tabIndex={manager === name ? 0 : -1}
             onClick={() => onSelect(name)}
+            onKeyDown={(event) => onTabKeyDown(event, name)}
             className={cn(
               'cursor-pointer border-b-2 px-4 py-2 font-mono text-sm transition-colors',
               manager === name
@@ -169,11 +195,25 @@ export function InstallTabs({ kind = 'expo', packages }: InstallTabsProps): Reac
        * colour rule pointing at a variable that only exists on highlighted
        * output.
        */}
-      <CodeBlock key={command} allowCopy className="m-0 rounded-none border-0">
-        <Pre>
-          <code className="px-4">{command}</code>
-        </Pre>
-      </CodeBlock>
+      {MANAGERS.map((name) => {
+        const command = commandFor(name, kind, packages);
+        return (
+          <div
+            key={name}
+            role="tabpanel"
+            id={`${instanceId}-panel-${name}`}
+            aria-labelledby={`${instanceId}-tab-${name}`}
+            hidden={manager !== name}
+            tabIndex={0}
+          >
+            <CodeBlock key={command} allowCopy className="m-0 rounded-none border-0">
+              <Pre>
+                <code className="px-4">{command}</code>
+              </Pre>
+            </CodeBlock>
+          </div>
+        );
+      })}
     </div>
   );
 }
