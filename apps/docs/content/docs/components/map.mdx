@@ -99,7 +99,12 @@ A popup inside a marker anchors to it and opens when it is pressed. Given a `lng
 ```tsx
 <Map center={[-74.006, 40.713]} zoom={11}>
   {offices.map((office) => (
-    <Map.Marker key={office.id} lngLat={office.lngLat}>
+    <Map.Marker
+      key={office.id}
+      lngLat={office.lngLat}
+      accessibilityLabel={office.name}
+      accessibilityHint="Show office details"
+    >
       <Map.Popup title={office.name}>
         <Text size="xs" muted>{office.headcount} people</Text>
       </Map.Popup>
@@ -117,6 +122,9 @@ A popup inside a marker anchors to it and opens when it is pressed. Given a `lng
   <Map.GeoJSON
     data={states}
     fill={['interpolate', ['linear'], ['get', 'share'], 0, muted, 1, primary]}
+    accessibility={(feature) => ({
+      label: `${feature.properties.name}: ${feature.properties.share}%`,
+    })}
   />
 </Map>
 ```
@@ -125,9 +133,20 @@ A popup inside a marker anchors to it and opens when it is pressed. Given a `lng
 
 `Map.Marker` mounts a React view each, which a thousand points cannot afford — and a thousand overlapping pins would be unreadable even if it could. `Map.Cluster` does it in a style layer, merging points as they get too close to tell apart.
 
+`accessibility` reads the same inline Feature or FeatureCollection passed to the layer. It creates a clipped screen-reader list, and activating an entry calls the layer's `onPress` with that exact feature. The rendered map geometry stays decorative. Resolve URL data before passing it when the layer needs a nonvisual list; PanelUI does not keep a second feature copy that can drift from the map.
+
 ```tsx
 <Map center={[10, 50]} zoom={3}>
-  <Map.Cluster data={sightings} radius={60} onPress={inspect} />
+  <Map.Cluster
+    data={sightings}
+    radius={60}
+    onPress={inspect}
+    accessibility={(feature) => ({
+      label: feature.properties.species,
+      hint: 'Inspect sighting',
+      state: { selected: feature.id === selectedId },
+    })}
+  />
 </Map>
 ```
 
@@ -348,6 +367,7 @@ Edge nodes coloured by state, spread across the world. A marker is a React view,
 | `lngLat` | `LngLat` | — | Where the marker sits, `[longitude, latitude]`. |
 | `anchor` | `'center' \| 'top' \| 'bottom' \| 'left' \| 'right'` | `'center'` | Which part of the marker sits on the coordinate. A pin drawn above its point wants `bottom`; a dot centred on it wants the default. |
 | `onPress` | `() => void` | — | Pressing the marker. Adds a button role when given. |
+| `accessibilityLabel` | `string` | — | Explicit spoken name. Other React Native accessibility props pass through too. |
 | `className` | `string` | — |  |
 
 ### Map.Label
@@ -411,6 +431,7 @@ Edge nodes coloured by state, spread across the world. A marker is a React view,
 | `strokeWidth` | `number` | `1` | Outline thickness. |
 | `fillOpacity` | `number` | `0.7` | 0 is invisible, 1 is solid. |
 | `onPress` | `(feature: unknown) => void` | — | Fires with the pressed feature. |
+| `accessibility` | `(feature: unknown, index: number) => MapFeatureAccessibility` | — | Describes each inline GeoJSON feature for the synchronized nonvisual list. |
 | `id` | `string` | `'geojson'` |  |
 
 ### Map.Cluster
@@ -423,6 +444,7 @@ Edge nodes coloured by state, spread across the world. A marker is a React view,
 | `radius` | `number` | `50` | How close two points have to be, in points, to merge. |
 | `maxZoom` | `number` | `14` | Above this zoom every point stands alone. |
 | `onPress` | `(feature: unknown) => void` | — | Fires with the pressed cluster or point. |
+| `accessibility` | `(feature: unknown, index: number) => MapFeatureAccessibility` | — | Describes each source point for the synchronized nonvisual list. |
 | `id` | `string` | `'cluster'` |  |
 
 ### Map.Heatmap

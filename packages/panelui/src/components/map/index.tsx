@@ -36,13 +36,14 @@ import {
   isValidElement,
   useCallback,
   useContext,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react';
-import { Pressable, View, type ViewProps } from 'react-native';
+import { Pressable, View, type PressableProps, type ViewProps } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { tv } from 'tailwind-variants';
 import { CompassIcon, CrosshairIcon, MinusIcon, PlusIcon } from '../../icons';
@@ -64,9 +65,15 @@ import {
   type StyleSpecification,
   type ViewState,
 } from './maplibre';
+import {
+  describeMapFeatures,
+  type MapFeatureAccessibility,
+  type MapFeatureAccessibilityDescription,
+} from './map-accessibility';
 
 export { hasMapLibre, CARTO_SOURCE };
 export type { BasemapSource, BasemapTokens, LngLat, LngLatBounds, ViewState };
+export type { MapFeatureAccessibility } from './map-accessibility';
 
 const mapVariants = tv({
   slots: {
@@ -172,7 +179,16 @@ interface MapContextValue {
   ready: boolean;
 }
 
-const MapContext = createContext<MapContextValue | null>(null);
+interface AccessibleFeatureGroup {
+  features: MapFeatureAccessibilityDescription[];
+  onPress?: (feature: unknown) => void;
+}
+
+interface InternalMapContextValue extends MapContextValue {
+  registerAccessibleFeatures(id: string, group: AccessibleFeatureGroup | null): void;
+}
+
+const MapContext = createContext<InternalMapContextValue | null>(null);
 
 /**
  * The map's camera and view state, from inside it.
@@ -293,6 +309,21 @@ const MapRoot = forwardRef<MapHandle, MapProps>(function MapRoot(
   const mapRef = useRef<MapRef | null>(null);
   const cameraRef = useRef<CameraRef | null>(null);
   const [ready, setReady] = useState(false);
+  const [accessibleFeatureGroups, setAccessibleFeatureGroups] = useState(
+    () => new globalThis.Map<string, AccessibleFeatureGroup>()
+  );
+
+  const registerAccessibleFeatures = useCallback(
+    (id: string, group: AccessibleFeatureGroup | null) => {
+      setAccessibleFeatureGroups((current) => {
+        const next = new globalThis.Map(current);
+        if (group?.features.length) next.set(id, group);
+        else next.delete(id);
+        return next;
+      });
+    },
+    []
+  );
 
   // Every colour the style needs, resolved from the active theme. Hooks run
   // unconditionally, so they sit above the renderer check rather than inside it.
@@ -344,7 +375,10 @@ const MapRoot = forwardRef<MapHandle, MapProps>(function MapRoot(
     []
   );
 
-  const context = useMemo(() => ({ mapRef, cameraRef, ready }), [ready]);
+  const context = useMemo(
+    () => ({ mapRef, cameraRef, ready, registerAccessibleFeatures }),
+    [ready, registerAccessibleFeatures]
+  );
 
   if (!hasMapLibre || !MapLibre) {
     return <MapUnavailable className={className} {...props} />;
@@ -370,6 +404,8 @@ const MapRoot = forwardRef<MapHandle, MapProps>(function MapRoot(
           touchZoom={interactive}
           touchRotate={rotatable}
           touchPitch={rotatable}
+          accessible={false}
+          importantForAccessibility="no"
           onDidFinishLoadingMap={() => {
             setReady(true);
             onReady?.();
@@ -400,12 +436,41 @@ const MapRoot = forwardRef<MapHandle, MapProps>(function MapRoot(
           {textChildren(children)}
         </MapLibreMap>
       </MapContext.Provider>
+      <View
+        accessibilityRole="list"
+        style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}
+      >
+        {[...accessibleFeatureGroups].flatMap(([groupId, group]) =>
+          group.features.map(({ feature, label, hint, state }, index) =>
+            group.onPress ? (
+              <Pressable
+                key={`${groupId}-${index}`}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                accessibilityHint={hint}
+                accessibilityState={state}
+                onPress={() => group.onPress?.(feature)}
+              />
+            ) : (
+              <View
+                key={`${groupId}-${index}`}
+                accessible
+                accessibilityRole="text"
+                accessibilityLabel={label}
+                accessibilityHint={hint}
+                accessibilityState={state}
+              />
+            )
+          )
+        )}
+      </View>
     </View>
   );
 });
 MapRoot.displayName = 'Map';
 
-export interface MapMarkerProps {
+export interface MapMarkerProps
+  extends Omit<PressableProps, 'children' | 'onPress' | 'style'> {
   /** Where the marker sits, `[longitude, latitude]`. */
   lngLat: LngLat;
   /**
@@ -415,6 +480,8 @@ export interface MapMarkerProps {
   anchor?: 'center' | 'top' | 'bottom' | 'left' | 'right';
   /** Pressing the marker. Adds a button role when given. */
   onPress?: () => void;
+  /** Explicit spoken name. Other React Native accessibility props pass through too. */
+  accessibilityLabel?: string;
   className?: string;
   /** Defaults to a dot. Anything else replaces it. */
   children?: ReactNode;
@@ -432,6 +499,8 @@ function MapMarker({
   onPress,
   className,
   children,
+  accessibilityState,
+  ...props
 }: MapMarkerProps) {
   const slots = mapVariants();
   const [open, setOpen] = useState(false);
@@ -471,21 +540,28 @@ function MapMarker({
    * the default pin keeps the box real, which is also the right drawing: a
    * label with nothing to label is a caption floating on its own.
    */
+  const pressable = onPress || popups.length > 0;
   const body = (
-    <View className={cn('items-center', className)}>
+    <View
+      {...(!pressable ? props : {})}
+      accessibilityState={!pressable ? accessibilityState : undefined}
+      className={cn('items-center', className)}
+    >
       {content.length > 0 ? content : <View className={slots.pin()} />}
       {labels}
     </View>
   );
-
-  const pressable = onPress || popups.length > 0;
 
   return (
     <MarkerContext.Provider value={lngLat}>
       <Marker lngLat={lngLat} anchor={anchor}>
         {pressable ? (
           <Pressable
+            {...props}
             accessibilityRole="button"
+            accessibilityState={
+              popups.length > 0 ? { ...accessibilityState, expanded: open } : accessibilityState
+            }
             onPress={() => {
               if (popups.length > 0) setOpen((was) => !was);
               onPress?.();
@@ -906,6 +982,8 @@ export interface MapGeoJSONProps {
   fillOpacity?: number;
   /** Fires with the pressed feature. */
   onPress?: (feature: unknown) => void;
+  /** Describes each inline GeoJSON feature for the synchronized nonvisual list. */
+  accessibility?: (feature: unknown, index: number) => MapFeatureAccessibility;
   id?: string;
 }
 
@@ -924,10 +1002,12 @@ function MapGeoJSON({
   strokeWidth = 1,
   fillOpacity = 0.7,
   onPress,
+  accessibility,
   id = 'geojson',
 }: MapGeoJSONProps) {
   const defaultFill = useToken('--color-primary', '#262626');
   const defaultStroke = useToken('--color-border', 'rgba(0,0,0,0.1)');
+  useAccessibleMapFeatures(id, data, accessibility, onPress);
 
   if (!MapLibre) return null;
   const { GeoJSONSource, Layer } = MapLibre;
@@ -976,6 +1056,8 @@ export interface MapClusterProps {
   maxZoom?: number;
   /** Fires with the pressed cluster or point. */
   onPress?: (feature: unknown) => void;
+  /** Describes each source point for the synchronized nonvisual list. */
+  accessibility?: (feature: unknown, index: number) => MapFeatureAccessibility;
   id?: string;
 }
 
@@ -993,12 +1075,14 @@ function MapCluster({
   radius = 50,
   maxZoom = 14,
   onPress,
+  accessibility,
   id = 'cluster',
 }: MapClusterProps) {
   const fill = useToken('--color-primary', '#262626');
   const onFill = useToken('--color-primary-foreground', '#fafafa');
   const bubble = color ?? fill;
   const ink = textColor ?? onFill;
+  useAccessibleMapFeatures(id, data, accessibility, onPress);
 
   if (!MapLibre) return null;
   const { GeoJSONSource, Layer } = MapLibre;
@@ -1056,6 +1140,25 @@ function MapCluster({
   );
 }
 MapCluster.displayName = 'Map.Cluster';
+
+function useAccessibleMapFeatures(
+  id: string,
+  data: unknown,
+  accessibility: MapGeoJSONProps['accessibility'],
+  onPress?: (feature: unknown) => void
+) {
+  const registerAccessibleFeatures = useContext(MapContext)?.registerAccessibleFeatures;
+  const features = useMemo(
+    () => (accessibility ? describeMapFeatures(data, accessibility) : []),
+    [accessibility, data]
+  );
+
+  useEffect(() => {
+    if (!accessibility || !registerAccessibleFeatures) return;
+    registerAccessibleFeatures(id, { features, onPress });
+    return () => registerAccessibleFeatures(id, null);
+  }, [accessibility, features, id, onPress, registerAccessibleFeatures]);
+}
 
 export interface MapHeatmapProps {
   /** Point features to spread. */

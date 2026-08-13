@@ -304,6 +304,7 @@ export {
   type MapArcProps,
   type MapGeoJSONProps,
   type MapClusterProps,
+  type MapFeatureAccessibility,
   type MapHeatmapProps,
   type MapUserLocationProps,
   type BasemapSource,
