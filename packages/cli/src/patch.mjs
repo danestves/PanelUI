@@ -93,6 +93,90 @@ module.exports = withUniwindConfig(config, {
 });
 `;
 
+/** Remove text that cannot participate in an exported JavaScript expression. */
+function codeOnly(source) {
+  let output = '';
+  let state = 'code';
+
+  for (let index = 0; index < source.length; index++) {
+    const char = source[index];
+    const next = source[index + 1];
+
+    if (state === 'code') {
+      if (char === '/' && next === '/') {
+        output += '  ';
+        index += 1;
+        state = 'line-comment';
+      } else if (char === '/' && next === '*') {
+        output += '  ';
+        index += 1;
+        state = 'block-comment';
+      } else if (char === "'" || char === '"' || char === '`') {
+        output += ' ';
+        state = char;
+      } else {
+        output += char;
+      }
+    } else if (state === 'line-comment') {
+      output += char === '\n' ? '\n' : ' ';
+      if (char === '\n') state = 'code';
+    } else if (state === 'block-comment') {
+      if (char === '*' && next === '/') {
+        output += '  ';
+        index += 1;
+        state = 'code';
+      } else {
+        output += char === '\n' ? '\n' : ' ';
+      }
+    } else if (char === '\\') {
+      output += ' ';
+      if (next !== undefined) {
+        output += next === '\n' ? '\n' : ' ';
+        index += 1;
+      }
+    } else {
+      output += char === '\n' ? '\n' : ' ';
+      if (char === state) state = 'code';
+    }
+  }
+
+  return output;
+}
+
+/**
+ * True only when the exported value itself is visibly wrapped.
+ *
+ * This deliberately recognises fewer shapes than a JavaScript parser could.
+ * Existing Metro configs are never edited, so an unfamiliar but valid shape
+ * gets safe manual instructions instead of a false claim that setup is done.
+ */
+function hasWrappedMetroExport(source) {
+  const code = codeOnly(source);
+  const wrapperCall = String.raw`(?:\(\s*)*withUniwindConfig\s*\(`;
+  const directExports = [
+    new RegExp(String.raw`\bmodule\s*\.\s*exports\s*=\s*${wrapperCall}`),
+    new RegExp(String.raw`\bexport\s+default\s+${wrapperCall}`),
+  ];
+  if (directExports.some((pattern) => pattern.test(code))) return true;
+
+  // A named const is still conservative: it cannot be reassigned between the
+  // wrapper call and the CommonJS/ESM export that refers to it.
+  const namedExports = [
+    /\bmodule\s*\.\s*exports\s*=\s*([A-Za-z_$][\w$]*)[ \t]*(?:;|$)/gm,
+    /\bexport\s+default\s+([A-Za-z_$][\w$]*)[ \t]*(?:;|$)/gm,
+  ];
+  for (const pattern of namedExports) {
+    for (const match of code.matchAll(pattern)) {
+      const declaration = new RegExp(
+        String.raw`\bconst\s+${match[1]}\s*=\s*${wrapperCall}`
+      );
+      if (declaration.test(code.slice(0, match.index))) return true;
+    }
+  }
+
+  return false;
+}
+
 /**
  * Metro has to know about the CSS entry and the extra themes.
  *
@@ -118,7 +202,7 @@ export async function patchMetro(cwd, config, { assumeYes, dryRun }) {
   }
 
   const current = fs.readFileSync(metroPath, 'utf8');
-  if (current.includes('withUniwindConfig')) {
+  if (hasWrappedMetroExport(current)) {
     success('metro.config.js already wraps withUniwindConfig');
     return;
   }
