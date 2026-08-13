@@ -287,7 +287,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 **Follow-output is conditional, not automatic.** `autoScroll` means *follow the bottom while the reader is at the bottom* — never *drag them to the bottom*. Being pulled away from a message you were half way through reading is the behaviour this exists to avoid.
 
-**The scroll position is not React state.** The at-end test runs per frame on the UI thread and only crosses into JS when the boolean flips, and the button fades from that same shared value. A transcript scrolls constantly; re-rendering on every frame of it would be the most expensive thing on the screen.
+**The scroll position is not React state.** The edge distances update per frame on the UI thread; only the at-end boolean crosses into JS when it flips, while each button fades from the distance to its configured target. A transcript scrolls constantly; re-rendering on every frame of it would be the most expensive thing on the screen.
 
 **Every turn needs a stable `messageId`.** It is the key for the offset the component measures, so an id derived from the array index breaks scrolling the moment anything is prepended.
 
