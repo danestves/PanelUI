@@ -34,6 +34,7 @@ import { AnimatedPressable } from '../../primitives/animated-pressable';
 import { Text } from '../../primitives/text';
 import { selectionTick } from '../../utils/haptics';
 import { Label } from '../label';
+import { normalize, precisionOf } from './number-input-math';
 
 /** Wait before a held button starts repeating — a tap must not trip it. */
 const REPEAT_DELAY = 400;
@@ -154,32 +155,6 @@ export interface NumberInputProps
    * and is silent without it.
    */
   haptics?: boolean;
-}
-
-/** Decimals implied by `step`, so display and math round to the same place. */
-function precisionOf(step: number): number {
-  if (!isFinite(step)) return 0;
-  const s = String(step);
-  const dot = s.indexOf('.');
-  return dot === -1 ? 0 : s.length - dot - 1;
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
-}
-
-/**
- * Snaps to the nearest step from a finite base (or 0 when `min` is open), then
- * rounds to the step's precision so 0.1 + 0.2 does not drift to 0.30000004.
- */
-function normalize(value: number, min: number, max: number, step: number): number {
-  const base = isFinite(min) ? min : 0;
-  const snapped = isFinite(step) && step > 0
-    ? Math.round((value - base) / step) * step + base
-    : value;
-  const p = precisionOf(step);
-  const factor = 10 ** p;
-  return clamp(Math.round(snapped * factor) / factor, min, max);
 }
 
 /**
