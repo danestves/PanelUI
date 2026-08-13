@@ -67,6 +67,10 @@ export interface FormApi<T extends Record<string, any>> {
   setFieldValue: <K extends keyof T>(name: K, value: T[K]) => void;
   setFieldTouched: <K extends keyof T>(name: K, touched?: boolean) => void;
   setFieldError: <K extends keyof T>(name: K, error: string | undefined) => void;
+  /** Read the latest value, including a change made before React renders again. */
+  getValue: <K extends keyof T>(name: K) => T[K];
+  /** Read a field from this render so a component naturally follows its changes. */
+  watch: <K extends keyof T>(name: K) => T[K];
   getFieldState: <K extends keyof T>(name: K) => FieldState<T[K]>;
   /** Used by `useField`/`Form.Field` to attach a field's validation rule. */
   registerValidator: <K extends keyof T>(name: K, validator?: Validator<T, K>) => void;
@@ -249,6 +253,9 @@ export function useForm<T extends Record<string, any>>({
     [state.values, state.errors, state.touched]
   );
 
+  const getValue = useCallback(<K extends keyof T>(name: K): T[K] => valuesRef.current[name], []);
+  const watch = useCallback(<K extends keyof T>(name: K): T[K] => state.values[name], [state.values]);
+
   const validateField = useCallback(async <K extends keyof T>(name: K) => {
     const validator = validatorsRef.current[name];
     if (!validator) return true;
@@ -369,6 +376,8 @@ export function useForm<T extends Record<string, any>>({
     setFieldValue,
     setFieldTouched,
     setFieldError,
+    getValue,
+    watch,
     getFieldState,
     registerValidator,
     validateField,
