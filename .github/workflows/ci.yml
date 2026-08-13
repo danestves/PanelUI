@@ -61,3 +61,13 @@ jobs:
             git diff --stat
             exit 1
           fi
+
+      - name: Template typechecks
+        run: |
+          # The templates ship to users with their own dependency sets, so they
+          # are typechecked against those rather than against the workspace's.
+          for template in templates/expo-app templates/expo-starter; do
+            npm install --prefix "$template" --ignore-scripts --package-lock=false --no-audit --no-fund
+            npm run typecheck --prefix "$template"
+          done
+
