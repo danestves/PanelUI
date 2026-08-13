@@ -17,6 +17,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../../..');
 const SRC = path.join(ROOT, 'packages/panelui/src');
 const OUT = path.join(HERE, '../public/r');
+const DOCS = path.join(HERE, '../content/docs');
 
 const meta = JSON.parse(fs.readFileSync(path.join(HERE, 'meta.json'), 'utf8'));
 
@@ -318,6 +319,27 @@ function descriptionFor(name) {
   return SUPPORT_DESCRIPTIONS[name] ?? `${name}.`;
 }
 
+/** The markdown route for an item, but only when that page actually exists. */
+function docsPathFor(name, type) {
+  const entry = meta[name];
+  const group = entry
+    ? (entry[3]?.group ?? 'components')
+    : type === 'registry:hook'
+      ? 'hooks'
+      : type === 'registry:lib'
+        ? 'utilities'
+        : null;
+  if (!group) return undefined;
+
+  const docsPath = `${group}/${name}`;
+  if (fs.existsSync(path.join(DOCS, `${docsPath}.mdx`))) return docsPath;
+
+  // Every meta entry promises a generated page. A stale group must fail the
+  // registry build rather than ship a route that the MCP will trust and 404.
+  if (entry) throw new Error(`${name}: documentation page ${docsPath}.mdx does not exist`);
+  return undefined;
+}
+
 /* ------------------------------------------------------------------ *
  * 3. The theme, which is global rather than per component.
  * ------------------------------------------------------------------ */
@@ -353,12 +375,16 @@ fs.writeFileSync(
   path.join(OUT, 'index.json'),
   JSON.stringify(
     built
-      .map(({ name, type, description, registryDependencies }) => ({
-        name,
-        type,
-        description,
-        registryDependencies,
-      }))
+      .map(({ name, type, description, registryDependencies }) => {
+        const docsPath = docsPathFor(name, type);
+        return {
+          name,
+          type,
+          description,
+          registryDependencies,
+          ...(docsPath ? { docsPath } : {}),
+        };
+      })
       .sort((a, b) => a.name.localeCompare(b.name)),
     null,
     2

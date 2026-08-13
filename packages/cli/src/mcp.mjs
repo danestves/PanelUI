@@ -45,6 +45,20 @@ function docsOrigin(registry) {
   return registry.replace(/\/r\/?$/, '');
 }
 
+/** Registry metadata is authoritative; the type keeps older registries useful. */
+function docsPathFor(item, name) {
+  if (typeof item?.docsPath === 'string' && /^[a-z0-9-]+\/[a-z0-9-]+$/.test(item.docsPath)) {
+    return item.docsPath;
+  }
+  const group =
+    item?.type === 'registry:hook'
+      ? 'hooks'
+      : item?.type === 'registry:lib'
+        ? 'utilities'
+        : 'components';
+  return `${group}/${name}`;
+}
+
 /* ------------------------------------------------------------------ *
  * The tools.
  * ------------------------------------------------------------------ */
@@ -171,7 +185,9 @@ async function callTool(name, args, options) {
     }
 
     case 'panelui_get_component_docs': {
-      const url = `${docsOrigin(registry)}/llms.mdx/components/${args.name}`;
+      const index = (await fetchJson(`${registry}/index.json`)) ?? [];
+      const item = index.find((candidate) => candidate.name === args.name);
+      const url = `${docsOrigin(registry)}/llms.mdx/${docsPathFor(item, args.name)}`;
       const response = await fetch(url);
       if (!response.ok) {
         return `No documentation page at ${url}. The component may be filed under charts, ai-components or form — try panelui_view_component instead.`;
