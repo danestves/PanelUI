@@ -118,7 +118,7 @@ export const Switch = forwardRef<View, SwitchProps>(
           if (haptics) selectionTick();
           onValueChange?.(!value);
         }}
-        hitSlop={8}
+        className="h-12 w-12 items-center justify-center"
       >
         <View className={slots.track({ className })}>
           <Animated.View style={activeTrackStyle} className={slots.activeTrack()} />

@@ -45,7 +45,7 @@ const itemVariants = tv({
     // `self-start` matters: the group is a column, so without it Yoga stretches
     // the row to the full width and the dead space to the right of the label
     // becomes part of the target. Tapping nothing would select the option.
-    row: 'flex-row items-center gap-2.5 self-start',
+    row: 'min-h-12 min-w-12 flex-row items-center gap-2.5 self-start',
     indicator:
       'h-5 w-5 items-center justify-center rounded-full border border-input bg-background',
     label: 'text-sm text-foreground',
@@ -248,7 +248,6 @@ const RadioGroupItem = forwardRef<View, RadioGroupItemProps>(
         accessibilityLabel={label}
         disabled={disabled}
         onPress={() => context.onValueChange(value)}
-        hitSlop={variant === 'card' ? undefined : 8}
         className={slots.row({ className })}
       >
         {body}

@@ -688,16 +688,25 @@ function CarouselDots({
             key={dot}
             disabled={!interactive}
             onPress={() => scrollTo(dot)}
-            hitSlop={6}
             accessibilityRole="tab"
             accessibilityLabel={`Slide ${dot + 1} of ${count}`}
             accessibilityState={{ selected: active }}
-            className={cn(
-              'rounded-full',
-              horizontal ? (active ? 'h-1 w-4' : 'h-1 w-1') : active ? 'h-4 w-1' : 'h-1 w-1',
-              active ? 'bg-foreground' : 'bg-foreground/30'
-            )}
-          />
+            className={cn('items-center justify-center', interactive && 'h-12 w-12')}
+          >
+            <View
+              className={cn(
+                'rounded-full',
+                horizontal
+                  ? active
+                    ? 'h-1 w-4'
+                    : 'h-1 w-1'
+                  : active
+                    ? 'h-4 w-1'
+                    : 'h-1 w-1',
+                active ? 'bg-foreground' : 'bg-foreground/30'
+              )}
+            />
+          </Pressable>
         );
       })}
     </View>
@@ -723,12 +732,11 @@ function makeArrow(direction: 'previous' | 'next') {
       <Pressable
         disabled={disabled}
         onPress={direction === 'next' ? next : previous}
-        hitSlop={8}
         accessibilityRole="button"
         accessibilityLabel={direction === 'next' ? 'Next slide' : 'Previous slide'}
         accessibilityState={{ disabled }}
         className={cn(
-          'items-center justify-center rounded-full p-1',
+          'h-12 w-12 items-center justify-center rounded-full',
           disabled ? 'opacity-30' : 'active:bg-foreground/10',
           className
         )}

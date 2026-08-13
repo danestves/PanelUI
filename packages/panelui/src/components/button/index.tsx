@@ -53,8 +53,8 @@ const buttonVariants = tv({
       },
     },
     size: {
-      sm: { root: 'h-9 gap-1.5 px-2.5', label: 'text-sm' },
-      md: { root: 'h-11 px-4', label: 'text-base' },
+      sm: { root: 'h-9 min-w-9 gap-1.5 px-2.5', label: 'text-sm' },
+      md: { root: 'h-11 min-w-11 px-4', label: 'text-base' },
       lg: { root: 'h-12 px-6', label: 'text-lg' },
       icon: { root: 'h-11 w-11 px-0' },
     },
@@ -133,6 +133,9 @@ export function useButtonGroup(): ButtonGroupContextValue | null {
 const ATTACHED = 'rounded-none border-transparent shadow-none active:bg-accent';
 
 const SPINNER_SIZE = { sm: 'sm', md: 'sm', lg: 'md', icon: 'sm' } as const;
+
+/** Extra room around the styled sizes so even the compact button reaches 48dp. */
+const BUTTON_HIT_SLOP = { sm: 6, md: 2, lg: 0, icon: 2 } as const;
 
 /**
  * The theme token each variant's content reads against. Icons in the content
@@ -446,6 +449,9 @@ export const Button = forwardRef<View, ButtonProps>(
           accessibilityRole="button"
           accessibilityState={{ disabled: isDisabled, busy: loading }}
           disabled={isDisabled}
+          // Joined segments cannot borrow room from each other without making
+          // two actions claim the same pixels. ButtonGroup owns that layout.
+          hitSlop={attached ? undefined : BUTTON_HIT_SLOP[resolvedSize ?? 'md']}
           // Before the spread, so a caller can still ask for the scale back.
           pressScale={attached ? 1 : undefined}
           className={root({ className: cn(attached && ATTACHED, className) })}

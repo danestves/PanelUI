@@ -13,7 +13,7 @@ import { Text } from '../../primitives/text';
 
 const checkboxVariants = tv({
   slots: {
-    row: 'flex-row items-center gap-2.5',
+    row: 'min-h-12 min-w-12 flex-row items-center gap-2.5',
     box: 'h-5 w-5 items-center justify-center rounded-md border border-input bg-background',
     fill: 'absolute inset-0 items-center justify-center rounded-md bg-primary',
     content: 'flex-1 gap-0.5',
@@ -130,7 +130,6 @@ export const Checkbox = forwardRef<View, CheckboxProps>(
         disabled={disabled}
         // An indeterminate box resolves upward: the press turns the group on.
         onPress={() => onCheckedChange?.(indeterminate ? true : !checked)}
-        hitSlop={8}
         // A description makes the row two lines tall — align the box to the
         // label rather than centring it against the whole block.
         className={slots.row({
