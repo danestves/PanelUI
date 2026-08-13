@@ -38,3 +38,16 @@ test('normalize keeps scientific steps, bounds, and decimal rounding', () => {
   assert.equal(normalize(1.2, 0, 1, 0.1), 1);
   assert.equal(normalize(1e300, -Infinity, Infinity, 1e-7), 1e300);
 });
+
+test('a step finer than the reliable-digit ceiling keeps its value', () => {
+  // The precision is capped at 15, so rounding one of these at the cap scales
+  // it below 0.5 and returns zero — the value rounded away rather than tidied.
+  for (const step of [1e-16, 1e-18, 1e-20]) {
+    assert.equal(normalize(step, -Infinity, Infinity, step), step, `step ${step}`);
+    assert.equal(normalize(2 * step, -Infinity, Infinity, step), 2 * step, `2x step ${step}`);
+  }
+
+  // The cap itself, and everything above it, still rounds as it always did.
+  assert.equal(normalize(1e-15, -Infinity, Infinity, 1e-15), 1e-15);
+  assert.equal(normalize(0.30000000000000004, 0, 1, 0.1), 0.3);
+});
