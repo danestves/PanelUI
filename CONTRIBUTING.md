@@ -28,6 +28,7 @@ npm install
 | Command | What it does |
 | --- | --- |
 | `npm run example` | Start the Expo showcase app |
+| `npm test` | Discover and run every repository contract test |
 | `npm run typecheck` | Typecheck every workspace |
 | `npm run build` | Build the library with `react-native-builder-bob` |
 | `npm run docs` | Start the documentation site |
@@ -146,6 +147,7 @@ Keep a pull request to one logical change. Before you open it:
 
 ```sh
 npm run typecheck   # must pass
+npm test            # must pass; focused `.only` tests are rejected
 npm run build       # must pass
 ```
 
