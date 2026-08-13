@@ -86,8 +86,10 @@ jobs:
       # bundled npm 10 therefore proved nothing about the environment the
       # release actually runs in, and let a verifier that crashed under npm 12
       # through to a tag that could not be published.
-      - name: Verify package contents, under the npm that will publish it
+      - name: Check shipped-surface budgets, under the npm that will publish
         run: |
           npm install -g npm@latest
           npm --version
-          npm run verify:package --workspace=panelui-native
+          # Reuses the release package verifier, then checks the generated
+          # registry served by the docs and downloaded by the CLI.
+          npm run performance:check
