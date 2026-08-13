@@ -6,7 +6,43 @@ import { fail, nearest } from './ui.mjs';
 /** Per-run cache — a closure re-visits shared items like `text` constantly. */
 const cache = new Map();
 
+/** Loopback is the one place cleartext is not a downgrade — nothing is on the wire. */
+function isLoopback(hostname) {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '[::1]' ||
+    hostname === '::1' ||
+    hostname.endsWith('.localhost')
+  );
+}
+
+/**
+ * Whatever the registry returns is written into the project as source, so the
+ * answer has to be known to come from the host that was asked. Cleartext gives
+ * anyone on the path an edit of that source, which is why it is refused
+ * anywhere but loopback.
+ */
+function assertTransport(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    fail(`Registry URL is not a URL: ${url}.`, 'Pass --registry https://panelui.dev/r');
+  }
+
+  if (parsed.protocol === 'https:') return;
+  if (parsed.protocol === 'http:' && isLoopback(parsed.hostname)) return;
+
+  fail(
+    `Refusing to fetch components over ${parsed.protocol}//.`,
+    'Registry files become source in your project, so they are only fetched over https.'
+  );
+}
+
 async function fetchJson(url) {
+  assertTransport(url);
+
   let response;
   try {
     response = await fetch(url);
