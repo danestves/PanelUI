@@ -2,21 +2,18 @@
 
 import Link from 'next/link';
 import type { ComponentPropsWithRef } from 'react';
+import { layoutLinkPrefetch } from '@/components/layout-link-policy';
 
 /**
  * Routes repeated by the persistent Fumadocs chrome.
  *
  * The desktop navbar, mobile menu and CTA can all contain the same destination,
  * so viewport prefetching each copy spends several RSC requests on one route.
- * Content links use `next/link` directly and keep its normal prefetching; this
- * policy applies only to links Fumadocs creates for its shared layouts.
+ * Content links use `next/link` directly and keep its normal prefetching. This
+ * wrapper owns links in Fumadocs' shared layouts and the repeated home footer.
  */
-const REPEATED_CHROME_ROUTES = new Set(['/', '/docs', '/docs/components']);
-
-type LayoutLinkProps = ComponentPropsWithRef<'a'> & { prefetch?: boolean };
+type LayoutLinkProps = ComponentPropsWithRef<'a'> & { prefetch?: boolean | null };
 
 export function LayoutLink({ href = '#', prefetch, ...props }: LayoutLinkProps) {
-  const repeated = REPEATED_CHROME_ROUTES.has(href);
-
-  return <Link href={href} prefetch={prefetch ?? (repeated ? false : null)} {...props} />;
+  return <Link href={href} prefetch={layoutLinkPrefetch(href, prefetch)} {...props} />;
 }
