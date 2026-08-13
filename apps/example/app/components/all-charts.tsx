@@ -106,7 +106,10 @@ export default function AllChartsScreen() {
         initialNumToRender={2}
         maxToRenderPerBatch={2}
         windowSize={3}
-        removeClippedSubviews
+        // Deliberately not `removeClippedSubviews`. It detaches views that have
+        // scrolled out rather than only skipping their render, and every card
+        // here is an SVG chart with animated paths — the case where that flag is
+        // known to leave blanks behind. The window above already does the work.
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={

@@ -19,7 +19,9 @@ test('the chart gallery delegates rows to a bounded virtualized list', () => {
   assert.match(screen, /initialNumToRender=\{2\}/);
   assert.match(screen, /maxToRenderPerBatch=\{2\}/);
   assert.match(screen, /windowSize=\{3\}/);
-  assert.match(screen, /removeClippedSubviews/);
+  // Detaching offscreen views blanks animated SVG on iOS, and every row here is
+  // a chart. The window bounds the work without it.
+  assert.doesNotMatch(screen, /^\s*removeClippedSubviews\b/m);
   assert.doesNotMatch(screen, /CHART_SHOWCASE\.map/);
   assert.doesNotMatch(screen, /<ScrollView/);
 });
