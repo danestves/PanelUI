@@ -207,7 +207,7 @@ export interface CarouselProps extends ViewProps {
   autoplay?: boolean;
   /** Milliseconds each slide is held when `autoplay` is set. */
   autoplayInterval?: number;
-  /** Controlled active slide. */
+  /** Controlled active slide. Requests move visually only after this value changes. */
   index?: number;
   /** Starting slide when uncontrolled. */
   defaultIndex?: number;
@@ -269,28 +269,37 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
     [isControlled, onIndexChange]
   );
 
+  const animateTo = useCallback(
+    (target: number) => {
+      if (reducedMotion) {
+        progress.value = target;
+      } else if (loop) {
+        // Spring to the nearest representation of the target rather than to the
+        // target itself, so a wrap from the last slide to the first travels one
+        // step forward instead of winding all the way back through the run.
+        const shortest = progress.value + distance(target, progress.value, count, true);
+        progress.value = withSpring(shortest, SPRING, (finished) => {
+          if (finished) progress.value = wrap(progress.value, count);
+        });
+      } else {
+        progress.value = withSpring(target, SPRING);
+      }
+    },
+    [count, loop, progress, reducedMotion]
+  );
+
   const scrollTo = useCallback(
     (target: number) => {
       if (count <= 0) return;
       const settled = loop ? wrap(target, count) : Math.max(0, Math.min(target, count - 1));
 
-      if (reducedMotion) {
-        progress.value = settled;
-      } else if (loop) {
-        // Spring to the nearest representation of the target rather than to the
-        // target itself, so a wrap from the last slide to the first travels one
-        // step forward instead of winding all the way back through the run.
-        const shortest = progress.value + distance(settled, progress.value, count, true);
-        progress.value = withSpring(shortest, SPRING, (finished) => {
-          if (finished) progress.value = wrap(progress.value, count);
-        });
-      } else {
-        progress.value = withSpring(settled, SPRING);
-      }
-
+      // A controlled request belongs to its owner. The finger may move the run,
+      // but after release it returns to the current prop until the owner accepts
+      // the request by changing that prop.
+      animateTo(isControlled ? index : settled);
       setIndex(settled);
     },
-    [count, loop, progress, reducedMotion, setIndex]
+    [animateTo, count, index, isControlled, loop, setIndex]
   );
 
   const next = useCallback(() => scrollTo(index + 1), [index, scrollTo]);
@@ -302,8 +311,8 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
   useEffect(() => {
     if (!isControlled || indexProp === undefined || count <= 0) return;
     if (Math.abs(progress.value - indexProp) < 0.001) return;
-    progress.value = reducedMotion ? indexProp : withSpring(indexProp, SPRING);
-  }, [isControlled, indexProp, count, progress, reducedMotion]);
+    animateTo(indexProp);
+  }, [animateTo, isControlled, indexProp, count, progress]);
 
   /*
    * Autoplay stops for good the first time a finger lands, rather than pausing.
