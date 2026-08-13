@@ -691,7 +691,12 @@ function CarouselDots({
             accessibilityRole="tab"
             accessibilityLabel={`Slide ${dot + 1} of ${count}`}
             accessibilityState={{ selected: active }}
-            className={cn('items-center justify-center', interactive && 'h-12 w-12')}
+            // 24, not the 48 the buttons get. Dots sit a few points apart, so
+            // a 48 box would either overlap its neighbours — making a tap near
+            // the join land on the wrong slide — or push a five-slide run out
+            // to the width of the screen. 24 clears the minimum with the pitch
+            // still wider than the target, so no two dots contend for a touch.
+            className={cn('items-center justify-center', interactive && 'h-6 w-6')}
           >
             <View
               className={cn(
