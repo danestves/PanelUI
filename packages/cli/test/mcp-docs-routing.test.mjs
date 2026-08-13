@@ -36,8 +36,12 @@ function waitForLine(stream) {
   });
 }
 
+// Resolved once: the port is printed on a single line, so a second listener
+// added after that line has been read would wait for output that never comes.
+const listening = waitForLine(server.stdout);
+
 test('registry docsPath metadata matches real docs and routes every supported kind', async () => {
-  const port = await waitForLine(server.stdout);
+  const port = await listening;
   const expected = new Map([
     ['button', 'components/button'],
     ['area-chart', 'charts/area-chart'],
@@ -85,4 +89,35 @@ test('registry docsPath metadata matches real docs and routes every supported ki
   }
   assert.match(replies.at(-1).result.content[0].text, /No documentation page at .*not-real/);
   assert.match(replies.at(-1).result.content[0].text, /try panelui_view_component instead/);
+});
+
+test('a name that could climb out of the docs route is refused before any request', async () => {
+  const port = await listening;
+  const names = ['../../etc/passwd', 'components/../../..', 'Select', 'a b', ''];
+  const input = names
+    .map((name, offset) =>
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id: offset + 1,
+        method: 'tools/call',
+        params: { name: 'panelui_get_component_docs', arguments: { name } },
+      })
+    )
+    .join('\n');
+
+  const result = spawnSync(
+    process.execPath,
+    [cli, 'mcp', '--registry', `http://127.0.0.1:${port}/r`],
+    { encoding: 'utf8', input: `${input}\n` }
+  );
+  assert.equal(result.status, 0, result.stderr);
+
+  const replies = result.stdout.trim().split('\n').map(JSON.parse);
+  assert.equal(replies.length, names.length);
+  for (const [offset, name] of names.entries()) {
+    const text = replies[offset].result.content[0].text;
+    assert.match(text, /is not a component name/, `${name || '(empty)'} -> ${text}`);
+    // Nothing was fetched, so nothing can come back looking like documentation.
+    assert.doesNotMatch(text, /^docs:/, name);
+  }
 });

@@ -1431,7 +1431,8 @@
     "description": "use-reveal-progress.",
     "registryDependencies": [
       "scroll-progress"
-    ]
+    ],
+    "docsPath": "hooks/use-reveal-progress"
   },
   {
     "name": "use-scroll-sections",
