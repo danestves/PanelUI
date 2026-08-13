@@ -66,6 +66,9 @@ jobs:
       - name: Build library
         run: npm run build
 
+      - name: Verify package contents
+        run: npm run verify:package --workspace=panelui-native
+
       # The only thing standing between a mistyped tag and a wrong version on
       # npm, which cannot be taken back — npm does not allow a version to be
       # republished, even after an unpublish.

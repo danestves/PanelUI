@@ -17,7 +17,8 @@
   },
   "files": [
     "src",
-    "lib",
+    "lib/module",
+    "lib/typescript",
     "theme.css",
     "README.md",
     "!**/__tests__",
@@ -25,10 +26,12 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "bob build",
+    "build": "npm run clean && bob build",
+    "prepack": "npm run build && npm run verify:package",
     "test": "node --experimental-strip-types --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf lib"
+    "clean": "rm -rf lib",
+    "verify:package": "node scripts/verify-package.mjs"
   },
   "keywords": [
     "react-native",

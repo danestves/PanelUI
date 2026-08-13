@@ -28,6 +28,9 @@ jobs:
       - name: Build library
         run: npm run build
 
+      - name: Verify package contents
+        run: npm run verify:package --workspace=panelui-native
+
       - name: Node tests
         run: |
           # Discovered rather than globbed, so a workspace that grows its first
