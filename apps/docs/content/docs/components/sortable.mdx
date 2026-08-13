@@ -12,6 +12,14 @@ For revealing actions on a row rather than moving it, use [Swipe](/docs/componen
 
 <Callout type="warn">Beta — the API has settled, but has not seen enough use to promise it will not move again.</Callout>
 
+<PreviewVideo
+  src="/previews/sortable.mp4"
+  poster="/previews/sortable-poster.jpg"
+  alt="The Sortable component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 Sortable ships with the library — no separate install.
@@ -70,6 +78,14 @@ Each row registers itself, so `Sortable.Item` may be wrapped in anything — but
 
 The whole of it. `value` is the current order, `onReorder` is told where the row landed, and `reorderItems` applies that move to the list the ids came from. The rows are ordinary `Item`s — anything at all can go inside a row, because the component only ever adds a transform to it.
 
+<PreviewVideo
+  src="/previews/sortable-a-list-you-can-reorder.mp4"
+  poster="/previews/sortable-a-list-you-can-reorder-poster.jpg"
+  alt="Sortable — A list you can reorder."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [tasks, setTasks] = useState([
   { id: 'a', title: 'Draft the release notes' },
@@ -103,6 +119,14 @@ const [tasks, setTasks] = useState([
 
 `activation="longPress"` gives the whole row to the drag, so there is no grip to aim at. It suits a row with nothing else to press — a plain label, a photo, a colour. Where a row has a button, a checkbox or a link on it, keep the default: a long press on the whole row takes all of them.
 
+<PreviewVideo
+  src="/previews/sortable-lifting-on-a-long-press.mp4"
+  poster="/previews/sortable-lifting-on-a-long-press-poster.jpg"
+  alt="Sortable — Lifting on a long press."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Sortable
   value={colors.map((color) => color.id)}
@@ -128,6 +152,14 @@ const [tasks, setTasks] = useState([
 ### Rows of different heights
 
 Every row reports its own height, so a list of rows of unequal size lands in the right slots. Nothing has to be declared and no row height is assumed — the one number a fixed-height list always gets wrong is the two-line row somebody adds to it later.
+
+<PreviewVideo
+  src="/previews/sortable-rows-of-different-heights.mp4"
+  poster="/previews/sortable-rows-of-different-heights-poster.jpg"
+  alt="Sortable — Rows of different heights."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Sortable
@@ -182,6 +214,14 @@ const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
 `useSortableItem` gives a row its id, its index, and whether it is the one in the air. `isActive` is a plain boolean and changes twice in a drag rather than sixty times a second — set when the row is lifted, cleared when it lands — so styling from it costs two renders, not a frame's worth each frame.
 
+<PreviewVideo
+  src="/previews/sortable-a-row-that-knows-it-is-being-carried.mp4"
+  poster="/previews/sortable-a-row-that-knows-it-is-being-carried-poster.jpg"
+  alt="Sortable — A row that knows it is being carried."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 function Row({ label }) {
   const { index, isActive } = useSortableItem();
@@ -211,6 +251,14 @@ function Row({ label }) {
 
 `disabled` on a row stops it being dragged. The others still move past it — a row that cannot be dragged is not the same as a row that cannot be displaced, and pretending otherwise would mean silently refusing drops that looked like they worked. `disabled` on the list turns every row off at once. For a row that keeps its slot as well, see below.
 
+<PreviewVideo
+  src="/previews/sortable-a-row-that-cannot-be-picked-up.mp4"
+  poster="/previews/sortable-a-row-that-cannot-be-picked-up-poster.jpg"
+  alt="Sortable — A row that cannot be picked up."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Sortable value={ids} onReorder={apply} gap={8}>
   {rows.map((row) => (
@@ -231,6 +279,14 @@ function Row({ label }) {
 `pinned` is the stronger one: the row cannot be picked up, and nothing else can take its place either. The rows that do move reorder among the slots left over, so a step that has to come first still does once the rest have been rearranged.
 
 It is not a wall. A row can be carried across a pinned one — it goes around it rather than pushing it down — which is what separates a pinned row from a list split in two. It simply never gives up where it is.
+
+<PreviewVideo
+  src="/previews/sortable-a-row-that-stays-put.mp4"
+  poster="/previews/sortable-a-row-that-stays-put-poster.jpg"
+  alt="Sortable — A row that stays put."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Sortable value={ids} onReorder={apply} gap={8}>
