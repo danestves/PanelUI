@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
-import { useForm } from '../lib/module/components/form/use-form.js';
+import { useForm } from '../src/components/form/use-form.ts';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 

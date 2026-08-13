@@ -28,8 +28,7 @@
     "build": "bob build",
     "test": "node --experimental-strip-types --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf lib",
-    "test": "npm run build && node --test test/*.test.mjs"
+    "clean": "rm -rf lib"
   },
   "keywords": [
     "react-native",
