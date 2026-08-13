@@ -76,10 +76,26 @@ if (forbiddenFiles.length > 0) {
   );
 }
 
+/*
+ * Set to catch a mistake, not to police growth.
+ *
+ * What this is guarding against is a stray directory finding its way into
+ * `files` — a `node_modules`, a build cache, a folder of recordings. Those
+ * arrive orders of magnitude over the line, so the line does not need to be
+ * anywhere near the current size to catch them.
+ *
+ * It needs to be well clear of it, though, because this step also runs in
+ * `publish.yml`, after the tag exists. A budget that a few ordinary components
+ * can cross turns a release into a failure at the one moment there is nothing
+ * useful to do about it. At 106 components the package is 768 files and 2.1 MB
+ * packed, and each new component costs six or seven files — so this leaves room
+ * for roughly another sixty of them. Raise it when it is genuinely reached;
+ * that is a normal thing to do and not a signal that anything is wrong.
+ */
 const budgets = {
-  files: 850,
-  packedBytes: 2_500_000,
-  unpackedBytes: 9_000_000,
+  files: 1_200,
+  packedBytes: 4_000_000,
+  unpackedBytes: 14_000_000,
 };
 const exceededBudgets = [
   ["files", manifest.entryCount, budgets.files],
