@@ -16,6 +16,14 @@ import path from 'node:path';
 import process from 'node:process';
 import { DEFAULT_REGISTRY, aliasToDir, projectPath, readConfig } from './config.mjs';
 
+/**
+ * The versions we speak, and the one we answer with otherwise.
+ *
+ * The spec says to reply with the client's version when it is one we support
+ * and with our own when it is not, so a newer client is told what it is talking
+ * to and can decide to downgrade rather than being refused. Echoing back
+ * whatever arrived would claim support for a protocol nothing here implements.
+ */
 const PROTOCOL_VERSION = '2025-06-18';
 const SUPPORTED_PROTOCOL_VERSIONS = [PROTOCOL_VERSION];
 
