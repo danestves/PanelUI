@@ -1,0 +1,141 @@
+---
+title: useRevealProgress
+description: Derive a shared reveal value from an element's travel through a scroll viewport.
+---
+
+Returns a Reanimated shared value that moves from `0` to `1` as an element
+travels through a scroll viewport. Attach the returned `ref` to the element,
+then read `progress.value` in an animated style.
+
+## Usage
+
+Wrap the scrollable in
+[`ScrollProgress`](/docs/components/scroll-text#wiring-up-the-scroll-position). It
+publishes the scroll offset and viewport geometry that the hook needs without
+crossing to React state on every scroll event.
+
+```tsx
+import { ScrollProgress, Text, useRevealProgress } from 'panelui-native';
+import { ScrollView } from 'react-native';
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useReducedMotion,
+} from 'react-native-reanimated';
+
+function StoryCard() {
+  const reducedMotion = useReducedMotion();
+  const { ref, progress } = useRevealProgress({
+    start: 0.9,
+    end: 0.45,
+    enabled: !reducedMotion,
+  });
+  const style = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [
+      { translateY: interpolate(progress.value, [0, 1], [24, 0]) },
+    ],
+  }));
+
+  return (
+    <Animated.View ref={ref} style={style} className="rounded-2xl bg-surface p-5">
+      <Text size="lg" weight="semibold">A story revealed by the scroll</Text>
+    </Animated.View>
+  );
+}
+
+export function StoryFeed() {
+  return (
+    <ScrollProgress className="flex-1">
+      <ScrollView contentContainerClassName="gap-12 p-6">
+        <Text>Content before the card…</Text>
+        <StoryCard />
+        <Text>Content after the card…</Text>
+      </ScrollView>
+    </ScrollProgress>
+  );
+}
+```
+
+`ScrollProgress` must contain exactly one scrollable. The hook measures the
+returned `ref` relative to the nearest provider's viewport, so nested
+scrollables use their own visible area rather than the whole window.
+
+<Callout type="warn" title="The provider drives derived progress">
+  Outside `ScrollProgress`, the hook does not throw, but there is no shared
+  scroll offset to trigger updates. Use the provider for scroll-derived
+  progress, or pass a shared value through `progress` when something else owns
+  the timeline.
+</Callout>
+
+## Start and end lines
+
+`start` and `end` are fractions of the viewport height:
+
+- Progress is `0` while the element's **top** is at or below the `start` line.
+- Progress reaches `1` when the element's **bottom** reaches the `end` line.
+- Between those lines, progress is continuous and clamped to `0...1`.
+
+With the defaults, the reveal begins when the element's top reaches 90% of the
+viewport height and finishes when its bottom reaches 50%:
+
+```text
+from = start × viewportHeight
+to = end × viewportHeight - elementHeight
+progress = clamp((from - elementTop) / (from - to), 0, 1)
+```
+
+Including the element's height in the end boundary lets a tall block scrub
+across its own travel instead of completing as soon as its first line appears.
+If the configured geometry produces no positive span, progress switches
+directly from `0` to `1` at the end boundary. Before a valid viewport and
+element measurement exist, derived progress is `0`.
+
+## External progress
+
+Pass a `SharedValue<number>` to drive the effect from a gesture, media timeline,
+or another animation instead of scroll position:
+
+```tsx
+const timeline = useSharedValue(0);
+const { progress } = useRevealProgress({ progress: timeline });
+
+// progress === timeline
+```
+
+The external shared value is returned as-is. `start`, `end`, and `enabled` only
+control the internally derived value, so they do not clamp, complete, or
+otherwise alter external progress. This mode does not require `ScrollProgress`
+or the returned measurement `ref`.
+
+## Enabled and reduced motion
+
+`enabled={false}` holds internally derived progress at `1`. That renders the
+effect in its completed state rather than hiding content at the start of its
+animation.
+
+The hook does **not** read the reduced-motion setting on its own. Read it with
+`useReducedMotion()` and pass `enabled: !reducedMotion`, as in the example.
+`ScrollText` and `ScrollCanvas` already do this internally.
+
+When external progress is supplied, it remains authoritative even if
+`enabled` is false. To honor reduced motion in external mode, complete the
+external value or bypass the animated transform in the caller.
+
+## API Reference
+
+### Options
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `start` | `number` | `0.9` | Viewport-height fraction where the element's top corresponds to progress `0`. |
+| `end` | `number` | `0.5` | Viewport-height fraction where the element's bottom corresponds to progress `1`. |
+| `progress` | `SharedValue<number>` | — | External progress returned unchanged instead of the scroll-derived value. |
+| `enabled` | `boolean` | `true` | When false, holds internally derived progress at `1`. |
+
+### Returns
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `ref` | `AnimatedRef<View>` | Attach to the element whose viewport travel should be measured. |
+| `progress` | `SharedValue<number>` | Derived `0...1` reveal progress, or the exact external shared value supplied. |
