@@ -6055,7 +6055,7 @@
       "XAxis": "Category labels under the bands. Real text, so they follow the theme’s font and the platform’s text scaling.",
       "YAxis": "Value labels down the side. The chart reserves a gutter for them, rather than drawing them over the plot.",
       "Legend": "A swatch and a name per series.",
-      "Tooltip": "The drag that selects a band, and the card that reports it."
+      "Tooltip": "The drag that selects a band, and the card that reports it. The card follows whichever axis the bands run along — across the plot when the bars grow up, down it when they grow right — so it always sits beside the bar it is describing."
     },
     "examples": [
       {

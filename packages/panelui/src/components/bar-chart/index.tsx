@@ -1084,6 +1084,15 @@ function BarChartTooltip({ formatValue, formatX, className }: BarChartTooltipPro
   const height = plot.height;
 
   /*
+   * The readout's own height, measured rather than assumed. Sideways it has to
+   * be clamped inside the plot vertically, and how tall it is depends on how
+   * many series are listed in it — a constant here would either let a
+   * three-series readout hang off the bottom or reserve room a one-series
+   * readout never uses.
+   */
+  const labelHeight = useSharedValue(0);
+
+  /*
    * Declared inside the memo, next to its callers: a worklet may only call
    * another worklet, and the rule is enforced by crashing rather than warning.
    */
@@ -1118,8 +1127,17 @@ function BarChartTooltip({ formatValue, formatX, className }: BarChartTooltipPro
       });
   }, [total, left, top, width, height, horizontal, activeIndex, setActiveIndexJS]);
 
-  // The readout centres over its band and is clamped inside the plot, so it
-  // never runs off the edge at the first or last one.
+  /*
+   * The readout centres over its band and is clamped inside the plot, so it
+   * never runs off the edge at the first or last one.
+   *
+   * Which axis the band runs along is the whole difference between the two
+   * orientations. Upright, the bands are side by side, so the readout slides
+   * across and sits above them all. Sideways, the bands are stacked down the
+   * plot, so it slides *down* to the row it is describing and stays centred
+   * across — held at the top instead, it would name the row under the finger
+   * while covering the first one, which is the row a reader checks it against.
+   */
   const labelStyle = useAnimatedStyle(() => {
     const index = activeIndex.value;
     if (index < 0 || !total) return { opacity: 0 };
@@ -1130,7 +1148,23 @@ function BarChartTooltip({ formatValue, formatX, className }: BarChartTooltipPro
       plot.left + plot.width - half,
       Math.max(plot.left + half, horizontal ? plot.left + plot.width / 2 : centre)
     );
-    return { opacity: 1, transform: [{ translateX: clamped - half }] };
+
+    if (!horizontal) {
+      return { opacity: 1, transform: [{ translateX: clamped - half }] };
+    }
+
+    // Until the first measurement lands the height is zero, which clamps to
+    // the top of the plot — the same place it used to sit, rather than a jump
+    // from somewhere it never was.
+    const tall = labelHeight.value;
+    const y = Math.min(
+      plot.top + Math.max(plot.height - tall, 0),
+      Math.max(plot.top, centre - tall / 2)
+    );
+    return {
+      opacity: 1,
+      transform: [{ translateX: clamped - half }, { translateY: y }],
+    };
   });
 
   const active = activeIndexJS >= 0 ? data[activeIndexJS] : null;
@@ -1151,6 +1185,9 @@ function BarChartTooltip({ formatValue, formatX, className }: BarChartTooltipPro
         >
           {active ? (
             <View
+              onLayout={(event) => {
+                labelHeight.value = event.nativeEvent.layout.height;
+              }}
               className={cn(
                 'rounded-xl border border-border bg-popover px-2.5 py-1.5 shadow-lg',
                 className
