@@ -31,7 +31,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tv } from 'tailwind-variants';
 import { getNativeUI } from '../../native';
 import { XIcon } from '../../icons';
-import { Portal } from '../../primitives/portal';
+import { ModalPortal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
@@ -435,7 +435,7 @@ function BottomSheetContent({
   if (!open) return null;
 
   return (
-    <Portal>
+    <ModalPortal>
       {/* Portal content mounts under PortalHost, outside this provider's
           subtree — re-provide the context so nested consumers keep working. */}
       <BottomSheetContext.Provider value={context}>
@@ -507,7 +507,7 @@ function BottomSheetContent({
         </GestureDetector>
         </View>
       </BottomSheetContext.Provider>
-    </Portal>
+    </ModalPortal>
   );
 }
 

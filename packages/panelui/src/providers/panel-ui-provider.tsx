@@ -1,7 +1,11 @@
 import { Fragment, type ComponentType, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { PortalHost, PortalProvider } from '../primitives/portal';
+import {
+  PortalHost,
+  PortalProvider,
+  useModalIsolationActive,
+} from '../primitives/portal';
 import { ToastViewport } from '../components/toast';
 import { cn } from '../utils/cn';
 
@@ -58,19 +62,47 @@ export function PanelUIProvider({
       {/* Outermost of ours, so every field below it can avoid the keyboard.
           A no-op Fragment when the controller is not installed. */}
       <KeyboardProvider>
-        <View className={cn('flex-1', background && 'bg-background', className)}>
-          <PortalProvider>
+        <PortalProvider>
+          <ProviderSurface
+            background={background}
+            className={className}
+          >
             {children}
-            {/* Sits before PortalHost so it can portal into it. */}
-            <ToastViewport />
-            <PortalHost />
-          </PortalProvider>
-        </View>
+          </ProviderSurface>
+        </PortalProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }
 
+function ProviderSurface({
+  children,
+  className,
+  background,
+}: Required<Pick<PanelUIProviderProps, 'children' | 'background'>> &
+  Pick<PanelUIProviderProps, 'className'>) {
+  const modalActive = useModalIsolationActive();
+  const isolateApp = Platform.OS === 'android' && modalActive;
+
+  return (
+    <View className={cn('flex-1', background && 'bg-background', className)}>
+      {/* This wrapper is the app accessibility boundary. PortalHost stays its
+          sibling, so hiding the background can never hide the active modal. */}
+      <View
+        collapsable={false}
+        style={styles.content}
+        importantForAccessibility={isolateApp ? 'no-hide-descendants' : 'auto'}
+      >
+        {children}
+      </View>
+      {/* Sits before PortalHost so it can portal into it. */}
+      <ToastViewport />
+      <PortalHost />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  content: { flex: 1 },
 });
