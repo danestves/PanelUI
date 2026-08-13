@@ -129,7 +129,10 @@ const fabVariants = tv({
       primary: { root: 'bg-primary', label: 'text-primary-foreground' },
       secondary: { root: 'bg-secondary', label: 'text-secondary-foreground' },
       surface: { root: 'border border-border bg-popover', label: 'text-foreground' },
-      destructive: { root: 'bg-destructive', label: 'text-white' },
+      destructive: {
+        root: 'bg-destructive',
+        label: 'text-destructive-solid-foreground',
+      },
     },
     disabled: {
       true: { root: 'opacity-[0.64] shadow-none' },
@@ -158,8 +161,9 @@ export type FabSize = NonNullable<FabVariantProps['size']>;
 export type FabVariant = NonNullable<FabVariantProps['variant']>;
 
 /** The theme token each variant's icon reads against. */
-const CONTENT_COLOR_VAR: Record<Exclude<FabVariant, 'destructive'>, string> = {
+const CONTENT_COLOR_VAR: Record<FabVariant, string> = {
   primary: '--color-primary-foreground',
+  destructive: '--color-destructive-solid-foreground',
   secondary: '--color-secondary-foreground',
   surface: '--color-foreground',
 };
@@ -234,17 +238,9 @@ const FabRoot = forwardRef<View, FabProps>(
       disabled,
     });
 
-    const themed = useCSSVariable(
-      CONTENT_COLOR_VAR[
-        variant === 'destructive' ? 'primary' : (variant ?? 'primary')
-      ]
-    );
+    const themed = useCSSVariable(CONTENT_COLOR_VAR[variant ?? 'primary']);
     const contentColor =
-      variant === 'destructive'
-        ? '#ffffff'
-        : typeof themed === 'string'
-          ? themed
-          : undefined;
+      typeof themed === 'string' ? themed : undefined;
 
     const handlePress = useCallback(() => {
       if (haptics) selectionTick();

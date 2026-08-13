@@ -78,12 +78,16 @@
   --color-accent-foreground: unset;
   --color-destructive: unset;
   --color-destructive-foreground: unset;
+  --color-destructive-solid-foreground: unset;
   --color-info: unset;
   --color-info-foreground: unset;
+  --color-info-solid-foreground: unset;
   --color-success: unset;
   --color-success-foreground: unset;
+  --color-success-solid-foreground: unset;
   --color-warning: unset;
   --color-warning-foreground: unset;
+  --color-warning-solid-foreground: unset;
   --color-border: unset;
   --color-input: unset;
   --color-ring: unset;
@@ -226,15 +230,19 @@
       /* status: {hue}-500, foreground {hue}-700 */
       --color-destructive: #ef4444;
       --color-destructive-foreground: #b91c1c;
+      --color-destructive-solid-foreground: #171717;
 
       --color-info: #3b82f6;
       --color-info-foreground: #1d4ed8;
+      --color-info-solid-foreground: #171717;
 
       --color-success: #10b981;
       --color-success-foreground: #047857;
+      --color-success-solid-foreground: #171717;
 
       --color-warning: #f59e0b;
       --color-warning-foreground: #b45309;
+      --color-warning-solid-foreground: #171717;
 
       /* border: black 8%, input: black 10% */
       --color-border: rgba(0, 0, 0, 0.08);
@@ -327,15 +335,19 @@
       /* color-mix(red-500 90%, white), foreground {hue}-400 */
       --color-destructive: #f15757;
       --color-destructive-foreground: #f87171;
+      --color-destructive-solid-foreground: #171717;
 
       --color-info: #3b82f6;
       --color-info-foreground: #60a5fa;
+      --color-info-solid-foreground: #171717;
 
       --color-success: #10b981;
       --color-success-foreground: #34d399;
+      --color-success-solid-foreground: #171717;
 
       --color-warning: #f59e0b;
       --color-warning-foreground: #fbbf24;
+      --color-warning-solid-foreground: #171717;
 
       /* border: white 6%, input: white 8% */
       --color-border: rgba(255, 255, 255, 0.06);
@@ -446,15 +458,19 @@
 
       --color-destructive: #eb5757;
       --color-destructive-foreground: #c62b30;
+      --color-destructive-solid-foreground: #08090a;
 
       --color-info: #4ea7fc;
       --color-info-foreground: #0b6ec4;
+      --color-info-solid-foreground: #08090a;
 
       --color-success: #27a644;
       --color-success-foreground: #1c7a32;
+      --color-success-solid-foreground: #08090a;
 
       --color-warning: #f2c94c;
       --color-warning-foreground: #8a6d0b;
+      --color-warning-solid-foreground: #08090a;
 
       --color-border: rgba(0, 0, 0, 0.08);
       --color-input: rgba(0, 0, 0, 0.12);
@@ -531,15 +547,19 @@
 
       --color-destructive: #eb5757;
       --color-destructive-foreground: #ff8a8a;
+      --color-destructive-solid-foreground: #08090a;
 
       --color-info: #4ea7fc;
       --color-info-foreground: #8ec5ff;
+      --color-info-solid-foreground: #08090a;
 
       --color-success: #27a644;
       --color-success-foreground: #4cc061;
+      --color-success-solid-foreground: #08090a;
 
       --color-warning: #f2c94c;
       --color-warning-foreground: #f5d97a;
+      --color-warning-solid-foreground: #08090a;
 
       /* The hairlines are opaque, not translucent: the surface ladder is only
          a few points wide, so a border mixed with whatever is under it would
@@ -606,10 +626,9 @@
       /* the sunken band under a card or dialog: black at 3.5% */
       --color-inset: rgba(0, 0, 0, 0.035);
 
-      /* Brand green is too light for white text; light mode uses the
-         darker ramp step so the contrast ratio holds. */
+      /* Dark green ink preserves the brand fill and clears the body-text floor. */
       --color-primary: #24b47e;
-      --color-primary-foreground: #ffffff;
+      --color-primary-foreground: #052e1b;
 
       --color-secondary: rgba(0, 0, 0, 0.05);
       --color-secondary-foreground: #171717;
@@ -622,15 +641,19 @@
 
       --color-destructive: #ef4444;
       --color-destructive-foreground: #b91c1c;
+      --color-destructive-solid-foreground: #171717;
 
       --color-info: #3b82f6;
       --color-info-foreground: #1d4ed8;
+      --color-info-solid-foreground: #171717;
 
       --color-success: #24b47e;
       --color-success-foreground: #16794c;
+      --color-success-solid-foreground: #171717;
 
       --color-warning: #f59e0b;
       --color-warning-foreground: #b45309;
+      --color-warning-solid-foreground: #171717;
 
       --color-border: rgba(0, 0, 0, 0.08);
       --color-input: rgba(0, 0, 0, 0.1);
@@ -707,15 +730,19 @@
 
       --color-destructive: #f15757;
       --color-destructive-foreground: #f87171;
+      --color-destructive-solid-foreground: #171717;
 
       --color-info: #3b82f6;
       --color-info-foreground: #60a5fa;
+      --color-info-solid-foreground: #171717;
 
       --color-success: #3ecf8e;
       --color-success-foreground: #4ade80;
+      --color-success-solid-foreground: #171717;
 
       --color-warning: #f59e0b;
       --color-warning-foreground: #fbbf24;
+      --color-warning-solid-foreground: #171717;
 
       --color-border: rgba(255, 255, 255, 0.07);
       --color-input: rgba(255, 255, 255, 0.1);

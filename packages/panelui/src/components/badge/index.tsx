@@ -20,7 +20,10 @@ const badgeVariants = tv({
       default: { root: 'bg-primary', label: 'text-primary-foreground' },
       secondary: { root: 'bg-secondary', label: 'text-secondary-foreground' },
       outline: { root: 'border-border bg-transparent', label: 'text-foreground' },
-      destructive: { root: 'bg-destructive', label: 'text-white' },
+      destructive: {
+        root: 'bg-destructive',
+        label: 'text-destructive-solid-foreground',
+      },
       success: { root: 'bg-success-subtle', label: 'text-success-foreground' },
       warning: { root: 'bg-warning-subtle', label: 'text-warning-foreground' },
       info: { root: 'bg-info-subtle', label: 'text-info-foreground' },
