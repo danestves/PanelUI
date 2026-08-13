@@ -11,6 +11,7 @@ Zero native code, so it runs in Expo Go.
 [![MIT license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/panel-ui/PanelUI/blob/main/LICENSE)
 ![platforms iOS and Android](https://img.shields.io/badge/platforms-iOS%20%7C%20Android-black?style=flat-square)
 ![Expo SDK 57+](https://img.shields.io/badge/Expo-SDK%2057%2B-000?style=flat-square&logo=expo)
+[![analytics by OpenPanel](https://shieldcn.dev/badge/analytics%20by-OpenPanel-2564EB.svg?logo=openpanel&logoColor=fff&variant=branded&brand=openpanel)](https://openpanel.dev)
 
 - ⚡ **Tailwind CSS for React Native** via [Uniwind](https://uniwind.dev) — no Babel transform,
   roughly 2.4–3× faster styling than NativeWind.

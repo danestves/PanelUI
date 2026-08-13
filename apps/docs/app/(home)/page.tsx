@@ -272,7 +272,20 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t px-6 py-10">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
-          <p>MIT © Khalid Abdi</p>
+          <div className="flex flex-col items-center gap-1 sm:items-start">
+            <p>MIT © Khalid Abdi</p>
+            <p>
+              Analytics provided by{' '}
+              <a
+                href="https://openpanel.dev"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-foreground"
+              >
+                OpenPanel
+              </a>
+            </p>
+          </div>
           <nav className="flex gap-6" aria-label="Footer">
             <Link href="/docs" prefetch={false} className="hover:text-foreground">
               Documentation
