@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import {
   getFlowConnectionActions,
   moveNodePosition,
-} from '../lib/module/components/flow/flow-accessibility.js';
+} from '../src/components/flow/flow-accessibility.ts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 

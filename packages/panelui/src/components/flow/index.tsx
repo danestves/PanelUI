@@ -986,9 +986,12 @@ export interface FlowNodeProps extends Omit<ViewProps, 'children'> {
   selected?: boolean;
   /** Tapping the node — separate from dragging it. */
   onPress?: () => void;
-  /** Delete this node when assistive technology requests it. */
+  /**
+   * Delete the node when assistive technology requests the advertised Delete
+   * node action. No delete action is exposed when this is omitted.
+   */
   onDelete?: () => void;
-  /** Distance, in graph points, covered by each accessible move action. */
+  /** Graph points covered by each Move up, right, down or left accessibility action. */
   accessibilityMoveStep?: number;
   /** Spoken name. Defaults to the node's id. */
   accessibilityLabel?: string;
@@ -1268,7 +1271,10 @@ export interface FlowHandleProps {
   /** Where along the face, 0–1. For more than one handle on a side. */
   offset?: number;
   className?: string;
-  /** Spoken handle name used in the parent node's connection actions. */
+  /**
+   * Spoken handle name used in the parent node's connection actions. Defaults
+   * to the handle's id.
+   */
   accessibilityLabel?: string;
   /** Draw nothing. The handle still anchors edges and still accepts a drop. */
   hidden?: boolean;
