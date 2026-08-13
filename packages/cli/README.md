@@ -43,13 +43,20 @@ npx panelui-cli@latest add item message
 npx panelui-cli@latest add button --overwrite
 ```
 
-### `list`
+### `list [--type kind] [--search text] [--json]`
 
-Everything available, grouped.
+Everything available, grouped as UI, charts, hooks, utilities and theme. Filters use generated
+registry metadata; search requires every term and ranks exact names, prefixes, name matches and
+description matches in that order. `--json` returns the same deterministically ordered index rows.
 
 ```bash
 npx panelui-cli@latest list
+npx panelui-cli@latest list --type chart
+npx panelui-cli@latest list --search "scroll progress" --json
 ```
+
+Current registries also expose `kind`, documentation `group`, and `stability` (`stable`, `beta` or
+`alpha`). Older custom indexes containing only `name`, `type` and `description` remain supported.
 
 ### `mcp`
 
@@ -105,6 +112,9 @@ editor-launched sessions, add `--registry <url>` or `--cwd <dir>` to that server
 | `--dry-run` | Show what would happen, write nothing |
 | `--cwd <dir>` | Run against another directory |
 | `--registry <url>` | Use a different registry |
+| `--type <kind>` | Filter list results: `ui`, `chart`, `hook`, `lib` or `theme` |
+| `--search <text>` | Rank list results matching every search term |
+| `--json` | Print list results as stable JSON |
 
 A value-taking flag without its value prints its usage and exits with status 1. No command runs.
 

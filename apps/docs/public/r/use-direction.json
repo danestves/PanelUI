@@ -1,7 +1,7 @@
 {
   "name": "use-direction",
   "type": "registry:hook",
-  "description": "use-direction.",
+  "description": "Reads the nearest LTR or RTL direction, falling back to the device setting.",
   "registryDependencies": [],
   "dependencies": [],
   "optionalDependencies": [],

@@ -2,6 +2,9 @@
   {
     "name": "accordion",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Collapsible sections with single or multiple selection.",
     "registryDependencies": [
       "icons",
@@ -12,6 +15,9 @@
   {
     "name": "alert",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Status message with a built-in icon.",
     "registryDependencies": [
       "cn",
@@ -23,12 +29,18 @@
   {
     "name": "animated-pressable",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Pressable with UI-thread press feedback.",
     "registryDependencies": []
   },
   {
     "name": "area-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "Filled bands over time, stacked or overlaid.",
     "registryDependencies": [
       "chart",
@@ -40,6 +52,9 @@
   {
     "name": "attachment",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "File row with upload states, built on Item.",
     "registryDependencies": [
       "animated-pressable",
@@ -53,6 +68,9 @@
   {
     "name": "avatar",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "User image with an initials fallback and an optional badge overlay.",
     "registryDependencies": [
       "cn",
@@ -63,6 +81,9 @@
   {
     "name": "badge",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Compact status label, dot, or notification count.",
     "registryDependencies": [
       "text"
@@ -72,6 +93,9 @@
   {
     "name": "bar-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "Categories compared by length, grouped or stacked.",
     "registryDependencies": [
       "chart",
@@ -83,6 +107,9 @@
   {
     "name": "bottom-sheet",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Draggable sheet anchored to the bottom of the screen.",
     "registryDependencies": [
       "cn",
@@ -98,6 +125,9 @@
   {
     "name": "breadcrumb",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "The trail of links back up the hierarchy to the current page.",
     "registryDependencies": [
       "animated-pressable",
@@ -110,6 +140,9 @@
   {
     "name": "button",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Pressable action with variants, sizes, loading state and icon slots.",
     "registryDependencies": [
       "animated-pressable",
@@ -124,6 +157,9 @@
   {
     "name": "button-group",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Several buttons drawn as one control — a segmented run, a split action, a toolbar.",
     "registryDependencies": [
       "button"
@@ -133,6 +169,9 @@
   {
     "name": "calendar",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A month of days, for picking one, several, or a range.",
     "registryDependencies": [
       "cn",
@@ -146,6 +185,9 @@
   {
     "name": "candlestick-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "Open, high, low and close for a period, drawn as one mark.",
     "registryDependencies": [
       "chart",
@@ -157,6 +199,9 @@
   {
     "name": "card",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Content surface with header, body and footer.",
     "registryDependencies": [
       "cn",
@@ -167,6 +212,9 @@
   {
     "name": "carousel",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A run of slides, one at a time, dragged with a finger.",
     "registryDependencies": [
       "cn",
@@ -178,12 +226,18 @@
   {
     "name": "chart",
     "type": "registry:lib",
+    "kind": "lib",
+    "group": "utilities",
+    "stability": "stable",
     "description": "Scales, monotone curves and path building. Shared by every chart.",
     "registryDependencies": []
   },
   {
     "name": "checkbox",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Animated checkbox, as a row or a selectable card.",
     "registryDependencies": [
       "icons",
@@ -194,6 +248,9 @@
   {
     "name": "chip",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Interactive pill — a filter, a tag, or a removable token.",
     "registryDependencies": [
       "animated-pressable",
@@ -207,6 +264,9 @@
   {
     "name": "cn",
     "type": "registry:lib",
+    "kind": "lib",
+    "group": "utilities",
+    "stability": "stable",
     "description": "Merges Tailwind class names, with later classes winning conflicts.",
     "registryDependencies": [],
     "docsPath": "utilities/cn"
@@ -214,6 +274,9 @@
   {
     "name": "code-block",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "stable",
     "description": "A fenced snippet, syntax-coloured and scrolled sideways.",
     "registryDependencies": [
       "animated-pressable",
@@ -227,7 +290,10 @@
   {
     "name": "collapse",
     "type": "registry:ui",
-    "description": "collapse.",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Keeps content mounted while animating its measured height open or closed.",
     "registryDependencies": [
       "cn"
     ]
@@ -235,12 +301,18 @@
   {
     "name": "color",
     "type": "registry:lib",
+    "kind": "lib",
+    "group": "utilities",
+    "stability": "stable",
     "description": "HSV colour arithmetic, parsing and formatting. Every function a worklet.",
     "registryDependencies": []
   },
   {
     "name": "color-picker",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A colour chosen by dragging — a saturation square or a wheel, a hue scale, and opacity.",
     "registryDependencies": [
       "cn",
@@ -255,6 +327,9 @@
   {
     "name": "combobox",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A text field that filters a list of options as you type.",
     "registryDependencies": [
       "chip",
@@ -271,6 +346,9 @@
   {
     "name": "context-menu",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Actions for a piece of content, opened by holding it.",
     "registryDependencies": [
       "cn",
@@ -284,12 +362,18 @@
   {
     "name": "date",
     "type": "registry:lib",
+    "kind": "lib",
+    "group": "utilities",
+    "stability": "stable",
     "description": "Day and month arithmetic, and locale-aware date formatting.",
     "registryDependencies": []
   },
   {
     "name": "date-picker",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A calendar behind a button.",
     "registryDependencies": [
       "button",
@@ -305,6 +389,9 @@
   {
     "name": "date-time-picker",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A day and a time of day, picked in one panel.",
     "registryDependencies": [
       "button",
@@ -323,6 +410,9 @@
   {
     "name": "dialog",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Modal dialog with a backdrop and footer actions.",
     "registryDependencies": [
       "cn",
@@ -336,6 +426,9 @@
   {
     "name": "direction",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Reading direction for everything below it.",
     "registryDependencies": [
       "text",
@@ -346,6 +439,9 @@
   {
     "name": "drawer",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A panel that comes in from an edge of the screen and covers the app until dismissed.",
     "registryDependencies": [
       "cn",
@@ -361,6 +457,9 @@
   {
     "name": "empty-state",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Placeholder for a list or screen with no content.",
     "registryDependencies": [
       "text"
@@ -370,6 +469,9 @@
   {
     "name": "fab",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "The floating action button — one action pinned over the content, with an optional dial of others behind it.",
     "registryDependencies": [
       "animated-pressable",
@@ -385,6 +487,9 @@
   {
     "name": "field",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Layout and validation-state kit a form control composes into.",
     "registryDependencies": [
       "label",
@@ -396,6 +501,9 @@
   {
     "name": "flow",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Pan-and-zoom canvas of draggable nodes joined by animated edges.",
     "registryDependencies": [
       "animated-pressable",
@@ -408,6 +516,9 @@
   {
     "name": "form",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "form",
+    "stability": "stable",
     "description": "Form state — values, validation and submission — with no form library underneath.",
     "registryDependencies": [],
     "docsPath": "form/form"
@@ -415,6 +526,9 @@
   {
     "name": "frame",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Widget shell — a card of rows sitting in a titled tray.",
     "registryDependencies": [
       "cn",
@@ -426,6 +540,9 @@
   {
     "name": "funnel-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "Where a population drained away, one step at a time.",
     "registryDependencies": [
       "chart",
@@ -438,6 +555,9 @@
   {
     "name": "grid-item",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Bento tiles, and the grid that places them.",
     "registryDependencies": [
       "animated-pressable",
@@ -449,12 +569,18 @@
   {
     "name": "haptics",
     "type": "registry:lib",
+    "kind": "lib",
+    "group": "utilities",
+    "stability": "stable",
     "description": "Optional bridge to the platform haptic engine, behind the `haptics` prop.",
     "registryDependencies": []
   },
   {
     "name": "heatmap-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "Contribution grid with a themed colour ramp and a readout.",
     "registryDependencies": [
       "cn",
@@ -466,6 +592,9 @@
   {
     "name": "hex-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "A whole broken into parts, counted out in cells.",
     "registryDependencies": [
       "chart",
@@ -477,6 +606,9 @@
   {
     "name": "icons",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "The icon set, plus the colour context components use to tint them.",
     "registryDependencies": [
       "use-direction"
@@ -485,6 +617,9 @@
   {
     "name": "input",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Text field with label, description and error message.",
     "registryDependencies": [
       "icons",
@@ -498,6 +633,9 @@
   {
     "name": "input-group",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Input with leading and trailing decorators.",
     "registryDependencies": [
       "input",
@@ -508,6 +646,9 @@
   {
     "name": "item",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Row of media, text and actions for lists and settings.",
     "registryDependencies": [
       "animated-pressable",
@@ -519,6 +660,9 @@
   {
     "name": "keyboard-avoider",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "View that lifts itself clear of the software keyboard.",
     "registryDependencies": [
       "text",
@@ -528,6 +672,9 @@
   {
     "name": "kpi",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "One number, what it is doing, and the shape it made getting there.",
     "registryDependencies": [
       "chart",
@@ -542,6 +689,9 @@
   {
     "name": "label",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Form field label with required, invalid and disabled states.",
     "registryDependencies": [
       "text"
@@ -551,6 +701,9 @@
   {
     "name": "line-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "Animated time series, drawn on the UI thread.",
     "registryDependencies": [
       "chart",
@@ -562,6 +715,9 @@
   {
     "name": "live-line-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "A reading that keeps arriving, against a window that keeps moving.",
     "registryDependencies": [
       "chart",
@@ -573,6 +729,9 @@
   {
     "name": "loader",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Nine loading animations behind one variant prop.",
     "registryDependencies": [
       "cn",
@@ -583,6 +742,9 @@
   {
     "name": "map",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "alpha",
     "description": "Vector map whose basemap is drawn from your theme tokens.",
     "registryDependencies": [
       "cn",
@@ -594,6 +756,9 @@
   {
     "name": "markdown-editor",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A field for writing markdown, with a formatting toolbar and a rendered preview.",
     "registryDependencies": [
       "button",
@@ -609,6 +774,9 @@
   {
     "name": "marker",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Inline note between conversation turns.",
     "registryDependencies": [
       "animated-pressable",
@@ -623,6 +791,9 @@
   {
     "name": "menu",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "The list of things you can do to something.",
     "registryDependencies": [
       "cn",
@@ -636,6 +807,9 @@
   {
     "name": "message",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Chat turn with avatar, bubble, header and footer.",
     "registryDependencies": [
       "animated-pressable",
@@ -648,6 +822,9 @@
   {
     "name": "message-scroller",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Scroll behaviour a chat transcript needs.",
     "registryDependencies": [
       "animated-pressable",
@@ -658,29 +835,29 @@
     "docsPath": "components/message-scroller"
   },
   {
-    "name": "meter",
-    "type": "registry:ui",
-    "description": "A measurement on a fixed scale, coloured by where it falls.",
-    "registryDependencies": [
-      "text"
-    ],
-    "docsPath": "components/meter"
-  },
-  {
     "name": "modal-isolation-store",
     "type": "registry:ui",
-    "description": "modal-isolation-store.",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Tracks nested modal owners without releasing isolation too early.",
     "registryDependencies": []
   },
   {
     "name": "native",
     "type": "registry:lib",
+    "kind": "lib",
+    "group": "utilities",
+    "stability": "stable",
     "description": "Optional bridge to the platform UI toolkit, behind the `native` prop.",
     "registryDependencies": []
   },
   {
     "name": "number-input",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Numeric field stepped by buttons or typed by hand.",
     "registryDependencies": [
       "animated-pressable",
@@ -694,6 +871,9 @@
   {
     "name": "otp-input",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "One-time-code field drawn as a row of separate cells.",
     "registryDependencies": [
       "text"
@@ -703,6 +883,9 @@
   {
     "name": "pagination",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Paged navigation over a long result set.",
     "registryDependencies": [
       "animated-pressable",
@@ -717,6 +900,9 @@
   {
     "name": "panel-ui-provider",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Root provider: gesture root, themed background, portal host, toasts.",
     "registryDependencies": [
       "cn",
@@ -727,6 +913,9 @@
   {
     "name": "panelside",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "alpha",
     "description": "Navigation panel that moves the app aside instead of covering it.",
     "registryDependencies": [
       "animated-pressable",
@@ -743,6 +932,9 @@
   {
     "name": "pie-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "One whole, divided between its parts.",
     "registryDependencies": [
       "chart",
@@ -754,6 +946,9 @@
   {
     "name": "plan",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "stable",
     "description": "What an agent intends to do, before it does it.",
     "registryDependencies": [
       "cn",
@@ -767,6 +962,9 @@
   {
     "name": "plot",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "alpha",
     "description": "A chart you assemble out of its marks.",
     "registryDependencies": [
       "chart",
@@ -778,6 +976,9 @@
   {
     "name": "polar-area-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "Several readings on one scale, compared as wedges.",
     "registryDependencies": [
       "chart",
@@ -789,6 +990,9 @@
   {
     "name": "popover",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Panel anchored to the element that opened it.",
     "registryDependencies": [
       "bottom-sheet",
@@ -803,6 +1007,9 @@
   {
     "name": "portal",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Renders content above everything else. Required by every overlay.",
     "registryDependencies": [
       "modal-isolation-store"
@@ -811,6 +1018,9 @@
   {
     "name": "post",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A social card — author, body, media and the counts underneath, with the votes animated.",
     "registryDependencies": [
       "animated-pressable",
@@ -826,6 +1036,9 @@
   {
     "name": "progress",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Determinate and indeterminate progress bar.",
     "registryDependencies": [
       "cn",
@@ -837,6 +1050,9 @@
   {
     "name": "qr-code",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A string a camera can read — framed, titled, or folded away behind a button.",
     "registryDependencies": [
       "cn",
@@ -848,6 +1064,9 @@
   {
     "name": "questionnaire",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "One question at a time, with progress, validation and a way back.",
     "registryDependencies": [
       "button",
@@ -862,6 +1081,9 @@
   {
     "name": "radar-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "Several measures of one thing, drawn as one shape.",
     "registryDependencies": [
       "chart",
@@ -873,6 +1095,9 @@
   {
     "name": "radio-group",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Single-select list of options.",
     "registryDependencies": [
       "cn",
@@ -883,6 +1108,9 @@
   {
     "name": "rating",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A row of stars to read or set a score.",
     "registryDependencies": [
       "cn",
@@ -895,6 +1123,9 @@
   {
     "name": "reasoning",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "stable",
     "description": "The model's working, shown while it happens and folded away after.",
     "registryDependencies": [
       "cn",
@@ -908,6 +1139,9 @@
   {
     "name": "response",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "stable",
     "description": "A model's answer, rendered as markdown while it is still arriving.",
     "registryDependencies": [
       "cn",
@@ -921,6 +1155,9 @@
   {
     "name": "ring-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "Concentric arcs, each measured against its own target.",
     "registryDependencies": [
       "chart",
@@ -932,6 +1169,9 @@
   {
     "name": "scatter-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "Two quantities against each other, to show how they relate.",
     "registryDependencies": [
       "chart",
@@ -943,12 +1183,18 @@
   {
     "name": "scrim",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "The backdrop behind an overlay — a dim, or a blur when expo-blur is installed.",
     "registryDependencies": []
   },
   {
     "name": "scroll-canvas",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Image frame whose contents move as you scroll.",
     "registryDependencies": [
       "cn",
@@ -959,6 +1205,9 @@
   {
     "name": "scroll-fade",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Fades the edges of a scroll container.",
     "registryDependencies": [],
     "docsPath": "components/scroll-fade"
@@ -966,12 +1215,18 @@
   {
     "name": "scroll-progress",
     "type": "registry:ui",
-    "description": "scroll-progress.",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Shares UI-thread scroll offset, viewport, content size and scroller position with descendants.",
     "registryDependencies": []
   },
   {
     "name": "scroll-text",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Text that resolves word by word as you scroll.",
     "registryDependencies": [
       "text",
@@ -982,6 +1237,9 @@
   {
     "name": "section-rail",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Floating section navigator for a long screen.",
     "registryDependencies": [
       "cn",
@@ -994,6 +1252,9 @@
   {
     "name": "select",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Picker shown in a bottom sheet, expanded in place, or floating over the page.",
     "registryDependencies": [
       "bottom-sheet",
@@ -1010,6 +1271,9 @@
   {
     "name": "selection-mode",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "alpha",
     "description": "Pick several things at once, on a screen or in a sheet.",
     "registryDependencies": [
       "animated-pressable",
@@ -1026,6 +1290,9 @@
   {
     "name": "separator",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Horizontal or vertical rule between content, optionally labelled.",
     "registryDependencies": [
       "cn",
@@ -1036,6 +1303,9 @@
   {
     "name": "shimmer",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "stable",
     "description": "Animated highlight sweeping across content.",
     "registryDependencies": [
       "cn",
@@ -1047,6 +1317,9 @@
   {
     "name": "signature",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Sign with a finger, and get the result back out as SVG or PNG.",
     "registryDependencies": [
       "animated-pressable",
@@ -1059,6 +1332,9 @@
   {
     "name": "skeleton",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Shimmer placeholder for loading content.",
     "registryDependencies": [
       "cn"
@@ -1068,6 +1344,9 @@
   {
     "name": "slider",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Pick a value, or a span, by dragging a thumb along a track.",
     "registryDependencies": [
       "haptics",
@@ -1080,6 +1359,9 @@
   {
     "name": "sortable",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A list whose rows can be dragged into a different order.",
     "registryDependencies": [
       "cn",
@@ -1091,6 +1373,9 @@
   {
     "name": "soundwave",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "stable",
     "description": "What a voice looks like while an app listens.",
     "registryDependencies": [
       "cn",
@@ -1101,6 +1386,9 @@
   {
     "name": "sources",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "stable",
     "description": "Where an answer came from, folded under a count.",
     "registryDependencies": [
       "cn",
@@ -1113,6 +1401,9 @@
   {
     "name": "spinner",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Indeterminate loading indicator.",
     "registryDependencies": [],
     "docsPath": "components/spinner"
@@ -1120,6 +1411,9 @@
   {
     "name": "steps",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Stepper for multi-step flows.",
     "registryDependencies": [
       "icons",
@@ -1131,6 +1425,9 @@
   {
     "name": "surface",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Elevated container with a variant ladder.",
     "registryDependencies": [],
     "docsPath": "components/surface"
@@ -1138,6 +1435,9 @@
   {
     "name": "swipe",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A row that slides aside to reveal the things you can do to it.",
     "registryDependencies": [
       "animated-pressable",
@@ -1152,6 +1452,9 @@
   {
     "name": "switch",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Animated on/off toggle.",
     "registryDependencies": [
       "field",
@@ -1164,6 +1467,9 @@
   {
     "name": "table",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Rows and columns that stay lined up, with sortable headers.",
     "registryDependencies": [
       "animated-pressable",
@@ -1178,6 +1484,9 @@
   {
     "name": "tabs",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Segmented navigation with an animated indicator.",
     "registryDependencies": [
       "cn",
@@ -1189,6 +1498,9 @@
   {
     "name": "tag-input",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A field whose value is a list of tokens rather than a string.",
     "registryDependencies": [
       "chip",
@@ -1202,6 +1514,9 @@
   {
     "name": "task",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "stable",
     "description": "One step an agent took, and what it did while it was there.",
     "registryDependencies": [
       "cn",
@@ -1215,6 +1530,9 @@
   {
     "name": "text",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Themed text with a size, weight and muted scale. Most components build on it.",
     "registryDependencies": [
       "use-direction"
@@ -1223,6 +1541,9 @@
   {
     "name": "text-animation",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Five ways a piece of text or a number arrives.",
     "registryDependencies": [
       "cn",
@@ -1233,6 +1554,9 @@
   {
     "name": "textarea",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Text field that runs to several lines, sized in rows.",
     "registryDependencies": [
       "keyboard-avoider",
@@ -1245,12 +1569,18 @@
   {
     "name": "theme",
     "type": "registry:theme",
+    "kind": "theme",
+    "group": "theme",
+    "stability": "stable",
     "description": "Design tokens for every theme, in light and dark.",
     "registryDependencies": []
   },
   {
     "name": "thinking-orb",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "stable",
     "description": "Dotted orb saying which kind of busy an agent is.",
     "registryDependencies": [
       "cn"
@@ -1260,12 +1590,18 @@
   {
     "name": "time",
     "type": "registry:lib",
+    "kind": "lib",
+    "group": "utilities",
+    "stability": "stable",
     "description": "Time-of-day arithmetic, and locale-aware time formatting.",
     "registryDependencies": []
   },
   {
     "name": "time-picker",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A time of day, as a wheel, a clock or a swipeable scale.",
     "registryDependencies": [
       "button",
@@ -1282,6 +1618,9 @@
   {
     "name": "timeline",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Vertical sequence of events.",
     "registryDependencies": [
       "icons",
@@ -1292,6 +1631,9 @@
   {
     "name": "toast",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Transient notification queue with swipe to dismiss.",
     "registryDependencies": [
       "button",
@@ -1305,6 +1647,9 @@
   {
     "name": "toggle-button",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A button that stays down, on its own or in a group.",
     "registryDependencies": [
       "animated-pressable",
@@ -1318,6 +1663,9 @@
   {
     "name": "tooltip",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A small label that names the control under your finger.",
     "registryDependencies": [
       "cn",
@@ -1329,6 +1677,9 @@
   {
     "name": "tour",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A walkthrough that introduces a screen one control at a time.",
     "registryDependencies": [
       "button",
@@ -1343,6 +1694,9 @@
   {
     "name": "tree",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "A hierarchy you can open a level at a time.",
     "registryDependencies": [
       "icons",
@@ -1354,6 +1708,9 @@
   {
     "name": "treemap-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "A total, cut into the parts it is made of, sized by area.",
     "registryDependencies": [
       "chart",
@@ -1365,6 +1722,9 @@
   {
     "name": "typography",
     "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
     "description": "Semantic text presets.",
     "registryDependencies": [
       "cn",
@@ -1375,13 +1735,19 @@
   {
     "name": "use-back-handler",
     "type": "registry:hook",
-    "description": "use-back-handler.",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
+    "description": "Consumes the Android hardware back press while an overlay is active.",
     "registryDependencies": [],
     "docsPath": "hooks/use-back-handler"
   },
   {
     "name": "use-breakpoint",
     "type": "registry:hook",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
     "description": "Responsive state derived from the window size.",
     "registryDependencies": [],
     "docsPath": "hooks/use-breakpoint"
@@ -1389,6 +1755,9 @@
   {
     "name": "use-copy-to-clipboard",
     "type": "registry:hook",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
     "description": "Copy text, with a temporary copied state.",
     "registryDependencies": [],
     "docsPath": "hooks/use-copy-to-clipboard"
@@ -1396,6 +1765,9 @@
   {
     "name": "use-debounced-value",
     "type": "registry:hook",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
     "description": "A copy of a value that settles after changes stop.",
     "registryDependencies": [],
     "docsPath": "hooks/use-debounced-value"
@@ -1403,13 +1775,18 @@
   {
     "name": "use-direction",
     "type": "registry:hook",
-    "description": "use-direction.",
-    "registryDependencies": [],
-    "docsPath": "hooks/use-direction"
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
+    "description": "Reads the nearest LTR or RTL direction, falling back to the device setting.",
+    "registryDependencies": []
   },
   {
     "name": "use-disclosure",
     "type": "registry:hook",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
     "description": "Open and closed state for an overlay.",
     "registryDependencies": [],
     "docsPath": "hooks/use-disclosure"
@@ -1417,6 +1794,9 @@
   {
     "name": "use-keyboard",
     "type": "registry:hook",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
     "description": "Keyboard height and visibility.",
     "registryDependencies": [],
     "docsPath": "hooks/use-keyboard"
@@ -1424,6 +1804,9 @@
   {
     "name": "use-keyboard-avoidance",
     "type": "registry:hook",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
     "description": "Lift an element just clear of the software keyboard.",
     "registryDependencies": [],
     "docsPath": "hooks/use-keyboard-avoidance"
@@ -1431,6 +1814,9 @@
   {
     "name": "use-previous",
     "type": "registry:hook",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
     "description": "The value from the previous render.",
     "registryDependencies": [],
     "docsPath": "hooks/use-previous"
@@ -1438,7 +1824,10 @@
   {
     "name": "use-reveal-progress",
     "type": "registry:hook",
-    "description": "use-reveal-progress.",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
+    "description": "Reports how far an element has travelled through its scroll viewport.",
     "registryDependencies": [
       "scroll-progress"
     ],
@@ -1447,13 +1836,19 @@
   {
     "name": "use-scroll-sections",
     "type": "registry:hook",
-    "description": "use-scroll-sections.",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
+    "description": "Tracks the active measured section and scrolls directly to one.",
     "registryDependencies": [],
     "docsPath": "hooks/use-scroll-sections"
   },
   {
     "name": "use-theme",
     "type": "registry:hook",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
     "description": "Read and change the active theme.",
     "registryDependencies": [],
     "docsPath": "hooks/use-theme"
@@ -1461,6 +1856,9 @@
   {
     "name": "waterfall-chart",
     "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
     "description": "How a run of changes carried one total to another.",
     "registryDependencies": [
       "chart",

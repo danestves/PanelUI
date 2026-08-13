@@ -1,7 +1,7 @@
 {
   "name": "use-reveal-progress",
   "type": "registry:hook",
-  "description": "use-reveal-progress.",
+  "description": "Reports how far an element has travelled through its scroll viewport.",
   "registryDependencies": [
     "scroll-progress"
   ],

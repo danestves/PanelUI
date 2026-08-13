@@ -1,7 +1,7 @@
 {
   "name": "scroll-progress",
   "type": "registry:ui",
-  "description": "scroll-progress.",
+  "description": "Shares UI-thread scroll offset, viewport, content size and scroller position with descendants.",
   "registryDependencies": [],
   "dependencies": [
     "react-native-reanimated"
