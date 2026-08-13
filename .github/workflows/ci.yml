@@ -61,3 +61,25 @@ jobs:
             git diff --stat
             exit 1
           fi
+
+      - name: Template typechecks
+        run: |
+          # The templates ship to users with their own dependency sets, so they
+          # are typechecked against those rather than against the workspace's.
+          for template in templates/expo-app templates/expo-starter; do
+            npm install --prefix "$template" --ignore-scripts --package-lock=false --no-audit --no-fund
+
+            # ...except for the library itself, which the templates ask for by
+            # `latest`. Left alone, this gate would check them against the last
+            # publish: a template using something added since would fail until
+            # the release, and a publish could turn CI red with no commit
+            # behind it. The build from this checkout is what is about to
+            # become `latest`, so that is what they are held to.
+            rm -rf "$template/node_modules/panelui-native"
+            mkdir -p "$template/node_modules/panelui-native"
+            cp -R packages/panelui/lib packages/panelui/package.json packages/panelui/theme.css \
+              "$template/node_modules/panelui-native/"
+
+            npm run typecheck --prefix "$template"
+          done
+
