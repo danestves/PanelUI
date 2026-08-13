@@ -209,6 +209,8 @@ export {
   type FlowControlsProps,
   type FlowMiniMapProps,
   type FlowConnection,
+  type FlowEndpoint,
+  type FlowEndpointReference,
   type FlowViewport,
   type FlowNodePosition,
   type FlowEdgeVariant,

@@ -29,6 +29,14 @@ export interface FlowConnectionAction {
   connection: FlowConnection;
 }
 
+/** Opaque, collision-free name for the native accessibility action map. */
+export function flowConnectionActionName(
+  source: { node: string; handle?: string },
+  target: { node: string; handle?: string }
+): string {
+  return `flow-connect:${JSON.stringify([source, target])}`;
+}
+
 /** Keep pointer and assistive-technology movement inside the same group bounds. */
 export function clampNodePosition(
   rect: FlowRect,
@@ -80,7 +88,10 @@ export function getFlowConnectionActions(
 
       if (targets.length === 0) {
         actions.push({
-          name: `flow-connect:${source.key}->${targetNode.id}`,
+          name: flowConnectionActionName(
+            { node: source.node, handle: source.id },
+            { node: targetNode.id }
+          ),
           label: `Connect ${source.label} to ${targetNode.label}`,
           connection: {
             source: sourceNode,
@@ -93,7 +104,10 @@ export function getFlowConnectionActions(
 
       for (const target of targets) {
         actions.push({
-          name: `flow-connect:${source.key}->${target.key}`,
+          name: flowConnectionActionName(
+            { node: source.node, handle: source.id },
+            { node: target.node, handle: target.id }
+          ),
           label: `Connect ${source.label} to ${targetNode.label}, ${target.label}`,
           connection: {
             source: sourceNode,

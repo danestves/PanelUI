@@ -107,6 +107,13 @@ import {
   type FlowAccessibilityHandle,
   type FlowAccessibilityNode,
 } from './flow-accessibility';
+import {
+  encodeFlowEdgeKey,
+  encodeFlowHandleKey,
+  resolveFlowEndpoint,
+  type FlowEndpoint,
+  type FlowEndpointReference,
+} from './flow-identifiers';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
@@ -1314,7 +1321,7 @@ function FlowHandle({
     unregisterHandle,
     connectNodes,
   } = flow;
-  const key = `${node}.${id}`;
+  const key = encodeFlowHandleKey(node, id);
 
   useEffect(() => {
     registerHandle({
@@ -1481,10 +1488,10 @@ FlowHandle.displayName = 'Flow.Handle';
 /* -------------------------------------------------------------------------- */
 
 export interface FlowEdgeProps {
-  /** Source, as `"nodeId"` or `"nodeId.handleId"`. */
-  from: string;
-  /** Target, same shape. */
-  to: string;
+  /** Source node or handle. Strings retain the `"nodeId.handleId"` shorthand. */
+  from: FlowEndpointReference;
+  /** Target node or handle, in the same shape. */
+  to: FlowEndpointReference;
   /** How the edge is routed. */
   variant?: FlowEdgeVariant;
   /**
@@ -1530,7 +1537,7 @@ export interface FlowEdgeProps {
  */
 function FlowEdge(props: FlowEdgeProps) {
   const { registerEdge, unregisterEdge } = useFlow('Flow.Edge');
-  const key = `${props.from}->${props.to}`;
+  const key = encodeFlowEdgeKey(props.from, props.to);
 
   // Re-registered whenever any prop changes, so `animated` toggling or a
   // variant switch reaches the layer that draws it.
@@ -1571,8 +1578,9 @@ function FlowEdgePath({
   tint: string;
   origin: { x: number; y: number };
 }) {
-  const source = resolveEnd(from, fromSide, handles);
-  const target = resolveEnd(to, toSide, handles);
+  const nodes = Object.keys(boxes);
+  const source = resolveEnd(from, fromSide, nodes, handles);
+  const target = resolveEnd(to, toSide, nodes, handles);
 
   const fromRect = boxes[source.node];
   const toRect = boxes[target.node];
@@ -1631,22 +1639,24 @@ function FlowEdgePath({
 }
 
 /**
- * Splits `"node"` or `"node.handle"` into the node and, when a handle was
- * named, the face and offset that handle registered.
+ * Resolves a node or handle without parsing either identifier. Legacy
+ * `"node.handle"` references are matched against the structured registry.
  */
 function resolveEnd(
-  reference: string,
+  reference: FlowEndpointReference,
   explicit: FlowSide | undefined,
+  nodes: string[],
   handles: HandleEntry[]
 ): { node: string; side: FlowSide | undefined; offset: number } {
-  const dot = reference.indexOf('.');
-  if (dot === -1) {
-    return { node: reference, side: explicit, offset: 0.5 };
-  }
-  const node = reference.slice(0, dot);
-  const entry = handles.find((handle) => handle.key === reference);
+  const endpoint = resolveFlowEndpoint(reference, nodes, handles);
+  const entry =
+    endpoint.handle === undefined
+      ? undefined
+      : handles.find(
+          (handle) => handle.node === endpoint.node && handle.id === endpoint.handle
+        );
   return {
-    node,
+    node: endpoint.node,
     side: explicit ?? entry?.side,
     offset: entry?.offset ?? 0.5,
   };
@@ -2199,4 +2209,4 @@ export const Flow = Object.assign(FlowRoot, {
   MiniMap: FlowMiniMap,
 });
 
-export type { FlowSide, FlowRect, FlowPoint };
+export type { FlowEndpoint, FlowEndpointReference, FlowSide, FlowRect, FlowPoint };
