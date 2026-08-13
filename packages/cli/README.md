@@ -60,6 +60,8 @@ npx panelui-cli@latest list
 | `--cwd <dir>` | Run against another directory |
 | `--registry <url>` | Use a different registry |
 
+A value-taking flag without its value prints its usage and exits with status 1. No command runs.
+
 ## `panelui.json`
 
 ```json

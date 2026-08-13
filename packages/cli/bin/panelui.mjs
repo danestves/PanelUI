@@ -9,7 +9,7 @@ import process from 'node:process';
 import { add, list } from '../src/add.mjs';
 import { init } from '../src/init.mjs';
 import { mcp, mcpInit } from '../src/mcp.mjs';
-import { CliError, bold, dim, error, info } from '../src/ui.mjs';
+import { CliError, bold, dim, error, info, optionValue } from '../src/ui.mjs';
 
 const HELP = `
 ${bold('panelui-cli')} — components for Expo, copied into your project.
@@ -86,20 +86,25 @@ function parseArgs(argv) {
         options.version = true;
         break;
       case '--cwd':
-        options.cwd = argv[++i];
+        options.cwd = optionValue(argv, i, arg, '<dir>');
+        i += 1;
         break;
       case '--registry':
         // A trailing slash would produce `…/r//item.json`.
-        options.registry = argv[++i]?.replace(/\/+$/, '');
+        options.registry = optionValue(argv, i, arg, '<url>').replace(/\/+$/, '');
+        i += 1;
         break;
       case '--template':
-        options.template = argv[++i];
+        options.template = optionValue(argv, i, arg, '<name>');
+        i += 1;
         break;
       case '--name':
-        options.name = argv[++i];
+        options.name = optionValue(argv, i, arg, '<name>');
+        i += 1;
         break;
       case '--theme':
-        options.theme = argv[++i];
+        options.theme = optionValue(argv, i, arg, '<name>');
+        i += 1;
         break;
       default:
         if (arg.startsWith('-')) {

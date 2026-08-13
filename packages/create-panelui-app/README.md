@@ -28,9 +28,12 @@ npx create-panelui-app@latest my-app --template starter --theme moon --yes
 | --- | --- | --- |
 | `--template <name>` | `starter`, `minimal` | `starter` gives you tabs, a themed dashboard, a component gallery and a theme picker; `minimal` is one screen, everything wired, nothing to delete. |
 | `--theme <name>` | `panel`, `moon`, `grass` | Which token set the app is themed with. Change it later in `global.css`. |
+| `--name <name>` | Project folder name | The same value accepted as the bare first argument. |
 | `--yes`, `-y` | | Accept every prompt and use the defaults. |
 | `--help`, `-h` | | Print the usage. |
 | `--version`, `-v` | | Print the version. |
+
+A value-taking option without its value prints its usage and exits with status 1. No project is created.
 
 ## What it is
 
