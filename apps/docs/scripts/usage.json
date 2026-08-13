@@ -8131,7 +8131,7 @@
       },
       {
         "title": "An item that cannot be picked",
-        "description": "`disabled` keeps an item out of the selection entirely — it will not start a mode, and it cannot be picked once one is running. For the things in a list that are not among the things being chosen between: a section header, an advert, a \"load more\".",
+        "description": "`disabled` keeps an item out of the selection entirely — it will not start a mode, and it cannot be picked once one is running. It does not disable the row's ordinary `onPress`, so a section header, advert, or \"load more\" action stays usable even while other rows are being selected.",
         "code": "<SelectionMode.Item value={row.id} disabled={row.type === 'header'}>\n  {/* … */}\n</SelectionMode.Item>"
       },
       {

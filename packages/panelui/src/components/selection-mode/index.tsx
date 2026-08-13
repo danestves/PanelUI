@@ -88,6 +88,15 @@ import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
 import { BottomSheet } from '../bottom-sheet';
+import {
+  canEnterSelection,
+  handleSelectionItemPress,
+  selectAllValues,
+  selectionOwnsPress,
+  selectionTarget,
+  selectValue,
+  toggleValue,
+} from './selection-mode-contracts';
 
 /** How long the circle takes to come and go, in milliseconds. */
 const REVEAL_DURATION = 180;
@@ -293,11 +302,12 @@ function SelectionModeRoot({
       // Entering with the row that was pressed already picked. Entering with
       // nothing picked leaves the reader in a list that has changed under them
       // with nothing to show for it.
-      if (value !== undefined && !selectedRef.current.includes(value)) {
-        setSelected([...selectedRef.current, value]);
+      if (value !== undefined) {
+        const next = selectValue(selectedRef.current, value, max);
+        if (next !== selectedRef.current) setSelected(next);
       }
     },
-    [haptics, setActive, setSelected]
+    [haptics, max, setActive, setSelected]
   );
 
   /*
@@ -321,13 +331,10 @@ function SelectionModeRoot({
   const toggle = useCallback(
     (value: string) => {
       const current = selectedRef.current;
-      if (current.includes(value)) {
-        setSelected(current.filter((entry) => entry !== value));
-      } else {
-        if (max !== undefined && current.length >= max) return;
-        if (haptics) selectionTick();
-        setSelected([...current, value]);
-      }
+      const next = toggleValue(current, value, max);
+      if (next === current) return;
+      if (!current.includes(value) && haptics) selectionTick();
+      setSelected(next);
     },
     [max, haptics, setSelected]
   );
@@ -336,15 +343,15 @@ function SelectionModeRoot({
     if (!values) return;
     // At the limit rather than refusing: somebody who asked for all of them and
     // can only have twenty wants the twenty, not an error.
-    setSelected(max === undefined ? [...values] : values.slice(0, max));
+    setSelected(selectAllValues(values, max));
   }, [values, max, setSelected]);
 
   const clear = useCallback(() => setSelected([]), [setSelected]);
 
   const total = values?.length ?? 0;
   const count = selected.length;
-  const allSelected =
-    total > 0 && count >= (max === undefined ? total : Math.min(total, max));
+  const target = selectionTarget(total, max);
+  const allSelected = target > 0 && count >= target;
 
   // An open mode owns the back button: back should leave the mode, not the
   // screen the list is on.
@@ -459,10 +466,11 @@ export interface SelectionModeItemProps extends Omit<ViewProps, 'children'> {
   className?: string;
   /** This row's id. What ends up in `selected`. */
   value: string;
-  /** What the row does when it is pressed and the mode is off. */
+  /** What the row does whenever selection does not own its press. */
   onPress?: () => void;
   /**
-   * Stop this row entering selection mode, and being picked once in it. For a
+   * Stop this row entering selection mode, and being picked once in it. Its
+   * ordinary `onPress` still runs, including while selection is active. For a
    * header row, an advert, a "load more" — anything in the list that is not one
    * of the things being chosen between.
    */
@@ -487,8 +495,9 @@ export interface SelectionModeItemProps extends Omit<ViewProps, 'children'> {
  *
  * The press behaviour is the whole component: off mode, a press is the row's
  * own and a long press turns the mode on with this row picked; in it, a press
- * picks and unpicks and the row's own press is unreachable. Two meanings for
- * one gesture is exactly why the mode has to be visible from the header.
+ * picks and unpicks. A row excluded from selection keeps its ordinary press in
+ * both states. Two meanings for one gesture is exactly why the mode has to be
+ * visible from the header.
  */
 function SelectionModeItem({
   className,
@@ -503,6 +512,7 @@ function SelectionModeItem({
   const { active, enter, toggle, isSelected, sheet } = useSelectionMode();
   const selected = isSelected(value);
   const showing = alwaysShowIndicator || active;
+  const selecting = selectionOwnsPress(active, disabled);
   const reducedMotion = useReducedMotion();
 
   const context = useMemo(() => ({ value }), [value]);
@@ -537,23 +547,20 @@ function SelectionModeItem({
   return (
     <SelectionModeItemContext.Provider value={context}>
       <Pressable
-        accessibilityRole={showing ? 'checkbox' : 'button'}
-        accessibilityState={showing ? { checked: selected, disabled } : { disabled }}
-        // The row is unreachable in selection mode, so a screen reader is told
-        // what pressing it does now rather than what it used to do.
+        accessibilityRole={selecting ? 'checkbox' : 'button'}
+        accessibilityState={selecting ? { checked: selected } : undefined}
+        // Eligible rows become checkboxes only while selection owns their
+        // press. Excluded rows remain ordinary buttons because their action is
+        // still available.
         accessibilityHint={
-          showing ? undefined : disabled ? undefined : 'Long press to select'
+          active || disabled ? undefined : 'Long press to select'
         }
-        disabled={disabled && showing}
         onPress={() => {
-          if (disabled) return;
-          if (showing) toggle(value);
-          else onPress?.();
+          handleSelectionItemPress(active, disabled, () => toggle(value), onPress);
         }}
-        onLongPress={sheet ? undefined : () => {
-          if (disabled || showing) return;
-          enter(value);
-        }}
+        onLongPress={
+          canEnterSelection(active, disabled, sheet) ? () => enter(value) : undefined
+        }
         className={cn(
           indicator === 'leading' ? 'flex-row items-center gap-3 px-4 py-2.5' : '',
           className

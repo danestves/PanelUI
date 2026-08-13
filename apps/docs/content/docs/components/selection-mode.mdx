@@ -159,7 +159,7 @@ Pass `values` and the header can pick everything at once. `max` caps it — a ro
 
 ### An item that cannot be picked
 
-`disabled` keeps an item out of the selection entirely — it will not start a mode, and it cannot be picked once one is running. For the things in a list that are not among the things being chosen between: a section header, an advert, a "load more".
+`disabled` keeps an item out of the selection entirely — it will not start a mode, and it cannot be picked once one is running. It does not disable the row's ordinary `onPress`, so a section header, advert, or "load more" action stays usable even while other rows are being selected.
 
 ```tsx
 <SelectionMode.Item value={row.id} disabled={row.type === 'header'}>
@@ -263,8 +263,8 @@ On a screen, `placement="floating"` lifts the bar off the edge into a rounded ca
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `value` | `string` | — | This row's id. What ends up in `selected`. |
-| `onPress` | `() => void` | — | What the row does when it is pressed and the mode is off. |
-| `disabled` | `boolean` | `false` | Stop this row entering selection mode, and being picked once in it. For a header row, an advert, a "load more" — anything in the list that is not one of the things being chosen between. |
+| `onPress` | `() => void` | — | What the row does whenever selection does not own its press. |
+| `disabled` | `boolean` | `false` | Stop this row entering selection mode, and being picked once in it. Its ordinary `onPress` still runs, including while selection is active. For a header row, an advert, a "load more" — anything in the list that is not one of the things being chosen between. |
 | `alwaysShowIndicator` | `boolean` | `false` | Draw the circle without waiting for the mode. |
 | `indicator` | `'leading' \| 'ring' \| 'none'` | `'leading'` | How being picked is drawn. `leading` puts the circle in front of the item, which is what a row wants. `ring` draws a ring around whatever you gave it instead — for a swatch, a thumbnail or a photo, where a circle beside it would be a second thing to look at and the item itself can carry the state. `none` draws nothing and leaves it to you; read `useSelectionMode().isSelected`. |
 
