@@ -187,7 +187,12 @@ export default function ComponentsScreen() {
               <Item.Description>Push alerts for anything urgent</Item.Description>
             </Item.Content>
             <Item.Actions>
-              <Switch value={notify} onValueChange={setNotify} />
+              <Switch
+                value={notify}
+                onValueChange={setNotify}
+                accessibilityLabel="Notifications"
+                accessibilityHint="Push alerts for anything urgent"
+              />
             </Item.Actions>
           </Item>
         </Card>

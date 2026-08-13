@@ -1,5 +1,5 @@
 import { forwardRef, useEffect } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, type PressableProps } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -10,6 +10,7 @@ import { tv, type VariantProps } from 'tailwind-variants';
 import { useDirectionSign } from '../../hooks/use-direction';
 import { getNativeUI } from '../../native';
 import { selectionTick } from '../../utils/haptics';
+import { useFieldLabelledBy } from '../field';
 
 const SPRING = { damping: 18, stiffness: 250, mass: 0.5 } as const;
 
@@ -48,7 +49,9 @@ const SWITCH_HIT_SLOP: Record<'sm' | 'md', { top: number; bottom: number; left: 
   md: { top: 10, bottom: 10, left: 0, right: 0 },
 };
 
-export interface SwitchProps extends VariantProps<typeof switchVariants> {
+export interface SwitchProps
+  extends VariantProps<typeof switchVariants>,
+    Pick<PressableProps, 'accessibilityLabel' | 'accessibilityHint' | 'accessibilityLabelledBy'> {
   className?: string;
   value: boolean;
   onValueChange?: (value: boolean) => void;
@@ -61,7 +64,7 @@ export interface SwitchProps extends VariantProps<typeof switchVariants> {
    * `className` and `size` are ignored.
    */
   native?: boolean;
-  /** Text label drawn beside the control. Native mode only. */
+  /** Names the control to assistive technology; native mode also draws it. */
   label?: string;
   /**
    * Tick the haptic engine each time the switch is flipped — a toggle you feel
@@ -78,7 +81,19 @@ export interface SwitchProps extends VariantProps<typeof switchVariants> {
  */
 export const Switch = forwardRef<View, SwitchProps>(
   (
-    { className, value, onValueChange, disabled, size = 'md', native, label, haptics },
+    {
+      className,
+      value,
+      onValueChange,
+      disabled,
+      size = 'md',
+      native,
+      label,
+      haptics,
+      accessibilityLabel,
+      accessibilityHint,
+      accessibilityLabelledBy,
+    },
     ref
   ) => {
     const progress = useSharedValue(value ? 1 : 0);
@@ -88,6 +103,9 @@ export const Switch = forwardRef<View, SwitchProps>(
     const sign = useDirectionSign();
     const nativeUI = native ? getNativeUI() : null;
     const slots = switchVariants({ size, disabled: !!disabled });
+    // React Native's labelled-by relationship is Android-only. `label` or an
+    // explicit accessibilityLabel remains the portable name on iOS.
+    const fieldLabelledBy = useFieldLabelledBy();
 
     useEffect(() => {
       progress.value = withSpring(value ? 1 : 0, SPRING);
@@ -114,7 +132,7 @@ export const Switch = forwardRef<View, SwitchProps>(
           <NativeSwitch
             value={value}
             onValueChange={(next: boolean) => onValueChange?.(next)}
-            label={label}
+            label={label ?? accessibilityLabel}
             disabled={disabled}
           />
         </Host>
@@ -126,6 +144,11 @@ export const Switch = forwardRef<View, SwitchProps>(
         ref={ref}
         accessibilityRole="switch"
         accessibilityState={{ checked: value, disabled: !!disabled }}
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityHint={accessibilityHint}
+        accessibilityLabelledBy={
+          accessibilityLabelledBy ?? (accessibilityLabel || label ? undefined : fieldLabelledBy)
+        }
         disabled={disabled}
         onPress={() => {
           if (haptics) selectionTick();

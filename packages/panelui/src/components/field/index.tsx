@@ -18,7 +18,12 @@
  *     <Field.Title>Marketing emails</Field.Title>
  *     <Field.Description>Product updates, at most weekly.</Field.Description>
  *   </Field.Content>
- *   <Switch value={subscribed} onValueChange={setSubscribed} />
+ *   <Switch
+ *     value={subscribed}
+ *     onValueChange={setSubscribed}
+ *     accessibilityLabel="Marketing emails"
+ *     accessibilityHint="Product updates, at most weekly."
+ *   />
  * </Field>
  * ```
  */
@@ -26,6 +31,7 @@ import {
   createContext,
   forwardRef,
   useContext,
+  useId,
   useMemo,
   type ReactNode,
 } from 'react';
@@ -73,13 +79,21 @@ interface FieldState {
   invalid: boolean;
   disabled: boolean;
   required: boolean;
+  relationshipIds: string[];
 }
 
 const FieldContext = createContext<FieldState>({
   invalid: false,
   disabled: false,
   required: false,
+  relationshipIds: [],
 });
+
+/** Android can announce the label, help and error text rendered beside a control. */
+export function useFieldLabelledBy(): string[] | undefined {
+  const { relationshipIds } = useContext(FieldContext);
+  return relationshipIds.length > 0 ? relationshipIds : undefined;
+}
 
 export interface FieldProps extends ViewProps {
   className?: string;
@@ -107,9 +121,19 @@ const FieldRoot = forwardRef<View, FieldProps>(
     ref
   ) => {
     const { root } = fieldVariants({ orientation, disabled });
+    const id = useId().replace(/:/g, '');
+    const labelId = `panelui-field-${id}-label`;
+    const titleId = `panelui-field-${id}-title`;
+    const descriptionId = `panelui-field-${id}-description`;
+    const errorId = `panelui-field-${id}-error`;
     const state = useMemo(
-      () => ({ invalid, disabled, required }),
-      [invalid, disabled, required]
+      () => ({
+        invalid,
+        disabled,
+        required,
+        relationshipIds: [labelId, titleId, descriptionId, errorId],
+      }),
+      [invalid, disabled, required, labelId, titleId, descriptionId, errorId]
     );
 
     return (
@@ -145,7 +169,7 @@ FieldContent.displayName = 'Field.Content';
 export interface FieldLabelProps extends LabelProps {}
 
 const FieldLabel = forwardRef<View, FieldLabelProps>(
-  ({ isRequired, isInvalid, isDisabled, ...props }, ref) => {
+  ({ isRequired, isInvalid, isDisabled, nativeID, ...props }, ref) => {
     const ctx = useContext(FieldContext);
     return (
       <Label
@@ -153,6 +177,7 @@ const FieldLabel = forwardRef<View, FieldLabelProps>(
         isRequired={isRequired ?? ctx.required}
         isInvalid={isInvalid ?? ctx.invalid}
         isDisabled={isDisabled ?? ctx.disabled}
+        nativeID={nativeID ?? ctx.relationshipIds[0]}
         {...props}
       />
     );
@@ -165,10 +190,17 @@ export interface FieldDescriptionProps extends TextProps {
 }
 
 const FieldDescription = forwardRef<RNText, FieldDescriptionProps>(
-  ({ className, ...props }, ref) => {
-    const { disabled } = useContext(FieldContext);
+  ({ className, nativeID, ...props }, ref) => {
+    const { disabled, relationshipIds } = useContext(FieldContext);
     const { description } = fieldVariants({ disabled });
-    return <Text ref={ref} className={description({ className })} {...props} />;
+    return (
+      <Text
+        ref={ref}
+        nativeID={nativeID ?? relationshipIds[2]}
+        className={description({ className })}
+        {...props}
+      />
+    );
   }
 );
 FieldDescription.displayName = 'Field.Description';
@@ -186,7 +218,8 @@ export interface FieldErrorProps extends Omit<ViewProps, 'children'> {
 }
 
 const FieldError = forwardRef<View, FieldErrorProps>(
-  ({ className, errors, children, ...props }, ref) => {
+  ({ className, errors, children, nativeID, ...props }, ref) => {
+    const { relationshipIds } = useContext(FieldContext);
     const messages = useMemo(() => {
       if (!errors) return null;
       const seen = new Set<string>();
@@ -213,6 +246,7 @@ const FieldError = forwardRef<View, FieldErrorProps>(
         // accessibilityRole list has no alert, the ARIA-aligned one does.
         role="alert"
         accessibilityLiveRegion="polite"
+        nativeID={nativeID ?? relationshipIds[3]}
         className={error({ className })}
         {...props}
       >
@@ -307,9 +341,17 @@ export interface FieldTitleProps extends TextProps {
 }
 
 const FieldTitle = forwardRef<RNText, FieldTitleProps>(
-  ({ className, ...props }, ref) => {
+  ({ className, nativeID, ...props }, ref) => {
     const { title } = fieldVariants();
-    return <Text ref={ref} className={title({ className })} {...props} />;
+    const { relationshipIds } = useContext(FieldContext);
+    return (
+      <Text
+        ref={ref}
+        nativeID={nativeID ?? relationshipIds[1]}
+        className={title({ className })}
+        {...props}
+      />
+    );
   }
 );
 FieldTitle.displayName = 'Field.Title';

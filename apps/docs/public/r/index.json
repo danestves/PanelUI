@@ -1056,6 +1056,7 @@
     "type": "registry:ui",
     "description": "Animated on/off toggle.",
     "registryDependencies": [
+      "field",
       "haptics",
       "native",
       "use-direction"
