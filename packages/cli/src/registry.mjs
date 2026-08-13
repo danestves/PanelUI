@@ -3,8 +3,10 @@
  */
 import { fail, nearest } from './ui.mjs';
 
-/** Per-run cache — a closure re-visits shared items like `text` constantly. */
+/** Share completed and in-flight item requests within this CLI process. */
 const cache = new Map();
+/** Overlap registry round trips without opening an unbounded connection burst. */
+const FETCH_CONCURRENCY = 6;
 
 /** Loopback is the one place cleartext is not a downgrade — nothing is on the wire. */
 function isLoopback(hostname) {
@@ -68,25 +70,83 @@ export async function fetchIndex(registry) {
 }
 
 export async function fetchItem(registry, name) {
-  if (cache.has(name)) return cache.get(name);
+  const key = `${registry}\0${name}`;
+  if (cache.has(key)) return cache.get(key);
 
-  const item = await fetchJson(`${registry}/${name}.json`);
-  if (!item) {
-    const index = await fetchIndex(registry);
-    const suggestion = nearest(
-      name,
-      index.map((entry) => entry.name)
-    );
-    fail(
-      `No component called "${name}".`,
-      suggestion
-        ? `Did you mean "${suggestion}"?`
-        : 'Run `npx panelui-cli@latest list` to see what is available.'
-    );
+  const request = (async () => {
+    const item = await fetchJson(`${registry}/${name}.json`);
+    if (!item) {
+      const index = await fetchIndex(registry);
+      const suggestion = nearest(
+        name,
+        index.map((entry) => entry.name)
+      );
+      fail(
+        `No component called "${name}".`,
+        suggestion
+          ? `Did you mean "${suggestion}"?`
+          : 'Run `npx panelui-cli@latest list` to see what is available.'
+      );
+    }
+
+    return item;
+  })();
+
+  cache.set(key, request);
+
+  try {
+    return await request;
+  } catch (error) {
+    // A transient failure was never cached before. Keep that retry-on-next-call
+    // behavior while still sharing this attempt with concurrent callers.
+    if (cache.get(key) === request) cache.delete(key);
+    throw error;
   }
+}
 
-  cache.set(name, item);
-  return item;
+async function fetchGraph(registry, names) {
+  const items = new Map();
+  const errors = new Map();
+  const queued = new Set();
+  const queue = [];
+  let cursor = 0;
+  let active = 0;
+
+  const enqueue = (name) => {
+    if (queued.has(name)) return;
+    queued.add(name);
+    queue.push(name);
+  };
+  for (const name of names) enqueue(name);
+
+  await new Promise((done) => {
+    const pump = () => {
+      while (active < FETCH_CONCURRENCY && cursor < queue.length) {
+        const name = queue[cursor++];
+        active++;
+
+        fetchItem(registry, name)
+          .then(
+            (item) => {
+              items.set(name, item);
+              for (const dependency of item.registryDependencies ?? []) enqueue(dependency);
+            },
+            (error) => errors.set(name, error)
+          )
+          .finally(() => {
+            active--;
+            if (active === 0 && cursor >= queue.length) done();
+            else pump();
+          });
+      }
+
+      if (active === 0 && cursor >= queue.length) done();
+    };
+
+    pump();
+  });
+
+  return { items, errors };
 }
 
 /**
@@ -97,21 +157,25 @@ export async function fetchItem(registry, name) {
  * the visited set makes that irrelevant either way.
  */
 export async function resolve(registry, names) {
+  const graph = await fetchGraph(registry, names);
   const resolved = new Map();
 
-  async function visit(name) {
+  function visit(name) {
     if (resolved.has(name)) return;
 
-    const item = await fetchItem(registry, name);
+    if (graph.errors.has(name)) throw graph.errors.get(name);
+    const item = graph.items.get(name);
     // Marked before recursing so a cycle could not loop forever.
     resolved.set(name, item);
 
     for (const dependency of item.registryDependencies ?? []) {
-      await visit(dependency);
+      visit(dependency);
     }
   }
 
-  for (const name of names) await visit(name);
+  // Fetch completion order is deliberately ignored. A second DFS preserves the
+  // requested and dependency order callers already see in dry-run output.
+  for (const name of names) visit(name);
 
   return [...resolved.values()];
 }
