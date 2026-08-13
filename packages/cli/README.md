@@ -35,7 +35,8 @@ npx panelui-cli@latest init
 ### `add <name...>`
 
 Copies components in, along with everything they depend on. A component you already have is
-left alone — those files are yours once copied.
+left alone — those files are yours once copied. Re-running the command still installs any missing
+packages required by those files.
 
 ```bash
 npx panelui-cli@latest add item message

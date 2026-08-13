@@ -66,26 +66,24 @@ export async function add(names, options) {
   }
 
   const pending = writes.filter((w) => options.overwrite || !w.exists);
-  if (!pending.length) {
-    success('Everything is already installed.');
-    return;
-  }
-
   if (options.dryRun) {
     info(dim('Dry run — nothing written.'));
-    return;
-  }
+  } else if (pending.length) {
+    if (
+      !(await confirm(`Write ${pending.length} file${pending.length === 1 ? '' : 's'}?`, options))
+    ) {
+      info(dim('Cancelled.'));
+      return;
+    }
 
-  if (!(await confirm(`Write ${pending.length} file${pending.length === 1 ? '' : 's'}?`, options))) {
-    info(dim('Cancelled.'));
-    return;
+    for (const write of pending) {
+      fs.mkdirSync(path.dirname(write.destination), { recursive: true });
+      fs.writeFileSync(write.destination, write.content);
+    }
+    success(`Wrote ${pending.length} file${pending.length === 1 ? '' : 's'}`);
+  } else {
+    success('Component files are already installed.');
   }
-
-  for (const write of pending) {
-    fs.mkdirSync(path.dirname(write.destination), { recursive: true });
-    fs.writeFileSync(write.destination, write.content);
-  }
-  success(`Wrote ${pending.length} file${pending.length === 1 ? '' : 's'}`);
 
   const { dependencies, optionalDependencies } = collectDependencies(items);
   const missing = dependencies.filter((dep) => !(dep in project.deps));
