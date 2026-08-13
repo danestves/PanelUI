@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -48,13 +48,37 @@ const collectTargets = (value) => {
   return Object.values(value).flatMap(collectTargets);
 };
 
+const publicPatternNames = {
+  "./components/*": readdirSync(resolve(packageRoot, "src/components"), {
+    withFileTypes: true,
+  })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name),
+  "./hooks/*": readdirSync(resolve(packageRoot, "src/hooks"))
+    .filter((name) => name !== "index.ts" && name.endsWith(".ts"))
+    .map((name) => name.slice(0, -3)),
+};
+
+const expandExportTargets = (key, value) => {
+  const targets = collectTargets(value);
+  if (!key.includes("*")) return targets;
+
+  const names = publicPatternNames[key];
+  if (!names) throw new Error(`No package verification inventory for ${key}.`);
+  return names.flatMap((name) =>
+    targets.map((target) => target.replaceAll("*", name)),
+  );
+};
+
 const requiredTargets = new Set(
   [
     packageJson.main,
     packageJson.module,
     packageJson.types,
     packageJson["react-native"],
-    ...collectTargets(packageJson.exports),
+    ...Object.entries(packageJson.exports).flatMap(([key, value]) =>
+      expandExportTargets(key, value),
+    ),
   ]
     .filter(Boolean)
     .map((path) => path.replace(/^\.\//, "")),
