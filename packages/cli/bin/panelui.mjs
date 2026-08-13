@@ -51,7 +51,7 @@ ${bold('Examples')}
 function parseArgs(argv) {
   const options = {
     cwd: process.cwd(),
-    yes: false,
+    assumeYes: false,
     overwrite: false,
     dryRun: false,
     registry: undefined,
@@ -69,7 +69,7 @@ function parseArgs(argv) {
     switch (arg) {
       case '--yes':
       case '-y':
-        options.yes = true;
+        options.assumeYes = true;
         break;
       case '--overwrite':
         options.overwrite = true;

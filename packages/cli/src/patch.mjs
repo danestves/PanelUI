@@ -203,6 +203,27 @@ export function detectPackageManager(cwd) {
 }
 
 /**
+ * A package name, optionally scoped, optionally pinned to a version.
+ *
+ * Names arrive from registry JSON, and on Windows the installer has to be
+ * reached through a shell because `npm` and friends are `.cmd` shims there.
+ * Anything a shell would read as syntax — a space, `&`, `|`, a quote — is
+ * therefore not a package name this will pass on, whatever the registry says.
+ */
+const PACKAGE_SPEC = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*(?:@[a-zA-Z0-9][a-zA-Z0-9.^~*+-]*)?$/;
+
+/** Refuse to hand the installer anything that is not plainly a package. */
+function assertInstallable(packages) {
+  const rejected = packages.filter((name) => typeof name !== 'string' || !PACKAGE_SPEC.test(name));
+  if (rejected.length) {
+    fail(
+      `Refusing to install ${rejected.map((name) => JSON.stringify(name)).join(', ')}.`,
+      'A registry item asked for something that is not a package name. Check the --registry you passed.'
+    );
+  }
+}
+
+/**
  * Installs through `expo install` where possible — it picks versions that
  * match the project's SDK, which plain `npm install` does not.
  */
@@ -221,18 +242,20 @@ export async function installDependencies(
    * goes through the package manager rather than `expo install`, which resolves
    * names against an SDK and has nothing to resolve when given none.
    */
-  const command = installAll
-    ? `${manager} install`
+  const argv = installAll
+    ? [manager, 'install']
     : isExpo
-      ? `npx expo install ${packages.join(' ')}`
-      : `${manager} ${manager === 'npm' ? 'install' : 'add'} ${packages.join(' ')}`;
+      ? ['npx', 'expo', 'install', ...packages]
+      : [manager, manager === 'npm' ? 'install' : 'add', ...packages];
+
+  if (!installAll) assertInstallable(packages);
 
   step(
     installAll
       ? 'Install dependencies'
       : `Install ${packages.length} package${packages.length === 1 ? '' : 's'}`
   );
-  console.log(dim(`  ${command}\n`));
+  console.log(dim(`  ${argv.join(' ')}\n`));
 
   if (dryRun) return;
   if (!(await confirm('Run it?', { assumeYes }))) {
@@ -240,8 +263,14 @@ export async function installDependencies(
     return;
   }
 
-  const [bin, ...args] = command.split(' ');
-  const result = spawnSync(bin, args, { cwd, stdio: 'inherit', shell: process.platform === 'win32' });
+  // Argument vector, never a command string: the package names came from the
+  // registry, and a string would let one of them carry its own arguments.
+  const [bin, ...args] = argv;
+  const result = spawnSync(bin, args, {
+    cwd,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
 
   if (result.status !== 0) {
     fail('Dependency installation failed.', 'Run the command above yourself.');

@@ -38,7 +38,12 @@ ${bold('Examples')}
 `;
 
 function parseArgs(argv) {
-  const options = { cwd: process.cwd(), yes: false, template: undefined, theme: undefined };
+  const options = {
+    cwd: process.cwd(),
+    assumeYes: false,
+    template: undefined,
+    theme: undefined,
+  };
   let help = false;
   let version = false;
 
@@ -47,7 +52,7 @@ function parseArgs(argv) {
     switch (arg) {
       case '--yes':
       case '-y':
-        options.yes = true;
+        options.assumeYes = true;
         break;
       case '--help':
       case '-h':
