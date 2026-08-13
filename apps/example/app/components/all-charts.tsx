@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, View } from 'react-native';
+import { useCallback } from 'react';
+import { FlatList, Pressable, View, type ListRenderItemInfo } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronRightIcon, Text, useThemeMode } from 'panelui-native';
@@ -75,10 +76,18 @@ function ChartCard({
   );
 }
 
+const chartKey = (entry: ComponentEntry) => entry.slug;
+
 export default function AllChartsScreen() {
   const insets = useSafeAreaInsets();
   const { mode } = useThemeMode();
   const tint = mode === 'dark' ? '#818181' : '#686868';
+  const renderChart = useCallback(
+    ({ item, index }: ListRenderItemInfo<ComponentEntry>) => (
+      <ChartCard entry={item} tint={tint} first={index === 0} />
+    ),
+    [tint]
+  );
 
   return (
     <View className="flex-1">
@@ -89,17 +98,23 @@ export default function AllChartsScreen() {
        * between entries divides it evenly between the two, which is exactly the
        * reading that was wrong.
        */}
-      <ScrollView
+      <FlatList
+        className="flex-1"
+        data={CHART_SHOWCASE}
+        renderItem={renderChart}
+        keyExtractor={chartKey}
+        initialNumToRender={2}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        removeClippedSubviews
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         showsVerticalScrollIndicator={false}
-      >
-        <Text size="sm" muted className="px-5 pb-6">
-          {`${CHART_SHOWCASE.length} charts, one example each. Tap a name for its versions and props.`}
-        </Text>
-        {CHART_SHOWCASE.map((entry, index) => (
-          <ChartCard key={entry.slug} entry={entry} tint={tint} first={index === 0} />
-        ))}
-      </ScrollView>
+        ListHeaderComponent={
+          <Text size="sm" muted className="px-5 pb-6">
+            {`${CHART_SHOWCASE.length} charts, one example each. Tap a name for its versions and props.`}
+          </Text>
+        }
+      />
     </View>
   );
 }
