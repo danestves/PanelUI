@@ -1,6 +1,7 @@
 ---
 title: Drawer
 description: A panel that comes in from an edge of the screen and covers the app until dismissed.
+status: updated
 ---
 
 A panel that comes in from an edge of the screen and covers the app until it is dismissed.
@@ -317,7 +318,7 @@ The same `side="start"` drawer inside a right-to-left subtree: it docks to the r
 | `swipeToDismiss` | `boolean` | `true` | Drag the drawer back toward its edge to dismiss it. Default true. Turn it off for a drawer whose content wants the same axis — a horizontal scroller in a side drawer. |
 | `showClose` | `boolean` | `true` | Show a close button in the drawer's inner top corner. Default true. |
 | `closeSide` | `DrawerCloseSide` | — | Which top corner the close button takes. Logical, like `side`: `end` is the corner text runs toward, so it is the right one in a left-to-right app and the left one in a right-to-left one. Defaults to the corner *away* from the docked edge, so an `end` drawer's button does not sit against the screen edge the panel came out of. Set it when the drawer reads better with the button on the outer corner instead — a panel people close by reaching for the same corner every time. |
-| `blur` | `boolean` | `false` | Frost the screen behind the drawer instead of dimming it. Needs the optional `expo-blur`; without it this dims, rather than failing. |
+| `blur` | `boolean` | `false` | Frost the screen behind the drawer instead of dimming it. Needs the optional `expo-blur`; without it this dims, rather than failing. Someone who has Reduce Transparency switched on gets an opaque backdrop instead, which is the whole point of the setting. |
 
 ### Drawer.Header
 

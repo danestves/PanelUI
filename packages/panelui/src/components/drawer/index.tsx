@@ -285,6 +285,9 @@ export interface DrawerContentProps extends ViewProps {
   /**
    * Frost the screen behind the drawer instead of dimming it. Needs the
    * optional `expo-blur`; without it this dims, rather than failing.
+   *
+   * Someone who has Reduce Transparency switched on gets an opaque
+   * backdrop instead, which is the whole point of the setting.
    */
   blur?: boolean;
   children?: ReactNode;

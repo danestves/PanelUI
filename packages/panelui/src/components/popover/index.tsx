@@ -321,6 +321,9 @@ export interface PopoverContentProps extends ViewProps {
    * Frost the background behind the panel instead of dimming it. Uses
    * `expo-blur` when installed and falls back to the dimmed scrim when it is
    * not, so it is safe to pass either way.
+   *
+   * Someone who has Reduce Transparency switched on gets an opaque
+   * backdrop instead, which is the whole point of the setting.
    */
   blur?: boolean;
   /**

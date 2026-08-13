@@ -236,6 +236,9 @@ export interface BottomSheetContentProps extends ViewProps {
    * Frost the screen behind the sheet instead of dimming it, so what is behind
    * stays legible as shape and colour while losing its detail. Needs the
    * optional `expo-blur`; without it this dims, rather than failing.
+   *
+   * Someone who has Reduce Transparency switched on gets an opaque
+   * backdrop instead, which is the whole point of the setting.
    */
   blur?: boolean;
   /**

@@ -89,6 +89,9 @@ export interface DialogContentProps extends ViewProps {
    * Frost the screen behind the dialog instead of dimming it. Uses `expo-blur`
    * when installed and falls back to the dim when it is not, so it is safe to
    * pass either way.
+   *
+   * Someone who has Reduce Transparency switched on gets an opaque
+   * backdrop instead, which is the whole point of the setting.
    */
   blur?: boolean;
   children?: ReactNode;

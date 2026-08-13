@@ -9,6 +9,71 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.66.0] — 2026-08-13
+
+### Added
+
+- **`Signature` can offer a way to sign that is not drawing.** Tracing a path with a finger is not
+  something every signer can do, and no label on a canvas changes that. `onRequestAlternative`
+  opens a method of your own — a typed name, an upload, an assisted flow — and is published as a
+  screen-reader action. Offer it as a visible control too.
+
+- **`ContextMenu` opens without a long press.** The menu was reachable only by holding the target,
+  which a screen reader cannot discover and a keyboard cannot perform. The trigger now publishes a
+  **Show menu** action, and answers the Context Menu key, Shift+F10, Enter and Space. Opens that
+  have no pointer to anchor against use the target's bounds.
+
+- **`Flow` accepts a structured endpoint.** `from` and `to` take `{ node, handle }` as well as the
+  `"node.handle"` string. The string form splits on a dot, so a node whose id contains one was
+  unresolvable; the structured form has nothing to parse. `FlowEndpoint` and
+  `FlowEndpointReference` are exported, and existing strings keep working.
+
+- **`useRevealProgress` is documented.** It was exported and reachable with no page to read.
+
+### Changed
+
+- **Overlays respect Reduce Transparency.** `blur` on `Dialog`, `BottomSheet`, `Drawer` and
+  `Popover` draws an opaque, tint-aware backdrop for anyone who has the setting on, rather than
+  frosting the screen behind it. The preference is read once per launch and shared, so opening an
+  overlay does not cost a round trip to the platform.
+
+- **`SelectionMode` rows excluded from selection keep their own press.** A row marked `disabled` is
+  not selectable, which is not the same as being inert — its `onPress` now runs in both states, and
+  it is announced as a button rather than an unchecked checkbox it can never fill.
+
+- **The published package declares exactly what it ships.** `files` names `lib/module` and
+  `lib/typescript` rather than `lib`, and a check runs in CI and again before publish: every
+  declared entry point present, nothing outside the contract, no tests, no build info.
+
+### Fixed
+
+- **A `Carousel` slide moved once instead of twice.** A move started its spring and then the new
+  index came back through state and started it again a frame later, from a standstill — so a flick
+  lost the momentum it was carrying. Every uncontrolled swipe, dot press and autoplay tick did it.
+
+- **`Carousel` counts the slides it can actually draw.** A conditional slide left as `null` was
+  still counted, so the run had a position with nothing in it and the dots showed one too many.
+
+- **A controlled `Carousel` starts where it was told to.** It began at `defaultIndex` and jumped to
+  `index` on the first frame. Autoplay also stops at the last slide of a run that does not loop,
+  instead of firing into a clamp.
+
+- **`Slider` range haptics follow the thumb under the finger.** Both thumbs shared one record of
+  the last step crossed, so the stationary end suppressed ticks for the one being dragged.
+
+- **`MessageScroller` jump buttons measure their own target.** Both buttons read the distance to the
+  bottom, so the one pointing at the start appeared and disappeared on the wrong edge.
+
+- **`Signature` no longer announces itself as complete.** The pad cannot know whether a signature is
+  finished — one mark may be the whole thing or the first letter of it — and "Signature complete"
+  after the first stroke told someone who cannot see the pad that they were done.
+
+### Docs
+
+- **`Sortable` has previews**: the page and six of its versions.
+- `Sortable` drops its beta pill; the API has settled.
+- The docs site's tablists and radio groups answer the arrow keys, Home and End.
+
 ## [0.65.0] — 2026-08-13
 
 An accessibility release. Several controls were reachable but not operable — a screen reader could
