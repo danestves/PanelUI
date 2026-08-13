@@ -35,6 +35,19 @@ const switchVariants = tv({
 
 const TRAVEL: Record<'sm' | 'md', number> = { sm: 16, md: 20 };
 
+/**
+ * Room around each track so the target reaches 48dp on both axes.
+ *
+ * Slop rather than a bigger box, because a box is layout: a switch sized to
+ * its target would stand 48dp tall in every row it has ever been placed in,
+ * and the tracks are only 24 and 28 tall. The `md` track is already 48 wide,
+ * which is why the horizontal figures differ between the two sizes.
+ */
+const SWITCH_HIT_SLOP: Record<'sm' | 'md', { top: number; bottom: number; left: number; right: number }> = {
+  sm: { top: 12, bottom: 12, left: 4, right: 4 },
+  md: { top: 10, bottom: 10, left: 0, right: 0 },
+};
+
 export interface SwitchProps extends VariantProps<typeof switchVariants> {
   className?: string;
   value: boolean;
@@ -118,7 +131,7 @@ export const Switch = forwardRef<View, SwitchProps>(
           if (haptics) selectionTick();
           onValueChange?.(!value);
         }}
-        hitSlop={8}
+        hitSlop={SWITCH_HIT_SLOP[size]}
       >
         <View className={slots.track({ className })}>
           <Animated.View style={activeTrackStyle} className={slots.activeTrack()} />
