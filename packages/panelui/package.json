@@ -28,7 +28,8 @@
     "build": "bob build",
     "test": "node --experimental-strip-types --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf lib"
+    "clean": "rm -rf lib",
+    "test": "npm run build && node --test test/*.test.mjs"
   },
   "keywords": [
     "react-native",
@@ -91,7 +92,9 @@
     "tailwind-variants": "^3.2.2"
   },
   "devDependencies": {
-    "react-native-builder-bob": "^0.43.0"
+    "react": "19.2.3",
+    "react-native-builder-bob": "^0.43.0",
+    "react-test-renderer": "19.2.3"
   },
   "react-native-builder-bob": {
     "source": "src",

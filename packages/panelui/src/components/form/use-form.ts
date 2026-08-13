@@ -174,6 +174,8 @@ export function useForm<T extends Record<string, any>>({
   const validatorsRef = useRef<
     Partial<Record<keyof T, (value: any, values: T) => string | undefined | Promise<string | undefined>>>
   >({});
+  const validationOwnersRef = useRef<Partial<Record<keyof T, symbol>>>({});
+  const submissionLockedRef = useRef(false);
 
   const [state, dispatch] = useReducer(reducer<T>, {
     values: defaultValues,
@@ -196,10 +198,23 @@ export function useForm<T extends Record<string, any>>({
   const valuesRef = useRef(state.values);
   valuesRef.current = state.values;
 
-  const setFieldValue = useCallback(<K extends keyof T>(name: K, value: T[K]) => {
-    valuesRef.current = { ...valuesRef.current, [name]: value } as T;
-    dispatch({ type: 'SET_VALUE', name, value });
+  /* Only the latest owner of a field may commit validation state. A value,
+   * validator or manual-error change claims ownership too, invalidating any
+   * result that was calculated from the state before that change. */
+  const claimFieldValidation = useCallback(<K extends keyof T>(name: K) => {
+    const owner = Symbol();
+    validationOwnersRef.current[name] = owner;
+    return owner;
   }, []);
+
+  const setFieldValue = useCallback(
+    <K extends keyof T>(name: K, value: T[K]) => {
+      claimFieldValidation(name);
+      valuesRef.current = { ...valuesRef.current, [name]: value } as T;
+      dispatch({ type: 'SET_VALUE', name, value });
+    },
+    [claimFieldValidation]
+  );
 
   const setFieldTouched = useCallback(<K extends keyof T>(name: K, touched = true) => {
     dispatch({ type: 'SET_TOUCHED', name, touched });
@@ -207,20 +222,22 @@ export function useForm<T extends Record<string, any>>({
 
   const setFieldError = useCallback(
     <K extends keyof T>(name: K, error: string | undefined) => {
+      claimFieldValidation(name);
       dispatch({ type: 'SET_ERROR', name, error });
     },
-    []
+    [claimFieldValidation]
   );
 
   const registerValidator = useCallback(
     <K extends keyof T>(name: K, validator?: Validator<T, K>) => {
+      claimFieldValidation(name);
       if (validator) {
         validatorsRef.current[name] = validator;
       } else {
         delete validatorsRef.current[name];
       }
     },
-    []
+    [claimFieldValidation]
   );
 
   const getFieldState = useCallback(
@@ -235,81 +252,100 @@ export function useForm<T extends Record<string, any>>({
   const validateField = useCallback(async <K extends keyof T>(name: K) => {
     const validator = validatorsRef.current[name];
     if (!validator) return true;
+    const owner = claimFieldValidation(name);
     const values = valuesRef.current;
     const error = await runValidator(name, validator, values);
-    dispatch({ type: 'SET_ERROR', name, error });
+    if (validationOwnersRef.current[name] === owner) {
+      dispatch({ type: 'SET_ERROR', name, error });
+    }
     return !error;
-  }, []);
+  }, [claimFieldValidation]);
 
   const handleSubmit = useCallback(async () => {
-    const values = valuesRef.current;
-    /*
-     * Every field the form knows of, which is not the same as every key of
-     * `defaultValues`: a field can register a validator under a name that was
-     * never declared there. Submitting only the declared ones meant such a
-     * field was never validated and never blocked anything, so a form of
-     * required-but-undeclared fields submitted itself while still empty.
-     *
-     * It is still a mistake to name a field that `defaultValues` does not
-     * declare — its value stays undefined and never reaches `onSubmit` —
-     * which is why `useField` says so. Validating it anyway is what turns
-     * that mistake into a visible error instead of a silent submit.
-     */
-    const names = Array.from(
-      new Set([...Object.keys(values), ...Object.keys(validatorsRef.current)])
-    ) as (keyof T)[];
-    dispatch({ type: 'TOUCH_ALL', names });
-
-    const fieldErrorEntries = await Promise.all(
-      names.map(async (name) => {
-        const validator = validatorsRef.current[name];
-        const error = validator
-          ? await runValidator(name, validator, values)
-          : undefined;
-        return [name, error] as const;
-      })
-    );
-
-    /*
-     * Same reasoning as a field's rule, one level up: a cross-field check that
-     * throws must not take the screen, and must not let the submit through.
-     * It belongs to no single field, so it blocks without marking one — there
-     * is no field whose error line would be the honest place to put it.
-     */
-    let formErrors: FieldErrors<T> = {};
-    let formValidateThrew = false;
-    if (validate) {
-      try {
-        formErrors = await validate(values);
-      } catch (error) {
-        console.error(
-          '[PanelUI] The form-level validate() threw, so the form is being ' +
-            'treated as invalid and the submit was not run.',
-          error
-        );
-        formValidateThrew = true;
-      }
-    }
-
-    const cleared = Object.fromEntries(names.map((name) => [name, undefined]));
-    const nextErrors: FieldErrors<T> = {
-      ...cleared,
-      ...Object.fromEntries(fieldErrorEntries.filter(([, error]) => error !== undefined)),
-      ...formErrors,
-    };
-    dispatch({ type: 'SET_ERRORS', errors: nextErrors });
-
-    if (formValidateThrew || Object.values(nextErrors).some(Boolean)) return;
-
-    dispatch({ type: 'SUBMIT_START' });
+    // Reducer state cannot guard two calls made before React renders again.
+    if (submissionLockedRef.current) return;
+    submissionLockedRef.current = true;
     try {
-      await onSubmit(values);
+      const values = valuesRef.current;
+      /*
+       * Every field the form knows of, which is not the same as every key of
+       * `defaultValues`: a field can register a validator under a name that was
+       * never declared there. Submitting only the declared ones meant such a
+       * field was never validated and never blocked anything, so a form of
+       * required-but-undeclared fields submitted itself while still empty.
+       *
+       * It is still a mistake to name a field that `defaultValues` does not
+       * declare — its value stays undefined and never reaches `onSubmit` —
+       * which is why `useField` says so. Validating it anyway is what turns
+       * that mistake into a visible error instead of a silent submit.
+       */
+      const names = Array.from(
+        new Set([...Object.keys(values), ...Object.keys(validatorsRef.current)])
+      ) as (keyof T)[];
+      const validationOwners = new Map(
+        names.map((name) => [name, claimFieldValidation(name)] as const)
+      );
+      dispatch({ type: 'TOUCH_ALL', names });
+
+      const fieldErrorEntries = await Promise.all(
+        names.map(async (name) => {
+          const validator = validatorsRef.current[name];
+          const error = validator
+            ? await runValidator(name, validator, values)
+            : undefined;
+          return [name, error] as const;
+        })
+      );
+
+      /*
+       * Same reasoning as a field's rule, one level up: a cross-field check that
+       * throws must not take the screen, and must not let the submit through.
+       * It belongs to no single field, so it blocks without marking one — there
+       * is no field whose error line would be the honest place to put it.
+       */
+      let formErrors: FieldErrors<T> = {};
+      let formValidateThrew = false;
+      if (validate) {
+        try {
+          formErrors = await validate(values);
+        } catch (error) {
+          console.error(
+            '[PanelUI] The form-level validate() threw, so the form is being ' +
+              'treated as invalid and the submit was not run.',
+            error
+          );
+          formValidateThrew = true;
+        }
+      }
+
+      const cleared = Object.fromEntries(names.map((name) => [name, undefined]));
+      const nextErrors: FieldErrors<T> = {
+        ...cleared,
+        ...Object.fromEntries(fieldErrorEntries.filter(([, error]) => error !== undefined)),
+        ...formErrors,
+      };
+      const ownedErrors = Object.fromEntries(
+        names
+          .filter((name) => validationOwnersRef.current[name] === validationOwners.get(name))
+          .map((name) => [name, nextErrors[name]])
+      ) as FieldErrors<T>;
+      dispatch({ type: 'SET_ERRORS', errors: ownedErrors });
+
+      if (formValidateThrew || Object.values(nextErrors).some(Boolean)) return;
+
+      dispatch({ type: 'SUBMIT_START' });
+      try {
+        await onSubmit(values);
+      } finally {
+        dispatch({ type: 'SUBMIT_END' });
+      }
     } finally {
-      dispatch({ type: 'SUBMIT_END' });
+      submissionLockedRef.current = false;
     }
-  }, [validate, onSubmit]);
+  }, [claimFieldValidation, validate, onSubmit]);
 
   const reset = useCallback((values: T = defaultsRef.current) => {
+    validationOwnersRef.current = {};
     valuesRef.current = values;
     dispatch({ type: 'RESET', values });
   }, []);
