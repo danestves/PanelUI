@@ -256,7 +256,7 @@ const [index, setIndex] = useState(0);
 | `itemSize` | `number` | — | Length of one slide along the direction of travel, in points. Measured from the carousel's own box when omitted, which is what a full-width slide wants; set it for a run that shows more than one at a time. |
 | `autoplay` | `boolean` | `false` | Advance on a timer. Stops for good the first time a finger lands. |
 | `autoplayInterval` | `number` | `4000` | Milliseconds each slide is held when `autoplay` is set. |
-| `index` | `number` | — | Controlled active slide. |
+| `index` | `number` | — | Controlled active slide. Requests move visually only after this value changes. |
 | `defaultIndex` | `number` | `0` | Starting slide when uncontrolled. |
 | `onIndexChange` | `(index: number) => void` | — |  |
 | `scrollEnabled` | `boolean` | `true` | Let go of the gesture, for a carousel inside something else that drags. |
