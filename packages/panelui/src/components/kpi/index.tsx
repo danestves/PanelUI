@@ -28,7 +28,9 @@
  */
 import { createContext, forwardRef, useContext, useMemo, type ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
-import { ArrowDown, ArrowUp, Minus } from 'lucide-react-native';
+import ArrowDown from 'lucide-react-native/icons/arrow-down';
+import ArrowUp from 'lucide-react-native/icons/arrow-up';
+import Minus from 'lucide-react-native/icons/minus';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
