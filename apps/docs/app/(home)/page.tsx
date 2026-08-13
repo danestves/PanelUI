@@ -280,7 +280,7 @@ export default function HomePage() {
                 href="https://openpanel.dev"
                 target="_blank"
                 rel="noreferrer"
-                className="hover:text-foreground"
+                className="underline underline-offset-4 hover:text-foreground"
               >
                 OpenPanel
               </a>
