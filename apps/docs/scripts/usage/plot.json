@@ -1,0 +1,79 @@
+{
+  "slug": "plot",
+  "intro": "Charts for the shapes this library does not already ship.\n\nEvery other chart here answers one question completely, and decides everything else for you. `Plot` decides nothing: it measures a box, resolves one scale, and hands both to whatever marks you put inside it. Columns with a line over them, a series against a shaded band, a mark you wrote yourself — all of them are children, drawn in the order they are written.\n\n**Reach for a named chart first.** [LineChart](/docs/charts/line-chart), [BarChart](/docs/charts/bar-chart) and [AreaChart](/docs/charts/area-chart) carry decisions this one leaves to you — where the baseline belongs, what a gap in a series means, how a loading state should read — and a chart assembled here has to make each of them again.\n\nIt is marked alpha. The parts are settled; the names of the geometry `usePlot` hands out are the part most likely to move.",
+  "usage": "<Plot data={months} xDataKey=\"month\">\n  <Plot.Grid />\n  <Plot.Bars dataKey=\"revenue\" colorIndex={2} />\n  <Plot.Line dataKey=\"orders\" />\n  <Plot.YAxis />\n  <Plot.XAxis />\n</Plot>",
+  "extraImports": [
+    "usePlot",
+    "yOf",
+    "Frame",
+    "Text",
+    "type PlotDatum"
+  ],
+  "anatomy": "<Plot data={…}>\n  <Plot.Header />    {/* the row above the drawing */}\n  <Plot.Legend />    {/* a swatch and a name per mark */}\n  <Plot.Grid />      {/* the rules the marks arrive into */}\n  <Plot.Area />      {/* a series as a fill */}\n  <Plot.Bars />      {/* a series as columns */}\n  <Plot.Line />      {/* a series as a stroke */}\n  <Plot.Dots />      {/* a dot per row */}\n  <Plot.Layer />     {/* marks of your own, in the SVG tree */}\n  <Plot.Rule />      {/* a reference line, with a caption */}\n  <Plot.YAxis />     {/* value labels down the side */}\n  <Plot.XAxis />     {/* labels along the bottom */}\n  <Plot.Cursor />    {/* the drag, and the line that follows it */}\n  <Plot.Tooltip />   {/* the readout that rides the cursor */}\n  <Plot.Overlay />   {/* anything of yours that is text or takes a touch */}\n</Plot>",
+  "parts": {
+    "Header": "The row above the drawing — what the plot is of, and the one number worth reading. Pass `children` to replace it entirely and keep only its place.",
+    "Legend": "A swatch and a name for every mark that registered. `labels` maps a `dataKey` to something a reader recognises; without it the key itself is shown.",
+    "Grid": "Horizontal rules across the plot. Drawn outside the reveal, so the frame is already there when the marks are uncovered into it.",
+    "Area": "A series as a fill down to the baseline. Write it before the line it belongs under — the order the marks are written is the order they are drawn.",
+    "Bars": "A series as columns, all of them in one path. Its presence puts the whole plot on a band scale unless `xScale` says otherwise: a bar centred on the plot's edge is a bar half of which is outside it.",
+    "Line": "A series as a stroked path. `curve=\"monotone\"` never overshoots between points; `linear` joins them straight. `dashArray` is for a series that is not real yet — a forecast, a projection.",
+    "Dots": "A dot per row, ringed in the page colour so it reads on top of the line rather than in it. For a series short enough that its individual points are worth marking.",
+    "Rule": "A reference line across the plot at a value — a target, a limit, an average — with a caption naming it. A view rather than an SVG line, so the caption is real text; it hides itself when the value falls outside the axis rather than pinning to the edge and claiming a number the chart does not cover.",
+    "Layer": "Marks of your own, dropped into the SVG tree where they are written. They reach the geometry through `usePlot()` rather than being handed it, because a mark that animates holds hooks and a render prop is not a component.",
+    "Overlay": "Anything of yours that is text or takes a touch, laid over the drawing. SVG text ignores the platform's text scaling and the theme's font, and a gesture handler cannot be attached to an SVG node at all.",
+    "XAxis": "Labels along the bottom, each centred on the row it names and clamped inside the frame.",
+    "YAxis": "Value labels down the side, one per grid line. Give it the same `ticks` as the grid, or the numbers name lines that are not there. It reads the domain the data settles at rather than the tweening one, so the axis holds still enough to read.",
+    "Cursor": "The drag, and the line that follows it. The hit area is the whole plot — a cursor you have to land on the line to summon is one nobody finds. Split from the readout because a plot whose value is shown in its own header wants this and no label.",
+    "Tooltip": "The readout that rides the cursor. Needs a `Plot.Cursor` beside it, which owns the gesture; on its own it never appears. Pass a function as `children` to draw it yourself."
+  },
+  "examples": [
+    {
+      "title": "Two marks, one scale",
+      "description": "The domain is derived from every mark that registered, so two quantities on one plot are drawn against one axis. That is the reason to compose rather than to stack two charts: two scales drawn over each other look like a comparison and are not one.\n\n**Both marks have to be in the same unit.** Revenue and costs are money and the gap between them is the margin — reading that off the chart is the point. Revenue and *order counts* are not: hundreds and tens of thousands on one linear axis puts the smaller series flat along the floor, where it says nothing. There is no second axis; draw the second quantity as its own plot.\n\nOrder is drawing order. The line is written after the columns, so it is drawn over them.",
+      "code": "<Plot data={months} xDataKey=\"month\" aspectRatio={1.7}>\n  <Plot.Header title=\"Revenue\" value={money(total)} />\n  <Plot.Legend labels={{ revenue: 'Revenue', costs: 'Costs' }} />\n  <Plot.Grid />\n  <Plot.Bars dataKey=\"revenue\" colorIndex={2} />\n  <Plot.Line dataKey=\"costs\" colorIndex={1} curve=\"linear\" />\n  <Plot.Dots dataKey=\"costs\" colorIndex={1} />\n  <Plot.YAxis />\n  <Plot.XAxis ticks={6} />\n</Plot>"
+    },
+    {
+      "title": "Pinning one end of the axis",
+      "description": "Either end of `yDomain` takes a number to hold it there or `auto` to derive it from the data.\n\n`[0, 'auto']` is the case a fixed pair cannot express: the baseline stays at zero while the top still follows whatever arrives. Headroom is not applied to a pinned end — a zero with a tenth of the span taken off it is not a zero.\n\nA plot containing `Plot.Bars` already gets zero in its derived domain, because a bar's length is measured from zero and an axis that skips it draws six near-identical columns for numbers that differ by half. Pin it when you want the axis to say so explicitly, or to hold the *top* as well.",
+      "code": "<Plot data={months} xDataKey=\"month\" yDomain={[0, 'auto']}>\n  <Plot.Grid />\n  <Plot.Bars dataKey=\"revenue\" colorIndex={2} />\n  <Plot.Rule y={28000} label=\"Target\" />\n  <Plot.YAxis format={(value) => money(Math.round(value))} />\n  <Plot.XAxis ticks={6} />\n</Plot>"
+    },
+    {
+      "title": "A mark of your own",
+      "description": "`Plot.Layer` puts its children in the SVG tree; `usePlot()` gives them the plot box, the tweening domain and the reveal. The scale functions — `xOf`, `bandOf`, `yOf`, `linePath`, `areaPath`, `barPath` — are exported alongside the component and every one of them is a worklet, so a mark you write is rebuilt on the UI thread on the same frames the built-in ones are.\n\nWrite it before the series it sits behind.",
+      "code": "function BandBetween({ low, high }: { low: number; high: number }) {\n  const { plot, domainMin, domainMax } = usePlot();\n\n  const animatedProps = useAnimatedProps(() => {\n    const min = domainMin.value;\n    const max = domainMax.value;\n    if (max === min) return { d: '' };\n    const top = yOf(high, plot, min, max);\n    const bottom = yOf(low, plot, min, max);\n    return { d: `M${plot.left},${top}H${plot.left + plot.width}V${bottom}H${plot.left}Z` };\n  });\n\n  return <AnimatedPath animatedProps={animatedProps} fill=\"#34d399\" fillOpacity={0.14} />;\n}\n\n<Plot data={months} xDataKey=\"month\">\n  <Plot.Grid />\n  <Plot.Layer>\n    <BandBetween low={20000} high={28000} />\n  </Plot.Layer>\n  <Plot.Area dataKey=\"revenue\" />\n  <Plot.Line dataKey=\"revenue\" />\n</Plot>"
+    },
+    {
+      "title": "Reading the cursor",
+      "description": "`Plot.Cursor` owns the drag and resolves the row under the finger. Only the index crosses back to the JS thread, and only when it changes, so a drag across a hundred rows costs a hundred re-renders at most rather than one per frame.\n\nInside the plot, read it with `usePlotCursor()`. Outside it — a readout in the card's header, a figure elsewhere on the screen — use `onActiveIndexChange`, since a hook cannot reach up out of the subtree it is called in.",
+      "code": "const [active, setActive] = useState(-1);\nconst row = active >= 0 ? months[active] : null;\n\n<Plot data={months} xDataKey=\"month\" onActiveIndexChange={setActive}>\n  <Plot.Header\n    title={row ? `${row.orders} orders` : 'Revenue'}\n    value={money(row ? row.revenue : latest)}\n  />\n  <Plot.Grid />\n  <Plot.Area dataKey=\"revenue\" />\n  <Plot.Line dataKey=\"revenue\" />\n  <Plot.Cursor />\n  <Plot.Tooltip formatValue={(value) => money(value)} />\n</Plot>"
+    },
+    {
+      "title": "Which scale the x-axis is on",
+      "description": "`point` puts the first and last rows on the plot's own edges, which is what a series wants — the line should reach the frame. `band` gives every row an equal slice and centres it, which is what anything with width needs.\n\nIt is resolved from the marks by default: a plot containing `Plot.Bars` is banded, and anything else is on points. Set `xScale` yourself for a line chart whose points should sit in the middle of a period rather than on its boundary.",
+      "code": "{/* Banded, because of the bars. */}\n<Plot data={months} xDataKey=\"month\">\n  <Plot.Bars dataKey=\"revenue\" />\n</Plot>\n\n{/* A line, but on slice centres rather than on the edges. */}\n<Plot data={months} xDataKey=\"month\" xScale=\"band\">\n  <Plot.Line dataKey=\"revenue\" />\n</Plot>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Combination",
+      "description": "Columns and a line over them — revenue and costs, both money, on one shared scale.",
+      "code": "<Plot data={months} xDataKey=\"month\" aspectRatio={1.7}>\n  <Plot.Header title=\"Revenue\" value={money(total)} />\n  <Plot.Legend labels={{ revenue: 'Revenue', costs: 'Costs' }} />\n  <Plot.Grid />\n  <Plot.Bars dataKey=\"revenue\" colorIndex={2} />\n  <Plot.Line dataKey=\"costs\" colorIndex={1} curve=\"linear\" />\n  <Plot.Dots dataKey=\"costs\" colorIndex={1} />\n  <Plot.YAxis />\n  <Plot.XAxis ticks={6} />\n</Plot>"
+    },
+    {
+      "title": "A pinned baseline",
+      "description": "Zero held at the bottom, the top left to follow the data, and a target drawn across it.",
+      "code": "<Plot data={months} xDataKey=\"month\" yDomain={[0, 'auto']} aspectRatio={1.7}>\n  <Plot.Header title=\"Revenue by month\" />\n  <Plot.Grid />\n  <Plot.Bars dataKey=\"revenue\" colorIndex={2} />\n  <Plot.Rule y={28000} label=\"Target\" />\n  <Plot.YAxis format={(value) => money(Math.round(value))} />\n  <Plot.XAxis ticks={6} />\n</Plot>"
+    },
+    {
+      "title": "A mark of your own",
+      "description": "A shaded band nothing here ships, drawn on the chart's own geometry through Plot.Layer and usePlot.",
+      "code": "<Plot data={months} xDataKey=\"month\" aspectRatio={1.7}>\n  <Plot.Header title=\"Revenue\" caption=\"Shaded where the month was within the plan\" />\n  <Plot.Grid />\n  <Plot.Layer>\n    <BandBetween low={20000} high={28000} />\n  </Plot.Layer>\n  <Plot.Area dataKey=\"revenue\" />\n  <Plot.Line dataKey=\"revenue\" />\n  <Plot.YAxis />\n  <Plot.XAxis ticks={6} />\n</Plot>"
+    },
+    {
+      "title": "Cursor and readout",
+      "description": "A drag resolves the row under the finger, and the card's header reads it.",
+      "code": "const [active, setActive] = useState(-1);\nconst row = active >= 0 ? months[active] : null;\n\n<Plot data={months} xDataKey=\"month\" aspectRatio={1.7} onActiveIndexChange={setActive}>\n  <Plot.Header title={row ? `${row.orders} orders` : 'Revenue'} value={money(row ? row.revenue : latest)} />\n  <Plot.Grid />\n  <Plot.Area dataKey=\"revenue\" />\n  <Plot.Line dataKey=\"revenue\" />\n  <Plot.Dots dataKey=\"revenue\" />\n  <Plot.YAxis />\n  <Plot.XAxis ticks={6} />\n  <Plot.Cursor />\n  <Plot.Tooltip formatValue={(value) => money(value)} />\n</Plot>"
+    }
+  ],
+  "notes": "### The reveal is shared\n\nEvery mark is drawn inside one clip rectangle that widens on mount, so the columns, the fill and the line arrive as one drawing rather than as three effects starting together. A composed chart is more at risk of that than a fixed one, which is why the clip lives on the root and not on the marks.\n\nIt plays once. Sending `status` back to `loading` and returning it to `ready` arms it again, so a refetch is uncovered rather than appearing whole on the frame the data lands.\n\n### What registers, and why\n\n`Plot.Line`, `Plot.Area`, `Plot.Bars` and `Plot.Dots` each register their `dataKey` and colour with the root. That is what the derived domain measures and what the legend and the readout list. A mark drawn through `Plot.Layer` registers nothing — it is not reading a column the root knows about — so give the root a `yDomain` if what you drew has to fit inside the axis.\n\n### Colours\n\n`colorIndex` picks one of the five `--color-chart-*` tokens, so a plot follows the active theme and is put on brand by overriding those five in your own `global.css`. `color` overrides it with a literal, which is right for a mark whose colour carries meaning of its own.\n\n### One axis, and only one\n\nThere is no secondary axis and no plan for one. Two scales on one drawing is the chart mistake that survives review most often, because it looks like a comparison from across the room and falls apart the moment anyone reads the numbers. Two quantities in different units are two plots."
+}

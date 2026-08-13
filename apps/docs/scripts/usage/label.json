@@ -1,0 +1,41 @@
+{
+  "slug": "label",
+  "intro": "A form field label, with required, invalid and disabled states.\n\nString children are wrapped in `Label.Text` for you.",
+  "usage": "<Label isRequired>Password</Label>\n<Input placeholder=\"Create a password\" secureTextEntry />\n\n<Label>\n  <Label.Text className=\"text-base font-semibold\">API key</Label.Text>\n</Label>",
+  "extraImports": [
+    "Input"
+  ],
+  "parts": {
+    "Text": "The label text. Renders the required asterisk when the label is required."
+  },
+  "anatomy": "<Label>\n  <Label.Text>…</Label.Text>\n</Label>",
+  "examples": [
+    {
+      "title": "Marking a field required",
+      "description": "`isRequired` adds the asterisk and the accessibility state.",
+      "code": "<View className=\"gap-1.5\">\n  <Label isRequired>Email</Label>\n  <Input keyboardType=\"email-address\" />\n</View>"
+    },
+    {
+      "title": "Invalid and disabled",
+      "description": "Both are visual and semantic — pair them with the matching state on the field itself.",
+      "code": "<Label isInvalid>Card number</Label>\n<Input errorMessage=\"Check the number and try again.\" />\n\n<Label isDisabled>Plan</Label>\n<Input value=\"Premium\" disabled />"
+    },
+    {
+      "title": "Custom layout",
+      "description": "Passing `Label.Text` instead of the `children` string is what lets the text be styled on its own — the required mark stays the label's, positioned the same way.",
+      "code": "<View className=\"w-full gap-1.5\">\n  <Label isRequired>\n    <Label.Text className=\"text-base font-semibold\">API key</Label.Text>\n  </Label>\n  <Input placeholder=\"sk-…\" />\n</View>",
+      "preview": {
+        "src": "/previews/label-custom-layout.jpg",
+        "alt": "Label — Custom layout.",
+        "width": 1179,
+        "height": 287
+      }
+    }
+  ],
+  "preview": {
+    "src": "/previews/label.jpg",
+    "alt": "The Label component, running in the example app.",
+    "width": 1179,
+    "height": 1246
+  }
+}

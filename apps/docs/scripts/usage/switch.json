@@ -1,0 +1,38 @@
+{
+  "slug": "switch",
+  "intro": "An on/off toggle, animated on the UI thread.\n\nUse it for a setting that takes effect immediately. When the value is part of a form that gets submitted, use [Checkbox](/docs/components/checkbox) — a switch implies the change has already happened.",
+  "usage": "<Switch value={enabled} onValueChange={setEnabled} />",
+  "notes": "Pass `haptics` to tick the platform's haptic engine each time the switch is flipped — the toggle clicks under the thumb rather than merely sliding. It needs the optional `expo-haptics` and is silent without it, and it is ignored in `native` mode, where the platform control owns its own feedback.\n\n### Native rendering\n\nPass `native` to render the platform's own switch instead — SwiftUI on iOS, Jetpack Compose on Android. It needs the optional `@expo/ui` package and is a silent no-op without it.\n\n**Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className` and most styling props are ignored. The native switch gains a `label` prop the styled one does not have.\n\nSee [Native rendering](/docs/native) for the full prop-by-prop breakdown.",
+  "examples": [
+    {
+      "title": "In a settings row",
+      "code": "<View className=\"flex-row items-center justify-between py-3\">\n  <View className=\"flex-1 gap-0.5\">\n    <Text weight=\"medium\">Push notifications</Text>\n    <Text size=\"sm\" muted>Alerts on this device.</Text>\n  </View>\n  <Switch value={push} onValueChange={setPush} />\n</View>"
+    },
+    {
+      "title": "Sizes and disabled",
+      "code": "<Switch size=\"sm\" value={compact} onValueChange={setCompact} />\n<Switch value={enabled} onValueChange={setEnabled} />\n<Switch value disabled onValueChange={() => {}} />"
+    },
+    {
+      "title": "Haptic toggle",
+      "description": "`haptics` fires a light tick each time the switch flips, so the toggle feels like it clicks into place. It needs the optional `expo-haptics`, and is silent without it.",
+      "code": "<Switch haptics value={enabled} onValueChange={setEnabled} />"
+    },
+    {
+      "title": "Native",
+      "description": "Renders the platform switch, which brings a `label` the styled one does not have. Theme tokens do not apply.",
+      "code": "<Switch native label=\"Wi-Fi\" value={wifi} onValueChange={setWifi} />"
+    }
+  ],
+  "variantCode": {
+    "size": "<Switch size=\"sm\" value={on} onValueChange={setOn} />\n<Switch size=\"md\" value={on} onValueChange={setOn} />"
+  },
+  "extraImports": [
+    "Text"
+  ],
+  "preview": {
+    "src": "/previews/switch.jpg",
+    "alt": "The Switch component, running in the example app.",
+    "width": 1179,
+    "height": 541
+  }
+}

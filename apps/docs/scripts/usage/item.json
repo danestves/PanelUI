@@ -1,0 +1,109 @@
+{
+  "slug": "item",
+  "intro": "A row of content: media on one side, a title and description in the middle, actions on the other.\n\nIt is the shape almost every list in an app already has — a settings row, a file in a picker, a member in a team list — so it exists once as a composable primitive instead of being rebuilt per screen with slightly different padding each time.\n\nFor tiles of different sizes rather than rows, use [GridItem](/docs/components/grid-item).",
+  "usage": "<Item variant=\"outline\">\n  <Item.Media variant=\"icon\">\n    <ReceiptIcon size={18} />\n  </Item.Media>\n  <Item.Content>\n    <Item.Title>Invoice.pdf</Item.Title>\n    <Item.Description>2.4 MB · Updated yesterday</Item.Description>\n  </Item.Content>\n  <Item.Actions>\n    <Button size=\"sm\" variant=\"outline\">Open</Button>\n  </Item.Actions>\n</Item>\n\n// Pressable rows. Without onPress it renders as a plain view and does not\n// announce itself as a button.\n<Item.Group>\n  <Item size=\"sm\" onPress={() => open(file)}>\n    <Item.Content>\n      <Item.Title>Notifications</Item.Title>\n      <Item.Description>Push, email and in-app</Item.Description>\n    </Item.Content>\n    <Item.Actions>\n      <ChevronRightIcon size={16} />\n    </Item.Actions>\n  </Item>\n  <Item.Separator />\n  <Item size=\"sm\" onPress={() => open(privacy)}>\n    <Item.Content>\n      <Item.Title>Privacy</Item.Title>\n    </Item.Content>\n  </Item>\n</Item.Group>",
+  "extraImports": [
+    "Avatar",
+    "Badge",
+    "Button",
+    "Switch",
+    "Text",
+    "ReceiptIcon",
+    "BellIcon",
+    "ChevronRightIcon",
+    "PackageIcon"
+  ],
+  "anatomy": "<Item.Group>\n  <Item>\n    <Item.Header>…</Item.Header>\n    <Item.Media>…</Item.Media>\n    <Item.Content>\n      <Item.Title>…</Item.Title>\n      <Item.Description>…</Item.Description>\n    </Item.Content>\n    <Item.Actions>…</Item.Actions>\n    <Item.Footer>…</Item.Footer>\n  </Item>\n  <Item.Separator />\n</Item.Group>",
+  "parts": {
+    "Group": "Stack of rows. Announces itself as a list.",
+    "Separator": "Hairline between rows in a group.",
+    "Media": "Leading slot — an icon tile, a thumbnail, or an avatar passed straight through.",
+    "Content": "The text column. Takes the remaining width so actions stay pinned to the trailing edge.",
+    "Title": "Primary line. Its size follows the item.",
+    "Description": "Secondary line, muted. Its size follows the item.",
+    "Actions": "Trailing slot — buttons, a chevron, a switch.",
+    "Header": "Full-width strip above the row content. Needs the item laid out as a column.",
+    "Footer": "Full-width strip below the row content."
+  },
+  "notes": "### Pressable or not\n\nGive the item an `onPress` and it renders as an `AnimatedPressable` with `accessibilityRole=\"button\"` and a press animation. Leave it off and it renders as a plain `View` — a static row should not announce itself as a button. React Native has no `render`-as-link escape hatch, so this is the substitute for one.\n\n### Density\n\n`size` is set once on the item. `Item.Media`, `Item.Title` and `Item.Description` read it from context, so the icon tile, title size and description size all move together. Override any of them individually by passing `size` or `className` to that part.\n\n### The two axes\n\n`orientation` means something different on the item and on the group, and they are independent:\n\n- On **`Item`** it decides whether the item's own parts sit side by side (`horizontal`, the default list row) or stack (`vertical`, a card).\n- On **`Item.Group`** it decides whether the items run down the screen (`vertical`, the default) or across it (`horizontal`, a carousel).\n\n`Item.Header` and `Item.Footer` are full-width strips, so they need `orientation=\"vertical\"` on the item. `Item.Separator` takes the prop too — a horizontal group needs vertical hairlines.",
+  "examples": [
+    {
+      "title": "A file row",
+      "code": "<Item variant=\"outline\">\n  <Item.Media variant=\"icon\">\n    <ReceiptIcon size={18} />\n  </Item.Media>\n  <Item.Content>\n    <Item.Title>Invoice.pdf</Item.Title>\n    <Item.Description>2.4 MB · Updated yesterday</Item.Description>\n  </Item.Content>\n  <Item.Actions>\n    <Button size=\"sm\" variant=\"outline\">Open</Button>\n  </Item.Actions>\n</Item>"
+    },
+    {
+      "title": "A settings group",
+      "description": "Give a row `onPress` and it becomes a pressable with a press animation and a button role. Leave it off and it stays a plain view.",
+      "code": "<Item.Group>\n  {rows.map((row, index) => (\n    <Fragment key={row.id}>\n      {index > 0 && <Item.Separator />}\n      <Item size=\"sm\" onPress={() => router.push(row.href)}>\n        <Item.Content>\n          <Item.Title>{row.title}</Item.Title>\n          <Item.Description>{row.summary}</Item.Description>\n        </Item.Content>\n        <Item.Actions>\n          <ChevronRightIcon size={16} />\n        </Item.Actions>\n      </Item>\n    </Fragment>\n  ))}\n</Item.Group>",
+      "preview": {
+        "src": "/previews/item-a-settings-group.jpg",
+        "alt": "Item — A settings group.",
+        "width": 1179,
+        "height": 758
+      }
+    },
+    {
+      "title": "Media types",
+      "description": "`icon` and `image` give the media slot a sized box; the default adds none, so an `Avatar` can style itself.",
+      "code": "<Item.Media variant=\"icon\"><BellIcon size={18} /></Item.Media>\n\n<Item.Media variant=\"image\">\n  <Image source={{ uri: product.image }} className=\"h-full w-full\" />\n</Item.Media>\n\n<Item.Media>\n  <Avatar size=\"md\" source={{ uri: user.avatar }} fallback=\"KA\" />\n</Item.Media>",
+      "preview": {
+        "src": "/previews/item-media-types.jpg",
+        "alt": "Item — Media types.",
+        "width": 1179,
+        "height": 991
+      }
+    },
+    {
+      "title": "With a switch",
+      "description": "Keep the row non-pressable when the control is the only target — two overlapping press areas is a bad row.",
+      "code": "<Item size=\"sm\">\n  <Item.Content>\n    <Item.Title>Push notifications</Item.Title>\n    <Item.Description>Alerts on this device.</Item.Description>\n  </Item.Content>\n  <Item.Actions>\n    <Switch value={push} onValueChange={setPush} />\n  </Item.Actions>\n</Item>"
+    },
+    {
+      "title": "A horizontal group of cards",
+      "description": "Two independent axes. `orientation` on the group runs the items across the screen instead of down it; `orientation` on each item stacks its own parts into a card. A carousel wants both.",
+      "code": "<ScrollView horizontal showsHorizontalScrollIndicator={false}>\n  <Item.Group orientation=\"horizontal\">\n    {plans.map((plan) => (\n      <Item\n        key={plan.id}\n        orientation=\"vertical\"\n        variant=\"outline\"\n        className=\"w-48\"\n      >\n        <Item.Media variant=\"icon\">\n          <PackageIcon size={18} />\n        </Item.Media>\n        <Item.Content>\n          <Item.Title>{plan.name}</Item.Title>\n          <Item.Description>{plan.summary}</Item.Description>\n        </Item.Content>\n        <Item.Footer>\n          <Text weight=\"semibold\">{plan.price}</Text>\n        </Item.Footer>\n      </Item>\n    ))}\n  </Item.Group>\n</ScrollView>",
+      "previewVideo": {
+        "src": "/previews/item-horizontal-group-of-card.mp4",
+        "poster": "/previews/item-horizontal-group-of-card-poster.jpg",
+        "alt": "Item — A horizontal group of cards.",
+        "width": 720,
+        "height": 370
+      }
+    },
+    {
+      "title": "A vertical item",
+      "description": "`orientation=\"vertical\"` is also what `Item.Header` and `Item.Footer` need — both are full-width strips, so they only make sense once the item stacks.",
+      "code": "<Item orientation=\"vertical\" variant=\"outline\">\n  <Item.Header>\n    <Badge variant=\"secondary\">Draft</Badge>\n    <Text size=\"xs\" muted>Updated 2h ago</Text>\n  </Item.Header>\n  <Item.Content>\n    <Item.Title>Quarterly report</Item.Title>\n    <Item.Description>Revenue, retention and headcount.</Item.Description>\n  </Item.Content>\n  <Item.Footer>\n    <Button size=\"sm\" variant=\"outline\">Preview</Button>\n    <Button size=\"sm\">Publish</Button>\n  </Item.Footer>\n</Item>",
+      "preview": {
+        "src": "/previews/item-a-vertical-item.jpg",
+        "alt": "Item — A vertical item.",
+        "width": 1179,
+        "height": 701
+      }
+    }
+  ],
+  "variantCode": {
+    "variant": "<Item variant=\"default\">…</Item>\n<Item variant=\"outline\">…</Item>\n<Item variant=\"muted\">…</Item>",
+    "size": "{/* Sets the row padding, and the media, title and description sizes. */}\n<Item size=\"default\">…</Item>\n<Item size=\"sm\">…</Item>\n<Item size=\"xs\">…</Item>",
+    "orientation": "{/* The list row — media, text and actions side by side. */}\n<Item orientation=\"horizontal\">…</Item>\n\n{/* Stacked into a card, for a carousel or for Header/Footer. */}\n<Item orientation=\"vertical\">…</Item>\n\n{/* The group has its own axis, independent of the items' own. */}\n<Item.Group orientation=\"horizontal\">…</Item.Group>"
+  },
+  "preview": {
+    "src": "/previews/item.jpg",
+    "alt": "Three Item rows on a dark screen showing the default, outline and muted variants — each with an icon tile, a title, a description and a New badge.",
+    "width": 1179,
+    "height": 969,
+    "caption": "The three surface variants, running in the example app."
+  },
+  "variantMedia": {
+    "size": [
+      {
+        "preview": {
+          "src": "/previews/item-size.jpg",
+          "alt": "Item — size.",
+          "width": 1179,
+          "height": 861
+        }
+      }
+    ]
+  }
+}

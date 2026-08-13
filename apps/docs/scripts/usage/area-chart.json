@@ -1,0 +1,73 @@
+{
+  "slug": "area-chart",
+  "intro": "Filled bands over time, stacked or overlaid.\n\n**This is not `LineChart.Area`.** Shading under a line is one series saying *this is the shape of the thing*. An area chart answers *what is it made of*, and that needs stacking — each band sits on the running total of the ones below it, so the top edge is the whole and each thickness is a share.\n\n**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.",
+  "usage": "<AreaChart data={traffic} xDataKey=\"hour\" stacked>\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.Area dataKey=\"search\" colorIndex={2} />\n  <AreaChart.XAxis />\n  <AreaChart.Tooltip />\n</AreaChart>",
+  "extraImports": [
+    "Card",
+    "Text"
+  ],
+  "anatomy": "<AreaChart>\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"…\" />        {/* one per series, bottom first */}\n  <AreaChart.Skeleton />                 {/* while status=\"loading\" */}\n  <AreaChart.XAxis />\n  <AreaChart.YAxis />\n  <AreaChart.Legend />\n  <AreaChart.Tooltip />                 {/* crosshair, dots and readout */}\n</AreaChart>",
+  "parts": {
+    "Grid": "Horizontal rules, so a band can be read against a number.",
+    "Area": "One filled band, with the line along its top edge. The fill is a downward gradient by default, so the top edge stays the darkest thing in the band.",
+    "Skeleton": "A low band on the baseline with a sweep across it, shown while `status=\"loading\"`.",
+    "XAxis": "The x labels. Real text, so they follow the theme’s font and the platform’s text scaling.",
+    "YAxis": "Value labels down the side. The chart reserves a gutter for them rather than drawing them over the plot.",
+    "Legend": "A swatch and a name per series, reversed for a stack so the key reads in the order the bands appear.",
+    "Tooltip": "The crosshair, the drag that drives it, and a dot riding the top edge of every band."
+  },
+  "examples": [
+    {
+      "title": "Stacked",
+      "description": "The first `Area` declared is the bottom of the stack. Order is load-bearing here in a way it is not on a line chart — it decides what sits on what.",
+      "code": "<AreaChart data={traffic} xDataKey=\"hour\" stacked>\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.Area dataKey=\"search\" colorIndex={2} />\n  <AreaChart.Area dataKey=\"social\" colorIndex={3} />\n  <AreaChart.XAxis ticks={5} />\n</AreaChart>"
+    },
+    {
+      "title": "Overlaid instead",
+      "description": "Without `stacked` the bands overlay each other and their fills go translucent, which is the right reading when the series are alternatives rather than parts — two plans compared, not two slices of one total.",
+      "code": "<AreaChart data={plans} xDataKey=\"hour\">\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"premium\" colorIndex={2} />\n  <AreaChart.Area dataKey=\"standard\" />\n  <AreaChart.XAxis />\n  <AreaChart.YAxis />\n</AreaChart>"
+    },
+    {
+      "title": "Tuning the fill",
+      "description": "`fillOpacity` is the weight at the top of the band and `gradientToOpacity` the weight at the bottom. Matching them gives a flat fill; leaving the bottom at zero fades the band out, which keeps the line legible over a busy grid.",
+      "code": "<AreaChart.Area dataKey=\"sessions\" fillOpacity={0.5} gradientToOpacity={0.05} />\n\n{/* A flat fill, for a band that has to hold a solid colour. */}\n<AreaChart.Area dataKey=\"sessions\" fillOpacity={0.4} gradientToOpacity={0.4} />\n\n{/* Fill only — no line along the top. */}\n<AreaChart.Area dataKey=\"sessions\" showLine={false} />"
+    },
+    {
+      "title": "Reading the total above the chart",
+      "description": "A stack’s headline number is the sum of its bands at that point, which the chart does not compute for you — it is your data, and only you know whether the sum means anything.",
+      "code": "const [active, setActive] = useState(null);\nconst total = active ? active.direct + active.search + active.social : null;\n\n<Text size=\"sm\" muted>\n  {active ? `${active.hour} · ${total.toLocaleString()} sessions` : 'Drag to read an hour.'}\n</Text>\n\n<AreaChart data={traffic} xDataKey=\"hour\" stacked onActiveIndexChange={(i, d) => setActive(d)}>\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.Tooltip />\n</AreaChart>"
+    },
+    {
+      "title": "Loading, and then data",
+      "description": "Add `AreaChart.Skeleton` and drive `status`. While loading, a flat band sits along the baseline with a highlight travelling across it; on `ready` the real bands grow out of it.\n\nWithout the skeleton the plot is empty while loading, which is the same picture a chart of zeroes draws.",
+      "code": "<AreaChart data={data} status={status} xDataKey=\"hour\" stacked>\n  <AreaChart.Grid />\n  <AreaChart.Skeleton />\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.Area dataKey=\"search\" colorIndex={2} />\n  <AreaChart.XAxis />\n</AreaChart>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Stacked",
+      "description": "The top edge is the total; each band is its share of it. Sessions by channel across a day.",
+      "code": "<AreaChart data={traffic} xDataKey=\"hour\" stacked onActiveIndexChange={(i, d) => setActive(d)}>\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.Area dataKey=\"search\" colorIndex={2} />\n  <AreaChart.Area dataKey=\"social\" colorIndex={3} />\n  <AreaChart.XAxis ticks={5} />\n  <AreaChart.Legend labels={{ direct: 'Direct', search: 'Search', social: 'Social' }} />\n  <AreaChart.Tooltip />\n</AreaChart>"
+    },
+    {
+      "title": "Overlaid",
+      "description": "Alternatives rather than parts, so the fills go translucent and both bands stay readable.",
+      "code": "<AreaChart data={traffic} xDataKey=\"hour\">\n  <AreaChart.Grid />\n  <AreaChart.Area dataKey=\"search\" colorIndex={2} />\n  <AreaChart.Area dataKey=\"direct\" />\n  <AreaChart.XAxis ticks={5} />\n  <AreaChart.YAxis />\n  <AreaChart.Tooltip />\n</AreaChart>",
+      "previewVideo": {
+        "src": "/previews/area-chart-overlaid.mp4",
+        "poster": "/previews/area-chart-overlaid-poster.jpg",
+        "alt": "AreaChart — Overlaid.",
+        "width": 720,
+        "height": 768
+      }
+    }
+  ],
+  "notes": "### Stacked or overlaid\n\nStack when the series are parts of one thing and the total means something: channels making up your traffic, plan tiers making up your revenue. Overlay when they are alternatives being compared, where a total would be a number nobody asked for.\n\nThe two are drawn differently on purpose. Stacked bands touch, so their fills are nearly opaque — a translucent band would show the one beneath through it and the pair would read as a third colour. Overlaid bands must be translucent, or the one in front hides the ones behind entirely.\n\n### Why the fill starts at zero\n\nAn area is a filled region, and a region floating above the bottom of the plot reads as a shape rather than as a quantity. A series that never goes below zero is therefore drawn from zero, and only the top of the domain gets headroom.\n\n### Why this is a separate component\n\nStacking is not a flag that could have been added to `LineChart.Area`. It changes the y-domain from the largest single series to the largest sum, it makes each area's baseline a curve rather than the axis, and it makes declaration order load-bearing. A chart where all of that was true of some children and not others would be a chart nobody could read.\n\n### Reduced motion\n\nThe reveal and the domain tween are both skipped, and the chart draws straight to its final shape.\n\n**`aspectRatio` measures the plot, not the whole chart.** The header sits above the drawing area rather than inside it, so a chart with a readout is taller than its ratio alone suggests — measure the box and the header would eat into the plot while still claiming the shape you asked for.\n\n**Labels sit on what they name.** Each x label is placed on its own point, and each y label is centred on the grid line it belongs to. `Grid`'s `rows` and `YAxis`'s `ticks` have to match for the numbers to line up; both default to `4`.",
+  "previewVideo": {
+    "src": "/previews/area-chart.mp4",
+    "poster": "/previews/area-chart-poster.jpg",
+    "alt": "The AreaChart component, running in the example app.",
+    "width": 720,
+    "height": 718
+  }
+}

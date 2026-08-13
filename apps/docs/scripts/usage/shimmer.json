@@ -1,0 +1,43 @@
+{
+  "slug": "shimmer",
+  "intro": "A highlight that sweeps through text and content, for loading, thinking and streaming states.\n\nThe content is used as a mask and a gradient band is swept behind it on the UI thread, so the highlight is clipped to the glyph shapes — the letters catch the light rather than sitting under a passing overlay.\n\nFor a placeholder where there is no content yet, use [Skeleton](/docs/components/skeleton).",
+  "usage": "<Shimmer>Thinking…</Shimmer>\n\n<Shimmer duration={1400} textClassName=\"text-lg font-medium\">\n  Generating response…\n</Shimmer>\n\n// Mask arbitrary content instead of a string.\n<Shimmer as=\"view\" className=\"w-full gap-2\">\n  <Skeleton className=\"h-4 w-3/4\" />\n  <Skeleton className=\"h-4 w-full\" />\n</Shimmer>",
+  "extraImports": [
+    "Skeleton"
+  ],
+  "notes": "The sweep runs entirely on the UI thread and never re-renders React while animating.\n\nIt stops when the OS reduce-motion setting is on, and when `enabled` is false — in both cases the content renders statically in `baseColor`.\n\n`baseColor` and `shimmerColor` default to the theme's muted-foreground and foreground tokens, so the effect reads correctly on any surface without configuration. `color` and `intensity` still work but are deprecated in favour of the two colour props.",
+  "examples": [
+    {
+      "title": "A thinking indicator",
+      "description": "The default. The sweep is clipped to the glyphs, so the letters catch the light instead of sitting under a passing band.",
+      "code": "<Shimmer>Thinking…</Shimmer>\n\n<Shimmer duration={1400} textClassName=\"text-lg font-medium\">\n  Generating response…\n</Shimmer>"
+    },
+    {
+      "title": "Masking a subtree",
+      "description": "`as=\"view\"` masks the sweep to whatever you pass instead of to a string.",
+      "code": "<Shimmer as=\"view\" className=\"w-full gap-2\">\n  <Skeleton className=\"h-4 w-3/4\" />\n  <Skeleton className=\"h-4 w-full\" />\n  <Skeleton className=\"h-4 w-1/2\" />\n</Shimmer>"
+    },
+    {
+      "title": "Tuning the sweep",
+      "code": "{/* Reverses on each pass instead of restarting from the left. */}\n<Shimmer mode=\"ping-pong\" duration={1600}>Ping-pong</Shimmer>\n\n{/* Right to left. */}\n<Shimmer reverse>Reversed</Shimmer>\n\n{/* A wider, slower band. */}\n<Shimmer spread={4} duration={2600}>Slow and broad</Shimmer>\n\n{/* One pass, then stop. */}\n<Shimmer once>Sweeps once</Shimmer>"
+    },
+    {
+      "title": "Custom colours",
+      "description": "Both default to theme tokens, so you only need these on a surface the tokens do not suit.",
+      "code": "<Shimmer baseColor=\"#3f3f46\" shimmerColor=\"#fafafa\">\n  Neutral on dark\n</Shimmer>"
+    },
+    {
+      "title": "Turning it off",
+      "description": "Renders the content statically in `baseColor`. Useful for stopping the sweep the moment a stream finishes, without swapping components.",
+      "code": "<Shimmer enabled={isStreaming}>{status}</Shimmer>"
+    }
+  ],
+  "previewVideo": {
+    "src": "/previews/shimmer.mp4",
+    "poster": "/previews/shimmer-poster.jpg",
+    "alt": "A screen recording of the Shimmer demo on a dark phone screen. A band of light sweeps repeatedly through the words of “Generating response…”, “Thinking…” and “Searching the web”, lighting each letter as it passes, then through further rows demonstrating a ping-pong sweep, a right-to-left sweep, a wider slower band, a disabled row that stays still, and two colour variants.",
+    "width": 640,
+    "height": 1122,
+    "caption": "The sweep is clipped to the glyphs, so the letters catch the light rather than a box over them."
+  }
+}

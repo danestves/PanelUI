@@ -1,0 +1,117 @@
+{
+  "slug": "time-picker",
+  "intro": "A time of day behind a trigger, in one of three faces.\n\nThe value is `{ hour, minute }` on a 24-hour clock whatever the face shows. A 12-hour display is a rendering choice; storing 7pm as `{ hour: 7 }` plus a meridiem flag would put that flag into every comparison downstream.\n\nThe three layouts exist because \"pick a time\" is three tasks. `wheel` is the precise one — any minute in the day is two or three flicks away. `clock` picks a *slot* rather than a time, and answers \"morning or evening?\" faster than digits. `ruler` is the coarse one, and the only one that reads at arm's length.\n\nAll three produce the same value and take the same props, so swapping between them is a one-word change. For a day and a time together, use [DateTimePicker](/docs/components/date-time-picker).",
+  "usage": "const [time, setTime] = useState<TimeValue>();\n\n<TimePicker value={time} onValueChange={setTime} />",
+  "extraImports": [
+    "Button",
+    "ClockIcon",
+    "Frame",
+    "ToggleButton",
+    "ToggleButtonGroup",
+    "formatTime",
+    "type TimeValue"
+  ],
+  "parts": {
+    "Trigger": "Wraps a trigger of your own and opens the panel on press. Pass a child to the picker instead and it is wrapped for you."
+  },
+  "examples": [
+    {
+      "title": "A time",
+      "description": "The trigger reads back the chosen time and falls back to the placeholder. Nothing chosen yet means the wheel opens near the current hour rather than at midnight — an unset picker still has to open somewhere plausible.",
+      "code": "const [time, setTime] = useState<TimeValue>();\n\n<TimePicker value={time} onValueChange={setTime} />",
+      "previewVideo": {
+        "src": "/previews/time-picker-a-time.mp4",
+        "poster": "/previews/time-picker-a-time-poster.jpg",
+        "alt": "TimePicker — A time.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "A 24-hour clock",
+      "description": "`hourCycle={24}` drops the meridiem column entirely and writes hours 00–23. The stored value does not change: it was always on a 24-hour clock.",
+      "code": "<TimePicker value={time} onValueChange={setTime} hourCycle={24} />"
+    },
+    {
+      "title": "Slots, not times",
+      "description": "A `minuteStep` turns the wheel into a list of the times you actually offer. Half-hour slots is four rows of scrolling instead of sixty.",
+      "code": "<TimePicker value={time} onValueChange={setTime} minuteStep={30} />"
+    },
+    {
+      "title": "Within opening hours",
+      "description": "`minTime` and `maxTime` bound the value rather than the scroll. A face reports the row it landed on and the picker clamps it, so every layout is bounded by the same rule and a value outside the span comes back as the nearest one inside it.",
+      "code": "<TimePicker\n  value={time}\n  onValueChange={setTime}\n  minTime={{ hour: 9, minute: 0 }}\n  maxTime={{ hour: 17, minute: 30 }}\n  minuteStep={15}\n/>"
+    },
+    {
+      "title": "The clock face",
+      "description": "A face beside a list of times. The hands sweep to the selection rather than jumping, because the face’s whole job is to say *when in the day* the highlighted row is — and a hand that jumps gives that away one row at a time.",
+      "code": "<TimePicker layout=\"clock\" value={time} onValueChange={setTime} />",
+      "previewVideo": {
+        "src": "/previews/time-picker-the-clock-face.mp4",
+        "poster": "/previews/time-picker-the-clock-face-poster.jpg",
+        "alt": "TimePicker — The clock face.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "The ruler, in a sheet",
+      "description": "One large readout over a scale you swipe. It is the layout that reads at arm's length, so it is the one for a sheet — where the panel takes the full width and the Done button with it, because a sheet's outside is only the strip above it.",
+      "code": "<TimePicker\n  layout=\"ruler\"\n  presentation=\"bottom-sheet\"\n  value={time}\n  onValueChange={setTime}\n/>",
+      "previewVideo": {
+        "src": "/previews/time-picker-the-ruler-in-a-sheet.mp4",
+        "poster": "/previews/time-picker-the-ruler-in-a-sheet-poster.jpg",
+        "alt": "TimePicker — The ruler, in a sheet.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "The four presentations",
+      "description": "`presentation` decides where the picker opens, and the choice is about how much of the screen the answer is worth. `popover` keeps the field in view and is the default; `dialog` takes the middle of the screen for a choice that is the whole point of the step; `bottom-sheet` puts it under the thumb, which is what a scale you swipe wants; and `inline` opens nothing at all, for a picker that is part of a form rather than behind it.",
+      "code": "<TimePicker presentation=\"popover\" value={time} onValueChange={setTime} />\n<TimePicker presentation=\"dialog\" … />\n<TimePicker presentation=\"bottom-sheet\" … />\n<TimePicker presentation=\"inline\" … />",
+      "previewVideo": {
+        "src": "/previews/time-picker-the-four-presentations.mp4",
+        "poster": "/previews/time-picker-the-four-presentations-poster.jpg",
+        "alt": "TimePicker — The four presentations.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "In a dialog",
+      "description": "The same panel over a frosted screen. Worth it when the time *is* the decision on the screen — the blur says that in a way a dim does not, and falls back to the dim where expo-blur is not installed.",
+      "code": "<TimePicker presentation=\"dialog\" value={time} onValueChange={setTime} />"
+    },
+    {
+      "title": "Inline, inside a Frame",
+      "description": "`inline` renders the panel with no trigger and no overlay, so it can be composed into a card of your own. The toggle goes outside the card: it chooses *which* time the card is editing, which is a decision about the card rather than a control inside it.",
+      "code": "const [edge, setEdge] = useState('start');\n\n<View className=\"gap-3\">\n  <ToggleButtonGroup\n    selectionMode=\"single\"\n    size=\"sm\"\n    value={[edge]}\n    onValueChange={(next) => setEdge(next[0] ?? 'start')}\n    className=\"w-full justify-between px-1\"\n  >\n    <ToggleButton id=\"start\">Starts</ToggleButton>\n    <ToggleButton id=\"end\">Ends</ToggleButton>\n  </ToggleButtonGroup>\n\n  <Frame>\n    <Frame.Header>\n      <Frame.Title>Time</Frame.Title>\n      <Frame.Action>\n        {formatTime(start)} – {formatTime(end)}\n      </Frame.Action>\n    </Frame.Header>\n    <Frame.Panel>\n      <Frame.Section className=\"items-center\">\n        <TimePicker\n          presentation=\"inline\"\n          layout=\"clock\"\n          value={edge === 'start' ? start : end}\n          onValueChange={edge === 'start' ? setStart : setEnd}\n        />\n      </Frame.Section>\n    </Frame.Panel>\n  </Frame>\n</View>",
+      "previewVideo": {
+        "src": "/previews/time-picker-inline-inside-a-frame.mp4",
+        "poster": "/previews/time-picker-inline-inside-a-frame-poster.jpg",
+        "alt": "TimePicker — Inline, inside a Frame.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Your own trigger",
+      "description": "Pass a child and it is cloned with an `onPress` that opens the panel, so a field row or an icon button can stand in for the default button.",
+      "code": "<TimePicker value={time} onValueChange={setTime}>\n  <Button variant=\"ghost\" size=\"icon\" accessibilityLabel=\"Choose a time\">\n    <ClockIcon size={18} />\n  </Button>\n</TimePicker>"
+    },
+    {
+      "title": "Turning the readout down",
+      "description": "The `ruler` face states its time in one large centred number, which is right when the scale is the only thing on the panel. Under something that outranks it — a calendar, a form row — that number is the largest text on screen standing for the smaller half of the answer. `compact` steps it down; `none` drops it, for a caller writing the time itself. The other two faces spell the time out in their own columns and hands and ignore this.",
+      "code": "<TimePicker layout=\"ruler\" readout=\"compact\" value={time} onValueChange={setTime} />\n\n{/* …or take it over entirely */}\n<TimePicker presentation=\"inline\" layout=\"ruler\" readout=\"none\" … />"
+    }
+  ],
+  "notes": "**The value is always 0–23.** `displayHour` and `hourFromDisplay` are exported alongside it if you need the face's own numbering, but nothing stored should be in it.\n\n**`minuteStep` defaults per layout.** `wheel` steps by 1, `clock` by 30 and `ruler` by 15 — the two that scroll the whole day at once need a coarser grid to be usable. Pass it explicitly and the layout stops mattering.\n\n**A chosen time off the step is rounded, not rejected.** At a 30-minute step 7:29 is a finger that stopped just short of half past, not a request for seven o'clock.\n\n**Every face is a scroll view.** Momentum, deceleration and fling physics come from the platform, and the selection is the row it comes to rest on. That is also why the panel needs a definite width, which the presentations give it.\n\n**The sheet gets a Done button and the popover does not.** A popover is dismissed by tapping anywhere outside it, which is most of the screen; a sheet's outside is the strip above it, and a scale under your thumb needs somewhere deliberate to finish.",
+  "previewVideo": {
+    "src": "/previews/time-picker.mp4",
+    "poster": "/previews/time-picker-poster.jpg",
+    "alt": "The TimePicker component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  }
+}

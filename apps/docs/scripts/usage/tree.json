@@ -1,0 +1,102 @@
+{
+  "slug": "tree",
+  "intro": "A hierarchy you can open a level at a time — a file browser, a folder of settings, a category picker, a table of contents.\n\nA closed branch renders nothing below it, so a tree costs what is open in it rather than what is in it.\n\n[Accordion](/docs/components/accordion) is the one-level version of the same idea; a tree's items can hold items, to any depth.",
+  "usage": "<Tree defaultExpanded={['src']} selectionMode=\"single\" showLines>\n  <Tree.Item value=\"src\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Icon><FolderOpenIcon size={15} /></Tree.Icon>\n      <Tree.Label>src</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"src/index.ts\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Icon><FileIcon size={14} /></Tree.Icon>\n          <Tree.Label>index.ts</Tree.Label>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>",
+  "extraImports": [
+    "Badge",
+    "FileIcon",
+    "FolderIcon",
+    "FolderOpenIcon",
+    "Spinner",
+    "Text"
+  ],
+  "anatomy": "<Tree>\n  <Tree.Item value=\"…\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Icon>…</Tree.Icon>\n      <Tree.Label>…</Tree.Label>\n      <Tree.Actions>…</Tree.Actions>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"…\">…</Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>",
+  "parts": {
+    "Item": "One node. Its `value` identifies it in both the expanded and the selected state, and its depth is read from how deeply it is nested rather than declared.",
+    "Trigger": "The node's row, and the thing you press. Pressing it selects the node, and opens it too unless `expandOnPress` is off.",
+    "Indicator": "The chevron, which turns a quarter circle while the branch is open. It is pressable in its own right, so it opens a branch without selecting it. On a leaf it becomes an empty box of the same size, keeping the labels aligned.",
+    "Icon": "The leading glyph, between the chevron and the label. It holds its width whether or not you fill it, which is what keeps a folder's name and a file's name starting at the same place — so give every row in a tree an icon, or give none of them one. A row with an empty slot is the odd one out: its label sits a whole box away from its own chevron while the rows around it look right.",
+    "Label": "The row's text.",
+    "Actions": "The trailing slot: a count, a badge, a menu button for the node.",
+    "Group": "The rows inside a branch — and the reason its item is a branch. Unmounts when the branch is closed."
+  },
+  "partNotes": "An item is a branch because it holds a `Tree.Group`, not because it was declared one, so there is no second fact to keep true. A branch whose children have not been fetched yet is the exception: it has no group to be recognised by, so it sets `hasChildren` to earn its chevron.",
+  "notes": "Expansion and selection are separate pieces of state, because a tree commonly needs one without the other. Expansion is `expanded` / `defaultExpanded` / `onExpandedChange` and is always an array. Selection is `value` / `defaultValue` / `onValueChange`, is off until you set `selectionMode`, and hands its value back in the shape you gave it — a string when `single`, an array when `multiple`.\n\nThe rows are laid out with `paddingStart` and a start-edge border rather than left-hand ones, so a tree in a right-to-left subtree indents away from the correct edge.\n\nBecause a closed branch is unmounted, the work a tree does is proportional to the rows on screen. A single branch holding thousands of open rows is the case that is not covered: render that one inside a virtualised list of your own.",
+  "examples": [
+    {
+      "title": "A file tree",
+      "description": "The default. `defaultExpanded` names the branches that start open; everything below a closed one has not rendered at all. Folders take a glyph of their own rather than an empty `Tree.Icon`, so a folder's name starts where the names of the files under it do.",
+      "code": "<Tree defaultExpanded={['src']}>\n  <Tree.Item value=\"src\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Icon><FolderOpenIcon size={15} /></Tree.Icon>\n      <Tree.Label>src</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"src/index.ts\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Icon><FileIcon size={14} /></Tree.Icon>\n          <Tree.Label>index.ts</Tree.Label>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>",
+      "previewVideo": {
+        "src": "/previews/tree.mp4",
+        "poster": "/previews/tree-poster.jpg",
+        "alt": "Tree — A file tree.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Guide lines",
+      "description": "`showLines` draws a hairline down each level, connecting a branch to the rows inside it. The indent is unchanged — the line lands midway through it rather than adding a step of its own.",
+      "code": "<Tree defaultExpanded={['src', 'src/components']} showLines>\n  {/* …items… */}\n</Tree>",
+      "preview": {
+        "src": "/previews/tree-guide-lines.jpg",
+        "alt": "Tree — Guide lines.",
+        "width": 1179,
+        "height": 787
+      }
+    },
+    {
+      "title": "Selecting a node",
+      "description": "`selectionMode` turns the rows from expanders into choices. `single` keeps one selected; `multiple` switches `value` to an array.",
+      "code": "const [selected, setSelected] = useState<string | string[]>('');\n\n<Tree\n  selectionMode=\"single\"\n  value={selected}\n  onValueChange={setSelected}\n  defaultExpanded={['src']}\n  showLines\n>\n  {/* …items… */}\n</Tree>",
+      "preview": {
+        "src": "/previews/tree-selecting-a-node.jpg",
+        "alt": "Tree — Selecting a node.",
+        "width": 1179,
+        "height": 797
+      }
+    },
+    {
+      "title": "A sidebar nav",
+      "description": "`size=\"sm\"` for a denser row, `expandOnPress={false}` so pressing a section selects it without opening it, and `Tree.Actions` for the unread count. The chevron still opens the section either way.",
+      "code": "<Tree size=\"sm\" selectionMode=\"single\" expandOnPress={false} defaultExpanded={['inbox']}>\n  <Tree.Item value=\"inbox\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Label>Inbox</Tree.Label>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"inbox/unread\">\n        <Tree.Trigger>\n          <Tree.Indicator />\n          <Tree.Label>Unread</Tree.Label>\n          <Tree.Actions><Badge variant=\"secondary\" count={12} /></Tree.Actions>\n        </Tree.Trigger>\n      </Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>",
+      "preview": {
+        "src": "/previews/tree-a-sidebar-nav.jpg",
+        "alt": "Tree — A sidebar nav.",
+        "width": 1179,
+        "height": 527
+      }
+    },
+    {
+      "title": "A branch that loads when opened",
+      "description": "`hasChildren` gives a chevron to a branch that has no `Tree.Group` yet, and `onExpandedChange` is where the fetch goes. The rows appear underneath once they arrive.",
+      "code": "const [expanded, setExpanded] = useState<string[]>([]);\nconst [files, setFiles] = useState<string[] | null>(null);\n\n<Tree\n  expanded={expanded}\n  onExpandedChange={(next) => {\n    setExpanded(next);\n    if (next.includes('archive') && !files) fetchArchive().then(setFiles);\n  }}\n>\n  <Tree.Item value=\"archive\" hasChildren>\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Label>archive</Tree.Label>\n      <Tree.Actions>{!files ? <Spinner size=\"sm\" /> : null}</Tree.Actions>\n    </Tree.Trigger>\n    {files ? <Tree.Group>{/* …rows… */}</Tree.Group> : null}\n  </Tree.Item>\n</Tree>",
+      "previewVideo": {
+        "src": "/previews/tree-a-branch-that-loads-when-opened.mp4",
+        "poster": "/previews/tree-a-branch-that-loads-when-opened-poster.jpg",
+        "alt": "Tree — A branch that loads when opened.",
+        "width": 720,
+        "height": 422
+      }
+    },
+    {
+      "title": "Selecting more than one",
+      "description": "`selectionMode=\"multiple\"` switches `value` from a string to an array, and a row toggles rather than replacing what was chosen. Selection and expansion stay separate: picking a folder does not open it, and opening one does not pick it.",
+      "code": "const [selected, setSelected] = useState<string[]>([]);\n\n<Tree\n  selectionMode=\"multiple\"\n  value={selected}\n  onValueChange={setSelected}\n  expanded={expanded}\n  onExpandedChange={setExpanded}\n  showLines\n>\n  {/* …items… */}\n</Tree>",
+      "preview": {
+        "src": "/previews/tree-selecting-more-than-one.jpg",
+        "alt": "Tree — Selecting more than one.",
+        "width": 1179,
+        "height": 804
+      }
+    }
+  ],
+  "previewVideo": {
+    "src": "/previews/tree.mp4",
+    "poster": "/previews/tree-poster.jpg",
+    "alt": "The Tree component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  }
+}

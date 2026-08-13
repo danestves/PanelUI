@@ -1,0 +1,124 @@
+{
+  "slug": "button-group",
+  "intro": "Several buttons drawn as one control: a segmented run, a split action, a toolbar down the side of a canvas.\n\nThe buttons stay [Button](/docs/components/button)s. Anything a button does — an icon, a badge, a loading state, a disabled segment, opening a [Popover](/docs/components/popover) — it still does inside a group, because the group is a container rather than a component that takes a list of items and renders them for you.\n\n**It is not a selection control**, and it does not track which button is on. Use [ToggleButtonGroup](/docs/components/toggle-button) when the control owns which one is selected, and [Tabs](/docs/components/tabs) when the buttons switch between panels of content — a segmented run that swaps a screen is navigation, and it should say so to a screen reader.",
+  "usage": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<PencilIcon size={16} />}>Rename</Button>\n  <Button startContent={<CopyIcon size={16} />}>Duplicate</Button>\n  <Button startContent={<TrashIcon size={16} />} disabled>Remove</Button>\n</ButtonGroup>",
+  "extraImports": [
+    "Button",
+    "Badge",
+    "Popover",
+    "Text",
+    "PencilIcon",
+    "CopyIcon",
+    "TrashIcon",
+    "FileIcon",
+    "ImageIcon",
+    "BookmarkIcon",
+    "SendIcon",
+    "ChevronDownIcon",
+    "StarIcon",
+    "EyeIcon",
+    "PlusIcon",
+    "MinusIcon",
+    "MaximizeIcon",
+    "CrosshairIcon"
+  ],
+  "examples": [
+    {
+      "title": "A view switcher",
+      "description": "`variant` and `size` fill in for any button that did not choose its own, so a run of three does not repeat the same two props three times. The current segment says `secondary` for itself and wins — which is all “selected” needs to be once the surrounding shape is already drawn.",
+      "code": "const [view, setView] = useState('media');\n\n<ButtonGroup size=\"sm\">\n  {views.map(({ value, label, icon: Icon }) => (\n    <Button\n      key={value}\n      variant={view === value ? 'secondary' : 'ghost'}\n      startContent={<Icon size={15} />}\n      onPress={() => setView(value)}\n    >\n      {label}\n    </Button>\n  ))}\n</ButtonGroup>",
+      "preview": {
+        "src": "/previews/button-group.jpg",
+        "alt": "ButtonGroup — A view switcher.",
+        "width": 1179,
+        "height": 194
+      }
+    },
+    {
+      "title": "Sharing the row",
+      "description": "`fullWidth` spans the container and splits it equally between the segments — equally, not by content. A row sized to its labels is a row whose divisions move when the labels change, and a picker whose thirds are different widths reads as though one of them matters more.",
+      "code": "<ButtonGroup fullWidth>\n  <Button variant=\"ghost\">Monthly</Button>\n  <Button variant=\"secondary\">Annual</Button>\n  <Button variant=\"ghost\">One-off</Button>\n</ButtonGroup>",
+      "preview": {
+        "src": "/previews/button-group-sharing-the-row.jpg",
+        "alt": "ButtonGroup — Sharing the row.",
+        "width": 1179,
+        "height": 236
+      }
+    },
+    {
+      "title": "A split action",
+      "description": "The thing itself, and the other ways to do it. The chevron segment is a `Button` inside a `Popover.Trigger` — a button nested inside something else — which still picks the group up, because the group passes its variant and size down through context rather than by rewriting the children it can see.",
+      "code": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<SendIcon size={16} />}>Publish</Button>\n  <Popover>\n    <Popover.Trigger>\n      <Button size=\"icon\" accessibilityLabel=\"More ways to publish\">\n        <ChevronDownIcon size={16} />\n      </Button>\n    </Popover.Trigger>\n    <Popover.Content align=\"end\" className=\"w-56 p-1.5\">\n      {/* …the other ways… */}\n    </Popover.Content>\n  </Popover>\n</ButtonGroup>",
+      "previewVideo": {
+        "src": "/previews/button-group-a-split-action.mp4",
+        "poster": "/previews/button-group-a-split-action-poster.jpg",
+        "alt": "ButtonGroup — A split action.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "A count inside a segment",
+      "description": "`endContent` takes a `Badge` the same way it would outside a group. Nothing about being in a run changes what a button can hold.",
+      "code": "<ButtonGroup variant=\"outline\">\n  <Button\n    startContent={<StarIcon size={16} />}\n    endContent={<Badge variant=\"warning\" count={148} />}\n  >\n    Star\n  </Button>\n  <Button size=\"icon\" accessibilityLabel=\"Star options\">\n    <ChevronDownIcon size={16} />\n  </Button>\n</ButtonGroup>",
+      "preview": {
+        "src": "/previews/button-group-a-count-inside-a-segment.jpg",
+        "alt": "ButtonGroup — A count inside a segment.",
+        "width": 1179,
+        "height": 435
+      }
+    },
+    {
+      "title": "Down the side",
+      "description": "`orientation=\"vertical\"` stacks the run and turns the dividers with it. With `size=\"icon\"` this is the toolbar beside a canvas.",
+      "code": "<ButtonGroup orientation=\"vertical\" variant=\"outline\" size=\"icon\">\n  <Button accessibilityLabel=\"Zoom in\"><PlusIcon size={16} /></Button>\n  <Button accessibilityLabel=\"Zoom out\"><MinusIcon size={16} /></Button>\n  <Button accessibilityLabel=\"Fit to screen\"><MaximizeIcon size={16} /></Button>\n</ButtonGroup>",
+      "preview": {
+        "src": "/previews/button-group-down-the-side.jpg",
+        "alt": "ButtonGroup — Down the side.",
+        "width": 1179,
+        "height": 613
+      }
+    },
+    {
+      "title": "Sharing the props without sharing the shape",
+      "description": "`attached={false}` keeps the inherited variant and size and drops the joined shape, leaving a spaced row of ordinary buttons. A toolbar rather than a segmented control.",
+      "code": "<ButtonGroup attached={false} variant=\"outline\" size=\"sm\">\n  <Button startContent={<SearchIcon size={15} />}>Find</Button>\n  <Button startContent={<DownloadIcon size={15} />}>Export</Button>\n  <Button startContent={<ShareNodesIcon size={15} />}>Share</Button>\n</ButtonGroup>",
+      "preview": {
+        "src": "/previews/button-group-sharing-the-props-without-sharing-the-shape.jpg",
+        "alt": "ButtonGroup — Sharing the props without sharing the shape.",
+        "width": 1179,
+        "height": 270
+      }
+    },
+    {
+      "title": "Busy and unavailable",
+      "description": "A segment carries its own state. `loading` swaps its label for a spinner and stops it answering; `disabled` fades it and deafens it. Neither takes the segment out of the run — a joined shape with a hole in it is harder to read than a dim segment, and the row would resize under the finger as the state changed.",
+      "code": "<ButtonGroup variant=\"outline\">\n  <Button startContent={<PencilIcon size={16} />}>Rename</Button>\n  <Button startContent={<CopyIcon size={16} />}>Duplicate</Button>\n  <Button startContent={<TrashIcon size={16} />} disabled>\n    Remove\n  </Button>\n</ButtonGroup>\n\n<ButtonGroup variant=\"outline\">\n  <Button loading={saving} onPress={save}>\n    {saving ? 'Saving' : 'Save layout'}\n  </Button>\n  <Button size=\"icon\" accessibilityLabel=\"Revert\">\n    <PlusIcon size={16} />\n  </Button>\n</ButtonGroup>",
+      "previewVideo": {
+        "src": "/previews/button-group-busy-and-unavailable.mp4",
+        "poster": "/previews/button-group-busy-and-unavailable-poster.jpg",
+        "alt": "ButtonGroup — Busy and unavailable.",
+        "width": 720,
+        "height": 252
+      }
+    },
+    {
+      "title": "Three sizes",
+      "description": "`size` on the group is the size of every segment in it, and it sets the height, the padding and the type together so the joined edges still meet. A segment that names its own size wins, which is how the chevron on a split action stays square while the rest of the run is not.",
+      "code": "{(['sm', 'md', 'lg'] as const).map((size) => (\n  <ButtonGroup key={size} size={size} variant=\"outline\">\n    <Button>Left</Button>\n    <Button>Middle</Button>\n    <Button>Right</Button>\n  </ButtonGroup>\n))}",
+      "preview": {
+        "src": "/previews/button-group-three-sizes.jpg",
+        "alt": "ButtonGroup — Three sizes.",
+        "width": 1179,
+        "height": 571
+      }
+    }
+  ],
+  "notes": "### Why the container draws the border\n\nA joined run could be built by giving the first and last segments their corners, squaring the ones between, and collapsing every shared edge with a negative margin. That works on the web and is a stack of off-by-one problems on a phone: the hairlines land on different fractions of a pixel per device, and a run that wraps has no first or last segment any more.\n\nSo the group draws the shape once — one border, one radius, one shadow, clipped — and the buttons inside draw none of their own. The dividers are real one-pixel views the group puts between its children, which is why they are always exactly one pixel and always in the same place.\n\n### What a button gives up inside one\n\nIts radius and its shadow, because the group owns both. Its border turns transparent rather than being removed — it is holding a pixel of the button's height, and dropping it would leave an `outline` segment a hair shorter than a `ghost` one beside it.\n\nIts press feedback changes too. A button on its own shrinks slightly when pressed, which inside a joined run would pull the segment away from its neighbours and show the container through the gap, so an attached segment takes a background instead. Pass `pressScale` yourself to override that.\n\n### Native buttons are not grouped\n\nA `native` button is drawn by the platform, so it has no border, radius or shadow for the group to take over. Several of them in a row would be platform buttons with a border drawn around them rather than a segmented control, so a native button inside a group ignores it and stays exactly what it was.",
+  "preview": {
+    "src": "/previews/button-group.jpg",
+    "alt": "The ButtonGroup component, running in the example app.",
+    "width": 1179,
+    "height": 194
+  }
+}

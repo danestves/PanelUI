@@ -1,0 +1,76 @@
+{
+  "slug": "scroll-canvas",
+  "intro": "A picture that moves inside its frame as you scroll past it.\n\nThe frame stays where the layout puts it and the image moves within it, which is what separates a parallax from a thing sliding around the page.\n\nIt is the counterpart to [ScrollText](/docs/components/scroll-text) — the same scrubbed reveal, applied to an image.",
+  "usage": "<ScrollProgress>\n  <ScrollView>\n    <ScrollCanvas source={{ uri }} effect=\"parallax\" />\n  </ScrollView>\n</ScrollProgress>",
+  "extraImports": [
+    "ScrollProgress"
+  ],
+  "examples": [
+    {
+      "title": "The four effects",
+      "description": "They are four different jobs. `parallax` drifts the image against the scroll so the frame reads as a window onto something further away; `zoom` settles it from slightly oversized to its natural size; `reveal` wipes it in from the bottom edge; `sequence` picks a frame out of a series, so the reader scrubs an animation with their thumb.",
+      "code": "<ScrollCanvas source={{ uri }} effect=\"parallax\" />\n<ScrollCanvas source={{ uri }} effect=\"zoom\" />\n<ScrollCanvas source={{ uri }} effect=\"reveal\" />\n<ScrollCanvas sources={frames} effect=\"sequence\" />"
+    },
+    {
+      "title": "Scrubbing a sequence",
+      "description": "Every frame stays mounted and its opacity is switched, rather than one image whose source is swapped. A swap crosses back into JS at each step and then waits on a decode, so a fast scrub shows the previous frame or nothing at all. Keep it to a couple of dozen frames — each one is a decoded bitmap held for as long as the canvas is mounted.",
+      "code": "<ScrollCanvas\n  effect=\"sequence\"\n  sources={frames}\n  start={0.95}\n  end={0.1}\n/>",
+      "previewVideo": {
+        "src": "/previews/scroll-canvas-sequence.mp4",
+        "poster": "/previews/scroll-canvas-sequence-poster.jpg",
+        "alt": "ScrollCanvas — Scrubbing a sequence.",
+        "width": 720,
+        "height": 1464
+      }
+    },
+    {
+      "title": "Shape and travel",
+      "description": "`aspectRatio` sets the frame; `distance` multiplies how far the effect moves. A parallaxing image is drawn taller than its frame so the drift never exposes an edge — pushing `distance` far past `1` spends more of that budget than there is.",
+      "code": "<ScrollCanvas source={{ uri }} aspectRatio={1} distance={1.6} />\n\n<ScrollCanvas\n  source={{ uri }}\n  aspectRatio={21 / 9}\n  className=\"rounded-none\"\n/>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Parallax",
+      "description": "The image drifts against the scroll inside a frame that stays put. It is drawn taller than the frame so the drift never exposes an edge.",
+      "code": "<ScrollCanvas source={{ uri }} effect=\"parallax\" />",
+      "previewVideo": {
+        "src": "/previews/scroll-canvas-parallax.mp4",
+        "poster": "/previews/scroll-canvas-parallax-poster.jpg",
+        "alt": "ScrollCanvas — Parallax.",
+        "width": 720,
+        "height": 1472
+      }
+    },
+    {
+      "title": "Zoom",
+      "description": "It settles from slightly oversized to its natural size as the frame crosses the viewport.",
+      "code": "<ScrollCanvas source={{ uri }} effect=\"zoom\" />",
+      "previewVideo": {
+        "src": "/previews/scroll-canvas-zoom.mp4",
+        "poster": "/previews/scroll-canvas-zoom-poster.jpg",
+        "alt": "ScrollCanvas — Zoom.",
+        "width": 720,
+        "height": 1460
+      }
+    },
+    {
+      "title": "Reveal",
+      "description": "A wipe uncovers it from the bottom edge up. A cover that retreats rather than a height that grows — animating a height relayouts the image inside it every frame.",
+      "code": "<ScrollCanvas source={{ uri }} effect=\"reveal\" />",
+      "previewVideo": {
+        "src": "/previews/scroll-canvas-reveal.mp4",
+        "poster": "/previews/scroll-canvas-reveal-poster.jpg",
+        "alt": "ScrollCanvas — Reveal.",
+        "width": 720,
+        "height": 1462
+      }
+    },
+    {
+      "title": "Sequence",
+      "description": "The scroll position picks the frame, so the thumb scrubs the animation. Every frame stays mounted and switches opacity; swapping one image's source would cross into JS and then wait on a decode.",
+      "code": "<ScrollCanvas\n  effect=\"sequence\"\n  sources={frames}\n  start={0.95}\n  end={0.1}\n/>"
+    }
+  ],
+  "notes": "The frame clips, so the image can be oversized and moved without disturbing anything around it. `reveal` is a cover that retreats rather than a height that grows, because animating a height relayouts the image inside it every frame — and it is a wipe rather than a fade so the frame keeps its shape while it fills.\n\n“Canvas” here is the frame the pictures move behind, not a drawing surface: nothing is rasterised and there is no `<canvas>` involved.\n\nUnder `useReducedMotion`, or with `enabled={false}`, the image renders plainly at rest."
+}

@@ -1,0 +1,97 @@
+{
+  "slug": "funnel-chart",
+  "intro": "Where a population drained away, one step at a time.\n\nEvery stage is a subset of the one above it, in the order the steps happen. That is a stronger claim than a bar chart makes, and it is what makes the interesting number the *ratio* between two stages rather than any stage's value: how many of the people who started checking out entered a card.\n\nIt is drawn as one ribbon across the card. The stages divide the width between them, each band is as tall as its value where it starts and as tall as the next stage's where it ends, and the sides curve so the run reads as a single narrowing channel.\n\n**Only use it when each stage really is a subset of the last.** For categories that do not nest, use a [BarChart](/docs/charts/bar-chart).\n\n**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.",
+  "usage": "<FunnelChart data={checkout}>\n  <FunnelChart.Header title=\"Product viewed\" value=\"41,800\" />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>",
+  "extraImports": [
+    "type FunnelDatum",
+    "Frame"
+  ],
+  "anatomy": "<FunnelChart data={…}>\n  <FunnelChart.Header />      {/* the strip above the run */}\n  <FunnelChart.Skeleton />    {/* the plain ribbon it waits behind */}\n  <FunnelChart.Stages />      {/* the ribbon itself */}\n  <FunnelChart.Labels />      {/* the count, the pill and the name, per stage */}\n  <FunnelChart.Legend />      {/* a key underneath, for a chart without labels */}\n</FunnelChart>",
+  "parts": {
+    "Header": "The strip above the run — what the funnel is of, what it reads, and room for a control. The chart introducing itself, as distinct from the caption on the card around it.",
+    "Stages": "The ribbon. One part rather than one per stage: a stage’s near edge is the previous stage’s far edge, so they cannot be configured apart without the shape coming apart with them. Each band is drawn concentrically, from a wide faint ring to a tight near-solid core.",
+    "Labels": "The readings, arranged around the ribbon: the count above the band, the name under it, and the conversion in a pill on the band itself. Three places rather than one line, because a name, a count and a percentage sharing a row make a row as wide as all three — and at the width a phone has, it is the name that gives way.",
+    "Legend": "A swatch, a name and a reading per stage, under the run. For a compact chart drawn without `Labels`, where the run is a shape and the reading is underneath it. A row each by default, because the stages are a sequence and a wrapped centred line loses the order.",
+    "Skeleton": "The waiting state: one plain ribbon over the whole run, undivided. A placeholder split would be an invented drop-off, and nobody can tell an invented one from a real one until it changes under them."
+  },
+  "examples": [
+    {
+      "title": "The data",
+      "description": "Steps in the order they happen, first one first. The order is yours and never the chart’s — stages are a process, and sorting them by size would destroy the only thing the chart is asserting.\n\nKeep the names short. A stage gets a column of the card’s width and no more, so five across a phone is about seventy points each, and a name that does not fit under one is a name the reader never gets to read.",
+      "code": "const checkout: FunnelDatum[] = [\n  { label: 'Viewed', value: 41800 },\n  { label: 'Basket', value: 18240 },\n  { label: 'Checkout', value: 9420 },\n  { label: 'Payment', value: 6180 },\n  { label: 'Paid', value: 5240 },\n];"
+    },
+    {
+      "title": "How deep it tapers",
+      "description": "`height` is the one measurement the data cannot supply. The run is as wide as the card and the stages divide that between them, but nothing in a set of counts says how far the ribbon should taper through — so it is a decision. Everything else follows from it: the count and the name each take a fixed share of the height at the top and bottom, and the ribbon is centred in what is left.",
+      "code": "<FunnelChart data={checkout} height={240}>\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+    },
+    {
+      "title": "Which conversion the pill reports",
+      "description": "Two true readings of one run, answering different questions. `top` is the share of the first stage — the default, because every stage has one and they read along the run as a single falling series. `previous` is the drop from the stage above, which is the step-by-step reading; the first stage has nothing above it, so it carries no pill.",
+      "code": "<FunnelChart data={checkout}>\n  <FunnelChart.Stages />\n  <FunnelChart.Labels share=\"previous\" />\n</FunnelChart>"
+    },
+    {
+      "title": "Rings, and drawing the shape flat",
+      "description": "`layers` is how many concentric rings each band is drawn as: tall and faint on the outside through to a tight near-solid core, which is what gives the ribbon an edge that falls off rather than stopping dead. Raise it and the shape reads as light; `layers={1}` draws it once, flat. `edges=\"straight\"` replaces the curved sides with plain diagonals, which is the honest shape for a drop worth seeing as a corner.",
+      "code": "<FunnelChart data={pipeline} layers={1} edges=\"straight\">\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+    },
+    {
+      "title": "Pulling one stage out of the fade",
+      "description": "The run is one hue that fades along it, because the stages are one quantity at successive moments. A `color` on a single stage takes it out of that fade and draws it at full strength — for the step where the money is taken, or the one the report is about. A colour per stage would say they were unrelated series.",
+      "code": "const data = checkout.map((stage) =>\n  stage.label === 'Paid' ? { ...stage, color: '#34d399' } : stage\n);"
+    },
+    {
+      "title": "Selecting a stage",
+      "description": "Press a band, its column, or its entry in the legend, and its rings spread while the others dim. Pressing it again clears the selection. Control it from outside with `activeIndex` and `onActiveIndexChange` when the header — or anything else on the screen — has to stay in step.",
+      "code": "const [active, setActive] = useState(-1);\nconst stage = active >= 0 ? checkout[active] : null;\n\n<FunnelChart data={checkout} activeIndex={active} onActiveIndexChange={setActive}>\n  <FunnelChart.Header\n    title={stage ? stage.label : 'Everyone who looked'}\n    value={(stage ?? checkout[0]).value.toLocaleString()}\n  />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+    },
+    {
+      "title": "A hard drop-off",
+      "description": "Eleven hires out of twelve hundred applications. At true height the last two stages are hairlines, and a hairline reads as nothing happening rather than as something rare — `minWidth` is the floor that keeps them visible, applied only to stages that have something in them.",
+      "code": "<FunnelChart data={pipeline} minWidth={0.16} edges=\"straight\" layers={1}>\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+    },
+    {
+      "title": "Compact, with a key instead of labels",
+      "description": "For a dashboard tile where the funnel is one of six things on the screen and a reading around every stage would be more text than tile. The key is a row per stage by default; `layout=\"inline\"` runs them together and wraps, where the names are short enough for it.",
+      "code": "<FunnelChart data={signup} height={120} gap={3}>\n  <FunnelChart.Stages />\n  <FunnelChart.Legend />\n</FunnelChart>"
+    },
+    {
+      "title": "While the numbers are still coming",
+      "description": "`status=\"loading\"` draws the ribbon and nothing else. An empty chart in that state still reserves the run’s height and a plausible number of stages, so the card does not jump when the data lands.",
+      "code": "<FunnelChart data={ready ? checkout : []} status={ready ? 'ready' : 'loading'}>\n  <FunnelChart.Skeleton />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Basic",
+      "description": "Five steps of a checkout, each labelled with what it converted at.",
+      "code": "<FunnelChart data={checkout}>\n  <FunnelChart.Header title=\"Product viewed\" value=\"41,800\" caption=\"13% of them placed an order\" />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+    },
+    {
+      "title": "Conversion",
+      "description": "Each step measured against the one above it, with both readings in the header as one is selected.",
+      "code": "<FunnelChart data={checkout} gap={6} activeIndex={active} onActiveIndexChange={setActive}>\n  <FunnelChart.Header title={stage?.label ?? 'Everyone who looked'} value={value} caption={caption} />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels share=\"previous\" />\n</FunnelChart>"
+    },
+    {
+      "title": "Pipeline",
+      "description": "A hard drop-off, drawn flat, with a floor under the stages too small to see.",
+      "code": "<FunnelChart data={pipeline} minWidth={0.16} edges=\"straight\" layers={1}>\n  <FunnelChart.Header title=\"Applications\" value=\"1,240\" caption=\"11 hires, from 1,240 applications\" />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+    },
+    {
+      "title": "Glow",
+      "description": "A deeper halo, and one stage pulled out of the fade into its own colour.",
+      "code": "<FunnelChart data={highlighted} layers={5} height={230}>\n  <FunnelChart.Header title=\"Order placed\" value=\"5,240\" caption=\"The one stage worth its own colour\" />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+    },
+    {
+      "title": "Compact",
+      "description": "The run as a shape, with the reading in a key underneath it.",
+      "code": "<FunnelChart data={signup} height={120} gap={3}>\n  <FunnelChart.Stages />\n  <FunnelChart.Legend />\n</FunnelChart>"
+    },
+    {
+      "title": "Loading",
+      "description": "One plain ribbon while it waits, because an invented drop-off is a lie.",
+      "code": "<FunnelChart data={status === 'loading' ? [] : checkout} status={status}>\n  <FunnelChart.Header title=\"Product viewed\" value={status === 'loading' ? '—' : '41,800'} />\n  <FunnelChart.Skeleton />\n  <FunnelChart.Stages />\n  <FunnelChart.Labels />\n</FunnelChart>"
+    }
+  ],
+  "notes": "### Why the readings are split three ways\n\nA stage has three things worth saying about it — what it is called, how many were left at it, and what it converted at — and putting all three on one line makes that line as wide as all three together. At the width a phone actually has, something has to give, and it is always the name: a reader is left with “Checkout st…” next to a number that means nothing without it.\n\nSo the count goes above the band, the name under it, and the conversion in a pill on the band itself. Each has the stage’s whole column to itself. The two text strips take a fixed share of the height and the ribbon takes the rest, centred in it, so the tallest stage reaches exactly to the words at both ends — no strip of nothing between the shape and the text, and no shape creeping under it.\n\nThe pill is filled rather than bare text for the same reason: it is the one reading that sits *over* the shape, where the fill behind it is the same token family the text would be drawn in. Punched out of its own background, it reads whatever the band is doing underneath.\n\n### One hue, not five\n\nThe stages are drawn in a single colour that fades along the run. They are one quantity at successive moments, not five unrelated series, and five hues would say they were — the reader would start looking for what “the green one” means. Set `color` on the chart to change the hue, or `color` on a single stage to pull it out of the fade at full strength.\n\n### A stage larger than its parent\n\nHeights are measured against the largest value in the run rather than against the first. In a well-formed funnel those are the same number. Where they are not — a stage that somehow counted more people than the step before it — the stage is drawn as given, taller than its parent, because that is a real data problem and a chart that quietly clamped it would be hiding the one thing worth seeing.\n\n### When not to reach for it\n\nA funnel asserts that each stage is a subset of the one above it. If that is not true of your data — categories that merely happen to be sorted, quantities measured at the same moment, anything a reader might want to compare exactly — it is a bar chart, where the comparison is a length and lengths are read exactly. Four to six stages is the range a funnel reads well in; past that the columns are too narrow to name and the lower stages are all floor."
+}

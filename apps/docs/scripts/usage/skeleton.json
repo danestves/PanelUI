@@ -1,0 +1,31 @@
+{
+  "slug": "skeleton",
+  "intro": "A shimmer placeholder for content that has not loaded yet.\n\nSize it with Tailwind utilities, matching the shape of what is coming — a placeholder that is the wrong size moves the page when the real content lands.\n\nFor a shimmer over content that *is* there, use [Shimmer](/docs/components/shimmer).",
+  "usage": "<View className=\"flex-row items-center gap-3\">\n  <Skeleton className=\"h-12 w-12 rounded-full\" />\n  <View className=\"flex-1 gap-2\">\n    <Skeleton className=\"h-4 w-3/4\" />\n    <Skeleton className=\"h-4 w-1/2\" />\n  </View>\n</View>",
+  "examples": [
+    {
+      "title": "A loading card",
+      "description": "Match the shape of the real content — a skeleton that is the wrong size is worse than none, because the layout jumps when the data lands.",
+      "code": "<Card>\n  <Card.Content className=\"gap-3 p-4\">\n    <Skeleton className=\"h-5 w-1/2\" />\n    <Skeleton className=\"h-4 w-full\" />\n    <Skeleton className=\"h-4 w-4/5\" />\n  </Card.Content>\n</Card>"
+    },
+    {
+      "title": "An avatar and two lines",
+      "code": "<View className=\"flex-row items-center gap-3\">\n  <Skeleton className=\"h-10 w-10 rounded-full\" />\n  <View className=\"flex-1 gap-2\">\n    <Skeleton className=\"h-4 w-1/3\" />\n    <Skeleton className=\"h-3 w-2/3\" />\n  </View>\n</View>"
+    },
+    {
+      "title": "Swapped for the real thing",
+      "code": "{loading ? (\n  <Skeleton className=\"h-6 w-32\" />\n) : (\n  <Text size=\"xl\" weight=\"semibold\">{user.name}</Text>\n)}"
+    }
+  ],
+  "extraImports": [
+    "Card",
+    "Text"
+  ],
+  "previewVideo": {
+    "src": "/previews/skeleton.mp4",
+    "poster": "/previews/skeleton-poster.jpg",
+    "alt": "The Skeleton component, running in the example app.",
+    "width": 720,
+    "height": 478
+  }
+}

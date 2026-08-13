@@ -1,0 +1,56 @@
+{
+  "slug": "radio-group",
+  "intro": "A single-select list of options, where all of them should be visible at once.\n\nPast about five options, or when the list has to be filtered, use [Select](/docs/components/select) instead.",
+  "usage": "<RadioGroup value={plan} onValueChange={setPlan}>\n  <RadioGroup.Item value=\"free\" label=\"Free — $0/month\" />\n  <RadioGroup.Item value=\"pro\" label=\"Pro — $12/month\" />\n  <RadioGroup.Item value=\"team\" label=\"Team — $36/month\" />\n</RadioGroup>",
+  "parts": {
+    "Item": "One option. `value` identifies it, `label` is what is shown."
+  },
+  "anatomy": "<RadioGroup>\n  <RadioGroup.Item value=\"…\" label=\"…\" />\n</RadioGroup>",
+  "examples": [
+    {
+      "title": "A list of plans",
+      "description": "The group owns the value; each item reports its own value up and reads selection back down.",
+      "code": "const [plan, setPlan] = useState(\"pro\");\n\n<RadioGroup value={plan} onValueChange={setPlan}>\n  <RadioGroup.Item value=\"free\" label=\"Free — $0/month\" />\n  <RadioGroup.Item value=\"pro\" label=\"Pro — $12/month\" />\n  <RadioGroup.Item value=\"team\" label=\"Team — $36/month\" />\n</RadioGroup>"
+    },
+    {
+      "title": "Cards",
+      "description": "The `card` variant makes the whole surface the target and highlights the selected option — for a picker where each choice carries a description. The disc moves to the trailing edge as a confirmation of the row rather than the thing you aim at.",
+      "code": "<RadioGroup value={plan} onValueChange={setPlan} variant=\"card\">\n  <RadioGroup.Item\n    value=\"starter\"\n    label=\"Starter\"\n    description=\"For a side project — one seat, community support.\"\n  />\n  <RadioGroup.Item\n    value=\"pro\"\n    label=\"Pro\"\n    description=\"For growing teams — five seats, priority support.\"\n  />\n</RadioGroup>",
+      "preview": {
+        "src": "/previews/radio-group-cards.jpg",
+        "alt": "RadioGroup — Cards.",
+        "width": 1179,
+        "height": 962
+      }
+    },
+    {
+      "title": "Laying the options out in a row",
+      "description": "Short labels stacked one per line read as a longer list than they are. `orientation=\"horizontal\"` wraps them along a row instead — and cards share the width rather than each filling it.",
+      "code": "<RadioGroup orientation=\"horizontal\" value={size} onValueChange={setSize}>\n  <RadioGroup.Item value=\"s\" label=\"Small\" />\n  <RadioGroup.Item value=\"m\" label=\"Medium\" />\n  <RadioGroup.Item value=\"l\" label=\"Large\" />\n</RadioGroup>\n\n<RadioGroup\n  orientation=\"horizontal\"\n  variant=\"card\"\n  value={billing}\n  onValueChange={setBilling}\n>\n  <RadioGroup.Item value=\"monthly\" label=\"Monthly\" description=\"$12/mo\" />\n  <RadioGroup.Item value=\"yearly\" label=\"Yearly\" description=\"$120/yr\" />\n</RadioGroup>",
+      "previewVideo": {
+        "src": "/previews/radio-group-horizontal.mp4",
+        "poster": "/previews/radio-group-horizontal-poster.jpg",
+        "alt": "RadioGroup — Laying the options out in a row.",
+        "width": 720,
+        "height": 504
+      }
+    }
+  ],
+  "extraImports": [
+    "Text"
+  ],
+  "variantCode": {
+    "variant": "<RadioGroup variant=\"dot\" value={value} onValueChange={setValue}>\n  <RadioGroup.Item value=\"a\" label=\"Option A\" />\n</RadioGroup>\n\n<RadioGroup variant=\"card\" value={value} onValueChange={setValue}>\n  <RadioGroup.Item value=\"a\" label=\"Option A\" description=\"With a supporting line\" />\n</RadioGroup>"
+  },
+  "notes": "The row of a `dot` item is only as wide as its label, so the empty space beside it is not part of the target — pressing nothing selects nothing. A `card` is the opposite on purpose: there the whole surface is what you aim at.\n\nThe options wrap rather than scroll when laid out horizontally. A choice that has run off the edge of the screen is a choice nobody knows is there.",
+  "hideVariants": [
+    "horizontal"
+  ],
+  "previewVideo": {
+    "src": "/previews/radio-group.mp4",
+    "poster": "/previews/radio-group-poster.jpg",
+    "alt": "The RadioGroup component, running in the example app.",
+    "width": 720,
+    "height": 276
+  }
+}

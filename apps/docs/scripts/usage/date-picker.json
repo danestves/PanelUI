@@ -1,0 +1,59 @@
+{
+  "slug": "date-picker",
+  "intro": "A calendar behind a button.\n\nIt is [Calendar](/docs/components/calendar) inside a [Popover](/docs/components/popover), with a trigger that reads back what was chosen. It is a separate component because the hard parts are the ones around the grid: what a closed field says, when the panel closes, and what a range shows while only half of it has been picked.\n\nFor a date and a time together, use [DateTimePicker](/docs/components/date-time-picker).",
+  "usage": "const [day, setDay] = useState<Date>();\n\n<DatePicker selected={day} onSelect={setDay} placeholder=\"Pick a date\" />",
+  "extraImports": [
+    "Label",
+    "Text"
+  ],
+  "parts": {
+    "Trigger": "Wraps a trigger of your own and opens the panel on press. Pass a child to the picker instead and it is wrapped for you."
+  },
+  "examples": [
+    {
+      "title": "A date",
+      "description": "The trigger reads the chosen date and falls back to the placeholder. One tap finishes it, so the panel closes on the tap.",
+      "code": "const [day, setDay] = useState<Date>();\n\n<DatePicker selected={day} onSelect={setDay} />"
+    },
+    {
+      "title": "A range",
+      "description": "It stays open until the second end is picked. A half-picked range reads as its start followed by a dash — the dash is what says the picker is still waiting, and without it half a range looks like a finished date.",
+      "code": "const [range, setRange] = useState<DateRange>();\n\n<DatePicker\n  mode=\"range\"\n  selected={range}\n  onSelect={setRange}\n  placeholder=\"Check in — check out\"\n  minDate={new Date()}\n/>"
+    },
+    {
+      "title": "A date of birth",
+      "description": "`captionLayout=\"dropdown\"` with `maxDate` set to today — paging back thirty years one month at a time is not a date picker.",
+      "code": "<DatePicker\n  selected={birthday}\n  onSelect={setBirthday}\n  captionLayout=\"dropdown\"\n  maxDate={new Date()}\n/>"
+    },
+    {
+      "title": "In a sheet",
+      "description": "The anchored panel is the default: a month grid is a fixed size and fits beside its trigger on any phone. A sheet earns its place when the screen is busy — a form with the keyboard up is the usual case.",
+      "code": "<DatePicker selected={day} onSelect={setDay} presentation=\"bottom-sheet\" />",
+      "previewVideo": {
+        "src": "/previews/date-picker-in-a-sheet.mp4",
+        "poster": "/previews/date-picker-in-a-sheet-poster.jpg",
+        "alt": "DatePicker — In a sheet.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Your own trigger",
+      "description": "Pass a child and it is cloned with an `onPress` that opens the panel, so a field row or an icon button can stand in for the default button.",
+      "code": "<DatePicker selected={day} onSelect={setDay}>\n  <Button variant=\"ghost\" size=\"icon\" accessibilityLabel=\"Choose a date\">\n    <CalendarIcon size={18} />\n  </Button>\n</DatePicker>"
+    },
+    {
+      "title": "A Hijri date",
+      "description": "`calendar` is forwarded to the grid and used for the trigger's own text, so the date on the closed field is written in the calendar the cell was tapped in.",
+      "code": "<DatePicker selected={day} onSelect={setDay} calendar=\"islamic\" />"
+    }
+  ],
+  "notes": "**It closes when the selection is finished, not when it changes.** A single date is done in one tap, so the panel closes on it. A range needs two and stays open until the second — closing on the first would leave half a range on screen and put someone back where they started. `multiple` never closes on its own; only the caller knows when a set is complete.\n\n**The trigger's text is derived, not stored.** Pass `format` to write it yourself; otherwise it is the short date, both ends of a range, or a count once more than one date is picked.\n\n**`calendar` is forwarded, and used for the trigger too** — a field reading a Gregorian date over a Hijri grid is the bug this exists to prevent.\n\n**Everything the calendar takes is forwarded** — `minDate`, `maxDate`, `disabledDates`, `numberOfMonths`, `captionLayout`, `weekStartsOn` and `locale`.\n\nReach for **Calendar** on its own when the grid should be on the page rather than behind a control — a booking screen where the month is the screen.\n\n**In a sheet the panel is centred.** A sheet is the full width of the screen and lays its children in a column, so a panel sized to its content would take the cross-axis start and sit flush against one edge — the right-hand one under RTL, directly below the close button.\n\nThe calendar inside the panel is unbordered — the panel already draws a surface, and a card inside a card is a seam. `startMonth`, `endMonth` and `selectOutsideDays` are forwarded to it; see [Calendar](/docs/components/calendar) for what each one bounds.",
+  "previewVideo": {
+    "src": "/previews/date-picker.mp4",
+    "poster": "/previews/date-picker-poster.jpg",
+    "alt": "The DatePicker component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  }
+}

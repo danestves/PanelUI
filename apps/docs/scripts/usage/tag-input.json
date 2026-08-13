@@ -1,0 +1,38 @@
+{
+  "slug": "tag-input",
+  "variantCode": {
+    "variant": "<TagInput variant=\"outline\" label=\"Topics\" placeholder=\"Add a topic\" />\n<TagInput variant=\"filled\" label=\"Topics\" placeholder=\"Add a topic\" />",
+    "size": "<TagInput size=\"sm\" defaultValue={['small']} placeholder=\"Small\" />\n<TagInput size=\"md\" defaultValue={['medium']} placeholder=\"Medium\" />\n<TagInput size=\"lg\" defaultValue={['large']} placeholder=\"Large\" />"
+  },
+  "intro": "A field whose value is a list of tokens rather than a string — labels on a task, recipients on a message, keywords on a post.\n\nThe tags are whatever gets typed. That is the whole distinction from [Combobox](/docs/components/combobox) in `multiple` mode: a combobox picks from a set of options you supply, so it needs a list, a filter and a surface to float that list on. A tag field has none of those, carries none of that machinery, and never opens a portal.",
+  "usage": "<TagInput\n  label=\"Topics\"\n  value={topics}\n  onValueChange={setTopics}\n  placeholder=\"Add a topic\"\n  clearable\n/>",
+  "notes": "### Three ways a tag gets committed\n\nReturn commits what has been typed. So does any of `delimiters` — a comma by default — which is what makes pasting `design, research, ops` land as three tags rather than one long one. Pass several to accept more than one separator, or `delimiters={[]}` to make return the only way in.\n\n`blurBehavior` decides what a field that loses focus mid-word does with the leftover. `add` (the default) commits it and clears it *if it was accepted*, leaving it in place if it was not, so a rejected word is still there to fix. `clear` drops it. `keep` leaves it exactly as typed.\n\nEvery tag is trimmed, and empty text is never committed — so a trailing comma adds nothing.\n\n### Backspace asks first\n\nBackspace on an empty field marks the last tag rather than taking it: the tag turns `destructive`, and a second backspace removes it. A held backspace repeats, and a field that deleted on the first one would empty itself in the time it takes to notice — the mark is the beat that lets you stop. Typing anything, or leaving the field, takes the mark off again.\n\n[Combobox](/docs/components/combobox) in `multiple` mode does the same with its chips, so the reflex carries between the two.\n\n### Turning a tag away\n\nThree rules can refuse a tag, and each one calls `onReject` with the reason it did:\n\n- `duplicate` — the list already holds it. Set `allowDuplicates` to accept it anyway. The comparison is exact, so `Design` and `design` are two different tags.\n- `max` — the list is full. `allowOverflow` lets it go past the limit instead, and the field then reports itself invalid while it is over, which is the point: some forms want the count shown as wrong rather than the typing refused.\n- `invalid` — `validate` returned `false` for it, given the list it would have joined.\n\nNothing is announced on its own. `onReject` exists because a tag that is silently dropped is indistinguishable from one that was never finished — pair it with `errorMessage` to say what happened.\n\n### The value, and the draft\n\n`value` is the tags; `inputValue` is the text still being typed. Both are optional and both fall back to state the field keeps itself, so the common case controls the tags alone and never touches the draft.\n\n`showCount` puts `3 / 8` under the field and turns `destructive` once the list is over `max`. It needs `max` — a count with no limit to count towards says nothing.\n\n### Read-only and disabled\n\n`readOnly` keeps the tags and takes away the input and the ✕ on each one, which is the right shape for a summary of a filter someone else set. `disabled` dims the whole field and stops it being reached at all.",
+  "examples": [
+    {
+      "title": "Typing tags",
+      "description": "Return or a comma ends a tag. Backspace on an empty field marks the last one; a second backspace takes it.",
+      "code": "const [tags, setTags] = useState(['expo', 'reanimated']);\n\n<TagInput\n  label=\"Topics\"\n  value={tags}\n  onValueChange={setTags}\n  placeholder=\"Add a topic\"\n  description=\"Return or a comma ends a tag.\"\n  clearable\n/>"
+    },
+    {
+      "title": "A capped list",
+      "description": "`max` stops the list at four and `onReject` says why, since a tag that is silently dropped looks like one that was never finished.",
+      "code": "const [tags, setTags] = useState(['urgent', 'billing']);\nconst [refused, setRefused] = useState(null);\n\n<TagInput\n  label=\"Labels\"\n  value={tags}\n  onValueChange={(next) => {\n    setRefused(null);\n    setTags(next);\n  }}\n  max={4}\n  showCount\n  placeholder=\"Add a label\"\n  errorMessage={refused ?? undefined}\n  onReject={(tag, reason) =>\n    setRefused(\n      reason === 'max'\n        ? `Four labels is the limit — “${tag}” was not added.`\n        : `“${tag}” is already on the list.`\n    )\n  }\n/>"
+    },
+    {
+      "title": "Deciding what counts",
+      "description": "`validate` decides what may become a tag at all. Several delimiters, because addresses get pasted separated by any of them.",
+      "code": "const [recipients, setRecipients] = useState(['ana@example.com']);\nconst [error, setError] = useState(null);\n\n<TagInput\n  label=\"Recipients\"\n  value={recipients}\n  onValueChange={(next) => {\n    setError(null);\n    setRecipients(next);\n  }}\n  chipVariant=\"info\"\n  keyboardType=\"email-address\"\n  placeholder=\"name@example.com\"\n  delimiters={[',', ' ', ';']}\n  validate={(tag) => tag.includes('@') && tag.includes('.')}\n  onReject={(tag) => setError(`“${tag}” is not an email address.`)}\n  errorMessage={error ?? undefined}\n/>"
+    },
+    {
+      "title": "Filled, inside a card",
+      "description": "A second border beside the card's own reads as a seam, so the field carries a background instead.",
+      "code": "<Card className=\"w-full\">\n  <Card.Content className=\"gap-4 p-4\">\n    <TagInput\n      variant=\"filled\"\n      label=\"Skills\"\n      defaultValue={['typescript', 'swift']}\n      placeholder=\"Add a skill\"\n    />\n  </Card.Content>\n</Card>"
+    },
+    {
+      "title": "Read-only and disabled",
+      "description": "`readOnly` keeps the tags and takes the input away; `disabled` dims the whole field.",
+      "code": "<TagInput label=\"Read-only\" readOnly defaultValue={['locked', 'archived']} />\n\n<TagInput\n  label=\"Disabled\"\n  disabled\n  defaultValue={['unavailable']}\n  placeholder=\"Add a tag\"\n/>"
+    }
+  ],
+  "extraImports": "Card"
+}

@@ -1,0 +1,93 @@
+{
+  "slug": "color-picker",
+  "intro": "A colour chosen by dragging rather than typed.\n\nThe controls are the colour model made visible: a square where saturation runs across and brightness runs up, or a wheel where hue is the angle and saturation the radius, under scales for whichever channels the shape does not carry.\n\n**Composition is the API.** A picker with no opacity is one with no `ColorPicker.Alpha` in it, not one with a prop turned off.\n\nNothing about a drag crosses to JavaScript: the four channels are shared values, and the hue behind the square, both thumb fills and the preview swatch are computed from them on the UI thread. The picked colour bridges back on change and again on release.",
+  "usage": "<ColorPicker defaultValue=\"#22c55e\" onValueCommit={setBrand}>\n  <ColorPicker.Area />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>",
+  "extraImports": [
+    "Button",
+    "Card",
+    "Text",
+    "Surface"
+  ],
+  "anatomy": "<ColorPicker presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Accent\" />  {/* the row that opens it */}\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>                   {/* …or no Trigger/Content at all, */}\n    <ColorPicker.Swatches colors={[…]} /> {/* and the parts stack where they are */}\n    <ColorPicker.Area />                  {/* …or <ColorPicker.Wheel /> */}\n    <ColorPicker.Channel channel=\"hue\" /> {/* the readout above a track */}\n    <ColorPicker.Hue />\n    <ColorPicker.Brightness />\n    <ColorPicker.Alpha />\n    <ColorPicker.Preview showValue />\n  </ColorPicker.Content>\n</ColorPicker>",
+  "parts": {
+    "Trigger": "What you press to open the picker, when `presentation` is not `inline`. Takes one element and clones it with an `onPress` — `ColorPicker.Field` is the obvious child, since it already reads out the colour it would let you change.",
+    "Content": "The panel the controls are drawn in. It takes the trigger's width by default, floored so a narrow row cannot squeeze the square, and everything `Popover.Content` accepts works here too.",
+    "Area": "The square: saturation across it, brightness up it, under the current hue. The thumb sits centred on the colour it has picked rather than nudged inside the edge, so a fully saturated corner is reachable and looks reachable.",
+    "Hue": "The hue scale, drawn as a gradient through the six corners of the colour wheel and back to red.",
+    "Alpha": "Opacity, over a checkerboard that says *nothing here*. The ramp is a gradient used as a mask over a solid fill of the current colour, so changing the colour above never re-declares a gradient's props from React.",
+    "Preview": "A swatch of the result, optionally with the colour written beside it. Takes children, for a copy button or a caption.",
+    "Swatches": "Presets. Tapping one sets every channel at once, and the ring marks the one that is currently exact.",
+    "Field": "The strip above the controls: what is being picked on the leading edge, what it currently is and a swatch of it on the trailing one. The value is built on the UI thread and only crosses to JavaScript when the rounded string changes, so a drag through a hundred frames of one hex costs one render.",
+    "Wheel": "The square bent into a circle — hue is the angle, saturation is the distance out. Interchangeable with `Area`: it reads the same channels, so a picker is a wheel *instead of* a square rather than as well as one. It carries no brightness, which is what `Brightness` is for.",
+    "Channel": "The line above a track: the number on the leading edge, what it names on the trailing one. Degrees for hue, a percentage for the rest.",
+    "Brightness": "Black to the current colour at full brightness. The square already carries brightness, so this is for pickers built around the wheel, which does not."
+  },
+  "partNotes": "Every part is optional and they render in the order you write them, so the layout is yours: presets above the square, the preview at the top, opacity left out entirely.\n\nThe picker stores hue, saturation, value and alpha rather than the string it hands back. That is not an implementation detail you can ignore — it is why the thumb stays where you left it. A fully black colour is `#000` whatever hue and saturation produced it, so a picker that stored its own output would lose the thumb the moment you dragged into a corner and have nowhere to put it back.\n\n`Content` re-provides the picker's context around what it holds, and has to: the panel is drawn through a portal, above everything else on the screen, so by the time the parts inside it go looking for the picker they are no longer anywhere below it in the tree. That is why the controls go inside `ColorPicker.Content` rather than inside a `Popover` you assemble yourself.",
+  "examples": [
+    {
+      "title": "Folded away behind the row",
+      "description": "A picker is a page's worth of controls in service of one value, and that value is read far more often than it is changed. `presentation` puts the controls behind the row that reads it out, so two colours cost two rows rather than two panels. `bottom-sheet` is the same arrangement brought up from the bottom edge instead.",
+      "code": "<ColorPicker value={accent} onValueChange={setAccent} presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Accent\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Area height={220} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </ColorPicker.Content>\n</ColorPicker>"
+    },
+    {
+      "title": "A labelled panel",
+      "description": "The layout the parts are shaped for: a strip that names the colour and prints it, the square, then a readout naming the track under it. Every piece is optional and none of them knows about the others — this is a composition, not a variant.",
+      "code": "<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Field label=\"Accent\" />\n  <Surface variant=\"secondary\" padding=\"sm\" className=\"gap-3 rounded-2xl\">\n    <ColorPicker.Area height={280} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </Surface>\n</ColorPicker>"
+    },
+    {
+      "title": "A wheel instead of a square",
+      "description": "Swap `Area` for `Wheel` and hue becomes the angle, saturation the radius. Brightness then has no dimension left on the disc, so it takes a track of its own — a wheel without one can only ever pick bright colours.",
+      "code": "<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Field label=\"Brand\" />\n  <ColorPicker.Wheel />\n  <ColorPicker.Channel channel=\"brightness\" />\n  <ColorPicker.Brightness />\n</ColorPicker>"
+    },
+    {
+      "title": "Controlled",
+      "description": "Hold the colour in state and apply it to something. `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change writes anywhere.",
+      "code": "const [color, setColor] = useState('#22c55e');\n\n<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Area />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>\n\n<Button className=\"w-full\" style={{ backgroundColor: color }}>\n  Save theme\n</Button>"
+    },
+    {
+      "title": "With opacity",
+      "description": "Add `ColorPicker.Alpha` and the colour gains a fourth channel. `format` decides how it is written: `hex` grows an `#rrggbbaa` pair and the other two switch to their `a` forms, but only once the colour is actually translucent — an opaque colour written with a trailing `ff` is the same colour spelled in a way half the parsers in the world reject.",
+      "code": "<ColorPicker defaultValue=\"rgba(59, 130, 246, 0.6)\" format=\"rgb\" onValueCommit={save}>\n  <ColorPicker.Area height={150} />\n  <ColorPicker.Hue />\n  <ColorPicker.Alpha />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
+    },
+    {
+      "title": "Presets first",
+      "description": "Most colour choices are one of eight, and the square is for the ninth. Putting `ColorPicker.Swatches` above it makes the common case a single tap without hiding the rest. Unreadable strings are dropped rather than rendered as black — a row of presets with a mystery black one in it is worse than a shorter row.",
+      "code": "<ColorPicker defaultValue=\"#f97316\" onValueCommit={setColor} size=\"sm\">\n  <ColorPicker.Swatches\n    colors={['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#0f172a']}\n  />\n  <ColorPicker.Area height={120} />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
+    },
+    {
+      "title": "Just a hue",
+      "description": "There is no minimum picker. A control that only needs a hue is the hue scale and nothing else, and it still reports a full colour.",
+      "code": "<ColorPicker defaultValue=\"#3b82f6\" onValueChange={setAccent}>\n  <ColorPicker.Hue />\n</ColorPicker>"
+    },
+    {
+      "title": "Disabled",
+      "code": "<ColorPicker defaultValue=\"#64748b\" disabled>\n  <ColorPicker.Area height={110} />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
+    }
+  ],
+  "variantCode": {
+    "size": "<ColorPicker size=\"sm\" defaultValue=\"#8b5cf6\">…</ColorPicker>\n<ColorPicker size=\"md\" defaultValue=\"#8b5cf6\">…</ColorPicker>\n<ColorPicker size=\"lg\" defaultValue=\"#8b5cf6\">…</ColorPicker>"
+  },
+  "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). Both read `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`, `hsl()` and `hsla()`; a string the picker cannot read leaves it on the colour it already has, rather than snapping to black.\n\n`ColorPicker.Preview`'s printed value is built on the UI thread and only crosses to JavaScript when it differs from the last one, so a drag that is not changing the rounded value costs nothing.\n\nThe square is adjustable to a screen reader in both axes: increment and decrement move saturation, and a **Brighter** / **Darker** pair moves brightness. Hue and opacity are adjustable on their own. Their spoken values update when a drag ends rather than during it — nobody is listening to the middle of a gesture, and a value that re-announced every frame would be a hundred announcements for one drag.\n\nThe conversion helpers the picker is built on are exported too — `parseColor`, `formatColor`, `hsvToHex`, `hsvToRgb`, `rgbToHsv`, `hsvToHsl`, `hsvToCss` and `isValidColor`. Every one is a worklet, so they can be called from an animated style as well as from ordinary code.\n\n### The wheel, and what it cannot carry\n\nA square holds two channels because it has two axes. A wheel holds two as well — an angle and a radius — so swapping one for the other trades brightness for a shape, not for a third channel. `ColorPicker.Brightness` is the track that takes it back; a wheel without one can only pick colours at full brightness.\n\nThe wheel is deliberately **not mirrored under RTL**, unlike the square and the tracks. Those have a start and an end, so they have a direction to be read in. A wheel has neither: reversing which way round the spectrum runs would move every colour somewhere else without making any of them easier to find.\n\nThere is no conic gradient to draw a hue ring with, so it is approximated by 120 solid wedges given a hair of overlap — three degrees each is under a pixel of colour step at any size this is drawn at, and the overlap stops the seams reading as lighter spokes. The ring is built once at module scope: it is the same wheel in every picker.",
+  "versions": [
+    {
+      "title": "Accent card",
+      "description": "Rows that read out a colour and open the picker over themselves when pressed.",
+      "code": "<ColorPicker value={accent} onValueChange={setAccent} presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Accent\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Area height={220} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </ColorPicker.Content>\n</ColorPicker>"
+    },
+    {
+      "title": "In a sheet",
+      "description": "The same folded-away picker, brought up from the bottom edge.",
+      "code": "<ColorPicker value={color} onValueChange={setColor} presentation=\"bottom-sheet\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Highlight\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Area height={240} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n    <ColorPicker.Channel channel=\"alpha\" />\n    <ColorPicker.Alpha />\n  </ColorPicker.Content>\n</ColorPicker>"
+    },
+    {
+      "title": "Inline panel",
+      "description": "A labelled strip over the square, and a readout naming the track under it.",
+      "code": "<ColorPicker value={color} onValueChange={setColor}>\n  <ColorPicker.Field label=\"Accent\" />\n  <Surface variant=\"secondary\" padding=\"sm\" className=\"gap-3 rounded-2xl\">\n    <ColorPicker.Area height={280} />\n    <ColorPicker.Channel channel=\"hue\" />\n    <ColorPicker.Hue />\n  </Surface>\n</ColorPicker>"
+    },
+    {
+      "title": "Wheel",
+      "description": "Hue around and saturation out, with brightness on a track of its own — folded away behind a row, the way the square is. The disc is a way of picking a colour rather than a different kind of control that has to live in the page.",
+      "code": "<ColorPicker value={color} onValueChange={setColor} presentation=\"popover\">\n  <ColorPicker.Trigger>\n    <ColorPicker.Field label=\"Brand\" />\n  </ColorPicker.Trigger>\n  <ColorPicker.Content>\n    <ColorPicker.Wheel />\n    <ColorPicker.Channel channel=\"brightness\" />\n    <ColorPicker.Brightness />\n    <ColorPicker.Channel channel=\"alpha\" />\n    <ColorPicker.Alpha />\n  </ColorPicker.Content>\n</ColorPicker>"
+    }
+  ]
+}

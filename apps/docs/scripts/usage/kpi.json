@@ -1,0 +1,106 @@
+{
+  "slug": "kpi",
+  "intro": "One number, what it is doing, and the shape it made getting there.\n\nA metric card is not a chart with a caption. The number is the message and the chart is the footnote, so the parts are sized around that: a title that stays quiet, a value that does not, a trend that says which way and by how much, and a sparkline small enough to admit that nobody is reading values off it.\n\nThe trend takes a number rather than a written string, so the component decides the direction and the colour instead of the call site keeping a minus sign and a red in step.",
+  "usage": "<Kpi colorIndex={1}>\n  <Kpi.Content layout=\"inline\">\n    <Kpi.Stat>\n      <Kpi.Title>Total Revenue</Kpi.Title>\n      <Kpi.Value>$317,904</Kpi.Value>\n      <Kpi.Trend value={7.8} caption=\"last 30d\" />\n    </Kpi.Stat>\n    <Kpi.Chart data={week} dataKey=\"v\" inline />\n  </Kpi.Content>\n</Kpi>",
+  "extraImports": [
+    "Text",
+    "Frame",
+    "Surface"
+  ],
+  "anatomy": "<Kpi colorIndex={1} goodDirection=\"up\">\n  <Kpi.Header>\n    <Kpi.Icon>{/* a glyph */}</Kpi.Icon>\n    <Kpi.Title />\n    <Kpi.Actions>{/* a menu */}</Kpi.Actions>\n  </Kpi.Header>\n  <Kpi.Content layout=\"inline\">\n    <Kpi.Stat>          {/* title, value and change, stacked */}\n      <Kpi.Title />\n      <Kpi.Value />\n      <Kpi.Trend value={7.8} />\n    </Kpi.Stat>\n    <Kpi.Chart data={series} dataKey=\"v\" inline />\n  </Kpi.Content>\n  <Kpi.Progress value={73} />\n  <Kpi.Separator />\n  <Kpi.Footer>{/* a caveat */}</Kpi.Footer>\n</Kpi>\n\n<Kpi.Group orientation=\"horizontal\">{/* several cards */}</Kpi.Group>",
+  "parts": {
+    "Header": "The top row: a tinted icon, the metric's name, and anything acting on it.",
+    "Icon": "A tinted square for a glyph. It takes the element rather than drawing one — a metric's icon comes from whatever set the app already uses, and an icon from outside this library needs its `color` passed explicitly.",
+    "Title": "The metric's name. Quiet on purpose: the value is the thing being read.",
+    "Actions": "The trailing end of the header — a menu trigger, a period filter, a link.",
+    "Content": "The row the value and the trend share. `layout=\"inline\"` puts the chart beside them instead of under everything.",
+    "Value": "The number. Formatted by you, not here — separators, currency and units are locale decisions a component would get wrong in a way that is hard to notice and impossible to override.",
+    "Trend": "The change. Takes a signed percentage and derives its own direction and colour. `text` by default — a line of colour under the number — or `variant=\"badge\"` for a pill with an arrow.",
+    "Chart": "The sparkline. A line chart with the axis padding dropped. Under the card it is full width and filled; `inline` puts it in a fixed 128pt column beside the number, unfilled.",
+    "Progress": "Progress towards a target, for a metric that has one.",
+    "Footer": "The bottom strip — a comparison period, a caveat, a link.",
+    "Separator": "A hairline across the card.",
+    "Group": "Several metrics laid out as one panel, in a row or a column, divided by a rule.",
+    "Stat": "The stacked title / value / change block. Its own container rather than three loose children, because the three belong together more tightly than they belong to whatever is above or below them — and because it takes the width in an `inline` row, leaving the chart its column on the end."
+  },
+  "examples": [
+    {
+      "title": "Which way is the good news",
+      "description": "Colour comes from what the movement *means*, not from its sign. A fall in churn, refunds or latency is good news and is drawn as good news — say so once on the card with `goodDirection` and every trend inside it follows. `\"none\"` is for a number that is neither, like a headcount.",
+      "code": "{/* A rise is good — the default. */}\n<Kpi goodDirection=\"up\">\n  <Kpi.Trend value={7.8} />   {/* green */}\n</Kpi>\n\n{/* A fall is good. */}\n<Kpi goodDirection=\"down\">\n  <Kpi.Trend value={-8.4} />  {/* also green */}\n</Kpi>\n\n{/* Neither. */}\n<Kpi goodDirection=\"none\">\n  <Kpi.Trend value={2.2} />   {/* grey */}\n</Kpi>"
+    },
+    {
+      "title": "Text or a badge",
+      "description": "A trend is a line of coloured text by default, sitting under the number where the eye already is. `variant=\"badge\"` puts a pill and an arrow round it, for a card busy enough that a bare line of colour gets lost in it — a header row with an icon and a title already on it, say.",
+      "code": "{/* Under the number. */}\n<Kpi.Trend value={7.8} caption=\"last 30d\" />\n\n{/* On the end of a header row. */}\n<Kpi.Header>\n  <Kpi.Title>Quarterly revenue</Kpi.Title>\n  <Kpi.Trend value={7.8} variant=\"badge\" />\n</Kpi.Header>"
+    },
+    {
+      "title": "Writing the number yourself",
+      "description": "The default prints one decimal place with an explicit sign. Pass `format` for anything else — the raw signed value goes in, the string comes out. `caption` is what it is being compared against, and stays muted.",
+      "code": "<Kpi.Trend\n  value={-8.4}\n  format={(v) => `${v.toFixed(0)}%`}\n  caption=\"vs last week\"\n/>"
+    },
+    {
+      "title": "In a frame",
+      "description": "A card on its own surface is one metric. Several inside a `Frame` are one report — the tray carries the title and the period, and `Frame.Panel` draws the hairlines between its sections for you. Turn each card’s own surface off so the frame is the surface.",
+      "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Overview</Frame.Title>\n    <Frame.Action>Last 30 days</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    {metrics.map((metric) => (\n      <Frame.Section key={metric.label}>\n        <Kpi surface={false} colorIndex={metric.colorIndex}>\n          <Kpi.Content layout=\"inline\">\n            <Kpi.Stat>\n              <Kpi.Title>{metric.label}</Kpi.Title>\n              <Kpi.Value>{metric.value}</Kpi.Value>\n              <Kpi.Trend value={metric.delta} caption={metric.period} />\n            </Kpi.Stat>\n            <Kpi.Chart data={metric.series} dataKey=\"v\" inline />\n          </Kpi.Content>\n        </Kpi>\n      </Frame.Section>\n    ))}\n  </Frame.Panel>\n</Frame>"
+    },
+    {
+      "title": "Several across a row",
+      "description": "`Kpi.Group` divides its children with a rule rather than spacing them apart, and inserts the rules *between* them — the one thing a list of siblings cannot express, and the reason a trailing rule after the last card is such a common mistake. `orientation=\"vertical\"` stacks them instead.",
+      "code": "<Frame.Section>\n  <Kpi.Group>\n    <Kpi surface={false} colorIndex={1}>\n      <Kpi.Title>Revenue</Kpi.Title>\n      <Kpi.Value>$317k</Kpi.Value>\n      <Kpi.Trend value={7.8} />\n    </Kpi>\n    <Kpi surface={false} colorIndex={2}>\n      <Kpi.Title>Orders</Kpi.Title>\n      <Kpi.Value>2,867</Kpi.Value>\n      <Kpi.Trend value={4.2} />\n    </Kpi>\n  </Kpi.Group>\n</Frame.Section>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Overview",
+      "description": "Number and change on the left, the shape it made on the right.",
+      "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Overview</Frame.Title>\n    <Frame.Action>Last 30 days</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <Frame.Section>\n      <Kpi surface={false} colorIndex={1}>\n        <Kpi.Content layout=\"inline\">\n          <Kpi.Stat>\n            <Kpi.Title>Total Revenue</Kpi.Title>\n            <Kpi.Value>$317,904</Kpi.Value>\n            <Kpi.Trend value={7.8} caption=\"last 30d\" />\n          </Kpi.Stat>\n          <Kpi.Chart data={week} dataKey=\"v\" inline />\n        </Kpi.Content>\n      </Kpi>\n    </Frame.Section>\n  </Frame.Panel>\n</Frame>",
+      "preview": {
+        "src": "/previews/kpi.jpg",
+        "alt": "Kpi — Overview.",
+        "width": 1179,
+        "height": 1190
+      }
+    },
+    {
+      "title": "With a sparkline",
+      "description": "The shape under the number, and the shape beside it.",
+      "code": "<Kpi colorIndex={1}>\n  <Kpi.Header>\n    <Kpi.Title>Total revenue</Kpi.Title>\n  </Kpi.Header>\n  <Kpi.Content>\n    <Kpi.Value>$317,904</Kpi.Value>\n    <Kpi.Trend value={7.8} />\n  </Kpi.Content>\n  <Kpi.Chart data={week} dataKey=\"v\" />\n</Kpi>",
+      "preview": {
+        "src": "/previews/kpi-with-a-sparkline.jpg",
+        "alt": "Kpi — With a sparkline.",
+        "width": 1179,
+        "height": 1035
+      }
+    },
+    {
+      "title": "With progress",
+      "description": "Targets, with an icon, a badge and a bar under each number.",
+      "code": "<Kpi surface={false} colorIndex={4}>\n  <Kpi.Header>\n    <Kpi.Icon tone=\"good\">\n      <Target size={16} color={tint} />\n    </Kpi.Icon>\n    <Kpi.Title>Quarterly revenue</Kpi.Title>\n    <Kpi.Trend value={7.8} variant=\"badge\" />\n  </Kpi.Header>\n  <Kpi.Value>$317k</Kpi.Value>\n  <Kpi.Progress value={73} label=\"of $435k\" showValueLabel />\n  <Kpi.Footer>\n    <Text size=\"xs\" muted>\n      41 days left in the quarter\n    </Text>\n  </Kpi.Footer>\n</Kpi>",
+      "preview": {
+        "src": "/previews/kpi-with-progress.jpg",
+        "alt": "Kpi — With progress.",
+        "width": 1179,
+        "height": 1177
+      }
+    },
+    {
+      "title": "Several as one panel",
+      "description": "Divided by a rule rather than spaced apart, in a row and a column.",
+      "code": "<Surface variant=\"secondary\" padding=\"lg\">\n  <Kpi.Group>\n    {metrics.map((metric) => (\n      <Kpi key={metric.label} surface={false} colorIndex={metric.colorIndex}>\n        <Kpi.Title>{metric.label}</Kpi.Title>\n        <Kpi.Value className=\"text-2xl\">{metric.value}</Kpi.Value>\n        <Kpi.Trend value={metric.delta} className=\"self-start\" />\n      </Kpi>\n    ))}\n  </Kpi.Group>\n</Surface>",
+      "preview": {
+        "src": "/previews/kpi-several-as-one-panel.jpg",
+        "alt": "Kpi — Several as one panel.",
+        "width": 1179,
+        "height": 1098
+      }
+    }
+  ],
+  "notes": "The sparkline is a `LineChart` in `compact` mode — the same chart used everywhere else with its axis padding dropped, because there is no grid, no axis and no crosshair here and every point of padding is one the shape is not using.\n\n`inline` gives it a **fixed 128pt column** rather than a share of the row. A stack of stat cards has labels of every length — \"Revenue\" over \"New customers\" — and a chart taking whatever the text leaves would be a different width on every card in it. Fixed, the shapes line up down the right-hand edge, which is the only reason they are there to be compared.\n\n### Where the space goes\n\n`Kpi.Stat` exists because a title, a number and a change are one fact in three lines, and the card’s own spacing is for the gaps *between* facts. Writing the three straight into the card gives them the wider spacing and they stop reading as a unit.\n\nIt also matters for a row of them. `Kpi.Title` grows to fill a header row, and a growing child of a *column* absorbs that column’s leftover height — which would push each card’s number down by however much that card had spare, and land three numbers at three different heights. The title only grows inside `Kpi.Header`.\n\n### Colour\n\n`colorIndex` is set on the card rather than on the chart, so a row of cards can be given five different series colours without repeating the choice on every part inside them. It resolves through the `--color-chart-*` tokens, so the cards follow the theme.\n\nThe trend does not use it. A change is coloured by meaning — success or destructive — and a metric’s series colour has nothing to say about whether its number went the right way.\n\n### Accessibility\n\nA trend is announced as one string — *\"Up 7.8 percent, last 30d\"* — rather than as an arrow, a number and a caption a screen reader would read as three unrelated stops. The rules inside a `Group` are hidden from it: a divider between two metrics is decoration, and announcing it puts an unlabelled stop between them.",
+  "preview": {
+    "src": "/previews/kpi.jpg",
+    "alt": "The Kpi component, running in the example app.",
+    "width": 1179,
+    "height": 1190
+  }
+}

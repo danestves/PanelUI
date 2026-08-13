@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { loadUsage } from './load-usage.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 /** Repo root, three levels up from apps/docs/scripts. */
@@ -9,7 +10,7 @@ const ROOT = path.resolve(HERE, '../../..');
 const S = HERE;
 const api = JSON.parse(fs.readFileSync(`${S}/api.json`, 'utf8'));
 const meta = JSON.parse(fs.readFileSync(`${S}/meta.json`, 'utf8'));
-const usage = JSON.parse(fs.readFileSync(`${S}/usage.json`, 'utf8'));
+const usage = loadUsage(path.join(S, 'usage'), Object.keys(meta));
 const contentDir = path.join(HERE, '../content/docs');
 
 /** Where a component's page goes, and what its sidebar group is called. */
@@ -303,7 +304,7 @@ ${u.versions.map((v) => [
    * derives for itself, or a prop that belongs to a compound part rather than
    * the root — documenting either as `<Name key="value">` sends readers to
    * write something that does not exist. STATE_KEYS covers the ones every
-   * component names the same way; `hideVariants` in usage.json covers the rest.
+   * component names the same way; `hideVariants` in its usage module covers the rest.
    */
   const STATE_KEYS = ['checked', 'disabled', 'completed', 'isDisabled', 'active', 'selected'];
   const hidden = new Set([...STATE_KEYS, ...(u.hideVariants ?? [])]);
@@ -351,7 +352,7 @@ ${tables.map(({ i, t }) => {
   // A name starting with the component's is assumed to be a compound part —
   // `FooBarProps` is `Foo.Bar`. Not always true: a sibling exported in its own
   // right shares the prefix without being a part of it, so `interfaceNames`
-  // lets usage.json name those itself.
+  // lets the component's usage module name those itself.
   const inferred = label === name ? name : `${name}.${label.replace(new RegExp('^' + name), '')}`;
   const heading = u.interfaceNames?.[i.name] ?? inferred;
   return `### ${heading.replace(/\.$/, '')}\n\n${t}`;

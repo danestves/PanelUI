@@ -1,0 +1,61 @@
+{
+  "slug": "task",
+  "intro": "One step an agent took, and what it did while it was there.\n\nThe header is the step; the body is the detail nobody reads unless something went wrong.\n\nOpen by default, and it stays open. Unlike a [Reasoning](/docs/ai-components/reasoning) trace, the steps *are* the record of what happened and are worth scrolling back through.\n\n`status` moves the leading glyph through pending, running, complete and error, and shimmers the title while it runs.",
+  "usage": "<Task status=\"running\">\n  <Task.Trigger title=\"Searching the codebase\" />\n  <Task.Content>\n    <Task.Item>\n      Read <Task.File>calendar/index.tsx</Task.File>\n    </Task.Item>\n  </Task.Content>\n</Task>",
+  "extraImports": [
+    "Marker",
+    "FileIcon"
+  ],
+  "parts": {
+    "Trigger": "The step. Shimmers its title while the status is `running`, and folds the body away.",
+    "Content": "What the step did, indented behind a rule so the lines read as belonging to the step above them.",
+    "Item": "One line of that.",
+    "File": "A filename inside a line, drawn as a bordered chip — a path in the middle of a sentence is otherwise indistinguishable from the sentence."
+  },
+  "examples": [
+    {
+      "title": "A step and its detail",
+      "description": "`status` is the whole state: it picks the glyph, tints the title on an error, and puts a shimmer on the title while the step is running.",
+      "code": "<Task status=\"complete\">\n  <Task.Trigger title=\"Read 4 files\" />\n  <Task.Content>\n    <Task.Item>\n      Opened <Task.File>calendar/index.tsx</Task.File>\n    </Task.Item>\n    <Task.Item>\n      Opened <Task.File>date-picker/index.tsx</Task.File>\n    </Task.Item>\n  </Task.Content>\n</Task>",
+      "preview": {
+        "src": "/previews/task-a-step-and-its-detail.jpg",
+        "width": 1179,
+        "height": 296,
+        "alt": "Task — A step and its detail."
+      }
+    },
+    {
+      "title": "Every status",
+      "description": "`pending` is a step that has not started, `running` shimmers, `complete` ticks, and `error` tints the title. A run of tasks in those four states is what an agent transcript looks like partway through.",
+      "code": "<Task status=\"complete\">\n  <Task.Trigger title=\"Read the component\" />\n  <Task.Content>…</Task.Content>\n</Task>\n\n<Task status=\"running\">\n  <Task.Trigger title=\"Editing the range band\" />\n  <Task.Content>…</Task.Content>\n</Task>\n\n<Task status=\"error\">\n  <Task.Trigger title=\"Typecheck failed\" />\n  <Task.Content>…</Task.Content>\n</Task>\n\n<Task status=\"pending\" defaultOpen={false}>\n  <Task.Trigger title=\"Regenerate the docs\" />\n  <Task.Content>…</Task.Content>\n</Task>"
+    },
+    {
+      "title": "Reading tool-call parts",
+      "description": "With the AI SDK a task is a tool-call part. `part.type` is `tool-<name>`, and `part.state` runs `input-streaming` → `input-available` → `output-available` or `output-error` — which maps onto `status` directly.",
+      "code": "const STATUS = {\n  'input-streaming': 'pending',\n  'input-available': 'running',\n  'output-available': 'complete',\n  'output-error': 'error',\n} as const;\n\n{message.parts.map((part, i) =>\n  part.type.startsWith('tool-') ? (\n    <Task key={i} status={STATUS[part.state]}>\n      <Task.Trigger title={part.type.replace('tool-', '')} />\n      <Task.Content>\n        <Task.Item>{JSON.stringify(part.input)}</Task.Item>\n      </Task.Content>\n    </Task>\n  ) : null\n)}"
+    },
+    {
+      "title": "A glyph for the file's kind",
+      "description": "`icon` on a `Task.File` sits before the name, which is what makes a long list of paths scannable by kind rather than by reading each one.",
+      "code": "<Task.Item>\n  Wrote{' '}\n  <Task.File icon={<FileIcon size={12} />}>\n    theme.css\n  </Task.File>\n</Task.Item>"
+    },
+    {
+      "title": "Between the turns",
+      "description": "A run of steps belongs between two messages rather than inside either, which is what [Marker](/docs/components/marker) is for — it draws the rule that separates the work from the conversation.",
+      "code": "<Marker variant=\"separator\">\n  <Marker.Content>Ran 3 tools</Marker.Content>\n</Marker>\n\n<Task status=\"complete\">\n  <Task.Trigger title=\"Read 4 files\" />\n  <Task.Content>\n    <Task.Item>\n      Opened <Task.File>calendar/index.tsx</Task.File>\n    </Task.Item>\n  </Task.Content>\n</Task>",
+      "preview": {
+        "src": "/previews/task.jpg",
+        "width": 1179,
+        "height": 953,
+        "alt": "Task — Between the turns."
+      }
+    }
+  ],
+  "notes": "**It stays open.** A reasoning trace folds itself away because it stops being interesting once the answer starts; a task does not, because the steps are the record. Pass `defaultOpen={false}` for a step whose detail is noise — a pending one, usually.\n\n**The body is indented behind a rule, not merely padded.** The rule is what says the lines belong to the step above them rather than being the next few steps, which matters the moment there is more than one task in a row.\n\n**`Task.File` is bordered on purpose.** A path in the middle of a sentence set only in monospace still reads as part of the sentence, and the paths are the part of a task line anyone actually scans for.\n\n**Nothing here depends on the AI SDK.** `status` is a string union that happens to line up with a tool part's `state`.",
+  "preview": {
+    "src": "/previews/task.jpg",
+    "width": 1179,
+    "height": 953,
+    "alt": "The Task component, running in the example app."
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "slug": "map",
+  "intro": "A vector map whose basemap is drawn from your theme tokens rather than shipped as a finished style.\n\nA hosted style gives you two maps, a light one and a dark one. PanelUI has six themes, and a map that stays grey while the rest of the screen turns green is the one rectangle on the page that visibly does not belong to it. The tiles still come from a provider — that is the part worth paying for — but every colour in the style is a token your theme already resolved, so a new theme gets a matching basemap without anyone drawing one.\n\n<Callout type=\"warn\" title=\"Map needs a development build\">\nThe renderer is native code and is not part of the Expo SDK, so **`Map` cannot run in Expo Go**. Install `@maplibre/maplibre-react-native`, add its config plugin to your app config, and rebuild:\n\n```bash\nnpx expo install @maplibre/maplibre-react-native expo-dev-client\nnpx expo prebuild --clean\nnpx expo run:ios   # or: eas build --profile development --platform ios\n```\n\n```json title=\"app.json\"\n{ \"expo\": { \"plugins\": [\"@maplibre/maplibre-react-native\"] } }\n```\n\nWithout it `Map` renders a message saying so rather than throwing, so a screen that embeds one still loads. Check `hasMapLibre` before routing somewhere whose whole content is a map.\n</Callout>",
+  "usage": "<Map center={[-0.118, 51.509]} zoom={11}>\n  <Map.Marker lngLat={[-0.118, 51.509]}>\n    <Map.Popup title=\"Charing Cross\">\n      <Text size=\"xs\" muted>The point every distance to London is measured from.</Text>\n    </Map.Popup>\n  </Map.Marker>\n  <Map.Controls locate />\n</Map>",
+  "extraImports": [
+    "Text",
+    "type LngLat",
+    "hasMapLibre"
+  ],
+  "anatomy": "<Map>\n  <Map.Marker lngLat={[…]}>\n    <Map.Label>…</Map.Label>\n    <Map.Popup>…</Map.Popup>\n  </Map.Marker>\n  <Map.Route coordinates={[…]} />\n  <Map.Arc from={[…]} to={[…]} />\n  <Map.GeoJSON data={…} />\n  <Map.Cluster data={…} />\n  <Map.Heatmap data={…} />\n  <Map.UserLocation />\n  <Map.Controls />\n</Map>",
+  "parts": {
+    "Marker": "A point drawn as React views, so it can hold anything the rest of the library can draw.",
+    "Label": "A caption pinned to a marker and always visible, unlike a popup. `size` and `tone` are for maps carrying a lot of them at once.",
+    "Popup": "A card anchored to a point — to the marker it sits inside, or to a coordinate of its own.",
+    "Controls": "Zoom, compass and locate, as themed views rather than the renderer's own ornaments.",
+    "Route": "A path across the map, drawn as a style layer so its cost does not grow with its length.",
+    "Arc": "A curved connection between two points, bowed so arcs sharing an endpoint stay tellable apart.",
+    "GeoJSON": "Arbitrary geography as a themed layer. `fill` takes a style expression, which is what makes a choropleth one layer instead of one per bucket.",
+    "Cluster": "Dense points merged as they get too close to tell apart — the layer to reach for past a few dozen.",
+    "UserLocation": "The device's own position, drawn by the renderer.",
+    "Heatmap": "Point density as a continuous field — the layer for *where*, once the points are too many to count. `points` hands over to the records themselves as it fades out past `maxZoom`, so no zoom level shows neither."
+  },
+  "examples": [
+    {
+      "title": "Markers and popups",
+      "description": "A popup inside a marker anchors to it and opens when it is pressed. Given a `lngLat` of its own it stands alone at that coordinate instead — the same component either way, because the difference is where it hangs rather than what it is.",
+      "code": "<Map center={[-74.006, 40.713]} zoom={11}>\n  {offices.map((office) => (\n    <Map.Marker\n      key={office.id}\n      lngLat={office.lngLat}\n      accessibilityLabel={office.name}\n      accessibilityHint=\"Show office details\"\n    >\n      <Map.Popup title={office.name}>\n        <Text size=\"xs\" muted>{office.headcount} people</Text>\n      </Map.Popup>\n    </Map.Marker>\n  ))}\n</Map>"
+    },
+    {
+      "title": "A blank canvas for data",
+      "description": "`blank` drops the basemap and keeps only the ground colour, for data that carries its own geography. Street detail under a choropleth is noise rather than context.",
+      "code": "<Map blank bounds={[-125, 24, -66, 50]}>\n  <Map.GeoJSON\n    data={states}\n    fill={['interpolate', ['linear'], ['get', 'share'], 0, muted, 1, primary]}\n    accessibility={(feature) => ({\n      label: `${feature.properties.name}: ${feature.properties.share}%`,\n    })}\n  />\n</Map>"
+    },
+    {
+      "title": "Clustering dense points",
+      "description": "`Map.Marker` mounts a React view each, which a thousand points cannot afford — and a thousand overlapping pins would be unreadable even if it could. `Map.Cluster` does it in a style layer, merging points as they get too close to tell apart.\n\n`accessibility` reads the same inline Feature or FeatureCollection passed to the layer. It creates a clipped screen-reader list, and activating an entry calls the layer's `onPress` with that exact feature. The rendered map geometry stays decorative. Resolve URL data before passing it when the layer needs a nonvisual list; PanelUI does not keep a second feature copy that can drift from the map.",
+      "code": "<Map center={[10, 50]} zoom={3}>\n  <Map.Cluster\n    data={sightings}\n    radius={60}\n    onPress={inspect}\n    accessibility={(feature) => ({\n      label: feature.properties.species,\n      hint: 'Inspect sighting',\n      state: { selected: feature.id === selectedId },\n    })}\n  />\n</Map>"
+    },
+    {
+      "title": "Routes and arcs",
+      "description": "A route follows the ground; an arc does not pretend to. The bow on an arc is not geography — it is there so two connections sharing an endpoint stay tellable apart, which a bundle of straight lines through one city does not.",
+      "code": "<Map blank bounds={[-130, 20, 30, 60]}>\n  <Map.Route id=\"leg\" coordinates={delivered} />\n  <Map.Route id=\"remaining\" coordinates={planned} dashed opacity={0.6} />\n  {links.map((link) => (\n    <Map.Arc key={link.id} id={link.id} from={link.from} to={link.to} />\n  ))}\n</Map>"
+    },
+    {
+      "title": "Bringing your own tiles",
+      "description": "The tiles are the one part of the style that is somebody else's to license. `source` swaps the provider while keeping the token-built layers, so the map still follows your theme. The default is CARTO, which is free for non-commercial use and needs a licence for everything else.",
+      "code": "<Map\n  source={{\n    url: 'https://example.com/tiles.json',\n    glyphs: 'https://example.com/fonts/{fontstack}/{range}.pbf',\n    fonts: ['Inter Regular'],\n    attribution: '© OpenStreetMap contributors',\n  }}\n/>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Places",
+      "description": "A street map that is the whole screen, with the search field, the locate control and the place card sitting over it. On a map every point of chrome is a point of geography you cannot see, so nothing here takes a strip of its own — including the way back, which lives in the search bar. The card appears only once something is selected, and the pin you picked is the only one carrying a name: four labels at once is a map with the names of everything on it and the shape of nothing.",
+      "code": "const [selected, setSelected] = useState(null);\nconst map = useRef(null);\n\n<Map ref={map} center={here} zoom={14}>\n  {places.map((place) => (\n    <Map.Marker\n      key={place.id}\n      lngLat={place.lngLat}\n      onPress={() => {\n        setSelected(place);\n        map.current?.flyTo({ center: place.lngLat, zoom: 15 });\n      }}\n    >\n      <Pin active={place.id === selected?.id} />\n      {place.id === selected?.id ? (\n        <Map.Label side=\"top\" size=\"sm\" tone=\"primary\">{place.name}</Map.Label>\n      ) : null}\n    </Map.Marker>\n  ))}\n\n  {route ? <Map.Route coordinates={[here, selected.lngLat]} width={5} /> : null}\n  <Map.Controls locate position=\"top-right\" />\n</Map>"
+    },
+    {
+      "title": "Choropleth",
+      "description": "One layer shaded by a style expression rather than one layer per bucket — which is what lets the metric switch without rebuilding the map.",
+      "code": "<Map blank bounds={[-11, 35, 31, 63]}>\n  <Map.GeoJSON\n    data={europeFeatures(values)}\n    fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}\n    fillOpacity={0.9}\n  />\n  <Map.Controls position=\"top-right\" />\n</Map>"
+    },
+    {
+      "title": "Heatmap",
+      "description": "Density as a field, with the ramp passed in and the points it was made of fading in as the field fades out. The derived ramp is the base colour at rising opacity, which is right over empty ground; over streets and coastline the opacity alone stops being separable from what is underneath, and the hue has to carry part of the reading — which is what `colors` is for.",
+      "code": "<Map bounds={[-10, 38, 20, 56]}>\n  <Map.Heatmap\n    data={reports}\n    weight=\"weight\"\n    radius={28}\n    colors={['#fff7bc', '#fee391', '#fec44f', '#fe9929', '#d7301f']}\n    points\n    maxZoom={9}\n  />\n</Map>"
+    },
+    {
+      "title": "Delivery tracker",
+      "description": "A driven leg and a planned one, told apart by dash rather than by colour — the two mean different things, and colour is already carrying the theme.",
+      "code": "<Map center={[0.02, 51.545]} zoom={10.5}>\n  <Map.Route id=\"done\" coordinates={driven} width={4} />\n  <Map.Route id=\"left\" coordinates={planned} width={4} dashed opacity={0.5} />\n</Map>",
+      "previewVideo": {
+        "src": "/previews/map-delivery-tracker.mp4",
+        "poster": "/previews/map-delivery-tracker-poster.jpg",
+        "width": 720,
+        "height": 1560,
+        "alt": "Map — Delivery tracker."
+      }
+    },
+    {
+      "title": "Store locator",
+      "description": "A list and a map on one selection, so pressing either moves the other.",
+      "code": "<Map center={selected.lngLat} zoom={13}>\n  {stores.map((store) => (\n    <Map.Marker\n      key={store.id}\n      lngLat={store.lngLat}\n      onPress={() => setSelected(store)}\n    >\n      <View className={store.id === selected.id ? activePin : pin} />\n    </Map.Marker>\n  ))}\n  <Map.Controls locate position=\"top-right\" />\n</Map>",
+      "previewVideo": {
+        "src": "/previews/map.mp4",
+        "poster": "/previews/map-poster.jpg",
+        "width": 720,
+        "height": 1560,
+        "alt": "Map — Store locator."
+      }
+    },
+    {
+      "title": "Logistics network",
+      "description": "Arcs between sites. The bow is not geography — it is there so two lanes sharing a hub stay tellable apart, which a bundle of straight lines through one city does not.",
+      "code": "<Map bounds={[-12, 36, 26, 60]}>\n  {lanes.map((lane) => (\n    <Map.Arc\n      key={lane.id}\n      id={lane.id}\n      from={byId[lane.from].lngLat}\n      to={byId[lane.to].lngLat}\n      curvature={0.18}\n    />\n  ))}\n</Map>",
+      "previewVideo": {
+        "src": "/previews/map-logistics-network.mp4",
+        "poster": "/previews/map-logistics-network-poster.jpg",
+        "width": 720,
+        "height": 1560,
+        "alt": "Map — Logistics network."
+      }
+    },
+    {
+      "title": "Uptime monitor",
+      "description": "Edge nodes coloured by state, spread across the world. A marker is a React view, so the status dot is the same one the rest of the app uses.",
+      "code": "<Map center={[0, 25]} zoom={1.1}>\n  {nodes.map((node) => (\n    <Map.Marker key={node.id} lngLat={node.lngLat}>\n      <View className=\"items-center\">\n        <View className={dotFor(node.state)} />\n        <Map.Label>{node.id.toUpperCase()}</Map.Label>\n      </View>\n    </Map.Marker>\n  ))}\n</Map>",
+      "previewVideo": {
+        "src": "/previews/map-uptime-monitor.mp4",
+        "poster": "/previews/map-uptime-monitor-poster.jpg",
+        "width": 720,
+        "height": 1560,
+        "alt": "Map — Uptime monitor."
+      }
+    }
+  ],
+  "notes": "### Why the basemap is assembled rather than downloaded\n\nA hosted style ships its colours baked in, which gives you exactly two maps. Everything here is built from the same tokens as the rest of the library, so `moon`, `grass` and anything you add later get a basemap that matches them without a designer redrawing one per theme.\n\nThe layer list is deliberately short. A full street style runs to ninety-odd layers separating tunnel casings from bridge casings across eleven zoom stops; almost none of that survives being recoloured down to five greys, and every layer is another thing to keep in step with the tokens. What is there is the set that still reads as a map at any zoom: ground, water, green space, buildings, roads, boundaries, and the labels that make them findable.\n\nPass `mapStyle` to skip all of it and use a style wholesale — the escape hatch for a map that has to match something outside the app.\n\n### Tile licensing\n\n`Map` defaults to CARTO's street tiles, which are free for non-commercial use and require a licence from CARTO for commercial use. That is a decision about your project rather than about this component, so `source` takes any provider serving the OpenMapTiles schema.\n\n### Markers or clusters\n\n`Map.Marker` is a React view, which is what lets it hold an avatar, a chip, or anything else the library draws. That also means a marker costs what a view costs. Past a few dozen points use `Map.Cluster`, which draws in a style layer and merges points as they crowd — by the time markers become expensive they have also become unreadable, so the two limits arrive together.\n\n### Labels on a crowded map\n\n`Map.Label` is out of the marker's layout flow, and deliberately so: a marker sits on its coordinate by the centre of its box, so a label in flow beneath the pin would drag that centre down and lift every pin off the place it marks. The pill overhangs the marker by a wide margin on both sides, which is what lets a long name stay centred over a small dot without the marker being anchored by the name instead.\n\nWhat that does not solve is a map with a dozen of them. `size=\"sm\"` tightens the pill, and `tone=\"muted\"` drops the text to the muted colour — together they are the difference between a network map and a wall of chips. The rule of thumb: label at `default` only the places the map is *about*, and let everything else support at `muted`. `tone=\"primary\"` inverts the pill for the single place being pointed at.",
+  "hideVariants": [
+    "position"
+  ],
+  "previewVideo": {
+    "src": "/previews/map.mp4",
+    "poster": "/previews/map-poster.jpg",
+    "width": 720,
+    "height": 1560,
+    "alt": "The Map component, running in the example app."
+  }
+}

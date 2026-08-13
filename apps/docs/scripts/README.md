@@ -6,15 +6,16 @@ from it.
 
 ```bash
 S=./scripts node scripts/extract.mjs   # library source -> api.json
-S=./scripts node scripts/gen.mjs       # api.json + usage.json -> MDX
+S=./scripts node scripts/gen.mjs       # api.json + usage/*.json -> MDX
 ```
 
 - `extract.mjs` parses `packages/panelui/src/components/*/index.tsx` for exported prop
   interfaces (with their JSDoc), `tv()` variant keys and defaults, the component's own
   parameter destructuring (for the Default column of non-variant props), and
   `Object.assign` parts.
-- `usage.json` holds the parts a parser cannot infer. **This is the file to edit** when a
-  component's behaviour changes:
+- `usage/<slug>.json` holds the parts a parser cannot infer, one component per file. **This is
+  the file to edit** when a component's behaviour changes. Keep its `slug` envelope equal to
+  the filename; generation rejects duplicates, missing/unknown slugs and stray artifacts:
 
   | Key | What it becomes |
   | --- | --- |
@@ -42,7 +43,8 @@ S=./scripts node scripts/gen.mjs       # api.json + usage.json -> MDX
   because they state how settled the API is rather than which release it landed in. `alpha`
   means it is still moving, `beta` that it has stopped but has not been used enough to promise
   it will not move again. A component carries at most one, and either outranks both dots.
-- `gen.mjs` merges the two and writes the MDX.
+- `gen.mjs` loads every usage module, merges it with the extracted API and metadata, and writes
+  the MDX.
 
 Every component page must carry worked `examples` — a props table says a prop exists, an
 example says what to write. Aim for three to five, covering each variant and every prop whose

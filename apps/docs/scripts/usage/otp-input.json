@@ -1,0 +1,75 @@
+{
+  "slug": "otp-input",
+  "intro": "A one-time-code field drawn as a row of separate cells, so the reader can see how many digits are left.\n\nThere is one text field underneath — a transparent input laid over the whole row — so the keyboard, SMS autofill and paste all behave; the cells are drawn from its value.\n\nThe active cell's border crosses to the focus colour on the UI thread, and a caret blinks in the cell awaiting input.",
+  "extraImports": [
+    "useState"
+  ],
+  "usage": "const [code, setCode] = useState('');\n\n<OtpInput value={code} onChangeText={setCode} onComplete={submit} />\n\n// Four masked cells, grouped two and two, letters allowed.\n<OtpInput length={4} mask groupEvery={2} type=\"text\" />",
+  "notes": "Accepts most `TextInputProps` — they land on the hidden field — except the ones `OtpInput` owns: `value`, `defaultValue`, `onChangeText`, `maxLength` and `children`.\n\nThe field is controlled when you pass `value`, and manages its own state otherwise (seed it with `defaultValue`). Either way the string is trimmed to `length` and, when `type=\"numeric\"`, filtered to digits, so an over-long paste or a stray character can never put the cells and the value out of step.\n\n`onComplete` fires once, on the transition to a full code — not on every keystroke that leaves it full — which is the right moment to submit or verify. The hidden input carries `textContentType=\"oneTimeCode\"` and the matching `autoComplete`, so iOS offers the SMS code above the keyboard and Android autofills it.",
+  "examples": [
+    {
+      "title": "Controlled",
+      "description": "Hold the value yourself and act on it when the code completes.",
+      "code": "const [code, setCode] = useState('');\n\n<OtpInput\n  value={code}\n  onChangeText={setCode}\n  onComplete={(value) => verify(value)}\n/>"
+    },
+    {
+      "title": "Masked, like a passcode",
+      "description": "Each filled cell shows a dot rather than the character.",
+      "code": "<OtpInput length={4} mask type=\"numeric\" />",
+      "previewVideo": {
+        "src": "/previews/otp-input-masked.mp4",
+        "poster": "/previews/otp-input-masked-poster.jpg",
+        "alt": "OtpInput — Masked, like a passcode.",
+        "width": 720,
+        "height": 232
+      }
+    },
+    {
+      "title": "Grouped with a separator",
+      "description": "`groupEvery` draws a divider between runs of cells — 3 gives `xxx — xxx`.",
+      "code": "<OtpInput length={6} groupEvery={3} />",
+      "preview": {
+        "src": "/previews/otp-input-grouped.jpg",
+        "alt": "OtpInput — Grouped with a separator.",
+        "width": 1179,
+        "height": 366
+      }
+    },
+    {
+      "title": "Sizes",
+      "code": "<OtpInput size=\"sm\" length={4} />\n<OtpInput size=\"md\" length={4} />\n<OtpInput size=\"lg\" length={4} />",
+      "preview": {
+        "src": "/previews/otp-input-size.jpg",
+        "alt": "OtpInput — Sizes.",
+        "width": 1179,
+        "height": 679
+      }
+    },
+    {
+      "title": "Invalid",
+      "description": "`errorMessage` tints every cell and prints a line beneath the row.",
+      "code": "<OtpInput\n  length={6}\n  value={code}\n  onChangeText={setCode}\n  errorMessage=\"That code didn’t match. Try again.\"\n/>"
+    },
+    {
+      "title": "Letters",
+      "description": "`type=\"text\"` accepts letters as well as digits.",
+      "preview": {
+        "src": "/previews/otp-input-letters.jpg",
+        "alt": "OtpInput — Letters.",
+        "width": 1179,
+        "height": 424
+      },
+      "code": "<OtpInput type=\"text\" length={4} />"
+    }
+  ],
+  "variantCode": {
+    "size": "<OtpInput size=\"sm\" length={4} />\n<OtpInput size=\"md\" length={4} />\n<OtpInput size=\"lg\" length={4} />"
+  },
+  "previewVideo": {
+    "src": "/previews/otp-input.mp4",
+    "poster": "/previews/otp-input-poster.jpg",
+    "alt": "The OtpInput component, running in the example app.",
+    "width": 720,
+    "height": 306
+  }
+}

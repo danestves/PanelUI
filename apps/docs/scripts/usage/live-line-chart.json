@@ -1,0 +1,44 @@
+{
+  "slug": "live-line-chart",
+  "intro": "Use it for a number that keeps arriving — a metric off a socket, a sensor, a queue depth. Each reading is placed at the time it carries against a window running from `window` seconds ago to now, so the gaps between readings are part of what is drawn.\n\nThe window is tied to the wall clock, not to the data. The line drifts left whether or not anything is arriving, so a feed that stalls shows as a flat run reaching back from the tip. That costs a frame callback for as long as the chart is mounted; `paused` and `status=\"loading\"` stop it, and it never starts when the platform asks for reduced motion — the window then advances as each reading lands instead.\n\nFor a fixed series that is not going to grow — a week of visits, twelve months of revenue — use [LineChart](/docs/charts/line-chart). It places points by their position in the list, which is the right answer when the spacing between them is not the subject.\n\n**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.",
+  "usage": "<LiveLineChart data={points} window={30}>\n  <LiveLineChart.Header title=\"Requests / sec\" />\n  <LiveLineChart.Grid />\n  <LiveLineChart.Area />\n  <LiveLineChart.Line />\n  <LiveLineChart.Tip />\n  <LiveLineChart.XAxis />\n</LiveLineChart>",
+  "extraImports": [
+    "type LiveLinePoint",
+    "Frame"
+  ],
+  "anatomy": "<LiveLineChart>\n  <LiveLineChart.Header />     {/* what is watched, and what it reads now */}\n  <LiveLineChart.Grid />       {/* the rules the readings are judged against */}\n  <LiveLineChart.Area />       {/* the gradient fill under the line */}\n  <LiveLineChart.Line />       {/* the line */}\n  <LiveLineChart.Skeleton />   {/* while status=\"loading\" */}\n  <LiveLineChart.Tip />        {/* the dot at the leading end, and its badge */}\n  <LiveLineChart.XAxis />      {/* how far back the plot reaches */}\n  <LiveLineChart.YAxis />      {/* the value scale */}\n  <LiveLineChart.Tooltip />    {/* drag back to read a reading that has gone past */}\n</LiveLineChart>",
+  "parts": {
+    "Header": "The strip above the plot. Its value falls back to the reading under the crosshair, then to the latest one, so a drag reads out here without wiring anything up.",
+    "Grid": "The horizontal rules the readings are judged against.",
+    "Area": "The gradient fill under the line. Its own part, so a chart that wants the shape without the weight of a filled band does not have one.",
+    "Line": "The line, rebuilt on the UI thread every frame the window moves.",
+    "Tip": "The dot at the leading end. It rides the newest reading rather than the right-hand edge. Pass `badge` to write the current reading beside it — off by default, since a floating card nobody opened reads as a tooltip.",
+    "XAxis": "How far back the plot reaches, labelled as offsets from now.",
+    "YAxis": "The value scale. Declaring one widens the left gutter so its labels have somewhere to sit.",
+    "Tooltip": "Drag back through the window to read a reading that has already gone past.",
+    "Skeleton": "A flat line down the middle, shown while `status=\"loading\"`."
+  },
+  "examples": [
+    {
+      "title": "A metric off a socket",
+      "description": "Append to `data` as readings arrive and the chart does the rest. Times are milliseconds, as `Date.now()` gives them.\n\nOld readings are dropped past `maxPoints` — they are off the window and cannot come back, and an unbounded feed otherwise grows an array for as long as the screen is open.",
+      "code": "const [points, setPoints] = useState<LiveLinePoint[]>([]);\n\nuseEffect(() => {\n  const timer = setInterval(() => {\n    setPoints((current) => [...current, { time: Date.now(), value: read() }]);\n  }, 500);\n  return () => clearInterval(timer);\n}, []);\n\n<LiveLineChart data={points} window={30}>\n  <LiveLineChart.Header title=\"Requests / sec\" />\n  <LiveLineChart.Grid />\n  <LiveLineChart.Area />\n  <LiveLineChart.Line />\n  <LiveLineChart.Tip />\n  <LiveLineChart.XAxis />\n</LiveLineChart>"
+    },
+    {
+      "title": "Colour that follows the direction",
+      "description": "`momentumColors` colours the line, the fill and the tip by where the reading has been going over the last few points rather than by a fixed hue. It is the one thing on the chart readable without looking at the axis, which is what a number watched out of the corner of an eye needs.\n\nLeft out, the chart draws in one colour throughout.",
+      "code": "<LiveLineChart\n  data={points}\n  momentumColors={{ up: '#10b981', down: '#ef4444' }}\n>\n  <LiveLineChart.Grid />\n  <LiveLineChart.Area />\n  <LiveLineChart.Line />\n  <LiveLineChart.Tip />\n</LiveLineChart>"
+    },
+    {
+      "title": "Reading back through the window",
+      "description": "`Tooltip` pins the crosshair to the moment it was put on rather than to the place on screen, so it travels left with the reading it named instead of sitting still while the line slides out from under it.\n\nA reading can scroll off the window while it is being read. The crosshair goes with it.",
+      "code": "<LiveLineChart data={points} onActivePointChange={setReading}>\n  <LiveLineChart.Header title=\"Throughput\" />\n  <LiveLineChart.Grid />\n  <LiveLineChart.YAxis />\n  <LiveLineChart.Line />\n  <LiveLineChart.Tip />\n  <LiveLineChart.Tooltip />\n  <LiveLineChart.XAxis />\n</LiveLineChart>"
+    },
+    {
+      "title": "Holding the window still",
+      "description": "`paused` freezes the window where it is. Readings still arrive and are still kept — it is the window that stops, so what is on screen holds still long enough to be talked about, axis and tip included. Clearing it jumps the window back to the present.",
+      "code": "<LiveLineChart data={points} paused={held}>\n  <LiveLineChart.Header title=\"Requests / sec\">\n    <Button size=\"sm\" variant=\"ghost\" onPress={() => setHeld(!held)}>\n      {held ? 'Resume' : 'Hold'}\n    </Button>\n  </LiveLineChart.Header>\n  <LiveLineChart.Line />\n  <LiveLineChart.Tip />\n</LiveLineChart>"
+    }
+  ],
+  "notes": "The y-axis follows what is *visible*, not everything kept. A spike that has scrolled off the left edge stops holding the axis open, so a feed that settles is not left flat against the bottom of a plot scaled for something that happened a minute ago. Pass `yDomain` to fix it instead.\n\n`Tip` draws a dot and nothing else unless `badge` is passed. The badge is a floating card, which is the shape a reader has learnt means they touched something — sitting there unasked it reads as a tooltip that opened by itself. Turn it on for a chart with no header to put the reading in. It hides itself while the crosshair is out either way, so there is never a second card answering a different question.\n\n`paused` holds the whole picture, not only the clock. Readings keep arriving behind the frozen edge, and the y-axis, the tip and the momentum colour are all derived from the newest one — left live they would go on rescaling, chasing and recolouring under a line that has stopped, which is a held chart that is still moving.\n\nThe tip rides the newest reading rather than the right-hand edge. Pinning it to the edge would hold it still and steady, which is the picture of a feed that is working.\n\nThe x-axis is labelled in offsets from now — `-30s`, `-15s`, `now` — rather than clock times. A moving window labelled with wall-clock times rewrites every label on every frame.\n\nThe frame callback stops on unmount, on `paused`, on `status=\"loading\"`, and never starts under reduced motion. Nothing else in the library animates without an interaction or a change of data, so a chart left mounted off-screen is worth `paused`."
+}

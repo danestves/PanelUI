@@ -1,0 +1,87 @@
+{
+  "slug": "message",
+  "intro": "A chat turn: an avatar, a bubble, and the metadata around it.\n\nThe pieces are separate because conversations differ in which they need. A support thread wants a sender name and a read receipt; an assistant transcript wants neither, but does want the bubble to carry tool output and actions.\n\nFor the scroll behaviour around a list of these, use [MessageScroller](/docs/components/message-scroller).",
+  "usage": "<Message>\n  <Message.Avatar>\n    <Avatar size=\"sm\" fallback=\"KA\" />\n  </Message.Avatar>\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>How can I help you today?</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>\n\n// The outgoing side.\n<Message align=\"end\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>Set a reminder for 9am.</Message.BubbleContent>\n    </Message.Bubble>\n    <Message.Footer>Read</Message.Footer>\n  </Message.Content>\n</Message>\n\n// Consecutive turns from one sender.\n<Message.Group align=\"start\">\n  <Message>\n    <Message.Avatar><Avatar size=\"sm\" fallback=\"AI\" /></Message.Avatar>\n    <Message.Content>\n      <Message.Header>Assistant</Message.Header>\n      <Message.Bubble>\n        <Message.BubbleContent>Looking that up…</Message.BubbleContent>\n      </Message.Bubble>\n    </Message.Content>\n  </Message>\n  <Message>\n    <Message.Avatar><Avatar size=\"sm\" fallback=\"AI\" /></Message.Avatar>\n    <Message.Content>\n      <Message.Bubble>\n        <Message.BubbleContent>Your reminder is set.</Message.BubbleContent>\n      </Message.Bubble>\n    </Message.Content>\n  </Message>\n</Message.Group>",
+  "extraImports": [
+    "Avatar",
+    "Button",
+    "Shimmer",
+    "BottomSheet"
+  ],
+  "anatomy": "<Message.Group>\n  <Message align=\"start\">\n    <Message.Avatar>…</Message.Avatar>\n    <Message.Content>\n      <Message.Header>…</Message.Header>\n      <Message.Bubble>\n        <Message.BubbleContent>…</Message.BubbleContent>\n      </Message.Bubble>\n      <Message.Actions>…</Message.Actions>\n      <Message.Footer>…</Message.Footer>\n    </Message.Content>\n  </Message>\n</Message.Group>",
+  "parts": {
+    "Group": "Consecutive turns from one sender. Tightens spacing and stacks them.",
+    "Avatar": "Slot for the sender avatar. Reserved but emptied on a stacked message.",
+    "Content": "Column holding the header, bubble, actions and footer.",
+    "Header": "Sender name or timestamp above the bubble.",
+    "Bubble": "The speech bubble. Takes its colour and squared corner from align.",
+    "BubbleContent": "Text inside the bubble, in whichever colour reads against it.",
+    "Actions": "Row of controls under the bubble — copy, retry, feedback.",
+    "Footer": "Delivery state or timestamp below the bubble."
+  },
+  "notes": "### Alignment\n\n`align` is the only decision the root makes, and every part reads it from context: which side the row sits on, which way the avatar goes, which corner of the bubble is squared off, and which colour it takes. `start` is incoming (muted bubble), `end` is outgoing (primary bubble).\n\nSet it on `Message.Group` instead and every message inside inherits it.\n\n### Grouping\n\n`Message.Group` marks every turn after the first as `stacked`. A stacked message still renders its avatar slot but leaves it empty, so the bubbles stay in one column instead of the second sliding under the first one's avatar. Pass `stacked` on a message explicitly to override that.\n\n### In a list\n\nRender a transcript with an inverted `FlatList`, not a `ScrollView` — it keeps the newest turn pinned to the bottom without measuring content, and recycles rows as the conversation grows.",
+  "examples": [
+    {
+      "title": "Both sides of a conversation",
+      "description": "`align` decides the row direction, the avatar side, which bubble corner is squared off, and the bubble colour — every part reads it from context.",
+      "code": "<Message>\n  <Message.Avatar>\n    <Avatar size=\"sm\" source={{ uri: them.avatar }} fallback=\"OL\" />\n  </Message.Avatar>\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>How can I help you today?</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>\n\n<Message align=\"end\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>Set a reminder for 9am.</Message.BubbleContent>\n    </Message.Bubble>\n    <Message.Footer>Read</Message.Footer>\n  </Message.Content>\n</Message>"
+    },
+    {
+      "title": "Grouped turns",
+      "description": "Every turn after the first is marked `stacked`: it keeps its avatar slot but empties it, so the bubbles stay in one column.",
+      "code": "<Message.Group align=\"start\">\n  {turns.map((turn) => (\n    <Message key={turn.id}>\n      <Message.Avatar>\n        <Avatar size=\"sm\" fallback=\"AI\" />\n      </Message.Avatar>\n      <Message.Content>\n        <Message.Bubble>\n          <Message.BubbleContent>{turn.text}</Message.BubbleContent>\n        </Message.Bubble>\n      </Message.Content>\n    </Message>\n  ))}\n</Message.Group>",
+      "preview": {
+        "src": "/previews/message-grouped-turns.jpg",
+        "alt": "Message — Grouped turns.",
+        "width": 1179,
+        "height": 609
+      }
+    },
+    {
+      "title": "A streaming turn",
+      "code": "<Message>\n  <Message.Avatar><Avatar size=\"sm\" fallback=\"AI\" /></Message.Avatar>\n  <Message.Content>\n    <Message.Bubble>\n      {text ? (\n        <Message.BubbleContent>{text}</Message.BubbleContent>\n      ) : (\n        <Shimmer textClassName=\"text-base\">Thinking…</Shimmer>\n      )}\n    </Message.Bubble>\n  </Message.Content>\n</Message>",
+      "previewVideo": {
+        "src": "/previews/message-streaming-and-actions.mp4",
+        "poster": "/previews/message-streaming-and-actions-poster.jpg",
+        "alt": "Message — A streaming turn.",
+        "width": 720,
+        "height": 424
+      }
+    },
+    {
+      "title": "Actions under the bubble",
+      "description": "`Message.Actions` reverses its row on the outgoing side so the buttons stay on the message’s own edge.",
+      "code": "<Message.Content>\n  <Message.Bubble>\n    <Message.BubbleContent>{answer}</Message.BubbleContent>\n  </Message.Bubble>\n  <Message.Actions>\n    <Button size=\"sm\" variant=\"ghost\" onPress={() => copy(answer)}>Copy</Button>\n    <Button size=\"sm\" variant=\"ghost\" onPress={retry}>Retry</Button>\n  </Message.Actions>\n</Message.Content>"
+    },
+    {
+      "title": "In a transcript",
+      "description": "An inverted `FlatList` keeps the newest turn pinned to the bottom without measuring content, and recycles rows as the conversation grows.",
+      "code": "<FlatList\n  data={[...messages].reverse()}\n  inverted\n  keyExtractor={(m) => m.id}\n  contentContainerClassName=\"gap-3 px-4 py-3\"\n  renderItem={({ item }) => (\n    <Message align={item.role === 'user' ? 'end' : 'start'}>\n      <Message.Content>\n        <Message.Bubble>\n          <Message.BubbleContent>{item.text}</Message.BubbleContent>\n        </Message.Bubble>\n      </Message.Content>\n    </Message>\n  )}\n/>"
+    },
+    {
+      "title": "Long-press for actions",
+      "description": "Give the turn an `onLongPress` and the whole row becomes a long-press target with the library's press feedback — the gesture a chat uses to surface per-message actions. The component only exposes the gesture; open a sheet or a popover from it.",
+      "code": "const [open, setOpen] = useState(false);\n\n<Message align=\"end\" onLongPress={() => setOpen(true)}>\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>Long-press me for actions.</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>\n\n<BottomSheet open={open} onOpenChange={setOpen}>\n  <BottomSheet.Content>\n    {/* copy · reply · forward · delete */}\n  </BottomSheet.Content>\n</BottomSheet>"
+    },
+    {
+      "title": "Header and footer",
+      "description": "`Message.Header` names the speaker above the bubble; `Message.Footer` timestamps it below.",
+      "preview": {
+        "src": "/previews/message-header-and-footer.jpg",
+        "alt": "Message — Header and footer.",
+        "width": 1179,
+        "height": 528
+      },
+      "code": "<Message>\n  <Message.Avatar>\n    <Avatar size=\"sm\" source={{ uri: user.avatar }} fallback=\"OL\" />\n  </Message.Avatar>\n  <Message.Content>\n    <Message.Header>Olivia</Message.Header>\n    <Message.Bubble>\n      <Message.BubbleContent>I pushed the fix — can you take another look?</Message.BubbleContent>\n    </Message.Bubble>\n    <Message.Footer>Yesterday at 18:04</Message.Footer>\n  </Message.Content>\n</Message>"
+    }
+  ],
+  "variantCode": {
+    "align": "{/* Incoming — muted bubble, avatar on the left. */}\n<Message align=\"start\">…</Message>\n\n{/* Outgoing — primary bubble, row reversed. */}\n<Message align=\"end\">…</Message>\n\n{/* Or set it once for a whole group. */}\n<Message.Group align=\"end\">…</Message.Group>"
+  },
+  "preview": {
+    "src": "/previews/message.jpg",
+    "alt": "The Message component, running in the example app.",
+    "width": 1179,
+    "height": 562
+  }
+}

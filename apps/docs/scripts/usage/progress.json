@@ -1,0 +1,67 @@
+{
+  "slug": "progress",
+  "intro": "A progress bar, determinate or indeterminate, animated on the UI thread.\n\nIt reads its value against a range you set, and captions itself with a label and a value readout when the bar needs a heading.\n\nUse the determinate form whenever you know the total. For work of unknown length, a [Spinner](/docs/components/spinner) says the same thing in less space.",
+  "usage": "<Progress value={uploaded} />\n<Progress value={70} color=\"success\" size=\"lg\" />\n<Progress value={1250} maxValue={2000} label=\"Budget\" showValueLabel />\n<Progress indeterminate color=\"info\" />",
+  "notes": "`value` is read against `minValue` and `maxValue`, which default to `0` and `100` — a percentage needs neither. With `indeterminate` the value is ignored, the bar loops, and the value label is dropped. The animation runs on the UI thread. Under reduce motion the fill lands on its value rather than springing to it, and the indeterminate bar fills the track and pulses in place instead of travelling across it — a bar that stopped moving would read as a bar that had hung, which is the one thing an indeterminate bar exists to rule out.\n\n### Writing the value\n\n`formatOptions` renders the readout through `Intl.NumberFormat`. A `percent` style is given how far along the bar is; every other style is given the value itself, so a currency or a byte count comes out as the quantity it is rather than as a proportion of the range. `valueLabel` replaces the whole thing when the text is not a number at all.\n\nWhatever the readout says is also what a screen reader is told, alongside the real range — so a bar counting seats reads \"18 of 24\" rather than \"75\".",
+  "examples": [
+    {
+      "title": "Determinate",
+      "description": "`value` against the default range of 0 to 100 — a plain percentage.",
+      "code": "<Progress value={72} />\n\n<Progress value={uploaded / total * 100} color=\"success\" size=\"lg\" />"
+    },
+    {
+      "title": "Labelled",
+      "description": "`label` captions the bar on the left; `showValueLabel` prints the percentage on the right. `valueLabel` replaces that text for anything that is not a bare percent.",
+      "code": "<Progress value={64} label=\"Downloading\" showValueLabel />\n\n<Progress\n  value={40}\n  label=\"Storage\"\n  valueLabel=\"8.2 GB of 20 GB\"\n  showValueLabel\n/>",
+      "preview": {
+        "src": "/previews/progress-labelled.jpg",
+        "alt": "Progress — Labelled.",
+        "width": 1179,
+        "height": 629
+      }
+    },
+    {
+      "title": "A range of its own",
+      "description": "`minValue` and `maxValue` let the bar take the numbers the work is actually counted in. Nothing has to be converted to a percentage on the way in, and the screen reader is told the real range rather than a derived one.",
+      "code": "<Progress\n  value={1250}\n  maxValue={2000}\n  label=\"Budget\"\n  formatOptions={{ style: 'currency', currency: 'USD' }}\n  showValueLabel\n/>\n\n<Progress\n  value={18}\n  maxValue={24}\n  label=\"Seats\"\n  valueLabel={`${18} of ${24}`}\n  color=\"info\"\n  showValueLabel\n/>"
+    },
+    {
+      "title": "Indeterminate",
+      "description": "For work with no measurable progress. The animation runs on the UI thread and stops when reduce-motion is on.",
+      "code": "<Progress indeterminate />"
+    },
+    {
+      "title": "Colour by state",
+      "code": "<Progress\n  value={usage}\n  color={usage > 90 ? 'destructive' : usage > 70 ? 'warning' : 'primary'}\n/>",
+      "preview": {
+        "src": "/previews/progress-colors.jpg",
+        "alt": "Progress — Colour by state.",
+        "width": 1179,
+        "height": 452
+      }
+    }
+  ],
+  "variantCode": {
+    "size": "<Progress size=\"sm\" value={40} />\n<Progress size=\"md\" value={40} />\n<Progress size=\"lg\" value={40} />",
+    "color": "<Progress color=\"primary\" value={40} />\n<Progress color=\"success\" value={40} />\n<Progress color=\"warning\" value={40} />\n<Progress color=\"destructive\" value={40} />\n<Progress color=\"info\" value={40} />"
+  },
+  "variantMedia": {
+    "size": [
+      {
+        "preview": {
+          "src": "/previews/progress-size.jpg",
+          "alt": "Progress — size.",
+          "width": 1179,
+          "height": 344
+        }
+      }
+    ]
+  },
+  "previewVideo": {
+    "src": "/previews/progress.mp4",
+    "poster": "/previews/progress-poster.jpg",
+    "alt": "The Progress component, running in the example app.",
+    "width": 720,
+    "height": 334
+  }
+}

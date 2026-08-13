@@ -1,0 +1,105 @@
+{
+  "slug": "accordion",
+  "intro": "Collapsible sections, for FAQs, settings groups and anything that would otherwise be a long scroll.\n\nExpansion animates with a Reanimated layout transition, and collapsed content unmounts. Pass `keepMounted` when there is state inside a section worth keeping — a half-filled form, a scroll position — at the cost of rendering every section up front.\n\nFor a hierarchy more than one level deep, use [Tree](/docs/components/tree).",
+  "usage": "<Accordion selectionMode=\"single\" defaultValue=\"shipping\">\n  <Accordion.Item value=\"shipping\">\n    <Accordion.Trigger>\n      <Accordion.Title>How long does shipping take?</Accordion.Title>\n      <Accordion.Indicator />\n    </Accordion.Trigger>\n    <Accordion.Content>\n      Standard delivery arrives in three to five working days.\n    </Accordion.Content>\n  </Accordion.Item>\n</Accordion>",
+  "parts": {
+    "Item": "One collapsible section. Its `value` identifies it in the accordion's state.",
+    "Trigger": "The pressable header row. A bare string child is wrapped in the title style.",
+    "Title": "Heading text inside the trigger.",
+    "Indicator": "Chevron that rotates 180° while the item is open.",
+    "Content": "The collapsible body. Unmounts when closed, unless `keepMounted` keeps it mounted and hidden from layout instead."
+  },
+  "notes": "Pass an array to `value` / `defaultValue` with `selectionMode=\"multiple\"`. `onValueChange` hands back whatever shape you gave it — a string in single mode, an array in multiple.\n\n`keepMounted` trades the cost of rendering every closed body up front for keeping what is inside them alive. Set it on the accordion for all of them, or on a single `Accordion.Content` for the one section that needs it — the prop on the content wins either way round.",
+  "anatomy": "<Accordion>\n  <Accordion.Item value=\"…\">\n    <Accordion.Trigger>\n      <Accordion.Title>…</Accordion.Title>\n      <Accordion.Indicator />\n    </Accordion.Trigger>\n    <Accordion.Content>…</Accordion.Content>\n  </Accordion.Item>\n</Accordion>",
+  "examples": [
+    {
+      "title": "Single open section",
+      "description": "The default. Opening one section closes the others — use it when the panels are alternatives rather than a checklist.",
+      "code": "<Accordion defaultValue=\"shipping\">\n  <Accordion.Item value=\"shipping\">\n    <Accordion.Trigger>\n      <Accordion.Title>Shipping</Accordion.Title>\n      <Accordion.Indicator />\n    </Accordion.Trigger>\n    <Accordion.Content>\n      <Text size=\"sm\" muted>Free over $50. Arrives in 2–4 days.</Text>\n    </Accordion.Content>\n  </Accordion.Item>\n\n  <Accordion.Item value=\"returns\">\n    <Accordion.Trigger>\n      <Accordion.Title>Returns</Accordion.Title>\n      <Accordion.Indicator />\n    </Accordion.Trigger>\n    <Accordion.Content>\n      <Text size=\"sm\" muted>30 days, unopened, receipt required.</Text>\n    </Accordion.Content>\n  </Accordion.Item>\n</Accordion>"
+    },
+    {
+      "title": "Several open at once",
+      "description": "`selectionMode=\"multiple\"` switches `value` from a string to an array.",
+      "code": "<Accordion selectionMode=\"multiple\" defaultValue={['shipping', 'returns']}>\n  {/* …items… */}\n</Accordion>",
+      "preview": {
+        "src": "/previews/accordion-multiple.jpg",
+        "alt": "Accordion — Several open at once.",
+        "width": 1179,
+        "height": 1022
+      }
+    },
+    {
+      "title": "Controlled",
+      "description": "Drive it from state when something outside the accordion needs to open a section.",
+      "code": "const [open, setOpen] = useState<string>('shipping');\n\n<>\n  <Button onPress={() => setOpen('returns')}>Jump to returns</Button>\n\n  <Accordion value={open} onValueChange={(v) => setOpen(v as string)}>\n    {/* …items… */}\n  </Accordion>\n</>"
+    },
+    {
+      "title": "Disabled section",
+      "description": "A section that exists but cannot be opened yet — an upsell, or a step not reached.",
+      "code": "<Accordion.Item value=\"enterprise\" isDisabled>\n  <Accordion.Trigger>\n    <Accordion.Title>Enterprise billing</Accordion.Title>\n    <Accordion.Indicator />\n  </Accordion.Trigger>\n  <Accordion.Content>\n    <Text size=\"sm\" muted>Contact sales.</Text>\n  </Accordion.Content>\n</Accordion.Item>"
+    },
+    {
+      "title": "Keeping a body's state",
+      "description": "A closed section is unmounted, so anything typed into it is gone when it reopens. `keepMounted` hides the body instead: it takes up no room and the same layout transition plays, but the field still holds what was typed.",
+      "code": "<Accordion variant=\"surface\" keepMounted defaultValue=\"note\">\n  <Accordion.Item value=\"note\">\n    <Accordion.Trigger>\n      <Accordion.Title>Delivery note</Accordion.Title>\n      <Accordion.Indicator />\n    </Accordion.Trigger>\n    <Accordion.Content>\n      <Textarea placeholder=\"Leave it with a neighbour…\" />\n    </Accordion.Content>\n  </Accordion.Item>\n</Accordion>"
+    }
+  ],
+  "variantCode": {
+    "variant": "<Accordion variant=\"default\">…</Accordion>\n<Accordion variant=\"surface\">…</Accordion>\n<Accordion variant=\"separated\">…</Accordion>\n<Accordion variant=\"bordered\">…</Accordion>\n<Accordion variant=\"ghost\">…</Accordion>"
+  },
+  "extraImports": [
+    "Text",
+    "Button",
+    "Textarea"
+  ],
+  "variantMedia": {
+    "variant": [
+      {
+        "previewVideo": {
+          "src": "/previews/accordion-border.mp4",
+          "poster": "/previews/accordion-border-poster.jpg",
+          "alt": "Accordion — variant bordered.",
+          "width": 720,
+          "height": 618,
+          "caption": "bordered"
+        }
+      },
+      {
+        "preview": {
+          "src": "/previews/accordion-ghost.jpg",
+          "alt": "Accordion — variant ghost.",
+          "width": 1160,
+          "height": 695,
+          "caption": "ghost"
+        }
+      },
+      {
+        "previewVideo": {
+          "src": "/previews/accordion-separated.mp4",
+          "poster": "/previews/accordion-separated-poster.jpg",
+          "alt": "Accordion — variant separated.",
+          "width": 720,
+          "height": 654,
+          "caption": "separated"
+        }
+      },
+      {
+        "previewVideo": {
+          "src": "/previews/accordion-surface.mp4",
+          "poster": "/previews/accordion-surface-poster.jpg",
+          "alt": "Accordion — variant surface.",
+          "width": 720,
+          "height": 600,
+          "caption": "surface"
+        }
+      }
+    ]
+  },
+  "previewVideo": {
+    "src": "/previews/accordion.mp4",
+    "poster": "/previews/accordion-poster.jpg",
+    "alt": "The Accordion component, running in the example app.",
+    "width": 720,
+    "height": 480
+  }
+}

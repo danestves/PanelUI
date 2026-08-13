@@ -1,0 +1,33 @@
+{
+  "slug": "spinner",
+  "intro": "An indeterminate loading indicator.\n\n[Button](/docs/components/button) renders one for you when `loading` is set, so a button does not need one passed in.\n\nWhen you know how much is left, use [Progress](/docs/components/progress) instead.",
+  "usage": "<Spinner />\n<Spinner size=\"lg\" />",
+  "examples": [
+    {
+      "title": "Inline",
+      "code": "<Spinner size=\"sm\" />\n<Spinner />\n<Spinner size=\"lg\" />"
+    },
+    {
+      "title": "Centred in a screen",
+      "code": "<View className=\"flex-1 items-center justify-center\">\n  <Spinner size=\"lg\" />\n</View>"
+    },
+    {
+      "title": "Inside a button",
+      "description": "You rarely need this — `Button`’s own `loading` prop inserts a variant-matched spinner for you.",
+      "code": "<Button loading={saving}>Save</Button>"
+    }
+  ],
+  "variantCode": {
+    "size": "<Spinner size=\"sm\" />\n<Spinner size=\"md\" />\n<Spinner size=\"lg\" />"
+  },
+  "extraImports": [
+    "Button"
+  ],
+  "previewVideo": {
+    "src": "/previews/spinner.mp4",
+    "poster": "/previews/spinner-poster.jpg",
+    "alt": "The Spinner component, running in the example app.",
+    "width": 720,
+    "height": 176
+  }
+}

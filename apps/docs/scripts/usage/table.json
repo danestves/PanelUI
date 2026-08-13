@@ -1,0 +1,141 @@
+{
+  "slug": "table",
+  "intro": "Rows and columns that stay lined up, with sortable headers.\n\nReact Native has no table layout, so a table here is a stack of flex rows whose cells divide the width the same way. The component owns everything that is not that: the hairlines, the muted header and footer bands, optional striping, per-column alignment, and a sort arrow that turns over rather than being swapped.\n\n**Tables are wide and phones are not.** For a list of records on a phone, a column of [Item](/docs/components/item) rows usually reads better.",
+  "usage": "<Table variant=\"outline\" columns={[{ flex: 2 }, {}, { align: 'end' }]}>\n  <Table.Header>\n    <Table.Row>\n      <Table.Head>Invoice</Table.Head>\n      <Table.Head>Method</Table.Head>\n      <Table.Head>Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    <Table.Row>\n      <Table.Cell>INV-001</Table.Cell>\n      <Table.Cell>Card</Table.Cell>\n      <Table.Cell>$250.00</Table.Cell>\n    </Table.Row>\n  </Table.Body>\n</Table>",
+  "extraImports": [
+    "Badge",
+    "ScrollFade",
+    "Pagination"
+  ],
+  "anatomy": "<Table.Frame>\n  <Table.Header />\n  <Table.Body />\n</Table.Frame>\n\n<Table>\n  <Table.Header>\n    <Table.Row>\n      <Table.Head />\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    <Table.Row>\n      <Table.Cell />\n    </Table.Row>\n  </Table.Body>\n  <Table.Footer>\n    <Table.Row>\n      <Table.Cell />\n    </Table.Row>\n  </Table.Footer>\n  <Table.Empty />\n  <Table.Caption />\n</Table>",
+  "parts": {
+    "Frame": "The table in a widget shell — column headings on the tray, rows in the card below. Takes the whole table and lifts the `Table.Header` out itself.",
+    "Header": "The band of column headers. Draws the rule that separates it from the body.",
+    "Body": "The data rows. Renders every child it is given — reach for a `FlatList` once the table is long.",
+    "Footer": "Totals band, tinted and ruled off, because a sum is not another row of data.",
+    "Row": "One row. Given `onPress` it becomes a button; `selected` keeps the chosen one lit.",
+    "Head": "A column header. Given `onPress` it becomes the handle for sorting by that column.",
+    "Cell": "One cell. Bare text is wrapped in the cell’s own type style; anything else is rendered as given.",
+    "Empty": "Stands in for the body when there is nothing to show, keeping the header that says what would be there.",
+    "Caption": "A line about the table as a whole. Place it after the body — a caption read before the columns is a heading."
+  },
+  "partNotes": "Nothing in React Native connects the third cell of one row to the third cell of the next except both of them dividing the row the same way. `columns` on the root is what states that once: one entry per column, and every `Table.Head` and `Table.Cell` takes its `flex`, `width` and `align` from the entry at its own position in the row. Anything set on a head or a cell still wins, for the one row that has to differ.\n\nWithout it the sizing has to be repeated on every head and every cell, and the column drifts the moment two of them disagree — which on a five-row, three-column table is eighteen places to keep in agreement by hand.\n\n`Table.Frame` is the other place that rule gets easier rather than harder. The headings end up outside the card, but they are still the same `Table.Header` you would have written inside it, and the lift keeps them measuring against the same padding as the rows.",
+  "examples": [
+    {
+      "title": "Basic",
+      "description": "Cells divide the row evenly unless told otherwise. `flex={2}` gives a column twice the share of the leftover width, and `align=\"end\"` puts a money column’s digits against the same edge so they read as a column.",
+      "code": "<Table variant=\"outline\">\n  <Table.Header>\n    <Table.Row>\n      <Table.Head flex={2}>Invoice</Table.Head>\n      <Table.Head>Method</Table.Head>\n      <Table.Head align=\"end\">Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    {invoices.map((invoice) => (\n      <Table.Row key={invoice.id}>\n        <Table.Cell flex={2}>{invoice.id}</Table.Cell>\n        <Table.Cell>{invoice.method}</Table.Cell>\n        <Table.Cell align=\"end\">{invoice.amount}</Table.Cell>\n      </Table.Row>\n    ))}\n  </Table.Body>\n  <Table.Footer>\n    <Table.Row>\n      <Table.Cell flex={2} labelClassName=\"font-medium\">Total</Table.Cell>\n      <Table.Cell />\n      <Table.Cell align=\"end\" labelClassName=\"font-medium\">$1,750.00</Table.Cell>\n    </Table.Row>\n  </Table.Footer>\n</Table>"
+    },
+    {
+      "title": "Declared columns",
+      "description": "The same table with its sizing moved to one array. A column is described once, at the top, and a row is just its contents — there is no longer a `flex` on a head that a cell underneath can contradict.\n\nDeclare it outside render. A fresh array every frame renumbers every cell in the table.",
+      "code": "const columns = [{ flex: 2 }, {}, { align: 'end' as const }];\n\n<Table variant=\"outline\" columns={columns}>\n  <Table.Header>\n    <Table.Row>\n      <Table.Head>Invoice</Table.Head>\n      <Table.Head>Method</Table.Head>\n      <Table.Head>Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    {invoices.map((invoice) => (\n      <Table.Row key={invoice.id}>\n        <Table.Cell>{invoice.id}</Table.Cell>\n        <Table.Cell>{invoice.method}</Table.Cell>\n        <Table.Cell>{invoice.amount}</Table.Cell>\n      </Table.Row>\n    ))}\n  </Table.Body>\n</Table>"
+    },
+    {
+      "title": "Striped",
+      "description": "Tints every other body row, which helps the eye track across a wide one. Leave it off for a short table, where the stripes are louder than the data.",
+      "code": "<Table variant=\"outline\" striped>\n  {/* …header and body… */}\n</Table>",
+      "preview": {
+        "src": "/previews/table-striped.jpg",
+        "width": 1179,
+        "height": 1089,
+        "alt": "Table — Striped."
+      }
+    },
+    {
+      "title": "In a frame",
+      "description": "Column headings are not data. `Table.Frame` puts them on the tray above the card, where they read as the label for the block, and leaves the card holding nothing but rows. Give it the whole table — it takes the `Table.Header` out itself, so the columns are still declared once. A title and a description are the same muted line on the tray, so a caption that fits on one line should be one — `description` is for a second thought, not the rest of the first.",
+      "code": "<Table.Frame\n  title=\"Five most recent invoices\"\n  action={<Badge variant=\"outline\">Q3</Badge>}\n>\n  <Table.Header>\n    <Table.Row>\n      <Table.Head flex={2}>Invoice</Table.Head>\n      <Table.Head>Method</Table.Head>\n      <Table.Head align=\"end\">Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Body>\n    {invoices.map((invoice) => (\n      <Table.Row key={invoice.id}>\n        <Table.Cell flex={2}>{invoice.id}</Table.Cell>\n        <Table.Cell>{invoice.method}</Table.Cell>\n        <Table.Cell align=\"end\">{invoice.amount}</Table.Cell>\n      </Table.Row>\n    ))}\n  </Table.Body>\n</Table.Frame>"
+    },
+    {
+      "title": "Sortable columns",
+      "description": "A header given `onPress` is the handle for sorting by its column. Pass `sortDirection` to the column being sorted by and leave it off the others: that column takes a full-strength arrow and a foreground label, while the rest keep a dimmed arrow saying they could be sorted too. The arrow rotates between the two directions rather than being replaced, so it stays the same arrow pointing the other way.",
+      "code": "const [column, setColumn] = useState<'id' | 'amount'>('amount');\nconst [direction, setDirection] = useState<'asc' | 'desc'>('desc');\n\nconst sortBy = (next: 'id' | 'amount') => {\n  if (next === column) {\n    setDirection((d) => (d === 'asc' ? 'desc' : 'asc'));\n    return;\n  }\n  setColumn(next);\n  setDirection('asc');\n};\n\n<Table.Head\n  flex={2}\n  sortable\n  sortDirection={column === 'id' ? direction : undefined}\n  onPress={() => sortBy('id')}\n>\n  Invoice\n</Table.Head>",
+      "previewVideo": {
+        "src": "/previews/table-sortable-columns.mp4",
+        "poster": "/previews/table-sortable-columns-poster.jpg",
+        "width": 720,
+        "height": 584,
+        "alt": "Table — Sortable columns."
+      }
+    },
+    {
+      "title": "Selectable rows",
+      "description": "A row with an `onPress` announces itself as a button rather than as a row, since being tappable is the more useful fact. `selected` lights the chosen one.",
+      "code": "const [picked, setPicked] = useState('INV-002');\n\n<Table.Body>\n  {invoices.map((invoice) => (\n    <Table.Row\n      key={invoice.id}\n      selected={picked === invoice.id}\n      onPress={() => setPicked(invoice.id)}\n    >\n      <Table.Cell flex={2}>{invoice.id}</Table.Cell>\n      <Table.Cell>\n        <Badge variant=\"success\">{invoice.status}</Badge>\n      </Table.Cell>\n    </Table.Row>\n  ))}\n</Table.Body>",
+      "previewVideo": {
+        "src": "/previews/table-selectable-rows.mp4",
+        "poster": "/previews/table-selectable-rows-poster.jpg",
+        "width": 720,
+        "height": 628,
+        "alt": "Table — Selectable rows."
+      }
+    },
+    {
+      "title": "Wider than the screen",
+      "description": "More columns than a phone is wide belong in a horizontal scroller, not squeezed until the columns are unreadable. Give the table a `minWidth` and a fixed `width` per column, and wrap it in `ScrollFade` so the fading edge says there is more to the right. The `w-full` on the wrapper is load-bearing — without a width of its own it shrink-wraps to the scroller’s content and the table runs off the screen instead of clipping.",
+      "code": "<ScrollFade size={24} className=\"w-full self-start\">\n  <ScrollView horizontal showsHorizontalScrollIndicator={false}>\n    <Table variant=\"outline\" size=\"sm\" striped style={{ minWidth: 440 }}>\n      <Table.Header>\n        <Table.Row>\n          <Table.Head width={86}>Invoice</Table.Head>\n          <Table.Head width={100}>Customer</Table.Head>\n          <Table.Head width={82}>Status</Table.Head>\n          <Table.Head width={92} align=\"end\">Amount</Table.Head>\n        </Table.Row>\n      </Table.Header>\n      {/* …body, with the same widths… */}\n    </Table>\n  </ScrollView>\n</ScrollFade>",
+      "previewVideo": {
+        "src": "/previews/table-wider-than-the-screen.mp4",
+        "poster": "/previews/table-wider-than-the-screen-poster.jpg",
+        "width": 720,
+        "height": 440,
+        "alt": "Table — Wider than the screen."
+      }
+    },
+    {
+      "title": "Nothing to show",
+      "description": "A header with no rows under it looks broken rather than empty. `Table.Empty` replaces the body and keeps the header, which is worth keeping: it says what would be there.",
+      "code": "<Table variant=\"outline\">\n  <Table.Header>\n    <Table.Row>\n      <Table.Head flex={2}>Invoice</Table.Head>\n      <Table.Head align=\"end\">Amount</Table.Head>\n    </Table.Row>\n  </Table.Header>\n  <Table.Empty>No invoices yet</Table.Empty>\n</Table>",
+      "preview": {
+        "src": "/previews/table-nothing-to-show.jpg",
+        "width": 1179,
+        "height": 495,
+        "alt": "Table — Nothing to show."
+      }
+    },
+    {
+      "title": "With a caption",
+      "description": "A line about the table as a whole — what it counts, when it was last read. Place it after the body: a caption read before the columns is a heading, and a heading is not this component's job.",
+      "code": "<Table variant=\"outline\">\n  <Table.Header>…</Table.Header>\n  <Table.Body>…</Table.Body>\n  <Table.Caption className=\"px-4 py-3\">\n    Five most recent invoices.\n  </Table.Caption>\n</Table>",
+      "preview": {
+        "src": "/previews/table-with-a-caption.jpg",
+        "width": 1179,
+        "height": 1193,
+        "alt": "Table — With a caption."
+      }
+    },
+    {
+      "title": "Paged",
+      "description": "`Pagination` reports the page; slicing the rows stays with you. Put it under the table with a `Pagination.Status` for the span, and the footer says both where you are and how much is left.",
+      "code": "const [page, setPage] = useState(1);\nconst pageSize = 20;\nconst rows = invoices.slice((page - 1) * pageSize, page * pageSize);\n\n<Pagination\n  count={Math.ceil(invoices.length / pageSize)}\n  page={page}\n  onPageChange={setPage}\n  variant=\"compact\"\n  size=\"sm\"\n>\n  <Pagination.Status pageSize={pageSize} total={invoices.length} />\n</Pagination>",
+      "previewVideo": {
+        "src": "/previews/table-paged.mp4",
+        "poster": "/previews/table-paged-poster.jpg",
+        "alt": "Table — Paged.",
+        "width": 720,
+        "height": 1560
+      }
+    }
+  ],
+  "notes": "### Columns are a convention, not a mechanism\n\nThere is no column model. A column exists because every row divides its width the same way, so `flex` and `width` on a `Table.Head` and on the `Table.Cell`s beneath it have to agree. `flex` is a share of the leftover width — the default of 1 makes columns even — and `width` pins a column that must not move, such as an icon or a state dot.\n\n### Sorting is yours\n\nThe table renders a sort direction; it never sorts. `sortDirection` says which way the arrow points and `onPress` reports the tap — reordering the rows stays with you, because the data being reordered is yours and only you know whether that means a comparator, a refetch or a new query.\n\nWhat the component does own is making the press land. The sorted column takes a full-strength arrow *and* a foreground label at a heavier weight, because one signal at the size of a sort arrow is too quiet: a press that only nudges a dim chevron reads as a press that did nothing, even when the rows behind it did move.\n\n### Long tables\n\n`Table.Body` renders every row it is given, so a table of thousands belongs in a `FlatList` instead. `Table.Row` takes `index` and `last` directly for that case: a virtualised row has no `Table.Body` above it to read its position from, and without them a striped table would tint nothing and every row would keep its hairline.\n\n```tsx\n<FlatList\n  data={invoices}\n  renderItem={({ item, index }) => (\n    <Table.Row index={index} last={index === invoices.length - 1}>\n      <Table.Cell flex={2}>{item.id}</Table.Cell>\n      <Table.Cell align=\"end\">{item.amount}</Table.Cell>\n    </Table.Row>\n  )}\n/>\n```\n\nWrap the list in a `Table` so the rows still read the density and striping, and put the header row above the list rather than inside it.\n\n### Accessibility\n\nThe root, the bands, the rows and the cells carry `table`, `rowgroup`, `row`, `columnheader` and `cell` roles, so a screen reader walks the table as a table. A row given `onPress` is the exception: it announces itself as a button, because being able to act on it is the more useful fact about it.",
+  "preview": {
+    "src": "/previews/table.jpg",
+    "width": 1179,
+    "height": 1023,
+    "alt": "The Table component, running in the example app."
+  },
+  "variantMedia": {
+    "variant": [
+      {
+        "preview": {
+          "src": "/previews/table-variant-outline.jpg",
+          "width": 1179,
+          "height": 1102,
+          "alt": "Table — variant=outline.",
+          "caption": "outline"
+        }
+      }
+    ]
+  }
+}

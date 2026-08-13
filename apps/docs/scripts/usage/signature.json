@@ -1,0 +1,117 @@
+{
+  "slug": "signature",
+  "intro": "A surface you sign with a finger, and a handle for getting the result back out as SVG or PNG.\n\nThe stroke being drawn is built on the UI thread and never reaches React, so the line keeps up with the fingertip. Finished strokes become static paths that never animate again.",
+  "usage": "const pad = useRef<SignatureHandle>(null);\n\n<Signature ref={pad} guideline guidelineLabel=\"Sign above the line\" />\n<Button onPress={() => pad.current?.save({ filename: 'agreement' })}>\n  Finish signing\n</Button>",
+  "extraImports": [
+    "Button",
+    "Input",
+    "Frame",
+    "Portal",
+    "Scrim",
+    "Text",
+    "type SignatureHandle"
+  ],
+  "parts": {
+    "Toolbar": "A row of controls under or over the pad. Purely layout.",
+    "Undo": "Round button for removing the last stroke. Wire it to `ref.current?.undo()`.",
+    "Redo": "Round button for putting back the last undone stroke. Wire it to `ref.current?.redo()`.",
+    "Clear": "Round button for dropping every stroke. Wire it to `ref.current?.clear()`."
+  },
+  "anatomy": "<Signature ref={pad} />\n<Signature.Toolbar>\n  <Signature.Undo onPress={() => pad.current?.undo()} />\n  <Signature.Redo onPress={() => pad.current?.redo()} />\n  <Signature.Clear onPress={() => pad.current?.clear()} />\n</Signature.Toolbar>",
+  "examples": [
+    {
+      "title": "A pad with its controls",
+      "description": "`onChange` reports the stroke count, which is the cheap way to keep a Save button disabled until there is something to save.",
+      "code": "const pad = useRef<SignatureHandle>(null);\nconst [count, setCount] = useState(0);\n\n<Signature ref={pad} onChange={setCount} />\n<Signature.Toolbar>\n  <View className=\"flex-row gap-2\">\n    <Signature.Undo disabled={count === 0} onPress={() => pad.current?.undo()} />\n    <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />\n  </View>\n  <Button disabled={count === 0} onPress={submit}>Done</Button>\n</Signature.Toolbar>"
+    },
+    {
+      "title": "A non-drawing alternative",
+      "description": "This example offers a typed legal-name flow. Whether a typed or uploaded signature is acceptable is a product and legal-policy decision; the component does not silently treat it as equivalent to ink.",
+      "code": "const [method, setMethod] = useState<'draw' | 'type'>('draw');\nconst useTypedSignature = () => setMethod('type');\n\n{method === 'draw' ? (\n  <>\n    <Signature ref={pad} onRequestAlternative={useTypedSignature} />\n    <Button variant=\"ghost\" onPress={useTypedSignature}>\n      Type my legal name instead\n    </Button>\n  </>\n) : (\n  <>\n    <Input label=\"Legal name\" value={legalName} onChangeText={setLegalName} />\n    <Button variant=\"ghost\" onPress={() => setMethod('draw')}>\n      Draw instead\n    </Button>\n  </>\n)}"
+    },
+    {
+      "title": "Signing in a frame",
+      "description": "Where a signature is usually asked for — over the thing being signed rather than on a screen of its own. `Portal` puts it above everything and `Scrim` frosts the screen behind it, so the frame is composed rather than borrowed from an overlay that has its own ideas about layout.",
+      "code": "<Portal>\n  <View className=\"absolute inset-0 items-center justify-center px-6\">\n    <Scrim blur />\n    <Pressable className=\"absolute inset-0\" onPress={close} />\n\n    <Animated.View style={rise} className=\"w-full\">\n      <Frame className=\"rounded-[28px] border-2 border-dashed\">\n        <Frame.Header>\n          <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />\n          <Frame.Title weight=\"semibold\" className=\"flex-1 text-center text-foreground\">\n            Sign\n          </Frame.Title>\n          <CloseButton onPress={close} />\n        </Frame.Header>\n        {/* The shell's radius less its 2px border, so the panel's opaque\n            corners stop short of the dashed edge instead of covering it. */}\n        <Frame.Panel className=\"rounded-b-[26px]\">\n          <Signature ref={pad} size=\"lg\" onChange={setCount} className=\"rounded-none border-0 bg-background\" />\n        </Frame.Panel>\n      </Frame>\n    </Animated.View>\n\n    {/* Outside the frame, and absent until there is something to confirm. */}\n    {count > 0 ? (\n      <Animated.View\n        entering={FadeInDown.springify()}\n        exiting={FadeOutDown.duration(150)}\n        className=\"absolute inset-x-6 bottom-16 items-center\"\n      >\n        <Button size=\"lg\" className=\"rounded-full px-8\" onPress={finish}>\n          Finish Signature\n        </Button>\n      </Animated.View>\n    ) : null}\n  </View>\n</Portal>"
+    },
+    {
+      "title": "Saving to a file",
+      "description": "`save()` writes the signature and resolves where it went. SVG needs no extra packages; PNG rasterises the pad and needs the optional raster package.",
+      "code": "const file = await pad.current?.save({\n  directory: FileSystem.documentDirectory,\n  filename: `agreement-${contractId}`,\n  format: 'svg',\n});\n\n// file.uri  → 'file:///…/agreement-4821.svg'\n// file.width, file.height → the pad's size in points"
+    },
+    {
+      "title": "Sending it somewhere instead",
+      "description": "`toSVG()` is pure string building — no packages, no async, nothing written to disk. For posting the signature to an API or storing it in a record.",
+      "code": "await fetch('/api/agreements/4821/sign', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ signature: pad.current?.toSVG() }),\n});"
+    },
+    {
+      "title": "A baseline to sign above",
+      "description": "The ✕ and the rule a paper form has. `guidelineLabel` captions it — a printed name under the line, usually.",
+      "code": "<Signature guideline guidelineLabel=\"Khalid Abdi\" size=\"lg\" />"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Signing frame",
+      "description": "A framed pad over a frosted screen, with start-over on one side of the header and close on the other. The confirm button is not in the frame: inside, it is a third control competing for a strip of chrome and disabled for as long as the pad is empty. Outside and absent until the first stroke, it arrives exactly when it means something — and the frame lifts to make room for it.",
+      "code": "const lift = useSharedValue(0);\n\nuseEffect(() => {\n  lift.value = withSpring(count > 0 ? -28 : 0, { damping: 22, stiffness: 240, mass: 0.8 });\n}, [count, lift]);\n\nconst rise = useAnimatedStyle(() => ({ transform: [{ translateY: lift.value }] }));"
+    },
+    {
+      "title": "Signing a document",
+      "description": "An agreement you scroll, with a Frame row that opens the same signing frame and the captured SVG landing back in the document.",
+      "code": "<Frame.Row onPress={() => setOpen(true)} chevron>\n  <Frame.Media><PencilIcon size={18} /></Frame.Media>\n  <Frame.Content>\n    <Frame.Title>{signature ? 'Signed' : 'Tap to sign'}</Frame.Title>\n  </Frame.Content>\n</Frame.Row>",
+      "previewVideo": {
+        "src": "/previews/signature-signing-a-document.mp4",
+        "poster": "/previews/signature-signing-a-document-poster.jpg",
+        "alt": "A services agreement scrolled to the bottom, where a Tap to sign row opens the pad. The captured signature lands back in the document.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Saving to a file",
+      "description": "A format toggle and a Save button, printing the resulting URI — or the name of the package that is missing.",
+      "code": "try {\n  const file = await pad.current?.save({ format });\n  setResult(file?.uri ?? null);\n} catch (error) {\n  setResult(error instanceof Error ? error.message : String(error));\n}",
+      "previewVideo": {
+        "src": "/previews/signature-saving-to-a-file.mp4",
+        "poster": "/previews/signature-saving-to-a-file-poster.jpg",
+        "alt": "A pad with an SVG/PNG toggle and Clear and Save buttons. Saving writes the stroke to the app directory and reports the path back.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Full screen",
+      "description": "`size=\"full\"` fills whatever it is given, with the actions on a bar below it.",
+      "code": "<Signature size=\"full\" guideline guidelineLabel=\"Khalid Abdi\" />",
+      "previewVideo": {
+        "src": "/previews/signature-full-screen.mp4",
+        "poster": "/previews/signature-full-screen-poster.jpg",
+        "alt": "The whole screen as the pad, with a baseline and a name beneath it. A signature is drawn across it and accepted from the bar below.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Proof of delivery",
+      "description": "Recipient, timestamp and signature on one screen, the shape a courier app asks for.",
+      "code": "<Signature ref={pad} guideline onChange={setCount} />\n<Button disabled={count === 0} onPress={confirm}>Confirm delivery</Button>",
+      "previewVideo": {
+        "src": "/previews/signature-proof-of-delivery.mp4",
+        "poster": "/previews/signature-proof-of-delivery-poster.jpg",
+        "alt": "A delivery card showing recipient, address and time, with a signature pad below it and a Confirm delivery button.",
+        "width": 720,
+        "height": 1560
+      }
+    }
+  ],
+  "notes": "### Why the stroke never reaches React\n\nA finger produces touch events far faster than a component tree can usefully re-render, and a signature is exactly where the lag shows: the line trails the fingertip and drawing feels like moving through syrup.\n\nSo the stroke being drawn lives in a shared value and is turned into an SVG path by a worklet on the UI thread — React is not involved in a single frame of it. When the finger lifts, that one finished string crosses to JavaScript once and becomes a static path. Committed strokes never animate again, so the hundredth stroke costs what the first one did.\n\nPoints closer together than `minDistance` are dropped as they arrive. A finger resting still otherwise emits a point per frame in the same spot, which is a longer path describing the same shape.\n\n### Smoothing\n\nRaw touch points joined with straight lines look like a seismograph. Each segment is drawn as a quadratic curve through the midpoint between two points instead: the point itself is the control handle, the midpoints are the anchors, and consecutive curves meet with a shared tangent. It needs no lookahead, so a point can be appended to a stroke already on screen without redrawing what came before it differently.\n\n### Getting the signature out\n\nThe ref exposes `clear`, `undo`, `redo`, `isEmpty`, `strokeCount`, `toSVG`, `toDataURL` and `save`.\n\n`toSVG()` is pure string building — no packages, no async, nothing written to disk — and returns a standalone document sized to the pad. It is the one to reach for when the signature is going into an API call or a database record.\n\n`save()` writes a file and resolves `{ uri, format, width, height }`. It needs the optional `expo-file-system`. Passing `format: 'png'` rasterises the pad and also needs the optional `react-native-view-shot`. Neither is installed on your behalf, and asking for something a missing package provides throws with that package's name in the message rather than failing somewhere further down.\n\n```tsx\nconst file = await pad.current?.save({ filename: 'agreement', format: 'png', scale: 3 });\n```\n\n`directory` defaults to the app's own document directory, which survives restarts and is not visible to the user. Pass one explicitly to write anywhere else.",
+  "previewVideo": {
+    "src": "/previews/signature.mp4",
+    "poster": "/previews/signature-poster.jpg",
+    "alt": "A framed signature pad opening over a frosted screen. A stroke is drawn with a finger, and the frame lifts as a confirm button arrives beneath it.",
+    "width": 720,
+    "height": 1560
+  },
+  "partNotes": "- **`Signature.Toolbar`** — A row of controls under or over the pad. Purely layout.\n- **`Signature.Undo`** — Round button for removing the last stroke. Wire it to `ref.current?.undo()`.\n- **`Signature.Redo`** — Round button for putting back the last undone stroke. Wire it to `ref.current?.redo()`.\n- **`Signature.Clear`** — Round button for dropping every stroke. Wire it to `ref.current?.clear()`.\n\nThe focused pad also exposes Undo, Redo and Clear as screen-reader actions when each action is available. Its value counts the strokes drawn so far, and the pad announces only the two moments it crosses between empty and not — a component cannot tell whether a signature is finished, and saying so after one mark would tell somebody who cannot see the pad that they are done.\n\nDrawing a signature still requires tracing a path with direct touch. That interaction cannot be made non-path-dependent by adding a label to the canvas. If your signing policy permits another method, use `onRequestAlternative` to open a typed, uploaded or assisted flow, and offer the same choice as a visible control."
+}

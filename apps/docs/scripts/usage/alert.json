@@ -1,0 +1,59 @@
+{
+  "slug": "alert",
+  "intro": "A status message: something the reader needs to know about the screen they are on.\n\n`Alert.Indicator` resolves both the icon and its colour from the alert's variant, so neither is passed in and both follow the active theme.\n\nUse it for a condition that persists on the page. For something transient that arrives and leaves, use [Toast](/docs/components/toast).",
+  "usage": "<Alert variant=\"success\">\n  <Alert.Indicator />\n  <Alert.Content>\n    <Alert.Title>Payment received</Alert.Title>\n    <Alert.Description>Your invoice has been paid.</Alert.Description>\n  </Alert.Content>\n</Alert>",
+  "parts": {
+    "Indicator": "Leading status icon, picked from the variant. Pass children to override it.",
+    "Content": "Flex-1 wrapper for the title and description.",
+    "Title": "Heading, coloured by the variant.",
+    "Description": "Body text, always muted."
+  },
+  "notes": "Omit `Alert.Indicator` for a text-only alert. The legacy `icon` prop still renders, but prefer the indicator.",
+  "anatomy": "<Alert>\n  <Alert.Indicator />\n  <Alert.Content>\n    <Alert.Title>…</Alert.Title>\n    <Alert.Description>…</Alert.Description>\n  </Alert.Content>\n</Alert>",
+  "examples": [
+    {
+      "title": "With a title and description",
+      "description": "The indicator picks its icon from the variant, so most alerts need no `icon` prop.",
+      "code": "<Alert variant=\"warning\">\n  <Alert.Indicator />\n  <Alert.Content>\n    <Alert.Title>Card expiring</Alert.Title>\n    <Alert.Description>\n      Your card ending 4242 expires next month.\n    </Alert.Description>\n  </Alert.Content>\n</Alert>"
+    },
+    {
+      "title": "Title only",
+      "description": "Drop the description when the title says everything.",
+      "code": "<Alert variant=\"success\">\n  <Alert.Indicator />\n  <Alert.Content>\n    <Alert.Title>Changes saved</Alert.Title>\n  </Alert.Content>\n</Alert>",
+      "preview": {
+        "src": "/previews/alert-title-only.jpg",
+        "alt": "Alert — Title only.",
+        "width": 1145,
+        "height": 315
+      }
+    },
+    {
+      "title": "A custom icon",
+      "description": "Pass `icon` on the root to replace the variant icon everywhere, or give `Alert.Indicator` children to replace it for one alert.",
+      "code": "<Alert variant=\"info\" icon={<ShieldCheckIcon size={18} />}>\n  <Alert.Indicator />\n  <Alert.Content>\n    <Alert.Title>Two-factor authentication is on</Alert.Title>\n  </Alert.Content>\n</Alert>"
+    },
+    {
+      "title": "No icon",
+      "description": "Leave out `Alert.Indicator` for a text-only alert.",
+      "preview": {
+        "src": "/previews/alert-no-icon.jpg",
+        "alt": "Alert — No icon.",
+        "width": 1167,
+        "height": 416
+      },
+      "code": "<Alert>\n  <Alert.Content>\n    <Alert.Title>Plain alert</Alert.Title>\n    <Alert.Description>Omit Alert.Indicator for a text-only alert.</Alert.Description>\n  </Alert.Content>\n</Alert>"
+    }
+  ],
+  "variantCode": {
+    "variant": "<Alert variant=\"default\">…</Alert>\n<Alert variant=\"info\">…</Alert>\n<Alert variant=\"success\">…</Alert>\n<Alert variant=\"warning\">…</Alert>\n<Alert variant=\"destructive\">…</Alert>"
+  },
+  "extraImports": [
+    "ShieldCheckIcon"
+  ],
+  "preview": {
+    "src": "/previews/alert.jpg",
+    "alt": "The Alert component, running in the example app.",
+    "width": 1179,
+    "height": 1136
+  }
+}

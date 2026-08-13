@@ -1,0 +1,65 @@
+{
+  "slug": "popover",
+  "intro": "A panel anchored to the thing that opened it.\n\nUse it when the context around the trigger has to stay visible. A [Dialog](/docs/components/dialog) takes the screen and asks to be dealt with; a popover stays beside its trigger.\n\n**Placement is a preference, not a promise.** The trigger is measured in window coordinates when it is pressed, the panel measures itself on its first layout, and the two are reconciled against the safe area — so `placement=\"bottom\"` means *below, if below fits*, and a trigger near the bottom of the screen opens upwards instead of off the edge.",
+  "usage": "<Popover>\n  <Popover.Trigger>\n    <Button variant=\"outline\">Options</Button>\n  </Popover.Trigger>\n  <Popover.Content placement=\"bottom\" align=\"end\">\n    <Popover.Title>Export</Popover.Title>\n    <Popover.Description>Choose a format.</Popover.Description>\n  </Popover.Content>\n</Popover>",
+  "extraImports": [
+    "Button",
+    "Input",
+    "Text",
+    "InfoIcon",
+    "ShareNodesIcon"
+  ],
+  "anatomy": "<Popover>\n  <Popover.Trigger>…</Popover.Trigger>\n  <Popover.Content>\n    <Popover.Arrow />\n    <Popover.Title>…</Popover.Title>\n    <Popover.Description>…</Popover.Description>\n    <Popover.Close>…</Popover.Close>\n  </Popover.Content>\n</Popover>",
+  "parts": {
+    "Trigger": "Wraps a single child and toggles the popover on press. It is also what gets measured, so the panel knows where to sit.",
+    "Content": "The panel. Portaled above everything else, positioned against the trigger, and flipped or slid to stay inside the safe area.",
+    "Arrow": "Optional point towards the trigger. Follows the resolved side, so it stays correct after a flip.",
+    "Title": "Panel heading.",
+    "Description": "Muted supporting line.",
+    "Close": "Wraps a child and closes the popover on press."
+  },
+  "examples": [
+    {
+      "title": "A long panel, scrolled",
+      "description": "The panel is capped to the room inside the safe area whatever you do, because a panel positioned past the edge of the screen cannot be scrolled back into view. `maxHeight` caps it lower than that, and `scrollable` hands the overflow back to the finger.",
+      "code": "<Popover>\n  <Popover.Trigger>\n    <Button variant=\"outline\">Release notes</Button>\n  </Popover.Trigger>\n  <Popover.Content scrollable maxHeight={280} align=\"start\" className=\"w-72\">\n    <Popover.Title>What changed</Popover.Title>\n    {notes.map((note) => (\n      <Popover.Description key={note.id}>{note.body}</Popover.Description>\n    ))}\n  </Popover.Content>\n</Popover>"
+    },
+    {
+      "title": "With an arrow",
+      "description": "The arrow is a rotated square half-buried under the panel, so only the point shows. It needs the panel to keep its border for its own two visible edges to line up with.",
+      "code": "<Popover>\n  <Popover.Trigger>\n    <Button variant=\"ghost\" size=\"icon\" accessibilityLabel=\"What is this?\">\n      <InfoIcon size={18} />\n    </Button>\n  </Popover.Trigger>\n  <Popover.Content placement=\"top\" className=\"w-60\">\n    <Popover.Arrow />\n    <Popover.Title>Monthly active users</Popover.Title>\n    <Popover.Description>\n      Anyone who opened the app at least once in the last 30 days.\n    </Popover.Description>\n  </Popover.Content>\n</Popover>"
+    },
+    {
+      "title": "A form, matching the trigger width",
+      "description": "`width=\"trigger\"` locks the panel to the trigger, so the two read as one control rather than as a panel floating over a button. It only earns its keep when the trigger is wide — a form pinned to the width of a short outline button is squeezed into a column. Give the trigger `fullWidth`, and set `minWidth` as the floor for the day it turns out narrower than the content. Controlled here, because the form needs to close itself on save.",
+      "code": "const [open, setOpen] = useState(false);\nconst [name, setName] = useState(\"Untitled board\");\n\n<Popover open={open} onOpenChange={setOpen}>\n  <Popover.Trigger>\n    <Button variant=\"outline\" fullWidth>Rename board</Button>\n  </Popover.Trigger>\n  <Popover.Content\n    width=\"trigger\"\n    minWidth={260}\n    align=\"start\"\n    className=\"gap-3\"\n  >\n    <Popover.Title>Rename</Popover.Title>\n    <Input value={name} onChangeText={setName} accessibilityLabel=\"Board name\" />\n    <View className=\"flex-row justify-end gap-2\">\n      <Popover.Close>\n        <Button variant=\"ghost\" size=\"sm\">Cancel</Button>\n      </Popover.Close>\n      <Popover.Close>\n        <Button size=\"sm\" onPress={save}>Save</Button>\n      </Popover.Close>\n    </View>\n  </Popover.Content>\n</Popover>"
+    },
+    {
+      "title": "Nudging the alignment",
+      "description": "`align` picks the edge to line up with; `alignOffset` moves the panel along that axis afterwards, and `offset` changes the gap to the trigger. Both take pixels and both accept negatives.",
+      "code": "{/* Lined up with the trigger's left edge, pulled 8px further left. */}\n<Popover.Content align=\"start\" alignOffset={-8} />\n\n{/* Tucked right up against the trigger. */}\n<Popover.Content offset={2} />"
+    },
+    {
+      "title": "A blurred background",
+      "description": "A popover does not dim the screen by default. Pass `blur` to frost what is behind it instead — it uses `expo-blur` when installed and falls back to a dim when it is not, so it is safe to pass either way.",
+      "code": "<Popover>\n  <Popover.Trigger>\n    <Button variant=\"outline\">Frost the screen</Button>\n  </Popover.Trigger>\n  <Popover.Content blur align=\"start\" className=\"w-64\">\n    <Popover.Arrow />\n    <Popover.Title>Focus here</Popover.Title>\n    <Popover.Description>The list behind is blurred.</Popover.Description>\n  </Popover.Content>\n</Popover>"
+    },
+    {
+      "title": "Presented as a bottom sheet",
+      "description": "Set `presentation=\"bottom-sheet\"` on the root and the same content opens in a draggable sheet instead of an anchored panel — better for a form on a small screen. Placement, align and the arrow do not apply.",
+      "code": "<Popover presentation=\"bottom-sheet\">\n  <Popover.Trigger>\n    <Button variant=\"outline\">Sort by</Button>\n  </Popover.Trigger>\n  <Popover.Content>\n    <Popover.Title>Sort by</Popover.Title>\n    {options.map((option) => (\n      <Popover.Close key={option}>\n        <Pressable onPress={() => sort(option)} className=\"rounded-xl px-3 py-3 active:bg-accent\">\n          <Text>{option}</Text>\n        </Pressable>\n      </Popover.Close>\n    ))}\n  </Popover.Content>\n</Popover>"
+    },
+    {
+      "title": "Owning the panel's surface",
+      "description": "`unstyled` drops the panel's background, border, padding and shadow and keeps only its position and its size, so the surface can be drawn by the caller. `background` then takes a layer rendered behind the content and — importantly — outside the scroller, so a surface stays put while the content moves over it.",
+      "code": "<Popover>\n  <Popover.Trigger>\n    <Button variant=\"outline\">Open</Button>\n  </Popover.Trigger>\n  <Popover.Content\n    unstyled\n    scrollable\n    className=\"p-3\"\n    background={<View className=\"absolute inset-0 bg-overlay\" />}\n  >\n    <Text>Drawn on a surface of your own.</Text>\n  </Popover.Content>\n</Popover>"
+    }
+  ],
+  "notes": "**Placement is resolved, not obeyed.** The side is flipped only when the preferred one genuinely has less room than its opposite; after that the panel is slid along the other axis to stay inside the safe area. That order matters — sliding first would let a badly placed panel look like it fits.\n\n**The panel is measured before it is shown.** Its size is not known until it has laid out once, so the first frame is laid out off-screen and the entrance starts from the frame after. That entrance is driven by hand rather than by a preset, because it has to start from whichever side was resolved — a panel that opened upwards should not appear to come from above.\n\n**The arrow points at the trigger, not the panel.** When `align` shifts the panel off-centre or a clamp slides it back on screen, the arrow tracks the trigger's centre rather than the panel's middle.\n\n**The trigger is measured on every open**, not once on layout. A trigger inside a scroll view has moved since it was laid out, and a stale rectangle anchors the panel to where it used to be.\n\n**`Popover.Trigger` wraps its child in a view.** The ref has to survive whatever the child is — a Button, a Pressable, an icon — and only a wrapper the component owns is guaranteed to be measurable.\n\nUse a **BottomSheet** instead when the content is long, needs its own scroll, or is the whole point of the interaction. A popover that fills the screen is a dialog wearing the wrong clothes.\n\n### Sizing the panel\n\n`content-fit` is the default and right for a menu. `trigger` ties the panel to the control that opened it, which reads as one thing rather than two — but only when the trigger is wide enough to hold what goes inside. `minWidth` is the floor, and it never wins past the space that actually exists: a panel wider than the screen is worse than a cramped one.\n\n**A panel is never taller than the screen.** `place` slides the panel to keep it inside the safe area, but a panel taller than that area has nowhere to slide to — it ends up pinned to the top edge with the rest of it off the bottom, where there is no way to get at it. The height is capped first so the slide always has a solution, and `scrollable` makes the overflow reachable.\n\n**A column of actions is a `Menu`.** A popover will hold one, but the rows then need their roles, their dismiss-on-select behaviour and their destructive colour written out by hand every time. `Menu` is this component with all of that already on it.\n\n### Drawing the surface yourself\n\n`unstyled` keeps the panel's position, its size cap and its rounded clip, and drops everything that paints: the background, the border, the padding and the shadow. It is for the case where something has to go *behind* the content — a gradient, an image, a blur — which a background colour cannot accommodate, because a background cannot be got behind.\n\n`background` is where that layer goes. It renders inside the panel but outside the scroller, which matters as soon as `scrollable` is set: a surface among the children would be inside the scroll body and would scroll away underneath the content sitting on it. [Menu](/docs/components/menu) is built on exactly this pair — its `Menu.Background` is a `Popover.Content` background.",
+  "preview": {
+    "src": "/previews/popover.jpg",
+    "alt": "The Popover component, running in the example app.",
+    "width": 1179,
+    "height": 1045
+  }
+}

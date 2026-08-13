@@ -1,0 +1,84 @@
+{
+  "slug": "hex-chart",
+  "intro": "A total broken into parts, counted out in cells.\n\nEach series gets a number of hexagons proportional to its share, so a series worth a tenth of the total is a tenth of the cells — and the reader can confirm it by counting rather than by judging an angle.\n\n**The limit is the small end.** Every cell is a whole unit, so a series worth less than half a cell rounds away to nothing. Use it for shares of a few percent and up. For a long tail of small values, use a [BarChart](/docs/charts/bar-chart); for the same total split by angle rather than by count, use a [PieChart](/docs/charts/pie-chart).\n\n**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.",
+  "previewVideo": {
+    "src": "/previews/hex-chart.mp4",
+    "poster": "/previews/hex-chart-poster.jpg",
+    "alt": "The HexChart component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  },
+  "usage": "<HexChart data={attribution}>\n  <HexChart.Header title=\"Attributed revenue\" value=\"£6,750\" />\n  <HexChart.Cells />\n  <HexChart.Tooltip />\n  <HexChart.Legend />\n</HexChart>",
+  "extraImports": [
+    "type HexDatum",
+    "Frame"
+  ],
+  "anatomy": "<HexChart data={…}>\n  <HexChart.Header />    {/* the strip above the field */}\n  <HexChart.Skeleton />  {/* the undivided field, while it loads */}\n  <HexChart.Cells />     {/* the honeycomb itself */}\n  <HexChart.Tooltip />   {/* the press target, and the label it shows */}\n  <HexChart.Legend />    {/* the key, under the field */}\n</HexChart>",
+  "parts": {
+    "Header": "The strip above the field — what the chart is of, what it reads, and optionally a key for the colours. The chart introducing itself, as distinct from the caption on the card around it.",
+    "Cells": "The honeycomb: the unfilled field, and one shape per series over it. One part rather than one per series — every cell shares a radius, a gap and a grid by definition, and a chart where one series' cells could be sized differently would be a chart drawing a lie.",
+    "Tooltip": "The press target over the field, and the label naming what was pressed. The label hangs above the selected series rather than on it, so the cells being read are never underneath the thing reading them, and it sizes itself to its text rather than to a fixed box. Without this part the honeycomb is not pressable, though the legend still is.",
+    "Legend": "The key: a swatch, a name and a share per series, under the field and across the width of it, wrapping rather than stacking. Pressable in the same way the cells are, and usually the easier target of the two. `Header legend` puts the same key in the header instead, which suits two or three short names and nothing longer.",
+    "Skeleton": "The field with nothing divided up yet, while `status=\"loading\"`. Deliberately undivided: placeholder shares would be an invented split, and a reader cannot tell an invented one from a real one until it changes under them."
+  },
+  "partNotes": "The unfilled cells are drawn by `Cells` too, not just the taken ones. The field is the denominator made visible — a honeycomb floating on nothing gives the eye no total to read the coloured part against — and it is drawn outside the reveal, so the total is there from the first frame and what fills in against it is the split.",
+  "examples": [
+    {
+      "title": "The data",
+      "description": "A label and a value per series, and no maximum — the sum is the maximum. Negative values are treated as zero, because a share of a whole cannot be less than none of it.",
+      "code": "const attribution: HexDatum[] = [\n  { label: 'Stir in strength', value: 3420 },\n  { label: 'Healthier every day', value: 1880 },\n  { label: 'Iron boost Q3', value: 840 },\n  { label: 'Ambassador program', value: 610 },\n];"
+    },
+    {
+      "title": "Blob or grid",
+      "description": "`shape` decides how the filled cells are arranged, and the two are for different jobs.\n\n`grid` is reading order and fills every cell, which is the countable arrangement: someone who wants to check that the second series really is a quarter can count a row and multiply. `blob` grows the series out from the middle of the field instead — the smallest in the centre, each larger one wrapped around it — which cannot be checked that way and does not ask to be. It shows the shape of the split at a glance.\n\nThe blob's edge is ragged by design, and ragged the same way every time: the nudge that roughens it is a hash of each cell's own coordinates rather than a random number, so a re-render is not an animation and the same data screenshots twice.",
+      "code": "{/* The default: an organic mass, read at a glance. */}\n<HexChart data={attribution}>\n  <HexChart.Cells />\n  <HexChart.Legend />\n</HexChart>\n\n{/* Reading order, every cell used, countable. */}\n<HexChart data={attribution} shape=\"grid\" columns={16}>\n  <HexChart.Cells />\n  <HexChart.Legend />\n</HexChart>"
+    },
+    {
+      "title": "How fine the honeycomb is",
+      "description": "`columns` is the one knob for cell size: the cell radius follows from it and the measured width, and the number of rows follows from the aspect ratio. Twenty-one across a phone is around two hundred and fifty cells in the field, so roughly half a percent each. More columns resolve a smaller share, at the cost of every cell getting smaller and harder to press.\n\n`density` is how much of the field the series fill, and only means anything for a blob — the cells left over are the margin the blob is read against. A `grid` fills every cell, because a waffle with a ragged last row has stopped being countable.",
+      "code": "{/* Finer, for a split with a small series in it. */}\n<HexChart data={attribution} columns={31} density={0.6}>\n  <HexChart.Cells />\n</HexChart>\n\n{/* Coarser and squarer, for a card. */}\n<HexChart data={attribution} columns={13} aspectRatio={1.2}>\n  <HexChart.Cells />\n</HexChart>"
+    },
+    {
+      "title": "Selecting a series",
+      "description": "Press a cell, or its row in the legend, and the other series dim while a label names the selected one. Pressing it again clears the selection, and so does pressing an unfilled cell — everything outside the honeycomb is “none of them”, and a chart you can select in but not out of is a chart with a trap in it.\n\nControl it from outside with `activeIndex` and `onActiveIndexChange` when something else on the card has to follow the selection, such as a readout in the header.",
+      "code": "const [active, setActive] = useState(-1);\nconst source = active >= 0 ? attribution[active] : null;\n\n<HexChart\n  data={attribution}\n  activeIndex={active}\n  onActiveIndexChange={setActive}\n>\n  <HexChart.Header\n    value={money(source ? source.value : total)}\n    caption={source ? source.label : 'Across four campaigns'}\n  />\n  <HexChart.Cells />\n  <HexChart.Tooltip formatValue={money} showCells />\n  <HexChart.Legend />\n</HexChart>"
+    },
+    {
+      "title": "Colours",
+      "description": "Each series takes the next `--color-chart-*` token, so a honeycomb follows the active theme and is put on brand by overriding those five. A series can name its own colour where one of them has to be fixed — a brand, a status, a category the reader already associates with a colour. The unfilled field takes the muted token unless `emptyColor` says otherwise.\n\nSee [Charts](/docs/customization/charts) for the ramp and how to change it.",
+      "code": "<HexChart\n  data={[\n    { label: 'Renewals', value: 3420, color: '#2563eb' },\n    { label: 'New', value: 1880 },\n    { label: 'Expansion', value: 840 },\n  ]}\n>\n  <HexChart.Cells emptyColor=\"rgba(0,0,0,0.04)\" dimOpacity={0.15} />\n  <HexChart.Legend />\n</HexChart>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Attribution",
+      "description": "The whole card: the total above, the honeycomb, and the key under it. Pressing a cell or a key entry moves the readout onto that campaign.",
+      "previewVideo": {
+        "src": "/previews/hex-chart-attribution.mp4",
+        "poster": "/previews/hex-chart-attribution-poster.jpg",
+        "alt": "HexChart — Attribution.",
+        "width": 720,
+        "height": 1560
+      },
+      "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Attributed revenue</Frame.Title>\n    <Frame.Action>View full report</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <HexChart\n      data={attribution}\n      activeIndex={active}\n      onActiveIndexChange={setActive}\n    >\n      <HexChart.Header\n        className=\"px-4 pt-3.5\"\n        value={money(source ? source.value : total)}\n        caption={source ? source.label : 'Across four campaigns'}\n      />\n      <HexChart.Cells />\n      <HexChart.Tooltip formatValue={money} showCells />\n      <HexChart.Legend className=\"px-4 pb-3.5\" />\n    </HexChart>\n  </Frame.Panel>\n</Frame>"
+    },
+    {
+      "title": "Waffle",
+      "description": "`shape=\"grid\"` instead: reading order, every cell used, and a split a reader can count off a row.",
+      "previewVideo": {
+        "src": "/previews/hex-chart-waffle.mp4",
+        "poster": "/previews/hex-chart-waffle-poster.jpg",
+        "alt": "HexChart — Waffle.",
+        "width": 720,
+        "height": 1560
+      },
+      "code": "<HexChart data={attribution} shape=\"grid\" columns={16} aspectRatio={1.8}>\n  <HexChart.Header\n    className=\"px-4 pt-3.5\"\n    value={money(total)}\n    caption=\"One cell is about half a percent\"\n  />\n  <HexChart.Cells />\n  <HexChart.Tooltip formatValue={money} />\n  <HexChart.Legend className=\"px-4 pb-3.5\" />\n</HexChart>"
+    },
+    {
+      "title": "Loading",
+      "description": "The denominator is not what is loading — the shape of the chart is known before its numbers are — so the field is drawn from the first frame and only the colours arrive.",
+      "code": "<HexChart data={attribution} status={status}>\n  <HexChart.Header\n    className=\"px-4 pt-3.5\"\n    value={status === 'loading' ? '—' : money(total)}\n    caption=\"Across four campaigns\"\n  />\n  <HexChart.Skeleton />\n  <HexChart.Cells />\n  <HexChart.Legend className=\"px-4 pb-3.5\" />\n</HexChart>"
+    }
+  ],
+  "notes": "Cell counts are apportioned by largest remainder, so the parts add up to the budget exactly. Rounding each share on its own does not: three equal parts of a hundred round to 33 each and leave one over, and a spare cell in a honeycomb is not a rounding error a reader can shrug off — it is a cell of some colour that nothing in the data accounts for.\n\nEvery cell belonging to a series is concatenated into a single path, so a two-hundred-cell chart is six nodes rather than two hundred, whatever the cell count. That is also why the reveal is a growing clip rather than a per-cell stagger: the cells are no longer separate things to stagger. A blob is uncovered by an ellipse growing from the centre of the field, in the field's own proportions, so it arrives in the order it was filled in; a grid wipes across, for the same reason.\n\nSelection is by press rather than by hover. There is no equivalent of a pointer resting somewhere without committing, so a chart that only revealed its numbers on hover would never reveal them at all.\n\nThe reveal runs once, when the data first arrives, and does not replay on every refresh — repeating it on each update turns a data change into an animation. Re-run it by hand through the ref's `replay()`, and it is skipped entirely under reduced motion."
+}

@@ -1,0 +1,78 @@
+{
+  "slug": "card",
+  "intro": "A content surface with a header, a body and a footer.\n\nUse the parts rather than dropping everything into the content slot — the padding and the hairlines between them are what the composition is for.\n\nFor a surface without the header and footer structure, use [Surface](/docs/components/surface).",
+  "usage": "<Card>\n  <Card.Header>\n    <Card.Title>Create project</Card.Title>\n    <Card.Description>Deploy your new project in one click.</Card.Description>\n  </Card.Header>\n  <Card.Content className=\"gap-4\">\n    <Input label=\"Name\" placeholder=\"My project\" />\n  </Card.Content>\n  <Card.Footer>\n    <Button size=\"sm\">Deploy</Button>\n  </Card.Footer>\n</Card>",
+  "extraImports": [
+    "Button",
+    "Text",
+    "Badge",
+    "Input",
+    "Chip"
+  ],
+  "parts": {
+    "Header": "Title and description block.",
+    "Title": "Card heading.",
+    "Description": "Muted supporting line.",
+    "Content": "Main body.",
+    "Footer": "Row of actions. `variant=\"panel\"` draws it as a band set into the card instead — a rule across the top, a step darker, and the card's own bottom corners — for a footer that is what somebody does with the card rather than more of what it says."
+  },
+  "anatomy": "<Card>\n  <Card.Header>\n    <Card.Title>…</Card.Title>\n    <Card.Description>…</Card.Description>\n  </Card.Header>\n  <Card.Content>…</Card.Content>\n  <Card.Footer>…</Card.Footer>\n</Card>",
+  "examples": [
+    {
+      "title": "Full anatomy",
+      "description": "Header, content and footer carry the padding, so the card itself never needs a padding class.",
+      "code": "<Card>\n  <Card.Header>\n    <Card.Title>Monthly report</Card.Title>\n    <Card.Description>Revenue and retention for October.</Card.Description>\n  </Card.Header>\n  <Card.Content>\n    <Text size=\"3xl\" weight=\"bold\">$48,120</Text>\n    <Text size=\"sm\" muted>+12% on September</Text>\n  </Card.Content>\n  <Card.Footer>\n    <Button variant=\"outline\" size=\"sm\">Export</Button>\n    <Button size=\"sm\">Open</Button>\n  </Card.Footer>\n</Card>"
+    },
+    {
+      "title": "Content only",
+      "description": "Skip the parts you do not need — nothing is required.",
+      "code": "<Card>\n  <Card.Content className=\"p-4\">\n    <Text>A plain surface with a border and a shadow.</Text>\n  </Card.Content>\n</Card>"
+    },
+    {
+      "title": "Media at the top",
+      "description": "Clip the card so the image corners follow its radius, and put the image before the header.",
+      "code": "<Card className=\"overflow-hidden\">\n  <Image source={{ uri: post.cover }} className=\"h-40 w-full\" />\n  <Card.Header>\n    <Card.Title>{post.title}</Card.Title>\n    <Card.Description>{post.excerpt}</Card.Description>\n  </Card.Header>\n</Card>",
+      "preview": {
+        "src": "/previews/card-with-image.jpg",
+        "alt": "Card — Media at the top.",
+        "width": 1179,
+        "height": 1371
+      }
+    },
+    {
+      "title": "Horizontal",
+      "description": "A media tile beside the text instead of above it.",
+      "preview": {
+        "src": "/previews/card-horizontal.jpg",
+        "alt": "Card — Horizontal.",
+        "width": 1179,
+        "height": 479
+      },
+      "code": "<Card className=\"overflow-hidden\">\n  <Card.Content className=\"flex-row items-center gap-4 p-3\">\n    <Image source={{ uri: product.image }} style={{ width: 72, height: 72, borderRadius: 12 }} />\n    <View className=\"flex-1 gap-0.5\">\n      <Text weight=\"semibold\">Accent chair</Text>\n      <Text size=\"sm\" muted>Walnut and boucle</Text>\n      <Badge variant=\"success\">In stock</Badge>\n    </View>\n  </Card.Content>\n</Card>"
+    },
+    {
+      "title": "With a form",
+      "description": "Card as the shell around a short form.",
+      "preview": {
+        "src": "/previews/card-with-form.jpg",
+        "alt": "Card — With a form.",
+        "width": 1179,
+        "height": 1275
+      },
+      "code": "<Card>\n  <Card.Header>\n    <Card.Title>Project settings</Card.Title>\n    <Card.Description>Manage how your project appears to others.</Card.Description>\n  </Card.Header>\n  <Card.Content className=\"gap-4\">\n    <Input label=\"Project name\" placeholder=\"PanelUI\" />\n    <Input label=\"Description\" placeholder=\"A short description\" description=\"Shown on your public profile.\" />\n  </Card.Content>\n  <Card.Footer>\n    <Button size=\"sm\">Save</Button>\n    <Button size=\"sm\" variant=\"ghost\">Cancel</Button>\n  </Card.Footer>\n</Card>"
+    },
+    {
+      "title": "Actions on their own surface",
+      "description": "`variant=\"panel\"` puts the buttons on a band of their own, divided from the body by a rule and a step of shade.\n\nThe case it exists for is a card whose body is a form. Buttons on the same surface, directly under the last field, read as one more field — and submitting is not the same kind of thing as filling something in.",
+      "code": "<Card>\n  <Card.Header>\n    <Card.Title>Login to your account</Card.Title>\n    <Card.Description>Enter your email below to login to your account.</Card.Description>\n  </Card.Header>\n  <Card.Content className=\"gap-4\">\n    <Input label=\"Email\" placeholder=\"m@example.com\" />\n    <Input label=\"Password\" secureTextEntry />\n  </Card.Content>\n  <Card.Footer variant=\"panel\" className=\"flex-col gap-2\">\n    <Button fullWidth>Login</Button>\n    <Button fullWidth variant=\"outline\">Login with Google</Button>\n  </Card.Footer>\n</Card>"
+    }
+  ],
+  "preview": {
+    "src": "/previews/card.jpg",
+    "alt": "A card on a dark screen titled Living room Sofa, with the description This sofa is perfect for modern tropical spaces, baroque inspired spaces, and a full-width white Buy now button.",
+    "width": 1179,
+    "height": 755,
+    "caption": "Header, content and footer, running in the example app."
+  },
+  "notes": "### Padding lives on the slots\n\nThe root carries none, which is why a card whose media reaches its own corners needs nothing but `overflow-hidden` — no padding to undo first.\n\n### Every part is a plain view\n\nA card draws a surface and stops there. Nothing in it subscribes to a theme value, drives an animation or reaches for a native module, so a screen may render as many as it likes and pay for the views alone. A decorative backing layer is composed as the first child of a card that clips, not built in."
+}

@@ -1,0 +1,37 @@
+{
+  "slug": "toast",
+  "intro": "A transient notification, with a queue and swipe to dismiss.\n\nThe queue lives outside React, so `toast.show()` works from anywhere — API clients, event handlers, code with no component around it. `PanelUIProvider` mounts the viewport for you.\n\nUse it for something that happened and needs no response. For a condition that persists on the screen, use [Alert](/docs/components/alert).",
+  "usage": "const { toast } = useToast();\n\n// A bare string\ntoast.show('Link copied');\n\n// A config object\ntoast.show({\n  variant: 'success',\n  label: 'Deployment complete',\n  description: 'panelui.dev is live on production.',\n  actionLabel: 'View',\n  onActionPress: ({ hide }) => hide(),\n});\n\n// A custom component\ntoast.show({\n  component: ({ hide }) => (\n    <Toast variant=\"info\" onHide={hide}>\n      <Toast.Indicator />\n      <Toast.Content>\n        <Toast.Title>Custom</Toast.Title>\n      </Toast.Content>\n      <Toast.Close />\n    </Toast>\n  ),\n});",
+  "extraImports": [
+    "Button",
+    "useToast"
+  ],
+  "parts": {
+    "Indicator": "Status icon, picked from the variant.",
+    "Content": "Flex-1 wrapper for title and description.",
+    "Title": "Heading, coloured by the variant.",
+    "Description": "Body text.",
+    "Action": "Trailing action button. Dismisses the toast after its own `onPress`.",
+    "Close": "Icon-only dismiss button."
+  },
+  "notes": "Toasts stack as an overlapping deck: the newest is fully visible and the ones behind peek out, with anything past the third fading rather than accumulating. Swiping toward the edge the toast entered from dismisses it; dragging the other way rubber-bands.\n\n`toast.hide(id)` dismisses one, `toast.hideAll()` clears the queue. A `duration` of `0` keeps a toast up until it is dismissed.",
+  "anatomy": "<Toast>\n  <Toast.Indicator />\n  <Toast.Content>\n    <Toast.Title>…</Toast.Title>\n    <Toast.Description>…</Toast.Description>\n  </Toast.Content>\n  <Toast.Action>…</Toast.Action>\n  <Toast.Close />\n</Toast>",
+  "examples": [
+    {
+      "title": "Firing one",
+      "description": "Toasts are queued through `useToast`, so any component can raise one without rendering it.",
+      "code": "const { toast } = useToast();\n\n<Button\n  onPress={() =>\n    toast({\n      variant: 'success',\n      title: 'Saved',\n      description: 'Your changes are live.',\n    })\n  }\n>\n  Save\n</Button>"
+    },
+    {
+      "title": "With an action",
+      "code": "toast({\n  variant: 'default',\n  title: 'Message archived',\n  action: { label: 'Undo', onPress: restore },\n});"
+    },
+    {
+      "title": "An error you have to dismiss",
+      "code": "toast({\n  variant: 'destructive',\n  title: 'Upload failed',\n  description: 'The file is larger than 25 MB.',\n  duration: 0, // stays until dismissed\n});"
+    }
+  ],
+  "variantCode": {
+    "variant": "toast({ variant: 'default', title: 'Saved' });\ntoast({ variant: 'info', title: 'Syncing' });\ntoast({ variant: 'success', title: 'Deployed' });\ntoast({ variant: 'warning', title: 'Almost out of space' });\ntoast({ variant: 'destructive', title: 'Upload failed' });"
+  }
+}

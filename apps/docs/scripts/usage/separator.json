@@ -1,0 +1,73 @@
+{
+  "slug": "separator",
+  "intro": "A rule between content, optionally with a label in it.\n\nReact Native has no `<hr>`, so a separator is a view sized on one axis and stretched on the other. That is why the orientation is a prop rather than something the layout works out — the component has to know which axis carries the thickness.",
+  "usage": "<Separator />\n\n{/* Vertical, inside a row that gives it a height. */}\n<View className=\"h-5 flex-row items-center\">\n  <Text size=\"sm\">Components</Text>\n  <Separator orientation=\"vertical\" className=\"mx-3\" />\n  <Text size=\"sm\">Themes</Text>\n</View>",
+  "extraImports": [
+    "Surface",
+    "Text",
+    "Button"
+  ],
+  "examples": [
+    {
+      "title": "Between sections",
+      "description": "The common pair: a horizontal rule splitting a card, and vertical rules between inline links.",
+      "code": "<Surface variant=\"secondary\" className=\"px-6 py-7\">\n  <Text weight=\"medium\">PanelUI</Text>\n  <Text size=\"sm\" muted>A React Native component library.</Text>\n\n  <Separator className=\"my-4\" />\n\n  <View className=\"h-5 flex-row items-center\">\n    <Text size=\"sm\">Components</Text>\n    <Separator orientation=\"vertical\" className=\"mx-3\" />\n    <Text size=\"sm\">Themes</Text>\n    <Separator orientation=\"vertical\" className=\"mx-3\" />\n    <Text size=\"sm\">Examples</Text>\n  </View>\n</Surface>"
+    },
+    {
+      "title": "Labelled divider",
+      "description": "Passing children breaks the rule around a centred label — the \"or continue with\" split in a sign-in form. The label is always announced; the flanking rules never are.",
+      "code": "<View className=\"gap-4\">\n  <Button variant=\"outline\">Continue with email</Button>\n  <Separator>or</Separator>\n  <Button variant=\"outline\">Continue as guest</Button>\n</View>",
+      "preview": {
+        "src": "/previews/separator-labelled-divider.jpg",
+        "alt": "Two full-width buttons, Continue with email and Continue as guest, split by a rule with the word or centred in a gap in the line.",
+        "width": 1179,
+        "height": 630
+      }
+    },
+    {
+      "title": "Custom thickness",
+      "description": "When neither variant is right, `thickness` takes a number of pixels and overrides them.",
+      "code": "<Separator thickness={1} />\n<Separator thickness={3} />\n<Separator thickness={6} />",
+      "preview": {
+        "src": "/previews/separator-custom-thickness.jpg",
+        "alt": "Separator — Custom thickness.",
+        "width": 1179,
+        "height": 600
+      }
+    },
+    {
+      "title": "Vertical, stretched by the row",
+      "description": "A vertical separator has no length of its own. `items-stretch` on the row gives it one; without a height from somewhere it measures zero and nothing draws.",
+      "code": "<View className=\"flex-row items-stretch gap-4 py-2\">\n  <View className=\"flex-1 gap-1\">\n    <Text size=\"xs\" muted className=\"uppercase tracking-wider\">Today</Text>\n    <Text size=\"lg\" weight=\"semibold\">128</Text>\n  </View>\n\n  <Separator orientation=\"vertical\" />\n\n  <View className=\"flex-1 gap-1\">\n    <Text size=\"xs\" muted className=\"uppercase tracking-wider\">Week</Text>\n    <Text size=\"lg\" weight=\"semibold\">904</Text>\n  </View>\n</View>"
+    },
+    {
+      "title": "Announced, not decorative",
+      "description": "Separators are skipped by screen readers by default. Set `decorative={false}` when the split itself carries meaning — between two groups of menu items, say — and it is announced with its orientation.",
+      "code": "<Separator decorative={false} />"
+    }
+  ],
+  "variantCode": {
+    "orientation": "<Separator orientation=\"horizontal\" />\n\n{/* Needs a height from the parent. */}\n<View className=\"h-5 flex-row items-center\">\n  <Separator orientation=\"vertical\" />\n</View>",
+    "variant": "<Separator variant=\"thin\" />\n<Separator variant=\"thick\" />"
+  },
+  "notes": "A horizontal separator fills its parent's width; a vertical one fills its parent's height. The vertical case is the one that catches people out — inside a `flex-row` the row has no intrinsic height, so pair it with `items-stretch` on the row or an explicit `h-*` somewhere.\n\n`thickness` wins over `variant`. Both set the height of a horizontal separator and the width of a vertical one, so the same value reads the same either way round.\n\nPass children to make a labelled separator: the rule splits around the content, so a divider can carry an \"or\" without a second element. Only the horizontal axis takes a label — a stacked word is not a divider, so a vertical separator ignores its children.",
+  "preview": {
+    "src": "/previews/separator.jpg",
+    "alt": "The Separator component, running in the example app.",
+    "width": 1179,
+    "height": 378
+  },
+  "variantMedia": {
+    "variant": [
+      {
+        "preview": {
+          "src": "/previews/separator-variants.jpg",
+          "alt": "Separator — variant.",
+          "width": 1179,
+          "height": 528,
+          "caption": "The thin and thick rules"
+        }
+      }
+    ]
+  }
+}

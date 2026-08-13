@@ -1,0 +1,102 @@
+{
+  "slug": "tabs",
+  "intro": "Switch between panels of content that belong to the same screen. One indicator slides between the triggers, so moving two tabs at once reads as a single movement rather than two states swapping.\n\nUse it when the panels are alternatives and the reader picks one. It is not navigation — a tab set announces itself to a screen reader as a tab set, and moving between screens belongs to your router. For a row of buttons that *do* something rather than switch something, use [ButtonGroup](/docs/components/button-group); for a control that owns which option is on, use [ToggleButtonGroup](/docs/components/toggle-button).",
+  "usage": "<Tabs defaultValue=\"account\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"account\">Account</Tabs.Trigger>\n    <Tabs.Trigger value=\"password\">Password</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"account\">…</Tabs.Content>\n  <Tabs.Content value=\"password\">…</Tabs.Content>\n</Tabs>",
+  "parts": {
+    "List": "Holds the triggers and the animated indicator. Takes `scrollable` for more tabs than fit.",
+    "Trigger": "One tab, with optional `icon`, `badge` and `disabled`. Must be inside `Tabs.List`.",
+    "Content": "Panel for a tab. Unmounted while inactive unless the root sets `keepMounted`."
+  },
+  "anatomy": "<Tabs>\n  <Tabs.List>\n    <Tabs.Trigger value=\"…\">…</Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"…\">…</Tabs.Content>\n</Tabs>",
+  "examples": [
+    {
+      "title": "Uncontrolled",
+      "description": "`defaultValue` is required — the tabs need a starting panel.",
+      "code": "<Tabs defaultValue=\"overview\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"overview\">Overview</Tabs.Trigger>\n    <Tabs.Trigger value=\"activity\">Activity</Tabs.Trigger>\n    <Tabs.Trigger value=\"settings\">Settings</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"overview\">\n    <Text>Usage and billing at a glance.</Text>\n  </Tabs.Content>\n  <Tabs.Content value=\"activity\">\n    <Text>Everything that happened this week.</Text>\n  </Tabs.Content>\n  <Tabs.Content value=\"settings\">\n    <Text>Names, members and integrations.</Text>\n  </Tabs.Content>\n</Tabs>"
+    },
+    {
+      "title": "Controlled",
+      "description": "Needed when something outside the tab strip changes the panel — a deep link, or a button in one panel that jumps to another.",
+      "code": "const [tab, setTab] = useState('overview');\n\n<>\n  <Button onPress={() => setTab('settings')}>Go to settings</Button>\n\n  <Tabs value={tab} onValueChange={setTab} defaultValue=\"overview\">\n    {/* …list and content… */}\n  </Tabs>\n</>"
+    },
+    {
+      "title": "More tabs than fit",
+      "description": "A fixed row splits its width between the triggers, which crushes every label once there are more than about four. `scrollable` gives each trigger its natural width, puts the row in a horizontal scroller, and scrolls the active tab into view when it changes from elsewhere.",
+      "code": "<Tabs variant=\"underline\" defaultValue=\"overview\">\n  <Tabs.List scrollable>\n    {sections.map((s) => (\n      <Tabs.Trigger key={s.id} value={s.id}>{s.name}</Tabs.Trigger>\n    ))}\n  </Tabs.List>\n\n  {/* …content… */}\n</Tabs>",
+      "previewVideo": {
+        "src": "/previews/tabs-scrollable.mp4",
+        "poster": "/previews/tabs-scrollable-poster.jpg",
+        "alt": "Tabs — More tabs than fit.",
+        "width": 720,
+        "height": 350
+      }
+    },
+    {
+      "title": "Icons, badges and disabled tabs",
+      "description": "A count or a status goes in `badge` rather than into the children, so the label keeps its own typography. A disabled trigger is dimmed, unselectable, and announced as disabled.",
+      "code": "<Tabs.List>\n  <Tabs.Trigger value=\"inbox\" icon={<InboxIcon size={16} />}>\n    Inbox\n  </Tabs.Trigger>\n  <Tabs.Trigger value=\"activity\" badge={<Badge variant=\"secondary\">4</Badge>}>\n    Activity\n  </Tabs.Trigger>\n  <Tabs.Trigger value=\"archived\" disabled>\n    Archived\n  </Tabs.Trigger>\n</Tabs.List>"
+    },
+    {
+      "title": "Panels that stay built",
+      "description": "A panel that has been shown once stays mounted, so a scroll position or a half-filled form is there when you come back to it — no flag needed. `keepMounted` goes further and mounts the panels you have *not* opened, at startup: reach for it when a panel has to be doing something while it is off screen, and leave it alone otherwise.",
+      "code": "<Tabs keepMounted defaultValue=\"draft\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"draft\">Draft</Tabs.Trigger>\n    <Tabs.Trigger value=\"preview\">Preview</Tabs.Trigger>\n  </Tabs.List>\n\n  <Tabs.Content value=\"draft\">\n    <Input label=\"Title\" value={title} onChangeText={setTitle} />\n  </Tabs.Content>\n  <Tabs.Content value=\"preview\">…</Tabs.Content>\n</Tabs>",
+      "preview": {
+        "src": "/previews/tabs-keep-panels-mounted.jpg",
+        "alt": "Tabs — Keeping panels mounted.",
+        "width": 1179,
+        "height": 801
+      }
+    },
+    {
+      "title": "Swiping between panels",
+      "description": "With `swipeable`, the panels sit side by side in a strip and dragging sideways moves it. The neighbouring panels are built before you reach them, which is what keeps a heavy panel from stalling on the frame it appears. The gesture takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls.\n\nA swipeable tab set needs a height to lay its strip out in — `flex-1` here, or a fixed height. It is off by default because a panel may already contain something that wants a horizontal drag, and the two cannot both have it.",
+      "code": "<Tabs swipeable defaultValue=\"mon\" className=\"flex-1\">\n  <Tabs.List scrollable>\n    {days.map((day) => (\n      <Tabs.Trigger key={day.value} value={day.value}>\n        {day.label}\n      </Tabs.Trigger>\n    ))}\n  </Tabs.List>\n  {days.map((day) => (\n    <Tabs.Content key={day.value} value={day.value}>\n      <FlashList data={day.entries} renderItem={renderEntry} />\n    </Tabs.Content>\n  ))}\n</Tabs>"
+    }
+  ],
+  "extraImports": [
+    "Text",
+    "Button",
+    "Input",
+    "Badge",
+    "PackageIcon",
+    "MessageCircleIcon",
+    "CalendarIcon"
+  ],
+  "variantCode": {
+    "variant": "{/* A chip travelling inside a recessed track — the default. */}\n<Tabs variant=\"segmented\" defaultValue=\"a\">…</Tabs>\n\n{/* A rule under the active tab, for a page-level switch. */}\n<Tabs variant=\"underline\" defaultValue=\"a\">…</Tabs>\n\n{/* A filled chip on the page, active label inverted against it. */}\n<Tabs variant=\"pill\" defaultValue=\"a\">…</Tabs>\n\n{/* Icon pills, only the selected one open. Every trigger needs an icon. */}\n<Tabs variant=\"expanding\" defaultValue=\"chats\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"home\" icon={<PackageIcon size={18} />}>Home</Tabs.Trigger>\n    <Tabs.Trigger value=\"chats\" icon={<MessageCircleIcon size={18} />}>Chats</Tabs.Trigger>\n    <Tabs.Trigger value=\"calendar\" icon={<CalendarIcon size={18} />}>Calendar</Tabs.Trigger>\n  </Tabs.List>\n</Tabs>"
+  },
+  "hideVariants": [
+    "scrollable"
+  ],
+  "variantMedia": {
+    "variant": [
+      {
+        "previewVideo": {
+          "src": "/previews/tabs-pill.mp4",
+          "poster": "/previews/tabs-pill-poster.jpg",
+          "alt": "Tabs — variant pill.",
+          "width": 720,
+          "height": 368,
+          "caption": "pill"
+        }
+      },
+      {
+        "preview": {
+          "src": "/previews/tabs-underline.jpg",
+          "alt": "Tabs — variant underline.",
+          "width": 1179,
+          "height": 639,
+          "caption": "underline"
+        }
+      }
+    ]
+  },
+  "previewVideo": {
+    "src": "/previews/tabs.mp4",
+    "poster": "/previews/tabs-poster.jpg",
+    "alt": "The Tabs component, running in the example app.",
+    "width": 720,
+    "height": 584
+  },
+  "notes": "### Swiping puts the panels in a row\n\nWith `swipeable`, the panels are laid out side by side in a strip as wide as all of them, and the tab set is a window showing one panel of it at a time. Moving between tabs is that strip sliding. A press and a drag do the same thing to it, so they produce the same movement.\n\nThe panel on each side of the active one is built before you get to it. That is the point of the arrangement: a panel that is only created when it becomes visible is a panel that stalls at the moment it becomes visible, for as long as it takes to build — and for a virtualised list or a chart, that is long enough to see.\n\nWithout `swipeable`, one panel is shown at a time in place, and the panels are neither laid out together nor built ahead.\n\n### A swipeable tab set needs a height\n\nGive it one, the same as any pager:\n\n```tsx\n<Tabs swipeable defaultValue=\"users\" className=\"flex-1\">\n```\n\nThe strip lays its panels out inside the height it is given. Without one there is nothing to lay them out in, and a virtualised list inside a panel of no height renders no rows — the failure looks like the tab set being empty rather than like a missing style. In development the tab set warns when this happens.\n\nIf you do not give it a height, the strip is as tall as its tallest panel and every panel stretches to match. That works for panels of ordinary content, and it means switching tabs does not change the tab set's height.\n\n### What a swipe commits on\n\nA drag changes tab on release, not while the finger is down. It commits once the drag has passed a quarter of a panel's width, or once it is moving faster than 500pt/s however short it was. Distance and speed can disagree — a flick back the way it came reads as a cancel — and speed decides.\n\nThe gesture takes over after 12pt of sideways travel and gives up on any real vertical travel, so a panel that scrolls still scrolls.\n\nThe order swiped through is the order the `Tabs.Content` panels are **written** in. Under RTL the first tab is the rightmost, and a swipe towards the start of the reading direction goes to the previous tab either way.\n\nAt the first and last tab the strip still moves, but a sixth as far. A gesture that produces nothing at all is indistinguishable from one that was not received.\n\n### What `keepMounted` is for\n\nA panel that has been shown once stays mounted for the life of the tab set, whether or not this is set. So state that has to survive a *visit* — a scroll position, a half-filled form — survives without it.\n\n`keepMounted` mounts the panels you have not been near, at startup instead of on arrival. Turn it on when a panel has to be live while it is off screen: a form that validates as another tab is edited, a subscription that must not miss a message. It costs those panels' render up front and buys nothing until somebody opens them.\n\n`keepMounted=\"measured\"` was the way to keep a hidden panel's size, back when a kept panel was hidden with `display: none` and so had none. In a swipeable tab set every panel in the strip has a real size already. It still works and means the same as `true`.\n\n### The expanding variant\n\nA row of icon pills where only the selected one is open: it widens to let its label out and closes again behind it. For a short row of destinations recognisable by their icons, where writing every label out spends the whole width on words nobody rereads.\n\nGive **every** trigger an `icon`. A closed tab has nothing else, and one without an icon closes to an empty pill.\n\nThere is no travelling indicator here. Every tab draws its own pill, so a shape sliding underneath them would be invisible; the shape that moves is the open tab itself. The open pill sits one step further from the page than the closed ones — lighter in a dark theme, darker in a light one.\n\nThe label is never unmounted, only closed over: a row of unlabelled icons gives a screen reader nothing to read, and a label that mounted on selection would have no width to animate from, so the pill would jump to its open size with the text fading in inside it.\n\n### Turning the animations off\n\n`animation=\"disable-all\"` stops the indicator, the strip and the expanding reveal. For a screen already animating something more important, or a device that cannot afford them.\n\nThe system's own reduce-motion setting is honoured without it."
+}
