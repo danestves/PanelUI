@@ -119,6 +119,8 @@ interface MapLibreModule {
     touchZoom?: boolean;
     touchRotate?: boolean;
     touchPitch?: boolean;
+    accessible?: boolean;
+    importantForAccessibility?: 'auto' | 'yes' | 'no' | 'no-hide-descendants';
     onPress?: (event: NativeEvent<{ coordinates: LngLat }>) => void;
     onDidFinishLoadingMap?: () => void;
     onRegionDidChange?: (event: NativeEvent<ViewState>) => void;

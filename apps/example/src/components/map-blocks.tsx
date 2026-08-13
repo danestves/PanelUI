@@ -373,6 +373,14 @@ export function ChoroplethBlock() {
             data={data}
             fill={['interpolate', ['linear'], ['get', 'value'], 0, muted, peak, primary]}
             fillOpacity={0.9}
+            accessibility={(feature) => {
+              const country = feature as (typeof data.features)[number];
+              const suffix = metric.id === 'churn' ? '%' : '';
+              const value = `${metric.unit}${country.properties.value.toLocaleString()}${suffix}`;
+              return {
+                label: `${country.properties.name}: ${value}`,
+              };
+            }}
           />
           <Map.Controls position="top-right" />
         </Map>
