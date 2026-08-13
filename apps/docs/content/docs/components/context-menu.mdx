@@ -3,7 +3,7 @@ title: ContextMenu
 description: Actions for a piece of content, opened by holding it.
 ---
 
-The actions that belong to a piece of content, reached by pressing and holding it.
+The actions that belong to a piece of content, reached by holding it, through a screen-reader action, or from the keyboard.
 
 A [Menu](/docs/components/menu) hangs off a control that exists to be opened — a ⋯ button, a toolbar item. A context menu has no such control: the target is the content itself.
 
@@ -65,7 +65,7 @@ npx panelui-cli@latest add context-menu
 </ContextMenu>
 ```
 
-- **`ContextMenu.Trigger`** — Wraps the content the actions belong to and opens the menu when it is held. The content need not be pressable, and is not cloned or altered. Also what gets measured under `anchor="target"`, and what `ContextMenu.Preview` draws again.
+- **`ContextMenu.Trigger`** — Wraps the content the actions belong to. A hold opens at the pointer; the Show menu accessibility action, Context Menu key and Shift+F10 open against the measured target. Activate, Enter and Space run `onPress` when supplied, otherwise they open the menu. The content need not be pressable, and is not cloned or altered.
 - **`ContextMenu.Content`** — The panel, and what a screen reader announces as a menu. Opens above the press and centred on it, over a dimmed screen, flipping below where there is no room.
 - **`ContextMenu.Preview`** — The held content, lifted off the dimmed page while its actions are up. Draws the trigger's own children again unless given children of its own, and anchors the panel to the target so the two never overlap.
 - **`ContextMenu.Background`** — The panel's surface, drawn behind every row and outside its scroller. Pass your own to put a gradient, an image or a blur under the rows.
@@ -301,12 +301,13 @@ It draws the trigger's own children, so nothing is described twice. Give it `chi
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — | Classes on the wrapper the content sits in, which lays out like any other view — it does not shrink to its child, because the things held are usually meant to fill their place in the layout. It is also the rect `anchor="target"` measures. |
-| `anchor` | `ContextMenuAnchor` | `'point'` | `point` anchors the panel where the finger landed, `target` against the bounds of the whole trigger. Point is the default because a context menu's target is usually large, and the middle of a whole message is not where the press was. Reach for `target` when the target is small and list-shaped and the panel should read as lining up with it. |
+| `anchor` | `ContextMenuAnchor` | `'point'` | `point` anchors the panel where the finger landed, `target` against the bounds of the whole trigger. Point is the default because a context menu's target is usually large, and the middle of a whole message is not where the press was. Reach for `target` when the target is small and list-shaped and the panel should read as lining up with it. Keyboard and accessibility opens always use the target bounds, because those modalities have no pointer coordinate. |
 | `delay` | `number` | `DEFAULT_DELAY` | How long the hold has to last, in milliseconds. 350 by default. |
 | `slop` | `number` | `DEFAULT_SLOP` | How far the finger may move during the hold before it stops being one, in points. 12 by default. Loose rather than tight, because the target is usually inside a scroller: a threshold small enough to feel precise cancels the menu for anyone whose thumb drifts while holding still, and a scroll has travelled much further than this by the time the two need telling apart. Tighten it only for a target that cannot be scrolled. |
 | `onPress` | `() => void` | — | A short press on the target, which the hold never also counts as. |
 | `haptics` | `boolean` | `false` | Tick the haptic engine as the menu opens. Needs the optional `expo-haptics`, and is silent without it. Worth setting more often than not. A hold has no edge to it the way a press does — nothing moves under the finger at the moment it takes — so the tick is what tells someone the hold has been long enough, before the panel has had time to say so. |
 | `disabled` | `boolean` | `false` | Nothing opens the menu, and the short press stops firing too. |
+| `onKeyDown` | `(event: ContextMenuKeyDownEvent) => void` | — | Called first for keyboard events. Prevent the event to keep ContextMenu from handling it. Context Menu and Shift+F10 open the menu; Enter and Space mirror the trigger's accessible activation. |
 
 ### ContextMenu.Preview
 
@@ -338,7 +339,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 `ContextMenu.Item` is `Menu.Item` with its glyph moved and its rows made taller — a wrapper, not a second implementation. The separator, the label, the radio rows, the submenu and the panel's background are the same components outright. The destructive colour, the press-in scale and the dismiss-on-select rule are defined once, and cannot come to differ between the ⋯ button and the hold.
 
-The panel is `Menu`'s, which is `Popover`'s, so edge-flipping, safe-area clamping, scrolling a long list and `presentation="bottom-sheet"` all arrive already working. What this component adds is the three things a menu opened on content needs and a menu opened from a button does not: the hold, where the panel goes, and the option of lifting the held content out of the page with it.
+The panel is `Menu`'s, which is `Popover`'s, so edge-flipping, safe-area clamping, scrolling a long list and `presentation="bottom-sheet"` all arrive already working. What this component adds is what a menu opened on content needs and a menu opened from a button does not: alternate invocation paths, placement against either a pointer or the target, and the option of lifting that target out of the page with it.
 
 Anything documented on the [Menu](/docs/components/menu) page for a row is true of the row here.
 
@@ -386,6 +387,10 @@ The screen dims behind the panel, which a plain `Popover` does not do. A popover
 
 A press has a moment you can feel — something moves under the finger. A hold does not, so until the panel appears there is nothing telling anyone the hold has been long enough. `haptics` on the trigger ticks the moment the hold is accepted, which is why it is worth setting more often than not. It needs the optional `expo-haptics` and is silent without it.
 
-### Accessibility
+### Accessibility and keyboard
 
-The panel is announced as a menu and its rows as menu items, and it takes the Android back button while it is up. A hold is not a gesture every reader can perform, though, and it is invisible — nothing on screen says the content has actions. Where the actions matter, give them a second way in: the same rows in a `Menu` behind a visible ⋯ button costs nothing, since they are the same components.
+The trigger is one accessible button with a named **Show menu** action. Show menu always opens the context actions; Activate runs `onPress` when the trigger has a primary short-press action, and otherwise opens the menu. That keeps a card that normally navigates behaving like the same card while still exposing its secondary actions. Disabled triggers announce that state and perform neither action.
+
+On the web and with a hardware keyboard, the Context Menu key and Shift+F10 open the menu. Enter and Space mirror Activate. A keyboard or accessibility action has no pointer position, so it anchors the panel to the trigger's measured bounds; a pointer hold keeps its precise point.
+
+The panel is announced as a menu and its rows as menu items, and it takes the Android back button while it is up. A visible ⋯ `Menu` can still be worth adding where discovering the available actions without opening them matters; it reuses the same row components.

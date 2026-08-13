@@ -4,7 +4,8 @@
  * A `Menu` hangs off a control that exists to be pressed: a ⋯ button, a toolbar
  * item, something whose whole job is to open the menu. A context menu has no
  * such control. The target is the content itself — a message, a note, a photo,
- * a row — and the actions are reached by pressing and holding it.
+ * a row — and the actions are reached by holding it, by a named accessibility
+ * action, or from the keyboard.
  *
  * ```tsx
  * <ContextMenu>
@@ -31,9 +32,9 @@
  * them. The panel is `Menu`'s panel, which is `Popover`'s, so `presentation`,
  * submenus and edge-flipping all arrive already working.
  *
- * What this component owns is the two things a menu opened on content needs and
- * a menu opened from a button does not: the long press, and where the panel
- * goes.
+ * What this component owns is what a menu opened on content needs and a menu
+ * opened from a button does not: alternate invocation paths, and where the
+ * panel goes.
  *
  * ## Anchored to the finger, not to the target
  *
@@ -73,7 +74,11 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { View, type ViewProps } from 'react-native';
+import {
+  View,
+  type AccessibilityActionInfo,
+  type ViewProps,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeOut,
@@ -95,6 +100,12 @@ import {
 import { usePopoverAnchor } from '../popover';
 import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
+import {
+  contextMenuAccessibilityInvocation,
+  contextMenuKeyInvocation,
+  type ContextMenuInvocation,
+  type ContextMenuKeyDownEvent,
+} from './context-menu-invocation';
 
 /**
  * How long the target is held before the menu opens.
@@ -260,7 +271,7 @@ function ContextMenuRoot({ children, ...props }: ContextMenuProps) {
 /** Which rectangle the panel is placed against. */
 export type ContextMenuAnchor = 'point' | 'target';
 
-export interface ContextMenuTriggerProps extends Omit<ViewProps, 'children'> {
+export interface ContextMenuTriggerProps extends Omit<ViewProps, 'children' | 'onKeyDown'> {
   /**
    * Classes on the wrapper the content sits in, which lays out like any other
    * view — it does not shrink to its child, because the things held are usually
@@ -280,7 +291,8 @@ export interface ContextMenuTriggerProps extends Omit<ViewProps, 'children'> {
    * Point is the default because a context menu's target is usually large, and
    * the middle of a whole message is not where the press was. Reach for
    * `target` when the target is small and list-shaped and the panel should read
-   * as lining up with it.
+   * as lining up with it. Keyboard and accessibility opens always use the target
+   * bounds, because those modalities have no pointer coordinate.
    */
   anchor?: ContextMenuAnchor;
   /** How long the hold has to last, in milliseconds. 350 by default. */
@@ -310,10 +322,17 @@ export interface ContextMenuTriggerProps extends Omit<ViewProps, 'children'> {
   haptics?: boolean;
   /** Nothing opens the menu, and the short press stops firing too. */
   disabled?: boolean;
+  /**
+   * Called first for keyboard events. Prevent the event to keep ContextMenu
+   * from handling it. Context Menu and Shift+F10 open the menu; Enter and Space
+   * mirror the trigger's accessible activation.
+   */
+  onKeyDown?: (event: ContextMenuKeyDownEvent) => void;
 }
 
 /**
- * Wraps the content and opens the menu when it is held.
+ * Wraps the content and opens the menu when held, through accessibility
+ * actions, or from the keyboard.
  *
  * The wrapper is a plain view and lays out like one, stretching as a view does
  * rather than shrinking to its child. That is the opposite of what a tooltip's
@@ -334,6 +353,14 @@ function ContextMenuTrigger({
   onPress,
   haptics = false,
   disabled = false,
+  accessible,
+  accessibilityActions,
+  onAccessibilityAction,
+  accessibilityRole,
+  accessibilityState,
+  focusable,
+  tabIndex,
+  onKeyDown,
   ...props
 }: ContextMenuTriggerProps) {
   const { setOpen, anchorTo } = usePopoverAnchor('ContextMenu.Trigger');
@@ -359,8 +386,8 @@ function ContextMenuTrigger({
    * The target is measured either way, because the preview draws at that rect
    * whatever the panel is placed against.
    */
-  const openAt = useCallback(
-    (x: number, y: number) => {
+  const open = useCallback(
+    (point?: { x: number; y: number }) => {
       // Ticked here rather than in the gesture callback so it fires once the
       // hold has been accepted, which is the moment there is something to
       // confirm — and on the same side of the bridge as the opening.
@@ -382,8 +409,8 @@ function ContextMenuTrigger({
          */
         const grown = hasPreview ? (PREVIEW_SCALE - 1) / 2 : 0;
         anchorTo(
-          against === 'point'
-            ? { x, y, width: 0, height: 0 }
+          against === 'point' && point
+            ? { ...point, width: 0, height: 0 }
             : {
                 x: mx - width * grown,
                 y: my - height * grown,
@@ -396,6 +423,63 @@ function ContextMenuTrigger({
     },
     [against, anchorTo, setOpen, haptics, setTarget, setContent, children, hasPreview]
   );
+
+  const openAt = useCallback((x: number, y: number) => open({ x, y }), [open]);
+  // Keyboard and accessibility actions have no pointer coordinate to honour.
+  // The measured target is the only real location they can anchor against.
+  const openFromTarget = useCallback(() => open(), [open]);
+
+  const invoke = useCallback(
+    (invocation: ContextMenuInvocation) => {
+      if (invocation === 'menu') openFromTarget();
+      else onPress?.();
+    },
+    [onPress, openFromTarget]
+  );
+
+  const triggerActions = useMemo<readonly AccessibilityActionInfo[] | undefined>(() => {
+    if (disabled) return undefined;
+    const reserved = new Set(['activate', 'showMenu']);
+    return [
+      { name: 'activate' },
+      { name: 'showMenu', label: 'Show menu' },
+      ...(accessibilityActions ?? []).filter(({ name }) => !reserved.has(name)),
+    ];
+  }, [accessibilityActions, disabled]);
+
+  const handleAccessibilityAction = useCallback<
+    NonNullable<ViewProps['onAccessibilityAction']>
+  >(
+    (event) => {
+      const actionName = event.nativeEvent.actionName;
+      const invocation = contextMenuAccessibilityInvocation(actionName, !!onPress, disabled);
+      if (invocation) {
+        invoke(invocation);
+        return;
+      }
+      // Reserved actions cannot bypass a disabled trigger through a consumer
+      // handler, while unrelated custom actions still compose normally.
+      if (actionName === 'activate' || actionName === 'showMenu') return;
+      onAccessibilityAction?.(event);
+    },
+    [disabled, invoke, onAccessibilityAction, onPress]
+  );
+
+  const handleKeyDown = useCallback(
+    (event: ContextMenuKeyDownEvent) => {
+      onKeyDown?.(event);
+      if (event.isDefaultPrevented()) return;
+      const invocation = contextMenuKeyInvocation(event.nativeEvent, !!onPress, disabled);
+      if (!invocation) return;
+      event.preventDefault();
+      invoke(invocation);
+    },
+    [disabled, invoke, onKeyDown, onPress]
+  );
+
+  // React Native exposes key events at runtime (and in its generated types),
+  // while its compatibility ViewProps declaration does not yet list them.
+  const keyboardProps = { onKeyDown: handleKeyDown } as ViewProps;
 
   const gesture = useMemo(() => {
     /*
@@ -432,7 +516,23 @@ function ContextMenuTrigger({
         a view that only groups children is otherwise flattened away — and a
         flattened view cannot be measured, which `anchor="target"` needs.
       */}
-      <View ref={ref} collapsable={false} className={className} {...props}>
+      <View
+        ref={ref}
+        collapsable={false}
+        accessible={accessible ?? true}
+        accessibilityRole={accessibilityRole ?? 'button'}
+        accessibilityState={{
+          ...accessibilityState,
+          disabled: disabled || accessibilityState?.disabled,
+        }}
+        accessibilityActions={triggerActions}
+        onAccessibilityAction={handleAccessibilityAction}
+        focusable={focusable ?? !disabled}
+        tabIndex={tabIndex ?? (disabled ? -1 : 0)}
+        className={className}
+        {...keyboardProps}
+        {...props}
+      >
         {children}
       </View>
     </GestureDetector>
