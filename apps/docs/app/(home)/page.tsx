@@ -24,6 +24,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { CopyInstall } from '@/components/copy-install';
+import { LayoutLink } from '@/components/layout-link';
 import { Showcase } from '@/components/showcase';
 import { absoluteUrl, site } from '@/lib/site';
 import meta from '@/scripts/meta.json';
@@ -287,12 +288,12 @@ export default function HomePage() {
             </p>
           </div>
           <nav className="flex gap-6" aria-label="Footer">
-            <Link href="/docs" prefetch={false} className="hover:text-foreground">
+            <LayoutLink href="/docs" className="hover:text-foreground">
               Documentation
-            </Link>
-            <Link href="/docs/components" prefetch={false} className="hover:text-foreground">
+            </LayoutLink>
+            <LayoutLink href="/docs/components" className="hover:text-foreground">
               Components
-            </Link>
+            </LayoutLink>
             <Link href={site.npm} className="hover:text-foreground">
               npm
             </Link>
