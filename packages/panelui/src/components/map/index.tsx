@@ -480,6 +480,8 @@ export interface MapMarkerProps
   anchor?: 'center' | 'top' | 'bottom' | 'left' | 'right';
   /** Pressing the marker. Adds a button role when given. */
   onPress?: () => void;
+  /** Explicit spoken name. Other React Native accessibility props pass through too. */
+  accessibilityLabel?: string;
   className?: string;
   /** Defaults to a dot. Anything else replaces it. */
   children?: ReactNode;
@@ -980,7 +982,7 @@ export interface MapGeoJSONProps {
   fillOpacity?: number;
   /** Fires with the pressed feature. */
   onPress?: (feature: unknown) => void;
-  /** Builds the synchronized nonvisual list from each inline GeoJSON feature. */
+  /** Describes each inline GeoJSON feature for the synchronized nonvisual list. */
   accessibility?: (feature: unknown, index: number) => MapFeatureAccessibility;
   id?: string;
 }
@@ -1054,7 +1056,7 @@ export interface MapClusterProps {
   maxZoom?: number;
   /** Fires with the pressed cluster or point. */
   onPress?: (feature: unknown) => void;
-  /** Builds the synchronized nonvisual list from each source point. */
+  /** Describes each source point for the synchronized nonvisual list. */
   accessibility?: (feature: unknown, index: number) => MapFeatureAccessibility;
   id?: string;
 }

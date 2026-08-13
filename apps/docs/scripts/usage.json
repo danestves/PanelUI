@@ -2794,17 +2794,17 @@
       {
         "title": "Markers and popups",
         "description": "A popup inside a marker anchors to it and opens when it is pressed. Given a `lngLat` of its own it stands alone at that coordinate instead — the same component either way, because the difference is where it hangs rather than what it is.",
-        "code": "<Map center={[-74.006, 40.713]} zoom={11}>\n  {offices.map((office) => (\n    <Map.Marker key={office.id} lngLat={office.lngLat}>\n      <Map.Popup title={office.name}>\n        <Text size=\"xs\" muted>{office.headcount} people</Text>\n      </Map.Popup>\n    </Map.Marker>\n  ))}\n</Map>"
+        "code": "<Map center={[-74.006, 40.713]} zoom={11}>\n  {offices.map((office) => (\n    <Map.Marker\n      key={office.id}\n      lngLat={office.lngLat}\n      accessibilityLabel={office.name}\n      accessibilityHint=\"Show office details\"\n    >\n      <Map.Popup title={office.name}>\n        <Text size=\"xs\" muted>{office.headcount} people</Text>\n      </Map.Popup>\n    </Map.Marker>\n  ))}\n</Map>"
       },
       {
         "title": "A blank canvas for data",
         "description": "`blank` drops the basemap and keeps only the ground colour, for data that carries its own geography. Street detail under a choropleth is noise rather than context.",
-        "code": "<Map blank bounds={[-125, 24, -66, 50]}>\n  <Map.GeoJSON\n    data={states}\n    fill={['interpolate', ['linear'], ['get', 'share'], 0, muted, 1, primary]}\n  />\n</Map>"
+        "code": "<Map blank bounds={[-125, 24, -66, 50]}>\n  <Map.GeoJSON\n    data={states}\n    fill={['interpolate', ['linear'], ['get', 'share'], 0, muted, 1, primary]}\n    accessibility={(feature) => ({\n      label: `${feature.properties.name}: ${feature.properties.share}%`,\n    })}\n  />\n</Map>"
       },
       {
         "title": "Clustering dense points",
-        "description": "`Map.Marker` mounts a React view each, which a thousand points cannot afford — and a thousand overlapping pins would be unreadable even if it could. `Map.Cluster` does it in a style layer, merging points as they get too close to tell apart.",
-        "code": "<Map center={[10, 50]} zoom={3}>\n  <Map.Cluster data={sightings} radius={60} onPress={inspect} />\n</Map>"
+        "description": "`Map.Marker` mounts a React view each, which a thousand points cannot afford — and a thousand overlapping pins would be unreadable even if it could. `Map.Cluster` does it in a style layer, merging points as they get too close to tell apart.\n\n`accessibility` reads the same inline Feature or FeatureCollection passed to the layer. It creates a clipped screen-reader list, and activating an entry calls the layer's `onPress` with that exact feature. The rendered map geometry stays decorative. Resolve URL data before passing it when the layer needs a nonvisual list; PanelUI does not keep a second feature copy that can drift from the map.",
+        "code": "<Map center={[10, 50]} zoom={3}>\n  <Map.Cluster\n    data={sightings}\n    radius={60}\n    onPress={inspect}\n    accessibility={(feature) => ({\n      label: feature.properties.species,\n      hint: 'Inspect sighting',\n      state: { selected: feature.id === selectedId },\n    })}\n  />\n</Map>"
       },
       {
         "title": "Routes and arcs",

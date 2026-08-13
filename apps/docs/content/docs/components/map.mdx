@@ -133,6 +133,8 @@ A popup inside a marker anchors to it and opens when it is pressed. Given a `lng
 
 `Map.Marker` mounts a React view each, which a thousand points cannot afford — and a thousand overlapping pins would be unreadable even if it could. `Map.Cluster` does it in a style layer, merging points as they get too close to tell apart.
 
+`accessibility` reads the same inline Feature or FeatureCollection passed to the layer. It creates a clipped screen-reader list, and activating an entry calls the layer's `onPress` with that exact feature. The rendered map geometry stays decorative. Resolve URL data before passing it when the layer needs a nonvisual list; PanelUI does not keep a second feature copy that can drift from the map.
+
 ```tsx
 <Map center={[10, 50]} zoom={3}>
   <Map.Cluster
@@ -147,8 +149,6 @@ A popup inside a marker anchors to it and opens when it is pressed. Given a `lng
   />
 </Map>
 ```
-
-`accessibility` reads the same inline Feature or FeatureCollection passed to the layer. It creates a clipped screen-reader list, and activating an entry calls the layer's `onPress` with that exact feature. The rendered map geometry stays decorative. Resolve URL data before passing it when the layer needs a nonvisual list; PanelUI does not keep a second feature copy that can drift from the map.
 
 ### Routes and arcs
 
