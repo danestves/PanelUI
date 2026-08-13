@@ -48,6 +48,7 @@ import {
   isValidElement,
   useContext,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -235,7 +236,7 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [series, setSeries] = useState<[string, string][]>([]);
   const [activeIndexJS, setActiveIndexJS] = useState(-1);
-  const clipId = useRef(`panelui-clip-${Math.random().toString(36).slice(2, 9)}`).current;
+  const clipId = `panelui-clip-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const reveal = useSharedValue(0);
   const domainMin = useSharedValue(0);
@@ -657,7 +658,7 @@ export interface LineChartAreaProps {
 function LineChartArea({ dataKey, color, colorIndex = 1, opacity = 0.18 }: LineChartAreaProps) {
   const { data, plot, domainMin, domainMax, curve, status, clipId } = useChart('LineChart.Area');
   const fill = useSeriesColor(color, colorIndex);
-  const gradientId = useRef(`panelui-area-${Math.random().toString(36).slice(2, 9)}`).current;
+  const gradientId = `panelui-area-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const values = useMemo(() => columnValues(data, dataKey), [data, dataKey]);
   const loading = status === 'loading';

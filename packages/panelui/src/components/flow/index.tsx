@@ -48,6 +48,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -870,7 +871,7 @@ function FlowBackground({
   const token = useCSSVariable('--color-muted-foreground');
   const tint = color ?? (typeof token === 'string' ? token : '#737373');
   // A pattern is referenced by id, and two canvases on one screen would collide.
-  const id = useRef(`panelui-flow-${Math.random().toString(36).slice(2, 7)}`).current;
+  const id = `panelui-flow-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   /*
    * The grid is a tile that follows the viewport in whole-cell steps.

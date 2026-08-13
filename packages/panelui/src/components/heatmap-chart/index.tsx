@@ -42,6 +42,7 @@ import {
   isValidElement,
   useContext,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -402,9 +403,7 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
 ) {
   const [width, setWidth] = useState(0);
   const [activeCell, setActiveCellState] = useState<HeatmapCell | null>(null);
-  const clipId = useRef(
-    `panelui-heat-${Math.random().toString(36).slice(2, 9)}`
-  ).current;
+  const clipId = `panelui-heat-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const reveal = useSharedValue(0);
   const reducedMotion = useReducedMotion();
