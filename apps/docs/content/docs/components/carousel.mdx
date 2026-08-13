@@ -255,9 +255,9 @@ const [index, setIndex] = useState(0);
 | `loop` | `boolean` | `false` | Run past the last slide back to the first, and the other way. |
 | `align` | `CarouselAlign` | `'center'` | Where the active slide sits. `center` is what the fanned layouts want; `start` suits a row of cards running off the trailing edge. `coverflow` and `stack` are always centred. |
 | `itemSize` | `number` | — | Length of one slide along the direction of travel, in points. Measured from the carousel's own box when omitted, which is what a full-width slide wants; set it for a run that shows more than one at a time. |
-| `autoplay` | `boolean` | `false` | Advance on a timer. Stops for good the first time a finger lands. |
+| `autoplay` | `boolean` | `false` | Advance on a timer. Stops at the non-looping end or after the first touch. |
 | `autoplayInterval` | `number` | `4000` | Milliseconds each slide is held when `autoplay` is set. |
-| `index` | `number` | — | Controlled active slide. Requests move visually only after this value changes. |
+| `index` | `number` | — | Controlled active slide. Requests move visually only after this value changes; an index invalidated by a child-count change is normalized and reported. |
 | `defaultIndex` | `number` | `0` | Starting slide when uncontrolled. |
 | `onIndexChange` | `(index: number) => void` | — |  |
 | `scrollEnabled` | `boolean` | `true` | Let go of the gesture, for a carousel inside something else that drags. |

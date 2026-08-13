@@ -55,6 +55,7 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -74,6 +75,11 @@ import Animated, {
 import { ChevronLeftIcon, ChevronRightIcon } from '../../icons';
 import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
+import {
+  normalizeCarouselIndex,
+  useCarouselAutoplay,
+  useCarouselIndexLifecycle,
+} from './carousel-lifecycle';
 
 /** Settles the run onto a whole index. Tuned to stop rather than to bounce. */
 const SPRING = { damping: 22, stiffness: 190, mass: 0.55 } as const;
@@ -161,8 +167,7 @@ export function useCarouselState() {
  */
 function wrap(value: number, count: number) {
   'worklet';
-  if (count <= 0) return 0;
-  return ((value % count) + count) % count;
+  return normalizeCarouselIndex(value, count, true);
 }
 
 /**
@@ -203,11 +208,14 @@ export interface CarouselProps extends ViewProps {
    * wants; set it for a run that shows more than one at a time.
    */
   itemSize?: number;
-  /** Advance on a timer. Stops for good the first time a finger lands. */
+  /** Advance on a timer. Stops at the non-looping end or after the first touch. */
   autoplay?: boolean;
   /** Milliseconds each slide is held when `autoplay` is set. */
   autoplayInterval?: number;
-  /** Controlled active slide. Requests move visually only after this value changes. */
+  /**
+   * Controlled active slide. Requests move visually only after this value changes;
+   * an index invalidated by a child-count change is normalized and reported.
+   */
   index?: number;
   /** Starting slide when uncontrolled. */
   defaultIndex?: number;
@@ -245,14 +253,15 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
 ) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [internalIndex, setInternalIndex] = useState(defaultIndex);
-  const [count, setCount] = useState(0);
+  const [count, setCountValue] = useState(0);
+  const [countKnown, setCountKnown] = useState(false);
   const [touched, setTouched] = useState(false);
   const reducedMotion = useReducedMotion();
 
   const isControlled = indexProp !== undefined;
-  const index = isControlled ? indexProp : internalIndex;
+  const requestedIndex = isControlled ? indexProp : internalIndex;
 
-  const progress = useSharedValue(defaultIndex);
+  const progress = useSharedValue(indexProp ?? defaultIndex);
   const engaged = useSharedValue(0);
 
   // A deck is dealt from the top of a pile, so it is dragged sideways whatever
@@ -260,6 +269,11 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
   const axis: CarouselOrientation = variant === 'stack' ? 'horizontal' : orientation;
   const along = axis === 'horizontal' ? size.width : size.height;
   const itemSize = itemSizeProp ?? along ?? 0;
+
+  const setCount = useCallback((next: number) => {
+    setCountValue(next);
+    setCountKnown(true);
+  }, []);
 
   const setIndex = useCallback(
     (next: number) => {
@@ -269,8 +283,22 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
     [isControlled, onIndexChange]
   );
 
+  /*
+   * The slide the run is currently travelling to.
+   *
+   * Moving the run and recording where it went are two steps: `scrollTo` starts
+   * the spring, then the new index arrives back through state and the lifecycle
+   * effect asks for it again. Without this the second ask restarts the spring a
+   * frame into the first — from a standstill, so a flick loses the momentum it
+   * was carrying. Remembering the target lets the echo be recognised and
+   * ignored, while a genuine request for the same slide still animates, because
+   * that one comes through `scrollTo` and sets this first.
+   */
+  const animatedTarget = useRef<number | null>(null);
+
   const animateTo = useCallback(
     (target: number) => {
+      animatedTarget.current = target;
       if (reducedMotion) {
         progress.value = target;
       } else if (loop) {
@@ -288,10 +316,27 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
     [count, loop, progress, reducedMotion]
   );
 
+  const settleIndex = useCallback(
+    (next: number) => {
+      if (animatedTarget.current === next) return;
+      if (Math.abs(progress.value - next) >= 0.001) animateTo(next);
+    },
+    [animateTo, progress]
+  );
+
+  const index = useCarouselIndexLifecycle({
+    requestedIndex,
+    count,
+    countKnown,
+    loop,
+    onCorrection: setIndex,
+    onSettledIndex: settleIndex,
+  });
+
   const scrollTo = useCallback(
     (target: number) => {
       if (count <= 0) return;
-      const settled = loop ? wrap(target, count) : Math.max(0, Math.min(target, count - 1));
+      const settled = normalizeCarouselIndex(target, count, loop);
 
       // A controlled request belongs to its owner. The finger may move the run,
       // but after release it returns to the current prop until the owner accepts
@@ -307,23 +352,19 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
 
   useImperativeHandle(ref, () => ({ next, previous, scrollTo }), [next, previous, scrollTo]);
 
-  // A controlled index moving underneath us animates rather than jumps.
-  useEffect(() => {
-    if (!isControlled || indexProp === undefined || count <= 0) return;
-    if (Math.abs(progress.value - indexProp) < 0.001) return;
-    animateTo(indexProp);
-  }, [animateTo, isControlled, indexProp, count, progress]);
-
   /*
    * Autoplay stops for good the first time a finger lands, rather than pausing.
    * Someone who has taken hold of the run is reading it, and having it start
    * moving again a few seconds later is the behaviour everybody hates.
    */
-  useEffect(() => {
-    if (!autoplay || touched || count <= 1) return;
-    const timer = setInterval(() => scrollTo(index + 1), autoplayInterval);
-    return () => clearInterval(timer);
-  }, [autoplay, touched, count, index, autoplayInterval, scrollTo]);
+  useCarouselAutoplay({
+    enabled: autoplay && !touched,
+    index,
+    count,
+    loop,
+    interval: autoplayInterval,
+    onAdvance: scrollTo,
+  });
 
   const settle = useCallback(
     (target: number) => {
