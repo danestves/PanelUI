@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTheme } from 'next-themes';
 import { MoonIcon, SunIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { radioIndexForKey } from '../composite-keyboard';
 
 /**
  * The theme picker over the home page's component previews, and the element
@@ -52,6 +53,20 @@ function themeName(family: Family, mode: Mode): string {
 export function Themer({ children }: { children: ReactNode }): React.ReactElement {
   const [family, setFamily] = useState<Family>('panel');
   const { resolvedTheme, setTheme } = useTheme();
+  const familyRefs = useRef<Partial<Record<Family, HTMLButtonElement | null>>>({});
+
+  const onFamilyKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>, id: Family) => {
+      const current = FAMILIES.findIndex((family) => family.id === id);
+      const nextIndex = radioIndexForKey(event.key, current, FAMILIES.length);
+      if (nextIndex === undefined) return;
+      event.preventDefault();
+      const next = FAMILIES[nextIndex].id;
+      setFamily(next);
+      familyRefs.current[next]?.focus();
+    },
+    []
+  );
 
   /*
    * `resolvedTheme` is undefined until the provider has read the stored choice
@@ -77,10 +92,16 @@ export function Themer({ children }: { children: ReactNode }): React.ReactElemen
           {FAMILIES.map(({ id, name, swatch }) => (
             <button
               key={id}
+              ref={(node) => {
+                familyRefs.current[id] = node;
+              }}
               type="button"
               role="radio"
+              aria-label={name}
               aria-checked={family === id}
+              tabIndex={family === id ? 0 : -1}
               onClick={() => setFamily(id)}
+              onKeyDown={(event) => onFamilyKeyDown(event, id)}
               className={cn(
                 'flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
                 family === id
