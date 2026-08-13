@@ -75,7 +75,7 @@
     "Draggable sheet anchored to the bottom of the screen.",
     "react native bottom sheet",
     {
-      "updatedIn": "0.66.0",
+      "updatedIn": "0.66.1",
       "category": "overlays"
     }
   ],
@@ -132,7 +132,7 @@
     {
       "addedIn": "0.27.0",
       "category": "layout",
-      "updatedIn": "0.66.0"
+      "updatedIn": "0.66.1"
     }
   ],
   "checkbox": [
@@ -188,7 +188,7 @@
     "Modal dialog with a backdrop and footer actions.",
     "react native modal dialog",
     {
-      "updatedIn": "0.66.0",
+      "updatedIn": "0.66.1",
       "category": "overlays"
     }
   ],
@@ -208,7 +208,7 @@
     "react native drawer component",
     {
       "addedIn": "0.33.0",
-      "updatedIn": "0.66.0",
+      "updatedIn": "0.66.1",
       "category": "overlays"
     }
   ],
@@ -257,7 +257,7 @@
     "react native node graph flow diagram",
     {
       "addedIn": "0.19.0",
-      "updatedIn": "0.66.0",
+      "updatedIn": "0.66.1",
       "category": "data"
     }
   ],
@@ -441,7 +441,7 @@
     "react native chat scroll",
     {
       "category": "media",
-      "updatedIn": "0.66.0"
+      "updatedIn": "0.66.1"
     }
   ],
   "popover": [
@@ -449,7 +449,7 @@
     "Panel anchored to the element that opened it.",
     "react native popover",
     {
-      "updatedIn": "0.66.0",
+      "updatedIn": "0.66.1",
       "category": "overlays"
     }
   ],
@@ -595,7 +595,7 @@
     "react native signature pad draw",
     {
       "addedIn": "0.19.0",
-      "updatedIn": "0.66.0",
+      "updatedIn": "0.66.1",
       "category": "forms"
     }
   ],
@@ -612,7 +612,7 @@
     "Pick a value, or a span, by dragging a thumb along a track.",
     "react native slider",
     {
-      "updatedIn": "0.66.0",
+      "updatedIn": "0.66.1",
       "category": "forms"
     }
   ],
@@ -831,7 +831,7 @@
     "react native context menu long press",
     {
       "addedIn": "0.52.0",
-      "updatedIn": "0.66.0",
+      "updatedIn": "0.66.1",
       "category": "actions"
     }
   ],
@@ -930,7 +930,7 @@
       "addedIn": "0.60.0",
       "alpha": true,
       "category": "actions",
-      "updatedIn": "0.66.0"
+      "updatedIn": "0.66.1"
     }
   ],
   "treemap-chart": [

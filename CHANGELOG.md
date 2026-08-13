@@ -9,6 +9,19 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.66.1] — 2026-08-13
+
+0.66.0 was tagged but never reached npm; this is that release, plus the fix for what stopped it.
+
+### Fixed
+
+- **The package check reads `npm pack`'s output in both shapes it comes in.** npm 11 and earlier
+  answer with an array of manifests, npm 12 with an object keyed by package name. The publish
+  workflow upgrades to `npm@latest` for trusted publishing, so the check ran under npm 12, took the
+  array apart, and threw — failing the release after the tag existed. CI could not have caught it:
+  it ran the same check under Node's bundled npm 10, which is not the npm that publishes. That step
+  now runs last and under `npm@latest`, so it exercises the environment the release actually uses.
+
 ## [0.66.0] — 2026-08-13
 
 ### Added
