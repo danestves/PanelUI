@@ -11,7 +11,7 @@ By participating you agree to abide by the [Code of Conduct](CODE_OF_CONDUCT.md)
   and send the fix.
 - **New component, or a change to an existing API?** Open an issue or a
   [discussion](https://github.com/panel-ui/PanelUI/discussions) first. PanelUI aims at one
-  coherent visual language across 70-odd components, and the design conversation is much cheaper
+  coherent visual language across the full component catalogue, and the design conversation is much cheaper
   before the code than after it.
 - **Documentation or a typo?** Straight to a pull request.
 

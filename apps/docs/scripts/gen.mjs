@@ -415,9 +415,9 @@ const indexSections = Object.entries(CATEGORIES)
 const indexPage = [
   `---
 title: Components
-description: Every component in PanelUI, by what it is for — ${Object.keys(meta).length} of them, each with its anatomy, props and variants.
+description: Every component module in PanelUI, by what it is for — ${Object.keys(meta).length} component modules, each with its anatomy, props and variants.
 ---`,
-  `All ${Object.keys(meta).length} components, grouped by the job they do. Every page covers the ` +
+  `All ${Object.keys(meta).length} component modules, grouped by the job they do. Every page covers the ` +
     `anatomy, every prop and every variant, read straight from the library's TypeScript so it ` +
     `cannot drift from the code.`,
   ...indexSections,

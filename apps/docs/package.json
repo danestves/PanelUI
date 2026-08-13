@@ -9,7 +9,7 @@
     "postinstall": "fumadocs-mdx",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test test/*.test.mjs",
-    "docs:generate": "node scripts/extract.mjs && node scripts/gen.mjs && node scripts/extract-icons.mjs && node scripts/build-registry.mjs && node scripts/build-api-reference.mjs && node scripts/build-skill.mjs && node scripts/build-skill-assets.mjs",
+    "docs:generate": "node scripts/extract.mjs && node scripts/gen.mjs && node scripts/extract-icons.mjs && node scripts/build-registry.mjs && node scripts/build-api-reference.mjs && node scripts/build-skill.mjs && node scripts/build-skill-assets.mjs && node ../../scripts/catalogue-manifest.mjs",
     "registry:build": "node scripts/build-registry.mjs",
     "prebuild": "node scripts/extract-icons.mjs && node scripts/build-registry.mjs && node scripts/build-api-reference.mjs --check && node scripts/build-skill.mjs && node scripts/build-skill-assets.mjs"
   },
