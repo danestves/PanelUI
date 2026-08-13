@@ -7,6 +7,7 @@
  */
 import process from 'node:process';
 import { add, list } from '../src/add.mjs';
+import { diagnose, formatDoctor } from '../src/doctor.mjs';
 import { init } from '../src/init.mjs';
 import { mcp, mcpInit } from '../src/mcp.mjs';
 import { update } from '../src/update.mjs';
@@ -24,6 +25,7 @@ ${bold('Commands')}
   add <name...>        Copy components in, with everything they depend on
   update [name...]     Safely update unchanged installed component files
   list                 Discover registry items; filter with --type or --search
+  doctor               Check project setup without changing it
   mcp                  Run the MCP server, so an agent can read the registry
   mcp init [editor]    Write the server into an editor's config
                        claude | cursor | vscode
@@ -37,7 +39,7 @@ ${bold('Options')}
   --registry <url>     Use a different registry
   --type <kind>        ui | chart | hook | lib | theme
   --search <text>      Rank registry items matching every search term
-  --json               Print list results as stable JSON
+  --json               Print list or doctor results as stable JSON
   --help, -h           This
   --version, -v        Print the version
 
@@ -72,6 +74,7 @@ function parseArgs(argv) {
     theme: undefined,
     help: false,
     version: false,
+    json: false,
   };
   const positionals = [];
 
@@ -99,6 +102,9 @@ function parseArgs(argv) {
       case '--version':
       case '-v':
         options.version = true;
+        break;
+      case '--json':
+        options.json = true;
         break;
       case '--cwd':
         options.cwd = optionValue(argv, i, arg, '<dir>');
@@ -172,6 +178,12 @@ async function main() {
     case 'ls':
       await list(options);
       break;
+    case 'doctor': {
+      const report = diagnose(options.cwd);
+      info(options.json ? JSON.stringify(report, null, 2) : formatDoctor(report));
+      if (report.errors) process.exitCode = 1;
+      break;
+    }
     case 'mcp':
       if (rest[0] === 'init') {
         const { file, label } = mcpInit(options, rest[1]);

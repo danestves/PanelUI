@@ -43,7 +43,7 @@ import {
 } from './ui.mjs';
 
 /** Needed by anything the registry can install. */
-const BASE_DEPENDENCIES = [
+export const BASE_DEPENDENCIES = [
   'uniwind',
   'tailwindcss',
   'tailwind-variants',

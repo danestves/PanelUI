@@ -150,7 +150,7 @@ function codeOnly(source) {
  * Existing Metro configs are never edited, so an unfamiliar but valid shape
  * gets safe manual instructions instead of a false claim that setup is done.
  */
-function hasWrappedMetroExport(source) {
+export function hasWrappedMetroExport(source) {
   const code = codeOnly(source);
   const wrapperCall = String.raw`(?:\(\s*)*withUniwindConfig\s*\(`;
   const directExports = [
