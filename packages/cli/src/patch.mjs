@@ -23,6 +23,7 @@ export async function patchCss(cwd, config, { assumeYes, dryRun }) {
   const cssPath = projectPath(cwd, config.css ?? 'global.css', 'CSS path');
   const exists = fs.existsSync(cssPath);
   const current = exists ? fs.readFileSync(cssPath, 'utf8') : '';
+  const cssDir = path.dirname(cssPath);
 
   const sourceDirs = [
     ...new Set(
@@ -30,19 +31,27 @@ export async function patchCss(cwd, config, { assumeYes, dryRun }) {
         .map(aliasToDir)
         // Scan the top-level directory rather than the leaf, so a later
         // `add` that creates a sibling folder is covered without re-running.
-        .map((dir) => `./${dir.split('/')[0]}`)
+        .map((dir) => dir.split(/[\\/]/)[0])
     ),
   ];
 
+  const legacyWanted = [
+    `@import './${config.theme ?? 'theme.css'}';`,
+    ...sourceDirs.map((dir) => `@source './${dir}';`),
+  ];
   const wanted = [
     `@import 'tailwindcss';`,
     `@import 'uniwind';`,
-    `@import './${config.theme ?? 'theme.css'}';`,
-    ...sourceDirs.map((dir) => `@source '${dir}';`),
+    `@import '${relativeCssSpecifier(cssDir, path.join(cwd, config.theme ?? 'theme.css'))}';`,
+    ...sourceDirs.map((dir) => `@source '${relativeCssSpecifier(cssDir, path.join(cwd, dir))}';`),
   ];
 
-  const missing = wanted.filter((line) => !current.includes(line.replace(/;$/, '')));
-  if (!missing.length) {
+  const corrected = legacyWanted.reduce(
+    (css, legacy, index) => css.replaceAll(legacy, wanted[index + 2]),
+    current
+  );
+  const missing = wanted.filter((line) => !corrected.includes(line.replace(/;$/, '')));
+  if (!missing.length && corrected === current) {
     success(`${path.basename(cssPath)} already set up`);
     return;
   }
@@ -56,10 +65,20 @@ export async function patchCss(cwd, config, { assumeYes, dryRun }) {
     return;
   }
 
-  const next = exists ? `${missing.join('\n')}\n\n${current}` : `${missing.join('\n')}\n`;
+  const next = exists
+    ? missing.length
+      ? `${missing.join('\n')}\n\n${corrected}`
+      : corrected
+    : `${missing.join('\n')}\n`;
   fs.mkdirSync(path.dirname(cssPath), { recursive: true });
   fs.writeFileSync(cssPath, next);
   success(`Wrote ${path.relative(cwd, cssPath)}`);
+}
+
+/** Convert a filesystem-relative target into a portable CSS module specifier. */
+function relativeCssSpecifier(fromDir, targetPath) {
+  const relative = path.relative(fromDir, targetPath).split(path.sep).join('/');
+  return relative.startsWith('.') ? relative : `./${relative}`;
 }
 
 const METRO_TEMPLATE = `const { getDefaultConfig } = require('expo/metro-config');
