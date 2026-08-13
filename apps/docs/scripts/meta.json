@@ -909,7 +909,6 @@
     {
       "addedIn": "0.50.0",
       "updatedIn": "0.65.0",
-      "beta": true,
       "category": "navigation"
     }
   ],

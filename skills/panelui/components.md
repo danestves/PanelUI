@@ -69,7 +69,7 @@ remember is a guess.
 | `Breadcrumb` | The trail of links back up the hierarchy to the current page. | `components/breadcrumb` |
 | `Pagination` | Paged navigation over a long result set. | `components/pagination` |
 | `SectionRail` | Floating section navigator for a long screen. | `components/section-rail` |
-| `Sortable` *(beta)* | A list whose rows can be dragged into a different order. | `components/sortable` |
+| `Sortable` | A list whose rows can be dragged into a different order. | `components/sortable` |
 | `Steps` | Stepper for multi-step flows. | `components/steps` |
 | `Tabs` | Segmented navigation with an animated indicator. | `components/tabs` |
 | `Tour` | A walkthrough that introduces a screen one control at a time. | `components/tour` |
