@@ -106,8 +106,9 @@ export const COMPONENTS = [
   {"slug":"tree","name":"Tree","summary":"A hierarchy you can open a level at a time"},
   {"slug":"treemap-chart","name":"TreemapChart","summary":"A total, cut into the parts it is made of, sized by area"},
   {"slug":"typography","name":"Typography","summary":"Semantic text presets"},
+  {"slug":"waterfall-chart","name":"WaterfallChart","summary":"How a run of changes carried one total to another"},
 ] as const;
 
 export type ComponentMetadata = (typeof COMPONENTS)[number];
 export const COMPONENT_COUNT = COMPONENTS.length;
-export const CHART_COUNT = 13;
+export const CHART_COUNT = 14;
