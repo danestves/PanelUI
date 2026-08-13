@@ -17,11 +17,15 @@ import process from 'node:process';
 import { DEFAULT_REGISTRY, aliasToDir, projectPath, readConfig } from './config.mjs';
 
 /**
- * The version we speak. The spec says to answer with the client's version when
- * we support it and ours when we do not, so a newer client downgrades rather
- * than failing.
+ * The versions we speak, and the one we answer with otherwise.
+ *
+ * The spec says to reply with the client's version when it is one we support
+ * and with our own when it is not, so a newer client is told what it is talking
+ * to and can decide to downgrade rather than being refused. Echoing back
+ * whatever arrived would claim support for a protocol nothing here implements.
  */
 const PROTOCOL_VERSION = '2025-06-18';
+const SUPPORTED_PROTOCOL_VERSIONS = [PROTOCOL_VERSION];
 
 const { default: pkg } = await import('../package.json', { with: { type: 'json' } });
 
@@ -316,10 +320,16 @@ async function handle(message, options) {
   if (id === undefined) return;
 
   switch (method) {
-    case 'initialize':
+    case 'initialize': {
+      const requested = params?.protocolVersion;
+      if (typeof requested !== 'string') {
+        return failure(id, -32602, 'Invalid params: protocolVersion must be a string');
+      }
+
       return result(id, {
-        protocolVersion:
-          typeof params.protocolVersion === 'string' ? params.protocolVersion : PROTOCOL_VERSION,
+        protocolVersion: SUPPORTED_PROTOCOL_VERSIONS.includes(requested)
+          ? requested
+          : PROTOCOL_VERSION,
         capabilities: { tools: {} },
         serverInfo: { name: 'panelui', version: pkg.version },
         instructions:
@@ -328,6 +338,7 @@ async function handle(message, options) {
           'components already exist. Then panelui_search_components before writing any custom ' +
           'UI, and panelui_get_component_docs before using one.',
       });
+    }
 
     case 'tools/list':
       return result(id, { tools: TOOLS });
@@ -354,6 +365,21 @@ async function handle(message, options) {
   }
 }
 
+async function receive(line, options) {
+  const text = line.trim();
+  if (!text) return;
+
+  let message;
+  try {
+    message = JSON.parse(text);
+  } catch {
+    failure(null, -32700, 'Parse error');
+    return;
+  }
+
+  await handle(message, options);
+}
+
 export async function mcp(options) {
   process.stdin.setEncoding('utf8');
 
@@ -363,21 +389,13 @@ export async function mcp(options) {
 
     let newline;
     while ((newline = buffer.indexOf('\n')) !== -1) {
-      const line = buffer.slice(0, newline).trim();
+      const line = buffer.slice(0, newline);
       buffer = buffer.slice(newline + 1);
-      if (!line) continue;
-
-      let message;
-      try {
-        message = JSON.parse(line);
-      } catch {
-        failure(null, -32700, 'Parse error');
-        continue;
-      }
-
-      await handle(message, options);
+      await receive(line, options);
     }
   }
+
+  await receive(buffer, options);
 }
 
 /* ------------------------------------------------------------------ *
