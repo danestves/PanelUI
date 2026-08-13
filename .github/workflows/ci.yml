@@ -28,9 +28,6 @@ jobs:
       - name: Build library
         run: npm run build
 
-      - name: Verify package contents
-        run: npm run verify:package --workspace=panelui-native
-
       - name: Node tests
         run: |
           # Discovered rather than globbed, so a workspace that grows its first
@@ -85,4 +82,19 @@ jobs:
 
             npm run typecheck --prefix "$template"
           done
+
+      # Last, because it is the only step that does not run under the npm the
+      # rest of CI uses.
+      #
+      # publish.yml upgrades to `npm@latest` for trusted publishing, and npm
+      # changes the shape of `npm pack --json` between majors — an array in 11,
+      # an object keyed by package name in 12. Checking the package under Node's
+      # bundled npm 10 therefore proved nothing about the environment the
+      # release actually runs in, and let a verifier that crashed under npm 12
+      # through to a tag that could not be published.
+      - name: Verify package contents, under the npm that will publish it
+        run: |
+          npm install -g npm@latest
+          npm --version
+          npm run verify:package --workspace=panelui-native
 

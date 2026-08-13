@@ -8,12 +8,23 @@ const packageJson = JSON.parse(
   readFileSync(resolve(packageRoot, "package.json"), "utf8"),
 );
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
-const [manifest] = JSON.parse(
+const packed = JSON.parse(
   execFileSync(npm, ["pack", "--dry-run", "--json", "--ignore-scripts"], {
     cwd: packageRoot,
     encoding: "utf8",
   }),
 );
+
+/*
+ * npm 11 and earlier answer with an array of manifests; npm 12 answers with an
+ * object keyed by package name. The manifests themselves are identical, and
+ * this runs under whatever npm the workflow happens to have — publish.yml
+ * installs `npm@latest` — so it has to read both.
+ */
+const [manifest] = Array.isArray(packed) ? packed : Object.values(packed);
+if (!manifest) {
+  throw new Error("npm pack returned no manifest to check.");
+}
 
 const files = new Set(manifest.files.map(({ path }) => path));
 const allowedFiles = new Set(["README.md", "package.json", "theme.css"]);
