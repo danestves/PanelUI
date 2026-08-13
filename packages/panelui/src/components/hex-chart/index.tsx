@@ -73,6 +73,7 @@ import {
   isValidElement,
   useContext,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -282,9 +283,7 @@ const HexChartRoot = forwardRef<HexChartHandle, HexChartProps>(function HexChart
   const [internalActive, setInternalActive] = useState(-1);
   const reveal = useSharedValue(0);
   const reducedMotion = useReducedMotion();
-  const clipId = useRef(
-    `panelui-hex-${Math.random().toString(36).slice(2, 9)}`
-  ).current;
+  const clipId = `panelui-hex-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const controlled = activeIndexProp !== undefined;
   const activeIndex = controlled ? activeIndexProp : internalActive;

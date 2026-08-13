@@ -68,6 +68,7 @@ import {
   isValidElement,
   useContext,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -328,7 +329,7 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [series, setSeries] = useState<[string, string][]>([]);
   const [activeIndexJS, setActiveIndexJS] = useState(-1);
-  const clipId = useRef(`panelui-plot-${Math.random().toString(36).slice(2, 9)}`).current;
+  const clipId = `panelui-plot-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const reveal = useSharedValue(0);
   const domainMin = useSharedValue(0);
