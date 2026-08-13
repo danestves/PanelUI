@@ -6,7 +6,8 @@
     "registryDependencies": [
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/accordion"
   },
   {
     "name": "alert",
@@ -16,7 +17,8 @@
       "cn",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/alert"
   },
   {
     "name": "animated-pressable",
@@ -32,7 +34,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/area-chart"
   },
   {
     "name": "attachment",
@@ -44,7 +47,8 @@
       "item",
       "shimmer",
       "text"
-    ]
+    ],
+    "docsPath": "components/attachment"
   },
   {
     "name": "avatar",
@@ -53,7 +57,8 @@
     "registryDependencies": [
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "components/avatar"
   },
   {
     "name": "badge",
@@ -61,7 +66,8 @@
     "description": "Compact status label, dot, or notification count.",
     "registryDependencies": [
       "text"
-    ]
+    ],
+    "docsPath": "components/badge"
   },
   {
     "name": "bar-chart",
@@ -71,7 +77,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/bar-chart"
   },
   {
     "name": "bottom-sheet",
@@ -85,7 +92,8 @@
       "scrim",
       "text",
       "use-back-handler"
-    ]
+    ],
+    "docsPath": "components/bottom-sheet"
   },
   {
     "name": "breadcrumb",
@@ -96,7 +104,8 @@
       "cn",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/breadcrumb"
   },
   {
     "name": "button",
@@ -109,7 +118,8 @@
       "native",
       "spinner",
       "text"
-    ]
+    ],
+    "docsPath": "components/button"
   },
   {
     "name": "button-group",
@@ -117,7 +127,8 @@
     "description": "Several buttons drawn as one control — a segmented run, a split action, a toolbar.",
     "registryDependencies": [
       "button"
-    ]
+    ],
+    "docsPath": "components/button-group"
   },
   {
     "name": "calendar",
@@ -129,7 +140,8 @@
       "icons",
       "popover",
       "text"
-    ]
+    ],
+    "docsPath": "components/calendar"
   },
   {
     "name": "candlestick-chart",
@@ -139,7 +151,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/candlestick-chart"
   },
   {
     "name": "card",
@@ -148,7 +161,8 @@
     "registryDependencies": [
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "components/card"
   },
   {
     "name": "carousel",
@@ -158,7 +172,8 @@
       "cn",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/carousel"
   },
   {
     "name": "chart",
@@ -173,7 +188,8 @@
     "registryDependencies": [
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/checkbox"
   },
   {
     "name": "chip",
@@ -185,13 +201,15 @@
       "haptics",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/chip"
   },
   {
     "name": "cn",
     "type": "registry:lib",
     "description": "Merges Tailwind class names, with later classes winning conflicts.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "utilities/cn"
   },
   {
     "name": "code-block",
@@ -203,7 +221,8 @@
       "icons",
       "text",
       "use-copy-to-clipboard"
-    ]
+    ],
+    "docsPath": "ai-components/code-block"
   },
   {
     "name": "collapse",
@@ -230,7 +249,8 @@
       "popover",
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/color-picker"
   },
   {
     "name": "combobox",
@@ -245,7 +265,8 @@
       "text",
       "use-back-handler",
       "use-keyboard"
-    ]
+    ],
+    "docsPath": "components/combobox"
   },
   {
     "name": "context-menu",
@@ -257,7 +278,8 @@
       "menu",
       "popover",
       "portal"
-    ]
+    ],
+    "docsPath": "components/context-menu"
   },
   {
     "name": "date",
@@ -277,7 +299,8 @@
       "icons",
       "popover",
       "text"
-    ]
+    ],
+    "docsPath": "components/date-picker"
   },
   {
     "name": "date-time-picker",
@@ -294,7 +317,8 @@
       "text",
       "time",
       "time-picker"
-    ]
+    ],
+    "docsPath": "components/date-time-picker"
   },
   {
     "name": "dialog",
@@ -306,7 +330,8 @@
       "scrim",
       "text",
       "use-back-handler"
-    ]
+    ],
+    "docsPath": "components/dialog"
   },
   {
     "name": "direction",
@@ -315,7 +340,8 @@
     "registryDependencies": [
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/direction"
   },
   {
     "name": "drawer",
@@ -329,7 +355,8 @@
       "text",
       "use-back-handler",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/drawer"
   },
   {
     "name": "empty-state",
@@ -337,7 +364,8 @@
     "description": "Placeholder for a list or screen with no content.",
     "registryDependencies": [
       "text"
-    ]
+    ],
+    "docsPath": "components/empty-state"
   },
   {
     "name": "fab",
@@ -351,7 +379,8 @@
       "scrim",
       "text",
       "use-back-handler"
-    ]
+    ],
+    "docsPath": "components/fab"
   },
   {
     "name": "field",
@@ -361,7 +390,8 @@
       "label",
       "separator",
       "text"
-    ]
+    ],
+    "docsPath": "components/field"
   },
   {
     "name": "flow",
@@ -372,13 +402,15 @@
       "cn",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/flow"
   },
   {
     "name": "form",
     "type": "registry:ui",
     "description": "Form state — values, validation and submission — with no form library underneath.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "form/form"
   },
   {
     "name": "frame",
@@ -388,7 +420,8 @@
       "cn",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/frame"
   },
   {
     "name": "funnel-chart",
@@ -399,7 +432,8 @@
       "cn",
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "charts/funnel-chart"
   },
   {
     "name": "grid-item",
@@ -409,7 +443,8 @@
       "animated-pressable",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "components/grid-item"
   },
   {
     "name": "haptics",
@@ -425,7 +460,8 @@
       "cn",
       "date",
       "text"
-    ]
+    ],
+    "docsPath": "charts/heatmap-chart"
   },
   {
     "name": "hex-chart",
@@ -435,7 +471,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/hex-chart"
   },
   {
     "name": "icons",
@@ -455,7 +492,8 @@
       "label",
       "text",
       "use-keyboard-avoidance"
-    ]
+    ],
+    "docsPath": "components/input"
   },
   {
     "name": "input-group",
@@ -464,7 +502,8 @@
     "registryDependencies": [
       "input",
       "text"
-    ]
+    ],
+    "docsPath": "components/input-group"
   },
   {
     "name": "item",
@@ -474,7 +513,8 @@
       "animated-pressable",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "components/item"
   },
   {
     "name": "keyboard-avoider",
@@ -496,7 +536,8 @@
       "progress",
       "surface",
       "text"
-    ]
+    ],
+    "docsPath": "components/kpi"
   },
   {
     "name": "label",
@@ -504,7 +545,8 @@
     "description": "Form field label with required, invalid and disabled states.",
     "registryDependencies": [
       "text"
-    ]
+    ],
+    "docsPath": "components/label"
   },
   {
     "name": "line-chart",
@@ -514,7 +556,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/line-chart"
   },
   {
     "name": "live-line-chart",
@@ -524,7 +567,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/live-line-chart"
   },
   {
     "name": "loader",
@@ -533,7 +577,8 @@
     "registryDependencies": [
       "cn",
       "icons"
-    ]
+    ],
+    "docsPath": "components/loader"
   },
   {
     "name": "map",
@@ -543,7 +588,8 @@
       "cn",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/map"
   },
   {
     "name": "markdown-editor",
@@ -557,7 +603,8 @@
       "response",
       "text",
       "textarea"
-    ]
+    ],
+    "docsPath": "components/markdown-editor"
   },
   {
     "name": "marker",
@@ -570,7 +617,8 @@
       "separator",
       "shimmer",
       "text"
-    ]
+    ],
+    "docsPath": "components/marker"
   },
   {
     "name": "menu",
@@ -582,7 +630,8 @@
       "popover",
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/menu"
   },
   {
     "name": "message",
@@ -593,7 +642,8 @@
       "cn",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/message"
   },
   {
     "name": "message-scroller",
@@ -604,7 +654,8 @@
       "cn",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/message-scroller"
   },
   {
     "name": "modal-isolation-store",
@@ -628,7 +679,8 @@
       "icons",
       "label",
       "text"
-    ]
+    ],
+    "docsPath": "components/number-input"
   },
   {
     "name": "otp-input",
@@ -636,7 +688,8 @@
     "description": "One-time-code field drawn as a row of separate cells.",
     "registryDependencies": [
       "text"
-    ]
+    ],
+    "docsPath": "components/otp-input"
   },
   {
     "name": "pagination",
@@ -649,7 +702,8 @@
       "icons",
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/pagination"
   },
   {
     "name": "panel-ui-provider",
@@ -674,7 +728,8 @@
       "text",
       "use-back-handler",
       "use-direction"
-    ]
+    ],
+    "docsPath": "ai-components/panelside"
   },
   {
     "name": "pie-chart",
@@ -684,7 +739,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/pie-chart"
   },
   {
     "name": "plan",
@@ -696,7 +752,8 @@
       "icons",
       "shimmer",
       "text"
-    ]
+    ],
+    "docsPath": "ai-components/plan"
   },
   {
     "name": "plot",
@@ -706,7 +763,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/plot"
   },
   {
     "name": "polar-area-chart",
@@ -716,7 +774,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/polar-area-chart"
   },
   {
     "name": "popover",
@@ -729,7 +788,8 @@
       "scrim",
       "text",
       "use-back-handler"
-    ]
+    ],
+    "docsPath": "components/popover"
   },
   {
     "name": "portal",
@@ -751,7 +811,8 @@
       "icons",
       "text",
       "use-previous"
-    ]
+    ],
+    "docsPath": "components/post"
   },
   {
     "name": "progress",
@@ -761,7 +822,8 @@
       "cn",
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/progress"
   },
   {
     "name": "qr-code",
@@ -771,7 +833,8 @@
       "cn",
       "popover",
       "text"
-    ]
+    ],
+    "docsPath": "components/qr-code"
   },
   {
     "name": "questionnaire",
@@ -784,7 +847,8 @@
       "icons",
       "input",
       "text"
-    ]
+    ],
+    "docsPath": "components/questionnaire"
   },
   {
     "name": "radar-chart",
@@ -794,7 +858,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/radar-chart"
   },
   {
     "name": "radio-group",
@@ -803,7 +868,8 @@
     "registryDependencies": [
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "components/radio-group"
   },
   {
     "name": "rating",
@@ -814,7 +880,8 @@
       "haptics",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/rating"
   },
   {
     "name": "reasoning",
@@ -826,7 +893,8 @@
       "icons",
       "shimmer",
       "text"
-    ]
+    ],
+    "docsPath": "ai-components/reasoning"
   },
   {
     "name": "response",
@@ -838,7 +906,8 @@
       "table",
       "text",
       "typography"
-    ]
+    ],
+    "docsPath": "ai-components/response"
   },
   {
     "name": "ring-chart",
@@ -848,7 +917,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/ring-chart"
   },
   {
     "name": "scatter-chart",
@@ -858,7 +928,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/scatter-chart"
   },
   {
     "name": "scrim",
@@ -873,13 +944,15 @@
     "registryDependencies": [
       "cn",
       "use-reveal-progress"
-    ]
+    ],
+    "docsPath": "components/scroll-canvas"
   },
   {
     "name": "scroll-fade",
     "type": "registry:ui",
     "description": "Fades the edges of a scroll container.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "components/scroll-fade"
   },
   {
     "name": "scroll-progress",
@@ -894,7 +967,8 @@
     "registryDependencies": [
       "text",
       "use-reveal-progress"
-    ]
+    ],
+    "docsPath": "components/scroll-text"
   },
   {
     "name": "section-rail",
@@ -905,7 +979,8 @@
       "haptics",
       "portal",
       "text"
-    ]
+    ],
+    "docsPath": "components/section-rail"
   },
   {
     "name": "select",
@@ -920,7 +995,8 @@
       "portal",
       "text",
       "use-back-handler"
-    ]
+    ],
+    "docsPath": "components/select"
   },
   {
     "name": "selection-mode",
@@ -935,7 +1011,8 @@
       "icons",
       "text",
       "use-back-handler"
-    ]
+    ],
+    "docsPath": "components/selection-mode"
   },
   {
     "name": "separator",
@@ -944,7 +1021,8 @@
     "registryDependencies": [
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "components/separator"
   },
   {
     "name": "shimmer",
@@ -954,7 +1032,8 @@
       "cn",
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "ai-components/shimmer"
   },
   {
     "name": "signature",
@@ -965,7 +1044,8 @@
       "cn",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/signature"
   },
   {
     "name": "skeleton",
@@ -973,7 +1053,8 @@
     "description": "Shimmer placeholder for loading content.",
     "registryDependencies": [
       "cn"
-    ]
+    ],
+    "docsPath": "components/skeleton"
   },
   {
     "name": "slider",
@@ -984,7 +1065,8 @@
       "native",
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/slider"
   },
   {
     "name": "sortable",
@@ -994,7 +1076,8 @@
       "cn",
       "haptics",
       "icons"
-    ]
+    ],
+    "docsPath": "components/sortable"
   },
   {
     "name": "soundwave",
@@ -1003,7 +1086,8 @@
     "registryDependencies": [
       "cn",
       "icons"
-    ]
+    ],
+    "docsPath": "ai-components/soundwave"
   },
   {
     "name": "sources",
@@ -1014,13 +1098,15 @@
       "collapse",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "ai-components/sources"
   },
   {
     "name": "spinner",
     "type": "registry:ui",
     "description": "Indeterminate loading indicator.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "components/spinner"
   },
   {
     "name": "steps",
@@ -1030,13 +1116,15 @@
       "icons",
       "spinner",
       "text"
-    ]
+    ],
+    "docsPath": "components/steps"
   },
   {
     "name": "surface",
     "type": "registry:ui",
     "description": "Elevated container with a variant ladder.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "components/surface"
   },
   {
     "name": "swipe",
@@ -1049,7 +1137,8 @@
       "icons",
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/swipe"
   },
   {
     "name": "switch",
@@ -1060,7 +1149,8 @@
       "haptics",
       "native",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/switch"
   },
   {
     "name": "table",
@@ -1073,7 +1163,8 @@
       "haptics",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/table"
   },
   {
     "name": "tabs",
@@ -1083,7 +1174,8 @@
       "cn",
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/tabs"
   },
   {
     "name": "tag-input",
@@ -1095,7 +1187,8 @@
       "icons",
       "label",
       "text"
-    ]
+    ],
+    "docsPath": "components/tag-input"
   },
   {
     "name": "task",
@@ -1107,7 +1200,8 @@
       "icons",
       "shimmer",
       "text"
-    ]
+    ],
+    "docsPath": "ai-components/task"
   },
   {
     "name": "text",
@@ -1124,7 +1218,8 @@
     "registryDependencies": [
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "components/text-animation"
   },
   {
     "name": "textarea",
@@ -1135,7 +1230,8 @@
       "label",
       "text",
       "use-keyboard-avoidance"
-    ]
+    ],
+    "docsPath": "components/textarea"
   },
   {
     "name": "theme",
@@ -1149,7 +1245,8 @@
     "description": "Dotted orb saying which kind of busy an agent is.",
     "registryDependencies": [
       "cn"
-    ]
+    ],
+    "docsPath": "ai-components/thinking-orb"
   },
   {
     "name": "time",
@@ -1170,7 +1267,8 @@
       "popover",
       "text",
       "time"
-    ]
+    ],
+    "docsPath": "components/time-picker"
   },
   {
     "name": "timeline",
@@ -1179,7 +1277,8 @@
     "registryDependencies": [
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/timeline"
   },
   {
     "name": "toast",
@@ -1191,7 +1290,8 @@
       "icons",
       "portal",
       "text"
-    ]
+    ],
+    "docsPath": "components/toast"
   },
   {
     "name": "toggle-button",
@@ -1203,7 +1303,8 @@
       "haptics",
       "icons",
       "text"
-    ]
+    ],
+    "docsPath": "components/toggle-button"
   },
   {
     "name": "tooltip",
@@ -1213,7 +1314,8 @@
       "cn",
       "portal",
       "text"
-    ]
+    ],
+    "docsPath": "components/tooltip"
   },
   {
     "name": "tour",
@@ -1226,7 +1328,8 @@
       "portal",
       "text",
       "use-back-handler"
-    ]
+    ],
+    "docsPath": "components/tour"
   },
   {
     "name": "tree",
@@ -1236,7 +1339,8 @@
       "icons",
       "text",
       "use-direction"
-    ]
+    ],
+    "docsPath": "components/tree"
   },
   {
     "name": "treemap-chart",
@@ -1246,7 +1350,8 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/treemap-chart"
   },
   {
     "name": "typography",
@@ -1255,31 +1360,36 @@
     "registryDependencies": [
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "components/typography"
   },
   {
     "name": "use-back-handler",
     "type": "registry:hook",
     "description": "use-back-handler.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-back-handler"
   },
   {
     "name": "use-breakpoint",
     "type": "registry:hook",
     "description": "Responsive state derived from the window size.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-breakpoint"
   },
   {
     "name": "use-copy-to-clipboard",
     "type": "registry:hook",
     "description": "Copy text, with a temporary copied state.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-copy-to-clipboard"
   },
   {
     "name": "use-debounced-value",
     "type": "registry:hook",
     "description": "A copy of a value that settles after changes stop.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-debounced-value"
   },
   {
     "name": "use-direction",
@@ -1291,25 +1401,29 @@
     "name": "use-disclosure",
     "type": "registry:hook",
     "description": "Open and closed state for an overlay.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-disclosure"
   },
   {
     "name": "use-keyboard",
     "type": "registry:hook",
     "description": "Keyboard height and visibility.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-keyboard"
   },
   {
     "name": "use-keyboard-avoidance",
     "type": "registry:hook",
     "description": "Lift an element just clear of the software keyboard.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-keyboard-avoidance"
   },
   {
     "name": "use-previous",
     "type": "registry:hook",
     "description": "The value from the previous render.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-previous"
   },
   {
     "name": "use-reveal-progress",
@@ -1317,19 +1431,22 @@
     "description": "use-reveal-progress.",
     "registryDependencies": [
       "scroll-progress"
-    ]
+    ],
+    "docsPath": "hooks/use-reveal-progress"
   },
   {
     "name": "use-scroll-sections",
     "type": "registry:hook",
     "description": "use-scroll-sections.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-scroll-sections"
   },
   {
     "name": "use-theme",
     "type": "registry:hook",
     "description": "Read and change the active theme.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-theme"
   },
   {
     "name": "waterfall-chart",
@@ -1339,6 +1456,7 @@
       "chart",
       "cn",
       "text"
-    ]
+    ],
+    "docsPath": "charts/waterfall-chart"
   }
 ]

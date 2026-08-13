@@ -45,6 +45,31 @@ function docsOrigin(registry) {
   return registry.replace(/\/r\/?$/, '');
 }
 
+/** A registry name, and nothing that could climb out of the path it goes into. */
+const DOCS_SLUG = /^[a-z0-9-]+$/;
+
+/**
+ * Registry metadata is authoritative; the type keeps older registries useful.
+ *
+ * Both halves are checked because both come from outside: `docsPath` from
+ * whatever registry the caller pointed at, and `name` straight from the tool
+ * call. Either one carrying `../` would walk the docs URL somewhere else, and
+ * the answer would come back as documentation.
+ */
+function docsPathFor(item, name) {
+  if (typeof item?.docsPath === 'string' && /^[a-z0-9-]+\/[a-z0-9-]+$/.test(item.docsPath)) {
+    return item.docsPath;
+  }
+  if (typeof name !== 'string' || !DOCS_SLUG.test(name)) return undefined;
+  const group =
+    item?.type === 'registry:hook'
+      ? 'hooks'
+      : item?.type === 'registry:lib'
+        ? 'utilities'
+        : 'components';
+  return `${group}/${name}`;
+}
+
 /* ------------------------------------------------------------------ *
  * The tools.
  * ------------------------------------------------------------------ */
@@ -171,7 +196,13 @@ async function callTool(name, args, options) {
     }
 
     case 'panelui_get_component_docs': {
-      const url = `${docsOrigin(registry)}/llms.mdx/components/${args.name}`;
+      const index = (await fetchJson(`${registry}/index.json`)) ?? [];
+      const item = index.find((candidate) => candidate.name === args.name);
+      const docsPath = docsPathFor(item, args.name);
+      if (!docsPath) {
+        return `"${args.name}" is not a component name. Run panelui_search_components to find one.`;
+      }
+      const url = `${docsOrigin(registry)}/llms.mdx/${docsPath}`;
       const response = await fetch(url);
       if (!response.ok) {
         return `No documentation page at ${url}. The component may be filed under charts, ai-components or form — try panelui_view_component instead.`;
