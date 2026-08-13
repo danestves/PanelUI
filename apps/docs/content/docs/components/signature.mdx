@@ -56,7 +56,7 @@ const pad = useRef<SignatureHandle>(null);
 - **`Signature.Redo`** — Round button for putting back the last undone stroke. Wire it to `ref.current?.redo()`.
 - **`Signature.Clear`** — Round button for dropping every stroke. Wire it to `ref.current?.clear()`.
 
-The focused pad also exposes Undo, Redo and Clear as screen-reader actions when each action is available. Its value is announced as empty or complete, and clearing announces the resulting empty state.
+The focused pad also exposes Undo, Redo and Clear as screen-reader actions when each action is available. Its value counts the strokes drawn so far, and the pad announces only the two moments it crosses between empty and not — a component cannot tell whether a signature is finished, and saying so after one mark would tell somebody who cannot see the pad that they are done.
 
 Drawing a signature still requires tracing a path with direct touch. That interaction cannot be made non-path-dependent by adding a label to the canvas. If your signing policy permits another method, use `onRequestAlternative` to open a typed, uploaded or assisted flow, and offer the same choice as a visible control.
 

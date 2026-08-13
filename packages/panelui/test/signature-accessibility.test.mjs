@@ -11,14 +11,10 @@ import {
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-test('signature value distinguishes empty and completed state', () => {
+test('signature value counts strokes without claiming the signature is finished', () => {
   assert.deepEqual(signatureAccessibilityValue(0), { text: 'Empty signature' });
-  assert.deepEqual(signatureAccessibilityValue(1), {
-    text: 'Signature complete, 1 stroke',
-  });
-  assert.deepEqual(signatureAccessibilityValue(3), {
-    text: 'Signature complete, 3 strokes',
-  });
+  assert.deepEqual(signatureAccessibilityValue(1), { text: 'Signed, 1 stroke' });
+  assert.deepEqual(signatureAccessibilityValue(3), { text: 'Signed, 3 strokes' });
 });
 
 test('only currently usable signature actions are exposed', () => {
@@ -34,8 +30,8 @@ test('only currently usable signature actions are exposed', () => {
   assert.deepEqual(signatureAccessibilityActions(2, 1, true, true), []);
 });
 
-test('state transitions announce completion, empty, and explicit clearing', () => {
-  assert.equal(signatureAnnouncement(0, 1, 'draw'), 'Signature completed.');
+test('only the crossings into and out of empty are announced', () => {
+  assert.equal(signatureAnnouncement(0, 1, 'draw'), 'Signature started.');
   assert.equal(signatureAnnouncement(1, 0, 'undo'), 'Signature is empty.');
   assert.equal(
     signatureAnnouncement(3, 0, 'clear'),

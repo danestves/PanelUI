@@ -5,12 +5,20 @@ export interface SignatureAccessibilityAction {
   label: string;
 }
 
+/**
+ * What the pad reads as when it is focused.
+ *
+ * It counts strokes and says nothing about whether the signature is finished,
+ * because the component cannot know that — one mark may be the whole signature
+ * or the first letter of it. Announcing "complete" after the first stroke tells
+ * somebody who cannot see the pad that they are done when they may not be.
+ */
 export function signatureAccessibilityValue(strokeCount: number) {
   return {
     text:
       strokeCount === 0
         ? 'Empty signature'
-        : `Signature complete, ${strokeCount} ${strokeCount === 1 ? 'stroke' : 'strokes'}`,
+        : `Signed, ${strokeCount} ${strokeCount === 1 ? 'stroke' : 'strokes'}`,
   };
 }
 
@@ -38,6 +46,14 @@ export function signatureAccessibilityActions(
   return actions;
 }
 
+/**
+ * Spoken when the pad crosses between empty and not, and nowhere else.
+ *
+ * Every stroke is silent on purpose: a running commentary during drawing is
+ * noise over the one gesture the reader is concentrating on. The two crossings
+ * are the ones that cannot be felt — that the pad now holds something, and that
+ * it no longer does.
+ */
 export function signatureAnnouncement(
   previousCount: number,
   strokeCount: number,
@@ -46,6 +62,6 @@ export function signatureAnnouncement(
   if (previousCount === strokeCount) return null;
   if (change === 'clear') return 'Signature cleared. Signature is empty.';
   if (strokeCount === 0) return 'Signature is empty.';
-  if (previousCount === 0) return 'Signature completed.';
+  if (previousCount === 0) return 'Signature started.';
   return null;
 }
