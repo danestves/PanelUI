@@ -97,6 +97,15 @@ import {
   type FlowRect,
   type FlowSide,
 } from './flow-paths';
+import {
+  clampNodePosition,
+  FLOW_DELETE_ACTION,
+  FLOW_MOVE_ACTIONS,
+  getFlowConnectionActions,
+  moveNodePosition,
+  type FlowAccessibilityHandle,
+  type FlowAccessibilityNode,
+} from './flow-accessibility';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
@@ -167,13 +176,9 @@ export interface FlowConnection {
   targetHandle?: string;
 }
 
-interface HandleEntry {
-  key: string;
-  node: string;
-  id: string;
+interface HandleEntry extends FlowAccessibilityHandle {
   side: FlowSide;
   offset: number;
-  type: 'source' | 'target' | 'both';
 }
 
 interface FlowContextValue {
@@ -215,7 +220,7 @@ interface FlowContextValue {
   maxZoom: number;
   locked: boolean;
   setLocked: (locked: boolean) => void;
-  nodeIds: string[];
+  nodes: FlowAccessibilityNode[];
   /**
    * Which of `nodeIds` are containers rather than nodes. A group writes its box
    * into the same registry — that is what lets an edge name one and the minimap
@@ -224,7 +229,7 @@ interface FlowContextValue {
   groupIds: string[];
   handles: HandleEntry[];
   edges: { key: string; props: FlowEdgeProps }[];
-  registerNode: (id: string) => void;
+  registerNode: (id: string, label?: string) => void;
   unregisterNode: (id: string) => void;
   registerGroup: (id: string) => void;
   unregisterGroup: (id: string) => void;
@@ -232,8 +237,8 @@ interface FlowContextValue {
   unregisterHandle: (key: string) => void;
   registerEdge: (key: string, props: FlowEdgeProps) => void;
   unregisterEdge: (key: string) => void;
-  onConnect?: (connection: FlowConnection) => void;
-  isValidConnection?: (connection: FlowConnection) => boolean;
+  connectNodes: (connection: FlowConnection) => void;
+  canConnect: boolean;
   onNodeDragEnd?: (id: string, position: FlowNodePosition) => void;
   fitView: () => void;
   zoomBy: (factor: number) => void;
@@ -332,7 +337,7 @@ function FlowRoot({
   const size = useSharedValue({ width: 0, height: 0 });
 
   const [locked, setLocked] = useState(false);
-  const [nodeIds, setNodeIds] = useState<string[]>([]);
+  const [nodes, setNodes] = useState<FlowAccessibilityNode[]>([]);
   const [groupIds, setGroupIds] = useState<string[]>([]);
   const [handles, setHandles] = useState<HandleEntry[]>([]);
   const [edges, setEdges] = useState<{ key: string; props: FlowEdgeProps }[]>([]);
@@ -441,12 +446,12 @@ function FlowRoot({
     viewportChangeRef.current?.({ x, y, zoom: z });
   }, []);
 
-  const registerNode = useCallback((id: string) => {
-    setNodeIds((current) => (current.includes(id) ? current : [...current, id]));
+  const registerNode = useCallback((id: string, label = id) => {
+    setNodes((current) => [...current.filter((entry) => entry.id !== id), { id, label }]);
   }, []);
 
   const unregisterNode = useCallback((id: string) => {
-    setNodeIds((current) => current.filter((entry) => entry !== id));
+    setNodes((current) => current.filter((entry) => entry.id !== id));
   }, []);
 
   const registerGroup = useCallback((id: string) => {
@@ -474,6 +479,15 @@ function FlowRoot({
 
   const unregisterEdge = useCallback((key: string) => {
     setEdges((current) => current.filter((edge) => edge.key !== key));
+  }, []);
+
+  const connectRef = useRef(onConnect);
+  connectRef.current = onConnect;
+  const validConnectionRef = useRef(isValidConnection);
+  validConnectionRef.current = isValidConnection;
+  const connectNodes = useCallback((next: FlowConnection) => {
+    if (validConnectionRef.current && !validConnectionRef.current(next)) return;
+    connectRef.current?.(next);
   }, []);
 
   const fitView = useCallback(() => {
@@ -549,10 +563,10 @@ function FlowRoot({
   // mount has nothing to fit to yet. One frame later they do.
   const fitOnMount = useRef(fitViewOnMount);
   useEffect(() => {
-    if (!fitOnMount.current || nodeIds.length === 0) return;
+    if (!fitOnMount.current || nodes.length === 0) return;
     const timer = setTimeout(fitView, 32);
     return () => clearTimeout(timer);
-  }, [fitView, nodeIds.length]);
+  }, [fitView, nodes.length]);
 
   const panStart = useSharedValue({ x: 0, y: 0 });
   const pinchStart = useSharedValue({ zoom: 1, x: 0, y: 0 });
@@ -647,7 +661,7 @@ function FlowRoot({
       maxZoom,
       locked,
       setLocked,
-      nodeIds,
+      nodes,
       groupIds,
       handles,
       edges,
@@ -659,8 +673,8 @@ function FlowRoot({
       unregisterHandle,
       registerEdge,
       unregisterEdge,
-      onConnect,
-      isValidConnection,
+      connectNodes,
+      canConnect: Boolean(onConnect),
       onNodeDragEnd,
       fitView,
       zoomBy,
@@ -678,11 +692,11 @@ function FlowRoot({
       handles,
       registerEdge,
       unregisterEdge,
-      isValidConnection,
+      connectNodes,
       locked,
       maxZoom,
       minZoom,
-      nodeIds,
+      nodes,
       groupIds,
       onConnect,
       onNodeDragEnd,
@@ -972,6 +986,13 @@ export interface FlowNodeProps extends Omit<ViewProps, 'children'> {
   selected?: boolean;
   /** Tapping the node — separate from dragging it. */
   onPress?: () => void;
+  /**
+   * Delete the node when assistive technology requests the advertised Delete
+   * node action. No delete action is exposed when this is omitted.
+   */
+  onDelete?: () => void;
+  /** Graph points covered by each Move up, right, down or left accessibility action. */
+  accessibilityMoveStep?: number;
   /** Spoken name. Defaults to the node's id. */
   accessibilityLabel?: string;
   children?: ReactNode;
@@ -991,7 +1012,11 @@ function FlowNode({
   pinned = false,
   selected = false,
   onPress,
+  onDelete,
+  accessibilityMoveStep = 24,
   accessibilityLabel,
+  accessibilityActions,
+  onAccessibilityAction,
   children,
   ...props
 }: FlowNodeProps) {
@@ -1009,6 +1034,10 @@ function FlowNode({
     registerGroup,
     unregisterGroup,
     onNodeDragEnd,
+    nodes,
+    handles,
+    connectNodes,
+    canConnect,
   } = flow;
 
   /*
@@ -1018,13 +1047,13 @@ function FlowNode({
    * layer both need to know it is a container and not a card.
    */
   useEffect(() => {
-    registerNode(id);
+    registerNode(id, accessibilityLabel ?? id);
     registerGroup(id);
     return () => {
       unregisterNode(id);
       unregisterGroup(id);
     };
-  }, [id, registerGroup, registerNode, unregisterGroup, unregisterNode]);
+  }, [accessibilityLabel, id, registerGroup, registerNode, unregisterGroup, unregisterNode]);
 
   // Writing on every render would fight the drag, snapping a node back to the
   // position it was first given. Only an actual change to the prop moves it.
@@ -1065,10 +1094,69 @@ function FlowNode({
   );
 
   const start = useSharedValue({ x: 0, y: 0 });
-
   const pressRef = useRef(onPress);
   pressRef.current = onPress;
   const press = useCallback(() => pressRef.current?.(), []);
+
+  const moveNode = useCallback(
+    (actionName: string) => {
+      const rect = rects.value[id];
+      if (!rect) return;
+      const bounds = confine && group ? rects.value[group] : undefined;
+      const next = moveNodePosition(rect, bounds, actionName, accessibilityMoveStep);
+      if (!next) return;
+      setNodeRect(id, next);
+      dragEnd(next.x, next.y);
+    },
+    [accessibilityMoveStep, confine, dragEnd, group, id, rects, setNodeRect]
+  );
+
+  const connectionActions = useMemo(
+    () => (canConnect && !locked ? getFlowConnectionActions(id, nodes, handles) : []),
+    [canConnect, handles, id, locked, nodes]
+  );
+  const connectionByAction = useMemo(
+    () => new Map(connectionActions.map((entry) => [entry.name, entry.connection])),
+    [connectionActions]
+  );
+  const movable = draggable && !pinned && !locked;
+  const nodeActions = useMemo(
+    () => [
+      ...(onPress ? [{ name: 'activate' }] : []),
+      ...(movable ? FLOW_MOVE_ACTIONS : []),
+      ...connectionActions.map(({ name, label }) => ({ name, label })),
+      ...(onDelete ? [FLOW_DELETE_ACTION] : []),
+      ...(accessibilityActions ?? []),
+    ],
+    [accessibilityActions, connectionActions, movable, onDelete, onPress]
+  );
+
+  const handleAccessibilityAction = useCallback<
+    NonNullable<ViewProps['onAccessibilityAction']>
+  >(
+    (event) => {
+      const action = event.nativeEvent.actionName;
+      if (action === 'activate' && onPress) {
+        press();
+        return;
+      }
+      if (movable && FLOW_MOVE_ACTIONS.some((entry) => entry.name === action)) {
+        moveNode(action);
+        return;
+      }
+      const nextConnection = connectionByAction.get(action);
+      if (nextConnection) {
+        connectNodes(nextConnection);
+        return;
+      }
+      if (action === FLOW_DELETE_ACTION.name && onDelete) {
+        onDelete();
+        return;
+      }
+      onAccessibilityAction?.(event);
+    },
+    [connectNodes, connectionByAction, movable, moveNode, onAccessibilityAction, onDelete, onPress, press]
+  );
 
   const drag = useMemo(
     () =>
@@ -1096,13 +1184,9 @@ function FlowNode({
            * would leave the edges drawn to a position the node never reached.
            */
           if (confine && group) {
-            const box = rects.value[group];
-            if (box) {
-              const maxX = box.x + box.width - rect.width;
-              const maxY = box.y + box.height - rect.height;
-              x = x < box.x ? box.x : x > maxX ? maxX : x;
-              y = y < box.y ? box.y : y > maxY ? maxY : y;
-            }
+            const next = clampNodePosition(rect, rects.value[group], { x, y });
+            x = next.x;
+            y = next.y;
           }
 
           rects.value = { ...rects.value, [id]: { ...rect, x, y } };
@@ -1158,6 +1242,8 @@ function FlowNode({
           accessibilityRole={onPress ? 'button' : 'none'}
           accessibilityLabel={accessibilityLabel ?? id}
           accessibilityState={{ selected }}
+          accessibilityActions={nodeActions}
+          onAccessibilityAction={handleAccessibilityAction}
           {...props}
         >
           {textChildren(children)}
@@ -1185,6 +1271,11 @@ export interface FlowHandleProps {
   /** Where along the face, 0–1. For more than one handle on a side. */
   offset?: number;
   className?: string;
+  /**
+   * Spoken handle name used in the parent node's connection actions. Defaults
+   * to the handle's id.
+   */
+  accessibilityLabel?: string;
   /** Draw nothing. The handle still anchors edges and still accepts a drop. */
   hidden?: boolean;
 }
@@ -1203,6 +1294,7 @@ function FlowHandle({
   type = 'both',
   offset = 0.5,
   className,
+  accessibilityLabel,
   hidden = false,
 }: FlowHandleProps) {
   const flow = useFlow('Flow.Handle');
@@ -1211,31 +1303,51 @@ function FlowHandle({
     throw new Error('Flow.Handle must be used within a <Flow.Node>');
   }
 
-  const { rects, zoom, connection, handles, locked, registerHandle, unregisterHandle } = flow;
+  const {
+    rects,
+    zoom,
+    connection,
+    handles,
+    locked,
+    registerHandle,
+    unregisterHandle,
+    connectNodes,
+  } = flow;
   const key = `${node}.${id}`;
 
   useEffect(() => {
-    registerHandle({ key, node, id, side: position, offset, type });
+    registerHandle({
+      key,
+      node,
+      id,
+      label: accessibilityLabel ?? id,
+      side: position,
+      offset,
+      type,
+    });
     return () => unregisterHandle(key);
-  }, [id, key, node, offset, position, registerHandle, type, unregisterHandle]);
-
-  const connectRef = useRef(flow.onConnect);
-  connectRef.current = flow.onConnect;
-  const validRef = useRef(flow.isValidConnection);
-  validRef.current = flow.isValidConnection;
+  }, [
+    accessibilityLabel,
+    id,
+    key,
+    node,
+    offset,
+    position,
+    registerHandle,
+    type,
+    unregisterHandle,
+  ]);
 
   const land = useCallback(
     (target: string, targetHandle: string | undefined) => {
-      const payload: FlowConnection = {
+      connectNodes({
         source: node,
         sourceHandle: id,
         target,
         targetHandle,
-      };
-      if (validRef.current && !validRef.current(payload)) return;
-      connectRef.current?.(payload);
+      });
     },
-    [id, node]
+    [connectNodes, id, node]
   );
 
   // A snapshot of what a drag can land on, rebuilt only when handles come and
@@ -1354,8 +1466,7 @@ function FlowHandle({
       <View
         collapsable={false}
         hitSlop={12}
-        accessibilityRole="button"
-        accessibilityLabel={`${position} connection point`}
+        accessible={false}
         style={placement}
         className={flowVariants().handle({ className })}
       />
@@ -1645,9 +1756,9 @@ function FlowGroup({
   } = flow;
 
   useEffect(() => {
-    registerNode(id);
+    registerNode(id, label ?? id);
     return () => unregisterNode(id);
-  }, [id, registerNode, unregisterNode]);
+  }, [id, label, registerNode, unregisterNode]);
 
   useEffect(() => {
     setNodeRect(id, {
@@ -1919,7 +2030,7 @@ function FlowMiniMap({
   height = 84,
   nodeColor,
 }: FlowMiniMapProps) {
-  const { rects, nodeIds, groupIds, translateX, translateY, zoom, size } =
+  const { rects, nodes, groupIds, translateX, translateY, zoom, size } =
     useFlow('Flow.MiniMap');
   const token = useCSSVariable('--color-muted-foreground');
   const tint = nodeColor ?? (typeof token === 'string' ? token : '#737373');
@@ -1999,7 +2110,7 @@ function FlowMiniMap({
         {/* Containers first and drawn as outlines, so the map reads the way
             the canvas does — boxes with things in them, rather than a wash of
             identical rectangles where the largest happens to be a group. */}
-        {nodeIds.map((id) => {
+        {nodes.map(({ id }) => {
           const group = groups.has(id);
           return (
             <MiniMapNode

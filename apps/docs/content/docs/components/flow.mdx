@@ -382,6 +382,8 @@ Two labelled containers, the dependency between them, and an overview of the par
 | `pinned` | `boolean` | `false` | Hold the node still: it takes no drag of its own and moves only when its container does. For a diagram where the boxes are what you rearrange and their contents are a fixed part of them. |
 | `selected` | `boolean` | `false` | Draw the selected ring. |
 | `onPress` | `() => void` | — | Tapping the node — separate from dragging it. |
+| `onDelete` | `() => void` | — | Delete the node when assistive technology requests the advertised Delete node action. No delete action is exposed when this is omitted. |
+| `accessibilityMoveStep` | `number` | `24` | Graph points covered by each Move up, right, down or left accessibility action. |
 | `accessibilityLabel` | `string` | — | Spoken name. Defaults to the node's id. |
 
 ### Flow.Handle
@@ -393,6 +395,7 @@ Two labelled containers, the dependency between them, and an overview of the par
 | `type` | `'source' \| 'target' \| 'both'` | `'both'` | `source` starts connections, `target` receives them, `both` does either. A drag from a source can only land on a target, and the other way round. |
 | `offset` | `number` | `0.5` | Where along the face, 0–1. For more than one handle on a side. |
 | `className` | `string` | — |  |
+| `accessibilityLabel` | `string` | — | Spoken handle name used in the parent node's connection actions. Defaults to the handle's id. |
 | `hidden` | `boolean` | `false` | Draw nothing. The handle still anchors edges and still accepts a drop. |
 
 ### Flow.Edge
@@ -479,6 +482,12 @@ The pane pans and pinches, a node drags, and a handle draws a new connection. Th
 `onConnect` is handed `{ source, sourceHandle, target, targetHandle }` and nothing else happens. The canvas never adds an edge itself, because the graph is yours and so is what a new connection means — a validation, a request, an undo entry. `isValidConnection` refuses one before `onConnect` sees it.
 
 A drop does not have to land on a handle. The nearest handle within reach wins, and failing that a drop anywhere on a node connects to the node — a finger is blunt, and the strict reading of the gesture is the wrong one on a small screen.
+
+### Accessible editing
+
+Each node is one accessibility stop. Activatable nodes expose the standard Activate action, movable nodes expose Move up, right, down and left, and `onDelete` adds Delete node. Movement uses the same graph coordinates, group confinement and `onNodeDragEnd` callback as pointer dragging. Pinned nodes, non-draggable nodes and a locked canvas do not advertise movement.
+
+Connection handles stay visual rather than pretending to be buttons. The parent node instead lists actions built from the handles already registered in the graph, such as "Connect output to Database, input". Choosing one runs the same `isValidConnection` check and `onConnect` callback as a handle drag, so a screen-reader user does not have to trace a path across the canvas.
 
 ### Groups
 

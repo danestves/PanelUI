@@ -26,6 +26,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "bob build",
+    "test": "node --experimental-strip-types --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib"
   },
