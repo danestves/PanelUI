@@ -403,8 +403,8 @@ Two labelled containers, the dependency between them, and an overview of the par
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `from` | `string` | — | Source, as `"nodeId"` or `"nodeId.handleId"`. |
-| `to` | `string` | — | Target, same shape. |
+| `from` | `FlowEndpointReference` | — | Source node or handle. Strings retain the `"nodeId.handleId"` shorthand. |
+| `to` | `FlowEndpointReference` | — | Target node or handle, in the same shape. |
 | `variant` | `FlowEdgeVariant` | `'bezier'` | How the edge is routed. |
 | `animated` | `boolean` | `false` | Mark the edge as carrying something — a request, a build, a dependency that is live rather than declared. Draws it dashed. |
 | `dashed` | `boolean` | `false` | Draw it broken rather than solid. |

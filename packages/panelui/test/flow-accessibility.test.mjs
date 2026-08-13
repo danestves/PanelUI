@@ -4,9 +4,13 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
+  flowConnectionActionName,
   getFlowConnectionActions,
   moveNodePosition,
 } from '../src/components/flow/flow-accessibility.ts';
+import {
+  encodeFlowHandleKey,
+} from '../src/components/flow/flow-identifiers.ts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -31,14 +35,35 @@ test('connection actions use registered source and target handles', () => {
     { id: 'logs', label: 'Logs' },
   ];
   const handles = [
-    { key: 'router.out', node: 'router', id: 'out', label: 'output', type: 'source' },
-    { key: 'database.in', node: 'database', id: 'in', label: 'input', type: 'target' },
-    { key: 'logs.out', node: 'logs', id: 'out', label: 'output', type: 'source' },
+    {
+      key: encodeFlowHandleKey('router', 'out'),
+      node: 'router',
+      id: 'out',
+      label: 'output',
+      type: 'source',
+    },
+    {
+      key: encodeFlowHandleKey('database', 'in'),
+      node: 'database',
+      id: 'in',
+      label: 'input',
+      type: 'target',
+    },
+    {
+      key: encodeFlowHandleKey('logs', 'out'),
+      node: 'logs',
+      id: 'out',
+      label: 'output',
+      type: 'source',
+    },
   ];
 
   assert.deepEqual(getFlowConnectionActions('router', nodes, handles), [
     {
-      name: 'flow-connect:router.out->database.in',
+      name: flowConnectionActionName(
+        { node: 'router', handle: 'out' },
+        { node: 'database', handle: 'in' }
+      ),
       label: 'Connect output to Database, input',
       connection: {
         source: 'router',
@@ -48,11 +73,48 @@ test('connection actions use registered source and target handles', () => {
       },
     },
     {
-      name: 'flow-connect:router.out->logs',
+      name: flowConnectionActionName(
+        { node: 'router', handle: 'out' },
+        { node: 'logs' }
+      ),
       label: 'Connect output to Logs',
       connection: { source: 'router', sourceHandle: 'out', target: 'logs' },
     },
   ]);
+});
+
+test('connection actions preserve punctuated and Unicode endpoint ids', () => {
+  const handles = [
+    {
+      key: encodeFlowHandleKey('source.v2.😀', 'out.primary'),
+      node: 'source.v2.😀',
+      id: 'out.primary',
+      label: 'output',
+      type: 'source',
+    },
+    {
+      key: encodeFlowHandleKey('target..节点', ''),
+      node: 'target..节点',
+      id: '',
+      label: 'input',
+      type: 'target',
+    },
+  ];
+  const [action] = getFlowConnectionActions(
+    'source.v2.😀',
+    [
+      { id: 'source.v2.😀', label: 'Source' },
+      { id: 'target..节点', label: 'Target' },
+    ],
+    handles
+  );
+
+  assert.deepEqual(action.connection, {
+    source: 'source.v2.😀',
+    sourceHandle: 'out.primary',
+    target: 'target..节点',
+    targetHandle: '',
+  });
 });
 
 test('the node owns actions and visual handles no longer claim button behavior', () => {
