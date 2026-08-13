@@ -65,7 +65,12 @@ export default function SettingsScreen() {
               <Item.Description>Currently {mode}</Item.Description>
             </Item.Content>
             <Item.Actions>
-              <Switch value={mode === 'dark'} onValueChange={toggleMode} />
+              <Switch
+                value={mode === 'dark'}
+                onValueChange={toggleMode}
+                accessibilityLabel="Dark mode"
+                accessibilityHint={`Currently ${mode}`}
+              />
             </Item.Actions>
           </Item>
         </Card>
