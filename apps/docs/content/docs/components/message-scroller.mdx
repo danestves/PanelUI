@@ -10,6 +10,8 @@ A transcript is the one list where the interesting end is the bottom, the conten
 
 One rule sits behind all of it — **the reader's position is theirs.** New content follows the bottom only while they are already at the bottom, scrolling away hands control back to them until they ask for it, and content added above them never moves what they are looking at.
 
+For long or streaming threads, `MessageScroller.List` is the virtualized path: it renders a bounded native list window instead of mounting the whole transcript.
+
 <PreviewVideo
   src="/previews/message-scroller.mp4"
   poster="/previews/message-scroller-poster.jpg"
@@ -37,19 +39,10 @@ npx panelui-cli@latest add message-scroller
 
 ```tsx
 <MessageScroller autoScroll className="flex-1">
-  <MessageScroller.Viewport>
-    <MessageScroller.Content>
-      {messages.map((message) => (
-        <MessageScroller.Item
-          key={message.id}
-          messageId={message.id}
-          scrollAnchor={message.role === "user"}
-        >
-          <Message>…</Message>
-        </MessageScroller.Item>
-      ))}
-    </MessageScroller.Content>
-  </MessageScroller.Viewport>
+  <MessageScroller.List
+    data={messages}
+    renderItem={({ item }) => <Message>{item.body}</Message>}
+  />
   <MessageScroller.Button />
 </MessageScroller>
 ```
@@ -59,13 +52,15 @@ npx panelui-cli@latest add message-scroller
 ```tsx
 <MessageScroller>
   <MessageScroller.Viewport>…</MessageScroller.Viewport>
+  <MessageScroller.List>…</MessageScroller.List>
   <MessageScroller.Content>…</MessageScroller.Content>
   <MessageScroller.Item>…</MessageScroller.Item>
   <MessageScroller.Button>…</MessageScroller.Button>
 </MessageScroller>
 ```
 
-- **`MessageScroller.Viewport`** — The scrollable. Owns all three behaviours, because all three are reactions to scroll and content-size events.
+- **`MessageScroller.Viewport`** — The backward-compatible ScrollView composition for short or structurally mixed transcripts. It mounts every child; prefer List for long or streaming threads.
+- **`MessageScroller.List`** — The virtualized transcript. Takes data whose rows have stable messageId values, renders only a bounded native window, and owns follow, prepend retention, anchoring, and jump events.
 - **`MessageScroller.Content`** — The transcript column. Announces additions rather than the whole list.
 - **`MessageScroller.Item`** — One turn. It exists to be measured — without a boundary per turn there is nothing to scroll *to* and nothing to measure a prepend against.
 - **`MessageScroller.Button`** — The way back to the live edge, shown only when there is one to go back to.
@@ -258,6 +253,15 @@ Older turns are prepended. The message being read stays exactly where it is — 
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
+### MessageScroller.List
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `contentContainerClassName` | `string` | — | Classes on the virtualized list's padded transcript column. |
+| `data` | `readonly T[]` | — | The complete transcript. Rows outside the native render window stay unmounted; each item therefore carries its stable navigation metadata. |
+| `renderItem` | `(info: ListRenderItemInfo<T>) => ReactElement \| null` | — | Draw one turn from the native list window. |
+
 ### MessageScroller.Content
 
 | Prop | Type | Default | Description |
@@ -284,20 +288,14 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+**Choose the real list for long threads.** `MessageScroller.List` takes `data` items with a stable `messageId` and optional `scrollAnchor`, plus a normal FlatList `renderItem`. It defaults to a 12-row initial render, batches 8 rows, and keeps a 7-viewport window; the underlying FlatList still accepts tuning props. Unlike the compound `Viewport` / `Content` / `Item` path, rows outside that window are not mounted. Keep the compound path for short transcripts that need arbitrary non-row children, and migrate long threads by moving each `messageId` and `scrollAnchor` onto its data item.
+
 **It needs a bounded height.** From `flex-1` in a column, or an explicit one. Given an unbounded parent it grows to fit its content and never scrolls at all.
 
 **Follow-output is conditional, not automatic.** `autoScroll` means *follow the bottom while the reader is at the bottom* — never *drag them to the bottom*. Being pulled away from a message you were half way through reading is the behaviour this exists to avoid.
 
-**The scroll position is not React state.** The edge distances update per frame on the UI thread; only the at-end boolean crosses into JS when it flips, while each button fades from the distance to its configured target. A transcript scrolls constantly; re-rendering on every frame of it would be the most expensive thing on the screen.
+**Prepend retention is native in the virtualized path.** `maintainVisibleContentPosition` keeps the first visible row in place while history arrives above it, including when rows outside the render window have never mounted. Set `preserveScrollOnPrepend={false}` to opt out.
 
-**Every turn needs a stable `messageId`.** It is the key for the offset the component measures, so an id derived from the array index breaks scrolling the moment anything is prepended.
+**Every turn needs a stable `messageId`.** It is the data identity for `scrollToMessage`, initial anchors, and React keys, so an id derived from the array index breaks navigation the moment anything is prepended.
 
-**The four scroll events are owned.** `onScroll`, `onScrollEndDrag`, `onMomentumScrollEnd` and `onContentSizeChange` are taken off `MessageScroller.Viewport`'s props type. They are not decoration on a scroll view — they *are* the behaviour, and a call site that quietly replaced one would look like a bug in the scrolling.
-
-## Public exports
-
-{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
-
-**Values:** `MessageScroller`, `useMessageScroller`, `useMessageScrollerVisibility`
-
-**Types:** `MessageScrollerProps`, `MessageScrollerViewportProps`, `MessageScrollerContentProps`, `MessageScrollerItemProps`, `MessageScrollerButtonProps`, `MessageScrollerPosition`
+**Scroll events are owned.** The virtualized path owns `onScroll`, `onContentSizeChange`, `onViewableItemsChanged`, prepend maintenance, and failed-index recovery; the compound viewport owns its four legacy scroll events. These handlers are the behavior, not decoration that a call site can replace.
