@@ -9,6 +9,45 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.64.0] — 2026-08-13
+
+### Added
+
+- **`WaterfallChart` — how a run of changes carried one total to another.** Each step's bar starts
+  where the previous one ended, so the gap beneath it is the balance that step acted on and its
+  length is what it changed by. A `BarChart` of the same numbers compares the changes against each
+  other; this compares each of them against the running total, which is what a revenue bridge, a
+  cash-flow month or a budget variance is actually asking.
+
+  Steps marked `total` are anchored to the baseline and drawn in a neutral colour — readings
+  rather than changes. Their `value` is added to the running figure before the bar is drawn, so
+  one rule covers both uses: an opening balance carries the figure it opens at, and a closing
+  total carries `0` and reads the balance the run arrived at.
+
+  Parts: `Header`, `Grid`, `Connectors`, `Bars`, `Values`, `XAxis`, `YAxis`, `Tooltip`, `Legend`,
+  `Skeleton`. The connectors are the part worth keeping — without them the bars are a row of
+  rectangles at unexplained heights, and the line from one bar's end to the next bar's start is
+  the only thing in the drawing that carries the sequence.
+
+  Three colours and no more, set by `riseColor`, `fallColor` and `totalColor`, with a `color` on a
+  single datum for pulling one line out for comment. `orientation="horizontal"` lays the run down
+  the side, which is what to reach for past about five steps: seven names do not fit across a
+  phone. `waterfallSteps` is exported so a header or a table elsewhere on the screen can read the
+  same running balances the chart drew.
+
+  The bars cost six animated paths a frame however long the run is — one per colour, each split
+  into the bar under the finger and the rest — and each grows from its own start towards its end
+  rather than up from the baseline, because a step is a movement between two balances.
+
+### Fixed
+
+- **`BarChart`'s sideways readout follows the row it names.** Upright the bands are side by side
+  and the card slid across them, which was the only case the placement was written for. Sideways
+  the bands are stacked down the plot, so the same code left the card pinned to the top of the
+  chart: it named the row under the finger while covering the first row, which is the one a reader
+  checks it against. It now moves along whichever axis the bands run along, clamped inside the
+  plot at both ends.
+
 ## [0.63.0] — 2026-08-12
 
 ### Added

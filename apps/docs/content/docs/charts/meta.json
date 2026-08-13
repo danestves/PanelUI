@@ -15,6 +15,7 @@
     "radar-chart",
     "ring-chart",
     "scatter-chart",
-    "treemap-chart"
+    "treemap-chart",
+    "waterfall-chart"
   ]
 }

@@ -967,5 +967,14 @@
       "addedIn": "0.63.0",
       "alpha": true
     }
+  ],
+  "waterfall-chart": [
+    "WaterfallChart",
+    "How a run of changes carried one total to another.",
+    "react native waterfall chart bridge",
+    {
+      "addedIn": "0.64.0",
+      "group": "charts"
+    }
   ]
 }

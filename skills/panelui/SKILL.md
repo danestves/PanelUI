@@ -41,8 +41,9 @@ and the reason will not be obvious.
 
 ## Principles
 
-1. **Look before you build.** There are 100 components. Search the registry before writing custom
-   UI — a "custom" sheet, picker, chart or chat transcript is almost always one that exists.
+1. **Look before you build.** `components.md` lists every one of them, and there are more than a
+   hundred. Search the registry before writing custom UI — a "custom" sheet, picker, chart or
+   chat transcript is almost always one that exists.
 2. **Compose the parts.** A settings screen is `Frame` + `Frame.Panel` + `Item` rows. A chat is
    `MessageScroller` + `Message` + `Bubble`. Reach for the compound parts before a `View`.
 3. **Never hardcode a colour.** Every colour is a semantic token — `bg-card`,

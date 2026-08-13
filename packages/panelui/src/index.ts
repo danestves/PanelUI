@@ -1095,6 +1095,28 @@ export {
   type TypographyParagraphProps,
   type TypographyCodeProps,
 } from './components/typography';
+export {
+  WaterfallChart,
+  useWaterfallChart,
+  waterfallSteps,
+  type WaterfallChartProps,
+  type WaterfallChartHandle,
+  type WaterfallChartHeaderProps,
+  type WaterfallChartGridProps,
+  type WaterfallChartBarsProps,
+  type WaterfallChartConnectorsProps,
+  type WaterfallChartValuesProps,
+  type WaterfallChartSkeletonProps,
+  type WaterfallChartXAxisProps,
+  type WaterfallChartYAxisProps,
+  type WaterfallChartTooltipProps,
+  type WaterfallChartLegendProps,
+  type WaterfallChartStatus,
+  type WaterfallChartOrientation,
+  type WaterfallDatum,
+  type WaterfallStep,
+  type WaterfallKind,
+} from './components/waterfall-chart';
 
 // Icons
 export {

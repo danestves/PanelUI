@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-105 components. The **Docs** column is the path under
+106 components. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -121,6 +121,7 @@ remember is a guess.
 | `RingChart` | Concentric arcs, each measured against its own target. | `charts/ring-chart` |
 | `ScatterChart` | Two quantities against each other, to show how they relate. | `charts/scatter-chart` |
 | `TreemapChart` | A total, cut into the parts it is made of, sized by area. | `charts/treemap-chart` |
+| `WaterfallChart` | How a run of changes carried one total to another. | `charts/waterfall-chart` |
 
 ## Feedback and status
 

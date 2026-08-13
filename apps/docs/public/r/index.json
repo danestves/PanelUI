@@ -1321,5 +1321,15 @@
     "type": "registry:hook",
     "description": "Read and change the active theme.",
     "registryDependencies": []
+  },
+  {
+    "name": "waterfall-chart",
+    "type": "registry:ui",
+    "description": "How a run of changes carried one total to another.",
+    "registryDependencies": [
+      "chart",
+      "cn",
+      "text"
+    ]
   }
 ]

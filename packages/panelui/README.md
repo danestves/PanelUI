@@ -215,6 +215,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Kpi` | One number, what it is doing, and the shape it made getting there |
 | `Label` | Form field label with required, invalid and disabled states |
 | `LineChart` | Animated time series, drawn on the UI thread |
+| `LiveLineChart` | A reading that keeps arriving, against a window that keeps moving |
 | `Loader` | Nine loading animations behind one variant prop |
 | `Map` | Vector map whose basemap is drawn from your theme tokens |
 | `MarkdownEditor` | A field for writing markdown, with a toolbar and a preview |
@@ -228,6 +229,8 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Panelside` | Collapsible side panel with its own search, groups and scenes |
 | `PieChart` | One whole, divided between its parts |
 | `Plan` | What an agent intends to do, before it does it |
+| `Plot` | A chart you assemble out of its marks |
+| `PolarAreaChart` | Several readings on one scale, compared as wedges |
 | `Popover` | Panel anchored to the element that opened it |
 | `Post` | Social card — author, body, media and the counts underneath |
 | `Progress` | Determinate and indeterminate progress bar |
@@ -275,6 +278,7 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 | `Tree` | A hierarchy you can open a level at a time |
 | `TreemapChart` | A total, cut into the parts it is made of, sized by area |
 | `Typography` | Semantic text presets |
+| `WaterfallChart` | How a run of changes carried one total to another |
 
 Plus `PanelUIProvider`, `Portal`, `AnimatedPressable`, `KeyboardAvoider`, `ScrollProgress`,
 `Text`, a set of SVG icons (with brand marks for Google, Facebook and Apple), and the `cn`
