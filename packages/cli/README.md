@@ -50,6 +50,51 @@ Everything available, grouped.
 npx panelui-cli@latest list
 ```
 
+### `mcp`
+
+Runs PanelUI's [Model Context Protocol](https://modelcontextprotocol.io/) server. An MCP client can
+inspect the registry, read component source and documentation, get the matching `add` command, and
+check how the current project consumes PanelUI.
+
+```bash
+npx panelui-cli@latest mcp
+```
+
+The server is a long-running stdio process intended to be launched by an MCP client. Standard input
+and output carry newline-delimited JSON-RPC messages; stdout contains no banner or other human-readable
+output. It reads project information from `--cwd` (the current directory by default).
+
+Registry lookups use `--registry <url>` first, then the registry in that project's `panelui.json`,
+then `https://panelui.dev/r`.
+
+#### `mcp init [claude|cursor|vscode]`
+
+Adds the server to a supported editor's project-level MCP configuration. The editor defaults to
+Claude Code when omitted.
+
+| Editor | Command | Config path, relative to `--cwd` |
+| --- | --- | --- |
+| Claude Code | `mcp init claude` | `.mcp.json` |
+| Cursor | `mcp init cursor` | `.cursor/mcp.json` |
+| VS Code | `mcp init vscode` | `.vscode/mcp.json` |
+
+```bash
+npx panelui-cli@latest mcp init
+npx panelui-cli@latest mcp init cursor
+npx panelui-cli@latest --cwd ./apps/mobile mcp init vscode
+```
+
+The command creates the parent directory when needed and merges a `panelui` server into the existing
+JSON instead of replacing other settings or servers. Claude Code and Cursor use the `mcpServers` map;
+VS Code uses `servers`. An existing `panelui` entry is updated to run:
+
+```text
+npx -y panelui-cli@latest mcp
+```
+
+The generated entry does not store one-off CLI options. To pin a registry or working directory for
+editor-launched sessions, add `--registry <url>` or `--cwd <dir>` to that server's generated `args`.
+
 ## Options
 
 | Flag | Effect |
