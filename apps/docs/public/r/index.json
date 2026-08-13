@@ -607,6 +607,12 @@
     ]
   },
   {
+    "name": "modal-isolation-store",
+    "type": "registry:ui",
+    "description": "modal-isolation-store.",
+    "registryDependencies": []
+  },
+  {
     "name": "native",
     "type": "registry:lib",
     "description": "Optional bridge to the platform UI toolkit, behind the `native` prop.",
@@ -729,7 +735,9 @@
     "name": "portal",
     "type": "registry:ui",
     "description": "Renders content above everything else. Required by every overlay.",
-    "registryDependencies": []
+    "registryDependencies": [
+      "modal-isolation-store"
+    ]
   },
   {
     "name": "post",

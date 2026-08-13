@@ -1,0 +1,15 @@
+{
+  "name": "modal-isolation-store",
+  "type": "registry:ui",
+  "description": "modal-isolation-store.",
+  "registryDependencies": [],
+  "dependencies": [],
+  "optionalDependencies": [],
+  "files": [
+    {
+      "path": "ui/modal-isolation-store.ts",
+      "type": "registry:ui",
+      "content": "/** Tracks modal owners without unisolating the app while a nested modal remains. */\nexport class ModalIsolationStore {\n  private owners = new Set<string>();\n  private listeners = new Set<() => void>();\n\n  acquire = (owner: string): (() => void) => {\n    const wasActive = this.getSnapshot();\n    this.owners.add(owner);\n    if (this.getSnapshot() !== wasActive) this.emit();\n\n    let released = false;\n    return () => {\n      if (released) return;\n      released = true;\n      const activeBeforeRelease = this.getSnapshot();\n      this.owners.delete(owner);\n      if (this.getSnapshot() !== activeBeforeRelease) this.emit();\n    };\n  };\n\n  subscribe = (listener: () => void): (() => void) => {\n    this.listeners.add(listener);\n    return () => this.listeners.delete(listener);\n  };\n\n  getSnapshot = (): boolean => this.owners.size > 0;\n\n  private emit() {\n    this.listeners.forEach((listener) => listener());\n  }\n}\n"
+    }
+  ]
+}
