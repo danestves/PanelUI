@@ -84,7 +84,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { XIcon } from '../../icons';
-import { Portal } from '../../primitives/portal';
+import { ModalPortal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
@@ -458,7 +458,7 @@ function DrawerContent({
   };
 
   return (
-    <Portal>
+    <ModalPortal>
       {/* Portal content mounts under PortalHost, outside this provider's
           subtree — re-provide the context so Drawer.Close keeps working. */}
       <DrawerContext.Provider value={{ open, setOpen }}>
@@ -561,7 +561,7 @@ function DrawerContent({
           </View>
         </DirectionContext.Provider>
       </DrawerContext.Provider>
-    </Portal>
+    </ModalPortal>
   );
 }
 

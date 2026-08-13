@@ -13,7 +13,7 @@ import {
 import { Pressable, View, type ViewProps } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
-import { Portal } from '../../primitives/portal';
+import { ModalPortal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
@@ -111,7 +111,7 @@ function DialogContent({
   if (!open) return null;
 
   return (
-    <Portal>
+    <ModalPortal>
       {/* Portal content mounts under PortalHost, outside this provider's
           subtree — re-provide the context so Dialog.Close etc. keep working. */}
       <DialogContext.Provider value={context}>
@@ -142,7 +142,7 @@ function DialogContent({
           </Animated.View>
         </Animated.View>
       </DialogContext.Provider>
-    </Portal>
+    </ModalPortal>
   );
 }
 

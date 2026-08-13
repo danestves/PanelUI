@@ -7,6 +7,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
+import { ModalIsolationStore } from './modal-isolation-store';
 
 type PortalMap = ReadonlyMap<string, ReactNode>;
 
@@ -39,13 +40,18 @@ class PortalStore {
 }
 
 const PortalContext = createContext<PortalStore | null>(null);
+const ModalIsolationContext = createContext<ModalIsolationStore | null>(null);
 
 export function PortalProvider({ children }: { children: ReactNode }) {
-  const storeRef = useRef<PortalStore | null>(null);
-  storeRef.current ??= new PortalStore();
+  const portalStoreRef = useRef<PortalStore | null>(null);
+  const modalStoreRef = useRef<ModalIsolationStore | null>(null);
+  portalStoreRef.current ??= new PortalStore();
+  modalStoreRef.current ??= new ModalIsolationStore();
   return (
-    <PortalContext.Provider value={storeRef.current}>
-      {children}
+    <PortalContext.Provider value={portalStoreRef.current}>
+      <ModalIsolationContext.Provider value={modalStoreRef.current}>
+        {children}
+      </ModalIsolationContext.Provider>
     </PortalContext.Provider>
   );
 }
@@ -69,6 +75,30 @@ export function Portal({ children }: { children: ReactNode }) {
   }, [store, key, children]);
 
   return null;
+}
+
+/** A portal that owns modal focus until it unmounts. */
+export function ModalPortal({ children }: { children: ReactNode }) {
+  const store = useModalIsolationStore('ModalPortal');
+  const owner = useId();
+
+  useEffect(() => store.acquire(owner), [owner, store]);
+
+  return <Portal>{children}</Portal>;
+}
+
+/** Whether any modal portal currently owns focus. */
+export function useModalIsolationActive(): boolean {
+  const store = useModalIsolationStore('useModalIsolationActive');
+  return useSyncExternalStore(store.subscribe, store.getSnapshot);
+}
+
+function useModalIsolationStore(component: string): ModalIsolationStore {
+  const store = useContext(ModalIsolationContext);
+  if (!store) {
+    throw new Error(`${component} must be used within a <PanelUIProvider>`);
+  }
+  return store;
 }
 
 /** Mount point for portaled content. PanelUIProvider renders one automatically. */
