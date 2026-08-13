@@ -67,6 +67,7 @@ import Animated, {
 import Svg, { Circle, G, Line as SvgLine } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
+import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import { compactNumber, useSeriesColor, xAt, yOf, type Plot } from '../../utils/chart';
 import { cn } from '../../utils/cn';
 
@@ -191,7 +192,7 @@ export function useScatterChart() {
   return { activePoint, xDataKey };
 }
 
-export interface ScatterChartProps extends ViewProps {
+export interface ScatterChartProps extends ViewProps, ChartAccessibilityProps<ScatterChartDatum> {
   className?: string;
   /** The rows. Each one is a point, placed by two of its values. */
   data: ScatterChartDatum[];
@@ -244,6 +245,11 @@ const ScatterChartRoot = forwardRef<ScatterChartHandle, ScatterChartProps>(
       xDomain,
       yDomain,
       onActivePointChange,
+      accessible,
+      accessibilityLabel,
+      accessibilityHint,
+      accessibilityLabelForDatum,
+      onAccessibilityDatumPress,
       compact = false,
       children,
       ...props
@@ -476,7 +482,26 @@ const ScatterChartRoot = forwardRef<ScatterChartHandle, ScatterChartProps>(
       <ScatterChartContext.Provider value={context}>
         <View {...props} style={props.style} className={cn('w-full', className)}>
           {header}
-          <View onLayout={onLayout} style={{ aspectRatio }} className="w-full">
+          <ChartAccessibilityData
+            chart="Scatter chart"
+            data={data}
+            disabled={accessible === false || status === 'loading'}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityHint={accessibilityHint}
+            accessibilityLabelForDatum={accessibilityLabelForDatum}
+            onAccessibilityDatumPress={onAccessibilityDatumPress}
+            valueOf={(datum) => [
+              [xDataKey, datum[xDataKey]],
+              ...series.map(([key]) => [key, datum[key]] as [string, unknown]),
+            ]}
+          />
+          <View
+            onLayout={onLayout}
+            style={{ aspectRatio }}
+            className="w-full"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
             {plot.width > 0 ? (
               <>
                 <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>

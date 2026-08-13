@@ -61,6 +61,7 @@ import Animated, {
 import Svg, { ClipPath, Defs, G, Line as SvgLine, Rect } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
+import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import { cn } from '../../utils/cn';
 import { normalizeWeekStart, startOfDay } from '../../utils/date';
 
@@ -309,7 +310,7 @@ function deriveLevels(data: HeatmapColumn[]): number[] {
 /* Root                                                                       */
 /* -------------------------------------------------------------------------- */
 
-export interface HeatmapChartProps extends ViewProps {
+export interface HeatmapChartProps extends ViewProps, ChartAccessibilityProps<HeatmapCell> {
   className?: string;
   /** One column per period, with its row bins inside. */
   data: HeatmapColumn[];
@@ -396,6 +397,11 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
     animationDuration = 900,
     inactiveOpacity = 1,
     onActiveCellChange,
+    accessible,
+    accessibilityLabel,
+    accessibilityHint,
+    accessibilityLabelForDatum,
+    onAccessibilityDatumPress,
     children,
     ...props
   },
@@ -491,6 +497,20 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
     [data, levelOf]
   );
 
+  const accessibilityCells = useMemo(
+    () =>
+      data.flatMap((column) =>
+        column.bins.map((bin) => ({
+          column: column.bin,
+          row: bin.bin,
+          count: bin.count,
+          level: levelOf(bin.count),
+          date: bin.date,
+        }))
+      ),
+    [data, levelOf]
+  );
+
   const setActiveCell = useMemo(
     () => (cell: HeatmapCell | null) => {
       setActiveCellState(cell);
@@ -570,11 +590,37 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
             whole chart, so it starts at the chart's edge, not the grid's. */}
         {parts.header}
 
+        <ChartAccessibilityData
+          chart="Heatmap chart"
+          data={accessibilityCells}
+          disabled={accessible === false}
+          accessibilityLabel={accessibilityLabel}
+          accessibilityHint={accessibilityHint}
+          accessibilityLabelForDatum={accessibilityLabelForDatum}
+          onAccessibilityDatumPress={onAccessibilityDatumPress}
+          valueOf={(cell) => [
+            ['date', cell.date],
+            ['column', cell.column],
+            ['row', cell.row],
+            ['count', cell.count],
+          ]}
+        />
+
         {parts.x ? (
-          <View style={{ paddingLeft: axisWidth }}>{parts.x}</View>
+          <View
+            style={{ paddingLeft: axisWidth }}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            {parts.x}
+          </View>
         ) : null}
 
-        <View className="flex-row">
+        <View
+          className="flex-row"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
           {parts.y}
           <View style={{ width: grid.width, height: grid.height }}>
             {grid.width > 0 ? (
