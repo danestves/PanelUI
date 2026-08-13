@@ -70,7 +70,7 @@ test('rejects unsafe scaffold names before any project files are created', async
 
   try {
     for (const name of ['../victim', '/victim', 'C:\\victim', '\\victim', '\\\\server\\share']) {
-      await assert.rejects(create({ cwd, name, yes: true }), CliError);
+      await assert.rejects(create({ cwd, name, assumeYes: true }), CliError);
     }
 
     assert.equal(validateProjectName('valid-app'), 'valid-app');

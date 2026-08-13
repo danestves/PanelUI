@@ -72,13 +72,13 @@ export async function init(options) {
 
   if (!project.isExpo) {
     warn('This does not look like an Expo project — no `expo` dependency found.');
-    if (!(await confirm('Continue anyway?', { defaultValue: false, assumeYes: options.yes }))) {
+    if (!(await confirm('Continue anyway?', { ...options, defaultValue: false }))) {
       return;
     }
   }
 
   const existing = readConfig(cwd);
-  if (existing && !options.yes) {
+  if (existing && !options.assumeYes) {
     const overwrite = await confirm(`${CONFIG_FILE} already exists. Reconfigure?`, {
       defaultValue: false,
     });
@@ -90,7 +90,7 @@ export async function init(options) {
 
   const config = defaultConfig(options.registry ?? DEFAULT_REGISTRY);
 
-  if (!options.yes && process.stdin.isTTY) {
+  if (!options.assumeYes && process.stdin.isTTY) {
     config.aliases.components = await ask('Where should components go?', config.aliases.components);
     config.aliases.lib = await ask('Where should utilities go?', config.aliases.lib);
     config.aliases.hooks = await ask('Where should hooks go?', config.aliases.hooks);
@@ -152,11 +152,11 @@ export async function create(options) {
         `No template called "${options.template}".`,
         `Try: ${TEMPLATES.map((entry) => entry.name).join(', ')}`
       ))
-    : await select('Which template?', TEMPLATES, { assumeYes: options.yes });
+    : await select('Which template?', TEMPLATES, options);
 
   const projectName = validateProjectName(
     options.name ??
-      (options.yes
+      (options.assumeYes
         ? template.defaultProjectName
         : await ask('What is it called?', template.defaultProjectName))
   );
@@ -170,7 +170,7 @@ export async function create(options) {
     : await select(
         'Which theme?',
         THEMES.map((entry) => ({ ...entry, title: entry.name })),
-        { assumeYes: options.yes }
+        options
       );
 
   const mode = await select(
@@ -180,7 +180,7 @@ export async function create(options) {
       { title: 'Light', id: 'light' },
       { title: 'Dark', id: 'dark' },
     ],
-    { assumeYes: options.yes }
+    options
   );
 
   const projectPath = resolveProjectPath(cwd, projectName, 'Project name');

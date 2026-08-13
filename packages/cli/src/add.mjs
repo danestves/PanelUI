@@ -76,7 +76,7 @@ export async function add(names, options) {
     return;
   }
 
-  if (!(await confirm(`Write ${pending.length} file${pending.length === 1 ? '' : 's'}?`, { assumeYes: options.yes }))) {
+  if (!(await confirm(`Write ${pending.length} file${pending.length === 1 ? '' : 's'}?`, options))) {
     info(dim('Cancelled.'));
     return;
   }
