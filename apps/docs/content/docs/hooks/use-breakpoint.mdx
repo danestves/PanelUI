@@ -47,6 +47,37 @@ const columns = isAtLeast('lg') ? 3 : isAtLeast('md') ? 2 : 1;
 />;
 ```
 
+### App-specific breakpoint names
+
+Create the contract once, outside a component. Its provider owns one window
+subscription; every bound hook below it reads the same dimensions. Names and
+`isAtLeast` arguments are inferred from the definition.
+
+```tsx
+import { createBreakpoints } from 'panelui-native';
+
+export const AppBreakpoints = createBreakpoints({
+  compact: 0,
+  medium: 600,
+  expanded: 900,
+});
+
+// At the app root:
+<AppBreakpoints.Provider>
+  <App />
+</AppBreakpoints.Provider>;
+
+// In a descendant:
+const { current, isAtLeast } = AppBreakpoints.useBreakpoint();
+// current: 'base' | 'compact' | 'medium' | 'expanded'
+const showSidebar = isAtLeast('expanded');
+```
+
+Thresholds must be finite, non-negative, and strictly ascending in declaration
+order. An invalid definition throws where `createBreakpoints` is called rather
+than producing different answers later. Widths below the first threshold use
+`base`; setting the first threshold to `0` makes that name the compact fallback.
+
 ### Branching on orientation
 
 ```tsx
@@ -94,3 +125,7 @@ Exported as `BREAKPOINTS`, matching Tailwind's:
 | `md` | 768 |
 | `lg` | 1024 |
 | `xl` | 1280 |
+
+These defaults and `useBreakpoint()` remain unchanged. `createBreakpoints()` is
+an opt-in semantic layer for apps whose layouts speak in names such as compact,
+medium, and expanded rather than Tailwind's defaults.

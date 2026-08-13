@@ -10,8 +10,12 @@ export {
 } from './use-disclosure';
 export {
   useBreakpoint,
+  createBreakpoints,
   BREAKPOINTS,
   type Breakpoint,
+  type BreakpointContract,
+  type BreakpointProviderProps,
+  type BreakpointResult,
   type UseBreakpointResult,
 } from './use-breakpoint';
 export { useKeyboard, type UseKeyboardResult } from './use-keyboard';
