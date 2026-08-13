@@ -42,8 +42,9 @@ const buttonVariants = tv({
       },
       destructive: {
         root: 'border-destructive bg-destructive shadow-sm',
-        label: 'text-white',
-        spinner: 'border-white/32 border-t-white',
+        label: 'text-destructive-solid-foreground',
+        spinner:
+          'border-destructive-solid-foreground/32 border-t-destructive-solid-foreground',
       },
       /** Neutral surface for third-party sign-in, sized for a full-width stack. */
       social: {
@@ -140,15 +141,10 @@ const BUTTON_HIT_SLOP = { sm: 6, md: 2, lg: 0, icon: 2 } as const;
 /**
  * The theme token each variant's content reads against. Icons in the content
  * slots inherit the resolved value, so they follow the theme automatically.
- *
- * `destructive` is absent on purpose: its background is a saturated red in
- * every theme, so its content is always white rather than a themed token.
  */
-const CONTENT_COLOR_VAR: Record<
-  Exclude<NonNullable<ButtonVariantProps['variant']>, 'destructive'>,
-  string
-> = {
+const CONTENT_COLOR_VAR: Record<NonNullable<ButtonVariantProps['variant']>, string> = {
   primary: '--color-primary-foreground',
+  destructive: '--color-destructive-solid-foreground',
   secondary: '--color-secondary-foreground',
   outline: '--color-foreground',
   ghost: '--color-foreground',
@@ -331,17 +327,9 @@ export const Button = forwardRef<View, ButtonProps>(
     // Icons in the content slots inherit this, so they stay legible when the
     // theme inverts the button's background. Without it every caller has to
     // hardcode a hex that is wrong in one theme or the other.
-    const themedColor = useCSSVariable(
-      CONTENT_COLOR_VAR[
-        resolvedVariant === 'destructive' ? 'primary' : (resolvedVariant ?? 'primary')
-      ]
-    );
+    const themedColor = useCSSVariable(CONTENT_COLOR_VAR[resolvedVariant ?? 'primary']);
     const contentColor =
-      resolvedVariant === 'destructive'
-        ? '#ffffff'
-        : typeof themedColor === 'string'
-          ? themedColor
-          : undefined;
+      typeof themedColor === 'string' ? themedColor : undefined;
 
     if (nativeUI) {
       const { Host, Button: NativeButton, RNHostView } = nativeUI;

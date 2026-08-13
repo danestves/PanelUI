@@ -258,10 +258,13 @@ const actionVariants = tv({
     color: {
       default: { root: 'bg-muted-foreground', label: 'text-background' },
       primary: { root: 'bg-primary', label: 'text-primary-foreground' },
-      success: { root: 'bg-success', label: 'text-white' },
-      warning: { root: 'bg-warning', label: 'text-white' },
-      info: { root: 'bg-info', label: 'text-white' },
-      destructive: { root: 'bg-destructive', label: 'text-white' },
+      success: { root: 'bg-success', label: 'text-success-solid-foreground' },
+      warning: { root: 'bg-warning', label: 'text-warning-solid-foreground' },
+      info: { root: 'bg-info', label: 'text-info-solid-foreground' },
+      destructive: {
+        root: 'bg-destructive',
+        label: 'text-destructive-solid-foreground',
+      },
     },
   },
   defaultVariants: {

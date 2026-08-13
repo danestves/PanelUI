@@ -83,7 +83,7 @@ function Button({
     secondary: 'text-secondary-foreground',
     outline: 'text-foreground',
     ghost: 'text-foreground',
-    destructive: 'text-white',
+    destructive: 'text-destructive-solid-foreground',
   }[variant];
 
   return (
