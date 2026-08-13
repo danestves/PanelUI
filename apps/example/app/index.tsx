@@ -4,7 +4,7 @@ import { PANEL_THEMES } from 'panelui-native';
 import { HomeCard } from '../src/components/home-card';
 import { ScreenHeader } from '../src/components/screen-header';
 import { BLOCKS } from '../src/data/blocks';
-import { COMPONENTS } from '../src/data/components';
+import { COMPONENT_COUNT } from '../src/data/components.generated';
 
 /** Documented hooks, plus ScrollFade and Shimmer shown on the same screen. */
 const HOOK_COUNT = 8;
@@ -20,7 +20,7 @@ export default function HomeScreen() {
         <HomeCard
           title="Components"
           subtitle="Explore all components"
-          count={COMPONENTS.length}
+          count={COMPONENT_COUNT}
           onPress={() => router.push('/components')}
         />
         <HomeCard

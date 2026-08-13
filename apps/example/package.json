@@ -42,7 +42,9 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "metadata:generate": "node scripts/generate-component-metadata.mjs",
+    "metadata:check": "node scripts/generate-component-metadata.mjs --check"
   },
   "private": true
 }

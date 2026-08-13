@@ -13,12 +13,12 @@ import {
 } from 'panelui-native';
 import { ScreenHeader } from '../../src/components/screen-header';
 import {
-  CHART_SHOWCASE,
+  CHART_COUNT,
   COMPONENTS,
-  type ComponentEntry,
-} from '../../src/data/components';
+  type ComponentMetadata,
+} from '../../src/data/components.generated';
 
-function ComponentRow({ entry, tint }: { entry: ComponentEntry; tint: string }) {
+function ComponentRow({ entry, tint }: { entry: ComponentMetadata; tint: string }) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -52,14 +52,14 @@ function AllChartsRow({ tint }: { tint: string }) {
     <>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`All charts. One example of each of the ${CHART_SHOWCASE.length} charts.`}
+        accessibilityLabel={`All charts. One example of each of the ${CHART_COUNT} charts.`}
         onPress={() => router.push('/components/all-charts')}
         className="flex-row items-center gap-3 px-5 py-4 active:bg-muted"
       >
         <View className="flex-1">
           <Text size="lg">All charts</Text>
           <Text size="sm" muted>
-            {`One example of each of the ${CHART_SHOWCASE.length} charts`}
+            {`One example of each of the ${CHART_COUNT} charts`}
           </Text>
         </View>
         <ChevronRightIcon size={18} color={tint} />
