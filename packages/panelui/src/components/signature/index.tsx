@@ -58,7 +58,12 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { View, type ViewProps } from 'react-native';
+import {
+  AccessibilityInfo,
+  View,
+  type AccessibilityActionEvent,
+  type ViewProps,
+} from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -81,6 +86,12 @@ import {
 } from '../../primitives/animated-pressable';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
+import {
+  signatureAccessibilityActions,
+  signatureAccessibilityValue,
+  signatureAnnouncement,
+  type SignatureChangeKind,
+} from './signature-accessibility';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -175,6 +186,12 @@ export interface SignatureProps
   placeholder?: ReactNode;
   /** Take no input. The strokes already there stay visible. */
   disabled?: boolean;
+  /**
+   * Opens a product-provided non-drawing method, such as typing a legal name,
+   * uploading an image, or asking for assisted signing. Exposed as a screen
+   * reader action; provide the same choice as a visible control too.
+   */
+  onRequestAlternative?: () => void;
   /** A stroke has started. */
   onBegin?: () => void;
   /** A stroke has finished. */
@@ -292,12 +309,17 @@ function SignatureRoot(
     guidelineLabel,
     placeholder,
     disabled = false,
+    onRequestAlternative,
     onBegin,
     onEnd,
     onChange,
     padClassName,
     placeholderClassName,
     guideClassName,
+    accessibilityLabel,
+    accessibilityHint,
+    accessibilityActions,
+    onAccessibilityAction,
     ...props
   }: SignatureProps,
   ref: Ref<SignatureHandle>
@@ -325,19 +347,30 @@ function SignatureRoot(
   beginRef.current = onBegin;
   const endRef = useRef(onEnd);
   endRef.current = onEnd;
+  const alternativeRef = useRef(onRequestAlternative);
+  alternativeRef.current = onRequestAlternative;
 
   // `onChange` fires from an effect rather than from inside a state updater.
   // An updater can be replayed during a render, and calling a parent's setState
   // from there is the "cannot update a component while rendering a different
   // component" warning — earned, not spurious.
   const reported = useRef(0);
+  const changeKind = useRef<SignatureChangeKind>('draw');
   useEffect(() => {
     if (reported.current === strokes.length) return;
+    const previous = reported.current;
     reported.current = strokes.length;
     changeRef.current?.(strokes.length);
+    const announcement = signatureAnnouncement(
+      previous,
+      strokes.length,
+      changeKind.current
+    );
+    if (announcement) AccessibilityInfo.announceForAccessibility(announcement);
   }, [strokes.length]);
 
   const commit = useCallback((d: string) => {
+    changeKind.current = 'draw';
     setStrokes((current) => [...current, d]);
     // Drawing again is a new branch of history, so what was undone is gone.
     setUndone([]);
@@ -419,28 +452,37 @@ function SignatureRoot(
     [layout.height, layout.width]
   );
 
+  const clear = useCallback(() => {
+    changeKind.current = 'clear';
+    setStrokes([]);
+    setUndone([]);
+  }, []);
+
+  const undo = useCallback(() => {
+    const last = strokes[strokes.length - 1];
+    if (last === undefined) return;
+    changeKind.current = 'undo';
+    setUndone((stack) => [...stack, last]);
+    setStrokes(strokes.slice(0, -1));
+  }, [strokes]);
+
+  const redo = useCallback(() => {
+    const restored = undone[undone.length - 1];
+    if (restored === undefined) return;
+    changeKind.current = 'redo';
+    setUndone(undone.slice(0, -1));
+    setStrokes([...strokes, restored]);
+  }, [strokes, undone]);
+
   useImperativeHandle(
     ref,
     (): SignatureHandle => ({
       // These read the current arrays and set flat values rather than nesting
       // one updater inside another — a nested updater runs during the render
       // pass, which is not a safe place to schedule another component's update.
-      clear() {
-        setStrokes([]);
-        setUndone([]);
-      },
-      undo() {
-        const last = strokes[strokes.length - 1];
-        if (last === undefined) return;
-        setUndone((stack) => [...stack, last]);
-        setStrokes(strokes.slice(0, -1));
-      },
-      redo() {
-        const restored = undone[undone.length - 1];
-        if (restored === undefined) return;
-        setUndone(undone.slice(0, -1));
-        setStrokes([...strokes, restored]);
-      },
+      clear,
+      undo,
+      redo,
       isEmpty: () => strokes.length === 0,
       strokeCount: () => strokes.length,
       toSVG: svgDocument,
@@ -524,10 +566,47 @@ function SignatureRoot(
         };
       },
     }),
-    [layout.height, layout.width, rasterise, strokes, undone, svgDocument]
+    [clear, layout.height, layout.width, rasterise, redo, strokes, svgDocument, undo]
   );
 
   const empty = strokes.length === 0;
+  const padActions = useMemo(
+    () =>
+      disabled
+        ? []
+        : [
+            ...(accessibilityActions ?? []),
+            ...signatureAccessibilityActions(
+              strokes.length,
+              undone.length,
+              Boolean(onRequestAlternative),
+              false
+            ),
+          ],
+    [accessibilityActions, disabled, onRequestAlternative, strokes.length, undone.length]
+  );
+  const handleAccessibilityAction = useCallback(
+    (event: AccessibilityActionEvent) => {
+      if (disabled) return;
+      switch (event.nativeEvent.actionName) {
+        case 'signature-undo':
+          undo();
+          return;
+        case 'signature-redo':
+          redo();
+          return;
+        case 'signature-clear':
+          clear();
+          return;
+        case 'signature-alternative':
+          alternativeRef.current?.();
+          return;
+        default:
+          onAccessibilityAction?.(event);
+      }
+    },
+    [clear, disabled, onAccessibilityAction, redo, undo]
+  );
 
   return (
     <View className={slots.root({ className })} {...props}>
@@ -541,9 +620,17 @@ function SignatureRoot(
           onLayout={(event) => setLayout(event.nativeEvent.layout)}
           accessible
           accessibilityRole="image"
-          accessibilityLabel="Signature pad"
-          accessibilityHint="Draw your signature with your finger"
+          accessibilityLabel={accessibilityLabel ?? 'Signature pad'}
+          accessibilityHint={
+            accessibilityHint ??
+            (onRequestAlternative
+              ? 'Direct touch drawing requires tracing a path. Use actions to edit or choose another signature method.'
+              : 'Direct touch drawing requires tracing a path. Use actions to undo, redo, or clear strokes.')
+          }
           accessibilityState={{ disabled }}
+          accessibilityValue={signatureAccessibilityValue(strokes.length)}
+          accessibilityActions={padActions}
+          onAccessibilityAction={handleAccessibilityAction}
         >
           {guideline && layout.height > 0 ? (
             <View

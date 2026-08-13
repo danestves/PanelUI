@@ -4533,6 +4533,7 @@
     "usage": "const pad = useRef<SignatureHandle>(null);\n\n<Signature ref={pad} guideline guidelineLabel=\"Sign above the line\" />\n<Button onPress={() => pad.current?.save({ filename: 'agreement' })}>\n  Finish signing\n</Button>",
     "extraImports": [
       "Button",
+      "Input",
       "Frame",
       "Portal",
       "Scrim",
@@ -4551,6 +4552,11 @@
         "title": "A pad with its controls",
         "description": "`onChange` reports the stroke count, which is the cheap way to keep a Save button disabled until there is something to save.",
         "code": "const pad = useRef<SignatureHandle>(null);\nconst [count, setCount] = useState(0);\n\n<Signature ref={pad} onChange={setCount} />\n<Signature.Toolbar>\n  <View className=\"flex-row gap-2\">\n    <Signature.Undo disabled={count === 0} onPress={() => pad.current?.undo()} />\n    <Signature.Clear disabled={count === 0} onPress={() => pad.current?.clear()} />\n  </View>\n  <Button disabled={count === 0} onPress={submit}>Done</Button>\n</Signature.Toolbar>"
+      },
+      {
+        "title": "A non-drawing alternative",
+        "description": "This example offers a typed legal-name flow. Whether a typed or uploaded signature is acceptable is a product and legal-policy decision; the component does not silently treat it as equivalent to ink.",
+        "code": "const [method, setMethod] = useState<'draw' | 'type'>('draw');\nconst useTypedSignature = () => setMethod('type');\n\n{method === 'draw' ? (\n  <>\n    <Signature ref={pad} onRequestAlternative={useTypedSignature} />\n    <Button variant=\"ghost\" onPress={useTypedSignature}>\n      Type my legal name instead\n    </Button>\n  </>\n) : (\n  <>\n    <Input label=\"Legal name\" value={legalName} onChangeText={setLegalName} />\n    <Button variant=\"ghost\" onPress={() => setMethod('draw')}>\n      Draw instead\n    </Button>\n  </>\n)}"
       },
       {
         "title": "Signing in a frame",
@@ -4635,7 +4641,8 @@
       "alt": "A framed signature pad opening over a frosted screen. A stroke is drawn with a finger, and the frame lifts as a confirm button arrives beneath it.",
       "width": 720,
       "height": 1560
-    }
+    },
+    "partNotes": "- **`Signature.Toolbar`** — A row of controls under or over the pad. Purely layout.\n- **`Signature.Undo`** — Round button for removing the last stroke. Wire it to `ref.current?.undo()`.\n- **`Signature.Redo`** — Round button for putting back the last undone stroke. Wire it to `ref.current?.redo()`.\n- **`Signature.Clear`** — Round button for dropping every stroke. Wire it to `ref.current?.clear()`.\n\nThe focused pad also exposes Undo, Redo and Clear as screen-reader actions when each action is available. Its value counts the strokes drawn so far, and the pad announces only the two moments it crosses between empty and not — a component cannot tell whether a signature is finished, and saying so after one mark would tell somebody who cannot see the pad that they are done.\n\nDrawing a signature still requires tracing a path with direct touch. That interaction cannot be made non-path-dependent by adding a label to the canvas. If your signing policy permits another method, use `onRequestAlternative` to open a typed, uploaded or assisted flow, and offer the same choice as a visible control."
   },
   "skeleton": {
     "intro": "A shimmer placeholder for content that has not loaded yet.\n\nSize it with Tailwind utilities, matching the shape of what is coming — a placeholder that is the wrong size moves the page when the real content lands.\n\nFor a shimmer over content that *is* there, use [Shimmer](/docs/components/shimmer).",

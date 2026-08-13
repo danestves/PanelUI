@@ -20,7 +20,7 @@ The stroke being drawn is built on the UI thread and never reaches React, so the
 Signature ships with the library — no separate install.
 
 ```tsx
-import { Signature, Button, Frame, Portal, Scrim, Text, type SignatureHandle } from 'panelui-native';
+import { Signature, Button, Input, Frame, Portal, Scrim, Text, type SignatureHandle } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -56,6 +56,10 @@ const pad = useRef<SignatureHandle>(null);
 - **`Signature.Redo`** — Round button for putting back the last undone stroke. Wire it to `ref.current?.redo()`.
 - **`Signature.Clear`** — Round button for dropping every stroke. Wire it to `ref.current?.clear()`.
 
+The focused pad also exposes Undo, Redo and Clear as screen-reader actions when each action is available. Its value counts the strokes drawn so far, and the pad announces only the two moments it crosses between empty and not — a component cannot tell whether a signature is finished, and saying so after one mark would tell somebody who cannot see the pad that they are done.
+
+Drawing a signature still requires tracing a path with direct touch. That interaction cannot be made non-path-dependent by adding a label to the canvas. If your signing policy permits another method, use `onRequestAlternative` to open a typed, uploaded or assisted flow, and offer the same choice as a visible control.
+
 ## Examples
 
 ### A pad with its controls
@@ -74,6 +78,31 @@ const [count, setCount] = useState(0);
   </View>
   <Button disabled={count === 0} onPress={submit}>Done</Button>
 </Signature.Toolbar>
+```
+
+### A non-drawing alternative
+
+This example offers a typed legal-name flow. Whether a typed or uploaded signature is acceptable is a product and legal-policy decision; the component does not silently treat it as equivalent to ink.
+
+```tsx
+const [method, setMethod] = useState<'draw' | 'type'>('draw');
+const useTypedSignature = () => setMethod('type');
+
+{method === 'draw' ? (
+  <>
+    <Signature ref={pad} onRequestAlternative={useTypedSignature} />
+    <Button variant="ghost" onPress={useTypedSignature}>
+      Type my legal name instead
+    </Button>
+  </>
+) : (
+  <>
+    <Input label="Legal name" value={legalName} onChangeText={setLegalName} />
+    <Button variant="ghost" onPress={() => setMethod('draw')}>
+      Draw instead
+    </Button>
+  </>
+)}
 ```
 
 ### Signing in a frame
@@ -276,6 +305,7 @@ Recipient, timestamp and signature on one screen, the shape a courier app asks f
 | `guidelineLabel` | `string` | — | Caption beside the baseline. Only shown with `guideline`. |
 | `placeholder` | `ReactNode` | — | Prompt shown over an empty pad. Pass `null` for none. |
 | `disabled` | `boolean` | `false` | Take no input. The strokes already there stay visible. |
+| `onRequestAlternative` | `() => void` | — | Opens a product-provided non-drawing method, such as typing a legal name, uploading an image, or asking for assisted signing. Exposed as a screen reader action; provide the same choice as a visible control too. |
 | `onBegin` | `() => void` | — | A stroke has started. |
 | `onEnd` | `() => void` | — | A stroke has finished. |
 | `onChange` | `(strokeCount: number) => void` | — | The number of committed strokes changed — by drawing, undoing, redoing or clearing. The cheap way to enable a Save button only once something is there to save. |
