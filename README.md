@@ -8,6 +8,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/panelui-native"><img alt="npm version and monthly downloads" src="https://shieldcn.dev/group/npm/v/panelui-native+npm/dm/panelui-native.svg?variant=branded&amp;size=xs" /></a>
   <a href="https://github.com/panel-ui/PanelUI"><img alt="GitHub stars, license, contributors and last commit" src="https://shieldcn.dev/group/github/panel-ui/PanelUI/stars+github/panel-ui/PanelUI/license+github/panel-ui/PanelUI/contributors+github/panel-ui/PanelUI/last-commit.svg?variant=branded&amp;size=xs" /></a>
+  <a href="https://openpanel.dev"><img alt="analytics by OpenPanel" src="https://shieldcn.dev/badge/analytics%20by-OpenPanel-2564EB.svg?logo=openpanel&amp;logoColor=fff&amp;variant=branded&amp;brand=openpanel&amp;size=xs" /></a>
 </p>
 
 <p align="center">
