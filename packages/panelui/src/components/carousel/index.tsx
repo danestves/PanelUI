@@ -55,6 +55,7 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -282,8 +283,22 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
     [isControlled, onIndexChange]
   );
 
+  /*
+   * The slide the run is currently travelling to.
+   *
+   * Moving the run and recording where it went are two steps: `scrollTo` starts
+   * the spring, then the new index arrives back through state and the lifecycle
+   * effect asks for it again. Without this the second ask restarts the spring a
+   * frame into the first — from a standstill, so a flick loses the momentum it
+   * was carrying. Remembering the target lets the echo be recognised and
+   * ignored, while a genuine request for the same slide still animates, because
+   * that one comes through `scrollTo` and sets this first.
+   */
+  const animatedTarget = useRef<number | null>(null);
+
   const animateTo = useCallback(
     (target: number) => {
+      animatedTarget.current = target;
       if (reducedMotion) {
         progress.value = target;
       } else if (loop) {
@@ -303,6 +318,7 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
 
   const settleIndex = useCallback(
     (next: number) => {
+      if (animatedTarget.current === next) return;
       if (Math.abs(progress.value - next) >= 0.001) animateTo(next);
     },
     [animateTo, progress]

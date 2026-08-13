@@ -115,3 +115,18 @@ test('autoplay stops at the terminal index and re-arms after lifecycle changes',
   assert.deepEqual(advances, [2, 3, 3, 1]);
   await mounted.unmount();
 });
+
+test('a move already under way is not re-animated when it echoes back', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const source = await readFile(
+    new URL('../src/components/carousel/index.tsx', import.meta.url),
+    'utf8'
+  );
+
+  // scrollTo starts the spring, then the new index arrives back through state
+  // and the lifecycle asks for it again. Restarting the spring a frame in loses
+  // the momentum a flick was carrying, so the second ask has to be recognised.
+  assert.match(source, /const animatedTarget = useRef<number \| null>\(null\)/);
+  assert.match(source, /animateTo = useCallback\(\s*\(target: number\) => \{\s*animatedTarget\.current = target;/);
+  assert.match(source, /settleIndex = useCallback\(\s*\(next: number\) => \{\s*if \(animatedTarget\.current === next\) return;/);
+});
