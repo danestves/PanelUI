@@ -186,6 +186,12 @@ function snap(value: number, min: number, max: number, step: number) {
 /** Which thumb a drag has hold of. A one-thumb slider only ever has `high`. */
 type Thumb = 'low' | 'high';
 
+function recordStep(last: Record<Thumb, number>, thumb: Thumb, next: number) {
+  if (next === last[thumb]) return false;
+  last[thumb] = next;
+  return true;
+}
+
 export const Slider = forwardRef<View, SliderProps>(
   (
     {
@@ -278,9 +284,12 @@ export const Slider = forwardRef<View, SliderProps>(
     rangeChangeRef.current = onRangeChange;
     const rangeCommitRef = useRef(onRangeCommit);
     rangeCommitRef.current = onRangeCommit;
-    // The last step a drag ticked on, so haptics fire once per step, not per
-    // pixel of movement within it.
-    const lastTick = useRef(value);
+    // Each thumb owns its last tick. Sharing one scalar lets the stationary
+    // endpoint suppress the thumb under the finger on a range slider.
+    const lastTick = useRef<Record<Thumb, number>>({
+      low,
+      high: isRange ? high : value,
+    });
     /*
      * True from the moment a finger lands until it lifts. A controlled parent
      * echoes every change straight back as a new prop, and springing the thumb
@@ -329,8 +338,7 @@ export const Slider = forwardRef<View, SliderProps>(
       (p: number, commit: boolean) => {
         const raw = min + p * span;
         const snapped = snap(raw, min, max, step);
-        if (haptics && snapped !== lastTick.current) {
-          lastTick.current = snapped;
+        if (haptics && recordStep(lastTick.current, 'high', snapped)) {
           selectionTick();
         }
         emitChange(snapped);
@@ -340,16 +348,13 @@ export const Slider = forwardRef<View, SliderProps>(
     );
 
     const commitRangeFromProgress = useCallback(
-      (pLow: number, pHigh: number, commit: boolean) => {
+      (pLow: number, pHigh: number, commit: boolean, thumb: Thumb) => {
         const next: [number, number] = [
           snap(min + pLow * span, min, max, step),
           snap(min + pHigh * span, min, max, step),
         ];
-        // Either end crossing onto a new step is a step crossed — the tick is
-        // about the thumb under the finger, and only one of them is.
-        const moved = next[0] !== lastTick.current && next[1] !== lastTick.current;
-        if (haptics && moved) {
-          lastTick.current = next[0];
+        const nextStep = thumb === 'low' ? next[0] : next[1];
+        if (haptics && recordStep(lastTick.current, thumb, nextStep)) {
           selectionTick();
         }
         emitRangeChange(next);
@@ -418,12 +423,12 @@ export const Slider = forwardRef<View, SliderProps>(
           const ceiling = Math.max(highProgress.value - gap, 0);
           const next = Math.min(Math.max(dragStartLow.value + delta, 0), ceiling);
           lowProgress.value = next;
-          runOnJS(commitRangeFromProgress)(next, highProgress.value, false);
+          runOnJS(commitRangeFromProgress)(next, highProgress.value, false, 'low');
         } else {
           const floor = Math.min(lowProgress.value + gap, 1);
           const next = Math.min(Math.max(dragStartHigh.value + delta, floor), 1);
           highProgress.value = next;
-          runOnJS(commitRangeFromProgress)(lowProgress.value, next, false);
+          runOnJS(commitRangeFromProgress)(lowProgress.value, next, false, 'high');
         }
       })
       .onFinalize(() => {
@@ -431,7 +436,12 @@ export const Slider = forwardRef<View, SliderProps>(
         pressedLow.value = withSpring(0, KNOB_SPRING);
         runOnJS(setDragging)(false);
         if (isRange) {
-          runOnJS(commitRangeFromProgress)(lowProgress.value, highProgress.value, true);
+          runOnJS(commitRangeFromProgress)(
+            lowProgress.value,
+            highProgress.value,
+            true,
+            activeThumb.value
+          );
         } else {
           runOnJS(commitFromProgress)(highProgress.value, true);
         }
@@ -456,11 +466,11 @@ export const Slider = forwardRef<View, SliderProps>(
         if (pickThumb(event.x) === 'low') {
           const bounded = Math.min(next, Math.max(highProgress.value - gap, 0));
           lowProgress.value = withSpring(bounded, SPRING);
-          runOnJS(commitRangeFromProgress)(bounded, highProgress.value, true);
+          runOnJS(commitRangeFromProgress)(bounded, highProgress.value, true, 'low');
         } else {
           const bounded = Math.max(next, Math.min(lowProgress.value + gap, 1));
           highProgress.value = withSpring(bounded, SPRING);
-          runOnJS(commitRangeFromProgress)(lowProgress.value, bounded, true);
+          runOnJS(commitRangeFromProgress)(lowProgress.value, bounded, true, 'high');
         }
       });
 
@@ -503,7 +513,7 @@ export const Slider = forwardRef<View, SliderProps>(
         const next = snap(value + dir * (step || 1), min, max, step);
         if (next === value) return;
         if (haptics) {
-          lastTick.current = next;
+          recordStep(lastTick.current, 'high', next);
           selectionTick();
         }
         highProgress.value = withSpring(toFraction(next), SPRING);
@@ -521,7 +531,7 @@ export const Slider = forwardRef<View, SliderProps>(
       const next = snap(bounded, min, max, step);
       if (next === current) return;
       if (haptics) {
-        lastTick.current = next;
+        recordStep(lastTick.current, thumb, next);
         selectionTick();
       }
       const pair: [number, number] = thumb === 'low' ? [next, high] : [low, next];
