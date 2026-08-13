@@ -45,3 +45,16 @@ jobs:
           # Some tests import the library's .ts sources directly. Type stripping
           # is on by default from Node 22.18; the flag keeps earlier 22.x working.
           node --experimental-strip-types --test "${files[@]}"
+
+      - name: Generated files are up to date
+        run: |
+          # The registry carries each component's source for the CLI to copy, so
+          # a source change that skips regeneration ships the old code to
+          # everyone installing that way while the npm package moves on.
+          npm run docs:generate --workspace=docs
+          if ! git diff --quiet; then
+            echo 'Generated output does not match the source.'
+            echo 'Run: npm run docs:generate --workspace=docs — and commit the result.'
+            git diff --stat
+            exit 1
+          fi

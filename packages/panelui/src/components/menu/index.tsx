@@ -57,7 +57,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
-import { Check, ChevronLeft, ChevronRight, Circle } from 'lucide-react-native';
+import Check from 'lucide-react-native/icons/check';
+import ChevronLeft from 'lucide-react-native/icons/chevron-left';
+import ChevronRight from 'lucide-react-native/icons/chevron-right';
+import Circle from 'lucide-react-native/icons/circle';
 import { Text, textChildren } from '../../primitives/text';
 import { useDirection, useDirectionSign } from '../../hooks/use-direction';
 import { selectionTick } from '../../utils/haptics';
