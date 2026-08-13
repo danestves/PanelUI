@@ -57,9 +57,12 @@ import { ChevronDownIcon } from '../../icons';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
 import { cn } from '../../utils/cn';
 import { textChildren } from '../../primitives/text';
+import {
+  distanceFromMessageScrollerTarget,
+  isMessageScrollerTargetVisible,
+  MESSAGE_SCROLLER_EDGE_THRESHOLD,
+} from './message-scroller-math';
 
-/** Within this many pixels of the bottom still counts as being at the bottom. */
-const END_THRESHOLD = 24;
 /**
  * How much of the previous turn is left showing above an anchored one. Scrolling
  * a turn flush to the top reads as content having been cut off; a sliver of the
@@ -71,8 +74,11 @@ export type MessageScrollerPosition = 'start' | 'end' | 'last-anchor';
 
 interface MessageScrollerContextValue {
   scrollRef: ReturnType<typeof useAnimatedRef<Animated.ScrollView>>;
-  /** 1 while the reader is at the live edge, 0 otherwise. Drives the button. */
+  /** 1 while the reader is at the live edge, 0 otherwise. Drives follow state. */
   atEnd: ReturnType<typeof useSharedValue<number>>;
+  /** Live distance from each edge, used by target-specific jump controls. */
+  distanceFromStart: ReturnType<typeof useSharedValue<number>>;
+  distanceFromEnd: ReturnType<typeof useSharedValue<number>>;
   atEndJS: boolean;
   setAtEndJS: (atEnd: boolean) => void;
   autoScroll: boolean;
@@ -150,6 +156,11 @@ function MessageScrollerRoot({
 }: MessageScrollerProps) {
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const atEnd = useSharedValue(1);
+  const awayFromEdge = MESSAGE_SCROLLER_EDGE_THRESHOLD + 1;
+  const distanceFromStart = useSharedValue(
+    defaultScrollPosition === 'start' ? 0 : awayFromEdge
+  );
+  const distanceFromEnd = useSharedValue(defaultScrollPosition === 'end' ? 0 : awayFromEdge);
   const [atEndJS, setAtEndJS] = useState(true);
   const [currentAnchorId, setCurrentAnchorId] = useState<string | null>(null);
 
@@ -199,6 +210,8 @@ function MessageScrollerRoot({
     () => ({
       scrollRef,
       atEnd,
+      distanceFromStart,
+      distanceFromEnd,
       atEndJS,
       setAtEndJS,
       autoScroll,
@@ -218,6 +231,8 @@ function MessageScrollerRoot({
     [
       scrollRef,
       atEnd,
+      distanceFromStart,
+      distanceFromEnd,
       atEndJS,
       autoScroll,
       preserveScrollOnPrepend,
@@ -268,6 +283,8 @@ function MessageScrollerViewport({
   const {
     scrollRef,
     atEnd,
+    distanceFromStart,
+    distanceFromEnd,
     setAtEndJS,
     autoScroll,
     preserveScrollOnPrepend,
@@ -310,8 +327,19 @@ function MessageScrollerViewport({
       const { contentOffset, contentSize, layoutMeasurement } = event;
       offsetY.value = contentOffset.y;
 
-      const distance = contentSize.height - layoutMeasurement.height - contentOffset.y;
-      const next = distance <= END_THRESHOLD ? 1 : 0;
+      distanceFromStart.value = distanceFromMessageScrollerTarget(
+        'start',
+        contentOffset.y,
+        contentSize.height,
+        layoutMeasurement.height
+      );
+      distanceFromEnd.value = distanceFromMessageScrollerTarget(
+        'end',
+        contentOffset.y,
+        contentSize.height,
+        layoutMeasurement.height
+      );
+      const next = isMessageScrollerTargetVisible(distanceFromEnd.value) ? 0 : 1;
       if (next !== atEnd.value) {
         atEnd.value = next;
         runOnJS(publishAtEnd)(next === 1);
@@ -515,12 +543,16 @@ function MessageScrollerButton({
   children,
   ...props
 }: MessageScrollerButtonProps) {
-  const { atEnd, scrollToEnd, scrollToStart } = useScroller('MessageScroller.Button');
+  const { distanceFromStart, distanceFromEnd, scrollToEnd, scrollToStart } =
+    useScroller('MessageScroller.Button');
   const tint = useCSSVariable('--color-foreground');
 
+  const targetDistance = target === 'end' ? distanceFromEnd : distanceFromStart;
   // Shown when away from the edge the button points at.
   const shown = useDerivedValue(() =>
-    withTiming(target === 'end' ? 1 - atEnd.value : atEnd.value, { duration: 160 })
+    withTiming(isMessageScrollerTargetVisible(targetDistance.value) ? 1 : 0, {
+      duration: 160,
+    })
   );
 
   const style = useAnimatedStyle(() => ({
