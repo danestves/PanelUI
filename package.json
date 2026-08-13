@@ -8,6 +8,8 @@
   ],
   "scripts": {
     "test:a11y": "node scripts/accessibility-gate.mjs",
+    "test:cli": "node --test packages/cli/test/*.test.mjs",
+    "verify:cli-packages": "node scripts/verify-cli-packages.mjs",
     "example": "npm run start --workspace=example",
     "test": "node scripts/run-contract-tests.mjs",
     "build": "npm run build --workspace=panelui-native",
