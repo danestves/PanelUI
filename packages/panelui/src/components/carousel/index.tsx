@@ -50,6 +50,7 @@ import {
   Children,
   createContext,
   forwardRef,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -186,6 +187,17 @@ function distance(index: number, progress: number, count: number, loop: boolean)
   if (raw > half) return raw - count;
   if (raw < -half) return raw + count;
   return raw;
+}
+
+/** Drop the empty nodes React omits before assigning slide positions. */
+function renderableChildren(children: ReactNode) {
+  // React treats a Fragment as one child here. Keep that keyed boundary rather
+  // than recursively flattening it and changing React's reconciliation model.
+  return Children.toArray(children);
+}
+
+function renderableChildKey(child: ReactNode, index: number) {
+  return isValidElement(child) && child.key !== null ? child.key : index;
 }
 
 export interface CarouselProps extends ViewProps {
@@ -488,13 +500,13 @@ export interface CarouselContentProps extends ViewProps {
  */
 function CarouselContent({ className, children, ...props }: CarouselContentProps) {
   const { setCount, variant, orientation, align } = useCarousel('Carousel.Content');
-  const slides = Children.count(children);
+  const slides = renderableChildren(children);
   const horizontal = orientation === 'horizontal';
   const centred = align === 'center' || variant === 'coverflow' || variant === 'stack';
 
   useEffect(() => {
-    setCount(slides);
-  }, [setCount, slides]);
+    setCount(slides.length);
+  }, [setCount, slides.length]);
 
   return (
     <View
@@ -515,8 +527,10 @@ function CarouselContent({ className, children, ...props }: CarouselContentProps
         props.style,
       ]}
     >
-      {Children.map(children, (child, index) => (
-        <ItemIndexContext.Provider value={index}>{child}</ItemIndexContext.Provider>
+      {slides.map((child, index) => (
+        <ItemIndexContext.Provider key={renderableChildKey(child, index)} value={index}>
+          {child}
+        </ItemIndexContext.Provider>
       ))}
     </View>
   );
