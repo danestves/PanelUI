@@ -17,7 +17,7 @@
  */
 import process from 'node:process';
 import { create } from 'panelui-cli/init';
-import { CliError, bold, dim, error, info } from 'panelui-cli/ui';
+import { CliError, bold, dim, error, info, optionValue } from 'panelui-cli/ui';
 
 const HELP = `
 ${bold('create-panelui-app')} — a new Expo app, with PanelUI already set up.
@@ -58,13 +58,16 @@ function parseArgs(argv) {
         version = true;
         break;
       case '--template':
-        options.template = argv[++i];
+        options.template = optionValue(argv, i, arg, '<name>');
+        i += 1;
         break;
       case '--theme':
-        options.theme = argv[++i];
+        options.theme = optionValue(argv, i, arg, '<name>');
+        i += 1;
         break;
       case '--name':
-        options.name = argv[++i];
+        options.name = optionValue(argv, i, arg, '<name>');
+        i += 1;
         break;
       default:
         if (arg.startsWith('-')) throw new CliError(`Unknown option: ${arg}`);

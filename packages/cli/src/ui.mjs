@@ -41,6 +41,15 @@ export function error(message) {
 /** A fatal, expected failure — a message, not a stack trace. */
 export class CliError extends Error {}
 
+/** Reads the next argv entry for a flag that cannot stand on its own. */
+export function optionValue(argv, index, flag, placeholder) {
+  const value = argv[index + 1];
+  if (!value || value.startsWith('-')) {
+    fail(`Missing value for ${flag}.`, `Usage: ${flag} ${placeholder}`);
+  }
+  return value;
+}
+
 export function fail(message, hint) {
   const err = new CliError(message);
   err.hint = hint;
