@@ -55,6 +55,7 @@ import {
 import {
   ScrollView,
   View,
+  type AccessibilityActionEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
@@ -74,6 +75,10 @@ import { ClockIcon } from '../../icons';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
+import {
+  accessibilityValueForIndex,
+  indexForAccessibilityAction,
+} from './accessibility';
 import {
   clampTime,
   displayHour,
@@ -398,6 +403,20 @@ function Column<T>({
 
   const selectedItem = items[index];
 
+  const onAccessibilityAction = useCallback(
+    (event: AccessibilityActionEvent) => {
+      const next = indexForAccessibilityAction(
+        index,
+        items.length,
+        event.nativeEvent.actionName,
+        disabled
+      );
+      if (next === undefined) return;
+      onIndexChange(next);
+    },
+    [disabled, index, items.length, onIndexChange]
+  );
+
   return (
     <Animated.ScrollView
       ref={ref}
@@ -426,7 +445,12 @@ function Column<T>({
       removeClippedSubviews={false}
       accessibilityRole="adjustable"
       accessibilityLabel={accessibilityLabel}
-      accessibilityValue={selectedItem ? { text: label(selectedItem) } : undefined}
+      accessibilityState={{ disabled }}
+      accessibilityValue={
+        selectedItem ? accessibilityValueForIndex(index, items.length, label(selectedItem)) : undefined
+      }
+      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      onAccessibilityAction={onAccessibilityAction}
     >
       {items.map((item, i) => (
         <ColumnRow key={i} offset={offset} index={i} selected={i === index}>
@@ -930,6 +954,21 @@ function RulerFace({
     [width]
   );
 
+  const onAccessibilityAction = useCallback(
+    (event: AccessibilityActionEvent) => {
+      const next = indexForAccessibilityAction(
+        index,
+        times.length,
+        event.nativeEvent.actionName,
+        disabled
+      );
+      if (next === undefined) return;
+      const time = times[next];
+      if (time) onValueChange(time);
+    },
+    [disabled, index, onValueChange, times]
+  );
+
   return (
     <View className={readout === 'none' ? undefined : 'gap-4'}>
       {readout === 'none' ? null : (
@@ -955,7 +994,14 @@ function RulerFace({
           onMomentumScrollEnd={onMomentumEnd}
           accessibilityRole="adjustable"
           accessibilityLabel="Time"
-          accessibilityValue={{ text: formatTime(value, { hourCycle, locale }) }}
+          accessibilityState={{ disabled }}
+          accessibilityValue={accessibilityValueForIndex(
+            index,
+            times.length,
+            formatTime(value, { hourCycle, locale })
+          )}
+          accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+          onAccessibilityAction={onAccessibilityAction}
         >
           {/*
             No numbers under the ticks. The readout above already says the
