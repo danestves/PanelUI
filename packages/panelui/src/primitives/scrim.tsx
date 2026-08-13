@@ -64,8 +64,13 @@ function observeReduceTransparency(
     changed = true;
     if (active) onChange(Boolean(enabled));
   };
-  const fallback = () => {
-    if (active && !changed) onChange(true);
+  /*
+   * A platform that cannot report the preference has no preference to respect,
+   * so blur stays available. A platform that has the API and failed to answer
+   * might have it switched on, and that is the case worth being careful about.
+   */
+  const fallback = (queryable: boolean) => () => {
+    if (active && !changed) onChange(queryable);
   };
 
   let subscription: { remove?: () => void } | undefined;
@@ -76,15 +81,15 @@ function observeReduceTransparency(
   }
 
   try {
-    if (typeof source.isReduceTransparencyEnabled !== 'function') fallback();
+    if (typeof source.isReduceTransparencyEnabled !== 'function') fallback(false)();
     else {
       void source.isReduceTransparencyEnabled().then((enabled) => {
         // A preference event that arrived while the query was pending is newer.
-        if (active && !changed) onChange(Boolean(enabled));
-      }, fallback);
+        if (active && !changed) update(enabled);
+      }, fallback(true));
     }
   } catch {
-    fallback();
+    fallback(true)();
   }
 
   return () => {
@@ -97,11 +102,29 @@ function observeReduceTransparency(
   };
 }
 
+/**
+ * The last answer the platform gave, shared by every scrim in the process.
+ *
+ * The query is asynchronous and the preference belongs to the device, not to
+ * any one overlay. Without this, each overlay opens not knowing it and draws
+ * opaque until the answer arrives — a flash on every dialog for the many people
+ * who have the preference off. Remembered here, only the first overlay of a
+ * launch can see it.
+ */
+let knownReduceTransparency: boolean | null = null;
+
 function useReduceTransparency() {
-  // Unknown is deliberately conservative: draw opaque until the async platform
-  // query says blur is allowed, rather than flashing blur for opted-out users.
-  const [enabled, setEnabled] = useState<boolean | null>(null);
-  useEffect(() => observeReduceTransparency(AccessibilityInfo, setEnabled), []);
+  // Not knowing is deliberately conservative: draw opaque until the platform
+  // says blur is allowed, rather than flashing blur at someone who opted out.
+  const [enabled, setEnabled] = useState<boolean | null>(knownReduceTransparency);
+  useEffect(
+    () =>
+      observeReduceTransparency(AccessibilityInfo, (next) => {
+        knownReduceTransparency = next;
+        setEnabled(next);
+      }),
+    []
+  );
   return enabled;
 }
 

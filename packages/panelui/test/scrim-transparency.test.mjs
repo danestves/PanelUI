@@ -84,11 +84,13 @@ test('a change received during the initial query wins', async () => {
   cleanup();
 });
 
-test('missing or rejected platform support stays opaque', async () => {
+test('a platform with no preference to report keeps blur available', () => {
   const missing = [];
   helpers.observeReduceTransparency({}, (value) => missing.push(value));
-  assert.deepEqual(missing, [true]);
+  assert.deepEqual(missing, [false]);
+});
 
+test('a platform that has the preference but cannot read it stays opaque', async () => {
   const rejected = [];
   helpers.observeReduceTransparency(
     { isReduceTransparencyEnabled: () => Promise.reject(new Error('unsupported')) },
@@ -97,6 +99,17 @@ test('missing or rejected platform support stays opaque', async () => {
   await Promise.resolve();
   await Promise.resolve();
   assert.deepEqual(rejected, [true]);
+
+  const threw = [];
+  helpers.observeReduceTransparency(
+    {
+      isReduceTransparencyEnabled() {
+        throw new Error('unsupported');
+      },
+    },
+    (value) => threw.push(value)
+  );
+  assert.deepEqual(threw, [true]);
 });
 
 test('rendering decisions suppress blur until it is explicitly allowed', () => {
@@ -113,10 +126,12 @@ test('rendering decisions suppress blur until it is explicitly allowed', () => {
 });
 
 test('the hook owns the subscription cleanup and opaque fallback layers', () => {
-  assert.match(
-    source,
-    /useEffect\(\(\) => observeReduceTransparency\(AccessibilityInfo, setEnabled\), \[\]\)/
-  );
+  assert.match(source, /observeReduceTransparency\(AccessibilityInfo, \(next\) => \{/);
+  // The answer outlives the overlay that asked for it, or every dialog opens
+  // opaque for a frame while the platform is asked again.
+  assert.match(source, /let knownReduceTransparency: boolean \| null = null/);
+  assert.match(source, /useState<boolean \| null>\(knownReduceTransparency\)/);
+  assert.match(source, /knownReduceTransparency = next/);
   assert.match(source, /const mode = scrimMode\(blur, BlurView !== null, reduceTransparency\)/);
   assert.match(source, /if \(mode === 'blur' && BlurView\)/);
   assert.match(source, /if \(mode === 'opaque'\)/);
