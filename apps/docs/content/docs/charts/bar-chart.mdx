@@ -299,6 +299,12 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+### Data budget
+
+For an animated chart, keep the data at **500 rows or fewer and no more than four `Bar` series**. The regression budget also covers 1,000 rows by five series, but that is a tested ceiling rather than the recommended interactive size; profile on the slowest target device before using it. Downsample or paginate beyond the recommendation.
+
+Every series scans every row twice per animated frame — once for the active band and once for the rest — so frame work grows as `2 × rows × series`. Grouping and stacking have the same frame cost. Stacking additionally prepares each series from the ones below it when data or series change, adding `rows × series × (series - 1) / 2` value visits; wide stacks therefore cost more to update than grouped data even when they animate identically.
+
 ### Why the axis always reaches zero
 
 A bar is read by its length, so the axis it is measured against has to start at nothing. Cropped at the bottom — the trick that makes a line chart's changes legible — a bar twice as tall no longer means twice as much, and the chart quietly exaggerates every difference in it. The derived domain therefore always includes zero. `yDomain` overrides it, and doing so is opting into a chart that misreads.
