@@ -257,6 +257,77 @@ Verify with `npm run typecheck`, `npm run build` and `npm run docs:generate` ins
 plainly which parts of a change are unverified until somebody runs it. When a change genuinely
 needs eyes on a device, ask; do not start one and report back.
 
+## Reviewing and landing pull requests
+
+Batches of contributor PRs arrive together, and "review them" means the same thing every time:
+read each one for defects and security problems, **push the fixes onto the contributor's branch**
+rather than landing a follow-up commit on `main`, and merge them one at a time in an order chosen
+so the conflicts are small.
+
+### Order the batch before touching any of it
+
+List what every PR touches first. Two rules decide the order, and both exist because getting them
+wrong loses work silently:
+
+- **A PR that rewrites or deletes a file other PRs edit goes first, not last.** Rebasing a
+  wholesale replacement over other people's edits resolves as "deleted by us" and drops them with
+  no conflict to notice. Landing it first turns the same problem into a mechanical redirect —
+  move each later PR's hunk into wherever the content lives now — which the generated-file check
+  then verifies.
+- **After that, largest diff first** among PRs sharing a file. `.github/workflows/ci.yml` and the
+  root `package.json` are the usual pile-up; a batch of tooling PRs will all add a step and a
+  script, and every one of those conflicts is additive — keep both sides.
+
+When a PR's edits have to be redirected, do it by comparing the PR against **its own base**, not
+against `main`. Apply only what the PR actually changed, and stop if `main` has moved on the same
+key — that one needs a real three-way merge, by hand, keeping both changes.
+
+### Generated files are regenerated, never merged
+
+`apps/docs/content/docs/**/*.mdx`, `apps/docs/public/r/*.json`, `apps/docs/public/skills/**`,
+`skills/**`, `catalogue.json` and `apps/docs/lib/public-api.generated.json` are artifacts. On a
+conflict take either side, run `npm run docs:generate --workspace=docs`, and amend. Never resolve
+one by hand — the diff will look plausible and be wrong.
+
+### The gates, per PR
+
+```bash
+npm run typecheck
+npm run build
+npm test                                              # every contract test
+npm run docs:generate --workspace=docs && git diff --exit-code
+npm run verify:package --workspace=panelui-native
+```
+
+The `git diff --exit-code` is the load-bearing one: a non-empty diff means generated output was
+hand-written and has drifted. Then merge only once the PR's own `check` run is green.
+
+### What to actually look for
+
+CI catches drift, types and tests. It does not catch these, so they are the review:
+
+- **Anything that reaches a path, a URL or a shell.** A name that came from a registry, a
+  lockfile, an MCP argument or a config is untrusted. Confirm it is validated at the point it
+  becomes a path, and that the containment helpers still gate every route in.
+- **A gate that behaves differently where it runs.** Check which workflows run each new check and
+  under which npm. `publish.yml` and `publish-cli.yml` install `npm@latest`; CI runs Node's
+  bundled npm. A verifier that passes in one and crashes in the other fails *after* the tag
+  exists, which is the worst moment available. This has happened once and cost a release.
+- **A budget with no headroom.** Size and count ceilings that a few ordinary components can cross
+  turn a normal week into a red build. Ask what the current number is and how much room is left,
+  and say so in a comment next to the number.
+- **A check that only passes on a clean checkout.** Scripts that walk the filesystem must ignore
+  what the platform and the tooling leave behind — `node_modules`, `.expo`, `expo-env.d.ts`,
+  `.DS_Store`. CI never sees those, so the check passes there and fails for every human.
+- **Docs prose**, against the guide rules above, and the props table, anatomy and variants against
+  what the diff actually changed.
+
+`updatedIn` in `apps/docs/scripts/meta.json` is bookkeeping for the release, not the merge — set
+it after the version bump, never while landing the PR.
+
+Report `npm audit` rather than acting on it; the findings are transitive through the Expo and
+sharp toolchains and are a standing known state.
+
 ## Git & release
 
 - **Every modification gets its own git commit.** Commit as soon as a logical unit of work is
@@ -312,6 +383,24 @@ independently of the library and of each other. Which package a release is for c
 Tagging and the GitHub release are outward-facing — and now publish — so confirm before the first
 one in a session unless the user has already said to go ahead. Their answer to the release question
 counts as that go-ahead for the release they just approved, and for that one only.
+
+### panelui.dev deploys on release, not on merge
+
+`apps/docs/vercel.json` sets `git.deploymentEnabled: false`, so **no branch and no pull request
+builds the site**. It used to build on every push, which is a full Next.js build of a site whose
+content only changes meaning when a version ships, and an open batch of pull requests turned that
+into dozens of them.
+
+`.github/workflows/deploy-docs.yml` fires a Vercel deploy hook when a `vX.Y.Z` release is
+published. It filters on the tag prefix for the same reason `publish.yml` does: every workflow on
+`release: published` sees every release, and a `cli-v*` tag does not change a component page.
+
+**A documentation change that is not part of a release does not reach panelui.dev on its own.**
+New previews, a corrected props table and a typo fix all sit on `main` until the next release. To
+publish them now, run the **Deploy docs** workflow by hand from the Actions tab — that is what the
+`workflow_dispatch` trigger is for, and using it is expected rather than exceptional. The hook is
+bound to `main` when it is created, so the branch picker in the Actions UI has no say in what
+Vercel builds.
 
 ### Release notes
 
