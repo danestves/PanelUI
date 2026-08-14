@@ -70,6 +70,7 @@ import Svg, {
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
+import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import {
   areaPath,
   columnValues,
@@ -157,7 +158,7 @@ export function useAreaChart() {
   };
 }
 
-export interface AreaChartProps extends ViewProps {
+export interface AreaChartProps extends ViewProps, ChartAccessibilityProps<AreaChartDatum> {
   className?: string;
   /** The rows. Each one is a point along the x-axis. */
   data: AreaChartDatum[];
@@ -233,6 +234,11 @@ const AreaChartRoot = forwardRef<AreaChartHandle, AreaChartProps>(function AreaC
     stacked = false,
     curve = 'monotone',
     onActiveIndexChange,
+    accessible,
+    accessibilityLabel,
+    accessibilityHint,
+    accessibilityLabelForDatum,
+    onAccessibilityDatumPress,
     compact = false,
     children,
     ...props
@@ -456,7 +462,26 @@ const AreaChartRoot = forwardRef<AreaChartHandle, AreaChartProps>(function AreaC
     <AreaChartContext.Provider value={context}>
       <View {...props} style={props.style} className={cn('w-full', className)}>
         {header}
-        <View onLayout={onLayout} style={{ aspectRatio }} className="w-full">
+        <ChartAccessibilityData
+          chart="Area chart"
+          data={data}
+          disabled={accessible === false || loading}
+          accessibilityLabel={accessibilityLabel}
+          accessibilityHint={accessibilityHint}
+          accessibilityLabelForDatum={accessibilityLabelForDatum}
+          onAccessibilityDatumPress={onAccessibilityDatumPress}
+          valueOf={(datum) => [
+            [xDataKey, datum[xDataKey]],
+            ...series.map(([key]) => [key, datum[key]] as [string, unknown]),
+          ]}
+        />
+        <View
+          onLayout={onLayout}
+          style={{ aspectRatio }}
+          className="w-full"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
           {plot.width > 0 ? (
             <>
               <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>

@@ -70,6 +70,7 @@ import Animated, {
 import Svg, { G, Line as SvgLine, Path } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
+import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import { bandOf, compactNumber, yOf, type Plot } from '../../utils/chart';
 import { cn } from '../../utils/cn';
 
@@ -234,7 +235,7 @@ function ohlcOf(
   return { open, high, low, close };
 }
 
-export interface CandlestickChartProps extends ViewProps {
+export interface CandlestickChartProps extends ViewProps, ChartAccessibilityProps<CandlestickChartDatum> {
   className?: string;
   /** The rows. Each one is a period along the x-axis. */
   data: CandlestickChartDatum[];
@@ -333,6 +334,11 @@ const CandlestickChartRoot = forwardRef<CandlestickChartHandle, CandlestickChart
       candleWidth,
       fadedOpacity = 0.3,
       onActiveIndexChange,
+      accessible,
+      accessibilityLabel,
+      accessibilityHint,
+      accessibilityLabelForDatum,
+      onAccessibilityDatumPress,
       compact = false,
       children,
       ...props
@@ -532,7 +538,29 @@ const CandlestickChartRoot = forwardRef<CandlestickChartHandle, CandlestickChart
       <CandlestickChartContext.Provider value={context}>
         <View {...props} style={props.style} className={cn('w-full', className)}>
           {header}
-          <View onLayout={onLayout} style={{ aspectRatio }} className="w-full">
+          <ChartAccessibilityData
+            chart="Candlestick chart"
+            data={data}
+            disabled={accessible === false || loading}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityHint={accessibilityHint}
+            accessibilityLabelForDatum={accessibilityLabelForDatum}
+            onAccessibilityDatumPress={onAccessibilityDatumPress}
+            valueOf={(datum) => [
+              [xDataKey, datum[xDataKey]],
+              [openDataKey, datum[openDataKey]],
+              [highDataKey, datum[highDataKey]],
+              [lowDataKey, datum[lowDataKey]],
+              [closeDataKey, datum[closeDataKey]],
+            ]}
+          />
+          <View
+            onLayout={onLayout}
+            style={{ aspectRatio }}
+            className="w-full"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
             {plot.width > 0 ? (
               <>
                 <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>

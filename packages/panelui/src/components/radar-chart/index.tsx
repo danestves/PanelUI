@@ -59,6 +59,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
+import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import { cn } from '../../utils/cn';
 import {
   polarPoint,
@@ -212,6 +213,9 @@ export interface RadarChartProps extends Omit<ViewProps, 'children'> {
   /** Drop the room reserved for axis labels, for a radar with none. */
   compact?: boolean;
   children?: ReactNode;
+  /** Accessible data labels and optional activation for each axis row. */
+  accessibilityLabelForDatum?: ChartAccessibilityProps<RadarChartDatum>['accessibilityLabelForDatum'];
+  onAccessibilityDatumPress?: ChartAccessibilityProps<RadarChartDatum>['onAccessibilityDatumPress'];
 }
 
 /** Imperative handle: re-run the reveal on demand, for a "replay" control. */
@@ -231,6 +235,11 @@ const RadarChartRoot = forwardRef<RadarChartHandle, RadarChartProps>(
       domain,
       animationDuration = REVEAL_DURATION,
       compact = false,
+      accessible,
+      accessibilityLabel,
+      accessibilityHint,
+      accessibilityLabelForDatum,
+      onAccessibilityDatumPress,
       children,
       ...props
     },
@@ -393,6 +402,19 @@ const RadarChartRoot = forwardRef<RadarChartHandle, RadarChartProps>(
       <RadarChartContext.Provider value={context}>
         <View {...props} style={props.style} className={cn('w-full', className)}>
           {header}
+          <ChartAccessibilityData
+            chart="Radar chart"
+            data={data}
+            disabled={accessible === false || status === 'loading'}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityHint={accessibilityHint}
+            accessibilityLabelForDatum={accessibilityLabelForDatum}
+            onAccessibilityDatumPress={onAccessibilityDatumPress}
+            valueOf={(datum) => [
+              [axisKey, datum[axisKey]],
+              ...series.map(([key]) => [key, datum[key]] as [string, unknown]),
+            ]}
+          />
           <View
             onLayout={onLayout}
             style={
@@ -407,6 +429,8 @@ const RadarChartRoot = forwardRef<RadarChartHandle, RadarChartProps>(
                 : { aspectRatio }
             }
             className={fixedSize ? 'self-center' : 'w-full'}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
           >
             {radius > 0 ? (
               <>

@@ -44,6 +44,7 @@
     "description": "Filled bands over time, stacked or overlaid.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],
@@ -99,6 +100,7 @@
     "description": "Categories compared by length, grouped or stacked.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],
@@ -191,6 +193,7 @@
     "description": "Open, high, low and close for a period, drawn as one mark.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],
@@ -230,6 +233,15 @@
     "group": "utilities",
     "stability": "stable",
     "description": "Scales, monotone curves and path building. Shared by every chart.",
+    "registryDependencies": []
+  },
+  {
+    "name": "chart-accessibility",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Speaks a chart as a list of its data, beside the drawing.",
     "registryDependencies": []
   },
   {
@@ -583,6 +595,7 @@
     "stability": "stable",
     "description": "Contribution grid with a themed colour ramp and a readout.",
     "registryDependencies": [
+      "chart-accessibility",
       "cn",
       "date",
       "text"
@@ -707,6 +720,7 @@
     "description": "Animated time series, drawn on the UI thread.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],
@@ -1099,6 +1113,7 @@
     "description": "Several measures of one thing, drawn as one shape.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],
@@ -1187,6 +1202,7 @@
     "description": "Two quantities against each other, to show how they relate.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],
