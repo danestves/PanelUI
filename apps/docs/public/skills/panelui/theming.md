@@ -4,7 +4,7 @@
 
 | Family | Light | Dark | Accent | Corners |
 | --- | --- | --- | --- | --- |
-| Panel | `light` | `dark` | Neutral greys | Moderate |
+| Panel | `light` | `dark` | Neutral `#262626` / `#f5f5f5` | Moderate |
 | Moon | `moon` | `moon-dark` | Lavender `#5e6ad2` | Tight, near-black canvas |
 | Grass | `grass` | `grass-dark` | Green `#24b47e` / `#3ecf8e` | Generous |
 

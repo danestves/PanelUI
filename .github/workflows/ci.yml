@@ -28,6 +28,9 @@ jobs:
       - name: Check catalogue parity
         run: npm run catalogue:check
 
+      - name: Check theme manifest parity
+        run: npm run themes:check
+
       - name: Build library
         run: npm run build
 
