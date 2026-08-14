@@ -12,6 +12,31 @@
       "react-native": "./src/index.ts",
       "default": "./lib/module/index.js"
     },
+    "./components/*": {
+      "types": "./lib/typescript/src/components/*/index.d.ts",
+      "react-native": "./src/components/*/index.tsx",
+      "default": "./lib/module/components/*/index.js"
+    },
+    "./hooks/*": {
+      "types": "./lib/typescript/src/hooks/*.d.ts",
+      "react-native": "./src/hooks/*.ts",
+      "default": "./lib/module/hooks/*.js"
+    },
+    "./utils/cn": {
+      "types": "./lib/typescript/src/utils/cn.d.ts",
+      "react-native": "./src/utils/cn.ts",
+      "default": "./lib/module/utils/cn.js"
+    },
+    "./utils/color": {
+      "types": "./lib/typescript/src/utils/color.d.ts",
+      "react-native": "./src/utils/color.ts",
+      "default": "./lib/module/utils/color.js"
+    },
+    "./utils/time": {
+      "types": "./lib/typescript/src/utils/time.d.ts",
+      "react-native": "./src/utils/time.ts",
+      "default": "./lib/module/utils/time.js"
+    },
     "./theme.css": "./theme.css",
     "./package.json": "./package.json"
   },

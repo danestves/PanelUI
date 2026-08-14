@@ -172,6 +172,25 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 
 ## Components
 
+The root entry remains the shortest import for most apps:
+
+```tsx
+import { Button, useBreakpoint, formatTime } from 'panelui-native';
+```
+
+For explicit module boundaries, every component and public hook also has a subpath. The public
+utilities are `cn`, `color`, and `time`:
+
+```tsx
+import { Button } from 'panelui-native/components/button';
+import { useBreakpoint } from 'panelui-native/hooks/use-breakpoint';
+import { formatTime } from 'panelui-native/utils/time';
+```
+
+These imports expose the same implementations and types as the root entry. They are an
+organization and tooling boundary; they do not promise a smaller bundle without measuring your
+consumer bundler.
+
 | Component | What it does |
 | --- | --- |
 | `Accordion` | Collapsible sections with single or multiple selection |
