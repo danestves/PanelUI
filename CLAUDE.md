@@ -384,23 +384,52 @@ Tagging and the GitHub release are outward-facing — and now publish — so con
 one in a session unless the user has already said to go ahead. Their answer to the release question
 counts as that go-ahead for the release they just approved, and for that one only.
 
+### What builds when
+
+Four workflows, and nothing else runs on its own. This is the whole picture:
+
+| Event | What runs | What it produces |
+| --- | --- | --- |
+| Push to `main`, or any pull request | `ci.yml` | Nothing published. Typecheck, template parity, catalogue and theme parity, build, contract tests, accessibility gate, generated-file drift, template typechecks, package and registry budgets. A second job re-runs the CLI tests on Node 20. |
+| Push to `main`, or any pull request | — | **No Vercel build.** `apps/docs/vercel.json` sets `git.deploymentEnabled: false`. |
+| Release published, tag `vX.Y.Z` | `publish.yml` | `panelui-native` on npm, via OIDC trusted publishing. |
+| Release published, tag `vX.Y.Z` | `deploy-docs.yml` | panelui.dev, by firing a Vercel deploy hook. |
+| Release published, tag `cli-v*` | `publish-cli.yml` | `panelui-cli` on npm. |
+| Release published, tag `create-v*` | `publish-cli.yml` | `create-panelui-app` on npm. |
+| **Deploy docs** run by hand | `deploy-docs.yml` | panelui.dev, from the current `main`. |
+
+Every workflow on `release: published` sees **every** release and filters by tag prefix itself, so
+a `cli-v*` release does not redeploy a docs site it did not change, and does not reach the
+library's version check.
+
 ### panelui.dev deploys on release, not on merge
 
-`apps/docs/vercel.json` sets `git.deploymentEnabled: false`, so **no branch and no pull request
-builds the site**. It used to build on every push, which is a full Next.js build of a site whose
-content only changes meaning when a version ships, and an open batch of pull requests turned that
-into dozens of them.
+The site used to build through Vercel's Git integration, which meant a full Next.js build for every
+push and every pull request — of a site whose content only changes meaning when a version ships.
+An open batch of pull requests turned that into dozens of builds nobody read.
 
-`.github/workflows/deploy-docs.yml` fires a Vercel deploy hook when a `vX.Y.Z` release is
-published. It filters on the tag prefix for the same reason `publish.yml` does: every workflow on
-`release: published` sees every release, and a `cli-v*` tag does not change a component page.
+Two pieces make the current arrangement, and they have to stay in step:
+
+- **`apps/docs/vercel.json`** turns the Git integration off. It lives in `apps/docs` because that
+  is the project's Root Directory in Vercel, and **it is validated against a schema that rejects
+  unknown properties** — a `//` key put there as a comment fails every deployment before it reaches
+  a build, with no build log to explain it. Explanations go in this file or in the workflow, not in
+  that one.
+- **`.github/workflows/deploy-docs.yml`** fires a Vercel deploy hook. The hook URL is the repository
+  secret `VERCEL_DEPLOY_HOOK`; it is created in Vercel under Settings → Git → Deploy Hooks, bound to
+  `main`. Deploy hooks are unaffected by `deploymentEnabled: false` — that setting gates the Git
+  integration, not the hook.
 
 **A documentation change that is not part of a release does not reach panelui.dev on its own.**
 New previews, a corrected props table and a typo fix all sit on `main` until the next release. To
 publish them now, run the **Deploy docs** workflow by hand from the Actions tab — that is what the
 `workflow_dispatch` trigger is for, and using it is expected rather than exceptional. The hook is
-bound to `main` when it is created, so the branch picker in the Actions UI has no say in what
-Vercel builds.
+bound to `main`, so the branch picker in the Actions UI has no say in what Vercel builds.
+
+The docs build runs `prebuild` before `next build`, which regenerates the icons, the registry, the
+skill and its assets, and **checks the API reference is current**. So a library change committed
+without running `docs:generate` fails the deploy — after CI has already caught it, but the second
+line matters because the deploy is the one that happens after the tag exists.
 
 ### Release notes
 
