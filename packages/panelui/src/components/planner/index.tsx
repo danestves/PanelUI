@@ -451,9 +451,31 @@ export interface PlannerHeaderProps {
   children?: ReactNode;
 }
 
-/** The strip along the top. Put `Title`, `Today`, `Nav` and actions in it. */
+/**
+ * The strip along the top of the frame. Put `Title`, `Today` and `Nav` in it.
+ *
+ * The strip has two ends rather than an even spread. What the month *is* —
+ * its name, and the way back to today — reads from the leading edge; what
+ * *moves* it sits at the trailing edge, under the thumb that reaches for it.
+ * Spaced evenly across a full-width strip they read as three unrelated
+ * controls instead of a label and a pair of buttons.
+ */
 function PlannerHeader({ children }: PlannerHeaderProps) {
-  return <Frame.Header>{children}</Frame.Header>;
+  const parts = Children.toArray(children);
+  const trails = (child: ReactNode) =>
+    isValidElement(child) && (child.type === PlannerNav || child.type === PlannerAction);
+
+  const trailing = parts.filter(trails);
+  const lead = parts.filter((child) => !trails(child));
+
+  return (
+    <Frame.Header>
+      <View className="min-w-0 flex-1 flex-row items-center gap-2">{lead}</View>
+      {trailing.length > 0 ? (
+        <View className="shrink-0 flex-row items-center gap-1.5">{trailing}</View>
+      ) : null}
+    </Frame.Header>
+  );
 }
 PlannerHeader.displayName = 'Planner.Header';
 

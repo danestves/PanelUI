@@ -9,6 +9,89 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.68.0] — 2026-08-15
+
+### Added
+
+- **`Planner` — a month of days, each carrying what falls on it.** `Calendar` picks a date and
+  answers with one; this shows what is already on the days, and its selection exists to open
+  something rather than to be submitted. Renewals, shifts, deadlines — anything where the date is
+  the question rather than the answer.
+
+  `entries` is the whole set, in any order and across any months; the planner buckets them by day
+  itself. `categories` is the key to the marker colours, taken from the `--color-chart-*` tokens in
+  declaration order so they follow the theme into dark mode.
+
+  `Planner.Details` binds a dialog to the open day and hands its children that day and what falls
+  on it. The binding is the component's; what the dialog says is yours, because the contents of a
+  day are your data. Leave it out and `onDayPress` still fires, for a planner that pushes a screen
+  instead.
+
+  The grid is always six weeks. A month spans five or six depending on the weekday it starts on,
+  and drawn at its natural height the panel changes size as you page through the year — which makes
+  the days appear to move under your thumb.
+
+- **`createForm<TValues>()` binds a form's value shape once**, so field names, values, validators
+  and render props stay typed through JSX. The unbound `Form` and `Form.Field` still work
+  unchanged; the bound pair is `SignUpForm.useForm(...)` and `SignUpForm.Field`.
+
+- **`createBreakpoints()` lets an app define its own breakpoint semantics** rather than taking the
+  library's. `useBreakpoint` keeps its defaults.
+
+- **Explicit subpath exports.** `panelui-native/components/<name>`, `panelui-native/hooks/<name>`
+  and the `cn`, `color` and `time` utilities can be imported directly, for a bundler that does
+  better with a narrower entry point than with the root barrel.
+
+- **`panelui-cli doctor`** audits a project without writing anything — configuration and contained
+  paths, aliases, CSS imports, the Metro wrapper, theme, ambient types, dependencies and provider
+  wiring. `--json` for CI.
+
+- **`panelui-cli update`** re-fetches tracked components and replaces only files whose digest still
+  matches the copy it installed. Anything edited locally is reported as a conflict and never
+  overwritten. `--check` and `--dry-run` write nothing and exit non-zero when there is work.
+
+- **`panelui-cli list` takes `--type` and `--search`**, and the registry now carries `kind`,
+  documentation `group` and `stability` alongside each item.
+
+- **An API reference section** at `/docs/reference`, generated from the package's actual root
+  exports, plus a per-page list of what each component module exports.
+
+- **An upgrading page** listing current package versions and the releases that ask you to edit an
+  existing app. The versions are checked against the manifests, so a release that moves one without
+  updating the page fails its tests.
+
+### Changed
+
+- **Charts expose their data to screen readers.** Every chart now offers one spoken summary and one
+  entry per data row, while its paths, axes and markers stay decorative. `accessibilityLabel`,
+  `accessibilityLabelForDatum` and `onAccessibilityDatumPress` shape it; `accessible={false}` turns
+  it off where the same data is already in an accessible table nearby.
+
+- **`MessageScroller` has a virtualized path**, so only the visible part of a long transcript is
+  mounted. `contentContainerClassName` styles the padded column.
+
+- **`TimePicker`'s ruler mounts a window of ticks** rather than all of them, moving it once every
+  forty ticks so a normal scroll never reaches the edge of what is drawn.
+
+- **`BarChart` documents a data budget** — 500 rows and four series for an animated chart, with the
+  arithmetic behind it, because frame work grows as `2 × rows × series` and stacking adds more.
+
+### Fixed
+
+- The library's `files` list narrowed to exactly what the build emits, so nothing can ship by
+  accident, and every declared entry point is verified against the tarball before publishing.
+- `Meter`'s `valueLabel` is spoken whether or not it is drawn, and only drawn when asked for.
+- `Skeleton` and `Spinner` honour reduce motion, and no longer announce a wait with no name.
+
+### Docs
+
+- Previews for `LiveLineChart`, and its three versions — Live, Momentum and Read back — written up
+  with the code you would write for them. The example app had carried them for a while and the page
+  said nothing about any of them.
+- Usage records are authored one file per component instead of one file for all of them.
+- **panelui.dev is built when a release is published, not on every push.** Documentation that is
+  not waiting on a release goes out by running the deploy workflow by hand.
+
 ## [0.67.0] — 2026-08-14
 
 ### Added
