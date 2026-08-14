@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "//": "No branch and no pull request deploys this site. panelui.dev is built by .github/workflows/deploy-docs.yml, which fires a Vercel deploy hook when a vX.Y.Z release is published — and on demand from the Actions tab for documentation that is not waiting on a release. Every push used to cost a full Next.js build of a site whose content only changes meaning when a version ships.",
   "git": {
     "deploymentEnabled": false
   }
