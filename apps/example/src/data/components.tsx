@@ -4992,6 +4992,7 @@ function PasswordStrengthDemo() {
         maxValue={4}
         segments={4}
         label="Password strength"
+        showValueLabel
         valueLabel={['Too short', 'Weak', 'Fair', 'Good', 'Strong'][score]}
         thresholds={[
           { from: 0, color: 'destructive' },
@@ -17633,6 +17634,7 @@ const CATALOGUE: ComponentEntry[] = [
               maxValue={5}
               segments={5}
               label="Signal"
+              showValueLabel
               valueLabel="3 of 5 bars"
               color="info"
             />

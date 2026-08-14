@@ -94,6 +94,10 @@ export interface MeterProps
   /**
    * Text for the value label. Overrides the formatted value — use it for a
    * word where a number reads worse: `Strong`, `Almost full`.
+   *
+   * It is spoken whether or not it is drawn, so it can give a screen reader
+   * better words than the caption without changing the caption. Pair it with
+   * `showValueLabel` to draw it too.
    */
   valueLabel?: string;
   /**
@@ -236,7 +240,7 @@ export const Meter = forwardRef<View, MeterProps>(
     }));
 
     const spoken = formatValue(held, fraction, valueLabel, formatOptions);
-    const showValue = showValueLabel || valueLabel != null;
+    const showValue = showValueLabel;
     const hasHeader = label != null || showValue;
 
     const accessibility = {

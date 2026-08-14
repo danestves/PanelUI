@@ -92,6 +92,7 @@ Four blocks say “three out of four” where a bar says “about seventy percen
   maxValue={4}
   segments={4}
   label="Password strength"
+  showValueLabel
   valueLabel={['Too short', 'Weak', 'Fair', 'Good', 'Strong'][strength]}
   thresholds={[
     { from: 0, color: 'destructive' },
@@ -153,7 +154,7 @@ Drop `label` and the bare track renders, with no header row. Name it another way
 | `maxValue` | `number` | `100` | The top of the scale — the value at which the bar reads as full. Defaults to `100`, so a bare percentage needs neither bound set. |
 | `label` | `string` | — | What is being measured. Also the accessibility label, and a meter without one announces a number with nothing attached to it — "seventy-five percent" of what is not an answer. Pass `accessibilityLabel` instead only where the caption is drawn some other way. |
 | `showValueLabel` | `boolean` | `false` | Draw the value above the track, opposite the label. |
-| `valueLabel` | `string` | — | Text for the value label. Overrides the formatted value — use it for a word where a number reads worse: `Strong`, `Almost full`. |
+| `valueLabel` | `string` | — | Text for the value label. Overrides the formatted value — use it for a word where a number reads worse: `Strong`, `Almost full`. It is spoken whether or not it is drawn, so it can give a screen reader better words than the caption without changing the caption. Pair it with `showValueLabel` to draw it too. |
 | `formatOptions` | `Intl.NumberFormatOptions` | — | How to write the value, through `Intl.NumberFormat`. A `percent` style formats how far up the scale the value sits; every other style formats the value itself, so `{ style: 'unit', unit: 'gigabyte' }` against a `maxValue` of `256` reads `64 GB` rather than a percentage of it. Falls back to a rounded percent when omitted. |
 | `thresholds` | `MeterThreshold[]` | — | Points on the scale where the colour changes, each `{ from, color }`. The highest one the reading has reached wins, so the order you list them in does not matter; below all of them the `color` prop applies. This is the difference between a meter and a bar: the colour is a judgement about the reading. Which direction is bad is yours to say — thresholds climbing to `destructive` suit a disk filling up, thresholds falling to it suit a battery running down. |
 | `segments` | `number` | — | Draw the scale as this many discrete blocks instead of one continuous bar. Blocks are all or nothing, which is the point of them: four blocks say "three out of four" where a bar says "about seventy percent", and a password is not seventy percent strong. Any value above the floor lights at least one block, so a reading that is not empty never looks it. |
@@ -171,3 +172,5 @@ Any reading above the floor lights at least one segment. Rounding down would lea
 Segments are all or nothing; a partly-filled block is not drawn. If the value does not divide into whole blocks, use the continuous bar instead.
 
 The fill is animated on the UI thread, so a value change costs one render and nothing per frame. Under the platform's reduce-motion setting it lands on the value rather than springing to it, and segments light without a fade.
+
+`valueLabel` is spoken whether or not it is drawn, so it can give a screen reader better words than the caption carries — a byte count where the caption shows a percent. Pair it with `showValueLabel` to draw it as well.
