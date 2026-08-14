@@ -1,0 +1,148 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {
+  bucketByDay,
+  dayAccessibilityLabel,
+  dayKey,
+  entriesOn,
+  summariseMonth,
+  visibleEntries,
+} from '../src/components/planner/planner-entries.ts';
+
+const at = (day, hour = 0) => new Date(2026, 0, day, hour);
+
+test('two times on the same day land in the same bucket', () => {
+  const morning = { date: at(7, 9) };
+  const evening = { date: at(7, 21) };
+  const other = { date: at(8) };
+
+  const days = bucketByDay([morning, evening, other]);
+  assert.equal(days.size, 2);
+  assert.deepEqual(entriesOn(days, at(7, 13)), [morning, evening]);
+  assert.deepEqual(entriesOn(days, at(8, 23)), [other]);
+  assert.equal(dayKey(at(7, 9)), dayKey(at(7, 21)));
+});
+
+test('a day with nothing on it returns the same empty array every time', () => {
+  const days = bucketByDay([{ date: at(3) }]);
+  const first = entriesOn(days, at(20));
+  const second = entriesOn(days, at(21));
+  assert.deepEqual(first, []);
+  // A fresh array per empty cell would defeat every memo below it, and a
+  // month is mostly empty cells.
+  assert.equal(first, second);
+});
+
+test('entries keep the order they were given', () => {
+  const a = { date: at(4), id: 'a' };
+  const b = { date: at(4), id: 'b' };
+  const c = { date: at(4), id: 'c' };
+  assert.deepEqual(entriesOn(bucketByDay([c, a, b]), at(4)), [c, a, b]);
+});
+
+test('a cell draws up to its limit and counts the rest', () => {
+  const items = [1, 2, 3, 4, 5];
+  assert.deepEqual(visibleEntries(items, 2), { shown: [1, 2], overflow: 3 });
+  assert.deepEqual(visibleEntries(items, 5), { shown: items, overflow: 0 });
+  assert.deepEqual(visibleEntries(items, 9), { shown: items, overflow: 0 });
+  assert.deepEqual(visibleEntries(items, 0), { shown: [], overflow: 5 });
+  assert.deepEqual(visibleEntries(items, -3), { shown: [], overflow: 5 });
+  assert.deepEqual(visibleEntries([], 3), { shown: [], overflow: 0 });
+});
+
+test('visibleEntries does not hand back the caller its own array', () => {
+  const items = [1, 2];
+  const { shown } = visibleEntries(items, 5);
+  shown.push(3);
+  assert.deepEqual(items, [1, 2]);
+});
+
+test('a day is spoken by what is on it, not only by its date', () => {
+  const labels = new Map([
+    ['monthly', 'Monthly'],
+    ['yearly', 'Yearly'],
+  ]);
+
+  assert.equal(
+    dayAccessibilityLabel('16 January 2026', [], labels),
+    '16 January 2026, nothing planned'
+  );
+  assert.equal(
+    dayAccessibilityLabel('16 January 2026', [{ date: at(16), category: 'monthly' }], labels),
+    '16 January 2026, 1 entry: Monthly'
+  );
+  assert.equal(
+    dayAccessibilityLabel(
+      '16 January 2026',
+      [
+        { date: at(16), category: 'monthly' },
+        { date: at(16), category: 'yearly' },
+        // The same category twice is named once — a list that repeats itself
+        // takes longer to hear and says nothing more.
+        { date: at(16), category: 'monthly' },
+      ],
+      labels
+    ),
+    '16 January 2026, 3 entries: Monthly, Yearly'
+  );
+});
+
+test('an uncategorised day is counted without inventing a category for it', () => {
+  assert.equal(
+    dayAccessibilityLabel('2 January 2026', [{ date: at(2) }], new Map()),
+    '2 January 2026, 1 entry'
+  );
+  assert.equal(
+    dayAccessibilityLabel(
+      '2 January 2026',
+      [{ date: at(2), category: 'gone' }],
+      new Map([['monthly', 'Monthly']])
+    ),
+    '2 January 2026, 1 entry'
+  );
+});
+
+test('the month total counts the month, not the days either side of it', () => {
+  const inJanuary = (date) => date.getMonth() === 0;
+  const entries = [
+    { date: at(5), category: 'monthly' },
+    { date: at(12), category: 'monthly' },
+    { date: at(25), category: 'yearly' },
+    { date: at(30) },
+    // December and February, drawn in the grid but not part of the total.
+    { date: new Date(2025, 11, 29), category: 'monthly' },
+    { date: new Date(2026, 1, 1), category: 'yearly' },
+  ];
+
+  assert.deepEqual(
+    summariseMonth(entries, [
+      { id: 'monthly', label: 'Monthly' },
+      { id: 'yearly', label: 'Yearly' },
+    ], inJanuary),
+    {
+      total: 4,
+      categories: [
+        { id: 'monthly', label: 'Monthly', count: 2 },
+        { id: 'yearly', label: 'Yearly', count: 1 },
+      ],
+    }
+  );
+});
+
+test('a declared category with nothing in it still appears, at zero', () => {
+  const { categories } = summariseMonth(
+    [{ date: at(5), category: 'monthly' }],
+    [
+      { id: 'monthly', label: 'Monthly' },
+      { id: 'weekly', label: 'Weekly' },
+    ],
+    () => true
+  );
+  // The legend is the key to the colours, so it has to list every colour the
+  // reader might be looking for — including the one that happens to be unused
+  // this month.
+  assert.deepEqual(categories, [
+    { id: 'monthly', label: 'Monthly', count: 1 },
+    { id: 'weekly', label: 'Weekly', count: 0 },
+  ]);
+});
