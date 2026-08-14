@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1064,
-    "values": 287,
-    "types": 777,
-    "modules": 131,
-    "components": 106,
+    "exports": 1068,
+    "values": 288,
+    "types": 780,
+    "modules": 132,
+    "components": 107,
     "hooks": 12
   },
   "groups": {
@@ -2136,6 +2136,29 @@
           },
           {
             "name": "MessageActionsProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/meter/index.tsx",
+        "slug": "meter",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "Meter",
+            "kind": "value"
+          },
+          {
+            "name": "MeterProps",
+            "kind": "type"
+          },
+          {
+            "name": "MeterColor",
+            "kind": "type"
+          },
+          {
+            "name": "MeterThreshold",
             "kind": "type"
           }
         ]
