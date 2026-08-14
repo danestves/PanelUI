@@ -36,6 +36,18 @@ test('shared drift, missing files and extras fail with their paths', () => {
   assert.throws(() => validateTemplateParity(root, manifest), /missing one\.txt[\s\S]*unexpected surprise\.txt[\s\S]*shared file drifted: shared\.txt/);
 });
 
+test('running a template does not make it fail the contract', () => {
+  const root = fixture();
+  // Written by `tsc` and by Finder, gitignored, and absent from CI's clean
+  // checkout — so counting them as extras only ever fails for a human.
+  fs.writeFileSync(path.join(root, 'one', 'expo-env.d.ts'), '/// <reference />');
+  fs.writeFileSync(path.join(root, 'two', '.DS_Store'), 'finder');
+  fs.mkdirSync(path.join(root, 'one', 'node_modules'));
+  fs.writeFileSync(path.join(root, 'one', 'node_modules', 'anything.txt'), 'installed');
+
+  assert.deepEqual(validateTemplateParity(root, manifest), { shared: 1, overlays: 1, unique: 2 });
+});
+
 test('overlay differences are exact rather than an unrestricted exception', () => {
   const root = fixture();
   fs.writeFileSync(path.join(root, 'two', 'app.json'), JSON.stringify({ name: 'two', stable: false }));

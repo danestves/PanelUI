@@ -7,10 +7,18 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
 const MANIFEST = path.join(ROOT, 'templates', 'parity.json');
 const GENERATED_DIRECTORIES = new Set(['node_modules', '.expo']);
+/*
+ * Left behind by running a template rather than by editing it, and gitignored
+ * for that reason — `expo-env.d.ts` is written by `tsc`, `.DS_Store` by Finder.
+ * CI checks out clean and never sees either, so counting them as stray files
+ * makes this pass there and fail for anyone who has actually run a template.
+ */
+const GENERATED_FILES = new Set(['expo-env.d.ts', '.DS_Store']);
 
 function filesBelow(root, relative = '') {
   return fs.readdirSync(path.join(root, relative), { withFileTypes: true }).flatMap((entry) => {
     if (entry.isDirectory() && GENERATED_DIRECTORIES.has(entry.name)) return [];
+    if (entry.isFile() && GENERATED_FILES.has(entry.name)) return [];
     const next = path.posix.join(relative, entry.name);
     return entry.isDirectory() ? filesBelow(root, next) : [next];
   });
