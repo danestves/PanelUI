@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-107 components. The **Docs** column is the path under
+107 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you

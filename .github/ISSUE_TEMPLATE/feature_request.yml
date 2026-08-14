@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for the proposal.
 
-        PanelUI aims at one coherent visual language across 70-odd components, so it is worth
+        PanelUI aims at one coherent visual language across the full component catalogue, so it is worth
         having the design conversation here before any code gets written.
 
   - type: dropdown

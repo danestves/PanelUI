@@ -98,8 +98,8 @@ if (forbiddenFiles.length > 0) {
  * It needs to be well clear of it, though, because this step also runs in
  * `publish.yml`, after the tag exists. A budget that a few ordinary components
  * can cross turns a release into a failure at the one moment there is nothing
- * useful to do about it. At 106 components the package is 768 files and 2.1 MB
- * packed, and each new component costs six or seven files — so this leaves room
+ * useful to do about it. At the current catalogue size the package is 768 files
+ * and 2.1 MB packed, and each new component costs six or seven files — so this leaves room
  * for roughly another sixty of them. Raise it when it is genuinely reached;
  * that is a normal thing to do and not a signal that anything is wrong.
  */

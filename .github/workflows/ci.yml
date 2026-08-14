@@ -25,6 +25,9 @@ jobs:
       - name: Check example metadata
         run: npm run metadata:check --workspace=example
 
+      - name: Check catalogue parity
+        run: npm run catalogue:check
+
       - name: Build library
         run: npm run build
 
@@ -97,4 +100,3 @@ jobs:
           npm install -g npm@latest
           npm --version
           npm run verify:package --workspace=panelui-native
-
