@@ -39,9 +39,18 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactElement,
   type ReactNode,
 } from 'react';
-import { View, type LayoutChangeEvent, type ViewProps } from 'react-native';
+import {
+  FlatList,
+  View,
+  type FlatListProps,
+  type LayoutChangeEvent,
+  type ListRenderItemInfo,
+  type ViewProps,
+  type ViewToken,
+} from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedRef,
@@ -59,7 +68,10 @@ import { cn } from '../../utils/cn';
 import { textChildren } from '../../primitives/text';
 import {
   distanceFromMessageScrollerTarget,
+  initialMessageScrollerIndex,
   isMessageScrollerTargetVisible,
+  messageScrollerAnchorAt,
+  messageScrollerIndex,
   MESSAGE_SCROLLER_EDGE_THRESHOLD,
 } from './message-scroller-math';
 
@@ -72,8 +84,15 @@ const ANCHOR_PEEK = 24;
 
 export type MessageScrollerPosition = 'start' | 'end' | 'last-anchor';
 
+interface MessageScrollerDriver {
+  scrollToEnd: (animated: boolean) => void;
+  scrollToStart: (animated: boolean) => void;
+  scrollToMessage: (id: string, animated: boolean) => boolean;
+}
+
 interface MessageScrollerContextValue {
   scrollRef: ReturnType<typeof useAnimatedRef<Animated.ScrollView>>;
+  registerDriver: (driver: MessageScrollerDriver | null) => void;
   /** 1 while the reader is at the live edge, 0 otherwise. Drives follow state. */
   atEnd: ReturnType<typeof useSharedValue<number>>;
   /** Live distance from each edge, used by target-specific jump controls. */
@@ -167,6 +186,10 @@ function MessageScrollerRoot({
   const itemY = useRef(new Map<string, number>());
   const anchors = useRef<string[]>([]);
   const following = useRef(autoScroll);
+  const driver = useRef<MessageScrollerDriver | null>(null);
+  const registerDriver = useCallback((next: MessageScrollerDriver | null) => {
+    driver.current = next;
+  }, []);
 
   const registerItem = useCallback((id: string, y: number, anchor: boolean) => {
     itemY.current.set(id, y);
@@ -183,7 +206,8 @@ function MessageScrollerRoot({
   const scrollToEnd = useCallback(
     (animated = true) => {
       following.current = true;
-      scrollRef.current?.scrollToEnd({ animated });
+      if (driver.current) driver.current.scrollToEnd(animated);
+      else scrollRef.current?.scrollToEnd({ animated });
     },
     [scrollRef]
   );
@@ -191,17 +215,23 @@ function MessageScrollerRoot({
   const scrollToStart = useCallback(
     (animated = true) => {
       following.current = false;
-      scrollRef.current?.scrollTo({ y: 0, animated });
+      if (driver.current) driver.current.scrollToStart(animated);
+      else scrollRef.current?.scrollTo({ y: 0, animated });
     },
     [scrollRef]
   );
 
   const scrollToMessage = useCallback(
     (id: string, animated = true) => {
+      if (driver.current) {
+        if (driver.current.scrollToMessage(id, animated)) following.current = false;
+        return;
+      }
       const y = itemY.current.get(id);
-      if (y === undefined) return;
-      following.current = false;
-      scrollRef.current?.scrollTo({ y: Math.max(0, y - ANCHOR_PEEK), animated });
+      if (y !== undefined) {
+        following.current = false;
+        scrollRef.current?.scrollTo({ y: Math.max(0, y - ANCHOR_PEEK), animated });
+      }
     },
     [scrollRef]
   );
@@ -209,6 +239,7 @@ function MessageScrollerRoot({
   const context = useMemo<MessageScrollerContextValue>(
     () => ({
       scrollRef,
+      registerDriver,
       atEnd,
       distanceFromStart,
       distanceFromEnd,
@@ -230,6 +261,7 @@ function MessageScrollerRoot({
     }),
     [
       scrollRef,
+      registerDriver,
       atEnd,
       distanceFromStart,
       distanceFromEnd,
@@ -439,6 +471,201 @@ function MessageScrollerViewport({
 }
 MessageScrollerViewport.displayName = 'MessageScroller.Viewport';
 
+export interface MessageScrollerListItem {
+  /** Stable id used by `scrollToMessage` and as the default React key. */
+  messageId: string;
+  /** Marks the start of a turn for `last-anchor` and visibility reporting. */
+  scrollAnchor?: boolean;
+}
+
+export interface MessageScrollerListProps<T extends MessageScrollerListItem = MessageScrollerListItem>
+  extends Omit<
+    FlatListProps<T>,
+    | 'data'
+    | 'renderItem'
+    | 'keyExtractor'
+    | 'onScroll'
+    | 'onContentSizeChange'
+    | 'onViewableItemsChanged'
+    | 'maintainVisibleContentPosition'
+    | 'onScrollToIndexFailed'
+    | 'onScrollEndDrag'
+    | 'onMomentumScrollEnd'
+    | 'CellRendererComponent'
+  > {
+  className?: string;
+  /** Classes on the virtualized list's padded transcript column. */
+  contentContainerClassName?: string;
+  /**
+   * The complete transcript. Rows outside the native render window stay
+   * unmounted; each item therefore carries its stable navigation metadata.
+   */
+  data: readonly T[];
+  /** Draw one turn from the native list window. */
+  renderItem: (info: ListRenderItemInfo<T>) => ReactElement | null;
+}
+
+/**
+ * The real virtualized transcript path. Only its render window mounts; native
+ * visible-content maintenance keeps prepends still without measuring offscreen
+ * rows in JavaScript.
+ */
+function MessageScrollerList<T extends MessageScrollerListItem>({
+  className,
+  contentContainerClassName,
+  data,
+  renderItem,
+  initialNumToRender = 12,
+  maxToRenderPerBatch = 8,
+  windowSize = 7,
+  ...props
+}: MessageScrollerListProps<T>) {
+  const {
+    atEnd,
+    distanceFromStart,
+    distanceFromEnd,
+    setAtEndJS,
+    autoScroll,
+    preserveScrollOnPrepend,
+    defaultScrollPosition,
+    following,
+    registerDriver,
+    setCurrentAnchorId,
+  } = useScroller('MessageScroller.List');
+  const listRef = useRef<FlatList<T>>(null);
+  const items = useRef(data);
+  items.current = data;
+  const opened = useRef(false);
+  const firstVisibleIndex = useRef<number | null>(null);
+
+  const publishAtEnd = useCallback(
+    (next: boolean) => {
+      following.current = autoScroll && next;
+      setAtEndJS(next);
+    },
+    [autoScroll, following, setAtEndJS]
+  );
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const { contentOffset, contentSize, layoutMeasurement } = event;
+      distanceFromStart.value = distanceFromMessageScrollerTarget(
+        'start',
+        contentOffset.y,
+        contentSize.height,
+        layoutMeasurement.height
+      );
+      distanceFromEnd.value = distanceFromMessageScrollerTarget(
+        'end',
+        contentOffset.y,
+        contentSize.height,
+        layoutMeasurement.height
+      );
+      const next = isMessageScrollerTargetVisible(distanceFromEnd.value) ? 0 : 1;
+      if (next !== atEnd.value) {
+        atEnd.value = next;
+        runOnJS(publishAtEnd)(next === 1);
+      }
+    },
+  });
+
+  const scrollToIndex = useCallback((index: number, animated: boolean) => {
+    listRef.current?.scrollToIndex({ index, viewOffset: ANCHOR_PEEK, animated });
+  }, []);
+
+  const setAnchorAtIndex = useCallback(
+    (index: number) => setCurrentAnchorId(messageScrollerAnchorAt(items.current, index)),
+    [setCurrentAnchorId]
+  );
+
+  useEffect(() => {
+    registerDriver({
+      scrollToEnd: (animated) => {
+        listRef.current?.scrollToEnd({ animated });
+        setAnchorAtIndex(items.current.length - 1);
+      },
+      scrollToStart: (animated) => {
+        listRef.current?.scrollToOffset({ offset: 0, animated });
+        setAnchorAtIndex(0);
+      },
+      scrollToMessage: (id, animated) => {
+        const index = messageScrollerIndex(items.current, id);
+        if (index === undefined) return false;
+        scrollToIndex(index, animated);
+        setAnchorAtIndex(index);
+        return true;
+      },
+    });
+    return () => registerDriver(null);
+  }, [registerDriver, scrollToIndex, setAnchorAtIndex]);
+
+  useEffect(() => {
+    following.current = autoScroll && atEnd.value === 1;
+  }, [atEnd, autoScroll, following]);
+
+  const onContentSizeChange = () => {
+    if (!opened.current) {
+      opened.current = true;
+      const index = initialMessageScrollerIndex(data, defaultScrollPosition);
+      const target = index ?? data.length - 1;
+      if (index === undefined) listRef.current?.scrollToEnd({ animated: false });
+      else if (index > 0) scrollToIndex(index, false);
+      setAnchorAtIndex(target);
+      return;
+    }
+    if (following.current) listRef.current?.scrollToEnd({ animated: true });
+  };
+
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken<T>[] }) => {
+      const first = viewableItems.reduce(
+        (best, token) => (token.index !== null && token.index < best ? token.index : best),
+        Infinity
+      );
+      firstVisibleIndex.current = Number.isFinite(first) ? first : null;
+    }
+  ).current;
+
+  const settleAnchor = () => {
+    if (firstVisibleIndex.current !== null) {
+      setCurrentAnchorId(messageScrollerAnchorAt(items.current, firstVisibleIndex.current));
+    }
+  };
+
+  return (
+    <Animated.FlatList
+      ref={listRef}
+      data={data}
+      renderItem={renderItem}
+      keyExtractor={(item) => item.messageId}
+      accessibilityRole="list"
+      accessibilityLabel="Messages"
+      accessibilityLiveRegion="polite"
+      scrollEventThrottle={16}
+      showsVerticalScrollIndicator={false}
+      initialNumToRender={initialNumToRender}
+      maxToRenderPerBatch={maxToRenderPerBatch}
+      windowSize={windowSize}
+      maintainVisibleContentPosition={
+        preserveScrollOnPrepend ? { minIndexForVisible: 0 } : undefined
+      }
+      className={cn('flex-1', className)}
+      contentContainerClassName={cn('gap-3 p-4 pb-16', contentContainerClassName)}
+      {...props}
+      onScroll={scrollHandler}
+      onContentSizeChange={onContentSizeChange}
+      onViewableItemsChanged={onViewableItemsChanged}
+      onScrollEndDrag={settleAnchor}
+      onMomentumScrollEnd={settleAnchor}
+      onScrollToIndexFailed={({ index, averageItemLength }) => {
+        listRef.current?.scrollToOffset({ offset: index * averageItemLength, animated: false });
+        setTimeout(() => scrollToIndex(index, false), 0);
+      }}
+    />
+  );
+}
+MessageScrollerList.displayName = 'MessageScroller.List';
+
 /**
  * How far the transcript shifted, measured on the message closest to the top
  * that was there before and is still there.
@@ -601,6 +828,7 @@ MessageScrollerButton.displayName = 'MessageScroller.Button';
 
 export const MessageScroller = Object.assign(MessageScrollerRoot, {
   Viewport: MessageScrollerViewport,
+  List: MessageScrollerList,
   Content: MessageScrollerContent,
   Item: MessageScrollerItem,
   Button: MessageScrollerButton,
