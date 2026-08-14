@@ -160,7 +160,12 @@ for (const item of componentModules) {
   const file = path.join(DOCS, `${routeFor(slug)}.mdx`);
   const marker = '\n## Public exports\n';
   const base = fs.readFileSync(file, 'utf8').split(marker)[0].trimEnd();
-  outputs.set(file, `${base}${marker}\n${generated}${moduleSection(item).replace(/^## [^\n]+\n\n/, '')}\n`);
+  // The blank line before the heading is not cosmetic. `marker` starts the
+  // section, and a page ending in a JSX close tag — `</Callout>` — followed
+  // straight by `##` gives MDX a heading glued to an element rather than a
+  // heading. Splitting on `marker` still finds the old shape, so pages written
+  // without it are rewritten rather than doubled.
+  outputs.set(file, `${base}\n${marker}\n${generated}${moduleSection(item).replace(/^## [^\n]+\n\n/, '')}\n`);
 }
 
 for (const [file, content] of outputs) {
