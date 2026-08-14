@@ -51,6 +51,7 @@ export const COMPONENTS = [
   {"slug":"menu","name":"Menu","summary":"The list of things you can do to something"},
   {"slug":"message","name":"Message","summary":"Chat turn with avatar, bubble and metadata"},
   {"slug":"message-scroller","name":"MessageScroller","summary":"Scroll behaviour a chat transcript needs"},
+  {"slug":"meter","name":"Meter","summary":"A measurement on a fixed scale, coloured by where it falls"},
   {"slug":"number-input","name":"NumberInput","summary":"Numeric field stepped by buttons or typed"},
   {"slug":"otp-input","name":"OtpInput","summary":"One-time-code field, one cell per digit"},
   {"slug":"pagination","name":"Pagination","summary":"Moving through a result set one page at a time"},

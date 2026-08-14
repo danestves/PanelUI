@@ -1,0 +1,121 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import test from 'node:test';
+import ts from 'typescript';
+
+const source = await readFile(
+  new URL('../src/components/meter/meter-scale.ts', import.meta.url),
+  'utf8'
+);
+const compiled = ts.transpileModule(source, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+const { clamp, colorFor, fractionOf, formatValue, litSegments } = await import(
+  `data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`
+);
+
+test('fractionOf reads a value against its own scale', () => {
+  assert.equal(fractionOf(50, 0, 100), 0.5);
+  assert.equal(fractionOf(168, 0, 256), 168 / 256);
+  // A scale that does not start at zero measures from its own floor.
+  assert.equal(fractionOf(60, 40, 80), 0.5);
+  // Out of range reads as one end of the track, never past it.
+  assert.equal(fractionOf(-20, 0, 100), 0);
+  assert.equal(fractionOf(140, 0, 100), 1);
+});
+
+test('a scale with no span reads as empty rather than dividing by zero', () => {
+  for (const [min, max] of [
+    [10, 10],
+    [80, 20],
+  ]) {
+    const fraction = fractionOf(15, min, max);
+    assert.equal(fraction, 0);
+    assert.ok(Number.isFinite(fraction));
+  }
+});
+
+test('clamp holds a stray value inside the scale', () => {
+  assert.equal(clamp(5, 0, 100), 5);
+  assert.equal(clamp(-5, 0, 100), 0);
+  assert.equal(clamp(105, 0, 100), 100);
+  assert.equal(clamp(Number.NaN, 0, 100), 0);
+});
+
+test('the highest threshold the reading has reached wins', () => {
+  const climbing = [
+    { from: 70, color: 'warning' },
+    { from: 90, color: 'destructive' },
+  ];
+  assert.equal(colorFor(10, 'success', climbing), 'success');
+  assert.equal(colorFor(70, 'success', climbing), 'warning');
+  assert.equal(colorFor(89, 'success', climbing), 'warning');
+  assert.equal(colorFor(90, 'success', climbing), 'destructive');
+  assert.equal(colorFor(100, 'success', climbing), 'destructive');
+});
+
+test('thresholds give the same answer whatever order they are listed in', () => {
+  // Order-independence is the contract. A first-wins rule would make a
+  // reordered array a silent behaviour change for the caller.
+  const bands = [
+    { from: 0, color: 'destructive' },
+    { from: 20, color: 'warning' },
+    { from: 50, color: 'success' },
+  ];
+  const shuffled = [bands[2], bands[0], bands[1]];
+  for (const value of [0, 19, 20, 49, 50, 100]) {
+    assert.equal(colorFor(value, 'primary', bands), colorFor(value, 'primary', shuffled));
+  }
+  assert.equal(colorFor(10, 'primary', bands), 'destructive');
+  assert.equal(colorFor(60, 'primary', bands), 'success');
+});
+
+test('no thresholds, or none reached, leaves the base colour', () => {
+  assert.equal(colorFor(50, 'info', undefined), 'info');
+  assert.equal(colorFor(50, 'info', []), 'info');
+  assert.equal(colorFor(5, 'info', [{ from: 80, color: 'destructive' }]), 'info');
+});
+
+test('any reading above the floor lights a segment', () => {
+  // Rounding down would leave the whole first block of a four-block meter
+  // dark, so "a little" would look like "none".
+  assert.equal(litSegments(0, 4), 0);
+  assert.equal(litSegments(0.01, 4), 1);
+  assert.equal(litSegments(0.25, 4), 1);
+  assert.equal(litSegments(0.26, 4), 2);
+  assert.equal(litSegments(0.75, 4), 3);
+  assert.equal(litSegments(1, 4), 4);
+});
+
+test('the lit count never runs past the blocks that exist', () => {
+  assert.equal(litSegments(1.5, 4), 4);
+  assert.equal(litSegments(1, 10), 10);
+  assert.equal(litSegments(0.5, 0), 0);
+  assert.equal(litSegments(0.5, -3), 0);
+});
+
+test('formatValue prefers an explicit label over any number', () => {
+  assert.equal(formatValue(3, 0.75, 'Strong'), 'Strong');
+  assert.equal(formatValue(3, 0.75, 'Strong', { style: 'percent' }), 'Strong');
+  // An empty string is a caller saying "no caption", not an absent one.
+  assert.equal(formatValue(3, 0.75, ''), '');
+});
+
+test('a percent style formats the fraction, and anything else the value', () => {
+  assert.equal(formatValue(168, 0.65625, undefined, { style: 'percent' }), '66%');
+  assert.equal(
+    formatValue(168, 0.65625, undefined, {
+      style: 'unit',
+      unit: 'gigabyte',
+      unitDisplay: 'short',
+    }),
+    '168 GB'
+  );
+});
+
+test('formatValue falls back to a rounded percent', () => {
+  assert.equal(formatValue(50, 0.5), '50%');
+  assert.equal(formatValue(168, 168 / 256), '66%');
+  // A partial Intl must not take the caption down with it.
+  assert.equal(formatValue(50, 0.5, undefined, { style: 'nonsense' }), '50%');
+});

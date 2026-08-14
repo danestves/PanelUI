@@ -10,6 +10,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { Text } from '../../primitives/text';
+import {
+  clamp,
+  colorFor,
+  fractionOf,
+  formatValue,
+  litSegments,
+  type MeterColor,
+  type MeterThreshold,
+} from './meter-scale';
 
 const SPRING = { damping: 20, stiffness: 180, mass: 0.6 } as const;
 /** Milliseconds for a segment to light or go out. */
@@ -56,22 +65,6 @@ const meterVariants = tv({
 });
 
 type MeterVariantProps = VariantProps<typeof meterVariants>;
-
-/** The token a meter can be painted with. */
-export type MeterColor = NonNullable<MeterVariantProps['color']>;
-
-/**
- * A point on the scale, and the colour the meter takes from there upwards.
- *
- * `from` is in the same units as `value` — not a percentage of the range —
- * so a threshold on a 0–8 GB meter is written in gigabytes.
- */
-export interface MeterThreshold {
-  /** The value at which this colour takes over. */
-  from: number;
-  /** What the bar is painted with at or above `from`. */
-  color: MeterColor;
-}
 
 export interface MeterProps
   extends Omit<ViewProps, 'children'>,
@@ -136,68 +129,6 @@ export interface MeterProps
   indicatorClassName?: string;
   /** Extra classes for the label + value row. */
   headerClassName?: string;
-}
-
-/** `value` held inside the scale, so a stray number cannot escape the track. */
-function clamp(value: number, min: number, max: number) {
-  if (!(value > min)) return min;
-  if (value > max) return max;
-  return value;
-}
-
-/**
- * How far up the scale the value sits, 0–1. An empty or inverted range has no
- * meaningful position in it, so it reads as empty rather than dividing by zero.
- */
-function fractionOf(value: number, min: number, max: number) {
-  const span = max - min;
-  if (!(span > 0)) return 0;
-  return clamp((value - min) / span, 0, 1);
-}
-
-/**
- * The colour the reading has earned: the highest threshold at or below the
- * value, or the base colour when it has reached none of them.
- */
-function colorFor(
-  value: number,
-  base: MeterColor | undefined,
-  thresholds: MeterThreshold[] | undefined
-) {
-  if (!thresholds?.length) return base;
-  let winner: MeterThreshold | undefined;
-  for (const threshold of thresholds) {
-    if (value < threshold.from) continue;
-    if (!winner || threshold.from > winner.from) winner = threshold;
-  }
-  return winner?.color ?? base;
-}
-
-/**
- * The value caption: an explicit override, an `Intl` rendering, or a rounded
- * percent.
- *
- * A `percent` style is given the fraction, because that is what a percentage
- * of the scale means; every other style is given the value, because a byte
- * count or a score is a quantity and not a proportion.
- */
-function formatValue(
-  value: number,
-  fraction: number,
-  valueLabel?: string,
-  formatOptions?: Intl.NumberFormatOptions
-) {
-  if (valueLabel != null) return valueLabel;
-  if (formatOptions) {
-    try {
-      return new Intl.NumberFormat(undefined, formatOptions).format(
-        formatOptions.style === 'percent' ? fraction : value
-      );
-    } catch {
-      // Some engines ship a partial Intl; fall through to the plain percent.
-    }
-  }
-  return `${Math.round(fraction * 100)}%`;
 }
 
 interface SegmentProps {
@@ -283,7 +214,7 @@ export const Meter = forwardRef<View, MeterProps>(
     // Any reading above the floor lights a block, so "a little" never looks
     // like "none". Rounding down would leave the first quarter of a
     // four-block meter dark, which is the reading it is least able to afford.
-    const litCount = segments ? Math.ceil(fraction * segments) : 0;
+    const litCount = segments ? litSegments(fraction, segments) : 0;
     const lit = useSharedValue(litCount);
 
     // Reduce motion lands on the value instead of springing to it — the
@@ -379,3 +310,5 @@ export const Meter = forwardRef<View, MeterProps>(
 );
 
 Meter.displayName = 'Meter';
+
+export type { MeterColor, MeterThreshold };
