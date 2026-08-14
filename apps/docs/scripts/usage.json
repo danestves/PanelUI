@@ -4660,6 +4660,11 @@
       {
         "title": "Swapped for the real thing",
         "code": "{loading ? (\n  <Skeleton className=\"h-6 w-32\" />\n) : (\n  <Text size=\"xl\" weight=\"semibold\">{user.name}</Text>\n)}"
+      },
+      {
+        "title": "Announcing the wait",
+        "description": "One label for the whole region, not one per row.",
+        "code": "<View className=\"gap-3\">\n  <Skeleton className=\"h-4 w-3/4\" label=\"Loading your orders\" />\n  <Skeleton className=\"h-4 w-full\" />\n  <Skeleton className=\"h-4 w-2/3\" />\n</View>"
       }
     ],
     "extraImports": [
@@ -4672,7 +4677,8 @@
       "alt": "The Skeleton component, running in the example app.",
       "width": 720,
       "height": 478
-    }
+    },
+    "notes": "A placeholder is a picture of content that is not there, so it is hidden from screen readers by default. An unlabelled grey box announces nothing worth hearing, and a screen of them announces it many times over.\n\nPass `label` on the one skeleton that stands for the region — the first row of a list, the card standing in for a page — and the wait is announced once, as a busy status. Leave it off the rest.\n\nUnder the platform's reduce-motion setting the pulse stops and the placeholder holds at a middle opacity. A skeleton that stops moving still reads as content on its way, because the shape is the message."
   },
   "slider": {
     "intro": "A value picked by dragging a thumb along a track, or a span picked by two.\n\nThe thumb is a pill exactly as tall as the track, so nothing has to escape the track to be drawn whole, with a knob inside it that shrinks while you drag.\n\nPosition and fill are animated on the UI thread, so dragging never round-trips through React; the value bridges back on change and again on release.\n\nFor an exact number, use [NumberInput](/docs/components/number-input) — past a handful of steps, typing beats dragging.",
@@ -4878,6 +4884,11 @@
         "title": "Inside a button",
         "description": "You rarely need this — `Button`’s own `loading` prop inserts a variant-matched spinner for you.",
         "code": "<Button loading={saving}>Save</Button>"
+      },
+      {
+        "title": "Naming the wait",
+        "description": "A spinner alone on a screen is the only thing announcing it, so give it words.",
+        "code": "<View className=\"flex-1 items-center justify-center\">\n  <Spinner size=\"lg\" label=\"Loading your dashboard\" />\n</View>"
       }
     ],
     "variantCode": {
@@ -4892,7 +4903,8 @@
       "alt": "The Spinner component, running in the example app.",
       "width": 720,
       "height": 176
-    }
+    },
+    "notes": "A bare ring carries no words, so it is hidden from screen readers unless `label` is given. An unnamed progress indicator announces its role and nothing else, which is noise standing in for information.\n\nLeave `label` off wherever something around the spinner already says the wait is on — `Button`'s `loading` state, a row with its own caption. Set it where the spinner is the only sign.\n\nUnder the platform's reduce-motion setting the ring stops turning and fades in place instead. It keeps moving because a spinner that holds still reads as one that has hung, which is the single thing a spinner exists to rule out."
   },
   "tour": {
     "versions": [
