@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1072,
-    "values": 289,
-    "types": 783,
+    "exports": 1076,
+    "values": 290,
+    "types": 786,
     "modules": 132,
     "components": 107,
     "hooks": 12
@@ -4434,11 +4434,27 @@
             "kind": "value"
           },
           {
+            "name": "createBreakpoints",
+            "kind": "value"
+          },
+          {
             "name": "BREAKPOINTS",
             "kind": "value"
           },
           {
             "name": "Breakpoint",
+            "kind": "type"
+          },
+          {
+            "name": "BreakpointContract",
+            "kind": "type"
+          },
+          {
+            "name": "BreakpointProviderProps",
+            "kind": "type"
+          },
+          {
+            "name": "BreakpointResult",
             "kind": "type"
           },
           {
