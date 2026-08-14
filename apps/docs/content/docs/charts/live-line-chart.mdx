@@ -11,12 +11,20 @@ For a fixed series that is not going to grow — a week of visits, twelve months
 
 **If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
 
+<PreviewVideo
+  src="/previews/live-line-chart.mp4"
+  poster="/previews/live-line-chart-poster.jpg"
+  alt="The LiveLineChart component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 LiveLineChart ships with the library — no separate install.
 
 ```tsx
-import { LiveLineChart, type LiveLinePoint, Frame } from 'panelui-native';
+import { LiveLineChart, type LiveLinePoint, Frame, Button } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -142,6 +150,104 @@ A reading can scroll off the window while it is being read. The crosshair goes w
   <LiveLineChart.Line />
   <LiveLineChart.Tip />
 </LiveLineChart>
+```
+
+## Versions
+
+### Live
+
+The window slides against the clock and the tip rides the newest reading. `window` is how many seconds are on screen; readings older than that leave on the left.
+
+<PreviewVideo
+  src="/previews/live-line-chart-live.mp4"
+  poster="/previews/live-line-chart-live-poster.jpg"
+  alt="LiveLineChart — Live."
+  width={720}
+  height={1560}
+/>
+
+```tsx
+<Frame>
+  <Frame.Header>
+    <Frame.Title>Requests / sec</Frame.Title>
+    <Frame.Action>Live</Frame.Action>
+  </Frame.Header>
+  <Frame.Panel>
+    <LiveLineChart data={points} window={30}>
+      <LiveLineChart.Header title="Right now" />
+      <LiveLineChart.Grid />
+      <LiveLineChart.Area />
+      <LiveLineChart.Line />
+      <LiveLineChart.Tip />
+      <LiveLineChart.XAxis />
+    </LiveLineChart>
+  </Frame.Panel>
+</Frame>
+```
+
+### Momentum
+
+Colour taken from the direction of travel rather than from one fixed hue. Passing an empty `momentumColors` takes the up, down and flat colours from the theme; give it your own to override them.
+
+<PreviewVideo
+  src="/previews/live-line-chart-momentum.mp4"
+  poster="/previews/live-line-chart-momentum-poster.jpg"
+  alt="LiveLineChart — Momentum."
+  width={720}
+  height={1560}
+/>
+
+```tsx
+<LiveLineChart data={points} window={24} momentumColors={{}}>
+  <LiveLineChart.Header
+    title="Throughput"
+    caption="The colour is the last few readings, not the value"
+  />
+  <LiveLineChart.Grid />
+  <LiveLineChart.YAxis />
+  <LiveLineChart.Area />
+  <LiveLineChart.Line />
+  <LiveLineChart.Tip />
+  <LiveLineChart.XAxis />
+</LiveLineChart>
+```
+
+### Read back
+
+Drag across the plot to read a moment that has already gone past, and hold the window still to talk about it. The two work together: dragging a window that is still moving means chasing the reading you are trying to name.
+
+<PreviewVideo
+  src="/previews/live-line-chart-read-back.mp4"
+  poster="/previews/live-line-chart-read-back-poster.jpg"
+  alt="LiveLineChart — Read back."
+  width={720}
+  height={1560}
+/>
+
+```tsx
+const [held, setHeld] = useState(false);
+
+<Frame>
+  <Frame.Header>
+    <Frame.Title>Read it back</Frame.Title>
+    <Frame.Action>
+      <Button size="sm" variant="ghost" onPress={() => setHeld(!held)}>
+        {held ? 'Resume' : 'Hold'}
+      </Button>
+    </Frame.Action>
+  </Frame.Header>
+  <Frame.Panel>
+    <LiveLineChart data={points} window={30} paused={held}>
+      <LiveLineChart.Header title="Requests / sec" caption="Drag across the plot" />
+      <LiveLineChart.Grid />
+      <LiveLineChart.YAxis />
+      <LiveLineChart.Line />
+      <LiveLineChart.Tip />
+      <LiveLineChart.Tooltip />
+      <LiveLineChart.XAxis />
+    </LiveLineChart>
+  </Frame.Panel>
+</Frame>
 ```
 
 ## API Reference

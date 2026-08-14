@@ -4,7 +4,8 @@
   "usage": "<LiveLineChart data={points} window={30}>\n  <LiveLineChart.Header title=\"Requests / sec\" />\n  <LiveLineChart.Grid />\n  <LiveLineChart.Area />\n  <LiveLineChart.Line />\n  <LiveLineChart.Tip />\n  <LiveLineChart.XAxis />\n</LiveLineChart>",
   "extraImports": [
     "type LiveLinePoint",
-    "Frame"
+    "Frame",
+    "Button"
   ],
   "anatomy": "<LiveLineChart>\n  <LiveLineChart.Header />     {/* what is watched, and what it reads now */}\n  <LiveLineChart.Grid />       {/* the rules the readings are judged against */}\n  <LiveLineChart.Area />       {/* the gradient fill under the line */}\n  <LiveLineChart.Line />       {/* the line */}\n  <LiveLineChart.Skeleton />   {/* while status=\"loading\" */}\n  <LiveLineChart.Tip />        {/* the dot at the leading end, and its badge */}\n  <LiveLineChart.XAxis />      {/* how far back the plot reaches */}\n  <LiveLineChart.YAxis />      {/* the value scale */}\n  <LiveLineChart.Tooltip />    {/* drag back to read a reading that has gone past */}\n</LiveLineChart>",
   "parts": {
@@ -40,5 +41,50 @@
       "code": "<LiveLineChart data={points} paused={held}>\n  <LiveLineChart.Header title=\"Requests / sec\">\n    <Button size=\"sm\" variant=\"ghost\" onPress={() => setHeld(!held)}>\n      {held ? 'Resume' : 'Hold'}\n    </Button>\n  </LiveLineChart.Header>\n  <LiveLineChart.Line />\n  <LiveLineChart.Tip />\n</LiveLineChart>"
     }
   ],
-  "notes": "The y-axis follows what is *visible*, not everything kept. A spike that has scrolled off the left edge stops holding the axis open, so a feed that settles is not left flat against the bottom of a plot scaled for something that happened a minute ago. Pass `yDomain` to fix it instead.\n\n`Tip` draws a dot and nothing else unless `badge` is passed. The badge is a floating card, which is the shape a reader has learnt means they touched something — sitting there unasked it reads as a tooltip that opened by itself. Turn it on for a chart with no header to put the reading in. It hides itself while the crosshair is out either way, so there is never a second card answering a different question.\n\n`paused` holds the whole picture, not only the clock. Readings keep arriving behind the frozen edge, and the y-axis, the tip and the momentum colour are all derived from the newest one — left live they would go on rescaling, chasing and recolouring under a line that has stopped, which is a held chart that is still moving.\n\nThe tip rides the newest reading rather than the right-hand edge. Pinning it to the edge would hold it still and steady, which is the picture of a feed that is working.\n\nThe x-axis is labelled in offsets from now — `-30s`, `-15s`, `now` — rather than clock times. A moving window labelled with wall-clock times rewrites every label on every frame.\n\nThe frame callback stops on unmount, on `paused`, on `status=\"loading\"`, and never starts under reduced motion. Nothing else in the library animates without an interaction or a change of data, so a chart left mounted off-screen is worth `paused`."
+  "versions": [
+    {
+      "title": "Live",
+      "description": "The window slides against the clock and the tip rides the newest reading. `window` is how many seconds are on screen; readings older than that leave on the left.",
+      "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Requests / sec</Frame.Title>\n    <Frame.Action>Live</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <LiveLineChart data={points} window={30}>\n      <LiveLineChart.Header title=\"Right now\" />\n      <LiveLineChart.Grid />\n      <LiveLineChart.Area />\n      <LiveLineChart.Line />\n      <LiveLineChart.Tip />\n      <LiveLineChart.XAxis />\n    </LiveLineChart>\n  </Frame.Panel>\n</Frame>",
+      "previewVideo": {
+        "src": "/previews/live-line-chart-live.mp4",
+        "poster": "/previews/live-line-chart-live-poster.jpg",
+        "alt": "LiveLineChart — Live.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Momentum",
+      "description": "Colour taken from the direction of travel rather than from one fixed hue. Passing an empty `momentumColors` takes the up, down and flat colours from the theme; give it your own to override them.",
+      "code": "<LiveLineChart data={points} window={24} momentumColors={{}}>\n  <LiveLineChart.Header\n    title=\"Throughput\"\n    caption=\"The colour is the last few readings, not the value\"\n  />\n  <LiveLineChart.Grid />\n  <LiveLineChart.YAxis />\n  <LiveLineChart.Area />\n  <LiveLineChart.Line />\n  <LiveLineChart.Tip />\n  <LiveLineChart.XAxis />\n</LiveLineChart>",
+      "previewVideo": {
+        "src": "/previews/live-line-chart-momentum.mp4",
+        "poster": "/previews/live-line-chart-momentum-poster.jpg",
+        "alt": "LiveLineChart — Momentum.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Read back",
+      "description": "Drag across the plot to read a moment that has already gone past, and hold the window still to talk about it. The two work together: dragging a window that is still moving means chasing the reading you are trying to name.",
+      "code": "const [held, setHeld] = useState(false);\n\n<Frame>\n  <Frame.Header>\n    <Frame.Title>Read it back</Frame.Title>\n    <Frame.Action>\n      <Button size=\"sm\" variant=\"ghost\" onPress={() => setHeld(!held)}>\n        {held ? 'Resume' : 'Hold'}\n      </Button>\n    </Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <LiveLineChart data={points} window={30} paused={held}>\n      <LiveLineChart.Header title=\"Requests / sec\" caption=\"Drag across the plot\" />\n      <LiveLineChart.Grid />\n      <LiveLineChart.YAxis />\n      <LiveLineChart.Line />\n      <LiveLineChart.Tip />\n      <LiveLineChart.Tooltip />\n      <LiveLineChart.XAxis />\n    </LiveLineChart>\n  </Frame.Panel>\n</Frame>",
+      "previewVideo": {
+        "src": "/previews/live-line-chart-read-back.mp4",
+        "poster": "/previews/live-line-chart-read-back-poster.jpg",
+        "alt": "LiveLineChart — Read back.",
+        "width": 720,
+        "height": 1560
+      }
+    }
+  ],
+  "notes": "The y-axis follows what is *visible*, not everything kept. A spike that has scrolled off the left edge stops holding the axis open, so a feed that settles is not left flat against the bottom of a plot scaled for something that happened a minute ago. Pass `yDomain` to fix it instead.\n\n`Tip` draws a dot and nothing else unless `badge` is passed. The badge is a floating card, which is the shape a reader has learnt means they touched something — sitting there unasked it reads as a tooltip that opened by itself. Turn it on for a chart with no header to put the reading in. It hides itself while the crosshair is out either way, so there is never a second card answering a different question.\n\n`paused` holds the whole picture, not only the clock. Readings keep arriving behind the frozen edge, and the y-axis, the tip and the momentum colour are all derived from the newest one — left live they would go on rescaling, chasing and recolouring under a line that has stopped, which is a held chart that is still moving.\n\nThe tip rides the newest reading rather than the right-hand edge. Pinning it to the edge would hold it still and steady, which is the picture of a feed that is working.\n\nThe x-axis is labelled in offsets from now — `-30s`, `-15s`, `now` — rather than clock times. A moving window labelled with wall-clock times rewrites every label on every frame.\n\nThe frame callback stops on unmount, on `paused`, on `status=\"loading\"`, and never starts under reduced motion. Nothing else in the library animates without an interaction or a change of data, so a chart left mounted off-screen is worth `paused`.",
+  "previewVideo": {
+    "src": "/previews/live-line-chart.mp4",
+    "poster": "/previews/live-line-chart-poster.jpg",
+    "alt": "The LiveLineChart component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  }
 }
