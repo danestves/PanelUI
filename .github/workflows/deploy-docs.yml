@@ -1,0 +1,74 @@
+# Deploys panelui.dev when a library release is published.
+#
+# The docs site used to build on every push and every pull request, through
+# Vercel's Git integration. That is a full Next.js build of a site whose content
+# only changes meaning when a version ships, and twenty open pull requests turn
+# it into dozens of builds nobody reads the output of. `apps/docs/vercel.json`
+# now sets `git.deploymentEnabled: false`, so no branch and no pull request
+# triggers anything; this workflow is the only thing that deploys.
+#
+# It fires a Vercel Deploy Hook rather than building here. The build stays on
+# Vercel — it is one build per release now, which is the point — and this
+# repository holds a single secret instead of the three a `vercel build` would
+# need.
+#
+# ## What this means day to day
+#
+# A documentation change that is not part of a release does not reach
+# panelui.dev on its own. New previews, a corrected props table, a typo — they
+# sit on `main` until the next release. Run this workflow by hand from the
+# Actions tab to push them out; that is the escape hatch, and it is expected to
+# be used.
+#
+# ## Why the tag is checked
+#
+# `release: published` fires for every release in the repository, and the CLI
+# packages are released under their own tag prefixes. A `cli-v0.4.2` release
+# does not change a component page, so it should not spend a build. Only a plain
+# `vX.Y.Z` gets through — the same filter publish.yml uses, for the same reason.
+#
+# ## One-time setup
+#
+#   Vercel -> panel-ui-0 -> Settings -> Git -> Deploy Hooks
+#     Name:   release
+#     Branch: main
+#   Then: gh secret set VERCEL_DEPLOY_HOOK -R panel-ui/PanelUI
+#
+# The hook is bound to `main` when it is created. Dispatching this workflow from
+# another branch still deploys `main` — the branch picker in the Actions UI has
+# no say in what Vercel builds.
+name: Deploy docs
+
+on:
+  release:
+    types: [published]
+  # Ship documentation that is not waiting on a release.
+  workflow_dispatch:
+
+# Nothing is read from the repository and nothing is written back to it. The
+# hook URL is the only capability this job has.
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref_name, 'v')
+    steps:
+      - name: Trigger the production deployment
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          # An unset secret expands to an empty string, and `curl ""` fails with
+          # a URL error that reads like a network problem. Say which it is.
+          if [ -z "$HOOK" ]; then
+            echo '::error::VERCEL_DEPLOY_HOOK is not set. Create a deploy hook in the Vercel project and add it as a repository secret.'
+            exit 1
+          fi
+
+          # --fail turns a 4xx or 5xx into a non-zero exit. Without it curl
+          # reports success for a deleted hook returning 404, and the run goes
+          # green while nothing deploys.
+          response="$(curl --fail --silent --show-error -X POST "$HOOK")"
+          echo "$response"
+          echo "Deployment queued. Watch it at https://vercel.com/khalids-projects-c17d80c9/panel-ui-0"
