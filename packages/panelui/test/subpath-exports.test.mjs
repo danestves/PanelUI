@@ -30,8 +30,11 @@ test('component and hook subpaths cover every public source module', async () =>
     assert.match(rootBarrel, new RegExp(`from './components/${name}'`), name);
   }
 
+  // A hook is a `use-` module. Anything else in the folder supports one —
+  // `breakpoint-contract` is the type the breakpoint hook is configured with —
+  // and is reached through the hook that uses it, not on its own.
   const hookNames = (await readdir(resolve(root, 'src/hooks')))
-    .filter((name) => name !== 'index.ts' && name.endsWith('.ts'))
+    .filter((name) => name.startsWith('use-') && name.endsWith('.ts'))
     .map((name) => name.slice(0, -3))
     .sort();
   const hookBarrel = await readFile(resolve(root, 'src/hooks/index.ts'), 'utf8');

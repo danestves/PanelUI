@@ -54,8 +54,10 @@ const publicPatternNames = {
   })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name),
+  // The `use-` modules are the hooks. The rest of the folder supports them and
+  // is reached through them, so it is not a subpath this package promises.
   "./hooks/*": readdirSync(resolve(packageRoot, "src/hooks"))
-    .filter((name) => name !== "index.ts" && name.endsWith(".ts"))
+    .filter((name) => name.startsWith("use-") && name.endsWith(".ts"))
     .map((name) => name.slice(0, -3)),
 };
 
