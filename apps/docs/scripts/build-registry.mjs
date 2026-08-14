@@ -208,12 +208,16 @@ for (const file of fs.readdirSync(path.join(SRC, 'hooks')).sort()) {
   // who wanted one.
   if (!/^use-.*\.ts$/.test(file)) continue;
   const name = file.replace(/\.ts$/, '');
+  const sourceFiles = [path.join(SRC, 'hooks', file)];
+  if (name === 'use-breakpoint') {
+    sourceFiles.unshift(path.join(SRC, 'hooks', 'breakpoint-contract.ts'));
+  }
   register(
     name,
     'registry:hook',
-    [path.join(SRC, 'hooks', file)],
-    () => `hooks/${file}`,
-    () => `${ALIAS.hooks}/${name}`
+    sourceFiles,
+    (source) => `hooks/${path.basename(source)}`,
+    (source) => `${ALIAS.hooks}/${path.basename(source).replace(/\.ts$/, '')}`
   );
 }
 
