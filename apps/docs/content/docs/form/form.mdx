@@ -9,6 +9,8 @@ Form state — values, errors, touched state and the submission lifecycle — wi
 
 For the layout around a control rather than its state, use [Field](/docs/components/field).
 
+`createForm<TValues>()` binds that value shape once, so field names, values, validators and render props stay typed through JSX without changing the runtime.
+
 <Preview
   src="/previews/form.jpg"
   alt="The Form component, running in the example app."
@@ -21,7 +23,7 @@ For the layout around a control rather than its state, use [Field](/docs/compone
 Form ships with the library — no separate install.
 
 ```tsx
-import { Form, useForm, useField, Input, Button, Checkbox } from 'panelui-native';
+import { Form, createForm, useForm, useField, Input, Button, Checkbox } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -33,49 +35,40 @@ npx panelui-cli@latest add form
 ## Usage
 
 ```tsx
-const form = useForm({
-  defaultValues: { email: '', password: '' },
-  onSubmit: async (values) => {
-    await signIn(values);
-  },
-});
+type SignUpValues = {
+  email: string;
+  age: number;
+  acceptedTerms: boolean;
+};
 
-<Form form={form}>
-  <Form.Field
-    name="email"
-    validate={(value) => (value.includes('@') ? undefined : 'Enter a valid email')}
-  >
-    {(field) => (
-      <Input
-        label="Email"
-        value={field.value}
-        onChangeText={field.onChange}
-        onBlur={field.onBlur}
-        errorMessage={field.error}
-      />
-    )}
-  </Form.Field>
+const SignUpForm = createForm<SignUpValues>();
 
-  <Form.Field
-    name="password"
-    validate={(value) => (value.length >= 8 ? undefined : 'At least 8 characters')}
-  >
-    {(field) => (
-      <Input
-        label="Password"
-        secureTextEntry
-        value={field.value}
-        onChangeText={field.onChange}
-        onBlur={field.onBlur}
-        errorMessage={field.error}
-      />
-    )}
-  </Form.Field>
+function SignUp() {
+  const form = SignUpForm.useForm({
+    defaultValues: { email: '', age: 18, acceptedTerms: false },
+    onSubmit: async (values) => register(values),
+  });
 
-  <Button loading={form.isSubmitting} onPress={form.handleSubmit}>
-    Sign in
-  </Button>
-</Form>
+  return (
+    <SignUpForm form={form}>
+      <SignUpForm.Field
+        name="email"
+        validate={(value) => (value.includes('@') ? undefined : 'Enter a valid email')}
+      >
+        {(field) => (
+          <Input
+            label="Email"
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            errorMessage={field.error}
+          />
+        )}
+      </SignUpForm.Field>
+      <Button onPress={form.handleSubmit}>Create account</Button>
+    </SignUpForm>
+  );
+}
 ```
 
 ## Composition
@@ -95,7 +88,7 @@ const form = useForm({
 </Form>
 ```
 
-- **`Form.Field`** — Binds one field's state (`value`, `error`, `touched`) to a render prop, and validates it on blur — or on every change, with `validateOn="change"`.
+- **`Form.Field`** — Binds one field's state (`value`, `error`, `touched`) to a render prop, and validates it on blur — or on every change, with `validateOn="change"`. A field from createForm is restricted to declared keys and carries its exact value type.
 
 ## Examples
 
@@ -243,6 +236,12 @@ The layout kit grouping switches, with no form hook involved — settings that s
 | --- | --- | --- | --- |
 | `form` | `FormApi<any>` | — |  |
 
+### Form.TypedForm
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `form` | `FormApi<T>` | — |  |
+
 ### Form.Field
 
 | Prop | Type | Default | Description |
@@ -250,6 +249,12 @@ The layout kit grouping switches, with no form hook involved — settings that s
 | `name` | `string` | — |  |
 | `validate` | `(value: any, values: any) => string \| undefined \| Promise<string \| undefined>` | — |  |
 | `validateOn` | `'blur' \| 'change'` | — | Runs on blur, and always on submit. `'change'` also validates on every edit. |
+
+### Form.TypedFormField
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `K` | — |  |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -277,7 +282,9 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 Each field registers its `validate` function with the form on mount, so `handleSubmit` can run every field's rule even for a field the user never touched. `useField(form, name, options)` returns `{ value, error, touched, onChange, onBlur }` — spread the pieces a control needs onto its own props. Which prop that is (`onChangeText`, `onCheckedChange`, `onValueChange`, …) is the reason this is a hook rather than a component that clones its child: only the caller knows which one a given control takes.
 
-`Form`/`Form.Field` trade some type precision for that JSX convenience — a field's `name` isn't checked against `keyof YourValues` there, because a value's shape can't flow through React Context generically. Reach for `useField(form, name)` directly, outside `<Form>`, when a field's name should be checked against the form's own value type.
+The compatibility `Form`/`Form.Field` API remains unbound for existing call sites. For end-to-end JSX typing, create a bound component once with `const SignUpForm = createForm<SignUpValues>()`, then call `SignUpForm.useForm(...)` and render `SignUpForm.Field`. Field names are limited to the flat keys in `SignUpValues`; each validator and render prop receives that key's value type, while `values`, `errors`, `setFieldValue`, `getValue`, `watch`, and `onSubmit` keep the complete shape.
+
+`getValue(name)` reads the latest imperative value, including an edit made before React's next render. `watch(name)` reads from the current render, so a component calling it naturally follows form renders. Both accept only declared flat keys.
 
 A field's `name` has to be a key of `defaultValues`, including the empty ones — `''` for text, `false` for a toggle. `defaultValues` is what declares the fields, and a name it does not declare has no value to hand a validator and nothing to submit. `Form.Field` cannot catch that in the types, so it warns in development instead; the typed `useField(form, name)` rejects it outright.
 
@@ -297,6 +304,6 @@ See [Field](/docs/components/field) for the layout primitives — `Field.Label`,
 
 {/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
 
-**Values:** `Form`, `useForm`, `useField`
+**Values:** `Form`, `createForm`, `useForm`, `useField`
 
-**Types:** `FormProps`, `FormFieldProps`, `FormApi`, `FieldErrors`, `FieldTouched`, `FieldState`, `UseFormOptions`, `Validator`, `FormFieldRenderProps`, `UseFieldOptions`
+**Types:** `FormProps`, `FormFieldProps`, `TypedForm`, `TypedFormProps`, `TypedFormFieldProps`, `FormApi`, `FieldErrors`, `FieldTouched`, `FieldState`, `UseFormOptions`, `Validator`, `FormFieldRenderProps`, `UseFieldOptions`

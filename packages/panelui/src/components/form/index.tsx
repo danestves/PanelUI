@@ -7,11 +7,8 @@
  * take differently-shaped change props, and only the caller knows which one
  * a given field needs to wire up.
  *
- * `Form`/`Form.Field` trade some type precision for that JSX ergonomics — a
- * field's `name` isn't checked against `keyof YourValues` here, because a
- * value's shape can't flow through `useContext` generically. Reach for
- * `useField(form, name)` directly when a field's name should be checked
- * against the form's own value type.
+ * `createForm<Values>()` binds that value shape to the same runtime components
+ * when field names and render values should stay typed through JSX.
  *
  * ```tsx
  * const form = useForm({
@@ -37,6 +34,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useField, type FormFieldRenderProps, type UseFieldOptions } from './use-field';
 import { useForm, type FormApi, type FieldErrors, type FieldTouched, type FieldState, type UseFormOptions, type Validator } from './use-form';
+import { bindFormRuntime } from './typed-form';
 
 export { useForm, useField };
 export type {
@@ -57,6 +55,11 @@ export interface FormProps {
   children?: ReactNode;
 }
 
+export interface TypedFormProps<T extends Record<string, any>> {
+  form: FormApi<T>;
+  children?: ReactNode;
+}
+
 function FormRoot({ form, children }: FormProps) {
   return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
 }
@@ -68,6 +71,14 @@ export interface FormFieldProps {
   /** Runs on blur, and always on submit. `'change'` also validates on every edit. */
   validateOn?: 'blur' | 'change';
   children: (field: FormFieldRenderProps<any>) => ReactNode;
+}
+
+export interface TypedFormFieldProps<
+  T extends Record<string, any>,
+  K extends keyof T,
+> extends UseFieldOptions<T, K> {
+  name: K;
+  children: (field: FormFieldRenderProps<T[K]>) => ReactNode;
 }
 
 function FormField({ name, validate, validateOn, children }: FormFieldProps) {
@@ -83,3 +94,19 @@ FormField.displayName = 'Form.Field';
 export const Form = Object.assign(FormRoot, {
   Field: FormField,
 });
+
+export interface TypedForm<T extends Record<string, any>> {
+  (props: TypedFormProps<T>): ReactNode;
+  Field: <K extends keyof T>(props: TypedFormFieldProps<T, K>) => ReactNode;
+  useForm: (options: UseFormOptions<T>) => FormApi<T>;
+  useField: <K extends keyof T>(
+    form: FormApi<T>,
+    name: K,
+    options?: UseFieldOptions<T, K>
+  ) => FormFieldRenderProps<T[K]>;
+}
+
+/** Bind a value shape to Form's existing runtime without creating new state. */
+export function createForm<T extends Record<string, any>>(): TypedForm<T> {
+  return bindFormRuntime(FormRoot, FormField, useForm, useField) as TypedForm<T>;
+}

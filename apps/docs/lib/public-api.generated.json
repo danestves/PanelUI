@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1068,
-    "values": 288,
-    "types": 780,
+    "exports": 1072,
+    "values": 289,
+    "types": 783,
     "modules": 132,
     "components": 107,
     "hooks": 12
@@ -1126,6 +1126,10 @@
             "kind": "value"
           },
           {
+            "name": "createForm",
+            "kind": "value"
+          },
+          {
             "name": "useForm",
             "kind": "value"
           },
@@ -1139,6 +1143,18 @@
           },
           {
             "name": "FormFieldProps",
+            "kind": "type"
+          },
+          {
+            "name": "TypedForm",
+            "kind": "type"
+          },
+          {
+            "name": "TypedFormProps",
+            "kind": "type"
+          },
+          {
+            "name": "TypedFormFieldProps",
             "kind": "type"
           },
           {

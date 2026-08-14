@@ -485,10 +485,14 @@ export {
 } from './components/field';
 export {
   Form,
+  createForm,
   useForm,
   useField,
   type FormProps,
   type FormFieldProps,
+  type TypedForm,
+  type TypedFormProps,
+  type TypedFormFieldProps,
   type FormApi,
   type FieldErrors,
   type FieldTouched,
