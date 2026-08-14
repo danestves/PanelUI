@@ -15,6 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { DEFAULT_REGISTRY, aliasToDir, projectPath, readConfig } from './config.mjs';
+import { discover, kindOf } from './discovery.mjs';
 
 /**
  * The versions we speak, and the one we answer with otherwise.
@@ -88,7 +89,7 @@ const TOOLS = [
       properties: {
         type: {
           type: 'string',
-          enum: ['ui', 'lib', 'hook', 'theme'],
+          enum: ['ui', 'chart', 'lib', 'hook', 'theme'],
           description: 'Only items of this kind. Omit for everything.',
         },
       },
@@ -157,21 +158,15 @@ async function callTool(name, args, options) {
   switch (name) {
     case 'panelui_list_components': {
       const index = await fetchJson(`${registry}/index.json`);
-      const items = args.type
-        ? index.filter((item) => item.type === `registry:${args.type}`)
-        : index;
+      const items = discover(index, { type: args.type });
       return items
-        .map((item) => `${item.name} (${item.type.replace('registry:', '')}) — ${item.description}`)
+        .map((item) => `${item.name} (${kindOf(item)}) — ${item.description}`)
         .join('\n');
     }
 
     case 'panelui_search_components': {
       const index = await fetchJson(`${registry}/index.json`);
-      const needle = String(args.query).toLowerCase();
-      const hits = index.filter(
-        (item) =>
-          item.name.includes(needle) || item.description.toLowerCase().includes(needle)
-      );
+      const hits = discover(index, { search: args.query });
       if (!hits.length) return `Nothing matches "${args.query}".`;
       return hits.map((item) => `${item.name} — ${item.description}`).join('\n');
     }

@@ -1,7 +1,7 @@
 {
   "name": "modal-isolation-store",
   "type": "registry:ui",
-  "description": "modal-isolation-store.",
+  "description": "Tracks nested modal owners without releasing isolation too early.",
   "registryDependencies": [],
   "dependencies": [],
   "optionalDependencies": [],

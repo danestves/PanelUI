@@ -1,7 +1,7 @@
 {
   "name": "use-scroll-sections",
   "type": "registry:hook",
-  "description": "use-scroll-sections.",
+  "description": "Tracks the active measured section and scrolls directly to one.",
   "registryDependencies": [],
   "dependencies": [],
   "optionalDependencies": [],

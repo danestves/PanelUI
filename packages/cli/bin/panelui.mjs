@@ -21,7 +21,7 @@ ${bold('Commands')}
   init                 In an empty folder, start a new app from a template.
                        In an existing one, set it up to receive components.
   add <name...>        Copy components in, with everything they depend on
-  list                 Show everything available
+  list                 Discover registry items; filter with --type or --search
   mcp                  Run the MCP server, so an agent can read the registry
   mcp init [editor]    Write the server into an editor's config
                        claude | cursor | vscode
@@ -32,6 +32,9 @@ ${bold('Options')}
   --dry-run            Show what would happen, write nothing
   --cwd <dir>          Run against another directory
   --registry <url>     Use a different registry
+  --type <kind>        ui | chart | hook | lib | theme
+  --search <text>      Rank registry items matching every search term
+  --json               Print list results as stable JSON
   --help, -h           This
   --version, -v        Print the version
 
@@ -45,6 +48,7 @@ ${bold('Examples')}
   npx panelui-cli@latest init --template starter --name my-app --theme moon
   npx panelui-cli@latest add button
   npx panelui-cli@latest add item message --yes
+  npx panelui-cli@latest list --type chart --search bar
   npx panelui-cli@latest mcp init cursor
 `;
 
@@ -55,6 +59,9 @@ function parseArgs(argv) {
     overwrite: false,
     dryRun: false,
     registry: undefined,
+    type: undefined,
+    search: undefined,
+    json: false,
     template: undefined,
     name: undefined,
     theme: undefined,
@@ -93,6 +100,17 @@ function parseArgs(argv) {
         // A trailing slash would produce `…/r//item.json`.
         options.registry = optionValue(argv, i, arg, '<url>').replace(/\/+$/, '');
         i += 1;
+        break;
+      case '--type':
+        options.type = optionValue(argv, i, arg, '<kind>');
+        i += 1;
+        break;
+      case '--search':
+        options.search = optionValue(argv, i, arg, '<text>');
+        i += 1;
+        break;
+      case '--json':
+        options.json = true;
         break;
       case '--template':
         options.template = optionValue(argv, i, arg, '<name>');

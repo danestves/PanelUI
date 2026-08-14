@@ -75,6 +75,14 @@ const SUPPORT_DESCRIPTIONS = {
   'use-keyboard': 'Keyboard height and visibility.',
   'use-keyboard-avoidance': 'Lift an element just clear of the software keyboard.',
   'use-previous': 'The value from the previous render.',
+  collapse: 'Keeps content mounted while animating its measured height open or closed.',
+  'scroll-progress':
+    'Shares UI-thread scroll offset, viewport, content size and scroller position with descendants.',
+  'modal-isolation-store': 'Tracks nested modal owners without releasing isolation too early.',
+  'use-back-handler': 'Consumes the Android hardware back press while an overlay is active.',
+  'use-direction': 'Reads the nearest LTR or RTL direction, falling back to the device setting.',
+  'use-reveal-progress': 'Reports how far an element has travelled through its scroll viewport.',
+  'use-scroll-sections': 'Tracks the active measured section and scrolls directly to one.',
 };
 
 /* ------------------------------------------------------------------ *
@@ -319,6 +327,24 @@ function descriptionFor(name) {
   return SUPPORT_DESCRIPTIONS[name] ?? `${name}.`;
 }
 
+function discoveryFor(name, type) {
+  const options = meta[name]?.[3] ?? {};
+  const group =
+    options.group ??
+    (type === 'registry:hook'
+      ? 'hooks'
+      : type === 'registry:lib'
+        ? 'utilities'
+        : type === 'registry:theme'
+          ? 'theme'
+          : 'components');
+  return {
+    kind: group === 'charts' ? 'chart' : type.replace('registry:', ''),
+    group,
+    stability: options.alpha ? 'alpha' : options.beta ? 'beta' : 'stable',
+  };
+}
+
 /** The markdown route for an item, but only when that page actually exists. */
 function docsPathFor(name, type) {
   const entry = meta[name];
@@ -360,6 +386,13 @@ built.push({
   ],
 });
 
+const placeholders = built.filter((item) => item.description === `${item.name}.`);
+if (placeholders.length) {
+  throw new Error(
+    `placeholder registry descriptions: ${placeholders.map((item) => item.name).join(', ')}`
+  );
+}
+
 /* ------------------------------------------------------------------ *
  * 4. Write.
  * ------------------------------------------------------------------ */
@@ -380,6 +413,7 @@ fs.writeFileSync(
         return {
           name,
           type,
+          ...discoveryFor(name, type),
           description,
           registryDependencies,
           ...(docsPath ? { docsPath } : {}),

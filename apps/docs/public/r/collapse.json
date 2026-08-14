@@ -1,7 +1,7 @@
 {
   "name": "collapse",
   "type": "registry:ui",
-  "description": "collapse.",
+  "description": "Keeps content mounted while animating its measured height open or closed.",
   "registryDependencies": [
     "cn"
   ],

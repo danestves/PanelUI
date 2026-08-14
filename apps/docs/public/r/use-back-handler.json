@@ -1,7 +1,7 @@
 {
   "name": "use-back-handler",
   "type": "registry:hook",
-  "description": "use-back-handler.",
+  "description": "Consumes the Android hardware back press while an overlay is active.",
   "registryDependencies": [],
   "dependencies": [],
   "optionalDependencies": [],

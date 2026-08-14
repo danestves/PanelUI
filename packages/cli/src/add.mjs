@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { applyAliases, detectProject, requireConfig, targetPath } from './config.mjs';
+import { discover, kindOf } from './discovery.mjs';
 import { collectDependencies, fetchIndex, resolve } from './registry.mjs';
 import { installDependencies } from './patch.mjs';
 import { bold, confirm, dim, fail, info, step, success, warn } from './ui.mjs';
@@ -109,27 +110,34 @@ export async function list(options) {
   const config = readConfigSafely(options.cwd);
   const registry = options.registry ?? config?.registry ?? 'https://panelui.dev/r';
   const index = await fetchIndex(registry);
+  const entries = discover(index, { type: options.type, search: options.search });
+
+  if (options.json) {
+    info(JSON.stringify(entries, null, 2));
+    return;
+  }
 
   const groups = {
-    'registry:ui': 'Components',
-    'registry:hook': 'Hooks',
-    'registry:lib': 'Utilities',
-    'registry:theme': 'Theme',
+    ui: 'Components',
+    chart: 'Charts',
+    hook: 'Hooks',
+    lib: 'Utilities',
+    theme: 'Theme',
   };
 
   for (const [type, label] of Object.entries(groups)) {
-    const entries = index.filter((entry) => entry.type === type);
-    if (!entries.length) continue;
+    const section = entries.filter((entry) => kindOf(entry) === type);
+    if (!section.length) continue;
 
     info('');
     info(bold(label));
-    for (const entry of entries) {
+    for (const entry of section) {
       info(`  ${entry.name.padEnd(22)} ${dim(entry.description ?? '')}`);
     }
   }
 
   info('');
-  info(dim(`${index.length} items · npx panelui-cli@latest add <name>`));
+  info(dim(`${entries.length} items · npx panelui-cli@latest add <name>`));
   info('');
 }
 
