@@ -106,8 +106,8 @@ export interface MeterProps
   formatOptions?: Intl.NumberFormatOptions;
   /**
    * Points on the scale where the colour changes, each `{ from, color }`. The
-   * last one the value has reached wins; below all of them the `color` prop
-   * applies. Order does not matter.
+   * highest one the reading has reached wins, so the order you list them in
+   * does not matter; below all of them the `color` prop applies.
    *
    * This is the difference between a meter and a bar: the colour is a
    * judgement about the reading. Which direction is bad is yours to say —

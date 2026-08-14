@@ -50,7 +50,7 @@ Set `maxValue` and the meter speaks in what is being measured. Nothing has to be
 
 ### Thresholds that climb
 
-A disk filling up gets worse as it rises, so the colours rise with it. The last threshold the value has reached wins.
+A disk filling up gets worse as it rises, so the colours rise with it. The highest threshold the reading has reached wins.
 
 ```tsx
 <Meter
@@ -155,7 +155,7 @@ Drop `label` and the bare track renders, with no header row. Name it another way
 | `showValueLabel` | `boolean` | `false` | Draw the value above the track, opposite the label. |
 | `valueLabel` | `string` | — | Text for the value label. Overrides the formatted value — use it for a word where a number reads worse: `Strong`, `Almost full`. |
 | `formatOptions` | `Intl.NumberFormatOptions` | — | How to write the value, through `Intl.NumberFormat`. A `percent` style formats how far up the scale the value sits; every other style formats the value itself, so `{ style: 'unit', unit: 'gigabyte' }` against a `maxValue` of `256` reads `64 GB` rather than a percentage of it. Falls back to a rounded percent when omitted. |
-| `thresholds` | `MeterThreshold[]` | — | Points on the scale where the colour changes, each `{ from, color }`. The last one the value has reached wins; below all of them the `color` prop applies. Order does not matter. This is the difference between a meter and a bar: the colour is a judgement about the reading. Which direction is bad is yours to say — thresholds climbing to `destructive` suit a disk filling up, thresholds falling to it suit a battery running down. |
+| `thresholds` | `MeterThreshold[]` | — | Points on the scale where the colour changes, each `{ from, color }`. The highest one the reading has reached wins, so the order you list them in does not matter; below all of them the `color` prop applies. This is the difference between a meter and a bar: the colour is a judgement about the reading. Which direction is bad is yours to say — thresholds climbing to `destructive` suit a disk filling up, thresholds falling to it suit a battery running down. |
 | `segments` | `number` | — | Draw the scale as this many discrete blocks instead of one continuous bar. Blocks are all or nothing, which is the point of them: four blocks say "three out of four" where a bar says "about seventy percent", and a password is not seventy percent strong. Any value above the floor lights at least one block, so a reading that is not empty never looks it. |
 | `indicatorClassName` | `string` | — | Extra classes for the fill, or for a lit segment. |
 | `headerClassName` | `string` | — | Extra classes for the label + value row. |

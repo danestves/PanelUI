@@ -2965,7 +2965,7 @@
       },
       {
         "title": "Thresholds that climb",
-        "description": "A disk filling up gets worse as it rises, so the colours rise with it. The last threshold the value has reached wins.",
+        "description": "A disk filling up gets worse as it rises, so the colours rise with it. The highest threshold the reading has reached wins.",
         "code": "<Meter\n  value={usedPercent}\n  label=\"Disk\"\n  showValueLabel\n  color=\"success\"\n  thresholds={[\n    { from: 70, color: 'warning' },\n    { from: 90, color: 'destructive' },\n  ]}\n/>"
       },
       {
