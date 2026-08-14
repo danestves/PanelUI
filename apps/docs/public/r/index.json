@@ -835,6 +835,18 @@
     "docsPath": "components/message-scroller"
   },
   {
+    "name": "meter",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "A measurement on a fixed scale, coloured by where it falls.",
+    "registryDependencies": [
+      "text"
+    ],
+    "docsPath": "components/meter"
+  },
+  {
     "name": "modal-isolation-store",
     "type": "registry:ui",
     "kind": "ui",
@@ -1779,7 +1791,8 @@
     "group": "hooks",
     "stability": "stable",
     "description": "Reads the nearest LTR or RTL direction, falling back to the device setting.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-direction"
   },
   {
     "name": "use-disclosure",
