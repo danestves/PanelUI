@@ -47,6 +47,16 @@ test('rejects duplicate, missing, unknown, and non-JSON modules together', (t) =
   assert.match(error.message, /missing usage module: missing\.json/);
 });
 
+test('ignores the files the platform leaves behind', (t) => {
+  const root = fixture(t, {
+    'alpha.json': { slug: 'alpha', intro: 'A' },
+    '.DS_Store': 'finder',
+    '.gitkeep': '',
+  });
+
+  assert.deepEqual(loadUsage(root, ['alpha']), { alpha: { intro: 'A' } });
+});
+
 test('rejects malformed JSON, invalid envelopes, and bad filenames', (t) => {
   const root = fixture(t, {
     'broken.json': '{',

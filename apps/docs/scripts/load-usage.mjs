@@ -14,6 +14,12 @@ export function loadUsage(directory, expectedSlugs) {
     .readdirSync(directory, { withFileTypes: true })
     .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   for (const entry of entries) {
+    // Whatever the platform leaves lying around is not an authoring mistake.
+    // Opening this folder in Finder writes a `.DS_Store` into it, and treating
+    // that as a stray module fails `docs:generate` for everybody on a Mac with
+    // an error about an artifact they did not create and cannot see.
+    if (entry.name.startsWith('.')) continue;
+
     if (!entry.isFile() || path.extname(entry.name) !== '.json') {
       failures.push(`unexpected artifact: ${entry.name}`);
       continue;
