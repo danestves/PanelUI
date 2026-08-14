@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "example": "npm run start --workspace=example",
+    "test": "node scripts/run-contract-tests.mjs",
     "build": "npm run build --workspace=panelui-native",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",

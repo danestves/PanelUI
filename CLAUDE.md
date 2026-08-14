@@ -240,6 +240,7 @@ which is worse than the gap it filled.
 
 - `npm install` — install all workspace deps
 - `npm run example` — start the example app (Metro/Expo dev server)
+- `npm test` — discover and run every repository contract test; rejects focused `.only` tests
 - `npm run typecheck` — typecheck all workspaces
 - `npm run build` — build the library with react-native-builder-bob (output: `lib/`)
 - `npm run docs` — start the docs site; `npm run build --workspace=docs` for a production build

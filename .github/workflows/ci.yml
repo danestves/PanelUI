@@ -31,26 +31,8 @@ jobs:
       - name: Build library
         run: npm run build
 
-      - name: Node tests
-        run: |
-          # Discovered rather than globbed, so a workspace that grows its first
-          # test directory is covered without anybody remembering to add it here.
-          files=()
-          while IFS= read -r file; do files+=("$file"); done < <(
-            find packages apps -path '*/test/*.test.mjs' -not -path '*/node_modules/*' | sort
-          )
-          if [ ${#files[@]} -eq 0 ]; then
-            echo 'No test files found — the discovery pattern is wrong.'
-            exit 1
-          fi
-          printf '%s\n' "${files[@]}"
-          if grep -l -E '\.only[[:space:]]*\(' "${files[@]}"; then
-            echo 'Focused tests are not allowed in CI.'
-            exit 1
-          fi
-          # Some tests import the library's .ts sources directly. Type stripping
-          # is on by default from Node 22.18; the flag keeps earlier 22.x working.
-          node --experimental-strip-types --test "${files[@]}"
+      - name: Contract tests
+        run: npm test
 
       - name: Generated files are up to date
         run: |

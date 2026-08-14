@@ -193,6 +193,7 @@ showcase in [`apps/example`](apps/example) and the documentation site in
 
 ```sh
 npm install         # install workspace deps
+npm test            # run every repository contract test
 npm run typecheck   # typecheck all workspaces
 npm run build       # build the library
 ```
