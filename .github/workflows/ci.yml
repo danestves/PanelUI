@@ -56,6 +56,12 @@ jobs:
             exit 1
           fi
 
+      - name: Build documentation
+        run: npm run build --workspace=docs
+
+      - name: Verify packed CLI consumers
+        run: npm run verify:cli-packages
+
       - name: Template typechecks
         run: |
           # The templates ship to users with their own dependency sets, so they
@@ -93,3 +99,22 @@ jobs:
           # Reuses the release package verifier, then checks the generated
           # registry served by the docs and downloaded by the CLI.
           npm run performance:check
+
+  node20-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test supported CLI runtime
+        run: npm run test:cli
+
+      - name: Verify packed CLI consumers
+        run: npm run verify:cli-packages
