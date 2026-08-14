@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-106 components. The **Docs** column is the path under
+107 components. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -132,6 +132,7 @@ remember is a guess.
 | `EmptyState` | Placeholder for a list or screen with no content. | `components/empty-state` |
 | `Loader` | Nine loading animations behind one variant prop. | `components/loader` |
 | `Marker` | Inline note between conversation turns. | `components/marker` |
+| `Meter` | A measurement on a fixed scale, coloured by where it falls. | `components/meter` |
 | `Progress` | Determinate and indeterminate progress bar. | `components/progress` |
 | `Skeleton` | Shimmer placeholder for loading content. | `components/skeleton` |
 | `Spinner` | Indeterminate loading indicator. | `components/spinner` |

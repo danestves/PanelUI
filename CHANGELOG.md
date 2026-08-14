@@ -9,6 +9,42 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.67.0] — 2026-08-14
+
+### Added
+
+- **`Meter` — a reading on a fixed scale.** Disk used, battery left, a test score, a password's
+  strength. `Progress` was answering these for want of anything else, and it is the wrong shape
+  for them: a meter is a reading that sits where it sits and may go back down, and nothing about
+  it is finishing.
+
+  `thresholds` are points on the scale, each `{ from, color }`, and the highest one the reading
+  has reached wins. Write them climbing for a disk filling up, falling for a battery running
+  down — which direction is bad is yours to say, and the same prop says both.
+
+  `segments` draws the scale as discrete blocks for readings that are counted rather than
+  measured. Four blocks say "three out of four" where a bar says "about seventy percent", and a
+  password is not seventy percent strong.
+
+- **`Skeleton` and `Spinner` take a `label`.** Setting it announces the wait as a busy status.
+  Put it on the one skeleton standing for a region, or on a spinner that is the only sign
+  anything is happening.
+
+### Fixed
+
+- **The loading indicators honour reduce motion.** Both animated regardless of the platform
+  setting. `Skeleton` now holds still at a middle opacity — the shape is what says content is
+  coming, so it can stop moving without reading as stalled. `Spinner` fades in place instead of
+  turning, because a spinner that holds still reads as one that has hung, which is the single
+  thing a spinner exists to rule out.
+
+- **The loading indicators stop announcing nothing.** `Skeleton` had no accessibility wiring at
+  all, so a screen reader walked over an unlabelled grey box — and a loading screen is many such
+  boxes. `Spinner` carried `progressbar` with no name, announcing its role and no information.
+  Both are hidden from assistive technology now unless `label` is given, which is right for
+  every use inside the library: `Button` already publishes `busy`, and `Combobox` and `Steps`
+  caption their own.
+
 ## [0.66.1] — 2026-08-13
 
 0.66.0 was tagged but never reached npm; this is that release, plus the fix for what stopped it.
