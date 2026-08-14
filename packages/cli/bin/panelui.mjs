@@ -9,6 +9,7 @@ import process from 'node:process';
 import { add, list } from '../src/add.mjs';
 import { init } from '../src/init.mjs';
 import { mcp, mcpInit } from '../src/mcp.mjs';
+import { update } from '../src/update.mjs';
 import { CliError, bold, dim, error, info, optionValue } from '../src/ui.mjs';
 
 const HELP = `
@@ -21,6 +22,7 @@ ${bold('Commands')}
   init                 In an empty folder, start a new app from a template.
                        In an existing one, set it up to receive components.
   add <name...>        Copy components in, with everything they depend on
+  update [name...]     Safely update unchanged installed component files
   list                 Discover registry items; filter with --type or --search
   mcp                  Run the MCP server, so an agent can read the registry
   mcp init [editor]    Write the server into an editor's config
@@ -29,6 +31,7 @@ ${bold('Commands')}
 ${bold('Options')}
   --yes, -y            Accept every prompt
   --overwrite          Replace files that already exist
+  --check              Check for safe updates without writing
   --dry-run            Show what would happen, write nothing
   --cwd <dir>          Run against another directory
   --registry <url>     Use a different registry
@@ -48,6 +51,7 @@ ${bold('Examples')}
   npx panelui-cli@latest init --template starter --name my-app --theme moon
   npx panelui-cli@latest add button
   npx panelui-cli@latest add item message --yes
+  npx panelui-cli@latest update --check
   npx panelui-cli@latest list --type chart --search bar
   npx panelui-cli@latest mcp init cursor
 `;
@@ -57,6 +61,7 @@ function parseArgs(argv) {
     cwd: process.cwd(),
     assumeYes: false,
     overwrite: false,
+    check: false,
     dryRun: false,
     registry: undefined,
     type: undefined,
@@ -80,6 +85,9 @@ function parseArgs(argv) {
         break;
       case '--overwrite':
         options.overwrite = true;
+        break;
+      case '--check':
+        options.check = true;
         break;
       case '--dry-run':
         options.dryRun = true;
@@ -156,6 +164,9 @@ async function main() {
       break;
     case 'add':
       await add(rest, options);
+      break;
+    case 'update':
+      await update(rest, options);
       break;
     case 'list':
     case 'ls':

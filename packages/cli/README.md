@@ -13,7 +13,7 @@ npx panelui-cli@latest add button
 | | `panelui-native` | `panelui-cli` |
 | --- | --- | --- |
 | You get | A dependency | Source files in your repo |
-| Updates | `npm update` | Re-run `add --overwrite`, or keep your edits |
+| Updates | `npm update` | `update` unchanged files; conflicts keep your edits |
 | Editing | Wrap or restyle it | Change the file |
 | Install size | Whole library | Only what you add |
 
@@ -42,6 +42,24 @@ packages required by those files.
 npx panelui-cli@latest add item message
 npx panelui-cli@latest add button --overwrite
 ```
+
+Successful writes are recorded in `panelui-lock.json`. `--overwrite` remains the explicit way to
+replace an existing file and makes that new copy eligible for later safe updates.
+
+### `update [name...]`
+
+Fetches tracked components again and updates only files whose digest still matches the copy the CLI
+installed. Locally edited or deleted files are reported as conflicts and never replaced. Omit names
+to update every tracked component. Files removed upstream are deleted only when still untouched.
+
+```bash
+npx panelui-cli@latest update
+npx panelui-cli@latest update button --check
+```
+
+`--check` and `--dry-run` never write and exit with status 1 when a safe update or conflict exists.
+Projects created before the lockfile are left untouched until an explicit `add <name> --overwrite`
+establishes the first trusted digest.
 
 ### `list [--type kind] [--search text] [--json]`
 
@@ -109,6 +127,7 @@ editor-launched sessions, add `--registry <url>` or `--cwd <dir>` to that server
 | --- | --- |
 | `--yes`, `-y` | Accept every prompt |
 | `--overwrite` | Replace files that already exist |
+| `--check` | Check tracked files for updates without writing |
 | `--dry-run` | Show what would happen, write nothing |
 | `--cwd <dir>` | Run against another directory |
 | `--registry <url>` | Use a different registry |
@@ -134,6 +153,9 @@ A value-taking flag without its value prints its usage and exits with status 1. 
 ```
 
 Change the aliases and imports are rewritten to match on the way in.
+
+`panelui-lock.json` records SHA-256 digests and registry ownership for files successfully copied by
+`add` or `update`. Commit it with the project so updates have the same safety baseline everywhere.
 
 ## Notes
 

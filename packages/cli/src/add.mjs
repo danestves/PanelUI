@@ -7,6 +7,7 @@ import { applyAliases, detectProject, requireConfig, targetPath } from './config
 import { discover, kindOf } from './discovery.mjs';
 import { collectDependencies, fetchIndex, resolve } from './registry.mjs';
 import { installDependencies } from './patch.mjs';
+import { recordInstalled } from './lock.mjs';
 import { bold, confirm, dim, fail, info, step, success, warn } from './ui.mjs';
 
 export async function add(names, options) {
@@ -81,6 +82,7 @@ export async function add(names, options) {
       fs.mkdirSync(path.dirname(write.destination), { recursive: true });
       fs.writeFileSync(write.destination, write.content);
     }
+    recordInstalled(cwd, pending, registry);
     success(`Wrote ${pending.length} file${pending.length === 1 ? '' : 's'}`);
   } else {
     success('Component files are already installed.');
