@@ -1,7 +1,7 @@
 {
   "name": "chart-accessibility",
   "type": "registry:ui",
-  "description": "chart-accessibility.",
+  "description": "Speaks a chart as a list of its data, beside the drawing.",
   "registryDependencies": [],
   "dependencies": [],
   "optionalDependencies": [],

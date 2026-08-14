@@ -116,17 +116,17 @@
     "exampleEntries": 107,
     "registry": {
       "componentItems": 107,
-      "supportItems": 30,
-      "totalItems": 137,
+      "supportItems": 31,
+      "totalItems": 138,
       "byType": {
-        "registry:ui": 117,
+        "registry:ui": 118,
         "registry:hook": 12,
         "registry:lib": 7,
         "registry:theme": 1
       }
     },
     "registrySupport": {
-      "primitives": 8,
+      "primitives": 9,
       "icons": 1,
       "providers": 1,
       "hooks": 12,
