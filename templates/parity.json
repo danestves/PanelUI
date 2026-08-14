@@ -1,0 +1,33 @@
+{
+  "templates": ["expo-app", "expo-starter"],
+  "shared": [
+    ".gitignore",
+    "app/_layout.tsx",
+    "assets/logo-dark.png",
+    "assets/logo-light.png",
+    "css.d.ts",
+    "global.css",
+    "metro.config.js",
+    "tsconfig.json",
+    "uniwind-types.d.ts"
+  ],
+  "overlays": {
+    "app.json": {
+      "differences": ["expo.name", "expo.scheme", "expo.slug"],
+      "reason": "Each generated Expo project needs its own display name, slug and deep-link scheme."
+    },
+    "package.json": {
+      "differences": ["name"],
+      "reason": "The minimal app and gallery starter are distinct npm project identities."
+    }
+  },
+  "unique": {
+    "expo-app": ["app/index.tsx"],
+    "expo-starter": [
+      "app/(tabs)/_layout.tsx",
+      "app/(tabs)/components.tsx",
+      "app/(tabs)/index.tsx",
+      "app/(tabs)/settings.tsx"
+    ]
+  }
+}

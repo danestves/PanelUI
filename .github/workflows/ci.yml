@@ -22,6 +22,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Check template shared-base parity
+        run: npm run template:parity
+
       - name: Check example metadata
         run: npm run metadata:check --workspace=example
 

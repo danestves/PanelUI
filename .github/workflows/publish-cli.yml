@@ -58,6 +58,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check template shared-base parity
+        run: npm run template:parity
+
       # Which package, if any, this release is for.
       - name: Read the package out of the tag
         id: target
