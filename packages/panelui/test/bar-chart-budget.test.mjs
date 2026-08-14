@@ -11,7 +11,7 @@ const source = await readFile(
   'utf8'
 );
 const usage = await readFile(
-  new URL('../../../apps/docs/scripts/usage.json', import.meta.url),
+  new URL('../../../apps/docs/scripts/usage/bar-chart.json', import.meta.url),
   'utf8'
 );
 
