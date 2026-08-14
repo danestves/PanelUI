@@ -1404,7 +1404,8 @@
     "name": "use-direction",
     "type": "registry:hook",
     "description": "use-direction.",
-    "registryDependencies": []
+    "registryDependencies": [],
+    "docsPath": "hooks/use-direction"
   },
   {
     "name": "use-disclosure",
