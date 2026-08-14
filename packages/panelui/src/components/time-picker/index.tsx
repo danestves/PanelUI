@@ -36,12 +36,11 @@
  *
  * ## Scroll offset, not gesture maths
  *
- * The wheel, the clock's list and the ruler are all scroll views with
- * `snapToOffsets`, and the selection is `Math.round(offset / itemSize)`. That
- * buys momentum, deceleration, edge bounce and platform-correct fling physics
- * for nothing, and none of it would be worth rebuilding on a pan gesture. The
- * per-item fade and the ruler's readout follow the offset on the UI thread, so
- * scrolling never round-trips through React — only the settled value does.
+ * The wheel, the clock's list and the ruler are snapping scroll views, and the
+ * selection is `Math.round(offset / itemSize)`. That buys momentum,
+ * deceleration, edge bounce and platform-correct fling physics for nothing,
+ * and none of it would be worth rebuilding on a pan gesture. The ruler keeps
+ * that full scroll range but mounts only an overscanned window of its ticks.
  */
 import {
   useCallback,
@@ -79,6 +78,7 @@ import {
   accessibilityValueForIndex,
   indexForAccessibilityAction,
 } from './accessibility';
+import { rulerWindow } from './ruler-window';
 import {
   clampTime,
   displayHour,
@@ -848,10 +848,20 @@ function RulerFace({
    */
   const [width, setWidth] = useState(0);
   const pad = Math.max(0, width / 2 - TICK_SPACING / 2);
+  const [windowIndex, setWindowIndex] = useState(index);
+  // A controlled/accessibility jump renders its destination before the effect
+  // moves the scroll view there; an in-flight gesture follows the scroll window.
+  const windowAnchor = index === resting.current ? windowIndex : index;
+  const window = rulerWindow(times.length, windowAnchor);
 
-  const snapToOffsets = useMemo(
-    () => times.map((_, i) => i * TICK_SPACING),
-    [times]
+  const showIndex = useCallback(
+    (next: number) => {
+      const nextStart = rulerWindow(times.length, next).start;
+      setWindowIndex((current) =>
+        rulerWindow(times.length, current).start === nextStart ? current : next
+      );
+    },
+    [times.length]
   );
 
   // The scale runs the same rest-and-resync machinery the wheel's columns do,
@@ -872,10 +882,14 @@ function RulerFace({
 
   // Unanimated, for the reason given on the wheel's columns: an animated
   // programmatic scroll reports itself as a gesture and the correction loops.
-  const snapTo = useCallback((to: number) => {
-    resting.current = to;
-    ref.current?.scrollTo({ x: to * TICK_SPACING, animated: false });
-  }, []);
+  const snapTo = useCallback(
+    (to: number) => {
+      resting.current = to;
+      showIndex(to);
+      ref.current?.scrollTo({ x: to * TICK_SPACING, animated: false });
+    },
+    [showIndex]
+  );
 
   useEffect(() => {
     if (index === resting.current) return;
@@ -934,6 +948,13 @@ function RulerFace({
     [atRest, cancelTimer, settleAt]
   );
 
+  const onScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      showIndex(Math.round(event.nativeEvent.contentOffset.x / TICK_SPACING));
+    },
+    [showIndex]
+  );
+
   useEffect(() => cancelTimer, [cancelTimer]);
 
   const stepsPerHour = Math.max(1, Math.round(60 / minuteStep));
@@ -985,9 +1006,11 @@ function RulerFace({
           contentOffset={{ x: index * TICK_SPACING, y: 0 }}
           scrollEnabled={!disabled}
           showsHorizontalScrollIndicator={false}
-          snapToOffsets={snapToOffsets}
+          snapToInterval={TICK_SPACING}
           disableIntervalMomentum
           decelerationRate="fast"
+          onScroll={onScroll}
+          scrollEventThrottle={16}
           onScrollBeginDrag={startMoving}
           onScrollEndDrag={onDragEnd}
           onMomentumScrollBegin={startMoving}
@@ -1009,22 +1032,27 @@ function RulerFace({
             at most — which is a legend, not a scale, and reads as clutter
             beside a number set at 36px.
           */}
-          {times.map((_, i) => (
-            <View
-              key={i}
-              style={{ width: TICK_SPACING }}
-              className="items-center justify-center"
-            >
+          <View style={{ width: window.start * TICK_SPACING }} />
+          {times.slice(window.start, window.end).map((_, offset) => {
+            const i = window.start + offset;
+            return (
               <View
-                className={cn(
-                  'w-0.5 rounded-full',
-                  // Taller and darker on the hour, so the scale reads as hours
-                  // rather than as an undifferentiated comb.
-                  i % stepsPerHour === 0 ? 'h-7 bg-muted-foreground' : 'h-4 bg-border'
-                )}
-              />
-            </View>
-          ))}
+                key={i}
+                style={{ width: TICK_SPACING }}
+                className="items-center justify-center"
+              >
+                <View
+                  className={cn(
+                    'w-0.5 rounded-full',
+                    // Taller and darker on the hour, so the scale reads as hours
+                    // rather than as an undifferentiated comb.
+                    i % stepsPerHour === 0 ? 'h-7 bg-muted-foreground' : 'h-4 bg-border'
+                  )}
+                />
+              </View>
+            );
+          })}
+          <View style={{ width: (times.length - window.end) * TICK_SPACING }} />
         </ScrollView>
 
         {/* Over the scale rather than in it: the indicator marks the centre of
