@@ -1,0 +1,64 @@
+{
+  "slug": "breadcrumb",
+  "intro": "The trail back up a hierarchy: a row of links ending in the page you are on.\n\nThe last crumb is not a link, because you cannot navigate to where you already are. It renders as a plain label marked as current rather than as a dead tappable target.\n\nSeparators are the component's job. `Breadcrumb.List` drops a chevron between the crumbs it holds, so a trail is only its items — there is no separator to forget, and none left dangling at the end.",
+  "usage": "<Breadcrumb>\n  <Breadcrumb.List>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={goHome}>Home</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={goProjects}>Projects</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>PanelUI</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>",
+  "anatomy": "<Breadcrumb>\n  <Breadcrumb.List>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link>…</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>…</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>",
+  "parts": {
+    "List": "The crumb row. Owns the separators — one between every pair of crumbs, none at the ends — and the collapsing, so you only ever list items.",
+    "Item": "One crumb: wraps a link or the current page.",
+    "Link": "A navigable crumb — an ancestor to jump back to. Muted until pressed, and carries the link role.",
+    "Page": "The trailing crumb: where you are now. Not a link, marked `aria-current=\"page\"`, painted in full foreground so the trail resolves to it.",
+    "Separator": "The glyph between crumbs. `List` inserts it for you and hides it from screen readers; public only for a hand-assembled trail.",
+    "Ellipsis": "Stands in for the crumbs a collapsed trail hides. Static by default; give the list an `onEllipsisPress` and it becomes the trigger for a menu of the hidden steps."
+  },
+  "notes": "You never write separators — `Breadcrumb.List` inserts a chevron between each crumb. Change the glyph for the whole trail with `separator` on the root, or for one gap by passing children to a hand-placed `Breadcrumb.Separator`.\n\nA deep trail on a narrow phone should not wrap into a paragraph. Give the list a `maxItems` and it keeps the first `itemsBeforeCollapse` and last `itemsAfterCollapse` crumbs (both default to 1), folding the middle into a single ellipsis. Hand the list an `onEllipsisPress` and the ellipsis becomes the handle for a menu of the hidden steps.",
+  "extraImports": [
+    "Text"
+  ],
+  "examples": [
+    {
+      "title": "A trail",
+      "description": "Links back up the tree, then the current page. The chevrons between them are the list's doing, not yours.",
+      "code": "<Breadcrumb>\n  <Breadcrumb.List>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Home</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Components</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>Breadcrumb</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>"
+    },
+    {
+      "title": "Custom separator",
+      "description": "`separator` on the root swaps the chevron for any node — a slash, a dot — across every gap at once.",
+      "code": "<Breadcrumb separator={<Text size=\"sm\" muted>/</Text>}>\n  <Breadcrumb.List>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Docs</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Guides</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>Theming</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>",
+      "preview": {
+        "src": "/previews/breadcrumb-custom-separator.jpg",
+        "alt": "The same trail — Docs, Guides, Theming — with a forward slash in place of each chevron.",
+        "width": 1179,
+        "height": 236
+      }
+    },
+    {
+      "title": "Collapsed",
+      "description": "`maxItems` folds the middle of a deep trail into an ellipsis, keeping the first and last crumbs. Pass `onEllipsisPress` to make the ellipsis open a menu of the hidden steps.",
+      "code": "<Breadcrumb>\n  <Breadcrumb.List maxItems={3} onEllipsisPress={() => {}}>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Home</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Library</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Components</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>Breadcrumb</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>",
+      "preview": {
+        "src": "/previews/breadcrumb-collapsed.jpg",
+        "alt": "A long trail shortened to Home, an ellipsis, and Breadcrumb, so a deep path still fits one line.",
+        "width": 1179,
+        "height": 262
+      }
+    },
+    {
+      "title": "Dense header",
+      "description": "`size=\"sm\"` tightens the type for a crumb trail sitting in a header bar.",
+      "code": "<Breadcrumb size=\"sm\">\n  <Breadcrumb.List>\n    <Breadcrumb.Item>\n      <Breadcrumb.Link onPress={() => {}}>Settings</Breadcrumb.Link>\n    </Breadcrumb.Item>\n    <Breadcrumb.Item>\n      <Breadcrumb.Page>Billing</Breadcrumb.Page>\n    </Breadcrumb.Item>\n  </Breadcrumb.List>\n</Breadcrumb>",
+      "preview": {
+        "src": "/previews/breadcrumb-dense-header.jpg",
+        "alt": "A two-crumb trail, Settings then Billing, at the tighter size a screen header uses.",
+        "width": 1179,
+        "height": 310
+      }
+    }
+  ],
+  "preview": {
+    "src": "/previews/breadcrumb.jpg",
+    "alt": "A three-step trail reading Home, Components, Breadcrumb, separated by chevrons. The first two are muted links; the last is white and unlinked, because it is the page you are already on.",
+    "width": 1179,
+    "height": 243
+  }
+}

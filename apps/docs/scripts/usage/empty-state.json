@@ -1,0 +1,55 @@
+{
+  "slug": "empty-state",
+  "intro": "The placeholder for a list or screen with nothing in it.\n\n`Media variant=\"icon\"` frames the icon in a small card with two rotated ghost cards fanned behind it.\n\nSay what would be here and how to get some. An empty list with no explanation reads as a list that failed to load.",
+  "usage": "<EmptyState>\n  <EmptyState.Header>\n    <EmptyState.Media variant=\"icon\">\n      <SearchIcon size={18} />\n    </EmptyState.Media>\n    <EmptyState.Title>No results found</EmptyState.Title>\n    <EmptyState.Description>\n      Try adjusting your search or filters.\n    </EmptyState.Description>\n  </EmptyState.Header>\n  <EmptyState.Content>\n    <Button variant=\"outline\" fullWidth>Clear filters</Button>\n  </EmptyState.Content>\n</EmptyState>",
+  "extraImports": [
+    "Button",
+    "SearchIcon",
+    "BellIcon"
+  ],
+  "parts": {
+    "Header": "Groups media, title and description into one centred column.",
+    "Media": "Visual anchor above the title.",
+    "Title": "Heading.",
+    "Description": "Supporting text.",
+    "Content": "Slot below the header, for actions."
+  },
+  "anatomy": "<EmptyState>\n  <EmptyState.Header>\n    <EmptyState.Media>…</EmptyState.Media>\n    <EmptyState.Title>…</EmptyState.Title>\n    <EmptyState.Description>…</EmptyState.Description>\n  </EmptyState.Header>\n  <EmptyState.Content>…</EmptyState.Content>\n</EmptyState>",
+  "examples": [
+    {
+      "title": "With an icon and an action",
+      "description": "The icon media fans two ghost cards behind the icon; the content slot below the header holds a primary action.",
+      "code": "<EmptyState>\n  <EmptyState.Header>\n    <EmptyState.Media variant=\"icon\">\n      <SearchIcon size={18} />\n    </EmptyState.Media>\n    <EmptyState.Title>No results found</EmptyState.Title>\n    <EmptyState.Description>Try adjusting your search or filters.</EmptyState.Description>\n  </EmptyState.Header>\n  <EmptyState.Content>\n    <Button variant=\"outline\" fullWidth>Clear filters</Button>\n  </EmptyState.Content>\n</EmptyState>"
+    },
+    {
+      "title": "Inside a card",
+      "description": "The `card` variant is a self-contained bordered block sized to its contents — for an empty section inside a screen rather than a whole empty screen. Pair it with a smaller `size`.",
+      "code": "<EmptyState variant=\"card\" size=\"sm\">\n  <EmptyState.Header>\n    <EmptyState.Media variant=\"icon\">\n      <BellIcon size={16} />\n    </EmptyState.Media>\n    <EmptyState.Title>No notifications</EmptyState.Title>\n    <EmptyState.Description>You are all caught up.</EmptyState.Description>\n  </EmptyState.Header>\n</EmptyState>"
+    },
+    {
+      "title": "Sizes",
+      "description": "One `size` scales the padding, media, title and description together.",
+      "code": "<EmptyState size=\"sm\">…</EmptyState>\n<EmptyState size=\"default\">…</EmptyState>\n<EmptyState size=\"lg\">…</EmptyState>"
+    },
+    {
+      "title": "Text only",
+      "description": "A heading and a line, with no icon or action.",
+      "preview": {
+        "src": "/previews/empty-state-with-text.jpg",
+        "alt": "EmptyState — Text only.",
+        "width": 1179,
+        "height": 717
+      },
+      "code": "<EmptyState>\n  <EmptyState.Title>No results</EmptyState.Title>\n  <EmptyState.Description>Try a different search term.</EmptyState.Description>\n</EmptyState>"
+    }
+  ],
+  "variantCode": {
+    "variant": "{/* Fills its parent — a whole screen or a flex slot. */}\n<EmptyState variant=\"default\">…</EmptyState>\n\n{/* A bordered block that sits inside content. */}\n<EmptyState variant=\"card\">…</EmptyState>"
+  },
+  "preview": {
+    "src": "/previews/empty-state.jpg",
+    "alt": "The EmptyState component, running in the example app.",
+    "width": 1179,
+    "height": 1026
+  }
+}

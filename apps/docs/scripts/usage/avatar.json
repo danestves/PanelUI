@@ -1,0 +1,62 @@
+{
+  "slug": "avatar",
+  "intro": "A user's picture, falling back to initials when there is no source or the image fails to load.\n\nPass `fallback` with the initials you want; without it, a missing image leaves an empty circle.",
+  "usage": "<Avatar size=\"lg\" source={{ uri: user.avatarUrl }} fallback=\"KA\" />\n\n<Avatar source={{ uri: user.avatarUrl }} fallback=\"KA\">\n  <Avatar.Badge>\n    <Badge variant=\"destructive\" count={5} />\n  </Avatar.Badge>\n</Avatar>",
+  "parts": {
+    "Badge": "Overlay pinned to the top-right — an unread count or a presence dot."
+  },
+  "notes": "A plain avatar renders as one clipped node. Adding children wraps it in an unclipped container so a corner badge is not cut in half by the circular mask.",
+  "anatomy": "<Avatar>\n  <Avatar.Badge>…</Avatar.Badge>\n</Avatar>",
+  "examples": [
+    {
+      "title": "Image with an initials fallback",
+      "description": "The fallback shows while the image is missing **and** if it fails to load, so a dead URL never leaves an empty circle.",
+      "code": "<Avatar source={{ uri: user.avatarUrl }} fallback=\"KA\" />\n\n{/* No source at all — straight to initials. */}\n<Avatar fallback=\"OL\" />",
+      "preview": {
+        "src": "/previews/avatar-with-image.jpg",
+        "alt": "Avatar — Image with an initials fallback.",
+        "width": 1179,
+        "height": 408
+      }
+    },
+    {
+      "title": "A presence dot",
+      "description": "`Avatar.Badge` hangs off an unclipped wrapper, so it is not cut in half by the avatar’s rounding.",
+      "code": "<Avatar size=\"lg\" source={{ uri: user.avatarUrl }} fallback=\"KA\">\n  <Avatar.Badge>\n    <View className=\"h-3 w-3 rounded-full bg-green-500\" />\n  </Avatar.Badge>\n</Avatar>"
+    },
+    {
+      "title": "A stack",
+      "description": "Negative margins overlap them; reverse the row so the first is on top.",
+      "code": "<View className=\"flex-row-reverse justify-end\">\n  {members.map((member) => (\n    <Avatar\n      key={member.id}\n      size=\"sm\"\n      source={{ uri: member.avatarUrl }}\n      fallback={member.initials}\n      className=\"-ml-2 border-2 border-background\"\n    />\n  ))}\n</View>",
+      "preview": {
+        "src": "/previews/avatar-stacked-group.jpg",
+        "alt": "Avatar — A stack.",
+        "width": 1179,
+        "height": 324
+      }
+    },
+    {
+      "title": "A notification badge",
+      "description": "`Avatar.Badge` overlays a `Badge` in the corner — a count, or a `shape=\"dot\"` presence dot.",
+      "preview": {
+        "src": "/previews/avatar-with-notification-badge.jpg",
+        "alt": "Avatar — A notification badge.",
+        "width": 1179,
+        "height": 401
+      },
+      "code": "<Avatar size=\"lg\" source={{ uri: user.avatar }} fallback=\"AB\">\n  <Avatar.Badge>\n    <Badge variant=\"destructive\" count={5} />\n  </Avatar.Badge>\n</Avatar>"
+    }
+  ],
+  "variantCode": {
+    "size": "<Avatar size=\"sm\" fallback=\"KA\" />\n<Avatar size=\"md\" fallback=\"KA\" />\n<Avatar size=\"lg\" fallback=\"KA\" />\n<Avatar size=\"xl\" fallback=\"KA\" />"
+  },
+  "preview": {
+    "src": "/previews/avatar.jpg",
+    "alt": "The Avatar component, running in the example app.",
+    "width": 1166,
+    "height": 448
+  },
+  "extraImports": [
+    "Badge"
+  ]
+}

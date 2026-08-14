@@ -1,0 +1,104 @@
+{
+  "slug": "ring-chart",
+  "intro": "Progress towards several targets, as concentric arcs.\n\nEach ring is a value against *its own* target, so three rings can all sit at ninety percent of three unrelated numbers and that is the reading. Nothing is normalised across rings and nothing has to add up.\n\nThat is the difference from a [PieChart](/docs/charts/pie-chart), which divides one whole between its slices and whose angles must come to a full turn.\n\n**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.",
+  "usage": "<RingChart data={goals} size={208}>\n  <RingChart.Header title=\"Today\" value=\"81%\" legend />\n  {goals.map((goal, index) => (\n    <RingChart.Ring key={goal.label} index={index} />\n  ))}\n  <RingChart.Center />\n</RingChart>",
+  "extraImports": [
+    "type RingDatum",
+    "Frame",
+    "Text"
+  ],
+  "anatomy": "<RingChart data={…}>\n  <RingChart.Header />                 {/* the strip above the rings */}\n  <RingChart.Ring index={0} />         {/* one per entry, outermost first */}\n  <RingChart.Ring index={1} />\n  <RingChart.Center />                 {/* the readout in the hole */}\n  <RingChart.Legend />\n</RingChart>",
+  "parts": {
+    "Header": "The strip above the rings — what the chart is of, what it reads, and a key for the colours. The chart introducing itself, as distinct from the caption on the card around it.",
+    "Ring": "One ring: a track, and the arc showing how far along it the value has got. Segment it into ticks with `segments`.",
+    "Center": "The readout in the hole. Shows the outermost ring until one is selected, then that ring’s own figures.",
+    "Legend": "A swatch, a name and a percentage per ring — pressable in the same way the rings are, and usually the easier target of the two. Prefer `Header legend` on a chart that has a header."
+  },
+  "examples": [
+    {
+      "title": "The data",
+      "description": "Each ring carries its own target. `maxValue` is what makes an arc mean something: without it the arc shows how far something went, and with it, how far it went *of what it was aiming at*.",
+      "code": "const goals: RingDatum[] = [\n  { label: 'Move', value: 486, maxValue: 600 },\n  { label: 'Exercise', value: 24, maxValue: 30 },\n  { label: 'Stand', value: 9, maxValue: 12 },\n];"
+    },
+    {
+      "title": "Selecting a ring",
+      "description": "Press a ring, or its row in the legend, and the centre swaps to that ring’s figures. Pressing it again clears the selection. Control it from outside with `activeIndex` and `onActiveIndexChange` when something else on the screen has to stay in step.",
+      "code": "const [active, setActive] = useState(-1);\n\n<RingChart data={goals} activeIndex={active} onActiveIndexChange={setActive}>\n  {goals.map((goal, index) => (\n    <RingChart.Ring key={goal.label} index={index} />\n  ))}\n  <RingChart.Center />\n  <RingChart.Legend />\n</RingChart>"
+    },
+    {
+      "title": "Drawing the middle yourself",
+      "description": "`Center` takes a render function instead of its default layout. It is given the selected ring, or `null` when nothing is selected.",
+      "code": "<RingChart.Center>\n  {(ring) => (\n    <>\n      <Text size=\"xs\" muted>{ring ? ring.label : 'Today'}</Text>\n      <Text size=\"xl\" weight=\"semibold\">\n        {ring ? `${Math.round((ring.value / ring.maxValue) * 100)}%` : '3 goals'}\n      </Text>\n    </>\n  )}\n</RingChart.Center>"
+    },
+    {
+      "title": "Sizing it",
+      "description": "Left alone the chart measures its container and stays square — which inside a card means a plot twice as tall as a bar or area chart at `aspectRatio={2}`. Give it a `size` and it draws that square and centres it in whatever it was handed. `strokeWidth` and `ringGap` decide how much of it the rings take and how much hole is left, and the hole is what the centre readout has to fit inside, so a chart of many thick rings has room for a number and not much else.",
+      "code": "{/* Sized, and centred in its container. The usual answer in a card. */}\n<RingChart data={goals} size={208} strokeWidth={16} ringGap={6}>…</RingChart>\n\n{/* Or left to fill, when the chart is the screen. */}\n<RingChart data={goals} strokeWidth={18} ringGap={6}>…</RingChart>"
+    },
+    {
+      "title": "Opening the ring into a gauge",
+      "description": "`startAngle` and `endAngle` are degrees clockwise from twelve o’clock. Leave a turn between them and the ring closes; leave less and the gap becomes the notch a dial has always had at the bottom. The track stops where the arc stops, and so does the touch target — the dead part of a gauge stays dead.",
+      "code": "<RingChart data={[health]} size={208} startAngle={-135} endAngle={135} strokeWidth={18}>\n  <RingChart.Header title=\"Score\" value=\"82 of 100\" />\n  <RingChart.Ring index={0} />\n  <RingChart.Center formatValue={(value) => `${value}`} />\n</RingChart>"
+    },
+    {
+      "title": "Counting in ticks",
+      "description": "`segments` breaks the ring into that many ticks, lit one at a time as the value climbs. For a target made of countable things: eight of twelve sessions reads off ticks you can count, and off a smooth arc only as “about two thirds”. The ends square themselves off unless you say otherwise, because a rounded cap on a tick as long as it is wide draws a lozenge.",
+      "code": "<RingChart data={[{ label: 'Sessions', value: 8, maxValue: 12 }]} size={208} strokeWidth={16}>\n  <RingChart.Header title=\"Sessions attended\" value=\"8 of 12\" />\n  <RingChart.Ring index={0} segments={12} segmentGap={6} />\n  <RingChart.Center formatValue={(value) => `${value}`} />\n</RingChart>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Today's goals",
+      "description": "Three targets, each read against its own rather than against each other. Selecting a ring swaps the header’s figures for that ring’s.",
+      "code": "<RingChart data={goals} size={208} strokeWidth={16} ringGap={6} activeIndex={active} onActiveIndexChange={setActive}>\n  <RingChart.Header value={`${percent}%`} caption={caption} legend />\n  {goals.map((goal, index) => (\n    <RingChart.Ring key={goal.label} index={index} />\n  ))}\n  <RingChart.Center defaultLabel=\"Move\" />\n</RingChart>",
+      "previewVideo": {
+        "src": "/previews/ring-chart-today-s-goals.mp4",
+        "poster": "/previews/ring-chart-today-s-goals-poster.jpg",
+        "alt": "RingChart — Today's goals.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Gauge",
+      "description": "The ring opened to three quarters of a turn, with the notch at the bottom where a dial has always had it. One value, and the room a wide hole gives the number.",
+      "code": "<RingChart data={[health]} size={208} startAngle={-135} endAngle={135} strokeWidth={18}>\n  <RingChart.Header title=\"Score\" value=\"82 of 100\" caption=\"Above the 75 the alerting is set at\" />\n  <RingChart.Ring index={0} colorIndex={2} />\n  <RingChart.Center formatValue={(value) => `${value}`} />\n</RingChart>",
+      "preview": {
+        "src": "/previews/ring-chart-gauge.jpg",
+        "alt": "RingChart — Gauge.",
+        "width": 1179,
+        "height": 1227
+      }
+    },
+    {
+      "title": "Segmented",
+      "description": "Ticks rather than an arc, for a target made of countable things. Twelve sessions, eight of them attended, and you can count them.",
+      "code": "<RingChart data={[sessions]} size={208} strokeWidth={16}>\n  <RingChart.Header title=\"Sessions attended\" value=\"8 of 12\" />\n  <RingChart.Ring index={0} segments={12} segmentGap={6} colorIndex={4} />\n  <RingChart.Center formatValue={(value) => `${value}`} />\n</RingChart>",
+      "preview": {
+        "src": "/previews/ring-chart-segmented.jpg",
+        "alt": "RingChart — Segmented.",
+        "width": 1179,
+        "height": 1177
+      }
+    },
+    {
+      "title": "Separate dials",
+      "description": "Three charts rather than three rings. Concentric, the outer ring is longer than the inner one at the same percentage and the eye reads the length — so targets that are not read against each other are better off apart.",
+      "code": "{budgets.map((budget, index) => (\n  <RingChart key={budget.label} data={[budget]} size={92} strokeWidth={9} startAngle={-120} endAngle={120}>\n    <RingChart.Ring index={0} colorIndex={index + 1} />\n    <RingChart.Center formatValue={() => `${percentOf(budget)}%`} />\n  </RingChart>\n))}",
+      "preview": {
+        "src": "/previews/ring-chart-separate-dials.jpg",
+        "alt": "RingChart — Separate dials.",
+        "width": 1179,
+        "height": 820
+      }
+    }
+  ],
+  "notes": "### Why every ring has a track\n\nAn arc drawn on nothing shows how far something went. An arc drawn on a full circle shows how far it went *of what it was aiming at*, which is the entire question a ring chart is asked. The track is the target made visible.\n\nA value past its target fills the ring and stops there. Going round twice would draw 110% as 10%, which is the wrong answer told confidently.\n\n### What the centre shows\n\nThe outermost ring, until one is selected. Not a total: the rings measure different things against different targets, so their values do not add up and their percentages do not average — a total in the middle would be a confident number about nothing. Pass a render function to `Center` when your rings *do* share a unit and a total is honest.\n\n### The header, and the card around it\n\n`RingChart.Header` belongs to the chart; the card's header belongs to the tray the chart sits in. The distinction is worth keeping: the header's value changes as a ring is selected, and its legend is the list the chart itself is holding. Pass the formatted value in rather than expecting it to be derived — there is no total to derive from targets that measure different things.\n\n### Touch, not hover\n\nRings are selected by pressing them. There is no equivalent here of a pointer resting somewhere without committing, so a chart that only revealed its numbers on hover would never reveal them at all — and because a twelve-point band is below the size a finger reliably hits, the touch target is widened well past the ring it belongs to.\n\n### Reduced motion\n\nThe sweep is skipped and the arcs draw at their final length.",
+  "previewVideo": {
+    "src": "/previews/ring-chart.mp4",
+    "poster": "/previews/ring-chart-poster.jpg",
+    "alt": "The RingChart component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  }
+}

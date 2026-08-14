@@ -1,0 +1,58 @@
+{
+  "slug": "surface",
+  "intro": "An elevated container, with a variant ladder for building hierarchy.\n\nNest the variants: each level sits one step further from the page background than the one around it.\n\nBoth the fill **and the corner radius** follow the active theme. The variants resolve to themed surface tokens and `rounded-3xl` resolves through the per-theme radius scale, so the same Surface is a 24px corner under Panel and a 32px one under Moon without knowing about either.\n\nFor a surface with a header, body and footer, use [Card](/docs/components/card).",
+  "usage": "<Surface>\n  <Text weight=\"medium\">Account</Text>\n\n  <Surface variant=\"secondary\" className=\"mt-3\">\n    <Text size=\"sm\" muted>Signed in as khalid@example.com</Text>\n\n    <Surface variant=\"tertiary\" className=\"mt-3\">\n      <Text size=\"xs\" muted>Session expires in 12 days</Text>\n    </Surface>\n  </Surface>\n</Surface>",
+  "extraImports": [
+    "Text"
+  ],
+  "notes": "`borderCurve: 'continuous'` is applied on iOS, giving Apple's squircle corner rather than a circular arc — visibly smoother at this radius. Android ignores it.\n\nUse `variant=\"transparent\"` when you want the padding and radius without a fill.",
+  "examples": [
+    {
+      "title": "Nested hierarchy",
+      "description": "The variants form a ladder, not a palette: each step sits one level further from the background, so nesting them builds depth without naming a colour.",
+      "code": "<Surface>\n  <Text weight=\"medium\">Account</Text>\n  <Surface variant=\"secondary\" className=\"mt-3\">\n    <Text size=\"sm\" muted>Signed in as khalid@example.com</Text>\n    <Surface variant=\"tertiary\" className=\"mt-3\">\n      <Text size=\"xs\" muted>Session expires in 12 days</Text>\n    </Surface>\n  </Surface>\n</Surface>"
+    },
+    {
+      "title": "Bordered and elevated",
+      "description": "A surface the same colour as the page needs a hairline to read as its own plane. `elevated` adds a soft shadow that lifts it off the page — off by default, because a nested surface takes its depth from its fill.",
+      "code": "<Surface bordered>…</Surface>\n<Surface elevated>…</Surface>\n<Surface bordered elevated>…</Surface>",
+      "preview": {
+        "src": "/previews/surface-bordered-and-elevated.jpg",
+        "alt": "Surface — Bordered and elevated.",
+        "width": 1179,
+        "height": 750
+      }
+    },
+    {
+      "title": "Padding scale",
+      "description": "`padding` scales the inner spacing. `none` is for a surface wrapping a bled image or a chart, where the content reaches the edge.",
+      "code": "<Surface padding=\"none\">…</Surface>\n<Surface padding=\"sm\">…</Surface>\n<Surface padding=\"default\">…</Surface>\n<Surface padding=\"lg\">…</Surface>",
+      "preview": {
+        "src": "/previews/surface-padding-scale.jpg",
+        "alt": "Surface — Padding scale.",
+        "width": 1179,
+        "height": 902
+      }
+    },
+    {
+      "title": "As a stat card",
+      "description": "A bordered surface with generous padding is the whole card for a metric.",
+      "code": "<Surface bordered padding=\"lg\" className=\"flex-1\">\n  <Text size=\"xs\" muted className=\"uppercase tracking-wider\">Revenue</Text>\n  <Text size=\"xl\" weight=\"semibold\" className=\"mt-1\">$24.8k</Text>\n</Surface>",
+      "preview": {
+        "src": "/previews/surface-as-a-state-card.jpg",
+        "alt": "Surface — As a stat card.",
+        "width": 1179,
+        "height": 521
+      }
+    }
+  ],
+  "variantCode": {
+    "variant": "<Surface variant=\"default\" className=\"p-4\">Default</Surface>\n<Surface variant=\"secondary\" className=\"p-4\">Secondary</Surface>\n<Surface variant=\"tertiary\" className=\"p-4\">Tertiary</Surface>\n<Surface variant=\"transparent\" className=\"p-4\">Transparent</Surface>"
+  },
+  "preview": {
+    "src": "/previews/surface.jpg",
+    "alt": "The Surface component, running in the example app.",
+    "width": 1179,
+    "height": 917
+  }
+}

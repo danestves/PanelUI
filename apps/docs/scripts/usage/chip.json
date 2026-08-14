@@ -1,0 +1,78 @@
+{
+  "slug": "chip",
+  "intro": "A compact, interactive pill: a filter, a tag, or a removable token in a \"To:\" field.\n\nSet `selected` to make it a filter and `onClose` to make it removable.\n\nWhere [Badge](/docs/components/badge) only shows, a chip is the one you press. For a field whose whole value is a list of these, use [TagInput](/docs/components/tag-input).",
+  "preview": {
+    "src": "/previews/chip.jpg",
+    "alt": "Seven chips on a dark screen under a VARIANTS heading — a neutral Default, a filled Primary, an Outline, and the four tone variants labelled Shipped, Beta, New and Blocked.",
+    "width": 1179,
+    "height": 397,
+    "caption": "Every variant, running in the example app."
+  },
+  "usage": "<Chip>Design</Chip>\n\n<Chip variant=\"info\" onClose={() => remove('design')}>Design</Chip>\n\n<Chip selected={on} onPress={() => setOn(!on)}>Available</Chip>",
+  "anatomy": "<Chip start={<Icon />} onClose={() => {}}>\n  <Chip.Label>…</Chip.Label>\n</Chip>",
+  "parts": {
+    "Label": "The label, when the chip holds more than a string. Reads the chip's variant and selected state itself, so an icon-plus-text chip does not thread the colour through by hand."
+  },
+  "extraImports": [
+    "CheckIcon"
+  ],
+  "examples": [
+    {
+      "title": "Tags",
+      "description": "A static token, in any of the tones. With no `onPress` it is a plain View — it does not invite a tap it will not answer.",
+      "code": "<Chip>Default</Chip>\n<Chip variant=\"primary\">Primary</Chip>\n<Chip variant=\"success\">Shipped</Chip>\n<Chip variant=\"warning\">Beta</Chip>\n<Chip variant=\"info\">New</Chip>\n<Chip variant=\"outline\">Draft</Chip>"
+    },
+    {
+      "title": "A filter bar",
+      "description": "`selected` promotes any chip to a loud accent surface, so a row of filters toggles on and off without a second colour. Pair it with `onPress` — setting `selected` makes the chip announce as a toggle.",
+      "code": "const [tags, setTags] = useState<string[]>(['design']);\n\nconst toggle = (id: string) =>\n  setTags((prev) =>\n    prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]\n  );\n\n<View className=\"flex-row flex-wrap gap-2\">\n  {['design', 'code', 'research'].map((id) => (\n    <Chip\n      key={id}\n      selected={tags.includes(id)}\n      onPress={() => toggle(id)}\n    >\n      {id}\n    </Chip>\n  ))}\n</View>",
+      "previewVideo": {
+        "src": "/previews/chip-a-filter-bar.mp4",
+        "poster": "/previews/chip-a-filter-bar-poster.jpg",
+        "alt": "Chip — A filter bar.",
+        "width": 720,
+        "height": 202
+      }
+    },
+    {
+      "title": "Removable tokens",
+      "description": "`onClose` adds a trailing ✕ that is its own hit target — removing a chip never also fires its `onPress`. Perfect for the recipients in a “To:” field or the applied filters above a list.",
+      "code": "const [people, setPeople] = useState(['Ada', 'Grace', 'Alan']);\n\n<View className=\"flex-row flex-wrap gap-2\">\n  {people.map((name) => (\n    <Chip\n      key={name}\n      variant=\"outline\"\n      onClose={() => setPeople((p) => p.filter((n) => n !== name))}\n    >\n      {name}\n    </Chip>\n  ))}\n</View>",
+      "previewVideo": {
+        "src": "/previews/chip-removable-tokens.mp4",
+        "poster": "/previews/chip-removable-tokens-poster.jpg",
+        "alt": "Chip — Removable tokens.",
+        "width": 720,
+        "height": 210
+      }
+    },
+    {
+      "title": "With a leading icon",
+      "description": "`start` takes an icon or an avatar before the label. Compose with `Chip.Label` and the icon inherits the chip's colour on its own.",
+      "code": "<Chip variant=\"success\" start={<CheckIcon size={13} />}>\n  <Chip.Label>Available</Chip.Label>\n</Chip>",
+      "preview": {
+        "src": "/previews/chip-with-leading-icon.jpg",
+        "alt": "Chip — With a leading icon.",
+        "width": 1179,
+        "height": 299
+      }
+    }
+  ],
+  "variantCode": {
+    "variant": "<Chip variant=\"default\">Default</Chip>\n<Chip variant=\"primary\">Primary</Chip>\n<Chip variant=\"outline\">Outline</Chip>\n<Chip variant=\"success\">Success</Chip>\n<Chip variant=\"warning\">Warning</Chip>\n<Chip variant=\"info\">Info</Chip>\n<Chip variant=\"destructive\">Destructive</Chip>",
+    "size": "<Chip size=\"sm\">Small</Chip>\n<Chip size=\"md\">Medium</Chip>\n<Chip size=\"lg\">Large</Chip>"
+  },
+  "notes": "A chip is only pressable when you give it an `onPress` or a `selected` state — otherwise it is a plain tag and is not announced as a control. A `selected` chip is read out as checked or unchecked; a plain pressable one as a button.\n\nThe close button carries its own `accessibilityLabel` (“Remove” by default — override with `closeLabel`) and a generous hit slop, since a small pill leaves little room for the finger.\n\nSet `haptics` for a tick under the finger on press or removal. It needs the optional `expo-haptics` and is silent without it.",
+  "variantMedia": {
+    "size": [
+      {
+        "preview": {
+          "src": "/previews/chip-size.jpg",
+          "alt": "Chip — size.",
+          "width": 1179,
+          "height": 341
+        }
+      }
+    ]
+  }
+}

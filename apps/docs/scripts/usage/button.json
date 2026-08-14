@@ -1,0 +1,75 @@
+{
+  "slug": "button",
+  "intro": "The primary action component: variants, sizes, a loading state and icon slots.\n\nIcons in `startContent` and `endContent` inherit a colour that reads against the button's background, so they follow the theme without a hardcoded hex.\n\nFor several buttons drawn as one control, use [ButtonGroup](/docs/components/button-group). For a button that stays down after it is pressed, use [ToggleButton](/docs/components/toggle-button).",
+  "usage": "<Button onPress={save}>Save changes</Button>\n\n<Button variant=\"outline\" startContent={<SearchIcon size={16} />}>\n  Search\n</Button>\n\n<Button variant=\"social\" fullWidth startContent={<GoogleIcon size={18} />}>\n  Continue with Google\n</Button>\n\n<Button loading={saving} fullWidth>\n  {saving ? 'Saving…' : 'Save'}\n</Button>",
+  "extraImports": [
+    "SearchIcon",
+    "ChevronRightIcon",
+    "GoogleIcon",
+    "AppleIcon"
+  ],
+  "notes": "`loading` swaps the start content for a variant-matched spinner and blocks presses. The `social` variant is a neutral surface sized for a full-width sign-in stack; pair it with `GoogleIcon`, `FacebookIcon` or `AppleIcon`.\n\n### Native rendering\n\nPass `native` to render the platform's own button instead — SwiftUI on iOS, Jetpack Compose on Android. It needs the optional `@expo/ui` package and is a silent no-op without it.\n\n**Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className` and most styling props are ignored. `variant` maps onto the nearest platform style; `size`, `fullWidth`, `loading`, `startContent` and `endContent` are dropped.\n\nSee [Native rendering](/docs/native) for the full prop-by-prop breakdown.\n\n### Liquid Glass\n\n`glass` draws a `native` button in the material iOS 26 uses for its own floating controls. It needs `native` — on its own it does nothing — and on an older iOS, on Android, or without `@expo/ui` the button keeps its ordinary platform style rather than failing.\n\n`primary` and `destructive` take the prominent variant, which keeps the accent tint a filled button is supposed to have; every other variant takes the plain one. A `native` icon button is drawn round rather than in the platform's default capsule — a lone glyph in a capsule reads as a text button somebody forgot to label. A labelled `native` button is sized through the platform's control scale, which `size` maps onto — that scales the room the style leaves around the label, and the label with it. An icon button is sized by padding on the glyph instead: the platform draws a button's background around its *label*, so padding the button pads outside the chrome and a frame only re-centres it.\n\n```tsx\n<Button native glass size=\"icon\" variant=\"ghost\">\n  <MenuIcon size={20} />\n</Button>\n```\n\n<Callout type=\"warn\" title=\"Give a native button a string label\">\nAnything other than a string has to be hosted inside the native tree, and a hosted view only measures where something above it is definite on both axes. An icon button is a square this component sizes, so it qualifies. A labelled one does not — its width is its text's, which nothing knows in advance — and hosting a label there leaves the width with no fixed point. The two layout systems then ask each other the same question until the app dies, in native code, where a JavaScript `try` has nothing to catch.\n\n```tsx\n<Button native>New chat</Button>                    {/* fine */}\n<Button native size=\"icon\"><PlusIcon /></Button>    {/* fine */}\n<Button native><Text>New chat</Text></Button>       {/* crashes */}\n```\n</Callout>",
+  "examples": [
+    {
+      "title": "With icons",
+      "description": "Icons in `startContent` and `endContent` inherit a colour that reads against the button’s background, so they follow the theme without a hardcoded hex.",
+      "code": "<Button startContent={<SearchIcon size={16} />}>Search</Button>\n\n<Button variant=\"outline\" endContent={<ChevronRightIcon size={16} />}>\n  Continue\n</Button>\n\n{/* Icon-only buttons get size=\"icon\" and an accessibility label. */}\n<Button size=\"icon\" variant=\"ghost\" accessibilityLabel=\"Search\">\n  <SearchIcon size={18} />\n</Button>",
+      "preview": {
+        "src": "/previews/button-with-icons.jpg",
+        "alt": "Button — With icons.",
+        "width": 1179,
+        "height": 616
+      }
+    },
+    {
+      "title": "Loading",
+      "description": "`loading` swaps the start content for a variant-matched spinner and blocks presses, so you do not need a separate `disabled`.",
+      "code": "const [saving, setSaving] = useState(false);\n\nasync function save() {\n  setSaving(true);\n  try {\n    await api.save(draft);\n  } finally {\n    setSaving(false);\n  }\n}\n\n<Button loading={saving} fullWidth onPress={save}>\n  {saving ? 'Saving…' : 'Save changes'}\n</Button>",
+      "previewVideo": {
+        "src": "/previews/button-loading.mp4",
+        "poster": "/previews/button-loading-poster.jpg",
+        "alt": "Button — Loading.",
+        "width": 720,
+        "height": 222
+      }
+    },
+    {
+      "title": "A sign-in stack",
+      "description": "The `social` variant is a neutral surface sized for a full-width column of providers.",
+      "code": "<View className=\"gap-2\">\n  <Button variant=\"social\" fullWidth startContent={<GoogleIcon size={18} />}>\n    Continue with Google\n  </Button>\n  <Button variant=\"social\" fullWidth startContent={<AppleIcon size={18} />}>\n    Continue with Apple\n  </Button>\n</View>",
+      "preview": {
+        "src": "/previews/button-social-login.jpg",
+        "alt": "Button — A sign-in stack.",
+        "width": 1179,
+        "height": 655
+      }
+    },
+    {
+      "title": "Destructive confirmation",
+      "code": "<View className=\"flex-row gap-2\">\n  <Button variant=\"ghost\" onPress={cancel}>Cancel</Button>\n  <Button variant=\"destructive\" onPress={deleteAccount}>\n    Delete account\n  </Button>\n</View>"
+    }
+  ],
+  "variantCode": {
+    "variant": "<Button>Primary</Button>\n<Button variant=\"secondary\">Secondary</Button>\n<Button variant=\"outline\">Outline</Button>\n<Button variant=\"ghost\">Ghost</Button>\n<Button variant=\"destructive\">Delete</Button>\n<Button variant=\"social\" startContent={<GoogleIcon size={18} />}>\n  Continue with Google\n</Button>",
+    "size": "<Button size=\"sm\">Small</Button>\n<Button size=\"md\">Medium</Button>\n<Button size=\"lg\">Large</Button>\n<Button size=\"icon\" accessibilityLabel=\"Search\">\n  <SearchIcon size={18} />\n</Button>",
+    "fullWidth": "<Button fullWidth>Spans its container</Button>"
+  },
+  "variantMedia": {
+    "size": [
+      {
+        "preview": {
+          "src": "/previews/button-size.jpg",
+          "alt": "Button — size.",
+          "width": 1179,
+          "height": 762
+        }
+      }
+    ]
+  },
+  "preview": {
+    "src": "/previews/button.jpg",
+    "alt": "The Button component, running in the example app.",
+    "width": 1179,
+    "height": 945
+  }
+}

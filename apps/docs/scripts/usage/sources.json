@@ -1,0 +1,57 @@
+{
+  "slug": "sources",
+  "intro": "Where an answer came from, folded under a count.\n\nA cited answer usually cites more places than anyone wants listed above it, so the list opens from a single line: \"Used 6 sources\".\n\nFolded is the resting state, unlike [Reasoning](/docs/ai-components/reasoning) — a citation list is something you go and check rather than something you watch arrive.",
+  "usage": "<Sources>\n  <Sources.Trigger count={sources.length} />\n  <Sources.Content>\n    {sources.map((source) => (\n      <Sources.Source\n        key={source.url}\n        href={source.url}\n        title={source.title}\n      />\n    ))}\n  </Sources.Content>\n</Sources>",
+  "extraImports": [
+    "Message",
+    "Avatar"
+  ],
+  "parts": {
+    "Trigger": "The line that opens the list. `count` reads \"Used 6 sources\".",
+    "Content": "The list, collapsed until the trigger is pressed.",
+    "Source": "One citation. Opens `href` with the platform's own handler, and falls back to the URL's host when there is no `title`."
+  },
+  "examples": [
+    {
+      "title": "A list of citations",
+      "description": "`title` is what the row says and `href` is where it goes. With no title the host stands in — which is a better label than a hundred characters of path, and models often send no title at all.",
+      "code": "<Sources>\n  <Sources.Trigger count={3} />\n  <Sources.Content>\n    <Sources.Source href=\"https://expo.dev/changelog\" title=\"Expo SDK 57\" />\n    <Sources.Source href=\"https://reactnative.dev/blog\" title=\"New Architecture\" />\n    <Sources.Source href=\"https://docs.swmansion.com/react-native-reanimated/\" />\n  </Sources.Content>\n</Sources>",
+      "preview": {
+        "src": "/previews/sources-a-list-of-citations.jpg",
+        "width": 1179,
+        "height": 553,
+        "alt": "Sources — A list of citations."
+      }
+    },
+    {
+      "title": "Reading message parts",
+      "description": "With the AI SDK these are the `source-url` parts of an assistant message. Filter once for the count and map the same array, so the number on the trigger cannot disagree with the list under it.",
+      "code": "const sources = message.parts.filter(\n  (part) => part.type === 'source-url'\n);\n\n{sources.length > 0 && (\n  <Sources>\n    <Sources.Trigger count={sources.length} />\n    <Sources.Content>\n      {sources.map((part) => (\n        <Sources.Source\n          key={part.sourceId}\n          href={part.url}\n          title={part.title}\n        />\n      ))}\n    </Sources.Content>\n  </Sources>\n)}"
+    },
+    {
+      "title": "Favicons instead of the link glyph",
+      "description": "`icon` replaces the leading glyph on a row. A favicon is worth the request in a real citation list: it is what a reader recognises a source by before they have read the title.",
+      "code": "<Sources.Source\n  href={part.url}\n  title={part.title}\n  icon={\n    <Avatar size=\"xs\" className=\"h-4 w-4\">\n      <Avatar.Image\n        source={{ uri: `https://icons.duckduckgo.com/ip3/${host}.ico` }}\n      />\n    </Avatar>\n  }\n/>"
+    },
+    {
+      "title": "Under a turn",
+      "description": "Below the bubble rather than above it: the citations are what the answer rests on, and they are read after it.",
+      "code": "<Message align=\"start\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>{answer}</Message.BubbleContent>\n    </Message.Bubble>\n    <Sources>\n      <Sources.Trigger count={sources.length} />\n      <Sources.Content>\n        {sources.map((source) => (\n          <Sources.Source key={source.url} href={source.url} title={source.title} />\n        ))}\n      </Sources.Content>\n    </Sources>\n  </Message.Content>\n</Message>",
+      "previewVideo": {
+        "src": "/previews/sources.mp4",
+        "poster": "/previews/sources-poster.jpg",
+        "width": 720,
+        "height": 612,
+        "alt": "Sources — Under a turn."
+      }
+    }
+  ],
+  "notes": "**A row is a link, and says so.** Each carries the `link` role and its title as the accessibility label, so a screen reader announces where it goes rather than reading the URL out character by character.\n\n**The host is parsed with a regex, not `URL`.** `URL` exists in Hermes but throws on anything malformed, and a model's citation is not a thing to trust with an exception. A label is worth having even when the string it came from is not a URL at all.\n\n**`Linking.openURL` is called without a `canOpenURL` guard.** That check needs the scheme declared up front on iOS, and a source is always http(s), which is always openable — the guard would only add a way to fail.\n\n**Nothing here depends on the AI SDK.** `href` and `title` are strings; they happen to be the shape of a `source-url` part.",
+  "previewVideo": {
+    "src": "/previews/sources.mp4",
+    "poster": "/previews/sources-poster.jpg",
+    "width": 720,
+    "height": 612,
+    "alt": "The Sources component, running in the example app."
+  }
+}

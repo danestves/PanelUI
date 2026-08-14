@@ -1,0 +1,164 @@
+{
+  "slug": "questionnaire",
+  "intro": "A multi-step questionnaire: one question on screen, the answers collected as they are given, and the way forward held until the current question is answered.\n\n**It owns the flow.** You supply the questions and do something with the answers; everything between those two points belongs to it. That is the difference from [Steps](/docs/components/steps), which only reflects a flow your app is already running.",
+  "usage": "const questions = [\n  { name: 'direction', required: true },\n  { name: 'detail' },\n] as const;\n\n<Questionnaire items={questions} onSubmit={(answers) => save(answers)}>\n  <Questionnaire.Title>Prototype</Questionnaire.Title>\n  <Questionnaire.Progress />\n\n  <Questionnaire.Item name=\"direction\" required>\n    <Questionnaire.Question>What should we build next?</Questionnaire.Question>\n    <Questionnaire.Description>Choose the direction you want to see first.</Questionnaire.Description>\n    <Questionnaire.Choices>\n      <Questionnaire.Choice value=\"delegation\" label=\"Delegation\" description=\"Show how work moves to a specialist.\" />\n      <Questionnaire.Choice value=\"prompts\" label=\"Question prompts\" />\n      <Questionnaire.Choice value=\"both\" label=\"Both together\" />\n    </Questionnaire.Choices>\n    <Questionnaire.Error />\n  </Questionnaire.Item>\n\n  <Questionnaire.Item name=\"detail\">\n    <Questionnaire.Question>How much detail?</Questionnaire.Question>\n    <Questionnaire.Choices>\n      <Questionnaire.Choice value=\"focused\" label=\"Focused\" />\n      <Questionnaire.Choice value=\"complete\" label=\"The complete flow\" />\n    </Questionnaire.Choices>\n  </Questionnaire.Item>\n\n  <Questionnaire.Footer>\n    <Questionnaire.Back />\n    <Questionnaire.Spacer />\n    <Questionnaire.Skip />\n    <Questionnaire.Next />\n    <Questionnaire.Submit />\n  </Questionnaire.Footer>\n</Questionnaire>",
+  "anatomy": "<Questionnaire items={questions}>\n  <Questionnaire.Title>…</Questionnaire.Title>\n  <Questionnaire.Progress />\n  <Questionnaire.Item name=\"…\">\n    <Questionnaire.Question>…</Questionnaire.Question>\n    <Questionnaire.Description>…</Questionnaire.Description>\n    <Questionnaire.Choices>\n      <Questionnaire.Choice value=\"…\" label=\"…\" />\n      <Questionnaire.Input placeholder=\"…\" />\n    </Questionnaire.Choices>\n    <Questionnaire.Error />\n  </Questionnaire.Item>\n  <Questionnaire.Footer>\n    <Questionnaire.Back />\n    <Questionnaire.Spacer />\n    <Questionnaire.Skip />\n    <Questionnaire.Next />\n    <Questionnaire.Submit />\n  </Questionnaire.Footer>\n</Questionnaire>",
+  "parts": {
+    "Title": "Names the questionnaire as a whole, in the frame’s header strip. Leave it out and the progress centres on the strip instead of sitting at its trailing edge.",
+    "Progress": "Where the reader is in the set — a bar per question by default, `numbers` to count them out, `count` for plain text. Give it a function for anything else.",
+    "Item": "One question. Only the active one is mounted.",
+    "Question": "The question being asked.",
+    "Description": "A line under it — what to consider, or that it can be skipped.",
+    "Choices": "The answers to a question. Hands each one its shortcut badge.",
+    "Choice": "One fixed answer. The whole row is the target.",
+    "Input": "An answer that is not on the list.",
+    "Error": "Why the way forward is closed. Nothing until the question fails to pass.",
+    "Footer": "The action row, in its own section at the foot of the panel.",
+    "Spacer": "A flexible gap, so the trailing buttons stay against the trailing edge.",
+    "Back": "To the previous question. Absent on the first.",
+    "Skip": "Records that an optional question was deliberately left out.",
+    "Next": "On to the next question. Dims while a required question is unanswered, and is absent on the last.",
+    "Submit": "Hands over every answer. Only on the last question, and dims the same way."
+  },
+  "partNotes": "The parts are given to `Questionnaire` as one flat list, and it sorts them into the frame it draws: the title and progress go to the header strip, the footer to a section at the foot of the panel, and every `Questionnaire.Item` becomes a question. Order the items the way you want them asked — or pass `items` and let that decide.",
+  "notes": "Answers come back as a record keyed by question name: a string for a single-answer question, an array of strings for a `multiple` one. That is the whole contract — `onAnswersChange` fires on every change and `onSubmit` fires once, with the same shape.\n\nA **required** question is the only thing that blocks the way forward. An optional one never does, so `Questionnaire.Skip` does not unblock anything: it *records* that the question was deliberately left out, moving its status from `unanswered` to `skipped` so your app can tell the two apart through `onStatusChange`. Making an optional question demand an explicit skip would trap anyone who did not render the button, and a question that cannot be ignored is not optional.\n\n`Questionnaire.Next` and `Questionnaire.Submit` **dim while a required question is unanswered, but stay pressable**. A disabled button says no without saying why, and on a question whose answers have scrolled out of view that is the whole of the feedback; pressing this one puts the reason under the question instead. The dimming is what stops it promising something it will not do — the look says not yet, the press says why not. Pass `disabled` if you would rather it were inert.\n\nPass `items` whenever a question is conditional. Only the active question is mounted, so a question that has not been reached cannot report that it exists — and without the full set there is no total to count against and no way to leave a question out. `items` also decides the order; without it, the order of the `Questionnaire.Item` children does.\n\nA **freeform answer lands under the same name** as the fixed ones, because it is another answer to the same question rather than a separate field. `Questionnaire.Input` shows whatever the question is answered with that none of its own choices offers, which is what makes picking a choice empty the field and typing clear the choice.\n\n`shortcuts` badges each answer with a letter or a number, skipping disabled ones so they do not take a letter out of the sequence. The badge is an affordance, not a binding: React Native surfaces hardware key events only to a focused text field, so nothing here can listen for the key itself.\n\nPlacing an unframed questionnaire in a container with chrome of its own means checking the corners: `BottomSheet` puts its close button in the top-right, which is where `Questionnaire.Progress` sits, so pass `showClose={false}` there.\n\nThe surrounding `Frame` is drawn by the component. Pass `frame={false}` to drop it — for a questionnaire in a `BottomSheet`, a `Dialog`, or a card that already draws its own boundary. With the frame off the questionnaire keeps only its vertical rhythm, because the container it was placed in is already holding it off the edges.",
+  "extraImports": [
+    "Text",
+    "Card",
+    "BottomSheet",
+    "Button",
+    "Progress"
+  ],
+  "examples": [
+    {
+      "title": "One answer at a time",
+      "description": "The default shape: a required question, an optional one, and a footer that shows only the actions that apply to the question on screen.",
+      "code": "const questions = [\n  { name: 'direction', required: true },\n  { name: 'detail' },\n] as const;\n\nfunction Prototype() {\n  const [answers, setAnswers] = useState<QuestionnaireAnswers>({});\n\n  return (\n    <Questionnaire items={questions} onAnswersChange={setAnswers} onSubmit={save}>\n      <Questionnaire.Title>Prototype</Questionnaire.Title>\n      <Questionnaire.Progress />\n\n      <Questionnaire.Item name=\"direction\" required>\n        <Questionnaire.Question>What should we build next?</Questionnaire.Question>\n        <Questionnaire.Description>Choose the direction you want to see first.</Questionnaire.Description>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice\n            value=\"delegation\"\n            label=\"Delegation\"\n            description=\"Show how work moves to a specialist.\"\n          />\n          <Questionnaire.Choice value=\"prompts\" label=\"Question prompts\" />\n          <Questionnaire.Choice value=\"both\" label=\"Both together\" />\n        </Questionnaire.Choices>\n        <Questionnaire.Error />\n      </Questionnaire.Item>\n\n      <Questionnaire.Item name=\"detail\">\n        <Questionnaire.Question>How much detail?</Questionnaire.Question>\n        <Questionnaire.Description>Skip this one if you have not decided.</Questionnaire.Description>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice value=\"focused\" label=\"Focused\" />\n          <Questionnaire.Choice value=\"complete\" label=\"The complete flow\" />\n        </Questionnaire.Choices>\n      </Questionnaire.Item>\n\n      <Questionnaire.Footer>\n        <Questionnaire.Back />\n        <Questionnaire.Spacer />\n        <Questionnaire.Skip />\n        <Questionnaire.Next />\n        <Questionnaire.Submit />\n      </Questionnaire.Footer>\n    </Questionnaire>\n  );\n}",
+      "previewVideo": {
+        "src": "/previews/questionnaire-one-answer-at-a-time.mp4",
+        "poster": "/previews/questionnaire-one-answer-at-a-time-poster.jpg",
+        "alt": "Questionnaire — One answer at a time.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Selecting more than one",
+      "description": "`multiple` turns a question’s answers into a set rather than a choice, and its answer arrives as an array.",
+      "code": "<Questionnaire onAnswersChange={setAnswers}>\n  <Questionnaire.Progress />\n  <Questionnaire.Item name=\"signals\" required multiple>\n    <Questionnaire.Question>What should every update include?</Questionnaire.Question>\n    <Questionnaire.Description>Select all that apply.</Questionnaire.Description>\n    <Questionnaire.Choices>\n      <Questionnaire.Choice value=\"progress\" label=\"Progress\" />\n      <Questionnaire.Choice value=\"decisions\" label=\"Decisions\" />\n      <Questionnaire.Choice value=\"risks\" label=\"Risks\" />\n    </Questionnaire.Choices>\n    <Questionnaire.Error />\n  </Questionnaire.Item>\n  <Questionnaire.Footer>\n    <Questionnaire.Spacer />\n    <Questionnaire.Submit />\n  </Questionnaire.Footer>\n</Questionnaire>\n\n// answers.signals -> ['progress', 'risks']",
+      "preview": {
+        "src": "/previews/questionnaire-selecting-more-than-one.jpg",
+        "alt": "Questionnaire — Selecting more than one.",
+        "width": 1179,
+        "height": 1266
+      }
+    },
+    {
+      "title": "An answer that is not listed",
+      "description": "Put a `Questionnaire.Input` among the choices. It holds whatever the question is answered with that none of the choices offers, so the two clear each other without either knowing the other is there.",
+      "code": "<Questionnaire.Item name=\"tool\" required>\n  <Questionnaire.Question>Where do you keep your notes?</Questionnaire.Question>\n  <Questionnaire.Choices>\n    <Questionnaire.Choice value=\"files\" label=\"Plain files\" />\n    <Questionnaire.Choice value=\"issues\" label=\"Issue tracker\" />\n    <Questionnaire.Input placeholder=\"Somewhere else…\" />\n  </Questionnaire.Choices>\n  <Questionnaire.Error />\n</Questionnaire.Item>",
+      "preview": {
+        "src": "/previews/questionnaire-an-answer-that-is-not-listed.jpg",
+        "alt": "Questionnaire — An answer that is not listed.",
+        "width": 1179,
+        "height": 1083
+      }
+    },
+    {
+      "title": "Leaving one out on purpose",
+      "description": "Skip records the decision rather than unblocking anything — an optional question never blocks. `onStatusChange` is how you tell a question that was skipped from one that was never answered.",
+      "code": "const [timing, setTiming] = useState<QuestionnaireItemStatus>('unanswered');\n\n<Questionnaire\n  onSubmit={(answers) =>\n    save({\n      timing: timing === 'skipped' ? { skipped: true } : { value: answers.timing },\n    })\n  }\n>\n  <Questionnaire.Item name=\"timing\" onStatusChange={setTiming}>\n    <Questionnaire.Question>When should this be revisited?</Questionnaire.Question>\n    <Questionnaire.Description>Skip this if timing has not been decided.</Questionnaire.Description>\n    <Questionnaire.Choices>\n      <Questionnaire.Choice value=\"week\" label=\"This week\" />\n      <Questionnaire.Choice value=\"cycle\" label=\"Next cycle\" />\n    </Questionnaire.Choices>\n  </Questionnaire.Item>\n  <Questionnaire.Footer>\n    <Questionnaire.Spacer />\n    <Questionnaire.Skip />\n    <Questionnaire.Submit />\n  </Questionnaire.Footer>\n</Questionnaire>"
+    },
+    {
+      "title": "A letter beside every answer",
+      "description": "Disabled answers are skipped rather than taking a letter with them, so the documentation below is `C`. The badge is an affordance, not a binding — React Native surfaces hardware key events only to a focused text field.",
+      "code": "<Questionnaire shortcuts=\"letters\">\n  <Questionnaire.Progress />\n  <Questionnaire.Item name=\"review\" required>\n    <Questionnaire.Question>What should be reviewed first?</Questionnaire.Question>\n    <Questionnaire.Choices>\n      <Questionnaire.Choice value=\"api\" label=\"The public API\" />\n      <Questionnaire.Choice value=\"tests\" label=\"Test coverage\" />\n      <Questionnaire.Choice value=\"perf\" label=\"Performance\" disabled />\n      <Questionnaire.Choice value=\"docs\" label=\"The documentation\" />\n    </Questionnaire.Choices>\n  </Questionnaire.Item>\n</Questionnaire>\n\n// shortcuts=\"numbers\" badges them 1, 2, 3 instead.",
+      "preview": {
+        "src": "/previews/questionnaire-a-letter-beside-every-answer.jpg",
+        "alt": "Questionnaire — A letter beside every answer.",
+        "width": 1179,
+        "height": 1282
+      }
+    },
+    {
+      "title": "Checking an answer against a schema",
+      "description": "The built-in rule is only that a required question has an answer. For anything more, keep the answers yourself and pass `invalid` back down — the question then reads as at fault and its `Questionnaire.Error` shows your message.",
+      "code": "function Contact() {\n  const [answers, setAnswers] = useState<QuestionnaireAnswers>({});\n\n  const email = typeof answers.email === 'string' ? answers.email : '';\n  const malformed = email.length > 0 && !email.includes('@');\n\n  return (\n    <Questionnaire answers={answers} onAnswersChange={setAnswers} onSubmit={save}>\n      <Questionnaire.Item name=\"email\" required invalid={malformed}>\n        <Questionnaire.Question>Where should we reply?</Questionnaire.Question>\n        <Questionnaire.Choices>\n          <Questionnaire.Input placeholder=\"you@example.com\" keyboardType=\"email-address\" />\n        </Questionnaire.Choices>\n        <Questionnaire.Error>That does not look like an email address.</Questionnaire.Error>\n      </Questionnaire.Item>\n      <Questionnaire.Footer>\n        <Questionnaire.Spacer />\n        <Questionnaire.Submit disabled={malformed} />\n      </Questionnaire.Footer>\n    </Questionnaire>\n  );\n}"
+    },
+    {
+      "title": "Driving the current question from outside",
+      "description": "Pass `item` and `onItemChange` to hold the active question in your own state — for jumping back to one from a summary, or restoring where somebody was.",
+      "code": "const [current, setCurrent] = useState('role');\n\n<>\n  <Questionnaire item={current} onItemChange={setCurrent} onSubmit={save}>\n    <Questionnaire.Progress />\n    <Questionnaire.Item name=\"role\" required>…</Questionnaire.Item>\n    <Questionnaire.Item name=\"size\" required>…</Questionnaire.Item>\n    <Questionnaire.Footer>\n      <Questionnaire.Back />\n      <Questionnaire.Spacer />\n      <Questionnaire.Next />\n      <Questionnaire.Submit />\n    </Questionnaire.Footer>\n  </Questionnaire>\n\n  <Button variant=\"outline\" onPress={() => setCurrent('role')}>\n    Back to the first question\n  </Button>\n</>"
+    },
+    {
+      "title": "Picking up where they left off",
+      "description": "Both halves of the state take a default, so a part-finished questionnaire reopens on the question it was left on with the answers already given.",
+      "code": "const saved = await load();\n\n<Questionnaire\n  defaultItem={saved.item}\n  defaultAnswers={saved.answers}\n  onItemChange={(item) => persist({ item })}\n  onAnswersChange={(answers) => persist({ answers })}\n  onSubmit={finish}\n>\n  …\n</Questionnaire>"
+    },
+    {
+      "title": "Questions that only apply sometimes",
+      "description": "A disabled question is left out of the count and never navigated to. Compute it from the answers so far, and pass `items` — a question that has not been reached is not mounted, so its own props cannot be read until it is.",
+      "code": "const [answers, setAnswers] = useState<QuestionnaireAnswers>({});\nconst solo = answers.size === 'solo';\n\nconst questions = [\n  { name: 'size', required: true },\n  { name: 'seats', required: true, disabled: solo },\n  { name: 'contact', required: true },\n];\n\n<Questionnaire items={questions} answers={answers} onAnswersChange={setAnswers}>\n  <Questionnaire.Progress />\n  <Questionnaire.Item name=\"size\" required>…</Questionnaire.Item>\n  <Questionnaire.Item name=\"seats\" required disabled={solo}>…</Questionnaire.Item>\n  <Questionnaire.Item name=\"contact\" required>…</Questionnaire.Item>\n  …\n</Questionnaire>\n\n// Answer \"Just me\" and the questionnaire is two questions long, not three."
+    },
+    {
+      "title": "A footer that reads the question",
+      "description": "Give a navigation button a function and it is called with the active question’s state — for a label that changes once the question has been answered. `Back` and `Continue` carry a chevron by default; pass `startContent`/`endContent` to change or drop it.",
+      "code": "<Questionnaire.Footer>\n  <Questionnaire.Back />\n  <Questionnaire.Spacer />\n  <Questionnaire.Next>\n    {({ status }) => (status === 'answered' ? 'Continue' : 'Choose an answer')}\n  </Questionnaire.Next>\n  <Questionnaire.Submit>Finish</Questionnaire.Submit>\n</Questionnaire.Footer>"
+    },
+    {
+      "title": "Pips, numbers, or a count",
+      "description": "`Questionnaire.Progress` draws a bar per question by default, filled up to the one being asked and widened on it. `numbers` counts them out instead — worth it where the reader will be sent back to a particular question, since a bar gives them nothing to go back *to*. `count` is the plain text. Both marked variants fall back to the count past eight questions, where neither is countable at a glance. Give it a function for anything else; it stays a progress bar to a screen reader either way.",
+      "code": "<Questionnaire.Progress />                    {/* ▬▬ ▪ ▪ ▪ */}\n<Questionnaire.Progress variant=\"numbers\" />  {/* ① ② ③ ④ */}\n<Questionnaire.Progress variant=\"count\" />    {/* Question 2 of 5 */}\n\n// Or build your own from the position:\n<Questionnaire.Progress>\n  {({ current, total }) => (\n    <Progress value={current} maxValue={total} className=\"w-24\" />\n  )}\n</Questionnaire.Progress>\n\n<Questionnaire.Progress>\n  {({ current, total }) => <Text size=\"sm\" muted>{total - current} to go</Text>}\n</Questionnaire.Progress>",
+      "preview": {
+        "src": "/previews/questionnaire-pips-numbers-or-a-count.jpg",
+        "alt": "Questionnaire — Pips, numbers, or a count.",
+        "width": 1179,
+        "height": 980
+      }
+    },
+    {
+      "title": "Without the frame",
+      "description": "The surrounding `Frame` is the component’s own. Turn it off for a questionnaire inside something that already draws a boundary, and the header, question and footer stack bare — keeping only their vertical rhythm, because the container is already holding them off the edges. Mind that container’s own insets: `Card.Content` is `p-6 pt-0` because it expects a `Card.Header` above it, so without one the progress row starts flush against the card’s top edge.",
+      "code": "<Card>\n  <Card.Content className=\"pt-6\">\n    <Questionnaire frame={false}>\n      <Questionnaire.Title>Timing</Questionnaire.Title>\n      <Questionnaire.Progress />\n      <Questionnaire.Item name=\"timing\" required>\n        <Questionnaire.Question>When should this ship?</Questionnaire.Question>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice value=\"week\" label=\"This week\" />\n          <Questionnaire.Choice value=\"cycle\" label=\"Next cycle\" />\n        </Questionnaire.Choices>\n      </Questionnaire.Item>\n      <Questionnaire.Footer>\n        <Questionnaire.Spacer />\n        <Questionnaire.Submit />\n      </Questionnaire.Footer>\n    </Questionnaire>\n  </Card.Content>\n</Card>",
+      "preview": {
+        "src": "/previews/questionnaire-without-the-frame.jpg",
+        "alt": "Questionnaire — Without the frame.",
+        "width": 1179,
+        "height": 1031
+      }
+    },
+    {
+      "title": "In a bottom sheet",
+      "description": "The sheet owns being dismissed and the questionnaire owns the questions — neither has to know what the other is doing. Pass `showClose={false}`: the sheet places its close button in its top-right corner, which is exactly where the progress sits, and two things in one corner is one of them unreachable. A questionnaire with Back, Skip and Send does not need a third way out, and the sheet still dismisses by drag and by backdrop.",
+      "code": "<BottomSheet open={open} onOpenChange={setOpen}>\n  <BottomSheet.Content showClose={false}>\n    <View className=\"p-4\">\n      <Questionnaire\n        frame={false}\n        onSubmit={(answers) => {\n          send(answers);\n          setOpen(false);\n        }}\n      >\n        <Questionnaire.Progress />\n        <Questionnaire.Item name=\"mood\" required>\n          <Questionnaire.Question>How did that go?</Questionnaire.Question>\n          <Questionnaire.Choices>\n            <Questionnaire.Choice value=\"good\" label=\"Better than expected\" />\n            <Questionnaire.Choice value=\"fine\" label=\"About right\" />\n            <Questionnaire.Choice value=\"bad\" label=\"Not well\" />\n          </Questionnaire.Choices>\n          <Questionnaire.Error />\n        </Questionnaire.Item>\n        <Questionnaire.Footer>\n          <Questionnaire.Spacer />\n          <Questionnaire.Submit>Send</Questionnaire.Submit>\n        </Questionnaire.Footer>\n      </Questionnaire>\n    </View>\n  </BottomSheet.Content>\n</BottomSheet>"
+    },
+    {
+      "title": "Swiping between questions",
+      "description": "A horizontal drag moves between questions, gated on the same answer the button is: swipe forward off an unanswered required question and it springs back and shows the error. A drag that is even slightly vertical belongs to the page, so a questionnaire in a scroller never fights it. Pass `swipeable={false}` to leave navigation to the buttons alone.",
+      "code": "<Questionnaire items={questions} swipeable onSubmit={save}>\n  …\n</Questionnaire>\n\n// Buttons only:\n<Questionnaire items={questions} swipeable={false} onSubmit={save}>\n  …\n</Questionnaire>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Getting set up",
+      "description": "Five questions and the summary they add up to — required, optional, multi-answer and freeform in one flow, with the answers laid out in a Frame at the end.",
+      "code": "const questions = [\n  { name: 'role', required: true },\n  { name: 'size', required: true },\n  { name: 'stack', multiple: true },\n  { name: 'timeline' },\n  { name: 'contact', required: true },\n] as const;\n\nfunction Onboarding() {\n  const [done, setDone] = useState<QuestionnaireAnswers | null>(null);\n\n  if (done) {\n    return (\n      <Frame>\n        <Frame.Header>\n          <Frame.Title>Your answers</Frame.Title>\n        </Frame.Header>\n        <Frame.Panel>\n          {Object.entries(done).map(([name, value]) => (\n            <Frame.Row key={name}>\n              <Frame.Content>\n                <Frame.Title>{name}</Frame.Title>\n                <Frame.Description>\n                  {Array.isArray(value) ? value.join(', ') : value}\n                </Frame.Description>\n              </Frame.Content>\n            </Frame.Row>\n          ))}\n        </Frame.Panel>\n      </Frame>\n    );\n  }\n\n  return (\n    <Questionnaire items={questions} onSubmit={setDone}>\n      <Questionnaire.Title>Getting set up</Questionnaire.Title>\n      <Questionnaire.Progress />\n\n      <Questionnaire.Item name=\"role\" required>\n        <Questionnaire.Question>What do you do?</Questionnaire.Question>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice value=\"engineer\" label=\"Engineering\" />\n          <Questionnaire.Choice value=\"design\" label=\"Design\" />\n          <Questionnaire.Choice value=\"product\" label=\"Product\" />\n          <Questionnaire.Input placeholder=\"Something else…\" />\n        </Questionnaire.Choices>\n        <Questionnaire.Error />\n      </Questionnaire.Item>\n\n      <Questionnaire.Item name=\"stack\" multiple>\n        <Questionnaire.Question>What are you building with?</Questionnaire.Question>\n        <Questionnaire.Description>Select all that apply.</Questionnaire.Description>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice value=\"expo\" label=\"Expo\" />\n          <Questionnaire.Choice value=\"next\" label=\"Next.js\" />\n          <Questionnaire.Choice value=\"native\" label=\"Bare React Native\" />\n        </Questionnaire.Choices>\n      </Questionnaire.Item>\n\n      <Questionnaire.Item name=\"timeline\">\n        <Questionnaire.Question>When are you shipping?</Questionnaire.Question>\n        <Questionnaire.Description>Skip this if it is not decided.</Questionnaire.Description>\n        <Questionnaire.Choices>\n          <Questionnaire.Choice value=\"month\" label=\"Within a month\" />\n          <Questionnaire.Choice value=\"quarter\" label=\"This quarter\" />\n        </Questionnaire.Choices>\n      </Questionnaire.Item>\n\n      <Questionnaire.Footer>\n        <Questionnaire.Back />\n        <Questionnaire.Spacer />\n        <Questionnaire.Skip />\n        <Questionnaire.Next />\n        <Questionnaire.Submit>Finish</Questionnaire.Submit>\n      </Questionnaire.Footer>\n    </Questionnaire>\n  );\n}"
+    },
+    {
+      "title": "In a sheet",
+      "description": "Two questions in a bottom sheet, where the sheet owns dismissal and the questionnaire owns the questions. `frame={false}`, because the sheet is already the boundary — and `showClose={false}`, because the sheet’s close button would land on top of the progress.",
+      "code": "function Feedback() {\n  const [open, setOpen] = useState(false);\n\n  return (\n    <>\n      <Button onPress={() => setOpen(true)}>Ask me two questions</Button>\n\n      <BottomSheet open={open} onOpenChange={setOpen}>\n        <BottomSheet.Content showClose={false}>\n          <Questionnaire\n            frame={false}\n            onSubmit={(answers) => {\n              send(answers);\n              setOpen(false);\n            }}\n          >\n            <Questionnaire.Title>Feedback</Questionnaire.Title>\n            <Questionnaire.Progress />\n\n            <Questionnaire.Item name=\"mood\" required>\n              <Questionnaire.Question>How did that go?</Questionnaire.Question>\n              <Questionnaire.Choices>\n                <Questionnaire.Choice value=\"good\" label=\"Better than expected\" />\n                <Questionnaire.Choice value=\"fine\" label=\"About right\" />\n                <Questionnaire.Choice value=\"bad\" label=\"Not well\" />\n              </Questionnaire.Choices>\n              <Questionnaire.Error />\n            </Questionnaire.Item>\n\n            <Questionnaire.Item name=\"why\">\n              <Questionnaire.Question>Anything to add?</Questionnaire.Question>\n              <Questionnaire.Choices>\n                <Questionnaire.Input placeholder=\"In your own words…\" />\n              </Questionnaire.Choices>\n            </Questionnaire.Item>\n\n            <Questionnaire.Footer>\n              <Questionnaire.Back />\n              <Questionnaire.Spacer />\n              <Questionnaire.Skip />\n              <Questionnaire.Next />\n              <Questionnaire.Submit>Send</Questionnaire.Submit>\n            </Questionnaire.Footer>\n          </Questionnaire>\n        </BottomSheet.Content>\n      </BottomSheet>\n    </>\n  );\n}"
+    }
+  ],
+  "hideVariants": [
+    "framed"
+  ],
+  "previewVideo": {
+    "src": "/previews/questionnaire.mp4",
+    "poster": "/previews/questionnaire-poster.jpg",
+    "alt": "The Questionnaire component, running in the example app.",
+    "width": 720,
+    "height": 1560,
+    "caption": "A five-question flow — required, optional, multi-answer and freeform — and the summary it adds up to."
+  }
+}

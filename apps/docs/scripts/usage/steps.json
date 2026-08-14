@@ -1,0 +1,56 @@
+{
+  "slug": "steps",
+  "intro": "A stepper for a multi-step flow: where the reader is, what is behind them, and what is left.\n\n**It does not own your flow** — it reflects whichever step your app says is active. For a flow the component runs itself, question by question, use [Questionnaire](/docs/components/questionnaire).",
+  "usage": "<Steps value={step} onValueChange={setStep}>\n  {items.map((item, index) => (\n    <Steps.Item key={item.title} step={index} className=\"flex-1\">\n      <Steps.Trigger>\n        <Steps.Indicator />\n        <Steps.Title>{item.title}</Steps.Title>\n      </Steps.Trigger>\n    </Steps.Item>\n  ))}\n</Steps>",
+  "parts": {
+    "Item": "One step. `step` is its zero-based position.",
+    "Trigger": "Makes the item selectable. Omit it for a read-only stepper.",
+    "Indicator": "The circle — step number, a check once complete, a spinner while loading.",
+    "Title": "Step heading.",
+    "Description": "Supporting line.",
+    "Separator": "Connector to the next step. Every item draws one already — write it only to dress a particular connector, inside the item whose state it reads."
+  },
+  "notes": "Steps are zero-based internally but the indicator renders them as 1, 2, 3.\n\nThe connectors are drawn for you: the root counts the items it holds and every one but the last joins to the next, so there is no separator to forget or leave dangling. Pass `separators={false}` for a stepper with none, or put a `Steps.Separator` inside an item to dress that one connector yourself — an item that has its own keeps it and gets no second.\n\nKnowing the count is also what lets a step say where it sits: a screen reader reaching the middle of a wizard hears the step's title, then its position and state — “Payment, step 2 of 3, completed”.",
+  "anatomy": "<Steps>\n  <Steps.Item step={0}>\n    <Steps.Trigger>\n      <Steps.Indicator />\n      <Steps.Title>…</Steps.Title>\n      <Steps.Description>…</Steps.Description>\n    </Steps.Trigger>\n  </Steps.Item>\n</Steps>",
+  "examples": [
+    {
+      "title": "A horizontal wizard",
+      "description": "`value` is the index of the current step; anything before it is completed. The connector between one item and the next comes with the item.",
+      "code": "const [step, setStep] = useState(1);\n\n<Steps value={step} onValueChange={setStep}>\n  <Steps.Item step={0} className=\"flex-1\">\n    <Steps.Trigger>\n      <Steps.Indicator />\n      <Steps.Title>Account</Steps.Title>\n    </Steps.Trigger>\n  </Steps.Item>\n  <Steps.Item step={1} className=\"flex-1\">\n    <Steps.Trigger>\n      <Steps.Indicator />\n      <Steps.Title>Payment</Steps.Title>\n    </Steps.Trigger>\n  </Steps.Item>\n  <Steps.Item step={2}>\n    <Steps.Trigger>\n      <Steps.Indicator />\n      <Steps.Title>Confirm</Steps.Title>\n    </Steps.Trigger>\n  </Steps.Item>\n</Steps>"
+    },
+    {
+      "title": "Vertical, with descriptions",
+      "code": "<Steps orientation=\"vertical\" value={step}>\n  <Steps.Item step={0}>\n    <Steps.Trigger>\n      <Steps.Indicator />\n      <View className=\"flex-1\">\n        <Steps.Title>Connect your repo</Steps.Title>\n        <Steps.Description>We only read metadata.</Steps.Description>\n      </View>\n    </Steps.Trigger>\n  </Steps.Item>\n  {/* …more items… */}\n</Steps>",
+      "preview": {
+        "src": "/previews/steps-vertical.jpg",
+        "alt": "Steps — Vertical, with descriptions.",
+        "width": 1179,
+        "height": 709
+      }
+    },
+    {
+      "title": "A step that is loading or blocked",
+      "code": "<Steps.Item step={1} loading={isDeploying}>\n  {/* … */}\n</Steps.Item>\n\n<Steps.Item step={3} disabled={!hasPaid}>\n  {/* … */}\n</Steps.Item>",
+      "previewVideo": {
+        "src": "/previews/steps-loading.mp4",
+        "poster": "/previews/steps-loading-poster.jpg",
+        "alt": "Steps — A step that is loading or blocked.",
+        "width": 720,
+        "height": 408
+      }
+    }
+  ],
+  "variantCode": {
+    "orientation": "<Steps orientation=\"horizontal\" value={step}>…</Steps>\n<Steps orientation=\"vertical\" value={step}>…</Steps>"
+  },
+  "extraImports": [
+    "Text"
+  ],
+  "previewVideo": {
+    "src": "/previews/steps.mp4",
+    "poster": "/previews/steps-poster.jpg",
+    "alt": "The Steps component, running in the example app.",
+    "width": 720,
+    "height": 414
+  }
+}

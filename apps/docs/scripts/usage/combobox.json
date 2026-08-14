@@ -1,0 +1,44 @@
+{
+  "slug": "combobox",
+  "intro": "A text field that filters a list of options as you type.\n\nThe difference from [Select](/docs/components/select) is where the typing happens. A select is a button that opens a list, and its optional filter lives inside that list once it is open. A combobox is the field itself — you are already typing when the options appear.\n\nUse it when the reader knows the name of what they want. Use a select when they expect to recognise it by scrolling, and [TagInput](/docs/components/tag-input) when there are no options to pick from at all.",
+  "extraImports": "Label",
+  "usage": "<Combobox\n  value={framework}\n  onValueChange={setFramework}\n  placeholder=\"Search frameworks\"\n  clearable\n>\n  <Combobox.Item value=\"expo\" label=\"Expo\" />\n  <Combobox.Item value=\"next\" label=\"Next.js\" />\n</Combobox>",
+  "anatomy": "<Combobox>\n  <Combobox.Item value=\"…\" label=\"…\" />\n  <Combobox.Group label=\"…\">\n    <Combobox.Item value=\"…\" label=\"…\" />\n  </Combobox.Group>\n</Combobox>",
+  "parts": {
+    "Item": "One option. `value` identifies it, `label` is what is shown and what the filter matches on, `description` adds a second line, `start` draws something before the label, and `disabled` keeps it listed but unselectable.",
+    "Group": "A titled run of options. Presentational only — a grouped Combobox reports the same values a flat one would."
+  },
+  "notes": "### Choosing a presentation\n\n`overlay` (the default) floats the list through a portal, anchored under the field and flipped above it when the keyboard leaves no room below. Nothing else on the screen moves. `contentWidth` and `offset` apply here only.\n\n`inline` expands the list in normal layout flow instead, pushing what is below it down. Reach for it in a form where nothing should be covered.\n\nThere is deliberately no sheet presentation. A sheet takes the bottom of the screen, which is where the keyboard already is, and the field you are typing into would end up behind one or the other. Select can offer a sheet because its trigger stops mattering once the list is open; a Combobox's never does.\n\n### One value or several\n\n`mode=\"multiple\"` draws the chosen options as removable chips in front of the input and keeps the list open between picks, so several can be taken in a row. The value is an array there and a single string otherwise — the type follows `mode`, so nothing has to be cast.\n\nPicking an already-chosen option removes it, which is the only way to undo a pick without reaching for its chip. Backspace on an empty field reaches the thing in front of the cursor when there is no character left to delete — but it marks that chip first, turning it `destructive`, and only a second backspace takes it. A held backspace repeats, and a field that removed on the first one would empty itself in the time it takes to notice. Typing anything, or leaving the field, takes the mark off again. [TagInput](/docs/components/tag-input) does the same, so the reflex carries between the two.\n\n### Filtering, and turning it off\n\nFiltering happens in the component by default, matching case-insensitively on any part of an option's label. Pass a function to `filter` to match on something else — a description, an alias list, an initialism.\n\nPass `filter={false}` when the options come from a server that is doing the matching itself. The field then renders exactly what it was given, because a second filter over results it cannot see the query behind would only remove correct answers. Pair it with the controlled `inputValue` / `onInputValueChange` so the query can drive the request, and with `loading` so the list says it is working rather than saying there are no matches.\n\n### Values it does not know about\n\n`allowCustomValue` lets the typed text become the value when it matches no option, committed on return. That turns the list into a set of suggestions rather than the set of legal answers, which is what a tag field is.\n\n### Inside a scroll view\n\nAn `overlay` list is portalled out of the tree, so a screen-level scroll view is not one of its ancestors and taps on the options reach them directly.\n\nAn `inline` list is not. It stays where it is rendered, which means the scroll view around it decides what happens to a tap that lands while the keyboard is up — and the default is to spend it dismissing the keyboard. Set `keyboardShouldPersistTaps=\"handled\"` on that scroll view, or the first tap on an option will be swallowed and the option will only take on the second.\n\n```tsx\n<ScrollView keyboardShouldPersistTaps=\"handled\">\n  <Combobox presentation=\"inline\" … />\n</ScrollView>\n```\n\n### Accessibility\n\nThe field is announced as a combobox that owns an expandable list, so the chips and the input read as parts of one control rather than as loose siblings, and the open state is announced on a role where it means something. The floating list is a modal layer: it takes the Android back button and hides the page behind it from the accessibility tree, so a screen reader cannot walk out of an open list into content it is covering.",
+  "examples": [
+    {
+      "title": "Filter as you type",
+      "description": "The list narrows on every keystroke; `clearable` offers a ✕ that empties the field.",
+      "code": "const [framework, setFramework] = useState<string>();\n\n<Combobox\n  value={framework}\n  onValueChange={setFramework}\n  placeholder=\"Search frameworks\"\n  clearable\n>\n  {frameworks.map((f) => (\n    <Combobox.Item key={f.value} value={f.value} label={f.label} />\n  ))}\n</Combobox>"
+    },
+    {
+      "title": "Grouped options",
+      "description": "A group is dropped when the query empties it, rather than leaving its heading behind.",
+      "code": "<Combobox value={framework} onValueChange={setFramework} openOnFocus>\n  <Combobox.Group label=\"Native\">\n    <Combobox.Item value=\"expo\" label=\"Expo\" />\n    <Combobox.Item value=\"react-native\" label=\"React Native\" />\n  </Combobox.Group>\n  <Combobox.Group label=\"Web\">\n    <Combobox.Item value=\"next\" label=\"Next.js\" />\n    <Combobox.Item value=\"remix\" label=\"Remix\" />\n  </Combobox.Group>\n</Combobox>"
+    },
+    {
+      "title": "Several at once",
+      "description": "Each pick becomes a removable chip in front of the input, and the list stays open.",
+      "code": "const [picked, setPicked] = useState<string[]>(['expo']);\n\n<Combobox\n  mode=\"multiple\"\n  value={picked}\n  onValueChange={setPicked}\n  placeholder=\"Add a framework\"\n  clearable\n>\n  {frameworks.map((f) => (\n    <Combobox.Item key={f.value} value={f.value} label={f.label} />\n  ))}\n</Combobox>"
+    },
+    {
+      "title": "A tag field",
+      "description": "`allowCustomValue` keeps whatever was typed, so the list only suggests.",
+      "code": "<Combobox\n  mode=\"multiple\"\n  value={tags}\n  onValueChange={setTags}\n  allowCustomValue\n  placeholder=\"Add a tag\"\n>\n  <Combobox.Item value=\"design\" label=\"design\" />\n  <Combobox.Item value=\"engineering\" label=\"engineering\" />\n</Combobox>"
+    },
+    {
+      "title": "Fetched for the query",
+      "description": "The server does the matching, so the field does not filter again — it only shows what came back.",
+      "code": "const [query, setQuery] = useState('');\nconst { results, loading } = useCitySearch(query);\n\n<Combobox\n  value={city}\n  onValueChange={setCity}\n  inputValue={query}\n  onInputValueChange={setQuery}\n  filter={false}\n  loading={loading}\n  loadingMessage=\"Looking up cities\"\n  emptyMessage=\"No city by that name\"\n  placeholder=\"Search cities\"\n>\n  {results.map((c) => (\n    <Combobox.Item key={c.value} value={c.value} label={c.label} />\n  ))}\n</Combobox>"
+    },
+    {
+      "title": "Expanding in place",
+      "description": "`inline` pushes what is below the field down instead of covering it.",
+      "code": "<Combobox\n  presentation=\"inline\"\n  value={framework}\n  onValueChange={setFramework}\n  placeholder=\"Search frameworks\"\n>\n  {/* …items… */}\n</Combobox>"
+    }
+  ]
+}

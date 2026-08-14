@@ -1,0 +1,91 @@
+{
+  "slug": "textarea",
+  "intro": "A text field that runs to several lines, sized in rows.\n\nIts height is given in `rows` rather than pixels, so it composes with `size` instead of fighting it — three rows of 14px text and three rows of 16px text are different heights, and both are three rows.\n\n`autoGrow` lets the field follow its content up to `maxRows` and scroll past that, which is what a composer wants: it starts small, opens up as you write, and stops before it eats the screen.\n\nEverything else it shares with [Input](/docs/components/input) — the animated focus border, the label, description and error line, and the keyboard avoidance.",
+  "usage": "<Textarea label=\"Notes\" placeholder=\"Anything we should know?\" />\n\n<Textarea\n  label=\"Bio\"\n  rows={3}\n  description=\"Shown on your public profile.\"\n/>\n\n<Textarea\n  autoGrow\n  rows={2}\n  maxRows={8}\n  placeholder=\"Message\"\n/>\n\n<Textarea\n  label=\"Status\"\n  maxLength={280}\n  showCount\n  value={status}\n  onChangeText={setStatus}\n/>",
+  "notes": "Accepts every `TextInputProps` except `multiline` and `numberOfLines`, both of which the component owns — it is always multiline, and its height comes from `rows`.\n\nThe height is computed rather than set as a class. A row count only becomes a height once you know how tall a line is, so the type size, its leading and the vertical padding are kept as numbers per `size` and the box is derived from them. Setting a line height in a class as well would give you two numbers that disagree.\n\n`autoGrow` measures the text through `onContentSizeChange` and clamps the result between `rows` and `maxRows`. The field never shrinks below `rows`, so a field that has been typed into and cleared goes back to the height it started at rather than collapsing to one line.\n\n`showCount` needs `maxLength` — a counter with no limit to count towards says nothing. It sits on the same row as the description, right-aligned, and turns `destructive` once the limit is reached.\n\n`errorMessage` puts the field in its invalid state, the same as it does on `Input`: the border is tinted at rest as well as on focus, because the error is a fact about the value rather than about whether the field happens to be focused.\n\n`avoidKeyboard` behaves exactly as it does on [Input](/docs/components/input#avoiding-the-keyboard) — it moves the field by its overlap with the keyboard and re-reads that overlap every frame while the field is focused. Do not toggle it at runtime; it changes which component renders the container, which would remount the field and drop focus.",
+  "examples": [
+    {
+      "title": "Rows, not pixels",
+      "description": "`rows` is how many lines of text the field is tall before it scrolls. It composes with `size`, so a small three-row field and a large three-row field are both three rows.",
+      "code": "<Textarea rows={2} placeholder=\"Two rows\" />\n<Textarea rows={4} placeholder=\"Four rows\" />\n<Textarea size=\"sm\" rows={4} placeholder=\"Four smaller rows\" />",
+      "preview": {
+        "src": "/previews/textarea.jpg",
+        "width": 1179,
+        "height": 1118,
+        "alt": "Textarea — Rows, not pixels."
+      }
+    },
+    {
+      "title": "Growing with the text",
+      "description": "`autoGrow` starts the field at `rows` and lets it follow the text up to `maxRows`, after which it holds its height and scrolls. It never shrinks below `rows`, so clearing the field returns it to where it started rather than collapsing it to one line.",
+      "code": "<Textarea\n  autoGrow\n  rows={2}\n  maxRows={6}\n  placeholder=\"Type a few lines…\"\n  value={message}\n  onChangeText={setMessage}\n/>",
+      "preview": {
+        "src": "/previews/textarea-growing-with-the-text.jpg",
+        "width": 1179,
+        "height": 692,
+        "alt": "Textarea — Growing with the text."
+      }
+    },
+    {
+      "title": "Label, description and error",
+      "description": "Setting `errorMessage` also puts the field into its invalid state — you do not need a separate flag. The description is replaced by the error while one is present.",
+      "code": "<Textarea\n  label=\"Bio\"\n  placeholder=\"A short bio\"\n  description=\"Shown on your public profile.\"\n/>\n\n<Textarea\n  label=\"Feedback\"\n  isRequired\n  value={feedback}\n  onChangeText={setFeedback}\n  errorMessage=\"Tell us a little more.\"\n/>",
+      "preview": {
+        "src": "/previews/textarea-label-description-and-error.jpg",
+        "width": 1179,
+        "height": 993,
+        "alt": "Textarea — Label, description and error."
+      }
+    },
+    {
+      "title": "Counting characters",
+      "description": "`showCount` needs `maxLength` to count towards. The counter sits beside the description and turns `destructive` at the limit.",
+      "code": "<Textarea\n  label=\"Status\"\n  maxLength={280}\n  showCount\n  rows={3}\n  description=\"Keep it short.\"\n  value={status}\n  onChangeText={setStatus}\n/>",
+      "preview": {
+        "src": "/previews/textarea-counting-characters.jpg",
+        "width": 1179,
+        "height": 496,
+        "alt": "Textarea — Counting characters."
+      }
+    },
+    {
+      "title": "Choosing a background",
+      "description": "Use `outline` on the page, where the field draws its own edge. Use `filled` inside a card or a sheet, where a second border beside the container’s own reads as a seam.",
+      "code": "<Textarea label=\"Notes\" placeholder=\"On the page\" />\n\n<Card>\n  <Card.Content className=\"gap-4 p-4\">\n    <Textarea variant=\"filled\" label=\"Notes\" placeholder=\"In a card\" />\n  </Card.Content>\n</Card>",
+      "preview": {
+        "src": "/previews/textarea-choosing-a-background.jpg",
+        "width": 1179,
+        "height": 527,
+        "alt": "Textarea — Choosing a background."
+      }
+    },
+    {
+      "title": "Passing through TextInput props",
+      "description": "Anything `TextInput` accepts works here, except `multiline` and `numberOfLines` — the component owns both.",
+      "code": "<Textarea\n  label=\"Address\"\n  rows={3}\n  autoCapitalize=\"words\"\n  autoComplete=\"street-address\"\n  returnKeyType=\"done\"\n  submitBehavior=\"blurAndSubmit\"\n  onSubmitEditing={save}\n/>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "A composer that avoids the keyboard",
+      "description": "A one-row composer that grows as the message does and rides the keyboard up. `avoidKeyboard` moves the field by exactly the amount the keyboard covers it, and `autoGrow` opens it up as the message gets longer — the pair of behaviours a chat input needs, and the one case a fixed box cannot show.",
+      "code": "const insets = useSafeAreaInsets();\n\n<KeyboardAvoider\n  mode=\"dock\"\n  bottomInset={insets.bottom}\n  className=\"absolute left-0 right-0 px-5\"\n  style={{ bottom: insets.bottom + 16 }}\n>\n  <View className=\"flex-row items-end gap-2 rounded-3xl border border-border bg-surface p-2\">\n    <Textarea\n      autoGrow\n      rows={1}\n      maxRows={5}\n      value={draft}\n      onChangeText={setDraft}\n      placeholder=\"Message\"\n      className=\"flex-1 border-0 bg-transparent px-2\"\n      containerClassName=\"flex-1\"\n    />\n    <SendIcon size={18} />\n  </View>\n</KeyboardAvoider>"
+    }
+  ],
+  "hideVariants": [
+    "over"
+  ],
+  "variantCode": {
+    "variant": "{/* On the page, where the field draws its own edge. */}\n<Textarea variant=\"outline\" label=\"Notes\" />\n\n{/* Inside a card or a sheet, where a second border reads as a seam. */}\n<Textarea variant=\"filled\" label=\"Notes\" />",
+    "size": "<Textarea size=\"sm\" rows={3} placeholder=\"14px type\" />\n<Textarea size=\"md\" rows={3} placeholder=\"16px type\" />\n<Textarea size=\"lg\" rows={3} placeholder=\"16px type, roomier\" />"
+  },
+  "extraImports": [
+    "Card"
+  ],
+  "preview": {
+    "src": "/previews/textarea.jpg",
+    "width": 1179,
+    "height": 1118,
+    "alt": "The Textarea component, running in the example app."
+  }
+}

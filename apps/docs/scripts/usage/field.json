@@ -1,0 +1,52 @@
+{
+  "slug": "field",
+  "intro": "The layout and validation-state kit a form control composes into.\n\nPanelUI's own controls — `Input`, `Checkbox`, `Switch`, `RadioGroup` — already carry a label, a description and an error slot, so **a single one of them needs no wrapper at all**.\n\nUse `Field` for what does not fit that shape: a control with its label off to the side, several controls grouped under one legend, or a rule breaking a form into sections.",
+  "usage": "<Field orientation=\"horizontal\">\n  <Field.Content>\n    <Field.Title>Marketing emails</Field.Title>\n    <Field.Description>Product updates, at most weekly.</Field.Description>\n  </Field.Content>\n  <Switch value={subscribed} onValueChange={setSubscribed} />\n</Field>",
+  "extraImports": [
+    "Input",
+    "Checkbox",
+    "Switch",
+    "Button"
+  ],
+  "anatomy": "<Field>\n  <Field.Label>…</Field.Label>\n  <Field.Description>…</Field.Description>\n  <Field.Error>…</Field.Error>\n</Field>\n\n<Field.Set>\n  <Field.Legend>…</Field.Legend>\n  <Field>…</Field>\n</Field.Set>\n\n<Field.Group>\n  <Field>…</Field>\n  <Field.Separator>Or</Field.Separator>\n  <Field>…</Field>\n</Field.Group>",
+  "parts": {
+    "Content": "Inner column for a label and description sitting beside a control, in a horizontal `Field`.",
+    "Label": "A `Label` that reads `isRequired`/`isInvalid`/`isDisabled` from the enclosing `Field` when not set explicitly.",
+    "Description": "Helper text under the control.",
+    "Error": "One validation message, or several — pass `errors` for an array; it dedupes by message and lists more than one with bullets. Announced with `role=\"alert\"`.",
+    "Set": "Groups related fields, e.g. a block of checkboxes for one setting.",
+    "Legend": "Heading for a `Field.Set`.",
+    "Group": "Vertical rhythm container for stacking `Field`/`Field.Set` blocks in a form.",
+    "Separator": "A rule, with an optional centered label — `Or`, between two sign-in options.",
+    "Title": "Non-label heading text, for a custom card-style row."
+  },
+  "notes": "### When you don't need it\n\n`Input`, `Checkbox`, `Switch` and `RadioGroup` already carry their own `label`, `description` and error slot — for a single one of those, skip `Field` and pass the props straight through:\n\n```tsx\n<Input label=\"Email\" description=\"We'll never share it.\" errorMessage={error} />\n```\n\nReach for `Field` when a row doesn't fit that shape. See [Form](/docs/form/form) for wiring one up to real validation state.",
+  "examples": [
+    {
+      "title": "Grouped checkboxes",
+      "description": "`Field.Legend` names the group; each `Checkbox` keeps its own label.",
+      "code": "<Field.Set>\n  <Field.Legend>Notifications</Field.Legend>\n  <Checkbox checked={email} onCheckedChange={setEmail} label=\"Email\" />\n  <Checkbox checked={sms} onCheckedChange={setSms} label=\"SMS\" />\n  <Checkbox checked={push} onCheckedChange={setPush} label=\"Push\" />\n</Field.Set>"
+    },
+    {
+      "title": "A rule between two options",
+      "description": "A plain `Separator` reads as a divider; `Field.Separator` reads as \"or\".",
+      "code": "<Field.Group>\n  <Button variant=\"outline\" onPress={continueWithApple}>\n    Continue with Apple\n  </Button>\n  <Field.Separator>Or</Field.Separator>\n  <Input label=\"Email\" value={email} onChangeText={setEmail} />\n</Field.Group>"
+    },
+    {
+      "title": "Manual error state",
+      "description": "`errors` takes an array and drops duplicate messages — for when more than one rule can fail with the same wording.",
+      "code": "<Field invalid={errors.length > 0}>\n  <Field.Label isRequired>Username</Field.Label>\n  <Input value={username} onChangeText={setUsername} />\n  <Field.Error errors={errors} />\n</Field>"
+    },
+    {
+      "title": "A disabled row",
+      "description": "`disabled` on the root dims the title, description and control together.",
+      "code": "<Field orientation=\"horizontal\" disabled={!hasPro}>\n  <Field.Content>\n    <Field.Title>Advanced analytics</Field.Title>\n    <Field.Description>Included with the Pro plan.</Field.Description>\n  </Field.Content>\n  <Switch value={analyticsEnabled} onValueChange={setAnalyticsEnabled} disabled={!hasPro} />\n</Field>"
+    }
+  ],
+  "preview": {
+    "src": "/previews/field.jpg",
+    "alt": "The Field component, running in the example app.",
+    "width": 1179,
+    "height": 391
+  }
+}

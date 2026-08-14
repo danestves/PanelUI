@@ -1,0 +1,84 @@
+{
+  "slug": "scroll-text",
+  "intro": "Text that resolves word by word as you scroll past it.\n\nThe reader's thumb is the playhead: words arrive left to right as the block crosses the viewport, and scrolling back up unresolves them. The effect is scrubbed rather than triggered, so it is reversible and lands exactly at both ends.\n\nFor text that animates on its own timing rather than on the scroll, use [TextAnimation](/docs/components/text-animation).",
+  "usage": "<ScrollProgress>\n  <ScrollView>\n    <ScrollText size=\"2xl\" weight=\"semibold\">\n      Every control ships with its accessibility wiring already done.\n    </ScrollText>\n  </ScrollView>\n</ScrollProgress>",
+  "extraImports": [
+    "ScrollProgress"
+  ],
+  "examples": [
+    {
+      "title": "Wiring up the scroll position",
+      "description": "`ScrollProgress` wraps the scroll view you already have rather than replacing it — the child is cloned with an animated scroll handler composed onto it, so a `FlatList`, a `SectionList` or your own scrollable all work and your own `onScroll` is kept. One listener serves every effect inside it.",
+      "code": "<ScrollProgress className=\"flex-1\">\n  <ScrollView>\n    <ScrollText>…</ScrollText>\n    <ScrollCanvas source={{ uri }} />\n  </ScrollView>\n</ScrollProgress>"
+    },
+    {
+      "title": "The four effects",
+      "description": "`color` crossfades each word between two colours, `fade` brings it up from nearly transparent (not fully — a word that vanishes takes the line's shape with it and the paragraph reflows as you scroll), `highlight` sweeps a background behind it, and `rise` lifts it into place.",
+      "code": "<ScrollText effect=\"color\">…</ScrollText>\n<ScrollText effect=\"fade\">…</ScrollText>\n<ScrollText effect=\"highlight\">…</ScrollText>\n<ScrollText effect=\"rise\">…</ScrollText>"
+    },
+    {
+      "title": "Splitting and stagger",
+      "description": "`stagger` is how much of the whole reveal one token takes. Small values run a hard edge along the line; large ones brighten the whole sentence together. `by=\"character\"` reads as typing rather than as reading, and wants a smaller stagger since there are far more tokens.",
+      "code": "<ScrollText stagger={0.12}>An edge travelling along the line.</ScrollText>\n\n<ScrollText stagger={0.9}>A line that arrives all at once.</ScrollText>\n\n<ScrollText by=\"character\" stagger={0.12}>One character at a time.</ScrollText>"
+    },
+    {
+      "title": "Setting the scroll window",
+      "description": "`start` and `end` are positions down the viewport, as fractions of its height. Progress is 0 while the block's top is still below `start`, and reaches 1 when its bottom passes `end` — so a tall block scrubs across its own height instead of snapping the moment its first line appears. A smaller `end` is a longer scrub.",
+      "code": "<ScrollText start={0.95} end={0.25}>A long, slow reveal.</ScrollText>"
+    },
+    {
+      "title": "Driving it from something else",
+      "description": "Pass a shared value as `progress` and nothing is measured — the reveal follows whatever you give it. For a timeline, a gesture, or a value you are animating yourself.",
+      "code": "const progress = useSharedValue(0);\n\n<ScrollText progress={progress}>Driven by hand.</ScrollText>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Colour",
+      "description": "Each word crossfades from the muted token to the foreground as the line passes. The default, and the one that survives being used on a whole paragraph.",
+      "code": "<ScrollText effect=\"color\" size=\"2xl\" weight=\"semibold\">\n  Every control ships with its accessibility wiring already done.\n</ScrollText>"
+    },
+    {
+      "title": "Fade",
+      "description": "Words come up from nearly transparent — not fully, because a word that vanishes takes the line's shape with it and the paragraph reflows as you scroll.",
+      "code": "<ScrollText effect=\"fade\" size=\"2xl\" weight=\"semibold\">…</ScrollText>",
+      "previewVideo": {
+        "src": "/previews/scroll-text-fade.mp4",
+        "poster": "/previews/scroll-text-fade-poster.jpg",
+        "alt": "ScrollText — Fade.",
+        "width": 720,
+        "height": 1456
+      }
+    },
+    {
+      "title": "Rise",
+      "description": "Words lift into place. This is the one that lays out as a wrapping row rather than as nested text, because a transform needs a view — it buys the motion and costs real line-breaking.",
+      "code": "<ScrollText effect=\"rise\" size=\"2xl\" weight=\"semibold\">…</ScrollText>",
+      "previewVideo": {
+        "src": "/previews/scroll-text-rise.mp4",
+        "poster": "/previews/scroll-text-rise-poster.jpg",
+        "alt": "ScrollText — Rise.",
+        "width": 720,
+        "height": 1448
+      }
+    },
+    {
+      "title": "Highlight",
+      "description": "A background sweeps behind the line as it resolves, using the accent token.",
+      "code": "<ScrollText effect=\"highlight\" size=\"2xl\" weight=\"semibold\">…</ScrollText>"
+    },
+    {
+      "title": "Splitting and stagger",
+      "description": "`by=\"character\"` reads as typing rather than as reading, and wants a smaller stagger since there are far more tokens. A wide stagger brightens the whole line together instead of running an edge along it.",
+      "code": "<ScrollText by=\"character\" stagger={0.12} size=\"3xl\" weight=\"bold\">\n  One character at a time.\n</ScrollText>\n\n<ScrollText stagger={0.9} size=\"3xl\" weight=\"bold\">\n  And one where the whole line arrives at once.\n</ScrollText>"
+    }
+  ],
+  "notes": "### Two layouts, and why\n\n`color`, `fade` and `highlight` render the words as nested `Text` inside one parent, which is the only way React Native will break them into real lines. Nested text cannot be transformed, though — a `translateY` on it is simply ignored.\n\nSo `rise` lays the words out as a wrapping row of separate views instead. That buys transforms and costs real line-breaking: words wrap on their own boundaries and the spacing is a margin rather than a space. Worth knowing before reaching for it on a paragraph rather than a heading.\n\n### Measurement\n\nThe block is measured on the UI thread whenever the scroll position changes — not every frame, and not once at layout. Once is wrong the moment anything above it resizes; every frame is a measurement pass for a value that only changes when the scroller moves.\n\n`useReducedMotion` renders the text fully resolved, with no effect at all. So does `enabled={false}` — the text is always readable, which is the one thing an effect on text must never take away.",
+  "previewVideo": {
+    "src": "/previews/scroll-text.mp4",
+    "poster": "/previews/scroll-text-poster.jpg",
+    "alt": "The ScrollText component, running in the example app.",
+    "width": 720,
+    "height": 1460
+  }
+}

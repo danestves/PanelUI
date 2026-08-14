@@ -1,0 +1,84 @@
+{
+  "slug": "qr-code",
+  "intro": "A string drawn as something a camera can read — bare, framed, titled, or folded away behind a button.\n\nGive it a `value` and compose the shape around it.\n\nThe encoder is ours and has no dependency behind it: the version grows to fit whatever you pass, and the whole code is drawn as a single path rather than one node per module — which for a dense code is the difference between appearing and appearing eventually.",
+  "usage": "<QRCode value=\"https://panelui.dev\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>Documentation</QRCode.Title>\n    </QRCode.Header>\n    <QRCode.Panel>\n      <QRCode.Canvas />\n    </QRCode.Panel>\n  </QRCode.Frame>\n  <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n</QRCode>",
+  "extraImports": [
+    "Button",
+    "Text",
+    "Avatar"
+  ],
+  "anatomy": "<QRCode value=\"…\" presentation=\"popover\">\n  <QRCode.Trigger>                      {/* …or no Trigger/Content at all, */}\n    <Button>Show the code</Button>      {/* and the parts draw where they are */}\n  </QRCode.Trigger>\n  <QRCode.Content>\n    <QRCode.Frame>                      {/* the tray */}\n      <QRCode.Header>                   {/* the strip across the top of it */}\n        <QRCode.Title>Pair a device</QRCode.Title>\n        <QRCode.Action>Expires in 5m</QRCode.Action>\n      </QRCode.Header>\n      <QRCode.Panel>                    {/* the card the code is drawn on */}\n        <QRCode.Canvas />               {/* the code itself */}\n        <QRCode.Logo>…</QRCode.Logo>    {/* clears a square in the middle */}\n      </QRCode.Panel>\n    </QRCode.Frame>\n    <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n    <QRCode.Value />                    {/* the string, for anyone who cannot scan */}\n  </QRCode.Content>\n</QRCode>",
+  "parts": {
+    "Canvas": "The code. Dark modules on a light plate whatever the theme is doing — see the note below, because that is the one place in the library that ignores the tokens and it is on purpose. `pixelSize`, `color` and `backgroundColor` override the defaults.",
+    "Frame": "The tray the code sits in — the same widget shell the charts use, with a titled strip over a card flush inside it.",
+    "Header": "The strip across the top of the tray. `QRCode.Title` takes the flexible side, `QRCode.Action` the end.",
+    "Title": "What the code is for. Muted and one line — it is a caption on the tray, not a heading.",
+    "Action": "The trailing slot on the header row: an expiry, a count, a button. A plain string draws as muted text.",
+    "Panel": "The card the code is drawn on, flush inside the tray. It is also what `QRCode.Logo` positions against, so the logo belongs in here beside the canvas.",
+    "Description": "A muted line inside the panel, under the code.",
+    "Caption": "A line under the whole thing saying what scanning it does.",
+    "Value": "The encoded string, selectable, on one line unless you pass `full`. For someone who cannot scan — which includes the person setting up the camera.",
+    "Logo": "Content for a cleared square in the middle of the code. Its presence is what clears the square, and what raises the error-correction level when the one asked for could not afford the loss.",
+    "Trigger": "What opens a `popover` or `bottom-sheet` code. Its child has to accept `onPress`.",
+    "Content": "The panel the code is drawn in when it is not drawn in place. Everything `Popover.Content` accepts works here too."
+  },
+  "partNotes": "The order and the presence of the parts are yours — a bare `<QRCode.Canvas />` with nothing around it is a perfectly good QR code, and everything else is optional shape.\n\n`QRCode.Content` re-provides the context inside itself. Portal content mounts under the portal host rather than under the element that opened it, so a provider outside the popover is not an ancestor of what is in it.",
+  "examples": [
+    {
+      "title": "In a frame",
+      "description": "The tray, its title strip, and a line under the whole thing.",
+      "code": "<QRCode value=\"https://panelui.dev\" size=\"lg\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>Documentation</QRCode.Title>\n      <QRCode.Action>panelui.dev</QRCode.Action>\n    </QRCode.Header>\n    <QRCode.Panel>\n      <QRCode.Canvas />\n    </QRCode.Panel>\n  </QRCode.Frame>\n  <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n</QRCode>"
+    },
+    {
+      "title": "With something in the header",
+      "description": "The trailing slot takes whatever the title needs qualifying with — here, how long the code is good for.",
+      "code": "<QRCode value=\"https://panelui.dev/pair/8f2a41\" size=\"lg\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>Pair a device</QRCode.Title>\n      <QRCode.Action>Expires in 5m</QRCode.Action>\n    </QRCode.Header>\n    <QRCode.Panel>\n      <QRCode.Canvas />\n    </QRCode.Panel>\n  </QRCode.Frame>\n  <QRCode.Value />\n</QRCode>"
+    },
+    {
+      "title": "Folded away behind a button",
+      "description": "The same code, brought up over the page when it is wanted and not before.",
+      "code": "<QRCode value=\"https://panelui.dev\" presentation=\"popover\">\n  <QRCode.Trigger>\n    <Button variant=\"outline\">Show QR code</Button>\n  </QRCode.Trigger>\n  <QRCode.Content>\n    <QRCode.Canvas />\n    <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n  </QRCode.Content>\n</QRCode>"
+    },
+    {
+      "title": "Up from the bottom edge",
+      "description": "The same thing in a sheet, which is the shape a phone wants for something you hold up to another screen.",
+      "code": "<QRCode value=\"https://panelui.dev\" presentation=\"bottom-sheet\" size=\"lg\">\n  <QRCode.Trigger>\n    <Button>Share</Button>\n  </QRCode.Trigger>\n  <QRCode.Content>\n    <QRCode.Canvas />\n    <QRCode.Caption>Anyone with this code can open the page</QRCode.Caption>\n  </QRCode.Content>\n</QRCode>"
+    },
+    {
+      "title": "With a mark in the middle",
+      "description": "A logo clears a square of modules and fills it; the error correction is raised to cover the loss.",
+      "code": "<QRCode value=\"https://panelui.dev\" size=\"lg\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>PanelUI</QRCode.Title>\n    </QRCode.Header>\n    <QRCode.Panel>\n      <QRCode.Canvas />\n      <QRCode.Logo>\n        <Avatar fallback=\"P\" size=\"sm\" />\n      </QRCode.Logo>\n    </QRCode.Panel>\n  </QRCode.Frame>\n</QRCode>"
+    },
+    {
+      "title": "A WiFi network",
+      "description": "Not every code is a URL. This one joins a network when it is scanned.",
+      "code": "<QRCode value=\"WIFI:T:WPA;S:PanelUI Guest;P:hunter2;;\" size=\"lg\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>PanelUI Guest</QRCode.Title>\n      <QRCode.Action>WPA2</QRCode.Action>\n    </QRCode.Header>\n    <QRCode.Panel>\n      <QRCode.Canvas />\n    </QRCode.Panel>\n  </QRCode.Frame>\n  <QRCode.Caption>Scan to join the network</QRCode.Caption>\n</QRCode>"
+    },
+    {
+      "title": "Bare",
+      "description": "No tray, no caption — the code and nothing else.",
+      "code": "<QRCode value=\"https://panelui.dev\" size=\"sm\">\n  <QRCode.Canvas />\n</QRCode>"
+    }
+  ],
+  "variantCode": {
+    "size": "<QRCode value=\"https://panelui.dev\" size=\"sm\">\n  <QRCode.Canvas />\n</QRCode>\n<QRCode value=\"https://panelui.dev\" size=\"md\">\n  <QRCode.Canvas />\n</QRCode>\n<QRCode value=\"https://panelui.dev\" size=\"lg\">\n  <QRCode.Canvas />\n</QRCode>"
+  },
+  "notes": "The encoding is byte mode, so `value` can be anything — a URL, a WiFi string, a vCard, Japanese. It is encoded as UTF-8, which every reader in circulation understands.\n\nThe QR **version** — the module count, 21×21 up to 177×177 — is chosen as the smallest that fits what you passed. That means a code visibly gets denser as its content grows, which is usually what you want and occasionally is not: pass `version` to pin it, and the component will tell you at runtime if the content stops fitting.\n\n### Error correction, and what it is for\n\n`errorCorrection` decides how much of the code can be lost and still read: `L` about 7%, `M` 15% (the default), `Q` 25%, `H` 30%. The correction is not free — the redundancy takes modules, so a higher level is a denser code at the same physical size, and a denser code is one a camera has to get closer to.\n\n`M` is the default because a code on a screen is not being damaged by anything. Raise it when the code will be printed, put on something curved, or covered in the middle — and a `QRCode.Logo` raises it for you if the level you asked for could not afford the square it clears.\n\n### Making it scannable\n\nThree things decide whether a code reads, and none of them is the code:\n\n- **The quiet zone.** Four modules of clear space all round, which `QRCode.Canvas` draws and paints. Do not clip it, and do not put the code flush against a border.\n- **Contrast, the right way round.** Dark modules on a light field, and `QRCode.Canvas` draws that way whatever the theme is doing. It is the one thing in the library that ignores the tokens, and it is deliberate: inverted, a code is rejected outright by a good share of scanners and found late by most of the rest, which turns a dark theme into a bug report about a code that \"sometimes does not work\". On a light theme the plate is white on a near-white card and reads as nothing at all, which is the intended outcome. `color` and `backgroundColor` override both.\n- **Size.** A code needs roughly one point per module at arm's length. `sm` is 128 points, which is fine for a version 2 code and marginal for a version 10 one; `lg` is 240.\n\n### Accessibility\n\nThe canvas has an image role and a label naming what it encodes, so a screen reader announces the destination rather than \"image\". `QRCode.Value` puts the same string on screen as selectable text, which is the way through for anyone whose camera is the thing being set up.",
+  "versions": [
+    {
+      "title": "Framed",
+      "description": "The tray, the title strip, and the code on the card inside it.",
+      "code": "<QRCode value=\"https://panelui.dev\" size=\"lg\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>Documentation</QRCode.Title>\n      <QRCode.Action>panelui.dev</QRCode.Action>\n    </QRCode.Header>\n    <QRCode.Panel>\n      <QRCode.Canvas />\n    </QRCode.Panel>\n  </QRCode.Frame>\n  <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n</QRCode>"
+    },
+    {
+      "title": "With a header",
+      "description": "A trailing slot in the header, and the encoded string underneath.",
+      "code": "<QRCode value=\"https://panelui.dev/pair/8f2a41\" size=\"lg\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>Pair a device</QRCode.Title>\n      <QRCode.Action>Expires in 5m</QRCode.Action>\n    </QRCode.Header>\n    <QRCode.Panel>\n      <QRCode.Canvas />\n    </QRCode.Panel>\n  </QRCode.Frame>\n  <QRCode.Value />\n</QRCode>"
+    },
+    {
+      "title": "In a popover",
+      "description": "Folded away behind a row until it is wanted, the way a colour picker folds away.",
+      "code": "<QRCode value=\"https://panelui.dev\" presentation=\"popover\">\n  <QRCode.Trigger>\n    <Button variant=\"outline\">Show QR code</Button>\n  </QRCode.Trigger>\n  <QRCode.Content>\n    <QRCode.Canvas />\n    <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n  </QRCode.Content>\n</QRCode>"
+    }
+  ]
+}

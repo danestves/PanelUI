@@ -1,0 +1,93 @@
+{
+  "slug": "typography",
+  "intro": "Semantic text presets, built on the `Text` primitive.\n\nA preset sets size, weight and tracking together. The marks — `underline`, `italic`, `strike` — and `weight`, `align` and `transform` layer on top of whichever preset is in force.\n\nThey are props rather than class names, so a screen never has to know which utilities add up to \"a bolded lead paragraph\".",
+  "usage": "<Typography type=\"h1\">Heading 1</Typography>\n<Typography type=\"body-sm\" muted>Small body text</Typography>\n<Typography underline>Terms of service</Typography>\n\n<Typography.Heading type=\"h2\">Section title</Typography.Heading>\n<Typography.Paragraph>Body copy.</Typography.Paragraph>\n<Typography.Code>npm i panelui-native</Typography.Code>",
+  "parts": {
+    "Heading": "Heading text, wired up with the matching accessibility heading level.",
+    "Paragraph": "Body copy, at any of the body presets.",
+    "Code": "Inline code on a muted surface.",
+    "Blockquote": "A quotation, marked by a rule down its leading edge.",
+    "List": "A bulleted or numbered list. Draws the markers React Native does not have.",
+    "ListItem": "One line of a list. The marker beside it belongs to the list."
+  },
+  "anatomy": "<Typography type=\"h1\">…</Typography>\n\n<Typography.Heading type=\"h2\">…</Typography.Heading>\n<Typography.Paragraph>…</Typography.Paragraph>\n<Typography.Code>…</Typography.Code>\n<Typography.Blockquote>…</Typography.Blockquote>\n\n<Typography.List>\n  <Typography.ListItem>…</Typography.ListItem>\n</Typography.List>",
+  "examples": [
+    {
+      "title": "Headings and body",
+      "description": "The type scale in one place, so headings stay consistent instead of being rebuilt from size and weight classes. `lead` is the sentence under a heading; `large` and `small` are the two steps either side of body.",
+      "code": "<Typography.Heading type=\"h1\">Ship it</Typography.Heading>\n\n<Typography.Paragraph type=\"lead\">\n  Everything you need to build a screen, and nothing you have to style twice.\n</Typography.Paragraph>\n\n<Typography.Paragraph>\n  Body copy at the default size.\n</Typography.Paragraph>\n\n<Typography.Paragraph type=\"small\" muted>\n  Updated 3 minutes ago\n</Typography.Paragraph>"
+    },
+    {
+      "title": "Marks",
+      "description": "`underline`, `italic` and `strike` are booleans and stack, and `weight` overrides whatever the preset set — which is how a paragraph gets bolded without becoming a heading.",
+      "code": "<Typography underline>Terms of service</Typography>\n<Typography italic>An aside, in passing.</Typography>\n<Typography strike muted>£24.00</Typography>\n<Typography weight=\"bold\">Total due today</Typography>\n\n{/* They stack. */}\n<Typography italic strike muted>Withdrawn</Typography>",
+      "preview": {
+        "src": "/previews/typography-marks.jpg",
+        "alt": "Typography — Marks.",
+        "width": 1179,
+        "height": 690
+      }
+    },
+    {
+      "title": "Alignment and case",
+      "description": "`transform` changes how the text is drawn, not the string underneath — so a screen reader still announces the original, and a label copied out of the UI is not shouting.",
+      "code": "<Typography align=\"center\">Centred</Typography>\n\n<Typography type=\"body-xs\" transform=\"uppercase\" muted>\n  Section label\n</Typography>",
+      "preview": {
+        "src": "/previews/typography-alignment-and-case.jpg",
+        "alt": "Typography — Alignment and case.",
+        "width": 1179,
+        "height": 468
+      }
+    },
+    {
+      "title": "Quotes and lists",
+      "description": "React Native draws no list markers and has no blockquote, so both are built here: a rule down the leading edge for the quote, and a marker beside each row for the list. The bullet is a view rather than the `•` character, whose size and baseline move with the platform font. Both use logical edges, so they mirror under a right-to-left `Direction`.",
+      "code": "<Typography.Blockquote>\n  A component library is a set of decisions you only have to make once.\n</Typography.Blockquote>\n\n<Typography.List>\n  <Typography.ListItem>Runs in Expo Go</Typography.ListItem>\n  <Typography.ListItem>Animates on the UI thread</Typography.ListItem>\n</Typography.List>\n\n<Typography.List ordered>\n  <Typography.ListItem>Install the package</Typography.ListItem>\n  <Typography.ListItem>Import the stylesheet</Typography.ListItem>\n</Typography.List>",
+      "preview": {
+        "src": "/previews/typography-quotes-and-lists.jpg",
+        "alt": "Typography — Quotes and lists.",
+        "width": 1179,
+        "height": 1215
+      }
+    },
+    {
+      "title": "Inline and block code",
+      "code": "<Typography.Paragraph>\n  Run <Typography.Code>npx expo install</Typography.Code> first.\n</Typography.Paragraph>"
+    },
+    {
+      "title": "Paragraphs",
+      "description": "`Typography.Paragraph` for body copy, with `type` and `muted` for emphasis.",
+      "preview": {
+        "src": "/previews/typography-paragraphs.jpg",
+        "alt": "Typography — Paragraphs.",
+        "width": 1179,
+        "height": 936
+      },
+      "code": "<Typography.Paragraph type=\"lead\">\n  A lead paragraph: the sentence under a heading, set larger and quieter than the body it introduces.\n</Typography.Paragraph>\n<Typography.Paragraph>\n  A default body paragraph, at the base size and weight.\n</Typography.Paragraph>\n<Typography.Paragraph type=\"body-sm\" muted>\n  A smaller, muted paragraph for captions and footnotes.\n</Typography.Paragraph>"
+    },
+    {
+      "title": "A section label",
+      "description": "A small, uppercase overline to head a section.",
+      "preview": {
+        "src": "/previews/typography-section-label.jpg",
+        "alt": "Typography — A section label.",
+        "width": 1179,
+        "height": 223
+      },
+      "code": "<Typography.Paragraph type=\"small\" muted className=\"uppercase tracking-wider\">\n  Section label\n</Typography.Paragraph>"
+    }
+  ],
+  "variantCode": {
+    "type": "<Typography.Heading type=\"h1\">Heading 1</Typography.Heading>\n<Typography.Heading type=\"h4\">Heading 4</Typography.Heading>\n<Typography.Paragraph type=\"lead\">Lead</Typography.Paragraph>\n<Typography.Paragraph type=\"body\">Body</Typography.Paragraph>\n<Typography.Paragraph type=\"large\">Large</Typography.Paragraph>\n<Typography.Paragraph type=\"small\">Small</Typography.Paragraph>\n<Typography.Blockquote>Quoted</Typography.Blockquote>\n<Typography.Code>inline code</Typography.Code>",
+    "weight": "<Typography weight=\"normal\">Normal</Typography>\n<Typography weight=\"medium\">Medium</Typography>\n<Typography weight=\"semibold\">Semibold</Typography>\n<Typography weight=\"bold\">Bold</Typography>",
+    "align": "<Typography align=\"left\">Left</Typography>\n<Typography align=\"center\">Centre</Typography>\n<Typography align=\"right\">Right</Typography>",
+    "transform": "<Typography transform=\"uppercase\">shouted</Typography>\n<Typography transform=\"lowercase\">Quietened</Typography>\n<Typography transform=\"capitalize\">title case</Typography>"
+  },
+  "notes": "`weight`, `align`, `transform` and the marks apply to every preset and to every part — a heading, a list item and a blockquote all take them.\n\n`Typography.List` draws its own markers because React Native has none. It reads its children to number them, so an ordered list counts correctly however the items were generated, and the marker is a view rather than the `•` character — that character's size and baseline shift with the platform font, and a view does not.",
+  "preview": {
+    "src": "/previews/typography.jpg",
+    "alt": "The Typography component, running in the example app.",
+    "width": 1179,
+    "height": 1009
+  }
+}

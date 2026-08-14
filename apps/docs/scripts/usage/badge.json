@@ -1,0 +1,47 @@
+{
+  "slug": "badge",
+  "intro": "A compact label for status, a count or a state.\n\nSet `count` for a notification bubble and `shape=\"dot\"` for a bare status dot.\n\nIt only shows — nothing about it is pressable. Use [Chip](/docs/components/chip) for the interactive version: a filter, a tag, a removable token.",
+  "usage": "<Badge>Default</Badge>\n<Badge variant=\"success\">Active</Badge>\n<Badge variant=\"destructive\" count={128} />\n<Badge variant=\"success\" shape=\"dot\" />",
+  "notes": "`count` clamps at `99+` so the pill keeps its shape, and sets an \"N unread\" accessibility label. Passing `count` implies `shape=\"count\"` unless you set a shape yourself.",
+  "examples": [
+    {
+      "title": "Status labels",
+      "description": "The default shape — a pill with a text label.",
+      "code": "<Badge>Default</Badge>\n<Badge variant=\"success\">Paid</Badge>\n<Badge variant=\"warning\">Pending</Badge>\n<Badge variant=\"destructive\">Failed</Badge>\n<Badge variant=\"outline\">Draft</Badge>"
+    },
+    {
+      "title": "A count",
+      "description": "`shape=\"count\"` sizes to a number. Pass `count` and it renders the digits for you.",
+      "code": "<Badge shape=\"count\" count={3} variant=\"destructive\" />\n\n{/* Clamp it yourself for large numbers. */}\n<Badge shape=\"count\" count={Math.min(unread, 99)} />"
+    },
+    {
+      "title": "A bare dot",
+      "description": "No label at all — an unread marker beside a title.",
+      "code": "<View className=\"flex-row items-center gap-2\">\n  <Text weight=\"medium\">Inbox</Text>\n  <Badge shape=\"dot\" variant=\"info\" />\n</View>"
+    },
+    {
+      "title": "With a status dot",
+      "description": "A small dot inside the badge, for a status row.",
+      "preview": {
+        "src": "/previews/badge-with-status-dot.jpg",
+        "alt": "Badge — With a status dot.",
+        "width": 1179,
+        "height": 429
+      },
+      "code": "<Badge variant=\"success\">\n  <View className=\"h-1.5 w-1.5 rounded-full\" style={{ backgroundColor: '#10b981' }} />\n  Operational\n</Badge>"
+    }
+  ],
+  "variantCode": {
+    "variant": "<Badge>Default</Badge>\n<Badge variant=\"secondary\">Secondary</Badge>\n<Badge variant=\"outline\">Outline</Badge>\n<Badge variant=\"destructive\">Failed</Badge>\n<Badge variant=\"success\">Paid</Badge>\n<Badge variant=\"warning\">Pending</Badge>\n<Badge variant=\"info\">Info</Badge>",
+    "shape": "<Badge shape=\"default\">Label</Badge>\n<Badge shape=\"dot\" variant=\"success\" />\n<Badge shape=\"count\" count={12} />"
+  },
+  "extraImports": [
+    "Text"
+  ],
+  "preview": {
+    "src": "/previews/badge.jpg",
+    "alt": "The Badge component, running in the example app.",
+    "width": 1179,
+    "height": 337
+  }
+}

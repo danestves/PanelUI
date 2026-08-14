@@ -1,0 +1,71 @@
+{
+  "slug": "markdown-editor",
+  "intro": "A field for writing markdown, with a formatting toolbar and a rendered preview.\n\nWriting and reading are two modes rather than two panes. Side-by-side does not survive the trip to a phone — two columns of a phone's width are both too narrow to read, and the keyboard covers the bottom half of the screen exactly when the writer is using it. The toolbar carries the switch between the modes, because the toolbar is the one thing on screen in both.\n\nThe preview is [Response](/docs/ai-components/response), the same renderer used for a model's answer, so there is one markdown parser in the library rather than two to keep in step. It renders through `Typography`, `CodeBlock` and `Table` — your app's own type and colours, not a document viewer's.",
+  "usage": "const [draft, setDraft] = useState('');\n\n<MarkdownEditor value={draft} onValueChange={setDraft} rows={12} />",
+  "extraImports": [
+    "Button",
+    "Text"
+  ],
+  "anatomy": "<MarkdownEditor>\n  <MarkdownEditor.Toolbar />   {/* formatting, and the write/preview switch */}\n  <MarkdownEditor.Input />     {/* draws while writing */}\n  <MarkdownEditor.Preview />   {/* draws while previewing */}\n</MarkdownEditor>",
+  "parts": {
+    "Toolbar": "The formatting actions and the switch between writing and reading. `actions` chooses which actions appear and in what order; `showModeSwitch` drops the switch for an editor with no preview. It takes children too, which land beside the switch — a word count, a save state, a submit.",
+    "Input": "The field the markdown is written in — a `Textarea`, so everything that accepts applies. It renders nothing while the preview is up.",
+    "Preview": "The draft, rendered. It renders nothing while the field is up, which is what makes the two one pane rather than two."
+  },
+  "partNotes": "Written without children the editor draws all three in that order, which is the whole component — so most uses need no parts at all. Write them out when you want to reorder them, drop one, or put something else on the toolbar row.",
+  "examples": [
+    {
+      "title": "The whole component",
+      "description": "No children: the toolbar, the field and the preview in that order. `rows` sizes the field and `placeholder` goes to it.",
+      "code": "const [draft, setDraft] = useState('');\n\n<MarkdownEditor\n  value={draft}\n  onValueChange={setDraft}\n  rows={10}\n  placeholder=\"Write something…\"\n/>",
+      "previewVideo": {
+        "src": "/previews/markdown-editor.mp4",
+        "poster": "/previews/markdown-editor-poster.jpg",
+        "alt": "MarkdownEditor — The whole component.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Starting on the reading side",
+      "description": "`defaultMode` decides which pane opens first. Reading first suits a draft that already exists — a note being reviewed rather than written.",
+      "code": "<MarkdownEditor value={draft} onValueChange={setDraft} defaultMode=\"preview\" />",
+      "preview": {
+        "src": "/previews/markdown-editor-starting-on-the-reading-side.jpg",
+        "alt": "MarkdownEditor — Starting on the reading side.",
+        "width": 1179,
+        "height": 1348
+      }
+    },
+    {
+      "title": "Choosing the actions, and adding to the row",
+      "description": "`actions` is the list, in the order you want them. The toolbar’s children sit beside the mode switch, for anything that belongs to the draft rather than to the text.",
+      "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar actions={['bold', 'italic', 'link']}>\n    <Text size=\"xs\" muted>{words} words</Text>\n  </MarkdownEditor.Toolbar>\n  <MarkdownEditor.Input rows={6} placeholder=\"Say something…\" />\n  <MarkdownEditor.Preview emptyText=\"Write a line and switch to Preview.\" />\n</MarkdownEditor>",
+      "preview": {
+        "src": "/previews/markdown-editor-choosing-the-actions-and-adding-to-the-row.jpg",
+        "alt": "MarkdownEditor — Choosing the actions, and adding to the row.",
+        "width": 1179,
+        "height": 673
+      }
+    },
+    {
+      "title": "A composer with no preview",
+      "description": "Leave `MarkdownEditor.Preview` out and turn the switch off with `showModeSwitch={false}`. What is left is a comment box whose toolbar formats and nothing else.",
+      "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar showModeSwitch={false} />\n  <MarkdownEditor.Input rows={4} placeholder=\"Leave a comment…\" />\n</MarkdownEditor>\n\n<Button fullWidth disabled={!draft.trim()} onPress={post}>Post</Button>",
+      "preview": {
+        "src": "/previews/markdown-editor-a-composer-with-no-preview.jpg",
+        "alt": "MarkdownEditor — A composer with no preview.",
+        "width": 1179,
+        "height": 755
+      }
+    }
+  ],
+  "notes": "### Where the caret lands\n\nEvery toolbar button is a function of the text and where the caret is in it, and what makes a formatting toolbar feel broken is never the characters it inserts — it is where the caret ends up afterwards. Three rules hold for all of them:\n\n- **Pressing twice undoes it.** A button that only ever adds is a button you can press once, and every press after that damages the text.\n- **A selection stays selected.** Bolding three words and then italicising the same three is two presses, not a press and a re-selection.\n- **With nothing selected, the caret lands where the writing goes** — between the new markers rather than after them.\n\nA line-level action — heading, list, quote — applies to every line the selection touches, even partly, and removes itself only when *all* of them already have it. A mixed block is a block someone is trying to make uniform, so the useful answer there is to add.\n\n### The field is monospaced, and does not correct you\n\nA markdown source is code as much as it is prose. Autocapitalisation and autocorrection are off, because an editor that capitalises the word after a fence, or rewrites a hyphen into an en dash, is an editor that quietly changes what the document renders as.\n\n### No platform markdown\n\nSwiftUI's `Text` can parse markdown and Jetpack Compose's cannot, so an editor backed by the platform would render on iOS and show a plain string on Android. The parser here is JavaScript and the output is React Native views, which is why the two platforms agree.",
+  "previewVideo": {
+    "src": "/previews/markdown-editor.mp4",
+    "poster": "/previews/markdown-editor-poster.jpg",
+    "alt": "The MarkdownEditor component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  }
+}

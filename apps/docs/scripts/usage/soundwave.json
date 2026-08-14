@@ -1,0 +1,122 @@
+{
+  "slug": "soundwave",
+  "intro": "What a voice looks like while an app is listening, in four looks: capsules over a microphone button, a metering strip for a transcript, a travelling wave for a reply being spoken, and an ambient glow that fills a screen.\n\n**It draws a level; it does not record one.** Your app owns the recorder and hands over a number between 0 and 1, so there is no audio dependency here and the same component works against a real meter, a synthesised one, or a remote peer's.\n\nWith no level at all it animates plausible motion for the current `state`, which is enough to build and review a voice screen before any audio exists.",
+  "usage": "<Soundwave variant=\"pills\" state=\"listening\" level={level} />",
+  "extraImports": [
+    "Card",
+    "Message",
+    "MicIcon",
+    "Text"
+  ],
+  "examples": [
+    {
+      "title": "Driving it from a recorder",
+      "description": "A recorder reports every 30–60ms. Putting that in React state is dozens of renders a second for a number that only moves pixels, so `level` also takes a `SharedValue` — write metering straight into it and nothing above the wave re-renders. A plain number is accepted too, and smoothed identically; it is the right choice for something slow, like a server-side speaking flag.",
+      "code": "const level = useSharedValue(0);\n\nuseEffect(() => {\n  recorder.onMetering(({ db }) => {\n    // dBFS is negative and logarithmic; the wave wants 0–1.\n    level.value = Math.max(0, (db + 60) / 60);\n  });\n}, [level]);\n\n<Soundwave variant=\"pills\" level={level} />"
+    },
+    {
+      "title": "A metering strip in a transcript",
+      "description": "`static` gives every bar a band of the current level, for a live meter. `scrolling` keeps a history that slides across with the newest sample at the trailing edge, for a recording in progress. `centered` decides whether bars grow from the middle out or up from a baseline.",
+      "code": "<Card>\n  <Card.Content className=\"flex-row items-center gap-3 p-4\">\n    <MicIcon size={18} />\n    <View className=\"flex-1\">\n      <Soundwave\n        variant=\"bars\"\n        mode=\"scrolling\"\n        centered={false}\n        bars={28}\n        barWidth={5}\n        height={40}\n        level={level}\n      />\n    </View>\n    <Text size=\"sm\" muted>0:12</Text>\n  </Card.Content>\n</Card>"
+    },
+    {
+      "title": "A voice note",
+      "description": "`levels` is the shape of a finished recording — collect the metering while recording and store the numbers beside the file. Supplying it draws the wave still rather than animated, and stops the engine entirely, so a transcript of twenty notes runs no animation at all until one is played. `progress` is the playhead: bars behind it keep full ink and the rest are dimmed.",
+      "code": "const player = useAudioPlayer(note.uri);\nconst status = useAudioPlayerStatus(player);\nconst progress = status.duration ? status.currentTime / status.duration : 0;\n\n<Message align=\"end\">\n  <Message.Content>\n    <Message.Bubble>\n      <View className=\"w-64 flex-row items-center gap-3\">\n        <Pressable onPress={() => player.play()}>\n          <PlayIcon size={16} />\n        </Pressable>\n\n        <View className=\"flex-1\">\n          <Soundwave\n            variant=\"bars\"\n            levels={note.levels}\n            progress={progress}\n            bars={40}\n            barWidth={2}\n            height={28}\n          />\n        </View>\n\n        <Text size=\"xs\" muted>0:12</Text>\n      </View>\n    </Message.Bubble>\n  </Message.Content>\n</Message>",
+      "preview": {
+        "src": "/previews/soundwave-voice-notes.jpg",
+        "alt": "Soundwave — A voice note.",
+        "width": 1179,
+        "height": 882
+      }
+    },
+    {
+      "title": "Real frequency bands",
+      "description": "If your app already runs an analysis, hand the bands over directly with `levels` and `bars` in `static` mode draws them instead of synthesising a shape. They are resampled to the bar count, so the two numbers do not have to match.",
+      "code": "<Soundwave variant=\"bars\" levels={bands} bars={24} />"
+    },
+    {
+      "title": "The state, when there is no level yet",
+      "description": "`state` always sets what a screen reader announces. With no `level` supplied it also picks the motion: `idle` barely breathes, `listening` and `speaking` run layered waves at unrelated tempi so neither repeats on a beat, and `thinking` is slower and shallower than both.",
+      "code": "<Soundwave variant=\"line\" state=\"speaking\" />\n<Soundwave variant=\"line\" state=\"thinking\" />\n<Soundwave variant=\"line\" state=\"idle\" />"
+    },
+    {
+      "title": "Ambient, over a whole screen",
+      "description": "`ambient` positions itself absolutely and takes no touches, so it goes behind a screen's content rather than wrapping it. `radius` traces the screen's own corners. It takes its colour from `--color-info` rather than the foreground, since a bloom in the text colour reads as a shadow.",
+      "code": "<View className=\"flex-1\">\n  <Soundwave variant=\"ambient\" state=\"listening\" level={level} radius={40} />\n\n  <View className=\"flex-1 items-center justify-center\">\n    <Text size=\"xl\">Start chatting anytime</Text>\n  </View>\n</View>"
+    },
+    {
+      "title": "Colour",
+      "description": "`color` takes a literal colour or a **theme token name**, which resolves against the active theme and follows it into dark mode. `gradient` paints across the wave instead of one flat ink — left to right for `bars` and `line`, up from the bottom edge for `ambient`. `trackColor` sets the part of a recording that has not played yet, which otherwise draws as the ink turned down.",
+      "code": "{/* Follows the theme. */}\n<Soundwave variant=\"bars\" color=\"--color-info\" />\n\n{/* Or a colour of your own. */}\n<Soundwave variant=\"bars\" color=\"#f97316\" />\n\n{/* Across the wave. */}\n<Soundwave variant=\"line\" gradient={['#6366f1', '#ec4899', '#f59e0b']} />\n\n{/* Played and unplayed, separately. */}\n<Soundwave\n  variant=\"bars\"\n  levels={note.levels}\n  progress={progress}\n  color=\"--color-success\"\n  trackColor=\"--color-muted\"\n/>",
+      "previewVideo": {
+        "src": "/previews/soundwave-colour.mp4",
+        "poster": "/previews/soundwave-colour-poster.jpg",
+        "alt": "Soundwave — Colour.",
+        "width": 720,
+        "height": 876
+      }
+    }
+  ],
+  "versions": [
+    {
+      "title": "Capsules",
+      "description": "The voice-mode screen: a few big capsules over a microphone button. Each capsule runs at its own hashed tempo and phase, so the group responds to one level without moving as a block, and the middle ones lead — a flat profile reads as a progress bar.",
+      "code": "<Soundwave\n  variant=\"pills\"\n  state=\"listening\"\n  level={level}\n  height={120}\n  barWidth={34}\n  barGap={12}\n/>"
+    },
+    {
+      "title": "Metering bars",
+      "description": "The same strip in both modes, at the size it is actually used: static bands, a scrolling history, and a compact recording row with a duration beside it.",
+      "code": "<Soundwave variant=\"bars\" mode=\"static\" level={level} height={64} />\n\n<Soundwave variant=\"bars\" mode=\"scrolling\" level={level} height={64} />"
+    },
+    {
+      "title": "Travelling wave",
+      "description": "One ribbon, tapered to nothing at both ends so it leaves and meets the edges flat instead of stopping at a hard cut. Shown at full size with a state switcher, and again inline under a reply.",
+      "code": "<Soundwave variant=\"line\" state=\"speaking\" height={96} />\n\n// Inline in a bubble, where the stroke has to be finer.\n<Soundwave variant=\"line\" state=\"speaking\" height={36} barWidth={2} />",
+      "previewVideo": {
+        "src": "/previews/soundwave-travelling-wave.mp4",
+        "poster": "/previews/soundwave-travelling-wave-poster.jpg",
+        "alt": "Soundwave — Travelling wave.",
+        "width": 720,
+        "height": 1056
+      }
+    },
+    {
+      "title": "Ambient glow",
+      "description": "A bloom rising off the bottom edge and a rim of light around the rest, both breathing on the level — a glow that only changes opacity reads as a screen dimming, one that also grows reads as something in the room getting louder.",
+      "code": "<Soundwave variant=\"ambient\" state=\"listening\" level={level} radius={40} />",
+      "previewVideo": {
+        "src": "/previews/soundwave-ambient-glow.mp4",
+        "poster": "/previews/soundwave-ambient-glow-poster.jpg",
+        "alt": "Soundwave — Ambient glow.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Voice notes",
+      "description": "Recorded waveforms in bubbles, filling as they play. Each note stores forty numbers rather than the audio, so the wave draws instantly on scroll — decoding a file to work out a bar chart is work no phone should repeat.",
+      "code": "<Soundwave\n  variant=\"bars\"\n  levels={note.levels}\n  progress={progress}\n  bars={40}\n  barWidth={2}\n  height={28}\n/>"
+    },
+    {
+      "title": "Recording composer",
+      "description": "A composer that turns into a recorder over a live transcript: the last few seconds slide past in `scrolling` mode while a timer runs, cancel throws the recording away, and send appends it to the thread as a note.",
+      "code": "<Soundwave\n  variant=\"bars\"\n  mode=\"scrolling\"\n  level={level}\n  bars={32}\n  barWidth={3}\n  height={36}\n/>",
+      "previewVideo": {
+        "src": "/previews/soundwave-recording-composer.mp4",
+        "poster": "/previews/soundwave-recording-composer-poster.jpg",
+        "alt": "Soundwave — Recording composer.",
+        "width": 720,
+        "height": 1560
+      }
+    }
+  ],
+  "notes": "**Nothing here touches the microphone.** Recording, permissions and the audio session stay in your app; this takes the number that falls out of them. There is a full walkthrough in [Voice](/docs/ai/voice) — metering, an assistant loop, and voice notes.\n\nLevels are smoothed with a fast attack and a slow release, which is what makes a meter read as a meter — it snaps up on a syllable and falls back gently instead of chattering around every sample. `sensitivity` multiplies the incoming value before it is clamped, for a quiet source.\n\n**Ink follows the surface.** A wave inside something that publishes a foreground — a chat bubble, a button — is drawn in that foreground rather than the page's, because a sent bubble is painted in the primary colour and in most themes the primary colour *is* the text colour. `ambient` opts out: it is a glow behind a screen, not ink on a surface.\n\nAnything above that is a prop: `color` (a colour or a theme token name), `gradient` across the wave, and `trackColor` for the unplayed part of a recording. Only `gradient` needs literal colours — resolve tokens with `useCSSVariable` if you want a themed one.\n\n`bars` and `line` are drawn as a single animated SVG path — one segment per bar with a round cap — so forty bars cost one animated prop a frame rather than forty animated views. With `progress` it is two: one for the played part, one for the rest. Both measure their own width, so they need a parent with one.\n\n`paused` and the system's reduced-motion setting both hold a representative frame rather than clearing to a flat line: a stopped wave is not an empty one.",
+  "previewVideo": {
+    "src": "/previews/soundwave.mp4",
+    "poster": "/previews/soundwave-poster.jpg",
+    "alt": "The Soundwave component, running in the example app.",
+    "width": 720,
+    "height": 1120
+  }
+}

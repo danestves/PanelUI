@@ -1,0 +1,56 @@
+{
+  "slug": "input-group",
+  "intro": "An input with leading or trailing decorators — a currency symbol, a unit, a button.\n\nThe prefix and suffix are measured and their widths applied as padding on the input, so text never runs underneath them however wide they turn out to be.",
+  "usage": "<InputGroup>\n  <InputGroup.Prefix isDecorative>\n    <SearchIcon size={16} />\n  </InputGroup.Prefix>\n  <InputGroup.Input placeholder=\"Search products…\" />\n</InputGroup>\n\n<InputGroup>\n  <InputGroup.Input placeholder=\"Password\" secureTextEntry={!visible} />\n  <InputGroup.Suffix>\n    <Button variant=\"ghost\" size=\"sm\" onPress={toggle}>\n      {visible ? 'Hide' : 'Show'}\n    </Button>\n  </InputGroup.Suffix>\n</InputGroup>",
+  "extraImports": [
+    "Text",
+    "Button",
+    "SearchIcon"
+  ],
+  "parts": {
+    "Prefix": "Leading decorator, absolutely positioned.",
+    "Input": "The field itself. Accepts all `Input` props.",
+    "Suffix": "Trailing decorator, absolutely positioned."
+  },
+  "notes": "Set `isDecorative` when the decorator is presentation-only: touches fall through to the input and screen readers skip it. Leave it off when it holds something interactive, like a show-password toggle.",
+  "anatomy": "<InputGroup>\n  <InputGroup.Prefix>…</InputGroup.Prefix>\n  <InputGroup.Input />\n  <InputGroup.Suffix>…</InputGroup.Suffix>\n</InputGroup>",
+  "examples": [
+    {
+      "title": "A prefix and a suffix",
+      "description": "The decorators are measured, and the field is padded around them — so text never runs underneath.",
+      "code": "<InputGroup>\n  <InputGroup.Prefix>\n    <Text muted>https://</Text>\n  </InputGroup.Prefix>\n  <InputGroup.Input placeholder=\"yoursite.com\" />\n  <InputGroup.Suffix>\n    <Text muted>.dev</Text>\n  </InputGroup.Suffix>\n</InputGroup>"
+    },
+    {
+      "title": "A search field",
+      "code": "<InputGroup>\n  <InputGroup.Prefix isDecorative>\n    <SearchIcon size={16} />\n  </InputGroup.Prefix>\n  <InputGroup.Input\n    placeholder=\"Search\"\n    value={query}\n    onChangeText={setQuery}\n    autoCorrect={false}\n  />\n</InputGroup>"
+    },
+    {
+      "title": "An interactive suffix",
+      "description": "Leave `isDecorative` off when the decorator is pressable, so it stays in the touch path.",
+      "code": "<InputGroup>\n  <InputGroup.Input secureTextEntry={hidden} placeholder=\"Password\" />\n  <InputGroup.Suffix>\n    <Button size=\"icon\" variant=\"ghost\" onPress={() => setHidden(!hidden)}>\n      <Text size=\"sm\" muted>{hidden ? 'Show' : 'Hide'}</Text>\n    </Button>\n  </InputGroup.Suffix>\n</InputGroup>",
+      "preview": {
+        "src": "/previews/input-group-an-interactive-suffix.jpg",
+        "alt": "InputGroup — An interactive suffix.",
+        "width": 1179,
+        "height": 401
+      }
+    },
+    {
+      "title": "Disabled",
+      "description": "`isDisabled` on the group dims the decorators along with the field, so the whole control reads as off rather than a live input with grey furniture around it.",
+      "code": "<InputGroup isDisabled className=\"w-full\">\n  <InputGroup.Prefix isDecorative>\n    <SearchIcon size={16} />\n  </InputGroup.Prefix>\n  <InputGroup.Input placeholder=\"Disabled input\" />\n</InputGroup>",
+      "preview": {
+        "src": "/previews/input-group-disabled.jpg",
+        "alt": "InputGroup — Disabled.",
+        "width": 1179,
+        "height": 299
+      }
+    }
+  ],
+  "preview": {
+    "src": "/previews/input-group.jpg",
+    "alt": "The InputGroup component, running in the example app.",
+    "width": 1179,
+    "height": 297
+  }
+}

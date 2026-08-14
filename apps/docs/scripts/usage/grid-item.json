@@ -1,0 +1,103 @@
+{
+  "slug": "grid-item",
+  "intro": "Bento tiles, and the grid that places them.\n\n[Item](/docs/components/item) is a row, and a list of rows is a column of views — the layout falls out of flexbox and nothing has to be measured. A bento is not that: tiles are different sizes and the grid still has to line up, so a wide tile and the two square ones beside it share a left edge, and a tall one runs past its neighbour with the next tile filling in underneath.\n\nA wrapping row cannot do the last of those — wrapping puts whatever did not fit on a *new line*, so nothing ever tucks under a tall tile. `GridItem.Group` measures itself, walks its children into the first free cell that fits each one, and positions them. Every tile is a whole number of cells, which is what makes the edges line up.",
+  "usage": "<GridItem.Group columns={2} gap={12} aspect={1.6}>\n  <GridItem colSpan={2}>\n    <GridItem.Media variant=\"icon\"><SparklesIcon size={18} /></GridItem.Media>\n    <GridItem.Title>Deploys</GridItem.Title>\n    <GridItem.Value>1,284</GridItem.Value>\n    <GridItem.Description>this week</GridItem.Description>\n  </GridItem>\n  <GridItem>…</GridItem>\n  <GridItem variant=\"muted\">…</GridItem>\n</GridItem.Group>",
+  "extraImports": [
+    "SparklesIcon",
+    "Badge",
+    "Text",
+    "LineChart"
+  ],
+  "anatomy": "<GridItem.Group columns={2} gap={12}>\n  <GridItem colSpan={2} rowSpan={1}>\n    <GridItem.Background />   {/* the layer behind, clipped by the tile */}\n    <GridItem.Media />        {/* an icon tile, a thumbnail, an avatar */}\n    <GridItem.Title />        {/* what the tile is of */}\n    <GridItem.Value />        {/* the figure */}\n    <GridItem.Description />\n    <GridItem.Footer>        {/* pinned to the bottom edge */}\n      <GridItem.Actions />\n    </GridItem.Footer>\n  </GridItem>\n</GridItem.Group>",
+  "parts": {
+    "Group": "The grid. Owns `columns`, `gap`, the cell shape and the density, measures its own width, places every tile, and stands as tall as the rows they needed.",
+    "Background": "The layer behind the tile's content — a chart, a gradient, an image, an oversized icon. Absolutely filling the tile and taking no touches, so it can be written anywhere among the children. It is the one part meant to be cropped: the tile clips it.",
+    "Media": "Leading slot: an icon tile, a thumbnail, or an avatar passed through. Sized off the group's density.",
+    "Title": "What the tile is of. Deliberately quiet, because the value under it is the message.",
+    "Value": "The figure. The largest thing on the tile, and the reason it is there.",
+    "Description": "One muted line — a period, a comparison, a caveat.",
+    "Footer": "A strip pushed to the bottom of the tile with the space left over, rather than positioned there. A tile's height is fixed by its cells, so there is always space to push with.",
+    "Actions": "Trailing slot: buttons, a chip, a chevron."
+  },
+  "examples": [
+    {
+      "title": "Columns, gaps and the shape of a cell",
+      "description": "`columns` is how many tracks wide the grid is and `gap` is the gutter, in points, both ways. The cell's height comes from `aspect` — width ÷ height, so `1` is square and anything above it is a letterbox. Give `rowHeight` instead when the grid should be a fixed size rather than driven by the width it was handed.\n\nEverything is set on the group, never on a tile: a tile that sized itself would not be in a grid.",
+      "code": "{/* Two square-ish tracks. */}\n<GridItem.Group columns={2} gap={12} aspect={1.6}>…</GridItem.Group>\n\n{/* Three narrow ones, at the smaller density. */}\n<GridItem.Group columns={3} gap={10} size=\"sm\">…</GridItem.Group>\n\n{/* Cells of a fixed height, whatever the width. */}\n<GridItem.Group columns={2} gap={12} rowHeight={120}>…</GridItem.Group>",
+      "preview": {
+        "src": "/previews/grid-item-columns-gaps-and-the-shape-of-a-cell.jpg",
+        "alt": "GridItem — Columns, gaps and the shape of a cell.",
+        "width": 1179,
+        "height": 744
+      }
+    },
+    {
+      "title": "Spanning",
+      "description": "`colSpan` and `rowSpan` are in cells. A tile asking for more columns than the grid has is clamped to the grid rather than overflowing it.\n\nTiles are placed in the order they are written, each into the first free cell it fits in, scanning row by row — the same rule a grid uses for anything it is not told where to put. Nothing already placed is moved, so a tall tile leaves a gap beside it that the following tiles fill.",
+      "code": "<GridItem.Group columns={3} gap={10}>\n  <GridItem rowSpan={2}>Two rows tall</GridItem>\n  <GridItem colSpan={2}>Two columns wide</GridItem>\n  <GridItem>Fills in beside the tall one</GridItem>\n  <GridItem>And so does this</GridItem>\n  <GridItem colSpan={3}>A full-width band under the rest</GridItem>\n</GridItem.Group>",
+      "preview": {
+        "src": "/previews/grid-item-spanning.jpg",
+        "alt": "GridItem — Spanning.",
+        "width": 1179,
+        "height": 1133
+      }
+    },
+    {
+      "title": "The layer behind the text",
+      "description": "`GridItem.Background` fills the tile, sits under everything else, and takes no touches, so it can be written anywhere among the children without moving them. The tile clips it — it is meant to run off the edges.\n\nThis is what makes a bento grid read as a bento grid rather than as a wall of stat cards. A sparkline pinned to the bottom, an oversized icon hung off a corner, a photo: none of them are read for values, so none of them need axes.\n\nThe icon treatment survives being used on *every* tile, which most decoration does not. An icon that fits inside the tile is an icon; one that runs off two edges of it at a tenth of its opacity is a texture — and giving each tile its own subject in its own `--color-chart-*` tint means four of them read as four different things rather than as wallpaper.",
+      "code": "{/* A shape along the bottom. */}\n<GridItem colSpan={2}>\n  <GridItem.Background>\n    <View className=\"mt-auto h-20 w-full opacity-60\">\n      <LineChart data={week} compact aspectRatio={3.4}>\n        <LineChart.Area dataKey=\"v\" />\n        <LineChart.Line dataKey=\"v\" />\n      </LineChart>\n    </View>\n  </GridItem.Background>\n  <GridItem.Title>Requests</GridItem.Title>\n  <GridItem.Value>52.4k</GridItem.Value>\n</GridItem>\n\n{/* A watermark hung off the corner, tinted per tile. */}\n<GridItem>\n  <GridItem.Background>\n    <View className=\"absolute -bottom-6 -right-5 opacity-[0.14]\">\n      <SparklesIcon size={72} color={useCSSVariable('--color-chart-1')} />\n    </View>\n  </GridItem.Background>\n  <GridItem.Title>Cache hits</GridItem.Title>\n  <GridItem.Value>94%</GridItem.Value>\n</GridItem>",
+      "preview": {
+        "src": "/previews/grid-item-the-layer-behind-the-text.jpg",
+        "alt": "GridItem — The layer behind the text.",
+        "width": 1179,
+        "height": 927
+      }
+    },
+    {
+      "title": "Tiles that go somewhere",
+      "description": "Give a tile `onPress` and it renders as a pressable with the button role and the press animation; leave it off and it is a plain view, so a tile that is only showing a number does not announce itself as a button.\n\nA whole tile is a generous touch target, so put the affordance in the footer rather than making a small button inside it — the chevron says where the press goes and the tile is what receives it.",
+      "code": "<GridItem onPress={() => router.push('/billing')}>\n  <GridItem.Title>Billing</GridItem.Title>\n  <GridItem.Footer>\n    <Text size=\"xs\" className=\"flex-1 text-muted-foreground\">3 invoices due</Text>\n    <ChevronRightIcon size={14} />\n  </GridItem.Footer>\n</GridItem>",
+      "previewVideo": {
+        "src": "/previews/grid-item-tiles-that-go-somewhere.mp4",
+        "poster": "/previews/grid-item-tiles-that-go-somewhere-poster.jpg",
+        "alt": "GridItem — Tiles that go somewhere.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Nesting a grid inside a tile",
+      "description": "A group inside a tile is a group like any other, and it measures the cell it was put in. That is how a bento gets a sub-rhythm — two small tiles stacked inside one cell of the outer grid — without the outer grid needing a notion of half a row. Use `variant=\"plain\"` on the tile holding it, so there is not a card inside a card.",
+      "code": "<GridItem.Group columns={2} gap={12}>\n  <GridItem rowSpan={2}>…</GridItem>\n  <GridItem variant=\"plain\" className=\"p-0\">\n    <GridItem.Group columns={1} gap={12} rowHeight={54}>\n      <GridItem size=\"sm\">…</GridItem>\n      <GridItem size=\"sm\">…</GridItem>\n    </GridItem.Group>\n  </GridItem>\n</GridItem.Group>"
+    },
+    {
+      "title": "A bento of stats",
+      "description": "The shape the component is named for: one tile across the top and two under it, from `colSpan` alone. `rowHeight` is set from what the tallest tile has to hold rather than from the proportion that looked right — an icon, a title, a figure and a line under it — because a cell shorter than its contents clips the last of them.",
+      "code": "<GridItem.Group columns={2} gap={12} rowHeight={164}>\n  <GridItem colSpan={2}>\n    <GridItem.Media variant=\"icon\"><SparklesIcon size={18} /></GridItem.Media>\n    <GridItem.Title>Deploys</GridItem.Title>\n    <GridItem.Value>1,284</GridItem.Value>\n    <GridItem.Description numberOfLines={1}>\n      this week, across 12 projects\n    </GridItem.Description>\n  </GridItem>\n  <GridItem>\n    <GridItem.Title>Uptime</GridItem.Title>\n    <GridItem.Value>99.98%</GridItem.Value>\n    <GridItem.Footer><Badge variant=\"secondary\">30 days</Badge></GridItem.Footer>\n  </GridItem>\n  <GridItem variant=\"muted\">\n    <GridItem.Title>p95 latency</GridItem.Title>\n    <GridItem.Value>142ms</GridItem.Value>\n    <GridItem.Description numberOfLines={1}>down 18ms</GridItem.Description>\n  </GridItem>\n</GridItem.Group>",
+      "preview": {
+        "src": "/previews/grid-item.jpg",
+        "alt": "GridItem — A bento of stats.",
+        "width": 1179,
+        "height": 1096
+      }
+    },
+    {
+      "title": "A wall of watermarks",
+      "description": "The same trick as the layer behind the text, repeated until it is a texture rather than an illustration. Each glyph is hung off the bottom-right corner and cut by the tile it sits in: an icon that fits inside a tile is an icon, and one that runs off two of its edges is a background. Keep the opacity low enough that the figure over it never has to compete.",
+      "code": "<GridItem.Group columns={2} gap={12} rowHeight={132}>\n  {stats.map((stat) => (\n    <GridItem key={stat.label}>\n      <GridItem.Background>\n        <View className=\"absolute -bottom-6 -right-5 opacity-[0.14]\">\n          <SparklesIcon size={120} color={stat.tint} />\n        </View>\n      </GridItem.Background>\n      <GridItem.Title>{stat.label}</GridItem.Title>\n      <GridItem.Value>{stat.value}</GridItem.Value>\n      <GridItem.Footer>\n        <Text size=\"xs\" muted numberOfLines={1}>{stat.caption}</Text>\n      </GridItem.Footer>\n    </GridItem>\n  ))}\n</GridItem.Group>",
+      "preview": {
+        "src": "/previews/grid-item-a-wall-of-watermarks.jpg",
+        "alt": "GridItem — A wall of watermarks.",
+        "width": 1179,
+        "height": 908
+      }
+    }
+  ],
+  "notes": "### A tile's height is its cells, not its content\n\nThis is the trade the grid makes, and it is the right way round for a bento: a grid of boxes that each grew to fit their own text is not a grid. But it does mean content taller than its cell is clipped rather than pushing the tile down.\n\nSo set the cell from what the tallest tile has to hold, not from the shape that looked right. At the default density a tile carrying a media tile, a title, a value and a line under it needs about 164 points, and one carrying a title, a value and a footer about 130 — `rowHeight` says so directly, where `aspect` says it only once you know how wide a track came out. Then `numberOfLines` on the text, `size=\"sm\"`, or another row for anything still over.\n\n### It draws nothing until it has measured\n\nEvery tile is placed from the group's width, so there is one frame of an empty box before the grid appears — which is better than one frame of every tile piled on the origin. The group reserves its height as soon as it knows it, so nothing below it jumps.\n\n### Reading order is writing order\n\nTiles are placed row by row in the order they are written, and that is also the order they sit in the tree — so a screen reader walks them the same way the eye does. Reordering the visual grid means reordering the children, which is the only way the two can be guaranteed to agree.\n\n### When to use Item instead\n\nIf every entry is the same size and the list runs down the screen, it is a list, and [Item](/docs/components/item) is the shape for it — one that stacks, separates and grows with its content. Reach for a grid when the sizes are *deliberately* different, because that difference is the only thing a bento says that a list does not.",
+  "preview": {
+    "src": "/previews/grid-item.jpg",
+    "alt": "The GridItem component, running in the example app.",
+    "width": 1179,
+    "height": 1096
+  }
+}

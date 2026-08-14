@@ -1,0 +1,120 @@
+{
+  "slug": "heatmap-chart",
+  "intro": "A calendar of bins shaded by how much happened in each — one column per period, one row per bin inside it.\n\nIt answers \"when was this busy\" at a glance, which a line cannot: a year of daily numbers plotted as a series is a hairball, and the same numbers as a grid are a pattern.\n\nIt is the wrong shape for reading exact values. Use it to find where to look, and a [BarChart](/docs/charts/bar-chart) or the readout to say how much.\n\n**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.",
+  "previewVideo": {
+    "src": "/previews/heatmap-chart.mp4",
+    "poster": "/previews/heatmap-chart-poster.jpg",
+    "alt": "The HeatmapChart component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  },
+  "usage": "<HeatmapChart data={weeks} weekStartDay={1}>\n  <HeatmapChart.Header title=\"Contributions\" value=\"1,204\" legend />\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis />\n  <HeatmapChart.Cells />\n  <HeatmapChart.Tooltip />\n</HeatmapChart>",
+  "extraImports": [
+    "buildHeatmapCalendar",
+    "Frame",
+    "Text"
+  ],
+  "anatomy": "<HeatmapChart>\n  <HeatmapChart.Header />     {/* the strip above the grid */}\n  <HeatmapChart.XAxis />      {/* month labels, above the grid */}\n  <HeatmapChart.YAxis />      {/* weekday labels, beside it */}\n  <HeatmapChart.Separator />  {/* rules grouping the columns */}\n  <HeatmapChart.Cells />      {/* the grid itself */}\n  <HeatmapChart.Tooltip />    {/* the readout under the finger */}\n  <HeatmapChart.Legend />     {/* the Less → More key, below */}\n</HeatmapChart>",
+  "parts": {
+    "Header": "The strip above the grid — what the chart is of, what it reads, and the ramp as a key. The place to put the key on a grid that scrolls sideways, where `Legend` would scroll away with the cells.",
+    "Cells": "The grid. Every row of every column is drawn, including the empty ones.",
+    "XAxis": "Month labels above the grid, emitted where the month changes. Pass `labels` for columns that are not weeks.",
+    "YAxis": "Row labels beside the grid. Weekdays by default; pass `labels` for anything else.",
+    "Separator": "Vertical rules grouping the columns — quarters, months, sprints.",
+    "Tooltip": "The readout that follows the finger across the grid.",
+    "Legend": "The `Less ▢▢▢▢▢ More` key, under the grid."
+  },
+  "examples": [
+    {
+      "title": "Building the calendar",
+      "description": "Data arrives as dates and numbers; `buildHeatmapCalendar` does the bucketing — including the two parts that are easy to get wrong. It backs up to the first day of the week the range starts in, so every row lines up with a weekday for the rest of the chart, and it emits a cell for every day in the range whether or not there was an entry, because a calendar with holes in it stops being a calendar.",
+      "code": "const weeks = buildHeatmapCalendar(commits, {\n  start: new Date(2025, 6, 23),\n  end: new Date(2026, 6, 23),\n  weekStartDay: 1,\n});\n\n<HeatmapChart data={weeks} weekStartDay={1}>\n  <HeatmapChart.Cells />\n</HeatmapChart>"
+    },
+    {
+      "title": "Scrolling a full year",
+      "description": "Fifty-three weeks do not fit across a phone. `fluid` draws the cells at `binSize` and lets the grid be as wide as it needs to be, so a horizontal `ScrollView` is all it takes. The legend belongs at the card's width rather than the grid's, so give it a chart of its own outside the scroller. The readout inside waits for a held press before it takes the touch, so the swipe still scrolls.",
+      "code": "<ScrollView horizontal showsHorizontalScrollIndicator={false}>\n  <HeatmapChart data={weeks} binSize={13} weekStartDay={1}>\n    <HeatmapChart.XAxis />\n    <HeatmapChart.YAxis />\n    <HeatmapChart.Cells />\n    <HeatmapChart.Tooltip />\n  </HeatmapChart>\n</ScrollView>\n\n<HeatmapChart data={[]}>\n  <HeatmapChart.Legend swatchSize={12} />\n</HeatmapChart>"
+    },
+    {
+      "title": "Filling the width instead",
+      "description": "For a short range — a quarter, a sprint — `fill` divides the available width between the columns rather than drawing them at a fixed size, so the chart always meets both edges.",
+      "code": "<HeatmapChart data={weeks.slice(-13)} layout=\"fill\" gap={4}>\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis />\n  <HeatmapChart.Cells cornerRadius={3} />\n  <HeatmapChart.Tooltip />\n  <HeatmapChart.Legend />\n</HeatmapChart>",
+      "preview": {
+        "src": "/previews/heatmap-chart-filling-the-width.jpg",
+        "alt": "HeatmapChart — Filling the width instead.",
+        "width": 1179,
+        "height": 1118
+      }
+    },
+    {
+      "title": "Changing the colour",
+      "description": "Name a theme token and the ramp follows it through light and dark. `emptyColor` is the cell with nothing in it, and `levelOpacity` retunes the contrast between the four busy levels without having to name five colours. `levelColors` is still there for a ramp that is not one colour at all.",
+      "code": "{/* A token, so the ramp still follows the theme. */}\n<HeatmapChart data={weeks} color=\"--color-chart-3\" />\n\n{/* A literal works too, for a colour that is not in the theme. */}\n<HeatmapChart data={weeks} color=\"#2dd4bf\" emptyColor=\"--color-surface-secondary\" />\n\n{/* Flatter contrast between the busy levels. */}\n<HeatmapChart data={weeks} levelOpacity={[1, 0.45, 0.62, 0.8, 1]} />\n\n{/* Five colours outright, when the ramp is not one colour fading. */}\n<HeatmapChart\n  data={weeks}\n  levelColors={['#1c1c1c', '#0e4429', '#006d32', '#26a641', '#39d353']}\n/>"
+    },
+    {
+      "title": "A grid whose rows are not days",
+      "description": "Seven rows is a calendar week, but the grid does not care. Twenty-four gives a day of hours, with the columns as dates — the cells, the ramp and the readout all work the same way.",
+      "code": "<HeatmapChart data={hours} rows={24} binSize={9}>\n  <HeatmapChart.Cells />\n  <HeatmapChart.Tooltip formatLabel={(cell) => `${cell.count} requests`} />\n</HeatmapChart>"
+    },
+    {
+      "title": "Reading the active cell above the chart",
+      "description": "`useHeatmapChart` only reaches children of the chart. A readout in the card's header is outside that subtree, so it takes `onActiveCellChange` instead — which fires when the cell changes, not once per frame.",
+      "code": "const [active, setActive] = useState(null);\n\n<Card.Header>\n  <Card.Description>\n    {active ? `${active.count} on ${active.date?.toDateString()}` : 'Drag to read a day.'}\n  </Card.Description>\n</Card.Header>\n\n<HeatmapChart data={weeks} onActiveCellChange={setActive}>\n  <HeatmapChart.Cells />\n  <HeatmapChart.Tooltip />\n</HeatmapChart>"
+    },
+    {
+      "title": "Labelling columns that are not weeks",
+      "description": "The x-axis emits a label where the month changes, which a grid of weekdays never does — there is no month in it to change. `labels` overrides them with one per column, the way `YAxis` already takes one per row, so a grid can be rows of hours by columns of days.",
+      "code": "<HeatmapChart data={week} layout=\"fill\" rows={4} gap={4}>\n  <HeatmapChart.Header title=\"Tickets opened\" legend />\n  <HeatmapChart.XAxis labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']} />\n  <HeatmapChart.YAxis labels={['00', '06', '12', '18']} tickFilter=\"all\" width={24} />\n  <HeatmapChart.Cells cornerRadius={3} />\n  <HeatmapChart.Tooltip />\n</HeatmapChart>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Contribution grid",
+      "description": "A full year with a readout that follows the finger. Fifty-three weeks do not fit across a phone, so the chart is `fluid` inside a horizontal `ScrollView` — and the header sits outside that scroller, at the frame's width, or it would scroll away with the cells. Press and hold to read a day; a swipe scrolls the chart instead.",
+      "code": "<HeatmapChart data={[]}>\n  <HeatmapChart.Header value={active ? `${active.count}` : total} caption={caption} legend />\n</HeatmapChart>\n\n<ScrollView horizontal showsHorizontalScrollIndicator={false}>\n  <HeatmapChart data={weeks} weekStartDay={1} binSize={13} onActiveCellChange={setActive}>\n    <HeatmapChart.XAxis />\n    <HeatmapChart.YAxis />\n    <HeatmapChart.Cells />\n    <HeatmapChart.Tooltip />\n  </HeatmapChart>\n</ScrollView>",
+      "previewVideo": {
+        "src": "/previews/heatmap-chart-contribution-grid.mp4",
+        "poster": "/previews/heatmap-chart-contribution-grid-poster.jpg",
+        "alt": "HeatmapChart — Contribution grid.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Filling the width",
+      "description": "For a short range, `fill` divides the available width between the columns rather than drawing them at a fixed size, so the chart always meets both edges of its card. No chart header here — the card's own already says what this is, and a second title under the first says it twice.",
+      "code": "<HeatmapChart data={weeks.slice(-13)} layout=\"fill\" weekStartDay={1} gap={4}>\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis />\n  <HeatmapChart.Cells cornerRadius={3} />\n  <HeatmapChart.Tooltip />\n  <HeatmapChart.Legend />\n</HeatmapChart>",
+      "preview": {
+        "src": "/previews/heatmap-chart-filling-the-width.jpg",
+        "alt": "HeatmapChart — Filling the width.",
+        "width": 1179,
+        "height": 1031
+      }
+    },
+    {
+      "title": "Quarters",
+      "description": "A rule every thirteen columns, and the ramp derived from a colour of your own instead of the chart token. `tickFilter=\"all\"` labels every row, which a narrower axis has room for once the labels are initials.",
+      "code": "<HeatmapChart data={weeks} weekStartDay={1} binSize={11} color={success}>\n  <HeatmapChart.XAxis />\n  <HeatmapChart.YAxis tickFilter=\"all\" labelFormat=\"initial\" width={16} />\n  <HeatmapChart.Separator every=\"quarter\" dashArray=\"2,3\" />\n  <HeatmapChart.Cells />\n  <HeatmapChart.Tooltip />\n</HeatmapChart>",
+      "previewVideo": {
+        "src": "/previews/heatmap-chart-quarters.mp4",
+        "poster": "/previews/heatmap-chart-quarters-poster.jpg",
+        "alt": "HeatmapChart — Quarters.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Punchcard",
+      "description": "Rows that are hours and columns that are weekdays. “When is this busy” is a question the year grid cannot answer, having already spent its rows on the days of the week — `rows` and a pair of `labels` turn the same grid on its side. Four six-hour bins: `fill` sizes a cell off the width, so with seven columns every extra row costs a lot of height.",
+      "code": "<HeatmapChart data={week} layout=\"fill\" rows={4} gap={4} onActiveCellChange={setActive}>\n  <HeatmapChart.Header title=\"Tickets opened\" value=\"06:00 – 18:00\" legend />\n  <HeatmapChart.XAxis labels={weekdays} />\n  <HeatmapChart.YAxis labels={hours} tickFilter=\"all\" width={24} />\n  <HeatmapChart.Cells cornerRadius={3} />\n  <HeatmapChart.Tooltip\n    formatLabel={(cell) => `${cell.count} · ${weekdays[cell.column]} ${hours[cell.row]}:00`}\n  />\n</HeatmapChart>",
+      "previewVideo": {
+        "src": "/previews/heatmap-chart-punchcard.mp4",
+        "poster": "/previews/heatmap-chart-punchcard-poster.jpg",
+        "alt": "HeatmapChart — Punchcard.",
+        "width": 720,
+        "height": 1560
+      }
+    }
+  ],
+  "notes": "### The colour ramp\n\nOne colour at five opacities, not five colours. A heatmap reads as *more* and *less* of one thing, and five distinct hues read as five different things — which is what the `--color-chart-*` tokens are for, and why only the first of them is used here. The base is `--color-chart-1`, so the ramp follows the active theme.\n\nThere are four ways to change it, in rough order of how often you want them:\n\n- **`color`** swaps the base. It takes a token by name — `color=\"--color-chart-3\"` — as readily as a literal, and naming the token is almost always what you meant: a literal is a colour frozen at the moment it was written, and it cannot follow the theme into dark mode.\n- **`emptyColor`** is the cell with nothing in it, `--color-muted` by default. Take it lighter or darker when \"measured, and empty\" should read differently from the surface around it.\n- **`levelOpacity`** retunes the contrast between the five steps without naming five colours.\n- **`levelColors`** replaces all five outright, for a ramp that is not one colour fading. The opacities are dropped then, since dimming a colour someone chose on purpose is not a ramp.\n\nThe four thresholds are the data's own quartiles by default, so a chart of single-digit counts and a chart of thousands both use the whole ramp. Zero is its own level and is left out of the quartiles — counting it drags every threshold to nothing on a sparse chart. Pass `levels` to fix them yourself.\n\n### Reading a grid that is not a calendar\n\nThe tooltip's default label names contributions on a date, because that is what the cells usually are. A grid built from bins with no `date` gets the count on its own — it is not a calendar, so there is nothing to say after the number, and it is emphatically not \"no data\". Pass `formatLabel` to name what the cells actually count.\n\n### Where the key goes\n\nA grid that scrolls sideways has two places for its ramp and only one of them works. `Legend` sits under the cells, inside the scroller, and slides out of view with them; `Header legend` sits above the grid at the chart's own width and stays put. On a grid that fits, either is fine.\n\n### Layout\n\nThe parts sit in a real layout rather than stacking over the plot: the labels are *beside* and *above* the grid and the legend is below it, so they take up room and the grid is sized with them accounted for. Only the cells and the rules are SVG — every label is a React Native view, because SVG text ignores the platform's text scaling and the theme's font.\n\n### Reading a cell without hijacking the scroll\n\n`HeatmapChart.Tooltip` waits for the press to be *held* before it claims the touch. It has to: a full year of columns lives inside a horizontal scroller, and a readout that takes over on the first pixel of movement means the chart can never be scrolled at all. Holding first is what separates “I am moving the chart” from “I am reading it”, and dragging from there moves the readout as usual.\n\n`activateAfterLongPress={0}` gives the touch back immediately, for a chart that is not inside a scroll view and so has no scroll to protect.\n\nThe cell is resolved on the UI thread and only crosses into JS when it *changes*, so a drag across a year costs a handful of re-renders rather than one per frame.\n\n### The reveal\n\nColumns arrive left to right on mount, drawn by one clip rectangle wiping across the grid rather than by an animation per column. The effect is the same and it costs one animated value instead of fifty-two. It plays once; a data change redraws without replaying it, because repeating it turns a refresh into an animation. `useReducedMotion` skips it."
+}

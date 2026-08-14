@@ -1,0 +1,104 @@
+{
+  "slug": "radar-chart",
+  "intro": "Several measures of one thing, drawn as one shape.\n\nA radar answers a question a bar chart cannot: not *which of these is biggest* but *what shape is this*. Five scores read as five bars are five facts; read as a polygon they are a profile, and two profiles laid over each other compare at a glance in a way two groups of bars never do.\n\n**The order of the axes changes the outline, and the outline is what people read.** Two datasets are only comparable on one radar if their axes are in the same order, and a radar is the wrong chart entirely for data whose axes have no natural order — use a [BarChart](/docs/charts/bar-chart) for that.\n\n**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.",
+  "usage": "<RadarChart data={scores} domain={[0, 100]} size={180}>\n  <RadarChart.Grid />\n  <RadarChart.Axis />\n  <RadarChart.Series dataKey=\"score\" colorIndex={1} showDots />\n</RadarChart>",
+  "extraImports": [
+    "type RadarChartDatum",
+    "Frame",
+    "Tabs"
+  ],
+  "anatomy": "<RadarChart data={…} axisKey=\"axis\" domain={[0, 100]}>\n  <RadarChart.Header title=\"…\" value=\"…\" />   {/* the strip above */}\n  <RadarChart.Grid rings={4} />               {/* the scale */}\n  <RadarChart.Axis />                         {/* the names round it */}\n  <RadarChart.Series dataKey=\"you\" />         {/* one profile */}\n  <RadarChart.Series dataKey=\"team\" fillOpacity={0} />\n  <RadarChart.Legend />\n</RadarChart>",
+  "parts": {
+    "Header": "The strip above the rings — a caption, a headline figure, and optionally the legend on the trailing end.",
+    "Grid": "The scale, as rings. Polygonal by default; `circular` draws them as circles.",
+    "Axis": "The axis names, placed around the outside and anchored by which side of the circle they are on.",
+    "Series": "One profile. Filled by default; drop `fillOpacity` to `0` on the second and subsequent ones.",
+    "Legend": "The series, named and coloured, in the bottom-left corner of the plot — which on a radar is empty by construction."
+  },
+  "examples": [
+    {
+      "title": "The data",
+      "description": "One row per axis, in the order they go round, with one key per series. `axisKey` names the column holding each row’s label; it defaults to `axis`.",
+      "code": "const profile: RadarChartDatum[] = [\n  { axis: 'Speed', you: 82, team: 64 },\n  { axis: 'Accuracy', you: 71, team: 78 },\n  { axis: 'Coverage', you: 55, team: 83 },\n  { axis: 'Uptime', you: 94, team: 91 },\n  { axis: 'Cost', you: 48, team: 62 },\n];"
+    },
+    {
+      "title": "Fix the scale",
+      "description": "Pass `domain` and mean it. A radar derives its outer ring from the data if you do not, and a scale that moves with the data makes two charts incomparable and a small value look like a large one — which is the failure this chart is most prone to. Where there is a known maximum, say so.",
+      "code": "{/* The rings are 20, 40, 60, 80, 100 — the same on every chart. */}\n<RadarChart data={profile} domain={[0, 100]}>\n  <RadarChart.Grid rings={5} />\n  <RadarChart.Axis />\n  <RadarChart.Series dataKey=\"you\" />\n</RadarChart>"
+    },
+    {
+      "title": "Switching what it draws",
+      "description": "Change `data` and the outline travels to the new one a vertex at a time rather than jumping. That movement is the point of putting a radar behind a switch — it is what says which axes moved and by how much, which a shape that simply appeared would not. Keep `domain` fixed across the switch or the rings move too and nothing is comparable.",
+      "code": "const [period, setPeriod] = useState('q3');\n\n<RadarChart data={quarters[period]} domain={[0, 100]}>\n  <RadarChart.Grid />\n  <RadarChart.Axis />\n  <RadarChart.Series dataKey=\"score\" showDots />\n</RadarChart>\n\n<Tabs value={period} onValueChange={setPeriod} defaultValue=\"q3\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"q1\">Q1</Tabs.Trigger>\n    <Tabs.Trigger value=\"q2\">Q2</Tabs.Trigger>\n    <Tabs.Trigger value=\"q3\">Q3</Tabs.Trigger>\n  </Tabs.List>\n</Tabs>"
+    },
+    {
+      "title": "Two profiles over each other",
+      "description": "Add a second `Series`. Fill only the first — two translucent fills over each other make a third colour that means nothing, and the reader has to work out which of the three regions is which.",
+      "code": "<RadarChart data={profile} domain={[0, 100]}>\n  <RadarChart.Grid />\n  <RadarChart.Axis />\n  <RadarChart.Series dataKey=\"you\" colorIndex={1} />\n  <RadarChart.Series dataKey=\"team\" colorIndex={2} fillOpacity={0} />\n  <RadarChart.Legend />\n</RadarChart>"
+    },
+    {
+      "title": "Circular rings",
+      "description": "Rings are polygons by default, drawn through the spokes, because they are read against the shape laid over them — a round ring behind an angular polygon gives every axis a different apparent distance to the edge. Use `circular` when the chart is for reading a value off one spoke rather than for comparing outlines.",
+      "code": "<RadarChart data={profile} domain={[0, 100]}>\n  <RadarChart.Grid circular rings={5} />\n  <RadarChart.Axis fontSize={10} />\n  <RadarChart.Series dataKey=\"you\" fillOpacity={0} showDots />\n</RadarChart>"
+    },
+    {
+      "title": "Replay the reveal",
+      "description": "Take a ref and call `replay()` to grow the shape out of the centre again — the reveal scales the *values*, not the group, so the stroke stays the width it will end at rather than growing with it.",
+      "code": "const chart = useRef<RadarChartHandle>(null);\n\n<Button onPress={() => chart.current?.replay()}>Replay</Button>\n\n<RadarChart ref={chart} data={profile} domain={[0, 100]}>\n  <RadarChart.Grid />\n  <RadarChart.Series dataKey=\"you\" />\n</RadarChart>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "One profile",
+      "description": "A filled polygon on polygonal rings, with a dot at each vertex.",
+      "code": "<Frame>\n  <Frame.Header>\n    <Frame.Title>Skills</Frame.Title>\n    <Frame.Action>Self-assessed</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <View className=\"px-4 pb-4 pt-2\">\n      <RadarChart data={skills} domain={[0, 100]}>\n        <RadarChart.Grid />\n        <RadarChart.Axis />\n        <RadarChart.Series dataKey=\"score\" colorIndex={1} showDots />\n      </RadarChart>\n    </View>\n  </Frame.Panel>\n</Frame>",
+      "preview": {
+        "src": "/previews/radar-chart.jpg",
+        "alt": "RadarChart — One profile.",
+        "width": 1179,
+        "height": 1038
+      }
+    },
+    {
+      "title": "Two compared",
+      "description": "Two profiles over each other, only the first of them filled.",
+      "code": "<RadarChart data={profile} domain={[0, 100]}>\n  <RadarChart.Grid />\n  <RadarChart.Axis />\n  <RadarChart.Series dataKey=\"you\" colorIndex={1} />\n  <RadarChart.Series dataKey=\"team\" colorIndex={2} fillOpacity={0} />\n  <RadarChart.Legend />\n</RadarChart>",
+      "preview": {
+        "src": "/previews/radar-chart-two-compared.jpg",
+        "alt": "RadarChart — Two compared.",
+        "width": 1179,
+        "height": 981
+      }
+    },
+    {
+      "title": "Outline on circles",
+      "description": "Circular rings and no fill, for reading a value off a spoke.",
+      "code": "<RadarChart data={profile} domain={[0, 100]}>\n  <RadarChart.Header title=\"Weakest axis\" value=\"Cost\" caption=\"48 of 100\" />\n  <RadarChart.Grid circular rings={5} />\n  <RadarChart.Axis fontSize={10} />\n  <RadarChart.Series dataKey=\"you\" colorIndex={3} fillOpacity={0} showDots />\n</RadarChart>",
+      "preview": {
+        "src": "/previews/radar-chart-outline-on-circles.jpg",
+        "alt": "RadarChart — Outline on circles.",
+        "width": 1179,
+        "height": 1246
+      }
+    },
+    {
+      "title": "Switching the data",
+      "description": "Tabs under the chart change what it draws, and the outline travels.",
+      "code": "<RadarChart data={quarters[period]} domain={[0, 100]}>\n  <RadarChart.Grid />\n  <RadarChart.Axis />\n  <RadarChart.Series dataKey=\"score\" colorIndex={1} showDots />\n</RadarChart>\n\n<Frame.Section className=\"px-4 py-3\">\n  <Tabs value={period} onValueChange={setPeriod} defaultValue=\"q3\">\n    <Tabs.List>\n      {PERIODS.map((entry) => (\n        <Tabs.Trigger key={entry.value} value={entry.value}>\n          {entry.label}\n        </Tabs.Trigger>\n      ))}\n    </Tabs.List>\n  </Tabs>\n</Frame.Section>",
+      "previewVideo": {
+        "src": "/previews/radar-chart-switching-the-data.mp4",
+        "poster": "/previews/radar-chart-switching-the-data-poster.jpg",
+        "alt": "RadarChart — Switching the data.",
+        "width": 720,
+        "height": 1560
+      }
+    }
+  ],
+  "notes": "Three axes is the minimum — two spokes are a line, not a shape — and past about eight the labels start colliding and the outline stops being readable as one form. Five or six is where this chart works.\n\n### Changing the data\n\nThe shape travels rather than jumping. Each vertex is tweened from where it was to where it is going over 420ms, and a switch made part way through another one carries on from the outline actually on screen rather than snapping back to start again.\n\nFixing `domain` matters most here. With a derived scale the rings move at the same moment the shape does, and a profile that got better looks identical to one that got worse.\n\n### The reveal\n\nThe polygons grow out of the centre rather than sweeping across, because a polar chart has no left-hand edge for a sweep to start from. It scales the **values**, not the group: a `scale` transform would grow the stroke and the dots along with the shape and arrive at the wrong stroke width.\n\nIt plays once on mount. `replay()` on the ref runs it again. Under *Reduce Motion* the shape is simply there.\n\n### It sizes itself\n\nEvery other chart here fills its container. This one does not, and the reason is that it is square: filling a panel makes a radar as tall as the panel is wide, which is twice the height of the wide chart beside it for the same five or six numbers. It takes a 180pt ring and centres. `size` moves that; `size={undefined}` with an `aspectRatio` goes back to filling the width.\n\n### Space for the labels\n\nAxis labels are horizontal text sitting outside a circle, which is why the view is **wider than it is tall**: the label at three o'clock needs its whole width to the right of the ring, while the one at twelve needs a single line above it. A square box either clips the sides or wastes the top and bottom.\n\nSVG clips at its viewport and does not reflow, so a label with nowhere to go would lose its tail with nothing to show it ever had one. The anchor is pulled back inside the view before drawing, which costs a couple of points of gap and is the cheaper of the two. For labels long enough to still crowd the shape, shorten them with `formatLabel` — and pass `compact` to reclaim the room entirely on a radar with no labels at all.\n\n### Colour\n\nSeries take the `--color-chart-*` tokens through `colorIndex`, the same ramp every other chart here uses, so the first series is the same colour as the first series on the chart beside it. The rings read `--color-border` and the labels `--color-muted-foreground`.",
+  "preview": {
+    "src": "/previews/radar-chart.jpg",
+    "alt": "The RadarChart component, running in the example app.",
+    "width": 1179,
+    "height": 1038
+  }
+}

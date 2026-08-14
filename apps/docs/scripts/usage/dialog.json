@@ -1,0 +1,53 @@
+{
+  "slug": "dialog",
+  "intro": "A modal dialog with a backdrop and footer actions.\n\nIt mounts through a portal and unmounts after its exit animation.\n\nUse it when the reader has to deal with something before carrying on. When the surrounding context needs to stay visible, use [Popover](/docs/components/popover); on a phone, a [BottomSheet](/docs/components/bottom-sheet) is usually the better shape for anything with more than two lines in it.",
+  "usage": "<Dialog>\n  <Dialog.Trigger>\n    <Button variant=\"outline\">Delete</Button>\n  </Dialog.Trigger>\n  <Dialog.Content>\n    <Dialog.Title>Delete project?</Dialog.Title>\n    <Dialog.Description>\n      This action cannot be undone.\n    </Dialog.Description>\n    <Dialog.Footer>\n      <Dialog.Close>\n        <Button size=\"sm\" variant=\"ghost\">Cancel</Button>\n      </Dialog.Close>\n      <Dialog.Close>\n        <Button size=\"sm\" variant=\"destructive\">Delete</Button>\n      </Dialog.Close>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
+  "extraImports": [
+    "Button",
+    "Input",
+    "View"
+  ],
+  "parts": {
+    "Trigger": "Clones its child and opens the dialog on press.",
+    "Content": "The dialog surface, rendered in a portal.",
+    "Title": "Required for accessibility.",
+    "Description": "Supporting text.",
+    "Footer": "Row of actions, aligned to the trailing edge. `variant=\"panel\"` draws it as a band instead — a rule across the top, a step darker, and the dialog's own bottom corners, bleeding out through the dialog's padding to reach its edges.",
+    "Close": "Clones its child and closes the dialog on press."
+  },
+  "anatomy": "<Dialog>\n  <Dialog.Trigger>…</Dialog.Trigger>\n  <Dialog.Content>\n    <Dialog.Title>…</Dialog.Title>\n    <Dialog.Description>…</Dialog.Description>\n    <Dialog.Footer>\n      <Dialog.Close>…</Dialog.Close>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
+  "examples": [
+    {
+      "title": "Uncontrolled, with a trigger",
+      "code": "<Dialog>\n  <Dialog.Trigger>\n    <Button variant=\"outline\">Rename</Button>\n  </Dialog.Trigger>\n  <Dialog.Content>\n    <Dialog.Title>Rename project</Dialog.Title>\n    <Dialog.Description>This is visible to everyone on the team.</Dialog.Description>\n    <Input className=\"mt-4\" defaultValue={project.name} />\n    <Dialog.Footer>\n      <Dialog.Close>\n        <Button variant=\"ghost\">Cancel</Button>\n      </Dialog.Close>\n      <Button onPress={save}>Save</Button>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>"
+    },
+    {
+      "title": "Controlled confirmation",
+      "description": "`dismissible={false}` forces a deliberate choice — the backdrop no longer closes it.",
+      "code": "const [open, setOpen] = useState(false);\n\n<Dialog open={open} onOpenChange={setOpen}>\n  <Dialog.Content dismissible={false}>\n    <Dialog.Title>Delete 12 files?</Dialog.Title>\n    <Dialog.Description>This cannot be undone.</Dialog.Description>\n    <Dialog.Footer>\n      <Button variant=\"ghost\" onPress={() => setOpen(false)}>Cancel</Button>\n      <Button variant=\"destructive\" onPress={confirm}>Delete</Button>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>"
+    },
+    {
+      "title": "A blurred background",
+      "description": "Pass `blur` to frost the screen behind the dialog instead of dimming it. It uses `expo-blur` when installed and falls back to the dim when it is not.",
+      "code": "<Dialog>\n  <Dialog.Trigger>\n    <Button variant=\"outline\">Discard changes</Button>\n  </Dialog.Trigger>\n  <Dialog.Content blur>\n    <Dialog.Title>Leave without saving?</Dialog.Title>\n    <Dialog.Description>Your changes will be lost.</Dialog.Description>\n    <Dialog.Footer>\n      <Dialog.Close><Button size=\"sm\" variant=\"ghost\">Keep editing</Button></Dialog.Close>\n      <Dialog.Close><Button size=\"sm\" variant=\"destructive\">Discard</Button></Dialog.Close>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
+      "preview": {
+        "src": "/previews/dialog-blurred-background.jpg",
+        "alt": "Dialog — A blurred background.",
+        "width": 1179,
+        "height": 2422
+      }
+    },
+    {
+      "title": "Actions on their own surface",
+      "description": "`variant=\"panel\"` separates what the dialog says from what you can do about it.\n\nWorth it on a dialog with a form in it, where the buttons are otherwise the last row of the form. A dialog that only asks a question does not need it — there is nothing there for the band to divide.",
+      "code": "<Dialog>\n  <Dialog.Trigger>\n    <Button variant=\"outline\">Edit profile</Button>\n  </Dialog.Trigger>\n  <Dialog.Content>\n    <Dialog.Title>Edit profile</Dialog.Title>\n    <Dialog.Description>Make changes to your profile here.</Dialog.Description>\n    <View className=\"gap-4 py-4\">\n      <Input label=\"Name\" defaultValue=\"Pedro Duarte\" />\n      <Input label=\"Username\" defaultValue=\"@peduarte\" />\n    </View>\n    <Dialog.Footer variant=\"panel\">\n      <Dialog.Close>\n        <Button size=\"sm\" variant=\"outline\">Cancel</Button>\n      </Dialog.Close>\n      <Dialog.Close>\n        <Button size=\"sm\">Save changes</Button>\n      </Dialog.Close>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>"
+    }
+  ],
+  "preview": {
+    "src": "/previews/dialog.jpg",
+    "alt": "A dialog open over a dimmed screen. The panel reads Delete project? above the line This action cannot be undone. The project and all of its data will be permanently removed, with a plain Cancel button and a red Delete button in the footer.",
+    "width": 1179,
+    "height": 2192,
+    "caption": "A destructive confirmation, with the backdrop dimming the screen behind it."
+  }
+}

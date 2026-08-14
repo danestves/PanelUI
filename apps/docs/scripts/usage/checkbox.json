@@ -1,0 +1,52 @@
+{
+  "slug": "checkbox",
+  "intro": "A checkbox with an animated tick, on its own or as a selectable card.\n\n`variant=\"card\"` turns the whole surface into the target, for pickable options where the box confirms a choice rather than being the only thing to press.\n\nUse it for a form value the reader is setting. For picking several rows out of a list, use [SelectionMode](/docs/components/selection-mode) — its marker is round, which is the convention for choosing rather than filling in.",
+  "usage": "<Checkbox\n  checked={accepted}\n  onCheckedChange={setAccepted}\n  label=\"Marketing & promotions\"\n  description=\"Special offers and exclusive deals\"\n/>\n\n<Checkbox\n  variant=\"card\"\n  checked={plan === 'pro'}\n  onCheckedChange={() => setPlan('pro')}\n  label=\"Pro\"\n  description=\"Advanced analytics and priority support.\"\n/>",
+  "notes": "With a `description` the row aligns the box to the label rather than centring it against the whole block. The card variant moves the box after the content so it sits top-right, and takes the primary border when checked.\n\n### The indeterminate state\n\n`indeterminate` is the third state a parent box needs when it governs a group whose children are partly on. It fills like a checked box but draws a dash instead of a tick, and announces itself to a screen reader as `mixed` rather than a plain boolean. `indeterminate` overrides `checked` for what is drawn; pressing an indeterminate box resolves the group by turning it fully on, so the press reports `true`.",
+  "examples": [
+    {
+      "title": "Controlled",
+      "description": "`checked` is required — the checkbox holds no state of its own.",
+      "code": "const [accepted, setAccepted] = useState(false);\n\n<Checkbox\n  checked={accepted}\n  onCheckedChange={setAccepted}\n  label=\"I accept the terms\"\n/>"
+    },
+    {
+      "title": "With a description",
+      "description": "The description sits under the label and stays part of the press target.",
+      "code": "<Checkbox\n  checked={marketing}\n  onCheckedChange={setMarketing}\n  label=\"Product updates\"\n  description=\"Occasional email about new releases. No more than once a month.\"\n/>"
+    },
+    {
+      "title": "Card variant",
+      "description": "A bordered surface that fills its width — for a list of options where each is a real choice rather than a small toggle.",
+      "code": "<View className=\"gap-2\">\n  {plans.map((plan) => (\n    <Checkbox\n      key={plan.id}\n      variant=\"card\"\n      checked={selected.includes(plan.id)}\n      onCheckedChange={() => toggle(plan.id)}\n      label={plan.name}\n      description={plan.summary}\n    />\n  ))}\n</View>",
+      "previewVideo": {
+        "src": "/previews/checkbox-card.mp4",
+        "poster": "/previews/checkbox-card-poster.jpg",
+        "alt": "Checkbox — Card variant.",
+        "width": 720,
+        "height": 626
+      }
+    },
+    {
+      "title": "A select-all row",
+      "code": "const all = selected.length === items.length;\nconst some = selected.length > 0 && !all;\n\n<Checkbox\n  checked={all}\n  indeterminate={some}\n  onCheckedChange={(next) => setSelected(next ? items.map((i) => i.id) : [])}\n  label={all ? 'Deselect all' : 'Select all'}\n/>",
+      "description": "The header is `indeterminate` when the selection is a partial one — some children on, some off — and pressing it turns them all on.",
+      "previewVideo": {
+        "src": "/previews/checkbox-select-all.mp4",
+        "poster": "/previews/checkbox-select-all-poster.jpg",
+        "alt": "Checkbox — A select-all row.",
+        "width": 720,
+        "height": 348
+      }
+    }
+  ],
+  "variantCode": {
+    "variant": "<Checkbox variant=\"default\" checked={a} onCheckedChange={setA} label=\"Default\" />\n\n{/* A bordered surface that fills its width. */}\n<Checkbox\n  variant=\"card\"\n  checked={b}\n  onCheckedChange={setB}\n  label=\"Card\"\n  description=\"For options that are real choices, not small toggles.\"\n/>"
+  },
+  "previewVideo": {
+    "src": "/previews/checkbox.mp4",
+    "poster": "/previews/checkbox-poster.jpg",
+    "alt": "The Checkbox component, running in the example app.",
+    "width": 720,
+    "height": 314
+  }
+}

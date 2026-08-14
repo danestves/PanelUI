@@ -1,0 +1,68 @@
+{
+  "slug": "slider",
+  "intro": "A value picked by dragging a thumb along a track, or a span picked by two.\n\nThe thumb is a pill exactly as tall as the track, so nothing has to escape the track to be drawn whole, with a knob inside it that shrinks while you drag.\n\nPosition and fill are animated on the UI thread, so dragging never round-trips through React; the value bridges back on change and again on release.\n\nFor an exact number, use [NumberInput](/docs/components/number-input) — past a handful of steps, typing beats dragging.",
+  "usage": "<Slider defaultValue={40} />\n<Slider label=\"Volume\" showValue defaultValue={40} />\n<Slider value={volume} onValueChange={setVolume} />\n<Slider defaultRange={[20, 80]} onRangeCommit={save} />",
+  "notes": "Runs controlled (`value` + `onValueChange`) or uncontrolled (`defaultValue`). `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change is expensive. The value is always snapped to a multiple of `step` from `min`.\n\n**A range is a second pair of props, not a tuple in the first.** Passing `range` or `defaultRange` gives the slider two thumbs and reports through `onRangeChange` / `onRangeCommit`. Keeping them apart is what lets a one-thumb slider's handler stay `(value: number) => void` — a single set of props covering both would hand every existing caller a union to narrow before they could read a number out of it.\n\nThe knob is painted with the page background rather than a per-colour on-token, because the status foregrounds are the darker text hues meant for soft fills — a green-700 knob on a green-500 pill would barely show. Override `knobClassName` if a theme needs something else.\n\nSee [Native rendering](/docs/native) for what `native` keeps and what it gives up — notably `onValueCommit`, which the platform control does not report. `native` is ignored on a range slider: neither platform ships a two-thumb control, so a range draws ours rather than quietly losing a thumb.",
+  "examples": [
+    {
+      "title": "Controlled",
+      "description": "Hold the value in state and read it back for a live label.",
+      "code": "const [volume, setVolume] = useState(40);\n\n<Slider value={volume} onValueChange={setVolume} />"
+    },
+    {
+      "title": "With a caption row",
+      "description": "`label` and `showValue` draw a row above the track. `formatValue` owns the units, so the caption reads the way the value is spoken rather than as a bare number. The label doubles as the accessibility label.",
+      "code": "<Slider label=\"Brightness\" showValue defaultValue={62} />\n\n<Slider\n  label=\"Budget\"\n  showValue\n  formatValue={(v) => `$${Math.round(v)}`}\n  min={0}\n  max={1000}\n  step={20}\n  defaultValue={340}\n  color=\"success\"\n/>"
+    },
+    {
+      "title": "A range",
+      "description": "`defaultRange` — or `range` for a controlled one — gives the slider two thumbs and fills between them instead of from the start. Whichever thumb your finger lands nearest is the one that moves, and the two bound each other rather than the track, so they can meet but never cross.",
+      "code": "const [price, setPrice] = useState([220, 680]);\n\n<Slider\n  label=\"Price\"\n  showValue\n  formatValue={(v) => `$${Math.round(v)}`}\n  range={price}\n  onRangeChange={setPrice}\n  min={0}\n  max={1000}\n  step={20}\n  color=\"success\"\n/>"
+    },
+    {
+      "title": "Keeping the thumbs apart",
+      "description": "`minStepsBetweenThumbs` is the gap the span can never close. A filter wants at least one: an empty range matches nothing, and a control that can be dragged into matching nothing reads as a bug rather than a choice.",
+      "code": "<Slider\n  label=\"Nights\"\n  showValue\n  defaultRange={[2, 6]}\n  min={1}\n  max={14}\n  step={1}\n  minStepsBetweenThumbs={1}\n/>"
+    },
+    {
+      "title": "Restyling the thumb",
+      "description": "The thumb is two elements — the coloured pill and the knob inside it — and each takes its own classes, so a custom slider does not have to give up the press animation to get a different look.",
+      "code": "<Slider\n  defaultValue={65}\n  trackClassName=\"bg-success/15\"\n  fillClassName=\"bg-success\"\n  thumbClassName=\"bg-success\"\n  knobClassName=\"bg-white\"\n/>"
+    },
+    {
+      "title": "Range and step",
+      "description": "`min`, `max` and `step` bound the value and snap it to fixed increments.",
+      "code": "<Slider min={0} max={10} step={1} defaultValue={5} />"
+    },
+    {
+      "title": "Commit on release",
+      "description": "`onValueChange` tracks the drag; `onValueCommit` fires once at the end — the place for a network write.",
+      "code": "<Slider\n  defaultValue={50}\n  onValueChange={setPreview}\n  onValueCommit={save}\n/>"
+    },
+    {
+      "title": "Haptic detents",
+      "description": "`haptics` ticks under the finger each time the drag crosses onto a new step, and once more on release — the value feels like it clicks into place. It needs the optional `expo-haptics`, and is silent without it.",
+      "code": "<Slider label=\"Zoom\" showValue min={0} max={10} step={1} defaultValue={4} haptics />"
+    },
+    {
+      "title": "Disabled",
+      "code": "<Slider defaultValue={30} disabled />"
+    },
+    {
+      "title": "The platform's own slider",
+      "description": "Passing `native` hands the track and thumb to SwiftUI or Jetpack Compose. The caption row stays ours, so a native control still gets the label and value above it. Needs the optional `@expo/ui` package; without it the prop is a silent no-op.",
+      "code": "<Slider\n  native\n  label=\"Brightness\"\n  showValue\n  formatValue={(v) => `${Math.round(v)}%`}\n  value={level}\n  onValueChange={setLevel}\n/>"
+    }
+  ],
+  "variantCode": {
+    "size": "<Slider size=\"sm\" defaultValue={40} />\n<Slider size=\"md\" defaultValue={40} />\n<Slider size=\"lg\" defaultValue={40} />",
+    "color": "<Slider color=\"primary\" defaultValue={40} />\n<Slider color=\"success\" defaultValue={40} />\n<Slider color=\"warning\" defaultValue={40} />\n<Slider color=\"destructive\" defaultValue={40} />\n<Slider color=\"info\" defaultValue={40} />"
+  },
+  "preview": {
+    "src": "/previews/slider.jpg",
+    "alt": "Four sliders on a dark screen. The first is labelled Volume with 40% on the right, its light fill ending in a pill-shaped thumb with a dark knob inside it; below are a green slider at about two thirds and an orange one at about half; the last is dimmed and labelled Locked, 30.",
+    "width": 1179,
+    "height": 831,
+    "caption": "The pill thumb at three sizes and colours, running in the example app."
+  }
+}

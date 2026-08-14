@@ -1,0 +1,53 @@
+{
+  "slug": "timeline",
+  "intro": "A vertical sequence of events.\n\n`value` marks how far along the sequence is; `tone` colours an individual event by kind, independently of that progress.\n\n**Vertical only.** A horizontal timeline gives each item roughly a fifth of a phone's width, which will not hold a date and a title.",
+  "usage": "<Timeline variant=\"icon\" value={2}>\n  {events.map((event, index) => (\n    <Timeline.Item\n      key={event.title}\n      step={index}\n      tone={event.tone}\n      last={index === events.length - 1}\n    >\n      <Timeline.Aside>\n        <Timeline.Date>{event.time}</Timeline.Date>\n        <Timeline.Label>{event.team}</Timeline.Label>\n      </Timeline.Aside>\n      <Timeline.Indicator>\n        <ShieldCheckIcon size={15} />\n      </Timeline.Indicator>\n      <Timeline.Content>\n        <Timeline.Header>\n          <Timeline.Title>{event.title}</Timeline.Title>\n          <Timeline.Trailing>{event.at}</Timeline.Trailing>\n        </Timeline.Header>\n        <Timeline.Description>{event.body}</Timeline.Description>\n      </Timeline.Content>\n    </Timeline.Item>\n  ))}\n</Timeline>",
+  "parts": {
+    "Item": "One event. `step` is its position, `last` stops the connector.",
+    "Aside": "Right-aligned meta column left of the rail. Place it before the indicator.",
+    "Indicator": "The node on the rail, with the connector below it.",
+    "Content": "Everything right of the rail.",
+    "Header": "Title row: heading left, trailing slot right.",
+    "Heading": "Wraps a title and anything stacked under it inside the header row.",
+    "Date": "Timestamp, usually in the aside.",
+    "Label": "Category line, coloured by the item's tone.",
+    "Meta": "Muted supporting line — a person, a source.",
+    "Title": "Event heading.",
+    "Trailing": "Right-hand slot in the header row.",
+    "Description": "Body text.",
+    "Stats": "Bordered strip of label/value pairs.",
+    "Stat": "One label/value pair inside `Stats`."
+  },
+  "notes": "Colour follows one rule: **progress is solid, event kind is tinted**. An untoned step runs from `muted` to `primary` as the timeline advances, exactly as `Steps` does; a toned step takes that tone's soft fill with its contents in the matching foreground. The `dot` and `card` variants keep full saturation — they are 16px discs with nothing inside, and a soft tint at that size disappears.\n\nIcons inside `Timeline.Indicator` inherit a colour that reads against the node, so they stay legible in every theme without a hardcoded value.",
+  "anatomy": "<Timeline>\n  <Timeline.Item step={0}>\n    <Timeline.Aside>\n      <Timeline.Date>…</Timeline.Date>\n      <Timeline.Label>…</Timeline.Label>\n      <Timeline.Meta>…</Timeline.Meta>\n    </Timeline.Aside>\n    <Timeline.Indicator>…</Timeline.Indicator>\n    <Timeline.Content>\n      <Timeline.Header>\n        <Timeline.Title>…</Timeline.Title>\n        <Timeline.Trailing>…</Timeline.Trailing>\n      </Timeline.Header>\n      <Timeline.Stats>\n        <Timeline.Stat label=\"…\" value=\"…\" />\n      </Timeline.Stats>\n      <Timeline.Description>…</Timeline.Description>\n    </Timeline.Content>\n  </Timeline.Item>\n</Timeline>",
+  "examples": [
+    {
+      "title": "An activity feed",
+      "description": "`value` is the index of the current entry; earlier ones render as completed.",
+      "code": "<Timeline value={2}>\n  <Timeline.Item step={0}>\n    <Timeline.Aside><Timeline.Indicator /></Timeline.Aside>\n    <Timeline.Content>\n      <Timeline.Header>\n        <Timeline.Title>Order placed</Timeline.Title>\n        <Timeline.Date>Mon 09:14</Timeline.Date>\n      </Timeline.Header>\n      <Timeline.Description>Payment authorised.</Timeline.Description>\n    </Timeline.Content>\n  </Timeline.Item>\n\n  <Timeline.Item step={1}>\n    {/* … */}\n  </Timeline.Item>\n\n  <Timeline.Item step={2} last>\n    {/* `last` drops the connector below the final entry. */}\n  </Timeline.Item>\n</Timeline>"
+    },
+    {
+      "title": "Tone per entry",
+      "description": "Tone is set on the item, not the root, so one failed step can stand out in an otherwise ordinary run.",
+      "code": "<Timeline.Item step={3} tone=\"danger\">\n  <Timeline.Aside><Timeline.Indicator /></Timeline.Aside>\n  <Timeline.Content>\n    <Timeline.Title>Build failed</Timeline.Title>\n    <Timeline.Description>3 tests failed on node 20.</Timeline.Description>\n  </Timeline.Content>\n</Timeline.Item>"
+    },
+    {
+      "title": "Numbered and card variants",
+      "code": "{/* Numbers instead of dots — for ordered procedures. */}\n<Timeline variant=\"numbered\">{/* …items… */}</Timeline>\n\n{/* Each entry on its own surface. */}\n<Timeline variant=\"card\">{/* …items… */}</Timeline>\n\n{/* Tighter rows for long histories. */}\n<Timeline variant=\"compact\">{/* …items… */}</Timeline>"
+    },
+    {
+      "title": "With stats",
+      "code": "<Timeline.Content>\n  <Timeline.Title>Deployed</Timeline.Title>\n  <Timeline.Stats>\n    <Timeline.Stat label=\"Duration\" value=\"1m 42s\" />\n    <Timeline.Stat label=\"Region\" value=\"fra1\" />\n  </Timeline.Stats>\n</Timeline.Content>"
+    }
+  ],
+  "variantCode": {
+    "variant": "<Timeline variant=\"dot\">…</Timeline>\n<Timeline variant=\"icon\">…</Timeline>\n<Timeline variant=\"numbered\">…</Timeline>\n<Timeline variant=\"card\">…</Timeline>\n<Timeline variant=\"compact\">…</Timeline>",
+    "tone": "{/* Tone is per entry, not per timeline. */}\n<Timeline.Item step={0} tone=\"default\">…</Timeline.Item>\n<Timeline.Item step={1} tone=\"info\">…</Timeline.Item>\n<Timeline.Item step={2} tone=\"success\">…</Timeline.Item>\n<Timeline.Item step={3} tone=\"warning\">…</Timeline.Item>\n<Timeline.Item step={4} tone=\"danger\">…</Timeline.Item>"
+  },
+  "preview": {
+    "src": "/previews/timeline.jpg",
+    "alt": "The Timeline component, running in the example app.",
+    "width": 1179,
+    "height": 977
+  }
+}
