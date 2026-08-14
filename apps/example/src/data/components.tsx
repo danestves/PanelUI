@@ -156,6 +156,8 @@ import {
   type PolarAreaDatum,
   type LiveLinePoint,
   PlayIcon,
+  Planner,
+  type PlannerEntry,
   PlusSquareIcon,
   Popover,
   Post,
@@ -14497,6 +14499,109 @@ function WaterfallLoadingVersion() {
   );
 }
 
+const PLANNER_CATEGORIES = [
+  { id: 'monthly', label: 'Monthly' },
+  { id: 'yearly', label: 'Yearly' },
+];
+
+function plannerEntries(month: Date): PlannerEntry[] {
+  const on = (day: number, label: string, category: string) => ({
+    id: `${label}-${day}`,
+    date: new Date(month.getFullYear(), month.getMonth(), day),
+    label,
+    category,
+  });
+  return [
+    on(2, 'Netflix', 'monthly'),
+    on(4, 'Linear', 'yearly'),
+    on(7, 'Adobe', 'monthly'),
+    on(10, 'Notion', 'yearly'),
+    on(12, 'iCloud', 'monthly'),
+    on(15, 'Vercel', 'monthly'),
+    on(20, 'Raycast', 'monthly'),
+    on(25, 'Slack', 'yearly'),
+    on(28, 'Figma', 'monthly'),
+    on(28, 'Sentry', 'monthly'),
+    on(28, 'Fly.io', 'monthly'),
+  ];
+}
+
+function PlannerDemo() {
+  const [month, setMonth] = useState(() => new Date());
+  return (
+    <Planner
+      month={month}
+      onMonthChange={setMonth}
+      entries={plannerEntries(month)}
+      categories={PLANNER_CATEGORIES}
+    >
+      <Planner.Header>
+        <Planner.Title />
+        <Planner.Today />
+        <Planner.Nav />
+      </Planner.Header>
+      <Planner.Grid />
+      <Planner.Legend counts>
+        <Planner.Summary />
+      </Planner.Legend>
+    </Planner>
+  );
+}
+
+function PlannerDetailsDemo() {
+  const [month, setMonth] = useState(() => new Date());
+  const entries = plannerEntries(month);
+  return (
+    <Planner
+      month={month}
+      onMonthChange={setMonth}
+      entries={entries}
+      categories={PLANNER_CATEGORIES}
+    >
+      <Planner.Header>
+        <Planner.Title />
+        <Planner.Nav />
+      </Planner.Header>
+      <Planner.Grid />
+      <Planner.Legend />
+      <Planner.Details>
+        {(_date, dayEntries) =>
+          dayEntries.length === 0 ? (
+            <Text size="sm" muted>
+              Nothing on this day.
+            </Text>
+          ) : (
+            <View className="gap-1 pt-1">
+              {dayEntries.map((entry) => (
+                <Text key={entry.id} size="sm">
+                  {entry.label}
+                </Text>
+              ))}
+            </View>
+          )
+        }
+      </Planner.Details>
+    </Planner>
+  );
+}
+
+function PlannerBareDemo() {
+  const [month, setMonth] = useState(() => new Date());
+  return (
+    <Card className="w-full p-2">
+      <Planner
+        frame={false}
+        month={month}
+        onMonthChange={setMonth}
+        entries={plannerEntries(month)}
+        categories={PLANNER_CATEGORIES}
+      >
+        <Planner.Grid />
+      </Planner>
+    </Card>
+  );
+}
+
 const CATALOGUE: ComponentEntry[] = [
   {
     slug: 'accordion',
@@ -17385,6 +17490,16 @@ const CATALOGUE: ComponentEntry[] = [
         ),
       },
       { label: 'Long-press for actions', render: () => <MessageLongPressDemo /> },
+    ],
+  },
+  {
+    slug: 'planner',
+    name: 'Planner',
+    summary: 'A month of days, each carrying what falls on it',
+    demos: [
+      { label: 'A month of renewals', render: () => <PlannerDemo /> },
+      { label: 'Opening a day', render: () => <PlannerDetailsDemo /> },
+      { label: 'Without the frame', render: () => <PlannerBareDemo /> },
     ],
   },
   {

@@ -1,0 +1,326 @@
+---
+title: Planner
+description: A month of days, each carrying what falls on it.
+status: new
+---
+
+A month grid where every day carries what falls on it — a marker, an icon, and a count you can hear. Pressing a day opens what is on it.
+
+It is not a date picker. [Calendar](/docs/components/calendar) exists to choose a date and answer with one; `Planner` shows what is already on the days, and its selection exists to open something rather than to be submitted. Reach for `Calendar` when the answer is a date, and for `Planner` when the date is the question.
+
+The grid is always six weeks. A month spans five or six depending on the weekday it starts on, and drawn at its natural height the panel changes size as you page through the year — which makes the days appear to move under your thumb.
+
+## Installation
+
+Planner ships with the library — no separate install.
+
+```tsx
+import { Planner, Text, Button, Item } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add planner
+```
+
+## Usage
+
+```tsx
+const [month, setMonth] = useState(new Date());
+
+<Planner
+  month={month}
+  onMonthChange={setMonth}
+  entries={renewals}
+  categories={[
+    { id: 'monthly', label: 'Monthly' },
+    { id: 'yearly', label: 'Yearly' },
+  ]}
+>
+  <Planner.Header>
+    <Planner.Title />
+    <Planner.Today />
+    <Planner.Nav />
+  </Planner.Header>
+  <Planner.Grid />
+  <Planner.Legend />
+</Planner>
+```
+
+## Composition
+
+```tsx
+<Planner entries={entries} categories={categories}>
+  <Planner.Header>
+    <Planner.Title />
+    <Planner.Today />
+    <Planner.Nav />
+    <Planner.Action>{/* a button of yours */}</Planner.Action>
+  </Planner.Header>
+  <Planner.Grid />
+  <Planner.Legend>
+    <Planner.Summary />
+  </Planner.Legend>
+  <Planner.Footer>{/* tools that act on the month */}</Planner.Footer>
+  <Planner.Details>{(date, entries) => /* … */}</Planner.Details>
+</Planner>
+```
+
+`Header` has to be a direct child of `Planner`. The root sorts its children so the header lands in the frame's top strip and everything else in the panel, which is what makes one widget out of two places.
+
+`Details` is optional. Leaving it out does not disable selection — `onDayPress` still fires, which is what a planner that pushes a screen instead of opening a dialog wants.
+
+## Examples
+
+### A month of renewals
+
+The ordinary case. Entries in any order, two categories, and the legend that reads them.
+
+```tsx
+const [month, setMonth] = useState(new Date(2026, 0));
+
+<Planner
+  month={month}
+  onMonthChange={setMonth}
+  entries={[
+    { id: 'n', date: new Date(2026, 0, 2), label: 'Netflix', category: 'monthly' },
+    { id: 'a', date: new Date(2026, 0, 7), label: 'Adobe', category: 'monthly' },
+    { id: 'f', date: new Date(2026, 0, 10), label: 'Figma', category: 'yearly' },
+  ]}
+  categories={[
+    { id: 'monthly', label: 'Monthly' },
+    { id: 'yearly', label: 'Yearly' },
+  ]}
+>
+  <Planner.Header>
+    <Planner.Title />
+    <Planner.Today />
+    <Planner.Nav />
+  </Planner.Header>
+  <Planner.Grid />
+  <Planner.Legend counts>
+    <Planner.Summary />
+  </Planner.Legend>
+</Planner>
+```
+
+### Opening a day
+
+`Details` binds a dialog to the open day. The planner owns the binding; what the dialog says is yours, because the contents of a day are your data.
+
+```tsx
+<Planner entries={entries} categories={categories}>
+  <Planner.Header>
+    <Planner.Title />
+    <Planner.Nav />
+  </Planner.Header>
+  <Planner.Grid />
+  <Planner.Details>
+    {(date, dayEntries) =>
+      dayEntries.length === 0 ? (
+        <Text muted size="sm">Nothing on this day.</Text>
+      ) : (
+        dayEntries.map((entry) => (
+          <Item key={entry.id}>
+            <Item.Content>
+              <Item.Title>{entry.label}</Item.Title>
+            </Item.Content>
+          </Item>
+        ))
+      )
+    }
+  </Planner.Details>
+</Planner>
+```
+
+### Pushing a screen instead
+
+Leave `Details` out and handle `onDayPress` yourself. The selection still moves, so the day you opened stays marked while you are away from it.
+
+```tsx
+<Planner
+  entries={entries}
+  categories={categories}
+  onDayPress={(date, dayEntries) => {
+    router.push(`/day/${date.toISOString().slice(0, 10)}`);
+  }}
+>
+  <Planner.Header>
+    <Planner.Title />
+    <Planner.Nav />
+  </Planner.Header>
+  <Planner.Grid />
+</Planner>
+```
+
+### Icons in the cells
+
+An entry's `icon` is drawn in its day. `entryLimit` caps how many a cell draws before it counts the rest — raise it for a wide screen, drop it to `0` for a grid of markers alone.
+
+```tsx
+<Planner
+  entries={[
+    { id: 'n', date: new Date(2026, 0, 2), label: 'Netflix', category: 'monthly', icon: <Avatar size="xs" source={netflix} /> },
+    { id: 'f', date: new Date(2026, 0, 28), label: 'Figma', category: 'monthly', icon: <Avatar size="xs" source={figma} /> },
+  ]}
+  categories={[{ id: 'monthly', label: 'Monthly' }]}
+  entryLimit={1}
+>
+  <Planner.Header>
+    <Planner.Title />
+    <Planner.Nav />
+  </Planner.Header>
+  <Planner.Grid />
+</Planner>
+```
+
+### Without the frame
+
+For a planner inside a sheet, a dialog or a card that already draws its own boundary.
+
+```tsx
+<BottomSheet open={open} onOpenChange={setOpen}>
+  <BottomSheet.Content>
+    <Planner frame={false} entries={entries} categories={categories}>
+      <Planner.Grid />
+      <Planner.Legend />
+    </Planner>
+  </BottomSheet.Content>
+</BottomSheet>
+```
+
+### A cell of your own
+
+`renderDay` replaces the cell entirely. It is handed the day, what falls on it, and the three states the default cell draws from — so a custom cell does not have to work them out again.
+
+```tsx
+<Planner entries={entries} categories={categories}>
+  <Planner.Header>
+    <Planner.Title />
+    <Planner.Nav />
+  </Planner.Header>
+  <Planner.Grid
+    renderDay={({ date, entries, isToday, isInMonth }) => (
+      <View className={cn('m-0.5 flex-1 rounded-lg p-1', isToday && 'bg-primary/10')}>
+        <Text size="xs" muted={!isInMonth}>{date.getDate()}</Text>
+        {entries.length > 0 ? <Text size="xs">{entries.length}</Text> : null}
+      </View>
+    )}
+  />
+</Planner>
+```
+
+## Variants
+
+### `inMonth`
+
+- `true` *(default)*
+- `false`
+
+```tsx
+<Planner inMonth="true">…</Planner>
+<Planner inMonth="false">…</Planner>
+```
+
+### `today`
+
+- `true`
+
+```tsx
+<Planner today="true">…</Planner>
+```
+
+## API Reference
+
+### Planner
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `month` | `Date` | — | The month on show. Leave it out for an uncontrolled planner. |
+| `defaultMonth` | `Date` | — |  |
+| `onMonthChange` | `(month: Date) => void` | — |  |
+| `entries` | `PlannerEntry[]` | `[]` | Everything the planner knows about, in any order and any month. |
+| `categories` | `PlannerCategory[]` | `[]` | The colour key. Declaration order is legend order and palette order. |
+| `selected` | `Date \| null` | — | The open day. `null` is none. Leave it out for an uncontrolled planner. |
+| `defaultSelected` | `Date \| null` | `null` |  |
+| `onSelectedChange` | `(date: Date \| null) => void` | — |  |
+| `onDayPress` | `(date: Date, entries: PlannerEntry[]) => void` | — | Runs before the selection moves, whether or not `Details` is present. |
+| `entryLimit` | `number` | `DEFAULT_ENTRY_LIMIT` | How many entries a cell draws before it counts the rest. Default `2`. |
+| `weekStartsOn` | `number \| 'auto'` | `'auto'` | First day of the week, 0 is Sunday. Defaults to the locale's. |
+| `locale` | `DateLocale` | — |  |
+| `calendar` | `CalendarSystem` | `'gregory'` |  |
+| `frame` | `boolean` | `true` | Draw the surrounding `Frame`. Off for a planner in a sheet or a card. |
+
+### Planner.Nav
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Planner.Grid
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `renderDay` | `PlannerDayRenderer` | — | Draws a cell yourself. It is handed the day and what falls on it. |
+
+### Planner.Day
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `date` | `Date` | — |  |
+| `renderDay` | `PlannerDayRenderer` | — |  |
+
+### Planner.Legend
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `counts` | `boolean` | — | Print each category's count for the month beside its label. |
+
+### Planner.Footer
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Planner.Details
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `ReactNode` | — | Title above the children. Defaults to the day's full date. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Entries and categories
+
+An entry is `{ id, date, label }`, plus an optional `category` and `icon`. Pass the whole set at once, in any order and across any months; the planner buckets them by day itself and draws only the month on show.
+
+A `category` is the key to a colour. Categories take their dot from the `--color-chart-*` tokens in the order they are declared, so they follow the theme into dark mode — give one a `colorIndex` to pick a different token, or a `color` for a brand that is not the theme's to choose.
+
+### What a day draws, and what it says
+
+A cell draws up to `entryLimit` icons — two by default — and then a count of what is left. It is one marker dot per day rather than one per entry: a cell that fits a row of dots does not also fit the date.
+
+The marker carries its meaning in colour, and colour is a signal that does not reach every reader. So the legend prints its label beside every swatch, and a day is spoken as its date, how many entries it carries and which categories they belong to — "16 January 2026, 3 entries: Monthly, Yearly". Between them those two are the whole content of the grid for somebody who cannot see it.
+
+The weekday headings are hidden from screen readers. Each day already names its own weekday, and React Native has no per-cell grid vocabulary to fall back on — no `gridcell`, no `row` — so a day has to be self-contained, and reading the heading again over 42 cells only makes it longer.
+
+Changing month announces the new one. Paging moves every label at once and a screen reader reads none of them, so without it the only thing that changed is silent.
+
+### The frame
+
+The root draws its own `Frame`: a month at a glance wants a boundary, a strip carrying the month and the way through it, and a footer that holds still while the middle changes. Pass `frame={false}` for a planner inside a sheet or a card that already draws its own edge.
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `Planner`
+
+**Types:** `PlannerProps`, `PlannerEntry`, `PlannerCategory`, `PlannerHeaderProps`, `PlannerTitleProps`, `PlannerTodayProps`, `PlannerNavProps`, `PlannerActionProps`, `PlannerGridProps`, `PlannerDayProps`, `PlannerDayState`, `PlannerDayRenderer`, `PlannerLegendProps`, `PlannerSummaryProps`, `PlannerFooterProps`, `PlannerDetailsProps`, `PlannerCountedCategory`

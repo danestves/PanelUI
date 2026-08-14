@@ -986,6 +986,23 @@
     "docsPath": "ai-components/plan"
   },
   {
+    "name": "planner",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "A month of days, each carrying what falls on it.",
+    "registryDependencies": [
+      "cn",
+      "date",
+      "dialog",
+      "frame",
+      "icons",
+      "text"
+    ],
+    "docsPath": "components/planner"
+  },
+  {
     "name": "plot",
     "type": "registry:ui",
     "kind": "chart",

@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-107 component modules. The **Docs** column is the path under
+108 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -99,6 +99,7 @@ remember is a guess.
 | `Flow` | Pan-and-zoom canvas of draggable nodes joined by animated edges. | `components/flow` |
 | `Kpi` | One number, what it is doing, and the shape it made getting there. | `components/kpi` |
 | `Map` *(alpha)* | Vector map whose basemap is drawn from your theme tokens. | `components/map` |
+| `Planner` | A month of days, each carrying what falls on it. | `components/planner` |
 | `Table` | Rows and columns that stay lined up, with sortable headers. | `components/table` |
 | `Timeline` | Vertical sequence of events. | `components/timeline` |
 

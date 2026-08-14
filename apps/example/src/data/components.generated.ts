@@ -58,6 +58,7 @@ export const COMPONENTS = [
   {"slug":"panelside","name":"Panelside","summary":"Navigation panel that pushes and curves the app screen"},
   {"slug":"pie-chart","name":"PieChart","summary":"One whole, divided between its parts"},
   {"slug":"plan","name":"Plan","summary":"What an agent intends to do, before it does it"},
+  {"slug":"planner","name":"Planner","summary":"A month of days, each carrying what falls on it"},
   {"slug":"plot","name":"Plot","summary":"A chart you assemble out of its marks"},
   {"slug":"polar-area-chart","name":"PolarAreaChart","summary":"Several readings on one scale, compared as wedges"},
   {"slug":"popover","name":"Popover","summary":"Panel anchored to the thing that opened it"},

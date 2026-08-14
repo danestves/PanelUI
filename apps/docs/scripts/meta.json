@@ -453,6 +453,12 @@
       "updatedIn": "0.66.1"
     }
   ],
+  "planner": [
+    "Planner",
+    "A month of days, each carrying what falls on it.",
+    "react native planner event calendar component",
+    { "addedIn": "0.68.0", "category": "data" }
+  ],
   "popover": [
     "Popover",
     "Panel anchored to the element that opened it.",

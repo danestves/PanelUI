@@ -1,0 +1,54 @@
+{
+  "slug": "planner",
+  "intro": "A month grid where every day carries what falls on it — a marker, an icon, and a count you can hear. Pressing a day opens what is on it.\n\nIt is not a date picker. [Calendar](/docs/components/calendar) exists to choose a date and answer with one; `Planner` shows what is already on the days, and its selection exists to open something rather than to be submitted. Reach for `Calendar` when the answer is a date, and for `Planner` when the date is the question.\n\nThe grid is always six weeks. A month spans five or six depending on the weekday it starts on, and drawn at its natural height the panel changes size as you page through the year — which makes the days appear to move under your thumb.",
+  "usage": "const [month, setMonth] = useState(new Date());\n\n<Planner\n  month={month}\n  onMonthChange={setMonth}\n  entries={renewals}\n  categories={[\n    { id: 'monthly', label: 'Monthly' },\n    { id: 'yearly', label: 'Yearly' },\n  ]}\n>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Today />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n  <Planner.Legend />\n</Planner>",
+  "extraImports": ["Text", "Button", "Item"],
+  "anatomy": "<Planner entries={entries} categories={categories}>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Today />\n    <Planner.Nav />\n    <Planner.Action>{/* a button of yours */}</Planner.Action>\n  </Planner.Header>\n  <Planner.Grid />\n  <Planner.Legend>\n    <Planner.Summary />\n  </Planner.Legend>\n  <Planner.Footer>{/* tools that act on the month */}</Planner.Footer>\n  <Planner.Details>{(date, entries) => /* … */}</Planner.Details>\n</Planner>",
+  "parts": {
+    "Header": "The strip along the top of the frame. Anything you put in it sits there rather than in the panel.",
+    "Title": "The month on show, in the calendar system and locale the grid is using. Pass children to say something else.",
+    "Today": "Jumps back to the month today is in. Disabled while you are already there.",
+    "Nav": "Back and forward a month.",
+    "Action": "The trailing end of the header strip, for a button of yours.",
+    "Grid": "The weekday row and the six weeks under it. `renderDay` replaces the cell.",
+    "Day": "One cell. The grid renders these; you only reach for it directly inside `renderDay`.",
+    "Legend": "The key to the marker colours. `counts` prints each category's total for the month.",
+    "Summary": "What the month adds up to. Counts the month only, never the days either side of it.",
+    "Footer": "The strip along the bottom, for tools that act on the month.",
+    "Details": "A dialog bound to the open day, its children a function of that day and what falls on it."
+  },
+  "partNotes": "`Header` has to be a direct child of `Planner`. The root sorts its children so the header lands in the frame's top strip and everything else in the panel, which is what makes one widget out of two places.\n\n`Details` is optional. Leaving it out does not disable selection — `onDayPress` still fires, which is what a planner that pushes a screen instead of opening a dialog wants.",
+  "notes": "### Entries and categories\n\nAn entry is `{ id, date, label }`, plus an optional `category` and `icon`. Pass the whole set at once, in any order and across any months; the planner buckets them by day itself and draws only the month on show.\n\nA `category` is the key to a colour. Categories take their dot from the `--color-chart-*` tokens in the order they are declared, so they follow the theme into dark mode — give one a `colorIndex` to pick a different token, or a `color` for a brand that is not the theme's to choose.\n\n### What a day draws, and what it says\n\nA cell draws up to `entryLimit` icons — two by default — and then a count of what is left. It is one marker dot per day rather than one per entry: a cell that fits a row of dots does not also fit the date.\n\nThe marker carries its meaning in colour, and colour is a signal that does not reach every reader. So the legend prints its label beside every swatch, and a day is spoken as its date, how many entries it carries and which categories they belong to — \"16 January 2026, 3 entries: Monthly, Yearly\". Between them those two are the whole content of the grid for somebody who cannot see it.\n\nThe weekday headings are hidden from screen readers. Each day already names its own weekday, and React Native has no per-cell grid vocabulary to fall back on — no `gridcell`, no `row` — so a day has to be self-contained, and reading the heading again over 42 cells only makes it longer.\n\nChanging month announces the new one. Paging moves every label at once and a screen reader reads none of them, so without it the only thing that changed is silent.\n\n### The frame\n\nThe root draws its own `Frame`: a month at a glance wants a boundary, a strip carrying the month and the way through it, and a footer that holds still while the middle changes. Pass `frame={false}` for a planner inside a sheet or a card that already draws its own edge.",
+  "examples": [
+    {
+      "title": "A month of renewals",
+      "description": "The ordinary case. Entries in any order, two categories, and the legend that reads them.",
+      "code": "const [month, setMonth] = useState(new Date(2026, 0));\n\n<Planner\n  month={month}\n  onMonthChange={setMonth}\n  entries={[\n    { id: 'n', date: new Date(2026, 0, 2), label: 'Netflix', category: 'monthly' },\n    { id: 'a', date: new Date(2026, 0, 7), label: 'Adobe', category: 'monthly' },\n    { id: 'f', date: new Date(2026, 0, 10), label: 'Figma', category: 'yearly' },\n  ]}\n  categories={[\n    { id: 'monthly', label: 'Monthly' },\n    { id: 'yearly', label: 'Yearly' },\n  ]}\n>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Today />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n  <Planner.Legend counts>\n    <Planner.Summary />\n  </Planner.Legend>\n</Planner>"
+    },
+    {
+      "title": "Opening a day",
+      "description": "`Details` binds a dialog to the open day. The planner owns the binding; what the dialog says is yours, because the contents of a day are your data.",
+      "code": "<Planner entries={entries} categories={categories}>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n  <Planner.Details>\n    {(date, dayEntries) =>\n      dayEntries.length === 0 ? (\n        <Text muted size=\"sm\">Nothing on this day.</Text>\n      ) : (\n        dayEntries.map((entry) => (\n          <Item key={entry.id}>\n            <Item.Content>\n              <Item.Title>{entry.label}</Item.Title>\n            </Item.Content>\n          </Item>\n        ))\n      )\n    }\n  </Planner.Details>\n</Planner>"
+    },
+    {
+      "title": "Pushing a screen instead",
+      "description": "Leave `Details` out and handle `onDayPress` yourself. The selection still moves, so the day you opened stays marked while you are away from it.",
+      "code": "<Planner\n  entries={entries}\n  categories={categories}\n  onDayPress={(date, dayEntries) => {\n    router.push(`/day/${date.toISOString().slice(0, 10)}`);\n  }}\n>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n</Planner>"
+    },
+    {
+      "title": "Icons in the cells",
+      "description": "An entry's `icon` is drawn in its day. `entryLimit` caps how many a cell draws before it counts the rest — raise it for a wide screen, drop it to `0` for a grid of markers alone.",
+      "code": "<Planner\n  entries={[\n    { id: 'n', date: new Date(2026, 0, 2), label: 'Netflix', category: 'monthly', icon: <Avatar size=\"xs\" source={netflix} /> },\n    { id: 'f', date: new Date(2026, 0, 28), label: 'Figma', category: 'monthly', icon: <Avatar size=\"xs\" source={figma} /> },\n  ]}\n  categories={[{ id: 'monthly', label: 'Monthly' }]}\n  entryLimit={1}\n>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n</Planner>"
+    },
+    {
+      "title": "Without the frame",
+      "description": "For a planner inside a sheet, a dialog or a card that already draws its own boundary.",
+      "code": "<BottomSheet open={open} onOpenChange={setOpen}>\n  <BottomSheet.Content>\n    <Planner frame={false} entries={entries} categories={categories}>\n      <Planner.Grid />\n      <Planner.Legend />\n    </Planner>\n  </BottomSheet.Content>\n</BottomSheet>"
+    },
+    {
+      "title": "A cell of your own",
+      "description": "`renderDay` replaces the cell entirely. It is handed the day, what falls on it, and the three states the default cell draws from — so a custom cell does not have to work them out again.",
+      "code": "<Planner entries={entries} categories={categories}>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid\n    renderDay={({ date, entries, isToday, isInMonth }) => (\n      <View className={cn('m-0.5 flex-1 rounded-lg p-1', isToday && 'bg-primary/10')}>\n        <Text size=\"xs\" muted={!isInMonth}>{date.getDate()}</Text>\n        {entries.length > 0 ? <Text size=\"xs\">{entries.length}</Text> : null}\n      </View>\n    )}\n  />\n</Planner>"
+    }
+  ]
+}

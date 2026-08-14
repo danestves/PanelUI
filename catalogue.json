@@ -58,6 +58,7 @@
     "panelside",
     "pie-chart",
     "plan",
+    "planner",
     "plot",
     "polar-area-chart",
     "popover",
@@ -110,16 +111,16 @@
     "waterfall-chart"
   ],
   "counts": {
-    "componentModules": 107,
-    "packageComponentExports": 107,
-    "documentedComponents": 107,
-    "exampleEntries": 107,
+    "componentModules": 108,
+    "packageComponentExports": 108,
+    "documentedComponents": 108,
+    "exampleEntries": 108,
     "registry": {
-      "componentItems": 107,
+      "componentItems": 108,
       "supportItems": 31,
-      "totalItems": 138,
+      "totalItems": 139,
       "byType": {
-        "registry:ui": 118,
+        "registry:ui": 119,
         "registry:hook": 12,
         "registry:lib": 7,
         "registry:theme": 1
