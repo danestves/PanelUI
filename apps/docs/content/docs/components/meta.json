@@ -42,6 +42,7 @@
     "menu",
     "message",
     "message-scroller",
+    "meter",
     "number-input",
     "otp-input",
     "pagination",

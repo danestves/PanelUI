@@ -743,6 +743,12 @@ export {
   type MenuRadioIndicator,
 } from './components/menu';
 export {
+  Meter,
+  type MeterProps,
+  type MeterColor,
+  type MeterThreshold,
+} from './components/meter';
+export {
   MessageScroller,
   useMessageScroller,
   useMessageScrollerVisibility,

@@ -426,6 +426,15 @@
       "category": "feedback"
     }
   ],
+  "meter": [
+    "Meter",
+    "A measurement on a fixed scale, coloured by where it falls.",
+    "react native meter gauge component",
+    {
+      "addedIn": "0.67.0",
+      "category": "feedback"
+    }
+  ],
   "message": [
     "Message",
     "Chat turn with avatar, bubble, header and footer.",

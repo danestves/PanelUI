@@ -2954,6 +2954,42 @@
       "height": 497
     }
   },
+  "meter": {
+    "intro": "A measurement on a fixed scale: disk used, battery left, a test score, a password's strength.\n\nIt is not a progress bar. A meter is a reading that sits where it sits and may go back down; progress moves towards an end that finishing is the point of. For work completing, use [Progress](/docs/components/progress).\n\n`thresholds` paint the bar by where the reading falls, and `segments` draws the scale as discrete blocks.\n\nReact Native has no meter role, so a meter announces as a progress bar with its value, range and unit attached. Pass `label` — the role will not tell a reading from a task, and the name is what does.",
+    "usage": "<Meter value={68} label=\"Storage\" showValueLabel />",
+    "examples": [
+      {
+        "title": "A scale in its own units",
+        "description": "Set `maxValue` and the meter speaks in what is being measured. Nothing has to be converted to a percent on the way in, and the screen reader is told the real scale.",
+        "code": "<Meter\n  value={168}\n  maxValue={256}\n  label=\"Storage\"\n  showValueLabel\n  formatOptions={{ style: 'unit', unit: 'gigabyte' }}\n/>"
+      },
+      {
+        "title": "Thresholds that climb",
+        "description": "A disk filling up gets worse as it rises, so the colours rise with it. The last threshold the value has reached wins.",
+        "code": "<Meter\n  value={usedPercent}\n  label=\"Disk\"\n  showValueLabel\n  color=\"success\"\n  thresholds={[\n    { from: 70, color: 'warning' },\n    { from: 90, color: 'destructive' },\n  ]}\n/>"
+      },
+      {
+        "title": "Thresholds that fall",
+        "description": "A battery gets worse as it drops. Same prop, written the other way up — which direction is bad is yours to say.",
+        "code": "<Meter\n  value={charge}\n  label=\"Battery\"\n  showValueLabel\n  thresholds={[\n    { from: 0, color: 'destructive' },\n    { from: 20, color: 'warning' },\n    { from: 50, color: 'success' },\n  ]}\n/>"
+      },
+      {
+        "title": "Counted, not measured",
+        "description": "Four blocks say “three out of four” where a bar says “about seventy percent”, and a password is not seventy percent strong. Pair `segments` with a `valueLabel` word rather than a number.",
+        "code": "<Meter\n  value={strength}\n  maxValue={4}\n  segments={4}\n  label=\"Password strength\"\n  valueLabel={['Too short', 'Weak', 'Fair', 'Good', 'Strong'][strength]}\n  thresholds={[\n    { from: 0, color: 'destructive' },\n    { from: 2, color: 'warning' },\n    { from: 3, color: 'success' },\n  ]}\n/>"
+      },
+      {
+        "title": "Without a caption",
+        "description": "Drop `label` and the bare track renders, with no header row. Name it another way so the reading is still attached to something.",
+        "code": "<Meter value={42} accessibilityLabel=\"Signal strength\" size=\"sm\" />"
+      }
+    ],
+    "variantCode": {
+      "color": "<Meter value={60} color=\"primary\" />\n<Meter value={60} color=\"success\" />\n<Meter value={60} color=\"warning\" />\n<Meter value={60} color=\"destructive\" />\n<Meter value={60} color=\"info\" />\n<Meter value={60} color=\"muted\" />",
+      "size": "<Meter value={60} size=\"sm\" />\n<Meter value={60} size=\"md\" />\n<Meter value={60} size=\"lg\" />"
+    },
+    "notes": "`from` on a threshold is in the same units as `value`, not a percentage of the range — a threshold on a 0–8 GB meter is written in gigabytes. The highest one the value has reached wins, so the order you list them in does not matter. Below all of them, the `color` prop applies.\n\nAny reading above the floor lights at least one segment. Rounding down would leave the first quarter of a four-block meter dark, and “a little” looking like “none” is the reading a meter can least afford to get wrong.\n\nSegments are all or nothing; a partly-filled block is not drawn. If the value does not divide into whole blocks, use the continuous bar instead.\n\nThe fill is animated on the UI thread, so a value change costs one render and nothing per frame. Under the platform's reduce-motion setting it lands on the value rather than springing to it, and segments light without a fade."
+  },
   "message": {
     "intro": "A chat turn: an avatar, a bubble, and the metadata around it.\n\nThe pieces are separate because conversations differ in which they need. A support thread wants a sender name and a read receipt; an assistant transcript wants neither, but does want the bubble to carry tool output and actions.\n\nFor the scroll behaviour around a list of these, use [MessageScroller](/docs/components/message-scroller).",
     "usage": "<Message>\n  <Message.Avatar>\n    <Avatar size=\"sm\" fallback=\"KA\" />\n  </Message.Avatar>\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>How can I help you today?</Message.BubbleContent>\n    </Message.Bubble>\n  </Message.Content>\n</Message>\n\n// The outgoing side.\n<Message align=\"end\">\n  <Message.Content>\n    <Message.Bubble>\n      <Message.BubbleContent>Set a reminder for 9am.</Message.BubbleContent>\n    </Message.Bubble>\n    <Message.Footer>Read</Message.Footer>\n  </Message.Content>\n</Message>\n\n// Consecutive turns from one sender.\n<Message.Group align=\"start\">\n  <Message>\n    <Message.Avatar><Avatar size=\"sm\" fallback=\"AI\" /></Message.Avatar>\n    <Message.Content>\n      <Message.Header>Assistant</Message.Header>\n      <Message.Bubble>\n        <Message.BubbleContent>Looking that up…</Message.BubbleContent>\n      </Message.Bubble>\n    </Message.Content>\n  </Message>\n  <Message>\n    <Message.Avatar><Avatar size=\"sm\" fallback=\"AI\" /></Message.Avatar>\n    <Message.Content>\n      <Message.Bubble>\n        <Message.BubbleContent>Your reminder is set.</Message.BubbleContent>\n      </Message.Bubble>\n    </Message.Content>\n  </Message>\n</Message.Group>",

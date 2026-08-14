@@ -1,0 +1,173 @@
+---
+title: Meter
+description: A measurement on a fixed scale, coloured by where it falls.
+status: new
+---
+
+A measurement on a fixed scale: disk used, battery left, a test score, a password's strength.
+
+It is not a progress bar. A meter is a reading that sits where it sits and may go back down; progress moves towards an end that finishing is the point of. For work completing, use [Progress](/docs/components/progress).
+
+`thresholds` paint the bar by where the reading falls, and `segments` draws the scale as discrete blocks.
+
+React Native has no meter role, so a meter announces as a progress bar with its value, range and unit attached. Pass `label` — the role will not tell a reading from a task, and the name is what does.
+
+## Installation
+
+Meter ships with the library — no separate install.
+
+```tsx
+import { Meter } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add meter
+```
+
+## Usage
+
+```tsx
+<Meter value={68} label="Storage" showValueLabel />
+```
+
+## Examples
+
+### A scale in its own units
+
+Set `maxValue` and the meter speaks in what is being measured. Nothing has to be converted to a percent on the way in, and the screen reader is told the real scale.
+
+```tsx
+<Meter
+  value={168}
+  maxValue={256}
+  label="Storage"
+  showValueLabel
+  formatOptions={{ style: 'unit', unit: 'gigabyte' }}
+/>
+```
+
+### Thresholds that climb
+
+A disk filling up gets worse as it rises, so the colours rise with it. The last threshold the value has reached wins.
+
+```tsx
+<Meter
+  value={usedPercent}
+  label="Disk"
+  showValueLabel
+  color="success"
+  thresholds={[
+    { from: 70, color: 'warning' },
+    { from: 90, color: 'destructive' },
+  ]}
+/>
+```
+
+### Thresholds that fall
+
+A battery gets worse as it drops. Same prop, written the other way up — which direction is bad is yours to say.
+
+```tsx
+<Meter
+  value={charge}
+  label="Battery"
+  showValueLabel
+  thresholds={[
+    { from: 0, color: 'destructive' },
+    { from: 20, color: 'warning' },
+    { from: 50, color: 'success' },
+  ]}
+/>
+```
+
+### Counted, not measured
+
+Four blocks say “three out of four” where a bar says “about seventy percent”, and a password is not seventy percent strong. Pair `segments` with a `valueLabel` word rather than a number.
+
+```tsx
+<Meter
+  value={strength}
+  maxValue={4}
+  segments={4}
+  label="Password strength"
+  valueLabel={['Too short', 'Weak', 'Fair', 'Good', 'Strong'][strength]}
+  thresholds={[
+    { from: 0, color: 'destructive' },
+    { from: 2, color: 'warning' },
+    { from: 3, color: 'success' },
+  ]}
+/>
+```
+
+### Without a caption
+
+Drop `label` and the bare track renders, with no header row. Name it another way so the reading is still attached to something.
+
+```tsx
+<Meter value={42} accessibilityLabel="Signal strength" size="sm" />
+```
+
+## Variants
+
+### `color`
+
+- `primary` *(default)*
+- `success`
+- `warning`
+- `destructive`
+- `info`
+- `muted`
+
+```tsx
+<Meter value={60} color="primary" />
+<Meter value={60} color="success" />
+<Meter value={60} color="warning" />
+<Meter value={60} color="destructive" />
+<Meter value={60} color="info" />
+<Meter value={60} color="muted" />
+```
+
+### `size`
+
+- `sm`
+- `md` *(default)*
+- `lg`
+
+```tsx
+<Meter value={60} size="sm" />
+<Meter value={60} size="md" />
+<Meter value={60} size="lg" />
+```
+
+## API Reference
+
+### Meter
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `number` | — | The measurement, somewhere between `minValue` and `maxValue`. |
+| `minValue` | `number` | `0` | The bottom of the scale — the value at which the bar reads as empty. Defaults to `0`. |
+| `maxValue` | `number` | `100` | The top of the scale — the value at which the bar reads as full. Defaults to `100`, so a bare percentage needs neither bound set. |
+| `label` | `string` | — | What is being measured. Also the accessibility label, and a meter without one announces a number with nothing attached to it — "seventy-five percent" of what is not an answer. Pass `accessibilityLabel` instead only where the caption is drawn some other way. |
+| `showValueLabel` | `boolean` | `false` | Draw the value above the track, opposite the label. |
+| `valueLabel` | `string` | — | Text for the value label. Overrides the formatted value — use it for a word where a number reads worse: `Strong`, `Almost full`. |
+| `formatOptions` | `Intl.NumberFormatOptions` | — | How to write the value, through `Intl.NumberFormat`. A `percent` style formats how far up the scale the value sits; every other style formats the value itself, so `{ style: 'unit', unit: 'gigabyte' }` against a `maxValue` of `256` reads `64 GB` rather than a percentage of it. Falls back to a rounded percent when omitted. |
+| `thresholds` | `MeterThreshold[]` | — | Points on the scale where the colour changes, each `{ from, color }`. The last one the value has reached wins; below all of them the `color` prop applies. Order does not matter. This is the difference between a meter and a bar: the colour is a judgement about the reading. Which direction is bad is yours to say — thresholds climbing to `destructive` suit a disk filling up, thresholds falling to it suit a battery running down. |
+| `segments` | `number` | — | Draw the scale as this many discrete blocks instead of one continuous bar. Blocks are all or nothing, which is the point of them: four blocks say "three out of four" where a bar says "about seventy percent", and a password is not seventy percent strong. Any value above the floor lights at least one block, so a reading that is not empty never looks it. |
+| `indicatorClassName` | `string` | — | Extra classes for the fill, or for a lit segment. |
+| `headerClassName` | `string` | — | Extra classes for the label + value row. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+`from` on a threshold is in the same units as `value`, not a percentage of the range — a threshold on a 0–8 GB meter is written in gigabytes. The highest one the value has reached wins, so the order you list them in does not matter. Below all of them, the `color` prop applies.
+
+Any reading above the floor lights at least one segment. Rounding down would leave the first quarter of a four-block meter dark, and “a little” looking like “none” is the reading a meter can least afford to get wrong.
+
+Segments are all or nothing; a partly-filled block is not drawn. If the value does not divide into whole blocks, use the continuous bar instead.
+
+The fill is animated on the UI thread, so a value change costs one render and nothing per frame. Under the platform's reduce-motion setting it lands on the value rather than springing to it, and segments light without a fade.

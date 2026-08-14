@@ -658,6 +658,15 @@
     "docsPath": "components/message-scroller"
   },
   {
+    "name": "meter",
+    "type": "registry:ui",
+    "description": "A measurement on a fixed scale, coloured by where it falls.",
+    "registryDependencies": [
+      "text"
+    ],
+    "docsPath": "components/meter"
+  },
+  {
     "name": "modal-isolation-store",
     "type": "registry:ui",
     "description": "modal-isolation-store.",
