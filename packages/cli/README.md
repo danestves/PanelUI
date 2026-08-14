@@ -76,6 +76,21 @@ npx panelui-cli@latest list --search "scroll progress" --json
 Current registries also expose `kind`, documentation `group`, and `stability` (`stable`, `beta` or
 `alpha`). Older custom indexes containing only `name`, `type` and `description` remain supported.
 
+### `doctor`
+
+Audits the current project without writing files or installing packages. It checks the PanelUI
+configuration and contained paths, aliases, CSS imports and sources, exported Metro wrapper, theme,
+Uniwind ambient types, required dependencies, and statically visible `PanelUIProvider` wiring.
+
+```bash
+npx panelui-cli@latest doctor
+npx panelui-cli@latest --cwd ./apps/mobile doctor --json
+```
+
+The human report marks confirmed errors with `✗`, warnings with `!`, and checks that need manual
+review with `?`. Confirmed errors exit with status 1; healthy, warning, and unknown-only reports exit
+with status 0. `--json` returns a versioned object with `status`, counts, and ordered `checks` for CI.
+
 ### `mcp`
 
 Runs PanelUI's [Model Context Protocol](https://modelcontextprotocol.io/) server. An MCP client can
@@ -133,7 +148,7 @@ editor-launched sessions, add `--registry <url>` or `--cwd <dir>` to that server
 | `--registry <url>` | Use a different registry |
 | `--type <kind>` | Filter list results: `ui`, `chart`, `hook`, `lib` or `theme` |
 | `--search <text>` | Rank list results matching every search term |
-| `--json` | Print list results as stable JSON |
+| `--json` | Print `list` or `doctor` results as stable JSON |
 
 A value-taking flag without its value prints its usage and exits with status 1. No command runs.
 
