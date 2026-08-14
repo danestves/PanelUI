@@ -483,6 +483,8 @@ find them and had no way to change them — and the fixes to that are the bulk o
   server card, an A2A agent card, an agent-skills index with per-artifact digests, and `auth.md`
   saying plainly that everything here is public and takes no token.
 
+<a id="migration-0-60-0"></a>
+
 ### Migration
 
 - **A swipeable `Tabs` needs a height to lay its strip out in** — `className="flex-1"` on the tab
@@ -534,6 +536,8 @@ find them and had no way to change them — and the fixes to that are the bulk o
   was carrying the design: down the screen a stage is a row, so its count and its name compete with
   the shape for the same width, and both the shape and the names come off worse. Across the card a
   stage is a column and each reading has that column to itself.
+
+<a id="migration-0-59-0"></a>
 
 ### Migration
 
@@ -1384,6 +1388,8 @@ see the entry below this one for what it is.
 
 ### Changed
 
+<a id="migration-0-46-0"></a>
+
 - **Breaking: `KpiChart` is now `Kpi`**, and every `KpiChart*Props` type is `Kpi*Props`. It was
   never a chart — the number is the message, the sparkline is a footnote drawn by `LineChart`, and
   half its versions have no chart at all. Calling it one filed it with the plots and described the
@@ -1484,6 +1490,8 @@ see the entry below this one for what it is.
 ## [0.44.0] — 2026-08-05
 
 ### Changed
+
+<a id="migration-0-44-0"></a>
 
 - **Breaking:** `Card.Wash` and the `CardWashProps` type are removed. The wash was the only part
   of `Card` that did any work — a shared value, a repeating opacity animation, a resolved theme
