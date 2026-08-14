@@ -223,14 +223,6 @@ For a planner inside a sheet, a dialog or a card that already draws its own boun
 <Planner inMonth="false">…</Planner>
 ```
 
-### `today`
-
-- `true`
-
-```tsx
-<Planner today="true">…</Planner>
-```
-
 ## API Reference
 
 ### Planner
@@ -292,6 +284,7 @@ For a planner inside a sheet, a dialog or a card that already draws its own boun
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `title` | `ReactNode` | — | Title above the children. Defaults to the day's full date. |
+| `description` | `ReactNode` | — | The line under the title. Defaults to how many entries the day carries, so the dialog answers "how much of this is there" before it is read. Pass `null` to drop it. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 

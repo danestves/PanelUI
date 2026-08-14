@@ -14500,8 +14500,8 @@ function WaterfallLoadingVersion() {
 }
 
 const PLANNER_CATEGORIES = [
-  { id: 'monthly', label: 'Monthly' },
-  { id: 'yearly', label: 'Yearly' },
+  { id: 'monthly', label: 'Monthly', color: '#8b5cf6' },
+  { id: 'yearly', label: 'Yearly', color: '#eab308' },
 ];
 
 function plannerEntries(month: Date): PlannerEntry[] {
@@ -14526,6 +14526,36 @@ function plannerEntries(month: Date): PlannerEntry[] {
   ];
 }
 
+function PlannerDayList({ entries }: { entries: PlannerEntry[] }) {
+  if (entries.length === 0) {
+    return (
+      <Text size="sm" muted>
+        Nothing renews on this day.
+      </Text>
+    );
+  }
+  return (
+    <View className="gap-2">
+      {entries.map((entry) => (
+        <View key={entry.id} className="flex-row items-center gap-2.5">
+          <View
+            className="h-2 w-2 rounded-full"
+            style={{
+              backgroundColor: PLANNER_CATEGORIES.find((c) => c.id === entry.category)?.color,
+            }}
+          />
+          <Text size="sm" className="flex-1">
+            {entry.label}
+          </Text>
+          <Text size="xs" muted>
+            {PLANNER_CATEGORIES.find((c) => c.id === entry.category)?.label}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function PlannerDemo() {
   const [month, setMonth] = useState(() => new Date());
   return (
@@ -14544,6 +14574,9 @@ function PlannerDemo() {
       <Planner.Legend counts>
         <Planner.Summary />
       </Planner.Legend>
+      <Planner.Details>
+        {(_date, dayEntries) => <PlannerDayList entries={dayEntries} />}
+      </Planner.Details>
     </Planner>
   );
 }
@@ -14565,21 +14598,7 @@ function PlannerDetailsDemo() {
       <Planner.Grid />
       <Planner.Legend />
       <Planner.Details>
-        {(_date, dayEntries) =>
-          dayEntries.length === 0 ? (
-            <Text size="sm" muted>
-              Nothing on this day.
-            </Text>
-          ) : (
-            <View className="gap-1 pt-1">
-              {dayEntries.map((entry) => (
-                <Text key={entry.id} size="sm">
-                  {entry.label}
-                </Text>
-              ))}
-            </View>
-          )
-        }
+        {(_date, dayEntries) => <PlannerDayList entries={dayEntries} />}
       </Planner.Details>
     </Planner>
   );

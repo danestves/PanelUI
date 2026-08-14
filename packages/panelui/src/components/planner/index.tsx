@@ -127,25 +127,32 @@ const plannerVariants = tv({
 const dayVariants = tv({
   slots: {
     /*
-     * A square-ish tile rather than a circle. A day here holds a number, a
-     * marker and sometimes an icon, and a circle wastes the corners it would
-     * need for them.
+     * A fixed height, and a square-ish tile rather than a circle.
+     *
+     * Fixed because the cell has to be the same size whether the day carries
+     * anything or not — sized to its contents, a row with one icon in it is
+     * taller than the five around it and the grid stops being a grid.
+     *
+     * Square-ish because a day here holds a number, a marker and sometimes an
+     * icon, and a circle wastes the corners it needs for them.
      */
-    cell: 'mx-0.5 flex-1 rounded-xl px-1 pb-1 pt-1.5',
-    number: 'text-xs',
+    cell: 'mx-0.5 h-14 flex-1 rounded-xl px-1.5 pt-1.5',
+    number: 'text-xs leading-none',
     marker: 'absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full',
-    body: 'min-h-6 flex-row flex-wrap items-center justify-center gap-0.5',
+    body: 'flex-1 flex-row items-center justify-center gap-0.5 pb-1',
   },
   variants: {
     /** Inside the month being shown, as opposed to the days either side. */
     inMonth: {
       true: { cell: 'bg-muted/40', number: 'text-foreground' },
-      false: { cell: 'bg-muted/20', number: 'text-muted-foreground/40' },
+      false: { cell: 'bg-muted/15', number: 'text-muted-foreground/40' },
     },
-    today: {
-      true: { cell: 'border border-primary bg-primary/10', number: 'text-primary font-medium' },
-    },
-    selected: { true: { cell: 'border border-primary bg-primary/15' } },
+    /*
+     * Today is the number, not the tile. A ring on today and a ring on the
+     * open day are two rings that mean different things and look the same.
+     */
+    today: { true: { number: 'text-primary font-semibold' } },
+    selected: { true: { cell: 'border border-primary/60 bg-primary/10' } },
     disabled: { true: { cell: 'opacity-40' } },
   },
   defaultVariants: { inMonth: true },
@@ -417,7 +424,10 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
     return (
       <PlannerContext.Provider value={context}>
         {frame ? (
-          <Frame ref={ref} className={className} {...props}>
+          // Full width by default: the grid is seven equal columns, and a
+          // container that sizes to its content collapses them to the width of
+          // a two-digit number.
+          <Frame ref={ref} className={cn('w-full', className)} {...props}>
             {header}
             <Frame.Panel dividers={false}>{body}</Frame.Panel>
           </Frame>
@@ -632,6 +642,7 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
   const isToday = isSameDay(date, today);
   const isSelected = selected ? isSameDay(date, selected) : false;
   const { shown, overflow } = visibleEntries(entries, entryLimit);
+  const drawable = shown.filter((entry) => entry.icon);
   const styles = dayVariants({ inMonth, today: isToday, selected: isSelected });
 
   const label = dayAccessibilityLabel(
@@ -668,16 +679,24 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
         <View className={styles.marker()} style={{ backgroundColor: markerColor(entries, colorOf) }} />
       ) : null}
 
-      <View className={styles.body()}>
-        {shown.map((entry) => (
-          <View key={entry.id}>{entry.icon}</View>
-        ))}
-        {overflow > 0 ? (
-          <Text size="xs" muted>
-            +{overflow}
-          </Text>
-        ) : null}
-      </View>
+      {/*
+        Only entries that brought an icon are drawn, and the overflow count
+        goes with them. A day whose entries have no icons is already saying
+        "something is here" with its marker; adding a bare "+3" under an empty
+        row says it twice, in a way that looks like a stray number.
+      */}
+      {drawable.length > 0 ? (
+        <View className={styles.body()}>
+          {drawable.map((entry) => (
+            <View key={entry.id}>{entry.icon}</View>
+          ))}
+          {overflow > 0 ? (
+            <Text size="xs" muted className="leading-none">
+              +{overflow}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -783,6 +802,12 @@ export interface PlannerDetailsProps {
   className?: string;
   /** Title above the children. Defaults to the day's full date. */
   title?: ReactNode;
+  /**
+   * The line under the title. Defaults to how many entries the day carries,
+   * so the dialog answers "how much of this is there" before it is read.
+   * Pass `null` to drop it.
+   */
+  description?: ReactNode;
   /** Given the open day and what falls on it. */
   children: (date: Date, entries: PlannerEntry[]) => ReactNode;
 }
@@ -795,16 +820,26 @@ export interface PlannerDetailsProps {
  * component's. Leave it out and `onDayPress` is still called — a planner that
  * pushes a screen instead of opening a dialog wants that and nothing else.
  */
-function PlannerDetails({ className, title, children }: PlannerDetailsProps) {
+function PlannerDetails({ className, title, description, children }: PlannerDetailsProps) {
   const { selected, select, days, system, locale } = usePlanner('Planner.Details');
   const entries = selected ? entriesOn(days, selected) : [];
 
+  const count =
+    entries.length === 1 ? '1 entry' : `${entries.length} entries`;
+
   return (
     <Dialog open={selected !== null} onOpenChange={(open) => !open && select(null)}>
-      <Dialog.Content className={className}>
-        <Dialog.Title>
-          {title ?? (selected ? calendarLongDate(selected, system, locale) : '')}
-        </Dialog.Title>
+      <Dialog.Content className={cn('gap-3', className)}>
+        <View className="gap-0.5">
+          <Dialog.Title>
+            {title ?? (selected ? calendarLongDate(selected, system, locale) : '')}
+          </Dialog.Title>
+          {description === null ? null : (
+            <Dialog.Description>
+              {description ?? (entries.length === 0 ? 'Nothing planned' : count)}
+            </Dialog.Description>
+          )}
+        </View>
         {selected ? children(selected, entries) : null}
       </Dialog.Content>
     </Dialog>
