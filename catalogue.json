@@ -51,6 +51,7 @@
     "menu",
     "message",
     "message-scroller",
+    "meter",
     "number-input",
     "otp-input",
     "pagination",
@@ -109,16 +110,16 @@
     "waterfall-chart"
   ],
   "counts": {
-    "componentModules": 106,
-    "packageComponentExports": 106,
-    "documentedComponents": 106,
-    "exampleEntries": 106,
+    "componentModules": 107,
+    "packageComponentExports": 107,
+    "documentedComponents": 107,
+    "exampleEntries": 107,
     "registry": {
-      "componentItems": 106,
+      "componentItems": 107,
       "supportItems": 30,
-      "totalItems": 136,
+      "totalItems": 137,
       "byType": {
-        "registry:ui": 116,
+        "registry:ui": 117,
         "registry:hook": 12,
         "registry:lib": 7,
         "registry:theme": 1
