@@ -127,6 +127,7 @@ import {
   type LoaderVariant,
   MarkdownEditor,
   Marker,
+  Marquee,
   MaximizeIcon,
   Menu,
   Message,
@@ -11432,6 +11433,103 @@ function Replay({ children }: { children: (run: number) => ReactNode }) {
   );
 }
 
+const MARQUEE_STACK = [
+  'Reanimated 4',
+  'Expo SDK 57',
+  'Uniwind',
+  'Tailwind v4',
+  'TypeScript',
+  'New Architecture',
+];
+
+const MARQUEE_RELEASES = [
+  'Marquee',
+  'Planner',
+  'Flow',
+  'Plot',
+  'Panelside',
+  'SelectionMode',
+];
+
+function MarqueeStripDemo() {
+  return (
+    <Marquee spacing={12} speed={40} className="w-full">
+      <View className="flex-row gap-3">
+        {MARQUEE_STACK.map((label) => (
+          <Badge key={label} variant="secondary">
+            {label}
+          </Badge>
+        ))}
+      </View>
+    </Marquee>
+  );
+}
+
+function MarqueeTwoRowDemo() {
+  // Two rows travelling opposite ways is the arrangement that reads as motion
+  // rather than as one row that happens to be sliding.
+  return (
+    <View className="w-full gap-3">
+      <Marquee spacing={12} speed={35}>
+        <View className="flex-row gap-3">
+          {MARQUEE_STACK.map((label) => (
+            <Chip key={label}>{label}</Chip>
+          ))}
+        </View>
+      </Marquee>
+      <Marquee spacing={12} speed={35} reverse>
+        <View className="flex-row gap-3">
+          {MARQUEE_RELEASES.map((label) => (
+            <Chip key={label} variant="outline">
+              {label}
+            </Chip>
+          ))}
+        </View>
+      </Marquee>
+    </View>
+  );
+}
+
+function MarqueeVerticalDemo() {
+  // A vertical marquee has no content to take its height from, so the height
+  // is the container's to give.
+  return (
+    <Marquee direction="vertical" spacing={12} speed={30} className="h-40 w-full">
+      <View className="gap-3">
+        {MARQUEE_RELEASES.map((label) => (
+          <Surface key={label} className="w-full rounded-xl px-4 py-3">
+            <Text weight="medium">{label}</Text>
+          </Surface>
+        ))}
+      </View>
+    </Marquee>
+  );
+}
+
+function MarqueePlayingDemo() {
+  const [playing, setPlaying] = useState(true);
+
+  return (
+    <View className="w-full gap-4">
+      <Marquee spacing={12} speed={40} playing={playing}>
+        <View className="flex-row gap-3">
+          {MARQUEE_STACK.map((label) => (
+            <Badge key={label} variant="secondary">
+              {label}
+            </Badge>
+          ))}
+        </View>
+      </Marquee>
+      <View className="flex-row items-center justify-between">
+        <Text size="sm" muted>
+          Playing
+        </Text>
+        <Switch value={playing} onValueChange={setPlaying} />
+      </View>
+    </View>
+  );
+}
+
 function TypingDemo() {
   return (
     <Replay>
@@ -17209,6 +17307,17 @@ const CATALOGUE: ComponentEntry[] = [
           </View>
         ),
       },
+    ],
+  },
+  {
+    slug: 'marquee',
+    name: 'Marquee',
+    summary: 'Content that travels across its container on a loop',
+    demos: [
+      { label: 'A strip of badges', render: () => <MarqueeStripDemo /> },
+      { label: 'Two rows, opposite ways', render: () => <MarqueeTwoRowDemo /> },
+      { label: 'Vertical', render: () => <MarqueeVerticalDemo /> },
+      { label: 'Holding it still', render: () => <MarqueePlayingDemo /> },
     ],
   },
   {

@@ -48,6 +48,7 @@ export const COMPONENTS = [
   {"slug":"map","name":"Map","summary":"Vector map drawn from your theme tokens"},
   {"slug":"markdown-editor","name":"MarkdownEditor","summary":"A field for writing markdown, and a way to see it rendered"},
   {"slug":"marker","name":"Marker","summary":"Inline note between conversation turns"},
+  {"slug":"marquee","name":"Marquee","summary":"Content that travels across its container on a loop"},
   {"slug":"menu","name":"Menu","summary":"The list of things you can do to something"},
   {"slug":"message","name":"Message","summary":"Chat turn with avatar, bubble and metadata"},
   {"slug":"message-scroller","name":"MessageScroller","summary":"Scroll behaviour a chat transcript needs"},

@@ -729,6 +729,11 @@ export {
   type MarkerContentProps,
 } from './components/marker';
 export {
+  Marquee,
+  type MarqueeProps,
+  type MarqueeDirection,
+} from './components/marquee';
+export {
   Menu,
   type MenuProps,
   type MenuTriggerProps,
