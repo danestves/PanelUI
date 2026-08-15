@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { applyAliases, detectProject, requireConfig, targetPath } from './config.mjs';
 import { discover, kindOf } from './discovery.mjs';
-import { collectDependencies, fetchIndex, resolve } from './registry.mjs';
+import { collectDependencies, dependencyClosures, fetchIndex, resolve } from './registry.mjs';
 import { installDependencies } from './patch.mjs';
 import { recordInstalled } from './lock.mjs';
 import { bold, confirm, dim, fail, info, step, success, warn } from './ui.mjs';
@@ -22,6 +22,7 @@ export async function add(names, options) {
   const registry = options.registry ?? config.registry;
 
   const items = await resolve(registry, names);
+  const closures = dependencyClosures(items, names);
 
   // Dependencies the user did not ask for are shown separately: taking three
   // extra files because you asked for one is fine, but it should not be a
@@ -82,9 +83,10 @@ export async function add(names, options) {
       fs.mkdirSync(path.dirname(write.destination), { recursive: true });
       fs.writeFileSync(write.destination, write.content);
     }
-    recordInstalled(cwd, pending, registry);
+    recordInstalled(cwd, pending, registry, closures);
     success(`Wrote ${pending.length} file${pending.length === 1 ? '' : 's'}`);
   } else {
+    if (!options.dryRun) recordInstalled(cwd, [], registry, closures);
     success('Component files are already installed.');
   }
 

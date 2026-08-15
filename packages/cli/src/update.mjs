@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { applyAliases, detectProject, projectPath, requireConfig, targetPath } from './config.mjs';
 import { digest, LOCK_FILE, readLock, writeLock } from './lock.mjs';
-import { collectDependencies, resolve } from './registry.mjs';
+import { collectDependencies, dependencyClosures, resolve } from './registry.mjs';
 import { installDependencies } from './patch.mjs';
 import { bold, confirm, dim, fail, info, success, warn } from './ui.mjs';
 
@@ -18,15 +18,29 @@ export async function update(names, options) {
   }
 
   const installed = [...new Set(Object.values(lock.files).map((entry) => entry.item))];
-  const requested = names.length ? names : installed;
-  const unknown = requested.filter((name) => !installed.includes(name));
+  const roots = lock.version === 2 ? Object.keys(lock.roots) : installed;
+  const requested = names.length ? names : roots;
+  const unknown = requested.filter((name) => !roots.includes(name));
   if (unknown.length) {
-    fail(`Not tracked as installed: ${unknown.join(', ')}.`, 'Use `add` for new components.');
+    fail(`Not tracked as a requested root: ${unknown.join(', ')}.`, 'Use `add` for new components.');
   }
-  if (!requested.length) fail(`No tracked components in ${LOCK_FILE}.`);
+  if (!requested.length) fail(`No tracked roots in ${LOCK_FILE}.`);
+
+  if (lock.version === 1) {
+    warn(
+      `${LOCK_FILE} v1 cannot prune former dependencies safely. Re-run \`add <root>\` before dependencies change to record requested roots.`
+    );
+  }
 
   const registry = options.registry ?? config.registry;
   const items = await resolve(registry, requested);
+  const resolvedItems = new Set(items.map((item) => item.name));
+  const closures = dependencyClosures(items, requested);
+  const nextRoots = lock.version === 2 ? { ...lock.roots, ...closures } : null;
+  const protectedItems = new Set(Object.values(nextRoots ?? {}).flat());
+  const legacyFiles = new Set(lock.version === 2 ? lock.legacyFiles : Object.keys(lock.files));
+  const ownershipChanged =
+    lock.version === 2 && JSON.stringify(lock.roots) !== JSON.stringify(nextRoots);
   const candidates = [];
   for (const item of items) {
     for (const file of item.files) {
@@ -45,7 +59,11 @@ export async function update(names, options) {
 
   const incoming = new Set(candidates.map((file) => file.relative));
   for (const [relative, tracked] of Object.entries(lock.files)) {
-    if (!requested.includes(tracked.item) || incoming.has(relative)) continue;
+    if (incoming.has(relative)) continue;
+    const removedUpstream = resolvedItems.has(tracked.item);
+    const orphaned =
+      lock.version === 2 && !legacyFiles.has(relative) && !protectedItems.has(tracked.item);
+    if (!removedUpstream && !orphaned) continue;
     const destination = projectPath(cwd, relative, 'Tracked file path');
     const current = fs.existsSync(destination) ? fs.readFileSync(destination, 'utf8') : null;
     candidates.push({
@@ -76,7 +94,7 @@ export async function update(names, options) {
     warn(`${conflicts.length} modified or untracked file${conflicts.length === 1 ? '' : 's'} left alone.`);
   }
 
-  if (!preview && (safe.length || missing.length)) {
+  if (!preview && (safe.length || missing.length || ownershipChanged)) {
     if (safe.length && !(await confirm(`Apply ${safe.length} file change${safe.length === 1 ? '' : 's'}?`, options))) {
       info(dim('Cancelled.'));
       return;
@@ -89,25 +107,34 @@ export async function update(names, options) {
         fs.writeFileSync(file.destination, file.content);
       }
     }
-    if (safe.length) {
+    if (safe.length || ownershipChanged) {
       const nextLock = structuredClone(lock);
       nextLock.registry = registry;
       for (const file of candidates.filter((entry) => entry.status !== 'conflict')) {
         if (file.status === 'remove') delete nextLock.files[file.relative];
         else nextLock.files[file.relative] = { item: file.item, digest: digest(file.content) };
       }
+      if (nextLock.version === 2) {
+        nextLock.roots = nextRoots;
+        nextLock.legacyFiles = nextLock.legacyFiles.filter(
+          (relative) => Object.hasOwn(nextLock.files, relative)
+        );
+      }
       writeLock(cwd, nextLock);
-      success(`Applied ${safe.length} file change${safe.length === 1 ? '' : 's'}`);
+      if (safe.length) success(`Applied ${safe.length} file change${safe.length === 1 ? '' : 's'}`);
+      else success('Updated dependency ownership metadata.');
     }
   } else if (!preview) {
     if (!conflicts.length) success('Tracked component files are current.');
-  } else if (safe.length || missing.length) {
-    const count = safe.length + missing.length;
+  } else if (safe.length || missing.length || ownershipChanged) {
+    const count = safe.length + missing.length + (ownershipChanged ? 1 : 0);
     info(dim(`${count} safe update${count === 1 ? '' : 's'} available; nothing written.`));
   } else if (!conflicts.length) {
     success('Tracked component files are current.');
   }
 
-  if ((preview && (safe.length || missing.length)) || conflicts.length) process.exitCode = 1;
+  if ((preview && (safe.length || missing.length || ownershipChanged)) || conflicts.length) {
+    process.exitCode = 1;
+  }
   info('');
 }

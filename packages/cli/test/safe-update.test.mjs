@@ -75,7 +75,8 @@ test('update writes only digest-matching files and reports modified files', asyn
     const added = run(['add', 'card', ...common]);
     assert.equal(added.status, 0, `${added.stdout}${added.stderr}`);
     const lock = JSON.parse(fs.readFileSync(path.join(project, 'panelui-lock.json'), 'utf8'));
-    assert.equal(lock.version, 1);
+    assert.equal(lock.version, 2);
+    assert.deepEqual(lock.roots, { card: ['card'] });
     assert.equal(lock.files['components/ui/card.tsx'].item, 'card');
     const unchanged = run(['update', ...common]);
     assert.equal(unchanged.status, 0, `${unchanged.stdout}${unchanged.stderr}`);
