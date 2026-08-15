@@ -80,7 +80,10 @@ Current registries also expose `kind`, documentation `group`, and `stability` (`
 
 Audits the current project without writing files or installing packages. It checks the PanelUI
 configuration and contained paths, aliases, CSS imports and sources, exported Metro wrapper, theme,
-Uniwind ambient types, required dependencies, and statically visible `PanelUIProvider` wiring.
+Uniwind ambient types, required dependencies, lockfile health, tracked-file digests, registry
+provenance, locally installed PanelUI package versions, and statically visible `PanelUIProvider`
+wiring. Missing or locally edited tracked files request review; malformed metadata, escaping paths,
+and provably incompatible installed versions are errors. No registry request is made.
 
 ```bash
 npx panelui-cli@latest doctor
@@ -90,6 +93,9 @@ npx panelui-cli@latest --cwd ./apps/mobile doctor --json
 The human report marks confirmed errors with `✗`, warnings with `!`, and checks that need manual
 review with `?`. Confirmed errors exit with status 1; healthy, warning, and unknown-only reports exit
 with status 0. `--json` returns a versioned object with `status`, counts, and ordered `checks` for CI.
+Version checks understand exact versions, `^`, `~`, `>=`, `*`, and `latest`. Other package-manager
+specifiers are reported as unknown rather than guessed. Newer readable lock schemas are review-only
+while their common tracked-file metadata is still checked.
 
 ### `mcp`
 
