@@ -64,6 +64,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactElement,
   type ReactNode,
@@ -71,6 +72,7 @@ import {
 import {
   AccessibilityInfo,
   AppState,
+  Platform,
   Pressable,
   View,
   type ViewProps,
@@ -107,6 +109,7 @@ import {
   visibleEntries,
   type PlannerCountedCategory,
 } from './planner-entries';
+import { plannerGridTarget } from './planner-grid-navigation';
 
 /** How many of a day's entries a cell draws before it stops and counts. */
 const DEFAULT_ENTRY_LIMIT = 2;
@@ -600,6 +603,21 @@ export interface PlannerGridProps {
   renderDay?: PlannerDayRenderer;
 }
 
+interface PlannerGridKeyDownEvent {
+  nativeEvent: { key?: string };
+  preventDefault: () => void;
+}
+
+interface PlannerGridNavigationContextValue {
+  activeIndex: number;
+  indexByDay: ReadonlyMap<number, number>;
+  register: (index: number, node: View | null) => void;
+  focus: (index: number, event: PlannerGridKeyDownEvent) => void;
+  makeActive: (index: number) => void;
+}
+
+const PlannerGridNavigationContext = createContext<PlannerGridNavigationContextValue | null>(null);
+
 /**
  * The weekday row and the six weeks below it.
  *
@@ -609,7 +627,8 @@ export interface PlannerGridProps {
  * weekday headings are hidden rather than read out 42 times over.
  */
 function PlannerGrid({ className, renderDay }: PlannerGridProps) {
-  const { month, weekStartsOn, locale, system } = usePlanner('Planner.Grid');
+  const { month, weekStartsOn, locale, system, selected, today, isInMonth } =
+    usePlanner('Planner.Grid');
   const { grid, week: weekRow, heading } = plannerVariants();
 
   const weeks = useMemo(
@@ -620,29 +639,70 @@ function PlannerGrid({ className, renderDay }: PlannerGridProps) {
     () => weekdayNames(locale, weekStartsOn),
     [locale, weekStartsOn]
   );
+  const dates = useMemo(() => weeks.flat(), [weeks]);
+  const indexByDay = useMemo(
+    () => new Map(dates.map((date, index) => [date.getTime(), index])),
+    [dates]
+  );
+  const initialDay = selected ?? today;
+  const [activeDay, setActiveDay] = useState(initialDay.getTime());
+  const storedIndex = indexByDay.get(activeDay);
+  const preferredIndex =
+    (selected ? indexByDay.get(startOfDay(selected).getTime()) : undefined) ??
+    indexByDay.get(today.getTime()) ??
+    dates.findIndex(isInMonth);
+  const activeIndex = storedIndex ?? Math.max(0, preferredIndex);
+  const refs = useRef(new Map<number, View>());
+  const register = useCallback((index: number, node: View | null) => {
+    if (node) refs.current.set(index, node);
+    else refs.current.delete(index);
+  }, []);
+  const makeActive = useCallback(
+    (index: number) => {
+      const date = dates[index];
+      if (date) setActiveDay(date.getTime());
+    },
+    [dates]
+  );
+  const focus = useCallback(
+    (index: number, event: PlannerGridKeyDownEvent) => {
+      const target = plannerGridTarget(event.nativeEvent.key ?? '', index, dates.length);
+      if (target === null) return;
+      event.preventDefault();
+      makeActive(target);
+      refs.current.get(target)?.focus();
+    },
+    [dates.length, makeActive]
+  );
+  const navigation = useMemo<PlannerGridNavigationContextValue>(
+    () => ({ activeIndex, indexByDay, register, focus, makeActive }),
+    [activeIndex, indexByDay, register, focus, makeActive]
+  );
 
   return (
-    <View className={grid({ className })}>
-      <View
-        className={weekRow()}
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-      >
-        {headings.map((label) => (
-          <Text key={label} size="xs" muted className={heading()}>
-            {label.toUpperCase()}
-          </Text>
-        ))}
-      </View>
-
-      {weeks.map((week, index) => (
-        <View key={index} className={weekRow()}>
-          {week.map((date) => (
-            <PlannerDay key={date.getTime()} date={date} renderDay={renderDay} />
+    <PlannerGridNavigationContext.Provider value={renderDay ? null : navigation}>
+      <View className={grid({ className })}>
+        <View
+          className={weekRow()}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
+          {headings.map((label) => (
+            <Text key={label} size="xs" muted className={heading()}>
+              {label.toUpperCase()}
+            </Text>
           ))}
         </View>
-      ))}
-    </View>
+
+        {weeks.map((week, index) => (
+          <View key={index} className={weekRow()}>
+            {week.map((date) => (
+              <PlannerDay key={date.getTime()} date={date} renderDay={renderDay} />
+            ))}
+          </View>
+        ))}
+      </View>
+    </PlannerGridNavigationContext.Provider>
   );
 }
 PlannerGrid.displayName = 'Planner.Grid';
@@ -658,6 +718,10 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
     days, today, selected, select, colorOf, categoryLabels,
     entryLimit, locale, system, isInMonth, onDayPress,
   } = usePlanner('Planner.Day');
+  const navigation = useContext(PlannerGridNavigationContext);
+  const registerGridCell = navigation?.register;
+  const focusGridCell = navigation?.focus;
+  const makeGridCellActive = navigation?.makeActive;
 
   const entries = entriesOn(days, date);
   const inMonth = isInMonth(date);
@@ -677,6 +741,31 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
     onDayPress?.(date, entries);
     select(date);
   };
+  const gridIndex = navigation?.indexByDay.get(date.getTime());
+  const setRef = useCallback(
+    (node: View | null) => {
+      if (gridIndex !== undefined) registerGridCell?.(gridIndex, node);
+    },
+    [gridIndex, registerGridCell]
+  );
+  const onFocus = useCallback(() => {
+    if (gridIndex !== undefined) makeGridCellActive?.(gridIndex);
+  }, [gridIndex, makeGridCellActive]);
+  const onKeyDown = useCallback(
+    (event: PlannerGridKeyDownEvent) => {
+      if (gridIndex !== undefined) focusGridCell?.(gridIndex, event);
+    },
+    [gridIndex, focusGridCell]
+  );
+  const webGridProps =
+    Platform.OS === 'web' && gridIndex !== undefined && navigation
+      ? {
+          ref: setRef,
+          tabIndex: navigation.activeIndex === gridIndex ? (0 as const) : (-1 as const),
+          onFocus,
+          onKeyDown,
+        }
+      : {};
 
   if (renderDay) {
     return (
@@ -688,6 +777,7 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
 
   return (
     <Pressable
+      {...(webGridProps as ViewProps)}
       onPress={press}
       accessibilityRole="button"
       accessibilityLabel={label}
