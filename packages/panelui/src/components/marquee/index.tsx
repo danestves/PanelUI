@@ -76,9 +76,10 @@ export interface MarqueeProps extends Omit<ViewProps, 'children'> {
   /** The content to repeat. Measured once, then tiled along the axis. */
   children: ReactNode;
   /**
-   * Travel speed in points per second. The cycle time follows from it and the
-   * measured content, so longer content takes proportionally longer rather
-   * than moving faster.
+   * Travel speed in points per second. 40 by default, which is slow enough
+   * that a word stays readable as it crosses. The cycle time follows from this
+   * and the measured content, so longer content takes proportionally longer
+   * rather than moving faster.
    */
   speed?: number;
   /** Gap between the end of one copy and the start of the next. */
