@@ -1,4 +1,14 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "panelui-native/components/*": ["./src/components/*/index.tsx"],
+      "panelui-native/hooks/*": ["./src/hooks/*.ts"],
+      "panelui-native/provider": ["./src/providers/panel-ui-provider.tsx"],
+      "panelui-native/theme": ["./src/theme/use-theme.ts"],
+      "panelui-native/primitives/*": ["./src/primitives/*.tsx"],
+      "panelui-native/utils/*": ["./src/utils/*.ts"]
+    }
+  },
   "include": ["src", "types", "type-tests"]
 }

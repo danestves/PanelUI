@@ -179,13 +179,20 @@ import { Button, useBreakpoint, formatTime } from 'panelui-native';
 ```
 
 For explicit module boundaries, every component and public hook also has a subpath. The public
-utilities are `cn`, `color`, and `time`:
+utilities are `cn`, `color`, and `time`. Provider, theme, and standalone foundations that do not
+expose internal helpers have explicit leaves too:
 
 ```tsx
 import { Button } from 'panelui-native/components/button';
 import { useBreakpoint } from 'panelui-native/hooks/use-breakpoint';
 import { formatTime } from 'panelui-native/utils/time';
+import { PanelUIProvider } from 'panelui-native/provider';
+import { useTheme } from 'panelui-native/theme';
+import { Scrim } from 'panelui-native/primitives/scrim';
 ```
+
+The other foundation leaves are `animated-pressable`, `keyboard-avoider`, and
+`scroll-progress` under `panelui-native/primitives/`.
 
 These imports expose the same implementations and types as the root entry. They are an
 organization and tooling boundary; they do not promise a smaller bundle without measuring your
