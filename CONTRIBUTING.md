@@ -31,6 +31,7 @@ npm install
 | `npm test` | Discover and run every repository contract test |
 | `npm run typecheck` | Typecheck every workspace |
 | `npm run build` | Build the library with `react-native-builder-bob` |
+| `npm run performance:example` | Production-export the Android showcase and check its bundle budget |
 | `npm run docs` | Start the documentation site |
 | `npm run docs:generate --workspace=docs` | Regenerate the docs pages and the CLI registry |
 

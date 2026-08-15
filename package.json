@@ -23,6 +23,7 @@
     "docs": "npm run dev --workspace=docs",
     "template": "node scripts/template-preview.mjs",
     "template:parity": "node scripts/template-parity.mjs",
+    "performance:example": "node scripts/verify-example-export.mjs",
     "performance:check": "npm run verify:package --workspace=panelui-native && node scripts/verify-registry-budgets.mjs"
   },
   "engines": {
