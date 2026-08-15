@@ -1,0 +1,795 @@
+import { useEffect, useRef, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScrollView, View, type LayoutChangeEvent } from "react-native";
+import { Avatar, Badge, BookmarkIcon, BellIcon, Button, Card, Frame, PlusIcon, SearchIcon, Skeleton, Switch, Text, Tooltip, Tour, Typography, WaterfallChart, type WaterfallDatum, waterfallSteps } from "panelui-native";
+import { PanelsideAssistantBlock, PanelsideChatBlock, PanelsideCurveBlock, PanelsideDockedBlock, PanelsideNativeBlock, PanelsideNavigateBlock, PanelsideOverlayBlock } from "../../components/panelside-blocks";
+import type { ComponentEntry } from '../component-types';
+
+/** Two series side by side, which is what a bar chart is for. */
+/** Padding the header needs to line up inside a `Frame.Panel`, which has none. */
+const CHART_HEADER = 'px-4 pt-3.5';
+
+/* -------------------------------------------------------------------------- */
+/* Catalogue                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A miniature screen for the tour to walk through.
+ *
+ * The point of a tour is that it points at things that are already there, so
+ * the demo needs a screen with things on it rather than three buttons in a row.
+ * This is the smallest one that still has a header, a body and an action —
+ * enough for the spotlight to travel a real distance between steps.
+ */
+function TourDemo() {
+  const [running, setRunning] = useState(false);
+
+  return (
+    <View className="w-full gap-4">
+      <Tour open={running} onOpenChange={setRunning}>
+        <View className="flex-row items-center justify-between">
+          <Text weight="semibold">Inbox</Text>
+          <Tour.Step
+            order={1}
+            title="Filter what you see"
+            description="Unread, flagged, or everything at once."
+            shape="circle"
+          >
+            <Button variant="ghost" size="icon" accessibilityLabel="Filter">
+              <SearchIcon size={20} />
+            </Button>
+          </Tour.Step>
+        </View>
+
+        <Tour.Step
+          order={0}
+          title="Your conversations"
+          description="Everything waiting for a reply lands in this list."
+          radius={16}
+        >
+          <Card>
+            {/* `p-4` rather than the default: Card.Content is `p-6 pt-0`,
+                which assumes a Card.Header above it, and there is none here —
+                so without this the three rows sit against the top border. */}
+            <Card.Content className="gap-2 p-4">
+              {[
+                { name: 'Ana Ruiz', initials: 'AR' },
+                { name: 'Deploy bot', initials: 'DB' },
+                { name: 'Marta Silva', initials: 'MS' },
+              ].map((person) => (
+                <View key={person.name} className="flex-row items-center gap-3">
+                  <Avatar size="sm" fallback={person.initials} />
+                  <Text size="sm">{person.name}</Text>
+                </View>
+              ))}
+            </Card.Content>
+          </Card>
+        </Tour.Step>
+
+        <Tour.Step
+          order={2}
+          title="Start something new"
+          description="A message to anyone, from anywhere in the app."
+        >
+          <Button onPress={() => {}}>New message</Button>
+        </Tour.Step>
+      </Tour>
+
+      <Button variant="outline" onPress={() => setRunning(true)}>
+        Start the tour
+      </Button>
+    </View>
+  );
+}
+
+/** `shape="circle"` for the controls that are round to begin with. */
+function TourCircleDemo() {
+  const [running, setRunning] = useState(false);
+
+  return (
+    <View className="w-full gap-4">
+      <Tour open={running} onOpenChange={setRunning} shape="circle" padding={10}>
+        <View className="flex-row items-center justify-center gap-6">
+          <Tour.Step order={0} title="You" description="Your profile, and everything under it.">
+            <Avatar fallback="KA" />
+          </Tour.Step>
+          <Tour.Step
+            order={1}
+            title="What you saved"
+            description="Anything you bookmark shows up here."
+          >
+            <Button variant="secondary" size="icon" accessibilityLabel="Saved">
+              <BookmarkIcon size={20} />
+            </Button>
+          </Tour.Step>
+          <Tour.Step order={2} title="Alerts" description="What the app is allowed to interrupt you for.">
+            <Button variant="secondary" size="icon" accessibilityLabel="Alerts">
+              <BellIcon size={20} />
+            </Button>
+          </Tour.Step>
+        </View>
+      </Tour>
+
+      <Button variant="outline" onPress={() => setRunning(true)}>
+        Start the tour
+      </Button>
+    </View>
+  );
+}
+
+/**
+ * `interactive` leaves the spotlit control pressable, so the walkthrough can
+ * ask you to use it rather than read about it. Advancing is the app's call:
+ * the target's own `onPress` moves the tour on.
+ */
+function TourInteractiveDemo() {
+  const [running, setRunning] = useState(false);
+  const [step, setStep] = useState(0);
+  const [count, setCount] = useState(0);
+
+  return (
+    <View className="w-full gap-4">
+      <Tour
+        open={running}
+        onOpenChange={setRunning}
+        step={step}
+        onStepChange={setStep}
+        interactive
+        showSkip={false}
+      >
+        <View className="items-center gap-4">
+          <Tour.Step
+            order={0}
+            title="Press it"
+            description="Go on — the button still works under the dim."
+            shape="circle"
+          >
+            <Button
+              variant="primary"
+              size="icon"
+              accessibilityLabel="Add one"
+              onPress={() => {
+                setCount((current) => current + 1);
+                if (running && step === 0) setStep(1);
+              }}
+            >
+              <PlusIcon size={20} />
+            </Button>
+          </Tour.Step>
+
+          <Tour.Step order={1} title="And there it is" description="The count went up by one.">
+            <Text size="lg" weight="semibold">
+              {count}
+            </Text>
+          </Tour.Step>
+        </View>
+      </Tour>
+
+      <Button
+        variant="outline"
+        onPress={() => {
+          setStep(0);
+          setRunning(true);
+        }}
+      >
+        Start the tour
+      </Button>
+    </View>
+  );
+}
+
+/**
+ * A walkthrough of a screen taller than the screen.
+ *
+ * The one case a tour cannot handle by itself: a target that has scrolled out
+ * of view has no rect worth measuring, so the step has to bring it back first.
+ * `onStepChange` fires with the step about to be shown, which is the moment to
+ * do it — every step records where it sits during layout, and the handler
+ * scrolls there before the spotlight goes looking.
+ *
+ * The scroll is deliberately not animated. The overlay measures its target a
+ * frame after the step changes, which is early enough to catch a jump and far
+ * too early to catch a three-hundred-millisecond glide — the hole would settle
+ * over wherever the content was passing through at the time. Under a dimmed
+ * screen the jump is not what the eye is following anyway; the spotlight
+ * travelling to the new target is.
+ */
+function TourScrollingDemo() {
+  const [running, setRunning] = useState(false);
+  const scroller = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
+
+  // Where each step sits down the content, filled in as the rows lay out. A
+  // ref rather than state: nothing renders from it, and a set-state per row
+  // during layout is a re-render per row for no visible difference.
+  const offsets = useRef<Record<number, number>>({});
+  const remember = (order: number) => (event: LayoutChangeEvent) => {
+    offsets.current[order] = event.nativeEvent.layout.y;
+  };
+
+  return (
+    <View className="flex-1">
+      <Tour
+        open={running}
+        onOpenChange={setRunning}
+        onStepChange={(order) => {
+          const y = offsets.current[order];
+          if (y === undefined) return;
+          // Short of the target rather than flush with it, so the step lands
+          // with some of the screen it belongs to still around it.
+          scroller.current?.scrollTo({ y: Math.max(0, y - 96), animated: false });
+        }}
+      >
+        <ScrollView
+          ref={scroller}
+          contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 120, gap: 16 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text size="xl" weight="bold">
+            Workspace
+          </Text>
+
+          {/* The steps are direct children of the scroller, so the `y` each one
+              reports at layout is its offset down the content — which is
+              exactly what scrollTo takes. Nested a level deeper it would be an
+              offset within whatever it was nested in. */}
+          <Tour.Step
+            order={0}
+            onLayout={remember(0)}
+            title="Everyone in here"
+            description="Who has access, and what they can reach."
+            radius={16}
+          >
+            <Card>
+              <Card.Content className="gap-3 p-4">
+                {[
+                  { name: 'Ana Ruiz', role: 'Admin', initials: 'AR' },
+                  { name: 'Marta Silva', role: 'Editor', initials: 'MS' },
+                  { name: 'Tom Byrne', role: 'Viewer', initials: 'TB' },
+                ].map((person) => (
+                  <View key={person.name} className="flex-row items-center gap-3">
+                    <Avatar size="sm" fallback={person.initials} />
+                    <Text size="sm" className="flex-1">
+                      {person.name}
+                    </Text>
+                    <Badge variant="secondary">{person.role}</Badge>
+                  </View>
+                ))}
+              </Card.Content>
+            </Card>
+          </Tour.Step>
+
+          <Filler lines={7} />
+
+          <Tour.Step
+            order={1}
+            onLayout={remember(1)}
+            title="What gets sent"
+            description="Turn off anything you would rather not hear about."
+            radius={16}
+          >
+            <Card>
+              <Card.Content className="gap-4 p-4">
+                <Text weight="semibold">Notifications</Text>
+                <NotificationRow label="Mentions" initial />
+                <NotificationRow label="Weekly digest" />
+              </Card.Content>
+            </Card>
+          </Tour.Step>
+
+          <Filler lines={9} />
+
+          <Tour.Step
+            order={2}
+            onLayout={remember(2)}
+            title="The one that cannot be undone"
+            description="Right at the bottom, where it belongs."
+          >
+            <Button variant="destructive" onPress={() => {}}>
+              Delete workspace
+            </Button>
+          </Tour.Step>
+        </ScrollView>
+      </Tour>
+
+      {/* Pinned, so the walkthrough can be restarted from wherever the last
+          one left the scroll. */}
+      <View
+        pointerEvents="box-none"
+        className="absolute inset-x-0 bottom-0 px-5"
+        style={{ paddingBottom: insets.bottom + 20 }}
+      >
+        <Button onPress={() => setRunning(true)}>Start the walkthrough</Button>
+      </View>
+    </View>
+  );
+}
+
+/** One switch row, holding its own state — Switch is controlled. */
+function NotificationRow({ label, initial = false }: { label: string; initial?: boolean }) {
+  const [on, setOn] = useState(initial);
+  return (
+    <View className="flex-row items-center justify-between gap-4">
+      <Text size="sm" className="flex-1">
+        {label}
+      </Text>
+      <Switch value={on} onValueChange={setOn} />
+    </View>
+  );
+}
+
+/** Filler paragraphs, so the steps are genuinely a scroll apart. */
+function Filler({ lines }: { lines: number }) {
+  return (
+    <View className="gap-2">
+      {Array.from({ length: lines }, (_, index) => (
+        <View
+          key={index}
+          className="h-3 rounded-full bg-muted"
+          style={{ width: `${68 + ((index * 37) % 30)}%` }}
+        />
+      ))}
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* WaterfallChart                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A quarter's revenue bridge: where it opened, what moved it, where it closed.
+ *
+ * Both ends are marked `total`, which is what anchors them to the baseline and
+ * makes the run a bridge between two readings rather than a row of changes.
+ * The closing entry carries `value: 0` — it reads the balance as it stands
+ * rather than adding to it.
+ */
+const REVENUE_BRIDGE: WaterfallDatum[] = [
+  { label: 'Q3', value: 482000, total: true },
+  { label: 'New', value: 96400 },
+  { label: 'Expansion', value: 41200 },
+  { label: 'Churn', value: -58700 },
+  { label: 'Downgrade', value: -19300 },
+  { label: 'Q4', value: 0, total: true },
+];
+
+/** Where a month's cash went, with no opening balance to bridge from. */
+const CASH_FLOW: WaterfallDatum[] = [
+  { label: 'Opening', value: 128000, total: true },
+  { label: 'Receipts', value: 74500 },
+  { label: 'Payroll', value: -61200 },
+  { label: 'Hosting', value: -14800 },
+  { label: 'Marketing', value: -22400 },
+  { label: 'Tax', value: -18600 },
+  { label: 'Closing', value: 0, total: true },
+];
+
+/** Money reads with its separators, and with the sign outside the symbol. */
+const dollars = (value: number) =>
+  `${value < 0 ? '−' : ''}$${Math.abs(Math.round(value)).toLocaleString()}`;
+
+/** The plain bridge: two totals, four changes, and the connectors between. */
+function WaterfallBasicVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Revenue</Frame.Title>
+          <Frame.Action>Q3 to Q4</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <WaterfallChart data={REVENUE_BRIDGE} className="px-2 pb-4">
+            <WaterfallChart.Header
+              className={CHART_HEADER}
+              title="Closing"
+              value={dollars(541600)}
+              caption="Up $59,600 on the quarter"
+              legend
+            />
+            <WaterfallChart.Grid />
+            <WaterfallChart.Connectors />
+            <WaterfallChart.Bars />
+            <WaterfallChart.XAxis />
+            <WaterfallChart.Tooltip />
+          </WaterfallChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * The same run with every change written at the end of its bar, and the value
+ * axis down the side to read the balances against.
+ */
+function WaterfallValuesVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Revenue</Frame.Title>
+          <Frame.Action>Labelled</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <WaterfallChart data={REVENUE_BRIDGE} aspectRatio={1.5} className="px-2 pb-4">
+            <WaterfallChart.Header
+              className={CHART_HEADER}
+              title="Q4 revenue"
+              value={dollars(541600)}
+              caption="Each bar is what that line moved"
+            />
+            <WaterfallChart.Grid />
+            <WaterfallChart.YAxis />
+            <WaterfallChart.Connectors />
+            <WaterfallChart.Bars />
+            <WaterfallChart.Values />
+            <WaterfallChart.XAxis />
+            <WaterfallChart.Tooltip />
+          </WaterfallChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * Seven steps, laid down the side.
+ *
+ * The reason to turn it is the names. Upright, seven columns across a phone is
+ * about forty points each, and "Marketing" does not fit under one. Sideways
+ * every name gets a full line to itself and the run reads top to bottom.
+ */
+function WaterfallSidewaysVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Cash</Frame.Title>
+          <Frame.Action>March</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <WaterfallChart
+            data={CASH_FLOW}
+            orientation="horizontal"
+            aspectRatio={0.95}
+            className="px-2 pb-4"
+          >
+            <WaterfallChart.Header
+              className={CHART_HEADER}
+              title="Closing balance"
+              value={dollars(85500)}
+              caption="Down $42,500 on the month"
+              legend
+            />
+            <WaterfallChart.Grid />
+            <WaterfallChart.Connectors />
+            <WaterfallChart.Bars />
+            <WaterfallChart.YAxis />
+            <WaterfallChart.Tooltip />
+          </WaterfallChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/**
+ * The header following the finger: the step's own change while one is held,
+ * and the closing balance when nothing is.
+ */
+function WaterfallReadoutVersion() {
+  const [active, setActive] = useState(-1);
+  const step = active >= 0 ? waterfallSteps(CASH_FLOW)[active] : null;
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Cash</Frame.Title>
+          <Frame.Action>Drag the chart</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <WaterfallChart
+            data={CASH_FLOW}
+            aspectRatio={1.6}
+            onActiveIndexChange={setActive}
+            className="px-2 pb-4"
+          >
+            <WaterfallChart.Header
+              className={CHART_HEADER}
+              title={step ? step.label : 'Closing balance'}
+              value={dollars(step ? step.value : 85500)}
+              caption={
+                step
+                  ? step.kind === 'total'
+                    ? 'A reading, not a change'
+                    : `Balance after: ${dollars(step.end)}`
+                  : 'Seven lines, opening to closing'
+              }
+            />
+            <WaterfallChart.Grid />
+            <WaterfallChart.Connectors />
+            <WaterfallChart.Bars />
+            <WaterfallChart.XAxis ticks={4} />
+            <WaterfallChart.Tooltip />
+          </WaterfallChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** The waiting state, and the run growing out of it when the data lands. */
+function WaterfallLoadingVersion() {
+  const [status, setStatus] = useState<'loading' | 'ready'>('loading');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setStatus('ready'), 1600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <View className="flex-1 justify-center gap-4 p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Revenue</Frame.Title>
+          <Frame.Action>{status === 'loading' ? 'Loading' : 'Q3 to Q4'}</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <WaterfallChart data={REVENUE_BRIDGE} status={status} className="px-2 pb-4">
+            <WaterfallChart.Header
+              className={CHART_HEADER}
+              title="Closing"
+              value={status === 'loading' ? '—' : dollars(541600)}
+              caption={status === 'loading' ? 'Fetching' : 'Up $59,600 on the quarter'}
+            />
+            <WaterfallChart.Grid />
+            <WaterfallChart.Skeleton />
+            <WaterfallChart.Connectors />
+            <WaterfallChart.Bars />
+            <WaterfallChart.XAxis />
+            <WaterfallChart.Tooltip />
+          </WaterfallChart>
+        </Frame.Panel>
+      </Frame>
+
+      <Button variant="secondary" onPress={() => setStatus('loading')}>
+        Load again
+      </Button>
+    </View>
+  );
+}
+
+export const ENTRIES: ComponentEntry[] = [
+{
+    slug: 'typography',
+    name: 'Typography',
+    summary: 'Semantic text presets',
+    demos: [
+      {
+        label: 'Types',
+        render: () => (
+          <View className="w-full gap-3">
+            <Typography type="h1">Heading 1</Typography>
+            <Typography type="h2">Heading 2</Typography>
+            <Typography type="h3">Heading 3</Typography>
+            <Typography type="h4">Heading 4</Typography>
+            <Typography type="body">Body text</Typography>
+            <Typography type="body-sm" muted>
+              Small body text
+            </Typography>
+            <Typography.Code>npm i panelui-native</Typography.Code>
+          </View>
+        ),
+      },
+      {
+        label: 'Paragraphs',
+        render: () => (
+          <View className="w-full gap-3">
+            <Typography.Paragraph type="lead">
+              A lead paragraph: the sentence under a heading, set larger and
+              quieter than the body it introduces.
+            </Typography.Paragraph>
+            <Typography.Paragraph>
+              This is a default body paragraph. It uses the base font size and
+              normal weight for comfortable reading.
+            </Typography.Paragraph>
+            <Typography.Paragraph type="body-sm" muted>
+              A smaller paragraph, useful for captions, footnotes, or secondary
+              descriptions.
+            </Typography.Paragraph>
+            <Typography.Paragraph type="small">
+              Small: tight, medium weight, for meta lines.
+            </Typography.Paragraph>
+          </View>
+        ),
+      },
+      {
+        label: 'Marks',
+        render: () => (
+          <View className="w-full gap-3">
+            <Typography underline>Terms of service</Typography>
+            <Typography italic>An aside, in passing.</Typography>
+            <Typography strike muted>
+              £24.00
+            </Typography>
+            <Typography weight="bold">Bolded body, without a heading.</Typography>
+            {/* Marks stack: each one is a prop, so a screen never has to know
+                which utilities add up to "a struck-through italic". */}
+            <Typography italic strike muted>
+              Withdrawn
+            </Typography>
+          </View>
+        ),
+      },
+      {
+        label: 'Alignment and case',
+        render: () => (
+          <View className="w-full gap-3">
+            <Typography align="left">Left</Typography>
+            <Typography align="center">Centre</Typography>
+            <Typography align="right">Right</Typography>
+            <Typography type="body-xs" transform="uppercase" muted>
+              Section label
+            </Typography>
+            <Typography transform="capitalize">a capitalised sentence</Typography>
+          </View>
+        ),
+      },
+      {
+        label: 'Quotes and lists',
+        render: () => (
+          <View className="w-full gap-5">
+            <Typography.Blockquote>
+              A component library is a set of decisions you only have to make
+              once.
+            </Typography.Blockquote>
+
+            <Typography.List>
+              <Typography.ListItem>Runs in Expo Go</Typography.ListItem>
+              <Typography.ListItem>Animates on the UI thread</Typography.ListItem>
+              <Typography.ListItem>
+                Wraps to as many lines as it needs, with the marker staying put
+              </Typography.ListItem>
+            </Typography.List>
+
+            <Typography.List ordered>
+              <Typography.ListItem>Install the package</Typography.ListItem>
+              <Typography.ListItem>Import the stylesheet</Typography.ListItem>
+              <Typography.ListItem>Wrap the app in the provider</Typography.ListItem>
+            </Typography.List>
+          </View>
+        ),
+      },
+    ],
+  },
+{
+    slug: 'panelside',
+    name: 'Panelside',
+    summary: 'Navigation panel that pushes and curves the app screen',
+    // Every one of these is the whole screen. Panelside wraps the app content
+    // in order to push it, so there is no version of it that fits in a section
+    // between two dividers.
+    demos: [
+      {
+        label: 'Assistant',
+        id: 'assistant',
+        fullPage: true,
+        fullBleed: true,
+        description: 'Swipe from the left edge — the screen slides, shrinks and rounds.',
+        render: () => <PanelsideAssistantBlock />,
+      },
+      {
+        label: 'Open a conversation',
+        id: 'navigate',
+        fullPage: true,
+        fullBleed: true,
+        description: 'Press a chat and the screen becomes it, with the panel closing itself.',
+        render: () => <PanelsideNavigateBlock />,
+      },
+      {
+        label: 'Overlay',
+        id: 'overlay',
+        fullPage: true,
+        fullBleed: true,
+        description: 'The same panel sliding over a screen that stays where it is.',
+        render: () => <PanelsideOverlayBlock />,
+      },
+      {
+        label: 'Docked',
+        id: 'docked',
+        fullPage: true,
+        fullBleed: true,
+        description: 'Past a width you pick, the panel is a column and the trigger goes.',
+        render: () => <PanelsideDockedBlock />,
+      },
+      {
+        label: 'Deeper curve',
+        id: 'curve',
+        fullPage: true,
+        fullBleed: true,
+        description: 'Scale, radius and dim turned well up — the three numbers are yours.',
+        render: () => <PanelsideCurveBlock />,
+      },
+      {
+        label: 'Full chat',
+        id: 'chat',
+        fullPage: true,
+        fullBleed: true,
+        description: 'A streaming transcript underneath, anchored and scrolling on its own.',
+        render: () => <PanelsideChatBlock />,
+      },
+      {
+        label: 'Native chat',
+        id: 'native',
+        fullPage: true,
+        fullBleed: true,
+        description: 'Platform picker, sheet and buttons inside the panel — needs @expo/ui.',
+        render: () => <PanelsideNativeBlock />,
+      },
+    ],
+  },
+{
+    slug: 'tour',
+    name: 'Tour',
+    summary: 'A walkthrough that introduces a screen one control at a time',
+    demos: [
+      { label: 'A walkthrough', render: () => <TourDemo /> },
+      { label: 'Round targets', render: () => <TourCircleDemo /> },
+      { label: 'Try it yourself', render: () => <TourInteractiveDemo /> },
+      {
+        label: 'Across a scroll',
+        id: 'scrolling',
+        fullPage: true,
+        description:
+          'A screen taller than the screen: each step scrolls its target back into view first.',
+        render: () => <TourScrollingDemo />,
+      },
+    ],
+  },
+{
+    slug: 'waterfall-chart',
+    name: 'WaterfallChart',
+    summary: 'How a run of changes carried one total to another',
+    layout: 'pager',
+    demos: [
+      {
+        label: 'Basic',
+        id: 'basic',
+        fullPage: true,
+        description: 'Two totals on the baseline, four changes floating between them.',
+        render: () => <WaterfallBasicVersion />,
+      },
+      {
+        label: 'Values',
+        id: 'values',
+        fullPage: true,
+        description: 'Every change written at the end of its bar, signed, over a value axis.',
+        render: () => <WaterfallValuesVersion />,
+      },
+      {
+        label: 'Sideways',
+        id: 'sideways',
+        fullPage: true,
+        description: 'Seven steps down the side, because seven names do not fit across a phone.',
+        render: () => <WaterfallSidewaysVersion />,
+      },
+      {
+        label: 'Reading a step',
+        id: 'readout',
+        fullPage: true,
+        description: 'The header follows the finger — the step held, or the closing balance.',
+        render: () => <WaterfallReadoutVersion />,
+      },
+      {
+        label: 'Loading',
+        id: 'loading',
+        fullPage: true,
+        description: 'Equal stubs on the baseline, because invented balances cannot be unseen.',
+        render: () => <WaterfallLoadingVersion />,
+      },
+    ],
+  }
+];
+export const ENTRIES_BY_SLUG = Object.fromEntries(ENTRIES.map((entry) => [entry.slug, entry]));

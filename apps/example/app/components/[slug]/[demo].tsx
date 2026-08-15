@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { EmptyState, Text } from 'panelui-native';
 import { ScreenHeader } from '../../../src/components/screen-header';
-import { COMPONENTS_BY_SLUG } from '../../../src/data/components';
+import { useComponentEntry } from '../../../src/data/use-component-entry';
 
 /**
  * One demo, filling the screen.
@@ -13,8 +13,35 @@ import { COMPONENTS_BY_SLUG } from '../../../src/data/components';
  */
 export default function ComponentVersionScreen() {
   const { slug, demo: demoId } = useLocalSearchParams<{ slug: string; demo: string }>();
-  const entry = COMPONENTS_BY_SLUG[slug ?? ''];
+  const { entry, status } = useComponentEntry(slug ?? '');
   const demo = entry?.demos.find((candidate) => candidate.id === demoId);
+
+  if (status === 'loading') {
+    return (
+      <View className="flex-1">
+        <ScreenHeader title="Demo" showBack />
+        <Text size="sm" muted className="p-5">
+          Loading demo…
+        </Text>
+      </View>
+    );
+  }
+
+  if (status === 'unavailable') {
+    return (
+      <View className="flex-1">
+        <ScreenHeader title="Unavailable" showBack />
+        <EmptyState>
+          <EmptyState.Header>
+            <EmptyState.Title>Demo unavailable</EmptyState.Title>
+            <EmptyState.Description>
+              This demo could not be loaded. Try again later.
+            </EmptyState.Description>
+          </EmptyState.Header>
+        </EmptyState>
+      </View>
+    );
+  }
 
   if (!demo) {
     return (
