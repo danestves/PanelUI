@@ -107,12 +107,18 @@ import {
   visibleEntries,
   type PlannerCountedCategory,
 } from './planner-entries';
+import { usePlannerMonthAnnouncement } from './planner-announcement';
 
 /** How many of a day's entries a cell draws before it stops and counts. */
 const DEFAULT_ENTRY_LIMIT = 2;
 
 /** The palette a category takes its dot from when it does not name a colour. */
 const PALETTE_SIZE = 5;
+
+/** Stable wrapper keeps the native method's receiver and the hook dependency steady. */
+const announceMonth = (label: string) => {
+  AccessibilityInfo.announceForAccessibility(label);
+};
 
 const plannerVariants = tv({
   slots: {
@@ -322,14 +328,21 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
     const month = monthProp
       ? startOfCalendarMonth(monthProp, system, locale)
       : internalMonth;
+    const monthLabel = calendarMonthLabel(month, system, locale);
+    const expectMonthAnnouncement = usePlannerMonthAnnouncement({
+      monthKey: month.getTime(),
+      monthLabel,
+      announce: announceMonth,
+    });
 
     const setMonth = useCallback(
       (next: Date) => {
         const settled = startOfCalendarMonth(next, system, locale);
+        expectMonthAnnouncement(settled);
         if (!monthProp) setInternalMonth(settled);
         onMonthChange?.(settled);
       },
-      [monthProp, onMonthChange, system, locale]
+      [monthProp, onMonthChange, system, locale, expectMonthAnnouncement]
     );
 
     const [internalSelected, setInternalSelected] = useState<Date | null>(defaultSelected);
@@ -371,16 +384,6 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
       () => summariseMonth(entries, categories, isInMonth),
       [entries, categories, isInMonth]
     );
-
-    /*
-     * The month is announced rather than left to the cells. Paging moves 42
-     * labels at once and a screen reader reads none of them, so without this
-     * the only thing that changes is silent.
-     */
-    const monthLabel = calendarMonthLabel(month, system, locale);
-    useEffect(() => {
-      AccessibilityInfo.announceForAccessibility(monthLabel);
-    }, [monthLabel]);
 
     const context = useMemo<PlannerContextValue>(
       () => ({
