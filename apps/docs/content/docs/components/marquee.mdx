@@ -1,0 +1,148 @@
+---
+title: Marquee
+description: Content that travels across its container on a loop.
+status: new
+---
+
+Repeats content end to end and travels it across the container, for a strip of logos, a ticker of prices or a row of names that should keep moving rather than stop at the edge.
+
+The content is measured once and tiled enough times to cover the container twice over. One track holds every copy and it is the track that moves, so the cost is a single animated node however much content is in it, driven on the UI thread as a linear timing.
+
+The loop is exactly one copy-and-gap long, which is why the seam never shows: the state it ends on is the state it began on.
+
+Content has to have a size of its own to be measured. A child stretched to `flex-1`, or an image with no width and height, measures as nothing and the marquee will not start.
+
+For content the reader should be able to move themselves, use a `ScrollView` and put [ScrollFade](/docs/components/scroll-fade) around it.
+
+## Installation
+
+Marquee ships with the library — no separate install.
+
+```tsx
+import { Marquee, Badge, Chip, Surface, Text, Switch } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add marquee
+```
+
+## Usage
+
+```tsx
+<Marquee spacing={12} speed={40}>
+  <View className="flex-row gap-3">
+    {stack.map((label) => (
+      <Badge key={label} variant="secondary">{label}</Badge>
+    ))}
+  </View>
+</Marquee>
+```
+
+## Examples
+
+### A strip of badges
+
+The default: horizontal, travelling toward the end of the line at 40 points a second.
+
+```tsx
+<Marquee spacing={12} speed={40}>
+  <View className="flex-row gap-3">
+    {stack.map((label) => (
+      <Badge key={label} variant="secondary">{label}</Badge>
+    ))}
+  </View>
+</Marquee>
+```
+
+### Two rows, opposite ways
+
+Two rows travelling against each other reads as motion, where a single row reads as one thing that happens to be sliding.
+
+```tsx
+<View className="gap-3">
+  <Marquee spacing={12} speed={35}>
+    <View className="flex-row gap-3">
+      {stack.map((label) => <Chip key={label}>{label}</Chip>)}
+    </View>
+  </Marquee>
+  <Marquee spacing={12} speed={35} reverse>
+    <View className="flex-row gap-3">
+      {releases.map((label) => (
+        <Chip key={label} variant="outline">{label}</Chip>
+      ))}
+    </View>
+  </Marquee>
+</View>
+```
+
+### Vertical
+
+There is no content width to take a height from on this axis, so the container is given one.
+
+```tsx
+<Marquee direction="vertical" spacing={12} speed={30} className="h-40">
+  <View className="gap-3">
+    {releases.map((label) => (
+      <Surface key={label} className="w-full rounded-xl px-4 py-3">
+        <Text weight="medium">{label}</Text>
+      </Surface>
+    ))}
+  </View>
+</Marquee>
+```
+
+### Holding it still
+
+`playing` stops the travel where it is and starts it again from there.
+
+```tsx
+const [playing, setPlaying] = useState(true);
+
+<Marquee spacing={12} speed={40} playing={playing}>
+  <View className="flex-row gap-3">
+    {stack.map((label) => (
+      <Badge key={label} variant="secondary">{label}</Badge>
+    ))}
+  </View>
+</Marquee>
+<Switch value={playing} onValueChange={setPlaying} />
+```
+
+## API Reference
+
+### Marquee
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `speed` | `number` | `DEFAULT_SPEED` | Travel speed in points per second. 40 by default, which is slow enough that a word stays readable as it crosses. The cycle time follows from this and the measured content, so longer content takes proportionally longer rather than moving faster. |
+| `spacing` | `number` | `0` | Gap between the end of one copy and the start of the next. |
+| `direction` | `MarqueeDirection` | `'horizontal'` | Axis the content travels along. |
+| `reverse` | `boolean` | `false` | Send it the other way: toward the start of the line, or upward. Applied after the reading direction, not instead of it. |
+| `playing` | `boolean` | `true` | Set false to hold the content where it is. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+**With the operating system set to reduce motion the content is rendered once and held still.** Not a slower loop — none. A ticker that never stops is the thing that setting exists to turn off.
+
+A horizontal marquee travels toward the end of the line, so it reverses in a right-to-left subtree. `reverse` flips it again from wherever that leaves it.
+
+**A vertical marquee needs a height.** A horizontal one takes its height from the content it measured, but a vertical one has nothing to take a height from and collapses. Give the container one.
+
+`speed` is points per second, so the cycle time follows from it and the measured content. Longer content takes proportionally longer rather than travelling faster, and two marquees at the same speed stay in step whatever is inside them.
+
+Screen readers are given one copy. The rest are duplicates of content already announced.
+
+Children stay interactive — a copy passing under a finger can be pressed. Set `playing={false}` to hold the content still for as long as it needs to be read or tapped accurately.
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `Marquee`
+
+**Types:** `MarqueeProps`, `MarqueeDirection`

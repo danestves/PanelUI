@@ -803,6 +803,19 @@
     "docsPath": "components/marker"
   },
   {
+    "name": "marquee",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Content that travels across its container on a loop.",
+    "registryDependencies": [
+      "cn",
+      "use-direction"
+    ],
+    "docsPath": "components/marquee"
+  },
+  {
     "name": "menu",
     "type": "registry:ui",
     "kind": "ui",

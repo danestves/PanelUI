@@ -257,7 +257,7 @@
     "react native node graph flow diagram",
     {
       "addedIn": "0.19.0",
-      "updatedIn": "0.66.1",
+      "updatedIn": "0.69.0",
       "category": "data"
     }
   ],
@@ -426,6 +426,15 @@
       "category": "feedback"
     }
   ],
+  "marquee": [
+    "Marquee",
+    "Content that travels across its container on a loop.",
+    "react native marquee ticker infinite scroll",
+    {
+      "addedIn": "0.69.0",
+      "category": "media"
+    }
+  ],
   "meter": [
     "Meter",
     "A measurement on a fixed scale, coloured by where it falls.",
@@ -457,7 +466,10 @@
     "Planner",
     "A month of days, each carrying what falls on it.",
     "react native planner event calendar component",
-    { "addedIn": "0.68.0", "category": "data" }
+    {
+      "addedIn": "0.68.0",
+      "category": "data"
+    }
   ],
   "popover": [
     "Popover",

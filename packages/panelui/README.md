@@ -240,6 +240,7 @@ consumer bundler.
 | `Map` | Vector map whose basemap is drawn from your theme tokens |
 | `MarkdownEditor` | A field for writing markdown, with a toolbar and a preview |
 | `Marker` | Inline note between conversation turns |
+| `Marquee` | Content that travels across its container on a loop |
 | `Menu` | The list of things you can do to something |
 | `Message` | Chat turn with avatar, bubble, header and footer |
 | `MessageScroller` | Scroll behaviour a chat transcript needs |

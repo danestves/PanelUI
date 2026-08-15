@@ -406,7 +406,7 @@ Two labelled containers, the dependency between them, and an overview of the par
 | `from` | `FlowEndpointReference` | — | Source node or handle. Strings retain the `"nodeId.handleId"` shorthand. |
 | `to` | `FlowEndpointReference` | — | Target node or handle, in the same shape. |
 | `variant` | `FlowEdgeVariant` | `'bezier'` | How the edge is routed. |
-| `animated` | `boolean` | `false` | Mark the edge as carrying something — a request, a build, a dependency that is live rather than declared. Draws it dashed. |
+| `animated` | `boolean` | `false` | Mark the edge as carrying something — a request, a build, a dependency that is live rather than declared. Draws it dashed and marches the dashes from source to target. Falls back to a still dashed edge when the operating system is set to reduce motion. |
 | `dashed` | `boolean` | `false` | Draw it broken rather than solid. |
 | `color` | `string` | — | Stroke colour. Defaults to the muted-foreground token — an edge is content rather than chrome, and the border token it would otherwise share with the nodes is, by design, barely there. |
 | `width` | `number` | `2` | Stroke width in graph points. |
@@ -462,13 +462,13 @@ Name a handle instead (`from="ingest.ok"`) and the edge stays pinned to that por
 
 `bezier` is a curve leaving and arriving perpendicular to each face. `smoothstep` is an orthogonal run with rounded corners — the one that reads as wiring — and `step` is the same with hard corners. `straight` is a line, for a graph where the routing is not the point.
 
-`arrow` puts a head on the target end, drawn as its own small triangle rather than through SVG's `marker-end`. `dashed` breaks the line up, and `animated` marks an edge as carrying something live rather than declared, which also draws it dashed.
+`arrow` puts a head on the target end, drawn as its own small triangle rather than through SVG's `marker-end`. `dashed` breaks the line up, and `animated` marks an edge as carrying something live rather than declared. It draws the edge dashed and marches the dashes from source to target; with the operating system set to reduce motion the dashes are drawn but held still.
 
 ### Where the positions live
 
 Every node's box is kept twice: on the UI thread, where a drag writes it every frame and the node's own transform reads it, and in React state, where the edges are rendered from it. A dragged frame therefore never lags the finger moving it, and the edges attached to it redraw as it goes.
 
-The tempting design is one copy — everything on the UI thread, edges animating their own path strings, no renders at all. It does not draw. An animated SVG path in React Native reliably animates its `d` and nothing else, and only while nothing else about it is animated. So the edges are ordinary elements and cost a render per drag frame, which is a real cost and the right trade.
+The tempting design is one copy — everything on the UI thread, edges animating their own path strings, no renders at all. It does not draw. An animated SVG path in React Native reliably animates its `d` and nothing else, and only while nothing else about it is animated. So the edges are ordinary elements and cost a render per drag frame, which is a real cost and the right trade. An `animated` edge keeps that arrangement and animates the one property the geometry does not own — the dash offset — so a dragged node reshapes the edge while the dashes keep marching.
 
 `onNodeDragEnd` reports where a frame was dropped. Positions are otherwise yours to leave alone: pass `position` once and the canvas takes it from there, or keep it in state and pass it back to drive nodes from outside.
 

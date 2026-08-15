@@ -1,0 +1,29 @@
+{
+  "slug": "marquee",
+  "intro": "Repeats content end to end and travels it across the container, for a strip of logos, a ticker of prices or a row of names that should keep moving rather than stop at the edge.\n\nThe content is measured once and tiled enough times to cover the container twice over. One track holds every copy and it is the track that moves, so the cost is a single animated node however much content is in it, driven on the UI thread as a linear timing.\n\nThe loop is exactly one copy-and-gap long, which is why the seam never shows: the state it ends on is the state it began on.\n\nContent has to have a size of its own to be measured. A child stretched to `flex-1`, or an image with no width and height, measures as nothing and the marquee will not start.\n\nFor content the reader should be able to move themselves, use a `ScrollView` and put [ScrollFade](/docs/components/scroll-fade) around it.",
+  "usage": "<Marquee spacing={12} speed={40}>\n  <View className=\"flex-row gap-3\">\n    {stack.map((label) => (\n      <Badge key={label} variant=\"secondary\">{label}</Badge>\n    ))}\n  </View>\n</Marquee>",
+  "extraImports": ["Badge", "Chip", "Surface", "Text", "Switch"],
+  "notes": "**With the operating system set to reduce motion the content is rendered once and held still.** Not a slower loop — none. A ticker that never stops is the thing that setting exists to turn off.\n\nA horizontal marquee travels toward the end of the line, so it reverses in a right-to-left subtree. `reverse` flips it again from wherever that leaves it.\n\n**A vertical marquee needs a height.** A horizontal one takes its height from the content it measured, but a vertical one has nothing to take a height from and collapses. Give the container one.\n\n`speed` is points per second, so the cycle time follows from it and the measured content. Longer content takes proportionally longer rather than travelling faster, and two marquees at the same speed stay in step whatever is inside them.\n\nScreen readers are given one copy. The rest are duplicates of content already announced.\n\nChildren stay interactive — a copy passing under a finger can be pressed. Set `playing={false}` to hold the content still for as long as it needs to be read or tapped accurately.",
+  "examples": [
+    {
+      "title": "A strip of badges",
+      "description": "The default: horizontal, travelling toward the end of the line at 40 points a second.",
+      "code": "<Marquee spacing={12} speed={40}>\n  <View className=\"flex-row gap-3\">\n    {stack.map((label) => (\n      <Badge key={label} variant=\"secondary\">{label}</Badge>\n    ))}\n  </View>\n</Marquee>"
+    },
+    {
+      "title": "Two rows, opposite ways",
+      "description": "Two rows travelling against each other reads as motion, where a single row reads as one thing that happens to be sliding.",
+      "code": "<View className=\"gap-3\">\n  <Marquee spacing={12} speed={35}>\n    <View className=\"flex-row gap-3\">\n      {stack.map((label) => <Chip key={label}>{label}</Chip>)}\n    </View>\n  </Marquee>\n  <Marquee spacing={12} speed={35} reverse>\n    <View className=\"flex-row gap-3\">\n      {releases.map((label) => (\n        <Chip key={label} variant=\"outline\">{label}</Chip>\n      ))}\n    </View>\n  </Marquee>\n</View>"
+    },
+    {
+      "title": "Vertical",
+      "description": "There is no content width to take a height from on this axis, so the container is given one.",
+      "code": "<Marquee direction=\"vertical\" spacing={12} speed={30} className=\"h-40\">\n  <View className=\"gap-3\">\n    {releases.map((label) => (\n      <Surface key={label} className=\"w-full rounded-xl px-4 py-3\">\n        <Text weight=\"medium\">{label}</Text>\n      </Surface>\n    ))}\n  </View>\n</Marquee>"
+    },
+    {
+      "title": "Holding it still",
+      "description": "`playing` stops the travel where it is and starts it again from there.",
+      "code": "const [playing, setPlaying] = useState(true);\n\n<Marquee spacing={12} speed={40} playing={playing}>\n  <View className=\"flex-row gap-3\">\n    {stack.map((label) => (\n      <Badge key={label} variant=\"secondary\">{label}</Badge>\n    ))}\n  </View>\n</Marquee>\n<Switch value={playing} onValueChange={setPlaying} />"
+    }
+  ]
+}

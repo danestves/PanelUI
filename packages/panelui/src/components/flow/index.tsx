@@ -31,6 +31,10 @@
  * the edges are ordinary elements and cost a render per drag frame. That is a
  * real cost and it is the right trade.
  *
+ * An `animated` edge keeps that arrangement and animates the one property the
+ * geometry does not own: the dash offset. Its `d` still arrives by re-render,
+ * so a dragged node reshapes the edge while the dashes keep marching.
+ *
  * JavaScript is told a drag has finished through `onNodeDragEnd`. Positions
  * are otherwise yours to leave alone: pass `position` once and the canvas
  * takes it from there, or keep it in state and pass it back to drive nodes
@@ -65,10 +69,12 @@ import {
 import { useCSSVariable } from 'uniwind';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  cancelAnimation,
   runOnJS,
   useAnimatedProps,
   useAnimatedStyle,
   useDerivedValue,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -158,6 +164,15 @@ const CONNECT_RADIUS = 44;
  * border of its own and takes none of this.
  */
 const GROUP_EDGE_STANDOFF = 5;
+
+/** Dash and gap length for a broken edge, in graph points. */
+const EDGE_DASH = 6;
+
+/**
+ * How long an animated edge takes to travel one dash-and-gap. Slow enough to
+ * read as flow rather than flicker, fast enough to look live.
+ */
+const EDGE_MARCH_DURATION = 600;
 
 export type FlowEdgeVariant = 'bezier' | 'smoothstep' | 'step' | 'straight';
 
@@ -1496,7 +1511,9 @@ export interface FlowEdgeProps {
   variant?: FlowEdgeVariant;
   /**
    * Mark the edge as carrying something — a request, a build, a dependency
-   * that is live rather than declared. Draws it dashed.
+   * that is live rather than declared. Draws it dashed and marches the dashes
+   * from source to target. Falls back to a still dashed edge when the
+   * operating system is set to reduce motion.
    */
   animated?: boolean;
   /** Draw it broken rather than solid. */
@@ -1549,6 +1566,63 @@ function FlowEdge(props: FlowEdgeProps) {
   }, [key, json, registerEdge, unregisterEdge]);
 
   return null;
+}
+
+/**
+ * A dashed edge whose dashes travel from source to target.
+ *
+ * The dash offset is the only animated property here, and the geometry is
+ * deliberately not one: `d` arrives as an ordinary prop and changes by
+ * re-render when a node moves. A path in React Native draws reliably when one
+ * property animates and the rest are plain, so splitting them this way lets a
+ * dragged node reshape the edge without ever interrupting the march.
+ *
+ * One dash and one gap of travel per cycle, which is why the loop is seamless:
+ * the end state is the start state shifted by exactly one period.
+ */
+function FlowMarchingEdge({
+  d,
+  stroke,
+  width,
+}: {
+  d: string;
+  stroke: string;
+  width: number;
+}) {
+  const offset = useSharedValue(0);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (reducedMotion) {
+      offset.value = 0;
+      return undefined;
+    }
+    // Negative, so the dashes run the way the path was drawn: source to target.
+    offset.value = withRepeat(
+      withTiming(-EDGE_DASH * 2, {
+        duration: EDGE_MARCH_DURATION,
+        easing: Easing.linear,
+      }),
+      -1,
+      false
+    );
+    return () => cancelAnimation(offset);
+  }, [offset, reducedMotion]);
+
+  const dashProps = useAnimatedProps(() => ({ strokeDashoffset: offset.value }));
+
+  return (
+    <AnimatedPath
+      animatedProps={dashProps}
+      d={d}
+      fill="none"
+      stroke={stroke}
+      strokeWidth={width}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeDasharray={`${EDGE_DASH} ${EDGE_DASH}`}
+    />
+  );
 }
 
 /** The part that actually draws an edge, inside the canvas's one `<Svg>`. */
@@ -1612,7 +1686,7 @@ function FlowEdgePath({
   const b = { x: outB.x + origin.x, y: outB.y + origin.y };
 
   const d = edgePath(variant, a, sideA, b, sideB, curvature, radius, gap);
-  const dash = dashed || animated ? 6 : 0;
+  const dash = dashed || animated ? EDGE_DASH : 0;
   const stroke = color ?? tint;
 
   const head = arrow
@@ -1624,15 +1698,19 @@ function FlowEdgePath({
 
   return (
     <>
-      <Path
-        d={d}
-        fill="none"
-        stroke={stroke}
-        strokeWidth={width}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeDasharray={dash ? `${dash} ${dash}` : undefined}
-      />
+      {animated ? (
+        <FlowMarchingEdge d={d} stroke={stroke} width={width} />
+      ) : (
+        <Path
+          d={d}
+          fill="none"
+          stroke={stroke}
+          strokeWidth={width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray={dash ? `${dash} ${dash}` : undefined}
+        />
+      )}
       {head ? <Path d={head} fill={stroke} /> : null}
     </>
   );
@@ -1703,9 +1781,10 @@ function FlowEdgeLayer() {
           origin={origin}
         />
       ))}
-      {/* The connection line is the one path that does animate, because it
-          follows a finger and has nothing else to follow. It animates `d` and
-          only `d`, which is the one thing that works. */}
+      {/* The connection line follows a finger, so it is the path that animates
+          `d` — and only `d`, which is the one thing that works while the
+          geometry is what moves. An animated edge inverts the split: static
+          `d`, animated dash offset. Either is fine; both at once is not. */}
       <AnimatedPath
         animatedProps={lineProps}
         fill="none"
