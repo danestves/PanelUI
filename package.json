@@ -23,7 +23,7 @@
     "docs": "npm run dev --workspace=docs",
     "template": "node scripts/template-preview.mjs",
     "template:parity": "node scripts/template-parity.mjs",
-    "performance:check": "npm run verify:package --workspace=panelui-native && node scripts/verify-registry-budgets.mjs"
+    "performance:check": "npm run verify:package --workspace=panelui-native && npm run benchmark:planner --workspace=panelui-native && node scripts/verify-registry-budgets.mjs"
   },
   "engines": {
     "node": ">=20"

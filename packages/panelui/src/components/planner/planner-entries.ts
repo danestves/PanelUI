@@ -99,9 +99,13 @@ export function dayAccessibilityLabel<T extends PlannerDatedEntry>(
   if (entries.length === 0) return `${dateLabel}, nothing planned`;
 
   const named: string[] = [];
+  const seen = new Set<string>();
   for (const entry of entries) {
     const label = entry.category ? categoryLabels.get(entry.category) : undefined;
-    if (label && !named.includes(label)) named.push(label);
+    if (label && !seen.has(label)) {
+      seen.add(label);
+      named.push(label);
+    }
   }
 
   const count = `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}`;
@@ -120,18 +124,23 @@ export function dayAccessibilityLabel<T extends PlannerDatedEntry>(
  * with the week the month happens to start on.
  */
 export function summariseMonth<T extends PlannerDatedEntry>(
-  entries: readonly T[],
+  days: Map<number, T[]>,
+  grid: readonly (readonly Date[])[],
   categories: readonly { id: string; label: string }[],
   isInMonth: (date: Date) => boolean
 ): { total: number; categories: PlannerCountedCategory[] } {
   const counts = new Map<string, number>();
   let total = 0;
 
-  for (const entry of entries) {
-    if (!isInMonth(entry.date)) continue;
-    total += 1;
-    if (entry.category) {
-      counts.set(entry.category, (counts.get(entry.category) ?? 0) + 1);
+  for (const week of grid) {
+    for (const date of week) {
+      if (!isInMonth(date)) continue;
+      for (const entry of entriesOn(days, date)) {
+        total += 1;
+        if (entry.category) {
+          counts.set(entry.category, (counts.get(entry.category) ?? 0) + 1);
+        }
+      }
     }
   }
 
