@@ -31,6 +31,12 @@ export const ACCESSIBILITY_SUITES = [
     anchor: 'compact core controls keep 48dp interaction boxes',
   },
   {
+    class: 'large-text',
+    file: 'packages/panelui/test/button-dynamic-type.test.mjs',
+    count: 2,
+    anchor: 'labelled Button sizes are floors with scalable intrinsic line boxes',
+  },
+  {
     class: 'modal-isolation',
     file: 'packages/panelui/test/modal-isolation-store.test.mjs',
     count: 3,
@@ -90,6 +96,7 @@ export const REQUIRED_CLASSES = [
   'gate-integrity',
   'perception',
   'target-size',
+  'large-text',
   'modal-isolation',
   'structured-content',
   'accessible-actions',

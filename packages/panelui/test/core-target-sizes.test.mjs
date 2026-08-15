@@ -12,8 +12,8 @@ test('compact core controls keep 48dp interaction boxes', async () => {
 
   assert.match(button, /const BUTTON_HIT_SLOP = \{ sm: 6, md: 2, lg: 0, icon: 2 \}/);
   assert.match(button, /hitSlop=\{attached \? undefined : BUTTON_HIT_SLOP/);
-  assert.match(button, /sm: \{ root: 'h-9 min-w-9 /);
-  assert.match(button, /md: \{ root: 'h-11 min-w-11 /);
+  assert.match(button, /sm: \{ root: 'min-h-9 min-w-9 /);
+  assert.match(button, /md: \{ root: 'min-h-11 min-w-11 /);
   assert.match(checkbox, /row: 'min-h-12 min-w-12 /);
   assert.match(radio, /row: 'min-h-12 min-w-12 /);
 

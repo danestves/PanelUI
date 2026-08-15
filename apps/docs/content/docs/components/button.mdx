@@ -209,6 +209,10 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 `loading` swaps the start content for a variant-matched spinner and blocks presses. The `social` variant is a neutral surface sized for a full-width sign-in stack; pair it with `GoogleIcon`, `FacebookIcon` or `AppleIcon`.
 
+### Large text
+
+Portable labelled buttons keep their 36/44/48dp default size as a minimum, not a ceiling. With Dynamic Type or Android font scaling, the label uses its intrinsic line box, wraps when its container is constrained, and grows the button with its vertical padding. Start/end icons keep their requested size. `size="icon"` remains a fixed square because it has no visible text; give it an `accessibilityLabel`.
+
 ### Native rendering
 
 Pass `native` to render the platform's own button instead — SwiftUI on iOS, Jetpack Compose on Android. It needs the optional `@expo/ui` package and is a silent no-op without it.
