@@ -4,6 +4,7 @@ import { applyAliases, detectProject, projectPath, requireConfig, targetPath } f
 import { digest, LOCK_FILE, readLock, writeLock } from './lock.mjs';
 import { collectDependencies, resolve } from './registry.mjs';
 import { installDependencies } from './patch.mjs';
+import { unifiedDiff } from './diff.mjs';
 import { bold, confirm, dim, fail, info, success, warn } from './ui.mjs';
 
 export async function update(names, options) {
@@ -35,11 +36,12 @@ export async function update(names, options) {
       const content = applyAliases(file.content, config);
       const tracked = lock.files[relative];
       const current = fs.existsSync(destination) ? fs.readFileSync(destination, 'utf8') : null;
-      let status = 'update';
+      let status;
       if (current === content) status = 'current';
-      else if (current === null) status = tracked ? 'conflict' : 'update';
+      else if (current === null) status = tracked ? 'conflict' : 'add';
       else if (!tracked || digest(current) !== tracked.digest) status = 'conflict';
-      candidates.push({ item: item.name, destination, relative, content, status });
+      else status = 'update';
+      candidates.push({ item: item.name, destination, relative, current, content, status });
     }
   }
 
@@ -52,6 +54,7 @@ export async function update(names, options) {
       item: tracked.item,
       destination,
       relative,
+      current,
       status: current !== null && digest(current) === tracked.digest ? 'remove' : 'conflict',
     });
   }
@@ -60,18 +63,27 @@ export async function update(names, options) {
   info(`Checking ${requested.map(bold).join(', ')}`);
   info('');
   for (const file of candidates) {
-    const marker = { current: '·', update: '~', remove: '-', conflict: '!' }[file.status];
+    const marker = { current: '·', add: '+', update: '~', remove: '-', conflict: '!' }[file.status];
     const note = file.status === 'conflict' ? ' (modified)' : file.status === 'remove' ? ' (removed upstream)' : '';
     info(`  ${marker} ${file.relative}${dim(note)}`);
   }
 
-  const safe = candidates.filter((file) => file.status === 'update' || file.status === 'remove');
+  const safe = candidates.filter(
+    (file) => file.status === 'add' || file.status === 'update' || file.status === 'remove'
+  );
   const conflicts = candidates.filter((file) => file.status === 'conflict');
   const preview = options.check || options.dryRun;
   const project = detectProject(cwd);
   const { dependencies } = collectDependencies(items);
   const missing = dependencies.filter((dependency) => !(dependency in project.deps));
   if (missing.length) info(dim(`  + install ${missing.join(', ')}`));
+  if (safe.length) {
+    info('');
+    safe.forEach((file, index) => {
+      info(unifiedDiff(file.relative, file.current, file.status === 'remove' ? null : file.content));
+      if (index < safe.length - 1) info('');
+    });
+  }
   if (conflicts.length) {
     warn(`${conflicts.length} modified or untracked file${conflicts.length === 1 ? '' : 's'} left alone.`);
   }

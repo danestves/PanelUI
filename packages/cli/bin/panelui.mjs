@@ -23,7 +23,7 @@ ${bold('Commands')}
   init                 In an empty folder, start a new app from a template.
                        In an existing one, set it up to receive components.
   add <name...>        Copy components in, with everything they depend on
-  update [name...]     Safely update unchanged installed component files
+  update [name...]     Diff and safely update unchanged component files
   list                 Discover registry items; filter with --type or --search
   doctor               Check project setup without changing it
   mcp                  Run the MCP server, so an agent can read the registry

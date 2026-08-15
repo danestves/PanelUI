@@ -51,6 +51,8 @@ replace an existing file and makes that new copy eligible for later safe updates
 Fetches tracked components again and updates only files whose digest still matches the copy the CLI
 installed. Locally edited or deleted files are reported as conflicts and never replaced. Omit names
 to update every tracked component. Files removed upstream are deleted only when still untouched.
+Before prompting or exiting in preview mode, the command prints three-line-context unified diffs for
+every safe changed, added, or removed file. Conflicts are listed but their contents are never printed.
 
 ```bash
 npx panelui-cli@latest update
