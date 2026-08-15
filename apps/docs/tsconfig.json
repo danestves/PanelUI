@@ -28,6 +28,12 @@
       ],
       "collections/*": [
         "./.source/*"
+      ],
+      "panelui-native": [
+        "../../packages/panelui/src/index.ts"
+      ],
+      "panelui-native/*": [
+        "../../packages/panelui/src/*"
       ]
     }
   },
