@@ -10,7 +10,7 @@ It is not a progress bar. A meter is a reading that sits where it sits and may g
 
 `thresholds` paint the bar by where the reading falls, and `segments` draws the scale as discrete blocks.
 
-React Native has no meter role, so a meter announces as a progress bar with its value, range and unit attached. Pass `label` — the role will not tell a reading from a task, and the name is what does.
+React Native has no meter role, so a meter exposes one read-only progress bar node with its name and formatted value. Pass `label` — the role will not tell a reading from a task, and the name is what does. The visible header repeats that same information visually but is not a second screen-reader stop.
 
 ## Installation
 
@@ -171,9 +171,9 @@ Any reading above the floor lights at least one segment. Rounding down would lea
 
 Segments are all or nothing; a partly-filled block is not drawn. If the value does not divide into whole blocks, use the continuous bar instead.
 
-The fill is animated on the UI thread, so a value change costs one render and nothing per frame. Under the platform's reduce-motion setting it lands on the value rather than springing to it, and segments light without a fade.
+The fill is animated on the UI thread, so a value change costs one render and nothing per frame. Under the platform's reduce-motion setting it lands on the value rather than springing to it, and segments light without a fade. Motion, thresholds and segments never change the spoken value.
 
-`valueLabel` is spoken whether or not it is drawn, so it can give a screen reader better words than the caption carries — a byte count where the caption shows a percent. Pair it with `showValueLabel` to draw it as well.
+`valueLabel` is spoken whether or not it is drawn, so it can replace a number with clearer words such as “Strong”. Pair it with `showValueLabel` to draw it too; drawing it does not create another accessibility stop. `accessibilityLabel` overrides the visible `label` as the spoken name. Without either one the platform has no honest name to announce, so always provide one. Value updates refresh the node when rendered but are not live-region announcements, and this read-only meter does not expose adjustable actions.
 
 ## Public exports
 

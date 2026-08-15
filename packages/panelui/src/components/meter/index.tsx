@@ -14,8 +14,8 @@ import {
   clamp,
   colorFor,
   fractionOf,
-  formatValue,
   litSegments,
+  meterSemantics,
   type MeterColor,
   type MeterThreshold,
 } from './meter-scale';
@@ -239,21 +239,26 @@ export const Meter = forwardRef<View, MeterProps>(
       width: trackWidth.value * progress.value,
     }));
 
-    const spoken = formatValue(held, fraction, valueLabel, formatOptions);
+    const semantics = meterSemantics({
+      value: held,
+      fraction,
+      minValue,
+      maxValue,
+      label,
+      accessibilityLabel,
+      valueLabel,
+      formatOptions,
+    });
+    const spoken = semantics.text;
     const showValue = showValueLabel;
     const hasHeader = label != null || showValue;
 
     const accessibility = {
       accessibilityRole: 'progressbar' as const,
-      accessibilityLabel: accessibilityLabel ?? label,
-      accessibilityValue: {
-        min: minValue,
-        max: maxValue,
-        now: held,
-        // Without this the scale is read as a bare number. `text` is what
-        // carries the unit — the percent sign, the gigabytes, the word.
-        text: spoken,
-      },
+      accessibilityLabel: semantics.label,
+      // `text` carries the unit or word and intentionally overrides the
+      // platform's generic rendering of this numeric range.
+      accessibilityValue: semantics.value,
     };
 
     const bar =
@@ -293,7 +298,13 @@ export const Meter = forwardRef<View, MeterProps>(
 
     return (
       <View className={slots.root()}>
-        <View className={slots.header({ className: headerClassName })}>
+        <View
+          className={slots.header({ className: headerClassName })}
+          // This is the visual rendering of the name and value already owned
+          // by the bar below. Hiding the subtree keeps one concise focus stop.
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
           {label != null ? (
             <Text size="sm" weight="medium" numberOfLines={1}>
               {label}

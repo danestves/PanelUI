@@ -10,9 +10,14 @@ const source = await readFile(
 const compiled = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 }).outputText;
-const { clamp, colorFor, fractionOf, formatValue, litSegments } = await import(
-  `data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`
-);
+const {
+  clamp,
+  colorFor,
+  fractionOf,
+  formatValue,
+  litSegments,
+  meterSemantics,
+} = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
 
 test('fractionOf reads a value against its own scale', () => {
   assert.equal(fractionOf(50, 0, 100), 0.5);
@@ -118,4 +123,80 @@ test('formatValue falls back to a rounded percent', () => {
   assert.equal(formatValue(168, 168 / 256), '66%');
   // A partial Intl must not take the caption down with it.
   assert.equal(formatValue(50, 0.5, undefined, { style: 'nonsense' }), '50%');
+});
+
+test('meter semantics expose one named range with one formatted value', () => {
+  assert.deepEqual(
+    meterSemantics({
+      value: 68,
+      fraction: 0.68,
+      minValue: 0,
+      maxValue: 100,
+      label: 'Storage',
+    }),
+    {
+      label: 'Storage',
+      text: '68%',
+      value: { min: 0, max: 100, now: 68, text: '68%' },
+    }
+  );
+});
+
+test('meter spoken names and values follow their explicit overrides', () => {
+  const units = meterSemantics({
+    value: 168,
+    fraction: 168 / 256,
+    minValue: 0,
+    maxValue: 256,
+    label: 'Storage',
+    accessibilityLabel: 'Project storage used',
+    formatOptions: { style: 'unit', unit: 'gigabyte', unitDisplay: 'short' },
+  });
+  assert.equal(units.label, 'Project storage used');
+  assert.equal(units.text, '168 GB');
+
+  const custom = meterSemantics({
+    value: 3,
+    fraction: 0.75,
+    minValue: 0,
+    maxValue: 4,
+    label: 'Password strength',
+    valueLabel: 'Good',
+  });
+  assert.equal(custom.text, 'Good');
+  assert.equal(custom.value.text, 'Good');
+});
+
+test('an absent name stays absent instead of inventing app context', () => {
+  const unnamed = meterSemantics({
+    value: 42,
+    fraction: 0.42,
+    minValue: 0,
+    maxValue: 100,
+  });
+  assert.equal(unnamed.label, undefined);
+});
+
+test('a value update keeps the name and refreshes the semantic range', () => {
+  const reading = (value) =>
+    meterSemantics({
+      value,
+      fraction: value / 100,
+      minValue: 0,
+      maxValue: 100,
+      label: 'Battery',
+    });
+  assert.equal(reading(20).label, reading(80).label);
+  assert.deepEqual(reading(80).value, { min: 0, max: 100, now: 80, text: '80%' });
+});
+
+test('the visual meter header is hidden from both platform accessibility trees', async () => {
+  const component = await readFile(
+    new URL('../src/components/meter/index.tsx', import.meta.url),
+    'utf8'
+  );
+  assert.match(component, /accessibilityElementsHidden/);
+  assert.match(component, /importantForAccessibility="no-hide-descendants"/);
+  assert.match(component, /accessibilityRole: 'progressbar'/);
+  assert.doesNotMatch(component, /accessibilityActions|accessibilityLiveRegion/);
 });
