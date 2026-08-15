@@ -19,6 +19,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check release version and tag parity
+        run: npm run release:check
+
       - name: Typecheck
         run: npm run typecheck
 
