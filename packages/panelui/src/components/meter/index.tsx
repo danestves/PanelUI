@@ -11,16 +11,21 @@ import Animated, {
 import { tv, type VariantProps } from 'tailwind-variants';
 import { Text } from '../../primitives/text';
 import {
-  clamp,
   colorFor,
-  fractionOf,
   formatValue,
   litSegments,
+  normalizeScale,
+  normalizeSegments,
   type MeterColor,
   type MeterThreshold,
 } from './meter-scale';
 
-const SPRING = { damping: 20, stiffness: 180, mass: 0.6 } as const;
+const SPRING = {
+  damping: 20,
+  stiffness: 180,
+  mass: 0.6,
+  overshootClamping: true,
+} as const;
 /** Milliseconds for a segment to light or go out. */
 const SEGMENT_DURATION = 180;
 /** How faint an unlit segment sits. Present, but plainly not counted. */
@@ -32,7 +37,7 @@ const meterVariants = tv({
     header: 'flex-row items-center justify-between gap-2',
     track: 'w-full overflow-hidden rounded-full',
     indicator: 'h-full rounded-full',
-    segments: 'w-full flex-row',
+    segments: 'w-full flex-row overflow-hidden',
     segment: 'flex-1 rounded-full',
   },
   variants: {
@@ -70,7 +75,7 @@ export interface MeterProps
   extends Omit<ViewProps, 'children'>,
     MeterVariantProps {
   className?: string;
-  /** The measurement, somewhere between `minValue` and `maxValue`. */
+  /** The measurement. Values outside the scale are clamped to its ends. */
   value: number;
   /**
    * The bottom of the scale — the value at which the bar reads as empty.
@@ -111,7 +116,8 @@ export interface MeterProps
   /**
    * Points on the scale where the colour changes, each `{ from, color }`. The
    * highest one the reading has reached wins, so the order you list them in
-   * does not matter; below all of them the `color` prop applies.
+   * does not matter; below all of them the `color` prop applies. Non-finite
+   * `from` values are ignored.
    *
    * This is the difference between a meter and a bar: the colour is a
    * judgement about the reading. Which direction is bad is yours to say —
@@ -125,8 +131,10 @@ export interface MeterProps
    * say "three out of four" where a bar says "about seventy percent", and a
    * password is not seventy percent strong.
    *
-   * Any value above the floor lights at least one block, so a reading that
-   * is not empty never looks it.
+   * Fractional counts round down and counts above 100 clamp to 100. Invalid,
+   * non-positive, or sub-one counts use the continuous bar. Any value above
+   * the floor lights at least one block, so a reading that is not empty never
+   * looks it.
    */
   segments?: number;
   /** Extra classes for the fill, or for a lit segment. */
@@ -207,8 +215,9 @@ export const Meter = forwardRef<View, MeterProps>(
     },
     ref
   ) => {
-    const held = clamp(value, minValue, maxValue);
-    const fraction = fractionOf(value, minValue, maxValue);
+    const scale = normalizeScale(value, minValue, maxValue);
+    const { value: held, fraction } = scale;
+    const segmentCount = normalizeSegments(segments);
     const resolvedColor = colorFor(held, color ?? 'primary', thresholds);
     const slots = meterVariants({ color: resolvedColor, size });
     const reducedMotion = useReducedMotion();
@@ -218,7 +227,7 @@ export const Meter = forwardRef<View, MeterProps>(
     // Any reading above the floor lights a block, so "a little" never looks
     // like "none". Rounding down would leave the first quarter of a
     // four-block meter dark, which is the reading it is least able to afford.
-    const litCount = segments ? litSegments(fraction, segments) : 0;
+    const litCount = litSegments(fraction, segmentCount);
     const lit = useSharedValue(litCount);
 
     // Reduce motion lands on the value instead of springing to it — the
@@ -232,7 +241,8 @@ export const Meter = forwardRef<View, MeterProps>(
     }, [lit, litCount]);
 
     const onLayout = (event: LayoutChangeEvent) => {
-      trackWidth.value = event.nativeEvent.layout.width;
+      const width = event.nativeEvent.layout.width;
+      trackWidth.value = Number.isFinite(width) && width > 0 ? width : 0;
     };
 
     const fillStyle = useAnimatedStyle(() => ({
@@ -247,8 +257,8 @@ export const Meter = forwardRef<View, MeterProps>(
       accessibilityRole: 'progressbar' as const,
       accessibilityLabel: accessibilityLabel ?? label,
       accessibilityValue: {
-        min: minValue,
-        max: maxValue,
+        min: scale.min,
+        max: scale.max,
         now: held,
         // Without this the scale is read as a bare number. `text` is what
         // carries the unit — the percent sign, the gigabytes, the word.
@@ -257,14 +267,14 @@ export const Meter = forwardRef<View, MeterProps>(
     };
 
     const bar =
-      segments && segments > 0 ? (
+      segmentCount > 0 ? (
         <View
           ref={ref}
           {...accessibility}
           className={slots.segments({ className })}
           {...props}
         >
-          {Array.from({ length: segments }, (_, index) => (
+          {Array.from({ length: segmentCount }, (_, index) => (
             <Segment
               key={index}
               index={index}
