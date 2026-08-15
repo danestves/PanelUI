@@ -35,6 +35,13 @@
  * advances as each point arrives instead, which is the same picture sampled
  * less often.
  *
+ * Screen readers receive one image-role snapshot: its name, current or
+ * selected value, direction, time window and paused state. It changes when the
+ * React data changes, never on the UI-thread clock frame, and requests no live
+ * announcement. The visual axes, badges and tooltip repeat that snapshot and
+ * stay out of the accessibility tree; controls placed in Header remain normal
+ * controls.
+ *
  * ## Colour follows the recent direction
  *
  * With `momentumColors` set, the line, the fill and the tip take their colour
@@ -92,6 +99,7 @@ import {
   type Plot,
 } from '../../utils/chart';
 import { cn } from '../../utils/cn';
+import { liveLineAccessibility } from './live-line-accessibility';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -224,6 +232,13 @@ function runOf(
 
 export interface LiveLineChartProps extends ViewProps {
   className?: string;
+  /**
+   * Names the chart's single screen-reader snapshot. Falls back to the Header
+   * title, then to "Live line chart".
+   */
+  accessibilityLabel?: string;
+  /** Additional guidance after the snapshot. No gesture is invented for it. */
+  accessibilityHint?: string;
   /** The readings so far, oldest first. Append to it as they arrive. */
   data: LiveLinePoint[];
   /** How much time the plot spans, in seconds. */
@@ -276,6 +291,8 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
       momentumColors,
       color,
       onActivePointChange,
+      accessibilityLabel,
+      accessibilityHint,
       children,
       ...props
     },
@@ -306,6 +323,34 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
         }
       });
       return found;
+    }, [children]);
+
+    const semanticParts = useMemo(() => {
+      let title: string | undefined;
+      let value: string | undefined;
+      let headerFormat: ((reading: number) => string) | undefined;
+      let tipFormat: ((reading: number) => string) | undefined;
+      let tooltipFormat: ((reading: number) => string) | undefined;
+      Children.forEach(children, (child) => {
+        if (!isValidElement(child)) return;
+        const part = (child.type as { displayName?: string }).displayName;
+        if (part === 'LiveLineChart.Header') {
+          const header = child.props as LiveLineChartHeaderProps;
+          title ??= header.title;
+          value ??= header.value;
+          headerFormat ??= header.formatValue;
+        } else if (part === 'LiveLineChart.Tip') {
+          tipFormat ??= (child.props as LiveLineChartTipProps).formatValue;
+        } else if (part === 'LiveLineChart.Tooltip') {
+          tooltipFormat ??= (child.props as LiveLineChartTooltipProps).formatValue;
+        }
+      });
+      return {
+        title,
+        value,
+        formatLatest: headerFormat ?? tipFormat,
+        formatActive: tooltipFormat ?? headerFormat ?? tipFormat,
+      };
     }, [children]);
 
     const pad = { ...PADDING, left: hasYAxis ? Y_AXIS_WIDTH : PADDING.left };
@@ -434,6 +479,21 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
     if (!paused) heldMomentum.current = liveMomentum;
     const momentum = paused ? heldMomentum.current : liveMomentum;
 
+    const defaultFormat = (reading: number) => compactNumber(reading);
+    const semantic = liveLineAccessibility({
+      name: accessibilityLabel ?? semanticParts.title,
+      status,
+      latest,
+      activePoint,
+      momentum,
+      windowSeconds: windowMs / 1000,
+      paused,
+      now: Date.now(),
+      valueOverride: semanticParts.value,
+      formatLatest: semanticParts.formatLatest ?? defaultFormat,
+      formatActive: semanticParts.formatActive ?? defaultFormat,
+    });
+
     const base = useSeriesColor(color, 1);
     const successToken = useCSSVariable('--color-success');
     const destructiveToken = useCSSVariable('--color-destructive');
@@ -519,8 +579,21 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
     return (
       <LiveLineChartContext.Provider value={context}>
         <View {...props} style={props.style} className={cn('w-full', className)}>
+          <View
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={semantic.label}
+            accessibilityHint={accessibilityHint}
+            style={{ position: 'absolute', left: -10_000, width: 1, height: 1 }}
+          />
           {header}
-          <View onLayout={onLayout} style={{ aspectRatio }} className="w-full">
+          <View
+            onLayout={onLayout}
+            style={{ aspectRatio }}
+            className="w-full"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
             {plot.width > 0 ? (
               <>
                 <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
@@ -1259,7 +1332,11 @@ function LiveLineChartHeader({
       {...props}
       className={cn('flex-row items-start justify-between gap-3 pb-3', className)}
     >
-      <View className="flex-1 gap-0.5">
+      <View
+        className="flex-1 gap-0.5"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
         {title ? (
           <Text size="xs" muted>
             {title}
