@@ -48,6 +48,7 @@
     "map",
     "markdown-editor",
     "marker",
+    "marquee",
     "menu",
     "message",
     "message-scroller",
@@ -111,16 +112,16 @@
     "waterfall-chart"
   ],
   "counts": {
-    "componentModules": 108,
-    "packageComponentExports": 108,
-    "documentedComponents": 108,
-    "exampleEntries": 108,
+    "componentModules": 109,
+    "packageComponentExports": 109,
+    "documentedComponents": 109,
+    "exampleEntries": 109,
     "registry": {
-      "componentItems": 108,
+      "componentItems": 109,
       "supportItems": 31,
-      "totalItems": 139,
+      "totalItems": 140,
       "byType": {
-        "registry:ui": 119,
+        "registry:ui": 120,
         "registry:hook": 12,
         "registry:lib": 7,
         "registry:theme": 1

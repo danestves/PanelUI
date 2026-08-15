@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1094,
-    "values": 291,
-    "types": 803,
-    "modules": 133,
-    "components": 108,
+    "exports": 1097,
+    "values": 292,
+    "types": 805,
+    "modules": 134,
+    "components": 109,
     "hooks": 12
   },
   "groups": {
@@ -1991,6 +1991,25 @@
           },
           {
             "name": "MarkerContentProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/marquee/index.tsx",
+        "slug": "marquee",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "Marquee",
+            "kind": "value"
+          },
+          {
+            "name": "MarqueeProps",
+            "kind": "type"
+          },
+          {
+            "name": "MarqueeDirection",
             "kind": "type"
           }
         ]

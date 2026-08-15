@@ -9,6 +9,42 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.69.0] — 2026-08-15
+
+### Added
+
+- **`Marquee` — content that travels across its container on a loop.** For a strip of logos, a
+  ticker of prices, a row of names: anything whose job is to keep moving past a boundary rather
+  than to be scrolled to.
+
+  The content is measured once and tiled enough times to cover the container twice over. One track
+  holds every copy and it is the track that moves, so the cost is a single animated node however
+  much content is in it, driven on the UI thread as a linear timing. The loop is exactly one
+  copy-and-gap long, which is why the seam never shows: the state it ends on is the state it
+  began on.
+
+  `speed` is points per second rather than a cycle time, so longer content takes proportionally
+  longer instead of travelling faster, and two marquees set to the same speed stay in step
+  whatever is inside them.
+
+  `direction="vertical"` needs a height on the container — a horizontal marquee takes its height
+  from the content it measured, but a vertical one has nothing to take a height from.
+
+  With the operating system set to reduce motion the content is rendered once and held still. Not
+  a slower loop: a ticker that never stops is the thing that setting exists to turn off. Screen
+  readers are given one copy rather than every tile.
+
+### Fixed
+
+- **`Flow.Edge`'s `animated` prop now animates.** It set a dash and nothing else, which made it a
+  second spelling of `dashed` — an edge marked as carrying something live looked exactly like one
+  marked as merely broken. The dashes now march from source to target.
+
+  The edge animates its dash offset while its geometry keeps arriving by re-render, which is the
+  inverse of the split the connection line uses and the reason both draw: a path in React Native
+  is reliable when one property animates and the rest are plain. A dragged node reshapes an
+  animated edge without interrupting the march. Reduce Motion leaves the dashes drawn but still.
+
 ## [0.68.0] — 2026-08-15
 
 ### Added
