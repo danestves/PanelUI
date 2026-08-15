@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { ModalIsolationStore } from './modal-isolation-store';
+import { captureFocusRestore, FocusRestorationStore } from './focus-restoration-store';
 
 type PortalMap = ReadonlyMap<string, ReactNode>;
 
@@ -41,16 +42,21 @@ class PortalStore {
 
 const PortalContext = createContext<PortalStore | null>(null);
 const ModalIsolationContext = createContext<ModalIsolationStore | null>(null);
+const FocusRestorationContext = createContext<FocusRestorationStore | null>(null);
 
 export function PortalProvider({ children }: { children: ReactNode }) {
   const portalStoreRef = useRef<PortalStore | null>(null);
   const modalStoreRef = useRef<ModalIsolationStore | null>(null);
+  const focusStoreRef = useRef<FocusRestorationStore | null>(null);
   portalStoreRef.current ??= new PortalStore();
   modalStoreRef.current ??= new ModalIsolationStore();
+  focusStoreRef.current ??= new FocusRestorationStore();
   return (
     <PortalContext.Provider value={portalStoreRef.current}>
       <ModalIsolationContext.Provider value={modalStoreRef.current}>
-        {children}
+        <FocusRestorationContext.Provider value={focusStoreRef.current}>
+          {children}
+        </FocusRestorationContext.Provider>
       </ModalIsolationContext.Provider>
     </PortalContext.Provider>
   );
@@ -80,9 +86,27 @@ export function Portal({ children }: { children: ReactNode }) {
 /** A portal that owns modal focus until it unmounts. */
 export function ModalPortal({ children }: { children: ReactNode }) {
   const store = useModalIsolationStore('ModalPortal');
+  const focusStore = useFocusRestorationStore('ModalPortal');
   const owner = useId();
 
-  useEffect(() => store.acquire(owner), [owner, store]);
+  useEffect(() => {
+    const releaseIsolation = store.acquire(owner);
+    const releaseFocus = focusStore.acquire(owner, captureFocusRestore());
+    return () => {
+      releaseIsolation();
+      releaseFocus();
+    };
+  }, [focusStore, owner, store]);
+
+  return <Portal>{children}</Portal>;
+}
+
+/** A non-isolating portal that returns browser focus to what opened it. */
+export function FocusRestorePortal({ children }: { children: ReactNode }) {
+  const store = useFocusRestorationStore('FocusRestorePortal');
+  const owner = useId();
+
+  useEffect(() => store.acquire(owner, captureFocusRestore()), [owner, store]);
 
   return <Portal>{children}</Portal>;
 }
@@ -95,6 +119,14 @@ export function useModalIsolationActive(): boolean {
 
 function useModalIsolationStore(component: string): ModalIsolationStore {
   const store = useContext(ModalIsolationContext);
+  if (!store) {
+    throw new Error(`${component} must be used within a <PanelUIProvider>`);
+  }
+  return store;
+}
+
+function useFocusRestorationStore(component: string): FocusRestorationStore {
+  const store = useContext(FocusRestorationContext);
   if (!store) {
     throw new Error(`${component} must be used within a <PanelUIProvider>`);
   }

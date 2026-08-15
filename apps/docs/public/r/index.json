@@ -526,6 +526,15 @@
     "docsPath": "components/flow"
   },
   {
+    "name": "focus-restoration-store",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Returns browser focus through nested overlays in last-opened order.",
+    "registryDependencies": []
+  },
+  {
     "name": "form",
     "type": "registry:ui",
     "kind": "ui",
@@ -1055,6 +1064,7 @@
     "stability": "stable",
     "description": "Renders content above everything else. Required by every overlay.",
     "registryDependencies": [
+      "focus-restoration-store",
       "modal-isolation-store"
     ]
   },

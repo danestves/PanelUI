@@ -49,5 +49,6 @@
     "width": 1179,
     "height": 2192,
     "caption": "A destructive confirmation, with the backdrop dimming the screen behind it."
-  }
+  },
+  "notes": "### Focus after closing\n\nOn the web, closing returns keyboard focus to the element that had it before the overlay opened. Nested overlays return to the still-open parent first. If that element was removed or disabled while the overlay was open, it is skipped rather than focusing a stale control. Native screen-reader containment remains the platform's `accessibilityViewIsModal` behaviour."
 }
