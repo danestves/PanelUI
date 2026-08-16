@@ -367,7 +367,7 @@ export interface PaginationItemProps
  * are on, so the current page is spoken as state rather than only painted.
  */
 const PaginationItem = forwardRef<View, PaginationItemProps>(
-  ({ className, labelClassName, page, children, ...props }, ref) => {
+  ({ className, labelClassName, page, children, onPress, ...props }, ref) => {
     const { page: current, size, disabled, goTo } = usePagination('Pagination.Item');
     const isCurrent = page === current;
     const { item, itemLabel } = paginationVariants({ size, current: isCurrent, disabled });
@@ -375,14 +375,17 @@ const PaginationItem = forwardRef<View, PaginationItemProps>(
     return (
       <AnimatedPressable
         ref={ref}
+        {...props}
         accessibilityRole="button"
         accessibilityLabel={`Page ${page}`}
         accessibilityState={{ selected: isCurrent, disabled }}
         disabled={disabled}
         hitSlop={size === 'sm' ? SMALL_HIT_SLOP : undefined}
-        onPress={() => goTo(page)}
+        onPress={(event) => {
+          onPress?.(event);
+          goTo(page);
+        }}
         className={item({ className })}
-        {...props}
       >
         {textChildren(children ?? String(page), (text) => (
           <Text className={itemLabel({ className: labelClassName })}>{text}</Text>
@@ -437,23 +440,29 @@ function PaginationArrow({
   word,
   className,
   label,
+  disabled,
+  onPress,
   ...props
 }: PaginationArrowProps & { step: -1 | 1; part: string; word: string }) {
   const { Glyph, size, spent, color, press } = useArrow(step, part);
-  const { item, itemLabel } = paginationVariants({ size, disabled: spent });
+  const isDisabled = Boolean(spent || disabled);
+  const { item, itemLabel } = paginationVariants({ size, disabled: isDisabled });
 
   return (
     <AnimatedPressable
+      {...props}
       accessibilityRole="button"
       accessibilityLabel={word}
-      accessibilityState={{ disabled: spent }}
-      disabled={spent}
+      accessibilityState={{ disabled: isDisabled }}
+      disabled={isDisabled}
       hitSlop={size === 'sm' ? SMALL_HIT_SLOP : undefined}
-      onPress={press}
+      onPress={(event) => {
+        onPress?.(event);
+        press();
+      }}
       className={item({
         className: cn('flex-row gap-1', label && (size === 'sm' ? 'px-2' : 'px-3'), className),
       })}
-      {...props}
     >
       {step === -1 ? <Glyph size={iconSize[size]} color={color} /> : null}
       {label ? <Text className={itemLabel()}>{word}</Text> : null}
@@ -489,24 +498,28 @@ export interface PaginationEllipsisProps
  * that always went forwards would strand anyone reading the row right to left.
  */
 const PaginationEllipsis = forwardRef<View, PaginationEllipsisProps>(
-  ({ className, direction = 1, jump = 5, ...props }, ref) => {
+  ({ className, direction = 1, jump = 5, disabled: disabledProp, onPress, ...props }, ref) => {
     const { page, size, disabled, goTo } = usePagination('Pagination.Ellipsis');
     const color = useCSSVariable('--color-muted-foreground');
     const { ellipsis } = paginationVariants({ size });
+    const isDisabled = Boolean(disabled || disabledProp);
 
     return (
       <AnimatedPressable
         ref={ref}
+        {...props}
         accessibilityRole="button"
         accessibilityLabel={
           direction === -1 ? `Back ${jump} pages` : `Forward ${jump} pages`
         }
-        accessibilityState={{ disabled }}
-        disabled={disabled}
+        accessibilityState={{ disabled: isDisabled }}
+        disabled={isDisabled}
         hitSlop={size === 'sm' ? SMALL_HIT_SLOP : undefined}
-        onPress={() => goTo(page + direction * jump)}
+        onPress={(event) => {
+          onPress?.(event);
+          goTo(page + direction * jump);
+        }}
         className={ellipsis({ className })}
-        {...props}
       >
         <EllipsisIcon
           size={iconSize[size]}
