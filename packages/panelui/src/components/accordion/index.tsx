@@ -34,7 +34,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Pressable, View, type Text as RNText, type ViewProps } from 'react-native';
+import {
+  Pressable,
+  View,
+  type PressableProps,
+  type Text as RNText,
+  type ViewProps,
+} from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedStyle,
@@ -268,27 +274,31 @@ const AccordionItem = forwardRef<View, AccordionItemProps>(
 );
 AccordionItem.displayName = 'Accordion.Item';
 
-export interface AccordionTriggerProps extends ViewProps {
+export interface AccordionTriggerProps extends Omit<PressableProps, 'children'> {
   className?: string;
   children?: ReactNode;
 }
 
 /** The pressable header row. Bare strings are wrapped in the title style. */
 const AccordionTrigger = forwardRef<View, AccordionTriggerProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, children, onPress, disabled = false, ...props }, ref) => {
     const { toggle, variant } = useAccordion('Accordion.Trigger');
     const { value, isExpanded, isDisabled } = useAccordionItem('Accordion.Trigger');
     const { trigger, title } = accordionVariants({ variant });
+    const triggerDisabled = Boolean(isDisabled || disabled);
 
     return (
       <Pressable
         ref={ref}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: isExpanded, disabled: isDisabled }}
-        disabled={isDisabled}
-        onPress={() => toggle(value)}
-        className={trigger({ className })}
         {...props}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isExpanded, disabled: triggerDisabled }}
+        disabled={triggerDisabled}
+        className={trigger({ className })}
+        onPress={(event) => {
+          onPress?.(event);
+          toggle(value);
+        }}
       >
         {textChildren(children, (text) => (
           <Text className={title()}>{text}</Text>
