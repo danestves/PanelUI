@@ -1,6 +1,6 @@
 {
   "slug": "accordion",
-  "intro": "Collapsible sections, for FAQs, settings groups and anything that would otherwise be a long scroll.\n\nExpansion animates with a Reanimated layout transition, and collapsed content unmounts. Pass `keepMounted` when there is state inside a section worth keeping — a half-filled form, a scroll position — at the cost of rendering every section up front.\n\nFor a hierarchy more than one level deep, use [Tree](/docs/components/tree).",
+  "intro": "Collapsible sections, for FAQs, settings groups and anything that would otherwise be a long scroll.\n\nExpansion animates with a Reanimated layout transition, and collapsed content unmounts. Pass `keepMounted` when there is state inside a section worth keeping — a half-filled form, a scroll position — at the cost of rendering every section up front.\n\nFor a single section rather than a set of them, use [Collapsible](/docs/components/collapsible), which keeps its body mounted by default.\n\nFor a hierarchy more than one level deep, use [Tree](/docs/components/tree).",
   "usage": "<Accordion selectionMode=\"single\" defaultValue=\"shipping\">\n  <Accordion.Item value=\"shipping\">\n    <Accordion.Trigger>\n      <Accordion.Title>How long does shipping take?</Accordion.Title>\n      <Accordion.Indicator />\n    </Accordion.Trigger>\n    <Accordion.Content>\n      Standard delivery arrives in three to five working days.\n    </Accordion.Content>\n  </Accordion.Item>\n</Accordion>",
   "parts": {
     "Item": "One collapsible section. Its `value` identifies it in the accordion's state.",
@@ -9,7 +9,7 @@
     "Indicator": "Chevron that rotates 180° while the item is open.",
     "Content": "The collapsible body. Unmounts when closed, unless `keepMounted` keeps it mounted and hidden from layout instead."
   },
-  "notes": "Pass an array to `value` / `defaultValue` with `selectionMode=\"multiple\"`. `onValueChange` hands back whatever shape you gave it — a string in single mode, an array in multiple.\n\n`keepMounted` trades the cost of rendering every closed body up front for keeping what is inside them alive. Set it on the accordion for all of them, or on a single `Accordion.Content` for the one section that needs it — the prop on the content wins either way round.",
+  "notes": "Pass an array to `value` / `defaultValue` with `selectionMode=\"multiple\"`. `onValueChange` hands back whatever shape you gave it — a string in single mode, an array in multiple.\n\n`keepMounted` trades the cost of rendering every closed body up front for keeping what is inside them alive. Set it on the accordion for all of them, or on a single `Accordion.Content` for the one section that needs it — the prop on the content wins either way round.\n\n**With the operating system set to reduce motion the section arrives at its new height and the chevron at its new angle without travelling to either.** The disclosure is the point and it still happens; the movement is what goes.",
   "anatomy": "<Accordion>\n  <Accordion.Item value=\"…\">\n    <Accordion.Trigger>\n      <Accordion.Title>…</Accordion.Title>\n      <Accordion.Indicator />\n    </Accordion.Trigger>\n    <Accordion.Content>…</Accordion.Content>\n  </Accordion.Item>\n</Accordion>",
   "examples": [
     {
