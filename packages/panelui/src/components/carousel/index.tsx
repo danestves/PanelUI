@@ -799,6 +799,7 @@ function makeArrow(direction: 'previous' | 'next') {
 
     return (
       <Pressable
+        {...props}
         disabled={disabled}
         onPress={direction === 'next' ? next : previous}
         accessibilityRole="button"
@@ -809,7 +810,6 @@ function makeArrow(direction: 'previous' | 'next') {
           disabled ? 'opacity-30' : 'active:bg-foreground/10',
           className
         )}
-        {...props}
       >
         {children ??
           (direction === 'next' ? (
