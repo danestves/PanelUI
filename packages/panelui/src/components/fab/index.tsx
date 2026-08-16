@@ -85,7 +85,10 @@ import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
 import { useBackHandler } from '../../hooks/use-back-handler';
-import { AnimatedPressable } from '../../primitives/animated-pressable';
+import {
+  AnimatedPressable,
+  type AnimatedPressableProps,
+} from '../../primitives/animated-pressable';
 import { Scrim } from '../../primitives/scrim';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
@@ -180,7 +183,9 @@ function anchor(placement: FabPlacement, offset: number) {
  * Fab
  * -------------------------------------------------------------------------- */
 
-export interface FabProps extends Omit<ViewProps, 'children'>, FabVariantProps {
+export interface FabProps
+  extends Omit<AnimatedPressableProps, 'children' | 'style' | 'disabled'>,
+    Omit<FabVariantProps, 'disabled'> {
   className?: string;
   /** The glyph. Sized by you — this is the one thing that should not guess. */
   icon?: ReactNode;
@@ -201,7 +206,8 @@ export interface FabProps extends Omit<ViewProps, 'children'>, FabVariantProps {
   placement?: FabPlacement;
   /** Distance from the edges when `placement` is set, in points. */
   offset?: number;
-  onPress?: () => void;
+  /** Placement-aware view style. Press-state styling belongs in `className`. */
+  style?: ViewProps['style'];
   disabled?: boolean;
   /**
    * A tick on press. Off by default — needs the optional `expo-haptics`, and
@@ -231,33 +237,37 @@ const FabRoot = forwardRef<View, FabProps>(
     },
     ref
   ) => {
+    const isDisabled = Boolean(disabled);
     const { root, label } = fabVariants({
       size,
       variant,
       extended: extended && !!children,
-      disabled,
+      disabled: isDisabled,
     });
 
     const themed = useCSSVariable(CONTENT_COLOR_VAR[variant ?? 'primary']);
     const contentColor =
       typeof themed === 'string' ? themed : undefined;
 
-    const handlePress = useCallback(() => {
-      if (haptics) selectionTick();
-      onPress?.();
-    }, [haptics, onPress]);
+    const handlePress = useCallback<NonNullable<AnimatedPressableProps['onPress']>>(
+      (event) => {
+        if (haptics) selectionTick();
+        onPress?.(event);
+      },
+      [haptics, onPress]
+    );
 
     return (
       <IconColorProvider color={contentColor}>
         <AnimatedPressable
           ref={ref}
+          {...props}
           accessibilityRole="button"
-          accessibilityState={{ disabled }}
-          disabled={disabled}
+          accessibilityState={{ disabled: isDisabled }}
+          disabled={isDisabled}
           onPress={handlePress}
           className={root({ className })}
           style={[placement ? anchor(placement, offset) : null, style]}
-          {...props}
         >
           {icon}
           {extended && children ? (
