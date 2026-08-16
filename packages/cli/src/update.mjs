@@ -18,7 +18,17 @@ export async function update(names, options) {
   }
 
   const installed = [...new Set(Object.values(lock.files).map((entry) => entry.item))];
-  const roots = lock.version === 2 ? Object.keys(lock.roots) : installed;
+  // Components installed before the lock recorded roots are still the user's to
+  // update. Their files sit in `legacyFiles` because no closure claims them,
+  // which says nothing about whether they were asked for — so each such item is
+  // a root too. Without this, the first `add` after an upgrade migrates the
+  // lock to v2 and silently narrows `update` to whatever was added since.
+  const adopted =
+    lock.version === 2
+      ? lock.legacyFiles.map((relative) => lock.files[relative]?.item).filter(Boolean)
+      : [];
+  const roots =
+    lock.version === 2 ? [...new Set([...Object.keys(lock.roots), ...adopted])] : installed;
   const requested = names.length ? names : roots;
   const unknown = requested.filter((name) => !roots.includes(name));
   if (unknown.length) {
