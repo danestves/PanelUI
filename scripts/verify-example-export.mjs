@@ -9,10 +9,16 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EXAMPLE = path.join(ROOT, 'apps/example');
 
 /*
- * Baseline (Expo 57, 108 component catalogue): 4,161 modules, a 6,640,222
+ * Baseline (Expo 57, 110 component catalogue): 4,185 modules, a 6,677,125
  * byte minified bundle, 33 assets / 1,019,361 bytes, eight route entries and
- * 7,661,810 output bytes. These are capacity guards with 6–50% headroom,
- * depending on how discrete the metric is, rather than targets to fill.
+ * 7,698,713 output bytes. These are capacity guards rather than targets to
+ * fill.
+ *
+ * The two that bind are `modules` and `bundleBytes`, at roughly 5% and 6%
+ * clear of the numbers above — on the order of five more components. When one
+ * of them trips, read it as a prompt to check what grew and then raise the
+ * ceiling deliberately; a build going red on the component that happened to
+ * be last is the failure mode to avoid, not a result to act on.
  */
 export const EXAMPLE_EXPORT_BUDGETS = Object.freeze({
   modules: 4_400,
