@@ -180,6 +180,25 @@ export async function resolve(registry, names) {
   return [...resolved.values()];
 }
 
+/** The resolved item names owned by each root the user explicitly requested. */
+export function dependencyClosures(items, roots) {
+  const byName = new Map(items.map((item) => [item.name, item]));
+  return Object.fromEntries(
+    roots.map((root) => {
+      const closure = [];
+      const visited = new Set();
+      const visit = (name) => {
+        if (visited.has(name)) return;
+        visited.add(name);
+        closure.push(name);
+        for (const dependency of byName.get(name)?.registryDependencies ?? []) visit(dependency);
+      };
+      visit(root);
+      return [root, closure];
+    })
+  );
+}
+
 /** The union of npm packages a set of items needs. */
 export function collectDependencies(items) {
   const required = new Set();

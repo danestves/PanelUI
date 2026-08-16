@@ -177,8 +177,14 @@ A value-taking flag without its value prints its usage and exits with status 1. 
 
 Change the aliases and imports are rewritten to match on the way in.
 
-`panelui-lock.json` records SHA-256 digests and registry ownership for files successfully copied by
-`add` or `update`. Commit it with the project so updates have the same safety baseline everywhere.
+`panelui-lock.json` records SHA-256 digests, requested roots, and each root's registry dependency
+closure. That lets a named update remove an untouched dependency only after no other requested root
+needs it. Locally edited files and dependencies shared with another root are always retained. Commit
+the lockfile so updates have the same safety baseline everywhere.
+
+Version 1 lockfiles remain readable, but their missing root history makes dependency pruning unsafe.
+Run `add <root>` again while its dependencies are still present to migrate that root to version 2;
+use `--overwrite` only when you also intend to reset edited files.
 
 ## Notes
 
