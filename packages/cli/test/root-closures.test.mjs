@@ -150,3 +150,54 @@ test('v1 locks stay conservative until add records an explicit root closure', as
     server.kill();
   }
 });
+
+test('migrating to v2 keeps updating components installed before the lock had roots', async () => {
+  const registry = path.join(root, 'adopted-registry');
+  fs.mkdirSync(registry);
+  item(registry, 'adopted', 'ui/adopted.ts');
+  item(registry, 'newcomer', 'ui/newcomer.ts');
+  const app = project('adopted-project');
+  fs.mkdirSync(path.join(app, 'components/ui'), { recursive: true });
+  fs.writeFileSync(path.join(app, 'components/ui/adopted.ts'), 'adopted\n');
+  writeLock(app, {
+    version: 1,
+    files: { 'components/ui/adopted.ts': { item: 'adopted', digest: digest('adopted\n') } },
+  });
+  const { server, url } = await registryServer(registry);
+
+  try {
+    // Adding an unrelated component is what migrates the lock to v2.
+    assert.equal(run(app, url, ['add', 'newcomer']).status, 0);
+    assert.deepEqual(lock(app).roots, { newcomer: ['newcomer'] });
+    assert.deepEqual(lock(app).legacyFiles, ['components/ui/adopted.ts']);
+
+    // The component that predates the migration is still updated by name...
+    fs.writeFileSync(
+      path.join(registry, 'adopted.json'),
+      JSON.stringify({
+        name: 'adopted',
+        files: [{ path: 'ui/adopted.ts', content: 'adopted v2\n' }],
+        registryDependencies: [],
+      })
+    );
+    const named = run(app, url, ['update', 'adopted']);
+    assert.equal(named.status, 0, `${named.stdout}${named.stderr}`);
+    assert.equal(fs.readFileSync(path.join(app, 'components/ui/adopted.ts'), 'utf8'), 'adopted v2\n');
+
+    // ...and by a bare update, which must not quietly skip it.
+    fs.writeFileSync(
+      path.join(registry, 'adopted.json'),
+      JSON.stringify({
+        name: 'adopted',
+        files: [{ path: 'ui/adopted.ts', content: 'adopted v3\n' }],
+        registryDependencies: [],
+      })
+    );
+    const bare = run(app, url, ['update']);
+    assert.equal(bare.status, 0, `${bare.stdout}${bare.stderr}`);
+    assert.match(bare.stdout, /adopted/);
+    assert.equal(fs.readFileSync(path.join(app, 'components/ui/adopted.ts'), 'utf8'), 'adopted v3\n');
+  } finally {
+    server.kill();
+  }
+});
