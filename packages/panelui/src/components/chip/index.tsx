@@ -285,9 +285,9 @@ const ChipRoot = forwardRef<View, ChipProps>(
           {pressable ? (
             <AnimatedPressable
               ref={ref}
-              onPress={handlePress}
-              {...sharedProps}
               {...props}
+              {...sharedProps}
+              onPress={handlePress}
             >
               {body}
             </AnimatedPressable>
