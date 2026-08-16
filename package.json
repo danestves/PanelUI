@@ -18,6 +18,7 @@
     "example:clear": "npm run start --workspace=example -- --clear",
     "catalogue:check": "node scripts/catalogue-manifest.mjs --check",
     "catalogue:generate": "node scripts/catalogue-manifest.mjs",
+    "release:check": "node scripts/release-parity.mjs",
     "themes:check": "node scripts/theme-manifest.mjs",
     "reset": "rm -rf apps/example/.expo apps/example/node_modules/.cache node_modules/.cache $TMPDIR/metro-* $TMPDIR/haste-map-* 2>/dev/null; echo \"caches cleared\"",
     "docs": "npm run dev --workspace=docs",
