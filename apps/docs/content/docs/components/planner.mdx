@@ -306,7 +306,7 @@ The weekday headings are hidden from screen readers. Each day already names its 
 
 On the web, one day is in the Tab order. Arrow Left/Right moves one visible day, Arrow Up/Down one week, and Home/End reaches the first or last day in the rendered week; movement stops at the six-week grid boundary. Enter and Space use the day button's ordinary press action. Native and TV keep every day as an ordinary Pressable so the platform focus engine owns directional movement. A custom `renderDay` also owns its own focus and activation behavior.
 
-Changing month announces the new one. Paging moves every label at once and a screen reader reads none of them, so without it the only thing that changed is silent.
+Using the month navigation announces the new month after it is shown. Mounting the planner and changing a controlled `month` prop directly stay silent, so an ordinary parent render does not interrupt what somebody is already reading. A controlled navigation request is announced only if the parent accepts it on the next committed render.
 
 ### The frame
 

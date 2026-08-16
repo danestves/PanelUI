@@ -109,6 +109,7 @@ import {
   visibleEntries,
   type PlannerCountedCategory,
 } from './planner-entries';
+import { usePlannerMonthAnnouncement } from './planner-announcement';
 import { plannerGridTarget } from './planner-grid-navigation';
 import {
   usePlannerMonthLifecycle,
@@ -120,6 +121,11 @@ const DEFAULT_ENTRY_LIMIT = 2;
 
 /** The palette a category takes its dot from when it does not name a colour. */
 const PALETTE_SIZE = 5;
+
+/** Stable wrapper keeps the native method's receiver and the hook dependency steady. */
+const announceMonth = (label: string) => {
+  AccessibilityInfo.announceForAccessibility(label);
+};
 
 const plannerVariants = tv({
   slots: {
@@ -328,12 +334,31 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
       [system, locale]
     );
 
-    const [month, setMonth] = usePlannerMonthLifecycle({
+    const [month, requestMonth] = usePlannerMonthLifecycle({
       month: monthProp,
       defaultMonth,
       settleMonth,
       onMonthChange,
     });
+    /*
+     * The announcement is registered against the month a press asks for, and
+     * spoken only once a commit arrives carrying it. That is what keeps a
+     * controlled parent's rejection silent, so it wraps the lifecycle's setter
+     * rather than living inside it — the hook owns which month is current, and
+     * this owns whether the change was the user's to hear about.
+     */
+    const expectMonthAnnouncement = usePlannerMonthAnnouncement({
+      monthKey: month.getTime(),
+      monthLabel: calendarMonthLabel(month, system, locale),
+      announce: announceMonth,
+    });
+    const setMonth = useCallback(
+      (next: Date) => {
+        expectMonthAnnouncement(settleMonth(next));
+        requestMonth(next);
+      },
+      [expectMonthAnnouncement, requestMonth, settleMonth]
+    );
     const [selected, select] = usePlannerSelectionLifecycle({
       selected: selectedProp,
       defaultSelected,
@@ -386,16 +411,6 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
       () => summariseMonth(days, grid, categories, isInMonth),
       [days, grid, categories, isInMonth]
     );
-
-    /*
-     * The month is announced rather than left to the cells. Paging moves 42
-     * labels at once and a screen reader reads none of them, so without this
-     * the only thing that changes is silent.
-     */
-    const monthLabel = calendarMonthLabel(month, system, locale);
-    useEffect(() => {
-      AccessibilityInfo.announceForAccessibility(monthLabel);
-    }, [monthLabel]);
 
     const context = useMemo<PlannerContextValue>(
       () => ({
