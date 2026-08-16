@@ -100,21 +100,21 @@ const MarkerRoot = forwardRef<View, MarkerProps>(
     const body = !onPress ? (
       <View
         ref={ref}
+        {...(props as ViewProps)}
         accessibilityState={{ disabled: !!disabled }}
         className={root({ className })}
-        {...(props as ViewProps)}
       >
         {inner}
       </View>
     ) : (
       <AnimatedPressable
         ref={ref}
+        {...props}
         accessibilityRole="button"
         accessibilityState={{ disabled: !!disabled }}
         disabled={disabled}
         onPress={onPress}
         className={root({ className })}
-        {...props}
       >
         {inner}
       </AnimatedPressable>
