@@ -9,6 +9,36 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.70.0] — 2026-08-16
+
+### Added
+
+- **`Collapsible` — one section of content, shown and hidden by its own header.** For optional
+  detail, an advanced-settings group, or a row that expands into the rest of what it knows.
+
+  It is split into `Trigger` / `Title` / `Indicator` / `Content`, the same anatomy as one
+  `Accordion` section, and differs in what happens to the body when it closes. An accordion
+  unmounts it; this keeps it mounted and animates its height, so state inside survives — a
+  part-filled form still holds what was typed, a list is still scrolled to where it was.
+
+  That costs a render the first time whether or not the section is ever opened, because a height
+  cannot be animated from `auto` and measuring the content means rendering it. For a body heavy
+  enough that this matters, a single-item `Accordion` unmounts it instead. The trade is stated on
+  the page rather than left to be discovered.
+
+  A closed body is taken out of the accessibility tree as well as hidden, so a screen reader does
+  not read out a section that is not on screen. With the operating system set to reduce motion the
+  panel snaps between its two states and the chevron turns without travelling.
+
+### Fixed
+
+- **`Accordion` now honours the operating system's reduce-motion setting.** The chevron animated
+  its rotation and the section travelled to its new height regardless, which is the one thing that
+  setting exists to stop — and it was the only animated disclosure in the library still doing it.
+
+  Both now arrive rather than travel when the setting is on. The disclosure itself is unchanged:
+  sections still open and close, and nothing about the API moves.
+
 ## [0.69.0] — 2026-08-15
 
 ### Added

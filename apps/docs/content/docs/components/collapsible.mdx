@@ -1,0 +1,216 @@
+---
+title: Collapsible
+description: One section of content, shown and hidden by its own header.
+status: new
+---
+
+One section of content that its own header shows and hides, for optional detail, an advanced-settings group, or a row that expands into the rest of what it knows.
+
+The body stays mounted while it is closed, so state inside it survives — a part-filled form still holds what was typed, a list is still scrolled to where it was.
+
+That costs a render the first time whether or not the section is ever opened, because a height cannot be animated from `auto` and measuring the content means rendering it. For a body heavy enough that this matters, use [Accordion](/docs/components/accordion) with a single item, which unmounts it instead.
+
+For several sections where opening one should close the others, use [Accordion](/docs/components/accordion).
+
+## Installation
+
+Collapsible ships with the library — no separate install.
+
+```tsx
+import { Collapsible, Text, Button, Textarea, Switch } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add collapsible
+```
+
+## Usage
+
+```tsx
+<Collapsible variant="surface" defaultOpen>
+  <Collapsible.Trigger>
+    <Collapsible.Title>Delivery options</Collapsible.Title>
+    <Collapsible.Indicator />
+  </Collapsible.Trigger>
+  <Collapsible.Content>
+    <Text size="sm" muted>Standard delivery arrives in three to five working days.</Text>
+  </Collapsible.Content>
+</Collapsible>
+```
+
+## Composition
+
+```tsx
+<Collapsible>
+  <Collapsible.Trigger>
+    <Collapsible.Title>…</Collapsible.Title>
+    <Collapsible.Indicator />
+  </Collapsible.Trigger>
+  <Collapsible.Content>…</Collapsible.Content>
+</Collapsible>
+```
+
+- **`Collapsible.Trigger`** — The pressable header row. A bare string child is wrapped in the title style.
+- **`Collapsible.Title`** — Heading text inside the trigger.
+- **`Collapsible.Indicator`** — Chevron that rotates 180° while the body is open.
+- **`Collapsible.Content`** — The body. Its height animates open and closed, and it stays mounted throughout.
+
+## Examples
+
+### A section of optional detail
+
+The default: a header row, a chevron, and a body that opens under it.
+
+```tsx
+<Collapsible>
+  <Collapsible.Trigger>
+    <Collapsible.Title>What is included</Collapsible.Title>
+    <Collapsible.Indicator />
+  </Collapsible.Trigger>
+  <Collapsible.Content>
+    <Text size="sm" muted>
+      Unlimited projects, 100GB of storage, and email support.
+    </Text>
+  </Collapsible.Content>
+</Collapsible>
+```
+
+### On a surface
+
+`variant="surface"` draws the border and background, so the section reads as one object rather than as a header with something under it.
+
+```tsx
+<Collapsible variant="surface" defaultOpen>
+  <Collapsible.Trigger>
+    <Collapsible.Title>Advanced settings</Collapsible.Title>
+    <Collapsible.Indicator />
+  </Collapsible.Trigger>
+  <Collapsible.Content>
+    <View className="gap-3">
+      <Text size="sm" muted>Send anonymous usage data</Text>
+      <Switch value={telemetry} onValueChange={setTelemetry} />
+    </View>
+  </Collapsible.Content>
+</Collapsible>
+```
+
+### Controlled
+
+Drive it from state when something outside the section needs to open it.
+
+```tsx
+const [open, setOpen] = useState(false);
+
+<>
+  <Button onPress={() => setOpen(true)}>Show the details</Button>
+
+  <Collapsible open={open} onOpenChange={setOpen}>
+    <Collapsible.Trigger>
+      <Collapsible.Title>{open ? 'Hide details' : 'Show details'}</Collapsible.Title>
+      <Collapsible.Indicator />
+    </Collapsible.Trigger>
+    <Collapsible.Content>
+      <Text size="sm" muted>Billed monthly, cancel any time.</Text>
+    </Collapsible.Content>
+  </Collapsible>
+</>
+```
+
+### The body keeps its state
+
+Closing the section and opening it again leaves the field exactly as it was. This is what separates it from a one-item accordion, which unmounts the body and starts over.
+
+```tsx
+<Collapsible variant="surface">
+  <Collapsible.Trigger>
+    <Collapsible.Title>Delivery note</Collapsible.Title>
+    <Collapsible.Indicator />
+  </Collapsible.Trigger>
+  <Collapsible.Content>
+    <Textarea placeholder="Leave it with a neighbour…" />
+  </Collapsible.Content>
+</Collapsible>
+```
+
+### Disabled
+
+A section that is there but cannot be opened yet — a step not reached, or a plan not on.
+
+```tsx
+<Collapsible variant="surface" isDisabled>
+  <Collapsible.Trigger>
+    <Collapsible.Title>Enterprise billing</Collapsible.Title>
+    <Collapsible.Indicator />
+  </Collapsible.Trigger>
+  <Collapsible.Content>
+    <Text size="sm" muted>Contact sales.</Text>
+  </Collapsible.Content>
+</Collapsible>
+```
+
+## Variants
+
+### `variant`
+
+- `default` *(default)*
+- `surface`
+- `ghost`
+
+```tsx
+<Collapsible variant="default">…</Collapsible>
+<Collapsible variant="surface">…</Collapsible>
+<Collapsible variant="ghost">…</Collapsible>
+```
+
+## API Reference
+
+### Collapsible
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `variant` | `CollapsibleVariant` | `default` |  |
+| `open` | `boolean` | — | Whether the body is showing, controlled. |
+| `defaultOpen` | `boolean` | `false` |  |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
+| `isDisabled` | `boolean` | `false` | Stops the trigger opening or closing it, and marks it disabled to a screen reader. |
+
+### Collapsible.Trigger
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Collapsible.Indicator
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Collapsible.Content
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+Leave `open` off and the component tracks its own state from `defaultOpen`. Pass `open` and it follows that instead, and `onOpenChange` is where the press arrives.
+
+`isDisabled` stops the trigger opening or closing it and marks it disabled to a screen reader. It does not close a section that is already open — a disabled control is one that cannot be used, not one that undoes itself.
+
+A closed body is taken out of the accessibility tree as well as hidden, so a screen reader does not read out a section that is not on screen.
+
+**With the operating system set to reduce motion the panel snaps between its two states and the chevron turns without travelling.** The disclosure still happens; it is the movement that is dropped.
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `Collapsible`
+
+**Types:** `CollapsibleProps`, `CollapsibleTriggerProps`, `CollapsibleIndicatorProps`, `CollapsibleContentProps`, `CollapsibleVariant`
