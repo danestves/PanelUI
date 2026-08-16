@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -8,8 +9,9 @@ const packageJson = JSON.parse(
   readFileSync(resolve(packageRoot, "package.json"), "utf8"),
 );
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const packRoot = mkdtempSync(join(tmpdir(), "panelui-pack-"));
 const packed = JSON.parse(
-  execFileSync(npm, ["pack", "--dry-run", "--json", "--ignore-scripts"], {
+  execFileSync(npm, ["pack", "--json", "--ignore-scripts", "--pack-destination", packRoot], {
     cwd: packageRoot,
     encoding: "utf8",
   }),
@@ -111,6 +113,47 @@ if (forbiddenFiles.length > 0) {
   throw new Error(
     `Package contains development-only files:\n${forbiddenFiles.join("\n")}`,
   );
+}
+
+/* Resolve real package exports from a fresh unpack, not from this workspace. */
+const consumerRoot = resolve(packRoot, "consumer");
+const installed = resolve(consumerRoot, "node_modules/panelui-native");
+mkdirSync(installed, { recursive: true });
+try {
+  execFileSync("tar", [
+    "-xzf",
+    resolve(packRoot, manifest.filename),
+    "--strip-components=1",
+    "-C",
+    installed,
+  ]);
+  writeFileSync(
+    resolve(consumerRoot, "consumer.ts"),
+    [
+      "import { Meter, type MeterProps } from 'panelui-native/components/meter';",
+      "import { Planner, type PlannerProps } from 'panelui-native/components/planner';",
+      "import { PanelUIProvider } from 'panelui-native/provider';",
+      "import { Scrim } from 'panelui-native/primitives/scrim';",
+      "import { useTheme, type ThemeName } from 'panelui-native/theme';",
+      "const meter: MeterProps = { value: 1 };",
+      "const planner: PlannerProps = { entries: [] };",
+      "const theme: ThemeName = 'system';",
+      "void [Meter, Planner, PanelUIProvider, Scrim, useTheme, meter, planner, theme];",
+    ].join("\n"),
+  );
+  execFileSync(process.execPath, [
+    resolve(packageRoot, "../../node_modules/typescript/bin/tsc"),
+    "--noEmit", "--strict", "--skipLibCheck", "--module", "esnext",
+    "--moduleResolution", "bundler", resolve(consumerRoot, "consumer.ts"),
+  ], { cwd: consumerRoot, stdio: "pipe" });
+  execFileSync(process.execPath, [
+    "--input-type=module",
+    "--eval",
+    "import { formatTime } from 'panelui-native/utils/time'; if (!formatTime({ hour: 9, minute: 5 }).includes('9')) process.exit(1);",
+  ], { cwd: consumerRoot, stdio: "pipe" });
+  console.log("Verified packed subpath consumer types and runtime utility import.");
+} finally {
+  rmSync(packRoot, { recursive: true, force: true });
 }
 
 /*

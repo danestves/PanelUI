@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import { promisify } from 'node:util';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const json = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
+const exec = promisify(execFile);
 
 test('component and hook subpaths cover every public source module', async () => {
   assert.deepEqual(json.exports['./components/*'], {
@@ -61,4 +64,28 @@ test('only root-public utilities receive subpaths', () => {
       default: `./lib/module/utils/${name}.js`,
     });
   }
+});
+
+test('reviewed provider, theme and foundation leaves have exact conditions', () => {
+  const leaves = {
+    provider: 'providers/panel-ui-provider.tsx',
+    theme: 'theme/use-theme.ts',
+    'primitives/animated-pressable': 'primitives/animated-pressable.tsx',
+    'primitives/keyboard-avoider': 'primitives/keyboard-avoider.tsx',
+    'primitives/scrim': 'primitives/scrim.tsx',
+    'primitives/scroll-progress': 'primitives/scroll-progress.tsx',
+  };
+  for (const [name, source] of Object.entries(leaves)) {
+    const stem = source.replace(/\.tsx?$/, '');
+    assert.deepEqual(json.exports[`./${name}`], {
+      types: `./lib/typescript/src/${stem}.d.ts`,
+      'react-native': `./src/${source}`,
+      default: `./lib/module/${stem}.js`,
+    });
+  }
+  assert.ok(json.exports['./components/*'], 'Meter and Planner use the component pattern');
+});
+
+test('generated subpaths are current', async () => {
+  await exec(process.execPath, ['scripts/generate-subpath-exports.mjs'], { cwd: root });
 });

@@ -22,6 +22,36 @@
       "react-native": "./src/hooks/*.ts",
       "default": "./lib/module/hooks/*.js"
     },
+    "./provider": {
+      "types": "./lib/typescript/src/providers/panel-ui-provider.d.ts",
+      "react-native": "./src/providers/panel-ui-provider.tsx",
+      "default": "./lib/module/providers/panel-ui-provider.js"
+    },
+    "./theme": {
+      "types": "./lib/typescript/src/theme/use-theme.d.ts",
+      "react-native": "./src/theme/use-theme.ts",
+      "default": "./lib/module/theme/use-theme.js"
+    },
+    "./primitives/animated-pressable": {
+      "types": "./lib/typescript/src/primitives/animated-pressable.d.ts",
+      "react-native": "./src/primitives/animated-pressable.tsx",
+      "default": "./lib/module/primitives/animated-pressable.js"
+    },
+    "./primitives/keyboard-avoider": {
+      "types": "./lib/typescript/src/primitives/keyboard-avoider.d.ts",
+      "react-native": "./src/primitives/keyboard-avoider.tsx",
+      "default": "./lib/module/primitives/keyboard-avoider.js"
+    },
+    "./primitives/scrim": {
+      "types": "./lib/typescript/src/primitives/scrim.d.ts",
+      "react-native": "./src/primitives/scrim.tsx",
+      "default": "./lib/module/primitives/scrim.js"
+    },
+    "./primitives/scroll-progress": {
+      "types": "./lib/typescript/src/primitives/scroll-progress.d.ts",
+      "react-native": "./src/primitives/scroll-progress.tsx",
+      "default": "./lib/module/primitives/scroll-progress.js"
+    },
     "./utils/cn": {
       "types": "./lib/typescript/src/utils/cn.d.ts",
       "react-native": "./src/utils/cn.ts",
@@ -52,13 +82,15 @@
   "sideEffects": false,
   "scripts": {
     "build": "npm run clean && bob build",
-    "prepack": "npm run build && npm run verify:package",
+    "prepack": "npm run check:subpaths && npm run build && npm run verify:package",
     "test": "node --experimental-strip-types --test test/*.test.mjs",
     "benchmark:bar-chart": "node scripts/benchmark-bar-chart.mjs",
     "benchmark:planner": "node --experimental-strip-types scripts/benchmark-planner.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.type-tests.json",
     "clean": "rm -rf lib",
-    "verify:package": "node scripts/verify-package.mjs"
+    "verify:package": "node scripts/verify-package.mjs",
+    "generate:subpaths": "node scripts/generate-subpath-exports.mjs --write",
+    "check:subpaths": "node scripts/generate-subpath-exports.mjs"
   },
   "keywords": [
     "react-native",
