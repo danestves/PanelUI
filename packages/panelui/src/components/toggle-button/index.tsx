@@ -333,6 +333,7 @@ const ToggleButtonRoot = forwardRef<View, ToggleButtonProps>(
         <IconColorProvider color={typeof tint === 'string' ? tint : undefined}>
           <AnimatedPressable
             ref={ref}
+            {...props}
             accessibilityRole="button"
             // `checked` is what a screen reader reads out as "on"/"off"; the
             // selected state is the entire point of this control, so it is
@@ -345,7 +346,6 @@ const ToggleButtonRoot = forwardRef<View, ToggleButtonProps>(
               slots.root({ className }),
               selected ? selectedClassName : unselectedClassName
             )}
-            {...props}
           >
             {textChildren(children, (text) => (
               <Text className={slots.label({ className: labelClassName })}>
