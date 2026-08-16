@@ -29,11 +29,55 @@ export interface MeterThreshold {
   color: MeterColor;
 }
 
+/** A bounded block count keeps malformed input from allocating without limit. */
+export const MAX_METER_SEGMENTS = 100;
+
+export interface MeterScale {
+  min: number;
+  max: number;
+  value: number;
+  fraction: number;
+}
+
+/**
+ * Make a public scale safe for layout, animation and native accessibility.
+ * Invalid bounds fall back to their documented defaults; if those still do
+ * not produce a positive span, the scale honestly collapses at its floor.
+ */
+export function normalizeScale(value: number, min: number, max: number): MeterScale {
+  const floor = Number.isFinite(min) ? min : 0;
+  const candidateMax = Number.isFinite(max) ? max : 100;
+  const ceiling = candidateMax > floor ? candidateMax : floor;
+  const held = Number.isNaN(value)
+    ? floor
+    : value === Number.POSITIVE_INFINITY
+      ? ceiling
+      : value === Number.NEGATIVE_INFINITY
+        ? floor
+        : Math.min(Math.max(value, floor), ceiling);
+  const magnitude = Math.max(Math.abs(floor), Math.abs(ceiling), 1);
+  const position =
+    ceiling > floor
+      ? (held / magnitude - floor / magnitude) /
+        (ceiling / magnitude - floor / magnitude)
+      : 0;
+  return {
+    min: floor,
+    max: ceiling,
+    value: held,
+    fraction: Math.min(Math.max(position, 0), 1),
+  };
+}
+
+/** Positive counts are whole and bounded; zero means the continuous meter. */
+export function normalizeSegments(segments: number | undefined) {
+  if (segments == null || !Number.isFinite(segments) || !(segments > 0)) return 0;
+  return Math.min(Math.floor(segments), MAX_METER_SEGMENTS);
+}
+
 /** `value` held inside the scale, so a stray number cannot escape the track. */
 export function clamp(value: number, min: number, max: number) {
-  if (!(value > min)) return min;
-  if (value > max) return max;
-  return value;
+  return normalizeScale(value, min, max).value;
 }
 
 /**
@@ -41,9 +85,7 @@ export function clamp(value: number, min: number, max: number) {
  * meaningful position in it, so it reads as empty rather than dividing by zero.
  */
 export function fractionOf(value: number, min: number, max: number) {
-  const span = max - min;
-  if (!(span > 0)) return 0;
-  return clamp((value - min) / span, 0, 1);
+  return normalizeScale(value, min, max).fraction;
 }
 
 /**
@@ -62,6 +104,7 @@ export function colorFor(
   if (!thresholds?.length) return base;
   let winner: MeterThreshold | undefined;
   for (const threshold of thresholds) {
+    if (!Number.isFinite(threshold.from)) continue;
     if (value < threshold.from) continue;
     if (!winner || threshold.from > winner.from) winner = threshold;
   }
@@ -77,8 +120,10 @@ export function colorFor(
  * wrong.
  */
 export function litSegments(fraction: number, segments: number) {
-  if (!(segments > 0)) return 0;
-  return Math.min(Math.ceil(fraction * segments), segments);
+  const count = normalizeSegments(segments);
+  if (count === 0 || Number.isNaN(fraction) || fraction <= 0) return 0;
+  if (!Number.isFinite(fraction) || fraction >= 1) return count;
+  return Math.min(Math.ceil(fraction * count), count);
 }
 
 /**

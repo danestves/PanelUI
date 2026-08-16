@@ -10,9 +10,15 @@ const source = await readFile(
 const compiled = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 }).outputText;
-const { clamp, colorFor, fractionOf, formatValue, litSegments } = await import(
-  `data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`
-);
+const {
+  clamp,
+  colorFor,
+  fractionOf,
+  formatValue,
+  litSegments,
+  normalizeScale,
+  normalizeSegments,
+} = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
 
 test('fractionOf reads a value against its own scale', () => {
   assert.equal(fractionOf(50, 0, 100), 0.5);
@@ -32,6 +38,31 @@ test('a scale with no span reads as empty rather than dividing by zero', () => {
     const fraction = fractionOf(15, min, max);
     assert.equal(fraction, 0);
     assert.ok(Number.isFinite(fraction));
+  }
+});
+
+test('invalid public scales normalize to finite ordered accessibility values', () => {
+  const cases = [
+    [Number.NaN, 0, 100, { min: 0, max: 100, value: 0, fraction: 0 }],
+    [Number.POSITIVE_INFINITY, 0, 100, { min: 0, max: 100, value: 100, fraction: 1 }],
+    [Number.NEGATIVE_INFINITY, 0, 100, { min: 0, max: 100, value: 0, fraction: 0 }],
+    [15, 10, 10, { min: 10, max: 10, value: 10, fraction: 0 }],
+    [15, 80, 20, { min: 80, max: 80, value: 80, fraction: 0 }],
+    [50, Number.NaN, 100, { min: 0, max: 100, value: 50, fraction: 0.5 }],
+    [50, 0, Number.POSITIVE_INFINITY, { min: 0, max: 100, value: 50, fraction: 0.5 }],
+    [
+      0,
+      -Number.MAX_VALUE,
+      Number.MAX_VALUE,
+      { min: -Number.MAX_VALUE, max: Number.MAX_VALUE, value: 0, fraction: 0.5 },
+    ],
+  ];
+  for (const [value, min, max, expected] of cases) {
+    const scale = normalizeScale(value, min, max);
+    assert.deepEqual(scale, expected);
+    assert.ok(Object.values(scale).every(Number.isFinite));
+    assert.ok(scale.min <= scale.value && scale.value <= scale.max);
+    assert.ok(scale.fraction >= 0 && scale.fraction <= 1);
   }
 });
 
@@ -76,6 +107,15 @@ test('no thresholds, or none reached, leaves the base colour', () => {
   assert.equal(colorFor(5, 'info', [{ from: 80, color: 'destructive' }]), 'info');
 });
 
+test('non-finite thresholds cannot take over a finite reading', () => {
+  const invalid = [
+    { from: Number.NaN, color: 'warning' },
+    { from: Number.POSITIVE_INFINITY, color: 'destructive' },
+    { from: Number.NEGATIVE_INFINITY, color: 'info' },
+  ];
+  assert.equal(colorFor(50, 'success', invalid), 'success');
+});
+
 test('any reading above the floor lights a segment', () => {
   // Rounding down would leave the whole first block of a four-block meter
   // dark, so "a little" would look like "none".
@@ -92,6 +132,25 @@ test('the lit count never runs past the blocks that exist', () => {
   assert.equal(litSegments(1, 10), 10);
   assert.equal(litSegments(0.5, 0), 0);
   assert.equal(litSegments(0.5, -3), 0);
+  assert.equal(litSegments(Number.NaN, 4), 0);
+  assert.equal(litSegments(Number.POSITIVE_INFINITY, 4), 4);
+  assert.equal(litSegments(Number.NEGATIVE_INFINITY, 4), 0);
+});
+
+test('segment counts cannot create fractional, non-finite, or unbounded rows', () => {
+  for (const [input, expected] of [
+    [undefined, 0],
+    [Number.NaN, 0],
+    [Number.NEGATIVE_INFINITY, 0],
+    [0.5, 0],
+    [2.9, 2],
+    [4, 4],
+    [Number.POSITIVE_INFINITY, 0],
+    [101, 100],
+    [1_000_000, 100],
+  ]) {
+    assert.equal(normalizeSegments(input), expected);
+  }
 });
 
 test('formatValue prefers an explicit label over any number', () => {
@@ -118,4 +177,16 @@ test('formatValue falls back to a rounded percent', () => {
   assert.equal(formatValue(168, 168 / 256), '66%');
   // A partial Intl must not take the caption down with it.
   assert.equal(formatValue(50, 0.5, undefined, { style: 'nonsense' }), '50%');
+});
+
+test('Meter feeds only normalized values into layout, animation, and accessibility', async () => {
+  const component = await readFile(
+    new URL('../src/components/meter/index.tsx', import.meta.url),
+    'utf8'
+  );
+  assert.match(component, /const scale = normalizeScale\(value, minValue, maxValue\)/);
+  assert.match(component, /const segmentCount = normalizeSegments\(segments\)/);
+  assert.match(component, /min: scale\.min[\s\S]*max: scale\.max[\s\S]*now: held/);
+  assert.match(component, /overshootClamping: true/);
+  assert.match(component, /Number\.isFinite\(width\) && width > 0 \? width : 0/);
 });
