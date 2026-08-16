@@ -96,16 +96,23 @@ test('update writes only digest-matching files and reports modified files', asyn
     const lockBeforeCheck = fs.readFileSync(path.join(project, 'panelui-lock.json'), 'utf8');
     const checked = run(['update', '--check', ...common], installEnv);
     assert.equal(checked.status, 1, `${checked.stdout}${checked.stderr}`);
+    assert.match(checked.stdout, /--- a\/components\/ui\/card\.tsx\n\+\+\+ b\/components\/ui\/card\.tsx/);
+    assert.match(checked.stdout, /--- \/dev\/null\n\+\+\+ b\/lib\/helper\.ts/);
+    assert.match(checked.stdout, /--- a\/components\/ui\/removed\.ts\n\+\+\+ \/dev\/null/);
+    assert.doesNotMatch(checked.stdout, /--- a\/components\/ui\/card-style\.ts/);
     assert.equal(fs.existsSync(marker), false);
     assert.equal(fs.readFileSync(path.join(project, 'components/ui/card.tsx'), 'utf8'), beforeCheck);
     assert.equal(fs.readFileSync(path.join(project, 'panelui-lock.json'), 'utf8'), lockBeforeCheck);
-    assert.equal(run(['update', '--dry-run', ...common], installEnv).status, 1);
+    const dryRun = run(['update', '--dry-run', ...common], installEnv);
+    assert.equal(dryRun.status, 1);
+    assert.match(dryRun.stdout, /@@ -1 \+1 @@\n-card v1\n\+card v2/);
     assert.equal(fs.existsSync(marker), false);
     assert.equal(fs.readFileSync(path.join(project, 'panelui-lock.json'), 'utf8'), lockBeforeCheck);
 
     const updated = run(['update', ...common], installEnv);
     const output = `${updated.stdout}${updated.stderr}`;
     assert.equal(updated.status, 1, output);
+    assert.match(output, /@@ -1 \+1 @@\n-card v1\n\+card v2/);
     assert.equal(fs.readFileSync(path.join(project, 'components/ui/card.tsx'), 'utf8'), 'card v2\n');
     assert.equal(
       fs.readFileSync(path.join(project, 'components/ui/card-style.ts'), 'utf8'),
