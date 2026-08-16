@@ -14,7 +14,13 @@ const DOTS: Record<string, { label: string; text?: string; className: string }> 
   updated: {
     label: 'Updated',
     text: 'Update',
-    className: 'border border-fd-border bg-fd-muted text-fd-muted-foreground',
+    /*
+     * Full-strength foreground, not the muted one. The pill sets its own
+     * background, and muted-on-muted lands at 4.46:1 — under the 4.5:1 this
+     * text needs at 10px. The grey comes from the fill; the word on top of it
+     * has to be readable.
+     */
+    className: 'border border-fd-border bg-fd-muted text-fd-foreground',
   },
   /*
    * Alpha outranks both, and is the only one set by hand: it says the API is
