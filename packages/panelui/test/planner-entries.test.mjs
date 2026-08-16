@@ -10,6 +10,9 @@ import {
 } from '../src/components/planner/planner-entries.ts';
 
 const at = (day, hour = 0) => new Date(2026, 0, day, hour);
+const januaryGrid = Array.from({ length: 6 }, (_, week) =>
+  Array.from({ length: 7 }, (_, day) => new Date(2025, 11, 28 + week * 7 + day))
+);
 
 test('two times on the same day land in the same bucket', () => {
   const morning = { date: at(7, 9) };
@@ -115,7 +118,7 @@ test('the month total counts the month, not the days either side of it', () => {
   ];
 
   assert.deepEqual(
-    summariseMonth(entries, [
+    summariseMonth(bucketByDay(entries), januaryGrid, [
       { id: 'monthly', label: 'Monthly' },
       { id: 'yearly', label: 'Yearly' },
     ], inJanuary),
@@ -130,8 +133,10 @@ test('the month total counts the month, not the days either side of it', () => {
 });
 
 test('a declared category with nothing in it still appears, at zero', () => {
+  const entries = [{ date: at(5), category: 'monthly' }];
   const { categories } = summariseMonth(
-    [{ date: at(5), category: 'monthly' }],
+    bucketByDay(entries),
+    januaryGrid,
     [
       { id: 'monthly', label: 'Monthly' },
       { id: 'weekly', label: 'Weekly' },
@@ -145,4 +150,40 @@ test('a declared category with nothing in it still appears, at zero', () => {
     { id: 'monthly', label: 'Monthly', count: 1 },
     { id: 'weekly', label: 'Weekly', count: 0 },
   ]);
+});
+
+test('month summaries inspect the fixed grid, not every entry in other months', () => {
+  const entries = [
+    ...Array.from({ length: 10_000 }, (_, day) => ({
+      date: new Date(2020, 0, (day % 28) + 1),
+      category: 'old',
+    })),
+    { date: at(7), category: 'current' },
+  ];
+  let monthChecks = 0;
+  let dayLookups = 0;
+  class CountingDays extends Map {
+    get(key) {
+      dayLookups += 1;
+      return super.get(key);
+    }
+  }
+  const indexed = new CountingDays(bucketByDay(entries));
+
+  const result = summariseMonth(
+    indexed,
+    januaryGrid,
+    [{ id: 'current', label: 'Current' }],
+    (date) => {
+      monthChecks += 1;
+      return date.getFullYear() === 2026 && date.getMonth() === 0;
+    }
+  );
+
+  assert.equal(monthChecks, 42);
+  assert.equal(dayLookups, 31);
+  assert.deepEqual(result, {
+    total: 1,
+    categories: [{ id: 'current', label: 'Current', count: 1 }],
+  });
 });

@@ -210,6 +210,7 @@ interface PlannerContextValue {
   summary: { total: number; categories: PlannerCountedCategory[] };
   entryLimit: number;
   weekStartsOn: number;
+  grid: Date[][];
   locale: DateLocale;
   system: 'gregory' | 'islamic';
   isInMonth: (date: Date) => boolean;
@@ -340,6 +341,14 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
     });
 
     const days = useMemo(() => bucketByDay(entries), [entries]);
+    const normalizedWeekStart =
+      weekStartsOn === 'auto'
+        ? localeWeekStart(locale)
+        : normalizeWeekStart(weekStartsOn);
+    const grid = useMemo(
+      () => monthGrid(month, normalizedWeekStart, system, locale),
+      [month, normalizedWeekStart, system, locale]
+    );
 
     const isInMonth = useCallback(
       (date: Date) => isSameCalendarMonth(date, month, system, locale),
@@ -351,22 +360,31 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
       [categories]
     );
 
-    const colorOf = useCallback(
-      (id: string | undefined) => {
-        if (!id) return undefined;
-        const index = categories.findIndex((category) => category.id === id);
-        if (index < 0) return undefined;
-        const category = categories[index]!;
-        if (category.color) return category.color;
-        const slot = (category.colorIndex ?? index + 1) - 1;
-        return palette[((slot % PALETTE_SIZE) + PALETTE_SIZE) % PALETTE_SIZE];
+    const categoryColors = useMemo(
+      () => {
+        const colors = new Map<string, string | undefined>();
+        categories.forEach((category, index) => {
+          // `findIndex` used to make the first duplicate id authoritative.
+          if (colors.has(category.id)) return;
+          const slot = (category.colorIndex ?? index + 1) - 1;
+          colors.set(
+            category.id,
+            category.color ??
+              palette[((slot % PALETTE_SIZE) + PALETTE_SIZE) % PALETTE_SIZE]
+          );
+        });
+        return colors;
       },
       [categories, palette]
     );
+    const colorOf = useCallback(
+      (id: string | undefined) => id ? categoryColors.get(id) : undefined,
+      [categoryColors]
+    );
 
     const summary = useMemo(
-      () => summariseMonth(entries, categories, isInMonth),
-      [entries, categories, isInMonth]
+      () => summariseMonth(days, grid, categories, isInMonth),
+      [days, grid, categories, isInMonth]
     );
 
     /*
@@ -392,10 +410,8 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
         colorOf,
         summary,
         entryLimit,
-        weekStartsOn:
-          weekStartsOn === 'auto'
-            ? localeWeekStart(locale)
-            : normalizeWeekStart(weekStartsOn),
+        weekStartsOn: normalizedWeekStart,
+        grid,
         locale,
         system,
         isInMonth,
@@ -403,7 +419,8 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
       }),
       [
         month, setMonth, today, selected, select, days, categories, categoryLabels,
-        colorOf, summary, entryLimit, weekStartsOn, locale, system, isInMonth, onDayPress,
+        colorOf, summary, entryLimit, normalizedWeekStart, grid, locale, system,
+        isInMonth, onDayPress,
       ]
     );
 
@@ -621,14 +638,9 @@ const PlannerGridNavigationContext = createContext<PlannerGridNavigationContextV
  * weekday headings are hidden rather than read out 42 times over.
  */
 function PlannerGrid({ className, renderDay }: PlannerGridProps) {
-  const { month, weekStartsOn, locale, system, selected, today, isInMonth } =
+  const { grid: weeks, weekStartsOn, locale, selected, today, isInMonth } =
     usePlanner('Planner.Grid');
   const { grid, week: weekRow, heading } = plannerVariants();
-
-  const weeks = useMemo(
-    () => monthGrid(month, weekStartsOn, system, locale),
-    [month, weekStartsOn, system, locale]
-  );
   const headings = useMemo(
     () => weekdayNames(locale, weekStartsOn),
     [locale, weekStartsOn]

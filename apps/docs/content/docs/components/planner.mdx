@@ -292,7 +292,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ### Entries and categories
 
-An entry is `{ id, date, label }`, plus an optional `category` and `icon`. Pass the whole set at once, in any order and across any months; the planner buckets them by day itself and draws only the month on show.
+An entry is `{ id, date, label }`, plus an optional `category` and `icon`. Pass the whole set at once, in any order and across any months; the planner indexes the set once by day, then month changes inspect only the fixed 42-cell grid. Cell entry nodes remain bounded by `42 × entryLimit`, while counts and spoken labels still include every entry.
 
 A `category` is the key to a colour. Categories take their dot from the `--color-chart-*` tokens in the order they are declared, so they follow the theme into dark mode — give one a `colorIndex` to pick a different token, or a `color` for a brand that is not the theme's to choose.
 
