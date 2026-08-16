@@ -7,6 +7,8 @@ Use it for a number that keeps arriving — a metric off a socket, a sensor, a q
 
 The window is tied to the wall clock, not to the data. The line drifts left whether or not anything is arriving, so a feed that stalls shows as a flat run reaching back from the tip. That costs a frame callback for as long as the chart is mounted; `paused` and `status="loading"` stop it, and it never starts when the platform asks for reduced motion — the window then advances as each reading lands instead.
 
+A screen reader receives one read-only chart snapshot rather than a new node for every arriving point: name, loading or empty state, current value and direction, time window, and whether it is paused. `accessibilityLabel` names it, falling back to the Header title and then “Live line chart”.
+
 For a fixed series that is not going to grow — a week of visits, twelve months of revenue — use [LineChart](/docs/charts/line-chart). It places points by their position in the list, which is the right answer when the spacing between them is not the subject.
 
 **If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
@@ -257,6 +259,8 @@ const [held, setHeld] = useState(false);
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
+| `accessibilityLabel` | `string` | — | Names the chart's single screen-reader snapshot. Falls back to the Header title, then to "Live line chart". |
+| `accessibilityHint` | `string` | — | Additional guidance after the snapshot. No gesture is invented for it. |
 | `data` | `LiveLinePoint[]` | — | The readings so far, oldest first. Append to it as they arrive. |
 | `window` | `number` | — | How much time the plot spans, in seconds. |
 | `paused` | `boolean` | `false` | Freeze the window where it is. The readings still arrive; the clock stops. |
@@ -347,6 +351,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 The y-axis follows what is *visible*, not everything kept. A spike that has scrolled off the left edge stops holding the axis open, so a feed that settles is not left flat against the bottom of a plot scaled for something that happened a minute ago. Pass `yDomain` to fix it instead.
 
 `Tip` draws a dot and nothing else unless `badge` is passed. The badge is a floating card, which is the shape a reader has learnt means they touched something — sitting there unasked it reads as a tooltip that opened by itself. Turn it on for a chart with no header to put the reading in. It hides itself while the crosshair is out either way, so there is never a second card answering a different question.
+
+The visual Header value, axes, Tip badge, crosshair and Tooltip are hidden from the accessibility tree because the chart snapshot already carries their reading. Header action children remain ordinary accessible controls. Existing Header, Tip and Tooltip formatters are reused for the snapshot. It updates when data or state renders, but it is not a live region and does not announce every frame. `Tooltip` read-back remains a touch interaction; `onActivePointChange` reports that interaction but is not an action, so the chart does not claim adjustable controls. Render application errors beside or instead of the chart — `status` models only `loading` and `ready`.
 
 `paused` holds the whole picture, not only the clock. Readings keep arriving behind the frozen edge, and the y-axis, the tip and the momentum colour are all derived from the newest one — left live they would go on rescaling, chasing and recolouring under a line that has stopped, which is a held chart that is still moving.
 
