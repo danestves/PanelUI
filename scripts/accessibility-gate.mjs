@@ -10,7 +10,7 @@ export const ACCESSIBILITY_SUITES = [
     class: 'gate-integrity',
     file: 'packages/panelui/test/accessibility-gate.test.mjs',
     count: 3,
-    anchor: 'the accessibility gate rejects a removed class, suite, or required test',
+    anchor: 'the accessibility gate rejects a removed class, suite, required test, or count drift',
   },
   {
     class: 'perception',
@@ -53,6 +53,12 @@ export const ACCESSIBILITY_SUITES = [
     file: 'packages/panelui/test/map-accessibility.test.mjs',
     count: 3,
     anchor: 'describes every feature from the same FeatureCollection used by the layer',
+  },
+  {
+    class: 'chart-semantics',
+    file: 'packages/panelui/test/chart-accessibility.test.mjs',
+    count: 4,
+    anchor: 'all confirmed chart families use the shared semantic sibling',
   },
   {
     class: 'accessible-actions',
@@ -99,6 +105,7 @@ export const REQUIRED_CLASSES = [
   'large-text',
   'modal-isolation',
   'structured-content',
+  'chart-semantics',
   'accessible-actions',
   'web-keyboard',
 ];

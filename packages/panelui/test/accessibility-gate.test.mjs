@@ -15,22 +15,32 @@ test('the accessibility gate covers every required class and contract suite', ()
   assert.deepEqual(validateAccessibilityGate({ root }), []);
 });
 
-test('the accessibility gate rejects a removed class, suite, or required test', () => {
-  const withoutClass = ACCESSIBILITY_SUITES.filter((suite) => suite.class !== 'target-size');
+test('the accessibility gate rejects a removed class, suite, required test, or count drift', () => {
+  const withoutClass = ACCESSIBILITY_SUITES.filter((suite) => suite.class !== 'chart-semantics');
   assert.ok(validateAccessibilityGate({ root, suites: withoutClass })
-    .some((error) => error.includes('Missing required accessibility class: target-size')));
+    .some((error) => error.includes('Missing required accessibility class: chart-semantics')));
 
-  const missingSuite = ACCESSIBILITY_SUITES.map((suite, index) =>
-    index === 0 ? { ...suite, file: 'packages/panelui/test/renamed.test.mjs' } : suite
+  const missingSuite = ACCESSIBILITY_SUITES.map((suite) =>
+    suite.class === 'chart-semantics'
+      ? { ...suite, file: 'packages/panelui/test/renamed.test.mjs' }
+      : suite
   );
   assert.ok(validateAccessibilityGate({ root, suites: missingSuite })
     .some((error) => error.includes('Missing accessibility suite')));
 
-  const missingTest = ACCESSIBILITY_SUITES.map((suite, index) =>
-    index === 0 ? { ...suite, anchor: 'renamed required contract' } : suite
+  const missingTest = ACCESSIBILITY_SUITES.map((suite) =>
+    suite.class === 'chart-semantics'
+      ? { ...suite, anchor: 'renamed required contract' }
+      : suite
   );
   assert.ok(validateAccessibilityGate({ root, suites: missingTest })
     .some((error) => error.includes('is missing required test')));
+
+  const staleCount = ACCESSIBILITY_SUITES.map((suite) =>
+    suite.class === 'chart-semantics' ? { ...suite, count: suite.count + 1 } : suite
+  );
+  assert.ok(validateAccessibilityGate({ root, suites: staleCount })
+    .some((error) => error.includes('must contain 5 tests; found 4')));
 });
 
 test('the accessibility gate rejects an incomplete manual checklist', (t) => {

@@ -4,8 +4,9 @@
 
 Run `npm run test:a11y` first. It covers deterministic source contracts for
 contrast, reduced transparency, target sizes, modal isolation, structured
-content, accessible actions, and web composite keyboards. It is not an axe
-scan, WCAG certification, or substitute for assistive-technology testing.
+content, chart semantics, accessible actions, and web composite keyboards. It
+is not an axe scan, WCAG certification, or substitute for assistive-technology
+testing.
 
 Test a release candidate on one current iOS device or simulator with VoiceOver
 and one current Android device or emulator with TalkBack. Record OS, device,
@@ -37,6 +38,7 @@ portrait and landscape where the component supports them.
 - **Structured visuals:** traverse a populated Map, Flow, and chart. Meaningful
   features/data are reachable without focusing decorative geometry, and an
   actionable datum activates the same behavior as touch. Sources:
+  `packages/panelui/test/chart-accessibility.test.mjs`,
   `packages/panelui/src/components/map/index.tsx`,
   `packages/panelui/src/components/flow/index.tsx`, and
   `packages/panelui/src/components/line-chart/index.tsx`.
