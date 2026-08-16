@@ -107,6 +107,10 @@ import {
   visibleEntries,
   type PlannerCountedCategory,
 } from './planner-entries';
+import {
+  usePlannerMonthLifecycle,
+  usePlannerSelectionLifecycle,
+} from './planner-lifecycle';
 
 /** How many of a day's entries a cell draws before it stops and counts. */
 const DEFAULT_ENTRY_LIMIT = 2;
@@ -315,32 +319,22 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
     const system = resolveCalendar(calendar, locale);
     const palette = usePalette();
     const today = useToday();
-
-    const [internalMonth, setInternalMonth] = useState(() =>
-      startOfCalendarMonth(defaultMonth ?? new Date(), system, locale)
-    );
-    const month = monthProp
-      ? startOfCalendarMonth(monthProp, system, locale)
-      : internalMonth;
-
-    const setMonth = useCallback(
-      (next: Date) => {
-        const settled = startOfCalendarMonth(next, system, locale);
-        if (!monthProp) setInternalMonth(settled);
-        onMonthChange?.(settled);
-      },
-      [monthProp, onMonthChange, system, locale]
+    const settleMonth = useCallback(
+      (date: Date) => startOfCalendarMonth(date, system, locale),
+      [system, locale]
     );
 
-    const [internalSelected, setInternalSelected] = useState<Date | null>(defaultSelected);
-    const selected = selectedProp !== undefined ? selectedProp : internalSelected;
-    const select = useCallback(
-      (date: Date | null) => {
-        if (selectedProp === undefined) setInternalSelected(date);
-        onSelectedChange?.(date);
-      },
-      [selectedProp, onSelectedChange]
-    );
+    const [month, setMonth] = usePlannerMonthLifecycle({
+      month: monthProp,
+      defaultMonth,
+      settleMonth,
+      onMonthChange,
+    });
+    const [selected, select] = usePlannerSelectionLifecycle({
+      selected: selectedProp,
+      defaultSelected,
+      onSelectedChange,
+    });
 
     const days = useMemo(() => bucketByDay(entries), [entries]);
 
