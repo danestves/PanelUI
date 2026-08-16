@@ -80,6 +80,7 @@ const SUPPORT_DESCRIPTIONS = {
   'scroll-progress':
     'Shares UI-thread scroll offset, viewport, content size and scroller position with descendants.',
   'modal-isolation-store': 'Tracks nested modal owners without releasing isolation too early.',
+  'focus-restoration-store': 'Returns browser focus through nested overlays in last-opened order.',
   'use-back-handler': 'Consumes the Android hardware back press while an overlay is active.',
   'use-direction': 'Reads the nearest LTR or RTL direction, falling back to the device setting.',
   'use-reveal-progress': 'Reports how far an element has travelled through its scroll viewport.',

@@ -1,0 +1,15 @@
+{
+  "name": "focus-restoration-store",
+  "type": "registry:ui",
+  "description": "Returns browser focus through nested overlays in last-opened order.",
+  "registryDependencies": [],
+  "dependencies": [],
+  "optionalDependencies": [],
+  "files": [
+    {
+      "path": "ui/focus-restoration-store.ts",
+      "type": "registry:ui",
+      "content": "interface FocusDocument {\n  activeElement?: FocusTarget | null;\n  body?: FocusTarget | null;\n  documentElement?: FocusTarget | null;\n}\n\ninterface FocusTarget {\n  disabled?: boolean;\n  isConnected?: boolean;\n  focus: (options?: { preventScroll?: boolean }) => void;\n  getAttribute?: (name: string) => string | null;\n}\n\ntype RestoreFocus = () => boolean;\n\ninterface FocusOwner {\n  owner: string;\n  released: boolean;\n  restore: RestoreFocus;\n}\n\n/** Restores nested overlays in last-opened order, even when parents close first. */\nexport class FocusRestorationStore {\n  private owners: FocusOwner[] = [];\n\n  acquire(owner: string, restore: RestoreFocus): (() => void) {\n    const entry = { owner, released: false, restore };\n    this.owners.push(entry);\n\n    return () => {\n      if (entry.released) return;\n      entry.released = true;\n      this.restoreReleasedOwners();\n    };\n  }\n\n  private restoreReleasedOwners() {\n    const candidates: RestoreFocus[] = [];\n    while (this.owners.at(-1)?.released) {\n      const entry = this.owners.pop();\n      if (entry) candidates.push(entry.restore);\n    }\n    candidates.some((restore) => restore());\n  }\n}\n\n/** Captures the current browser focus without evaluating DOM APIs on native. */\nexport function captureFocusRestore(\n  document = (globalThis as { document?: FocusDocument }).document\n): RestoreFocus {\n  const target = document?.activeElement;\n  if (!target || target === document?.body || target === document?.documentElement) {\n    return () => false;\n  }\n\n  return () => {\n    if (target.isConnected === false || target.disabled) return false;\n    if (target.getAttribute?.('aria-disabled') === 'true') return false;\n    try {\n      target.focus({ preventScroll: true });\n    } catch {\n      try {\n        target.focus();\n      } catch {\n        return false;\n      }\n    }\n    return document?.activeElement === target;\n  };\n}\n"
+    }
+  ]
+}

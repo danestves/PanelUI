@@ -59,7 +59,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Portal } from '../../primitives/portal';
+import { FocusRestorePortal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { BottomSheet } from '../bottom-sheet';
@@ -535,7 +535,7 @@ function PopoverContent({
   if (!open || !trigger) return null;
 
   return (
-    <Portal>
+    <FocusRestorePortal>
       {/* Portal content mounts under PortalHost, outside this provider's
           subtree — re-provide the context so Popover.Close and Popover.Arrow
           keep working. */}
@@ -609,7 +609,7 @@ function PopoverContent({
           </Animated.View>
         </View>
       </PopoverContext.Provider>
-    </Portal>
+    </FocusRestorePortal>
   );
 }
 
