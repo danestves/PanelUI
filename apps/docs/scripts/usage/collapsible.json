@@ -4,7 +4,7 @@
   "usage": "<Collapsible variant=\"surface\" defaultOpen>\n  <Collapsible.Trigger>\n    <Collapsible.Title>Delivery options</Collapsible.Title>\n    <Collapsible.Indicator />\n  </Collapsible.Trigger>\n  <Collapsible.Content>\n    <Text size=\"sm\" muted>Standard delivery arrives in three to five working days.</Text>\n  </Collapsible.Content>\n</Collapsible>",
   "anatomy": "<Collapsible>\n  <Collapsible.Trigger>\n    <Collapsible.Title>…</Collapsible.Title>\n    <Collapsible.Indicator />\n  </Collapsible.Trigger>\n  <Collapsible.Content>…</Collapsible.Content>\n</Collapsible>",
   "parts": {
-    "Trigger": "The pressable header row. A bare string child is wrapped in the title style.",
+    "Trigger": "The pressable header row. A bare string child is wrapped in the title style. Its Pressable props are forwarded, and a supplied onPress runs before the disclosure toggles.",
     "Title": "Heading text inside the trigger.",
     "Indicator": "Chevron that rotates 180° while the body is open.",
     "Content": "The body. Its height animates open and closed, and it stays mounted throughout."
