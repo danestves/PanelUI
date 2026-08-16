@@ -13,7 +13,7 @@
   "anatomy": "<Tree>\n  <Tree.Item value=\"…\">\n    <Tree.Trigger>\n      <Tree.Indicator />\n      <Tree.Icon>…</Tree.Icon>\n      <Tree.Label>…</Tree.Label>\n      <Tree.Actions>…</Tree.Actions>\n    </Tree.Trigger>\n    <Tree.Group>\n      <Tree.Item value=\"…\">…</Tree.Item>\n    </Tree.Group>\n  </Tree.Item>\n</Tree>",
   "parts": {
     "Item": "One node. Its `value` identifies it in both the expanded and the selected state, and its depth is read from how deeply it is nested rather than declared.",
-    "Trigger": "The node's row, and the thing you press. Pressing it selects the node, and opens it too unless `expandOnPress` is off.",
+    "Trigger": "The node's row, and the thing you press. Pressing it selects the node, and opens it too unless `expandOnPress` is off. Standard Pressable props are forwarded; a supplied `onPress` runs after the tree has handled expansion and selection.",
     "Indicator": "The chevron, which turns a quarter circle while the branch is open. It is pressable in its own right, so it opens a branch without selecting it. On a leaf it becomes an empty box of the same size, keeping the labels aligned.",
     "Icon": "The leading glyph, between the chevron and the label. It holds its width whether or not you fill it, which is what keeps a folder's name and a file's name starting at the same place — so give every row in a tree an icon, or give none of them one. A row with an empty slot is the odd one out: its label sits a whole box away from its own chevron while the rows around it look right.",
     "Label": "The row's text.",
