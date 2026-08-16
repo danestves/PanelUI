@@ -58,12 +58,21 @@ overlap. Target-size reference: `packages/panelui/test/core-target-sizes.test.mj
 Automated contract references: `apps/docs/test/composite-keyboard.test.mjs` and
 `packages/panelui/test/context-menu-invocation.test.mjs`.
 
+## Browser automation — docs
+
+After the production docs build, run `npm run test:a11y:browser`. It starts that
+build locally and runs axe in headless Chromium against the home page, docs
+shell, and Button guide using WCAG 2.0, 2.1, and 2.2 A/AA rules. This bounded
+smoke catches deterministic markup regressions; it is not a site-wide crawl,
+an assistive-technology test, or WCAG certification.
+
 ## Sign-off
 
 - [ ] `npm run test:a11y` passes at the release commit.
 - [ ] VoiceOver scenarios pass; device/build evidence is linked.
 - [ ] TalkBack scenarios pass; device/build evidence is linked.
 - [ ] Keyboard scenarios pass in a supported browser.
+- [ ] The docs browser accessibility smoke passes.
 - [ ] Failures are filed with component, platform, build, steps, expected
       announcement/focus, and actual announcement/focus. No claim of full WCAG
       or device coverage is made from this checklist alone.

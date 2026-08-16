@@ -61,8 +61,12 @@ export const baseOptions: BaseLayoutProps = {
     },
     {
       // Star count where available, a bare icon while the repo is private.
-      type: 'custom',
-      children: <GithubStars />,
+      // Let Fumadocs own the anchor and list item. A custom item is inserted
+      // directly under its desktop ul, producing invalid list markup.
+      type: 'button',
+      text: <GithubStars />,
+      url: site.repo,
+      external: true,
       secondary: true,
     },
     {
