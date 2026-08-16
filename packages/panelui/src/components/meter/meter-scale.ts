@@ -152,3 +152,34 @@ export function formatValue(
   }
   return `${Math.round(fraction * 100)}%`;
 }
+
+/**
+ * The meter's single spoken contract. Visual treatments such as segments,
+ * thresholds and motion do not belong here: they do not change the reading.
+ */
+export function meterSemantics({
+  value,
+  fraction,
+  minValue,
+  maxValue,
+  label,
+  accessibilityLabel,
+  valueLabel,
+  formatOptions,
+}: {
+  value: number;
+  fraction: number;
+  minValue: number;
+  maxValue: number;
+  label?: string;
+  accessibilityLabel?: string;
+  valueLabel?: string;
+  formatOptions?: Intl.NumberFormatOptions;
+}) {
+  const text = formatValue(value, fraction, valueLabel, formatOptions);
+  return {
+    label: accessibilityLabel ?? label,
+    text,
+    value: { min: minValue, max: maxValue, now: value, text },
+  };
+}
