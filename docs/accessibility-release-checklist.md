@@ -12,6 +12,12 @@ and one current Android device or emulator with TalkBack. Record OS, device,
 app build, tester, and date. Use nontrivial data, large text, dark mode, and both
 portrait and landscape where the component supports them.
 
+- **Dynamic Type / font size:** at 200% and the platform maximum, check `sm`,
+  `md`, and `lg` Buttons with a long label and start/end icons, both alone and
+  in a ButtonGroup. Labels may wrap and labelled controls may grow; no glyph is
+  cropped, icon-only Buttons remain square, and adjacent targets do not overlap.
+  Reference: `packages/panelui/test/button-dynamic-type.test.mjs`.
+
 ## VoiceOver — iOS
 
 - **Dialog and nested overlays:** open a Dialog, then a nested menu or picker.

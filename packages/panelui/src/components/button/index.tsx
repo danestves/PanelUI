@@ -15,7 +15,10 @@ import { Spinner } from '../spinner';
 const buttonVariants = tv({
   slots: {
     root: 'flex-row items-center justify-center gap-2 rounded-lg border border-transparent',
-    label: 'font-medium',
+    // Let a constrained label wrap, and centre every line of an action name.
+    // An explicit Tailwind text step would also impose a fixed line height,
+    // which can be shorter than the glyphs after Dynamic Type scales them.
+    label: 'min-w-0 shrink text-center font-medium',
     spinner: '',
   },
   variants: {
@@ -54,9 +57,13 @@ const buttonVariants = tv({
       },
     },
     size: {
-      sm: { root: 'h-9 min-w-9 gap-1.5 px-2.5', label: 'text-sm' },
-      md: { root: 'h-11 min-w-11 px-4', label: 'text-base' },
-      lg: { root: 'h-12 px-6', label: 'text-lg' },
+      // These padding + intrinsic-font pairs equal the old 36/44/48dp boxes
+      // at the default scale. `min-h-*`, rather than `h-*`, lets the same box
+      // grow when the label's system-scaled glyphs or wrapped lines need it.
+      sm: { root: 'min-h-9 min-w-9 gap-1.5 px-2.5 py-2', label: 'text-[14px]' },
+      md: { root: 'min-h-11 min-w-11 px-4 py-2.5', label: 'text-[16px]' },
+      lg: { root: 'min-h-12 px-6 py-2.5', label: 'text-[18px]' },
+      // Icon-only controls have no scalable label, so their square is stable.
       icon: { root: 'h-11 w-11 px-0' },
     },
     fullWidth: {
