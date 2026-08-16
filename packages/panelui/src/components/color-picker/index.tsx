@@ -71,6 +71,7 @@ import {
   View,
   type AccessibilityActionEvent,
   type LayoutChangeEvent,
+  type ViewStyle,
 } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -663,8 +664,8 @@ interface ChannelTrackProps {
   /** What fills the track — a hue ramp, or a masked translucency ramp. */
   children: ReactNode;
   gesture: ReturnType<typeof Gesture.Race>;
-  thumbStyle: ReturnType<typeof useAnimatedStyle>;
-  thumbFillStyle: ReturnType<typeof useAnimatedStyle>;
+  thumbStyle: ReturnType<typeof useAnimatedStyle<ViewStyle>>;
+  thumbFillStyle: ReturnType<typeof useAnimatedStyle<ViewStyle>>;
   onLayout: (event: LayoutChangeEvent) => void;
   size: ColorPickerSize;
   className?: string;

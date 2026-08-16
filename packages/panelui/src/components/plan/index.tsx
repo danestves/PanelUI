@@ -285,7 +285,7 @@ function PlanIcon({ className, children, ...props }: PlanIconProps) {
   );
 }
 
-export interface PlanTitleProps extends ViewProps {
+export interface PlanTitleProps extends TextProps {
   className?: string;
   children?: ReactNode;
 }
@@ -306,7 +306,7 @@ function PlanTitle({ className, children, ...props }: PlanTitleProps) {
   );
 }
 
-export interface PlanDescriptionProps extends ViewProps {
+export interface PlanDescriptionProps extends TextProps {
   className?: string;
   children?: ReactNode;
 }

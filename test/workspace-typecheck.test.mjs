@@ -35,6 +35,7 @@ test('workspace typecheck ignores missing and stale publish declarations', async
     await readFile(join(ROOT, 'apps/example/tsconfig.json'), 'utf8'),
   );
   const paths = exampleConfig.compilerOptions?.paths;
+  assert.deepEqual(exampleConfig.compilerOptions?.types, ['expo/types']);
   assert.deepEqual(paths?.['panelui-native'], [
     '../../packages/panelui/src/index.ts',
   ]);

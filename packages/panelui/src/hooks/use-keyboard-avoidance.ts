@@ -45,7 +45,12 @@
  * ```
  */
 import { useCallback, useEffect, useState } from 'react';
-import { useWindowDimensions, type LayoutChangeEvent, type View } from 'react-native';
+import {
+  useWindowDimensions,
+  type LayoutChangeEvent,
+  type View,
+  type ViewStyle,
+} from 'react-native';
 import {
   measure,
   runOnJS,
@@ -106,7 +111,7 @@ export interface UseKeyboardAvoidanceResult {
   /** Attach to the same element, so a re-layout at rest cannot leave it offset. */
   onLayout: (event: LayoutChangeEvent) => void;
   /** Apply to the same element. */
-  animatedStyle: ReturnType<typeof useAnimatedStyle>;
+  animatedStyle: ReturnType<typeof useAnimatedStyle<ViewStyle>>;
 }
 
 type KeyboardHeightHook = () => SharedValue<number>;

@@ -32,7 +32,7 @@
  * block in a text part, or the fields of a tool call that wrote a file.
  */
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { ScrollView, View, type ViewProps } from 'react-native';
+import { ScrollView, View, type TextProps, type ViewProps } from 'react-native';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { useCopyToClipboard } from '../../hooks/use-copy-to-clipboard';
@@ -240,7 +240,7 @@ function CodeBlockHeader({ className, children, ...props }: CodeBlockHeaderProps
   );
 }
 
-export interface CodeBlockFilenameProps extends ViewProps {
+export interface CodeBlockFilenameProps extends TextProps {
   className?: string;
   children?: ReactNode;
 }
@@ -254,7 +254,7 @@ function CodeBlockFilename({ className, children, ...props }: CodeBlockFilenameP
   );
 }
 
-export interface CodeBlockLanguageProps extends ViewProps {
+export interface CodeBlockLanguageProps extends TextProps {
   className?: string;
   children?: ReactNode;
 }
