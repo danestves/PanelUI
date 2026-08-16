@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-109 component modules. The **Docs** column is the path under
+110 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -82,6 +82,7 @@ remember is a guess.
 | `Accordion` | Collapsible sections with single or multiple selection. | `components/accordion` |
 | `Card` | Content surface with header, body and footer. | `components/card` |
 | `Carousel` | A run of slides, one at a time, dragged with a finger. | `components/carousel` |
+| `Collapsible` | One section of content, shown and hidden by its own header. | `components/collapsible` |
 | `Direction` | Reading direction for everything below it. | `components/direction` |
 | `Frame` | Widget shell — a card of rows sitting in a titled tray. | `components/frame` |
 | `GridItem` | Bento tiles, and the grid that places them. | `components/grid-item` |

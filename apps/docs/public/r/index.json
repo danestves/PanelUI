@@ -311,6 +311,20 @@
     ]
   },
   {
+    "name": "collapsible",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "One section of content, shown and hidden by its own header.",
+    "registryDependencies": [
+      "collapse",
+      "icons",
+      "text"
+    ],
+    "docsPath": "components/collapsible"
+  },
+  {
     "name": "color",
     "type": "registry:lib",
     "kind": "lib",

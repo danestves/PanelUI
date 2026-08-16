@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 107 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 110 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -211,6 +211,7 @@ consumer bundler.
 | `Checkbox` | Animated checkbox, as a row or a selectable card |
 | `Chip` | Interactive pill — a filter, a tag, or a removable token |
 | `CodeBlock` | Syntax-highlighted code with a header and a copy button |
+| `Collapsible` | One section of content, shown and hidden by its own header |
 | `ColorPicker` | A colour chosen by dragging — a saturation square, a hue scale, and opacity |
 | `Combobox` | A text field that filters a list of options as you type |
 | `ContextMenu` | Actions for a piece of content, opened by holding it |
@@ -251,6 +252,7 @@ consumer bundler.
 | `Panelside` | Collapsible side panel with its own search, groups and scenes |
 | `PieChart` | One whole, divided between its parts |
 | `Plan` | What an agent intends to do, before it does it |
+| `Planner` | A month of days, each carrying what falls on it |
 | `Plot` | A chart you assemble out of its marks |
 | `PolarAreaChart` | Several readings on one scale, compared as wedges |
 | `Popover` | Panel anchored to the element that opened it |

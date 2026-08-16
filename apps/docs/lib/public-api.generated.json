@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1097,
-    "values": 292,
-    "types": 805,
-    "modules": 134,
-    "components": 109,
+    "exports": 1103,
+    "values": 293,
+    "types": 810,
+    "modules": 135,
+    "components": 110,
     "hooks": 12
   },
   "groups": {
@@ -652,6 +652,37 @@
           },
           {
             "name": "TokenKind",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/collapsible/index.tsx",
+        "slug": "collapsible",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "Collapsible",
+            "kind": "value"
+          },
+          {
+            "name": "CollapsibleProps",
+            "kind": "type"
+          },
+          {
+            "name": "CollapsibleTriggerProps",
+            "kind": "type"
+          },
+          {
+            "name": "CollapsibleIndicatorProps",
+            "kind": "type"
+          },
+          {
+            "name": "CollapsibleContentProps",
+            "kind": "type"
+          },
+          {
+            "name": "CollapsibleVariant",
             "kind": "type"
           }
         ]

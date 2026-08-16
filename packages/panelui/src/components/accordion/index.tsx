@@ -10,6 +10,10 @@
  * also changes the shape of `value`: a string when single, an array when
  * multiple.
  *
+ * With the operating system set to reduce motion the section arrives at its new
+ * height and the chevron at its new angle without travelling to either. The
+ * disclosure is the point and it still happens; the movement is what goes.
+ *
  * A closed section costs nothing, because its body is unmounted. That is the
  * right default and the wrong one for a body with state in it: a half-filled
  * form, a list scrolled to the middle, a video part-way through. Collapsing
@@ -25,6 +29,7 @@ import {
   isValidElement,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -33,7 +38,8 @@ import { Pressable, View, type Text as RNText, type ViewProps } from 'react-nati
 import Animated, {
   LinearTransition,
   useAnimatedStyle,
-  useDerivedValue,
+  useReducedMotion,
+  useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
@@ -48,6 +54,12 @@ export type AccordionVariant =
   | 'ghost';
 
 export type AccordionSelectionMode = 'single' | 'multiple';
+
+/**
+ * How long the height change and the chevron take. One constant for both, so
+ * the panel and the arrow that describes it finish together.
+ */
+const TRANSITION_DURATION = 200;
 
 const accordionVariants = tv({
   slots: {
@@ -162,6 +174,7 @@ const AccordionRoot = forwardRef<View, AccordionProps>(
     },
     ref
   ) => {
+    const reducedMotion = useReducedMotion();
     const [internal, setInternal] = useState<string[]>(() => toArray(defaultValue));
     const isControlled = value !== undefined;
     const expanded = isControlled ? toArray(value) : internal;
@@ -197,7 +210,10 @@ const AccordionRoot = forwardRef<View, AccordionProps>(
       <AccordionContext.Provider value={context}>
         <Animated.View
           ref={ref}
-          layout={LinearTransition.duration(200)}
+          // Dropping the layout animation is what honours Reduce Motion here:
+          // the section still opens, it just arrives at its new height rather
+          // than travelling to it.
+          layout={reducedMotion ? undefined : LinearTransition.duration(TRANSITION_DURATION)}
           className={root({ className })}
           {...props}
         >
@@ -227,6 +243,7 @@ export interface AccordionItemProps extends ViewProps {
 const AccordionItem = forwardRef<View, AccordionItemProps>(
   ({ className, value, isDisabled = false, children, ...props }, ref) => {
     const { expanded, variant } = useAccordion('Accordion.Item');
+    const reducedMotion = useReducedMotion();
     const isExpanded = expanded.includes(value);
     const { item } = accordionVariants({ variant });
 
@@ -239,7 +256,7 @@ const AccordionItem = forwardRef<View, AccordionItemProps>(
       <AccordionItemContext.Provider value={context}>
         <Animated.View
           ref={ref}
-          layout={LinearTransition.duration(200)}
+          layout={reducedMotion ? undefined : LinearTransition.duration(TRANSITION_DURATION)}
           className={item({ className })}
           {...props}
         >
@@ -294,13 +311,19 @@ const AccordionIndicator = forwardRef<View, AccordionIndicatorProps>(
     const { variant } = useAccordion('Accordion.Indicator');
     const { isExpanded } = useAccordionItem('Accordion.Indicator');
     const { indicator } = accordionVariants({ variant });
+    const reducedMotion = useReducedMotion();
+    const progress = useSharedValue(isExpanded ? 1 : 0);
 
-    const rotation = useDerivedValue(
-      () => withTiming(isExpanded ? 180 : 0, { duration: 200 }),
-      [isExpanded]
-    );
+    useEffect(() => {
+      progress.value = reducedMotion
+        ? isExpanded
+          ? 1
+          : 0
+        : withTiming(isExpanded ? 1 : 0, { duration: TRANSITION_DURATION });
+    }, [isExpanded, reducedMotion, progress]);
+
     const style = useAnimatedStyle(() => ({
-      transform: [{ rotate: `${rotation.value}deg` }],
+      transform: [{ rotate: `${progress.value * 180}deg` }],
     }));
 
     return (

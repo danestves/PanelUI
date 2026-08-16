@@ -19,6 +19,7 @@
     "checkbox",
     "chip",
     "code-block",
+    "collapsible",
     "color-picker",
     "combobox",
     "context-menu",
@@ -112,16 +113,16 @@
     "waterfall-chart"
   ],
   "counts": {
-    "componentModules": 109,
-    "packageComponentExports": 109,
-    "documentedComponents": 109,
-    "exampleEntries": 109,
+    "componentModules": 110,
+    "packageComponentExports": 110,
+    "documentedComponents": 110,
+    "exampleEntries": 110,
     "registry": {
-      "componentItems": 109,
+      "componentItems": 110,
       "supportItems": 31,
-      "totalItems": 140,
+      "totalItems": 141,
       "byType": {
-        "registry:ui": 120,
+        "registry:ui": 121,
         "registry:hook": 12,
         "registry:lib": 7,
         "registry:theme": 1

@@ -7,6 +7,8 @@ Collapsible sections, for FAQs, settings groups and anything that would otherwis
 
 Expansion animates with a Reanimated layout transition, and collapsed content unmounts. Pass `keepMounted` when there is state inside a section worth keeping — a half-filled form, a scroll position — at the cost of rendering every section up front.
 
+For a single section rather than a set of them, use [Collapsible](/docs/components/collapsible), which keeps its body mounted by default.
+
 For a hierarchy more than one level deep, use [Tree](/docs/components/tree).
 
 <PreviewVideo
@@ -266,6 +268,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 Pass an array to `value` / `defaultValue` with `selectionMode="multiple"`. `onValueChange` hands back whatever shape you gave it — a string in single mode, an array in multiple.
 
 `keepMounted` trades the cost of rendering every closed body up front for keeping what is inside them alive. Set it on the accordion for all of them, or on a single `Accordion.Content` for the one section that needs it — the prop on the content wins either way round.
+
+**With the operating system set to reduce motion the section arrives at its new height and the chevron at its new angle without travelling to either.** The disclosure is the point and it still happens; the movement is what goes.
 
 ## Public exports
 
