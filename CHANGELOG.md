@@ -9,6 +9,64 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.71.0] — 2026-08-16
+
+### Added
+
+- **Seven new package subpaths**, so a single import no longer has to come through the root
+  barrel: `panelui-native/provider`, `panelui-native/theme`, and
+  `panelui-native/primitives/{animated-pressable,keyboard-avoider,scrim,scroll-progress}`. Every
+  subpath is generated from the source tree and verified against a real packed tarball, so the
+  published `exports` map cannot drift from what is actually in the package.
+
+- **Roving keyboard navigation on `Planner.Grid`.** On the web one day is in the Tab order, arrow
+  keys move by day and by week, and Home/End reach the ends of the rendered week; movement stops
+  at the grid boundary rather than wrapping. Native and TV are unchanged — the platform focus
+  engine owns directional movement there.
+
+- **`accessibilityLabel` and `accessibilityHint` on `LiveLineChart`**, naming the chart's single
+  screen-reader snapshot. The visual header value, axes, tip badge and crosshair are hidden from
+  the accessibility tree, because the snapshot already carries their reading.
+
+### Changed
+
+- **`Button` sizes are now floors rather than fixed heights.** `sm`, `md` and `lg` keep their
+  36/44/48dp boxes at the default text size, but a label scaled by Dynamic Type or Android font
+  scaling now grows the button instead of being clipped by it, and wraps when its container is
+  constrained. `size="icon"` stays a fixed square: it has no visible text to scale.
+
+- **`Meter` repairs an invalid scale instead of drawing an undefined one.** Values outside the
+  scale clamp to its ends, NaN reads at the floor, infinities at the corresponding end, and
+  non-finite bounds fall back to the documented 0 and 100. Segment counts round down and cap at
+  100. The spoken reading now comes from one contract shared with the visual, so it always
+  describes the same scale the bar is drawing.
+
+- **Overlays restore browser focus when they close.** `Dialog`, `Drawer`, `BottomSheet`,
+  `Popover` and `ContextMenu` return focus to whatever had it before they opened, in
+  last-opened order when they are nested. Native is unaffected.
+
+- **`Planner` announces a month change only once it has been accepted.** A controlled parent that
+  rejects the request stays silent, and mounting or changing the `month` prop directly no longer
+  interrupts what somebody is already reading.
+
+- **`Planner` bounds its per-render work on large entry sets.** The entries are indexed by day
+  once and month changes inspect only the fixed 42-cell grid, so drawn nodes stay bounded by
+  `42 × entryLimit`. Counts and spoken labels still include every entry.
+
+### Fixed
+
+- **`LiveLineChart` keeps one canonical buffer.** Non-finite readings are dropped, out-of-order
+  timestamps sorted, and a duplicate timestamp replaced by the later reading; `maxPoints` applies
+  after that, so a controlled replacement cannot leave a stale point selected. The frame callback
+  now also stops while the app is backgrounded and resynchronises on return.
+
+- **`Planner` keeps a controlled `month` separate from the month a parent has accepted**, so an
+  unrelated parent render no longer rebuilds the grid.
+
+### Docs
+
+- The `FunnelChart` page now opens with a recording of the component running.
+
 ## [0.70.0] — 2026-08-16
 
 ### Added

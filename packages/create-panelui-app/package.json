@@ -1,6 +1,6 @@
 {
   "name": "create-panelui-app",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Start a new Expo app with PanelUI already wired up.",
   "type": "module",
   "bin": {
@@ -14,7 +14,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "panelui-cli": "^0.5.0"
+    "panelui-cli": "^0.6.0"
   },
   "keywords": [
     "react-native",

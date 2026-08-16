@@ -75,7 +75,7 @@
     "Draggable sheet anchored to the bottom of the screen.",
     "react native bottom sheet",
     {
-      "updatedIn": "0.66.1",
+      "updatedIn": "0.71.0",
       "category": "overlays"
     }
   ],
@@ -93,7 +93,7 @@
     "Pressable action with variants, sizes, loading state and icon slots.",
     "react native button",
     {
-      "updatedIn": "0.65.0",
+      "updatedIn": "0.71.0",
       "category": "actions"
     }
   ],
@@ -197,7 +197,7 @@
     "Modal dialog with a backdrop and footer actions.",
     "react native modal dialog",
     {
-      "updatedIn": "0.66.1",
+      "updatedIn": "0.71.0",
       "category": "overlays"
     }
   ],
@@ -217,7 +217,7 @@
     "react native drawer component",
     {
       "addedIn": "0.33.0",
-      "updatedIn": "0.66.1",
+      "updatedIn": "0.71.0",
       "category": "overlays"
     }
   ],
@@ -450,7 +450,8 @@
     "react native meter gauge component",
     {
       "addedIn": "0.67.0",
-      "category": "feedback"
+      "category": "feedback",
+      "updatedIn": "0.71.0"
     }
   ],
   "message": [
@@ -477,7 +478,8 @@
     "react native planner event calendar component",
     {
       "addedIn": "0.68.0",
-      "category": "data"
+      "category": "data",
+      "updatedIn": "0.71.0"
     }
   ],
   "popover": [
@@ -485,7 +487,7 @@
     "Panel anchored to the element that opened it.",
     "react native popover",
     {
-      "updatedIn": "0.66.1",
+      "updatedIn": "0.71.0",
       "category": "overlays"
     }
   ],
@@ -869,7 +871,7 @@
     "react native context menu long press",
     {
       "addedIn": "0.52.0",
-      "updatedIn": "0.66.1",
+      "updatedIn": "0.71.0",
       "category": "actions"
     }
   ],
@@ -996,7 +998,8 @@
     "react native live streaming realtime line chart",
     {
       "addedIn": "0.62.0",
-      "group": "charts"
+      "group": "charts",
+      "updatedIn": "0.71.0"
     }
   ],
   "plot": [

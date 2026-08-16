@@ -1,6 +1,6 @@
 {
   "name": "panelui-cli",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Add PanelUI components to an Expo project one at a time, source and all.",
   "type": "module",
   "bin": {
