@@ -451,6 +451,8 @@ export function MenuItem({
   closeOnSelect = true,
   onSelect,
   onPress,
+  onPressIn,
+  onPressOut,
   ...props
 }: MenuItemProps) {
   const { close, haptics } = useMenu('Menu.Item');
@@ -467,15 +469,21 @@ export function MenuItem({
 
   return (
     <AnimatedPressable
+      {...props}
       accessibilityRole="menuitem"
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={handlePress}
-      onPressIn={press.onPressIn}
-      onPressOut={press.onPressOut}
+      onPressIn={(event) => {
+        onPressIn?.(event);
+        press.onPressIn();
+      }}
+      onPressOut={(event) => {
+        onPressOut?.(event);
+        press.onPressOut();
+      }}
       style={press.rowStyle}
       className={cn(slots.item(), 'overflow-hidden', className)}
-      {...props}
     >
       <Animated.View
         pointerEvents="none"
