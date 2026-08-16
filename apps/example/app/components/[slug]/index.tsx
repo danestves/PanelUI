@@ -11,7 +11,8 @@ import {
   useKeyboard,
 } from 'panelui-native';
 import { ScreenHeader } from '../../../src/components/screen-header';
-import { COMPONENTS_BY_SLUG, type ComponentEntry, type Demo } from '../../../src/data/components';
+import type { ComponentEntry, Demo } from '../../../src/data/components';
+import { useComponentEntry } from '../../../src/data/use-component-entry';
 
 /**
  * A demo that needs the whole screen gets a row here instead of being rendered
@@ -245,7 +246,34 @@ function PagerLayout({
 
 export default function ComponentDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
-  const entry = COMPONENTS_BY_SLUG[slug ?? ''];
+  const { entry, status } = useComponentEntry(slug ?? '');
+
+  if (status === 'loading') {
+    return (
+      <View className="flex-1">
+        <ScreenHeader title="Component" showBack />
+        <Text size="sm" muted className="p-5">
+          Loading demo…
+        </Text>
+      </View>
+    );
+  }
+
+  if (status === 'unavailable') {
+    return (
+      <View className="flex-1">
+        <ScreenHeader title="Unavailable" showBack />
+        <EmptyState>
+          <EmptyState.Header>
+            <EmptyState.Title>Component unavailable</EmptyState.Title>
+            <EmptyState.Description>
+              This component demo could not be loaded. Try again later.
+            </EmptyState.Description>
+          </EmptyState.Header>
+        </EmptyState>
+      </View>
+    );
+  }
 
   if (!entry) {
     return (

@@ -1,0 +1,445 @@
+{
+  "generated": "Run npm run metadata:generate --workspace=example; do not edit.",
+  "entries": [
+    {
+      "slug": "accordion",
+      "signature": "8f110665db20cd47d2a809d3a01aa9458598014d00d737599a4fc2c88a03bb5d"
+    },
+    {
+      "slug": "alert",
+      "signature": "3991043b7eae92fcc325f19b143760401584d3a0d820f1f9a9ae0d0a7abbeb99"
+    },
+    {
+      "slug": "area-chart",
+      "signature": "7d1f4099983da8e421fd8c3dc751a8672f05fb3b834984d49598d30e02ffbc30"
+    },
+    {
+      "slug": "attachment",
+      "signature": "c963e6baad4e2bd6fda548c63672211fab5bac5d2fc3798ded091f4721951a99"
+    },
+    {
+      "slug": "avatar",
+      "signature": "0ac2aecea476c31116accf029f43e580d58736a33da1d1751278c93f21f9b279"
+    },
+    {
+      "slug": "badge",
+      "signature": "b814e818e87474ef9a5a021060c951c5e7b6f4830e4509276f51d89d4ce8dc21"
+    },
+    {
+      "slug": "bar-chart",
+      "signature": "23ef85df45e95ca35ad51a601d45386ea077ef6a1d980191dc9448d9ad9b0ab7"
+    },
+    {
+      "slug": "bottom-sheet",
+      "signature": "7a6479c134b488888f05dbd90fd3ff495a04cb1e7bd6e73513260e562fcc81df"
+    },
+    {
+      "slug": "breadcrumb",
+      "signature": "2e76c3772f46377342b1dca01677a5295a89f7ca0002c7a6b28212ed2814e4fa"
+    },
+    {
+      "slug": "button",
+      "signature": "71c8343b677d601c8d0a6c2ba9ad7eb34f7982866a2468bcd9f27437ece2ab34"
+    },
+    {
+      "slug": "button-group",
+      "signature": "1986dac2715f3393d06f01b18e512e1c8165fe19a491ea62cf211ad8045dd9c4"
+    },
+    {
+      "slug": "calendar",
+      "signature": "961255c0c281e131f0be7ab5fb0754180b4c3ce41802a0351deb20f059f11c03"
+    },
+    {
+      "slug": "candlestick-chart",
+      "signature": "017552de65a54bb3daeca56f517b84943f0fda5400acafff7198bdaddbb9174c"
+    },
+    {
+      "slug": "card",
+      "signature": "227198f30a777ecb87f3162853fc0fa116d4e1f277aa97da8bd03b7aae754805"
+    },
+    {
+      "slug": "carousel",
+      "signature": "98c6c928ba96eb3b19929acb12188f076d01554ff6b31a1f96f456d75a47368f"
+    },
+    {
+      "slug": "checkbox",
+      "signature": "8557e213b7f4cf93e7ab518780ee7676c82e1ac713fd15abff9fa31444a8706e"
+    },
+    {
+      "slug": "chip",
+      "signature": "0dd1c8abd320c9f83a513d5aa723d79eedc85dffccf03a26430a477f3b454545"
+    },
+    {
+      "slug": "code-block",
+      "signature": "48976d4f5ff198702e14d13a83a47c29854b894bba85efcc6186372233e1e770"
+    },
+    {
+      "slug": "collapsible",
+      "signature": "8e6f7d3bee5e56ce6aad1d5eaef6a951e43f67b5c924717693d8df6ab0cd2f3f"
+    },
+    {
+      "slug": "color-picker",
+      "signature": "2fa6fc9af55993734e75515fa1194c37db8cdee7df28629cf12fdacfdd5d954d"
+    },
+    {
+      "slug": "combobox",
+      "signature": "48e50a43ddf32e72a3f8e0b854e61390fe290685ecd46440d04546d3f7ffcff0"
+    },
+    {
+      "slug": "context-menu",
+      "signature": "215665dade171895c642a4a7fe3763d23c80d6d46b0eac40944513e820cbbef8"
+    },
+    {
+      "slug": "date-picker",
+      "signature": "6b44598a65ab00b4b180a128c83cc1a560423274089b2a057c7d473d896d4930"
+    },
+    {
+      "slug": "date-time-picker",
+      "signature": "7bf2f7b424485e2aa827cb6b02b5149f34cfa983d6856522078f10f6800c374c"
+    },
+    {
+      "slug": "dialog",
+      "signature": "73cd25b6530cd94bda5266774bfb44ba21ac9ce8b30675adc966524501bcd266"
+    },
+    {
+      "slug": "direction",
+      "signature": "2a56050724a6a5a2095e67a9bd8faa5310be399183605266635295b0de0e0ad8"
+    },
+    {
+      "slug": "drawer",
+      "signature": "51f2a4aa677433b8c332a3e6db32f0a34cb127d6e7c3e767324b2c602a5bc894"
+    },
+    {
+      "slug": "empty-state",
+      "signature": "e8df761e1a87220cf8059b03435192219af30bfcb21e6c375ec14479dee73704"
+    },
+    {
+      "slug": "fab",
+      "signature": "52a0ab4cf207de107ed83b7cc3448080cb76f063debf40ded48fdf077f4a2495"
+    },
+    {
+      "slug": "field",
+      "signature": "da9982646b1e29ce5a5cd59e84a0d1544aa076646edaaad80627ece74ab01a2e"
+    },
+    {
+      "slug": "flow",
+      "signature": "243d8523dfa66c7453509d1462e1a4d8751782c02e8330a669e3e14e4ccf1b58"
+    },
+    {
+      "slug": "form",
+      "signature": "f9a8cd0c9dd9fd33b892e7cb3e0a87299cdf5a6ab6a415bfbd43fed2e6e3ee78"
+    },
+    {
+      "slug": "frame",
+      "signature": "c64fdb732a2db47af46ad0b78866a9e5f9ad13469dcde7b12c60e492fb24e349"
+    },
+    {
+      "slug": "funnel-chart",
+      "signature": "9d25117d6ddd16451596db80f95bdf6bb84cbcff1a695fc85a12407c9a8d0f31"
+    },
+    {
+      "slug": "grid-item",
+      "signature": "b02fd74c55ab6fcd62dda3c8f9e02faabeaf9bd18ebc726f611ca28fecb44d7c"
+    },
+    {
+      "slug": "heatmap-chart",
+      "signature": "967e41dd16f41545936e866256a6ffec592ac63966049981452e310619ae9061"
+    },
+    {
+      "slug": "hex-chart",
+      "signature": "594837d80a471f8ce55b19c025eda064fd600bc745a7c72f202df507e1a9b261"
+    },
+    {
+      "slug": "input",
+      "signature": "bb262c1f5e676e5e91c933168b7df986d20b7ba85bd867bfc6935a64d1049b5f"
+    },
+    {
+      "slug": "input-group",
+      "signature": "d822bb07f39a8e236d73256cacfdf99a5bd129e1e6a4ff0d7bc51982c570104b"
+    },
+    {
+      "slug": "item",
+      "signature": "96bd8dc055d824ad1d84559f682d59dac51daf69ab0ad2379ee138b299e74521"
+    },
+    {
+      "slug": "kpi",
+      "signature": "c59b411144f6c488f1dca4b44c55828229263fee567bf876568b790a97f8a1c9"
+    },
+    {
+      "slug": "label",
+      "signature": "9abf07c48e742030c8cd3c1365fa1e6e24fde80e0b2bca409f82006888c04e00"
+    },
+    {
+      "slug": "line-chart",
+      "signature": "06eb9fbfdefa298c1b153e6e1d6c3cbea07693ec0c77f71b536e99852e013eb4"
+    },
+    {
+      "slug": "live-line-chart",
+      "signature": "65c5af38c717905cd4fb47ab03339ee8d152734aca1919c9b038e5af693e9b64"
+    },
+    {
+      "slug": "loader",
+      "signature": "3bfe8f04ef875e5417d1d8f5f5452ea238c4b85eddd4af509306e304de5305e3"
+    },
+    {
+      "slug": "map",
+      "signature": "9c658471ff517e98e3231ded8a5f83d7c62b8b0069b069c2b2b9145b54089d34"
+    },
+    {
+      "slug": "markdown-editor",
+      "signature": "8ea85cfcd64f4ab148dd13b10f67bd92f56778f6cabbe09e6ffcdb5db5c380ea"
+    },
+    {
+      "slug": "marker",
+      "signature": "d27ae0ca454e5fcbfbdeb1ced7055a0255db4c4948dab3a0c7dea84a9ade64c5"
+    },
+    {
+      "slug": "marquee",
+      "signature": "c69a35872e5ff96e7cbd5534cb16319e4e25ee145b83158e9df78d310ee9595d"
+    },
+    {
+      "slug": "menu",
+      "signature": "d2ba2567c8bfa4d6b6e957e83b0f986c43b13741c83298c672f1391362e87d97"
+    },
+    {
+      "slug": "message",
+      "signature": "5a35be04afd7ac886ebaa6db770bc80d4a7f7b7d82cf59717557785d4e146053"
+    },
+    {
+      "slug": "message-scroller",
+      "signature": "801ac34487ab8d52b5442c6397fd0eeabee00f280d614cb58f3b79ffe23ebab7"
+    },
+    {
+      "slug": "meter",
+      "signature": "c3a20f76a18ee3c715d4c5fbc53285231c6e4f30cbf3f06276da853829bc574c"
+    },
+    {
+      "slug": "number-input",
+      "signature": "8bd4946c684252c8441f26b5449ea571850bb3d6c569e0c7710b7c9082711892"
+    },
+    {
+      "slug": "otp-input",
+      "signature": "58b7cc72540e614b710f256baae8556464062a44f37ea9c65e7a2f0206b327db"
+    },
+    {
+      "slug": "pagination",
+      "signature": "0ae7736b7b65ee8ac30181dcd8fc388111fec4067ce51fe3df0f4b4a0ce3602f"
+    },
+    {
+      "slug": "panelside",
+      "signature": "d0b15943c500db36d931d2b764df84995e5a5f52218759bb0d5e042f4a096e00"
+    },
+    {
+      "slug": "pie-chart",
+      "signature": "61c1d8e9ddc6672cd8ee737ad1c50978b923eb3332305f55130196eeaf058658"
+    },
+    {
+      "slug": "plan",
+      "signature": "95adaf06931fd252f1015bbbbaab74b9dc30d9cf4c1d5d38b2462064fb52b09e"
+    },
+    {
+      "slug": "planner",
+      "signature": "fb140a9c8a72d3862ee8a22154505eaa8e80cc286231333de648b523cb49336d"
+    },
+    {
+      "slug": "plot",
+      "signature": "30eaa04b4560d028a016a964236684cb2710ed3f5f449490920bf4a081c75753"
+    },
+    {
+      "slug": "polar-area-chart",
+      "signature": "b16a9d0cb749f176963f4c79acf943e5e0d1c085e800de15915e7a8c4511ecd2"
+    },
+    {
+      "slug": "popover",
+      "signature": "bd3f908c53dc1a14ae8f04481414dd10e66a0890b6c7915b0190ff3e729100b7"
+    },
+    {
+      "slug": "post",
+      "signature": "9065531e44e16bf46d8671007c7bf6bdc134f9a063eb9d4b2f54251548c6918a"
+    },
+    {
+      "slug": "progress",
+      "signature": "08612dbada2b6fcaa2186b66fc95a58e58a8cd1c1c53810ddca3eb21e63a439c"
+    },
+    {
+      "slug": "qr-code",
+      "signature": "743003795024dc803470f4371046c6e71801a6491c2e334c9226eab49ca7d998"
+    },
+    {
+      "slug": "questionnaire",
+      "signature": "d984263dc2d42409dcb2c57f46aca5b95ecdc859bbbce0953127f5c36c2937dd"
+    },
+    {
+      "slug": "radar-chart",
+      "signature": "13da59175864a1556ab5eda56d67424804e460e58a8c680010b72484476fd17c"
+    },
+    {
+      "slug": "radio-group",
+      "signature": "4a77ae3a1032e5a2ba52fe76d72ec4acc5dcb480043a6fe2517fd1a6c97b6c0e"
+    },
+    {
+      "slug": "rating",
+      "signature": "2def9bc640d79e41809c592bad8bf9a298ba32875f2cbe8afd40733d8c93a788"
+    },
+    {
+      "slug": "reasoning",
+      "signature": "8717731ac4020080c64a5149db76ff6a7de7572601d081b67e621679eaeba987"
+    },
+    {
+      "slug": "response",
+      "signature": "8126fbcf2206aada09504d706d19d9d93ecc07cae5a6eaf9e4bcbbeaf4a87882"
+    },
+    {
+      "slug": "ring-chart",
+      "signature": "5a1f6087d05807a2005b94e106057e0cdd2331fbd515d3dc9b2ebf5e03a7f4b6"
+    },
+    {
+      "slug": "scatter-chart",
+      "signature": "6f0e3ba37701165ffe2bb0eeb621f08a52a83e1a505b50aeb9ac8796e8b79701"
+    },
+    {
+      "slug": "scroll-canvas",
+      "signature": "765795301aa8baaafd5f894007cc8c2e372828010bfd5304ceca649a2adc2555"
+    },
+    {
+      "slug": "scroll-fade",
+      "signature": "38e17bc3525ef767472481f958c79c46610730fc20868bb967504df4d1add1f4"
+    },
+    {
+      "slug": "scroll-text",
+      "signature": "1297bc0a2c5ef390397681aaf1fc1633cbf6f50d47371c4c640685bb30c4e741"
+    },
+    {
+      "slug": "section-rail",
+      "signature": "31ceb8456a0aac90626b0a410a74034ad697fe551b2ea9ba55b1ad05cb7c5f34"
+    },
+    {
+      "slug": "select",
+      "signature": "e8239f303aaeca476fd83a0ab7c800551b0196664c6f6f87caeafb61eaa43cfc"
+    },
+    {
+      "slug": "selection-mode",
+      "signature": "dfb481f059be300a564d79812a4b41b2f9e6cc1c48edd0fa7c501b632fee52c6"
+    },
+    {
+      "slug": "separator",
+      "signature": "69c7e603355226cce2089d2011b28a8d7768e7b64bb1bfe698427c5516d8dfe5"
+    },
+    {
+      "slug": "shimmer",
+      "signature": "8839cf71a514f9ea03f878c1d1599eac161d1a718e386b9699cbf10cf0c63ef3"
+    },
+    {
+      "slug": "signature",
+      "signature": "9de69dc607b14358e717ac645544080583d70b3564ecaacc6d6c03b8176587b1"
+    },
+    {
+      "slug": "skeleton",
+      "signature": "32364fb68c5588aa87f11b915e2e133a33ec4d1ef052dc1ef8257fc558ab82fd"
+    },
+    {
+      "slug": "slider",
+      "signature": "04dc021cbfef50f9f8c55721326f6497f14a833cd3dcdc870ade1fa439f427d2"
+    },
+    {
+      "slug": "sortable",
+      "signature": "e69d596caebedae4ecf75ff7b3e9bc1b7ddf2d11bd3e6886b6829a0101d52c66"
+    },
+    {
+      "slug": "soundwave",
+      "signature": "f37db43a348ebf89bd1d54f4c83cfe227f87169bd27a38c100448e0a1f4fbd1c"
+    },
+    {
+      "slug": "sources",
+      "signature": "f243f6201fcf473e0dbeb66252c7012e485a76cf43898d1298a7c82bba278ba2"
+    },
+    {
+      "slug": "spinner",
+      "signature": "311cea7bae30ad3e257ca2d44c26ec788810bc6651f828b713ab7855d140e1b8"
+    },
+    {
+      "slug": "steps",
+      "signature": "6dc58a137914d4b7bb13738c361e1a7f270eff6c47be05520823eed7e2bf2f46"
+    },
+    {
+      "slug": "surface",
+      "signature": "1a77e5ebd610d2395dc20054dc228df96f619f5b319131fa664a62abd534aa49"
+    },
+    {
+      "slug": "swipe",
+      "signature": "7cbeea56bc9ff088378a9c86accf7d83d936bc72103a24a6985c631ace911771"
+    },
+    {
+      "slug": "switch",
+      "signature": "344dc0bb21dc2da35dc13ce4e23e678849b807a72f4a62367b8549ae7bb886cd"
+    },
+    {
+      "slug": "table",
+      "signature": "a9ffc18be1fd62801527f633cb3b869dfc58e7d4f553c8881796ecf1d7710f8f"
+    },
+    {
+      "slug": "tabs",
+      "signature": "5c06737786b4bd7be288a8726b4bf10fa6ce129e69bd9ffafd972cbc8c5a8c14"
+    },
+    {
+      "slug": "tag-input",
+      "signature": "e218a499fa7bdb02433e9be3c80fc7c6ce315d4313c2f2b224f47a04070f5b1c"
+    },
+    {
+      "slug": "task",
+      "signature": "1a8c26b1c6ef401c3e0d96a066147acd56d03975d2d99ff45b87411f011b423e"
+    },
+    {
+      "slug": "text-animation",
+      "signature": "934cf50a75d3cc92818672d772eddcc79e02b00ff2698c49641b80211fbe5d16"
+    },
+    {
+      "slug": "textarea",
+      "signature": "7c2427d0c94a4c9f4b5243d80e4a2b2a9e2e6f153d755f80bd514a8ecf86de28"
+    },
+    {
+      "slug": "thinking-orb",
+      "signature": "682d078016c1cbf727566342f8a583434f51c58d66ea7287ccde5b4f192a9d28"
+    },
+    {
+      "slug": "timeline",
+      "signature": "eac3814df91d13fe0601f107260a8bb19c947a2569a0726fe5519d126de216c4"
+    },
+    {
+      "slug": "time-picker",
+      "signature": "fdfe0aec2c9517ecd2627874a64e4e401b1323e5f929a6dbd6ce8e7e77a4f927"
+    },
+    {
+      "slug": "toast",
+      "signature": "65da89eab4c745901d491feda111e49ea4801f9e6dda3ac25d6437bda8e7b152"
+    },
+    {
+      "slug": "toggle-button",
+      "signature": "bcd68d548edcb8fe0541137c59f754baacc392e134609c19dd397b84f28d3036"
+    },
+    {
+      "slug": "tooltip",
+      "signature": "0cc83f1e2d466adb6635f8f7ec9e950c2d15d8a1e61567068679046c7f59cee9"
+    },
+    {
+      "slug": "tour",
+      "signature": "b6b8ccaf2ad90ed2b149e0c2d326a4cda7b97710922743a642352daed51c137e"
+    },
+    {
+      "slug": "tree",
+      "signature": "ec863855380ba968646b5b71595e8232ee7f6de51926ea6b4625cfb6010ebb57"
+    },
+    {
+      "slug": "treemap-chart",
+      "signature": "fba4764265620094d268c5251d9c89564f68c2b82b4cce78cec955c037a4f7bf"
+    },
+    {
+      "slug": "typography",
+      "signature": "20eec53fda1270cbccffd2412f2fd507965b49aeaafb194f89ce0574730a960a"
+    },
+    {
+      "slug": "waterfall-chart",
+      "signature": "3040878d53b45360026f2fc9315910975dd36af6a2e0ed70103da04d35b62288"
+    }
+  ]
+}

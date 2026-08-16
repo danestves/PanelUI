@@ -1,10 +1,10 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, View, type ListRenderItemInfo } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronRightIcon, Text, useThemeMode } from 'panelui-native';
 import { ScreenHeader } from '../../src/components/screen-header';
-import { CHART_SHOWCASE, type ComponentEntry } from '../../src/data/components';
+import { loadChartShowcase, type ComponentEntry } from '../../src/data/components';
 
 /**
  * One example of every chart, on one screen.
@@ -77,11 +77,31 @@ function ChartCard({
 }
 
 const chartKey = (entry: ComponentEntry) => entry.slug;
+type ChartLoadState =
+  | { status: 'loading'; entries: ComponentEntry[] }
+  | { status: 'ready'; entries: ComponentEntry[] }
+  | { status: 'unavailable'; entries: ComponentEntry[] };
 
 export default function AllChartsScreen() {
   const insets = useSafeAreaInsets();
   const { mode } = useThemeMode();
+  const [chartState, setChartState] = useState<ChartLoadState>({ status: 'loading', entries: [] });
+  const charts = chartState.entries;
   const tint = mode === 'dark' ? '#818181' : '#686868';
+  useEffect(() => {
+    let active = true;
+    loadChartShowcase().then(
+      (entries) => {
+        if (active) setChartState({ status: 'ready', entries });
+      },
+      () => {
+        if (active) setChartState({ status: 'unavailable', entries: [] });
+      }
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
   const renderChart = useCallback(
     ({ item, index }: ListRenderItemInfo<ComponentEntry>) => (
       <ChartCard entry={item} tint={tint} first={index === 0} />
@@ -100,7 +120,7 @@ export default function AllChartsScreen() {
        */}
       <FlatList
         className="flex-1"
-        data={CHART_SHOWCASE}
+        data={charts}
         renderItem={renderChart}
         keyExtractor={chartKey}
         initialNumToRender={2}
@@ -114,7 +134,11 @@ export default function AllChartsScreen() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <Text size="sm" muted className="px-5 pb-6">
-            {`${CHART_SHOWCASE.length} charts, one example each. Tap a name for its versions and props.`}
+            {chartState.status === 'loading'
+              ? 'Loading chart examples…'
+              : chartState.status === 'unavailable'
+                ? 'Chart examples could not be loaded. Try again later.'
+                : `${charts.length} charts, one example each. Tap a name for its versions and props.`}
           </Text>
         }
       />

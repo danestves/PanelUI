@@ -1,0 +1,1525 @@
+import { useMemo, useState, type ReactNode } from "react";
+import { FlatList, ScrollView, View } from "react-native";
+import { Alert, Avatar, Badge, BookmarkIcon, BellIcon, Button, CalendarIcon, Card, CheckIcon, Direction, FileIcon, Frame, Input, Item, MessageCircleIcon, PackageIcon, Pagination, ScrollFade, Separator, Slider, Spinner, Steps, Swipe, Switch, Table, Tabs, Text, ToggleButton, ToggleButtonGroup, TrashIcon, Typography, hasNativeUI } from "panelui-native";
+import type { ComponentEntry } from '../component-types';
+
+/* -------------------------------------------------------------------------- */
+/* Stateful demo wrappers                                                     */
+/* -------------------------------------------------------------------------- */
+
+function SwitchDemo() {
+  const [enabled, setEnabled] = useState(true);
+  const [push, setPush] = useState(false);
+
+  return (
+    <Card className="w-full">
+      <Card.Content className="gap-5 p-4">
+        <View className="flex-row items-center justify-between gap-4">
+          <View className="flex-1">
+            <Text weight="medium">Email notifications</Text>
+            <Text size="sm" muted>
+              Receive updates and newsletters
+            </Text>
+          </View>
+          <Switch value={enabled} onValueChange={setEnabled} />
+        </View>
+        <View className="flex-row items-center justify-between gap-4">
+          <View className="flex-1">
+            <Text weight="medium">Push notifications</Text>
+            <Text size="sm" muted>
+              Get instant alerts on your device
+            </Text>
+          </View>
+          <Switch value={push} onValueChange={setPush} />
+        </View>
+      </Card.Content>
+    </Card>
+  );
+}
+
+function HapticSwitchDemo() {
+  const [wifi, setWifi] = useState(true);
+  const [bluetooth, setBluetooth] = useState(false);
+
+  return (
+    <Card className="w-full">
+      <Card.Content className="gap-5 p-4">
+        <Text size="sm" muted>
+          Each flip fires a light tick — install expo-haptics to feel it on a device.
+        </Text>
+        <View className="flex-row items-center justify-between gap-4">
+          <Text weight="medium">Wi-Fi</Text>
+          <Switch haptics value={wifi} onValueChange={setWifi} />
+        </View>
+        <View className="flex-row items-center justify-between gap-4">
+          <Text weight="medium">Bluetooth</Text>
+          <Switch haptics value={bluetooth} onValueChange={setBluetooth} />
+        </View>
+      </Card.Content>
+    </Card>
+  );
+}
+
+/**
+ * Wraps a native-mode demo with a note about what is actually on screen —
+ * without @expo/ui installed the `native` prop is a silent no-op, which is
+ * otherwise indistinguishable from it not working.
+ */
+function NativeDemo({ children }: { children: ReactNode }) {
+  return (
+    <View className="w-full gap-5">
+      <Alert variant={hasNativeUI() ? 'info' : 'warning'}>
+        <Alert.Content>
+          <Alert.Title>
+            {hasNativeUI()
+              ? 'Rendering the platform control'
+              : '@expo/ui not available'}
+          </Alert.Title>
+          <Alert.Description>
+            {hasNativeUI()
+              ? 'Theme tokens do not apply here — the platform draws this.'
+              : 'The `native` prop is a no-op, so the styled component renders instead.'}
+          </Alert.Description>
+        </Alert.Content>
+      </Alert>
+      {/* A rule between the note and the control, so a platform button
+          sitting right under the alert does not read as part of it. */}
+      <Separator />
+      <View className="w-full gap-4">{children}</View>
+    </View>
+  );
+}
+
+function NativeSliderDemo() {
+  const [level, setLevel] = useState(40);
+
+  return (
+    <NativeDemo>
+      <Slider
+        native
+        label="Brightness"
+        showValue
+        formatValue={(v) => `${Math.round(v)}%`}
+        value={level}
+        onValueChange={setLevel}
+      />
+      {/* The caption row is ours either way — only the control below it is
+          handed to the platform. */}
+      <Slider
+        label="For comparison, the styled one"
+        showValue
+        formatValue={(v) => `${Math.round(v)}%`}
+        value={level}
+        onValueChange={setLevel}
+      />
+    </NativeDemo>
+  );
+}
+
+function NativeSwitchDemo() {
+  const [enabled, setEnabled] = useState(true);
+
+  return (
+    <NativeDemo>
+      <Switch
+        native
+        label="Notifications"
+        value={enabled}
+        onValueChange={setEnabled}
+      />
+    </NativeDemo>
+  );
+}
+
+function SliderDemo() {
+  const [volume, setVolume] = useState(40);
+
+  return (
+    <View className="w-full gap-6">
+      {/* `label` + `showValue` draw the caption row, so a controlled slider
+          does not have to hand-build one to display what it is set to. */}
+      <Slider
+        label="Volume"
+        showValue
+        formatValue={(v) => `${Math.round(v)}%`}
+        value={volume}
+        onValueChange={setVolume}
+      />
+      <Slider defaultValue={70} color="success" size="sm" />
+      <Slider defaultValue={5} min={0} max={10} step={1} color="warning" size="lg" />
+      <Slider label="Locked" showValue defaultValue={30} disabled />
+    </View>
+  );
+}
+
+function RangeSliderDemo() {
+  const [price, setPrice] = useState<[number, number]>([220, 680]);
+
+  return (
+    <View className="w-full gap-6">
+      {/* Controlled through `range` + `onRangeChange`. The single-value props
+          are untouched, so nothing here has to narrow a union to read a
+          number. */}
+      <Slider
+        label="Price"
+        showValue
+        formatValue={(v) => `$${Math.round(v)}`}
+        range={price}
+        onRangeChange={setPrice}
+        min={0}
+        max={1000}
+        step={20}
+        color="success"
+      />
+      {/* `minStepsBetweenThumbs` keeps a gap the span can never close, which is
+          what a filter wants: an empty range matches nothing and looks like a
+          bug rather than a choice. */}
+      <Slider
+        label="Nights"
+        showValue
+        defaultRange={[2, 6]}
+        min={1}
+        max={14}
+        step={1}
+        minStepsBetweenThumbs={1}
+      />
+      <Slider label="Locked" showValue defaultRange={[30, 60]} disabled />
+    </View>
+  );
+}
+
+const TAB_SECTIONS = [
+  'Overview',
+  'Activity',
+  'Members',
+  'Billing',
+  'Integrations',
+  'Security',
+  'Audit log',
+];
+
+function ScrollableTabsDemo() {
+  return (
+    // More tabs than fit. A fixed row answers that by crushing every label to
+    // an unreadable width; `scrollable` gives each one its natural width and
+    // scrolls the active tab into view instead.
+    <Tabs variant="underline" defaultValue="Overview" className="w-full">
+      <Tabs.List scrollable>
+        {TAB_SECTIONS.map((section) => (
+          <Tabs.Trigger key={section} value={section}>
+            {section}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+      {TAB_SECTIONS.map((section) => (
+        <Tabs.Content key={section} value={section}>
+          <Text size="sm" muted className="py-4">
+            {section}
+          </Text>
+        </Tabs.Content>
+      ))}
+    </Tabs>
+  );
+}
+
+function KeepMountedTabsDemo() {
+  return (
+    // Type into the field, switch away, come back: the text is still there.
+    // Without `keepMounted` the panel is unmounted and the value goes with it.
+    <Tabs keepMounted defaultValue="draft" className="w-full">
+      <Tabs.List>
+        <Tabs.Trigger value="draft">Draft</Tabs.Trigger>
+        <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.Content value="draft">
+        <Card>
+          <Card.Content className="gap-3 p-4">
+            <Input label="Title" placeholder="Type something, then switch tab" />
+            <Text size="xs" muted>
+              This panel stays mounted, so what you type survives the switch.
+            </Text>
+          </Card.Content>
+        </Card>
+      </Tabs.Content>
+      <Tabs.Content value="settings">
+        <Card>
+          <Card.Content className="p-4">
+            <Text size="sm" muted>
+              Switch back to Draft — the title you typed is still in the field.
+            </Text>
+          </Card.Content>
+        </Card>
+      </Tabs.Content>
+    </Tabs>
+  );
+}
+
+function SwipeableTabsDemo() {
+  const days = [
+    { value: 'mon', label: 'Mon', body: 'Two runs and a swim. 14km total.' },
+    { value: 'tue', label: 'Tue', body: 'Rest day. Nothing logged.' },
+    { value: 'wed', label: 'Wed', body: 'One long ride, 62km, out to the coast.' },
+    { value: 'thu', label: 'Thu', body: 'Intervals — 8 × 400m on the track.' },
+  ];
+
+  return (
+    // Drag sideways on a card to move to the next day. The indicator follows,
+    // and the row scrolls the tab into view when it lands off the end.
+    <Tabs swipeable defaultValue="mon" className="w-full">
+      <Tabs.List scrollable>
+        {days.map((day) => (
+          <Tabs.Trigger key={day.value} value={day.value}>
+            {day.label}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+      {days.map((day) => (
+        <Tabs.Content key={day.value} value={day.value}>
+          <Card>
+            <Card.Content className="gap-2 p-4">
+              <Text weight="medium">{day.label}</Text>
+              <Text size="sm" muted>
+                {day.body}
+              </Text>
+              <Text size="xs" muted className="mt-2">
+                Swipe left or right on this card.
+              </Text>
+            </Card.Content>
+          </Card>
+        </Tabs.Content>
+      ))}
+    </Tabs>
+  );
+}
+
+/** Rows for the kept-panel demo. Long enough that building them is visible. */
+const KEPT_PANEL_ROWS = Array.from({ length: 400 }, (_, index) => ({
+  id: String(index),
+  title: `Rule ${index + 1}`,
+  detail: `${['Allow', 'Deny', 'Redirect'][index % 3]} · priority ${index + 1}`,
+}));
+
+/**
+ * The two settings of `keepMounted` that differ, side by side.
+ *
+ * `true` hides an inactive panel with `display: none`, which lays it out at zero
+ * size — so a virtualised list inside one renders no rows, and its whole first
+ * render lands on the frame the tab is switched to. `'measured'` keeps the panel
+ * at full size while hidden, so the list is already built by then.
+ *
+ * The lists here are deliberately long: the difference is a stall on switching,
+ * and a panel of four cards is built too fast to feel either way.
+ */
+function KeptPanelTabsDemo() {
+  const [measured, setMeasured] = useState(true);
+  const panels = ['users', 'domains', 'routing'];
+
+  return (
+    <View className="flex-1 gap-3 px-4 pt-3">
+      <ToggleButtonGroup
+        value={measured ? ['measured'] : []}
+        onValueChange={(value) => setMeasured(value.includes('measured'))}
+        size="sm"
+      >
+        <ToggleButton id="measured">keepMounted=&quot;measured&quot;</ToggleButton>
+      </ToggleButtonGroup>
+
+      <Text size="xs" muted>
+        {measured
+          ? 'Panels stay laid out while hidden — each list is already built, so switching is immediate.'
+          : 'Panels are hidden with display: none — each list builds on the frame you switch to it.'}
+      </Text>
+
+      {/*
+        Remounted when the setting changes, so a panel built under one setting
+        is never measured under the other — otherwise the lists left over from
+        `measured` would make `true` look just as fast.
+      */}
+      <Tabs
+        key={measured ? 'measured' : 'true'}
+        defaultValue="users"
+        keepMounted={measured ? 'measured' : true}
+        swipeable
+        className="flex-1"
+      >
+        <Tabs.List>
+          {panels.map((panel) => (
+            <Tabs.Trigger key={panel} value={panel} className="capitalize">
+              {panel}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+
+        {panels.map((panel) => (
+          <Tabs.Content key={panel} value={panel} className="flex-1">
+            <FlatList
+              data={KEPT_PANEL_ROWS}
+              keyExtractor={(row) => `${panel}-${row.id}`}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <Item>
+                  <Item.Content>
+                    <Item.Title>{item.title}</Item.Title>
+                    <Item.Description>{item.detail}</Item.Description>
+                  </Item.Content>
+                </Item>
+              )}
+            />
+          </Tabs.Content>
+        ))}
+      </Tabs>
+    </View>
+  );
+}
+
+/** The four destinations of the expanding row, and what each one shows. */
+const EXPANDING_TABS = [
+  {
+    value: 'home',
+    label: 'Home',
+    icon: <PackageIcon size={18} />,
+    body: 'Everything that changed since you were last here.',
+  },
+  {
+    value: 'chats',
+    label: 'Chats',
+    icon: <MessageCircleIcon size={18} />,
+    body: 'Four threads, two of them waiting on you.',
+  },
+  {
+    value: 'calendar',
+    label: 'Calendar',
+    icon: <CalendarIcon size={18} />,
+    body: 'Nothing until Thursday, and then rather a lot.',
+  },
+  {
+    value: 'inbox',
+    label: 'Inbox',
+    icon: <BellIcon size={18} />,
+    body: 'Three notifications, none of them urgent.',
+  },
+];
+
+/**
+ * Icon-only until you pick one.
+ *
+ * Four labels written out take the whole row to say four words nobody rereads
+ * after the first time. Closed, they take an icon each; open, the one you are
+ * looking at says what it is.
+ */
+function ExpandingTabsDemo() {
+  return (
+    // `swipeable` as well, so the panel under the row arrives the way it does
+    // when it is dragged: pressing a pill throws the incoming panel in from the
+    // side it belongs on rather than cross-fading it in place.
+    <Tabs swipeable variant="expanding" defaultValue="chats" className="w-full">
+      <Tabs.List className="justify-center">
+        {EXPANDING_TABS.map((tab) => (
+          <Tabs.Trigger key={tab.value} value={tab.value} icon={tab.icon}>
+            {tab.label}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+      {EXPANDING_TABS.map((tab) => (
+        <Tabs.Content key={tab.value} value={tab.value}>
+          <Card>
+            <Card.Content className="gap-2 p-4">
+              <Text weight="medium">{tab.label}</Text>
+              <Text size="sm" muted>
+                {tab.body}
+              </Text>
+            </Card.Content>
+          </Card>
+        </Tabs.Content>
+      ))}
+    </Tabs>
+  );
+}
+
+const INVOICES = [
+  { id: 'INV-001', status: 'Paid', method: 'Card', amount: 250 },
+  { id: 'INV-002', status: 'Pending', method: 'Transfer', amount: 150 },
+  { id: 'INV-003', status: 'Unpaid', method: 'Card', amount: 350 },
+  { id: 'INV-004', status: 'Paid', method: 'Card', amount: 450 },
+  { id: 'INV-005', status: 'Paid', method: 'Transfer', amount: 550 },
+];
+
+const invoiceAmount = (value: number) => `$${value.toFixed(2)}`;
+
+/**
+ * The same three columns as the basic demo, sized once at the top instead of on
+ * all eighteen heads and cells. Module scope, not inline: a fresh array every
+ * frame renumbers every cell in the table.
+ */
+const INVOICE_COLUMNS = [{ flex: 2 }, {}, { align: 'end' as const }];
+
+/** One column model on the root; the rows below are just their contents. */
+function ColumnsTableDemo() {
+  return (
+    <Table variant="outline" columns={INVOICE_COLUMNS} className="w-full">
+      <Table.Header>
+        <Table.Row>
+          <Table.Head>Invoice</Table.Head>
+          <Table.Head>Method</Table.Head>
+          <Table.Head>Amount</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {INVOICES.map((invoice) => (
+          <Table.Row key={invoice.id}>
+            <Table.Cell>{invoice.id}</Table.Cell>
+            <Table.Cell>{invoice.method}</Table.Cell>
+            <Table.Cell>{invoiceAmount(invoice.amount)}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table>
+  );
+}
+
+/**
+ * A table that pages. The component reports the page; slicing the rows stays
+ * here, which is the whole division of labour it is built around.
+ */
+function PaginatedTableDemo() {
+  const [page, setPage] = useState(1);
+  const pageSize = 2;
+  const rows = INVOICES.slice((page - 1) * pageSize, page * pageSize);
+
+  return (
+    <View className="w-full gap-3">
+      <Table variant="outline" columns={INVOICE_COLUMNS} className="w-full">
+        <Table.Header>
+          <Table.Row>
+            <Table.Head>Invoice</Table.Head>
+            <Table.Head>Method</Table.Head>
+            <Table.Head>Amount</Table.Head>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {rows.map((invoice) => (
+            <Table.Row key={invoice.id}>
+              <Table.Cell>{invoice.id}</Table.Cell>
+              <Table.Cell>{invoice.method}</Table.Cell>
+              <Table.Cell>{invoiceAmount(invoice.amount)}</Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table>
+
+      <Pagination
+        count={Math.ceil(INVOICES.length / pageSize)}
+        page={page}
+        onPageChange={setPage}
+        variant="compact"
+        size="sm"
+      >
+        <Pagination.Status pageSize={pageSize} total={INVOICES.length} />
+      </Pagination>
+    </View>
+  );
+}
+
+/** Every presentation driven from one page number, so the three stay in step. */
+function PaginationDemo({
+  count = 12,
+  ...props
+}: Partial<React.ComponentProps<typeof Pagination>>) {
+  const [page, setPage] = useState(1);
+
+  return <Pagination count={count} page={page} onPageChange={setPage} {...props} />;
+}
+
+function TableDemo({
+  variant,
+  striped,
+  caption,
+}: {
+  variant?: 'default' | 'outline';
+  striped?: boolean;
+  caption?: string;
+}) {
+  return (
+    <Table variant={variant} striped={striped} className="w-full">
+      <Table.Header>
+        <Table.Row>
+          <Table.Head flex={2}>Invoice</Table.Head>
+          <Table.Head>Method</Table.Head>
+          <Table.Head align="end">Amount</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {INVOICES.map((invoice) => (
+          <Table.Row key={invoice.id}>
+            <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+            <Table.Cell>{invoice.method}</Table.Cell>
+            <Table.Cell align="end">{invoiceAmount(invoice.amount)}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+      <Table.Footer>
+        <Table.Row>
+          <Table.Cell flex={2} labelClassName="font-medium">
+            Total
+          </Table.Cell>
+          <Table.Cell />
+          <Table.Cell align="end" labelClassName="font-medium">
+            {invoiceAmount(INVOICES.reduce((sum, i) => sum + i.amount, 0))}
+          </Table.Cell>
+        </Table.Row>
+      </Table.Footer>
+      {caption ? (
+        <Table.Caption className="px-4 py-3">{caption}</Table.Caption>
+      ) : null}
+    </Table>
+  );
+}
+
+/** Headings on the tray, rows in the card — `Table.Frame` does the lift. */
+function FramedTableDemo() {
+  return (
+    // One caption line, not two. On the tray a title and a description are the
+    // same muted `text-sm`, so stacking them reads as one sentence broken in
+    // half and costs the frame a row of height for nothing.
+    <Table.Frame
+      className="w-full"
+      title="Five most recent invoices"
+      action={<Badge variant="outline">Q3</Badge>}
+    >
+      <Table.Header>
+        <Table.Row>
+          <Table.Head flex={2}>Invoice</Table.Head>
+          <Table.Head>Method</Table.Head>
+          <Table.Head align="end">Amount</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {INVOICES.map((invoice) => (
+          <Table.Row key={invoice.id}>
+            <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+            <Table.Cell>{invoice.method}</Table.Cell>
+            <Table.Cell align="end">{invoiceAmount(invoice.amount)}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+      <Table.Footer>
+        <Table.Row>
+          <Table.Cell flex={2} labelClassName="font-medium">
+            Total
+          </Table.Cell>
+          <Table.Cell />
+          <Table.Cell align="end" labelClassName="font-medium">
+            {invoiceAmount(INVOICES.reduce((sum, i) => sum + i.amount, 0))}
+          </Table.Cell>
+        </Table.Row>
+      </Table.Footer>
+    </Table.Frame>
+  );
+}
+
+/** A column header is the handle for sorting by it; the arrow turns over. */
+function SortableTableDemo() {
+  const [column, setColumn] = useState<'id' | 'amount'>('amount');
+  const [direction, setDirection] = useState<'asc' | 'desc'>('desc');
+
+  const sortBy = (next: 'id' | 'amount') => {
+    if (next === column) {
+      setDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setColumn(next);
+    setDirection('asc');
+  };
+
+  const rows = useMemo(() => {
+    const sign = direction === 'asc' ? 1 : -1;
+    return [...INVOICES].sort((a, b) =>
+      column === 'amount'
+        ? (a.amount - b.amount) * sign
+        : a.id.localeCompare(b.id) * sign
+    );
+  }, [column, direction]);
+
+  return (
+    <Table variant="outline">
+      <Table.Header>
+        <Table.Row>
+          <Table.Head
+            flex={2}
+            sortDirection={column === 'id' ? direction : undefined}
+            sortable
+            onPress={() => sortBy('id')}
+          >
+            Invoice
+          </Table.Head>
+          <Table.Head
+            align="end"
+            sortDirection={column === 'amount' ? direction : undefined}
+            sortable
+            onPress={() => sortBy('amount')}
+          >
+            Amount
+          </Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {rows.map((invoice) => (
+          <Table.Row key={invoice.id}>
+            <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+            <Table.Cell align="end">{invoiceAmount(invoice.amount)}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table>
+  );
+}
+
+/** Rows given an `onPress` become buttons, and the chosen one stays lit. */
+function SelectableTableDemo() {
+  const [picked, setPicked] = useState('INV-002');
+
+  return (
+    <View className="w-full gap-3">
+      <Table variant="outline">
+        <Table.Header>
+          <Table.Row>
+            <Table.Head flex={2}>Invoice</Table.Head>
+            <Table.Head>Status</Table.Head>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {INVOICES.map((invoice) => (
+            <Table.Row
+              key={invoice.id}
+              selected={picked === invoice.id}
+              onPress={() => setPicked(invoice.id)}
+            >
+              <Table.Cell flex={2}>{invoice.id}</Table.Cell>
+              <Table.Cell>
+                <Badge
+                  variant={
+                    invoice.status === 'Paid'
+                      ? 'success'
+                      : invoice.status === 'Pending'
+                        ? 'warning'
+                        : 'destructive'
+                  }
+                >
+                  {invoice.status}
+                </Badge>
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table>
+      <Text size="sm" muted>
+        Selected {picked}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * More columns than a phone is wide. The table keeps a `minWidth` and scrolls
+ * sideways rather than crushing the columns; the fade says there is more.
+ *
+ * `w-full` on the `ScrollFade` is what makes that true. Without it the wrapper
+ * shrink-wraps to the scroller's content and the table runs off the screen
+ * instead of clipping — a scroll view only scrolls once something has decided
+ * how wide its window is.
+ */
+function WideTableDemo() {
+  return (
+    <ScrollFade size={24} className="w-full self-start">
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <Table variant="outline" size="sm" striped style={{ minWidth: 440 }}>
+          <Table.Header>
+            <Table.Row>
+              <Table.Head width={86}>Invoice</Table.Head>
+              <Table.Head width={100}>Customer</Table.Head>
+              <Table.Head width={82}>Status</Table.Head>
+              <Table.Head width={92} align="end">
+                Amount
+              </Table.Head>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {INVOICES.slice(0, 4).map((invoice, index) => (
+              <Table.Row key={invoice.id}>
+                <Table.Cell width={86}>{invoice.id}</Table.Cell>
+                <Table.Cell width={100}>
+                  {['Acme', 'Globex', 'Initech', 'Umbrella'][index]}
+                </Table.Cell>
+                <Table.Cell width={82}>{invoice.status}</Table.Cell>
+                <Table.Cell width={92} align="end">
+                  {invoiceAmount(invoice.amount)}
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
+      </ScrollView>
+    </ScrollFade>
+  );
+}
+
+const STEP_DATA = [
+  { title: 'Account', description: 'Create your login' },
+  { title: 'Profile', description: 'Tell us about you' },
+  { title: 'Billing', description: 'Add a payment method' },
+];
+
+function StepsDemo() {
+  const [step, setStep] = useState(1);
+
+  return (
+    <View className="w-full gap-6">
+      <Steps value={step} onValueChange={setStep}>
+        {STEP_DATA.map((item, index) => (
+          <Steps.Item
+            key={item.title}
+            step={index}
+            className={index < STEP_DATA.length - 1 ? 'flex-1' : undefined}
+          >
+            <Steps.Trigger>
+              <Steps.Indicator />
+            </Steps.Trigger>
+          </Steps.Item>
+        ))}
+      </Steps>
+      <View className="items-center gap-1">
+        <Text weight="medium">{STEP_DATA[step]?.title}</Text>
+        <Text size="sm" muted>
+          {STEP_DATA[step]?.description}
+        </Text>
+      </View>
+      <View className="flex-row gap-2">
+        <Button
+          variant="outline"
+          className="flex-1"
+          disabled={step === 0}
+          onPress={() => setStep((current) => Math.max(0, current - 1))}
+        >
+          Back
+        </Button>
+        <Button
+          className="flex-1"
+          disabled={step === STEP_DATA.length - 1}
+          onPress={() =>
+            setStep((current) => Math.min(STEP_DATA.length - 1, current + 1))
+          }
+        >
+          Next
+        </Button>
+      </View>
+    </View>
+  );
+}
+
+const price = (value: number) => `$${value.toFixed(2)}`;
+
+/**
+ * A short list where every row deletes itself. The rows are state so the full
+ * swipe has something real to do — an action that only logs proves nothing
+ * about whether the row got out of the way afterwards.
+ */
+function SwipeDeleteDemo() {
+  const [rows, setRows] = useState([
+    { name: 'Invoice.pdf', meta: '2.4 MB' },
+    { name: 'Contract.docx', meta: '812 KB' },
+    { name: 'Notes.md', meta: '4 KB' },
+  ]);
+
+  if (rows.length === 0) {
+    return (
+      <View className="w-full gap-3">
+        <Text size="sm" muted>
+          Every row deleted.
+        </Text>
+        <Button
+          variant="outline"
+          size="sm"
+          onPress={() =>
+            setRows([
+              { name: 'Invoice.pdf', meta: '2.4 MB' },
+              { name: 'Contract.docx', meta: '812 KB' },
+              { name: 'Notes.md', meta: '4 KB' },
+            ])
+          }
+        >
+          Put them back
+        </Button>
+      </View>
+    );
+  }
+
+  return (
+    <View className="w-full overflow-hidden rounded-xl border border-border">
+      {rows.map((row, index) => (
+        <View key={row.name}>
+          <Swipe haptics>
+            <Swipe.End>
+              <Swipe.Action
+                icon={<TrashIcon />}
+                label="Delete"
+                color="destructive"
+                onPress={() =>
+                  setRows((current) => current.filter((r) => r.name !== row.name))
+                }
+              />
+            </Swipe.End>
+            <Item>
+              <Item.Media variant="icon">
+                <FileIcon />
+              </Item.Media>
+              <Item.Content>
+                <Item.Title>{row.name}</Item.Title>
+                <Item.Description>{row.meta}</Item.Description>
+              </Item.Content>
+            </Item>
+          </Swipe>
+          {index < rows.length - 1 ? <Item.Separator /> : null}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+const SWIPE_MAIL = [
+  { id: 'm1', from: 'Nadia Rahman', subject: 'Re: the Q3 numbers' },
+  { id: 'm2', from: 'Build bot', subject: 'main is green again' },
+  { id: 'm3', from: 'Tomas Lind', subject: 'Lunch Thursday?' },
+  { id: 'm4', from: 'Registry', subject: 'Your domain renews in 14 days' },
+];
+
+/**
+ * The point of a group is the row you are *not* touching. Open one, then open
+ * another: the first puts itself away. Without the group all four stand open
+ * at once, which is the state every real inbox goes out of its way to avoid.
+ *
+ * The rows sit inside an `Item.Group` and come out of a `map`, neither of
+ * which the group can see — it works because each row registers itself rather
+ * than being counted as a child.
+ */
+function SwipeGroupDemo() {
+  const [log, setLog] = useState<string | null>(null);
+
+  return (
+    <View className="w-full gap-3">
+      <Swipe.Group className="overflow-hidden rounded-xl border border-border">
+        <Item.Group>
+          {SWIPE_MAIL.map((message, index) => (
+            <View key={message.id}>
+              <Swipe haptics>
+                <Swipe.End>
+                  <Swipe.Action
+                    icon={<BookmarkIcon />}
+                    label="Archive"
+                    color="info"
+                    onPress={() => setLog(`Archived ${message.from}.`)}
+                  />
+                  <Swipe.Action
+                    icon={<TrashIcon />}
+                    label="Delete"
+                    color="destructive"
+                    onPress={() => setLog(`Deleted ${message.from}.`)}
+                  />
+                </Swipe.End>
+                <Item>
+                  <Item.Content>
+                    <Item.Title>{message.from}</Item.Title>
+                    <Item.Description>{message.subject}</Item.Description>
+                  </Item.Content>
+                </Item>
+              </Swipe>
+              {index < SWIPE_MAIL.length - 1 ? <Item.Separator /> : null}
+            </View>
+          ))}
+        </Item.Group>
+      </Swipe.Group>
+      <Text size="sm" muted>
+        {log ?? 'Open one row, then another — the first closes itself.'}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * A panel on each side, and more than one tile on the end — which is where the
+ * rule about the outermost action earns its keep: Delete is the far tile, so it
+ * is the one a full swipe reaches.
+ */
+function SwipeBothSidesDemo() {
+  const [status, setStatus] = useState('Drag the row either way.');
+
+  return (
+    <View className="w-full gap-3">
+      <View className="overflow-hidden rounded-xl border border-border">
+        <Swipe haptics onOpenChange={(side) => side && setStatus(`Open on the ${side}.`)}>
+          <Swipe.Start>
+            <Swipe.Action
+              icon={<CheckIcon />}
+              label="Done"
+              color="success"
+              onPress={() => setStatus('Marked done.')}
+            />
+          </Swipe.Start>
+          <Swipe.End>
+            <Swipe.Action
+              icon={<BellIcon />}
+              label="Snooze"
+              color="warning"
+              onPress={() => setStatus('Snoozed until tomorrow.')}
+            />
+            <Swipe.Action
+              icon={<TrashIcon />}
+              label="Delete"
+              color="destructive"
+              onPress={() => setStatus('Deleted.')}
+            />
+          </Swipe.End>
+          <Item>
+            <Item.Content>
+              <Item.Title>Renew the domain</Item.Title>
+              <Item.Description>Due Friday</Item.Description>
+            </Item.Content>
+          </Item>
+        </Swipe>
+      </View>
+      <Text size="sm" muted>
+        {status}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * The two halves of the full-swipe decision, side by side. The top row fires
+ * its action on a long drag; the bottom one opens and waits to be tapped.
+ */
+function SwipeFullSwipeDemo() {
+  const [log, setLog] = useState('Nothing fired yet.');
+
+  return (
+    <View className="w-full gap-4">
+      <View className="gap-2">
+        <Text size="sm" weight="medium">
+          fullSwipe (default)
+        </Text>
+        <View className="overflow-hidden rounded-xl border border-border">
+          <Swipe haptics>
+            <Swipe.End>
+              <Swipe.Action
+                icon={<TrashIcon />}
+                label="Delete"
+                color="destructive"
+                onPress={() => setLog('Fired by the swipe.')}
+              />
+            </Swipe.End>
+            <Item>
+              <Item.Content>
+                <Item.Title>Draft note</Item.Title>
+                <Item.Description>Carry the drag all the way</Item.Description>
+              </Item.Content>
+            </Item>
+          </Swipe>
+        </View>
+      </View>
+
+      <View className="gap-2">
+        <Text size="sm" weight="medium">
+          fullSwipe={'{false}'}
+        </Text>
+        <View className="overflow-hidden rounded-xl border border-border">
+          <Swipe fullSwipe={false}>
+            <Swipe.End>
+              <Swipe.Action
+                icon={<TrashIcon />}
+                label="Delete"
+                color="destructive"
+                onPress={() => setLog('Fired by the tile.')}
+              />
+            </Swipe.End>
+            <Item>
+              <Item.Content>
+                <Item.Title>Production database</Item.Title>
+                <Item.Description>The tile has to be tapped</Item.Description>
+              </Item.Content>
+            </Item>
+          </Swipe>
+        </View>
+      </View>
+
+      <Text size="sm" muted>
+        {log}
+      </Text>
+    </View>
+  );
+}
+
+/** `keepOpen` for an action that toggles rather than finishes. */
+function SwipeKeepOpenDemo() {
+  const [saved, setSaved] = useState(false);
+
+  return (
+    <View className="w-full overflow-hidden rounded-xl border border-border">
+      <Swipe>
+        <Swipe.Start>
+          <Swipe.Action
+            icon={<BookmarkIcon />}
+            label={saved ? 'Saved' : 'Save'}
+            color={saved ? 'success' : 'primary'}
+            keepOpen
+            onPress={() => setSaved((current) => !current)}
+          />
+        </Swipe.Start>
+        <Item>
+          <Item.Content>
+            <Item.Title>Weekly digest</Item.Title>
+            <Item.Description>{saved ? 'Saved for later' : 'Not saved'}</Item.Description>
+          </Item.Content>
+        </Item>
+      </Swipe>
+    </View>
+  );
+}
+
+/**
+ * The same row in a right-to-left subtree. `Swipe.End` still means the edge
+ * text runs toward, so the panel is on the left and the row opens rightward —
+ * without a word of the markup changing.
+ */
+function SwipeRtlDemo() {
+  return (
+    <Direction dir="rtl" className="w-full">
+      <View className="overflow-hidden rounded-xl border border-border">
+        <Swipe>
+          <Swipe.End>
+            <Swipe.Action icon={<TrashIcon />} label="حذف" color="destructive" />
+          </Swipe.End>
+          <Item>
+            <Item.Content>
+              <Item.Title>فاتورة يوليو</Item.Title>
+              <Item.Description>٢٫٤ ميغابايت</Item.Description>
+            </Item.Content>
+          </Item>
+        </Swipe>
+      </View>
+    </Direction>
+  );
+}
+
+export const ENTRIES: ComponentEntry[] = [
+{
+    slug: 'slider',
+    name: 'Slider',
+    summary: 'Pick a value by dragging a thumb along a track',
+    demos: [
+      { label: 'Interactive', render: () => <SliderDemo /> },
+      { label: 'Range', render: () => <RangeSliderDemo /> },
+      { label: 'Native', render: () => <NativeSliderDemo /> },
+      {
+        label: 'Colors',
+        render: () => (
+          <View className="w-full gap-5">
+            <Slider defaultValue={40} color="primary" />
+            <Slider defaultValue={55} color="success" />
+            <Slider defaultValue={70} color="warning" />
+            <Slider defaultValue={85} color="destructive" />
+          </View>
+        ),
+      },
+      {
+        label: 'Sizes',
+        render: () => (
+          <View className="w-full gap-5">
+            <Slider defaultValue={40} size="sm" />
+            <Slider defaultValue={40} size="md" />
+            <Slider defaultValue={40} size="lg" />
+          </View>
+        ),
+      },
+      {
+        label: 'Stepped',
+        render: () => (
+          <View className="w-full gap-5">
+            <Slider defaultValue={2} min={0} max={5} step={1} />
+            <Slider defaultValue={30} disabled />
+          </View>
+        ),
+      },
+      {
+        label: 'Labelled',
+        render: () => (
+          <View className="w-full gap-6">
+            <Slider label="Brightness" showValue defaultValue={62} />
+            {/* formatValue owns the units, so the caption reads the way the
+                value is actually spoken rather than as a bare number. */}
+            <Slider
+              label="Budget"
+              showValue
+              formatValue={(v) => `$${Math.round(v)}`}
+              defaultValue={340}
+              min={0}
+              max={1000}
+              step={20}
+              color="success"
+            />
+          </View>
+        ),
+      },
+    ],
+  },
+{
+    slug: 'spinner',
+    name: 'Spinner',
+    summary: 'Indeterminate loading indicator',
+    demos: [
+      {
+        label: 'Sizes',
+        render: () => (
+          <View className="flex-row items-center gap-6">
+            <Spinner size="sm" />
+            <Spinner />
+            <Spinner size="lg" />
+          </View>
+        ),
+      },
+      {
+        label: 'In context',
+        render: () => (
+          <Card className="w-full">
+            <Card.Content className="items-center gap-3 p-8">
+              <Spinner size="lg" />
+              <Text size="sm" muted>
+                Loading your projects…
+              </Text>
+            </Card.Content>
+          </Card>
+        ),
+      },
+    ],
+  },
+{
+    slug: 'steps',
+    name: 'Steps',
+    summary: 'Stepper for multi-step flows',
+    demos: [
+      { label: 'Horizontal', render: () => <StepsDemo /> },
+      {
+        label: 'Vertical',
+        render: () => (
+          <Steps defaultValue={1} orientation="vertical" className="w-full">
+            {STEP_DATA.map((step, index) => (
+              <Steps.Item key={step.title} step={index}>
+                <Steps.Trigger>
+                  <Steps.Indicator />
+                  <View className="flex-1">
+                    <Steps.Title>{step.title}</Steps.Title>
+                    <Steps.Description>{step.description}</Steps.Description>
+                  </View>
+                </Steps.Trigger>
+              </Steps.Item>
+            ))}
+          </Steps>
+        ),
+      },
+      {
+        label: 'Loading',
+        render: () => (
+          <Steps value={1} orientation="vertical" className="w-full">
+            {STEP_DATA.map((step, index) => (
+              <Steps.Item key={step.title} step={index} loading={index === 1}>
+                <Steps.Trigger>
+                  <Steps.Indicator />
+                  <View className="flex-1">
+                    <Steps.Title>{step.title}</Steps.Title>
+                  </View>
+                </Steps.Trigger>
+              </Steps.Item>
+            ))}
+          </Steps>
+        ),
+      },
+    ],
+  },
+{
+    slug: 'swipe',
+    name: 'Swipe',
+    summary: 'A row that slides aside to reveal its actions',
+    demos: [
+      { label: 'Swipe to delete', render: () => <SwipeDeleteDemo /> },
+      { label: 'Both sides', render: () => <SwipeBothSidesDemo /> },
+      { label: 'One row open at a time', render: () => <SwipeGroupDemo /> },
+      { label: 'Full swipe', render: () => <SwipeFullSwipeDemo /> },
+      { label: 'Keeping the row open', render: () => <SwipeKeepOpenDemo /> },
+      { label: 'Right to left', render: () => <SwipeRtlDemo /> },
+    ],
+  },
+{
+    slug: 'switch',
+    name: 'Switch',
+    summary: 'On/off toggle',
+    demos: [
+      { label: 'Settings rows', render: () => <SwitchDemo /> },
+      {
+        label: 'States',
+        render: () => (
+          <View className="gap-5">
+            <View className="flex-row items-center gap-3">
+              <Switch value onValueChange={() => {}} />
+              <Text size="sm" muted>On</Text>
+            </View>
+            <View className="flex-row items-center gap-3">
+              <Switch value={false} onValueChange={() => {}} />
+              <Text size="sm" muted>Off</Text>
+            </View>
+            <View className="flex-row items-center gap-3">
+              <Switch value disabled onValueChange={() => {}} />
+              <Text size="sm" muted>Disabled</Text>
+            </View>
+          </View>
+        ),
+      },
+      { label: 'Haptics', render: () => <HapticSwitchDemo /> },
+      { label: 'Native', render: () => <NativeSwitchDemo /> },
+    ],
+  },
+{
+    slug: 'table',
+    name: 'Table',
+    summary: 'Rows and columns that stay lined up',
+    demos: [
+      { label: 'Basic', render: () => <TableDemo /> },
+      { label: 'Outline', render: () => <TableDemo variant="outline" /> },
+      { label: 'Striped', render: () => <TableDemo variant="outline" striped /> },
+      { label: 'Declared columns', render: () => <ColumnsTableDemo /> },
+      { label: 'Paged', render: () => <PaginatedTableDemo /> },
+      { label: 'In a frame', render: () => <FramedTableDemo /> },
+      { label: 'Sortable columns', render: () => <SortableTableDemo /> },
+      { label: 'Selectable rows', render: () => <SelectableTableDemo /> },
+      { label: 'Wider than the screen', render: () => <WideTableDemo /> },
+      {
+        label: 'Empty',
+        render: () => (
+          <Table variant="outline">
+            <Table.Header>
+              <Table.Row>
+                <Table.Head flex={2}>Invoice</Table.Head>
+                <Table.Head align="end">Amount</Table.Head>
+              </Table.Row>
+            </Table.Header>
+            <Table.Empty>No invoices yet</Table.Empty>
+          </Table>
+        ),
+      },
+      {
+        label: 'With a caption',
+        render: () => (
+          <TableDemo variant="outline" caption="Five most recent invoices." />
+        ),
+      },
+    ],
+  },
+{
+    slug: 'pagination',
+    name: 'Pagination',
+    summary: 'Moving through a result set one page at a time',
+    demos: [
+      { label: 'Basic', render: () => <PaginationDemo /> },
+      { label: 'Compact', render: () => <PaginationDemo variant="compact" /> },
+      { label: 'Simple', render: () => <PaginationDemo variant="simple" /> },
+      { label: 'Small', render: () => <PaginationDemo size="sm" /> },
+      {
+        label: 'A long set',
+        render: () => <PaginationDemo count={240} />,
+      },
+      {
+        // Nine targets is as wide as a run gets on a phone. Two boundaries and
+        // two arriving arrows put it past the screen, and a centred row that
+        // does not fit hangs off both ends — so this trades the arrows for the
+        // numbers, which is what a wider run was for.
+        label: 'Wider run',
+        render: () => (
+          <PaginationDemo count={240} siblings={2} boundaries={1} size="sm" controls={false} />
+        ),
+      },
+      {
+        label: 'Numbers only',
+        render: () => <PaginationDemo controls={false} />,
+      },
+      {
+        label: 'With a status line',
+        render: () => (
+          <PaginationDemo count={12} variant="compact">
+            <Pagination.Status pageSize={20} total={240} />
+          </PaginationDemo>
+        ),
+      },
+      { label: 'Beside a table', render: () => <PaginatedTableDemo /> },
+      {
+        label: 'Disabled',
+        render: () => <PaginationDemo disabled />,
+      },
+    ],
+  },
+{
+    slug: 'tabs',
+    name: 'Tabs',
+    summary: 'Segmented navigation between panels',
+    demos: [
+      {
+        label: 'Basic',
+        render: () => (
+          <Tabs defaultValue="account" className="w-full">
+            <Tabs.List>
+              <Tabs.Trigger value="account">Account</Tabs.Trigger>
+              <Tabs.Trigger value="password">Password</Tabs.Trigger>
+              <Tabs.Trigger value="team">Team</Tabs.Trigger>
+            </Tabs.List>
+            <Tabs.Content value="account">
+              <Card>
+                <Card.Content className="gap-4 p-4">
+                  <Input label="Name" placeholder="Khalid Abdi" />
+                  <Input label="Username" placeholder="@khalid" />
+                </Card.Content>
+              </Card>
+            </Tabs.Content>
+            <Tabs.Content value="password">
+              <Card>
+                <Card.Content className="gap-4 p-4">
+                  <Input label="Current password" secureTextEntry />
+                  <Input label="New password" secureTextEntry />
+                </Card.Content>
+              </Card>
+            </Tabs.Content>
+            <Tabs.Content value="team">
+              <Card>
+                <Card.Content className="flex-row items-center gap-3 p-4">
+                  <Avatar fallback="KA" />
+                  <View className="flex-1">
+                    <Text weight="medium">Khalid Abdi</Text>
+                    <Text size="sm" muted>
+                      Owner
+                    </Text>
+                  </View>
+                  <Badge variant="secondary">Admin</Badge>
+                </Card.Content>
+              </Card>
+            </Tabs.Content>
+          </Tabs>
+        ),
+      },
+      {
+        label: 'Two panels',
+        render: () => (
+          <Tabs defaultValue="preview" className="w-full">
+            <Tabs.List>
+              <Tabs.Trigger value="preview">Preview</Tabs.Trigger>
+              <Tabs.Trigger value="code">Code</Tabs.Trigger>
+            </Tabs.List>
+            <Tabs.Content value="preview">
+              <Card>
+                <Card.Content className="items-center p-8">
+                  <Button>Click me</Button>
+                </Card.Content>
+              </Card>
+            </Tabs.Content>
+            <Tabs.Content value="code">
+              <Card>
+                <Card.Content className="p-4">
+                  <Typography.Code>{'<Button>Click me</Button>'}</Typography.Code>
+                </Card.Content>
+              </Card>
+            </Tabs.Content>
+          </Tabs>
+        ),
+      },
+      {
+        label: 'Underline',
+        render: () => (
+          <Tabs variant="underline" defaultValue="overview" className="w-full">
+            <Tabs.List>
+              <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+              <Tabs.Trigger value="activity" badge={<Badge variant="secondary">4</Badge>}>
+                Activity
+              </Tabs.Trigger>
+              <Tabs.Trigger value="archived" disabled>
+                Archived
+              </Tabs.Trigger>
+            </Tabs.List>
+            <Tabs.Content value="overview">
+              <Text size="sm" muted className="py-4">
+                A rule under the active tab, on a row that has no track of its
+                own — for a page-level switch rather than a control.
+              </Text>
+            </Tabs.Content>
+            <Tabs.Content value="activity">
+              <Text size="sm" muted className="py-4">
+                Four things happened while you were away.
+              </Text>
+            </Tabs.Content>
+            <Tabs.Content value="archived">
+              <Text size="sm" muted className="py-4">
+                Unreachable — the trigger is disabled.
+              </Text>
+            </Tabs.Content>
+          </Tabs>
+        ),
+      },
+      {
+        label: 'Pill',
+        render: () => (
+          <Tabs variant="pill" defaultValue="all" className="w-full">
+            <Tabs.List>
+              <Tabs.Trigger value="all">All</Tabs.Trigger>
+              <Tabs.Trigger value="unread">Unread</Tabs.Trigger>
+              <Tabs.Trigger value="flagged">Flagged</Tabs.Trigger>
+            </Tabs.List>
+            <Tabs.Content value="all">
+              <Text size="sm" muted className="py-4">
+                A filled chip on the page, with the active label inverted
+                against it.
+              </Text>
+            </Tabs.Content>
+            <Tabs.Content value="unread">
+              <Text size="sm" muted className="py-4">
+                Nothing unread.
+              </Text>
+            </Tabs.Content>
+            <Tabs.Content value="flagged">
+              <Text size="sm" muted className="py-4">
+                Nothing flagged.
+              </Text>
+            </Tabs.Content>
+          </Tabs>
+        ),
+      },
+      {
+        label: 'Scrollable',
+        render: () => <ScrollableTabsDemo />,
+      },
+      {
+        label: 'Keeping panels mounted',
+        render: () => <KeepMountedTabsDemo />,
+      },
+      {
+        label: 'Swiping between panels',
+        render: () => <SwipeableTabsDemo />,
+      },
+      {
+        label: 'Icons that open',
+        render: () => <ExpandingTabsDemo />,
+      },
+      {
+        label: 'Panels that keep their size',
+        id: 'kept-panels',
+        fullPage: true,
+        description:
+          'Long lists in every panel, switched with keepMounted at "measured" and at true.',
+        render: () => <KeptPanelTabsDemo />,
+      },
+    ],
+  }
+];
+export const ENTRIES_BY_SLUG = Object.fromEntries(ENTRIES.map((entry) => [entry.slug, entry]));
