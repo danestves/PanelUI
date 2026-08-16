@@ -153,6 +153,15 @@
       "category": "actions"
     }
   ],
+  "collapsible": [
+    "Collapsible",
+    "One section of content, shown and hidden by its own header.",
+    "react native collapsible disclosure expand",
+    {
+      "addedIn": "0.70.0",
+      "category": "layout"
+    }
+  ],
   "color-picker": [
     "ColorPicker",
     "A colour chosen by dragging — a saturation square or a wheel, a hue scale, and opacity.",

@@ -1,0 +1,44 @@
+{
+  "slug": "collapsible",
+  "intro": "One section of content that its own header shows and hides, for optional detail, an advanced-settings group, or a row that expands into the rest of what it knows.\n\nThe body stays mounted while it is closed, so state inside it survives — a part-filled form still holds what was typed, a list is still scrolled to where it was.\n\nThat costs a render the first time whether or not the section is ever opened, because a height cannot be animated from `auto` and measuring the content means rendering it. For a body heavy enough that this matters, use [Accordion](/docs/components/accordion) with a single item, which unmounts it instead.\n\nFor several sections where opening one should close the others, use [Accordion](/docs/components/accordion).",
+  "usage": "<Collapsible variant=\"surface\" defaultOpen>\n  <Collapsible.Trigger>\n    <Collapsible.Title>Delivery options</Collapsible.Title>\n    <Collapsible.Indicator />\n  </Collapsible.Trigger>\n  <Collapsible.Content>\n    <Text size=\"sm\" muted>Standard delivery arrives in three to five working days.</Text>\n  </Collapsible.Content>\n</Collapsible>",
+  "anatomy": "<Collapsible>\n  <Collapsible.Trigger>\n    <Collapsible.Title>…</Collapsible.Title>\n    <Collapsible.Indicator />\n  </Collapsible.Trigger>\n  <Collapsible.Content>…</Collapsible.Content>\n</Collapsible>",
+  "parts": {
+    "Trigger": "The pressable header row. A bare string child is wrapped in the title style.",
+    "Title": "Heading text inside the trigger.",
+    "Indicator": "Chevron that rotates 180° while the body is open.",
+    "Content": "The body. Its height animates open and closed, and it stays mounted throughout."
+  },
+  "notes": "Leave `open` off and the component tracks its own state from `defaultOpen`. Pass `open` and it follows that instead, and `onOpenChange` is where the press arrives.\n\n`isDisabled` stops the trigger opening or closing it and marks it disabled to a screen reader. It does not close a section that is already open — a disabled control is one that cannot be used, not one that undoes itself.\n\nA closed body is taken out of the accessibility tree as well as hidden, so a screen reader does not read out a section that is not on screen.\n\n**With the operating system set to reduce motion the panel snaps between its two states and the chevron turns without travelling.** The disclosure still happens; it is the movement that is dropped.",
+  "examples": [
+    {
+      "title": "A section of optional detail",
+      "description": "The default: a header row, a chevron, and a body that opens under it.",
+      "code": "<Collapsible>\n  <Collapsible.Trigger>\n    <Collapsible.Title>What is included</Collapsible.Title>\n    <Collapsible.Indicator />\n  </Collapsible.Trigger>\n  <Collapsible.Content>\n    <Text size=\"sm\" muted>\n      Unlimited projects, 100GB of storage, and email support.\n    </Text>\n  </Collapsible.Content>\n</Collapsible>"
+    },
+    {
+      "title": "On a surface",
+      "description": "`variant=\"surface\"` draws the border and background, so the section reads as one object rather than as a header with something under it.",
+      "code": "<Collapsible variant=\"surface\" defaultOpen>\n  <Collapsible.Trigger>\n    <Collapsible.Title>Advanced settings</Collapsible.Title>\n    <Collapsible.Indicator />\n  </Collapsible.Trigger>\n  <Collapsible.Content>\n    <View className=\"gap-3\">\n      <Text size=\"sm\" muted>Send anonymous usage data</Text>\n      <Switch value={telemetry} onValueChange={setTelemetry} />\n    </View>\n  </Collapsible.Content>\n</Collapsible>"
+    },
+    {
+      "title": "Controlled",
+      "description": "Drive it from state when something outside the section needs to open it.",
+      "code": "const [open, setOpen] = useState(false);\n\n<>\n  <Button onPress={() => setOpen(true)}>Show the details</Button>\n\n  <Collapsible open={open} onOpenChange={setOpen}>\n    <Collapsible.Trigger>\n      <Collapsible.Title>{open ? 'Hide details' : 'Show details'}</Collapsible.Title>\n      <Collapsible.Indicator />\n    </Collapsible.Trigger>\n    <Collapsible.Content>\n      <Text size=\"sm\" muted>Billed monthly, cancel any time.</Text>\n    </Collapsible.Content>\n  </Collapsible>\n</>"
+    },
+    {
+      "title": "The body keeps its state",
+      "description": "Closing the section and opening it again leaves the field exactly as it was. This is what separates it from a one-item accordion, which unmounts the body and starts over.",
+      "code": "<Collapsible variant=\"surface\">\n  <Collapsible.Trigger>\n    <Collapsible.Title>Delivery note</Collapsible.Title>\n    <Collapsible.Indicator />\n  </Collapsible.Trigger>\n  <Collapsible.Content>\n    <Textarea placeholder=\"Leave it with a neighbour…\" />\n  </Collapsible.Content>\n</Collapsible>"
+    },
+    {
+      "title": "Disabled",
+      "description": "A section that is there but cannot be opened yet — a step not reached, or a plan not on.",
+      "code": "<Collapsible variant=\"surface\" isDisabled>\n  <Collapsible.Trigger>\n    <Collapsible.Title>Enterprise billing</Collapsible.Title>\n    <Collapsible.Indicator />\n  </Collapsible.Trigger>\n  <Collapsible.Content>\n    <Text size=\"sm\" muted>Contact sales.</Text>\n  </Collapsible.Content>\n</Collapsible>"
+    }
+  ],
+  "variantCode": {
+    "variant": "<Collapsible variant=\"default\">…</Collapsible>\n<Collapsible variant=\"surface\">…</Collapsible>\n<Collapsible variant=\"ghost\">…</Collapsible>"
+  },
+  "extraImports": ["Text", "Button", "Textarea", "Switch"]
+}

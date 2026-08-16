@@ -417,6 +417,14 @@ export {
   type ChipSize,
 } from './components/chip';
 export {
+  Collapsible,
+  type CollapsibleProps,
+  type CollapsibleTriggerProps,
+  type CollapsibleIndicatorProps,
+  type CollapsibleContentProps,
+  type CollapsibleVariant,
+} from './components/collapsible';
+export {
   ColorPicker,
   type ColorPickerProps,
   type ColorPickerTriggerProps,
