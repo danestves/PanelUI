@@ -261,13 +261,13 @@ const [held, setHeld] = useState(false);
 | `className` | `string` | — |  |
 | `accessibilityLabel` | `string` | — | Names the chart's single screen-reader snapshot. Falls back to the Header title, then to "Live line chart". |
 | `accessibilityHint` | `string` | — | Additional guidance after the snapshot. No gesture is invented for it. |
-| `data` | `LiveLinePoint[]` | — | The readings so far, oldest first. Append to it as they arrive. |
-| `window` | `number` | — | How much time the plot spans, in seconds. |
+| `data` | `LiveLinePoint[]` | — | The readings so far. Invalid values are dropped and timestamps are ordered. |
+| `window` | `number` | — | How much time the plot spans, in seconds. Invalid values use 30. |
 | `paused` | `boolean` | `false` | Freeze the window where it is. The readings still arrive; the clock stops. |
 | `yDomain` | `[number, number]` | — | Fix the y-axis instead of deriving it from what is visible. |
 | `domainDuration` | `number` | `420` | Milliseconds for the y-axis to settle after the range changes. |
 | `curve` | `ChartCurve` | `'monotone'` | `monotone` never overshoots between readings; `linear` joins them straight. |
-| `maxPoints` | `number` | `500` | The most readings kept. Older ones are dropped, since they are off the window and cannot come back — an unbounded feed otherwise grows an array for as long as the screen is open. |
+| `maxPoints` | `number` | `500` | The most readings kept. Older ones are dropped, since they are off the window and cannot come back — an unbounded feed otherwise grows an array for as long as the screen is open. Must be positive and finite. |
 | `aspectRatio` | `number` | `2` | Width ÷ height of the plot. |
 | `status` | `LiveLineChartStatus` | `'ready'` | `loading` draws a flat placeholder and holds the clock. |
 | `momentumColors` | `LiveLineMomentumColors` | — | Colour per direction. Left out, the chart draws in one hue throughout. |
@@ -350,6 +350,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 The y-axis follows what is *visible*, not everything kept. A spike that has scrolled off the left edge stops holding the axis open, so a feed that settles is not left flat against the bottom of a plot scaled for something that happened a minute ago. Pass `yDomain` to fix it instead.
 
+The chart owns one canonical buffer: non-finite readings are ignored, out-of-order timestamps are sorted, and the last reading at a duplicate timestamp replaces the earlier one. `maxPoints` is applied after that normalization, so a controlled replacement or a smaller limit cannot leave a stale point selected.
 `Tip` draws a dot and nothing else unless `badge` is passed. The badge is a floating card, which is the shape a reader has learnt means they touched something — sitting there unasked it reads as a tooltip that opened by itself. Turn it on for a chart with no header to put the reading in. It hides itself while the crosshair is out either way, so there is never a second card answering a different question.
 
 The visual Header value, axes, Tip badge, crosshair and Tooltip are hidden from the accessibility tree because the chart snapshot already carries their reading. Header action children remain ordinary accessible controls. Existing Header, Tip and Tooltip formatters are reused for the snapshot. It updates when data or state renders, but it is not a live region and does not announce every frame. `Tooltip` read-back remains a touch interaction; `onActivePointChange` reports that interaction but is not an action, so the chart does not claim adjustable controls. Render application errors beside or instead of the chart — `status` models only `loading` and `ready`.
@@ -360,7 +361,7 @@ The tip rides the newest reading rather than the right-hand edge. Pinning it to 
 
 The x-axis is labelled in offsets from now — `-30s`, `-15s`, `now` — rather than clock times. A moving window labelled with wall-clock times rewrites every label on every frame.
 
-The frame callback stops on unmount, on `paused`, on `status="loading"`, and never starts under reduced motion. Nothing else in the library animates without an interaction or a change of data, so a chart left mounted off-screen is worth `paused`.
+The frame callback stops on unmount, while the app is backgrounded, on `paused`, on `status="loading"`, and never starts under reduced motion. Returning to the app synchronizes the window before drawing resumes. Nothing else in the library animates without an interaction or a change of data, so a chart left mounted off-screen is worth `paused`.
 
 ## Public exports
 

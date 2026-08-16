@@ -30,10 +30,10 @@
  * they mean opposite things.
  *
  * The cost is a frame callback for as long as the chart is mounted. It is
- * stopped by `paused`, by `status="loading"` and on unmount, and it is never
- * started when the platform asks for reduced motion — in that case the window
- * advances as each point arrives instead, which is the same picture sampled
- * less often.
+ * stopped by `paused`, by `status="loading"`, while the app is backgrounded
+ * and on unmount, and it is never started when the platform asks for reduced
+ * motion — in that case the window advances as each point arrives instead,
+ * which is the same picture sampled less often.
  *
  * Screen readers receive one image-role snapshot: its name, current or
  * selected value, direction, time window and paused state. It changes when the
@@ -63,7 +63,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent, type ViewProps } from 'react-native';
+import {
+  AppState,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+  type ViewProps,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -100,6 +106,12 @@ import {
 } from '../../utils/chart';
 import { cn } from '../../utils/cn';
 import { liveLineAccessibility } from './live-line-accessibility';
+import {
+  liveLineClockRuns,
+  normalizeLiveLinePoints,
+  normalizeLiveLineWindow,
+  reconcileLiveLineActivePoint,
+} from './live-line-lifecycle';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -239,9 +251,9 @@ export interface LiveLineChartProps extends ViewProps {
   accessibilityLabel?: string;
   /** Additional guidance after the snapshot. No gesture is invented for it. */
   accessibilityHint?: string;
-  /** The readings so far, oldest first. Append to it as they arrive. */
+  /** The readings so far. Invalid values are dropped and timestamps are ordered. */
   data: LiveLinePoint[];
-  /** How much time the plot spans, in seconds. */
+  /** How much time the plot spans, in seconds. Invalid values use 30. */
   window?: number;
   /** Freeze the window where it is. The readings still arrive; the clock stops. */
   paused?: boolean;
@@ -254,7 +266,7 @@ export interface LiveLineChartProps extends ViewProps {
   /**
    * The most readings kept. Older ones are dropped, since they are off the
    * window and cannot come back — an unbounded feed otherwise grows an array
-   * for as long as the screen is open.
+   * for as long as the screen is open. Must be positive and finite.
    */
   maxPoints?: number;
   /** Width ÷ height of the plot. */
@@ -307,12 +319,13 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
     const domainMax = useSharedValue(0);
     const activeTime = useSharedValue(-1);
     const reducedMotion = useReducedMotion();
+    const [appState, setAppState] = useState(AppState.currentState ?? 'active');
     // Stripped of punctuation: `useId` returns something like `:r1:`, and a
     // colon inside a `url(#…)` reference does not resolve — which in RN SVG is
     // a clip that silently does nothing rather than an error.
     const clipId = `panelui-live-clip-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
-    const windowMs = Math.max(windowSeconds, 1) * 1000;
+    const windowMs = normalizeLiveLineWindow(windowSeconds) * 1000;
     const loading = status === 'loading';
 
     const hasYAxis = useMemo(() => {
@@ -367,7 +380,7 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
      * the one chart nobody bounded to be the one left running overnight.
      */
     const points = useMemo(
-      () => (data.length > maxPoints ? data.slice(data.length - maxPoints) : data),
+      () => normalizeLiveLinePoints(data, maxPoints),
       [data, maxPoints]
     );
 
@@ -375,6 +388,11 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
       times.value = points.map((point) => point.time);
       values.value = points.map((point) => point.value);
     }, [points, times, values]);
+
+    useEffect(() => {
+      const subscription = AppState.addEventListener('change', setAppState);
+      return () => subscription.remove();
+    }, []);
 
     const liveLatest = points.length ? points[points.length - 1]! : null;
 
@@ -438,7 +456,7 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
       now.value = Date.now();
     }, false);
 
-    const running = !paused && !loading && !reducedMotion;
+    const running = liveLineClockRuns({ paused, loading, reducedMotion, appState });
 
     useEffect(() => {
       frame.setActive(running);
@@ -455,6 +473,13 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
       if (paused) return;
       now.value = Date.now();
     }, [running, paused, points, now]);
+
+    // A frame callback is suspended with the app. Land on the wall clock as
+    // soon as it becomes active instead of showing the backgrounded window for
+    // one frame and relying on the platform to schedule a callback promptly.
+    useEffect(() => {
+      if (appState === 'active' && !paused) now.value = Date.now();
+    }, [appState, paused, now]);
 
     useImperativeHandle(
       ref,
@@ -517,6 +542,13 @@ const LiveLineChartRoot = forwardRef<LiveLineChartHandle, LiveLineChartProps>(
       },
       [onActivePointChange]
     );
+
+    useEffect(() => {
+      const next = reconcileLiveLineActivePoint(activePoint, points);
+      if (next === activePoint) return;
+      if (!next) activeTime.value = -1;
+      setActivePoint(next);
+    }, [activePoint, points, activeTime, setActivePoint]);
 
     const onLayout = (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
@@ -1097,6 +1129,14 @@ function LiveLineChartTooltip({ formatValue, className }: LiveLineChartTooltipPr
       setActivePoint(Number.isFinite(time) && time > 0 ? { time, value } : null);
     },
     [setActivePoint]
+  );
+
+  useEffect(
+    () => () => {
+      activeTime.value = -1;
+      setActivePoint(null);
+    },
+    [activeTime, setActivePoint]
   );
 
   const pan = useMemo(() => {
