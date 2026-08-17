@@ -9,6 +9,84 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.73.0] — 2026-08-17
+
+### Added
+
+- **`Timeline` runs sideways.** `orientation="horizontal"` lays the items out as columns on a
+  rail wider than the screen, swiped through rather than scrolled down. The component used to
+  rule this out on the grounds that each item would get a fifth of a phone's width — which holds
+  only if the rail has to fit, and it does not. A column takes the width its contents need and an
+  item carrying nothing collapses to a tick, so a quiet stretch of years compresses while a busy
+  one keeps its room. `Timeline.Item` takes a `width` to override that, `snap` lands a flick on a
+  column rather than between two, and both the snapping and the fade at the edges are dropped
+  under reduced motion. Vertical is untouched and stays the default.
+
+- **`Plot.Rule` draws down the plot as well as across it.** Pass `x` for a vertical rule at a row
+  — the release the numbers either side are being read against — and `strokeWidth`, `dashed`,
+  `opacity`, `labelPlacement` and `labelClassName` for how it looks. `color` now reaches the
+  caption too, so a rule and its name cannot end up disagreeing.
+
+- **`Plot` takes `nice`.** An axis derived from the data ends where the data ended, which is how a
+  chart comes to be labelled 34,650. `nice` rounds the derived ends out to a step of 1, 2 or 5
+  times a power of ten. It only widens, and a pinned end is left where it was put.
+
+- **`Plot.Bars` takes `baseline`.** Columns grow from zero unless you move it, for a chart showing
+  movement against a reference rather than size from zero.
+
+### Changed
+
+- **`Planner` rings today's cell.** Today was marked by colouring the day number and nothing else,
+  which is a small signal on a grid of forty-two tinted tiles — and which day it is now is the
+  question a month view is opened to answer. Today rings the tile and the open day fills it: two
+  channels rather than two rings, so a day that is both keeps the ring over the fill. Every cell
+  reserves the ring's width whether it draws one or not, so nothing shifts by a point when it is
+  picked.
+
+### Fixed
+
+- **Charts drew nothing on Android.** `LineChart` rendered its axes and labels but never its line
+  or area. The reveal is a rect inside a clip path whose width was supplied only by an animated
+  prop, and animated props on an element inside `Defs` do not reach the native clip on every
+  platform — leaving that rect with no width at all, an empty clip, and every mark inside it
+  invisible while the axes, which sit outside it, drew normally. The width is now declared as well
+  as animated, so the reveal still plays where it lands and the fallback is a chart drawn whole
+  rather than a chart drawn nowhere. `Plot`, `AreaChart`, `HeatmapChart` and `HexChart` shared the
+  pattern and are fixed with it. ([#148](https://github.com/panel-ui/PanelUI/issues/148))
+
+- **`Plot`'s reference rule was close to invisible.** It drew in the muted foreground, then took a
+  hardcoded half opacity on top of that, and captioned itself with muted text at the smallest
+  size. A target nobody can read is a target the chart is not stating. It now draws at full
+  strength, and `dashed` rather than faintness is what keeps it from being mistaken for a series.
+
+- **`Plot.Area` sat half a slice off from the marks above it** on any plot that also carried
+  columns — it ignored the x scale where the line and dots did not. **`Plot.Line` silently dropped
+  `curve`** on a band scale, which is every combination chart. Both now go through the same path
+  helpers.
+
+- **Components no longer lose their own behaviour to a forwarded prop.** Ending the rendered
+  element with `{...props}` meant a consumer-supplied `onPress`, `accessibilityRole` or
+  `accessibilityState` replaced the component's rather than composing with it — an `onPress` on
+  `Accordion.Trigger` stopped the accordion opening. Fixed across `Accordion`, `Breadcrumb`,
+  `Button`, `Carousel`, `Chip`, `Collapsible`, `Fab`, `Flow`, `Frame`, `GridItem`, `Item`,
+  `Marker`, `Menu`, `Pagination`, `Panelside`, `Post`, `Table`, `ToggleButton` and `Tree`. Thanks
+  to [@danestves](https://github.com/danestves).
+
+- **`Marquee` no longer wedges on a bad number.** A non-finite `speed` or `spacing` reached a
+  Reanimated timing, which takes it as a frame that never resolves. Invalid input now falls back
+  to the default or pauses. Thanks to [@danestves](https://github.com/danestves).
+
+- **Workspace typechecks run against source.** The apps resolved `panelui-native` from the
+  gitignored `lib/` output, so a clean checkout failed `npm run typecheck` until the library had
+  been built. Thanks to [@danestves](https://github.com/danestves).
+
+### Docs
+
+- **The page tree moved to the right of the documentation.**
+
+- **`Marquee` gained the two versions it was missing** — a wall of customer logos and a vertical
+  feed of post cards — plus a preview recording on the page.
+
 ## [0.72.0] — 2026-08-17
 
 ### Added
