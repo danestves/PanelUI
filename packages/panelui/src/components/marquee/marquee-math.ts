@@ -1,3 +1,17 @@
+/**
+ * The arithmetic behind the loop, kept out of the component so it can be tested
+ * without rendering one.
+ *
+ * Every value here reaches a Reanimated timing or a layout offset, and both
+ * treat `NaN` and `Infinity` as a frame that never resolves rather than as an
+ * error. A marquee handed a bad number should hold still, not wedge — so the
+ * guards live at the boundary, once, instead of at each use.
+ */
+
+/**
+ * Points per second. Slow enough that a word stays readable as it crosses,
+ * which is the speed a ticker is actually for.
+ */
 export const DEFAULT_MARQUEE_SPEED = 40;
 
 export function normalizeMarqueeSpeed(value: number): number {

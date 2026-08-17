@@ -68,10 +68,6 @@ import {
   normalizeMarqueeSpeed,
 } from './marquee-math';
 
-/**
- * Points per second. Slow enough that a word stays readable as it crosses,
- * which is the speed a ticker is actually for.
- */
 export type MarqueeDirection = 'horizontal' | 'vertical';
 
 export interface MarqueeProps extends Omit<ViewProps, 'children'> {
