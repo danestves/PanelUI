@@ -15,7 +15,9 @@ test('measured decorators pad the field on the logical side', async () => {
   assert.match(inputGroup, /paddingEnd: group\.suffixWidth/);
   assert.doesNotMatch(inputGroup, /padding(?:Left|Right):/);
 
-  assert.match(input, /paddingStart: startWidth/);
-  assert.match(input, /paddingEnd: endWidth/);
+  assert.match(input, /inputContentPadding\(startWidth, !!startContent\)/);
+  assert.match(input, /inputContentPadding\(endWidth, !!endContent\)/);
+  assert.match(input, /paddingStart: startPadding/);
+  assert.match(input, /paddingEnd: endPadding/);
   assert.doesNotMatch(input, /padding(?:Left|Right):/);
 });

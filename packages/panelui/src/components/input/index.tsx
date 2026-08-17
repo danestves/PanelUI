@@ -59,6 +59,7 @@ import { IconColorProvider } from '../../icons';
 import { KeyboardAvoider } from '../../primitives/keyboard-avoider';
 import { Text, textChildren } from '../../primitives/text';
 import { Label } from '../label';
+import { inputContentPadding } from './input-content-padding';
 
 /** Long enough to read as a transition, short enough not to lag a fast tab. */
 const FOCUS_DURATION = 150;
@@ -303,6 +304,9 @@ export const Input = forwardRef<TextInput, InputProps>(
       setEndWidth(event.nativeEvent.layout.width);
     }, []);
 
+    const startPadding = inputContentPadding(startWidth, !!startContent);
+    const endPadding = inputContentPadding(endWidth, !!endContent);
+
     /*
      * The content is quieter than the value. An icon at the same weight as the
      * text reads as part of what was typed, and the placeholder colour is
@@ -325,8 +329,8 @@ export const Input = forwardRef<TextInput, InputProps>(
           borderStyle,
           // Only the side that has content, and only once it has been
           // measured — a 0 here would wipe out the field's own padding.
-          startWidth ? { paddingStart: startWidth } : null,
-          endWidth ? { paddingEnd: endWidth } : null,
+          startPadding ? { paddingStart: startPadding } : null,
+          endPadding ? { paddingEnd: endPadding } : null,
           // Caller styles come last so InputGroup can pad the field around its
           // decorators, but never last enough to drop the animated border.
           style,
