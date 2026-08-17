@@ -328,6 +328,7 @@ const BreadcrumbEllipsis = forwardRef<View, BreadcrumbEllipsisProps>(
       return (
         <View
           ref={ref}
+          {...(props as ViewProps)}
           accessibilityLabel="More"
           className={cn('h-5 items-center justify-center px-0.5', className)}
         >
@@ -339,12 +340,12 @@ const BreadcrumbEllipsis = forwardRef<View, BreadcrumbEllipsisProps>(
     return (
       <AnimatedPressable
         ref={ref}
+        {...props}
         accessibilityRole="button"
         accessibilityLabel="Show more"
         pressScale={0.92}
         onPress={onPress}
         className={cn('h-5 items-center justify-center px-0.5', className)}
-        {...props}
       >
         {glyph}
       </AnimatedPressable>
