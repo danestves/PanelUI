@@ -283,7 +283,7 @@ The extended form, in each of the three corners it can take.
 | `extended` | `boolean` | `false` | Spell the action out beside the glyph. |
 | `placement` | `FabPlacement` | `'bottom-right'` | Pin it over the content, in a corner. Left out, it is an ordinary button in the flow — which is what you want inside a `Fab.Group`, or when the screen already has somewhere for it to sit. |
 | `offset` | `number` | `DEFAULT_OFFSET` | Distance from the edges when `placement` is set, in points. |
-| `onPress` | `() => void` | — |  |
+| `style` | `ViewProps['style']` | — | Placement-aware view style. Press-state styling belongs in `className`. |
 | `disabled` | `boolean` | `false` |  |
 | `haptics` | `boolean` | `false` | A tick on press. Off by default — needs the optional `expo-haptics`, and is silent without it. |
 | `accessibilityLabel` | `string` | — | Required for an icon-only button. A lone glyph reads out as nothing. |
@@ -352,6 +352,10 @@ The whole dial runs off a single shared value, and each action works out its own
 ### The trigger turns rather than swapping
 
 `rotateOnOpen` gives the glyph a quarter circle while the dial is up. That is doing real work when the glyph is a plus: the same mark becomes a cross, so the button says *this closes now* without a second icon to swap in. Turn it off for a glyph that means something at one angle only.
+
+### Press behavior composes with the button
+
+`Fab` forwards the ordinary animated Pressable controls such as `hitSlop`, `onLongPress`, `pressOpacity`, and the native press event passed to `onPress`. Its button role, disabled state, haptic tick, and primary press handler remain owned by the component. Use `className` for pressed-state styling; `style` remains a placement-aware view style so an absolutely positioned Fab keeps one deterministic anchor.
 
 ## Public exports
 
