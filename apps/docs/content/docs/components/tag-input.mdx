@@ -208,7 +208,7 @@ Every tag is trimmed, and empty text is never committed — so a trailing comma 
 
 ### Backspace asks first
 
-Backspace on an empty field marks the last tag rather than taking it: the tag turns `destructive`, and a second backspace removes it. A held backspace repeats, and a field that deleted on the first one would empty itself in the time it takes to notice — the mark is the beat that lets you stop. Typing anything, or leaving the field, takes the mark off again.
+Backspace on an empty field marks the last tag rather than taking it: the tag turns `destructive`, and a second backspace removes it. A held backspace repeats, and a field that deleted on the first one would empty itself in the time it takes to notice — the mark is the beat that lets you stop. Typing anything, or leaving the field, takes the mark off again. A controlled `value` replacement or reorder also clears it, so a mark armed for the old list can never remove a tag that arrived in its place.
 
 [Combobox](/docs/components/combobox) in `multiple` mode does the same with its chips, so the reflex carries between the two.
 
