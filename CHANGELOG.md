@@ -9,6 +9,33 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.72.0] — 2026-08-17
+
+### Added
+
+- **`SearchBar`** — a search field with the two controls an ordinary field does not have. A ✕
+  inside the field clears the query without dismissing the keyboard, because emptying a query is
+  usually the start of the next one; a Cancel button beside it is the control that ends the
+  search. `cancel="focus"` slides Cancel in while the field is being edited and folds it away
+  again after, so the row is only as wide as the search when nobody is searching.
+
+  The ✕ is drawn by the component rather than left to the platform's `clearButtonMode`, which
+  exists on iOS only, cannot be labelled for a screen reader and cannot be swapped for a spinner
+  while results are in flight. Its glyph is 24 points and its touch box 48, made up with slop so
+  the field keeps its height.
+
+  `debounce` holds `onDebouncedChange` until typing pauses, so a network search runs once per
+  pause instead of once per letter. `onChangeText` still fires on every keystroke — a controlled
+  field that lags its own input is unusable — and the return key spends the pending pause rather
+  than waiting it out.
+
+### Fixed
+
+- **`InputGroup` pads its field on the logical side.** The prefix and suffix are inset with
+  `start-0`/`end-0`, so Yoga moves them to the other edge under `Direction dir="rtl"`, but their
+  measured width was applied as physical left/right padding and stayed where it was written —
+  leaving the value running underneath the decorator in a right-to-left subtree.
+
 ## [0.71.0] — 2026-08-16
 
 ### Added
