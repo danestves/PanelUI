@@ -29,8 +29,33 @@ export default function Layout({ children }: { children: ReactNode }) {
        */
       sidebar={{ collapsible: false, prefetch: false }}
       tabMode="navbar"
+      containerProps={{ style: { gridTemplate: PAGE_TREE_RIGHT } }}
     >
       {children}
     </DocsLayout>
   );
 }
+
+/*
+ * The page tree on the right, the table of contents on the left.
+ *
+ * Notebook lays the page out as a five-column grid — gutter, sidebar, main,
+ * toc, gutter — and there is no prop for which side the tree goes on, so this
+ * is the same template with the two outer content columns swapped. The layout
+ * spreads `containerProps.style` after its own, which is what makes overriding
+ * it here supported rather than a fight with the component.
+ *
+ * `sidebar` still spans into the gutter beside it, as it did on the left: that
+ * span is what lets the column bleed to the edge of the window instead of
+ * stopping at the content width. The header keeps the middle three columns, so
+ * it stays put whichever side the tree is on.
+ *
+ * The aside inside that area pins itself to the start edge; `#nd-sidebar` in
+ * global.css turns it around to match. Both halves have to move together.
+ */
+const PAGE_COLUMN =
+  'calc(var(--fd-layout-width,97rem) - var(--fd-sidebar-col) - var(--fd-toc-width))';
+
+const PAGE_TREE_RIGHT = `". header header header ."
+". toc-popover toc-popover sidebar sidebar"
+". toc main sidebar sidebar" 1fr / minmax(min-content, 1fr) var(--fd-toc-width) minmax(0, ${PAGE_COLUMN}) var(--fd-sidebar-col) minmax(min-content, 1fr)`;

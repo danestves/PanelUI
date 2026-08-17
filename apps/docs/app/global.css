@@ -409,6 +409,22 @@ body {
  * bar. Fumadocs ships the structure; these override only its colour choices.
  */
 #nd-sidebar {
+  /*
+   * The page tree sits on the right of the page, and the grid area it lands in
+   * is set on the layout's container.
+   *
+   * These two lines are the other half of that. The aside is absolutely
+   * positioned inside its area and pinned to the *start* edge with its contents
+   * pushed to the end — correct for a column on the left, and backwards for one
+   * on the right, where it would leave the list floating against the middle of
+   * the page with a gap to the window. Pinned to the end edge and aligned to
+   * start instead, the list sits against the right margin the way it sat
+   * against the left.
+   */
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+  align-items: flex-start;
+
   /* Group headings — "Sections", "Components". */
   & p {
     font-size: 0.75rem;
