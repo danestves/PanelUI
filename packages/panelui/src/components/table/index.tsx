@@ -414,10 +414,10 @@ const TableRow = forwardRef<View, TableRowProps>(
       return (
         <View
           ref={ref}
+          {...(props as ViewProps)}
           role="row"
           accessibilityState={{ disabled: !!disabled, selected: !!selected }}
           className={classes}
-          {...(props as ViewProps)}
         >
           {cells}
         </View>
@@ -427,6 +427,7 @@ const TableRow = forwardRef<View, TableRowProps>(
     return (
       <AnimatedPressable
         ref={ref}
+        {...props}
         // A row you can act on is a button first: announcing it as a row would
         // hide the fact that it does anything.
         accessibilityRole="button"
@@ -434,7 +435,6 @@ const TableRow = forwardRef<View, TableRowProps>(
         disabled={disabled}
         onPress={onPress}
         className={classes}
-        {...props}
       >
         {cells}
       </AnimatedPressable>
