@@ -1412,6 +1412,7 @@ function PanelsideTrigger({
   className,
   label = 'Open navigation panel',
   children,
+  onPress,
   ...props
 }: PanelsideTriggerProps) {
   const { toggle, docked } = usePanelsideContext('Panelside.Trigger');
@@ -1426,6 +1427,7 @@ function PanelsideTrigger({
     return cloneElement(children, {
       onPress: (...args: unknown[]) => {
         children.props.onPress?.(...args);
+        onPress?.(...(args as Parameters<NonNullable<PressableProps['onPress']>>));
         toggle();
       },
     });
@@ -1433,11 +1435,14 @@ function PanelsideTrigger({
 
   return (
     <AnimatedPressable
-      onPress={toggle}
+      {...props}
+      onPress={(event) => {
+        onPress?.(event);
+        toggle();
+      }}
       className={cn('h-10 w-10 items-center justify-center rounded-full', className)}
       accessibilityRole="button"
       accessibilityLabel={label}
-      {...props}
     >
       <MenuIcon size={20} color={color} />
     </AnimatedPressable>
