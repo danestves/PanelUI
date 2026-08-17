@@ -43,6 +43,11 @@ import { StarIcon } from '../../icons';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
+import {
+  normalizeRatingMax,
+  normalizeRatingPrecision,
+  normalizeRatingValue,
+} from './rating-inputs';
 
 /** Springs the fill onto its resting value after a tap or the end of a drag. */
 const SPRING = { damping: 18, stiffness: 220, mass: 0.6 } as const;
@@ -197,8 +202,8 @@ export const Rating = forwardRef<View, RatingProps>(
       rowClassName,
       value: valueProp,
       defaultValue = 0,
-      max = 5,
-      precision = 1,
+      max: maxProp = 5,
+      precision: precisionProp = 1,
       onValueChange,
       onValueCommit,
       readOnly = false,
@@ -213,9 +218,11 @@ export const Rating = forwardRef<View, RatingProps>(
     },
     ref
   ) => {
+    const max = normalizeRatingMax(maxProp);
+    const precision = normalizeRatingPrecision(precisionProp);
     const isControlled = valueProp !== undefined;
-    const [internal, setInternal] = useState(defaultValue);
-    const value = clampJS(isControlled ? valueProp! : internal, 0, max);
+    const [internal, setInternal] = useState(() => normalizeRatingValue(defaultValue, max));
+    const value = normalizeRatingValue(isControlled ? valueProp : internal, max);
 
     const interactive = !readOnly && !disabled;
     const slots = ratingVariants({ size, disabled });
