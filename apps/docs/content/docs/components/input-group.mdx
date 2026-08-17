@@ -158,7 +158,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
-Set `isDecorative` when the decorator is presentation-only: touches fall through to the input and screen readers skip it. Leave it off when it holds something interactive, like a show-password toggle.
+Set `isDecorative` when the decorator is presentation-only: touches fall through to the input and screen readers skip it. Leave it off when it holds something interactive, like a show-password toggle. Prefix and Suffix measurements are removed automatically when decorators unmount, so conditionally rendered adornments do not leave stale input padding.
 
 ## Public exports
 

@@ -11,7 +11,6 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useState,
   type ReactNode,
 } from 'react';
 import {
@@ -23,6 +22,12 @@ import {
 import { tv } from 'tailwind-variants';
 import { Input, type InputProps } from '../input';
 import { textChildren } from '../../primitives/text';
+import {
+  useInputGroupDecoratorMeasurement,
+  useInputGroupMeasurements,
+  type InputGroupDecoratorOwner,
+  type InputGroupDecoratorSide,
+} from './input-group-measurements';
 
 const inputGroupVariants = tv({
   slots: {
@@ -41,8 +46,15 @@ interface InputGroupState {
   isDisabled: boolean;
   prefixWidth: number;
   suffixWidth: number;
-  setPrefixWidth: (width: number) => void;
-  setSuffixWidth: (width: number) => void;
+  measureDecorator: (
+    side: InputGroupDecoratorSide,
+    owner: InputGroupDecoratorOwner,
+    width: number
+  ) => void;
+  removeDecorator: (
+    side: InputGroupDecoratorSide,
+    owner: InputGroupDecoratorOwner
+  ) => void;
 }
 
 const InputGroupContext = createContext<InputGroupState | null>(null);
@@ -61,12 +73,24 @@ export interface InputGroupProps extends ViewProps {
 const InputGroupRoot = forwardRef<View, InputGroupProps>(
   ({ className, isDisabled = false, children, ...props }, ref) => {
     const { root } = inputGroupVariants();
-    const [prefixWidth, setPrefixWidth] = useState(0);
-    const [suffixWidth, setSuffixWidth] = useState(0);
+    const { prefixWidth, suffixWidth, measureDecorator, removeDecorator } =
+      useInputGroupMeasurements();
 
     const value = useMemo<InputGroupState>(
-      () => ({ isDisabled, prefixWidth, suffixWidth, setPrefixWidth, setSuffixWidth }),
-      [isDisabled, prefixWidth, suffixWidth]
+      () => ({
+        isDisabled,
+        prefixWidth,
+        suffixWidth,
+        measureDecorator,
+        removeDecorator,
+      }),
+      [
+        isDisabled,
+        prefixWidth,
+        suffixWidth,
+        measureDecorator,
+        removeDecorator,
+      ]
     );
 
     return (
@@ -97,14 +121,18 @@ function createDecorator(side: 'prefix' | 'suffix') {
     ({ className, isDecorative = false, onLayout, children, ...props }, ref) => {
       const group = useInputGroup();
       const slots = inputGroupVariants({ isDisabled: group?.isDisabled ?? false });
-      const setWidth = side === 'prefix' ? group?.setPrefixWidth : group?.setSuffixWidth;
+      const measure = useInputGroupDecoratorMeasurement(
+        side,
+        group?.measureDecorator,
+        group?.removeDecorator
+      );
 
       const handleLayout = useCallback(
         (event: LayoutChangeEvent) => {
-          setWidth?.(event.nativeEvent.layout.width);
+          measure(event.nativeEvent.layout.width);
           onLayout?.(event);
         },
-        [setWidth, onLayout]
+        [measure, onLayout]
       );
 
       return (

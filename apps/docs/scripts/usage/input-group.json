@@ -12,7 +12,7 @@
     "Input": "The field itself. Accepts all `Input` props.",
     "Suffix": "Trailing decorator, absolutely positioned."
   },
-  "notes": "Set `isDecorative` when the decorator is presentation-only: touches fall through to the input and screen readers skip it. Leave it off when it holds something interactive, like a show-password toggle.",
+  "notes": "Set `isDecorative` when the decorator is presentation-only: touches fall through to the input and screen readers skip it. Leave it off when it holds something interactive, like a show-password toggle. Prefix and Suffix measurements are removed automatically when decorators unmount, so conditionally rendered adornments do not leave stale input padding.",
   "anatomy": "<InputGroup>\n  <InputGroup.Prefix>…</InputGroup.Prefix>\n  <InputGroup.Input />\n  <InputGroup.Suffix>…</InputGroup.Suffix>\n</InputGroup>",
   "examples": [
     {
