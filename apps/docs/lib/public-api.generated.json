@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1105,
+    "exports": 1106,
     "values": 294,
-    "types": 811,
+    "types": 812,
     "modules": 136,
     "components": 111,
     "hooks": 12
@@ -4139,6 +4139,10 @@
           },
           {
             "name": "TimelineTone",
+            "kind": "type"
+          },
+          {
+            "name": "TimelineOrientation",
             "kind": "type"
           }
         ]

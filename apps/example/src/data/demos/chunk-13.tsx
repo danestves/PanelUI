@@ -819,6 +819,103 @@ function TimelineDemo({
   );
 }
 
+/**
+ * A span of years on a rail you swipe through.
+ *
+ * The shape a long history wants. Read top to bottom it is a page nobody
+ * reaches the end of; laid out sideways, a year is a column and the whole run
+ * is one gesture.
+ *
+ * The empty years carry the argument. 2018, 2020, 2021 and 2024 have nothing on
+ * them and collapse to a tick, so a quiet stretch costs a thumb-width instead
+ * of a screen and the years that did something keep their room. Nothing sets a
+ * width here — the columns take it from whether they have content.
+ */
+const LIFELINE = [
+  {
+    year: '2016',
+    age: '0',
+    events: ['First commit, on a train, in a single file.'],
+  },
+  {
+    year: '2017',
+    age: '1',
+    events: [
+      'Rewrote the layout engine after the first real app hit sixty screens.',
+      'Ten components, all of them buttons in disguise.',
+    ],
+  },
+  { year: '2018', age: '2', events: [] },
+  {
+    year: '2019',
+    age: '3',
+    events: [
+      'Moved the animations onto the UI thread and stopped apologising for the list.',
+    ],
+  },
+  { year: '2020', age: '4', events: [] },
+  { year: '2021', age: '5', events: [] },
+  {
+    year: '2022',
+    age: '6',
+    events: [
+      'Design tokens became one file, and dark mode stopped being a fork.',
+      'The docs started generating themselves from the source.',
+    ],
+  },
+  {
+    year: '2023',
+    age: '7',
+    events: ['Charts arrived — twelve of them, all on one scale engine.'],
+  },
+  { year: '2024', age: '8', events: [] },
+  {
+    year: '2025',
+    age: '9',
+    events: [
+      'The registry shipped, so a component could be copied instead of installed.',
+    ],
+  },
+];
+
+function LifelineDemo() {
+  return (
+    <View className="flex-1 justify-center">
+      <View className="gap-1 px-5 pb-8">
+        <Text size="sm" muted>
+          Swipe
+        </Text>
+        <Text size="xl" weight="semibold">
+          Ten years of it
+        </Text>
+      </View>
+
+      <Timeline orientation="horizontal" value={LIFELINE.length - 1} className="pl-5">
+        {LIFELINE.map((entry, index) => (
+          <Timeline.Item
+            key={entry.year}
+            step={index}
+            last={index === LIFELINE.length - 1}
+          >
+            <Timeline.Aside>
+              <Timeline.Meta>{entry.age}</Timeline.Meta>
+              <Timeline.Date>{entry.year}</Timeline.Date>
+            </Timeline.Aside>
+            <Timeline.Indicator />
+            <Timeline.Content>
+              {entry.events.map((event) => (
+                <Timeline.Description key={event} className="pb-3">
+                  {event}
+                </Timeline.Description>
+              ))}
+            </Timeline.Content>
+          </Timeline.Item>
+        ))}
+      </Timeline>
+    </View>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /* Tree                                                                       */
 /* -------------------------------------------------------------------------- */
@@ -1320,6 +1417,14 @@ export const ENTRIES: ComponentEntry[] = [
       { label: 'Studio feed', render: () => <StudioFeedDemo /> },
       { label: 'Ledger', render: () => <LedgerDemo /> },
       { label: 'Handoff', render: () => <HandoffDemo /> },
+      {
+        label: 'A decade, sideways',
+        id: 'horizontal',
+        fullPage: true,
+        description:
+          'Years as columns on a rail wider than the screen. Quiet years collapse to a tick; a flick lands on a column.',
+        render: () => <LifelineDemo />,
+      },
     ],
   },
 {

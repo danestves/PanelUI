@@ -11,8 +11,18 @@
  * attribute selectors for a stylesheet to key off. `Steps` resolves its states
  * the same way, so the two read as siblings.
  *
- * Vertical only — a horizontal timeline gives each item roughly a fifth of a
- * phone's width, which is not enough for a date and a title.
+ * ## Two orientations
+ *
+ * Vertical is the default and the ordinary case. Horizontal lays the items out
+ * as columns on a rail that runs off the side of the screen and is swiped
+ * through, which is the arrangement a long span of time wants: a decade of
+ * entries read top to bottom is a page nobody reaches the end of.
+ *
+ * The objection to a horizontal timeline is that each item gets a fifth of a
+ * phone's width, which will not hold a date and a title. The answer is that it
+ * does not have to fit — the rail is wider than the screen, and a column takes
+ * the width its contents need. An item with nothing on it collapses to a tick,
+ * so a quiet stretch compresses and a busy one keeps its room.
  *
  * ```tsx
  * <Timeline variant="icon" value={2}>
@@ -34,13 +44,23 @@
  * ```
  */
 import {
+  Children,
   createContext,
   forwardRef,
+  isValidElement,
   useContext,
   useMemo,
   type ReactNode,
 } from 'react';
-import { View, type Text as RNText, type ViewProps } from 'react-native';
+import { ScrollView, View, type Text as RNText, type ViewProps } from 'react-native';
+import Animated, {
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
@@ -49,6 +69,49 @@ import { Text, type TextProps, textChildren } from '../../primitives/text';
 export type TimelineVariant = 'dot' | 'icon' | 'numbered' | 'card' | 'compact';
 /** Semantic colour for a single event, independent of progress. */
 export type TimelineTone = 'default' | 'info' | 'success' | 'warning' | 'danger';
+/** Which way the sequence runs. */
+export type TimelineOrientation = 'vertical' | 'horizontal';
+
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+
+/*
+ * Horizontal geometry.
+ *
+ * The rail has to land on exactly the same line in every column, and the
+ * simplest way to guarantee that is to make the band above it a fixed height
+ * rather than to position the rail against measured content. So the aside is
+ * `HORIZONTAL_RAIL_TOP` tall in every column, the rail is drawn once across the
+ * whole track at that offset, and each column's tick is pulled up by half its
+ * own height to sit centred on it.
+ */
+const HORIZONTAL_RAIL_TOP = 64;
+const HORIZONTAL_TICK_HEIGHT = 10;
+
+/** A column with something to say, and one with nothing. */
+const HORIZONTAL_WIDE = 268;
+const HORIZONTAL_NARROW = 76;
+
+/**
+ * How wide a column is: what it was given, else what its contents ask for.
+ *
+ * Read by the item to size itself and by the root to build the snap offsets, so
+ * it lives here rather than in either — the two disagreeing would put every
+ * snap point half a column out.
+ */
+function itemWidth(props: TimelineItemProps): number {
+  if (typeof props.width === 'number') return props.width;
+
+  let filled = false;
+  Children.forEach(props.children, (child) => {
+    if (filled || !isValidElement(child)) return;
+    const displayName = (child.type as { displayName?: string })?.displayName;
+    if (displayName !== 'Timeline.Content') return;
+    const inner = (child.props as { children?: ReactNode }).children;
+    if (inner !== undefined && inner !== null && inner !== false) filled = true;
+  });
+
+  return filled ? HORIZONTAL_WIDE : HORIZONTAL_NARROW;
+}
 
 /** Variants whose node is a filled disc rather than an outlined ring. */
 const SOLID_VARIANTS: TimelineVariant[] = ['dot', 'card'];
@@ -107,11 +170,29 @@ const timelineVariants = tv({
       true: { separator: 'bg-primary' },
       false: { separator: 'bg-muted' },
     },
+    /*
+     * Horizontal turns the item from a row into a column and the rail from a
+     * line down the side into a line across the top. The aside is a fixed
+     * height because that height *is* where the rail sits — see
+     * HORIZONTAL_RAIL_TOP — and it is left-aligned rather than right, since a
+     * column reads from its own left edge rather than towards a rail beside it.
+     */
+    orientation: {
+      vertical: {},
+      horizontal: {
+        item: 'w-auto shrink-0 flex-col gap-0 pr-6',
+        aside: 'w-auto items-start justify-end gap-1 pb-2 pt-0',
+        rail: 'w-full items-start',
+        body: 'w-auto flex-none pb-0 pt-5',
+        title: 'text-sm',
+      },
+    },
   },
   defaultVariants: {
     variant: 'dot',
     tone: 'default',
     completed: false,
+    orientation: 'vertical',
   },
 });
 
@@ -169,6 +250,13 @@ const TONE_ICON_VAR: Record<TimelineTone, string> = {
 interface TimelineContextValue {
   activeStep: number;
   variant: TimelineVariant;
+  orientation: TimelineOrientation;
+  /** Horizontal only: where the track has been scrolled to, on the UI thread. */
+  scrollX: SharedValue<number>;
+  /** Horizontal only: each column's left edge, indexed by its `step`. */
+  offsets: number[];
+  /** Horizontal only: false when the reader has asked for less movement. */
+  animate: boolean;
 }
 
 interface TimelineItemContextValue {
@@ -199,18 +287,120 @@ export interface TimelineProps extends ViewProps {
   /** Steps at or below this index render as completed. */
   value?: number;
   variant?: TimelineVariant;
+  /**
+   * Which way the sequence runs. `horizontal` lays the items out as columns on
+   * a rail wider than the screen, swiped through rather than scrolled down.
+   */
+  orientation?: TimelineOrientation;
+  /**
+   * Horizontal only: land a flick on a column rather than between two.
+   *
+   * On by default, because the thing being moved between is a column — stopping
+   * halfway shows two half-columns and no whole one.
+   */
+  snap?: boolean;
   children?: ReactNode;
 }
 
 const TimelineRoot = forwardRef<View, TimelineProps>(
-  ({ className, value = 0, variant = 'dot', children, ...props }, ref) => {
-    const { root } = timelineVariants({ variant });
-    const context = useMemo(() => ({ activeStep: value, variant }), [value, variant]);
+  (
+    {
+      className,
+      value = 0,
+      variant = 'dot',
+      orientation = 'vertical',
+      snap = true,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    const horizontal = orientation === 'horizontal';
+    const { root } = timelineVariants({ variant, orientation });
+    const reducedMotion = useReducedMotion();
+    const scrollX = useSharedValue(0);
+    const border = useCSSVariable('--color-border');
+
+    /*
+     * The columns' left edges, from the same width rule the items size
+     * themselves by. These are the snap points, and they are what an item reads
+     * to know how far it is from the reading edge.
+     */
+    const offsets = useMemo(() => {
+      if (!horizontal) return [];
+      const result: number[] = [];
+      let sum = 0;
+      Children.forEach(children, (child) => {
+        if (!isValidElement(child)) return;
+        result.push(sum);
+        sum += itemWidth(child.props as TimelineItemProps);
+      });
+      return result;
+    }, [children, horizontal]);
+
+    const context = useMemo(
+      () => ({
+        activeStep: value,
+        variant,
+        orientation,
+        scrollX,
+        offsets,
+        animate: !reducedMotion,
+      }),
+      [value, variant, orientation, scrollX, offsets, reducedMotion]
+    );
+
+    const onScroll = useAnimatedScrollHandler((event) => {
+      scrollX.value = event.contentOffset.x;
+    });
+
+    if (!horizontal) {
+      return (
+        <TimelineContext.Provider value={context}>
+          <View ref={ref} className={root({ className })} {...props}>
+            {textChildren(children)}
+          </View>
+        </TimelineContext.Provider>
+      );
+    }
 
     return (
       <TimelineContext.Provider value={context}>
         <View ref={ref} className={root({ className })} {...props}>
-          {textChildren(children)}
+          <AnimatedScrollView
+            horizontal
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+            showsHorizontalScrollIndicator={false}
+            decelerationRate="fast"
+            snapToAlignment="start"
+            snapToOffsets={snap ? offsets : undefined}
+          >
+            {/*
+              The track sizes itself to its columns, so the rail stretched
+              between its own left and right edges runs the whole length of the
+              sequence rather than the width of the screen.
+            */}
+            <View className="relative flex-row">
+              <View
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: HORIZONTAL_RAIL_TOP,
+                  borderTopWidth: 1,
+                  // Dashed borders only render at a radius of zero, which this
+                  // has, and the rule is the whole element.
+                  borderStyle: 'dashed',
+                  borderColor: typeof border === 'string' ? border : undefined,
+                }}
+              />
+              {textChildren(children)}
+            </View>
+          </AnimatedScrollView>
         </View>
       </TimelineContext.Provider>
     );
@@ -228,28 +418,88 @@ export interface TimelineItemProps extends ViewProps {
   tone?: TimelineTone;
   /** Set on the final item so its rail stops at the indicator. */
   last?: boolean;
+  /**
+   * Horizontal only: how wide this column is, in points.
+   *
+   * Left out, a column that carries content takes a readable width and one that
+   * carries none collapses to a tick — so a quiet stretch of the sequence
+   * compresses instead of paying full width for nothing. Set it to override
+   * that for a column that needs more or less room than its contents suggest.
+   */
+  width?: number;
   children?: ReactNode;
 }
 
 const TimelineItem = forwardRef<View, TimelineItemProps>(
   (
-    { className, step, completed, tone = 'default', last = false, children, ...props },
+    {
+      className,
+      step,
+      completed,
+      tone = 'default',
+      last = false,
+      width,
+      children,
+      ...props
+    },
     ref
   ) => {
-    const { activeStep, variant } = useTimeline('Timeline.Item');
+    const { activeStep, variant, orientation, scrollX, offsets, animate } =
+      useTimeline('Timeline.Item');
     const isCompleted = completed ?? step <= activeStep;
-    const { item } = timelineVariants({ variant, tone, completed: isCompleted });
+    const { item } = timelineVariants({
+      variant,
+      tone,
+      completed: isCompleted,
+      orientation,
+    });
+    const horizontal = orientation === 'horizontal';
 
     const context = useMemo(
       () => ({ step, completed: isCompleted, tone, showSeparator: !last }),
       [step, isCompleted, tone, last]
     );
 
+    const columnWidth = horizontal
+      ? itemWidth({ step, width, children } as TimelineItemProps)
+      : undefined;
+    const offset = offsets[step] ?? 0;
+
+    /*
+     * A column recedes as it leaves the reading edge, so the one being read is
+     * the one that looks read. The window is a column's own width either side,
+     * which keeps the neighbours legible — this is a timeline, and the value of
+     * it is being able to see what came before and after at once.
+     */
+    const columnStyle = useAnimatedStyle(() => {
+      if (!horizontal || !animate) return { opacity: 1 };
+      const distance = Math.abs(scrollX.value - offset);
+      const window = Math.max(columnWidth ?? HORIZONTAL_WIDE, 1) * 2;
+      return {
+        opacity: interpolate(distance, [0, window], [1, 0.45], 'clamp'),
+      };
+    });
+
+    if (!horizontal) {
+      return (
+        <TimelineItemContext.Provider value={context}>
+          <View ref={ref} className={item({ className })} {...props}>
+            {textChildren(children)}
+          </View>
+        </TimelineItemContext.Provider>
+      );
+    }
+
     return (
       <TimelineItemContext.Provider value={context}>
-        <View ref={ref} className={item({ className })} {...props}>
+        <Animated.View
+          ref={ref}
+          className={item({ className })}
+          style={[{ width: columnWidth }, columnStyle]}
+          {...props}
+        >
           {textChildren(children)}
-        </View>
+        </Animated.View>
       </TimelineItemContext.Provider>
     );
   }
@@ -261,10 +511,28 @@ TimelineItem.displayName = 'Timeline.Item';
  * person. Place it before `Timeline.Indicator`.
  */
 const TimelineAside = forwardRef<View, ViewProps & { className?: string }>(
-  ({ className, ...props }, ref) => {
-    const { variant } = useTimeline('Timeline.Aside');
-    const { aside } = timelineVariants({ variant });
-    return <View ref={ref} className={aside({ className })} {...props} />;
+  ({ className, style, ...props }, ref) => {
+    const { variant, orientation } = useTimeline('Timeline.Aside');
+    const { aside } = timelineVariants({ variant, orientation });
+
+    return (
+      <View
+        ref={ref}
+        className={aside({ className })}
+        /*
+         * Horizontal: this band's height is where the rail lands, so it is
+         * fixed rather than sized to whatever the column happens to put in it.
+         * A column with a longer label would otherwise push its own tick below
+         * everybody else's and the rail would stop being a line.
+         */
+        style={
+          orientation === 'horizontal'
+            ? [{ height: HORIZONTAL_RAIL_TOP }, style]
+            : style
+        }
+        {...props}
+      />
+    );
   }
 );
 TimelineAside.displayName = 'Timeline.Aside';
@@ -284,14 +552,42 @@ export interface TimelineIndicatorProps extends ViewProps {
  */
 const TimelineIndicator = forwardRef<View, TimelineIndicatorProps>(
   ({ className, children, ...props }, ref) => {
-    const { variant } = useTimeline('Timeline.Indicator');
+    const { variant, orientation } = useTimeline('Timeline.Indicator');
     const { step, completed, tone, showSeparator } =
       useTimelineItem('Timeline.Indicator');
     const { rail, indicator, indicatorLabel, separator } = timelineVariants({
       variant,
       tone,
       completed,
+      orientation,
     });
+
+    /*
+     * Horizontal: a tick sitting on the rail, not a node with a connector
+     * running out of it. The rail is already drawn across the whole track by
+     * the root, so what a column owes it is the mark saying where this entry
+     * falls — pulled up by half its height to straddle the line rather than
+     * hang off it.
+     */
+    if (orientation === 'horizontal') {
+      return (
+        <View className={rail()}>
+          <View
+            ref={ref}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            className={indicator({
+              className: `w-px rounded-none ${completed ? 'bg-primary' : 'bg-muted-foreground'} ${className ?? ''}`,
+            })}
+            style={{
+              height: HORIZONTAL_TICK_HEIGHT,
+              marginTop: -HORIZONTAL_TICK_HEIGHT / 2,
+            }}
+            {...props}
+          />
+        </View>
+      );
+    }
 
     // dot/card nodes are small discs with nothing inside, so they keep full
     // saturation — a soft tint at 16px would disappear. Nodes that hold an
@@ -352,9 +648,9 @@ TimelineIndicator.displayName = 'Timeline.Indicator';
  */
 const TimelineContent = forwardRef<View, ViewProps & { className?: string }>(
   ({ className, children, ...props }, ref) => {
-    const { variant } = useTimeline('Timeline.Content');
+    const { variant, orientation } = useTimeline('Timeline.Content');
     const { completed, tone } = useTimelineItem('Timeline.Content');
-    const { body, panel } = timelineVariants({ variant, tone, completed });
+    const { body, panel } = timelineVariants({ variant, tone, completed, orientation });
 
     return (
       <View ref={ref} className={body({ className })} {...props}>
@@ -368,8 +664,8 @@ TimelineContent.displayName = 'Timeline.Content';
 /** Title row: heading on the left, `Timeline.Trailing` on the right. */
 const TimelineHeader = forwardRef<View, ViewProps & { className?: string }>(
   ({ className, ...props }, ref) => {
-    const { variant } = useTimeline('Timeline.Header');
-    const { header } = timelineVariants({ variant });
+    const { variant, orientation } = useTimeline('Timeline.Header');
+    const { header } = timelineVariants({ variant, orientation });
     return <View ref={ref} className={header({ className })} {...props} />;
   }
 );
@@ -378,40 +674,40 @@ TimelineHeader.displayName = 'Timeline.Header';
 /** Wraps a title and anything stacked under it inside the header row. */
 const TimelineHeading = forwardRef<View, ViewProps & { className?: string }>(
   ({ className, ...props }, ref) => {
-    const { variant } = useTimeline('Timeline.Heading');
-    const { heading } = timelineVariants({ variant });
+    const { variant, orientation } = useTimeline('Timeline.Heading');
+    const { heading } = timelineVariants({ variant, orientation });
     return <View ref={ref} className={heading({ className })} {...props} />;
   }
 );
 TimelineHeading.displayName = 'Timeline.Heading';
 
 const TimelineDate = forwardRef<RNText, TextProps>(({ className, ...props }, ref) => {
-  const { variant } = useTimeline('Timeline.Date');
-  const { date } = timelineVariants({ variant });
+  const { variant, orientation } = useTimeline('Timeline.Date');
+  const { date } = timelineVariants({ variant, orientation });
   return <Text ref={ref} className={date({ className })} {...props} />;
 });
 TimelineDate.displayName = 'Timeline.Date';
 
 /** Category line in the aside, coloured by the item's tone. */
 const TimelineLabel = forwardRef<RNText, TextProps>(({ className, ...props }, ref) => {
-  const { variant } = useTimeline('Timeline.Label');
+  const { variant, orientation } = useTimeline('Timeline.Label');
   const { tone } = useTimelineItem('Timeline.Label');
-  const { label } = timelineVariants({ variant, tone });
+  const { label } = timelineVariants({ variant, tone, orientation });
   return <Text ref={ref} className={label({ className })} {...props} />;
 });
 TimelineLabel.displayName = 'Timeline.Label';
 
 /** Muted supporting line — a person's name, a source. */
 const TimelineMeta = forwardRef<RNText, TextProps>(({ className, ...props }, ref) => {
-  const { variant } = useTimeline('Timeline.Meta');
-  const { meta } = timelineVariants({ variant });
+  const { variant, orientation } = useTimeline('Timeline.Meta');
+  const { meta } = timelineVariants({ variant, orientation });
   return <Text ref={ref} className={meta({ className })} {...props} />;
 });
 TimelineMeta.displayName = 'Timeline.Meta';
 
 const TimelineTitle = forwardRef<RNText, TextProps>(({ className, ...props }, ref) => {
-  const { variant } = useTimeline('Timeline.Title');
-  const { title } = timelineVariants({ variant });
+  const { variant, orientation } = useTimeline('Timeline.Title');
+  const { title } = timelineVariants({ variant, orientation });
   return <Text ref={ref} className={title({ className })} {...props} />;
 });
 TimelineTitle.displayName = 'Timeline.Title';
@@ -419,8 +715,8 @@ TimelineTitle.displayName = 'Timeline.Title';
 /** Right-hand slot in the header row — a timestamp, usually. */
 const TimelineTrailing = forwardRef<RNText, TextProps>(
   ({ className, ...props }, ref) => {
-    const { variant } = useTimeline('Timeline.Trailing');
-    const { trailing } = timelineVariants({ variant });
+    const { variant, orientation } = useTimeline('Timeline.Trailing');
+    const { trailing } = timelineVariants({ variant, orientation });
     return <Text ref={ref} className={trailing({ className })} {...props} />;
   }
 );
@@ -428,8 +724,8 @@ TimelineTrailing.displayName = 'Timeline.Trailing';
 
 const TimelineDescription = forwardRef<RNText, TextProps>(
   ({ className, ...props }, ref) => {
-    const { variant } = useTimeline('Timeline.Description');
-    const { content } = timelineVariants({ variant });
+    const { variant, orientation } = useTimeline('Timeline.Description');
+    const { content } = timelineVariants({ variant, orientation });
     return <Text ref={ref} className={content({ className })} {...props} />;
   }
 );
@@ -438,8 +734,8 @@ TimelineDescription.displayName = 'Timeline.Description';
 /** Bordered strip of label/value pairs under a title. */
 const TimelineStats = forwardRef<View, ViewProps & { className?: string }>(
   ({ className, ...props }, ref) => {
-    const { variant } = useTimeline('Timeline.Stats');
-    const { stats } = timelineVariants({ variant });
+    const { variant, orientation } = useTimeline('Timeline.Stats');
+    const { stats } = timelineVariants({ variant, orientation });
     return <View ref={ref} className={stats({ className })} {...props} />;
   }
 );
@@ -453,8 +749,8 @@ export interface TimelineStatProps extends ViewProps {
 
 const TimelineStat = forwardRef<View, TimelineStatProps>(
   ({ className, label, value, ...props }, ref) => {
-    const { variant } = useTimeline('Timeline.Stat');
-    const { statLabel, statValue } = timelineVariants({ variant });
+    const { variant, orientation } = useTimeline('Timeline.Stat');
+    const { statLabel, statValue } = timelineVariants({ variant, orientation });
     return (
       <View ref={ref} className={className} {...props}>
         <Text className={statLabel()}>{label}</Text>

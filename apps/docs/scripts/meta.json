@@ -767,10 +767,11 @@
   ],
   "timeline": [
     "Timeline",
-    "Vertical sequence of events.",
+    "A sequence of events, vertical or swiped sideways.",
     "react native timeline",
     {
-      "category": "data"
+      "category": "data",
+      "updatedIn": "0.73.0"
     }
   ],
   "toast": [

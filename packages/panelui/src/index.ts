@@ -1069,6 +1069,7 @@ export {
   type TimelineStatProps,
   type TimelineVariant,
   type TimelineTone,
+  type TimelineOrientation,
 } from './components/timeline';
 export {
   Toast,

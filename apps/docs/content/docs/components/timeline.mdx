@@ -1,13 +1,16 @@
 ---
 title: Timeline
-description: Vertical sequence of events.
+description: A sequence of events, vertical or swiped sideways.
+status: updated
 ---
 
-A vertical sequence of events.
+A sequence of events, vertical by default.
 
 `value` marks how far along the sequence is; `tone` colours an individual event by kind, independently of that progress.
 
-**Vertical only.** A horizontal timeline gives each item roughly a fifth of a phone's width, which will not hold a date and a title.
+`orientation="horizontal"` lays the items out as columns on a rail wider than the screen, swiped through rather than scrolled down. Reach for it when the span is long enough that read downwards it becomes a page nobody finishes.
+
+**A horizontal timeline scrolls off the side, and that is what buys each column its width.** An item carrying content takes a readable column; an item carrying none collapses to a tick, so a quiet stretch of years compresses instead of paying full width for nothing. Give `Timeline.Item` a `width` to override that.
 
 <Preview
   src="/previews/timeline.jpg"
@@ -83,11 +86,24 @@ npx panelui-cli@latest add timeline
     </Timeline.Content>
   </Timeline.Item>
 </Timeline>
+
+<Timeline orientation="horizontal">
+  <Timeline.Item step={0}>
+    <Timeline.Aside>
+      <Timeline.Meta>…</Timeline.Meta>
+      <Timeline.Date>…</Timeline.Date>
+    </Timeline.Aside>
+    <Timeline.Indicator />
+    <Timeline.Content>
+      <Timeline.Description>…</Timeline.Description>
+    </Timeline.Content>
+  </Timeline.Item>
+</Timeline>
 ```
 
 - **`Timeline.Item`** — One event. `step` is its position, `last` stops the connector.
 - **`Timeline.Aside`** — Right-aligned meta column left of the rail. Place it before the indicator.
-- **`Timeline.Indicator`** — The node on the rail, with the connector below it.
+- **`Timeline.Indicator`** — The node on the rail, with the connector below it. Horizontal, it is a tick on the shared rail and takes no children.
 - **`Timeline.Content`** — Everything right of the rail.
 - **`Timeline.Header`** — Title row: heading left, trailing slot right.
 - **`Timeline.Heading`** — Wraps a title and anything stacked under it inside the header row.
@@ -168,6 +184,33 @@ Tone is set on the item, not the root, so one failed step can stand out in an ot
 </Timeline.Content>
 ```
 
+## Versions
+
+### A decade, sideways
+
+Years as columns on a rail wider than the screen. The empty years carry the argument: they collapse to a tick, so the quiet stretch costs a thumb-width instead of a screen and the years that did something keep their room. Nothing sets a width — the columns take it from whether they have content.
+
+```tsx
+<Timeline orientation="horizontal" value={years.length - 1} className="pl-5">
+  {years.map((entry, index) => (
+    <Timeline.Item key={entry.year} step={index} last={index === years.length - 1}>
+      <Timeline.Aside>
+        <Timeline.Meta>{entry.age}</Timeline.Meta>
+        <Timeline.Date>{entry.year}</Timeline.Date>
+      </Timeline.Aside>
+      <Timeline.Indicator />
+      <Timeline.Content>
+        {entry.events.map((event) => (
+          <Timeline.Description key={event} className="pb-3">
+            {event}
+          </Timeline.Description>
+        ))}
+      </Timeline.Content>
+    </Timeline.Item>
+  ))}
+</Timeline>
+```
+
 ## Variants
 
 ### `variant`
@@ -203,6 +246,17 @@ Tone is set on the item, not the root, so one failed step can stand out in an ot
 <Timeline.Item step={4} tone="danger">…</Timeline.Item>
 ```
 
+### `orientation`
+
+- `vertical` *(default)*
+- `horizontal`
+
+```tsx
+{/* Vertical is the default. Horizontal scrolls off the side of the screen. */}
+<Timeline orientation="vertical">…</Timeline>
+<Timeline orientation="horizontal">…</Timeline>
+```
+
 ## API Reference
 
 ### Timeline
@@ -210,8 +264,10 @@ Tone is set on the item, not the root, so one failed step can stand out in an ot
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `value` | `number` | — | Steps at or below this index render as completed. |
+| `value` | `number` | `0` | Steps at or below this index render as completed. |
 | `variant` | `TimelineVariant` | `dot` |  |
+| `orientation` | `TimelineOrientation` | `vertical` | Which way the sequence runs. `horizontal` lays the items out as columns on a rail wider than the screen, swiped through rather than scrolled down. |
+| `snap` | `boolean` | `true` | Horizontal only: land a flick on a column rather than between two. On by default, because the thing being moved between is a column — stopping halfway shows two half-columns and no whole one. |
 
 ### Timeline.Item
 
@@ -221,7 +277,8 @@ Tone is set on the item, not the root, so one failed step can stand out in an ot
 | `step` | `number` | — | Position in the sequence, zero-based. |
 | `completed` | `boolean` | `false` | Force the completed state regardless of the timeline's value. |
 | `tone` | `TimelineTone` | `default` | Colours the node and label — for event kind rather than progress. |
-| `last` | `boolean` | — | Set on the final item so its rail stops at the indicator. |
+| `last` | `boolean` | `false` | Set on the final item so its rail stops at the indicator. |
+| `width` | `number` | — | Horizontal only: how wide this column is, in points. Left out, a column that carries content takes a readable width and one that carries none collapses to a tick — so a quiet stretch of the sequence compresses instead of paying full width for nothing. Set it to override that for a column that needs more or less room than its contents suggest. |
 
 ### Timeline.Indicator
 
@@ -235,7 +292,7 @@ Tone is set on the item, not the root, so one failed step can stand out in an ot
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `label` | `string` | — |  |
-| `value` | `string` | — |  |
+| `value` | `string` | `0` |  |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -245,10 +302,18 @@ Colour follows one rule: **progress is solid, event kind is tinted**. An untoned
 
 Icons inside `Timeline.Indicator` inherit a colour that reads against the node, so they stay legible in every theme without a hardcoded value.
 
+### Horizontal
+
+The rail is drawn once across the whole track and every column puts a tick on it. What keeps those ticks on one line is that the band above the rail is a fixed height in every column — so `Timeline.Aside` is where the date and any label go, and a taller label does not push one column's tick below its neighbours'.
+
+A flick lands on a column rather than between two, which is what `snap` is for; turn it off for free scrolling. Columns fade as they leave the reading edge, and the window is wide enough that the neighbours stay legible — being able to see what came before and after at once is most of the reason to draw a timeline at all. With the operating system set to reduce motion the fade is dropped and the rail simply scrolls.
+
+`Timeline.Indicator` takes no children here: the node is a tick on the rail, not a disc with an icon in it, and `variant` does not change that.
+
 ## Public exports
 
 {/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
 
 **Values:** `Timeline`
 
-**Types:** `TimelineProps`, `TimelineItemProps`, `TimelineIndicatorProps`, `TimelineStatProps`, `TimelineVariant`, `TimelineTone`
+**Types:** `TimelineProps`, `TimelineItemProps`, `TimelineIndicatorProps`, `TimelineStatProps`, `TimelineVariant`, `TimelineTone`, `TimelineOrientation`

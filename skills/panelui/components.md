@@ -103,7 +103,7 @@ remember is a guess.
 | `Map` *(alpha)* | Vector map whose basemap is drawn from your theme tokens. | `components/map` |
 | `Planner` | A month of days, each carrying what falls on it. | `components/planner` |
 | `Table` | Rows and columns that stay lined up, with sortable headers. | `components/table` |
-| `Timeline` | Vertical sequence of events. | `components/timeline` |
+| `Timeline` | A sequence of events, vertical or swiped sideways. | `components/timeline` |
 
 ## Charts
 

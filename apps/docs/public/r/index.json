@@ -1719,7 +1719,7 @@
     "kind": "ui",
     "group": "components",
     "stability": "stable",
-    "description": "Vertical sequence of events.",
+    "description": "A sequence of events, vertical or swiped sideways.",
     "registryDependencies": [
       "icons",
       "text"
