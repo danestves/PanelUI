@@ -29,6 +29,23 @@ test('https is allowed through to the network layer', async () => {
   });
 });
 
+test('an https registry cannot redirect source to remote cleartext', async (context) => {
+  context.mock.method(globalThis, 'fetch', async () => ({
+    url: 'http://registry.example.com/r/index.json',
+    status: 200,
+    ok: true,
+    async json() {
+      return [{ name: 'button' }];
+    },
+  }));
+
+  await assert.rejects(fetchIndex('https://registry.example.com/r'), (error) => {
+    assert.ok(error instanceof CliError);
+    assert.match(error.message, /Refusing to fetch components over http/);
+    return true;
+  });
+});
+
 test('loopback over http still works, so local development is not blocked', async () => {
   const server = http.createServer((_request, response) => {
     response.setHeader('content-type', 'application/json');

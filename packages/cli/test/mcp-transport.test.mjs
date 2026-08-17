@@ -11,8 +11,8 @@ function request(id, method, params) {
   return JSON.stringify({ jsonrpc: '2.0', id, method, ...(params ? { params } : {}) });
 }
 
-function run(input) {
-  const server = spawnSync(process.execPath, [cli, 'mcp'], { encoding: 'utf8', input });
+function run(input, args = []) {
+  const server = spawnSync(process.execPath, [cli, 'mcp', ...args], { encoding: 'utf8', input });
   assert.equal(server.status, 0, server.stderr);
   assert.equal(server.stderr, '');
   return server.stdout
@@ -21,6 +21,20 @@ function run(input) {
     .filter(Boolean)
     .map((line) => JSON.parse(line));
 }
+
+test('registry-reading tools reject remote cleartext before fetching', () => {
+  const [reply] = run(
+    `${request(9, 'tools/call', {
+      name: 'panelui_list_components',
+      arguments: {},
+    })}\n`,
+    ['--registry', 'http://registry.example.com/r']
+  );
+
+  assert.equal(reply.id, 9);
+  assert.equal(reply.result.isError, true);
+  assert.match(reply.result.content[0].text, /Refusing to fetch components over http/);
+});
 
 test('initialization negotiates unsupported versions to the server version', () => {
   const [reply] = run(

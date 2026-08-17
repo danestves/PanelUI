@@ -25,7 +25,7 @@ function isLoopback(hostname) {
  * anyone on the path an edit of that source, which is why it is refused
  * anywhere but loopback.
  */
-function assertTransport(url) {
+export function assertRegistryTransport(url) {
   let parsed;
   try {
     parsed = new URL(url);
@@ -42,8 +42,8 @@ function assertTransport(url) {
   );
 }
 
-async function fetchJson(url) {
-  assertTransport(url);
+async function fetchResponse(url) {
+  assertRegistryTransport(url);
 
   let response;
   try {
@@ -55,12 +55,27 @@ async function fetchJson(url) {
     );
   }
 
+  // `fetch` follows redirects by default. Validate the effective URL as well
+  // as the requested one so an HTTPS registry cannot redirect component
+  // source onto a cleartext remote connection.
+  if (response.url) assertRegistryTransport(response.url);
+
   if (response.status === 404) return null;
   if (!response.ok) {
     fail(`Registry returned ${response.status} for ${url}.`);
   }
 
-  return response.json();
+  return response;
+}
+
+export async function fetchJson(url) {
+  const response = await fetchResponse(url);
+  return response?.json() ?? null;
+}
+
+export async function fetchText(url) {
+  const response = await fetchResponse(url);
+  return response?.text() ?? null;
 }
 
 export async function fetchIndex(registry) {
