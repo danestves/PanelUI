@@ -49,7 +49,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Pressable, View, type Text as RNText, type ViewProps } from 'react-native';
+import {
+  Pressable,
+  View,
+  type PressableProps,
+  type Text as RNText,
+  type ViewProps,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -160,14 +166,14 @@ const CollapsibleRoot = forwardRef<View, CollapsibleProps>(
 );
 CollapsibleRoot.displayName = 'Collapsible';
 
-export interface CollapsibleTriggerProps extends ViewProps {
+export interface CollapsibleTriggerProps extends Omit<PressableProps, 'children'> {
   className?: string;
   children?: ReactNode;
 }
 
 /** The pressable header row. Bare strings are wrapped in the title style. */
 const CollapsibleTrigger = forwardRef<View, CollapsibleTriggerProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, children, onPress, ...props }, ref) => {
     const { open, toggle, isDisabled, variant } = useCollapsible('Collapsible.Trigger');
     const { trigger, title } = collapsibleVariants({ variant });
 
@@ -177,9 +183,12 @@ const CollapsibleTrigger = forwardRef<View, CollapsibleTriggerProps>(
         accessibilityRole="button"
         accessibilityState={{ expanded: open, disabled: isDisabled }}
         disabled={isDisabled}
-        onPress={toggle}
         className={trigger({ className })}
         {...props}
+        onPress={(event) => {
+          onPress?.(event);
+          toggle();
+        }}
       >
         {textChildren(children, (text) => (
           <Text className={title()}>{text}</Text>
