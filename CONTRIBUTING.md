@@ -35,9 +35,10 @@ npm install
 | `npm run docs` | Start the documentation site |
 | `npm run docs:generate --workspace=docs` | Regenerate the docs pages and the CLI registry |
 
-`npm run example` needs the library built at least once, since the app imports `panelui-native`
-from the workspace. Run `npm run build` after changing library source, or the app will keep
-compiling against the previous build.
+The example and docs workspaces resolve `panelui-native` directly from `packages/panelui/src`.
+That keeps local typechecks and development on the current source even when the ignored `lib/`
+publish output is missing or was built from an older commit. Run `npm run build` when validating
+the package that will be published; a normal workspace typecheck does not require it.
 
 ### Where things live
 
