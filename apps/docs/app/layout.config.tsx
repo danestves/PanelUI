@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import { GithubStars } from '@/components/github-stars';
+import { LayoutLink } from '@/components/layout-link';
 import { site } from '@/lib/site';
 
 /** Shared nav config for the docs layout and the home layout. */
@@ -33,6 +34,35 @@ export const baseOptions: BaseLayoutProps = {
       </span>
     ),
     url: '/',
+    /*
+     * Components sits on the left, beside the wordmark, rather than in the row
+     * of links on the right.
+     *
+     * `nav.children` is the only left-hand slot either layout offers: the
+     * header renders it inside the same container as the title, while
+     * everything in `links` goes into the `justify-end` group at the other end
+     * of the bar. So this link lives here and not in `links` below — moving it
+     * back means moving it between the two, not flipping a flag.
+     *
+     * It is deliberately not in `links`, which also means it is not in
+     * `menuItems` — the mobile menu would otherwise list it twice, since the
+     * notebook sidebar already renders the page tree it points at.
+     *
+     * `LayoutLink`, not `next/link`: this destination is repeated by the
+     * persistent chrome, and the policy behind that wrapper is what stops every
+     * page in the site prefetching it again.
+     */
+    children: (
+      <LayoutLink
+        href="/docs/components"
+        // ms-6, because the wordmark ends where this begins. The nav title is
+        // its own anchor with no trailing space of its own, so without a margin
+        // the two read as one string.
+        className="ms-6 text-sm text-fd-muted-foreground transition-colors hover:text-fd-accent-foreground max-lg:hidden"
+      >
+        Components
+      </LayoutLink>
+    ),
   },
   /*
    * No `on` here, which means 'all' — and that is what puts these links in the
@@ -50,15 +80,6 @@ export const baseOptions: BaseLayoutProps = {
    */
   links: [
     { type: 'main', text: 'Docs', url: '/docs', active: 'nested-url' },
-    {
-      type: 'main',
-      text: 'Components',
-      // The index, not Button. This link is "show me what there is", and
-      // answering it by dropping the reader into one arbitrary component's
-      // page made them work out the rest from the sidebar.
-      url: '/docs/components',
-      active: 'nested-url',
-    },
     {
       // Star count where available, a bare icon while the repo is private.
       // Let Fumadocs own the anchor and list item. A custom item is inserted

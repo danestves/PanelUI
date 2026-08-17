@@ -28,7 +28,17 @@ test('every repeated layout instance uses the shared policy', () => {
   const instances = [
     ['brand title', 'app/layout.config.tsx', "url: '/'"],
     ['Docs navigation', 'app/layout.config.tsx', "text: 'Docs', url: '/docs'"],
-    ['Components navigation', 'app/layout.config.tsx', "url: '/docs/components'"],
+    /*
+     * Components sits in `nav.children` rather than in `links`, because that is
+     * the only slot either layout renders on the left of the bar. It is still a
+     * repeated layout destination, so what has to hold is that it goes through
+     * LayoutLink — not that it is written as a `links` entry.
+     */
+    [
+      'Components navigation',
+      'app/layout.config.tsx',
+      '<LayoutLink\n        href="/docs/components"',
+    ],
     [
       'Get started navigation',
       'app/layout.config.tsx',
