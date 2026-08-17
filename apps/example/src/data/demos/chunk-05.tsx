@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, Pressable, ScrollView, View } from "react-native";
-import { Avatar, Badge, BellIcon, Button, CalendarIcon, Card, ChevronRightIcon, Frame, GridItem, HexChart, Input, InputGroup, Item, KeyboardAvoider, Label, LineChart, NumberInput, OtpInput, PackageIcon, PencilIcon, PlusSquareIcon, ReceiptIcon, SearchIcon, SendIcon, ShieldCheckIcon, SparklesIcon, Separator, Skeleton, Text, XIcon, Tooltip } from "panelui-native";
+import { Avatar, Badge, BellIcon, Button, CalendarIcon, Card, ChevronRightIcon, Frame, GridItem, HexChart, Input, InputGroup, Item, KeyboardAvoider, Label, LineChart, NumberInput, OtpInput, PackageIcon, PencilIcon, PlusSquareIcon, ReceiptIcon, SearchBar, SearchIcon, SendIcon, ShieldCheckIcon, SparklesIcon, Separator, Skeleton, Text, XIcon, Tooltip } from "panelui-native";
 import { useCSSVariable } from "uniwind";
 import type { ComponentEntry } from '../component-types';
 
@@ -654,6 +654,106 @@ function GridItemWatermarksDemo() {
   );
 }
 
+/** A short list to filter, so the results move as fast as the typing does. */
+const PRODUCTS = [
+  'Wireless keyboard',
+  'Mechanical keyboard',
+  'Laptop stand',
+  'USB-C hub',
+  'Desk mat',
+  'Monitor arm',
+];
+
+function SearchBarFilterDemo() {
+  const [query, setQuery] = useState('');
+  const results = PRODUCTS.filter((item) =>
+    item.toLowerCase().includes(query.trim().toLowerCase())
+  );
+
+  return (
+    <View className="w-full gap-4">
+      <SearchBar
+        placeholder="Search products"
+        value={query}
+        onChangeText={setQuery}
+      />
+      {results.length === 0 ? (
+        <Text size="sm" muted>
+          Nothing matches “{query}”.
+        </Text>
+      ) : (
+        results.map((item) => (
+          <Text key={item} size="sm">
+            {item}
+          </Text>
+        ))
+      )}
+    </View>
+  );
+}
+
+/**
+ * The Cancel button as a screen uses it: it comes out while the field is being
+ * edited and folds away again once it is not, so the row is only as wide as
+ * the search when nobody is searching.
+ */
+function SearchBarCancelDemo() {
+  const [query, setQuery] = useState('');
+  const [cancelled, setCancelled] = useState(false);
+
+  return (
+    <View className="w-full gap-3">
+      <SearchBar
+        variant="filled"
+        shape="pill"
+        cancel="focus"
+        placeholder="Search messages"
+        value={query}
+        onChangeText={(next) => {
+          setQuery(next);
+          setCancelled(false);
+        }}
+        onCancel={() => setCancelled(true)}
+      />
+      <Text size="sm" muted>
+        {cancelled ? 'Search cancelled.' : 'Tap the field to bring Cancel out.'}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * A query that costs something: the spinner stands in for the clear button
+ * while the search is in flight, and only runs once typing has paused.
+ */
+function SearchBarDebounceDemo() {
+  const [query, setQuery] = useState('');
+  const [ran, setRan] = useState('');
+  const [pending, setPending] = useState(false);
+
+  return (
+    <View className="w-full gap-3">
+      <SearchBar
+        placeholder="Search the catalogue"
+        debounce={400}
+        loading={pending}
+        value={query}
+        onChangeText={(next) => {
+          setQuery(next);
+          setPending(next.length > 0 && next !== ran);
+        }}
+        onDebouncedChange={(next) => {
+          setRan(next);
+          setPending(false);
+        }}
+      />
+      <Text size="sm" muted>
+        {ran ? `Searched for “${ran}”.` : 'The search runs 400ms after you stop typing.'}
+      </Text>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'hex-chart',
@@ -799,6 +899,27 @@ export const ENTRIES: ComponentEntry[] = [
             </InputGroup.Prefix>
             <InputGroup.Input placeholder="Disabled input" />
           </InputGroup>
+        ),
+      },
+    ],
+  },
+{
+    slug: 'search-bar',
+    name: 'SearchBar',
+    summary: 'Search field with a clear button and a Cancel button',
+    demos: [
+      { label: 'Filtering a list', render: () => <SearchBarFilterDemo /> },
+      { label: 'Cancel on focus', render: () => <SearchBarCancelDemo /> },
+      { label: 'Debounced query', render: () => <SearchBarDebounceDemo /> },
+      {
+        label: 'Sizes and shapes',
+        render: () => (
+          <View className="w-full gap-5">
+            <SearchBar size="sm" placeholder="Small" />
+            <SearchBar size="md" variant="filled" placeholder="Medium, filled" />
+            <SearchBar size="lg" shape="pill" placeholder="Large, pill" />
+            <SearchBar placeholder="Disabled" defaultValue="Last query" disabled />
+          </View>
         ),
       },
     ],

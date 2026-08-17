@@ -71,6 +71,8 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   input: () => load05().then((module) => module.ENTRIES_BY_SLUG['input']),
   'input-group': () =>
     load05().then((module) => module.ENTRIES_BY_SLUG['input-group']),
+  'search-bar': () =>
+    load05().then((module) => module.ENTRIES_BY_SLUG['search-bar']),
   'number-input': () =>
     load05().then((module) => module.ENTRIES_BY_SLUG['number-input']),
   'otp-input': () =>

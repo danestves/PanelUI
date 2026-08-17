@@ -1317,6 +1317,22 @@
     "docsPath": "components/scroll-text"
   },
   {
+    "name": "search-bar",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Search field with a clear button, a Cancel button and a debounced query.",
+    "registryDependencies": [
+      "animated-pressable",
+      "icons",
+      "input",
+      "spinner",
+      "text"
+    ],
+    "docsPath": "components/search-bar"
+  },
+  {
     "name": "section-rail",
     "type": "registry:ui",
     "kind": "ui",

@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-110 component modules. The **Docs** column is the path under
+111 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -43,6 +43,7 @@ remember is a guess.
 | `Questionnaire` | One question at a time, with progress, validation and a way back. | `components/questionnaire` |
 | `RadioGroup` | Single-select list of options. | `components/radio-group` |
 | `Rating` | A row of stars to read or set a score. | `components/rating` |
+| `SearchBar` | Search field with a clear button, a Cancel button and a debounced query. | `components/search-bar` |
 | `Select` | Picker shown in a bottom sheet, expanded in place, or floating over the page. | `components/select` |
 | `Signature` | Sign with a finger, and get the result back out as SVG or PNG. | `components/signature` |
 | `Slider` | Pick a value, or a span, by dragging a thumb along a track. | `components/slider` |

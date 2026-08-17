@@ -1,0 +1,173 @@
+---
+title: SearchBar
+description: Search field with a clear button, a Cancel button and a debounced query.
+status: new
+---
+
+A text field for querying a list, with the two controls a search needs and an ordinary field does not: a clear button inside the field, and a Cancel button beside it.
+
+It is a single field, not a results list. Render the results yourself underneath — the component tells you what was typed and when the typing stopped.
+
+## Installation
+
+SearchBar ships with the library — no separate install.
+
+```tsx
+import { SearchBar, Text, View } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add search-bar
+```
+
+## Usage
+
+```tsx
+<SearchBar placeholder="Search orders" onSubmit={run} />
+
+<SearchBar
+  variant="filled"
+  shape="pill"
+  cancel="focus"
+  value={query}
+  onChangeText={setQuery}
+  onCancel={close}
+/>
+```
+
+## Examples
+
+### Filtering a list
+
+The field is controlled, so `onChangeText` fires on every keystroke and the list narrows as fast as the typing does. Use this shape when the data is already in memory.
+
+```tsx
+const [query, setQuery] = useState('');
+const results = PRODUCTS.filter((item) =>
+  item.toLowerCase().includes(query.trim().toLowerCase())
+);
+
+return (
+  <View className="w-full gap-4">
+    <SearchBar
+      placeholder="Search products"
+      value={query}
+      onChangeText={setQuery}
+    />
+    {results.map((item) => (
+      <Text key={item} size="sm">{item}</Text>
+    ))}
+  </View>
+);
+```
+
+### Cancel on focus
+
+`cancel="focus"` slides a Cancel button in while the field is being edited and folds it away again once it is not, so the row is only as wide as the search when nobody is searching. Pressing it empties the query, drops focus and calls `onCancel`.
+
+```tsx
+<SearchBar
+  variant="filled"
+  shape="pill"
+  cancel="focus"
+  placeholder="Search messages"
+  value={query}
+  onChangeText={setQuery}
+  onCancel={() => setSearching(false)}
+/>
+```
+
+### A query that costs something
+
+`debounce` holds `onDebouncedChange` until typing pauses, so a network search runs once per pause instead of once per letter. `onChangeText` still fires on every keystroke — a controlled field that lags its own input is unusable. Pressing the return key flushes the pause immediately.
+
+```tsx
+<SearchBar
+  placeholder="Search the catalogue"
+  debounce={400}
+  loading={pending}
+  value={query}
+  onChangeText={setQuery}
+  onDebouncedChange={(next) => search(next)}
+/>
+```
+
+### Sizes and shapes
+
+`shape="pill"` is the shape a search field takes when it is chrome — above a list, in a header. `rounded` is the one it takes inside a form beside other fields.
+
+```tsx
+<View className="w-full gap-5">
+  <SearchBar size="sm" placeholder="Small" />
+  <SearchBar size="md" variant="filled" placeholder="Medium, filled" />
+  <SearchBar size="lg" shape="pill" placeholder="Large, pill" />
+  <SearchBar placeholder="Disabled" defaultValue="Last query" disabled />
+</View>
+```
+
+## Variants
+
+### `size`
+
+- `sm`
+- `md` *(default)*
+- `lg`
+
+```tsx
+<SearchBar size="sm" placeholder="Search" />
+```
+
+### `shape`
+
+- `rounded` *(default)*
+- `pill`
+
+```tsx
+<SearchBar shape="pill" placeholder="Search" />
+```
+
+## API Reference
+
+### SearchBar
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `InputProps['variant']` | — | The field's background, from `Input`. `outline` draws its own edge, for a search bar sitting on the page; `filled` drops it, for one inside a card or a header where a second border reads as a seam. Defaults to `outline`. |
+| `value` | `string` | — | The query, when the caller holds it. Leave unset to let the field keep it. |
+| `defaultValue` | `string` | — | Starting query for an uncontrolled field. Ignored once `value` is passed. |
+| `onChangeText` | `(value: string) => void` | — | Fires on every keystroke. For a search that costs something, see `debounce`. |
+| `onSubmit` | `(value: string) => void` | — | The return key, which is labelled Search. Flushes `onDebouncedChange` first. |
+| `debounce` | `number` | `0` | How long typing has to pause before `onDebouncedChange` runs, in milliseconds. `0` runs it on every keystroke, which is only right for a filter over a list already in memory. |
+| `onDebouncedChange` | `(value: string) => void` | — | The query, once typing has paused for `debounce` milliseconds. |
+| `onClear` | `() => void` | — | Fires after the ✕ empties the field. The field keeps focus. |
+| `onCancel` | `() => void` | — | Fires after Cancel empties the field and drops focus. |
+| `isClearable` | `boolean` | `true` | Whether the ✕ appears once there is a query. |
+| `cancel` | `'never' \| 'focus' \| 'always'` | `'never'` | When the Cancel button is beside the field. `focus` slides it in while the field is being edited and away again when it is not, which is what a search bar above a list wants. `always` keeps it out, for a screen that is nothing but the search. |
+| `cancelLabel` | `string` | `'Cancel'` | The Cancel button's word. |
+| `clearLabel` | `string` | `'Clear search'` | How the ✕ announces itself. |
+| `loading` | `boolean` | `false` | Results are on their way. A spinner takes the ✕'s place, because the two would otherwise sit on top of one another at exactly the moment a query is both non-empty and running. |
+| `icon` | `ReactNode` | — | The leading glyph, for a search over something with a symbol of its own. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+The clear button is drawn by the component rather than left to the platform's `clearButtonMode`, which exists on iOS only, cannot be labelled for a screen reader and cannot be swapped for a spinner. Clearing keeps the keyboard up, because emptying a query is usually the start of the next one; Cancel is the control that ends the search.
+
+The glyph is 24 points and its touch box is 48, made up with slop rather than with size — a 48-point circle inside a 40-point field would either overflow it or force every search bar in the app to be as tall as the largest one.
+
+`loading` replaces the clear button rather than joining it, since the two would otherwise collide at exactly the moment a query is both non-empty and running.
+
+For a search with a label, a description and an error line, use `Field` around an `Input`. SearchBar drops that furniture on purpose: Cancel sits beside the field, and a label stacked above the field would leave it centred against the whole stack.
+
+For a field that filters a list of its own and shows it in a popover, use [Combobox](/docs/components/combobox).
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `SearchBar`
+
+**Types:** `SearchBarProps`

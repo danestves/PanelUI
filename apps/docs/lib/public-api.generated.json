@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1103,
-    "values": 293,
-    "types": 810,
-    "modules": 135,
-    "components": 110,
+    "exports": 1105,
+    "values": 294,
+    "types": 811,
+    "modules": 136,
+    "components": 111,
     "hooks": 12
   },
   "groups": {
@@ -3409,6 +3409,21 @@
           },
           {
             "name": "ScrollTextSplit",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/search-bar/index.tsx",
+        "slug": "search-bar",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "SearchBar",
+            "kind": "value"
+          },
+          {
+            "name": "SearchBarProps",
             "kind": "type"
           }
         ]
