@@ -40,6 +40,11 @@ test('every repeated layout instance uses the shared policy', () => {
       '<LayoutLink\n        href="/docs/components"',
     ],
     [
+      'Components mobile navigation',
+      'app/layout.config.tsx',
+      "text: 'Components',\n      url: '/docs/components',\n      active: 'nested-url',\n      on: 'menu'",
+    ],
+    [
       'Get started navigation',
       'app/layout.config.tsx',
       "text: 'Get started',\n      url: '/docs'",
@@ -53,6 +58,15 @@ test('every repeated layout instance uses the shared policy', () => {
   }
 
   assert.match(read('app/layout.tsx'), /components=\{\{ Link: LayoutLink \}\}/);
+});
+
+test('Components remains reachable on the home mobile menu without duplicating the docs tree', () => {
+  const options = read('app/layout.config.tsx');
+
+  assert.match(options, /export const homeOptions: BaseLayoutProps/);
+  assert.match(options, /on: 'menu'/);
+  assert.match(read('app/(home)/layout.tsx'), /<HomeLayout \{\.\.\.homeOptions\}>/);
+  assert.match(read('app/docs/layout.tsx'), /<DocsLayout[\s\S]*\{\.\.\.baseOptions\}/);
 });
 
 test('primary content links keep Next prefetch and link behavior passes through', () => {
