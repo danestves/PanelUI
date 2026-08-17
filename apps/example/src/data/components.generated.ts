@@ -78,6 +78,7 @@ export const COMPONENTS = [
   {"slug":"scroll-canvas","name":"ScrollCanvas","summary":"Image frame whose contents move as you scroll"},
   {"slug":"scroll-fade","name":"ScrollFade","summary":"Fades the edges of a scroll container"},
   {"slug":"scroll-text","name":"ScrollText","summary":"Text that resolves word by word as you scroll"},
+  {"slug":"search-bar","name":"SearchBar","summary":"Search field with a clear button and a Cancel button"},
   {"slug":"section-rail","name":"SectionRail","summary":"Floating section navigator for a long screen"},
   {"slug":"select","name":"Select","summary":"Picker shown in a sheet, in place, or floating over the page"},
   {"slug":"selection-mode","name":"SelectionMode","summary":"Pick several rows out of a list, with a count and a bar of actions"},

@@ -1,0 +1,33 @@
+{
+  "slug": "search-bar",
+  "intro": "A text field for querying a list, with the two controls a search needs and an ordinary field does not: a clear button inside the field, and a Cancel button beside it.\n\nIt is a single field, not a results list. Render the results yourself underneath — the component tells you what was typed and when the typing stopped.",
+  "usage": "<SearchBar placeholder=\"Search orders\" onSubmit={run} />\n\n<SearchBar\n  variant=\"filled\"\n  shape=\"pill\"\n  cancel=\"focus\"\n  value={query}\n  onChangeText={setQuery}\n  onCancel={close}\n/>",
+  "extraImports": ["Text", "View"],
+  "variantCode": {
+    "size": "<SearchBar size=\"sm\" placeholder=\"Search\" />",
+    "shape": "<SearchBar shape=\"pill\" placeholder=\"Search\" />"
+  },
+  "examples": [
+    {
+      "title": "Filtering a list",
+      "description": "The field is controlled, so `onChangeText` fires on every keystroke and the list narrows as fast as the typing does. Use this shape when the data is already in memory.",
+      "code": "const [query, setQuery] = useState('');\nconst results = PRODUCTS.filter((item) =>\n  item.toLowerCase().includes(query.trim().toLowerCase())\n);\n\nreturn (\n  <View className=\"w-full gap-4\">\n    <SearchBar\n      placeholder=\"Search products\"\n      value={query}\n      onChangeText={setQuery}\n    />\n    {results.map((item) => (\n      <Text key={item} size=\"sm\">{item}</Text>\n    ))}\n  </View>\n);"
+    },
+    {
+      "title": "Cancel on focus",
+      "description": "`cancel=\"focus\"` slides a Cancel button in while the field is being edited and folds it away again once it is not, so the row is only as wide as the search when nobody is searching. Pressing it empties the query, drops focus and calls `onCancel`.",
+      "code": "<SearchBar\n  variant=\"filled\"\n  shape=\"pill\"\n  cancel=\"focus\"\n  placeholder=\"Search messages\"\n  value={query}\n  onChangeText={setQuery}\n  onCancel={() => setSearching(false)}\n/>"
+    },
+    {
+      "title": "A query that costs something",
+      "description": "`debounce` holds `onDebouncedChange` until typing pauses, so a network search runs once per pause instead of once per letter. `onChangeText` still fires on every keystroke — a controlled field that lags its own input is unusable. Pressing the return key flushes the pause immediately.",
+      "code": "<SearchBar\n  placeholder=\"Search the catalogue\"\n  debounce={400}\n  loading={pending}\n  value={query}\n  onChangeText={setQuery}\n  onDebouncedChange={(next) => search(next)}\n/>"
+    },
+    {
+      "title": "Sizes and shapes",
+      "description": "`shape=\"pill\"` is the shape a search field takes when it is chrome — above a list, in a header. `rounded` is the one it takes inside a form beside other fields.",
+      "code": "<View className=\"w-full gap-5\">\n  <SearchBar size=\"sm\" placeholder=\"Small\" />\n  <SearchBar size=\"md\" variant=\"filled\" placeholder=\"Medium, filled\" />\n  <SearchBar size=\"lg\" shape=\"pill\" placeholder=\"Large, pill\" />\n  <SearchBar placeholder=\"Disabled\" defaultValue=\"Last query\" disabled />\n</View>"
+    }
+  ],
+  "notes": "The clear button is drawn by the component rather than left to the platform's `clearButtonMode`, which exists on iOS only, cannot be labelled for a screen reader and cannot be swapped for a spinner. Clearing keeps the keyboard up, because emptying a query is usually the start of the next one; Cancel is the control that ends the search.\n\nThe glyph is 24 points and its touch box is 48, made up with slop rather than with size — a 48-point circle inside a 40-point field would either overflow it or force every search bar in the app to be as tall as the largest one.\n\n`loading` replaces the clear button rather than joining it, since the two would otherwise collide at exactly the moment a query is both non-empty and running.\n\nFor a search with a label, a description and an error line, use `Field` around an `Input`. SearchBar drops that furniture on purpose: Cancel sits beside the field, and a label stacked above the field would leave it centred against the whole stack.\n\nFor a field that filters a list of its own and shows it in a popover, use [Combobox](/docs/components/combobox)."
+}

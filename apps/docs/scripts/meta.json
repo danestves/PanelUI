@@ -344,6 +344,15 @@
       "category": "forms"
     }
   ],
+  "search-bar": [
+    "SearchBar",
+    "Search field with a clear button, a Cancel button and a debounced query.",
+    "react native search bar",
+    {
+      "addedIn": "0.72.0",
+      "category": "forms"
+    }
+  ],
   "pagination": [
     "Pagination",
     "Paged navigation over a long result set.",

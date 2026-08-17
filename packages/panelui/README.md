@@ -1,7 +1,7 @@
 # PanelUI — React Native UI components for Expo, styled with Tailwind CSS
 
 **PanelUI** (`panelui-native`) is an accessible, high-performance React Native component
-library for Expo apps. 110 typed components — buttons, bottom sheets, dialogs, selects,
+library for Expo apps. 111 typed components — buttons, bottom sheets, dialogs, selects,
 toasts, forms — styled with Tailwind CSS v4 and animated on the UI thread with Reanimated.
 Zero native code, so it runs in Expo Go.
 
@@ -277,6 +277,7 @@ consumer bundler.
 | `ScrollCanvas` | Image frame whose contents move as you scroll |
 | `ScrollFade` | Fades the edges of a scroll container |
 | `ScrollText` | Text that resolves word by word as you scroll |
+| `SearchBar` | Search field with a clear button, a Cancel button and a debounced query |
 | `SectionRail` | Floating section navigator for a long screen |
 | `Select` | Picker shown in a bottom sheet, expanded in place, or floating over the page, with an optional filter |
 | `SelectionMode` | Pick several rows out of a list, on a screen or in a sheet |
