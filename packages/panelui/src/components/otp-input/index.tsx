@@ -38,6 +38,7 @@ import Animated, {
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
+import { resolveOtpEditable } from './otp-input-state';
 
 /** Long enough to read as a transition, short enough not to lag a fast type. */
 const FOCUS_DURATION = 150;
@@ -245,6 +246,7 @@ export const OtpInput = forwardRef<TextInput, OtpInputProps>(
       groupEvery = 0,
       size,
       disabled,
+      editable,
       isInvalid,
       errorMessage,
       accessibilityLabel,
@@ -351,7 +353,7 @@ export const OtpInput = forwardRef<TextInput, OtpInputProps>(
             ref={setRef}
             value={value}
             onChangeText={handleChange}
-            editable={!disabled}
+            editable={resolveOtpEditable(editable, disabled)}
             keyboardType={type === 'numeric' ? 'number-pad' : 'default'}
             // The OS one-time-code affordances: iOS surfaces the SMS code above
             // the keyboard, Android offers to autofill it.

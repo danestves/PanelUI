@@ -172,7 +172,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
-Accepts most `TextInputProps` — they land on the hidden field — except the ones `OtpInput` owns: `value`, `defaultValue`, `onChangeText`, `maxLength` and `children`.
+Accepts most `TextInputProps` — they land on the hidden field — except the ones `OtpInput` owns: `value`, `defaultValue`, `onChangeText`, `maxLength` and `children`. Setting `editable={false}` also makes the native field read-only, while `disabled` always takes precedence and keeps it non-editable.
 
 The field is controlled when you pass `value`, and manages its own state otherwise (seed it with `defaultValue`). Either way the string is trimmed to `length` and, when `type="numeric"`, filtered to digits, so an over-long paste or a stray character can never put the cells and the value out of step.
 
