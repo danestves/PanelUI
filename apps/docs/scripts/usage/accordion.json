@@ -4,7 +4,7 @@
   "usage": "<Accordion selectionMode=\"single\" defaultValue=\"shipping\">\n  <Accordion.Item value=\"shipping\">\n    <Accordion.Trigger>\n      <Accordion.Title>How long does shipping take?</Accordion.Title>\n      <Accordion.Indicator />\n    </Accordion.Trigger>\n    <Accordion.Content>\n      Standard delivery arrives in three to five working days.\n    </Accordion.Content>\n  </Accordion.Item>\n</Accordion>",
   "parts": {
     "Item": "One collapsible section. Its `value` identifies it in the accordion's state.",
-    "Trigger": "The pressable header row. A bare string child is wrapped in the title style.",
+    "Trigger": "The pressable header row. A bare string child is wrapped in the title style. Standard Pressable props are forwarded; a supplied `onPress` runs before the accordion toggles the item.",
     "Title": "Heading text inside the trigger.",
     "Indicator": "Chevron that rotates 180° while the item is open.",
     "Content": "The collapsible body. Unmounts when closed, unless `keepMounted` keeps it mounted and hidden from layout instead."

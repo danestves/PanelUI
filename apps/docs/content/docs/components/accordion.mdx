@@ -64,7 +64,7 @@ npx panelui-cli@latest add accordion
 ```
 
 - **`Accordion.Item`** — One collapsible section. Its `value` identifies it in the accordion's state.
-- **`Accordion.Trigger`** — The pressable header row. A bare string child is wrapped in the title style.
+- **`Accordion.Trigger`** — The pressable header row. A bare string child is wrapped in the title style. Standard Pressable props are forwarded; a supplied `onPress` runs before the accordion toggles the item.
 - **`Accordion.Title`** — Heading text inside the trigger.
 - **`Accordion.Indicator`** — Chevron that rotates 180° while the item is open.
 - **`Accordion.Content`** — The collapsible body. Unmounts when closed, unless `keepMounted` keeps it mounted and hidden from layout instead.
