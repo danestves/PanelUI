@@ -61,6 +61,7 @@
     },
     {
       "title": "Disabled",
+      "description": "Disabled applies to every input path: touch, presets, and assistive-technology adjustment actions all leave the colour unchanged.",
       "code": "<ColorPicker defaultValue=\"#64748b\" disabled>\n  <ColorPicker.Area height={110} />\n  <ColorPicker.Hue />\n  <ColorPicker.Preview showValue />\n</ColorPicker>"
     }
   ],
