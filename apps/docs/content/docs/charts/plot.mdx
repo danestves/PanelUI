@@ -426,7 +426,7 @@ It plays once. Sending `status` back to `loading` and returning it to `ready` ar
 
 ### What registers, and why
 
-`Plot.Line`, `Plot.Area`, `Plot.Bars` and `Plot.Dots` each register their `dataKey` and colour with the root. That is what the derived domain measures and what the legend and the readout list. A mark drawn through `Plot.Layer` registers nothing — it is not reading a column the root knows about — so give the root a `yDomain` if what you drew has to fit inside the axis.
+`Plot.Line`, `Plot.Area`, `Plot.Bars` and `Plot.Dots` each register their `dataKey` and colour with the root. That is what the derived domain measures and what the legend and the readout list. Multiple marks may share one key — an area, line and dots for the same series register independently, so removing one does not remove the survivors from the domain or legend. Data keys are ordinary strings and may contain punctuation, including `|`. A mark drawn through `Plot.Layer` registers nothing — it is not reading a column the root knows about — so give the root a `yDomain` if what you drew has to fit inside the axis.
 
 ### Reference lines
 
