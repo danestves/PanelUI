@@ -628,7 +628,13 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
                 <Svg width={grid.width} height={grid.height} style={StyleSheet.absoluteFill}>
                   <Defs>
                     <ClipPath id={clipId}>
-                      <AnimatedRect x={0} y={0} height={grid.height} animatedProps={clipProps} />
+                      <AnimatedRect
+                        x={0}
+                        y={0}
+                        width={grid.width}
+                        height={grid.height}
+                        animatedProps={clipProps}
+                      />
                     </ClipPath>
                   </Defs>
                   <G clipPath={`url(#${clipId})`}>

@@ -534,7 +534,13 @@ const HexChartRoot = forwardRef<HexChartHandle, HexChartProps>(function HexChart
                         animatedProps={ellipseProps}
                       />
                     ) : (
-                      <AnimatedRect x={0} y={0} height={height} animatedProps={rectProps} />
+                      <AnimatedRect
+                          x={0}
+                          y={0}
+                          width={width}
+                          height={height}
+                          animatedProps={rectProps}
+                        />
                     )}
                   </ClipPath>
                 </Defs>

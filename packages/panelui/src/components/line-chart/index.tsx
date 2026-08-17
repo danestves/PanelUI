@@ -477,11 +477,20 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
                    * One clip for everything in the plot. Sharing it is what
                    * makes the reveal read as the chart arriving, rather than as
                    * three separate things animating in at once.
+                   *
+                   * `width` is set statically as well as animated, and it has
+                   * to be. Animated props on an element inside `Defs` do not
+                   * reach the native clip on every platform, and with the width
+                   * coming only from the animation there is no width at all
+                   * when they do not — an empty clip, and a chart whose marks
+                   * are all invisible while its axes draw normally. Declared,
+                   * the worst case is the reveal not playing.
                    */}
                   <ClipPath id={clipId}>
                     <AnimatedRect
                       x={plot.left}
                       y={0}
+                      width={plot.width}
                       height={size.height}
                       animatedProps={clipProps}
                     />

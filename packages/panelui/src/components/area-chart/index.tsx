@@ -490,11 +490,19 @@ const AreaChartRoot = forwardRef<AreaChartHandle, AreaChartProps>(function AreaC
                    * One clip for everything in the plot. Sharing it is what
                    * makes the reveal read as the chart arriving rather than as
                    * several bands animating in at once.
+                   *
+                   * `width` is set statically as well as animated, and it has
+                   * to be. Animated props on an element inside `Defs` do not
+                   * reach the native clip on every platform, and with the width
+                   * coming only from the animation there is no width at all
+                   * when they do not — an empty clip, and marks that never
+                   * appear while the axes draw normally.
                    */}
                   <ClipPath id={clipId}>
                     <AnimatedRect
                       x={plot.left}
                       y={0}
+                      width={plot.width}
                       height={size.height}
                       animatedProps={clipProps}
                     />

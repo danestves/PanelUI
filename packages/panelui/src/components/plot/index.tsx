@@ -625,11 +625,19 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
                    * read as the chart arriving, rather than as four separate
                    * things animating in at once — which is the thing a composed
                    * chart is most at risk of looking like.
+                   *
+                   * `width` is set statically as well as animated, and it has
+                   * to be. Animated props on an element inside `Defs` do not
+                   * reach the native clip on every platform, and with the width
+                   * coming only from the animation there is no width at all
+                   * when they do not — an empty clip, and marks that never
+                   * appear while the axes draw normally.
                    */}
                   <ClipPath id={clipId}>
                     <AnimatedRect
                       x={plot.left}
                       y={0}
+                      width={plot.width}
                       height={size.height}
                       animatedProps={clipProps}
                     />
