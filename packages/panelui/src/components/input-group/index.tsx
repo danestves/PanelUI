@@ -146,8 +146,13 @@ const InputGroupInput = forwardRef<TextInput, InputGroupInputProps>(
         style={[
           // Only override padding on the side that actually has a decorator —
           // a 0 here would wipe out the field's default horizontal padding.
-          group?.prefixWidth ? { paddingLeft: group.prefixWidth } : null,
-          group?.suffixWidth ? { paddingRight: group.suffixWidth } : null,
+          //
+          // `paddingStart`/`paddingEnd`, not left/right: the decorators are
+          // inset with `start-0`/`end-0`, so under `Direction dir="rtl"` Yoga
+          // moves them to the other edge. Physical padding stays where it was
+          // written and leaves the value running underneath them.
+          group?.prefixWidth ? { paddingStart: group.prefixWidth } : null,
+          group?.suffixWidth ? { paddingEnd: group.suffixWidth } : null,
           style,
         ]}
         {...props}
