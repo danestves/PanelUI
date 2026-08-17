@@ -59,7 +59,7 @@ npx panelui-cli@latest add steps
 ```
 
 - **`Steps.Item`** — One step. `step` is its zero-based position.
-- **`Steps.Trigger`** — Makes the item selectable. Omit it for a read-only stepper.
+- **`Steps.Trigger`** — Makes the item selectable. Accepts Pressable props and composes `onPress` before selection. Omit it for a read-only stepper.
 - **`Steps.Indicator`** — The circle — step number, a check once complete, a spinner while loading.
 - **`Steps.Title`** — Step heading.
 - **`Steps.Description`** — Supporting line.
@@ -212,6 +212,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 ## Notes
 
 Steps are zero-based internally but the indicator renders them as 1, 2, 3.
+
+`Steps.Trigger` accepts the normal Pressable contract. Its `onPress` runs before the step selection callback, while selection, the button role, position/state announcement, and an item-level `disabled` state remain owned by Steps. A trigger-level `disabled` prop combines with the item instead of re-enabling it.
 
 The connectors are drawn for you: the root counts the items it holds and every one but the last joins to the next, so there is no separator to forget or leave dangling. Pass `separators={false}` for a stepper with none, or put a `Steps.Separator` inside an item to dress that one connector yourself — an item that has its own keeps it and gets no second.
 
