@@ -300,6 +300,7 @@ export const Button = forwardRef<View, ButtonProps>(
       endContent,
       native,
       glass = false,
+      accessibilityState,
       ...props
     },
     ref
@@ -441,8 +442,6 @@ export const Button = forwardRef<View, ButtonProps>(
       <IconColorProvider color={contentColor}>
         <AnimatedPressable
           ref={ref}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: isDisabled, busy: loading }}
           disabled={isDisabled}
           // Joined segments cannot borrow room from each other without making
           // two actions claim the same pixels. ButtonGroup owns that layout.
@@ -451,6 +450,8 @@ export const Button = forwardRef<View, ButtonProps>(
           pressScale={attached ? 1 : undefined}
           className={root({ className: cn(attached && ATTACHED, className) })}
           {...props}
+          accessibilityRole="button"
+          accessibilityState={{ ...accessibilityState, disabled: isDisabled, busy: loading }}
         >
           {loading ? (
             <Spinner size={SPINNER_SIZE[resolvedSize ?? 'md']} className={spinner()} />
