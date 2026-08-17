@@ -54,7 +54,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Pressable, View, type Text as RNText, type ViewProps } from 'react-native';
+import {
+  Pressable,
+  View,
+  type PressableProps,
+  type Text as RNText,
+  type ViewProps,
+} from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedStyle,
@@ -353,10 +359,9 @@ const TreeItem = forwardRef<View, TreeItemProps>(
 );
 TreeItem.displayName = 'Tree.Item';
 
-export interface TreeTriggerProps extends ViewProps {
+/** Pressable props are forwarded; `onPress` runs after the tree updates its state. */
+export interface TreeTriggerProps extends Omit<PressableProps, 'children'> {
   className?: string;
-  /** Runs after the press has been handled, with the tree's own state already updated. */
-  onPress?: () => void;
   children?: ReactNode;
 }
 
@@ -370,20 +375,20 @@ export interface TreeTriggerProps extends ViewProps {
  * actually survives to the user.
  */
 const TreeTrigger = forwardRef<View, TreeTriggerProps>(
-  ({ className, onPress, children, ...props }, ref) => {
+  ({ className, onPress, disabled = false, children, ...props }, ref) => {
     const { toggleExpanded, select, selectionMode, expandOnPress, size } =
       useTree('Tree.Trigger');
     const { value, level, isExpanded, isSelected, isDisabled, isBranch } =
       useTreeItem('Tree.Trigger');
-    const { trigger } = treeVariants({ size, isSelected, isDisabled });
-
     const accentForeground = useCSSVariable('--color-accent-foreground');
     const selectedColor = typeof accentForeground === 'string' ? accentForeground : undefined;
 
-    const handlePress = () => {
+    const triggerDisabled = Boolean(isDisabled || disabled);
+    const { trigger } = treeVariants({ size, isSelected, isDisabled: triggerDisabled });
+    const handlePress: NonNullable<PressableProps['onPress']> = (event) => {
       if (isBranch && expandOnPress) toggleExpanded(value);
       select(value);
-      onPress?.();
+      onPress?.(event);
     };
 
     return (
@@ -393,13 +398,13 @@ const TreeTrigger = forwardRef<View, TreeTriggerProps>(
         accessibilityState={{
           expanded: isBranch ? isExpanded : undefined,
           selected: selectionMode === 'none' ? undefined : isSelected,
-          disabled: isDisabled,
+          disabled: triggerDisabled,
         }}
         aria-level={level + 1}
-        disabled={isDisabled}
-        onPress={handlePress}
+        disabled={triggerDisabled}
         className={trigger({ className })}
         {...props}
+        onPress={handlePress}
       >
         <IconColorProvider color={isSelected ? selectedColor : undefined}>
           {children}
