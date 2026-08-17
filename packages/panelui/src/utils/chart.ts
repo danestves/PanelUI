@@ -265,6 +265,50 @@ export function yOf(value: number, plot: Plot, min: number, max: number): number
 }
 
 /**
+ * Widens a domain out to round numbers.
+ *
+ * An axis derived from the data ends wherever the data happened to end, so it
+ * gets labelled 34,650 — a number that is true and that nobody was looking for.
+ * Rounding the ends out to a step of 1, 2 or 5 times a power of ten gives the
+ * axis labels somebody can actually read a value off, and it can only ever add
+ * room, never crop.
+ *
+ * Zero survives: any step divides it, so a baseline pinned there stays there.
+ */
+export function niceDomain(
+  min: number,
+  max: number,
+  ticks = 5
+): [number, number] {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) {
+    return [min, max];
+  }
+
+  const rough = (max - min) / Math.max(1, ticks);
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const error = rough / magnitude;
+
+  /*
+   * 1, 2, 5 or 10 times the magnitude — the steps a reader can divide in their
+   * head. The thresholds are geometric means rather than the steps themselves,
+   * so each candidate wins over the span it is genuinely closest to. Rounding at
+   * the steps instead pushes anything above 5 up to a full decade, which turns a
+   * top of 31,500 into an axis ending at 40,000 and hands a quarter of the plot
+   * to empty space.
+   */
+  const step =
+    (error >= Math.sqrt(50)
+      ? 10
+      : error >= Math.sqrt(10)
+        ? 5
+        : error >= Math.sqrt(2)
+          ? 2
+          : 1) * magnitude;
+
+  return [Math.floor(min / step) * step, Math.ceil(max / step) * step];
+}
+
+/**
  * A value's x on a *measured* axis, with `min` at the left edge and `max` at
  * the right.
  *
@@ -356,7 +400,16 @@ export function runsOf(
   min: number,
   max: number,
   /** Baselines to stack each point on top of, for a stacked area. */
-  baselines?: number[]
+  baselines?: number[],
+  /**
+   * Place points at band centres rather than spreading them edge to edge.
+   *
+   * A line drawn over columns has to agree with them about where a row sits,
+   * and a column owns a slice of the axis rather than a position on it. Spread
+   * evenly, the first point lands half a slice left of the bar it describes and
+   * every point after it is wrong by the same amount.
+   */
+  banded?: boolean
 ): ChartPoint[][] {
   'worklet';
   const runs: ChartPoint[][] = [];
@@ -370,7 +423,8 @@ export function runsOf(
       continue;
     }
     const stacked = value + (baselines?.[i] ?? 0);
-    run.push({ x: xOf(i, values.length, plot), y: yOf(stacked, plot, min, max) });
+    const x = banded ? bandOf(i, values.length, plot) : xOf(i, values.length, plot);
+    run.push({ x, y: yOf(stacked, plot, min, max) });
   }
   if (run.length) runs.push(run);
   return runs;
@@ -404,7 +458,9 @@ export function linePath(
   max: number,
   curve: ChartCurve,
   loading: boolean,
-  baselines?: number[]
+  baselines?: number[],
+  /** Place points at band centres, for a line drawn over columns. */
+  banded?: boolean
 ): string {
   'worklet';
   if (loading || plot.width <= 0) {
@@ -413,7 +469,7 @@ export function linePath(
     const y = plot.top + plot.height / 2;
     return `M${plot.left},${y} L${plot.left + plot.width},${y}`;
   }
-  return runsOf(values, plot, min, max, baselines)
+  return runsOf(values, plot, min, max, baselines, banded)
     .map((run) => segment(run, curve))
     .join(' ');
 }
@@ -433,13 +489,15 @@ export function areaPath(
   max: number,
   curve: ChartCurve,
   loading: boolean,
-  baselines?: number[]
+  baselines?: number[],
+  /** Place points at band centres, for an area drawn against columns. */
+  banded?: boolean
 ): string {
   'worklet';
   if (loading || plot.width <= 0) return '';
 
   const bottom = plot.top + plot.height;
-  const runs = runsOf(values, plot, min, max, baselines);
+  const runs = runsOf(values, plot, min, max, baselines, banded);
 
   if (!baselines) {
     return runs
@@ -460,7 +518,8 @@ export function areaPath(
     plot,
     min,
     max,
-    baselines
+    baselines,
+    banded
   );
 
   return runs

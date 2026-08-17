@@ -1232,6 +1232,12 @@ const PLOT_TARGET = 28000;
  * Nothing in the library ships this as a component of its own, which is the
  * point — it is two marks written one after the other, and the order they are
  * written is the order they are drawn.
+ *
+ * Costs are the columns and revenue is the line, rather than the other way
+ * round, because revenue is the larger of the two every month. Drawn the other
+ * way the line runs through the middle of the bars and the chart has to be
+ * decoded; drawn this way the line clears them and the gap underneath it is the
+ * margin, which is the only reason to put both on one axis.
  */
 function PlotCombinationVersion() {
   return (
@@ -1255,12 +1261,12 @@ function PlotCombinationVersion() {
             />
             <Plot.Legend
               className={CHART_HEADER}
-              labels={{ revenue: 'Revenue', costs: 'Costs' }}
+              labels={{ costs: 'Costs', revenue: 'Revenue' }}
             />
             <Plot.Grid />
-            <Plot.Bars dataKey="revenue" colorIndex={2} />
-            <Plot.Line dataKey="costs" colorIndex={1} curve="linear" />
-            <Plot.Dots dataKey="costs" colorIndex={1} />
+            <Plot.Bars dataKey="costs" colorIndex={2} />
+            <Plot.Line dataKey="revenue" colorIndex={1} />
+            <Plot.Dots dataKey="revenue" colorIndex={1} />
             <Plot.YAxis />
             <Plot.XAxis ticks={6} />
           </Plot>
@@ -1275,7 +1281,13 @@ function PlotCombinationVersion() {
  *
  * `yDomain={[0, 'auto']}` is the case the fixed pair cannot express: the bottom
  * is held where a length has to start, and the top still follows whatever the
- * data does.
+ * data does. `nice` then rounds that top out, so the axis is labelled in
+ * numbers the target can be measured against rather than wherever June landed.
+ *
+ * The rule is dashed rather than faint. It is the number every column here is
+ * being judged against, so it has to be readable over them — what keeps it from
+ * being mistaken for a series is that it is neutral and broken, not that it is
+ * hard to see.
  */
 function PlotPinnedVersion() {
   return (
@@ -1290,13 +1302,14 @@ function PlotPinnedVersion() {
             data={PLOT_QUARTER}
             xDataKey="month"
             yDomain={[0, 'auto']}
+            nice
             aspectRatio={1.7}
             className="px-3 pb-3"
           >
             <Plot.Header className={CHART_HEADER} title="Revenue by month" />
             <Plot.Grid />
             <Plot.Bars dataKey="revenue" colorIndex={2} />
-            <Plot.Rule y={PLOT_TARGET} label="Target" />
+            <Plot.Rule y={PLOT_TARGET} label="Target" dashed />
             <Plot.YAxis format={(value) => money(Math.round(value))} />
             <Plot.XAxis ticks={6} />
           </Plot>

@@ -105,6 +105,7 @@ import {
   columnValues,
   compactNumber,
   linePath,
+  niceDomain,
   useSeriesColor,
   xOf,
   yOf,
@@ -282,6 +283,17 @@ export interface PlotProps extends ViewProps {
    */
   yDomain?: [PlotBound, PlotBound];
   /**
+   * Round the derived ends of the y-domain out to whole numbers.
+   *
+   * Left off, an axis ends a tenth of the span past the largest value, so it
+   * gets labelled 34,650 — true, and not a number anybody was looking for. On,
+   * the ends move out to a step of 1, 2 or 5 times a power of ten, and the
+   * labels become values a reader can measure against.
+   *
+   * It only ever widens the axis, and a pinned end is left alone.
+   */
+  nice?: boolean;
+  /**
    * How an index becomes an x. Derived from the marks when left out: a plot
    * with bars in it is banded, and anything else is on points.
    */
@@ -317,6 +329,7 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
     animationDuration = 700,
     domainDuration = 500,
     yDomain,
+    nice = false,
     xScale: xScaleProp,
     curve = 'monotone',
     onActiveIndexChange,
@@ -450,11 +463,20 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
      * drifting off the axis is exactly what pinning it was for.
      */
     const headroom = (max - min) * 0.1;
+    /*
+     * `nice` replaces the headroom rather than adding to it: rounding out to a
+     * whole step is already room, and doing both would leave a tenth of the
+     * span of empty axis above a top the reader was told is round.
+     */
+    const [niceLow, niceHigh] = nice ? niceDomain(min, max) : [min, max];
+    const derivedLow = nice ? niceLow : min - headroom * lowRoom;
+    const derivedHigh = nice ? niceHigh : max + headroom * highRoom;
+
     return [
-      typeof lowPin === 'number' ? lowPin : min - headroom * lowRoom,
-      typeof highPin === 'number' ? highPin : max + headroom * highRoom,
+      typeof lowPin === 'number' ? lowPin : derivedLow,
+      typeof highPin === 'number' ? highPin : derivedHigh,
     ];
-  }, [data, yDomain, seriesKeys, hasBars]);
+  }, [data, yDomain, seriesKeys, hasBars, nice]);
 
   const loading = status === 'loading';
   // Nothing has said what the axis is yet — no mark has registered and no
@@ -759,28 +781,12 @@ function PlotLine({
     const max = domainMax.value;
     if (max === min || plot.width <= 0) return { d: '' };
 
-    if (!banded) return { d: linePath(values, plot, min, max, curve, false) };
-
     /*
-     * A banded line is built here rather than through `linePath`, which spreads
-     * its points across the full width. On a band scale the points belong in
-     * the middle of their own slice — a line that ignored that would start half
-     * a slice left of the bar it is describing.
+     * `banded` moves the points to the middle of their own slice, which is
+     * where a line drawn over columns has to sit — spread edge to edge it
+     * starts half a slice left of the bar it is describing.
      */
-    let d = '';
-    let drawn = 0;
-    for (let index = 0; index < values.length; index += 1) {
-      const value = values[index];
-      if (value === null || value === undefined) {
-        drawn = 0;
-        continue;
-      }
-      const x = bandOf(index, values.length, plot);
-      const y = yOf(value, plot, min, max);
-      d += `${drawn === 0 ? 'M' : 'L'}${x},${y}`;
-      drawn += 1;
-    }
-    return { d };
+    return { d: linePath(values, plot, min, max, curve, false, undefined, banded) };
   });
 
   if (status === 'loading') return null;
@@ -820,15 +826,19 @@ function PlotArea({
   opacity = 0.18,
   curve = 'monotone',
 }: PlotAreaProps) {
-  const { data, plot, domainMin, domainMax, status, clipId } = useChart('Plot.Area');
+  const { data, plot, xScale, domainMin, domainMax, status, clipId } =
+    useChart('Plot.Area');
   const fill = useMark(dataKey, color, colorIndex);
   const values = useMemo(() => columnValues(data, dataKey), [data, dataKey]);
+  const banded = xScale === 'band';
 
   const animatedProps = useAnimatedProps(() => {
     const min = domainMin.value;
     const max = domainMax.value;
     if (max === min || plot.width <= 0) return { d: '' };
-    return { d: areaPath(values, plot, min, max, curve, false) };
+    // Band-aware for the same reason the line is: an area on a plot that also
+    // carries columns has to close over the same slices they occupy.
+    return { d: areaPath(values, plot, min, max, curve, false, undefined, banded) };
   });
 
   if (status === 'loading') return null;
@@ -848,6 +858,18 @@ export interface PlotBarsProps extends PlotSeriesProps {
   /** Rounds the end the bar grows towards, in points. */
   radius?: number;
   opacity?: number;
+  /**
+   * The value the columns grow from. Zero by default, and zero is nearly always
+   * right — a bar is a length, and a length has to start where the quantity
+   * does.
+   *
+   * Set it for the case where the reader is being shown movement rather than
+   * size: temperatures against a seasonal average, a score against a pass mark.
+   * Columns then run up and down from that line instead of all standing on the
+   * floor. It is clamped into the axis, so a baseline the domain does not cover
+   * falls back to the nearer edge.
+   */
+  baseline?: number;
 }
 
 /**
@@ -866,6 +888,7 @@ function PlotBars({
   gap = 0.35,
   radius = 4,
   opacity = 1,
+  baseline = 0,
 }: PlotBarsProps) {
   const { data, plot, domainMin, domainMax, status, clipId } = useChart('Plot.Bars');
   const fill = useMark(dataKey, color, colorIndex);
@@ -881,12 +904,12 @@ function PlotBars({
     if (max === min || plot.width <= 0 || total === 0) return { d: '' };
 
     /*
-     * Bars grow from the baseline, which is the domain's zero where the domain
-     * covers it and the nearer edge where it does not. A bar drawn from the
+     * Bars grow from the baseline — zero unless the caller moved it — clamped
+     * into the domain where the axis does not reach it. A bar drawn from the
      * bottom of a plot whose axis starts at 40 is a length that is not in the
      * data.
      */
-    const base = yOf(Math.min(Math.max(0, min), max), plot, min, max);
+    const base = yOf(Math.min(Math.max(baseline, min), max), plot, min, max);
     let path = '';
 
     for (let index = 0; index < total; index += 1) {
@@ -1059,11 +1082,36 @@ PlotOverlay.displayName = 'Plot.Overlay';
 PlotOverlay.layer = 'overlay' as Layer;
 
 export interface PlotRuleProps {
-  /** Where to draw it, in the data's own units. */
-  y: number;
+  /**
+   * Where to draw it, in the data's own units. Omit it and pass `x` instead for
+   * a rule down the plot rather than across it.
+   */
+  y?: number;
+  /**
+   * A row to draw a vertical rule at, by index — the release the numbers are
+   * read against, the day a change landed.
+   *
+   * The x axis here carries positions rather than quantities, so this is which
+   * row rather than what value. Exactly one of `y` and `x` is drawn; `y` wins
+   * if both are given.
+   */
+  x?: number;
   /** A name for what the line means. Nothing is drawn without one. */
   label?: string;
+  /** Overrides the line *and* its caption, so the two cannot drift apart. */
   color?: string;
+  /** Thickness in points. */
+  strokeWidth?: number;
+  /**
+   * Break the line into dashes, for a rule that should read as an annotation
+   * rather than as a series the chart is drawing.
+   */
+  dashed?: boolean;
+  /** Fades the line and its caption together. */
+  opacity?: number;
+  /** Which end of the rule the caption sits at. */
+  labelPlacement?: 'start' | 'end';
+  labelClassName?: string;
   className?: string;
 }
 
@@ -1071,15 +1119,34 @@ export interface PlotRuleProps {
  * A reference line across the plot — a target, a limit, an average.
  *
  * A view rather than an SVG line, so its label is real text and follows the
- * theme. Its height is one point and its position is a transform, so it costs
+ * theme. Its thickness is a border and its position is a transform, so it costs
  * no more than the SVG line would while gaining a legible caption.
+ *
+ * It is drawn at full strength in the foreground colour, and it is meant to be.
+ * A reference line is the number the series is being judged against — a target
+ * nobody can read is a target the chart is not actually stating — so what keeps
+ * it from being mistaken for a series is that it is neutral and optionally
+ * dashed, not that it is faint.
  */
-function PlotRule({ y, label, color, className }: PlotRuleProps) {
-  const { plot, domainMin, domainMax, status } = useChart('Plot.Rule');
-  const token = useCSSVariable('--color-muted-foreground');
+function PlotRule({
+  y,
+  x,
+  label,
+  color,
+  strokeWidth = 1,
+  dashed = false,
+  opacity = 1,
+  labelPlacement = 'end',
+  labelClassName,
+  className,
+}: PlotRuleProps) {
+  const { plot, domainMin, domainMax, status, data } = useChart('Plot.Rule');
+  const token = useCSSVariable('--color-foreground');
   const stroke = color ?? (typeof token === 'string' ? token : '#888888');
+  const vertical = y === undefined && x !== undefined;
 
-  const style = useAnimatedStyle(() => {
+  const horizontalStyle = useAnimatedStyle(() => {
+    if (vertical || y === undefined) return { opacity: 0 };
     const min = domainMin.value;
     const max = domainMax.value;
     if (max === min) return { opacity: 0 };
@@ -1087,23 +1154,92 @@ function PlotRule({ y, label, color, className }: PlotRuleProps) {
     // Off the top or bottom of the plot is out of the chart's range, and a rule
     // pinned to the edge would claim a value the axis does not cover.
     const inside = at >= plot.top - 0.5 && at <= plot.top + plot.height + 0.5;
-    return { opacity: inside ? 1 : 0, transform: [{ translateY: at }] };
+    return { opacity: inside ? opacity : 0, transform: [{ translateY: at }] };
   });
 
   if (status === 'loading') return null;
+
+  const line = dashed
+    ? {
+        borderColor: stroke,
+        borderStyle: 'dashed' as const,
+        borderTopWidth: strokeWidth,
+      }
+    : { backgroundColor: stroke, height: strokeWidth };
+
+  if (vertical) {
+    /*
+     * The x axis carries positions, not quantities, so a vertical rule is
+     * placed from the row's own geometry rather than from the tweening domain —
+     * there is nothing on this axis for it to tween against.
+     */
+    const total = data.length;
+    const at =
+      total > 0
+        ? xOf(Math.max(0, Math.min(total - 1, x!)), total, plot)
+        : plot.left + plot.width / 2;
+
+    return (
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          left: at,
+          top: plot.top,
+          height: plot.height,
+          opacity,
+        }}
+        className={className}
+      >
+        <View
+          style={
+            dashed
+              ? {
+                  borderColor: stroke,
+                  borderStyle: 'dashed',
+                  borderLeftWidth: strokeWidth,
+                  flex: 1,
+                }
+              : { backgroundColor: stroke, width: strokeWidth, flex: 1 }
+          }
+        />
+        {label ? (
+          <Text
+            size="xs"
+            weight="medium"
+            numberOfLines={1}
+            style={color ? { color } : undefined}
+            className={cn('absolute left-1 top-0', labelClassName)}
+          >
+            {label}
+          </Text>
+        ) : null}
+      </View>
+    );
+  }
 
   return (
     <Animated.View
       pointerEvents="none"
       style={[
         { position: 'absolute', left: plot.left, width: plot.width, top: 0 },
-        style,
+        horizontalStyle,
       ]}
       className={className}
     >
-      <View style={{ height: 1, backgroundColor: stroke, opacity: 0.5 }} />
+      <View style={line} />
       {label ? (
-        <Text size="xs" muted numberOfLines={1} className="self-end pt-0.5">
+        <Text
+          size="xs"
+          weight="medium"
+          numberOfLines={1}
+          style={color ? { color } : undefined}
+          className={cn(
+            'pt-0.5',
+            labelPlacement === 'start' ? 'self-start' : 'self-end',
+            labelClassName
+          )}
+        >
           {label}
         </Text>
       ) : null}

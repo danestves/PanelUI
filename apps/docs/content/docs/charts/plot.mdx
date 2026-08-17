@@ -68,7 +68,7 @@ npx panelui-cli@latest add plot
 - **`Plot.Bars`** — A series as columns, all of them in one path. Its presence puts the whole plot on a band scale unless `xScale` says otherwise: a bar centred on the plot's edge is a bar half of which is outside it.
 - **`Plot.Line`** — A series as a stroked path. `curve="monotone"` never overshoots between points; `linear` joins them straight. `dashArray` is for a series that is not real yet — a forecast, a projection.
 - **`Plot.Dots`** — A dot per row, ringed in the page colour so it reads on top of the line rather than in it. For a series short enough that its individual points are worth marking.
-- **`Plot.Rule`** — A reference line across the plot at a value — a target, a limit, an average — with a caption naming it. A view rather than an SVG line, so the caption is real text; it hides itself when the value falls outside the axis rather than pinning to the edge and claiming a number the chart does not cover.
+- **`Plot.Rule`** — A reference line across the plot at a value — a target, a limit, an average — with a caption naming it. Pass `x` instead of `y` for a rule down the plot at a row: the release the numbers are read against, the day a change landed. A view rather than an SVG line, so the caption is real text; it hides itself when the value falls outside the axis rather than pinning to the edge and claiming a number the chart does not cover.
 - **`Plot.Layer`** — Marks of your own, dropped into the SVG tree where they are written. They reach the geometry through `usePlot()` rather than being handed it, because a mark that animates holds hooks and a render prop is not a component.
 - **`Plot.Overlay`** — Anything of yours that is text or takes a touch, laid over the drawing. SVG text ignores the platform's text scaling and the theme's font, and a gesture handler cannot be attached to an SVG node at all.
 - **`Plot.XAxis`** — Labels along the bottom, each centred on the row it names and clamped inside the frame.
@@ -190,20 +190,35 @@ It is resolved from the marks by default: a plot containing `Plot.Bars` is bande
 </Plot>
 ```
 
+### Marking a row, and moving the baseline
+
+`x` draws the rule down the plot at a row rather than across it at a value — here the month a change shipped, so the columns either side of it can be read against each other. `baseline` moves where the columns grow from, for a chart showing movement against a reference rather than size from zero.
+
+```tsx
+<Plot data={months} xDataKey="month" aspectRatio={1.7}>
+  <Plot.Header title="Change against plan" />
+  <Plot.Grid />
+  <Plot.Bars dataKey="delta" baseline={0} colorIndex={2} />
+  <Plot.Rule x={3} label="Shipped" dashed labelPlacement="start" />
+  <Plot.YAxis />
+  <Plot.XAxis ticks={6} />
+</Plot>
+```
+
 ## Versions
 
 ### Combination
 
-Columns and a line over them — revenue and costs, both money, on one shared scale.
+Columns and a line over them — costs and revenue, both money, on one shared scale. Revenue is the larger of the two every month, so it is the line: drawn the other way round it runs through the middle of the bars, and the gap that should read as margin has to be decoded instead.
 
 ```tsx
 <Plot data={months} xDataKey="month" aspectRatio={1.7}>
   <Plot.Header title="Revenue" value={money(total)} />
-  <Plot.Legend labels={{ revenue: 'Revenue', costs: 'Costs' }} />
+  <Plot.Legend labels={{ costs: 'Costs', revenue: 'Revenue' }} />
   <Plot.Grid />
-  <Plot.Bars dataKey="revenue" colorIndex={2} />
-  <Plot.Line dataKey="costs" colorIndex={1} curve="linear" />
-  <Plot.Dots dataKey="costs" colorIndex={1} />
+  <Plot.Bars dataKey="costs" colorIndex={2} />
+  <Plot.Line dataKey="revenue" colorIndex={1} />
+  <Plot.Dots dataKey="revenue" colorIndex={1} />
   <Plot.YAxis />
   <Plot.XAxis ticks={6} />
 </Plot>
@@ -211,14 +226,14 @@ Columns and a line over them — revenue and costs, both money, on one shared sc
 
 ### A pinned baseline
 
-Zero held at the bottom, the top left to follow the data, and a target drawn across it.
+Zero held at the bottom, the top rounded out to a whole number, and a target drawn across it. The rule is dashed rather than faint — it is the number every column is being judged against, so it has to survive being read over them.
 
 ```tsx
-<Plot data={months} xDataKey="month" yDomain={[0, 'auto']} aspectRatio={1.7}>
+<Plot data={months} xDataKey="month" yDomain={[0, 'auto']} nice aspectRatio={1.7}>
   <Plot.Header title="Revenue by month" />
   <Plot.Grid />
   <Plot.Bars dataKey="revenue" colorIndex={2} />
-  <Plot.Rule y={28000} label="Target" />
+  <Plot.Rule y={28000} label="Target" dashed />
   <Plot.YAxis format={(value) => money(Math.round(value))} />
   <Plot.XAxis ticks={6} />
 </Plot>
@@ -277,6 +292,7 @@ const row = active >= 0 ? months[active] : null;
 | `animationDuration` | `number` | `700` | Milliseconds for the plot to be uncovered on mount. |
 | `domainDuration` | `number` | `500` | Milliseconds for the y-axis to settle after the data changes. |
 | `yDomain` | `[PlotBound, PlotBound]` | — | The y-domain, as `[low, high]`. Either end may be a number to pin it there or `auto` to take it from the data. Pinning one end is the case this exists for: `[0, 'auto']` keeps the baseline at zero, which a chart of lengths needs — a bar cropped at the bottom is a length that lies — while still letting the top follow whatever arrives. |
+| `nice` | `boolean` | `false` | Round the derived ends of the y-domain out to whole numbers. Left off, an axis ends a tenth of the span past the largest value, so it gets labelled 34,650 — true, and not a number anybody was looking for. On, the ends move out to a step of 1, 2 or 5 times a power of ten, and the labels become values a reader can measure against. It only ever widens the axis, and a pinned end is left alone. |
 | `xScale` | `PlotScale` | — | How an index becomes an x. Derived from the marks when left out: a plot with bars in it is banded, and anything else is on points. |
 | `curve` | `PlotCurve` | `'monotone'` | How series are joined between points, unless a mark overrides it. |
 | `onActiveIndexChange` | `(index: number, datum: PlotDatum \| null) => void` | — | The row under the cursor as it moves, and `-1`/`null` when the finger lifts. This is how a readout *outside* the plot gets its value — that header is not inside this provider, so it cannot use `usePlotCursor`. |
@@ -321,6 +337,7 @@ const row = active >= 0 ? months[active] : null;
 | `gap` | `number` | `0.35` | Fraction of each slice left empty, `0` to `1`. |
 | `radius` | `number` | `4` | Rounds the end the bar grows towards, in points. |
 | `opacity` | `number` | `1` |  |
+| `baseline` | `number` | `0` | The value the columns grow from. Zero by default, and zero is nearly always right — a bar is a length, and a length has to start where the quantity does. Set it for the case where the reader is being shown movement rather than size: temperatures against a seasonal average, a score against a pass mark. Columns then run up and down from that line instead of all standing on the floor. It is clamped into the axis, so a baseline the domain does not cover falls back to the nearer edge. |
 
 ### Plot.Dots
 
@@ -339,9 +356,15 @@ const row = active >= 0 ? months[active] : null;
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `y` | `number` | — | Where to draw it, in the data's own units. |
+| `y` | `number` | — | Where to draw it, in the data's own units. Omit it and pass `x` instead for a rule down the plot rather than across it. |
+| `x` | `number` | — | A row to draw a vertical rule at, by index — the release the numbers are read against, the day a change landed. The x axis here carries positions rather than quantities, so this is which row rather than what value. Exactly one of `y` and `x` is drawn; `y` wins if both are given. |
 | `label` | `string` | — | A name for what the line means. Nothing is drawn without one. |
-| `color` | `string` | — |  |
+| `color` | `string` | — | Overrides the line *and* its caption, so the two cannot drift apart. |
+| `strokeWidth` | `number` | `1` | Thickness in points. |
+| `dashed` | `boolean` | `false` | Break the line into dashes, for a rule that should read as an annotation rather than as a series the chart is drawing. |
+| `opacity` | `number` | `1` | Fades the line and its caption together. |
+| `labelPlacement` | `'start' \| 'end'` | `'end'` | Which end of the rule the caption sits at. |
+| `labelClassName` | `string` | — |  |
 | `className` | `string` | — |  |
 
 ### Plot.XAxis
@@ -404,6 +427,16 @@ It plays once. Sending `status` back to `loading` and returning it to `ready` ar
 ### What registers, and why
 
 `Plot.Line`, `Plot.Area`, `Plot.Bars` and `Plot.Dots` each register their `dataKey` and colour with the root. That is what the derived domain measures and what the legend and the readout list. A mark drawn through `Plot.Layer` registers nothing — it is not reading a column the root knows about — so give the root a `yDomain` if what you drew has to fit inside the axis.
+
+### Reference lines
+
+`Plot.Rule` is drawn at full strength in the foreground colour. A target nobody can read is a target the chart is not stating, so what keeps a rule from being mistaken for a series is that it is neutral and, with `dashed`, broken — not that it is faint. `color` moves the line and its caption together, so the two cannot end up disagreeing about what the rule means.
+
+`labelPlacement` puts the caption at either end. `y` draws across the plot at a value; `x` draws down it at a row, by index, for the release or the deploy the numbers either side are being read against.
+
+### Round numbers on the axis
+
+An axis derived from the data ends where the data ended, which is how a chart comes to be labelled 34,650. `nice` rounds the derived ends out to a step of 1, 2 or 5 times a power of ten, so the labels are values a reader can measure a bar against. It only widens, never crops, and a pinned end is left where it was put — `yDomain={[0, 'auto']}` with `nice` keeps the baseline at zero and rounds only the top.
 
 ### Colours
 

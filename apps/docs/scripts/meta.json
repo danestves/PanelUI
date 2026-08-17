@@ -1018,7 +1018,8 @@
     {
       "group": "charts",
       "addedIn": "0.63.0",
-      "alpha": true
+      "alpha": true,
+      "updatedIn": "0.73.0"
     }
   ],
   "waterfall-chart": [
