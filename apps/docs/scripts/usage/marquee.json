@@ -1,6 +1,13 @@
 {
   "slug": "marquee",
   "intro": "Repeats content end to end and travels it across the container, for a strip of logos, a ticker of prices or a row of names that should keep moving rather than stop at the edge.\n\nThe content is measured once and tiled enough times to cover the container twice over. One track holds every copy and it is the track that moves, so the cost is a single animated node however much content is in it, driven on the UI thread as a linear timing.\n\nThe loop is exactly one copy-and-gap long, which is why the seam never shows: the state it ends on is the state it began on.\n\nContent has to have a size of its own to be measured. A child stretched to `flex-1`, or an image with no width and height, measures as nothing and the marquee will not start.\n\nFor content the reader should be able to move themselves, use a `ScrollView` and put [ScrollFade](/docs/components/scroll-fade) around it.",
+  "previewVideo": {
+    "src": "/previews/marquee.mp4",
+    "poster": "/previews/marquee-poster.jpg",
+    "alt": "The Marquee component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  },
   "usage": "<Marquee spacing={12} speed={40}>\n  <View className=\"flex-row gap-3\">\n    {stack.map((label) => (\n      <Badge key={label} variant=\"secondary\">{label}</Badge>\n    ))}\n  </View>\n</Marquee>",
   "extraImports": [
     "Badge",
