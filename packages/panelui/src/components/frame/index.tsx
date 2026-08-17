@@ -398,7 +398,7 @@ const FrameRow = forwardRef<View, FrameRowProps>(
 
     if (!onPress) {
       return (
-        <View ref={ref} className={classes} {...(props as ViewProps)}>
+        <View ref={ref} {...(props as ViewProps)} className={classes}>
           {body}
         </View>
       );
@@ -407,10 +407,10 @@ const FrameRow = forwardRef<View, FrameRowProps>(
     return (
       <Pressable
         ref={ref}
+        {...props}
         accessibilityRole="button"
         onPress={onPress}
         className={classes}
-        {...props}
       >
         {body}
       </Pressable>
