@@ -1254,6 +1254,7 @@ function FlowNode({
     <FlowNodeContext.Provider value={id}>
       <GestureDetector gesture={gesture}>
         <Animated.View
+          {...props}
           collapsable={false}
           onLayout={onLayout}
           style={[{ position: 'absolute', top: 0, left: 0 }, style]}
@@ -1267,7 +1268,6 @@ function FlowNode({
           accessibilityState={{ selected }}
           accessibilityActions={nodeActions}
           onAccessibilityAction={handleAccessibilityAction}
-          {...props}
         >
           {textChildren(children)}
         </Animated.View>
