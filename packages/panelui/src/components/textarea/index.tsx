@@ -39,6 +39,7 @@ import type { KeyboardAvoidanceMode } from '../../hooks/use-keyboard-avoidance';
 import { KeyboardAvoider } from '../../primitives/keyboard-avoider';
 import { Text } from '../../primitives/text';
 import { Label } from '../label';
+import { textareaIsDisabled } from './textarea-disabled';
 
 /** Long enough to read as a transition, short enough not to lag a fast tab. */
 const FOCUS_DURATION = 150;
@@ -183,6 +184,8 @@ export const Textarea = forwardRef<TextInput, TextareaProps>(
       onFocus,
       onBlur,
       onContentSizeChange,
+      editable,
+      accessibilityState,
       style,
       ...props
     },
@@ -190,6 +193,7 @@ export const Textarea = forwardRef<TextInput, TextareaProps>(
   ) => {
     const [focused, setFocused] = useState(false);
     const invalid = !!errorMessage;
+    const isDisabled = textareaIsDisabled(disabled, editable);
 
     const metrics = METRICS[size];
     /* Both paddings plus the lines themselves — the box a row count asks for. */
@@ -225,7 +229,7 @@ export const Textarea = forwardRef<TextInput, TextareaProps>(
     const slots = textareaVariants({
       variant,
       size,
-      disabled: !!disabled,
+      disabled: isDisabled,
       over,
     });
 
@@ -320,19 +324,19 @@ export const Textarea = forwardRef<TextInput, TextareaProps>(
     const body = (
       <>
         {label ? (
-          <Label isRequired={isRequired} isInvalid={invalid} isDisabled={!!disabled}>
+          <Label isRequired={isRequired} isInvalid={invalid} isDisabled={isDisabled}>
             {label}
           </Label>
         ) : null}
         <AnimatedTextInput
           ref={ref}
           multiline
-          editable={!disabled}
+          editable={!isDisabled}
           onFocus={handleFocus}
           onBlur={handleBlur}
           onContentSizeChange={handleContentSizeChange}
           accessibilityLabel={label}
-          accessibilityState={{ disabled: !!disabled }}
+          accessibilityState={{ ...accessibilityState, disabled: isDisabled }}
           aria-required={isRequired}
           aria-invalid={invalid}
           className={slots.field({ className })}
