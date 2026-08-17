@@ -198,7 +198,7 @@ const PostRoot = forwardRef<View, PostProps>(
 
     if (!onPress) {
       return (
-        <View ref={ref} className={root({ className })} {...props}>
+        <View ref={ref} {...props} className={root({ className })}>
           {body}
         </View>
       );
@@ -210,10 +210,10 @@ const PostRoot = forwardRef<View, PostProps>(
       // as one button buries them.
       <AnimatedPressable
         ref={ref}
+        {...props}
         accessibilityRole="link"
         onPress={onPress}
         className={root({ className })}
-        {...props}
       >
         {body}
       </AnimatedPressable>
@@ -681,7 +681,7 @@ const PostMedia = forwardRef<View, PostMediaProps>(
 
     if (!onPress) {
       return (
-        <View ref={ref} className={media({ className })} style={{ aspectRatio }} {...props}>
+        <View ref={ref} {...props} className={media({ className })} style={{ aspectRatio }}>
           {picture}
         </View>
       );
@@ -690,12 +690,12 @@ const PostMedia = forwardRef<View, PostMediaProps>(
     return (
       <Pressable
         ref={ref}
+        {...props}
         accessibilityRole="imagebutton"
         accessibilityLabel={alt}
         onPress={onPress}
         className={media({ className })}
         style={{ aspectRatio }}
-        {...props}
       >
         {picture}
       </Pressable>
