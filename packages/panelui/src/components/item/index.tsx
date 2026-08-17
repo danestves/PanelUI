@@ -148,21 +148,21 @@ const ItemRoot = forwardRef<View, ItemProps>(
     const body = !onPress ? (
       <View
         ref={ref}
+        {...(props as ViewProps)}
         accessibilityState={{ disabled: !!disabled }}
         className={root({ className })}
-        {...(props as ViewProps)}
       >
         {textChildren(children)}
       </View>
     ) : (
       <AnimatedPressable
         ref={ref}
+        {...props}
         accessibilityRole="button"
         accessibilityState={{ disabled: !!disabled }}
         disabled={disabled}
         onPress={onPress}
         className={root({ className })}
-        {...props}
       >
         {textChildren(children)}
       </AnimatedPressable>
