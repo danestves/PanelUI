@@ -18,7 +18,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
-import { View, type ViewProps } from 'react-native';
+import { AppState, View, type ViewProps } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -537,6 +537,20 @@ function ToastStack({
  */
 export function ToastViewport() {
   const items = useSyncExternalStore(toastStore.subscribe, toastStore.getSnapshot);
+
+  useEffect(() => {
+    const syncTimers = (state: string) => {
+      if (state === 'active') toastStore.resumeTimers();
+      else toastStore.pauseTimers();
+    };
+
+    syncTimers(AppState.currentState);
+    const subscription = AppState.addEventListener('change', syncTimers);
+    return () => {
+      subscription.remove();
+      toastStore.pauseTimers();
+    };
+  }, []);
 
   if (items.length === 0) return null;
 

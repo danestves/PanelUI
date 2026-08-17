@@ -44,11 +44,18 @@ const DEFAULT_DURATION = 4000;
 
 let counter = 0;
 
-class ToastStore {
+interface ToastTimer {
+  remaining: number;
+  startedAt?: number;
+  timeout?: ReturnType<typeof setTimeout>;
+}
+
+export class ToastStore {
   private items: ToastItem[] = [];
   private snapshot: readonly ToastItem[] = this.items;
   private listeners = new Set<() => void>();
-  private timers = new Map<string, ReturnType<typeof setTimeout>>();
+  private timers = new Map<string, ToastTimer>();
+  private timersPaused = false;
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -69,10 +76,9 @@ class ToastStore {
 
     const duration = resolved.duration ?? DEFAULT_DURATION;
     if (duration > 0) {
-      this.timers.set(
-        id,
-        setTimeout(() => this.hide(id), duration)
-      );
+      const timer = { remaining: duration };
+      this.timers.set(id, timer);
+      if (!this.timersPaused) this.startTimer(id, timer);
     }
 
     return id;
@@ -81,7 +87,7 @@ class ToastStore {
   hide = (id: string) => {
     const timer = this.timers.get(id);
     if (timer) {
-      clearTimeout(timer);
+      if (timer.timeout !== undefined) clearTimeout(timer.timeout);
       this.timers.delete(id);
     }
     if (!this.items.some((item) => item.id === id)) return;
@@ -90,12 +96,41 @@ class ToastStore {
   };
 
   hideAll = () => {
-    this.timers.forEach(clearTimeout);
+    this.timers.forEach((timer) => {
+      if (timer.timeout !== undefined) clearTimeout(timer.timeout);
+    });
     this.timers.clear();
     if (this.items.length === 0) return;
     this.items = [];
     this.emit();
   };
+
+  /** Pause auto-dismiss countdowns while their viewport is not visible. */
+  pauseTimers = () => {
+    if (this.timersPaused) return;
+    this.timersPaused = true;
+    const now = Date.now();
+
+    this.timers.forEach((timer) => {
+      if (timer.timeout === undefined || timer.startedAt === undefined) return;
+      clearTimeout(timer.timeout);
+      timer.remaining = Math.max(0, timer.remaining - (now - timer.startedAt));
+      delete timer.timeout;
+      delete timer.startedAt;
+    });
+  };
+
+  /** Resume each auto-dismiss countdown from its remaining visible time. */
+  resumeTimers = () => {
+    if (!this.timersPaused) return;
+    this.timersPaused = false;
+    this.timers.forEach((timer, id) => this.startTimer(id, timer));
+  };
+
+  private startTimer(id: string, timer: ToastTimer) {
+    timer.startedAt = Date.now();
+    timer.timeout = setTimeout(() => this.hide(id), timer.remaining);
+  }
 
   private emit() {
     this.snapshot = this.items;
