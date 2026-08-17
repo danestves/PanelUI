@@ -149,7 +149,13 @@ const dayVariants = tv({
      * Square-ish because a day here holds a number, a marker and sometimes an
      * icon, and a circle wastes the corners it needs for them.
      */
-    cell: 'mx-0.5 h-14 flex-1 rounded-xl px-1.5 pt-1.5',
+    /*
+     * The transparent border is load-bearing: today and the open day both draw
+     * one, and a cell that only grows a border when it is picked shifts its
+     * contents by a point at the moment you look at it. Every cell reserves the
+     * point; the variants below only colour it.
+     */
+    cell: 'mx-0.5 h-14 flex-1 rounded-xl border border-transparent px-1.5 pt-1.5',
     number: 'text-xs leading-none',
     marker: 'absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full',
     body: 'flex-1 flex-row items-center justify-center gap-0.5 pb-1',
@@ -161,13 +167,22 @@ const dayVariants = tv({
       false: { cell: 'bg-muted/15', number: 'text-muted-foreground/40' },
     },
     /*
-     * Today is the number, not the tile. A ring on today and a ring on the
-     * open day are two rings that mean different things and look the same.
+     * Today rings the tile; the open day fills it. Two rings would be the
+     * problem — two channels are not, and the ring is the one that has to
+     * survive being read at a glance across forty-two tiles.
      */
-    today: { true: { number: 'text-primary font-semibold' } },
-    selected: { true: { cell: 'border border-primary/60 bg-primary/10' } },
+    today: { true: { cell: 'border-foreground', number: 'font-semibold' } },
+    selected: { true: { cell: 'border-primary/60 bg-primary/10' } },
     disabled: { true: { cell: 'opacity-40' } },
   },
+  compoundVariants: [
+    /*
+     * Today, and open. Declaration order would otherwise hand the border to
+     * `selected` and lose the one mark that says which day it actually is —
+     * so the ring is restated over the fill.
+     */
+    { today: true, selected: true, class: { cell: 'border-foreground bg-primary/10' } },
+  ],
   defaultVariants: { inMonth: true },
 });
 

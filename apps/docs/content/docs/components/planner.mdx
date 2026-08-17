@@ -296,6 +296,12 @@ An entry is `{ id, date, label }`, plus an optional `category` and `icon`. Pass 
 
 A `category` is the key to a colour. Categories take their dot from the `--color-chart-*` tokens in the order they are declared, so they follow the theme into dark mode — give one a `colorIndex` to pick a different token, or a `color` for a brand that is not the theme's to choose.
 
+### Today, and the day you opened
+
+Today rings its tile; the day you open fills it. They are two different marks because they answer two different questions — which day it is now, and which day the details below belong to — and a day that is both keeps the ring over the fill.
+
+The ring is drawn in the foreground colour, so it reads as a plain outline against the tile in either theme. Every cell reserves the ring's width whether it draws one or not, so nothing shifts by a point at the moment it is picked.
+
 ### What a day draws, and what it says
 
 A cell draws up to `entryLimit` icons — two by default — and then a count of what is left. It is one marker dot per day rather than one per entry: a cell that fits a row of dots does not also fit the date.
