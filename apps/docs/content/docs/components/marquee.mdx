@@ -18,7 +18,7 @@ For content the reader should be able to move themselves, use a `ScrollView` and
 Marquee ships with the library — no separate install.
 
 ```tsx
-import { Marquee, Badge, Chip, Surface, Text, Switch } from 'panelui-native';
+import { Marquee, Badge, Chip, Post, Surface, Text, Switch, MessageCircleIcon } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -107,6 +107,70 @@ const [playing, setPlaying] = useState(true);
   </View>
 </Marquee>
 <Switch value={playing} onValueChange={setPlaying} />
+```
+
+## Versions
+
+### A wall of logos
+
+The customer strip a marketing page runs across its width. Two rows travelling against each other, because one row of marks reads as a list that happens to be sliding.
+
+The logos are drawn as SVG paths rather than fetched as images, and that is the part worth copying: content is measured once, and an image with no width and height measures as nothing — so a strip of remote logos is the arrangement most likely to never start. A path has its size the moment it mounts. Fetching them instead is fine as long as every `Image` is given explicit dimensions.
+
+The marks take the foreground colour rather than each brand's own. Eight brand colours in one strip is eight things competing with the page they sit on.
+
+```tsx
+const second = [...brands.slice(4), ...brands.slice(0, 4)];
+
+<View className="gap-3">
+  <Marquee spacing={12} speed={28}>
+    <View className="flex-row gap-3">
+      {brands.map((brand) => (
+        <BrandMark key={brand.name} name={brand.name} path={brand.path} />
+      ))}
+    </View>
+  </Marquee>
+  <Marquee spacing={12} speed={28} reverse>
+    <View className="flex-row gap-3">
+      {second.map((brand) => (
+        <BrandMark key={brand.name} name={brand.name} path={brand.path} />
+      ))}
+    </View>
+  </Marquee>
+</View>
+```
+
+### A feed that keeps moving
+
+Cards on the vertical axis. The container gives the height, because a vertical marquee has no content width to take one from, and each card is given a width for the same reason a logo needs one.
+
+Holding a card stops the travel. A post sliding out from under a finger cannot be read or tapped accurately, and the hold sits on a wrapper rather than on the card so the stats inside it keep their own presses.
+
+```tsx
+const [playing, setPlaying] = useState(true);
+
+<Marquee direction="vertical" spacing={12} speed={22} playing={playing} className="flex-1">
+  <View className="gap-3">
+    {posts.map((post) => (
+      <Pressable
+        key={post.id}
+        className="w-72"
+        onPressIn={() => setPlaying(false)}
+        onPressOut={() => setPlaying(true)}
+      >
+        <Post variant="compact">
+          <Post.Header>
+            <Post.Author name={post.author} handle={post.handle} timestamp="2h" />
+          </Post.Header>
+          <Post.Body numberOfLines={3}>{post.body}</Post.Body>
+          <Post.Footer>
+            <Post.Stat icon={MessageCircleIcon} value={post.replies} />
+          </Post.Footer>
+        </Post>
+      </Pressable>
+    ))}
+  </View>
+</Marquee>
 ```
 
 ## API Reference
