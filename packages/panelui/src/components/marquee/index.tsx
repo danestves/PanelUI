@@ -62,12 +62,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useDirectionSign } from '../../hooks/use-direction';
 import { cn } from '../../utils/cn';
-
-/**
- * Points per second. Slow enough that a word stays readable as it crosses,
- * which is the speed a ticker is actually for.
- */
-const DEFAULT_SPEED = 40;
+import {
+  DEFAULT_MARQUEE_SPEED,
+  marqueeCopyCount,
+  normalizeMarqueeSpeed,
+} from './marquee-math';
 
 export type MarqueeDirection = 'horizontal' | 'vertical';
 
@@ -98,7 +97,7 @@ export interface MarqueeProps extends Omit<ViewProps, 'children'> {
 export function Marquee({
   className,
   children,
-  speed = DEFAULT_SPEED,
+  speed: speedProp = DEFAULT_MARQUEE_SPEED,
   spacing = 0,
   direction = 'horizontal',
   reverse = false,
@@ -115,19 +114,22 @@ export function Marquee({
 
   const [viewport, setViewport] = useState(0);
   const [content, setContent] = useState(0);
+  const speed = normalizeMarqueeSpeed(speedProp);
 
   // The distance from one copy to the same point on the next, and therefore
   // both the layout step and the exact loop length. They are the same number
   // on purpose: taking the gap from anywhere else is how a seam appears.
-  const period = content > 0 ? content + spacing : 0;
+  const layout = useMemo(
+    () => marqueeCopyCount(viewport, content, spacing),
+    [viewport, content, spacing]
+  );
+  const { period } = layout;
 
   const copies = useMemo(() => {
-    if (period <= 0 || viewport <= 0) return [];
     // Enough to span the container, plus one trailing into view and one
     // already past it — the two the travel consumes before the loop restarts.
-    const count = Math.ceil(viewport / period) + 2;
-    return Array.from({ length: count }, (_, index) => index);
-  }, [period, viewport]);
+    return Array.from({ length: layout.count }, (_, index) => index);
+  }, [layout.count]);
 
   const offset = useSharedValue(0);
 
