@@ -112,6 +112,12 @@ import {
   type Plot as PlotBox,
 } from '../../utils/chart';
 import { cn } from '../../utils/cn';
+import {
+  registerPlotSeries,
+  unregisterPlotSeries,
+  visiblePlotSeries,
+  type PlotSeriesRegistration,
+} from './plot-series-registry';
 
 /*
  * The scale functions, re-exported so a mark written outside this file can sit
@@ -214,7 +220,7 @@ export interface PlotGeometry {
   /** Every mark that registered itself, as `[dataKey, colour]`. */
   series: [string, string][];
   registerSeries: (key: string, color: string) => void;
-  unregisterSeries: (key: string) => void;
+  unregisterSeries: (key: string, color?: string) => void;
   /** Row under the cursor, or `-1`. On the UI thread. */
   activeIndex: SharedValue<number>;
   /** The same index on the JS thread, for anything that has to re-render. */
@@ -340,7 +346,7 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
   ref
 ) {
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [series, setSeries] = useState<[string, string][]>([]);
+  const [registrations, setRegistrations] = useState<PlotSeriesRegistration[]>([]);
   const [activeIndexJS, setActiveIndexJS] = useState(-1);
   const clipId = `panelui-plot-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
@@ -352,18 +358,17 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
 
   const registerSeries = useMemo(
     () => (key: string, color: string) =>
-      setSeries((current) => {
-        const existing = current.find(([k]) => k === key);
-        if (existing?.[1] === color) return current;
-        return [...current.filter(([k]) => k !== key), [key, color]];
-      }),
+      setRegistrations((current) => registerPlotSeries(current, key, color)),
     []
   );
 
   const unregisterSeries = useMemo(
-    () => (key: string) => setSeries((current) => current.filter(([k]) => k !== key)),
+    () => (key: string, color?: string) =>
+      setRegistrations((current) => unregisterPlotSeries(current, key, color)),
     []
   );
+
+  const series = useMemo(() => visiblePlotSeries(registrations), [registrations]);
 
   /*
    * What the children need decided before anything is laid out.
@@ -404,7 +409,7 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
    * magnitude apart look alike, which is the chart lying rather than the chart
    * being convenient.
    */
-  const seriesKeys = series.map(([key]) => key).join('|');
+  const seriesKeys = useMemo(() => series.map(([key]) => key), [series]);
   const extent = useMemo<[number, number]>(() => {
     const lowPin = yDomain?.[0];
     const highPin = yDomain?.[1];
@@ -412,11 +417,10 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
       return [lowPin, highPin];
     }
 
-    const keys = seriesKeys ? seriesKeys.split('|') : [];
     let min = Infinity;
     let max = -Infinity;
     for (const row of data) {
-      for (const key of keys) {
+      for (const key of seriesKeys) {
         const value = row[key];
         if (typeof value !== 'number' || Number.isNaN(value)) continue;
         if (value < min) min = value;
@@ -692,7 +696,7 @@ function useMark(dataKey: string, color: string | undefined, colorIndex: number)
 
   useEffect(() => {
     registerSeries(dataKey, resolved);
-    return () => unregisterSeries(dataKey);
+    return () => unregisterSeries(dataKey, resolved);
   }, [dataKey, resolved, registerSeries, unregisterSeries]);
 
   return resolved;
