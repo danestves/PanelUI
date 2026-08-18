@@ -121,3 +121,17 @@ test('every circular control is a sized box with the pressable filling it', () =
   // with the symbol's font metrics in it, which is not the box it draws in.
   assert.doesNotMatch(inputSource, /getNativeUI|matchContents/);
 });
+
+test('every control that hands over still carries its press handler', () => {
+  /*
+   * A native control is drawn by the platform, so a dropped `onPress` looks
+   * exactly like a working button — there is no visual tell at all. Each
+   * handoff is checked for the handler it was given rather than trusted.
+   */
+  for (const match of [...inputSource.matchAll(/<Button\b[\s\S]{0,500}?>/g)]) {
+    const tag = match[0];
+    assert.match(tag, /\bnative\b/, `a Button here should hand over:\n${tag}`);
+    assert.match(tag, /onPress=\{/, `a handed-over control lost its handler:\n${tag}`);
+    assert.match(tag, /accessibilityLabel=\{/, `the platform draws no label of its own:\n${tag}`);
+  }
+});
