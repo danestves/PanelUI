@@ -73,6 +73,7 @@ const SUPPORT_DESCRIPTIONS = {
   'use-copy-to-clipboard': 'Copy text, with a temporary copied state.',
   'use-debounced-value': 'A copy of a value that settles after changes stop.',
   'use-disclosure': 'Open and closed state for an overlay.',
+  'controllable-state': 'Owner-driven controlled and uncontrolled state lifecycle.',
   'use-keyboard': 'Keyboard height and visibility.',
   'use-keyboard-avoidance': 'Lift an element just clear of the software keyboard.',
   'use-previous': 'The value from the previous render.',
