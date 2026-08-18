@@ -279,7 +279,7 @@ const [selected, setSelected] = useState<string[]>([]);
 | `onExpandedChange` | `(expanded: string[]) => void` | — | Fires with the next set of open branches — the hook to load a branch's children on. |
 | `expandOnPress` | `boolean` | `true` | Whether pressing anywhere on a branch's row opens it, as well as selecting it. Turn it off when selecting a branch has to be possible without opening it; the chevron still opens it either way. |
 | `showLines` | `boolean` | `false` | Draw a hairline down each level, connecting a branch to the rows inside it. |
-| `indent` | `number` | `DEFAULT_INDENT` | How far one level is drawn in from its parent, in points. |
+| `indent` | `number` | `16` | How far one level is drawn in from its parent, in points. |
 
 ### Tree.Item
 

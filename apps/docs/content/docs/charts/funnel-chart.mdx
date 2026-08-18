@@ -258,15 +258,15 @@ One plain ribbon while it waits, because an invented drop-off is a lie.
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `data` | `FunnelDatum[]` | — | The steps, in the order they happen. Never reordered. |
-| `height` | `number` | `DEFAULT_HEIGHT` | How tall the run is drawn, in points. The run is as wide as it is given and as deep as this: the width is the card's, but nothing in the data says how far the ribbon should taper through, so it is a decision rather than a measurement. |
+| `height` | `number` | `200` | How tall the run is drawn, in points. The run is as wide as it is given and as deep as this: the width is the card's, but nothing in the data says how far the ribbon should taper through, so it is a decision rather than a measurement. |
 | `stageSize` | `number` | — | How wide one stage is, in points. Left unset the stages divide the width between them, which is nearly always what a run across a card wants. Worth setting only to make a run stop short of the edge. |
 | `gap` | `number` | `4` | Space between one stage and the next, in points. |
-| `layers` | `number` | `DEFAULT_LAYERS` | Concentric rings drawn per stage, faint and wide on the outside through to a near-solid core. `1` draws the band once, flat. |
+| `layers` | `number` | `3` | Concentric rings drawn per stage, faint and wide on the outside through to a near-solid core. `1` draws the band once, flat. |
 | `edges` | `FunnelEdges` | `'curved'` | Whether the sides of a band are curves or straight diagonals. |
 | `minWidth` | `number` | `0.1` | The shortest a non-zero stage is drawn, as a share of the tallest. A stage worth a fifth of a percent of the first is a hairline: it reads as missing rather than as small, and "missing" is a different claim. The floor is only applied to stages that have something in them — a genuine zero is drawn as nothing, because there it is the truth. |
 | `color` | `string` | — | The funnel's hue. Defaults to the first chart token. |
 | `animationDuration` | `number` | `700` | Milliseconds for one stage to grow. |
-| `staggerDelay` | `number` | `STAGGER` | Milliseconds between one stage starting and the next. `0` for all at once. |
+| `staggerDelay` | `number` | `90` | Milliseconds between one stage starting and the next. `0` for all at once. |
 | `status` | `FunnelChartStatus` | `'ready'` | `loading` draws one plain muted ribbon until the data arrives. |
 | `activeIndex` | `number` | — | Selected stage. Leave unset to let the chart track it. |
 | `onActiveIndexChange` | `(index: number) => void` | — | Fires with the selected stage, or `-1` when the selection is cleared. |

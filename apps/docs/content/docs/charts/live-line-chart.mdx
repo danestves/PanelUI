@@ -263,7 +263,7 @@ const [held, setHeld] = useState(false);
 | `accessibilityLabel` | `string` | — | Names the chart's single screen-reader snapshot. Falls back to the Header title, then to "Live line chart". |
 | `accessibilityHint` | `string` | — | Additional guidance after the snapshot. No gesture is invented for it. |
 | `data` | `LiveLinePoint[]` | — | The readings so far. Invalid values are dropped and timestamps are ordered. |
-| `window` | `number` | — | How much time the plot spans, in seconds. Invalid values use 30. |
+| `window` | `number` | `30` | How much time the plot spans, in seconds. Invalid values use 30. |
 | `paused` | `boolean` | `false` | Freeze the window where it is. The readings still arrive; the clock stops. |
 | `yDomain` | `[number, number]` | — | Fix the y-axis instead of deriving it from what is visible. |
 | `domainDuration` | `number` | `420` | Milliseconds for the y-axis to settle after the range changes. |

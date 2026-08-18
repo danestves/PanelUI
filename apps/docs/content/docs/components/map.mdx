@@ -352,7 +352,7 @@ Edge nodes coloured by state, spread across the world. A marker is a React view,
 | `pitch` | `number` | — | Initial tilt in degrees. 0 looks straight down. |
 | `bounds` | `LngLatBounds` | — | Frame these bounds instead of centring — `[west, south, east, north]`. Wins over `center` and `zoom` when both are given. |
 | `blank` | `boolean` | `false` | Drop the basemap and keep only the ground colour. For data that carries its own geography — a choropleth, an arc diagram — where streets underneath are noise rather than context. |
-| `source` | `BasemapSource` | `CARTO_SOURCE` | Where the vector tiles come from. Defaults to CARTO, which is free for non-commercial use and licensed for everything else. |
+| `source` | `BasemapSource` | — | Where the vector tiles come from. Defaults to CARTO, which is free for non-commercial use and licensed for everything else. |
 | `mapStyle` | `string \| StyleSpecification` | — | Use this style wholesale instead of building one from tokens. The escape hatch for a map that has to match something outside the app. |
 | `rotatable` | `boolean` | `false` | Let the map rotate and tilt. Off by default — most maps only pan and zoom. |
 | `interactive` | `boolean` | `true` | Turn off panning and zooming, for a map that is an illustration. |

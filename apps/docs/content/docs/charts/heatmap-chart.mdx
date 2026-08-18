@@ -299,7 +299,7 @@ Rows that are hours and columns that are weekdays. “When is this busy” is a 
 | `gap` | `number` | `3` | Space between cells, in pixels. |
 | `cornerRadius` | `number` | `2` | Corner radius of a cell. |
 | `weekStartDay` | `number` | `0` | Which weekday is the top row. `0` is Sunday. Labels follow it. |
-| `rows` | `number` | `DAYS_IN_WEEK` | Rows per column. Seven for a calendar; use another number when the bins are not weekdays — twenty-four for a grid of hours. |
+| `rows` | `number` | `7` | Rows per column. Seven for a calendar; use another number when the bins are not weekdays — twenty-four for a grid of hours. |
 | `levels` | `number[]` | — | The four counts at which the ramp steps up. Derived from the data's own quartiles when omitted, so a chart of single digits and a chart of thousands both use the whole ramp. |
 | `levelColors` | `string[]` | — | Five colours — empty, then the four activity levels. Replaces the derived ramp outright. Omit it and the ramp is `--color-chart-1` at five opacities, which follows the theme. |
 | `color` | `string` | — | Base colour for the derived ramp — the colour the busiest cells are drawn in, with the quieter levels the same colour at lower opacity. Takes a theme token by name as well as a literal, so `"--color-chart-3"` recolours the chart and keeps following the theme through light and dark. Defaults to `--color-chart-1`. |
@@ -336,7 +336,7 @@ Rows that are hours and columns that are weekdays. “When is this busy” is a 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `width` | `number` | `DEFAULT_AXIS_WIDTH` | Width reserved for the labels. The grid is sized around it. |
+| `width` | `number` | `26` | Width reserved for the labels. The grid is sized around it. |
 | `tickFilter` | `'all' \| 'odd' \| 'even'` | `'odd'` | Which rows get a label. Every other row is the usual choice. |
 | `labelFormat` | `'initial' \| 'full'` | `'full'` | `initial` is the single letter; `full` is the abbreviated name. |
 | `labels` | `string[]` | — | Row labels, top to bottom. Overrides the weekday names — for a grid whose rows are not days. |
@@ -347,7 +347,7 @@ Rows that are hours and columns that are weekdays. “When is this busy” is a 
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `formatLabel` | `(cell: HeatmapCell) => string` | — | The line shown for a cell. Defaults to the count and the date. |
-| `activateAfterLongPress` | `number` | `DEFAULT_HOLD` | How long a press has to be held before the readout takes over, in milliseconds. It is not zero, and cannot be: a full year of columns lives inside a horizontal scroller, and a readout that claims the touch on the first pixel of movement means the chart can never be scrolled. Holding first is what separates "I am moving the chart" from "I am reading it". Set `0` only for a chart that is not inside a scroll view at all. |
+| `activateAfterLongPress` | `number` | `180` | How long a press has to be held before the readout takes over, in milliseconds. It is not zero, and cannot be: a full year of columns lives inside a horizontal scroller, and a readout that claims the touch on the first pixel of movement means the chart can never be scrolled. Holding first is what separates "I am moving the chart" from "I am reading it". Set `0` only for a chart that is not inside a scroll view at all. |
 
 ### HeatmapChart.HeatmapLegend
 

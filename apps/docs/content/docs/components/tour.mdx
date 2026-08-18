@@ -279,15 +279,15 @@ const offsets = useRef<Record<number, number>>({});
 | `onStepChange` | `(step: number) => void` | — | Fires with the `order` about to be shown, before it is. This is where a target inside a scroller is brought back into view: the step is measured on the next frame, so a `scrollTo` issued here lands first. |
 | `onFinish` | `() => void` | — | The last step was acknowledged. |
 | `onSkip` | `() => void` | — | The tour was ended early — the skip control, the backdrop, or Android back. |
-| `padding` | `number` | `DEFAULT_PADDING` | Room left around every target, in pixels. 8 by default. A step may override it. |
-| `radius` | `number` | `DEFAULT_RADIUS` | Corner radius of a rectangular cutout, in pixels. 12 by default. A step may override it. |
+| `padding` | `number` | `8` | Room left around every target, in pixels. 8 by default. A step may override it. |
+| `radius` | `number` | `12` | Corner radius of a rectangular cutout, in pixels. 12 by default. A step may override it. |
 | `shape` | `TourShape` | `'rect'` | Shape of every cutout. A step may override it. |
 | `placement` | `TourPlacement` | `'auto'` | Which side of the target the card prefers. `auto` puts it below when below fits and above when it does not, which is the only behaviour that survives a target near an edge. |
 | `dismissible` | `boolean` | `true` | Ending the tour by pressing the dimmed area, or Android back. Default true. |
 | `showProgress` | `boolean` | `true` | Show "2 of 5" above the step's title. Default true. |
 | `showSkip` | `boolean` | `true` | Show the skip control. Default true. |
 | `interactive` | `boolean` | `false` | Leave the spotlit control pressable. Off by default: a tour is usually read rather than used, and a control that reacts under the dim invites people to start doing the thing before they have been told what it does. Turn it on for the walkthrough that asks you to try the step — the target keeps its own `onPress`, so advancing the tour from it is the app's call. |
-| `overlayColor` | `string` | `DEFAULT_OVERLAY` | The dim laid over everything outside the cutout. Black at 66% by default — dark enough that the hole reads as the only lit thing, light enough that the screen behind it is still recognisable as the screen you were on. |
+| `overlayColor` | `string` | `'rgba(0, 0, 0, 0.66)'` | The dim laid over everything outside the cutout. Black at 66% by default — dark enough that the hole reads as the only lit thing, light enough that the screen behind it is still recognisable as the screen you were on. |
 | `labels` | `TourLabels` | — | The words on the card's controls. |
 | `cardClassName` | `string` | — | Extra classes for the card. |
 

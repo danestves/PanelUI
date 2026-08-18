@@ -239,7 +239,7 @@ For a planner inside a sheet, a dialog or a card that already draws its own boun
 | `defaultSelected` | `Date \| null` | `null` |  |
 | `onSelectedChange` | `(date: Date \| null) => void` | — |  |
 | `onDayPress` | `(date: Date, entries: PlannerEntry[]) => void` | — | Runs before the selection moves, whether or not `Details` is present. |
-| `entryLimit` | `number` | `DEFAULT_ENTRY_LIMIT` | How many entries a cell draws before it counts the rest. Default `2`. |
+| `entryLimit` | `number` | `2` | How many entries a cell draws before it counts the rest. Default `2`. |
 | `weekStartsOn` | `number \| 'auto'` | `'auto'` | First day of the week, 0 is Sunday. Defaults to the locale's. |
 | `locale` | `DateLocale` | — |  |
 | `calendar` | `CalendarSystem` | `'gregory'` |  |
