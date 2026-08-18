@@ -9,6 +9,127 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.75.0] — 2026-08-18
+
+### Added
+
+- **`SplitView`, two stacked panes whose seam settles on a named height.** The case `Splitter`
+  does not serve: a layout with a few right answers — a map over a list, a preview over an editor
+  — is better served by a seam that lands on one of them than by one that lets the reader stop
+  three points short and live with it. `snapPoints` are fractions of the room the two panes share,
+  so they mean the same thing on any screen; a number above `1` is points, and a negative
+  `maxHeight` is measured back from the bottom, for the limit that is always written as a
+  subtraction. `SplitView.DragArea` takes real layout height and that height comes out before the
+  fractions are resolved, so `0.5` is half of what is actually divisible rather than half of a
+  number the seam then eats into.
+
+  A release settles on the nearest point to where the pane is plus where the throw was going, so a
+  flick carries past a midpoint the finger never crossed — but never more than one point from
+  where the pane actually is. Capping the distance alone is not enough: the same throw skips two
+  points in a list packed close together and none in a list spread wide, so the guarantee is made
+  in points. `SplitView.Top` clips what does not fit and `SplitView.Bottom` takes exactly what the
+  top gave up with no second measurement, so content longer than the shortest snap point brings
+  its own scroller. Dragging runs on the UI thread and `onSnap` fires from the spring's completion
+  rather than on every frame. `Splitter` is still the one for any division, more than two panes,
+  or a split that runs across rather than down.
+
+### Changed
+
+- **`Timeline`'s horizontal rail focuses the column being read.** It had one fade curve applied to
+  the whole column across two column widths — a window wide enough to keep three columns near full
+  strength, which is a row with nothing picked out. The column now fades, drops four points and
+  scales down four percent across one column's width, and `Timeline.Content` takes a second,
+  steeper curve to 30%. Several columns of prose stop reading as a wall while the dates and ticks
+  either side stay legible, which is most of the reason to draw a timeline sideways. Reduce motion
+  drops both curves.
+
+- **`Steps.Trigger` takes `PressableProps`** and composes rather than replaces: a consumer
+  `onPress` runs before the step changes, and the component's own `accessibilityRole`,
+  `accessibilityState` and `disabled` win over spread props. `disabled` on the trigger is ORed with
+  the item's.
+
+- **`Plot.unregisterSeries` takes the colour as an optional second argument.** Several marks may
+  now share one `dataKey` — an area, a line and dots for the same series register independently, so
+  removing one no longer drops the survivors from the domain and the legend. Data keys are also
+  ordinary strings again: one containing `|` is no longer split into columns that do not exist.
+
+- **`Select` keeps its styled presentation when an option is disabled**, even with `native` set.
+  The portable platform picker can disable the whole control but not one row, so handing it a
+  disabled item made that choice selectable again. The list stays visible and unselectable instead.
+
+- **`Toast` durations pause while the app is backgrounded** and resume from the time left, so a
+  message raised on the way out is still there on the way back rather than having expired in the
+  background. `ToastStore` is exported for tests.
+
+- **`Textarea` treats `editable={false}` as disabled**, and `OtpInput` honours `editable` alongside
+  `disabled` rather than letting one override the other.
+
+- **`Rating` normalises `max`, `precision` and its value** — a fractional `max` floors, a
+  non-positive `precision` falls back to whole stars, and a non-finite value reads as zero rather
+  than propagating into the fill.
+
+### Fixed
+
+- **`Splitter` panes drew nothing inside a centred container, and a seam took one drag and then
+  ignored the next.** Two faults. A horizontal splitter had no width of its own, and its panes are
+  shares of one — so the width came from a share of a width that came from the panes, a circle that
+  resolves to zero. It now fills the width it is given. And the seam raced its own double tap in
+  the order that makes the pan wait: a two-tap gesture only fails once its window expires, half a
+  second after the finger lands, so a slow first drag outlasted it and the quicker one after it did
+  not. The pan goes first, the tap gives up on distance rather than on a timer, and each seam only
+  answers to the axis it splits — so a splitter inside a scroller leaves the scroll alone. The seam
+  is also lifted above both panes; it is written between them, and the later sibling was painting
+  over the outer half of every touch target.
+
+- **`Drawer` played its close animation twice on a swipe dismiss.** The gesture animated the panel
+  off-screen and then unmounting fired the exiting preset, which starts from the view's layout
+  position and applies its own transform — so the panel was drawn back at the docked edge and slid
+  out again. The exit is now written rather than taken from a preset and seeds itself from the
+  drag, picking the panel up wherever the finger left it. The close button and backdrop paths draw
+  the same slide they always did.
+
+- **`InputGroup` and `Input` clear measured padding when a decorator goes away.** A prefix or
+  suffix rendered conditionally left its width behind as padding on an empty field.
+
+- **`TagInput` invalidates a stale deletion mark.** A controlled list replaced between two
+  backspaces could have the first one's mark authorise deleting a tag that was never armed.
+
+- **`SearchBar` flushes a pending debounce on submit** instead of firing now and again when the old
+  pause expires.
+
+- **`Planner` refreshes today at local midnight** rather than only when the app comes back.
+
+- **`Tour` ties a measured card height to the step that produced it**, so the next card is not
+  placed using the last one's height before its own first layout.
+
+- **`ColorPicker` and `DateTimePicker` enforce `disabled` past the touch layer.** Accessibility
+  actions could still adjust a picker that announced itself as unavailable, and a controlled
+  date-time picker could commit through a panel left mounted.
+
+- **`RadioGroup` ignores a press on the option already selected**, rather than reporting a change
+  that did not happen.
+
+- **`Timeline`'s horizontal columns accept only a finite, positive `width`**, and a consumer
+  `style` composes around the measured width and the fade rather than replacing them.
+
+- **`panelui-cli` refuses cleartext for MCP registry and documentation reads.** The MCP server had
+  its own `fetch` that bypassed the CLI's transport guard, and the guard now also re-checks the
+  effective URL after redirects, so an HTTPS registry cannot redirect component source onto a
+  cleartext connection.
+
+### Docs
+
+- Props tables document the value a default is rather than the name it has. A default written as a
+  named constant printed the constant — `DEFAULT_MARQUEE_SPEED` in the Default column sends a
+  reader to the source to find out what the table was for — and a destructuring renamed to keep a
+  normalised value out of the way documented no default at all. Twenty-four pages pick up a real
+  number.
+
+- The Components link is back in the mobile menu on the home layout, where there is no page tree
+  to reach it through.
+
+- The docs middleware moved to the `proxy` convention Next 16.3 replaced it with.
+
 ## [0.74.0] — 2026-08-18
 
 ### Added
