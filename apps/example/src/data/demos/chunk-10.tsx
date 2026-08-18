@@ -783,6 +783,7 @@ function InlineComposerDemo() {
 
   return (
     <AIInput
+      native
       value={value}
       onValueChange={setValue}
       avoidKeyboard={false}
@@ -810,6 +811,7 @@ function RecordingDemo() {
 
   return (
     <AIInput
+      native
       status={status}
       avoidKeyboard={false}
       onRecordCancel={() => setStatus('ready')}
@@ -843,6 +845,7 @@ function StreamingDemo() {
 
   return (
     <AIInput
+      native
       value={value}
       onValueChange={setValue}
       status={status}
@@ -903,6 +906,7 @@ function ChatDemo() {
 
       <View className="px-3" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
         <AIInput
+          native
           value={value}
           onValueChange={setValue}
           onSubmit={() => setValue('')}
@@ -1045,7 +1049,7 @@ function SheetDemo() {
     <View className="flex-1 items-center justify-center bg-background px-6">
       <AddToChatSheet open={open} onOpenChange={setOpen} />
       <View className="w-full max-w-sm">
-        <AIInput avoidKeyboard={false}>
+        <AIInput native avoidKeyboard={false}>
           <AIInput.Field placeholder="Chat with the model" />
           <AIInput.Toolbar>
             <AIInput.Action
@@ -1075,6 +1079,7 @@ function VoiceDemo() {
   return (
     <>
       <AIInput.VoiceMode
+        native
         state={muted ? 'idle' : 'listening'}
         level={level}
         title={muted ? 'Muted' : 'Start chatting anytime'}

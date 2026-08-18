@@ -56,7 +56,10 @@ test('every size states one line height, in one place', () => {
   // The bounds are computed from these numbers and the field is drawn with
   // them, so a leading set in a class as well would be a leading that
   // disagrees with itself.
-  assert.match(source, /lineHeight: metrics\.lineHeight/);
+  assert.match(source, /metrics\.lineHeight/);
+  // …and the one-line field states none at all, because iOS spends the
+  // surplus above the glyphs and the text ends up below the buttons.
+  assert.match(source, /inline \? undefined : metrics\.lineHeight/);
   assert.doesNotMatch(source, /leading-\[/);
 
   for (const size of Object.keys(AI_INPUT_METRICS)) {

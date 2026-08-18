@@ -118,6 +118,13 @@ const RADIUS = { sm: 22, md: 26, lg: 30 } as const;
  */
 const CONTROL = { sm: 26, md: 30, lg: 34 } as const;
 
+/**
+ * Roughly what a line of text occupies as a multiple of its size, before any
+ * leading is added on top. Used only to centre one line inside a control, so
+ * being a fraction of a point out costs nothing.
+ */
+const NATURAL_LEADING = 1.2;
+
 const EASE = Easing.out(Easing.cubic);
 const HEIGHT_DURATION = 240;
 const ENTER_DURATION = 220;
@@ -139,7 +146,7 @@ const aiInputVariants = tv({
     // On one line the field is what takes up the slack between the controls,
     // and the row's own padding already stands it off the edge.
     fieldInline: 'flex-1 bg-transparent px-2 font-normal text-foreground',
-    row: 'w-full flex-row items-end gap-1.5 p-1.5',
+    row: 'w-full flex-row items-end gap-1.5 p-2',
     toolbar: 'w-full flex-row items-center gap-2 px-2 pb-2',
     spacer: 'flex-1',
     pill: 'flex-row items-center gap-1.5 px-3',
@@ -438,8 +445,25 @@ function AIInputField({
    * the whole row down inside the card, which is a composer whose contents sit
    * low in it. So the padding is whatever centres one line in a control.
    */
+  /*
+   * On one line the field states no line height at all.
+   *
+   * A line height above the font's own exists to separate lines from each
+   * other, and iOS spends the surplus *above* the glyphs rather than splitting
+   * it — so a single line set to 22 over 16pt type sits several points below
+   * the buttons beside it, placeholder and value alike. With none set, the
+   * platform lays the text out in the font's own line box, which sits where a
+   * line of that font is supposed to.
+   *
+   * The box is then exactly one control tall with the natural line centred in
+   * it. `NATURAL_LEADING` is what a line of a given size actually occupies —
+   * it only has to be close, since it decides a padding either side rather
+   * than the height itself.
+   */
+  const lineHeight = inline ? undefined : metrics.lineHeight;
+  const naturalLine = Math.round(metrics.fontSize * NATURAL_LEADING);
   const padding = inline
-    ? Math.max(4, Math.round((CONTROL[size] - metrics.lineHeight) / 2))
+    ? Math.max(2, Math.round((CONTROL[size] - naturalLine) / 2))
     : metrics.padding;
 
   const boxStyle = useMemo(
@@ -455,16 +479,16 @@ function AIInputField({
        * other the height of the box that was just set from it, and on that one
        * the field can never grow past the height it opened at.
        */
-      minHeight: inline ? metrics.lineHeight + padding * 2 : bounds.minHeight,
+      minHeight: inline ? CONTROL[size] : bounds.minHeight,
       maxHeight: bounds.maxHeight,
       fontSize: metrics.fontSize,
-      lineHeight: metrics.lineHeight,
+      lineHeight,
       paddingTop: padding,
       paddingBottom: padding,
       // Android starts the caret in the middle of the box without it.
       textAlignVertical: 'top' as const,
     }),
-    [bounds.minHeight, bounds.maxHeight, inline, metrics, padding]
+    [bounds.minHeight, bounds.maxHeight, inline, lineHeight, metrics.fontSize, padding, size]
   );
 
   const slots = aiInputVariants({ size });
@@ -881,6 +905,8 @@ export interface AIInputRecordingProps extends Omit<ViewProps, 'children'> {
   className?: string;
   cancelLabel?: string;
   confirmLabel?: string;
+  /** Draw the two decisions as the platform's own buttons. */
+  native?: boolean;
 }
 
 /**
@@ -892,13 +918,57 @@ function AIInputRecording({
   className,
   cancelLabel = 'Discard recording',
   confirmLabel = 'Use recording',
+  native,
   ...props
 }: AIInputRecordingProps) {
   const context = useAIInput('AIInput.Recording');
-  const { size, level, recordCancel, recordConfirm } = context;
+  const { size, level, recordCancel, recordConfirm, native: contextNative } = context;
   const control = CONTROL[size];
   const slots = aiInputVariants({ size });
   const onPrimary = useCSSVariable('--color-primary-foreground');
+  const isNative = native ?? contextNative;
+
+  const meter = (
+    <View className={slots.meter()}>
+      <Soundwave
+        variant="bars"
+        mode="scrolling"
+        state="listening"
+        level={level}
+        centered
+        barWidth={2.5}
+        height={control}
+      />
+    </View>
+  );
+
+  if (isNative) {
+    return (
+      <View {...props} className={slots.recording({ className })}>
+        <Button
+          native
+          glass
+          variant="secondary"
+          size="icon"
+          accessibilityLabel={cancelLabel}
+          onPress={recordCancel}
+        >
+          <XIcon size={16} />
+        </Button>
+        {meter}
+        <Button
+          native
+          glass
+          variant="primary"
+          size="icon"
+          accessibilityLabel={confirmLabel}
+          onPress={recordConfirm}
+        >
+          <CheckIcon size={16} />
+        </Button>
+      </View>
+    );
+  }
 
   return (
     <View {...props} className={slots.recording({ className })}>
@@ -918,17 +988,7 @@ function AIInputRecording({
         </AnimatedPressable>
       </Glass>
 
-      <View className={slots.meter()}>
-        <Soundwave
-          variant="bars"
-          mode="scrolling"
-          state="listening"
-          level={level}
-          centered
-          barWidth={2.5}
-          height={control}
-        />
-      </View>
+      {meter}
 
       <View
         className="overflow-hidden rounded-full bg-primary"
@@ -1719,19 +1779,32 @@ function AIInputVoiceMode({
         >
           {children}
           <View className="flex-1" />
-          <View
-            className="overflow-hidden rounded-full bg-foreground"
-            style={{ width: control, height: control }}
-          >
-            <AnimatedPressable
-              accessibilityRole="button"
+          {native ? (
+            <Button
+              native
+              glass
+              variant="primary"
+              size="icon"
               accessibilityLabel={closeLabel}
               onPress={onClose}
-              className="h-full w-full items-center justify-center"
             >
-              <XIcon size={18} color={typeof onSolid === 'string' ? onSolid : undefined} />
-            </AnimatedPressable>
-          </View>
+              <XIcon size={16} />
+            </Button>
+          ) : (
+            <View
+              className="overflow-hidden rounded-full bg-foreground"
+              style={{ width: control, height: control }}
+            >
+              <AnimatedPressable
+                accessibilityRole="button"
+                accessibilityLabel={closeLabel}
+                onPress={onClose}
+                className="h-full w-full items-center justify-center"
+              >
+                <XIcon size={18} color={typeof onSolid === 'string' ? onSolid : undefined} />
+              </AnimatedPressable>
+            </View>
+          )}
         </View>
       </View>
     </AIInputContext.Provider>
