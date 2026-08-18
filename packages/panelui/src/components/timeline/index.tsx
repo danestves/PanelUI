@@ -50,6 +50,7 @@ import {
   isValidElement,
   useContext,
   useMemo,
+  type ReactElement,
   type ReactNode,
 } from 'react';
 import { ScrollView, View, type Text as RNText, type ViewProps } from 'react-native';
@@ -65,7 +66,7 @@ import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
-import { timelineColumnWidth } from './timeline-geometry';
+import { timelineColumnOffsets, timelineColumnWidth } from './timeline-geometry';
 
 export type TimelineVariant = 'dot' | 'icon' | 'numbered' | 'card' | 'compact';
 /** Semantic colour for a single event, independent of progress. */
@@ -74,6 +75,7 @@ export type TimelineTone = 'default' | 'info' | 'success' | 'warning' | 'danger'
 export type TimelineOrientation = 'vertical' | 'horizontal';
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+const TimelineColumnOffsetContext = createContext<number | null>(null);
 
 /*
  * Horizontal geometry.
@@ -330,17 +332,28 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
      * themselves by. These are the snap points, and they are what an item reads
      * to know how far it is from the reading edge.
      */
-    const offsets = useMemo(() => {
-      if (!horizontal) return [];
-      const result: number[] = [];
-      let sum = 0;
+    const columns = useMemo(() => {
+      if (!horizontal) return { offsets: [], children };
+      const items: ReactElement<TimelineItemProps>[] = [];
       Children.forEach(children, (child) => {
-        if (!isValidElement(child)) return;
-        result.push(sum);
-        sum += itemWidth(child.props as TimelineItemProps);
+        if (isValidElement(child) && child.type === TimelineItem) {
+          items.push(child as ReactElement<TimelineItemProps>);
+        }
       });
-      return result;
+      const offsets = timelineColumnOffsets(items.map((item) => itemWidth(item.props)));
+      let position = 0;
+      const rendered = Children.map(children, (child) => {
+        if (!isValidElement(child) || child.type !== TimelineItem) return child;
+        const offset = offsets[position++] ?? 0;
+        return (
+          <TimelineColumnOffsetContext.Provider value={offset}>
+            {child}
+          </TimelineColumnOffsetContext.Provider>
+        );
+      });
+      return { offsets, children: rendered };
     }, [children, horizontal]);
+    const { offsets } = columns;
 
     const context = useMemo(
       () => ({
@@ -402,7 +415,7 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
                   borderColor: typeof border === 'string' ? border : undefined,
                 }}
               />
-              {textChildren(children)}
+              {textChildren(columns.children)}
             </View>
           </AnimatedScrollView>
         </View>
@@ -450,8 +463,9 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     },
     ref
   ) => {
-    const { activeStep, variant, orientation, scrollX, offsets, animate } =
+    const { activeStep, variant, orientation, scrollX, animate } =
       useTimeline('Timeline.Item');
+    const columnOffset = useContext(TimelineColumnOffsetContext);
     const isCompleted = completed ?? step <= activeStep;
     const { item } = timelineVariants({
       variant,
@@ -464,7 +478,7 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     const columnWidth = horizontal
       ? itemWidth({ step, width, children } as TimelineItemProps)
       : undefined;
-    const offset = offsets[step] ?? 0;
+    const offset = columnOffset ?? 0;
 
     const context = useMemo(
       () => ({
