@@ -1272,6 +1272,7 @@ export {
   RotateCcwIcon,
   RotateCwIcon,
   SearchIcon,
+  SendArrowIcon,
   SendIcon,
   ShareNodesIcon,
   ShieldAlertIcon,

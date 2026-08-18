@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1144,
-    "values": 304,
+    "exports": 1145,
+    "values": 305,
     "types": 840,
     "modules": 140,
     "components": 114,
@@ -5518,6 +5518,10 @@
           },
           {
             "name": "SearchIcon",
+            "kind": "value"
+          },
+          {
+            "name": "SendArrowIcon",
             "kind": "value"
           },
           {

@@ -1339,6 +1339,29 @@ export interface ToggleIconProps extends IconProps {
 }
 
 /** Upvote. Filled once the vote is cast. */
+/**
+ * A plain up arrow, drawn symmetrically about the centre of its box so it sits
+ * dead centre in a circular button.
+ *
+ * Distinct from `ArrowUpIcon`, which is the heavy solid arrow a vote control
+ * wants, and from `SendIcon`, which is a paper plane. This is the one a
+ * composer's send button uses.
+ */
+export function SendArrowIcon({ size = 16, color, ...props }: IconProps) {
+  const resolved = useResolvedColor(color, '#737373');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path
+        d="m5 12 7-7 7 7M12 19V5"
+        stroke={resolved}
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 export function ArrowUpIcon({ size = 16, color, filled, ...props }: ToggleIconProps) {
   const resolved = useResolvedColor(color, '#737373');
   return (

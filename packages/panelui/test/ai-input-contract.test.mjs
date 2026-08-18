@@ -101,3 +101,23 @@ test('the composer never touches the microphone', () => {
   assert.match(inputSource, /onRecordCancel/);
   assert.match(inputSource, /onRecordConfirm/);
 });
+
+test('every circular control is a sized box with the pressable filling it', () => {
+  /*
+   * A pressable that sizes itself and centres its own glyph put the glyph off
+   * centre; the same button built as a sized View with the pressable stretched
+   * inside it did not. So the size lives on a wrapper and the pressable always
+   * fills it, everywhere, rather than only where somebody noticed.
+   */
+  const sized = [...inputSource.matchAll(/style=\{\{ width: [^}]+height: [^}]+\}\}/g)];
+  assert.ok(sized.length >= 4, 'the circular controls should still be explicitly sized');
+
+  for (const match of [...inputSource.matchAll(/<AnimatedPressable[\s\S]{0,600}?>/g)]) {
+    const tag = match[0];
+    assert.doesNotMatch(tag, /style=\{\{ width/, `a pressable sizes itself:\n${tag}`);
+  }
+
+  // And nothing hosts a platform symbol in one. A hosted view reports a box
+  // with the symbol's font metrics in it, which is not the box it draws in.
+  assert.doesNotMatch(inputSource, /getNativeUI|matchContents/);
+});

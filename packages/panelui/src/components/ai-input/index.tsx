@@ -60,7 +60,6 @@ import {
 import {
   AccessibilityInfo,
   findNodeHandle,
-  Platform,
   Pressable,
   TextInput,
   View,
@@ -83,15 +82,14 @@ import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { useDirection } from '../../hooks/use-direction';
 import {
-  ArrowUpIcon,
   AudioLinesIcon,
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MicIcon,
+  SendArrowIcon,
   XIcon,
 } from '../../icons';
-import { getNativeUI } from '../../native';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
 import { Glass } from '../../primitives/glass';
 import { KeyboardAvoider } from '../../primitives/keyboard-avoider';
@@ -592,55 +590,6 @@ function AIInputPill({
   );
 }
 
-/**
- * A glyph drawn by the platform where the platform has one.
- *
- * The trailing button's two marks — an arrow and a waveform — are the two
- * every voice assistant on the phone already draws, and the system draws them
- * better than a hand-traced path does: correct optical weight at every size,
- * and the same shape the rest of the OS uses.
- *
- * iOS gets the SF Symbol. Android's toolkit wants a vector asset from a
- * package this library does not depend on, so it gets the drawn icon, as does
- * anyone without the optional toolkit installed. Both are finished; neither is
- * a placeholder for the other.
- *
- * The host is given an explicit square, because a hosted view with no definite
- * size above it on both axes is a crash in native code rather than an
- * exception anything here could catch.
- */
-function NativeGlyph({
-  symbol,
-  size,
-  color,
-  fallback,
-}: {
-  symbol: string;
-  size: number;
-  color?: string;
-  fallback: ReactNode;
-}) {
-  const native = Platform.OS === 'ios' ? getNativeUI() : null;
-  if (!native?.Icon || !native?.Host) return <>{fallback}</>;
-
-  /*
-   * `matchContents` and no size of its own. Given a fixed box the host lays
-   * the symbol out against its own intrinsic size inside it and leaves it
-   * wherever that lands — off centre, and differently so per symbol. Sized to
-   * its contents it is a glyph-shaped view, which the button's own centring
-   * then handles like any other child.
-   *
-   * The definite size a hosted view needs is the button above it, which is a
-   * square this component draws.
-   */
-  const { Host, Icon } = native;
-  return (
-    <Host matchContents>
-      <Icon name={symbol} size={size} color={color} />
-    </Host>
-  );
-}
-
 export interface AIInputSubmitProps extends Omit<ViewProps, 'children'> {
   className?: string;
   /** Names the button in its send state. */
@@ -680,57 +629,41 @@ function AIInputSubmit({
   const onPress = mode === 'stop' ? stop : mode === 'send' ? submit : voice;
 
   return (
-    <AnimatedPressable
-      accessibilityRole="button"
+    <View
       {...props}
-      accessibilityLabel={label}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
       className={cn(
-        'items-center justify-center rounded-full',
+        'overflow-hidden rounded-full',
         mode === 'voice' ? 'bg-foreground' : 'bg-primary',
-        disabled && 'opacity-40',
         className
       )}
       style={{ width: diameter, height: diameter }}
     >
-      {mode === 'send' ? (
-        <NativeGlyph
-          symbol="arrow.up"
-          size={18}
-          color={typeof onSurface === 'string' ? onSurface : undefined}
-          fallback={
-            <ArrowUpIcon
-              size={18}
-              color={typeof onSurface === 'string' ? onSurface : undefined}
-              filled
-            />
-          }
-        />
-      ) : mode === 'stop' ? (
-        <NativeGlyph
-          symbol="stop.fill"
-          size={16}
-          color={typeof onSurface === 'string' ? onSurface : undefined}
-          fallback={
-            <View className="rounded-sm bg-primary-foreground" style={{ width: 11, height: 11 }} />
-          }
-        />
-      ) : (
-        <NativeGlyph
-          symbol="waveform"
-          size={19}
-          color={typeof onSolid === 'string' ? onSolid : undefined}
-          fallback={
-            <AudioLinesIcon
-              size={19}
-              color={typeof onSolid === 'string' ? onSolid : undefined}
-            />
-          }
-        />
-      )}
-    </AnimatedPressable>
+      <AnimatedPressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ disabled }}
+        disabled={disabled}
+        onPress={onPress}
+        className={cn(
+          'h-full w-full items-center justify-center',
+          disabled && 'opacity-40'
+        )}
+      >
+        {mode === 'send' ? (
+          <SendArrowIcon
+            size={19}
+            color={typeof onSurface === 'string' ? onSurface : undefined}
+          />
+        ) : mode === 'stop' ? (
+          <View className="rounded-sm bg-primary-foreground" style={{ width: 11, height: 11 }} />
+        ) : (
+          <AudioLinesIcon
+            size={19}
+            color={typeof onSolid === 'string' ? onSolid : undefined}
+          />
+        )}
+      </AnimatedPressable>
+    </View>
   );
 }
 
@@ -787,18 +720,22 @@ function AIInputRecording({
         />
       </View>
 
-      <AnimatedPressable
-        accessibilityRole="button"
-        accessibilityLabel={confirmLabel}
-        onPress={recordConfirm}
-        className="items-center justify-center rounded-full bg-primary"
+      <View
+        className="overflow-hidden rounded-full bg-primary"
         style={{ width: control + 4, height: control + 4 }}
       >
-        <CheckIcon
-          size={18}
-          color={typeof onPrimary === 'string' ? onPrimary : undefined}
-        />
-      </AnimatedPressable>
+        <AnimatedPressable
+          accessibilityRole="button"
+          accessibilityLabel={confirmLabel}
+          onPress={recordConfirm}
+          className="h-full w-full items-center justify-center"
+        >
+          <CheckIcon
+            size={18}
+            color={typeof onPrimary === 'string' ? onPrimary : undefined}
+          />
+        </AnimatedPressable>
+      </View>
     </View>
   );
 }
@@ -1532,15 +1469,19 @@ function AIInputVoiceMode({
         >
           {children}
           <View className="flex-1" />
-          <AnimatedPressable
-            accessibilityRole="button"
-            accessibilityLabel={closeLabel}
-            onPress={onClose}
-            className="items-center justify-center rounded-full bg-foreground"
+          <View
+            className="overflow-hidden rounded-full bg-foreground"
             style={{ width: control, height: control }}
           >
-            <XIcon size={18} color={typeof onSolid === 'string' ? onSolid : undefined} />
-          </AnimatedPressable>
+            <AnimatedPressable
+              accessibilityRole="button"
+              accessibilityLabel={closeLabel}
+              onPress={onClose}
+              className="h-full w-full items-center justify-center"
+            >
+              <XIcon size={18} color={typeof onSolid === 'string' ? onSolid : undefined} />
+            </AnimatedPressable>
+          </View>
         </View>
       </View>
     </AIInputContext.Provider>
