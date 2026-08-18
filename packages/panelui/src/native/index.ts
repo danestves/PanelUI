@@ -65,6 +65,23 @@ interface NativeUIModule {
     Item: ComponentType<Record<string, unknown>>;
   };
   BottomSheet: ComponentType<Record<string, unknown>>;
+  /**
+   * A platform glyph: an SF Symbol on iOS, a vector drawable on Android.
+   *
+   * `name` is a symbol name on iOS. Android wants an asset rather than a
+   * name, from a package this library does not depend on — so callers here
+   * pass the iOS name and fall back to the drawn icon set everywhere else,
+   * which is the same bargain every other native control makes.
+   *
+   * It has to sit inside a `Host`, and that host needs a definite size above
+   * it on both axes.
+   */
+  Icon: ComponentType<{
+    name: unknown;
+    size?: number;
+    color?: string;
+    [key: string]: unknown;
+  }>;
 }
 
 let resolved = false;

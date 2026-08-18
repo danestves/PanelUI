@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1119,
-    "values": 297,
-    "types": 822,
-    "modules": 138,
-    "components": 113,
+    "exports": 1144,
+    "values": 304,
+    "types": 840,
+    "modules": 140,
+    "components": 114,
     "hooks": 12
   },
   "groups": {
@@ -45,6 +45,77 @@
           },
           {
             "name": "AccordionSelectionMode",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/ai-input/index.tsx",
+        "slug": "ai-input",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "AIInput",
+            "kind": "value"
+          },
+          {
+            "name": "AIInputProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputStatus",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputFieldProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputToolbarProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputActionProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputPillProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputSubmitProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputRecordingProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputSheetProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputSheetScreenProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputSheetGroupProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputSheetRowProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputSheetToggleProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputSheetChoiceProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputVoiceModeProps",
             "kind": "type"
           }
         ]
@@ -5046,6 +5117,33 @@
         ]
       },
       {
+        "source": "primitives/glass.tsx",
+        "slug": "glass",
+        "category": "foundations",
+        "symbols": [
+          {
+            "name": "Glass",
+            "kind": "value"
+          },
+          {
+            "name": "hasGlass",
+            "kind": "value"
+          },
+          {
+            "name": "GlassProps",
+            "kind": "type"
+          },
+          {
+            "name": "GlassVariant",
+            "kind": "type"
+          },
+          {
+            "name": "GlassRadius",
+            "kind": "type"
+          }
+        ]
+      },
+      {
         "source": "primitives/keyboard-avoider.tsx",
         "slug": "keyboard-avoider",
         "category": "foundations",
@@ -5179,6 +5277,10 @@
             "kind": "value"
           },
           {
+            "name": "AudioLinesIcon",
+            "kind": "value"
+          },
+          {
             "name": "BadgeCheckIcon",
             "kind": "value"
           },
@@ -5196,6 +5298,10 @@
           },
           {
             "name": "CalendarIcon",
+            "kind": "value"
+          },
+          {
+            "name": "CameraIcon",
             "kind": "value"
           },
           {
@@ -5220,6 +5326,10 @@
           },
           {
             "name": "ChevronRightIcon",
+            "kind": "value"
+          },
+          {
+            "name": "ChevronsUpDownIcon",
             "kind": "value"
           },
           {
@@ -5276,6 +5386,10 @@
           },
           {
             "name": "FolderOpenIcon",
+            "kind": "value"
+          },
+          {
+            "name": "GlobeIcon",
             "kind": "value"
           },
           {

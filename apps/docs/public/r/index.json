@@ -13,6 +13,28 @@
     "docsPath": "components/accordion"
   },
   {
+    "name": "ai-input",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "alpha",
+    "description": "A prompt composer: a field that grows to five lines, a row of controls, and the sheet they open.",
+    "registryDependencies": [
+      "animated-pressable",
+      "bottom-sheet",
+      "cn",
+      "glass",
+      "icons",
+      "keyboard-avoider",
+      "native",
+      "soundwave",
+      "switch",
+      "text",
+      "use-direction"
+    ],
+    "docsPath": "ai-components/ai-input"
+  },
+  {
     "name": "alert",
     "type": "registry:ui",
     "kind": "ui",

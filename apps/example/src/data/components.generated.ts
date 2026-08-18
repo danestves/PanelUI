@@ -2,6 +2,7 @@
 
 export const COMPONENTS = [
   {"slug":"accordion","name":"Accordion","summary":"Collapsible sections, single or multiple"},
+  {"slug":"ai-input","name":"AIInput","summary":"A prompt composer, the sheet it opens, and a screen with no field on it"},
   {"slug":"alert","name":"Alert","summary":"Status message with an icon"},
   {"slug":"area-chart","name":"AreaChart","summary":"Filled bands over time, stacked or overlaid"},
   {"slug":"attachment","name":"Attachment","summary":"File row with upload states, built on Item"},

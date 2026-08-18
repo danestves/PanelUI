@@ -50,6 +50,26 @@ import { useReduceTransparency } from './scrim';
 /** How the material treats what is behind it. */
 export type GlassVariant = 'regular' | 'clear';
 
+/**
+ * Corner radius in points — one number for all four, or a top and a bottom.
+ *
+ * The two-sided form is for a surface with an edge that is not a real edge: a
+ * sheet docked to the bottom of the screen rounds its top and leaves its
+ * bottom square, because the screen edge is where it ends.
+ */
+export type GlassRadius = number | { top?: number; bottom?: number };
+
+function shapeOf(radius: GlassRadius | undefined) {
+  if (radius === undefined) return null;
+  if (typeof radius === 'number') return { borderRadius: radius };
+  return {
+    borderTopLeftRadius: radius.top ?? 0,
+    borderTopRightRadius: radius.top ?? 0,
+    borderBottomLeftRadius: radius.bottom ?? 0,
+    borderBottomRightRadius: radius.bottom ?? 0,
+  };
+}
+
 interface GlassViewProps {
   glassEffectStyle?: GlassVariant | 'none';
   tintColor?: string;
@@ -104,9 +124,10 @@ export interface GlassProps extends ViewProps {
   tint?: string;
   /**
    * Corner radius in points. The material rounds itself to this, so give it
-   * the same number the container is drawn with.
+   * the same shape the container is drawn with — clipping a square material
+   * to a rounded parent throws away the lit edge that makes it read as glass.
    */
-  radius?: number;
+  radius?: GlassRadius;
   /** Applied only when the material cannot be drawn. Give it a real surface. */
   fallbackClassName?: string;
   className?: string;
@@ -126,7 +147,7 @@ export function Glass({
   // Not knowing yet counts as "do not draw it": the material arriving a frame
   // late is invisible, and one flashing at somebody who opted out is not.
   const material = GlassView !== null && reduceTransparency === false;
-  const shape = radius === undefined ? null : { borderRadius: radius };
+  const shape = shapeOf(radius);
 
   return (
     <View

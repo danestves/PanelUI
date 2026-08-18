@@ -20,6 +20,9 @@ export { Portal, PortalHost, PortalProvider } from './primitives/portal';
 // recede. Public so a custom overlay gets the same backdrop — and the same
 // graceful fall back from blur to dim — as the built-in ones.
 export { Scrim, hasBlur, type ScrimProps } from './primitives/scrim';
+// The material iOS draws its floating controls in, with a solid fallback where
+// there is none. Public so a surface of your own gets the same treatment.
+export { Glass, hasGlass, type GlassProps, type GlassVariant, type GlassRadius } from './primitives/glass';
 export { Text, type TextProps } from './primitives/text';
 export { Collapse, type CollapseProps } from './primitives/collapse';
 export {
@@ -935,6 +938,24 @@ export {
   type SignatureToolbarProps,
   type SignatureButtonProps,
 } from './components/signature';
+export {
+  AIInput,
+  type AIInputProps,
+  type AIInputStatus,
+  type AIInputFieldProps,
+  type AIInputToolbarProps,
+  type AIInputActionProps,
+  type AIInputPillProps,
+  type AIInputSubmitProps,
+  type AIInputRecordingProps,
+  type AIInputSheetProps,
+  type AIInputSheetScreenProps,
+  type AIInputSheetGroupProps,
+  type AIInputSheetRowProps,
+  type AIInputSheetToggleProps,
+  type AIInputSheetChoiceProps,
+  type AIInputVoiceModeProps,
+} from './components/ai-input';
 export { Shimmer, type ShimmerProps } from './components/shimmer';
 export {
   Reasoning,
@@ -1190,17 +1211,20 @@ export {
   ArrowDownIcon,
   ArrowUpIcon,
   ArrowUpRightIcon,
+  AudioLinesIcon,
   BadgeCheckIcon,
   BellIcon,
   BookmarkIcon,
   BoldIcon,
   CalendarIcon,
+  CameraIcon,
   CardIcon,
   CheckCircleIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChevronsUpDownIcon,
   ChevronUpIcon,
   CircleIcon,
   CodeIcon,
@@ -1215,6 +1239,7 @@ export {
   FileIcon,
   FolderIcon,
   FolderOpenIcon,
+  GlobeIcon,
   GoogleIcon,
   HeartIcon,
   HeadingIcon,
