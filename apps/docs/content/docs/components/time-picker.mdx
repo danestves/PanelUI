@@ -267,7 +267,7 @@ The `ruler` face states its time in one large centred number, which is right whe
 | `minuteStep` | `number` | — | Minutes between selectable times. `wheel` defaults to 1; `clock` and `ruler` default to 30 and 15, since both scroll the whole day at once. |
 | `minTime` | `TimeValue` | — | Earliest selectable time, inclusive. |
 | `maxTime` | `TimeValue` | — | Latest selectable time, inclusive. |
-| `placeholder` | `string` | `DEFAULT_PLACEHOLDER` | What the trigger reads when nothing has been chosen. |
+| `placeholder` | `string` | `'Choose a time'` | What the trigger reads when nothing has been chosen. |
 | `format` | `(value: TimeValue) => string` | — | Override how the chosen time is written on the trigger. |
 | `locale` | `string` | — | BCP 47 tag for the time's text and the meridiem labels. |
 | `readout` | `TimePickerReadout` | `'default'` | How loudly the `ruler` face states the time it is on. The other two faces spell the time out in their own columns and hands, and ignore this. The big centred number is right when the scale is the only thing on the panel. Under something that outranks it — a calendar, a form row — it is the largest text on screen for the smaller half of the answer, so step it down with `compact` or take it over yourself with `none`. |

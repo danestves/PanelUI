@@ -209,7 +209,7 @@ Past a line of text the inversion stops reading as a whisper and starts reading 
 | `onOpenChange` | `(open: boolean) => void` | — |  |
 | `defaultOpen` | `boolean` | `false` | Initial state when uncontrolled. |
 | `openOn` | `TooltipOpenOn` | `'longPress'` | Whether a long press or a plain press reveals the label. Long press is the default because it does not steal a tappable control's own press. |
-| `duration` | `number` | `DEFAULT_DURATION` | How long the label stays up before hiding itself, in milliseconds. `0` keeps it up until it is dismissed by a tap outside or the trigger again. |
+| `duration` | `number` | `1500` | How long the label stays up before hiding itself, in milliseconds. `0` keeps it up until it is dismissed by a tap outside or the trigger again. |
 | `label` | `string` | — | The label's text, mirrored onto the trigger as its accessibility label so a screen reader announces what the tooltip says without opening it. Set it whenever the trigger has no text of its own — an icon-only button. |
 
 ### Tooltip.Trigger
@@ -229,7 +229,7 @@ Past a line of text the inversion stops reading as a whisper and starts reading 
 | `className` | `string` | — |  |
 | `placement` | `TooltipPlacement` | `'top'` | Preferred side of the trigger. Flipped when that side does not fit. |
 | `align` | `TooltipAlign` | `'center'` | Where the label sits along the trigger's other axis. |
-| `offset` | `number` | `DEFAULT_OFFSET` | Gap between the trigger and the label, in pixels. |
+| `offset` | `number` | `6` | Gap between the trigger and the label, in pixels. |
 | `alignOffset` | `number` | `0` | Nudge along the alignment axis, in pixels. |
 | `variant` | `TooltipVariant` | `'inverted'` | Which set of colours the panel, its arrow and its text draw from. `inverted` is the default and right for a label: a whisper over the page should read as a different layer rather than as another panel of it. `surface` matches the popover — reach for it once the tooltip carries a heading and a sentence, where the inversion stops reading as a whisper. |
 | `width` | `number \| 'trigger' \| 'full' \| 'content-fit'` | `'content-fit'` | `content-fit` sizes to the content, `trigger` matches the trigger's width, `full` spans the safe area, and a number is that many pixels. Worth setting for anything longer than a label, which would otherwise run to whatever width the sentence happens to want. |

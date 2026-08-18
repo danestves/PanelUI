@@ -267,10 +267,10 @@ Tabs under the chart change what it draws, and the outline travels.
 | `data` | `RadarChartDatum[]` | — | One row per axis, in the order they go round. |
 | `axisKey` | `string` | `'axis'` | Key holding each row's axis label. |
 | `status` | `RadarChartStatus` | `'ready'` | `loading` holds the shape at the centre until the data arrives, then grows it — one component throughout rather than a spinner swapped for a chart, because swapping loses the transition. |
-| `size` | `number` | — | Diameter of the outermost ring, in points. The view is that plus the room the axis labels need around it, and centres itself. The ring rather than the box, because the ring is the thing being sized — a box measurement would mean "bigger" also meant "labels further from the shape", and the chart would grow without the drawing growing with it. Pass `size={undefined}` with an `aspectRatio` to fill the container the way the other charts do. |
+| `size` | `number` | `180` | Diameter of the outermost ring, in points. The view is that plus the room the axis labels need around it, and centres itself. The ring rather than the box, because the ring is the thing being sized — a box measurement would mean "bigger" also meant "labels further from the shape", and the chart would grow without the drawing growing with it. Pass `size={undefined}` with an `aspectRatio` to fill the container the way the other charts do. |
 | `aspectRatio` | `number` | `1` | Width ÷ height when `size` is not given. `1` is the square a radar wants; the rings stay circular whatever it is set to. |
 | `domain` | `[number, number]` | — | Fix the scale instead of deriving it from the data. A radar almost always wants this: the shape only means something against a known maximum, and a scale that moves with the data makes two charts incomparable. |
-| `animationDuration` | `number` | `REVEAL_DURATION` | Milliseconds for the reveal on mount. |
+| `animationDuration` | `number` | `620` | Milliseconds for the reveal on mount. |
 | `compact` | `boolean` | `false` | Drop the room reserved for axis labels, for a radar with none. |
 | `accessibilityLabelForDatum` | `ChartAccessibilityProps<RadarChartDatum>['accessibilityLabelForDatum']` | — | Accessible data labels and optional activation for each axis row. |
 | `onAccessibilityDatumPress` | `ChartAccessibilityProps<RadarChartDatum>['onAccessibilityDatumPress']` | — |  |

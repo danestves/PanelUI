@@ -151,7 +151,7 @@ useEffect(() => {
 | `isStreaming` | `boolean` | `false` | Whether more is still coming. Finishes an unterminated construct at the end of the text instead of escaping it, so the answer does not flicker between styles as its delimiters arrive. |
 | `parseIncompleteMarkdown` | `boolean` | `true` | Turns off speculative completion entirely, even while streaming. |
 | `onLinkPress` | `(href: string) => void` | — | What a link does. Opens it with the system handler by default. |
-| `allowedLinkPrefixes` | `string[]` | `DEFAULT_LINK_PREFIXES` | Schemes a link is allowed to open. A model can write any URL it likes, and an answer is not a trusted document — so the default list is the four that cannot do anything but navigate. |
+| `allowedLinkPrefixes` | `string[]` | `['https://', 'http://', 'mailto:', 'tel:']` | Schemes a link is allowed to open. A model can write any URL it likes, and an answer is not a trusted document — so the default list is the four that cannot do anything but navigate. |
 | `components` | `ResponseComponents` | — | Swap out how a block is drawn. |
 | `showLineNumbers` | `boolean` | `false` | Line numbers in fenced code. |
 

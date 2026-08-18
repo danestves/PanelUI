@@ -181,16 +181,16 @@ One plain box while it waits, because an invented split is a lie.
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `data` | `TreemapDatum[]` | — | The parts of the total, in any order. Sorted by the chart unless told not to. |
-| `aspectRatio` | `number` | `DEFAULT_ASPECT` | Width ÷ height of the box the tiles fill. |
+| `aspectRatio` | `number` | `1.4` | Width ÷ height of the box the tiles fill. |
 | `gap` | `number` | `3` | Space between one tile and the next, in points. |
 | `cornerRadius` | `number` | `6` | Corner radius of a tile, in points. |
 | `sort` | `boolean` | `true` | Sort the tiles largest first. On by default, and worth leaving on. The row test assumes a descending run — given a large tile next to a small one it has no good row to make, and the chart comes out as slivers. Turn it off only where the given order is itself the message. |
 | `maxTiles` | `number` | — | Keep the largest `maxTiles` and gather the rest into one. A phone-width treemap runs out of legible tiles somewhere around twenty. Past that the tail is texture, and one tile that says how much the tail is worth is more use than forty that cannot be read or hit. |
 | `otherLabel` | `string` | `'Other'` | What the gathered tile is called. |
 | `color` | `string` | — | The ramp's hue. Defaults to the first chart token. |
-| `minLabelSize` | `number` | `DEFAULT_MIN_LABEL` | Smallest side, in points, a tile needs before `Labels` writes on it. A name clipped to two letters is not a shorter name, it is a different word. Tiles under this are left blank and read through the readout. |
+| `minLabelSize` | `number` | `48` | Smallest side, in points, a tile needs before `Labels` writes on it. A name clipped to two letters is not a shorter name, it is a different word. Tiles under this are left blank and read through the readout. |
 | `animationDuration` | `number` | `520` | Milliseconds for one tile to grow. |
-| `staggerDelay` | `number` | `STAGGER` | Milliseconds between one tile starting and the next. `0` for all at once. |
+| `staggerDelay` | `number` | `26` | Milliseconds between one tile starting and the next. `0` for all at once. |
 | `status` | `TreemapChartStatus` | `'ready'` | `loading` draws the box undivided until the data arrives. |
 | `activeIndex` | `number` | — | Selected tile, indexed as laid out. Leave unset to let the chart track it. |
 | `onActiveIndexChange` | `(index: number) => void` | — | Fires with the selected tile, or `-1` when the selection is cleared. |

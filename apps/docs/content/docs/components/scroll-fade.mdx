@@ -161,7 +161,7 @@ const onScroll = useAnimatedScrollHandler({
 | `edges` | `'both' \| 'start' \| 'end' \| 'none'` | `'both'` | Which edges fade. |
 | `orientation` | `'horizontal' \| 'vertical'` | — | Scroll axis. Inferred from the child's `horizontal` prop when omitted — pass it explicitly for children that scroll horizontally without that prop (a `FlatList` with `horizontal` set through `contentContainerStyle`, say). |
 | `color` | `string` | — | Colour the fade resolves to — normally whatever sits behind the scrollable. Defaults to the theme's background. |
-| `fadeInDistance` | `number` | `DEFAULT_FADE_IN_DISTANCE` | Distance in pixels over which an edge fades from clear to full. |
+| `fadeInDistance` | `number` | `24` | Distance in pixels over which an edge fades from clear to full. |
 | `enabled` | `boolean` | `true` | Set false to render the child with no fades at all. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.

@@ -70,13 +70,43 @@ for (const dir of fs.readdirSync(root).sort()) {
     for (const dm of dBlock[1].matchAll(/(\w+):\s*'?([\w-]+)'?/g)) defaults[dm[1]] = dm[2];
   }
 
-  const destructured = {};
-  for (const dm of src.matchAll(/^\s{2,}(\w+) = ([^,\n]+),$/gm)) {
+  // `name = default` and `name: local = default` alike — a destructuring
+  // renamed to keep a normalised value out of the way still documents the
+  // prop's default, and the prop is the half the table is about.
+  const DESTRUCTURED = /^\s{2,}(\w+)(?::\s*\w+)? = ([^,\n]+),$/gm;
+
+  /*
+   * A default written as a named constant is documented as the value, not as
+   * the name: `DEFAULT_MARQUEE_SPEED` in the Default column tells a reader
+   * nothing they can act on, and sends them to the source to find out what
+   * the table was for. One that cannot be resolved to a literal is dropped
+   * rather than printed, because a symbol is a worse answer than no answer.
+   */
+  const KEYWORD = /^(?:true|false|null|undefined|Infinity|NaN)$/;
+  const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
+
+  const literalFor = (value) => {
+    if (KEYWORD.test(value) || !IDENTIFIER.test(value)) return value;
+    const named = src.match(
+      new RegExp(`^const ${value}\\s*(?::[^=]+)?=\\s*([^;\\n]+?)(?:\\s+as const)?;`, 'm')
+    );
+    if (!named) return undefined;
+    const resolved = named[1].trim();
+    if (KEYWORD.test(resolved)) return resolved;
+    return IDENTIFIER.test(resolved) ? undefined : resolved;
+  };
+
+  const record = (into, name, value) => {
     // First one wins: a prop destructured in more than one sub-component has
     // the same default in each, and if it does not the root's is the one
     // people mean.
-    if (!(dm[1] in destructured)) destructured[dm[1]] = dm[2].trim();
-  }
+    if (name in into) return;
+    const literal = literalFor(value.trim());
+    if (literal !== undefined) into[name] = literal;
+  };
+
+  const destructured = {};
+  for (const dm of src.matchAll(DESTRUCTURED)) record(destructured, dm[1], dm[2]);
 
   /*
    * The same defaults again, but attributed to the interface each destructuring
@@ -89,9 +119,7 @@ for (const dir of fs.readdirSync(root).sort()) {
   const byInterface = {};
   for (const bm of src.matchAll(/\(\{([\s\S]*?)\n\}:\s*(\w+)/g)) {
     const own = {};
-    for (const dm of bm[1].matchAll(/^\s{2,}(\w+) = ([^,\n]+),$/gm)) {
-      own[dm[1]] = dm[2].trim();
-    }
+    for (const dm of bm[1].matchAll(DESTRUCTURED)) record(own, dm[1], dm[2]);
     byInterface[bm[2]] = { ...(byInterface[bm[2]] ?? {}), ...own };
   }
 

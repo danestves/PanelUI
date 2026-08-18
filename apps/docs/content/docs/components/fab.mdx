@@ -282,7 +282,7 @@ The extended form, in each of the three corners it can take.
 | `icon` | `ReactNode` | — | The glyph. Sized by you — this is the one thing that should not guess. |
 | `extended` | `boolean` | `false` | Spell the action out beside the glyph. |
 | `placement` | `FabPlacement` | `'bottom-right'` | Pin it over the content, in a corner. Left out, it is an ordinary button in the flow — which is what you want inside a `Fab.Group`, or when the screen already has somewhere for it to sit. |
-| `offset` | `number` | `DEFAULT_OFFSET` | Distance from the edges when `placement` is set, in points. |
+| `offset` | `number` | `16` | Distance from the edges when `placement` is set, in points. |
 | `style` | `ViewProps['style']` | — | Placement-aware view style. Press-state styling belongs in `className`. |
 | `disabled` | `boolean` | `false` |  |
 | `haptics` | `boolean` | `false` | A tick on press. Off by default — needs the optional `expo-haptics`, and is silent without it. |
@@ -298,7 +298,7 @@ The extended form, in each of the three corners it can take.
 | `open` | `boolean` | — | Controlled open state. |
 | `onOpenChange` | `(open: boolean) => void` | — |  |
 | `placement` | `FabPlacement` | `'bottom-right'` | Which corner of the *screen* the whole dial parks in. |
-| `offset` | `number` | `DEFAULT_OFFSET` | Distance from the screen's edges, in points. Add your safe-area inset. |
+| `offset` | `number` | `16` | Distance from the screen's edges, in points. Add your safe-area inset. |
 | `size` | `FabSize` | `md` |  |
 | `variant` | `FabVariant` | `primary` |  |
 | `disabled` | `boolean` | `false` |  |

@@ -302,8 +302,8 @@ It draws the trigger's own children, so nothing is described twice. Give it `chi
 | --- | --- | --- | --- |
 | `className` | `string` | — | Classes on the wrapper the content sits in, which lays out like any other view — it does not shrink to its child, because the things held are usually meant to fill their place in the layout. It is also the rect `anchor="target"` measures. |
 | `anchor` | `ContextMenuAnchor` | `'point'` | `point` anchors the panel where the finger landed, `target` against the bounds of the whole trigger. Point is the default because a context menu's target is usually large, and the middle of a whole message is not where the press was. Reach for `target` when the target is small and list-shaped and the panel should read as lining up with it. Keyboard and accessibility opens always use the target bounds, because those modalities have no pointer coordinate. |
-| `delay` | `number` | `DEFAULT_DELAY` | How long the hold has to last, in milliseconds. 350 by default. |
-| `slop` | `number` | `DEFAULT_SLOP` | How far the finger may move during the hold before it stops being one, in points. 12 by default. Loose rather than tight, because the target is usually inside a scroller: a threshold small enough to feel precise cancels the menu for anyone whose thumb drifts while holding still, and a scroll has travelled much further than this by the time the two need telling apart. Tighten it only for a target that cannot be scrolled. |
+| `delay` | `number` | `350` | How long the hold has to last, in milliseconds. 350 by default. |
+| `slop` | `number` | `12` | How far the finger may move during the hold before it stops being one, in points. 12 by default. Loose rather than tight, because the target is usually inside a scroller: a threshold small enough to feel precise cancels the menu for anyone whose thumb drifts while holding still, and a scroll has travelled much further than this by the time the two need telling apart. Tighten it only for a target that cannot be scrolled. |
 | `onPress` | `() => void` | — | A short press on the target, which the hold never also counts as. |
 | `haptics` | `boolean` | `false` | Tick the haptic engine as the menu opens. Needs the optional `expo-haptics`, and is silent without it. Worth setting more often than not. A hold has no edge to it the way a press does — nothing moves under the finger at the moment it takes — so the tick is what tells someone the hold has been long enough, before the panel has had time to say so. |
 | `disabled` | `boolean` | `false` | Nothing opens the menu, and the short press stops firing too. |
@@ -328,7 +328,7 @@ It draws the trigger's own children, so nothing is described twice. Give it `chi
 | `placement` | `MenuContentProps['placement']` | `'bottom'` | Which side of the anchor the panel opens on. Down from the press, flipping above it near the bottom of the screen. |
 | `align` | `MenuContentProps['align']` | `'start'` | Where it sits along the other axis. From the press, not centred on it. |
 | `offset` | `number` | `8` | Gap between the anchor and the panel. Small, so it reads as coming out of the press rather than floating near it. |
-| `minWidth` | `number` | `DEFAULT_MIN_WIDTH` | Floor for the panel's width. A context menu has no trigger to take its width from, and a column of one-word verbs is too narrow to aim at. |
+| `minWidth` | `number` | `280` | Floor for the panel's width. A context menu has no trigger to take its width from, and a column of one-word verbs is too narrow to aim at. |
 | `scrim` | `boolean` | `true` | Dim the screen behind the panel. On here, unlike a plain popover. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
