@@ -1,5 +1,8 @@
 {
   "title": "Integrations",
   "icon": "neon",
-  "pages": ["neon"]
+  "pages": [
+    "neon",
+    "logo-maker"
+  ]
 }

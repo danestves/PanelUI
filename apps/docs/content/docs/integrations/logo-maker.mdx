@@ -1,0 +1,72 @@
+---
+title: Logo Maker
+description: An agent skill that designs an original app logo — a compact mark that stays readable at 32 × 32, as a vector file or through an image model.
+---
+
+An app needs a logo before it needs almost anything else, and the ones that
+survive being shrunk to a tab favicon are not the detailed ones.
+
+**Logo Maker** is an agent skill that designs one. It ships in this repository
+alongside the PanelUI skill, so the command that installs one installs both.
+
+## Install
+
+<InstallTabs kind="dlx" packages="skills add panel-ui/PanelUI" />
+
+Then ask for a logo in your own words — "design a logo for this app", "I need
+an app icon for a habit tracker". The skill activates on the request; there is
+no command to remember.
+
+## What it does
+
+It makes a **symbol**, not an illustration. The subject is reduced until it
+still reads at icon size, and the rules are mostly about what to leave out:
+
+- one dominant silhouette from about six to ten shapes
+- one feature that identifies the subject, not its anatomy
+- two eyes and one mouth, if there is a face at all
+- no thin lines and no sharp points — every tip ends blunt
+- two subject colours plus one background, chosen in OKLCH, with contrast
+  floors of 3:1 for the silhouette and 4.5:1 for facial marks
+
+Before drawing it proposes three directions and offers six candidates, two per
+direction, so there is something to choose between rather than one answer to
+accept or reject.
+
+## Two ways to draw it
+
+The skill picks a path before any design work, and the design rules are shared
+so the two cannot drift apart.
+
+<Cards>
+  <Card title="Vector">
+    With no image generator available — or for a product that already has a
+    repository — it authors the mark as SVG on a 512 grid, fills only and no
+    strokes, then exports 1024, 512, 180 and 32px PNGs from the same file. The
+    result is something the project keeps, diffs and re-exports.
+  </Card>
+  <Card title="Image model">
+    Where a generator is configured, it writes the brief as a prompt, generates
+    each candidate as its own square image, and checks what comes back against
+    the same rules. One retry with a targeted correction; never a silent fix in
+    post-processing.
+  </Card>
+</Cards>
+
+It will not claim to have generated an image without a generator. If neither
+path is open it says so.
+
+## The check that decides it
+
+Every candidate is rendered at **32 × 32** and looked at. If you cannot tell
+what it is at that size, the design failed — and detail is what broke it, so
+adding more cannot fix it.
+
+That check is the reason for every rule above.
+
+## What it will not do
+
+It draws no text: a mark that needs a word to be understood is a wordmark,
+which is a different job. It produces no grid or contact sheet from a single
+generation — a picture of some logos is not a logo. And it names the rule
+anything failed rather than reporting a pass it did not verify.

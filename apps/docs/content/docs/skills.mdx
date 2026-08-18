@@ -15,8 +15,12 @@ the real API rather than guess it.
 
 <InstallTabs kind="dlx" packages="skills add panel-ui/PanelUI" />
 
-That writes the skill into your project for whichever agent you use — Claude Code, Cursor,
+That writes the skills into your project for whichever agent you use — Claude Code, Cursor,
 Copilot, Windsurf and the rest all read the same format. Run it again to update.
+
+Two skills come with it. The one below is about the library; the other is
+[Logo Maker](/docs/integrations/logo-maker), which designs an app logo and has
+nothing to do with PanelUI beyond being written here.
 
 Nothing else is needed: the skill activates on its own when the project has `panelui-native` in
 its dependencies or a `panelui.json` beside it.
@@ -30,7 +34,7 @@ its dependencies or a `panelui.json` beside it.
     `@/components/ui/…`. It checks rather than assumes.
   </Card>
   <Card title="Every component">
-    All 98, by what they are for, with the URL of each one's documentation as markdown. Generated
+    All 114, by what they are for, with the URL of each one's documentation as markdown. Generated
     from the same file the docs are, so it cannot name a component that does not exist.
   </Card>
   <Card title="The rules that are not negotiable">
