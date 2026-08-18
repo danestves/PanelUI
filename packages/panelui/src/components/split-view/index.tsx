@@ -471,6 +471,7 @@ function SplitViewDragArea({
   return (
     <GestureDetector gesture={pan}>
       <View
+        {...props}
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel={accessibilityLabel}
@@ -493,7 +494,6 @@ function SplitViewDragArea({
         }
         className={dragArea({ className })}
         onLayout={handleLayout}
-        {...props}
       >
         {children}
       </View>
