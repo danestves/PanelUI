@@ -316,6 +316,7 @@ function AIInputRoot({
   avoidKeyboard = true,
   keyboardBottomInset = 0,
   keyboardGap = 8,
+  style,
   ...props
 }: AIInputProps) {
   const [internalValue, setInternalValue] = useState(defaultValue);
@@ -380,12 +381,36 @@ function AIInputRoot({
 
   const slots = aiInputVariants({ size, disabled });
 
+  /*
+   * Whether the card has to keep room at its foot for a row it does not lay
+   * out.
+   *
+   * A handed-over control is a hosted native view, and a hosted view settles
+   * where the platform puts it rather than where the row it is in ends up —
+   * which, in a card that is also sizing itself to the field above, is over
+   * that field. Reserving the row's height here and pinning the row into the
+   * reservation takes the question away: the field's box stops where the
+   * reservation starts, so a control that draws itself somewhere unexpected
+   * has nothing above it left to cover.
+   *
+   * Read from the children rather than tracked in state, so the card and the
+   * row agree on the first render instead of the second.
+   */
+  const hasNativeRow =
+    native &&
+    Children.toArray(children).some(
+      (child) =>
+        isValidElement(child) &&
+        (child.type === AIInputToolbar || child.type === AIInputRecording)
+    );
+
   const surface = (
     <Glass
       radius={RADIUS[size]}
       fallbackClassName="border border-border bg-card"
       {...props}
       className={slots.root({ className })}
+      style={[hasNativeRow ? { paddingBottom: NATIVE_ROW_HEIGHT } : null, style]}
     >
       {children}
     </Glass>
@@ -609,7 +634,7 @@ function AIInputToolbar({ className, children, style, ...props }: AIInputToolbar
     <View
       {...props}
       accessibilityRole="toolbar"
-      className={slots.toolbar({ className })}
+      className={cn(slots.toolbar({ className }), native && 'absolute inset-x-0 bottom-0')}
       style={[
         native ? { height: NATIVE_ROW_HEIGHT, paddingBottom: NATIVE_ROW_FOOT } : null,
         style,
@@ -986,7 +1011,7 @@ function AIInputRecording({
     return (
       <View
         {...props}
-        className={slots.recording({ className })}
+        className={cn(slots.recording({ className }), 'absolute inset-x-0 bottom-0')}
         style={{ height: NATIVE_ROW_HEIGHT, paddingBottom: NATIVE_ROW_FOOT }}
       >
         <Button
