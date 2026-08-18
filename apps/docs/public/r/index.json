@@ -1047,6 +1047,7 @@
     "description": "A chart you assemble out of its marks.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],
@@ -1986,6 +1987,7 @@
     "description": "How a run of changes carried one total to another.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],
