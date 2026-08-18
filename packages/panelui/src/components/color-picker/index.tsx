@@ -108,6 +108,7 @@ import {
 import { cn } from '../../utils/cn';
 import { selectionTick } from '../../utils/haptics';
 import { Popover, type PopoverContentProps } from '../popover';
+import { enabledColorPickerAction } from './color-picker-accessibility';
 
 /** Settles a thumb that was moved by something other than a finger. */
 const TIMING = { duration: 140 } as const;
@@ -586,7 +587,10 @@ const ColorPickerArea = forwardRef<View, ColorPickerAreaProps>(
     };
 
     const onAccessibilityAction = (event: AccessibilityActionEvent) => {
-      const action = event.nativeEvent.actionName;
+      const action = enabledColorPickerAction(
+        event.nativeEvent.actionName,
+        ctx.disabled
+      );
       if (action === 'increment') nudge('saturation', 1);
       else if (action === 'decrement') nudge('saturation', -1);
       else if (action === 'brighter') nudge('brightness', 1);
@@ -829,8 +833,12 @@ const ColorPickerHue = forwardRef<View, ColorPickerHueProps>(
         disabled={ctx.disabled}
         accessibilityValue={{ min: 0, max: 360, now: announced, text: `${announced}°` }}
         onAccessibilityAction={(event) => {
-          if (event.nativeEvent.actionName === 'increment') nudge(1);
-          else if (event.nativeEvent.actionName === 'decrement') nudge(-1);
+          const action = enabledColorPickerAction(
+            event.nativeEvent.actionName,
+            ctx.disabled
+          );
+          if (action === 'increment') nudge(1);
+          else if (action === 'decrement') nudge(-1);
         }}
       >
         <LinearGradient
@@ -948,8 +956,12 @@ const ColorPickerAlpha = forwardRef<View, ColorPickerAlphaProps>(
           text: `${announced}%`,
         }}
         onAccessibilityAction={(event) => {
-          if (event.nativeEvent.actionName === 'increment') nudge(1);
-          else if (event.nativeEvent.actionName === 'decrement') nudge(-1);
+          const action = enabledColorPickerAction(
+            event.nativeEvent.actionName,
+            ctx.disabled
+          );
+          if (action === 'increment') nudge(1);
+          else if (action === 'decrement') nudge(-1);
         }}
       >
         <Checkerboard />
@@ -1504,8 +1516,12 @@ const ColorPickerBrightness = forwardRef<View, ColorPickerBrightnessProps>(
           text: `${announced}%`,
         }}
         onAccessibilityAction={(event) => {
-          if (event.nativeEvent.actionName === 'increment') nudge(1);
-          else if (event.nativeEvent.actionName === 'decrement') nudge(-1);
+          const action = enabledColorPickerAction(
+            event.nativeEvent.actionName,
+            ctx.disabled
+          );
+          if (action === 'increment') nudge(1);
+          else if (action === 'decrement') nudge(-1);
         }}
       >
         <LinearGradient
@@ -1667,7 +1683,10 @@ const ColorPickerWheel = forwardRef<View, ColorPickerWheelProps>(
     };
 
     const onAccessibilityAction = (event: AccessibilityActionEvent) => {
-      const action = event.nativeEvent.actionName;
+      const action = enabledColorPickerAction(
+        event.nativeEvent.actionName,
+        ctx.disabled
+      );
       if (action === 'increment') nudge('hue', 1);
       else if (action === 'decrement') nudge('hue', -1);
       else if (action === 'saturate') nudge('saturation', 1);
