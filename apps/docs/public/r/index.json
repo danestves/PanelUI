@@ -244,6 +244,7 @@
     "description": "A run of slides, one at a time, dragged with a finger.",
     "registryDependencies": [
       "cn",
+      "controllable-state",
       "icons",
       "text"
     ],
@@ -407,6 +408,15 @@
       "portal"
     ],
     "docsPath": "components/context-menu"
+  },
+  {
+    "name": "controllable-state",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Owner-driven controlled and uncontrolled state lifecycle.",
+    "registryDependencies": []
   },
   {
     "name": "date",
@@ -1949,7 +1959,9 @@
     "group": "hooks",
     "stability": "stable",
     "description": "Open and closed state for an overlay.",
-    "registryDependencies": [],
+    "registryDependencies": [
+      "controllable-state"
+    ],
     "docsPath": "hooks/use-disclosure"
   },
   {
