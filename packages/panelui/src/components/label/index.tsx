@@ -81,9 +81,9 @@ const LabelRoot = forwardRef<View, LabelProps>(
       <LabelContext.Provider value={state}>
         <View
           ref={ref}
+          {...props}
           className={root({ className })}
           accessibilityState={{ disabled: isDisabled }}
-          {...props}
         >
           {/* Bare strings are the common case — wrap them so callers don't have to. */}
           {textChildren(children, (text) => <LabelText>{text}</LabelText>)}
