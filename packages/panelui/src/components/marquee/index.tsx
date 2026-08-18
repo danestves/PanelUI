@@ -15,10 +15,11 @@
  * ## How it loops
  *
  * The content is measured once, then laid out end to end enough times to cover
- * the container twice over. One track holds every copy and it is that track,
- * not the copies, that moves — a single animated node for any amount of
- * content. It travels exactly one copy-and-gap and starts over, so the state it
- * ends on is the state it began on and the seam never shows.
+ * the container. One track holds every copy and it is that track, not the
+ * copies, that moves. The track has a fixed copy budget: exceptionally short
+ * content gets extra whitespace instead of multiplying its React subtree
+ * hundreds of times. It travels exactly one layout period and starts over, so
+ * the state it ends on is the state it began on and the seam never shows.
  *
  * The travel is a linear timing driven on the UI thread, so it costs nothing
  * per frame in JavaScript and keeps running while the thread is busy.
@@ -81,7 +82,7 @@ export interface MarqueeProps extends Omit<ViewProps, 'children'> {
    * rather than moving faster.
    */
   speed?: number;
-  /** Gap between the end of one copy and the start of the next. */
+  /** Minimum gap between the end of one copy and the start of the next. */
   spacing?: number;
   /** Axis the content travels along. */
   direction?: MarqueeDirection;
