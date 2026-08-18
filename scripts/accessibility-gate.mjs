@@ -20,6 +20,12 @@ export const ACCESSIBILITY_SUITES = [
   },
   {
     class: 'perception',
+    file: 'packages/panelui/test/timeline-contrast.test.mjs',
+    count: 2,
+    anchor: 'horizontal Timeline keeps informative content fully opaque',
+  },
+  {
+    class: 'perception',
     file: 'packages/panelui/test/scrim-transparency.test.mjs',
     count: 6,
     anchor: 'rendering decisions suppress blur until it is explicitly allowed',

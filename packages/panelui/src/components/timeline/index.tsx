@@ -606,8 +606,8 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     );
 
     /*
-     * A column recedes as it leaves the reading edge, so the one being read is
-     * the one that looks read.
+     * A column scales and drops as it leaves the reading edge, so the one being
+     * read is distinct without fading informative text below its contrast.
      *
      * One column's width either side, not two: a window wide enough to hold
      * three columns near full strength is a row where nothing is picked out,
@@ -621,12 +621,11 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
      * the rest.
      */
     const columnStyle = useAnimatedStyle(() => {
-      if (!horizontal || !animate) return { opacity: 1, transform: [] };
+      if (!horizontal || !animate) return { transform: [] };
       const distance = Math.abs(scrollX.value - offset);
       const window = Math.max(columnWidth ?? timelineColumnWidth(undefined, true), 1);
       const away = interpolate(distance, [0, window], [0, 1], 'clamp');
       return {
-        opacity: 1 - away * 0.4,
         transform: [{ scale: 1 - away * 0.04 }, { translateY: away * 4 }],
       };
     });
@@ -821,22 +820,7 @@ const TimelineContent = forwardRef<View, ViewProps & { className?: string }>(
     const { body, panel } = timelineVariants({ variant, tone, completed, orientation });
     const horizontal = orientation === 'horizontal';
 
-    /*
-     * Horizontal: the body recedes further than the column around it.
-     *
-     * The rail is a continuous thing and has to stay readable across the whole
-     * track — the years either side of the one being read are half of what a
-     * timeline is for. The prose under them is not: several columns of it at
-     * equal weight is a wall, and no amount of fading the column as a whole
-     * fixes that without taking the years down with it. So the body takes a
-     * second, steeper curve and the dates keep the first one.
-     */
-    const bodyStyle = useAnimatedStyle(() => {
-      if (!horizontal || !animate) return { opacity: 1 };
-      const distance = Math.abs(scrollX.value - offset);
-      const window = Math.max(columnWidth, 1);
-      return { opacity: interpolate(distance, [0, window], [1, 0.3], 'clamp') };
-    });
+    /* Horizontal content stays fully opaque; scale and translation provide focus. */
 
     const inner =
       variant === 'card' ? (
@@ -858,7 +842,7 @@ const TimelineContent = forwardRef<View, ViewProps & { className?: string }>(
         ref={ref}
         className={body({ className })}
         {...props}
-        style={[style, bodyStyle]}
+        style={style}
       >
         {inner}
       </Animated.View>
