@@ -23,6 +23,26 @@
   <a href="https://panelui.dev/docs/cli">CLI</a>
 </p>
 
+<p align="center">
+  <a href="https://neon.com">
+    <img
+      src="https://shieldcn.dev/badge/-Sponsored%20by-?variant=ghost&size=xs&font=inter"
+      alt="Sponsored by"
+      height="20"
+    />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://neon.com">
+    <img
+      src="https://raw.githubusercontent.com/panel-ui/PanelUI/main/.github/assets/neon.png"
+      alt="Neon"
+      width="200"
+    />
+  </a>
+</p>
+
 ---
 
 **PanelUI is an open-source React Native UI component library for Expo apps**, styled with
