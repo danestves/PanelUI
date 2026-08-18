@@ -5,6 +5,7 @@ import {
   isCollapsed,
   layoutOffset,
   normalizeConstraint,
+  resetLayout,
   resizeLayout,
   resolveLayout,
 } from '../src/components/splitter/splitter-math.ts';
@@ -107,6 +108,50 @@ test('only the pane being shrunk is ever offered the collapse', () => {
   // Growing the first pane past everything shuts the second, never the first.
   assert.deepEqual(resizeLayout([50, 50], 0, 60, both), [100, 0]);
   assert.deepEqual(resizeLayout([50, 50], 0, -60, both), [0, 100]);
+});
+
+test('a reset preserves the pair total without violating panel constraints', () => {
+  assert.deepEqual(
+    resetLayout(
+      [50, 10, 40],
+      [50, 30, 20],
+      0,
+      [open({ minSize: 40 }), open(), open()]
+    ),
+    [40, 20, 40]
+  );
+  assert.deepEqual(
+    resetLayout(
+      [20, 40, 40],
+      [80, 20, 40],
+      0,
+      [open({ maxSize: 45 }), open(), open()]
+    ),
+    [45, 15, 40]
+  );
+});
+
+test('a reset uses the same collapse and contradictory-constraint rules as a drag', () => {
+  assert.deepEqual(
+    resetLayout(
+      [30, 30, 40],
+      [5, 55, 40],
+      0,
+      [open({ minSize: 20, collapsible: true }), open(), open()]
+    ),
+    [0, 60, 40]
+  );
+
+  const impossible = [30, 30, 40];
+  assert.deepEqual(
+    resetLayout(
+      impossible,
+      [50, 50, 40],
+      0,
+      [open({ minSize: 50 }), open({ minSize: 50 }), open()]
+    ),
+    impossible
+  );
 });
 
 test('a shut pane reads as shut, and a small one does not', () => {

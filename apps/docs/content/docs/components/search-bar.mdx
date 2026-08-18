@@ -154,6 +154,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+When `disabled`, the field, clear button, Cancel button, and submit boundary are all inert. Cancel remains visible when `cancel="always"`, but leaves the focus order and cannot clear, blur, or call `onCancel`.
+
 The clear button is drawn by the component rather than left to the platform's `clearButtonMode`, which exists on iOS only, cannot be labelled for a screen reader and cannot be swapped for a spinner. Clearing keeps the keyboard up, because emptying a query is usually the start of the next one; Cancel is the control that ends the search.
 
 The glyph is 24 points and its touch box is 48, made up with slop rather than with size — a 48-point circle inside a 40-point field would either overflow it or force every search bar in the app to be as tall as the largest one.

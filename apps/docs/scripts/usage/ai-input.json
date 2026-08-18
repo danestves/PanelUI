@@ -1,0 +1,86 @@
+{
+  "slug": "ai-input",
+  "intro": "The composer a person types a prompt into: a field that grows with what is written in it, a row of controls under it, and the sheet those controls open.\n\nThe field opens one line tall and follows the text up to `maxRows`. After that it holds its height and scrolls its own content, so the composer cannot grow until the send button is off the bottom of the screen. Five rows is the default.\n\nNothing here touches the microphone. There is a recording state and it draws a live meter, but the app owns the recorder and passes back a `level` and a `status` — which is what keeps the composer free of an audio dependency.\n\nThe surfaces ask for the iOS system material and get it on iOS 26 and above. Below that, on Android, and for anyone with Reduce Transparency switched on, they are drawn as solid token surfaces. Both are finished looks; see [Glass](/docs/components/glass) for why nothing is faked where the material does not exist.\n\nFor a plain multi-line field with a label and a character count, use [Textarea](/docs/components/textarea). For the answer coming back, use [Response](/docs/ai-components/response).",
+  "usage": "<AIInput value={value} onValueChange={setValue} onSubmit={send}>\n  <AIInput.Field placeholder=\"Ask anything\" />\n  <AIInput.Toolbar>\n    <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={() => setSheet(true)} />\n    <AIInput.Pill label=\"Sonnet 4.6\" detail=\"High\" onPress={() => setModels(true)} />\n    <AIInput.Spacer />\n    <AIInput.Action label=\"Dictate\" icon={<MicIcon />} onPress={record} />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n</AIInput>",
+  "extraImports": [
+    "PlusIcon",
+    "MicIcon",
+    "CameraIcon",
+    "GlobeIcon",
+    "FileIcon",
+    "Text"
+  ],
+  "anatomy": "<AIInput>\n  <AIInput.Field />\n  <AIInput.Toolbar>\n    <AIInput.Action />\n    <AIInput.Pill />\n    <AIInput.Spacer />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n  <AIInput.Recording />\n</AIInput>\n\n<AIInput.Sheet>\n  <AIInput.Sheet.Screen id=\"root\" title=\"Add to chat\">\n    <AIInput.Sheet.Group>\n      <AIInput.Sheet.Row />\n      <AIInput.Sheet.Toggle />\n      <AIInput.Sheet.Choice />\n    </AIInput.Sheet.Group>\n  </AIInput.Sheet.Screen>\n</AIInput.Sheet>\n\n<AIInput.VoiceMode />",
+  "parts": {
+    "Field": "The prompt itself. Grows from `minRows` to `maxRows`, then scrolls. Takes every `TextInput` prop.",
+    "Toolbar": "The row of controls under the field. Stays at the bottom of the box however tall the field grows.",
+    "Spacer": "Pushes everything after it to the trailing end of the toolbar.",
+    "Action": "A circular control with a glyph in it. `label` is required — a circle says nothing on its own.",
+    "Pill": "A control showing a current value, for something with more than two settings: the model, the mode, the project.",
+    "Submit": "The trailing control, which is three controls wearing one shape: voice on an empty composer, send once something is typed, stop while the model is answering.",
+    "Recording": "What the toolbar becomes while a recording runs — discard it, watch it, keep it. Render it in place of `Toolbar` when `status` is `recording`.",
+    "Sheet": "The sheet the controls open. Rows inside it push further screens onto the same sheet rather than opening a second one over it.",
+    "Sheet.Screen": "One screen in that sheet. `id` is what a row's `to` names.",
+    "Sheet.Group": "A card of related rows, with a hairline between each pair, and an optional `footnote` under it.",
+    "Sheet.Row": "A row. With `to` it pushes that screen and shows a chevron; with `value` it shows the current setting; with neither it is just a line.",
+    "Sheet.Toggle": "A row carrying a `Switch`, for a setting that is on or off.",
+    "Sheet.Choice": "One of a set, with a tick on the one in force.",
+    "VoiceMode": "The screen a voice conversation happens on. It is a surface, not an overlay — render it as its own route.",
+    "Row": "The field and its controls on a single line, instead of the field above them. The composer at its smallest — a bar that is always on screen rather than the focus of it."
+  },
+  "examples": [
+    {
+      "title": "Growing, and then scrolling",
+      "description": "`maxRows` is where the field stops. Up to it the composer follows the text; past it the height holds and the field scrolls, which is what keeps the toolbar on screen.\n\n`minRows` moves the floor if a composer should open taller than one line.",
+      "code": "<AIInput value={value} onValueChange={setValue} maxRows={5}>\n  <AIInput.Field placeholder=\"Ask anything\" />\n  <AIInput.Toolbar>\n    <AIInput.Spacer />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n</AIInput>"
+    },
+    {
+      "title": "On one line",
+      "description": "`AIInput.Row` puts the field between the controls rather than above them, which is the whole composer in one pill.\n\nThe field still grows — it grows the row. Reach for it when the composer is always on screen, and for the stacked one when it is what the screen is for.",
+      "code": "<AIInput value={value} onValueChange={setValue} onSubmit={send}>\n  <AIInput.Row>\n    <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={add} />\n    <AIInput.Field placeholder=\"Ask anything\" />\n    <AIInput.Action label=\"Dictate\" icon={<MicIcon />} onPress={record} />\n    <AIInput.Submit />\n  </AIInput.Row>\n</AIInput>"
+    },
+    {
+      "title": "The platform's own controls",
+      "description": "`native` hands a control to the platform, which draws it in its own material — Liquid Glass on iOS 26. The card behind it is still ours, and still glass.\n\nThe platform owns their colour, metrics and shape while this is on, so `className` and the theme tokens stop reaching them, and the row they sit in takes the platform's height rather than the one our own controls would need.\n\nA pill with a `detail` or an `indicator` is drawn rather than handed over: only a plain string can go to a native button, because a hosted view inside one has no width anything can resolve.",
+      "code": "<AIInput native value={value} onValueChange={setValue}>\n  <AIInput.Field />\n  <AIInput.Toolbar>\n    <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={add} />\n    <AIInput.Pill label=\"Sonnet 4.6\" accessibilityLabel=\"Change model\" />\n    <AIInput.Spacer />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n</AIInput>"
+    },
+    {
+      "title": "One button, three jobs",
+      "description": "`AIInput.Submit` reads `status` and whether anything has been typed, and offers the one thing that is worth doing: voice mode on an empty composer, send once there is a prompt, stop while the answer is arriving.\n\nOne control rather than three, because a row of dimmed siblings is a row of things that look broken.",
+      "code": "<AIInput\n  value={value}\n  onValueChange={setValue}\n  status={status}\n  onSubmit={send}\n  onStop={stop}\n  onVoice={() => router.push('/voice')}\n>\n  <AIInput.Field />\n  <AIInput.Toolbar>\n    <AIInput.Spacer />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n</AIInput>"
+    },
+    {
+      "title": "Recording, without a recorder",
+      "description": "The composer draws the meter; the app runs the recorder. Pass a Reanimated shared value as `level` and metering arriving every 30ms never re-renders anything above the composer.\n\nWith no `level` at all the meter animates plausible motion, so the screen can be built before any audio exists.",
+      "code": "const level = useSharedValue(0);\n\n<AIInput status={recording ? 'recording' : 'ready'} level={level}\n  onRecordCancel={discard} onRecordConfirm={transcribe}>\n  <AIInput.Field placeholder=\"Chat with the model\" />\n  {recording ? <AIInput.Recording /> : (\n    <AIInput.Toolbar>\n      <AIInput.Spacer />\n      <AIInput.Action label=\"Dictate\" icon={<MicIcon />} onPress={start} />\n      <AIInput.Submit />\n    </AIInput.Toolbar>\n  )}\n</AIInput>"
+    },
+    {
+      "title": "A sheet that goes deeper",
+      "description": "A row with `to` pushes the screen with that id onto the same sheet. The sheet stays where it is, the close button becomes a back button, and the body slides — which is what makes one level deeper read as the same surface rather than another one landing on top.\n\nThe sheet forgets where it was when it closes, so reopening always starts at the first screen.",
+      "code": "<AIInput.Sheet open={open} onOpenChange={setOpen}>\n  <AIInput.Sheet.Screen id=\"root\" title=\"Add to chat\">\n    <AIInput.Sheet.Group>\n      <AIInput.Sheet.Row icon={<FileIcon />} label=\"Add files\" onPress={pick} />\n    </AIInput.Sheet.Group>\n    <AIInput.Sheet.Group>\n      <AIInput.Sheet.Row label=\"Add to project\" value={project ?? 'None'} to=\"project\" />\n      <AIInput.Sheet.Row label=\"Tool access\" value={tools} to=\"tools\" />\n    </AIInput.Sheet.Group>\n    <AIInput.Sheet.Group>\n      <AIInput.Sheet.Toggle icon={<GlobeIcon />} label=\"Web search\"\n        value={web} onValueChange={setWeb} />\n    </AIInput.Sheet.Group>\n  </AIInput.Sheet.Screen>\n\n  <AIInput.Sheet.Screen id=\"tools\" title=\"Tool access\">\n    <AIInput.Sheet.Group>\n      {TOOL_MODES.map((mode) => (\n        <AIInput.Sheet.Choice\n          key={mode.id}\n          label={mode.label}\n          description={mode.description}\n          selected={tools === mode.id}\n          onPress={() => setTools(mode.id)}\n        />\n      ))}\n    </AIInput.Sheet.Group>\n  </AIInput.Sheet.Screen>\n</AIInput.Sheet>"
+    },
+    {
+      "title": "An action in the header",
+      "description": "`trailing` on a screen puts a second control at the far end of the header. The leading end belongs to the sheet, which draws a close button on the first screen and a back button on every screen pushed onto it.",
+      "code": "<AIInput.Sheet.Screen\n  id=\"project\"\n  title=\"Add to project\"\n  trailing={<AIInput.Action label=\"New project\" icon={<PlusIcon />} onPress={create} />}\n>\n  <AIInput.Sheet.Group>\n    {projects.map((project) => (\n      <AIInput.Sheet.Row key={project.id} label={project.name}\n        description={project.updated} onPress={() => choose(project)} />\n    ))}\n  </AIInput.Sheet.Group>\n</AIInput.Sheet.Screen>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "In a chat",
+      "description": "The composer docked above the keyboard, over a transcript. The page behind does not move — the composer travels with the keyboard instead.",
+      "code": "<View className=\"flex-1\">\n  <MessageScroller>{turns}</MessageScroller>\n  <AIInput value={value} onValueChange={setValue} onSubmit={send} keyboardBottomInset={insets.bottom}>\n    <AIInput.Field placeholder=\"Chat with the model\" />\n    <AIInput.Toolbar>\n      <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={() => setSheet(true)} />\n      <AIInput.Pill label=\"Sonnet 4.6\" detail=\"High\" onPress={() => setModels(true)} />\n      <AIInput.Spacer />\n      <AIInput.Submit />\n    </AIInput.Toolbar>\n  </AIInput>\n</View>"
+    },
+    {
+      "title": "The sheet it opens",
+      "description": "Three screens on one sheet: what can be added to the chat, the project it belongs to, and how much of the toolbox the model is given.",
+      "code": "<AIInput.Sheet open={open} onOpenChange={setOpen}>\n  <AIInput.Sheet.Screen id=\"root\" title=\"Add to chat\" trailing={<Text muted>All photos</Text>}>\n    …\n  </AIInput.Sheet.Screen>\n  <AIInput.Sheet.Screen id=\"project\" title=\"Add to project\">…</AIInput.Sheet.Screen>\n  <AIInput.Sheet.Screen id=\"tools\" title=\"Tool access\">…</AIInput.Sheet.Screen>\n</AIInput.Sheet>"
+    },
+    {
+      "title": "Voice mode",
+      "description": "The screen with no field on it. The wash behind everything and the capsules over the microphone are the same meter the composer draws, given the whole screen.",
+      "code": "<AIInput.VoiceMode\n  state={state}\n  level={level}\n  title=\"Start chatting anytime\"\n  onMicPress={toggleMute}\n  onClose={() => router.back()}\n>\n  <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={add} />\n  <AIInput.Pill label=\"Sonnet\" indicator={<ChevronsUpDownIcon size={14} />} onPress={models} />\n</AIInput.VoiceMode>"
+    }
+  ],
+  "notes": "**The field stops at `maxRows` and scrolls.** The toolbar stays at the bottom of the box, so a long prompt never pushes the send button off the screen.\n\n**The trailing button is inert when there is nothing to do.** With no text it offers voice mode, and only if the app took an `onVoice`; without one it stays disabled until something is typed, rather than looking live and doing nothing. The same goes for `onStop` while streaming.\n\n**`onSubmit` does not clear the field.** The composer does not know whether the send succeeded; clear `value` yourself once it has.\n\n**Glass needs iOS 26.** Everywhere else the surfaces are solid, which is a finished look rather than a fallback. Nothing is faked on Android.\n\n**A `native` row is the platform's height, not ours.** A control handed over is hosted, and a hosted view only lays out where something above it is fixed on both axes. The platform frames its icon buttons at 44pt, so a row carrying them takes a definite height of its own — a shorter row is one its controls hang out of, over the field above them. The drawn controls are smaller and are laid out by the row itself, so this applies only once `native` is on.\n\n**`avoidKeyboard` is a component boundary, not a flag.** Turning it off means the keyboard hook is never called at all — calling it has global consequences, and a composer that was told not to avoid the keyboard must not impose that on every other screen.\n\n**The sheet is a solid surface, not a material.** It covers most of the screen, so there is almost nothing behind it left to refract. The composer keeps the glass, because a bar floating over a page is the case the material is for.\n\n**A sheet row's `to` names a screen id, not a route.** It pushes onto the same sheet; nothing navigates."
+}

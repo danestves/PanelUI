@@ -778,7 +778,7 @@ function TabsList({ className, scrollable = false, children, ...props }: TabsLis
   }, [scrollable, activeLayout?.x, activeLayout]);
 
   const row = (
-    <View accessibilityRole="tablist" className={cn(list(), className)} {...props}>
+    <View {...props} accessibilityRole="tablist" className={cn(list(), className)}>
       {/* Nothing to slide: in `expanding` every tab draws its own pill, and the
           open one is the shape that moves. */}
       {variant === 'expanding' ? null : <TabsIndicator />}

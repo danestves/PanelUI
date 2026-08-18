@@ -211,6 +211,22 @@ For a planner inside a sheet, a dialog or a card that already draws its own boun
 </Planner>
 ```
 
+## Lifecycle contract
+
+| Case | Contract |
+| --- | --- |
+| default initialization | defaultMonth and defaultSelected initialize their uncontrolled owners once. |
+| controlled acceptance | Month and selection requests render after their owner supplies them. |
+| controlled rejection | Rejected requests leave the accepted month and selection visible. |
+| external reset | Owner month, selection, and null resets render without request callbacks. |
+| disabled path | Not applicable: Planner has no root disabled contract; consumers disable actions individually. |
+| prop replacement | Equivalent Date instances retain semantic month identity; distinct instants replace it. |
+| unmount cleanup | Lifecycle hooks retain no timers or subscriptions; today refresh owns separate cleanup. |
+| reduced motion | Not applicable: lifecycle state commits do not animate. |
+| callback counts | Each normalized request reports once; prop acceptance and reset report zero times. |
+
+Executable evidence: `packages/panelui/test/planner-lifecycle.test.mjs` (5 tests).
+
 ## Variants
 
 ### `inMonth`

@@ -45,14 +45,23 @@
  */
 import {
   Children,
+  cloneElement,
   createContext,
   forwardRef,
   isValidElement,
   useContext,
   useMemo,
+  type ReactElement,
   type ReactNode,
 } from 'react';
-import { ScrollView, View, type Text as RNText, type ViewProps } from 'react-native';
+import {
+  ScrollView,
+  View,
+  type FlatListProps,
+  type ListRenderItemInfo,
+  type Text as RNText,
+  type ViewProps,
+} from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedScrollHandler,
@@ -65,7 +74,7 @@ import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
-import { timelineColumnWidth } from './timeline-geometry';
+import { TIMELINE_WIDE_COLUMN, timelineColumnWidth } from './timeline-geometry';
 
 export type TimelineVariant = 'dot' | 'icon' | 'numbered' | 'card' | 'compact';
 /** Semantic colour for a single event, independent of progress. */
@@ -252,6 +261,8 @@ interface TimelineContextValue {
   offsets: number[];
   /** Horizontal only: false when the reader has asked for less movement. */
   animate: boolean;
+  /** A virtualized list draws one rail segment per mounted cell. */
+  virtualized: boolean;
 }
 
 interface TimelineItemContextValue {
@@ -350,6 +361,7 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
         scrollX,
         offsets,
         animate: !reducedMotion,
+        virtualized: false,
       }),
       [value, variant, orientation, scrollX, offsets, reducedMotion]
     );
@@ -412,6 +424,120 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
 );
 TimelineRoot.displayName = 'Timeline';
 
+export interface TimelineListProps<T>
+  extends Omit<
+    FlatListProps<T>,
+    | 'data'
+    | 'renderItem'
+    | 'horizontal'
+    | 'getItemLayout'
+    | 'onScroll'
+    | 'snapToOffsets'
+    | 'CellRendererComponent'
+  > {
+  /** Complete event collection; rows outside the native window stay unmounted. */
+  data: readonly T[];
+  /** Render one `Timeline.Item`. Its step, width, and last marker are owned by the list. */
+  renderItem: (info: ListRenderItemInfo<T>) => ReactElement<TimelineItemProps>;
+  /** Width of each column, or a resolver for mixed-width histories. */
+  itemWidth?: number | ((item: T, index: number) => number);
+  /** Steps at or below this index render as completed. */
+  value?: number;
+  variant?: TimelineVariant;
+  snap?: boolean;
+}
+
+/**
+ * Opt-in bounded mount path for long horizontal histories. The compound
+ * `Timeline` API remains the simpler choice for short or mixed-content lists.
+ */
+function TimelineList<T>({
+  data,
+  renderItem,
+  itemWidth: requestedWidth = TIMELINE_WIDE_COLUMN,
+  value = 0,
+  variant = 'dot',
+  snap = true,
+  initialNumToRender = 6,
+  maxToRenderPerBatch = 6,
+  windowSize = 5,
+  className,
+  ...props
+}: TimelineListProps<T>) {
+  const reducedMotion = useReducedMotion();
+  const scrollX = useSharedValue(0);
+  const widths = useMemo(
+    () =>
+      data.map((item, index) =>
+        timelineColumnWidth(
+          typeof requestedWidth === 'function' ? requestedWidth(item, index) : requestedWidth,
+          true
+        )
+      ),
+    [data, requestedWidth]
+  );
+  const offsets = useMemo(() => {
+    let offset = 0;
+    return widths.map((width) => {
+      const current = offset;
+      offset += width;
+      return current;
+    });
+  }, [widths]);
+  const context = useMemo(
+    () => ({
+      activeStep: value,
+      variant,
+      orientation: 'horizontal' as const,
+      scrollX,
+      offsets,
+      animate: !reducedMotion,
+      virtualized: true,
+    }),
+    [value, variant, scrollX, offsets, reducedMotion]
+  );
+  const { root } = timelineVariants({ variant, orientation: 'horizontal' });
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollX.value = event.contentOffset.x;
+  });
+
+  return (
+    <TimelineContext.Provider value={context}>
+      <Animated.FlatList
+        data={data}
+        horizontal
+        accessibilityRole="list"
+        showsHorizontalScrollIndicator={false}
+        decelerationRate="fast"
+        snapToAlignment="start"
+        initialNumToRender={initialNumToRender}
+        maxToRenderPerBatch={maxToRenderPerBatch}
+        windowSize={windowSize}
+        removeClippedSubviews
+        className={root({ className })}
+        {...props}
+        getItemLayout={(_, index) => ({
+          index,
+          length: widths[index] ?? TIMELINE_WIDE_COLUMN,
+          offset: offsets[index] ?? 0,
+        })}
+        snapToOffsets={snap ? offsets : undefined}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        renderItem={(info) =>
+          cloneElement(renderItem(info), {
+            step: info.index,
+            width: widths[info.index],
+            last: info.index === data.length - 1,
+            role: 'listitem',
+          })
+        }
+      />
+    </TimelineContext.Provider>
+  );
+}
+TimelineList.displayName = 'Timeline.List';
+
 export interface TimelineItemProps extends ViewProps {
   className?: string;
   /** Position in the sequence, zero-based. */
@@ -450,8 +576,9 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     },
     ref
   ) => {
-    const { activeStep, variant, orientation, scrollX, offsets, animate } =
+    const { activeStep, variant, orientation, scrollX, offsets, animate, virtualized } =
       useTimeline('Timeline.Item');
+    const border = useCSSVariable('--color-border');
     const isCompleted = completed ?? step <= activeStep;
     const { item } = timelineVariants({
       variant,
@@ -521,6 +648,22 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
           {...props}
           style={[style, { width: columnWidth }, columnStyle]}
         >
+          {virtualized && !last ? (
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: HORIZONTAL_RAIL_TOP,
+                borderTopWidth: 1,
+                borderStyle: 'dashed',
+                borderColor: typeof border === 'string' ? border : undefined,
+              }}
+            />
+          ) : null}
           {textChildren(children)}
         </Animated.View>
       </TimelineItemContext.Provider>
@@ -809,6 +952,7 @@ const TimelineStat = forwardRef<View, TimelineStatProps>(
 TimelineStat.displayName = 'Timeline.Stat';
 
 export const Timeline = Object.assign(TimelineRoot, {
+  List: TimelineList,
   Item: TimelineItem,
   Aside: TimelineAside,
   Indicator: TimelineIndicator,

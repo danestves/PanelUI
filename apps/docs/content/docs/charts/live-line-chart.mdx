@@ -252,6 +252,22 @@ const [held, setHeld] = useState(false);
 </Frame>
 ```
 
+## Lifecycle contract
+
+| Case | Contract |
+| --- | --- |
+| default initialization | An empty input starts with a finite empty domain and no active reading. |
+| controlled acceptance | The data prop is authoritative; normalized finite readings are rendered. |
+| controlled rejection | Not applicable: the chart emits no data mutation requests. |
+| external reset | Replacing data reconciles or clears the selected timestamp. |
+| disabled path | paused and inactive AppState both stop frame ownership. |
+| prop replacement | data, maxPoints, window, motion, pause, and tooltip changes are reconciled. |
+| unmount cleanup | Animation frames and AppState listeners are released; Tooltip removal clears selection. |
+| reduced motion | The live clock owns no frames while reduced motion is active. |
+| callback counts | Selection callbacks follow only accepted finite readings. |
+
+Executable evidence: `packages/panelui/test/live-line-lifecycle.test.mjs` (4 tests).
+
 ## API Reference
 
 ### LiveLineChart

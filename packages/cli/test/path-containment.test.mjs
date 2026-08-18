@@ -64,6 +64,70 @@ test('rejects registry and configured paths that can escape a project', () => {
   }
 });
 
+test('rejects a registry destination whose existing ancestor is a symlink outside the project', () => {
+  const root = temporaryProject();
+  const cwd = path.join(root, 'project');
+  const outside = path.join(root, 'outside');
+  fs.mkdirSync(cwd);
+  fs.mkdirSync(outside);
+  fs.symlinkSync(outside, path.join(cwd, 'components'), 'dir');
+
+  const config = {
+    ...defaultConfig(),
+    aliases: { ...defaultConfig().aliases, components: '@/components' },
+  };
+
+  try {
+    assert.throws(() => targetPath(cwd, config, 'ui/button.tsx'), CliError);
+    assert.equal(fs.existsSync(path.join(outside, 'button.tsx')), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('allows a symlinked registry directory when its real target stays inside the project', () => {
+  const cwd = temporaryProject();
+  const shared = path.join(cwd, 'shared-components');
+  fs.mkdirSync(shared);
+  fs.symlinkSync(shared, path.join(cwd, 'components'), 'dir');
+
+  const config = {
+    ...defaultConfig(),
+    aliases: { ...defaultConfig().aliases, components: '@/components' },
+  };
+
+  try {
+    assert.equal(
+      targetPath(cwd, config, 'ui/button.tsx'),
+      path.join(cwd, 'components', 'button.tsx')
+    );
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test('rejects a broken destination symlink instead of treating it as a missing file', () => {
+  const cwd = temporaryProject();
+  const components = path.join(cwd, 'components');
+  fs.mkdirSync(components);
+  fs.symlinkSync(
+    path.resolve(cwd, '..', 'missing-target.tsx'),
+    path.join(components, 'button.tsx'),
+    'file'
+  );
+
+  const config = {
+    ...defaultConfig(),
+    aliases: { ...defaultConfig().aliases, components: '@/components' },
+  };
+
+  try {
+    assert.throws(() => targetPath(cwd, config, 'ui/button.tsx'), CliError);
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test('rejects unsafe scaffold names before any project files are created', async () => {
   const cwd = temporaryProject();
   const victim = path.resolve(cwd, '..', 'victim');
