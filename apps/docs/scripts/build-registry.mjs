@@ -34,6 +34,7 @@ const OPTIONAL = new Set([
   'expo-blur',
   'expo-clipboard',
   'expo-file-system',
+  'expo-glass-effect',
   'expo-haptics',
   'expo-location',
   'react-native-keyboard-controller',
@@ -58,6 +59,8 @@ const SUPPORT_DESCRIPTIONS = {
   'animated-pressable': 'Pressable with UI-thread press feedback.',
   'keyboard-avoider': 'View that lifts itself clear of the software keyboard.',
   scrim: 'The backdrop behind an overlay — a dim, or a blur when expo-blur is installed.',
+  glass:
+    'The iOS system material, drawn where it exists and a solid surface everywhere else.',
   'panel-ui-provider': 'Root provider: gesture root, themed background, portal host, toasts.',
   icons: 'The icon set, plus the colour context components use to tint them.',
   cn: 'Merges Tailwind class names, with later classes winning conflicts.',

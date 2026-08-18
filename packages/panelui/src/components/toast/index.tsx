@@ -175,7 +175,12 @@ const ToastRoot = ({ className, variant = 'default', onHide, children, ...props 
 
   return (
     <ToastContext.Provider value={context}>
-      <View accessibilityRole="alert" accessibilityLiveRegion="polite" className={root({ className })} {...props}>
+      <View
+        {...props}
+        accessibilityRole="alert"
+        accessibilityLiveRegion="polite"
+        className={root({ className })}
+      >
         {textChildren(children)}
       </View>
     </ToastContext.Provider>

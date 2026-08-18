@@ -2,6 +2,7 @@
   "generated": "Run npm run catalogue:generate; do not edit by hand.",
   "componentModules": [
     "accordion",
+    "ai-input",
     "alert",
     "area-chart",
     "attachment",
@@ -115,24 +116,96 @@
     "typography",
     "waterfall-chart"
   ],
+  "visualizations": [
+    {
+      "name": "area-chart",
+      "accessibilityMode": "shared-data"
+    },
+    {
+      "name": "bar-chart",
+      "accessibilityMode": "shared-data"
+    },
+    {
+      "name": "candlestick-chart",
+      "accessibilityMode": "shared-data"
+    },
+    {
+      "name": "funnel-chart",
+      "accessibilityMode": "interactive-items"
+    },
+    {
+      "name": "heatmap-chart",
+      "accessibilityMode": "shared-data"
+    },
+    {
+      "name": "hex-chart",
+      "accessibilityMode": "interactive-items"
+    },
+    {
+      "name": "line-chart",
+      "accessibilityMode": "shared-data"
+    },
+    {
+      "name": "live-line-chart",
+      "accessibilityMode": "summary"
+    },
+    {
+      "name": "pie-chart",
+      "accessibilityMode": "interactive-items"
+    },
+    {
+      "name": "plot",
+      "accessibilityMode": "shared-data"
+    },
+    {
+      "name": "polar-area-chart",
+      "accessibilityMode": "interactive-items"
+    },
+    {
+      "name": "radar-chart",
+      "accessibilityMode": "shared-data"
+    },
+    {
+      "name": "ring-chart",
+      "accessibilityMode": "interactive-items"
+    },
+    {
+      "name": "scatter-chart",
+      "accessibilityMode": "shared-data"
+    },
+    {
+      "name": "treemap-chart",
+      "accessibilityMode": "interactive-items"
+    },
+    {
+      "name": "waterfall-chart",
+      "accessibilityMode": "shared-data"
+    }
+  ],
   "counts": {
-    "componentModules": 113,
-    "packageComponentExports": 113,
-    "documentedComponents": 113,
-    "exampleEntries": 113,
+    "componentModules": 114,
+    "packageComponentExports": 114,
+    "documentedComponents": 114,
+    "exampleEntries": 114,
     "registry": {
-      "componentItems": 113,
-      "supportItems": 33,
-      "totalItems": 146,
+      "componentItems": 114,
+      "supportItems": 34,
+      "totalItems": 148,
       "byType": {
-        "registry:ui": 126,
+        "registry:ui": 128,
         "registry:hook": 12,
         "registry:lib": 7,
         "registry:theme": 1
       }
     },
+    "visualizations": {
+      "total": 16,
+      "sharedData": 9,
+      "summaries": 1,
+      "interactiveItems": 6
+    },
     "registrySupport": {
-      "primitives": 11,
+      "primitives": 12,
       "icons": 1,
       "providers": 1,
       "hooks": 12,

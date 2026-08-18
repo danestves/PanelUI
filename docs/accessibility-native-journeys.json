@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "platforms": ["ios", "android"],
+  "journeys": [
+    {
+      "id": "adjustable-seams",
+      "title": "Adjustable controls cross every seam once",
+      "expected": "Slider and TimePicker increment and decrement one step, announce bounded values, and never cross disabled or terminal bounds."
+    },
+    {
+      "id": "controlled-rejection",
+      "title": "Rejected controlled gestures remain owner-driven",
+      "expected": "A rejected Carousel, SplitView, or picker request settles back to the accepted prop without duplicate change or settlement announcements."
+    },
+    {
+      "id": "overlay-focus",
+      "title": "Nested overlays isolate and restore focus",
+      "expected": "Only the top overlay is traversed; closing it returns focus into its parent, and closing the parent returns focus to its opener."
+    },
+    {
+      "id": "large-text",
+      "title": "Large text preserves labels and targets",
+      "expected": "At 200% and platform maximum text, labelled controls grow without clipping and adjacent 48dp targets do not overlap."
+    },
+    {
+      "id": "swipe-dismissal",
+      "title": "Swipe dismissal completes exactly once",
+      "expected": "Drawer, sheet, toast, and swipe actions dismiss or commit once from either side of a threshold and remain operable with the screen reader active."
+    },
+    {
+      "id": "chart-exploration",
+      "title": "Structured visuals expose equivalent data",
+      "expected": "Chart, Map, and Flow data is reachable in logical order while decorative geometry stays silent and actions match touch behavior."
+    },
+    {
+      "id": "screen-reader-actions",
+      "title": "Custom actions preserve state boundaries",
+      "expected": "ContextMenu, Signature, Sortable, and disabled adjustable controls expose only currently valid actions and announce their results."
+    }
+  ]
+}

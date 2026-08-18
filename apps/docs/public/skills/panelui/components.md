@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-113 component modules. The **Docs** column is the path under
+114 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -160,6 +160,7 @@ remember is a guess.
 
 | Component | What it is | Docs |
 | --- | --- | --- |
+| `AIInput` *(alpha)* | A prompt composer: a field that grows to five lines, a row of controls, and the sheet they open. | `ai-components/ai-input` |
 | `CodeBlock` | A fenced snippet, syntax-coloured and scrolled sideways. | `ai-components/code-block` |
 | `Panelside` *(alpha)* | Navigation panel that moves the app aside instead of covering it. | `ai-components/panelside` |
 | `Plan` | What an agent intends to do, before it does it. | `ai-components/plan` |

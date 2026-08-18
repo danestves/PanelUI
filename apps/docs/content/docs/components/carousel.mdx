@@ -242,6 +242,22 @@ const [index, setIndex] = useState(0);
 <Button onPress={() => carousel.current?.next()}>Skip</Button>
 ```
 
+## Lifecycle contract
+
+| Case | Contract |
+| --- | --- |
+| default initialization | defaultIndex owns the initial uncontrolled request until the child count is known. |
+| controlled acceptance | A requested index renders only after the owner supplies it. |
+| controlled rejection | A rejected request returns to the accepted prop without restarting its spring. |
+| external reset | A new owner index renders without being reported as a user request. |
+| disabled path | scrollEnabled disables gestures; imperative and explicit controls remain available. |
+| prop replacement | Count, loop, interval, and index changes normalize and re-arm from accepted state. |
+| unmount cleanup | Autoplay owns one timeout and its effect cleanup cancels it. |
+| reduced motion | Accepted movement writes progress immediately instead of starting a spring. |
+| callback counts | Invalid controlled corrections report once per request/count/loop identity. |
+
+Executable evidence: `packages/panelui/test/carousel-lifecycle.test.mjs` (4 tests).
+
 ## API Reference
 
 ### Carousel

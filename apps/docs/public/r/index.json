@@ -13,6 +13,29 @@
     "docsPath": "components/accordion"
   },
   {
+    "name": "ai-input",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "ai-components",
+    "stability": "alpha",
+    "description": "A prompt composer: a field that grows to five lines, a row of controls, and the sheet they open.",
+    "registryDependencies": [
+      "animated-pressable",
+      "bottom-sheet",
+      "button",
+      "cn",
+      "glass",
+      "icons",
+      "keyboard-avoider",
+      "native",
+      "soundwave",
+      "switch",
+      "text",
+      "use-direction"
+    ],
+    "docsPath": "ai-components/ai-input"
+  },
+  {
     "name": "alert",
     "type": "registry:ui",
     "kind": "ui",
@@ -598,6 +621,18 @@
     "docsPath": "charts/funnel-chart"
   },
   {
+    "name": "glass",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "The iOS system material, drawn where it exists and a solid surface everywhere else.",
+    "registryDependencies": [
+      "cn",
+      "scrim"
+    ]
+  },
+  {
     "name": "grid-item",
     "type": "registry:ui",
     "kind": "ui",
@@ -844,6 +879,7 @@
     "description": "Content that travels across its container on a loop.",
     "registryDependencies": [
       "cn",
+      "text",
       "use-direction"
     ],
     "docsPath": "components/marquee"
@@ -1057,6 +1093,7 @@
     "description": "A chart you assemble out of its marks.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],
@@ -1998,6 +2035,7 @@
     "description": "How a run of changes carried one total to another.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],

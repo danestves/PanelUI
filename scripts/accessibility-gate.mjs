@@ -20,6 +20,12 @@ export const ACCESSIBILITY_SUITES = [
   },
   {
     class: 'perception',
+    file: 'packages/panelui/test/timeline-contrast.test.mjs',
+    count: 2,
+    anchor: 'horizontal Timeline keeps informative content fully opaque',
+  },
+  {
+    class: 'perception',
     file: 'packages/panelui/test/scrim-transparency.test.mjs',
     count: 6,
     anchor: 'rendering decisions suppress blur until it is explicitly allowed',
@@ -35,6 +41,12 @@ export const ACCESSIBILITY_SUITES = [
     file: 'packages/panelui/test/button-dynamic-type.test.mjs',
     count: 2,
     anchor: 'labelled Button sizes are floors with scalable intrinsic line boxes',
+  },
+  {
+    class: 'motion-control',
+    file: 'packages/panelui/test/marquee-math.test.mjs',
+    count: 5,
+    anchor: 'only the spoken Marquee copy can receive pointer or keyboard interaction',
   },
   {
     class: 'modal-isolation',
@@ -96,6 +108,12 @@ export const ACCESSIBILITY_SUITES = [
     count: 4,
     anchor: 'horizontal tabs wrap and support Home and End without consuming vertical keys',
   },
+  {
+    class: 'native-journeys',
+    file: 'test/accessibility-native-journeys.test.mjs',
+    count: 3,
+    anchor: 'native accessibility journeys cover the bounded release matrix',
+  },
 ];
 
 export const REQUIRED_CLASSES = [
@@ -103,11 +121,13 @@ export const REQUIRED_CLASSES = [
   'perception',
   'target-size',
   'large-text',
+  'motion-control',
   'modal-isolation',
   'structured-content',
   'chart-semantics',
   'accessible-actions',
   'web-keyboard',
+  'native-journeys',
 ];
 
 export const CHECKLIST = 'docs/accessibility-release-checklist.md';
@@ -116,6 +136,7 @@ export const CHECKLIST_SECTIONS = [
   '## VoiceOver — iOS',
   '## TalkBack — Android',
   '## Keyboard — web',
+  '## Native journey receipts',
   '## Sign-off',
 ];
 
