@@ -9,6 +9,17 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.75.1] — 2026-08-18
+
+### Fixed
+
+- **`Drawer` threw on the first press and never opened.** The custom exit animation added in
+  0.75.0 was written below the component's `if (!open) return null`, so a closed drawer ran 26
+  hooks and an open one ran 27. React counts hooks by position, so opening one raised
+  "Rendered more hooks than during the previous render" and the panel never appeared. The hook
+  reads nothing that is only known once the drawer is open, so it now sits with the others above
+  that return. If you are on 0.75.0, this is the upgrade to take.
+
 ## [0.75.0] — 2026-08-18
 
 ### Added
