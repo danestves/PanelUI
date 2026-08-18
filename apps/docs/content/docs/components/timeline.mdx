@@ -278,7 +278,7 @@ Years as columns on a rail wider than the screen. The empty years carry the argu
 | `completed` | `boolean` | `false` | Force the completed state regardless of the timeline's value. |
 | `tone` | `TimelineTone` | `default` | Colours the node and label — for event kind rather than progress. |
 | `last` | `boolean` | `false` | Set on the final item so its rail stops at the indicator. |
-| `width` | `number` | — | Horizontal only: how wide this column is, in points. Left out, a column that carries content takes a readable width and one that carries none collapses to a tick — so a quiet stretch of the sequence compresses instead of paying full width for nothing. Set it to override that for a column that needs more or less room than its contents suggest. |
+| `width` | `number` | — | Horizontal only: how wide this column is, in points. Left out, a column that carries content takes a readable width and one that carries none collapses to a tick — so a quiet stretch of the sequence compresses instead of paying full width for nothing. Set it to override that for a column that needs more or less room than its contents suggest. It must be finite and greater than zero; invalid values use the content default. |
 
 ### Timeline.Indicator
 
@@ -309,6 +309,8 @@ The rail is drawn once across the whole track and every column puts a tick on it
 A flick lands on a column rather than between two, which is what `snap` is for; turn it off for free scrolling. Columns fade as they leave the reading edge, and the window is wide enough that the neighbours stay legible — being able to see what came before and after at once is most of the reason to draw a timeline at all. With the operating system set to reduce motion the fade is dropped and the rail simply scrolls.
 
 `Timeline.Indicator` takes no children here: the node is a tick on the rail, not a disc with an icon in it, and `variant` does not change that.
+
+Consumer `style` values compose around the horizontal item's measured width and scroll-driven fade rather than replacing them. A custom `width` must be finite and greater than zero; invalid values fall back to the same wide-or-narrow content default used when `width` is omitted.
 
 ## Public exports
 

@@ -65,6 +65,7 @@ import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
+import { timelineColumnWidth } from './timeline-geometry';
 
 export type TimelineVariant = 'dot' | 'icon' | 'numbered' | 'card' | 'compact';
 /** Semantic colour for a single event, independent of progress. */
@@ -87,10 +88,6 @@ const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 const HORIZONTAL_RAIL_TOP = 64;
 const HORIZONTAL_TICK_HEIGHT = 10;
 
-/** A column with something to say, and one with nothing. */
-const HORIZONTAL_WIDE = 268;
-const HORIZONTAL_NARROW = 76;
-
 /**
  * How wide a column is: what it was given, else what its contents ask for.
  *
@@ -99,8 +96,6 @@ const HORIZONTAL_NARROW = 76;
  * snap point half a column out.
  */
 function itemWidth(props: TimelineItemProps): number {
-  if (typeof props.width === 'number') return props.width;
-
   let filled = false;
   Children.forEach(props.children, (child) => {
     if (filled || !isValidElement(child)) return;
@@ -110,7 +105,7 @@ function itemWidth(props: TimelineItemProps): number {
     if (inner !== undefined && inner !== null && inner !== false) filled = true;
   });
 
-  return filled ? HORIZONTAL_WIDE : HORIZONTAL_NARROW;
+  return timelineColumnWidth(props.width, filled);
 }
 
 /** Variants whose node is a filled disc rather than an outlined ring. */
@@ -425,6 +420,7 @@ export interface TimelineItemProps extends ViewProps {
    * carries none collapses to a tick — so a quiet stretch of the sequence
    * compresses instead of paying full width for nothing. Set it to override
    * that for a column that needs more or less room than its contents suggest.
+   * It must be finite and greater than zero; invalid values use the content default.
    */
   width?: number;
   children?: ReactNode;
@@ -439,6 +435,7 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
       tone = 'default',
       last = false,
       width,
+      style,
       children,
       ...props
     },
@@ -474,7 +471,7 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     const columnStyle = useAnimatedStyle(() => {
       if (!horizontal || !animate) return { opacity: 1 };
       const distance = Math.abs(scrollX.value - offset);
-      const window = Math.max(columnWidth ?? HORIZONTAL_WIDE, 1) * 2;
+      const window = Math.max(columnWidth ?? timelineColumnWidth(undefined, true), 1) * 2;
       return {
         opacity: interpolate(distance, [0, window], [1, 0.45], 'clamp'),
       };
@@ -483,7 +480,7 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     if (!horizontal) {
       return (
         <TimelineItemContext.Provider value={context}>
-          <View ref={ref} className={item({ className })} {...props}>
+          <View ref={ref} className={item({ className })} style={style} {...props}>
             {textChildren(children)}
           </View>
         </TimelineItemContext.Provider>
@@ -495,8 +492,8 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
         <Animated.View
           ref={ref}
           className={item({ className })}
-          style={[{ width: columnWidth }, columnStyle]}
           {...props}
+          style={[style, { width: columnWidth }, columnStyle]}
         >
           {textChildren(children)}
         </Animated.View>
