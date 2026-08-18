@@ -92,6 +92,7 @@ export const COMPONENTS = [
   {"slug":"sources","name":"Sources","summary":"Where an answer came from, folded under a count"},
   {"slug":"spinner","name":"Spinner","summary":"Indeterminate loading indicator"},
   {"slug":"splitter","name":"Splitter","summary":"Panes sharing a container, with a seam you can drag"},
+  {"slug":"split-view","name":"SplitView","summary":"Two stacked panes whose seam settles on a named height"},
   {"slug":"steps","name":"Steps","summary":"Stepper for multi-step flows"},
   {"slug":"surface","name":"Surface","summary":"Elevated container with a variant ladder"},
   {"slug":"swipe","name":"Swipe","summary":"A row that slides aside to reveal its actions"},

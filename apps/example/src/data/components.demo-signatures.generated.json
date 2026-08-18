@@ -363,7 +363,11 @@
     },
     {
       "slug": "splitter",
-      "signature": "6b9210371cab7887730298b99e0faebb0efec084c236249c8082b2e5ee69db0c"
+      "signature": "e2d75d6a56798289cdc035a49ffa8f212ac77327a352d724a3ebcba3110aab04"
+    },
+    {
+      "slug": "split-view",
+      "signature": "4f68faae15e899a5292d2dd1b7a2af7fcf95a9372e055e2f4ec53650ac450d9a"
     },
     {
       "slug": "steps",

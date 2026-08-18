@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1113,
-    "values": 295,
-    "types": 818,
-    "modules": 137,
-    "components": 112,
+    "exports": 1119,
+    "values": 297,
+    "types": 822,
+    "modules": 138,
+    "components": 113,
     "hooks": 12
   },
   "groups": {
@@ -3740,6 +3740,37 @@
           },
           {
             "name": "SpinnerProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/split-view/index.tsx",
+        "slug": "split-view",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "SplitView",
+            "kind": "value"
+          },
+          {
+            "name": "useSplitView",
+            "kind": "value"
+          },
+          {
+            "name": "SplitViewProps",
+            "kind": "type"
+          },
+          {
+            "name": "SplitViewPaneProps",
+            "kind": "type"
+          },
+          {
+            "name": "SplitViewDragAreaProps",
+            "kind": "type"
+          },
+          {
+            "name": "SplitViewHandleProps",
             "kind": "type"
           }
         ]

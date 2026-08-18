@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-112 component modules. The **Docs** column is the path under
+113 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -92,6 +92,7 @@ remember is a guess.
 | `ScrollFade` | Fades the edges of a scroll container. | `components/scroll-fade` |
 | `Separator` | Horizontal or vertical rule between content, optionally labelled. | `components/separator` |
 | `Splitter` | Panes that share a container, with a seam between them you can drag. | `components/splitter` |
+| `SplitView` | Two stacked panes whose seam settles on one of a few named heights. | `components/split-view` |
 | `Surface` | Elevated container with a variant ladder. | `components/surface` |
 | `Typography` | Semantic text presets. | `components/typography` |
 

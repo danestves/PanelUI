@@ -290,6 +290,7 @@ consumer bundler.
 | `Soundwave` | What a voice looks like while an app listens |
 | `Sources` | The references behind an answer, behind a disclosure |
 | `Spinner` | Indeterminate loading indicator |
+| `SplitView` | Two stacked panes whose seam settles on one of a few named heights |
 | `Splitter` | Panes that share a container, with a seam between them you can drag |
 | `Steps` | Stepper for multi-step flows |
 | `Surface` | Elevated container with a variant ladder |

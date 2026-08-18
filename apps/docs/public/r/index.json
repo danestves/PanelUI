@@ -1507,6 +1507,18 @@
     "docsPath": "components/spinner"
   },
   {
+    "name": "split-view",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Two stacked panes whose seam settles on one of a few named heights.",
+    "registryDependencies": [
+      "haptics"
+    ],
+    "docsPath": "components/split-view"
+  },
+  {
     "name": "splitter",
     "type": "registry:ui",
     "kind": "ui",

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScrollView, View, type LayoutChangeEvent } from "react-native";
-import { Avatar, Badge, BookmarkIcon, BellIcon, Button, Card, Frame, PlusIcon, SearchIcon, Skeleton, Splitter, Switch, Text, Tooltip, Tour, Typography, WaterfallChart, type WaterfallDatum, waterfallSteps } from "panelui-native";
+import { Avatar, Badge, BookmarkIcon, BellIcon, Button, Card, Frame, PlusIcon, SearchIcon, Skeleton, SplitView, Splitter, Switch, Text, Tooltip, Tour, Typography, WaterfallChart, type WaterfallDatum, waterfallSteps } from "panelui-native";
 import { PanelsideAssistantBlock, PanelsideChatBlock, PanelsideCurveBlock, PanelsideDockedBlock, PanelsideNativeBlock, PanelsideNavigateBlock, PanelsideOverlayBlock } from "../../components/panelside-blocks";
 import type { ComponentEntry } from '../component-types';
 
@@ -632,6 +632,55 @@ function SplitterControlledDemo() {
   );
 }
 
+/** Filler for a split-view pane, so the demos show where the seam lands. */
+function Half({ title, body, className }: { title: string; body: string; className?: string }) {
+  return (
+    <View className={`flex-1 justify-center gap-1 p-4 ${className ?? ''}`}>
+      <Text weight="medium">{title}</Text>
+      <Text size="sm" muted>
+        {body}
+      </Text>
+    </View>
+  );
+}
+
+const NOTES = [
+  'The pane clips what does not fit.',
+  'So anything longer than the shortest snap point brings its own scroller.',
+  'A ScrollView here behaves like any other scroller in a box whose height changes.',
+  'Drag the seam down and this list gets more of the room.',
+  'Drag it up and the list keeps scrolling in what is left.',
+  'Nothing about the scroll position changes when the pane does.',
+];
+
+/** Controlled, so a button can put the seam somewhere the reader did not drag it. */
+function SplitViewControlledDemo() {
+  const [index, setIndex] = useState(1);
+
+  return (
+    <View className="w-full gap-3">
+      <SplitView
+        className="h-80 overflow-hidden rounded-2xl border border-border"
+        snapIndex={index}
+        onSnapIndexChange={setIndex}
+      >
+        <SplitView.Top>
+          <Half title="Preview" body={`Snap ${index + 1} of 3.`} className="bg-surface-secondary" />
+        </SplitView.Top>
+        <SplitView.DragArea>
+          <SplitView.Handle />
+        </SplitView.DragArea>
+        <SplitView.Bottom>
+          <Half title="Source" body="What you are writing." />
+        </SplitView.Bottom>
+      </SplitView>
+      <Button variant="outline" onPress={() => setIndex(0)}>
+        Collapse the preview
+      </Button>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'typography',
@@ -946,6 +995,104 @@ export const ENTRIES: ComponentEntry[] = [
                 <Pane title="Also fixed" body="" />
               </Splitter.Panel>
             </Splitter>
+          </View>
+        ),
+      },
+    ],
+  },
+{
+    slug: 'split-view',
+    name: 'SplitView',
+    summary: 'Two stacked panes whose seam settles on a named height',
+    demos: [
+      {
+        label: 'A pane at three heights',
+        render: () => (
+          <View className="w-full">
+            <SplitView className="h-96 overflow-hidden rounded-2xl border border-border">
+              <SplitView.Top>
+                <Half title="Map" body="Drag the handle down for more of it." className="bg-surface-secondary" />
+              </SplitView.Top>
+              <SplitView.DragArea>
+                <SplitView.Handle />
+              </SplitView.DragArea>
+              <SplitView.Bottom>
+                <Half title="Results" body="8 places nearby." />
+              </SplitView.Bottom>
+            </SplitView>
+          </View>
+        ),
+      },
+      {
+        label: 'Naming the heights',
+        render: () => (
+          <View className="w-full">
+            <SplitView
+              className="h-96 overflow-hidden rounded-2xl border border-border"
+              snapPoints={[0.3, 0.75]}
+              minHeight={96}
+              defaultSnapIndex={0}
+            >
+              <SplitView.Top>
+                <Half title="Preview" body="Two heights, and a floor of 96 points." />
+              </SplitView.Top>
+              <SplitView.DragArea>
+                <SplitView.Handle />
+              </SplitView.DragArea>
+              <SplitView.Bottom>
+                <Half title="Editor" body="index.tsx" className="bg-surface-secondary" />
+              </SplitView.Bottom>
+            </SplitView>
+          </View>
+        ),
+      },
+      {
+        label: 'Content that scrolls inside a pane',
+        render: () => (
+          <View className="w-full">
+            <SplitView
+              className="h-96 overflow-hidden rounded-2xl border border-border"
+              snapPoints={[0.35, 0.8]}
+            >
+              <SplitView.Top>
+                <ScrollView contentContainerClassName="gap-2 p-4">
+                  {NOTES.map((note) => (
+                    <Text key={note} size="sm">
+                      {note}
+                    </Text>
+                  ))}
+                </ScrollView>
+              </SplitView.Top>
+              <SplitView.DragArea>
+                <SplitView.Handle />
+              </SplitView.DragArea>
+              <SplitView.Bottom>
+                <Half title="Detail" body="Takes whatever the list gave up." className="bg-surface-secondary" />
+              </SplitView.Bottom>
+            </SplitView>
+          </View>
+        ),
+      },
+      { label: 'Driving it from outside', render: () => <SplitViewControlledDemo /> },
+      {
+        label: 'A seam that does not move',
+        render: () => (
+          <View className="w-full">
+            <SplitView
+              className="h-72 overflow-hidden rounded-2xl border border-border"
+              snapPoints={[0.5]}
+              disabled
+            >
+              <SplitView.Top>
+                <Half title="Fixed" body="The seam is frozen." />
+              </SplitView.Top>
+              <SplitView.DragArea>
+                <SplitView.Handle />
+              </SplitView.DragArea>
+              <SplitView.Bottom>
+                <Half title="Also fixed" body="" className="bg-surface-secondary" />
+              </SplitView.Bottom>
+            </SplitView>
           </View>
         ),
       },

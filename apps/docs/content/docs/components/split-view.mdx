@@ -1,0 +1,241 @@
+---
+title: SplitView
+description: Two stacked panes whose seam settles on one of a few named heights.
+status: new
+---
+
+Two stacked panes with a seam between them that settles on one of a few heights you name, rather than wherever the finger stopped.
+
+Snap points are fractions of the room the panes share, so they mean the same thing on any screen and a rotation costs no re-measuring.
+
+The split view has no height of its own. Give it one — `className="h-96"`, or a parent that has one — or it collapses and takes its panes with it.
+
+For panes that stop anywhere the reader lets go, and for more than two of them, use [Splitter](/docs/components/splitter).
+
+## Installation
+
+SplitView ships with the library — no separate install.
+
+```tsx
+import { SplitView, ScrollView, Text, View } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add split-view
+```
+
+## Usage
+
+```tsx
+<SplitView className="h-96" snapPoints={[0.25, 0.6]} minHeight={80}>
+  <SplitView.Top>
+    <View className="flex-1 justify-center p-4">
+      <Text>Drag the handle to resize.</Text>
+    </View>
+  </SplitView.Top>
+  <SplitView.DragArea>
+    <SplitView.Handle />
+  </SplitView.DragArea>
+  <SplitView.Bottom>
+    <View className="flex-1 justify-center p-4">
+      <Text>This pane takes the rest.</Text>
+    </View>
+  </SplitView.Bottom>
+</SplitView>
+```
+
+## Composition
+
+```tsx
+<SplitView>
+  <SplitView.Top>…</SplitView.Top>
+  <SplitView.DragArea>
+    <SplitView.Handle />
+  </SplitView.DragArea>
+  <SplitView.Bottom>…</SplitView.Bottom>
+</SplitView>
+```
+
+`SplitView.DragArea` is the whole touch target, not just the pill inside it. Give it padding to make the target larger — the room it takes is measured, so the snap arithmetic follows.
+
+`SplitView.Handle` renders a pill and grows a little while the seam is moving. Give it children to draw something else there; the scale still applies.
+
+## Examples
+
+### A pane at three heights
+
+The default snap points are a fifth, a half and four fifths of the room the panes share. A flick lands on one of them.
+
+```tsx
+<SplitView className="h-96 rounded-2xl border border-border">
+  <SplitView.Top>
+    <View className="flex-1 justify-center bg-surface-secondary p-4">
+      <Text weight="medium">Map</Text>
+    </View>
+  </SplitView.Top>
+  <SplitView.DragArea>
+    <SplitView.Handle />
+  </SplitView.DragArea>
+  <SplitView.Bottom>
+    <View className="flex-1 justify-center p-4">
+      <Text weight="medium">Results</Text>
+    </View>
+  </SplitView.Bottom>
+</SplitView>
+```
+
+### Naming the heights
+
+A number at or below 1 is a fraction of the room the panes share; anything larger is points. `minHeight` is the floor either way, and a snap point below it is pulled up to it rather than ignored.
+
+```tsx
+<SplitView
+  className="h-96"
+  snapPoints={[0.3, 0.75]}
+  minHeight={96}
+  defaultSnapIndex={0}
+>
+  <SplitView.Top>{preview}</SplitView.Top>
+  <SplitView.DragArea>
+    <SplitView.Handle />
+  </SplitView.DragArea>
+  <SplitView.Bottom>{editor}</SplitView.Bottom>
+</SplitView>
+```
+
+### Content that scrolls inside a pane
+
+A pane clips what does not fit, so anything longer than the shortest snap point needs its own scroller. Put a ScrollView in the pane and it behaves like any other scroller in a box whose height changes.
+
+```tsx
+<SplitView className="h-96" snapPoints={[0.35, 0.8]}>
+  <SplitView.Top>
+    <ScrollView contentContainerClassName="gap-2 p-4">
+      {notes.map((note) => (
+        <Text key={note}>{note}</Text>
+      ))}
+    </ScrollView>
+  </SplitView.Top>
+  <SplitView.DragArea>
+    <SplitView.Handle />
+  </SplitView.DragArea>
+  <SplitView.Bottom>{detail}</SplitView.Bottom>
+</SplitView>
+```
+
+### Driving it from outside
+
+Pass `snapIndex` to control which height the seam sits at, and move it with a control of your own. Pair it with `onSnapIndexChange` or a drag will spring back to the index the props still name.
+
+```tsx
+const [index, setIndex] = useState(1);
+
+<View className="gap-3">
+  <SplitView
+    className="h-80"
+    snapIndex={index}
+    onSnapIndexChange={setIndex}
+  >
+    <SplitView.Top>{top}</SplitView.Top>
+    <SplitView.DragArea>
+      <SplitView.Handle />
+    </SplitView.DragArea>
+    <SplitView.Bottom>{bottom}</SplitView.Bottom>
+  </SplitView>
+  <Button variant="outline" onPress={() => setIndex(0)}>
+    Collapse
+  </Button>
+</View>
+```
+
+### A seam that does not move
+
+`disabled` freezes the seam. The panes keep the heights they have, and the screen reader is told the control is unavailable rather than left offering steps that do nothing.
+
+```tsx
+<SplitView className="h-72" snapPoints={[0.5]} disabled>
+  <SplitView.Top>{summary}</SplitView.Top>
+  <SplitView.DragArea>
+    <SplitView.Handle />
+  </SplitView.DragArea>
+  <SplitView.Bottom>{detail}</SplitView.Bottom>
+</SplitView>
+```
+
+## API Reference
+
+### SplitView
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `snapPoints` | `readonly number[]` | — | Heights the seam settles on. A number at or below `1` is a fraction of the room the panes share; anything larger is points. Defaults to `[0.2, 0.5, 0.8]`. |
+| `minHeight` | `number` | — | Smallest the top pane may get, as a fraction or in points. Defaults to `100`. |
+| `maxHeight` | `number` | — | Largest the top pane may get, as a fraction or in points. A negative number is measured back from the bottom — `-80` leaves eighty points for the other pane. Defaults to all the room there is. |
+| `defaultSnapIndex` | `number` | `1` | Which snap point the seam starts at when uncontrolled. Defaults to `1`. |
+| `snapIndex` | `number` | — | Controlled snap index. Pair it with `onSnapIndexChange`. |
+| `onSnapIndexChange` | `(index: number) => void` | — | Called with the index the seam settled on. |
+| `onSnap` | `(index: number, topHeight: number) => void` | — | Called once the pane has settled, with the index and its height in points. |
+| `disabled` | `boolean` | `false` | Freezes the seam. The panes keep the heights they have. |
+| `animateOnMount` | `boolean` | `false` | Springs to the starting snap point on mount instead of opening at it. |
+
+### SplitView.Pane
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### SplitView.DragArea
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `accessibilityLabel` | `string` | `'Resize panes'` | What a screen reader calls the seam. Defaults to "Resize panes". |
+
+### SplitView.Handle
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### What the fractions are fractions of
+
+The drag area takes real layout height, and that height is subtracted before the snap points are resolved. So `0.5` is half of what is actually divisible rather than half of a number the seam then eats into, and a taller drag area moves every snap point rather than only the largest. Points — any number above 1 — are used as written.
+
+`maxHeight` also takes a negative number, measured back from the bottom: `-80` leaves eighty points for the lower pane whatever the container turns out to be.
+
+Snap points are clamped into the range `minHeight` and `maxHeight` allow, sorted, and any two that land on the same height become one — a list with the same height twice makes a flick settle on a snap that looks like it did nothing.
+
+### Releasing
+
+A release settles on the nearest snap point to where the pane is *plus where the throw was going*, so a fast flick carries past a midpoint the finger never crossed. It never moves more than one point from where the pane actually is, however hard it is thrown — a release landing two snaps from where it was aimed reads as the control guessing.
+
+Dragging runs on the UI thread. `onSnap` fires from the spring's completion, once, rather than on every frame — a layout that re-rendered sixty times a second is the one thing that would make this feel slow. `onSnapIndexChange` fires as soon as the destination is known.
+
+### Reaching the layout from inside
+
+`useSplitView` returns the live layout and a `snapTo`. `topHeight` is a shared value on the UI thread — read it in a worklet, not in render, where it is only ever the number the last commit happened to see.
+
+### Accessibility
+
+The drag area is `adjustable`, and increment and decrement step through the snap points rather than by a distance. Those are the positions this control has, and announcing a percentage nobody can stop at would describe a different control.
+
+With the operating system set to reduce motion the seam moves to its snap point without the spring, and the grip does not scale.
+
+### SplitView or Splitter
+
+Reach for SplitView when the layout has a few right answers — a map over a list, a preview over an editor — and the reader should land on one of them. Reach for [Splitter](/docs/components/splitter) when any division is valid, when there are more than two panes, or when the split runs across rather than down.
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `SplitView`, `useSplitView`
+
+**Types:** `SplitViewProps`, `SplitViewPaneProps`, `SplitViewDragAreaProps`, `SplitViewHandleProps`

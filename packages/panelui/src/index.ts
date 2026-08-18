@@ -1042,6 +1042,14 @@ export {
   type SplitterConstraint,
 } from './components/splitter';
 export {
+  SplitView,
+  useSplitView,
+  type SplitViewProps,
+  type SplitViewPaneProps,
+  type SplitViewDragAreaProps,
+  type SplitViewHandleProps,
+} from './components/split-view';
+export {
   Steps,
   type StepsProps,
   type StepsItemProps,
