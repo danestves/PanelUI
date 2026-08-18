@@ -64,6 +64,7 @@ import { Text } from '../../primitives/text';
 import { selectionTick } from '../../utils/haptics';
 import { Chip, type ChipSize, type ChipVariant } from '../chip';
 import { Label } from '../label';
+import { reconcileMarkedTag, type MarkedTag } from './tag-input-state';
 
 /** Matches Input and Combobox, so the three read as the same control focused. */
 const FOCUS_DURATION = 150;
@@ -298,18 +299,18 @@ export const TagInput = forwardRef<TextInput, TagInputProps>(
      * itself, because with `allowDuplicates` two tags can read the same and
      * marking "the last one" has to mean the last one.
      */
-    const [marked, setMarked] = useState<number | null>(null);
+    const [marked, setMarked] = useState<MarkedTag | null>(null);
 
     const overflowing = max !== undefined && tags.length > max;
     const invalid = !!errorMessage || overflowing;
     const interactive = !disabled && !readOnly;
 
-    // The list can be emptied from outside, which would leave the mark pointing
-    // past the end of it — and a stale mark is a tag deleted by a backspace
-    // meant for the one that used to be there.
+    // A controlled list can be replaced or reordered between the two
+    // backspaces. Keep the mark only while the exact tag it armed still owns
+    // that slot, so a key press aimed at the old value cannot delete the new one.
     useEffect(() => {
-      if (marked !== null && marked >= tags.length) setMarked(null);
-    }, [marked, tags.length]);
+      setMarked((current) => reconcileMarkedTag(current, tags));
+    }, [tags]);
 
     const setText = useCallback(
       (next: string) => {
@@ -418,14 +419,15 @@ export const TagInput = forwardRef<TextInput, TagInputProps>(
         // what it always means, and the tags are none of its business.
         if (text.length > 0 || tags.length === 0) return;
 
-        if (marked !== null && marked < tags.length) {
-          removeAt(marked);
+        if (marked !== null && reconcileMarkedTag(marked, tags)) {
+          removeAt(marked.index);
           setMarked(null);
           return;
         }
-        setMarked(tags.length - 1);
+        const index = tags.length - 1;
+        setMarked({ index, tag: tags[index]! });
       },
-      [onKeyPress, text.length, tags.length, marked, removeAt]
+      [onKeyPress, text.length, tags, marked, removeAt]
     );
 
     const handleFocus = useCallback<NonNullable<TextInputProps['onFocus']>>(
@@ -541,7 +543,7 @@ export const TagInput = forwardRef<TextInput, TagInputProps>(
                     // The marked tag turns destructive rather than growing an
                     // outline: it is about to be deleted, and that is the one
                     // colour in the theme that already means exactly that.
-                    variant={marked === index ? 'destructive' : chipVariant}
+                    variant={marked?.index === index ? 'destructive' : chipVariant}
                     onClose={interactive ? () => removeAt(index) : undefined}
                     closeLabel={`Remove ${tag}`}
                     haptics={haptics}
