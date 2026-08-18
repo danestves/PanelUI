@@ -84,6 +84,9 @@ const DEFAULT_PLACEHOLDER = 'Pick a date and time';
  */
 const PANEL_WIDTH = 308;
 
+/** A stable rule that makes every calendar day unavailable while disabled. */
+const DISABLE_ALL_DATES = () => true;
+
 /** How a `Date` is written on the closed trigger. */
 function describe(
   value: Date,
@@ -204,18 +207,23 @@ function DateTimePickerRoot({
 
   const setOpen = useCallback(
     (next: boolean) => {
+      if (disabled && next) return;
       if (!isOpenControlled) setInternalOpen(next);
       onOpenChange?.(next);
     },
-    [isOpenControlled, onOpenChange]
+    [disabled, isOpenControlled, onOpenChange]
   );
 
   const commit = useCallback(
     (next: Date) => {
+      // A controlled caller can keep the panel mounted or open while disabled.
+      // Guard the value boundary as well as the visible controls so a stale
+      // press cannot commit during the same render that disables the picker.
+      if (disabled) return;
       if (!isValueControlled) setInternalValue(next);
       onValueChange?.(next);
     },
-    [isValueControlled, onValueChange]
+    [disabled, isValueControlled, onValueChange]
   );
 
   /*
@@ -281,7 +289,7 @@ function DateTimePickerRoot({
         mode="single"
         selected={value}
         onSelect={handleDay}
-        disabled={disabledDates}
+        disabled={disabled ? DISABLE_ALL_DATES : disabledDates}
         minDate={minDate}
         maxDate={maxDate}
         startMonth={minDate}

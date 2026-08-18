@@ -185,6 +185,10 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 So the panel stays until Done — in every presentation, including the popover, which is the one place `DatePicker` has no Done button at all. Tapping outside still dismisses it, but that is how a popover is *abandoned*, and something has to say when both halves are settled.
 
+### Disabled applies to the whole panel
+
+`disabled` prevents changes from both the calendar and the time control, including `presentation="inline"` and a controlled panel that remains open while disabled. It does not merely disable the default trigger.
+
 ### The panel is a fixed width
 
 That is what lets the two halves line up. A month grid and a time scale that each measured themselves would be two boxes of slightly different widths stacked on each other, and the seam shows at any size. The hairline between them is a hairline rather than a gap for the same reason: space alone reads as two controls that happen to be near each other.
