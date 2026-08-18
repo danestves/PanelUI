@@ -55,6 +55,7 @@ const config = {
       cached('/logo-glow-light.png'),
       cached('/logo-glow-dark.png'),
       cached('/icon-512.png'),
+      cached('/neon.svg'),
     ];
   },
   /*

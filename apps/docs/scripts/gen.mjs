@@ -4,6 +4,23 @@ import { fileURLToPath } from 'url';
 import { loadUsage } from './load-usage.mjs';
 import { LIFECYCLE_CASES, loadLifecycleMatrices } from '../../../scripts/lifecycle-matrices.mjs';
 
+/**
+ * A summary as a YAML scalar the frontmatter parser will accept.
+ *
+ * A plain scalar ends at the first `: `, so a perfectly ordinary summary — "A
+ * prompt composer: a field that grows" — turns the rest of the line into a
+ * mapping key and fails the whole build. It fails at `next build` rather than
+ * here, which is after the drift check has already passed and, at release
+ * time, after the tag exists.
+ *
+ * Quoted only when it has to be, so the frontmatter of the other pages does
+ * not churn.
+ */
+function yamlScalar(value) {
+  const unsafe = /^[-?:,[\]{}#&*!|>'"%@`]|: |:$| #/.test(value);
+  return unsafe ? JSON.stringify(value) : value;
+}
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 /** Repo root, three levels up from apps/docs/scripts. */
 const ROOT = path.resolve(HERE, '../../..');
@@ -225,7 +242,7 @@ for (const [slug, entry] of Object.entries(meta)) {
 
   sections.push(`---
 title: ${name}
-description: ${summary}${status ? `\nstatus: ${status}` : ''}
+description: ${yamlScalar(summary)}${status ? `\nstatus: ${status}` : ''}
 ---
 
 ${u.intro ?? summary}${maturity}${preview}

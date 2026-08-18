@@ -1,0 +1,170 @@
+---
+title: Neon
+description: We recommend using Neon — serverless Postgres for the API routes behind a PanelUI app, with the connection string kept off the device.
+---
+
+We recommend using neon.
+
+PanelUI draws the screens. Neon is where the data behind them lives: serverless
+Postgres that scales to zero between requests, which is the shape an app's
+traffic actually has.
+
+## Why it suits an Expo app
+
+An app is idle most of the time and busy in short bursts. A database billed by
+the hour is paid for through all the idle, and one that has to be kept warm is
+one more thing to keep warm. Neon sleeps when nothing is asking and wakes on the
+next query.
+
+Branching is the other half. A Neon branch is a copy-on-write copy of the whole
+database, so a preview deploy or a local checkout can have its own data without
+a seed script that drifts from production.
+
+## The connection string never reaches the device
+
+This is the part worth getting right before anything else.
+
+A React Native bundle is downloadable, and everything in it is readable —
+`process.env` values included. A database URL shipped in an app is a database URL
+handed to everyone who installs it. So the device never holds it and never talks
+to Postgres directly. It calls a route you own, and the route talks to Neon.
+
+<Callout type="warn">
+  Anything prefixed `EXPO_PUBLIC_` is inlined into the bundle by design. A
+  connection string must never carry that prefix.
+</Callout>
+
+## Setting it up
+
+<Steps>
+
+<Step>
+
+### Create the database
+
+Make a project at [neon.com](https://neon.com) and copy the pooled connection
+string. Pooled, not direct: an API route opens a connection per invocation, and
+a serverless function that opens direct connections runs out of them under any
+real traffic.
+
+</Step>
+
+<Step>
+
+### Put it in the server's environment
+
+```sh title=".env.local"
+DATABASE_URL="postgresql://…@…neon.tech/…?sslmode=require"
+```
+
+Add `.env.local` to `.gitignore`, and set the same variable as a secret wherever
+the routes are deployed.
+
+</Step>
+
+<Step>
+
+### Install the driver
+
+<InstallTabs packages="@neondatabase/serverless" />
+
+It speaks Postgres over HTTP, so it works in the serverless runtimes Expo Router
+API routes run on, where a TCP socket is not available.
+
+</Step>
+
+<Step>
+
+### Write the route
+
+An Expo Router API route is a `+api.ts` file beside the screen it serves. It
+runs on the server, so it is the one place the connection string exists.
+
+```ts title="app/tasks+api.ts"
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(process.env.DATABASE_URL!);
+
+export async function GET() {
+  const tasks = await sql`select id, title, done from tasks order by created_at desc`;
+  return Response.json(tasks);
+}
+
+export async function POST(request: Request) {
+  const { title } = await request.json();
+  if (typeof title !== 'string' || title.trim().length === 0) {
+    return Response.json({ error: 'A task needs a title.' }, { status: 400 });
+  }
+
+  const [task] = await sql`
+    insert into tasks (title) values (${title.trim()})
+    returning id, title, done
+  `;
+  return Response.json(task, { status: 201 });
+}
+```
+
+Validate at the route, not only in the form. The form is the part an attacker
+does not have to use.
+
+</Step>
+
+<Step>
+
+### Put a PanelUI form on the front of it
+
+The screen never mentions Neon. It posts to the route and renders what comes
+back.
+
+```tsx title="app/index.tsx"
+import { useState } from 'react';
+import { View } from 'react-native';
+import { Button, Field, Input, Text } from 'panelui-native';
+
+export default function Tasks() {
+  const [title, setTitle] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function add() {
+    setSaving(true);
+    setError(null);
+    try {
+      const response = await fetch('/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      });
+      if (!response.ok) throw new Error('That did not save.');
+      setTitle('');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Something went wrong.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <View className="gap-4 p-4">
+      <Field>
+        <Field.Label>New task</Field.Label>
+        <Input value={title} onChangeText={setTitle} placeholder="Water the plants" />
+        {error ? <Field.Error>{error}</Field.Error> : null}
+      </Field>
+      <Button onPress={add} loading={saving} disabled={title.trim().length === 0}>
+        Add task
+      </Button>
+    </View>
+  );
+}
+```
+
+</Step>
+
+</Steps>
+
+## Where to go next
+
+Neon's own [documentation](https://neon.com/docs) covers branching, migrations
+and connection pooling in depth. For the routes themselves, see
+[Expo Router's API routes](https://docs.expo.dev/router/reference/api-routes/).

@@ -1,6 +1,32 @@
+import type { ReactNode } from 'react';
 import { docs } from 'collections/server';
 import { loader } from 'fumadocs-core/source';
 import { statusBadgesPlugin } from 'fumadocs-core/source/status-badges';
+
+/**
+ * The marks a sidebar `icon` can resolve to.
+ *
+ * A section that is about somebody else's product is the one place a mark
+ * earns its keep: "Integrations" says nothing on its own, and the logo says
+ * which integration before the row is read. Everything else in this sidebar is
+ * about the library and is named for what it is, so nothing else has one.
+ *
+ * Drawn inline rather than fetched. The sidebar renders on the server and the
+ * mark is four paths; a request for it would be four paths and a round trip.
+ */
+const ICONS: Record<string, ReactNode> = {
+  neon: (
+    <svg
+      viewBox="0 0 317 116"
+      role="img"
+      aria-label="Neon"
+      className="size-4 shrink-0"
+      fill="currentColor"
+    >
+      <path d="M0 21.4C0 9.6 9.6 0 21.4 0h73.2C106.4 0 116 9.6 116 21.4v66.5c0 12.2-15.4 17.6-22.9 8L71 67.2v37.6c0 6.2-5 11.2-11.2 11.2H21.4C9.6 116 0 106.4 0 94.6V21.4Zm21.4-4.5a4.5 4.5 0 0 0-4.5 4.5v73.2a4.5 4.5 0 0 0 4.5 4.5h32.7V63.9c0-12.2 15.4-17.6 22.9-8L99.1 89V21.4a4.5 4.5 0 0 0-4.5-4.5H21.4Z" />
+    </svg>
+  ),
+};
 
 /**
  * The marks a `status` can resolve to. Anything else renders nothing.
@@ -60,6 +86,25 @@ export const source = loader({
   baseUrl: '/docs',
   source: docs.toFumadocsSource(),
   plugins: [
+    /*
+     * Resolves an `icon` string in a folder's meta.json or a page's
+     * frontmatter to a rendered mark. Written out rather than imported: the
+     * only icon plugin the package exports maps names onto a general-purpose
+     * icon set, and a section named after a product wants that product's mark.
+     */
+    {
+      name: 'panelui:icon',
+      transformPageTree: {
+        folder(node) {
+          if (typeof node.icon === 'string') node.icon = ICONS[node.icon] ?? undefined;
+          return node;
+        },
+        file(node) {
+          if (typeof node.icon === 'string') node.icon = ICONS[node.icon] ?? undefined;
+          return node;
+        },
+      },
+    },
     /*
      * Blue dot for a component that has just arrived, a grey "Update" pill for
      * one that changed under someone already using it.
