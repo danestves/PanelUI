@@ -370,6 +370,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+A non-finite step value is treated as zero, preserving the step and its label without poisoning every later running total. An explicit `yDomain` is used only when both ends are finite; otherwise the chart derives a safe domain from the run.
+
 ### What a total step means
 
 `total: true` moves a bar onto the baseline and into the neutral colour. Its `value` is added to the running figure before the bar is drawn, which covers both uses with one rule: an opening balance carries the figure it opens at, and a closing total carries `0` so it reads the balance the run arrived at.

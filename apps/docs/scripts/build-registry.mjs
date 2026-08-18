@@ -66,6 +66,7 @@ const SUPPORT_DESCRIPTIONS = {
   cn: 'Merges Tailwind class names, with later classes winning conflicts.',
   chart: 'Scales, monotone curves and path building. Shared by every chart.',
   'chart-accessibility': 'Speaks a chart as a list of its data, beside the drawing.',
+  'finite-chart': 'Keeps non-finite data and domains out of chart geometry.',
   color: 'HSV colour arithmetic, parsing and formatting. Every function a worklet.',
   date: 'Day and month arithmetic, and locale-aware date formatting.',
   time: 'Time-of-day arithmetic, and locale-aware time formatting.',

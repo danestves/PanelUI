@@ -99,6 +99,7 @@ import Svg, {
 import { useCSSVariable } from 'uniwind';
 import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import { Text } from '../../primitives/text';
+import { finiteChartNumber } from '../../primitives/finite-chart';
 import {
   areaPath,
   bandOf,
@@ -417,9 +418,9 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
    */
   const seriesKeys = useMemo(() => series.map(([key]) => key), [series]);
   const extent = useMemo<[number, number]>(() => {
-    const lowPin = yDomain?.[0];
-    const highPin = yDomain?.[1];
-    if (typeof lowPin === 'number' && typeof highPin === 'number') {
+    const lowPin = finiteChartNumber(yDomain?.[0]);
+    const highPin = finiteChartNumber(yDomain?.[1]);
+    if (lowPin !== undefined && highPin !== undefined) {
       return [lowPin, highPin];
     }
 
@@ -427,8 +428,8 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
     let max = -Infinity;
     for (const row of data) {
       for (const key of seriesKeys) {
-        const value = row[key];
-        if (typeof value !== 'number' || Number.isNaN(value)) continue;
+        const value = finiteChartNumber(row[key]);
+        if (value === undefined) continue;
         if (value < min) min = value;
         if (value > max) max = value;
       }
@@ -438,8 +439,8 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
       // Nothing to measure. Fall back to whatever was pinned, and to a unit
       // domain when nothing was — dividing by a span of zero is how a mark
       // ends up drawn at infinity.
-      const low = typeof lowPin === 'number' ? lowPin : 0;
-      const high = typeof highPin === 'number' ? highPin : low + 1;
+      const low = lowPin ?? 0;
+      const high = highPin ?? low + 1;
       return [low, high];
     }
 
@@ -483,8 +484,8 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
     const derivedHigh = nice ? niceHigh : max + headroom * highRoom;
 
     return [
-      typeof lowPin === 'number' ? lowPin : derivedLow,
-      typeof highPin === 'number' ? highPin : derivedHigh,
+      lowPin ?? derivedLow,
+      highPin ?? derivedHigh,
     ];
   }, [data, yDomain, seriesKeys, hasBars, nice]);
 

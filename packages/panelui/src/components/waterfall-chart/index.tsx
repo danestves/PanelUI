@@ -67,6 +67,10 @@ import Svg, { Defs, G, Line as SvgLine, LinearGradient, Path, Stop } from 'react
 import { useCSSVariable } from 'uniwind';
 import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import { Text } from '../../primitives/text';
+import {
+  finiteChartDomain,
+  finiteChartNumber,
+} from '../../primitives/finite-chart';
 import { barPath, compactNumber, type Plot } from '../../utils/chart';
 import { cn } from '../../utils/cn';
 
@@ -197,7 +201,7 @@ export function waterfallSteps(data: WaterfallDatum[]): WaterfallStep[] {
   let running = 0;
 
   for (const datum of data) {
-    const value = typeof datum.value === 'number' && !Number.isNaN(datum.value) ? datum.value : 0;
+    const value = finiteChartNumber(datum.value) ?? 0;
 
     if (datum.total) {
       // A total is a reading, so it is measured from the baseline and the
@@ -391,7 +395,8 @@ const WaterfallChartRoot = forwardRef<WaterfallChartHandle, WaterfallChartProps>
     };
 
     const extent = useMemo<[number, number]>(() => {
-      if (yDomain) return yDomain;
+      const explicit = finiteChartDomain(yDomain);
+      if (explicit) return explicit;
 
       /*
        * Both ends of every bar, not just the values. A step's bar occupies the
