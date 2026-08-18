@@ -323,6 +323,7 @@ The screen with no field on it. The wash behind everything and the capsules over
 | `maxRows` | `number` | `5` | Rows the field grows to before it holds that height and scrolls. |
 | `avoidKeyboard` | `boolean` | `true` | Lift the composer clear of the software keyboard. |
 | `keyboardBottomInset` | `number` | `0` | How far above the bottom edge the composer already sits. |
+| `keyboardGap` | `number` | `8` | Gap to leave between the composer and the top of the keyboard. A composer resting directly on the keys reads as part of them. |
 
 ### AIInput.Field
 
@@ -480,6 +481,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 **`onSubmit` does not clear the field.** The composer does not know whether the send succeeded; clear `value` yourself once it has.
 
 **Glass needs iOS 26.** Everywhere else the surfaces are solid, which is a finished look rather than a fallback. Nothing is faked on Android.
+
+**A `native` toolbar is a taller row.** The platform frames its icon buttons at 44pt, so the row grows to hold them — a shorter one is a row its buttons hang out of, over the field above. The drawn controls are smaller and sit inside it either way.
 
 **`avoidKeyboard` is a component boundary, not a flag.** Turning it off means the keyboard hook is never called at all — calling it has global consequences, and a composer that was told not to avoid the keyboard must not impose that on every other screen.
 

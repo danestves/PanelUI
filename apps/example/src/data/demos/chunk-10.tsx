@@ -911,6 +911,7 @@ function ChatDemo() {
           onValueChange={setValue}
           onSubmit={() => setValue('')}
           keyboardBottomInset={Math.max(insets.bottom, 12)}
+          keyboardGap={12}
         >
           <AIInput.Field placeholder="Chat with the model" />
           <AIInput.Toolbar>
