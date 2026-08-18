@@ -36,9 +36,10 @@
   ],
   "avatar": [
     "Avatar",
-    "User image with an initials fallback and an optional badge overlay.",
+    "User image with an initials fallback, a badge overlay, and a stack for a group of them.",
     "react native avatar",
     {
+      "updatedIn": "0.74.0",
       "category": "media"
     }
   ],

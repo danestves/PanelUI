@@ -61,6 +61,7 @@ export {
   Avatar,
   type AvatarProps,
   type AvatarBadgeProps,
+  type AvatarGroupProps,
 } from './components/avatar';
 export {
   Attachment,

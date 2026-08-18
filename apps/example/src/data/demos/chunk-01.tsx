@@ -741,19 +741,35 @@ export const ENTRIES: ComponentEntry[] = [
       {
         label: 'Stacked group',
         render: () => (
-          <View className="flex-row">
+          <Avatar.Group>
             {AVATARS.map((uri, index) => (
-              <View key={uri} style={{ marginLeft: index === 0 ? 0 : -14 }}>
-                <Avatar
-                  source={{ uri }}
-                  fallback={String.fromCharCode(65 + index)}
-                  className="border-2 border-background"
-                />
-              </View>
+              <Avatar key={uri} source={{ uri }} fallback={String.fromCharCode(65 + index)} />
             ))}
-            <View style={{ marginLeft: -14 }}>
-              <Avatar fallback="+5" className="border-2 border-background" />
-            </View>
+          </Avatar.Group>
+        ),
+      },
+      {
+        label: 'A capped group',
+        render: () => (
+          <View className="w-full gap-5">
+            {/* Three of the three, and thirty-seven more behind them. */}
+            <Avatar.Group size="sm" max={3} total={40}>
+              {AVATARS.map((uri, index) => (
+                <Avatar key={uri} source={{ uri }} fallback={String.fromCharCode(65 + index)} />
+              ))}
+            </Avatar.Group>
+            {/* The cap counts faces: two shown, one counted. */}
+            <Avatar.Group max={2}>
+              {AVATARS.map((uri, index) => (
+                <Avatar key={uri} source={{ uri }} fallback={String.fromCharCode(65 + index)} />
+              ))}
+            </Avatar.Group>
+            {/* `overlap={0}` closes the stack up into a plain row. */}
+            <Avatar.Group size="lg" overlap={0} className="gap-2">
+              {AVATARS.map((uri, index) => (
+                <Avatar key={uri} source={{ uri }} fallback={String.fromCharCode(65 + index)} />
+              ))}
+            </Avatar.Group>
           </View>
         ),
       },
