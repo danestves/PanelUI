@@ -23,7 +23,9 @@
     {
       "addedIn": "0.25.0",
       "group": "charts",
-      "updatedIn": "0.63.0"
+      "updatedIn": "0.63.0",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
     }
   ],
   "attachment": [
@@ -58,7 +60,9 @@
     {
       "addedIn": "0.25.0",
       "group": "charts",
-      "updatedIn": "0.63.0"
+      "updatedIn": "0.63.0",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
     }
   ],
   "candlestick-chart": [
@@ -68,7 +72,9 @@
     {
       "addedIn": "0.53.0",
       "group": "charts",
-      "updatedIn": "0.63.0"
+      "updatedIn": "0.63.0",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
     }
   ],
   "bottom-sheet": [
@@ -287,7 +293,9 @@
     {
       "addedIn": "0.58.0",
       "group": "charts",
-      "updatedIn": "0.59.0"
+      "updatedIn": "0.59.0",
+      "visualization": true,
+      "accessibilityMode": "interactive-items"
     }
   ],
   "heatmap-chart": [
@@ -297,7 +305,9 @@
     {
       "addedIn": "0.14.0",
       "updatedIn": "0.40.0",
-      "group": "charts"
+      "group": "charts",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
     }
   ],
   "hex-chart": [
@@ -307,7 +317,9 @@
     {
       "addedIn": "0.56.0",
       "group": "charts",
-      "updatedIn": "0.63.0"
+      "updatedIn": "0.63.0",
+      "visualization": true,
+      "accessibilityMode": "interactive-items"
     }
   ],
   "input": [
@@ -398,7 +410,9 @@
     "react native line chart",
     {
       "updatedIn": "0.63.0",
-      "group": "charts"
+      "group": "charts",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
     }
   ],
   "loader": [
@@ -548,7 +562,9 @@
     {
       "addedIn": "0.46.0",
       "group": "charts",
-      "updatedIn": "0.63.0"
+      "updatedIn": "0.63.0",
+      "visualization": true,
+      "accessibilityMode": "interactive-items"
     }
   ],
   "ring-chart": [
@@ -558,7 +574,9 @@
     {
       "addedIn": "0.25.0",
       "updatedIn": "0.63.0",
-      "group": "charts"
+      "group": "charts",
+      "visualization": true,
+      "accessibilityMode": "interactive-items"
     }
   ],
   "scatter-chart": [
@@ -567,7 +585,9 @@
     "react native scatter plot chart",
     {
       "addedIn": "0.45.0",
-      "group": "charts"
+      "group": "charts",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
     }
   ],
   "scroll-canvas": [
@@ -975,7 +995,9 @@
     {
       "addedIn": "0.43.0",
       "group": "charts",
-      "updatedIn": "0.63.0"
+      "updatedIn": "0.63.0",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
     }
   ],
   "tree": [
@@ -1023,7 +1045,9 @@
     "react native treemap chart",
     {
       "addedIn": "0.61.0",
-      "group": "charts"
+      "group": "charts",
+      "visualization": true,
+      "accessibilityMode": "interactive-items"
     }
   ],
   "polar-area-chart": [
@@ -1033,7 +1057,9 @@
     {
       "addedIn": "0.62.0",
       "group": "charts",
-      "updatedIn": "0.63.0"
+      "updatedIn": "0.63.0",
+      "visualization": true,
+      "accessibilityMode": "interactive-items"
     }
   ],
   "live-line-chart": [
@@ -1043,7 +1069,9 @@
     {
       "addedIn": "0.62.0",
       "group": "charts",
-      "updatedIn": "0.71.0"
+      "updatedIn": "0.71.0",
+      "visualization": true,
+      "accessibilityMode": "summary"
     }
   ],
   "plot": [
@@ -1054,7 +1082,9 @@
       "group": "charts",
       "addedIn": "0.63.0",
       "alpha": true,
-      "updatedIn": "0.75.0"
+      "updatedIn": "0.75.0",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
     }
   ],
   "waterfall-chart": [
@@ -1063,7 +1093,9 @@
     "react native waterfall chart bridge",
     {
       "addedIn": "0.64.0",
-      "group": "charts"
+      "group": "charts",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
     }
   ]
 }

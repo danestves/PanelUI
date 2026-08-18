@@ -29,6 +29,74 @@ export function assertUniqueParity(label, canonical, actual) {
   }
 }
 
+
+export function assertVisualizationContract(name, mode, source) {
+  if (mode === "shared-data") {
+    if (
+      !source.includes("<ChartAccessibilityData") ||
+      !source.includes('importantForAccessibility="no-hide-descendants"')
+    ) {
+      throw new Error(
+        `${name}: shared-data visualization must expose ChartAccessibilityData and hide decorative geometry`,
+      );
+    }
+    return;
+  }
+  if (mode === "summary") {
+    if (
+      !source.includes('accessibilityRole="image"') ||
+      !source.includes("accessibilityLabel={semantic.label}") ||
+      !source.includes('importantForAccessibility="no-hide-descendants"')
+    ) {
+      throw new Error(
+        `${name}: summary visualization must expose a labelled summary and hide decorative geometry`,
+      );
+    }
+    return;
+  }
+  if (mode === "interactive-items") {
+    if (
+      !source.includes('accessibilityRole="button"') ||
+      !source.includes("accessibilityLabel=")
+    ) {
+      throw new Error(
+        `${name}: interactive-items visualization must expose labelled actionable data items`,
+      );
+    }
+    return;
+  }
+  throw new Error(`${name}: unknown visualization accessibility mode ${String(mode)}`);
+}
+
+function visualizationEntries() {
+  const meta = readJson("apps/docs/scripts/meta.json");
+  const chartGroup = Object.entries(meta)
+    .filter(([, entry]) => entry[3]?.group === "charts")
+    .map(([name]) => name)
+    .sort();
+  const visualizations = Object.entries(meta)
+    .filter(([, entry]) => entry[3]?.visualization === true)
+    .map(([name, entry]) => ({
+      name,
+      accessibilityMode: entry[3]?.accessibilityMode,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  assertUniqueParity(
+    "Visualization metadata",
+    chartGroup,
+    visualizations.map(({ name }) => name),
+  );
+  for (const item of visualizations) {
+    assertVisualizationContract(
+      item.name,
+      item.accessibilityMode,
+      read(`packages/panelui/src/components/${item.name}/index.tsx`),
+    );
+  }
+  return visualizations;
+}
+
 function componentDirectories() {
   return fs
     .readdirSync(path.join(ROOT, "packages/panelui/src/components"), {
@@ -125,6 +193,8 @@ function buildManifest() {
   }
   validateClaims(components.length);
 
+  const visualizations = visualizationEntries();
+
   const registryTypes = Object.fromEntries(
     ["registry:ui", "registry:hook", "registry:lib", "registry:theme"].map(
       (type) => [type, registry.filter((item) => item.type === type).length],
@@ -134,6 +204,7 @@ function buildManifest() {
   return {
     generated: "Run npm run catalogue:generate; do not edit by hand.",
     componentModules: components,
+    visualizations,
     counts: {
       componentModules: components.length,
       packageComponentExports: exports.length,
@@ -144,6 +215,18 @@ function buildManifest() {
         supportItems: registry.length - registryComponents.length,
         totalItems: registry.length,
         byType: registryTypes,
+      },
+      visualizations: {
+        total: visualizations.length,
+        sharedData: visualizations.filter(
+          ({ accessibilityMode }) => accessibilityMode === "shared-data",
+        ).length,
+        summaries: visualizations.filter(
+          ({ accessibilityMode }) => accessibilityMode === "summary",
+        ).length,
+        interactiveItems: visualizations.filter(
+          ({ accessibilityMode }) => accessibilityMode === "interactive-items",
+        ).length,
       },
       registrySupport: {
         primitives: sourceFiles("packages/panelui/src/primitives", /\.tsx?$/),
