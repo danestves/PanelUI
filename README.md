@@ -25,11 +25,10 @@
 
 <p align="center">
   <a href="https://neon.com">
-    <img
-      src="https://shieldcn.dev/badge/-Sponsored%20by%3A-?variant=ghost&size=lg&font=inter"
-      alt="Sponsored by:"
-      height="30"
-    />
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Sponsored%20by%3A?variant=ghost&size=lg&font=inter&fontSize=20&height=44&mode=dark" />
+      <img src="https://shieldcn.dev/badge/Sponsored%20by%3A?variant=ghost&size=lg&font=inter&fontSize=20&height=44&mode=light" alt="Sponsored by:" />
+    </picture>
   </a>
 </p>
 
