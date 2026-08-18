@@ -3,8 +3,8 @@
 ## Scope and limits
 
 Run `npm run test:a11y` first. It covers deterministic source contracts for
-contrast, reduced transparency, target sizes, modal isolation, structured
-content, chart semantics, accessible actions, and web composite keyboards. It
+contrast, reduced transparency, motion controls, target sizes, modal isolation,
+structured content, chart semantics, accessible actions, and web composite keyboards. It
 is not an axe scan, WCAG certification, or substitute for assistive-technology
 testing.
 
@@ -45,6 +45,9 @@ portrait and landscape where the component supports them.
 - **Signature:** hear empty/signed state, draw strokes, use undo/redo/clear, and
   reach the product-provided alternative input method. Reference:
   `packages/panelui/test/signature-accessibility.test.mjs`.
+- **Marquee:** reach the visible Pause control, stop and restart motion, then
+  traverse interactive content once. Repeated and measurement copies must not
+  receive focus. Reference: `packages/panelui/test/marquee-math.test.mjs`.
 
 ## TalkBack — Android
 
@@ -62,9 +65,12 @@ overlap. Target-size reference: `packages/panelui/test/core-target-sizes.test.mj
   select, while Home/End select the edges.
 - Open ContextMenu with the Context Menu key and Shift+F10, dismiss with Escape,
   and confirm focus remains on its trigger.
+- Tab through a Marquee with interactive content, pause and restart it, and
+  confirm neither hidden repeated copies nor the measurement copy receive focus.
 
-Automated contract references: `apps/docs/test/composite-keyboard.test.mjs` and
-`packages/panelui/test/context-menu-invocation.test.mjs`.
+Automated contract references: `apps/docs/test/composite-keyboard.test.mjs`,
+`packages/panelui/test/context-menu-invocation.test.mjs`, and
+`packages/panelui/test/marquee-math.test.mjs`.
 
 ## Browser automation — docs
 

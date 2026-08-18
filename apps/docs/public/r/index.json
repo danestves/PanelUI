@@ -834,6 +834,7 @@
     "description": "Content that travels across its container on a loop.",
     "registryDependencies": [
       "cn",
+      "text",
       "use-direction"
     ],
     "docsPath": "components/marquee"
