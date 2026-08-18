@@ -7,6 +7,12 @@ import {
   avatarGroupOverlap,
 } from '../src/components/avatar/avatar-group.ts';
 
+const sourceAvatar = await readFile(
+  new URL('../src/components/avatar/index.tsx', import.meta.url),
+  'utf8'
+);
+
+
 test('an unusable cap shows everybody rather than nobody', () => {
   assert.deepEqual(avatarGroupCount(5), { visible: 5, overflow: 0 });
   assert.deepEqual(avatarGroupCount(5, 0), { visible: 5, overflow: 0 });
@@ -73,4 +79,16 @@ test('the copied Avatar ships the stack arithmetic', async () => {
     item.files.find((file) => file.path === 'ui/avatar.tsx').content,
     /avatarGroupCount\(faces\.length, max, total\)/
   );
+});
+
+test('Avatar.Group keeps visual stacking independent from logical list order', () => {
+  const group = sourceAvatar.slice(sourceAvatar.indexOf('const AvatarGroup ='));
+  assert.match(group, /for \(let index = 0; index < visible; index \+= 1\)/);
+  assert.ok(group.indexOf("key: 'overflow'") > group.indexOf('index < visible'));
+  assert.match(group, /className=\{cn\('flex-row self-start'/);
+  assert.doesNotMatch(group, /flex-row-reverse/);
+  assert.match(group, /role="listitem"/);
+  assert.match(group, /zIndex: stack\.length - index/);
+  assert.match(group, /marginStart: index === 0 \? 0 : -slide/);
+  assert.ok(group.indexOf('{...props}') < group.indexOf('accessibilityRole="list"'));
 });

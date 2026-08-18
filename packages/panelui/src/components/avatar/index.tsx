@@ -154,11 +154,9 @@ export interface AvatarGroupProps extends ViewProps {
  * A row of avatars, each overlapping the one after it, with the people who did
  * not fit counted at the end.
  *
- * The faces are drawn back to front — the first is on top — which is why the
- * row lays itself out in reverse: later siblings paint over earlier ones, so
- * the stacking order and the reading order pull against each other and one of
- * them has to be flipped. Flipping the layout keeps the children in the order
- * they were written.
+ * The faces stay in logical child order for assistive traversal. Explicit
+ * z-indices, rather than a reversed render/layout order, put the first face on
+ * top while the overflow count remains the final list item.
  *
  * Each face gets a ring in the page background so it separates from the one
  * underneath whatever surface the stack sits on.
@@ -177,9 +175,20 @@ const AvatarGroup = forwardRef<View, AvatarGroupProps>(
     const { visible, overflow } = avatarGroupCount(faces.length, max, total);
     const slide = avatarGroupOverlap(size, overlap);
 
-    // Back to front: the count sits under the last face, which sits under the
-    // one before it, and so on up to the first.
+    // Logical reading order: visible people first, then the overflow summary.
+    // Painting order is independent and applied to each wrapper below.
     const stack: { key: string; node: ReactNode }[] = [];
+
+    for (let index = 0; index < visible; index += 1) {
+      const face = faces[index]!;
+      stack.push({
+        key: String(face.key ?? index),
+        node: cloneElement(face, {
+          size: face.props.size ?? size,
+          className: cn('border-2 border-background', face.props.className),
+        }),
+      });
+    }
 
     if (overflow > 0) {
       stack.push({
@@ -195,28 +204,22 @@ const AvatarGroup = forwardRef<View, AvatarGroupProps>(
       });
     }
 
-    for (let index = visible - 1; index >= 0; index -= 1) {
-      const face = faces[index]!;
-      stack.push({
-        key: String(face.key ?? index),
-        node: cloneElement(face, {
-          size: face.props.size ?? size,
-          className: cn('border-2 border-background', face.props.className),
-        }),
-      });
-    }
-
     return (
       <View
         ref={ref}
-        accessibilityRole="list"
-        className={cn('flex-row-reverse self-start', className)}
+        className={cn('flex-row self-start', className)}
         {...props}
+        accessibilityRole="list"
       >
         {stack.map((entry, index) => (
-          // The first node laid out is the trailing one, and it is the only one
-          // with nothing to slide under.
-          <View key={entry.key} style={index === 0 ? undefined : { marginEnd: -slide }}>
+          <View
+            key={entry.key}
+            role="listitem"
+            style={{
+              zIndex: stack.length - index,
+              marginStart: index === 0 ? 0 : -slide,
+            }}
+          >
             {entry.node}
           </View>
         ))}
