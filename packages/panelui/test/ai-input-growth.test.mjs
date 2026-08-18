@@ -60,6 +60,11 @@ test('every size states one line height, in one place', () => {
   // …and the one-line field states none at all, because iOS spends the
   // surplus above the glyphs and the text ends up below the buttons.
   assert.match(source, /inline \? undefined : metrics\.lineHeight/);
+  // …and it carries no vertical padding of its own there, so its box is as
+  // close to the text as the platform will make it. The row centres that box
+  // against the controls rather than bottom-aligning a height nothing knows.
+  assert.match(source, /const padding = inline \? 0 : metrics\.padding/);
+  assert.match(source, /row: '[^']*items-center/);
   assert.doesNotMatch(source, /leading-\[/);
 
   for (const size of Object.keys(AI_INPUT_METRICS)) {

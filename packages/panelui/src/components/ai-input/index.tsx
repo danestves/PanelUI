@@ -118,13 +118,6 @@ const RADIUS = { sm: 22, md: 26, lg: 30 } as const;
  */
 const CONTROL = { sm: 26, md: 30, lg: 34 } as const;
 
-/**
- * Roughly what a line of text occupies as a multiple of its size, before any
- * leading is added on top. Used only to centre one line inside a control, so
- * being a fraction of a point out costs nothing.
- */
-const NATURAL_LEADING = 1.2;
-
 const EASE = Easing.out(Easing.cubic);
 const HEIGHT_DURATION = 240;
 const ENTER_DURATION = 220;
@@ -146,7 +139,21 @@ const aiInputVariants = tv({
     // On one line the field is what takes up the slack between the controls,
     // and the row's own padding already stands it off the edge.
     fieldInline: 'flex-1 bg-transparent px-2 font-normal text-foreground',
-    row: 'w-full flex-row items-end gap-1.5 p-2',
+    /*
+     * Centred, not bottom-aligned.
+     *
+     * The stacked toolbar sits under the field, so it aligns to the bottom.
+     * Here the field is *between* the controls, and its box is not the height
+     * this component computes: a multiline TextInput carries a vertical inset
+     * of the platform's own on top of any padding given to it. Bottom-aligning
+     * a box whose real height is unknown puts its text below the controls
+     * beside it by however much that inset is — which is what kept happening.
+     *
+     * Centring does not need to know the height. Whatever the field's box
+     * turns out to be, its middle lines up with theirs, and the text sits in
+     * the middle of it.
+     */
+    row: 'w-full flex-row items-center gap-1.5 p-2',
     toolbar: 'w-full flex-row items-center gap-2 px-2 pb-2',
     spacer: 'flex-1',
     pill: 'flex-row items-center gap-1.5 px-3',
@@ -461,10 +468,7 @@ function AIInputField({
    * than the height itself.
    */
   const lineHeight = inline ? undefined : metrics.lineHeight;
-  const naturalLine = Math.round(metrics.fontSize * NATURAL_LEADING);
-  const padding = inline
-    ? Math.max(2, Math.round((CONTROL[size] - naturalLine) / 2))
-    : metrics.padding;
+  const padding = inline ? 0 : metrics.padding;
 
   const boxStyle = useMemo(
     () => ({
@@ -479,16 +483,20 @@ function AIInputField({
        * other the height of the box that was just set from it, and on that one
        * the field can never grow past the height it opened at.
        */
-      minHeight: inline ? CONTROL[size] : bounds.minHeight,
+      minHeight: inline ? undefined : bounds.minHeight,
       maxHeight: bounds.maxHeight,
       fontSize: metrics.fontSize,
       lineHeight,
       paddingTop: padding,
       paddingBottom: padding,
-      // Android starts the caret in the middle of the box without it.
-      textAlignVertical: 'top' as const,
+      /*
+       * Android puts the caret in the middle of a multiline box unless told
+       * otherwise, which is wrong for a field that grows downward — and right
+       * for one that is a single line between two buttons.
+       */
+      textAlignVertical: inline ? ('center' as const) : ('top' as const),
     }),
-    [bounds.minHeight, bounds.maxHeight, inline, lineHeight, metrics.fontSize, padding, size]
+    [bounds.minHeight, bounds.maxHeight, inline, lineHeight, metrics.fontSize, padding]
   );
 
   const slots = aiInputVariants({ size });
