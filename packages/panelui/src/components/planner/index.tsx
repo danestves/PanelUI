@@ -268,7 +268,7 @@ function useToday(): Date {
       const now = startOfDay(current);
       // A new object every resume would invalidate every memo below it for a
       // date that has not changed.
-      setToday((current) => (current.getTime() === now.getTime() ? current : now));
+      setToday((previous) => (previous.getTime() === now.getTime() ? previous : now));
       clearTimer();
       timer = setTimeout(refreshAndSchedule, millisecondsUntilNextLocalDay(current));
     };
