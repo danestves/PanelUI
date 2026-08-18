@@ -38,12 +38,19 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Pressable, View, type Text as RNText, type ViewProps } from 'react-native';
+import {
+  Pressable,
+  View,
+  type PressableProps,
+  type Text as RNText,
+  type ViewProps,
+} from 'react-native';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { CheckIcon } from '../../icons';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { Spinner } from '../spinner';
+import { stepsTriggerDisabled } from './steps-trigger';
 
 export type StepState = 'active' | 'completed' | 'inactive' | 'loading';
 export type StepsOrientation = 'horizontal' | 'vertical';
@@ -293,7 +300,7 @@ const StepsItem = forwardRef<View, StepsItemProps>(
 );
 StepsItem.displayName = 'Steps.Item';
 
-export interface StepsTriggerProps extends ViewProps {
+export interface StepsTriggerProps extends PressableProps {
   className?: string;
   children?: ReactNode;
 }
@@ -308,11 +315,23 @@ const STATE_WORDS: Record<StepState, string> = {
 
 /** Makes its item selectable. Omit it for a read-only stepper. */
 const StepsTrigger = forwardRef<View, StepsTriggerProps>(
-  ({ className, children, ...props }, ref) => {
+  (
+    {
+      className,
+      children,
+      disabled,
+      onPress,
+      accessibilityState,
+      accessibilityValue,
+      ...props
+    },
+    ref
+  ) => {
     const { setActiveStep, orientation } = useSteps('Steps.Trigger');
     const { step, state, isDisabled } = useStepItem('Steps.Trigger');
     const placement = useContext(StepPositionContext);
-    const { trigger } = stepsVariants({ orientation, state, isDisabled });
+    const triggerDisabled = stepsTriggerDisabled(isDisabled, disabled);
+    const { trigger } = stepsVariants({ orientation, state, isDisabled: triggerDisabled });
 
     /*
      * Said as a value rather than a label, because the label is the step's own
@@ -327,13 +346,20 @@ const StepsTrigger = forwardRef<View, StepsTriggerProps>(
     return (
       <Pressable
         ref={ref}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: isDisabled, selected: state === 'active' }}
-        accessibilityValue={{ text: position }}
-        disabled={isDisabled}
-        onPress={() => setActiveStep(step)}
-        className={trigger({ className })}
         {...props}
+        accessibilityRole="button"
+        accessibilityState={{
+          ...accessibilityState,
+          disabled: triggerDisabled,
+          selected: state === 'active',
+        }}
+        accessibilityValue={{ ...accessibilityValue, text: position }}
+        disabled={triggerDisabled}
+        onPress={(event) => {
+          onPress?.(event);
+          setActiveStep(step);
+        }}
+        className={trigger({ className })}
       >
         {textChildren(children)}
       </Pressable>
