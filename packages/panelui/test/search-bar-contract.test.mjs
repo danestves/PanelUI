@@ -33,6 +33,20 @@ test('SearchBar keeps focus after clearing and drops it after cancelling', async
   assert.match(cancel.slice(0, 400), /inputRef\.current\?\.blur\(\)/);
 });
 
+test('a disabled SearchBar rejects clear, cancel, and submit at their boundaries', async () => {
+  const source = await component('search-bar');
+
+  for (const handler of ['handleSubmit', 'handleClear', 'handleCancel']) {
+    const body = source.slice(source.indexOf(`const ${handler}`));
+    assert.match(body.slice(0, 260), /if \(disabled\) return;/);
+  }
+
+  const cancel = source.slice(source.indexOf('<AnimatedPressable\n            onLayout'));
+  assert.match(cancel.slice(0, 500), /disabled=\{disabled\}/);
+  assert.match(cancel.slice(0, 500), /focusable=\{!disabled\}/);
+  assert.match(cancel.slice(0, 500), /accessibilityState=\{\{ disabled: !!disabled \}\}/);
+});
+
 test('SearchBar debounces the query without debouncing the field', async () => {
   const source = await component('search-bar');
 
