@@ -415,26 +415,6 @@ function DrawerContent({
     [closeCorner, showClose]
   );
 
-  if (!open) return null;
-
-  /*
-   * The slide has to be given a physical direction, since the animation
-   * presets are physical. This is the same mirroring Yoga did for the panel's
-   * position, applied by hand to the one thing Yoga does not own.
-   */
-  const physical: 'left' | 'right' | 'top' | 'bottom' = horizontal
-    ? (side === 'start') === (dir === 'ltr')
-      ? 'left'
-      : 'right'
-    : side;
-
-  const entering = {
-    left: SlideInLeft,
-    right: SlideInRight,
-    top: SlideInUp,
-    bottom: SlideInDown,
-  }[physical];
-
   /*
    * The slide out is written by hand, because the panel is not always at rest
    * when it starts.
@@ -447,6 +427,10 @@ function DrawerContent({
    * picks the panel up wherever the finger left it and carries it the rest of
    * the way. A press on the close button or the backdrop leaves `travel` at
    * zero, so that path is the same slide it always was.
+   *
+   * Above the early return, with every other hook. It reads nothing that is
+   * only known once the drawer is open, and a hook below that return is one
+   * that runs on an open drawer and not on a closed one.
    */
   const exiting = useCallback(() => {
     'worklet';
@@ -467,6 +451,26 @@ function DrawerContent({
       },
     };
   }, [extent, horizontal, outward, travel]);
+
+  if (!open) return null;
+
+  /*
+   * The slide has to be given a physical direction, since the animation
+   * presets are physical. This is the same mirroring Yoga did for the panel's
+   * position, applied by hand to the one thing Yoga does not own.
+   */
+  const physical: 'left' | 'right' | 'top' | 'bottom' = horizontal
+    ? (side === 'start') === (dir === 'ltr')
+      ? 'left'
+      : 'right'
+    : side;
+
+  const entering = {
+    left: SlideInLeft,
+    right: SlideInRight,
+    top: SlideInUp,
+    bottom: SlideInDown,
+  }[physical];
 
   /*
    * The inset and the panel's own padding stack rather than compete.
