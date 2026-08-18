@@ -1,5 +1,6 @@
 # dependencies
 node_modules/
+accessibility-receipts/
 
 # expo
 .expo/

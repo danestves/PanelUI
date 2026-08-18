@@ -58,6 +58,7 @@ import {
   isCollapsed,
   layoutOffset,
   normalizeConstraint,
+  resetLayout,
   resizeLayout,
   resolveLayout,
   type SplitterConstraint,
@@ -469,17 +470,10 @@ function SplitterHandle({
    * they already have between them.
    */
   const reset = useCallback(() => {
-    const pair = boundary >= 0 ? boundary : 0;
-    const next = layout.value.slice();
-    const room = (next[pair] ?? 0) + (next[pair + 1] ?? 0);
-    const first = initial[pair] ?? 0;
-    const span = first + (initial[pair + 1] ?? 0);
-    if (span <= 0) return;
-    next[pair] = (first / span) * room;
-    next[pair + 1] = room - next[pair]!;
+    const next = resetLayout(layout.value, initial, boundary, constraints);
     layout.value = next;
     commit(next);
-  }, [boundary, commit, initial, layout]);
+  }, [boundary, commit, constraints, initial, layout]);
 
   const doubleTap = useMemo(
     () =>
@@ -583,6 +577,7 @@ export {
   layoutOffset,
   normalizeConstraint,
   panelFloor,
+  resetLayout,
   resizeLayout,
   resolveLayout,
   type SplitterConstraint,

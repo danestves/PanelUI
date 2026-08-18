@@ -623,7 +623,7 @@ function TooltipTitle({ className, ...props }: TooltipTitleProps) {
   const { title } = tooltipVariants({ variant });
 
   return (
-    <Text accessibilityRole="header" className={cn(title(), className)} {...props} />
+    <Text {...props} accessibilityRole="header" className={cn(title(), className)} />
   );
 }
 

@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ScrollView, View } from "react-native";
-import { Avatar, Badge, Button, CodeBlock, FileIcon, Frame, Item, Marker, Message, MessageScroller, Plan, Reasoning, Response, ScatterChart, ScrollCanvas, ScrollProgress, Separator, Shimmer, Sources, Skeleton, Slider, Switch, Task, Text, ThinkingOrb, Tooltip } from "panelui-native";
+import { useSharedValue } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AIInput, Avatar, Badge, Button, CameraIcon, ChevronsUpDownIcon, CodeBlock, FileIcon, Frame, GlobeIcon, Item, Marker, Message, MessageScroller, MicIcon, Plan, PlusIcon, Reasoning, Response, ScatterChart, ScrollCanvas, ScrollProgress, SearchIcon, Separator, Shimmer, Skeleton, Slider, Sources, Switch, Task, Text, ThinkingOrb, Tooltip, type AIInputStatus } from "panelui-native";
+import { router } from "expo-router";
 import { useCSSVariable } from "uniwind";
 import type { ComponentEntry } from '../component-types';
 
@@ -741,7 +744,414 @@ function AgentTranscriptDemo() {
   );
 }
 
-export const ENTRIES: ComponentEntry[] = [
+export /* -------------------------------------------------------------------------- */
+/* Composer                                                                   */
+/* -------------------------------------------------------------------------- */
+
+function ComposerDemo({
+  initial = '',
+  placeholder = 'Chat with the model',
+}: {
+  initial?: string;
+  placeholder?: string;
+}) {
+  const [value, setValue] = useState(initial);
+
+  return (
+    <AIInput
+      native
+      value={value}
+      onValueChange={setValue}
+      avoidKeyboard={false}
+      onSubmit={() => setValue('')}
+    >
+      <AIInput.Field placeholder={placeholder} />
+      <AIInput.Toolbar>
+        <AIInput.Action label="Add to chat" icon={<PlusIcon size={17} />} />
+        <AIInput.Pill label="Sonnet 4.6" accessibilityLabel="Change model" />
+        <AIInput.Spacer />
+        <AIInput.Action label="Dictate" icon={<MicIcon size={15} />} />
+        <AIInput.Submit />
+      </AIInput.Toolbar>
+    </AIInput>
+  );
+}
+
+/** The composer at its smallest: one pill, everything on the same line. */
+function InlineComposerDemo() {
+  const [value, setValue] = useState('');
+
+  return (
+    <AIInput
+      native
+      value={value}
+      onValueChange={setValue}
+      avoidKeyboard={false}
+      onSubmit={() => setValue('')}
+    >
+      <AIInput.Row>
+        <AIInput.Action label="Add to chat" icon={<PlusIcon size={17} />} />
+        <AIInput.Field placeholder="Ask anything" />
+        <AIInput.Action label="Dictate" icon={<MicIcon size={15} />} />
+        <AIInput.Submit />
+      </AIInput.Row>
+    </AIInput>
+  );
+}
+
+/**
+ * The recording state, driven by nothing.
+ *
+ * With no `level` the meter animates its own plausible motion, which is the
+ * point of the demo: the screen can be built and reviewed before any recorder
+ * exists behind it.
+ */
+function RecordingDemo() {
+  const [status, setStatus] = useState<AIInputStatus>('recording');
+
+  return (
+    <AIInput
+      native
+      status={status}
+      avoidKeyboard={false}
+      onRecordCancel={() => setStatus('ready')}
+      onRecordConfirm={() => setStatus('ready')}
+    >
+      <AIInput.Field placeholder="Chat with the model" />
+      {status === 'recording' ? (
+        <AIInput.Recording />
+      ) : (
+        <AIInput.Toolbar>
+          <AIInput.Action label="Add to chat" icon={<PlusIcon size={17} />} />
+          <AIInput.Spacer />
+          <AIInput.Action
+            label="Dictate"
+            icon={<MicIcon size={15} />}
+            onPress={() => setStatus('recording')}
+          />
+          <AIInput.Submit />
+        </AIInput.Toolbar>
+      )}
+    </AIInput>
+  );
+}
+
+/** Answering, so the trailing button offers to stop rather than to send. */
+function StreamingDemo() {
+  const [status, setStatus] = useState<AIInputStatus>('streaming');
+  const [value, setValue] = useState(
+    'Explain the difference between a bottom sheet and a drawer'
+  );
+
+  return (
+    <AIInput
+      native
+      value={value}
+      onValueChange={setValue}
+      status={status}
+      avoidKeyboard={false}
+      onStop={() => setStatus('ready')}
+      onSubmit={() => setStatus('streaming')}
+    >
+      <AIInput.Field />
+      <AIInput.Toolbar>
+        <AIInput.Pill label="Sonnet 4.6" detail="High" accessibilityLabel="Change model" />
+        <AIInput.Spacer />
+        <AIInput.Submit />
+      </AIInput.Toolbar>
+    </AIInput>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Full page: a chat                                                          */
+/* -------------------------------------------------------------------------- */
+
+const TURNS = [
+  { from: 'them', text: 'Good evening. What are we working on?' },
+  { from: 'me', text: 'A composer for the library.' },
+  {
+    from: 'them',
+    text: 'Start with what happens when the text runs past one line — that is the part every composer gets wrong.',
+  },
+];
+
+function ChatDemo() {
+  const insets = useSafeAreaInsets();
+  const [value, setValue] = useState('');
+  const [sheet, setSheet] = useState(false);
+
+  return (
+    <View className="flex-1 bg-background">
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="gap-3 px-4 pb-4 pt-6"
+        keyboardDismissMode="interactive"
+      >
+        {TURNS.map((turn, index) => (
+          <View
+            key={index}
+            className={
+              turn.from === 'me'
+                ? 'max-w-[80%] self-end rounded-2xl bg-primary px-3.5 py-2.5'
+                : 'max-w-[85%] self-start rounded-2xl bg-muted px-3.5 py-2.5'
+            }
+          >
+            <Text className={turn.from === 'me' ? 'text-primary-foreground' : undefined}>
+              {turn.text}
+            </Text>
+          </View>
+        ))}
+      </ScrollView>
+
+      <View className="px-3" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
+        <AIInput
+          native
+          value={value}
+          onValueChange={setValue}
+          onSubmit={() => setValue('')}
+          keyboardBottomInset={Math.max(insets.bottom, 12)}
+          keyboardGap={12}
+        >
+          <AIInput.Field placeholder="Chat with the model" />
+          <AIInput.Toolbar>
+            <AIInput.Action
+              label="Add to chat"
+              icon={<PlusIcon size={17} />}
+              onPress={() => setSheet(true)}
+            />
+            <AIInput.Pill label="Sonnet 4.6" detail="High" accessibilityLabel="Change model" />
+            <AIInput.Spacer />
+            <AIInput.Action label="Dictate" icon={<MicIcon size={15} />} />
+            <AIInput.Submit />
+          </AIInput.Toolbar>
+        </AIInput>
+      </View>
+
+      <AddToChatSheet open={sheet} onOpenChange={setSheet} />
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Full page: the sheet                                                       */
+/* -------------------------------------------------------------------------- */
+
+const TOOL_MODES = [
+  { id: 'auto', label: 'Auto', description: 'The model chooses for you' },
+  {
+    id: 'on-demand',
+    label: 'On demand',
+    description: 'Load when needed. More messages, lower accuracy',
+  },
+  {
+    id: 'always',
+    label: 'Always available',
+    description: 'Ready from the start. Fewer messages, better accuracy',
+  },
+];
+
+const PROJECTS = [
+  { id: 'library', name: 'Component library', updated: 'last week' },
+  { id: 'docs', name: 'Documentation site', updated: 'last month' },
+];
+
+function AddToChatSheet({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [project, setProject] = useState<string | null>(null);
+  const [tools, setTools] = useState('auto');
+  const [research, setResearch] = useState(false);
+  const [web, setWeb] = useState(true);
+
+  const toolLabel = TOOL_MODES.find((mode) => mode.id === tools)?.label ?? 'Auto';
+  const projectLabel = PROJECTS.find((entry) => entry.id === project)?.name ?? 'None';
+
+  return (
+    <AIInput.Sheet open={open} onOpenChange={onOpenChange}>
+      <AIInput.Sheet.Screen
+        id="root"
+        title="Add to chat"
+        trailing={
+          <Text size="lg" muted>
+            All photos
+          </Text>
+        }
+      >
+        <AIInput.Sheet.Group>
+          <AIInput.Sheet.Row icon={<CameraIcon size={20} />} label="Camera" onPress={() => {}} />
+          <AIInput.Sheet.Row icon={<FileIcon size={20} />} label="Add files" onPress={() => {}} />
+        </AIInput.Sheet.Group>
+
+        <AIInput.Sheet.Group>
+          <AIInput.Sheet.Row label="Add to project" value={projectLabel} to="project" />
+          <AIInput.Sheet.Row label="Tool access" value={toolLabel} to="tools" />
+        </AIInput.Sheet.Group>
+
+        <AIInput.Sheet.Group>
+          <AIInput.Sheet.Toggle
+            icon={<SearchIcon size={20} />}
+            label="Research"
+            value={research}
+            onValueChange={setResearch}
+          />
+          <AIInput.Sheet.Toggle
+            icon={<GlobeIcon size={20} />}
+            label="Web search"
+            value={web}
+            onValueChange={setWeb}
+          />
+        </AIInput.Sheet.Group>
+      </AIInput.Sheet.Screen>
+
+      <AIInput.Sheet.Screen
+        id="project"
+        title="Add to project"
+        trailing={<AIInput.Action label="New project" icon={<PlusIcon size={17} />} />}
+      >
+        <AIInput.Sheet.Group>
+          {PROJECTS.map((entry) => (
+            <AIInput.Sheet.Row
+              key={entry.id}
+              label={entry.name}
+              description={entry.updated}
+              onPress={() => setProject(entry.id)}
+              value={project === entry.id ? 'Selected' : undefined}
+            />
+          ))}
+        </AIInput.Sheet.Group>
+      </AIInput.Sheet.Screen>
+
+      <AIInput.Sheet.Screen id="tools" title="Tool access">
+        <AIInput.Sheet.Group footnote="Tools the model can reach while it answers.">
+          {TOOL_MODES.map((mode) => (
+            <AIInput.Sheet.Choice
+              key={mode.id}
+              label={mode.label}
+              description={mode.description}
+              selected={tools === mode.id}
+              onPress={() => setTools(mode.id)}
+            />
+          ))}
+        </AIInput.Sheet.Group>
+      </AIInput.Sheet.Screen>
+    </AIInput.Sheet>
+  );
+}
+
+function SheetDemo() {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <View className="flex-1 items-center justify-center bg-background px-6">
+      <AddToChatSheet open={open} onOpenChange={setOpen} />
+      <View className="w-full max-w-sm">
+        <AIInput native avoidKeyboard={false}>
+          <AIInput.Field placeholder="Chat with the model" />
+          <AIInput.Toolbar>
+            <AIInput.Action
+              label="Add to chat"
+              icon={<PlusIcon size={17} />}
+              onPress={() => setOpen(true)}
+            />
+            <AIInput.Spacer />
+            <AIInput.Submit />
+          </AIInput.Toolbar>
+        </AIInput>
+      </View>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Full page: voice mode                                                      */
+/* -------------------------------------------------------------------------- */
+
+function VoiceDemo() {
+  const level = useSharedValue(0);
+  const [muted, setMuted] = useState(false);
+  const [sheet, setSheet] = useState(false);
+  const toggle = useCallback(() => setMuted((current) => !current), []);
+
+  return (
+    <>
+      <AIInput.VoiceMode
+        native
+        state={muted ? 'idle' : 'listening'}
+        level={level}
+        title={muted ? 'Muted' : 'Start chatting anytime'}
+        micLabel={muted ? 'Unmute' : 'Mute'}
+        onMicPress={toggle}
+        // The screen is drawn edge to edge with no header, so this button is
+        // the only way back out of it.
+        onClose={() => router.back()}
+      >
+        <AIInput.Action
+          label="Add to chat"
+          icon={<PlusIcon size={17} />}
+          onPress={() => setSheet(true)}
+        />
+        <AIInput.Pill
+          label="Sonnet"
+          indicator={<ChevronsUpDownIcon size={14} />}
+          accessibilityLabel="Change model"
+          onPress={() => setSheet(true)}
+        />
+      </AIInput.VoiceMode>
+      <AddToChatSheet open={sheet} onOpenChange={setSheet} />
+    </>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Catalogue                                                                  */
+/* -------------------------------------------------------------------------- */
+
+const ENTRIES: ComponentEntry[] = [
+  {
+    slug: 'ai-input',
+    name: 'AIInput',
+    summary: 'A prompt composer, the sheet it opens, and a screen with no field on it',
+    demos: [
+      { label: 'At rest', render: () => <ComposerDemo /> },
+      { label: 'On one line', render: () => <InlineComposerDemo /> },
+      {
+        label: 'Past one line',
+        render: () => (
+          <ComposerDemo initial="It grows a line at a time until it reaches five of them, and then it holds that height and starts to scroll instead, which is what keeps the row of buttons on the screen." />
+        ),
+      },
+      { label: 'While the answer arrives', render: () => <StreamingDemo /> },
+      { label: 'While recording', render: () => <RecordingDemo /> },
+      {
+        label: 'In a chat',
+        id: 'chat',
+        fullPage: true,
+        description: 'Docked above the keyboard, over a transcript that stays where it is.',
+        render: () => <ChatDemo />,
+      },
+      {
+        label: 'The sheet it opens',
+        id: 'sheet',
+        fullPage: true,
+        description: 'Three screens on one sheet, each row pushing the next onto it.',
+        render: () => <SheetDemo />,
+      },
+      {
+        label: 'Voice mode',
+        id: 'voice',
+        fullPage: true,
+        fullBleed: true,
+        description: 'The screen with no field: one microphone, and a way out.',
+        render: () => <VoiceDemo />,
+      },
+    ],
+  },
+
 {
     slug: 'scatter-chart',
     name: 'ScatterChart',

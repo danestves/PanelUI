@@ -113,7 +113,13 @@ function observeReduceTransparency(
  */
 let knownReduceTransparency: boolean | null = null;
 
-function useReduceTransparency() {
+/**
+ * Whether the device asks for Reduce Transparency: `true`, `false`, or `null`
+ * while the platform has not answered yet. Exported because every material in
+ * the library has to respect the same preference, and two copies of this would
+ * be two answers.
+ */
+export function useReduceTransparency() {
   // Not knowing is deliberately conservative: draw opaque until the platform
   // says blur is allowed, rather than flashing blur at someone who opted out.
   const [enabled, setEnabled] = useState<boolean | null>(knownReduceTransparency);

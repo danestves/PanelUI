@@ -31,7 +31,9 @@ function ShareSheet() {
 }
 ```
 
-`props` spreads straight onto any PanelUI overlay — it is `{ open, onOpenChange }`.
+`props` spreads straight onto any PanelUI overlay — it is `{ open, onOpenChange }`. Requests equal to the accepted state are ignored, so calling `open()` twice does not emit a duplicate change.
+
+Controlled requests remain owner-driven until the `open` prop accepts them; external prop resets do not call `onOpenChange`. If ownership changes from controlled to uncontrolled, the hook retains the last accepted controlled value rather than restoring its old default.
 
 ## Examples
 
