@@ -333,6 +333,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+In a horizontal timeline, snapping and focus follow the rendered `Timeline.Item` order. `step` remains the semantic progress value, so it may be sparse, repeated, or reordered without moving another column’s snap point; non-item children do not create phantom offsets.
+
 Colour follows one rule: **progress is solid, event kind is tinted**. An untoned step runs from `muted` to `primary` as the timeline advances, exactly as `Steps` does; a toned step takes that tone's soft fill with its contents in the matching foreground. The `dot` and `card` variants keep full saturation — they are 16px discs with nothing inside, and a soft tint at that size disappears.
 
 Icons inside `Timeline.Indicator` inherit a colour that reads against the node, so they stay legible in every theme without a hardcoded value.
