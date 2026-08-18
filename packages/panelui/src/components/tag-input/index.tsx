@@ -427,7 +427,7 @@ export const TagInput = forwardRef<TextInput, TagInputProps>(
         const index = tags.length - 1;
         setMarked({ index, tag: tags[index]! });
       },
-      [onKeyPress, text.length, tags.length, marked, removeAt]
+      [onKeyPress, text.length, tags, marked, removeAt]
     );
 
     const handleFocus = useCallback<NonNullable<TextInputProps['onFocus']>>(
