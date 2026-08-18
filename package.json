@@ -9,6 +9,7 @@
   "scripts": {
     "test:a11y": "node scripts/accessibility-gate.mjs",
     "test:a11y:browser": "npm run test:a11y:browser --workspace=docs",
+    "test:a11y:native": "node scripts/accessibility-native-receipt.mjs",
     "test:cli": "node --test packages/cli/test/*.test.mjs",
     "verify:cli-packages": "node scripts/verify-cli-packages.mjs",
     "example": "npm run start --workspace=example",
@@ -26,7 +27,7 @@
     "template": "node scripts/template-preview.mjs",
     "template:parity": "node scripts/template-parity.mjs",
     "performance:example": "node scripts/verify-example-export.mjs",
-    "performance:check": "npm run verify:package --workspace=panelui-native && npm run benchmark:planner --workspace=panelui-native && node scripts/verify-registry-budgets.mjs"
+    "performance:check": "npm run verify:package --workspace=panelui-native && npm run benchmark:planner --workspace=panelui-native && npm run benchmark:components --workspace=panelui-native && node scripts/verify-registry-budgets.mjs"
   },
   "engines": {
     "node": ">=20"

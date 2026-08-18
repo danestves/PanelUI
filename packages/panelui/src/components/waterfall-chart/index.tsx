@@ -65,6 +65,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, G, Line as SvgLine, LinearGradient, Path, Stop } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
+import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import { Text } from '../../primitives/text';
 import {
   finiteChartDomain,
@@ -232,7 +233,7 @@ export function waterfallSteps(data: WaterfallDatum[]): WaterfallStep[] {
   return steps;
 }
 
-export interface WaterfallChartProps extends ViewProps {
+export interface WaterfallChartProps extends ViewProps, ChartAccessibilityProps<WaterfallStep> {
   className?: string;
   /** The steps, in the order they happen. */
   data: WaterfallDatum[];
@@ -331,6 +332,11 @@ const WaterfallChartRoot = forwardRef<WaterfallChartHandle, WaterfallChartProps>
       fallColor,
       totalColor,
       onActiveIndexChange,
+      accessible,
+      accessibilityLabel,
+      accessibilityHint,
+      accessibilityLabelForDatum,
+      onAccessibilityDatumPress,
       compact = false,
       children,
       ...props
@@ -540,7 +546,29 @@ const WaterfallChartRoot = forwardRef<WaterfallChartHandle, WaterfallChartProps>
       <WaterfallChartContext.Provider value={context}>
         <View {...props} style={props.style} className={cn('w-full', className)}>
           {header}
-          <View onLayout={onLayout} style={{ aspectRatio }} className="w-full">
+          <ChartAccessibilityData
+            chart="Waterfall chart"
+            data={steps}
+            disabled={accessible === false || loading}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityHint={accessibilityHint}
+            accessibilityLabelForDatum={accessibilityLabelForDatum}
+            onAccessibilityDatumPress={onAccessibilityDatumPress}
+            valueOf={(step) => [
+              ['label', step.label],
+              ['change', step.value],
+              ['kind', step.kind],
+              ['starts at', step.start],
+              ['ends at', step.end],
+            ]}
+          />
+          <View
+            onLayout={onLayout}
+            style={{ aspectRatio }}
+            className="w-full"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
             {plot.width > 0 ? (
               <>
                 <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>

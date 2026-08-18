@@ -11,7 +11,10 @@ test('Tree.Trigger owns one composed Pressable contract', () => {
   assert.match(source, /extends Omit<PressableProps, 'children'>/);
   assert.match(source, /const triggerDisabled = Boolean\(isDisabled \|\| disabled\)/);
   assert.match(source, /select\(value\);\s*onPress\?\.\(event\)/);
-  assert.match(source, /\{\.\.\.props\}\s*onPress=\{handlePress\}/);
+  assert.match(
+    source,
+    /\{\.\.\.props\}[\s\S]*accessibilityRole="button"[\s\S]*disabled=\{triggerDisabled\}[\s\S]*onPress=\{handlePress\}/
+  );
 });
 
 test('the copied Tree source retains the trigger contract', async () => {

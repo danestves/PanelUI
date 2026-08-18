@@ -74,6 +74,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { ChevronLeftIcon, ChevronRightIcon } from '../../icons';
+import { useControllableState } from '../../primitives/controllable-state';
 import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import {
@@ -264,14 +265,20 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
   ref
 ) {
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [internalIndex, setInternalIndex] = useState(defaultIndex);
   const [count, setCountValue] = useState(0);
   const [countKnown, setCountKnown] = useState(false);
   const [touched, setTouched] = useState(false);
   const reducedMotion = useReducedMotion();
 
-  const isControlled = indexProp !== undefined;
-  const requestedIndex = isControlled ? indexProp : internalIndex;
+  const {
+    value: requestedIndex,
+    setValue: setIndex,
+    isControlled,
+  } = useControllableState({
+    value: indexProp,
+    defaultValue: defaultIndex,
+    onChange: onIndexChange,
+  });
 
   const progress = useSharedValue(indexProp ?? defaultIndex);
   const engaged = useSharedValue(0);
@@ -286,14 +293,6 @@ const CarouselRoot = forwardRef<CarouselHandle, CarouselProps>(function Carousel
     setCountValue(next);
     setCountKnown(true);
   }, []);
-
-  const setIndex = useCallback(
-    (next: number) => {
-      if (!isControlled) setInternalIndex(next);
-      onIndexChange?.(next);
-    },
-    [isControlled, onIndexChange]
-  );
 
   /*
    * The slide the run is currently travelling to.

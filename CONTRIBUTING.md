@@ -70,6 +70,12 @@ a fallback.
 **Accessibility is part of the component.** Interactive parts wire up `accessibilityRole`, mirror
 their state through `accessibilityState`, and label anything that is not self-describing.
 
+**Forward consumer props before props the component owns.** A later JSX spread can silently
+replace internal handlers, disabled state, roles, state, or layout. Compound controls with these
+boundaries belong in `scripts/owned-props.json`; `npm test` parses their TSX and requires every
+inventoried prop after the consumer spread. Compose consumer callbacks explicitly when both must
+run rather than surrendering the internal boundary.
+
 **Every component takes `className`.** It is how a consumer restyles anything.
 
 **Overlays mount lazily** through `Portal` and unmount after their exit animation.

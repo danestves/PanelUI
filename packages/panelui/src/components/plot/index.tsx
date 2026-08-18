@@ -97,6 +97,7 @@ import Svg, {
   Rect,
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
+import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import { Text } from '../../primitives/text';
 import { finiteChartNumber } from '../../primitives/finite-chart';
 import {
@@ -261,7 +262,7 @@ export function usePlotCursor(): { activeIndex: number; activePoint: PlotDatum |
   };
 }
 
-export interface PlotProps extends ViewProps {
+export interface PlotProps extends ViewProps, ChartAccessibilityProps<PlotDatum> {
   className?: string;
   /** The rows. Each one is a position along the x-axis. */
   data: PlotDatum[];
@@ -340,6 +341,11 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
     xScale: xScaleProp,
     curve = 'monotone',
     onActiveIndexChange,
+    accessible,
+    accessibilityLabel,
+    accessibilityHint,
+    accessibilityLabelForDatum,
+    onAccessibilityDatumPress,
     compact = false,
     children,
     ...props
@@ -620,7 +626,26 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
     <PlotContext.Provider value={context}>
       <View {...props} style={props.style} className={cn('w-full', className)}>
         {header}
-        <View onLayout={onLayout} style={{ aspectRatio }} className="w-full">
+        <ChartAccessibilityData
+          chart="Plot"
+          data={data}
+          disabled={accessible === false || status === 'loading'}
+          accessibilityLabel={accessibilityLabel}
+          accessibilityHint={accessibilityHint}
+          accessibilityLabelForDatum={accessibilityLabelForDatum}
+          onAccessibilityDatumPress={onAccessibilityDatumPress}
+          valueOf={(datum) => [
+            [xDataKey, datum[xDataKey]],
+            ...seriesKeys.map((key) => [key, datum[key]] as [string, unknown]),
+          ]}
+        />
+        <View
+          onLayout={onLayout}
+          style={{ aspectRatio }}
+          className="w-full"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
           {plot.width > 0 ? (
             <>
               <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
