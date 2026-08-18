@@ -164,7 +164,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 Toasts stack as an overlapping deck: the newest is fully visible and the ones behind peek out, with anything past the third fading rather than accumulating. Swiping toward the edge the toast entered from dismisses it; dragging the other way rubber-bands.
 
-`toast.hide(id)` dismisses one, `toast.hideAll()` clears the queue. A `duration` of `0` keeps a toast up until it is dismissed.
+Auto-dismiss durations count visible foreground time: countdowns pause while the app is inactive or in the background, then resume where they left off. `toast.hide(id)` dismisses one, `toast.hideAll()` clears the queue. A `duration` of `0` keeps a toast up until it is dismissed.
 
 ## Public exports
 

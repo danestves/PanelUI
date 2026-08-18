@@ -14,7 +14,7 @@
     "Action": "Trailing action button. Dismisses the toast after its own `onPress`.",
     "Close": "Icon-only dismiss button."
   },
-  "notes": "Toasts stack as an overlapping deck: the newest is fully visible and the ones behind peek out, with anything past the third fading rather than accumulating. Swiping toward the edge the toast entered from dismisses it; dragging the other way rubber-bands.\n\n`toast.hide(id)` dismisses one, `toast.hideAll()` clears the queue. A `duration` of `0` keeps a toast up until it is dismissed.",
+  "notes": "Toasts stack as an overlapping deck: the newest is fully visible and the ones behind peek out, with anything past the third fading rather than accumulating. Swiping toward the edge the toast entered from dismisses it; dragging the other way rubber-bands.\n\nAuto-dismiss durations count visible foreground time: countdowns pause while the app is inactive or in the background, then resume where they left off. `toast.hide(id)` dismisses one, `toast.hideAll()` clears the queue. A `duration` of `0` keeps a toast up until it is dismissed.",
   "anatomy": "<Toast>\n  <Toast.Indicator />\n  <Toast.Content>\n    <Toast.Title>…</Toast.Title>\n    <Toast.Description>…</Toast.Description>\n  </Toast.Content>\n  <Toast.Action>…</Toast.Action>\n  <Toast.Close />\n</Toast>",
   "examples": [
     {
