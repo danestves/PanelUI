@@ -9,6 +9,94 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.76.0] — 2026-08-19
+
+### Added
+
+- **`AIInput`, the composer a person types a prompt into.** The library had ten
+  AI components and nothing to type into. This is the field, the row of
+  controls under it, the sheet those controls open, and the voice screen the
+  empty state offers. The field opens one line tall and grows to `maxRows`,
+  after which it holds that height and scrolls — a composer that keeps growing
+  eventually pushes its own send button off the screen.
+
+  It never touches the microphone. The app owns the recorder and passes back a
+  `level` and a `status`; a shared value keeps 30ms metering off the JS thread
+  entirely, and `Soundwave` draws every meter, so the composer needs no audio
+  dependency. A sheet row with `to` pushes onto the *same* sheet rather than
+  opening a second one over it, and `native` hands the controls to the platform
+  to be drawn in its own material. Marked alpha: the surface is broad and new.
+
+- **`Glass`, the iOS system material with an honest fallback.** Glass could
+  previously only reach a `Button`, and only by handing rendering to SwiftUI,
+  which cannot dress a field or a sheet. This draws the real material on
+  iOS 26 behind three gates — the optional package resolves, the runtime API
+  exists, and the app was compiled for the design — and a solid token surface
+  everywhere else. Nothing is faked on Android.
+
+- **`Timeline.List`**, a virtualized path for long horizontal histories, with a
+  bounded native render window. The compound API stays for short or mixed
+  compositions.
+
+- **`BottomSheet.Content` takes `showGrabber`**, so a sheet drawing its own
+  surface can put the handle on that surface instead of above it.
+
+- **`Marquee` draws a Pause/Play control**, labelled and observable through
+  `pauseLabel`, `playLabel` and `onPlayingChange`. Motion that cannot be
+  stopped is motion somebody is stuck with.
+
+- **A Logo Maker agent skill**, published beside the library's own.
+  `npx skills add panel-ui/PanelUI` now installs both.
+
+- **An Integrations section in the documentation**, with a page on using Neon
+  for the API routes behind a PanelUI app.
+
+### Changed
+
+- **`Avatar.Group` no longer reverses its layout.** Stacking order is set
+  explicitly instead, so the first face is still on top and assistive
+  technology reads the group in the order it was written.
+- **`Plot` and `WaterfallChart` expose their data** the way the other chart
+  families do.
+- **`Carousel` and `useDisclosure` share one controllable-state primitive**, so
+  controlled and uncontrolled behave identically across both.
+- Icons gained camera, globe, chevrons-up-down, audio-lines and a plain send
+  arrow.
+
+### Fixed
+
+- **Charts reject non-finite geometry.** A single `NaN` in a series could push
+  the whole drawing to infinity.
+- **`Timeline` horizontal columns keep their text opaque**, and snapping now
+  follows the rendered order rather than the `step` value — a sparse or
+  repeated `step` no longer lands a column on another column's snap point.
+- **`Avatar` resets its fallback when the image source changes**, so a new URI
+  is retried rather than showing the previous one's failure.
+- **`SearchBar`'s cancel action follows `disabled`.**
+- **`SplitView` keeps an accepted snap state** when a controlled change is
+  rejected, and `Splitter` constrains a pair reset within its bounds.
+- **`Marquee` bounds how many copies a very short child mounts.**
+- **Consumer props no longer replace the semantics a component owns.** A later
+  JSX spread could silently take over the role, state, disabled flag or press
+  handler of `Alert`, `ButtonGroup`, `Field`, `Label`, `Plan`, `Tabs`,
+  `Timeline`, `Toast`, `Tooltip`, `Typography`, the seam components and the
+  tree. A test now parses the source of every compound control with that
+  boundary and fails if an owned prop drifts back above the spread.
+- **The CLI rejects paths that escape a project through a symbolic link.** A
+  lexically contained path could still leave the project through an existing
+  symlink, or through a destination that was itself one.
+- **A summary containing a colon no longer breaks the documentation build.** A
+  plain YAML scalar ends at the first `: `, so it failed at `next build` —
+  after the drift check had passed and, at release time, after the tag exists.
+
+### Docs
+
+- Lifecycle matrices for the controlled components, generated rather than
+  written.
+- A sponsorship block in the README.
+- Accessibility release checklist gains a native journey receipt, validated
+  rather than trusted.
+
 ## [0.75.1] — 2026-08-18
 
 ### Fixed

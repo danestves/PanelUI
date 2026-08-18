@@ -26,9 +26,9 @@
 <p align="center">
   <a href="https://neon.com">
     <img
-      src="https://shieldcn.dev/badge/-Sponsored%20by-?variant=ghost&size=xs&font=inter"
-      alt="Sponsored by"
-      height="20"
+      src="https://shieldcn.dev/badge/-Sponsored%20by%3A-?variant=ghost&size=lg&font=inter"
+      alt="Sponsored by:"
+      height="30"
     />
   </a>
 </p>

@@ -41,7 +41,7 @@
     "User image with an initials fallback, a badge overlay, and a stack for a group of them.",
     "react native avatar",
     {
-      "updatedIn": "0.74.0",
+      "updatedIn": "0.76.0",
       "category": "media"
     }
   ],
@@ -82,7 +82,7 @@
     "Draggable sheet anchored to the bottom of the screen.",
     "react native bottom sheet",
     {
-      "updatedIn": "0.71.0",
+      "updatedIn": "0.76.0",
       "category": "overlays"
     }
   ],
@@ -366,7 +366,7 @@
     {
       "addedIn": "0.72.0",
       "category": "forms",
-      "updatedIn": "0.75.0"
+      "updatedIn": "0.76.0"
     }
   ],
   "pagination": [
@@ -467,6 +467,7 @@
     "Content that travels across its container on a loop.",
     "react native marquee ticker infinite scroll",
     {
+      "updatedIn": "0.76.0",
       "addedIn": "0.69.0",
       "category": "media"
     }
@@ -710,7 +711,7 @@
     "react native resizable split panes",
     {
       "addedIn": "0.74.0",
-      "updatedIn": "0.75.0",
+      "updatedIn": "0.76.0",
       "category": "layout"
     }
   ],
@@ -719,6 +720,7 @@
     "Two stacked panes whose seam settles on one of a few named heights.",
     "react native split view snap points resizable drawer pane",
     {
+      "updatedIn": "0.76.0",
       "addedIn": "0.75.0",
       "category": "layout"
     }
@@ -824,7 +826,7 @@
     "react native timeline",
     {
       "category": "data",
-      "updatedIn": "0.75.0"
+      "updatedIn": "0.76.0"
     }
   ],
   "toast": [
@@ -1082,7 +1084,7 @@
       "group": "charts",
       "addedIn": "0.63.0",
       "alpha": true,
-      "updatedIn": "0.75.0",
+      "updatedIn": "0.76.0",
       "visualization": true,
       "accessibilityMode": "shared-data"
     }
@@ -1092,6 +1094,7 @@
     "How a run of changes carried one total to another.",
     "react native waterfall chart bridge",
     {
+      "updatedIn": "0.76.0",
       "addedIn": "0.64.0",
       "group": "charts",
       "visualization": true,
