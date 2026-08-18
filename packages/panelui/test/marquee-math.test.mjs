@@ -64,3 +64,26 @@ test('the copied Marquee ships the normalization helper', async () => {
     /normalizeMarqueeSpeed\(speedProp\)/
   );
 });
+
+test('Marquee ships a visible user pause control by default', async () => {
+  const source = await readFile(
+    new URL('../src/components/marquee/index.tsx', import.meta.url),
+    'utf8'
+  );
+  assert.match(source, /showPauseControl = true/);
+  assert.match(source, /const moving = playing && !userPaused/);
+  assert.match(source, /<Pressable[\s\S]*accessibilityRole="button"[\s\S]*min-h-12 min-w-12/);
+  assert.match(source, /onPlayingChange\?\.\(!next\)/);
+  assert.match(source, /\{userPaused \? playLabel : pauseLabel\}/);
+});
+
+test('only the spoken Marquee copy can receive pointer or keyboard interaction', async () => {
+  const source = await readFile(
+    new URL('../src/components/marquee/index.tsx', import.meta.url),
+    'utf8'
+  );
+  assert.match(source, /pointerEvents=\{spoken \? 'box-none' : 'none'\}/);
+  assert.match(source, /inert=\{Platform\.OS === 'web' && !spoken \? true : undefined\}/);
+  assert.match(source, /aria-hidden=\{!spoken\}/);
+  assert.match(source, /inert=\{Platform\.OS === 'web' \? true : undefined\}[\s\S]*onLayout=\{onContentLayout\}/);
+});

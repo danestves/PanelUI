@@ -139,3 +139,22 @@ useEffect(() => {
   the specific load of a token-by-token AI response.
 - [ScrollFade](/docs/components/scroll-fade) — the zero-re-render scroll
   pattern, with the caveat it imposes on your own `onScroll`.
+
+## Component scale budgets
+
+Aggregate package and example ceilings tell you that the repository grew, not
+which component caused it. The component scale gate reports the owner,
+representative workload, measured operation or mount count, budget, and
+remaining headroom:
+
+```bash
+npm run benchmark:components --workspace=panelui-native
+```
+
+The current reviewed workloads are: a pathological small-content Marquee in a
+390-point viewport; **40 compound Timeline items** (use a bounded data/list path
+for longer histories); BarChart at 500 rows by four stacked series;
+MessageScroller's initial, batch, and viewport windows; and TimePicker's
+1,440-value ruler. These are local contracts rather than claims about device
+frame time. Profile release builds for CPU/layout cost, and add a row when a
+component introduces multiplicative rendering or advertises large-data use.

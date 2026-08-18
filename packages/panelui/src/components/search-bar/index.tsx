@@ -294,28 +294,31 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(
 
     const handleSubmit = useCallback(
       (event: NativeSyntheticEvent<TextInputSubmitEditingEventData>) => {
+        if (disabled) return;
         // A return key is somebody saying they are done waiting, so the
         // pending pause is spent rather than waited out.
         flushSearchBarDebounce(debounceTimerRef, debouncedRef.current, text);
         onSubmit?.(text);
         onSubmitEditing?.(event);
       },
-      [onSubmit, onSubmitEditing, text]
+      [disabled, onSubmit, onSubmitEditing, text]
     );
 
     const handleClear = useCallback(() => {
+      if (disabled) return;
       setText('');
       onClear?.();
       // The keyboard stays: clearing a query is the start of the next one.
       // Android takes focus away with the press, so it is asked back.
       inputRef.current?.focus();
-    }, [onClear, setText]);
+    }, [disabled, onClear, setText]);
 
     const handleCancel = useCallback(() => {
+      if (disabled) return;
       setText('');
       inputRef.current?.blur();
       onCancel?.();
-    }, [onCancel, setText]);
+    }, [disabled, onCancel, setText]);
 
     /*
      * Cancel's width is measured once and driven from a shared value, so the
@@ -426,8 +429,11 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(
           <AnimatedPressable
             onLayout={handleCancelLayout}
             onPress={handleCancel}
+            disabled={disabled}
+            focusable={!disabled}
             hitSlop={8}
             accessibilityRole="button"
+            accessibilityState={{ disabled: !!disabled }}
             className={slots.cancelButton()}
           >
             <Text className={slots.cancelLabel()}>{cancelLabel}</Text>

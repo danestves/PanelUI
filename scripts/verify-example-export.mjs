@@ -9,16 +9,17 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EXAMPLE = path.join(ROOT, 'apps/example');
 
 /*
- * Baseline (Expo 57, 110 component catalogue): 4,185 modules, a 6,677,125
+ * Baseline (Expo 57, 113 component catalogue): 4,207 modules, a 6,751,859
  * byte minified bundle, 33 assets / 1,019,361 bytes, eight route entries and
- * 7,698,713 output bytes. These are capacity guards rather than targets to
+ * 7,773,447 output bytes. These are capacity guards rather than targets to
  * fill.
  *
  * The two that bind are `modules` and `bundleBytes`, at roughly 5% and 6%
  * clear of the numbers above — on the order of five more components. When one
- * of them trips, read it as a prompt to check what grew and then raise the
- * ceiling deliberately; a build going red on the component that happened to
- * be last is the failure mode to avoid, not a result to act on.
+ * of them trips, the external source map attribution below identifies the
+ * largest workspace/dependency owners and the direct source owned by each
+ * route entry. Native Metro emits one application bundle, so route source is
+ * reported honestly rather than pretending those routes are separate chunks.
  */
 export const EXAMPLE_EXPORT_BUDGETS = Object.freeze({
   modules: 4_400,
@@ -45,6 +46,53 @@ function containedFile(root, relative) {
   return target;
 }
 
+function sourceOwner(source) {
+  const normalized = source.replaceAll('\\', '/');
+  if (normalized.includes('/apps/example/')) return 'app/example';
+  if (normalized.includes('/packages/panelui/')) return 'workspace/panelui-native';
+  const marker = '/node_modules/';
+  const dependency = normalized.slice(normalized.lastIndexOf(marker) + marker.length);
+  if (normalized.includes(marker)) {
+    const parts = dependency.split('/');
+    return parts[0].startsWith('@') ? `${parts[0]}/${parts[1]}` : parts[0];
+  }
+  if (source.startsWith('\0') || source === '__prelude__') return 'metro/runtime';
+  return 'workspace/other';
+}
+
+export function measureSourceAttribution(sourceMap) {
+  const groups = new Map();
+  const routes = [];
+  for (let index = 0; index < sourceMap.sources.length; index += 1) {
+    const source = sourceMap.sources[index];
+    const sourceBytes = Buffer.byteLength(sourceMap.sourcesContent?.[index] ?? '');
+    const owner = sourceOwner(source);
+    const group = groups.get(owner) ?? { name: owner, modules: 0, sourceBytes: 0 };
+    group.modules += 1;
+    group.sourceBytes += sourceBytes;
+    groups.set(owner, group);
+
+    const normalized = source.replaceAll('\\', '/');
+    const routeMarker = '/apps/example/app/';
+    const routeAt = normalized.lastIndexOf(routeMarker);
+    if (routeAt >= 0 && /\.[jt]sx?$/.test(normalized)) {
+      routes.push({
+        route: normalized.slice(routeAt + routeMarker.length),
+        sourceBytes,
+      });
+    }
+  }
+  const ranked = (left, right) =>
+    right.sourceBytes - left.sourceBytes || left.name.localeCompare(right.name);
+  return {
+    groups: [...groups.values()].sort(ranked),
+    routes: routes.sort(
+      (left, right) =>
+        right.sourceBytes - left.sourceBytes || left.route.localeCompare(right.route),
+    ),
+  };
+}
+
 export function measureExampleExport(outputDirectory, log, appDirectory = EXAMPLE) {
   const metadata = JSON.parse(
     fs.readFileSync(path.join(outputDirectory, 'metadata.json'), 'utf8'),
@@ -56,6 +104,13 @@ export function measureExampleExport(outputDirectory, log, appDirectory = EXAMPL
 
   const android = metadata.fileMetadata.android;
   const bundle = containedFile(outputDirectory, android.bundle);
+  const sourceMapFile = containedFile(outputDirectory, `${android.bundle}.map`);
+  if (!fs.existsSync(sourceMapFile)) {
+    throw new Error('Expo export did not emit the requested external source map.');
+  }
+  const attribution = measureSourceAttribution(
+    JSON.parse(fs.readFileSync(sourceMapFile, 'utf8')),
+  );
   const assets = android.assets.map((asset) => containedFile(outputDirectory, asset.path));
   if (new Set(assets).size !== assets.length) {
     throw new Error('Expo export metadata contains duplicate assets.');
@@ -63,7 +118,11 @@ export function measureExampleExport(outputDirectory, log, appDirectory = EXAMPL
   const moduleMatch = log.match(/Android Bundled[^\n]*\(([\d,]+) modules\)/);
   if (!moduleMatch) throw new Error('Expo output did not report its module count.');
 
-  const outputFiles = filesBelow(outputDirectory);
+  // Source maps are generated only so this gate can explain growth. They are
+  // not part of the production artifact whose capacity is budgeted.
+  const outputFiles = filesBelow(outputDirectory).filter(
+    (file) => file !== sourceMapFile,
+  );
   const routeFiles = filesBelow(path.join(appDirectory, 'app'))
     .filter((file) => /\.[jt]sx?$/.test(file))
     .filter((file) => !path.basename(file).startsWith('_'));
@@ -77,6 +136,7 @@ export function measureExampleExport(outputDirectory, log, appDirectory = EXAMPL
     routes: routeFiles.length,
     files: outputFiles.length,
     totalBytes: outputFiles.reduce((sum, file) => sum + fs.statSync(file).size, 0),
+    attribution,
   };
 }
 
@@ -104,11 +164,19 @@ export function assertExampleExportBudgets(
 }
 
 export function formatExampleExport(metrics) {
+  const owners = metrics.attribution.groups
+    .slice(0, 8)
+    .map((group) => `${group.name}: ${group.modules} modules / ${group.sourceBytes} source bytes`)
+    .join('\n');
+  const routes = metrics.attribution.routes
+    .map((route) => `${route.route}: ${route.sourceBytes} source bytes`)
+    .join('\n');
   return (
     `Verified Android example export: ${metrics.modules} modules, ` +
     `${metrics.bundleBytes} bundle bytes (${metrics.bundle}), ` +
     `${metrics.assets} assets / ${metrics.assetBytes} asset bytes, ` +
-    `${metrics.routes} routes, ${metrics.files} files / ${metrics.totalBytes} total bytes.`
+    `${metrics.routes} routes, ${metrics.files} files / ${metrics.totalBytes} total bytes.\n` +
+    `Largest source owners:\n${owners}\nRoute entry sources:\n${routes}`
   );
 }
 
@@ -129,6 +197,8 @@ export function verifyExampleExport() {
         // Hermes bytecode embeds a nondeterministic byte in otherwise identical
         // exports. Budget the stable, minified production JavaScript instead.
         '--no-bytecode',
+        '--source-maps',
+        'external',
         '--max-workers',
         '2',
       ],

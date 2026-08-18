@@ -91,9 +91,9 @@ const AlertRoot = forwardRef<View, AlertProps>(
       <AlertContext.Provider value={variant}>
         <View
           ref={ref}
+          {...props}
           accessibilityRole="alert"
           className={root({ className })}
-          {...props}
         >
           {icon ? (
             <>

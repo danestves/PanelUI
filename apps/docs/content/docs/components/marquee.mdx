@@ -102,18 +102,19 @@ There is no content width to take a height from on this axis, so the container i
 
 ### Holding it still
 
-`playing` stops the travel where it is and starts it again from there.
+The built-in visible control meets the default pause requirement. Externally owned `playing` is available when the page already has an equivalent control.
 
 ```tsx
-const [playing, setPlaying] = useState(true);
-
-<Marquee spacing={12} speed={40} playing={playing}>
+<Marquee spacing={12} speed={40} pauseLabel="Pause ticker" playLabel="Play ticker">
   <View className="flex-row gap-3">
     {stack.map((label) => (
       <Badge key={label} variant="secondary">{label}</Badge>
     ))}
   </View>
 </Marquee>
+
+{/* Existing page-level controls can own the same state. */}
+<Marquee playing={playing} showPauseControl={false}>{/* … */}</Marquee>
 <Switch value={playing} onValueChange={setPlaying} />
 ```
 
@@ -193,6 +194,10 @@ const [playing, setPlaying] = useState(true);
 | `direction` | `MarqueeDirection` | `'horizontal'` | Axis the content travels along. |
 | `reverse` | `boolean` | `false` | Send it the other way: toward the start of the line, or upward. Applied after the reading direction, not instead of it. |
 | `playing` | `boolean` | `true` | Set false to hold the content where it is. |
+| `showPauseControl` | `boolean` | `true` | Show the built-in user pause/play control while motion is enabled. |
+| `pauseLabel` | `string` | `'Pause'` | Visible and spoken label for the moving state. |
+| `playLabel` | `string` | `'Play'` | Visible and spoken label for the user-paused state. |
+| `onPlayingChange` | `(playing: boolean) => void` | — | Reports changes made by the built-in control. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -204,11 +209,11 @@ A horizontal marquee travels toward the end of the line, so it reverses in a rig
 
 **A vertical marquee needs a height.** A horizontal one takes its height from the content it measured, but a vertical one has nothing to take a height from and collapses. Give the container one.
 
-`speed` is points per second, so the cycle time follows from it and the measured content. Longer content takes proportionally longer rather than travelling faster. `spacing` is the minimum gap between copies. When a very short child would exceed the 32-copy mount budget, Marquee adds enough whitespace to preserve continuous coverage without mounting an unbounded number of subtrees. Non-finite speed values fall back to 40 points per second; negative or non-finite spacing is treated as zero, so invalid data cannot produce a non-finite animation or layout.
+`speed` is points per second, so the cycle time follows from it and the measured content. Longer content takes proportionally longer rather than travelling faster, and two marquees at the same speed stay in step whatever is inside them. `spacing` is the minimum gap between copies. When a very short child would exceed the 32-copy mount budget, Marquee adds enough whitespace to preserve continuous coverage without mounting an unbounded number of subtrees. Non-finite speed values fall back to 40 points per second; negative or non-finite spacing is treated as zero, so invalid data cannot produce a non-finite animation or layout.
 
-Screen readers are given one copy. The rest are duplicates of content already announced.
+Screen readers and keyboard/pointer interaction are given one copy. Every repeated visual copy and the hidden measurement copy are inert, so an interactive child appears only once in focus and hit-testing order.
 
-Children stay interactive — a copy passing under a finger can be pressed. Set `playing={false}` to hold the content still for as long as it needs to be read or tapped accurately.
+Motion includes a visible 48-point Pause/Play control by default. Its labels can be localized with `pauseLabel` and `playLabel`; use `onPlayingChange` to observe the user choice. Set `showPauseControl={false}` only when an equivalent visible control exists elsewhere. `playing={false}` remains the externally owned way to hold the content still and suppresses the built-in control.
 
 ## Public exports
 

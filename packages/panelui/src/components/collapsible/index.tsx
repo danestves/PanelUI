@@ -180,11 +180,11 @@ const CollapsibleTrigger = forwardRef<View, CollapsibleTriggerProps>(
     return (
       <Pressable
         ref={ref}
+        {...props}
         accessibilityRole="button"
         accessibilityState={{ expanded: open, disabled: isDisabled }}
         disabled={isDisabled}
         className={trigger({ className })}
-        {...props}
         onPress={(event) => {
           onPress?.(event);
           toggle();

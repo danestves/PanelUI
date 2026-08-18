@@ -194,6 +194,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+Double-tapping a handle restores that pair’s initial proportion inside the room the pair currently owns. The reset obeys the same minimum, maximum, and collapse constraints as a drag, so it never creates a layout ordinary interaction could not reach.
+
 Dragging runs on the UI thread and never round-trips through React. `onLayoutChange` therefore fires when the seam is let go, not on every frame — a layout that re-rendered sixty times a second is the one thing that would make this feel slow. Anything that has to follow the drag itself should be inside a pane, where it is laid out by the pane rather than by a state update.
 
 A seam is `adjustable` to a screen reader, with increment and decrement moving it `step` percent at a time, so the layout can be changed without a drag.
