@@ -842,7 +842,7 @@ function AIInputSheetScreen({ className, id, title, trailing, children, ...props
   void title;
   void trailing;
   return (
-    <View {...props} className={cn('gap-3 pb-2', className)}>
+    <View {...props} className={cn('gap-4 pb-2', className)}>
       {children}
     </View>
   );
@@ -1068,7 +1068,7 @@ function AIInputSheetHeader({
        */}
       <View pointerEvents="none" className="absolute inset-x-0 items-center">
         {typeof title === 'string' ? (
-          <Text size="lg" weight="semibold" numberOfLines={1}>
+          <Text size="xl" weight="semibold" numberOfLines={1}>
             {title}
           </Text>
         ) : (
@@ -1200,7 +1200,7 @@ function AIInputSheetGroup({ className, footnote, children, ...props }: AIInputS
   const rows = Children.toArray(children);
   return (
     <View className="gap-2">
-      <View {...props} className={cn('overflow-hidden rounded-2xl bg-muted/50', className)}>
+      <View {...props} className={cn('overflow-hidden rounded-[20px] bg-muted/50', className)}>
         {rows.map((row, index) => (
           <View key={index}>
             {index > 0 ? <View className="ms-4 h-px bg-border" /> : null}
@@ -1285,7 +1285,7 @@ function AIInputSheetRow({
   const interactive = Boolean(to || onPress);
   if (!interactive) {
     return (
-      <View {...props} className={cn('flex-row items-center gap-3 px-4 py-3.5', className)}>
+      <View {...props} className={cn('flex-row items-center gap-3 px-4 py-4', className)}>
         {body}
       </View>
     );
@@ -1300,7 +1300,7 @@ function AIInputSheetRow({
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={handlePress}
-      className={cn('flex-row items-center gap-3 px-4 py-3.5', disabled && 'opacity-40', className)}
+      className={cn('flex-row items-center gap-3 px-4 py-4', disabled && 'opacity-40', className)}
     >
       {body}
     </AnimatedPressable>
@@ -1384,7 +1384,7 @@ function AIInputSheetChoice({
       disabled={disabled}
       onPress={onPress}
       className={cn(
-        'flex-row items-start gap-3 px-4 py-3.5',
+        'flex-row items-start gap-3 px-4 py-4',
         disabled && 'opacity-40',
         className
       )}
