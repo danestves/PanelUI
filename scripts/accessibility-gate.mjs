@@ -37,6 +37,12 @@ export const ACCESSIBILITY_SUITES = [
     anchor: 'labelled Button sizes are floors with scalable intrinsic line boxes',
   },
   {
+    class: 'motion-control',
+    file: 'packages/panelui/test/marquee-math.test.mjs',
+    count: 5,
+    anchor: 'only the spoken Marquee copy can receive pointer or keyboard interaction',
+  },
+  {
     class: 'modal-isolation',
     file: 'packages/panelui/test/modal-isolation-store.test.mjs',
     count: 3,
@@ -109,6 +115,7 @@ export const REQUIRED_CLASSES = [
   'perception',
   'target-size',
   'large-text',
+  'motion-control',
   'modal-isolation',
   'structured-content',
   'chart-semantics',
