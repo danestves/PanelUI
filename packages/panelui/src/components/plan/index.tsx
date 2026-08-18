@@ -296,11 +296,15 @@ function PlanTitle({ className, children, ...props }: PlanTitleProps) {
   const { title } = planVariants();
 
   if (isStreaming && typeof children === 'string') {
-    return <Shimmer textClassName={cn(title(), className)}>{children}</Shimmer>;
+    return (
+      <Shimmer accessibilityRole="header" textClassName={cn(title(), className)}>
+        {children}
+      </Shimmer>
+    );
   }
 
   return (
-    <Text accessibilityRole="header" className={cn(title(), className)} {...props}>
+    <Text {...props} accessibilityRole="header" className={cn(title(), className)}>
       {children}
     </Text>
   );
