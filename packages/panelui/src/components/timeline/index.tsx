@@ -260,6 +260,15 @@ interface TimelineItemContextValue {
   tone: TimelineTone;
   /** False on the last item, so its rail does not trail into nothing. */
   showSeparator: boolean;
+  /**
+   * Horizontal only: where this column starts, in points, and how wide it is.
+   *
+   * Both are worked out by the item, and the parts inside it need the same two
+   * numbers to fade against the scroll. Passing them down beats deriving them
+   * twice from measurements that would then be free to disagree.
+   */
+  offset: number;
+  columnWidth: number;
 }
 
 const TimelineContext = createContext<TimelineContextValue | null>(null);
@@ -452,28 +461,46 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     });
     const horizontal = orientation === 'horizontal';
 
-    const context = useMemo(
-      () => ({ step, completed: isCompleted, tone, showSeparator: !last }),
-      [step, isCompleted, tone, last]
-    );
-
     const columnWidth = horizontal
       ? itemWidth({ step, width, children } as TimelineItemProps)
       : undefined;
     const offset = offsets[step] ?? 0;
 
+    const context = useMemo(
+      () => ({
+        step,
+        completed: isCompleted,
+        tone,
+        showSeparator: !last,
+        offset,
+        columnWidth: columnWidth ?? 0,
+      }),
+      [step, isCompleted, tone, last, offset, columnWidth]
+    );
+
     /*
      * A column recedes as it leaves the reading edge, so the one being read is
-     * the one that looks read. The window is a column's own width either side,
-     * which keeps the neighbours legible — this is a timeline, and the value of
-     * it is being able to see what came before and after at once.
+     * the one that looks read.
+     *
+     * One column's width either side, not two: a window wide enough to hold
+     * three columns near full strength is a row where nothing is picked out,
+     * and picking one out is the whole job. The neighbours stay legible at the
+     * far end of it — a timeline is worth reading for what came before and
+     * after — they simply stop competing.
+     *
+     * The scale and the drop are what turn a fade into a focus. Four points and
+     * four percent is under the threshold where anybody would call it movement,
+     * and over the one where the column at the edge stops looking flat against
+     * the rest.
      */
     const columnStyle = useAnimatedStyle(() => {
-      if (!horizontal || !animate) return { opacity: 1 };
+      if (!horizontal || !animate) return { opacity: 1, transform: [] };
       const distance = Math.abs(scrollX.value - offset);
-      const window = Math.max(columnWidth ?? timelineColumnWidth(undefined, true), 1) * 2;
+      const window = Math.max(columnWidth ?? timelineColumnWidth(undefined, true), 1);
+      const away = interpolate(distance, [0, window], [0, 1], 'clamp');
       return {
-        opacity: interpolate(distance, [0, window], [1, 0.45], 'clamp'),
+        opacity: 1 - away * 0.4,
+        transform: [{ scale: 1 - away * 0.04 }, { translateY: away * 4 }],
       };
     });
 
@@ -644,15 +671,54 @@ TimelineIndicator.displayName = 'Timeline.Indicator';
  * so the connector runs unbroken.
  */
 const TimelineContent = forwardRef<View, ViewProps & { className?: string }>(
-  ({ className, children, ...props }, ref) => {
-    const { variant, orientation } = useTimeline('Timeline.Content');
-    const { completed, tone } = useTimelineItem('Timeline.Content');
+  ({ className, children, style, ...props }, ref) => {
+    const { variant, orientation, scrollX, animate } = useTimeline('Timeline.Content');
+    const { completed, tone, offset, columnWidth } =
+      useTimelineItem('Timeline.Content');
     const { body, panel } = timelineVariants({ variant, tone, completed, orientation });
+    const horizontal = orientation === 'horizontal';
+
+    /*
+     * Horizontal: the body recedes further than the column around it.
+     *
+     * The rail is a continuous thing and has to stay readable across the whole
+     * track — the years either side of the one being read are half of what a
+     * timeline is for. The prose under them is not: several columns of it at
+     * equal weight is a wall, and no amount of fading the column as a whole
+     * fixes that without taking the years down with it. So the body takes a
+     * second, steeper curve and the dates keep the first one.
+     */
+    const bodyStyle = useAnimatedStyle(() => {
+      if (!horizontal || !animate) return { opacity: 1 };
+      const distance = Math.abs(scrollX.value - offset);
+      const window = Math.max(columnWidth, 1);
+      return { opacity: interpolate(distance, [0, window], [1, 0.3], 'clamp') };
+    });
+
+    const inner =
+      variant === 'card' ? (
+        <View className={panel()}>{textChildren(children)}</View>
+      ) : (
+        children
+      );
+
+    if (!horizontal) {
+      return (
+        <View ref={ref} className={body({ className })} style={style} {...props}>
+          {inner}
+        </View>
+      );
+    }
 
     return (
-      <View ref={ref} className={body({ className })} {...props}>
-        {variant === 'card' ? <View className={panel()}>{textChildren(children)}</View> : children}
-      </View>
+      <Animated.View
+        ref={ref}
+        className={body({ className })}
+        {...props}
+        style={[style, bodyStyle]}
+      >
+        {inner}
+      </Animated.View>
     );
   }
 );
