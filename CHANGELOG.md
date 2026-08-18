@@ -9,6 +9,42 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.74.0] — 2026-08-18
+
+### Added
+
+- **`Splitter`, panes that share a container.** Two or more panes with a seam between them the
+  reader can drag, horizontally or stacked. Sizes are percentages of the splitter rather than
+  points, so a layout dragged in portrait is still the same layout in landscape and a rotation
+  costs no re-measuring. `Splitter.Panel` takes `minSize`, `maxSize`, `defaultSize` and
+  `collapsible` — a drag past the minimum shuts a collapsible pane instead of stopping at it, and
+  only once the drag is more than halfway there, so a finger that grazes the minimum springs back.
+  A drag borrows from the pane on the other side of that seam and from nobody else, so a
+  three-pane layout keeps the pane nobody touched where it was. Double-tapping a seam puts its
+  pair back where it started.
+
+  The seams are drawn over the panes rather than between them: a handle that took layout space
+  would have to be measured before the panes could be sized, which puts the whole layout
+  downstream of a number nobody controls. Floating it means the panes add up to exactly the
+  container, and the touch target can be as wide as a finger needs without moving anything.
+  Dragging runs on the UI thread, so `onLayoutChange` fires when the seam is let go rather than
+  on every frame. A seam is `adjustable` to a screen reader, with increment and decrement moving
+  it `step` percent at a time.
+
+- **`Avatar.Group`.** A row of avatars, each overlapping the one after it, with the people who did
+  not fit counted at the end. `max` caps the faces rather than the row — three with five people
+  shows three avatars and a `+2` — and `total` counts against a population the children only
+  sample, so three faces out of forty read `+37`. `size` sets the whole stack in one place and
+  `overlap` closes it up or opens it out. The stack lays itself out in reverse so the first face
+  is the one on top, and each gets a ring in the page background so it separates from the one
+  beneath it on any surface. It replaces the hand-rolled version the docs used to recommend,
+  which had no count and left the negative margin to the caller.
+
+### Docs
+
+- The Avatar page's stack example is now the component rather than a recipe, with a second example
+  for the overflow count.
+
 ## [0.73.0] — 2026-08-17
 
 ### Added

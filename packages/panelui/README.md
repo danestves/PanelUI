@@ -204,7 +204,7 @@ consumer bundler.
 | `Alert` | Status message with a built-in icon |
 | `AreaChart` | Filled bands over time, stacked or overlaid |
 | `Attachment` | File row with upload states, built on Item |
-| `Avatar` | User image with an initials fallback and an optional badge overlay |
+| `Avatar` | User image with an initials fallback, a badge overlay, and a stack for a group of them |
 | `Badge` | Compact status label, dot, or notification count |
 | `BarChart` | Categories compared by length, grouped or stacked |
 | `BottomSheet` | Draggable sheet anchored to the bottom of the screen |
@@ -290,6 +290,7 @@ consumer bundler.
 | `Soundwave` | What a voice looks like while an app listens |
 | `Sources` | The references behind an answer, behind a disclosure |
 | `Spinner` | Indeterminate loading indicator |
+| `Splitter` | Panes that share a container, with a seam between them you can drag |
 | `Steps` | Stepper for multi-step flows |
 | `Surface` | Elevated container with a variant ladder |
 | `Swipe` | A row that slides aside to reveal the things you can do to it |

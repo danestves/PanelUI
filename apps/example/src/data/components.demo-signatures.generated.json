@@ -19,7 +19,7 @@
     },
     {
       "slug": "avatar",
-      "signature": "0ac2aecea476c31116accf029f43e580d58736a33da1d1751278c93f21f9b279"
+      "signature": "d49abdeedc76a070541905ebdb272e0e37dbf20eda41ffe689d2e5855935ad6c"
     },
     {
       "slug": "badge",
@@ -360,6 +360,10 @@
     {
       "slug": "spinner",
       "signature": "311cea7bae30ad3e257ca2d44c26ec788810bc6651f828b713ab7855d140e1b8"
+    },
+    {
+      "slug": "splitter",
+      "signature": "6b9210371cab7887730298b99e0faebb0efec084c236249c8082b2e5ee69db0c"
     },
     {
       "slug": "steps",

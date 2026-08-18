@@ -1,0 +1,43 @@
+{
+  "slug": "splitter",
+  "intro": "Two or more panes sharing one container, with a seam between them that can be dragged to change how the room is divided.\n\nSizes are percentages of the splitter rather than points, so a layout dragged in portrait is still the same layout in landscape.\n\nThe splitter has no size of its own along the axis it does not split. A horizontal one needs a height — `className=\"h-64\"`, or a parent that gives it one — or it collapses to nothing and takes its panes with it.\n\nFor a panel that comes in over the app instead of beside it, use [Drawer](/docs/components/drawer).",
+  "usage": "<Splitter className=\"h-64\" defaultLayout={[65, 35]}>\n  <Splitter.Panel minSize={30}>{list}</Splitter.Panel>\n  <Splitter.Handle />\n  <Splitter.Panel minSize={20}>{detail}</Splitter.Panel>\n</Splitter>",
+  "extraImports": ["Button", "Text", "View"],
+  "anatomy": "<Splitter>\n  <Splitter.Panel>…</Splitter.Panel>\n  <Splitter.Handle />\n  <Splitter.Panel>…</Splitter.Panel>\n</Splitter>",
+  "parts": {
+    "Panel": "One pane. It clips what is inside it, so a pane dragged narrower hides its content rather than pushing it into its neighbour.",
+    "Handle": "The seam between two panes. Put one between each pair; a splitter with no handles is a fixed layout."
+  },
+  "partNotes": "A handle takes no layout space — it is drawn over the seam the two panes already share. That is why the panes add up to exactly the container, and why the touch target can be 24 points wide without moving anything.",
+  "examples": [
+    {
+      "title": "Two panes",
+      "description": "`defaultLayout` is one percentage per pane. `minSize` is the smallest share a pane may hold, so neither side can be dragged down to a sliver.",
+      "code": "<Splitter className=\"h-64 rounded-2xl border border-border\" defaultLayout={[60, 40]}>\n  <Splitter.Panel minSize={25} className=\"bg-surface-secondary p-4\">\n    <Text weight=\"medium\">Inbox</Text>\n    <Text size=\"sm\" muted>12 conversations</Text>\n  </Splitter.Panel>\n  <Splitter.Handle />\n  <Splitter.Panel minSize={25} className=\"p-4\">\n    <Text weight=\"medium\">Thread</Text>\n    <Text size=\"sm\" muted>Pick a conversation to read it.</Text>\n  </Splitter.Panel>\n</Splitter>"
+    },
+    {
+      "title": "A pane that can be shut",
+      "description": "`collapsible` lets a drag past `minSize` shut the pane instead of stopping at it, and the snap only happens once the drag is more than halfway there — so a finger that grazes the minimum springs back. Double-tapping the seam puts the pair back where it started, which is the way out of a pane shut by accident.",
+      "code": "<Splitter className=\"h-64\" defaultLayout={[30, 70]}>\n  <Splitter.Panel minSize={20} collapsible className=\"bg-surface-secondary\">\n    {sidebar}\n  </Splitter.Panel>\n  <Splitter.Handle />\n  <Splitter.Panel minSize={40}>{content}</Splitter.Panel>\n</Splitter>"
+    },
+    {
+      "title": "Stacked panes",
+      "description": "`orientation=\"vertical\"` splits the height instead of the width. Everything else is the same, including the percentages — they are shares of the splitter, whichever way it runs.",
+      "code": "<Splitter orientation=\"vertical\" className=\"h-80\" defaultLayout={[45, 55]}>\n  <Splitter.Panel minSize={20} className=\"p-4\">\n    {preview}\n  </Splitter.Panel>\n  <Splitter.Handle />\n  <Splitter.Panel minSize={20} className=\"p-4\">\n    {editor}\n  </Splitter.Panel>\n</Splitter>"
+    },
+    {
+      "title": "Three panes",
+      "description": "One handle per seam. A drag borrows from the pane on the other side of that seam and from nobody else, so the third pane keeps the width it was left at.",
+      "code": "<Splitter className=\"h-64\" defaultLayout={[25, 50, 25]}>\n  <Splitter.Panel minSize={15}>{files}</Splitter.Panel>\n  <Splitter.Handle />\n  <Splitter.Panel minSize={30}>{editor}</Splitter.Panel>\n  <Splitter.Handle />\n  <Splitter.Panel minSize={15}>{outline}</Splitter.Panel>\n</Splitter>"
+    },
+    {
+      "title": "Keeping the layout",
+      "description": "`onLayoutChange` fires when a seam is let go, with the percentages to store. Passing `layout` back makes the splitter controlled — a seam that is let go then snaps to whatever that prop says, so a reset button is one call to `setLayout`.",
+      "code": "const [layout, setLayout] = useState([50, 50]);\n\nreturn (\n  <View className=\"w-full gap-3\">\n    <Splitter className=\"h-56\" layout={layout} onLayoutChange={setLayout}>\n      <Splitter.Panel minSize={20}>{left}</Splitter.Panel>\n      <Splitter.Handle />\n      <Splitter.Panel minSize={20}>{right}</Splitter.Panel>\n    </Splitter>\n    <Button variant=\"outline\" onPress={() => setLayout([50, 50])}>\n      Even split\n    </Button>\n  </View>\n);"
+    }
+  ],
+  "variantCode": {
+    "orientation": "{/* Side by side. */}\n<Splitter className=\"h-64\">\n  <Splitter.Panel>{left}</Splitter.Panel>\n  <Splitter.Handle />\n  <Splitter.Panel>{right}</Splitter.Panel>\n</Splitter>\n\n{/* Stacked. */}\n<Splitter orientation=\"vertical\" className=\"h-64\">\n  <Splitter.Panel>{top}</Splitter.Panel>\n  <Splitter.Handle />\n  <Splitter.Panel>{bottom}</Splitter.Panel>\n</Splitter>"
+  },
+  "notes": "Dragging runs on the UI thread and never round-trips through React. `onLayoutChange` therefore fires when the seam is let go, not on every frame — a layout that re-rendered sixty times a second is the one thing that would make this feel slow. Anything that has to follow the drag itself should be inside a pane, where it is laid out by the pane rather than by a state update.\n\nA seam is `adjustable` to a screen reader, with increment and decrement moving it `step` percent at a time, so the layout can be changed without a drag.\n\nMinimums that add up to more than 100 cannot all be honoured. Every pane is shrunk in proportion rather than the last one being pushed out of the container, which keeps the problem visible — but it is a layout nobody asked for, so keep the total under 100.\n\nPanes are sized by flex until the splitter has been measured, which is the first frame, and by measured points afterwards. The two agree, so there is nothing to see.\n\nFor a pane that slides over the content rather than beside it, use [Drawer](/docs/components/drawer) or [BottomSheet](/docs/components/bottom-sheet). For a row that slides aside to reveal actions, use [Swipe](/docs/components/swipe)."
+}

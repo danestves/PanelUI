@@ -36,9 +36,10 @@
   ],
   "avatar": [
     "Avatar",
-    "User image with an initials fallback and an optional badge overlay.",
+    "User image with an initials fallback, a badge overlay, and a stack for a group of them.",
     "react native avatar",
     {
+      "updatedIn": "0.74.0",
       "category": "media"
     }
   ],
@@ -671,6 +672,15 @@
     {
       "updatedIn": "0.67.0",
       "category": "feedback"
+    }
+  ],
+  "splitter": [
+    "Splitter",
+    "Panes that share a container, with a seam between them you can drag.",
+    "react native resizable split panes",
+    {
+      "addedIn": "0.74.0",
+      "category": "layout"
     }
   ],
   "tour": [
