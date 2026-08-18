@@ -16,6 +16,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { DEFAULT_REGISTRY, aliasToDir, projectPath, readConfig } from './config.mjs';
 import { discover, kindOf } from './discovery.mjs';
+import { fetchJson, fetchText } from './registry.mjs';
 
 /**
  * The versions we speak, and the one we answer with otherwise.
@@ -33,13 +34,6 @@ const { default: pkg } = await import('../package.json', { with: { type: 'json' 
 /* ------------------------------------------------------------------ *
  * The registry, through the same fetch the CLI uses.
  * ------------------------------------------------------------------ */
-
-async function fetchJson(url) {
-  const response = await fetch(url);
-  if (response.status === 404) return null;
-  if (!response.ok) throw new Error(`Registry returned ${response.status} for ${url}`);
-  return response.json();
-}
 
 function registryFor(options) {
   return options.registry ?? readConfig(options.cwd)?.registry ?? DEFAULT_REGISTRY;
@@ -202,11 +196,11 @@ async function callTool(name, args, options) {
         return `"${args.name}" is not a component name. Run panelui_search_components to find one.`;
       }
       const url = `${docsOrigin(registry)}/llms.mdx/${docsPath}`;
-      const response = await fetch(url);
-      if (!response.ok) {
+      const documentation = await fetchText(url);
+      if (documentation === null) {
         return `No documentation page at ${url}. The component may be filed under charts, ai-components or form — try panelui_view_component instead.`;
       }
-      return response.text();
+      return documentation;
     }
 
     case 'panelui_get_add_command':

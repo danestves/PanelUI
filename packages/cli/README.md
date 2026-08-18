@@ -115,6 +115,8 @@ output. It reads project information from `--cwd` (the current directory by defa
 
 Registry lookups use `--registry <url>` first, then the registry in that project's `panelui.json`,
 then `https://panelui.dev/r`.
+MCP registry and documentation reads require HTTPS, including after redirects; HTTP remains available
+only for loopback registries used during local development.
 
 #### `mcp init [claude|cursor|vscode]`
 
