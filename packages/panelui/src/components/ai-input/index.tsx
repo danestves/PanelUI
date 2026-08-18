@@ -623,9 +623,19 @@ function NativeGlyph({
   const native = Platform.OS === 'ios' ? getNativeUI() : null;
   if (!native?.Icon || !native?.Host) return <>{fallback}</>;
 
+  /*
+   * `matchContents` and no size of its own. Given a fixed box the host lays
+   * the symbol out against its own intrinsic size inside it and leaves it
+   * wherever that lands — off centre, and differently so per symbol. Sized to
+   * its contents it is a glyph-shaped view, which the button's own centring
+   * then handles like any other child.
+   *
+   * The definite size a hosted view needs is the button above it, which is a
+   * square this component draws.
+   */
   const { Host, Icon } = native;
   return (
-    <Host matchContents style={{ width: size, height: size }}>
+    <Host matchContents>
       <Icon name={symbol} size={size} color={color} />
     </Host>
   );
@@ -861,6 +871,14 @@ export interface AIInputSheetProps {
   blur?: boolean;
   /** How tall the sheet opens. `auto` sizes to the screen currently on top. */
   size?: 'auto' | 'half' | 'full';
+  /**
+   * Float the sheet clear of the screen edges instead of docking it to the
+   * bottom. On by default: the surface is a material, and a material reads as
+   * laid over the app when there is app visible around all four of its edges.
+   * Docked, its bottom edge is the screen's, and there is nothing behind it
+   * there to refract.
+   */
+  detached?: boolean;
 }
 
 /**
@@ -894,6 +912,7 @@ function AIInputSheet({
   onScreenChange,
   blur = false,
   size = 'auto',
+  detached = true,
 }: AIInputSheetProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isControlled = openProp !== undefined;
@@ -961,6 +980,7 @@ function AIInputSheet({
       <BottomSheet.Content
         blur={blur}
         size={size}
+        detached={detached}
         showClose={false}
         showGrabber={false}
         className="border-0 bg-transparent px-0 pt-0 shadow-none"
@@ -976,10 +996,19 @@ function AIInputSheet({
          */}
         <AIInputSheetContext.Provider value={context}>
           <Glass
-            radius={{ top: 24 }}
-            fallbackClassName="border border-b-0 border-border bg-popover"
+            // Four rounded corners when it floats, two when it is docked: the
+            // bottom edge of a docked sheet is the screen's edge, and rounding
+            // a corner there rounds nothing.
+            radius={detached ? 24 : { top: 24 }}
+            fallbackClassName={cn(
+              'border border-border bg-popover',
+              !detached && 'border-b-0'
+            )}
             className="px-4 pt-2"
-            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+            // A floating sheet's own bottom margin already clears the home
+            // indicator, so it takes plain padding rather than stacking the
+            // inset on top of the gap.
+            style={{ paddingBottom: detached ? 16 : Math.max(insets.bottom, 16) }}
           >
             <View className="mb-2 self-center">
               <View className="h-1 w-10 rounded-full bg-muted-foreground/40" />

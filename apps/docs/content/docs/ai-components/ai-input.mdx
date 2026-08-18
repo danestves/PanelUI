@@ -362,6 +362,7 @@ The screen with no field on it. The wash behind everything and the capsules over
 | `onScreenChange` | `(id: string) => void` | — | Called whenever the screen on top changes, pushed or popped. |
 | `blur` | `boolean` | `false` | Frost the screen behind the sheet instead of dimming it. |
 | `size` | `'auto' \| 'half' \| 'full'` | `'auto'` | How tall the sheet opens. `auto` sizes to the screen currently on top. |
+| `detached` | `boolean` | `true` | Float the sheet clear of the screen edges instead of docking it to the bottom. On by default: the surface is a material, and a material reads as laid over the app when there is app visible around all four of its edges. Docked, its bottom edge is the screen's, and there is nothing behind it there to refract. |
 
 ### AIInput.SheetGroup
 
