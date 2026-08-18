@@ -45,7 +45,9 @@ export const ACCESSIBILITY_SUITES = [
   {
     class: 'motion-control',
     file: 'packages/panelui/test/marquee-math.test.mjs',
-    count: 5,
+    // Two changes landed in this file: the pause control and the bound on how
+    // many copies a very short child can mount.
+    count: 6,
     anchor: 'only the spoken Marquee copy can receive pointer or keyboard interaction',
   },
   {
