@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
   DEFAULT_MARQUEE_SPEED,
+  MAX_MARQUEE_COPIES,
   marqueeCopyCount,
   normalizeMarqueeSpacing,
   normalizeMarqueeSpeed,
@@ -31,6 +32,23 @@ test('copy layout rejects invalid measurements and preserves coverage', () => {
     period: 0,
     count: 0,
   });
+});
+
+test('copy layout keeps tiny content inside a fixed mount budget', () => {
+  const viewport = 390;
+  const layout = marqueeCopyCount(viewport, 1, 0);
+
+  assert.deepEqual(layout, {
+    period: viewport / (MAX_MARQUEE_COPIES - 2),
+    count: MAX_MARQUEE_COPIES,
+  });
+  assert.ok((layout.count - 2) * layout.period >= viewport);
+
+  for (const content of [0.001, 0.1, 1, 8, 32, 128, 512]) {
+    const candidate = marqueeCopyCount(1440, content, 0);
+    assert.ok(candidate.count <= MAX_MARQUEE_COPIES);
+    assert.ok((candidate.count - 2) * candidate.period >= 1440);
+  }
 });
 
 test('the copied Marquee ships the normalization helper', async () => {
