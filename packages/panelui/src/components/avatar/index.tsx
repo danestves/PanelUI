@@ -22,6 +22,7 @@ import {
   avatarGroupOverlap,
   type AvatarSizeName,
 } from './avatar-group';
+import { avatarSourceIdentity } from './avatar-source';
 
 const avatarVariants = tv({
   slots: {
@@ -53,16 +54,20 @@ export interface AvatarProps extends ViewProps, VariantProps<typeof avatarVarian
 
 const AvatarRoot = forwardRef<View, AvatarProps>(
   ({ className, size, source, fallback, imageProps, children, ...props }, ref) => {
-    const [errored, setErrored] = useState(false);
+    const [failedSource, setFailedSource] = useState<string>();
     const { root, image, fallback: fallbackSlot } = avatarVariants({ size });
-    const showImage = !!source && !errored;
+    const sourceIdentity = avatarSourceIdentity(source);
+    const showImage = !!source && failedSource !== sourceIdentity;
 
     const face = showImage ? (
       <Image
-        source={source}
-        onError={() => setErrored(true)}
         className={image()}
         {...imageProps}
+        source={source}
+        onError={(event) => {
+          setFailedSource(sourceIdentity);
+          imageProps?.onError?.(event);
+        }}
       />
     ) : (
       <Text className={fallbackSlot()}>{fallback ?? '?'}</Text>

@@ -2,14 +2,19 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { loadUsage } from './load-usage.mjs';
+import { LIFECYCLE_CASES, loadLifecycleMatrices } from '../../../scripts/lifecycle-matrices.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 /** Repo root, three levels up from apps/docs/scripts. */
 const ROOT = path.resolve(HERE, '../../..');
+const lifecycleMatrices = loadLifecycleMatrices(ROOT);
 
 const S = HERE;
 const api = JSON.parse(fs.readFileSync(`${S}/api.json`, 'utf8'));
 const meta = JSON.parse(fs.readFileSync(`${S}/meta.json`, 'utf8'));
+for (const slug of Object.keys(lifecycleMatrices)) {
+  if (!meta[slug]) throw new Error(`lifecycle matrix has no component metadata: ${slug}`);
+}
 const usage = loadUsage(path.join(S, 'usage'), Object.keys(meta));
 const contentDir = path.join(HERE, '../content/docs');
 
@@ -174,6 +179,7 @@ for (const [slug, entry] of Object.entries(meta)) {
   const c = api[slug];
   if (!c) { console.error('missing api for', slug); continue; }
   const u = usage[slug] ?? {};
+  const lifecycle = lifecycleMatrices[slug];
 
   const parts = c.parts.length ? c.parts.map((p) => `${name}.${p}`) : [];
   // A single string here would spread character by character (`"useState"` →
@@ -296,6 +302,19 @@ ${u.versions.map((v) => [
   demoMedia(v),
   `\n\n\`\`\`tsx\n${v.code}\n\`\`\``,
 ].join('')).join('\n\n')}`);
+  }
+
+  if (lifecycle) {
+    const evidence = lifecycle.evidence
+      .map((item) => `${inlineCode(item.file)} (${item.tests.length} tests)`)
+      .join(', ');
+    sections.push(`## Lifecycle contract
+
+| Case | Contract |
+| --- | --- |
+${LIFECYCLE_CASES.map((key) => `| ${key} | ${esc(lifecycle.cases[key])} |`).join('\n')}
+
+Executable evidence: ${evidence}.`);
   }
 
   /*

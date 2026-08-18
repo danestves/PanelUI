@@ -17,6 +17,8 @@ const load13 = () => import('./demos/chunk-13');
 const load14 = () => import('./demos/chunk-14');
 
 const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
+  'ai-input': () =>
+    load10().then((module) => module.ENTRIES_BY_SLUG['ai-input']),
   accordion: () =>
     load01().then((module) => module.ENTRIES_BY_SLUG['accordion']),
   alert: () => load01().then((module) => module.ENTRIES_BY_SLUG['alert']),

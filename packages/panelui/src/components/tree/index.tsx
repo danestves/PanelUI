@@ -286,10 +286,10 @@ const TreeRoot = forwardRef<View, TreeProps>(
       <TreeContext.Provider value={context}>
         <Animated.View
           ref={ref}
+          {...props}
           layout={LinearTransition.duration(TRANSITION_DURATION)}
           accessibilityRole="list"
           className={root({ className })}
-          {...props}
         >
           {children}
         </Animated.View>
@@ -394,6 +394,7 @@ const TreeTrigger = forwardRef<View, TreeTriggerProps>(
     return (
       <Pressable
         ref={ref}
+        {...props}
         accessibilityRole="button"
         accessibilityState={{
           expanded: isBranch ? isExpanded : undefined,
@@ -403,7 +404,6 @@ const TreeTrigger = forwardRef<View, TreeTriggerProps>(
         aria-level={level + 1}
         disabled={triggerDisabled}
         className={trigger({ className })}
-        {...props}
         onPress={handlePress}
       >
         <IconColorProvider color={isSelected ? selectedColor : undefined}>

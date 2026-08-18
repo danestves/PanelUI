@@ -15,10 +15,11 @@
  * ## How it loops
  *
  * The content is measured once, then laid out end to end enough times to cover
- * the container twice over. One track holds every copy and it is that track,
- * not the copies, that moves — a single animated node for any amount of
- * content. It travels exactly one copy-and-gap and starts over, so the state it
- * ends on is the state it began on and the seam never shows.
+ * the container. One track holds every copy and it is that track, not the
+ * copies, that moves. The track has a fixed copy budget: exceptionally short
+ * content gets extra whitespace instead of multiplying its React subtree
+ * hundreds of times. It travels exactly one layout period and starts over, so
+ * the state it ends on is the state it began on and the seam never shows.
  *
  * The travel is a linear timing driven on the UI thread, so it costs nothing
  * per frame in JavaScript and keeps running while the thread is busy.
@@ -43,8 +44,10 @@
  * Screen readers get one copy. The rest are duplicates of content already
  * announced, and hearing a sponsor list four times over is not thoroughness.
  */
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
 import {
+  Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -61,6 +64,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useDirectionSign } from '../../hooks/use-direction';
+import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import {
   DEFAULT_MARQUEE_SPEED,
@@ -69,6 +73,9 @@ import {
 } from './marquee-math';
 
 export type MarqueeDirection = 'horizontal' | 'vertical';
+
+type InertViewProps = ViewProps & { inert?: boolean };
+const InertView = View as ComponentType<InertViewProps>;
 
 export interface MarqueeProps extends Omit<ViewProps, 'children'> {
   className?: string;
@@ -81,7 +88,7 @@ export interface MarqueeProps extends Omit<ViewProps, 'children'> {
    * rather than moving faster.
    */
   speed?: number;
-  /** Gap between the end of one copy and the start of the next. */
+  /** Minimum gap between the end of one copy and the start of the next. */
   spacing?: number;
   /** Axis the content travels along. */
   direction?: MarqueeDirection;
@@ -92,6 +99,14 @@ export interface MarqueeProps extends Omit<ViewProps, 'children'> {
   reverse?: boolean;
   /** Set false to hold the content where it is. */
   playing?: boolean;
+  /** Show the built-in user pause/play control while motion is enabled. */
+  showPauseControl?: boolean;
+  /** Visible and spoken label for the moving state. */
+  pauseLabel?: string;
+  /** Visible and spoken label for the user-paused state. */
+  playLabel?: string;
+  /** Reports changes made by the built-in control. */
+  onPlayingChange?: (playing: boolean) => void;
 }
 
 export function Marquee({
@@ -102,6 +117,10 @@ export function Marquee({
   direction = 'horizontal',
   reverse = false,
   playing = true,
+  showPauseControl = true,
+  pauseLabel = 'Pause',
+  playLabel = 'Play',
+  onPlayingChange,
   style,
   onLayout,
   ...props
@@ -114,7 +133,9 @@ export function Marquee({
 
   const [viewport, setViewport] = useState(0);
   const [content, setContent] = useState(0);
+  const [userPaused, setUserPaused] = useState(false);
   const speed = normalizeMarqueeSpeed(speedProp);
+  const moving = playing && !userPaused;
 
   // The distance from one copy to the same point on the next, and therefore
   // both the layout step and the exact loop length. They are the same number
@@ -136,7 +157,7 @@ export function Marquee({
   useEffect(() => {
     cancelAnimation(offset);
     offset.value = 0;
-    if (reducedMotion || !playing || period <= 0 || speed <= 0) return undefined;
+    if (reducedMotion || !moving || period <= 0 || speed <= 0) return undefined;
     offset.value = withRepeat(
       withTiming(period, {
         duration: (period / speed) * 1000,
@@ -146,7 +167,7 @@ export function Marquee({
       false
     );
     return () => cancelAnimation(offset);
-  }, [offset, period, playing, reducedMotion, speed]);
+  }, [offset, period, moving, reducedMotion, speed]);
 
   const trackStyle = useAnimatedStyle(() => {
     const travel = (reverse ? offset.value : -offset.value) * flip;
@@ -200,7 +221,12 @@ export function Marquee({
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
-        <View onLayout={onContentLayout}>{children}</View>
+        <InertView
+          inert={Platform.OS === 'web' ? true : undefined}
+          onLayout={onContentLayout}
+        >
+          {children}
+        </InertView>
       </ScrollView>
 
       <Animated.View style={[StyleSheet.absoluteFill, trackStyle]} pointerEvents="box-none">
@@ -210,18 +236,36 @@ export function Marquee({
           const spoken = index === 1;
           const at = (index - 1) * period;
           return (
-            <View
+            <InertView
               key={index}
               style={[styles.copy, horizontal ? { left: at } : { top: at }]}
-              pointerEvents="box-none"
+              pointerEvents={spoken ? 'box-none' : 'none'}
+              inert={Platform.OS === 'web' && !spoken ? true : undefined}
+              aria-hidden={!spoken}
               accessibilityElementsHidden={!spoken}
               importantForAccessibility={spoken ? 'auto' : 'no-hide-descendants'}
             >
               {children}
-            </View>
+            </InertView>
           );
         })}
       </Animated.View>
+      {showPauseControl && playing && period > 0 && speed > 0 ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={userPaused ? playLabel : pauseLabel}
+          className="absolute bottom-2 end-2 min-h-12 min-w-12 items-center justify-center rounded-full border border-border bg-background/95 px-3"
+          onPress={() => {
+            const next = !userPaused;
+            setUserPaused(next);
+            onPlayingChange?.(!next);
+          }}
+        >
+          <Text className="text-xs font-medium text-foreground">
+            {userPaused ? playLabel : pauseLabel}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

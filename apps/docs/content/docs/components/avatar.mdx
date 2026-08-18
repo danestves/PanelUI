@@ -199,6 +199,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+When an image fails, Avatar shows the fallback for that exact source. Changing the URI, request headers, or asset retries with the new source; a consumer `imageProps.onError` is called after the fallback state is secured.
+
 A plain avatar renders as one clipped node. Adding children wraps it in an unclipped container so a corner badge is not cut in half by the circular mask.
 
 `Avatar.Group` keeps people in the order they were written and exposes each visible person, followed by the `+N` overflow summary, as a list item. Explicit stacking order puts the first face on top without reversing assistive-technology traversal. This logical order is preserved in both LTR and RTL layouts.

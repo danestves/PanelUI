@@ -20,12 +20,11 @@ test('a horizontal column is focused, not merely faded', () => {
   assert.match(column.slice(0, 500), /translateY: away \* 4/);
 });
 
-test('the body recedes further than the rail it hangs under', () => {
-  const body = source.slice(source.indexOf('const bodyStyle = useAnimatedStyle'));
-  assert.match(body.slice(0, 400), /\[1, 0\.3\], 'clamp'/);
-
-  // Both curves are dropped under reduce motion rather than only one.
-  assert.match(body.slice(0, 400), /if \(!horizontal \|\| !animate\) return \{ opacity: 1 \}/);
+test('the body stays opaque while the column focus transform moves', () => {
+  assert.doesNotMatch(source, /const bodyStyle = useAnimatedStyle/);
+  const horizontalBody = source.slice(source.indexOf("if (!horizontal)"), source.indexOf("TimelineContent.displayName"));
+  assert.match(horizontalBody, /<Animated\.View[\s\S]*style=\{style\}/);
+  assert.doesNotMatch(horizontalBody, /opacity/);
 });
 
 test('a column hands its geometry down instead of being measured twice', () => {
