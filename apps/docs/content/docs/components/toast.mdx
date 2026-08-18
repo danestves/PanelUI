@@ -119,6 +119,22 @@ toast({
 });
 ```
 
+## Lifecycle contract
+
+| Case | Contract |
+| --- | --- |
+| default initialization | A toast begins with its complete visible-time duration. |
+| controlled acceptance | Not applicable: the toast store owns entries rather than accepting a value prop. |
+| controlled rejection | Not applicable: dismiss requests mutate the owning store directly. |
+| external reset | Clearing or replacing the viewport does not spend background time. |
+| disabled path | Inactive AppState and an unmounted viewport pause every countdown. |
+| prop replacement | Duration is captured per toast; viewport lifecycle changes preserve remaining time. |
+| unmount cleanup | Viewport release pauses timers and removes AppState ownership. |
+| reduced motion | Not applicable to countdown ownership; visual transitions own motion separately. |
+| callback counts | Each timer fires dismissal once after its complete foreground-visible duration. |
+
+Executable evidence: `packages/panelui/test/toast-timer-lifecycle.test.mjs` (3 tests).
+
 ## Variants
 
 ### `variant`

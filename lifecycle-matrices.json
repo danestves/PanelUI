@@ -1,0 +1,58 @@
+{
+  "carousel": {
+    "evidence": [{ "file": "packages/panelui/test/carousel-lifecycle.test.mjs", "tests": ["indices clamp or wrap consistently when the slide count shrinks", "an invalid controlled index is rendered safely and reported once", "autoplay stops at the terminal index and re-arms after lifecycle changes", "a move already under way is not re-animated when it echoes back"] }],
+    "cases": {
+      "default initialization": "defaultIndex owns the initial uncontrolled request until the child count is known.",
+      "controlled acceptance": "A requested index renders only after the owner supplies it.",
+      "controlled rejection": "A rejected request returns to the accepted prop without restarting its spring.",
+      "external reset": "A new owner index renders without being reported as a user request.",
+      "disabled path": "scrollEnabled disables gestures; imperative and explicit controls remain available.",
+      "prop replacement": "Count, loop, interval, and index changes normalize and re-arm from accepted state.",
+      "unmount cleanup": "Autoplay owns one timeout and its effect cleanup cancels it.",
+      "reduced motion": "Accepted movement writes progress immediately instead of starting a spring.",
+      "callback counts": "Invalid controlled corrections report once per request/count/loop identity."
+    }
+  },
+  "planner": {
+    "evidence": [{ "file": "packages/panelui/test/planner-lifecycle.test.mjs", "tests": ["a controlled month changes only after its parent accepts the request", "an equivalent controlled Date preserves the settled month identity", "an uncontrolled month commits locally and reports one normalized request", "controlled selection supports rejected requests and external resets", "uncontrolled selection commits child updates including close"] }],
+    "cases": {
+      "default initialization": "defaultMonth and defaultSelected initialize their uncontrolled owners once.",
+      "controlled acceptance": "Month and selection requests render after their owner supplies them.",
+      "controlled rejection": "Rejected requests leave the accepted month and selection visible.",
+      "external reset": "Owner month, selection, and null resets render without request callbacks.",
+      "disabled path": "Not applicable: Planner has no root disabled contract; consumers disable actions individually.",
+      "prop replacement": "Equivalent Date instances retain semantic month identity; distinct instants replace it.",
+      "unmount cleanup": "Lifecycle hooks retain no timers or subscriptions; today refresh owns separate cleanup.",
+      "reduced motion": "Not applicable: lifecycle state commits do not animate.",
+      "callback counts": "Each normalized request reports once; prop acceptance and reset report zero times."
+    }
+  },
+  "live-line-chart": {
+    "evidence": [{ "file": "packages/panelui/test/live-line-lifecycle.test.mjs", "tests": ["the bounded buffer orders, repairs, filters, and trims controlled data", "controlled replacement and maxPoints shrink reconcile the active reading", "the clock only owns frames while foregrounded and visibly live", "runtime cleans up app and tooltip lifecycle ownership"] }],
+    "cases": {
+      "default initialization": "An empty input starts with a finite empty domain and no active reading.",
+      "controlled acceptance": "The data prop is authoritative; normalized finite readings are rendered.",
+      "controlled rejection": "Not applicable: the chart emits no data mutation requests.",
+      "external reset": "Replacing data reconciles or clears the selected timestamp.",
+      "disabled path": "paused and inactive AppState both stop frame ownership.",
+      "prop replacement": "data, maxPoints, window, motion, pause, and tooltip changes are reconciled.",
+      "unmount cleanup": "Animation frames and AppState listeners are released; Tooltip removal clears selection.",
+      "reduced motion": "The live clock owns no frames while reduced motion is active.",
+      "callback counts": "Selection callbacks follow only accepted finite readings."
+    }
+  },
+  "toast": {
+    "evidence": [{ "file": "packages/panelui/test/toast-timer-lifecycle.test.mjs", "tests": ["toast durations exclude time spent with timers paused", "toasts created while paused wait for the viewport to resume", "ToastViewport connects the timer lifecycle to AppState"] }],
+    "cases": {
+      "default initialization": "A toast begins with its complete visible-time duration.",
+      "controlled acceptance": "Not applicable: the toast store owns entries rather than accepting a value prop.",
+      "controlled rejection": "Not applicable: dismiss requests mutate the owning store directly.",
+      "external reset": "Clearing or replacing the viewport does not spend background time.",
+      "disabled path": "Inactive AppState and an unmounted viewport pause every countdown.",
+      "prop replacement": "Duration is captured per toast; viewport lifecycle changes preserve remaining time.",
+      "unmount cleanup": "Viewport release pauses timers and removes AppState ownership.",
+      "reduced motion": "Not applicable to countdown ownership; visual transitions own motion separately.",
+      "callback counts": "Each timer fires dismissal once after its complete foreground-visible duration."
+    }
+  }
+}
