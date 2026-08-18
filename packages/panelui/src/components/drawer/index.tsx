@@ -66,14 +66,11 @@ import {
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
   SlideInDown,
   SlideInLeft,
   SlideInRight,
   SlideInUp,
-  SlideOutDown,
-  SlideOutLeft,
-  SlideOutRight,
-  SlideOutUp,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -96,6 +93,9 @@ import {
 import { cn } from '../../utils/cn';
 
 const SPRING = { damping: 24, stiffness: 300, mass: 0.7 } as const;
+/** How long the panel takes to leave, whether by a drag or a press. */
+const EXIT_DURATION = 200;
+
 /** How far a drag has to travel outward before releasing it dismisses. */
 const DISMISS_DISTANCE = 80;
 /** A flick this fast dismisses regardless of how far it got. */
@@ -375,9 +375,11 @@ function DrawerContent({
         const velocity =
           (horizontal ? event.velocityX : event.velocityY) * outward;
         if (travel.value > DISMISS_DISTANCE || velocity > DISMISS_VELOCITY) {
-          travel.value = withTiming(extent, { duration: 180 }, (finished) => {
-            if (finished) runOnJS(close)();
-          });
+          // Straight to the exit, without finishing the slide first. The exit
+          // starts from wherever `travel` is and carries it the rest of the
+          // way, so driving it to `extent` here would be the same distance
+          // animated twice.
+          runOnJS(close)();
         } else {
           travel.value = withSpring(0, SPRING);
         }
@@ -433,12 +435,38 @@ function DrawerContent({
     bottom: SlideInDown,
   }[physical];
 
-  const exiting = {
-    left: SlideOutLeft,
-    right: SlideOutRight,
-    top: SlideOutUp,
-    bottom: SlideOutDown,
-  }[physical];
+  /*
+   * The slide out is written by hand, because the panel is not always at rest
+   * when it starts.
+   *
+   * A preset animates from the view's *layout* position and applies its own
+   * transform, which overrides the one the drag was already using. So a
+   * swipe-dismiss played twice: the gesture carried the panel off-screen, and
+   * then the exit put it back at zero and slid it out again. Seeding the
+   * initial transform from `travel` makes the two one animation — the exit
+   * picks the panel up wherever the finger left it and carries it the rest of
+   * the way. A press on the close button or the backdrop leaves `travel` at
+   * zero, so that path is the same slide it always was.
+   */
+  const exiting = useCallback(() => {
+    'worklet';
+    const shift = extent * outward;
+    const from = travel.value * outward;
+    const timing = { duration: EXIT_DURATION, easing: Easing.out(Easing.quad) };
+
+    return {
+      initialValues: {
+        transform: horizontal
+          ? [{ translateX: from }, { translateY: 0 }]
+          : [{ translateX: 0 }, { translateY: from }],
+      },
+      animations: {
+        transform: horizontal
+          ? [{ translateX: withTiming(shift, timing) }, { translateY: 0 }]
+          : [{ translateX: 0 }, { translateY: withTiming(shift, timing) }],
+      },
+    };
+  }, [extent, horizontal, outward, travel]);
 
   /*
    * The inset and the panel's own padding stack rather than compete.
@@ -499,7 +527,7 @@ function DrawerContent({
                   .damping(24)
                   .stiffness(260)
                   .mass(0.7)}
-                exiting={exiting.duration(200)}
+                exiting={exiting}
                 accessibilityViewIsModal
                 className={panelVariants({ side, className })}
                 {...props}

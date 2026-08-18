@@ -370,7 +370,7 @@ By default the corner *away* from the docked edge, so an `end` drawer's button s
 
 ### Dismissing it
 
-A tap on the backdrop, a drag back toward the docked edge, the corner close button, `Drawer.Close`, or the Android back button. Turn the first two off with `dismissible={false}` and `swipeToDismiss={false}` — turn off `swipeToDismiss` when the content wants the same axis, such as a horizontal scroller in a side drawer.
+A tap on the backdrop, a drag back toward the docked edge, the corner close button, `Drawer.Close`, or the Android back button. A dismissing drag does not spring the panel back to the edge first — the exit picks it up wherever the finger left it and carries it the rest of the way, so every route out is the same single slide. Turn the first two off with `dismissible={false}` and `swipeToDismiss={false}` — turn off `swipeToDismiss` when the content wants the same axis, such as a horizontal scroller in a side drawer.
 
 ### Drawer or BottomSheet
 
