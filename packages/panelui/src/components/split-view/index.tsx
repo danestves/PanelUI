@@ -56,10 +56,10 @@ import {
   DEFAULT_MIN_HEIGHT,
   clamp,
   nearestSnapIndex,
-  normalizeSnapIndex,
   resolveLength,
   resolveSnapPoints,
 } from './split-view-math';
+import { useSplitViewIndexLifecycle } from './split-view-lifecycle';
 
 /** Settles the pane onto a snap point without overshooting past its limits. */
 const SPRING = {
@@ -189,14 +189,16 @@ function SplitViewRoot({
     [pointsKey]
   );
 
-  const controlled = snapIndexProp !== undefined;
-  const [internalIndex, setInternalIndex] = useState(() =>
-    normalizeSnapIndex(defaultSnapIndex, 1)
-  );
-  const snapIndex = normalizeSnapIndex(
-    controlled ? snapIndexProp : internalIndex,
-    points.length || 1
-  );
+  const {
+    index: snapIndex,
+    requestIndex,
+    requestToken,
+  } = useSplitViewIndexLifecycle({
+    snapIndex: snapIndexProp,
+    defaultSnapIndex,
+    count: points.length,
+    onSnapIndexChange,
+  });
 
   const onSnapRef = useRef(onSnap);
   onSnapRef.current = onSnap;
@@ -207,30 +209,15 @@ function SplitViewRoot({
   }, []);
 
   /*
-   * Moving the seam is one function whether a drag, a press or a screen reader
-   * asked for it — the alternative is three places that each have to remember
-   * to spring, to report, and to leave a controlled caller's index alone.
+   * Every modality makes the same request. The synchronization effect below
+   * moves only to the index the owner accepts, then reports that settlement.
    */
   const moveTo = useCallback(
-    (index: number, options?: { animated?: boolean }) => {
-      const target = points[index];
-      if (target === undefined) return;
-
-      if (!controlled) setInternalIndex(index);
-      onSnapIndexChange?.(index);
-
-      const finish = () => report(index, target);
-      if (options?.animated === false || !animate) {
-        topHeight.value = target;
-        finish();
-        return;
-      }
-      topHeight.value = withSpring(target, SPRING, (finished) => {
-        'worklet';
-        if (finished) runOnJS(finish)();
-      });
+    (index: number) => {
+      if (points[index] === undefined) return;
+      requestIndex(index);
     },
-    [animate, controlled, onSnapIndexChange, points, report, topHeight]
+    [points, requestIndex]
   );
 
   const snapTo = useCallback((index: number) => moveTo(index), [moveTo]);
@@ -260,11 +247,15 @@ function SplitViewRoot({
       report(snapIndex, target);
       return;
     }
-    topHeight.value = withSpring(target, SPRING);
+    const finish = () => report(snapIndex, target);
+    topHeight.value = withSpring(target, SPRING, (finished) => {
+      'worklet';
+      if (finished) runOnJS(finish)();
+    });
     // Only when the resolved layout moves — a re-render that changes nothing
     // must not restart a spring the reader is watching.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points, snapIndex, animate, animateOnMount]);
+  }, [points, snapIndex, animate, animateOnMount, requestToken]);
 
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
