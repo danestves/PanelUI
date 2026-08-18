@@ -1053,13 +1053,7 @@ function SheetDemo() {
         <AIInput native avoidKeyboard={false}>
           <AIInput.Field placeholder="Chat with the model" />
           <AIInput.Toolbar>
-            {/*
-             * Drawn, not handed to the platform: this is the demo's only way
-             * back into the sheet, so it is the one control here that has to
-             * respond whether or not the native toolkit is in the build.
-             */}
             <AIInput.Action
-              native={false}
               label="Add to chat"
               icon={<PlusIcon size={17} />}
               onPress={() => setOpen(true)}

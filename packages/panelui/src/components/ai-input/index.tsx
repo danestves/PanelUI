@@ -119,20 +119,19 @@ const RADIUS = { sm: 22, md: 26, lg: 30 } as const;
 const CONTROL = { sm: 26, md: 30, lg: 34 } as const;
 
 /**
- * Room the toolbar keeps around its controls: the trailing button is a little
- * larger than the rest, and the row stands off the bottom of the card.
- */
-const TOOLBAR_ROOM = 10;
-
-/**
- * The row a platform-drawn control needs.
+ * The row a platform-drawn control needs, and the space kept under it.
  *
- * A native icon button is given a 44pt frame by `Button` — the number that
- * ends the measurement chain rather than one that sets a look — so a row
- * shorter than that is a row its buttons hang out of, over whatever is above
- * them. The drawn controls are smaller and fit inside it either way.
+ * `Button` frames a native icon button at 44pt — the number that ends the
+ * measurement chain rather than one that sets a look. A row shorter than that
+ * is a row its controls hang out of, over whatever is above them, and a row
+ * with no definite height at all is one they never lay out against: a hosted
+ * view only measures where something above it is fixed on both axes.
+ *
+ * The drawn controls are smaller and are laid out by the row itself, so this
+ * applies only when the controls have been handed over.
  */
-const NATIVE_TOOLBAR_HEIGHT = 48;
+const NATIVE_ROW_HEIGHT = 48;
+const NATIVE_ROW_FOOT = 4;
 
 const EASE = Easing.out(Easing.cubic);
 const HEIGHT_DURATION = 240;
@@ -170,10 +169,10 @@ const aiInputVariants = tv({
      * the middle of it.
      */
     row: 'w-full flex-row items-center gap-1.5 p-2',
-    toolbar: 'w-full flex-row items-center gap-2 px-2',
+    toolbar: 'w-full flex-row items-center gap-2 px-2 pb-2',
     spacer: 'flex-1',
     pill: 'flex-row items-center gap-1.5 px-3',
-    recording: 'w-full flex-row items-center gap-3 px-2 pb-2.5',
+    recording: 'w-full flex-row items-center gap-3 px-2 pb-2',
     meter: 'flex-1',
   },
   variants: {
@@ -606,27 +605,15 @@ export interface AIInputToolbarProps extends ViewProps {
 function AIInputToolbar({ className, children, style, ...props }: AIInputToolbarProps) {
   const { size, native } = useAIInput('AIInput.Toolbar');
   const slots = aiInputVariants({ size });
-  const height = native
-    ? NATIVE_TOOLBAR_HEIGHT
-    : CONTROL[size] + TOOLBAR_ROOM;
   return (
     <View
       {...props}
       accessibilityRole="toolbar"
       className={slots.toolbar({ className })}
-      /*
-       * A definite height, not one derived from the tallest child.
-       *
-       * A control handed to the platform is hosted, and a hosted view only
-       * measures where something above it is fixed on both axes. Several of
-       * them in a row inside a card that is itself sizing to its content gives
-       * the platform a box nothing has agreed on yet, and each one lays out
-       * against its own intrinsic size instead — which is a row of buttons
-       * scattered over the field above it.
-       *
-       * The controls are a known size, so the row they sit in can be too.
-       */
-      style={[{ height }, style]}
+      style={[
+        native ? { height: NATIVE_ROW_HEIGHT, paddingBottom: NATIVE_ROW_FOOT } : null,
+        style,
+      ]}
     >
       {children}
     </View>
@@ -1000,7 +987,7 @@ function AIInputRecording({
       <View
         {...props}
         className={slots.recording({ className })}
-        style={{ height: NATIVE_TOOLBAR_HEIGHT }}
+        style={{ height: NATIVE_ROW_HEIGHT, paddingBottom: NATIVE_ROW_FOOT }}
       >
         <Button
           native
@@ -1028,11 +1015,7 @@ function AIInputRecording({
   }
 
   return (
-    <View
-      {...props}
-      className={slots.recording({ className })}
-      style={{ height: isNative ? NATIVE_TOOLBAR_HEIGHT : control + TOOLBAR_ROOM }}
-    >
+    <View {...props} className={slots.recording({ className })}>
       <Glass
         variant="clear"
         radius={control / 2}

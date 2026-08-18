@@ -115,9 +115,11 @@ The field still grows — it grows the row. Reach for it when the composer is al
 
 ### The platform's own controls
 
-`native` hands the toolbar's buttons to the platform, which draws them in its own material — Liquid Glass on iOS 26. The card behind them is still ours, and still glass.
+`native` hands a control to the platform, which draws it in its own material — Liquid Glass on iOS 26. The card behind it is still ours, and still glass.
 
-The platform owns their colour, metrics and shape while this is on, so `className` and the theme tokens stop reaching them. A pill with a `detail` or an `indicator` is drawn rather than handed over: only a plain string can go to a native button, because a hosted view inside one has no width anything can resolve.
+The platform owns their colour, metrics and shape while this is on, so `className` and the theme tokens stop reaching them, and the row they sit in takes the platform's height rather than the one our own controls would need.
+
+A pill with a `detail` or an `indicator` is drawn rather than handed over: only a plain string can go to a native button, because a hosted view inside one has no width anything can resolve.
 
 ```tsx
 <AIInput native value={value} onValueChange={setValue}>
@@ -482,7 +484,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 **Glass needs iOS 26.** Everywhere else the surfaces are solid, which is a finished look rather than a fallback. Nothing is faked on Android.
 
-**A `native` toolbar is a taller row.** The platform frames its icon buttons at 44pt, so the row grows to hold them — a shorter one is a row its buttons hang out of, over the field above. The drawn controls are smaller and sit inside it either way.
+**A `native` row is the platform's height, not ours.** A control handed over is hosted, and a hosted view only lays out where something above it is fixed on both axes. The platform frames its icon buttons at 44pt, so a row carrying them takes a definite height of its own — a shorter row is one its controls hang out of, over the field above them. The drawn controls are smaller and are laid out by the row itself, so this applies only once `native` is on.
 
 **`avoidKeyboard` is a component boundary, not a flag.** Turning it off means the keyboard hook is never called at all — calling it has global consequences, and a composer that was told not to avoid the keyboard must not impose that on every other screen.
 
