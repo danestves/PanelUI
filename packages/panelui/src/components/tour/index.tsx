@@ -74,6 +74,11 @@ import { Portal } from '../../primitives/portal';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { Button } from '../button';
+import {
+  currentTourCardHeight,
+  nextTourCardMeasurement,
+  type TourCardMeasurement,
+} from './tour-card-measurement';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -466,7 +471,10 @@ function TourOverlay({
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const [spot, setSpot] = useState<(Rect & { radius: number }) | null>(null);
-  const [cardHeight, setCardHeight] = useState<number | null>(null);
+  const [cardMeasurement, setCardMeasurement] = useState<TourCardMeasurement | null>(
+    null
+  );
+  const cardHeight = currentTourCardHeight(active, cardMeasurement);
 
   const stepPadding = active?.padding ?? padding;
   const stepRadius = active?.radius ?? radius;
@@ -570,8 +578,8 @@ function TourOverlay({
 
   const onCardLayout = (event: LayoutChangeEvent) => {
     const measured = event.nativeEvent.layout.height;
-    setCardHeight((current) =>
-      current !== null && Math.abs(current - measured) < 1 ? current : measured
+    setCardMeasurement((current) =>
+      nextTourCardMeasurement(active, measured, current)
     );
   };
 
