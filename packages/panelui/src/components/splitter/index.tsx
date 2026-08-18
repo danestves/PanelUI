@@ -465,7 +465,13 @@ function SplitterHandle({
   }, [boundary, commit, initial, layout]);
 
   const doubleTap = useMemo(
-    () => Gesture.Tap().numberOfTaps(2).enabled(!frozen && boundary >= 0).onEnd(() => runOnJS(reset)()),
+    () =>
+      Gesture.Tap()
+        .numberOfTaps(2)
+        .enabled(!frozen && boundary >= 0)
+        .onEnd((_event, success) => {
+          if (success) runOnJS(reset)();
+        }),
     [boundary, frozen, reset]
   );
 
