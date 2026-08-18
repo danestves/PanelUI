@@ -43,12 +43,12 @@ test('SearchBar debounces the query without debouncing the field', async () => {
   // The callback is read through a ref, so an inline arrow function does not
   // restart the timer on every render and push the pause out forever.
   assert.match(source, /const debouncedRef = useRef\(onDebouncedChange\)/);
-  assert.match(source, /debouncedRef\.current\?\.\(text\)/);
-  assert.match(source, /return \(\) => clearTimeout\(timer\)/);
+  assert.match(source, /scheduleSearchBarDebounce\(debounceTimerRef, debouncedRef\.current, text, debounce\)/);
+  assert.match(source, /cancelSearchBarDebounce\(debounceTimerRef\)/);
 
   // Submitting spends the pending pause rather than waiting it out.
   const submit = source.slice(source.indexOf('const handleSubmit'));
-  assert.match(submit.slice(0, 400), /debouncedRef\.current\?\.\(text\)[\s\S]*onSubmit\?\.\(text\)/);
+  assert.match(submit.slice(0, 500), /flushSearchBarDebounce\(debounceTimerRef, debouncedRef\.current, text\)[\s\S]*onSubmit\?\.\(text\)/);
 });
 
 test('the Cancel button is measured once and animated on the UI thread', async () => {

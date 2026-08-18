@@ -70,6 +70,12 @@ import { AnimatedPressable } from '../../primitives/animated-pressable';
 import { Text } from '../../primitives/text';
 import { Input, type InputProps } from '../input';
 import { Spinner } from '../spinner';
+import {
+  cancelSearchBarDebounce,
+  flushSearchBarDebounce,
+  scheduleSearchBarDebounce,
+  type SearchBarDebounceTimer,
+} from './search-bar-debounce';
 
 /** Matches the field's own focus crossfade, so the row settles as one thing. */
 const CANCEL_DURATION = 180;
@@ -251,6 +257,7 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(
      * render and push the pause out forever.
      */
     const debouncedRef = useRef(onDebouncedChange);
+    const debounceTimerRef = useRef<SearchBarDebounceTimer['current']>(null);
     useEffect(() => {
       debouncedRef.current = onDebouncedChange;
     });
@@ -263,12 +270,10 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(
         settled.current = true;
         return;
       }
-      if (debounce <= 0) {
-        debouncedRef.current?.(text);
-        return;
-      }
-      const timer = setTimeout(() => debouncedRef.current?.(text), debounce);
-      return () => clearTimeout(timer);
+      scheduleSearchBarDebounce(debounceTimerRef, debouncedRef.current, text, debounce);
+      return () => {
+        cancelSearchBarDebounce(debounceTimerRef);
+      };
     }, [text, debounce]);
 
     const handleFocus = useCallback<NonNullable<InputProps['onFocus']>>(
@@ -291,7 +296,7 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(
       (event: NativeSyntheticEvent<TextInputSubmitEditingEventData>) => {
         // A return key is somebody saying they are done waiting, so the
         // pending pause is spent rather than waited out.
-        debouncedRef.current?.(text);
+        flushSearchBarDebounce(debounceTimerRef, debouncedRef.current, text);
         onSubmit?.(text);
         onSubmitEditing?.(event);
       },
