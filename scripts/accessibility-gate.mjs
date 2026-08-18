@@ -96,6 +96,12 @@ export const ACCESSIBILITY_SUITES = [
     count: 4,
     anchor: 'horizontal tabs wrap and support Home and End without consuming vertical keys',
   },
+  {
+    class: 'native-journeys',
+    file: 'test/accessibility-native-journeys.test.mjs',
+    count: 3,
+    anchor: 'native accessibility journeys cover the bounded release matrix',
+  },
 ];
 
 export const REQUIRED_CLASSES = [
@@ -108,6 +114,7 @@ export const REQUIRED_CLASSES = [
   'chart-semantics',
   'accessible-actions',
   'web-keyboard',
+  'native-journeys',
 ];
 
 export const CHECKLIST = 'docs/accessibility-release-checklist.md';
@@ -116,6 +123,7 @@ export const CHECKLIST_SECTIONS = [
   '## VoiceOver — iOS',
   '## TalkBack — Android',
   '## Keyboard — web',
+  '## Native journey receipts',
   '## Sign-off',
 ];
 
