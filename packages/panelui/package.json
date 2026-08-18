@@ -90,7 +90,8 @@
     "clean": "rm -rf lib",
     "verify:package": "node scripts/verify-package.mjs",
     "generate:subpaths": "node scripts/generate-subpath-exports.mjs --write",
-    "check:subpaths": "node scripts/generate-subpath-exports.mjs"
+    "check:subpaths": "node scripts/generate-subpath-exports.mjs",
+    "benchmark:components": "node --experimental-strip-types scripts/benchmark-component-scale.mjs"
   },
   "keywords": [
     "react-native",
