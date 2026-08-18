@@ -1034,6 +1034,14 @@ export {
 } from './components/sortable';
 export { Spinner, type SpinnerProps } from './components/spinner';
 export {
+  Splitter,
+  type SplitterProps,
+  type SplitterPanelProps,
+  type SplitterHandleProps,
+  type SplitterOrientation,
+  type SplitterConstraint,
+} from './components/splitter';
+export {
   Steps,
   type StepsProps,
   type StepsItemProps,

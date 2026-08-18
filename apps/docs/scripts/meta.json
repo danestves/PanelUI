@@ -674,6 +674,15 @@
       "category": "feedback"
     }
   ],
+  "splitter": [
+    "Splitter",
+    "Panes that share a container, with a seam between them you can drag.",
+    "react native resizable split panes",
+    {
+      "addedIn": "0.74.0",
+      "category": "layout"
+    }
+  ],
   "tour": [
     "Tour",
     "A walkthrough that introduces a screen one control at a time.",

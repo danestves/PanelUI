@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-111 component modules. The **Docs** column is the path under
+112 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -91,6 +91,7 @@ remember is a guess.
 | `ScrollCanvas` | Image frame whose contents move as you scroll. | `components/scroll-canvas` |
 | `ScrollFade` | Fades the edges of a scroll container. | `components/scroll-fade` |
 | `Separator` | Horizontal or vertical rule between content, optionally labelled. | `components/separator` |
+| `Splitter` | Panes that share a container, with a seam between them you can drag. | `components/splitter` |
 | `Surface` | Elevated container with a variant ladder. | `components/surface` |
 | `Typography` | Semantic text presets. | `components/typography` |
 
@@ -145,7 +146,7 @@ remember is a guess.
 | Component | What it is | Docs |
 | --- | --- | --- |
 | `Attachment` | File row with upload states, built on Item. | `components/attachment` |
-| `Avatar` | User image with an initials fallback and an optional badge overlay. | `components/avatar` |
+| `Avatar` | User image with an initials fallback, a badge overlay, and a stack for a group of them. | `components/avatar` |
 | `Marquee` | Content that travels across its container on a loop. | `components/marquee` |
 | `Message` | Chat turn with avatar, bubble, header and footer. | `components/message` |
 | `MessageScroller` | Scroll behaviour a chat transcript needs. | `components/message-scroller` |

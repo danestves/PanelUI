@@ -91,6 +91,7 @@
     "soundwave",
     "sources",
     "spinner",
+    "splitter",
     "steps",
     "surface",
     "swipe",
@@ -114,16 +115,16 @@
     "waterfall-chart"
   ],
   "counts": {
-    "componentModules": 111,
-    "packageComponentExports": 111,
-    "documentedComponents": 111,
-    "exampleEntries": 111,
+    "componentModules": 112,
+    "packageComponentExports": 112,
+    "documentedComponents": 112,
+    "exampleEntries": 112,
     "registry": {
-      "componentItems": 111,
+      "componentItems": 112,
       "supportItems": 32,
-      "totalItems": 143,
+      "totalItems": 144,
       "byType": {
-        "registry:ui": 123,
+        "registry:ui": 124,
         "registry:hook": 12,
         "registry:lib": 7,
         "registry:theme": 1

@@ -72,7 +72,7 @@
     "kind": "ui",
     "group": "components",
     "stability": "stable",
-    "description": "User image with an initials fallback and an optional badge overlay.",
+    "description": "User image with an initials fallback, a badge overlay, and a stack for a group of them.",
     "registryDependencies": [
       "cn",
       "text"
@@ -1505,6 +1505,19 @@
     "description": "Indeterminate loading indicator.",
     "registryDependencies": [],
     "docsPath": "components/spinner"
+  },
+  {
+    "name": "splitter",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Panes that share a container, with a seam between them you can drag.",
+    "registryDependencies": [
+      "haptics",
+      "use-direction"
+    ],
+    "docsPath": "components/splitter"
   },
   {
     "name": "steps",

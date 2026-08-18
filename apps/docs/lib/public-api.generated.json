@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1106,
-    "values": 294,
-    "types": 812,
-    "modules": 136,
-    "components": 111,
+    "exports": 1113,
+    "values": 295,
+    "types": 818,
+    "modules": 137,
+    "components": 112,
     "hooks": 12
   },
   "groups": {
@@ -189,6 +189,10 @@
           },
           {
             "name": "AvatarBadgeProps",
+            "kind": "type"
+          },
+          {
+            "name": "AvatarGroupProps",
             "kind": "type"
           }
         ]
@@ -3736,6 +3740,37 @@
           },
           {
             "name": "SpinnerProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/splitter/index.tsx",
+        "slug": "splitter",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "Splitter",
+            "kind": "value"
+          },
+          {
+            "name": "SplitterProps",
+            "kind": "type"
+          },
+          {
+            "name": "SplitterPanelProps",
+            "kind": "type"
+          },
+          {
+            "name": "SplitterHandleProps",
+            "kind": "type"
+          },
+          {
+            "name": "SplitterOrientation",
+            "kind": "type"
+          },
+          {
+            "name": "SplitterConstraint",
             "kind": "type"
           }
         ]

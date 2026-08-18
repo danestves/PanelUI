@@ -1,0 +1,213 @@
+---
+title: Splitter
+description: Panes that share a container, with a seam between them you can drag.
+status: new
+---
+
+Two or more panes sharing one container, with a seam between them that can be dragged to change how the room is divided.
+
+Sizes are percentages of the splitter rather than points, so a layout dragged in portrait is still the same layout in landscape.
+
+The splitter has no size of its own along the axis it does not split. A horizontal one needs a height — `className="h-64"`, or a parent that gives it one — or it collapses to nothing and takes its panes with it.
+
+For a panel that comes in over the app instead of beside it, use [Drawer](/docs/components/drawer).
+
+## Installation
+
+Splitter ships with the library — no separate install.
+
+```tsx
+import { Splitter, Button, Text, View } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add splitter
+```
+
+## Usage
+
+```tsx
+<Splitter className="h-64" defaultLayout={[65, 35]}>
+  <Splitter.Panel minSize={30}>{list}</Splitter.Panel>
+  <Splitter.Handle />
+  <Splitter.Panel minSize={20}>{detail}</Splitter.Panel>
+</Splitter>
+```
+
+## Composition
+
+```tsx
+<Splitter>
+  <Splitter.Panel>…</Splitter.Panel>
+  <Splitter.Handle />
+  <Splitter.Panel>…</Splitter.Panel>
+</Splitter>
+```
+
+A handle takes no layout space — it is drawn over the seam the two panes already share. That is why the panes add up to exactly the container, and why the touch target can be 24 points wide without moving anything.
+
+## Examples
+
+### Two panes
+
+`defaultLayout` is one percentage per pane. `minSize` is the smallest share a pane may hold, so neither side can be dragged down to a sliver.
+
+```tsx
+<Splitter className="h-64 rounded-2xl border border-border" defaultLayout={[60, 40]}>
+  <Splitter.Panel minSize={25} className="bg-surface-secondary p-4">
+    <Text weight="medium">Inbox</Text>
+    <Text size="sm" muted>12 conversations</Text>
+  </Splitter.Panel>
+  <Splitter.Handle />
+  <Splitter.Panel minSize={25} className="p-4">
+    <Text weight="medium">Thread</Text>
+    <Text size="sm" muted>Pick a conversation to read it.</Text>
+  </Splitter.Panel>
+</Splitter>
+```
+
+### A pane that can be shut
+
+`collapsible` lets a drag past `minSize` shut the pane instead of stopping at it, and the snap only happens once the drag is more than halfway there — so a finger that grazes the minimum springs back. Double-tapping the seam puts the pair back where it started, which is the way out of a pane shut by accident.
+
+```tsx
+<Splitter className="h-64" defaultLayout={[30, 70]}>
+  <Splitter.Panel minSize={20} collapsible className="bg-surface-secondary">
+    {sidebar}
+  </Splitter.Panel>
+  <Splitter.Handle />
+  <Splitter.Panel minSize={40}>{content}</Splitter.Panel>
+</Splitter>
+```
+
+### Stacked panes
+
+`orientation="vertical"` splits the height instead of the width. Everything else is the same, including the percentages — they are shares of the splitter, whichever way it runs.
+
+```tsx
+<Splitter orientation="vertical" className="h-80" defaultLayout={[45, 55]}>
+  <Splitter.Panel minSize={20} className="p-4">
+    {preview}
+  </Splitter.Panel>
+  <Splitter.Handle />
+  <Splitter.Panel minSize={20} className="p-4">
+    {editor}
+  </Splitter.Panel>
+</Splitter>
+```
+
+### Three panes
+
+One handle per seam. A drag borrows from the pane on the other side of that seam and from nobody else, so the third pane keeps the width it was left at.
+
+```tsx
+<Splitter className="h-64" defaultLayout={[25, 50, 25]}>
+  <Splitter.Panel minSize={15}>{files}</Splitter.Panel>
+  <Splitter.Handle />
+  <Splitter.Panel minSize={30}>{editor}</Splitter.Panel>
+  <Splitter.Handle />
+  <Splitter.Panel minSize={15}>{outline}</Splitter.Panel>
+</Splitter>
+```
+
+### Keeping the layout
+
+`onLayoutChange` fires when a seam is let go, with the percentages to store. Passing `layout` back makes the splitter controlled — a seam that is let go then snaps to whatever that prop says, so a reset button is one call to `setLayout`.
+
+```tsx
+const [layout, setLayout] = useState([50, 50]);
+
+return (
+  <View className="w-full gap-3">
+    <Splitter className="h-56" layout={layout} onLayoutChange={setLayout}>
+      <Splitter.Panel minSize={20}>{left}</Splitter.Panel>
+      <Splitter.Handle />
+      <Splitter.Panel minSize={20}>{right}</Splitter.Panel>
+    </Splitter>
+    <Button variant="outline" onPress={() => setLayout([50, 50])}>
+      Even split
+    </Button>
+  </View>
+);
+```
+
+## Variants
+
+### `orientation`
+
+- `horizontal` *(default)*
+- `vertical`
+
+```tsx
+{/* Side by side. */}
+<Splitter className="h-64">
+  <Splitter.Panel>{left}</Splitter.Panel>
+  <Splitter.Handle />
+  <Splitter.Panel>{right}</Splitter.Panel>
+</Splitter>
+
+{/* Stacked. */}
+<Splitter orientation="vertical" className="h-64">
+  <Splitter.Panel>{top}</Splitter.Panel>
+  <Splitter.Handle />
+  <Splitter.Panel>{bottom}</Splitter.Panel>
+</Splitter>
+```
+
+## API Reference
+
+### Splitter
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `orientation` | `SplitterOrientation` | `'horizontal'` | Which way the panes are laid out. Defaults to `horizontal`. |
+| `layout` | `number[]` | — | Controlled layout, as one percentage per panel. Pair it with `onLayoutChange`: a seam that is let go snaps back to this unless the value moves with it. |
+| `defaultLayout` | `number[]` | — | Starting layout when uncontrolled, as one percentage per panel. Panels left out of it fall back to their own `defaultSize`, and then to an even share. |
+| `onLayoutChange` | `(layout: number[]) => void` | — | Called with the new layout once a seam is let go, or stepped. |
+| `disabled` | `boolean` | `false` | Freezes every seam. |
+| `step` | `number` | `5` | How far one accessibility step moves a seam, in percent. Defaults to `5`. |
+
+### Splitter.Panel
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `defaultSize` | `number` | — | Starting share of the splitter, in percent. Unsized panes split the rest. |
+| `minSize` | `number` | — | Smallest share this pane may hold while open, in percent. Defaults to `10`. |
+| `maxSize` | `number` | — | Largest share this pane may hold, in percent. Defaults to `100`. |
+| `collapsible` | `boolean` | — | Lets a drag past `minSize` shut the pane rather than stopping at it. |
+| `collapsedSize` | `number` | — | Share this pane holds while shut, in percent. Defaults to `0`. |
+
+### Splitter.Handle
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `disabled` | `boolean` | — | Freezes this seam on its own, leaving the others draggable. |
+| `withGrip` | `boolean` | `true` | Draws the grip in the middle of the seam. Defaults to `true`. |
+| `accessibilityLabel` | `string` | `'Resize panels'` | What a screen reader calls the seam. Defaults to "Resize panels". |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+Dragging runs on the UI thread and never round-trips through React. `onLayoutChange` therefore fires when the seam is let go, not on every frame — a layout that re-rendered sixty times a second is the one thing that would make this feel slow. Anything that has to follow the drag itself should be inside a pane, where it is laid out by the pane rather than by a state update.
+
+A seam is `adjustable` to a screen reader, with increment and decrement moving it `step` percent at a time, so the layout can be changed without a drag.
+
+Minimums that add up to more than 100 cannot all be honoured. Every pane is shrunk in proportion rather than the last one being pushed out of the container, which keeps the problem visible — but it is a layout nobody asked for, so keep the total under 100.
+
+Panes are sized by flex until the splitter has been measured, which is the first frame, and by measured points afterwards. The two agree, so there is nothing to see.
+
+For a pane that slides over the content rather than beside it, use [Drawer](/docs/components/drawer) or [BottomSheet](/docs/components/bottom-sheet). For a row that slides aside to reveal actions, use [Swipe](/docs/components/swipe).
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `Splitter`
+
+**Types:** `SplitterProps`, `SplitterPanelProps`, `SplitterHandleProps`, `SplitterOrientation`, `SplitterConstraint`
