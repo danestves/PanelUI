@@ -44,9 +44,10 @@ export const baseOptions: BaseLayoutProps = {
      * of the bar. So this link lives here and not in `links` below — moving it
      * back means moving it between the two, not flipping a flag.
      *
-     * It is deliberately not in `links`, which also means it is not in
-     * `menuItems` — the mobile menu would otherwise list it twice, since the
-     * notebook sidebar already renders the page tree it points at.
+     * It is deliberately not in the shared `links`, which also means it is not
+     * in the notebook's `menuItems` — that mobile menu would otherwise list it
+     * twice, since the sidebar already renders the page tree it points at. The
+     * home-only options below restore it where no page tree exists.
      *
      * `LayoutLink`, not `next/link`: this destination is repeated by the
      * persistent chrome, and the policy behind that wrapper is what stops every
@@ -95,6 +96,26 @@ export const baseOptions: BaseLayoutProps = {
       text: 'Get started',
       url: '/docs',
       secondary: true,
+    },
+  ],
+};
+
+/**
+ * The home layout has no docs page tree, so its mobile menu needs the
+ * Components destination that `nav.children` hides below the desktop
+ * breakpoint. Keep this menu-only: adding it to `baseOptions.links` would
+ * duplicate the same destination above the notebook page tree on mobile.
+ */
+export const homeOptions: BaseLayoutProps = {
+  ...baseOptions,
+  links: [
+    ...(baseOptions.links ?? []),
+    {
+      type: 'main',
+      text: 'Components',
+      url: '/docs/components',
+      active: 'nested-url',
+      on: 'menu',
     },
   ],
 };
