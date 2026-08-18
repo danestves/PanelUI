@@ -290,9 +290,9 @@ export interface TypographyListProps extends ViewProps {
  */
 const TypographyList = forwardRef<View, TypographyListProps>(
   ({ className, ordered = false, children, ...props }, ref) => (
-    <View ref={ref} accessibilityRole="list" className={cn('gap-2', className)} {...props}>
+    <View ref={ref} {...props} accessibilityRole="list" className={cn('gap-2', className)}>
       {Children.map(children, (child, index) => (
-        <View className="w-full flex-row gap-2">
+        <View role="listitem" className="w-full flex-row gap-2">
           {ordered ? (
             <Text className="text-base text-muted-foreground">{index + 1}.</Text>
           ) : (
