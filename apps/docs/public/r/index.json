@@ -588,6 +588,18 @@
     "docsPath": "charts/funnel-chart"
   },
   {
+    "name": "glass",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "The iOS system material, drawn where it exists and a solid surface everywhere else.",
+    "registryDependencies": [
+      "cn",
+      "scrim"
+    ]
+  },
+  {
     "name": "grid-item",
     "type": "registry:ui",
     "kind": "ui",

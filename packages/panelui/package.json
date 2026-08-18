@@ -132,6 +132,7 @@
     "expo-blur": ">=13.0.0",
     "expo-clipboard": ">=7.0.0",
     "expo-file-system": ">=17.0.0",
+    "expo-glass-effect": ">=57.0.0",
     "expo-haptics": ">=13.0.0",
     "expo-linear-gradient": ">=13.0.0",
     "expo-location": ">=18.0.0",
@@ -184,6 +185,9 @@
       "optional": true
     },
     "expo-file-system": {
+      "optional": true
+    },
+    "expo-glass-effect": {
       "optional": true
     },
     "expo-haptics": {
