@@ -137,3 +137,41 @@ test('the copied Splitter ships the layout arithmetic', async () => {
     /resizeLayout\(start\.value, boundary, delta, constraints\)/
   );
 });
+
+test('a drag wins the seam outright rather than queueing behind the double tap', async () => {
+  const source = await readFile(
+    new URL('../src/components/splitter/index.tsx', import.meta.url),
+    'utf8'
+  );
+
+  // The pan first. A race hands priority to whatever it is given first and
+  // makes the rest wait for that to fail — and a two-tap gesture only fails
+  // once its window expires, which parked every quick drag for half a second.
+  assert.match(source, /Gesture\.Race\(pan, doubleTap\)/);
+
+  // And the tap gives up on distance rather than only on that timer.
+  assert.match(source, /\.numberOfTaps\(2\)[\s\S]{0,240}?\.maxDistance\(/);
+
+  // A seam answers to the axis it splits, so a splitter inside a scroller
+  // leaves the scroll alone and a press across it can still fail the pan.
+  assert.match(source, /activeOffsetX\(\[-8, 8\]\)\.failOffsetY/);
+  assert.match(source, /activeOffsetY\(\[-8, 8\]\)\.failOffsetX/);
+});
+
+test('a horizontal splitter fills its width, and the seam is drawn over both panes', async () => {
+  const source = await readFile(
+    new URL('../src/components/splitter/index.tsx', import.meta.url),
+    'utf8'
+  );
+
+  // Without a width of its own a row asks its panes how wide they are, and a
+  // pane's width is a share of the answer — a circle that resolves to zero.
+  assert.match(source, /root: 'w-full flex-row'/);
+
+  // The seam is written between the panes, so the one after it paints on top
+  // and takes half its touch target unless the seam is lifted above both.
+  for (const handle of source.matchAll(/handle: '([^']*)'/g)) {
+    if (handle[1].includes('absolute')) continue;
+    assert.match(handle[1], /\bz-10\b/);
+  }
+});

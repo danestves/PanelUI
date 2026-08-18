@@ -870,18 +870,20 @@ export const ENTRIES: ComponentEntry[] = [
       {
         label: 'Two panes',
         render: () => (
-          <Splitter
-            className="h-56 overflow-hidden rounded-2xl border border-border"
-            defaultLayout={[60, 40]}
-          >
-            <Splitter.Panel minSize={25} className="bg-surface-secondary">
-              <Pane title="Inbox" body="12 conversations" />
-            </Splitter.Panel>
-            <Splitter.Handle />
-            <Splitter.Panel minSize={25}>
-              <Pane title="Thread" body="Pick a conversation to read it." />
-            </Splitter.Panel>
-          </Splitter>
+          <View className="w-full">
+            <Splitter
+              className="h-56 overflow-hidden rounded-2xl border border-border"
+              defaultLayout={[60, 40]}
+            >
+              <Splitter.Panel minSize={25} className="bg-surface-secondary">
+                <Pane title="Inbox" body="12 conversations" />
+              </Splitter.Panel>
+              <Splitter.Handle />
+              <Splitter.Panel minSize={25}>
+                <Pane title="Thread" body="Pick a conversation to read it." />
+              </Splitter.Panel>
+            </Splitter>
+          </View>
         ),
       },
       { label: 'A pane that can be shut', render: () => <SplitterCollapsibleDemo /> },
@@ -906,41 +908,45 @@ export const ENTRIES: ComponentEntry[] = [
       {
         label: 'Three panes',
         render: () => (
-          <Splitter
-            className="h-56 overflow-hidden rounded-2xl border border-border"
-            defaultLayout={[25, 50, 25]}
-          >
-            <Splitter.Panel minSize={15} className="bg-surface-secondary">
-              <Pane title="Files" body="8" />
-            </Splitter.Panel>
-            <Splitter.Handle />
-            <Splitter.Panel minSize={30}>
-              <Pane title="Editor" body="index.tsx" />
-            </Splitter.Panel>
-            <Splitter.Handle />
-            <Splitter.Panel minSize={15} className="bg-surface-secondary">
-              <Pane title="Outline" body="4 symbols" />
-            </Splitter.Panel>
-          </Splitter>
+          <View className="w-full">
+            <Splitter
+              className="h-56 overflow-hidden rounded-2xl border border-border"
+              defaultLayout={[25, 50, 25]}
+            >
+              <Splitter.Panel minSize={15} className="bg-surface-secondary">
+                <Pane title="Files" body="8" />
+              </Splitter.Panel>
+              <Splitter.Handle />
+              <Splitter.Panel minSize={30}>
+                <Pane title="Editor" body="index.tsx" />
+              </Splitter.Panel>
+              <Splitter.Handle />
+              <Splitter.Panel minSize={15} className="bg-surface-secondary">
+                <Pane title="Outline" body="4 symbols" />
+              </Splitter.Panel>
+            </Splitter>
+          </View>
         ),
       },
       { label: 'Keeping the layout', render: () => <SplitterControlledDemo /> },
       {
         label: 'Frozen',
         render: () => (
-          <Splitter
-            disabled
-            className="h-40 overflow-hidden rounded-2xl border border-border"
-            defaultLayout={[70, 30]}
-          >
-            <Splitter.Panel>
-              <Pane title="Fixed" body="The seam is frozen." />
-            </Splitter.Panel>
-            <Splitter.Handle />
-            <Splitter.Panel className="bg-surface-secondary">
-              <Pane title="Also fixed" body="" />
-            </Splitter.Panel>
-          </Splitter>
+          <View className="w-full">
+            <Splitter
+              disabled
+              className="h-40 overflow-hidden rounded-2xl border border-border"
+              defaultLayout={[70, 30]}
+            >
+              <Splitter.Panel>
+                <Pane title="Fixed" body="The seam is frozen." />
+              </Splitter.Panel>
+              <Splitter.Handle />
+              <Splitter.Panel className="bg-surface-secondary">
+                <Pane title="Also fixed" body="" />
+              </Splitter.Panel>
+            </Splitter>
+          </View>
         ),
       },
     ],

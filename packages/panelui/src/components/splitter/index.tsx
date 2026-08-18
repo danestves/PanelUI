@@ -82,14 +82,22 @@ const splitterVariants = tv({
   variants: {
     orientation: {
       horizontal: {
-        root: 'flex-row',
-        handle: 'bottom-0 start-0 top-0 w-6',
+        // `w-full`, because the panes are shares of a width the splitter has to
+        // already know. Left to size itself, a row asks its children how wide
+        // they are and the children answer with a share of that answer — a
+        // circle that resolves to zero and takes the whole splitter with it.
+        // Inside anything that centres its children, that is what happens.
+        root: 'w-full flex-row',
+        // Over the pane that follows it, not under. A seam is drawn between two
+        // panes but written between them too, and a later sibling paints on top
+        // — which left the outer half of every touch target dead.
+        handle: 'bottom-0 start-0 top-0 z-10 w-6',
         line: 'h-full w-px',
         grip: 'h-8 w-1',
       },
       vertical: {
         root: 'flex-col',
-        handle: 'end-0 start-0 top-0 h-6',
+        handle: 'end-0 start-0 top-0 z-10 h-6',
         line: 'h-px w-full',
         grip: 'h-1 w-8',
       },
@@ -393,57 +401,65 @@ function SplitterHandle({
   const collapsed = useSharedValue(false);
   const moved = useSharedValue(false);
 
-  const pan = useMemo(
-    () =>
-      Gesture.Pan()
-        .enabled(!frozen && boundary >= 0)
-        .onBegin(() => {
-          start.value = layout.value.slice();
-          moved.value = false;
-          const constraint = constraints[boundary];
-          collapsed.value = constraint
-            ? isCollapsed(layout.value[boundary] ?? 0, constraint)
-            : false;
-        })
-        .onUpdate((event) => {
-          if (available.value <= 0) return;
-          const travelled = horizontal ? event.translationX * sign : event.translationY;
-          const delta = (travelled / available.value) * 100;
-          const next = resizeLayout(start.value, boundary, delta, constraints);
-          moved.value = true;
-          layout.value = next;
+  const pan = useMemo(() => {
+    const gesture = Gesture.Pan()
+      .enabled(!frozen && boundary >= 0)
+      .onBegin(() => {
+        start.value = layout.value.slice();
+        moved.value = false;
+        const constraint = constraints[boundary];
+        collapsed.value = constraint
+          ? isCollapsed(layout.value[boundary] ?? 0, constraint)
+          : false;
+      })
+      .onUpdate((event) => {
+        if (available.value <= 0) return;
+        const travelled = horizontal ? event.translationX * sign : event.translationY;
+        const delta = (travelled / available.value) * 100;
+        const next = resizeLayout(start.value, boundary, delta, constraints);
+        moved.value = true;
+        layout.value = next;
 
-          // The one moment in a drag worth feeling: a pane arriving at shut, or
-          // leaving it. Both are a jump the finger did not make, so the tick is
-          // what says the jump was the control and not a stutter.
-          const constraint = constraints[boundary];
-          if (constraint) {
-            const shut = isCollapsed(next[boundary] ?? 0, constraint);
-            if (shut !== collapsed.value) {
-              collapsed.value = shut;
-              runOnJS(selectionTick)();
-            }
+        // The one moment in a drag worth feeling: a pane arriving at shut, or
+        // leaving it. Both are a jump the finger did not make, so the tick is
+        // what says the jump was the control and not a stutter.
+        const constraint = constraints[boundary];
+        if (constraint) {
+          const shut = isCollapsed(next[boundary] ?? 0, constraint);
+          if (shut !== collapsed.value) {
+            collapsed.value = shut;
+            runOnJS(selectionTick)();
           }
-        })
-        // A seam that was pressed and not moved has nothing to report, and a
-        // layout change nobody made is a re-render nobody asked for.
-        .onFinalize(() => {
-          if (moved.value) runOnJS(commit)(layout.value.slice());
-        }),
-    [
-      available,
-      boundary,
-      collapsed,
-      commit,
-      constraints,
-      frozen,
-      horizontal,
-      layout,
-      moved,
-      sign,
-      start,
-    ]
-  );
+        }
+      })
+      // A seam that was pressed and not moved has nothing to report, and a
+      // layout change nobody made is a re-render nobody asked for.
+      .onFinalize(() => {
+        if (moved.value) runOnJS(commit)(layout.value.slice());
+      });
+
+    /*
+     * A seam only answers to the axis it moves on. Without that it claims any
+     * movement at all — which is a splitter inside a scroller taking the
+     * scroll, and a drag with no way to fail, which is the one thing the double
+     * tap behind it is waiting for.
+     */
+    return horizontal
+      ? gesture.activeOffsetX([-8, 8]).failOffsetY([-16, 16])
+      : gesture.activeOffsetY([-8, 8]).failOffsetX([-16, 16]);
+  }, [
+    available,
+    boundary,
+    collapsed,
+    commit,
+    constraints,
+    frozen,
+    horizontal,
+    layout,
+    moved,
+    sign,
+    start,
+  ]);
 
   const { initial } = context;
   /**
@@ -468,6 +484,9 @@ function SplitterHandle({
     () =>
       Gesture.Tap()
         .numberOfTaps(2)
+        // A tap that has travelled this far is a drag, and saying so is what
+        // lets it give up on the movement rather than on a timer.
+        .maxDistance(HANDLE_THICKNESS / 2)
         .enabled(!frozen && boundary >= 0)
         .onEnd((_event, success) => {
           if (success) runOnJS(reset)();
@@ -475,7 +494,19 @@ function SplitterHandle({
     [boundary, frozen, reset]
   );
 
-  const gesture = useMemo(() => Gesture.Race(doubleTap, pan), [doubleTap, pan]);
+  /*
+   * The drag comes first, and the order is the whole of it.
+   *
+   * A race gives its first gesture the priority and makes the rest wait for it
+   * to fail. With the tap in front, every drag was held back until the tap gave
+   * up — which a two-tap gesture only does once its window has expired, half a
+   * second after the finger lands. A slow first drag outlasted that and worked;
+   * the quicker one after it did not, and the seam ignored it.
+   *
+   * Round this way the pan activates on movement, and a press that never moves
+   * fails it and hands the touch on, which is all the tap was waiting for.
+   */
+  const gesture = useMemo(() => Gesture.Race(pan, doubleTap), [doubleTap, pan]);
 
   const animatedStyle = useAnimatedStyle(() => {
     if (available.value <= 0) return { opacity: 0 };
