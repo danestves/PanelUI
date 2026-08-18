@@ -18,7 +18,12 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
-import { AppState, View, type ViewProps } from 'react-native';
+import {
+  AppState,
+  View,
+  type AppStateStatus,
+  type ViewProps,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -539,9 +544,15 @@ export function ToastViewport() {
   const items = useSyncExternalStore(toastStore.subscribe, toastStore.getSnapshot);
 
   useEffect(() => {
-    const syncTimers = (state: string) => {
-      if (state === 'active') toastStore.resumeTimers();
-      else toastStore.pauseTimers();
+    /*
+     * Pause on the two states that mean nobody can see the toast, rather than
+     * on everything that is not `active`. Android reports `unknown` before it
+     * has decided, and a toast raised in that window would otherwise have its
+     * countdown parked with nothing coming to restart it.
+     */
+    const syncTimers = (state: AppStateStatus) => {
+      if (state === 'background' || state === 'inactive') toastStore.pauseTimers();
+      else toastStore.resumeTimers();
     };
 
     syncTimers(AppState.currentState);
