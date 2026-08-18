@@ -115,6 +115,7 @@ import {
   usePlannerMonthLifecycle,
   usePlannerSelectionLifecycle,
 } from './planner-lifecycle';
+import { millisecondsUntilNextLocalDay } from './planner-today';
 
 /** How many of a day's entries a cell draws before it stops and counts. */
 const DEFAULT_ENTRY_LIMIT = 2;
@@ -249,21 +250,38 @@ function usePlanner(component: string): PlannerContextValue {
   return context;
 }
 
-/** Today, recomputed when the app comes back rather than only at mount. */
+/** Today, recomputed at local midnight and whenever the app comes back. */
 function useToday(): Date {
   const [today, setToday] = useState(() => startOfDay(new Date()));
 
   useEffect(() => {
-    const refresh = () => {
-      const now = startOfDay(new Date());
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const clearTimer = () => {
+      if (timer === null) return;
+      clearTimeout(timer);
+      timer = null;
+    };
+
+    const refreshAndSchedule = () => {
+      const current = new Date();
+      const now = startOfDay(current);
       // A new object every resume would invalidate every memo below it for a
       // date that has not changed.
-      setToday((current) => (current.getTime() === now.getTime() ? current : now));
+      setToday((previous) => (previous.getTime() === now.getTime() ? previous : now));
+      clearTimer();
+      timer = setTimeout(refreshAndSchedule, millisecondsUntilNextLocalDay(current));
     };
+
+    refreshAndSchedule();
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') refresh();
+      if (state === 'active') refreshAndSchedule();
+      else clearTimer();
     });
-    return () => subscription.remove();
+    return () => {
+      clearTimer();
+      subscription.remove();
+    };
   }, []);
 
   return today;
