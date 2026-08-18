@@ -25,13 +25,24 @@
     "Sheet.Row": "A row. With `to` it pushes that screen and shows a chevron; with `value` it shows the current setting; with neither it is just a line.",
     "Sheet.Toggle": "A row carrying a `Switch`, for a setting that is on or off.",
     "Sheet.Choice": "One of a set, with a tick on the one in force.",
-    "VoiceMode": "The screen a voice conversation happens on. It is a surface, not an overlay — render it as its own route."
+    "VoiceMode": "The screen a voice conversation happens on. It is a surface, not an overlay — render it as its own route.",
+    "Row": "The field and its controls on a single line, instead of the field above them. The composer at its smallest — a bar that is always on screen rather than the focus of it."
   },
   "examples": [
     {
       "title": "Growing, and then scrolling",
       "description": "`maxRows` is where the field stops. Up to it the composer follows the text; past it the height holds and the field scrolls, which is what keeps the toolbar on screen.\n\n`minRows` moves the floor if a composer should open taller than one line.",
       "code": "<AIInput value={value} onValueChange={setValue} maxRows={5}>\n  <AIInput.Field placeholder=\"Ask anything\" />\n  <AIInput.Toolbar>\n    <AIInput.Spacer />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n</AIInput>"
+    },
+    {
+      "title": "On one line",
+      "description": "`AIInput.Row` puts the field between the controls rather than above them, which is the whole composer in one pill.\n\nThe field still grows — it grows the row. Reach for it when the composer is always on screen, and for the stacked one when it is what the screen is for.",
+      "code": "<AIInput value={value} onValueChange={setValue} onSubmit={send}>\n  <AIInput.Row>\n    <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={add} />\n    <AIInput.Field placeholder=\"Ask anything\" />\n    <AIInput.Action label=\"Dictate\" icon={<MicIcon />} onPress={record} />\n    <AIInput.Submit />\n  </AIInput.Row>\n</AIInput>"
+    },
+    {
+      "title": "The platform's own controls",
+      "description": "`native` hands the toolbar's buttons to the platform, which draws them in its own material — Liquid Glass on iOS 26. The card behind them is still ours, and still glass.\n\nThe platform owns their colour, metrics and shape while this is on, so `className` and the theme tokens stop reaching them. A pill with a `detail` or an `indicator` is drawn rather than handed over: only a plain string can go to a native button, because a hosted view inside one has no width anything can resolve.",
+      "code": "<AIInput native value={value} onValueChange={setValue}>\n  <AIInput.Field />\n  <AIInput.Toolbar>\n    <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={add} />\n    <AIInput.Pill label=\"Sonnet 4.6\" accessibilityLabel=\"Change model\" />\n    <AIInput.Spacer />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n</AIInput>"
     },
     {
       "title": "One button, three jobs",
@@ -71,5 +82,5 @@
       "code": "<AIInput.VoiceMode\n  state={state}\n  level={level}\n  title=\"Start chatting anytime\"\n  onMicPress={toggleMute}\n  onClose={() => router.back()}\n>\n  <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={add} />\n  <AIInput.Pill label=\"Sonnet\" indicator={<ChevronsUpDownIcon size={14} />} onPress={models} />\n</AIInput.VoiceMode>"
     }
   ],
-  "notes": "**The field stops at `maxRows` and scrolls.** The toolbar stays at the bottom of the box, so a long prompt never pushes the send button off the screen.\n\n**`onSubmit` does not clear the field.** The composer does not know whether the send succeeded; clear `value` yourself once it has.\n\n**Glass needs iOS 26.** Everywhere else the surfaces are solid, which is a finished look rather than a fallback. Nothing is faked on Android.\n\n**`avoidKeyboard` is a component boundary, not a flag.** Turning it off means the keyboard hook is never called at all — calling it has global consequences, and a composer that was told not to avoid the keyboard must not impose that on every other screen.\n\n**A sheet row's `to` names a screen id, not a route.** It pushes onto the same sheet; nothing navigates."
+  "notes": "**The field stops at `maxRows` and scrolls.** The toolbar stays at the bottom of the box, so a long prompt never pushes the send button off the screen.\n\n**The trailing button is inert when there is nothing to do.** With no text it offers voice mode, and only if the app took an `onVoice`; without one it stays disabled until something is typed, rather than looking live and doing nothing. The same goes for `onStop` while streaming.\n\n**`onSubmit` does not clear the field.** The composer does not know whether the send succeeded; clear `value` yourself once it has.\n\n**Glass needs iOS 26.** Everywhere else the surfaces are solid, which is a finished look rather than a fallback. Nothing is faked on Android.\n\n**`avoidKeyboard` is a component boundary, not a flag.** Turning it off means the keyboard hook is never called at all — calling it has global consequences, and a composer that was told not to avoid the keyboard must not impose that on every other screen.\n\n**The sheet is a solid surface, not a material.** It covers most of the screen, so there is almost nothing behind it left to refract. The composer keeps the glass, because a bar floating over a page is the case the material is for.\n\n**A sheet row's `to` names a screen id, not a route.** It pushes onto the same sheet; nothing navigates."
 }

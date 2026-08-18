@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1145,
+    "exports": 1146,
     "values": 305,
-    "types": 840,
+    "types": 841,
     "modules": 140,
     "components": 114,
     "hooks": 12
@@ -68,6 +68,10 @@
           },
           {
             "name": "AIInputFieldProps",
+            "kind": "type"
+          },
+          {
+            "name": "AIInputRowProps",
             "kind": "type"
           },
           {

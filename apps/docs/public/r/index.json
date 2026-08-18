@@ -22,6 +22,7 @@
     "registryDependencies": [
       "animated-pressable",
       "bottom-sheet",
+      "button",
       "cn",
       "glass",
       "icons",

@@ -86,6 +86,7 @@ import {
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  IconColorProvider,
   MicIcon,
   SendArrowIcon,
   XIcon,
@@ -96,6 +97,7 @@ import { KeyboardAvoider } from '../../primitives/keyboard-avoider';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { BottomSheet } from '../bottom-sheet';
+import { Button } from '../button';
 import { Soundwave } from '../soundwave';
 import { Switch } from '../switch';
 import { AI_INPUT_METRICS, growthBounds, type AIInputSize } from './ai-input-growth';
@@ -106,8 +108,15 @@ export type AIInputStatus = 'ready' | 'recording' | 'submitted' | 'streaming';
 /** Corner radius per size, in points. The material rounds itself to these. */
 const RADIUS = { sm: 22, md: 26, lg: 30 } as const;
 
-/** Circular control diameter per size. */
-const CONTROL = { sm: 32, md: 36, lg: 40 } as const;
+/**
+ * Circular control diameter per size.
+ *
+ * Deliberately under the 44pt touch minimum: these sit in a row inside a card
+ * with padding around it, and the card's own padding carries the target the
+ * finger actually gets. A 44pt circle here makes a toolbar that is taller than
+ * the field above it.
+ */
+const CONTROL = { sm: 26, md: 30, lg: 34 } as const;
 
 const EASE = Easing.out(Easing.cubic);
 const HEIGHT_DURATION = 240;
@@ -127,6 +136,10 @@ const aiInputVariants = tv({
   slots: {
     root: 'w-full',
     field: 'w-full bg-transparent px-4 font-normal text-foreground',
+    // On one line the field is what takes up the slack between the controls,
+    // and the row's own padding already stands it off the edge.
+    fieldInline: 'flex-1 bg-transparent px-2 font-normal text-foreground',
+    row: 'w-full flex-row items-end gap-1.5 p-1.5',
     toolbar: 'w-full flex-row items-center gap-2 px-2 pb-2',
     spacer: 'flex-1',
     pill: 'flex-row items-center gap-1.5 px-3',
@@ -158,12 +171,15 @@ interface AIInputContextValue {
   size: AIInputSize;
   level?: number | SharedValue<number>;
   disabled: boolean;
+  native: boolean;
   minRows: number;
   maxRows: number;
   focused: boolean;
   setFocused: (focused: boolean) => void;
   submit: () => void;
   stop: () => void;
+  canVoice: boolean;
+  canStop: boolean;
   recordCancel: () => void;
   recordConfirm: () => void;
   voice: () => void;
@@ -224,6 +240,17 @@ export interface AIInputProps extends Omit<ViewProps, 'children'> {
   size?: AIInputSize;
   /** Nothing can be typed, pressed or sent. */
   disabled?: boolean;
+  /**
+   * Draw the toolbar's controls as the platform's own buttons, in the system
+   * material — Liquid Glass on iOS 26, the platform's ordinary button style
+   * below it and on Android.
+   *
+   * The platform owns their colour, metrics and shape when this is on, so
+   * `className` and the theme tokens no longer reach them. The card behind
+   * them is still ours, and still glass. Needs the optional `@expo/ui`;
+   * without it the drawn controls are used and nothing breaks.
+   */
+  native?: boolean;
   /** Rows the empty field is tall. */
   minRows?: number;
   /** Rows the field grows to before it holds that height and scrolls. */
@@ -249,6 +276,7 @@ function AIInputRoot({
   level,
   size = 'md',
   disabled = false,
+  native = false,
   minRows = 1,
   maxRows = 5,
   avoidKeyboard = true,
@@ -282,11 +310,14 @@ function AIInputRoot({
       size,
       level,
       disabled,
+      native,
       minRows,
       maxRows,
       focused,
       setFocused,
       submit,
+      canVoice: onVoice !== undefined,
+      canStop: onStop !== undefined,
       stop: () => onStop?.(),
       recordCancel: () => onRecordCancel?.(),
       recordConfirm: () => onRecordConfirm?.(),
@@ -299,11 +330,13 @@ function AIInputRoot({
       size,
       level,
       disabled,
+      native,
       minRows,
       maxRows,
       focused,
       submit,
       onStop,
+      onVoice,
       onRecordCancel,
       onRecordConfirm,
       onVoice,
@@ -371,6 +404,7 @@ function AIInputField({
   const metrics = AI_INPUT_METRICS[size];
   const placeholderColor = useCSSVariable('--color-muted-foreground');
   const bounds = growthBounds(metrics, minRows, maxRows);
+  const inline = useContext(AIInputInlineContext);
 
   const handleFocus = useCallback<NonNullable<TextInputProps['onFocus']>>(
     (event) => {
@@ -393,6 +427,21 @@ function AIInputField({
    * height is computed from them and a line height set in two places is a line
    * height that will disagree with itself.
    */
+  /*
+   * On one line the field's first row has to be exactly as tall as the buttons
+   * beside it.
+   *
+   * The row aligns to the bottom, so that a field which has grown keeps its
+   * controls at the foot of the box rather than floating them beside the
+   * middle of the text. That alignment is only correct if an *ungrown* field
+   * is the same height as the controls — otherwise its extra padding pushes
+   * the whole row down inside the card, which is a composer whose contents sit
+   * low in it. So the padding is whatever centres one line in a control.
+   */
+  const padding = inline
+    ? Math.max(4, Math.round((CONTROL[size] - metrics.lineHeight) / 2))
+    : metrics.padding;
+
   const boxStyle = useMemo(
     () => ({
       /*
@@ -406,16 +455,16 @@ function AIInputField({
        * other the height of the box that was just set from it, and on that one
        * the field can never grow past the height it opened at.
        */
-      minHeight: bounds.minHeight,
+      minHeight: inline ? metrics.lineHeight + padding * 2 : bounds.minHeight,
       maxHeight: bounds.maxHeight,
       fontSize: metrics.fontSize,
       lineHeight: metrics.lineHeight,
-      paddingTop: metrics.padding,
-      paddingBottom: metrics.padding,
+      paddingTop: padding,
+      paddingBottom: padding,
       // Android starts the caret in the middle of the box without it.
       textAlignVertical: 'top' as const,
     }),
-    [bounds.minHeight, bounds.maxHeight, metrics]
+    [bounds.minHeight, bounds.maxHeight, inline, metrics, padding]
   );
 
   const slots = aiInputVariants({ size });
@@ -440,7 +489,7 @@ function AIInputField({
        */
       onFocus={handleFocus}
       onBlur={handleBlur}
-      className={slots.field({ className })}
+      className={inline ? slots.fieldInline({ className }) : slots.field({ className })}
       style={[boxStyle, style]}
     />
   );
@@ -449,6 +498,49 @@ function AIInputField({
 /* -------------------------------------------------------------------------- */
 /* Toolbar and its controls                                                   */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * True inside `AIInput.Row` — the parts that lay out differently on one line
+ * read it rather than taking a prop each, so a caller rearranges the composer
+ * by moving one component instead of setting a flag on three.
+ */
+const AIInputInlineContext = createContext(false);
+
+export interface AIInputRowProps extends ViewProps {
+  className?: string;
+}
+
+/**
+ * The field and its controls on a single line.
+ *
+ * The composer at its smallest: one pill above the keyboard with the field
+ * between the controls rather than above them. It suits a bar that is always
+ * on screen, where the stacked composer suits one that is the focus of it.
+ *
+ * The field still grows — it just grows the row.
+ *
+ * ```tsx
+ * <AIInput>
+ *   <AIInput.Row>
+ *     <AIInput.Action label="Add" icon={<PlusIcon />} />
+ *     <AIInput.Field placeholder="Ask anything" />
+ *     <AIInput.Action label="Dictate" icon={<MicIcon />} />
+ *     <AIInput.Submit />
+ *   </AIInput.Row>
+ * </AIInput>
+ * ```
+ */
+function AIInputRow({ className, children, ...props }: AIInputRowProps) {
+  const { size } = useAIInput('AIInput.Row');
+  const slots = aiInputVariants({ size });
+  return (
+    <AIInputInlineContext.Provider value>
+      <View {...props} className={slots.row({ className })}>
+        {children}
+      </View>
+    </AIInputInlineContext.Provider>
+  );
+}
 
 export interface AIInputToolbarProps extends ViewProps {
   className?: string;
@@ -480,6 +572,12 @@ export interface AIInputActionProps
   disabled?: boolean;
   /** Control size. Inherited from the composer when it is inside one. */
   size?: AIInputSize;
+  /**
+   * Draw it as the platform's own button, in the system material. Inherited
+   * from the composer when it is inside one. The platform owns its colour and
+   * shape, so `className` stops reaching it.
+   */
+  native?: boolean;
 }
 
 function AIInputAction({
@@ -489,11 +587,38 @@ function AIInputAction({
   onPress,
   disabled,
   size: sizeProp,
+  native,
   ...props
 }: AIInputActionProps) {
   const context = useAIInputOptional();
-  const size = CONTROL[sizeProp ?? context?.size ?? 'md'];
+  const scale = sizeProp ?? context?.size ?? 'md';
+  const size = CONTROL[scale];
   const isDisabled = disabled ?? context?.disabled ?? false;
+  const isNative = native ?? context?.native ?? false;
+
+  /*
+   * The platform's own button, in its own material. `Button` already knows how
+   * to ask for that — the circular border shape, the glass style, and the
+   * hosting an icon inside a native control needs — so this is a handoff
+   * rather than a second implementation of it.
+   */
+  if (isNative) {
+    return (
+      <View {...props} className={className}>
+        <Button
+          native
+          glass
+          variant="secondary"
+          size="icon"
+          accessibilityLabel={label}
+          disabled={isDisabled}
+          onPress={onPress}
+        >
+          {icon}
+        </Button>
+      </View>
+    );
+  }
 
   return (
     <Glass
@@ -534,6 +659,13 @@ export interface AIInputPillProps extends Omit<ViewProps, 'children'> {
   accessibilityLabel?: string;
   /** Control size. Inherited from the composer when it is inside one. */
   size?: AIInputSize;
+  /**
+   * Draw it as the platform's own button, in the system material. Only a
+   * string `label` can be handed over — a hosted view inside a native button
+   * has no width anything can resolve — so a pill given elements is drawn
+   * here whatever this says.
+   */
+  native?: boolean;
 }
 
 function AIInputPill({
@@ -545,6 +677,7 @@ function AIInputPill({
   disabled,
   accessibilityLabel,
   size: sizeProp,
+  native,
   ...props
 }: AIInputPillProps) {
   const context = useAIInputOptional();
@@ -552,6 +685,36 @@ function AIInputPill({
   const height = CONTROL[size];
   const isDisabled = disabled ?? context?.disabled ?? false;
   const slots = aiInputVariants({ size });
+
+  /*
+   * Only a plain string goes to the platform. Passing elements makes it host
+   * them, and a hosted view inside a labelled button leaves the width
+   * unresolved — which is not an exception anything here could catch but a
+   * crash in native code. A pill with a `detail` or an `indicator` is drawn.
+   */
+  const isNative =
+    (native ?? context?.native ?? false) &&
+    typeof label === 'string' &&
+    detail === undefined &&
+    indicator === undefined;
+
+  if (isNative) {
+    return (
+      <View {...props} className={className}>
+        <Button
+          native
+          glass
+          variant="secondary"
+          size="sm"
+          accessibilityLabel={accessibilityLabel}
+          disabled={isDisabled}
+          onPress={onPress}
+        >
+          {label as string}
+        </Button>
+      </View>
+    );
+  }
 
   return (
     <Glass
@@ -598,6 +761,8 @@ export interface AIInputSubmitProps extends Omit<ViewProps, 'children'> {
   voiceLabel?: string;
   /** Names it while the model is answering. */
   stopLabel?: string;
+  /** Draw it as the platform's own button, in the system material. */
+  native?: boolean;
 }
 
 /**
@@ -613,11 +778,12 @@ function AIInputSubmit({
   sendLabel = 'Send',
   voiceLabel = 'Voice mode',
   stopLabel = 'Stop',
+  native,
   ...props
 }: AIInputSubmitProps) {
   const context = useAIInput('AIInput.Submit');
-  const { value, status, size, disabled, submit, stop, voice } = context;
-  const diameter = CONTROL[size] + 4;
+  const { value, status, size, disabled, submit, stop, voice, canVoice, canStop } = context;
+  const diameter = CONTROL[size] + 2;
   const streaming = status === 'streaming' || status === 'submitted';
   const hasText = value.trim().length > 0;
 
@@ -627,6 +793,53 @@ function AIInputSubmit({
   const mode = streaming ? 'stop' : hasText ? 'send' : 'voice';
   const label = mode === 'stop' ? stopLabel : mode === 'send' ? sendLabel : voiceLabel;
   const onPress = mode === 'stop' ? stop : mode === 'send' ? submit : voice;
+  const isNative = native ?? context.native;
+
+  /*
+   * Nothing to send is not something to press.
+   *
+   * Empty, the button offers voice mode — but only if the app took `onVoice`;
+   * with nothing wired to it, it is a live-looking control that does nothing.
+   * Same for stop. So the button is disabled whenever the thing it is offering
+   * cannot happen, which for an empty composer with no voice mode means it
+   * stays inert until something is typed.
+   */
+  const inert =
+    disabled ||
+    (mode === 'send' ? !hasText : mode === 'stop' ? !canStop : !canVoice);
+
+  const glyph =
+    mode === 'send' ? (
+      <SendArrowIcon size={18} />
+    ) : mode === 'stop' ? (
+      <View className="rounded-sm bg-primary-foreground" style={{ width: 11, height: 11 }} />
+    ) : (
+      <AudioLinesIcon size={18} />
+    );
+
+  /*
+   * The platform's own button, tinted. `Button` maps a primary variant onto
+   * `glassProminent`, which is the one that keeps an accent fill — drawing the
+   * material by hand over a plain button throws that fill away, and this is
+   * the one control in the row that is supposed to be filled.
+   */
+  if (isNative) {
+    return (
+      <View {...props} className={className}>
+        <Button
+          native
+          glass
+          variant="primary"
+          size="icon"
+          accessibilityLabel={label}
+          disabled={inert}
+          onPress={onPress}
+        >
+          {glyph}
+        </Button>
+      </View>
+    );
+  }
 
   return (
     <View
@@ -641,27 +854,24 @@ function AIInputSubmit({
       <AnimatedPressable
         accessibilityRole="button"
         accessibilityLabel={label}
-        accessibilityState={{ disabled }}
-        disabled={disabled}
+        accessibilityState={{ disabled: inert }}
+        disabled={inert}
         onPress={onPress}
-        className={cn(
-          'h-full w-full items-center justify-center',
-          disabled && 'opacity-40'
-        )}
+        className={cn('h-full w-full items-center justify-center', inert && 'opacity-40')}
       >
-        {mode === 'send' ? (
-          <SendArrowIcon
-            size={19}
-            color={typeof onSurface === 'string' ? onSurface : undefined}
-          />
-        ) : mode === 'stop' ? (
-          <View className="rounded-sm bg-primary-foreground" style={{ width: 11, height: 11 }} />
-        ) : (
-          <AudioLinesIcon
-            size={19}
-            color={typeof onSolid === 'string' ? onSolid : undefined}
-          />
-        )}
+        <IconColorProvider
+          color={
+            mode === 'voice'
+              ? typeof onSolid === 'string'
+                ? onSolid
+                : undefined
+              : typeof onSurface === 'string'
+                ? onSurface
+                : undefined
+          }
+        >
+          {glyph}
+        </IconColorProvider>
       </AnimatedPressable>
     </View>
   );
@@ -932,16 +1142,24 @@ function AIInputSheet({
          * is not an ancestor of the header that reads it.
          */}
         <AIInputSheetContext.Provider value={context}>
-          <Glass
-            // Four rounded corners when it floats, two when it is docked: the
-            // bottom edge of a docked sheet is the screen's edge, and rounding
-            // a corner there rounds nothing.
-            radius={detached ? 24 : { top: 24 }}
-            fallbackClassName={cn(
-              'border border-border bg-popover',
-              !detached && 'border-b-0'
+          {/*
+           * A solid surface, not a material.
+           *
+           * A sheet covers most of the screen, so there is almost nothing
+           * behind it left to refract — the material reads as a grey wash over
+           * a blur of nothing rather than as glass, and the controls sitting on
+           * it lose their own material to it. The composer keeps the glass,
+           * because a bar floating over a page is the case the material is for.
+           *
+           * Four rounded corners when it floats, two when it is docked: the
+           * bottom edge of a docked sheet is the screen's edge, and rounding a
+           * corner there rounds nothing.
+           */}
+          <View
+            className={cn(
+              'overflow-hidden border border-border bg-popover px-4 pt-2',
+              detached ? 'rounded-3xl' : 'rounded-t-3xl border-b-0'
             )}
-            className="px-4 pt-2"
             // A floating sheet's own bottom margin already clears the home
             // indicator, so it takes plain padding rather than stacking the
             // inset on top of the gap.
@@ -958,7 +1176,7 @@ function AIInputSheet({
             <AIInputSheetBody activeId={activeId} depth={depth} className={className}>
               {active}
             </AIInputSheetBody>
-          </Glass>
+          </View>
         </AIInputSheetContext.Provider>
       </BottomSheet.Content>
     </BottomSheet>
@@ -1033,7 +1251,22 @@ function AIInputSheetBody({
   const { width } = useWindowDimensions();
   const height = useSharedValue(-1);
   const paneRef = useRef<View>(null);
-  const [measured, setMeasured] = useState(false);
+
+  /*
+   * Whether the screen is lifted out of the flow onto its own layer.
+   *
+   * Not on the first layout, which is what a wizard inside a fixed frame can
+   * afford. A sheet sized to its content is still sliding up while its first
+   * screen measures, and switching the screen to absolute mid-flight takes the
+   * height out from under the sheet and puts it back a frame later — which is
+   * the sheet arriving with a stutter in it.
+   *
+   * So the first screen stays in the flow and the sheet opens around a real
+   * height. The layer is only needed once two screens have to overlap, which
+   * is the moment somebody navigates, and by then the height below is already
+   * recorded to travel from.
+   */
+  const [layered, setLayered] = useState(false);
 
   /*
    * Which way the screen slides, worked out from the move rather than from
@@ -1056,6 +1289,11 @@ function AIInputSheetBody({
     }
   }, [depth]);
 
+  // The first navigation is what needs two screens on top of each other.
+  useEffect(() => {
+    if (navigated.current) setLayered(true);
+  }, [activeId]);
+
   // Move the reader onto the screen that just arrived, rather than leaving
   // focus on the row that is no longer there.
   useEffect(() => {
@@ -1077,17 +1315,20 @@ function AIInputSheetBody({
     (event: LayoutChangeEvent) => {
       const next = event.nativeEvent.layout.height;
       if (next <= 0) return;
-      if (measured) {
+      // Recorded whether or not it is being used yet, so the first push has a
+      // height to travel from rather than growing out of nothing.
+      if (layered) {
         height.value = withTiming(next, { duration: HEIGHT_DURATION, easing: EASE });
         return;
       }
       height.value = next;
-      setMeasured(true);
     },
-    [measured, height]
+    [layered, height]
   );
 
-  const heightStyle = useAnimatedStyle(() => (height.value < 0 ? {} : { height: height.value }));
+  const heightStyle = useAnimatedStyle(() =>
+    height.value < 0 ? {} : { height: height.value }
+  );
 
   /*
    * Written out rather than taken from the stock builders, which carry an
@@ -1107,12 +1348,15 @@ function AIInputSheetBody({
   }, [direction, offset]);
 
   return (
-    <Animated.View style={heightStyle} className={cn('w-full overflow-hidden', className)}>
+    <Animated.View
+      style={layered ? heightStyle : undefined}
+      className={cn('w-full overflow-hidden', className)}
+    >
       <Animated.View
         key={activeId ?? '__empty__'}
-        entering={measured ? entering : undefined}
+        entering={layered ? entering : undefined}
         exiting={FadeOut.duration(EXIT_DURATION)}
-        className={measured ? 'absolute inset-x-0 top-0' : 'w-full'}
+        className={layered ? 'absolute inset-x-0 top-0' : 'w-full'}
       >
         <View ref={paneRef} onLayout={onPaneLayout} className="w-full pt-2">
           {children}
@@ -1372,6 +1616,8 @@ export interface AIInputVoiceModeProps extends Omit<ViewProps, 'children'> {
   closeLabel?: string;
   /** Type scale for the controls in the bottom row. */
   size?: AIInputSize;
+  /** Draw the bottom row's controls as the platform's own, in its material. */
+  native?: boolean;
 }
 
 /**
@@ -1394,6 +1640,7 @@ function AIInputVoiceMode({
   onClose,
   closeLabel = 'End voice mode',
   size = 'md',
+  native = false,
   ...props
 }: AIInputVoiceModeProps) {
   const insets = useSafeAreaInsets();
@@ -1408,17 +1655,20 @@ function AIInputVoiceMode({
       size,
       level,
       disabled: false,
+      native,
       minRows: 1,
       maxRows: 5,
       focused: false,
       setFocused: () => {},
       submit: () => {},
       stop: () => {},
+      canVoice: false,
+      canStop: false,
       recordCancel: () => {},
       recordConfirm: () => {},
       voice: () => {},
     }),
-    [level, size]
+    [level, native, size]
   );
 
   return (
@@ -1492,6 +1742,7 @@ function AIInputVoiceMode({
 
 AIInputRoot.displayName = 'AIInput';
 AIInputField.displayName = 'AIInput.Field';
+AIInputRow.displayName = 'AIInput.Row';
 AIInputToolbar.displayName = 'AIInput.Toolbar';
 AIInputSpacer.displayName = 'AIInput.Spacer';
 AIInputAction.displayName = 'AIInput.Action';
@@ -1516,6 +1767,7 @@ const Sheet = Object.assign(AIInputSheet, {
 
 export const AIInput = Object.assign(AIInputRoot, {
   Field: AIInputField,
+  Row: AIInputRow,
   Toolbar: AIInputToolbar,
   Spacer: AIInputSpacer,
   Action: AIInputAction,

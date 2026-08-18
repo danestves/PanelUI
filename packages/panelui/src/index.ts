@@ -943,6 +943,7 @@ export {
   type AIInputProps,
   type AIInputStatus,
   type AIInputFieldProps,
+  type AIInputRowProps,
   type AIInputToolbarProps,
   type AIInputActionProps,
   type AIInputPillProps,

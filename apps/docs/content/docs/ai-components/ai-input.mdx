@@ -74,7 +74,7 @@ npx panelui-cli@latest add ai-input
 
 - **`AIInput.Screen`** — See props below.
 - **`AIInput.Group`** — See props below.
-- **`AIInput.Row`** — See props below.
+- **`AIInput.Row`** — The field and its controls on a single line, instead of the field above them. The composer at its smallest — a bar that is always on screen rather than the focus of it.
 - **`AIInput.Toggle`** — See props below.
 - **`AIInput.Choice`** — See props below.
 
@@ -90,6 +90,41 @@ npx panelui-cli@latest add ai-input
 <AIInput value={value} onValueChange={setValue} maxRows={5}>
   <AIInput.Field placeholder="Ask anything" />
   <AIInput.Toolbar>
+    <AIInput.Spacer />
+    <AIInput.Submit />
+  </AIInput.Toolbar>
+</AIInput>
+```
+
+### On one line
+
+`AIInput.Row` puts the field between the controls rather than above them, which is the whole composer in one pill.
+
+The field still grows — it grows the row. Reach for it when the composer is always on screen, and for the stacked one when it is what the screen is for.
+
+```tsx
+<AIInput value={value} onValueChange={setValue} onSubmit={send}>
+  <AIInput.Row>
+    <AIInput.Action label="Add" icon={<PlusIcon />} onPress={add} />
+    <AIInput.Field placeholder="Ask anything" />
+    <AIInput.Action label="Dictate" icon={<MicIcon />} onPress={record} />
+    <AIInput.Submit />
+  </AIInput.Row>
+</AIInput>
+```
+
+### The platform's own controls
+
+`native` hands the toolbar's buttons to the platform, which draws them in its own material — Liquid Glass on iOS 26. The card behind them is still ours, and still glass.
+
+The platform owns their colour, metrics and shape while this is on, so `className` and the theme tokens stop reaching them. A pill with a `detail` or an `indicator` is drawn rather than handed over: only a plain string can go to a native button, because a hosted view inside one has no width anything can resolve.
+
+```tsx
+<AIInput native value={value} onValueChange={setValue}>
+  <AIInput.Field />
+  <AIInput.Toolbar>
+    <AIInput.Action label="Add" icon={<PlusIcon />} onPress={add} />
+    <AIInput.Pill label="Sonnet 4.6" accessibilityLabel="Change model" />
     <AIInput.Spacer />
     <AIInput.Submit />
   </AIInput.Toolbar>
@@ -283,12 +318,19 @@ The screen with no field on it. The wash behind everything and the capsules over
 | `level` | `number \| SharedValue<number>` | — | Input level, 0–1, from the app's own recorder. Pass a shared value to keep metering off the JS thread entirely. Omitted, the meter animates plausible motion so a screen can be built before any audio exists. |
 | `size` | `AIInputSize` | `'md'` | Type scale and control size. |
 | `disabled` | `boolean` | `false` | Nothing can be typed, pressed or sent. |
+| `native` | `boolean` | `false` | Draw the toolbar's controls as the platform's own buttons, in the system material — Liquid Glass on iOS 26, the platform's ordinary button style below it and on Android. The platform owns their colour, metrics and shape when this is on, so `className` and the theme tokens no longer reach them. The card behind them is still ours, and still glass. Needs the optional `@expo/ui`; without it the drawn controls are used and nothing breaks. |
 | `minRows` | `number` | `1` | Rows the empty field is tall. |
 | `maxRows` | `number` | `5` | Rows the field grows to before it holds that height and scrolls. |
 | `avoidKeyboard` | `boolean` | `true` | Lift the composer clear of the software keyboard. |
 | `keyboardBottomInset` | `number` | `0` | How far above the bottom edge the composer already sits. |
 
 ### AIInput.Field
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### AIInput.Row
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -310,6 +352,7 @@ The screen with no field on it. The wash behind everything and the capsules over
 | `onPress` | `() => void` | — |  |
 | `disabled` | `boolean` | `false` |  |
 | `size` | `AIInputSize` | `md` | Control size. Inherited from the composer when it is inside one. |
+| `native` | `boolean` | — | Draw it as the platform's own button, in the system material. Inherited from the composer when it is inside one. The platform owns its colour and shape, so `className` stops reaching it. |
 
 ### AIInput.Pill
 
@@ -323,6 +366,7 @@ The screen with no field on it. The wash behind everything and the capsules over
 | `disabled` | `boolean` | `false` |  |
 | `accessibilityLabel` | `string` | — | Names the control when the label alone does not say what changing it does. |
 | `size` | `AIInputSize` | `md` | Control size. Inherited from the composer when it is inside one. |
+| `native` | `boolean` | — | Draw it as the platform's own button, in the system material. Only a string `label` can be handed over — a hosted view inside a native button has no width anything can resolve — so a pill given elements is drawn here whatever this says. |
 
 ### AIInput.Submit
 
@@ -332,6 +376,7 @@ The screen with no field on it. The wash behind everything and the capsules over
 | `sendLabel` | `string` | `'Send'` | Names the button in its send state. |
 | `voiceLabel` | `string` | `'Voice mode'` | Names it in its voice state, which is what an empty composer offers. |
 | `stopLabel` | `string` | `'Stop'` | Names it while the model is answering. |
+| `native` | `boolean` | — | Draw it as the platform's own button, in the system material. |
 
 ### AIInput.Recording
 
@@ -421,6 +466,7 @@ The screen with no field on it. The wash behind everything and the capsules over
 | `onClose` | `() => void` | — |  |
 | `closeLabel` | `string` | `'End voice mode'` |  |
 | `size` | `AIInputSize` | `'md'` | Type scale for the controls in the bottom row. |
+| `native` | `boolean` | `false` | Draw the bottom row's controls as the platform's own, in its material. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -428,11 +474,15 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 **The field stops at `maxRows` and scrolls.** The toolbar stays at the bottom of the box, so a long prompt never pushes the send button off the screen.
 
+**The trailing button is inert when there is nothing to do.** With no text it offers voice mode, and only if the app took an `onVoice`; without one it stays disabled until something is typed, rather than looking live and doing nothing. The same goes for `onStop` while streaming.
+
 **`onSubmit` does not clear the field.** The composer does not know whether the send succeeded; clear `value` yourself once it has.
 
 **Glass needs iOS 26.** Everywhere else the surfaces are solid, which is a finished look rather than a fallback. Nothing is faked on Android.
 
 **`avoidKeyboard` is a component boundary, not a flag.** Turning it off means the keyboard hook is never called at all — calling it has global consequences, and a composer that was told not to avoid the keyboard must not impose that on every other screen.
+
+**The sheet is a solid surface, not a material.** It covers most of the screen, so there is almost nothing behind it left to refract. The composer keeps the glass, because a bar floating over a page is the case the material is for.
 
 **A sheet row's `to` names a screen id, not a route.** It pushes onto the same sheet; nothing navigates.
 
@@ -442,4 +492,4 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 **Values:** `AIInput`
 
-**Types:** `AIInputProps`, `AIInputStatus`, `AIInputFieldProps`, `AIInputToolbarProps`, `AIInputActionProps`, `AIInputPillProps`, `AIInputSubmitProps`, `AIInputRecordingProps`, `AIInputSheetProps`, `AIInputSheetScreenProps`, `AIInputSheetGroupProps`, `AIInputSheetRowProps`, `AIInputSheetToggleProps`, `AIInputSheetChoiceProps`, `AIInputVoiceModeProps`
+**Types:** `AIInputProps`, `AIInputStatus`, `AIInputFieldProps`, `AIInputRowProps`, `AIInputToolbarProps`, `AIInputActionProps`, `AIInputPillProps`, `AIInputSubmitProps`, `AIInputRecordingProps`, `AIInputSheetProps`, `AIInputSheetScreenProps`, `AIInputSheetGroupProps`, `AIInputSheetRowProps`, `AIInputSheetToggleProps`, `AIInputSheetChoiceProps`, `AIInputVoiceModeProps`

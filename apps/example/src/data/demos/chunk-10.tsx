@@ -758,15 +758,42 @@ function ComposerDemo({
   const [value, setValue] = useState(initial);
 
   return (
-    <AIInput value={value} onValueChange={setValue} avoidKeyboard={false} onSubmit={() => setValue('')}>
+    <AIInput
+      native
+      value={value}
+      onValueChange={setValue}
+      avoidKeyboard={false}
+      onSubmit={() => setValue('')}
+    >
       <AIInput.Field placeholder={placeholder} />
       <AIInput.Toolbar>
-        <AIInput.Action label="Add to chat" icon={<PlusIcon size={20} />} />
-        <AIInput.Pill label="Sonnet 4.6" detail="High" accessibilityLabel="Change model" />
+        <AIInput.Action label="Add to chat" icon={<PlusIcon size={17} />} />
+        <AIInput.Pill label="Sonnet 4.6" accessibilityLabel="Change model" />
         <AIInput.Spacer />
-        <AIInput.Action label="Dictate" icon={<MicIcon size={18} />} />
+        <AIInput.Action label="Dictate" icon={<MicIcon size={15} />} />
         <AIInput.Submit />
       </AIInput.Toolbar>
+    </AIInput>
+  );
+}
+
+/** The composer at its smallest: one pill, everything on the same line. */
+function InlineComposerDemo() {
+  const [value, setValue] = useState('');
+
+  return (
+    <AIInput
+      value={value}
+      onValueChange={setValue}
+      avoidKeyboard={false}
+      onSubmit={() => setValue('')}
+    >
+      <AIInput.Row>
+        <AIInput.Action label="Add to chat" icon={<PlusIcon size={17} />} />
+        <AIInput.Field placeholder="Ask anything" />
+        <AIInput.Action label="Dictate" icon={<MicIcon size={15} />} />
+        <AIInput.Submit />
+      </AIInput.Row>
     </AIInput>
   );
 }
@@ -793,11 +820,11 @@ function RecordingDemo() {
         <AIInput.Recording />
       ) : (
         <AIInput.Toolbar>
-          <AIInput.Action label="Add to chat" icon={<PlusIcon size={20} />} />
+          <AIInput.Action label="Add to chat" icon={<PlusIcon size={17} />} />
           <AIInput.Spacer />
           <AIInput.Action
             label="Dictate"
-            icon={<MicIcon size={18} />}
+            icon={<MicIcon size={15} />}
             onPress={() => setStatus('recording')}
           />
           <AIInput.Submit />
@@ -885,12 +912,12 @@ function ChatDemo() {
           <AIInput.Toolbar>
             <AIInput.Action
               label="Add to chat"
-              icon={<PlusIcon size={20} />}
+              icon={<PlusIcon size={17} />}
               onPress={() => setSheet(true)}
             />
             <AIInput.Pill label="Sonnet 4.6" detail="High" accessibilityLabel="Change model" />
             <AIInput.Spacer />
-            <AIInput.Action label="Dictate" icon={<MicIcon size={18} />} />
+            <AIInput.Action label="Dictate" icon={<MicIcon size={15} />} />
             <AIInput.Submit />
           </AIInput.Toolbar>
         </AIInput>
@@ -979,7 +1006,7 @@ function AddToChatSheet({
       <AIInput.Sheet.Screen
         id="project"
         title="Add to project"
-        trailing={<AIInput.Action label="New project" icon={<PlusIcon size={20} />} />}
+        trailing={<AIInput.Action label="New project" icon={<PlusIcon size={17} />} />}
       >
         <AIInput.Sheet.Group>
           {PROJECTS.map((entry) => (
@@ -1023,7 +1050,7 @@ function SheetDemo() {
           <AIInput.Toolbar>
             <AIInput.Action
               label="Add to chat"
-              icon={<PlusIcon size={20} />}
+              icon={<PlusIcon size={17} />}
               onPress={() => setOpen(true)}
             />
             <AIInput.Spacer />
@@ -1059,7 +1086,7 @@ function VoiceDemo() {
       >
         <AIInput.Action
           label="Add to chat"
-          icon={<PlusIcon size={20} />}
+          icon={<PlusIcon size={17} />}
           onPress={() => setSheet(true)}
         />
         <AIInput.Pill
@@ -1085,6 +1112,7 @@ const ENTRIES: ComponentEntry[] = [
     summary: 'A prompt composer, the sheet it opens, and a screen with no field on it',
     demos: [
       { label: 'At rest', render: () => <ComposerDemo /> },
+      { label: 'On one line', render: () => <InlineComposerDemo /> },
       {
         label: 'Past one line',
         render: () => (

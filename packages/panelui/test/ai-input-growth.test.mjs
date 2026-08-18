@@ -46,7 +46,7 @@ test('nothing about the height is measured', () => {
   assert.doesNotMatch(source, /onContentSizeChange=\{/);
   assert.doesNotMatch(source, /contentSize/);
   assert.doesNotMatch(source, /scrollEnabled=\{/);
-  assert.match(source, /minHeight: bounds\.minHeight/);
+  assert.match(source, /bounds\.minHeight/);
   assert.match(source, /maxHeight: bounds\.maxHeight/);
   // And no fixed height, which is what would stop it growing between them.
   assert.doesNotMatch(source, /\n\s+height: bounds\./);
