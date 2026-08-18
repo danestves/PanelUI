@@ -3,8 +3,8 @@
 ## Scope and limits
 
 Run `npm run test:a11y` first. It covers deterministic source contracts for
-contrast, reduced transparency, target sizes, modal isolation, structured
-content, chart semantics, accessible actions, and web composite keyboards. It
+contrast, reduced transparency, motion controls, target sizes, modal isolation,
+structured content, chart semantics, accessible actions, and web composite keyboards. It
 is not an axe scan, WCAG certification, or substitute for assistive-technology
 testing.
 
@@ -45,6 +45,9 @@ portrait and landscape where the component supports them.
 - **Signature:** hear empty/signed state, draw strokes, use undo/redo/clear, and
   reach the product-provided alternative input method. Reference:
   `packages/panelui/test/signature-accessibility.test.mjs`.
+- **Marquee:** reach the visible Pause control, stop and restart motion, then
+  traverse interactive content once. Repeated and measurement copies must not
+  receive focus. Reference: `packages/panelui/test/marquee-math.test.mjs`.
 
 ## TalkBack — Android
 
@@ -62,9 +65,41 @@ overlap. Target-size reference: `packages/panelui/test/core-target-sizes.test.mj
   select, while Home/End select the edges.
 - Open ContextMenu with the Context Menu key and Shift+F10, dismiss with Escape,
   and confirm focus remains on its trigger.
+- Tab through a Marquee with interactive content, pause and restart it, and
+  confirm neither hidden repeated copies nor the measurement copy receive focus.
 
-Automated contract references: `apps/docs/test/composite-keyboard.test.mjs` and
-`packages/panelui/test/context-menu-invocation.test.mjs`.
+Automated contract references: `apps/docs/test/composite-keyboard.test.mjs`,
+`packages/panelui/test/context-menu-invocation.test.mjs`, and
+`packages/panelui/test/marquee-math.test.mjs`.
+
+## Native journey receipts
+
+The seven cross-component journeys in
+`docs/accessibility-native-journeys.json` are the bounded native release
+matrix. Run all seven on both platforms rather than selecting only the paths
+changed in the release:
+
+1. Build the exact release commit and record its SHA.
+2. Create a local template (the ignored directory prevents device evidence
+   from entering the repository):
+
+   ```sh
+   mkdir -p accessibility-receipts
+   npm run test:a11y:native -- --template > accessibility-receipts/<sha>.json
+   ```
+
+3. On VoiceOver/iOS and TalkBack/Android, fill in OS, device, build, tester,
+   date, pass/fail, and a screenshot/video/log path or link for every journey.
+4. Validate the complete receipt:
+
+   ```sh
+   npm run test:a11y:native -- --receipt accessibility-receipts/<sha>.json
+   ```
+
+The validator rejects a missing platform, missing journey, pending result,
+missing evidence, or any failed result. It does not operate the device or
+claim that typed evidence proves the observation; the named tester owns that
+release decision.
 
 ## Browser automation — docs
 
@@ -79,6 +114,7 @@ an assistive-technology test, or WCAG certification.
 - [ ] `npm run test:a11y` passes at the release commit.
 - [ ] VoiceOver scenarios pass; device/build evidence is linked.
 - [ ] TalkBack scenarios pass; device/build evidence is linked.
+- [ ] The native journey receipt passes for the exact release commit.
 - [ ] Keyboard scenarios pass in a supported browser.
 - [ ] The docs browser accessibility smoke passes.
 - [ ] Failures are filed with component, platform, build, steps, expected

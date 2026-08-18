@@ -140,10 +140,10 @@ const FieldRoot = forwardRef<View, FieldProps>(
       <FieldContext.Provider value={state}>
         <View
           ref={ref}
+          {...props}
           role="group"
           accessibilityState={{ disabled }}
           className={root({ className })}
-          {...props}
         >
           {textChildren(children)}
         </View>
@@ -242,13 +242,13 @@ const FieldError = forwardRef<View, FieldErrorProps>(
     return (
       <View
         ref={ref}
+        {...props}
         // Web-aligned `role`, same as `Separator` already uses — RN's older
         // accessibilityRole list has no alert, the ARIA-aligned one does.
         role="alert"
         accessibilityLiveRegion="polite"
         nativeID={nativeID ?? relationshipIds[3]}
         className={error({ className })}
-        {...props}
       >
         {messages ? (
           messages.length === 1 ? (
@@ -278,7 +278,7 @@ export interface FieldSetProps extends ViewProps {
 const FieldSet = forwardRef<View, FieldSetProps>(
   ({ className, ...props }, ref) => {
     const { set } = fieldVariants();
-    return <View ref={ref} role="group" className={set({ className })} {...props} />;
+    return <View ref={ref} {...props} role="group" className={set({ className })} />;
   }
 );
 FieldSet.displayName = 'Field.Set';
@@ -293,7 +293,7 @@ const FieldLegend = forwardRef<RNText, FieldLegendProps>(
   ({ className, variant = 'legend', ...props }, ref) => {
     const { legend } = fieldVariants({ legendVariant: variant });
     return (
-      <Text ref={ref} role="heading" className={legend({ className })} {...props} />
+      <Text ref={ref} {...props} role="heading" className={legend({ className })} />
     );
   }
 );

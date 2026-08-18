@@ -227,6 +227,34 @@ export function resizeLayout(
   return next;
 }
 
+/** Restores one pair's initial ratio without escaping its current constraints. */
+export function resetLayout(
+  layout: number[],
+  initial: number[],
+  boundary: number,
+  constraints: SplitterConstraint[]
+): number[] {
+  const next = layout.slice();
+  if (boundary < 0 || boundary + 1 >= next.length) return next;
+
+  const pair = next[boundary]! + next[boundary + 1]!;
+  const first = initial[boundary];
+  const second = initial[boundary + 1];
+  if (
+    !Number.isFinite(pair) ||
+    typeof first !== 'number' ||
+    !Number.isFinite(first) ||
+    typeof second !== 'number' ||
+    !Number.isFinite(second) ||
+    first + second <= 0
+  ) {
+    return next;
+  }
+
+  const target = (first / (first + second)) * pair;
+  return resizeLayout(next, boundary, target - next[boundary]!, constraints);
+}
+
 /** Where a seam sits, in percent, measured from the start of the splitter. */
 export function layoutOffset(layout: number[], boundary: number): number {
   'worklet';

@@ -204,6 +204,10 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+### Controlled ownership
+
+A controlled split only moves to an index its owner accepts. A drag or `snapTo` reports the request through `onSnapIndexChange`; if the prop stays where it was, the seam settles back there. `onSnap` describes the position that actually settled, including an external controlled change, rather than an unaccepted request.
+
 ### What the fractions are fractions of
 
 The drag area takes real layout height, and that height is subtracted before the snap points are resolved. So `0.5` is half of what is actually divisible rather than half of a number the seam then eats into, and a taller drag area moves every snap point rather than only the largest. Points — any number above 1 — are used as written.

@@ -225,6 +225,15 @@ export interface BottomSheetContentProps extends ViewProps {
    */
   showClose?: boolean;
   /**
+   * Show the drag handle at the top of the sheet. On by default, because a
+   * sheet that can be dragged should say so.
+   *
+   * Turn it off when the sheet draws its own — a component wrapping this one
+   * to give the surface a material of its own has to put the handle on that
+   * material, and a handle floating above it belongs to nothing.
+   */
+  showGrabber?: boolean;
+  /**
    * Float the sheet clear of the screen edges instead of docking it to the
    * bottom, so it reads as a card laid over the app rather than a drawer
    * pulled out of it. All four corners round and the bottom border comes back,
@@ -267,6 +276,7 @@ function BottomSheetContent({
   className,
   dismissible = true,
   showClose = true,
+  showGrabber = true,
   detached = false,
   blur = false,
   size = 'auto',
@@ -475,9 +485,11 @@ function BottomSheetContent({
             ]}
           >
             <SheetSurfaceContext.Provider value={surface}>
-              <View className="mb-3 self-center">
-                <View className="h-1 w-10 rounded-full bg-muted-foreground/30" />
-              </View>
+              {showGrabber ? (
+                <View className="mb-3 self-center">
+                  <View className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+                </View>
+              ) : null}
               {textChildren(children)}
               {/*
                 * Last, and lifted above the content.

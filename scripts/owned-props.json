@@ -1,0 +1,44 @@
+[
+  {
+    "owner": "AccordionTrigger",
+    "file": "packages/panelui/src/components/accordion/index.tsx",
+    "element": "Pressable",
+    "props": ["accessibilityRole", "accessibilityState", "disabled", "className", "onPress"]
+  },
+  {
+    "owner": "CollapsibleTrigger",
+    "file": "packages/panelui/src/components/collapsible/index.tsx",
+    "element": "Pressable",
+    "props": ["accessibilityRole", "accessibilityState", "disabled", "className", "onPress"]
+  },
+  {
+    "owner": "TreeRoot",
+    "file": "packages/panelui/src/components/tree/index.tsx",
+    "element": "Animated.View",
+    "props": ["layout", "accessibilityRole", "className"]
+  },
+  {
+    "owner": "TreeTrigger",
+    "file": "packages/panelui/src/components/tree/index.tsx",
+    "element": "Pressable",
+    "props": ["accessibilityRole", "accessibilityState", "aria-level", "disabled", "className", "onPress"]
+  },
+  {
+    "owner": "FrameRow",
+    "file": "packages/panelui/src/components/frame/index.tsx",
+    "element": "Pressable",
+    "props": ["accessibilityRole", "onPress", "className"]
+  },
+  {
+    "owner": "TableRow",
+    "file": "packages/panelui/src/components/table/index.tsx",
+    "element": "View",
+    "props": ["role", "accessibilityState", "className"]
+  },
+  {
+    "owner": "TableRow",
+    "file": "packages/panelui/src/components/table/index.tsx",
+    "element": "AnimatedPressable",
+    "props": ["accessibilityRole", "accessibilityState", "disabled", "onPress", "className"]
+  }
+]

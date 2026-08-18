@@ -171,11 +171,11 @@ const ButtonGroupRoot = forwardRef<View, ButtonGroupProps>(
       <ButtonGroupProvider value={context}>
         <View
           ref={ref}
+          {...props}
           // A run of related actions is a toolbar; a screen reader announcing
           // the group is what tells someone the buttons in it belong together.
           accessibilityRole="toolbar"
           className={root({ className })}
-          {...props}
         >
           {items.map((child, index) => (
             // Index keys: these fragments have no identity of their own, and

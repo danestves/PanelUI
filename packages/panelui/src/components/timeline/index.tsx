@@ -45,6 +45,7 @@
  */
 import {
   Children,
+  cloneElement,
   createContext,
   forwardRef,
   isValidElement,
@@ -53,7 +54,14 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { ScrollView, View, type Text as RNText, type ViewProps } from 'react-native';
+import {
+  ScrollView,
+  View,
+  type FlatListProps,
+  type ListRenderItemInfo,
+  type Text as RNText,
+  type ViewProps,
+} from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedScrollHandler,
@@ -66,7 +74,7 @@ import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
-import { timelineColumnOffsets, timelineColumnWidth } from './timeline-geometry';
+import { TIMELINE_WIDE_COLUMN, timelineColumnOffsets, timelineColumnWidth } from './timeline-geometry';
 
 export type TimelineVariant = 'dot' | 'icon' | 'numbered' | 'card' | 'compact';
 /** Semantic colour for a single event, independent of progress. */
@@ -254,6 +262,8 @@ interface TimelineContextValue {
   offsets: number[];
   /** Horizontal only: false when the reader has asked for less movement. */
   animate: boolean;
+  /** A virtualized list draws one rail segment per mounted cell. */
+  virtualized: boolean;
 }
 
 interface TimelineItemContextValue {
@@ -363,6 +373,7 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
         scrollX,
         offsets,
         animate: !reducedMotion,
+        virtualized: false,
       }),
       [value, variant, orientation, scrollX, offsets, reducedMotion]
     );
@@ -425,6 +436,128 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
 );
 TimelineRoot.displayName = 'Timeline';
 
+export interface TimelineListProps<T>
+  extends Omit<
+    FlatListProps<T>,
+    | 'data'
+    | 'renderItem'
+    | 'horizontal'
+    | 'getItemLayout'
+    | 'onScroll'
+    | 'snapToOffsets'
+    | 'CellRendererComponent'
+  > {
+  /** Complete event collection; rows outside the native window stay unmounted. */
+  data: readonly T[];
+  /** Render one `Timeline.Item`. Its step, width, and last marker are owned by the list. */
+  renderItem: (info: ListRenderItemInfo<T>) => ReactElement<TimelineItemProps>;
+  /** Width of each column, or a resolver for mixed-width histories. */
+  itemWidth?: number | ((item: T, index: number) => number);
+  /** Steps at or below this index render as completed. */
+  value?: number;
+  variant?: TimelineVariant;
+  snap?: boolean;
+}
+
+/**
+ * Opt-in bounded mount path for long horizontal histories. The compound
+ * `Timeline` API remains the simpler choice for short or mixed-content lists.
+ */
+function TimelineList<T>({
+  data,
+  renderItem,
+  itemWidth: requestedWidth = TIMELINE_WIDE_COLUMN,
+  value = 0,
+  variant = 'dot',
+  snap = true,
+  initialNumToRender = 6,
+  maxToRenderPerBatch = 6,
+  windowSize = 5,
+  className,
+  ...props
+}: TimelineListProps<T>) {
+  const reducedMotion = useReducedMotion();
+  const scrollX = useSharedValue(0);
+  const widths = useMemo(
+    () =>
+      data.map((item, index) =>
+        timelineColumnWidth(
+          typeof requestedWidth === 'function' ? requestedWidth(item, index) : requestedWidth,
+          true
+        )
+      ),
+    [data, requestedWidth]
+  );
+  const offsets = useMemo(() => {
+    let offset = 0;
+    return widths.map((width) => {
+      const current = offset;
+      offset += width;
+      return current;
+    });
+  }, [widths]);
+  const context = useMemo(
+    () => ({
+      activeStep: value,
+      variant,
+      orientation: 'horizontal' as const,
+      scrollX,
+      offsets,
+      animate: !reducedMotion,
+      virtualized: true,
+    }),
+    [value, variant, scrollX, offsets, reducedMotion]
+  );
+  const { root } = timelineVariants({ variant, orientation: 'horizontal' });
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollX.value = event.contentOffset.x;
+  });
+
+  return (
+    <TimelineContext.Provider value={context}>
+      <Animated.FlatList
+        data={data}
+        horizontal
+        accessibilityRole="list"
+        showsHorizontalScrollIndicator={false}
+        decelerationRate="fast"
+        snapToAlignment="start"
+        initialNumToRender={initialNumToRender}
+        maxToRenderPerBatch={maxToRenderPerBatch}
+        windowSize={windowSize}
+        removeClippedSubviews
+        className={root({ className })}
+        {...props}
+        getItemLayout={(_, index) => ({
+          index,
+          length: widths[index] ?? TIMELINE_WIDE_COLUMN,
+          offset: offsets[index] ?? 0,
+        })}
+        snapToOffsets={snap ? offsets : undefined}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        renderItem={(info) => (
+          /*
+           * The list owns the order, so it hands each column its own left edge
+           * the same way the compound root does. An item reads its offset from
+           * here rather than indexing by `step`, and a virtualized item that
+           * was given none would sit at zero and never recede.
+           */
+          <TimelineColumnOffsetContext.Provider value={offsets[info.index] ?? 0}>
+            {cloneElement(renderItem(info), {
+              step: info.index,
+              width: widths[info.index],
+              last: info.index === data.length - 1,
+              role: 'listitem',
+            })}
+          </TimelineColumnOffsetContext.Provider>
+        )}
+      />
+    </TimelineContext.Provider>
+  );
+}
+TimelineList.displayName = 'Timeline.List';
+
 export interface TimelineItemProps extends ViewProps {
   className?: string;
   /** Position in the sequence, zero-based. */
@@ -463,9 +596,16 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     },
     ref
   ) => {
-    const { activeStep, variant, orientation, scrollX, animate } =
+    const { activeStep, variant, orientation, scrollX, animate, virtualized } =
       useTimeline('Timeline.Item');
+    /*
+     * Where this column starts, from its position among the rendered items
+     * rather than from `step`. `step` is the semantic progress value: it may
+     * be sparse, repeated or reordered, and indexing the offsets by it lands a
+     * column on another column's snap point.
+     */
     const columnOffset = useContext(TimelineColumnOffsetContext);
+    const border = useCSSVariable('--color-border');
     const isCompleted = completed ?? step <= activeStep;
     const { item } = timelineVariants({
       variant,
@@ -493,8 +633,8 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
     );
 
     /*
-     * A column recedes as it leaves the reading edge, so the one being read is
-     * the one that looks read.
+     * A column scales and drops as it leaves the reading edge, so the one being
+     * read is distinct without fading informative text below its contrast.
      *
      * One column's width either side, not two: a window wide enough to hold
      * three columns near full strength is a row where nothing is picked out,
@@ -508,12 +648,11 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
      * the rest.
      */
     const columnStyle = useAnimatedStyle(() => {
-      if (!horizontal || !animate) return { opacity: 1, transform: [] };
+      if (!horizontal || !animate) return { transform: [] };
       const distance = Math.abs(scrollX.value - offset);
       const window = Math.max(columnWidth ?? timelineColumnWidth(undefined, true), 1);
       const away = interpolate(distance, [0, window], [0, 1], 'clamp');
       return {
-        opacity: 1 - away * 0.4,
         transform: [{ scale: 1 - away * 0.04 }, { translateY: away * 4 }],
       };
     });
@@ -536,6 +675,22 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
           {...props}
           style={[style, { width: columnWidth }, columnStyle]}
         >
+          {virtualized && !last ? (
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: HORIZONTAL_RAIL_TOP,
+                borderTopWidth: 1,
+                borderStyle: 'dashed',
+                borderColor: typeof border === 'string' ? border : undefined,
+              }}
+            />
+          ) : null}
           {textChildren(children)}
         </Animated.View>
       </TimelineItemContext.Provider>
@@ -692,22 +847,7 @@ const TimelineContent = forwardRef<View, ViewProps & { className?: string }>(
     const { body, panel } = timelineVariants({ variant, tone, completed, orientation });
     const horizontal = orientation === 'horizontal';
 
-    /*
-     * Horizontal: the body recedes further than the column around it.
-     *
-     * The rail is a continuous thing and has to stay readable across the whole
-     * track — the years either side of the one being read are half of what a
-     * timeline is for. The prose under them is not: several columns of it at
-     * equal weight is a wall, and no amount of fading the column as a whole
-     * fixes that without taking the years down with it. So the body takes a
-     * second, steeper curve and the dates keep the first one.
-     */
-    const bodyStyle = useAnimatedStyle(() => {
-      if (!horizontal || !animate) return { opacity: 1 };
-      const distance = Math.abs(scrollX.value - offset);
-      const window = Math.max(columnWidth, 1);
-      return { opacity: interpolate(distance, [0, window], [1, 0.3], 'clamp') };
-    });
+    /* Horizontal content stays fully opaque; scale and translation provide focus. */
 
     const inner =
       variant === 'card' ? (
@@ -729,7 +869,7 @@ const TimelineContent = forwardRef<View, ViewProps & { className?: string }>(
         ref={ref}
         className={body({ className })}
         {...props}
-        style={[style, bodyStyle]}
+        style={style}
       >
         {inner}
       </Animated.View>
@@ -839,6 +979,7 @@ const TimelineStat = forwardRef<View, TimelineStatProps>(
 TimelineStat.displayName = 'Timeline.Stat';
 
 export const Timeline = Object.assign(TimelineRoot, {
+  List: TimelineList,
   Item: TimelineItem,
   Aside: TimelineAside,
   Indicator: TimelineIndicator,

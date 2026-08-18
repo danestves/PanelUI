@@ -135,6 +135,45 @@ export function projectPath(cwd, relativePath, label = 'Path') {
     fail(`${label} must stay inside the project.`);
   }
 
+  /*
+   * A lexical path can still leave the project through an existing symlink.
+   * Resolve the nearest path that already exists, then put the missing suffix
+   * back on that real location. This covers both a symlinked alias directory
+   * (`components -> ../shared`) and a destination that is itself a symlink,
+   * including a broken one that cannot safely be followed.
+   */
+  let ancestor = destination;
+  const suffix = [];
+  while (ancestor !== path.dirname(ancestor)) {
+    try {
+      fs.lstatSync(ancestor);
+      break;
+    } catch (error) {
+      if (error?.code !== 'ENOENT') fail(`${label} could not be inspected safely.`);
+      suffix.unshift(path.basename(ancestor));
+      ancestor = path.dirname(ancestor);
+    }
+  }
+
+  let realRoot;
+  let realAncestor;
+  try {
+    realRoot = fs.realpathSync(root);
+    realAncestor = fs.realpathSync(ancestor);
+  } catch {
+    fail(`${label} contains a broken or unreadable symbolic link.`);
+  }
+
+  const realDestination = path.resolve(realAncestor, ...suffix);
+  const realRelative = path.relative(realRoot, realDestination);
+  if (
+    !realRelative ||
+    realRelative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(realRelative)
+  ) {
+    fail(`${label} must stay inside the project, including through symbolic links.`);
+  }
+
   return destination;
 }
 
