@@ -270,6 +270,8 @@ Pass `native` to render the platform’s own picker instead — SwiftUI on iOS, 
 
 **Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className`, `presentation` and most styling props are ignored. A native picker always has a selection, so an unset `value` shows the first option rather than the placeholder — set an initial value or add an explicit "None" item.
 
+The portable native picker cannot disable one option independently. When any `Select.Item` is disabled, Select keeps the styled presentation even if `native` is requested, so the disabled choice remains visible without becoming selectable.
+
 See [Native rendering](/docs/native) for the full prop-by-prop breakdown.
 
 ### Filtering a long list

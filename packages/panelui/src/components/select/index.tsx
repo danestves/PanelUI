@@ -70,6 +70,7 @@ import { useBackHandler } from '../../hooks/use-back-handler';
 import { cn } from '../../utils/cn';
 import { BottomSheet } from '../bottom-sheet';
 import { InputGroup } from '../input-group';
+import { nativeSelectSupportsOptions } from './native-select-contract';
 
 const selectVariants = tv({
   slots: {
@@ -339,13 +340,21 @@ function SelectRoot({
   const triggerRef = useRef<View>(null);
   const chevron = useSharedValue(0);
   const { height: screenHeight } = useWindowDimensions();
-  const nativeUI = native ? getNativeUI() : null;
 
   const options = useMemo(() => {
     const collected: SelectItemProps[] = [];
     eachOption(children, (option) => collected.push(option));
     return collected;
   }, [children]);
+
+  /*
+   * @expo/ui's portable Picker only has a control-wide `enabled` flag. Its
+   * items accept label and value, but no disabled state, so handing it a
+   * disabled Select.Item would make that option selectable again. Preserve
+   * the public item contract by using the styled Select for that list.
+   */
+  const nativeUI =
+    native && nativeSelectSupportsOptions(options) ? getNativeUI() : null;
 
   const selectedLabel = useMemo(
     () => options.find((option) => option.value === value)?.label,
