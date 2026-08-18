@@ -1,0 +1,15 @@
+{
+  "name": "finite-chart",
+  "type": "registry:ui",
+  "description": "Keeps non-finite data and domains out of chart geometry.",
+  "registryDependencies": [],
+  "dependencies": [],
+  "optionalDependencies": [],
+  "files": [
+    {
+      "path": "ui/finite-chart.ts",
+      "type": "registry:ui",
+      "content": "/** Returns a number only when it is safe to use in chart arithmetic. */\nexport function finiteChartNumber(value: unknown): number | undefined {\n  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;\n}\n\n/** Accepts an explicit domain only when both ends are finite. */\nexport function finiteChartDomain(\n  domain: readonly [number, number] | undefined\n): [number, number] | undefined {\n  if (!domain) return undefined;\n  const low = finiteChartNumber(domain[0]);\n  const high = finiteChartNumber(domain[1]);\n  return low === undefined || high === undefined ? undefined : [low, high];\n}\n"
+    }
+  ]
+}

@@ -418,6 +418,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+Non-finite series values are ignored when the domain and marks are derived. A non-finite `yDomain` end is treated as `auto`, so malformed telemetry cannot push the plot geometry to infinity.
+
 ### The reveal is shared
 
 Every mark is drawn inside one clip rectangle that widens on mount, so the columns, the fill and the line arrive as one drawing rather than as three effects starting together. A composed chart is more at risk of that than a fixed one, which is why the clip lives on the root and not on the marks.

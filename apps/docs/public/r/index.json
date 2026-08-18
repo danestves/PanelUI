@@ -525,6 +525,15 @@
     "docsPath": "components/field"
   },
   {
+    "name": "finite-chart",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Keeps non-finite data and domains out of chart geometry.",
+    "registryDependencies": []
+  },
+  {
     "name": "flow",
     "type": "registry:ui",
     "kind": "ui",
@@ -1048,6 +1057,7 @@
     "registryDependencies": [
       "chart",
       "cn",
+      "finite-chart",
       "text"
     ],
     "docsPath": "charts/plot"
@@ -1987,6 +1997,7 @@
     "registryDependencies": [
       "chart",
       "cn",
+      "finite-chart",
       "text"
     ],
     "docsPath": "charts/waterfall-chart"
