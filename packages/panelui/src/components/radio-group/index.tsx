@@ -36,6 +36,7 @@ import Animated, {
 import { tv, type VariantProps } from 'tailwind-variants';
 import { cn } from '../../utils/cn';
 import { Text, textChildren } from '../../primitives/text';
+import { requestRadioValueChange } from './radio-group-value';
 
 type RadioVariant = 'dot' | 'card';
 type RadioOrientation = 'vertical' | 'horizontal';
@@ -247,7 +248,9 @@ const RadioGroupItem = forwardRef<View, RadioGroupItemProps>(
         accessibilityState={{ selected, disabled: !!disabled }}
         accessibilityLabel={label}
         disabled={disabled}
-        onPress={() => context.onValueChange(value)}
+        onPress={() =>
+          requestRadioValueChange(context.value, value, context.onValueChange)
+        }
         className={slots.row({ className })}
       >
         {body}
