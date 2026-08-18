@@ -91,6 +91,7 @@ import {
   SendArrowIcon,
   XIcon,
 } from '../../icons';
+import { hasNativeUI } from '../../native';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
 import { Glass } from '../../primitives/glass';
 import { KeyboardAvoider } from '../../primitives/keyboard-avoider';
@@ -338,6 +339,20 @@ function AIInputRoot({
     onSubmit?.(value);
   }, [onSubmit, value]);
 
+  /*
+   * Whether the controls can actually be handed over.
+   *
+   * `native` is a request, not a fact: the toolkit is an optional peer, and
+   * without it `Button` quietly draws its own control instead — at the size
+   * *it* uses, which is not the size this row is built around. Asking for a
+   * platform control and getting a 44pt drawn one in a row shaped for a 30pt
+   * one is how the buttons ended up over the field.
+   *
+   * So the request is resolved against what is installed, once, and every part
+   * reads the answer rather than the ask.
+   */
+  const platformControls = native && hasNativeUI();
+
   const context = useMemo<AIInputContextValue>(
     () => ({
       value,
@@ -346,7 +361,7 @@ function AIInputRoot({
       size,
       level,
       disabled,
-      native,
+      native: platformControls,
       minRows,
       maxRows,
       focused,
@@ -366,7 +381,7 @@ function AIInputRoot({
       size,
       level,
       disabled,
-      native,
+      platformControls,
       minRows,
       maxRows,
       focused,
@@ -397,7 +412,7 @@ function AIInputRoot({
    * row agree on the first render instead of the second.
    */
   const hasNativeRow =
-    native &&
+    platformControls &&
     Children.toArray(children).some(
       (child) =>
         isValidElement(child) &&
@@ -683,7 +698,7 @@ function AIInputAction({
   const scale = sizeProp ?? context?.size ?? 'md';
   const size = CONTROL[scale];
   const isDisabled = disabled ?? context?.disabled ?? false;
-  const isNative = native ?? context?.native ?? false;
+  const isNative = (native ?? context?.native ?? false) && hasNativeUI();
 
   /*
    * The platform's own button, in its own material. `Button` already knows how
@@ -783,6 +798,7 @@ function AIInputPill({
    */
   const isNative =
     (native ?? context?.native ?? false) &&
+    hasNativeUI() &&
     typeof label === 'string' &&
     detail === undefined &&
     indicator === undefined;
@@ -882,7 +898,7 @@ function AIInputSubmit({
   const mode = streaming ? 'stop' : hasText ? 'send' : 'voice';
   const label = mode === 'stop' ? stopLabel : mode === 'send' ? sendLabel : voiceLabel;
   const onPress = mode === 'stop' ? stop : mode === 'send' ? submit : voice;
-  const isNative = native ?? context.native;
+  const isNative = (native ?? context.native) && hasNativeUI();
 
   /*
    * Nothing to send is not something to press.
@@ -991,7 +1007,7 @@ function AIInputRecording({
   const control = CONTROL[size];
   const slots = aiInputVariants({ size });
   const onPrimary = useCSSVariable('--color-primary-foreground');
-  const isNative = native ?? contextNative;
+  const isNative = (native ?? contextNative) && hasNativeUI();
 
   const meter = (
     <View className={slots.meter()}>
@@ -1784,7 +1800,7 @@ function AIInputVoiceMode({
       size,
       level,
       disabled: false,
-      native,
+      native: native && hasNativeUI(),
       minRows: 1,
       maxRows: 5,
       focused: false,
@@ -1848,7 +1864,7 @@ function AIInputVoiceMode({
         >
           {children}
           <View className="flex-1" />
-          {native ? (
+          {native && hasNativeUI() ? (
             <Button
               native
               glass

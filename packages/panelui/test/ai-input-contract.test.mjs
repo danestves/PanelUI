@@ -135,3 +135,24 @@ test('every control that hands over still carries its press handler', () => {
     assert.match(tag, /accessibilityLabel=\{/, `the platform draws no label of its own:\n${tag}`);
   }
 });
+
+test('a request for platform controls is resolved against what is installed', () => {
+  /*
+   * `native` is an ask, not a fact. The toolkit is an optional peer, and
+   * without it `Button` quietly draws its own control at the size *it* uses —
+   * 44pt for an icon where this row is built around 30pt — so the buttons
+   * ended up over the field on any build without it.
+   *
+   * Every branch that hands a control over checks first.
+   */
+  const asks = [...inputSource.matchAll(/const isNative =[^;]+;/g)].map((match) => match[0]);
+  assert.ok(asks.length >= 4, 'each part that can hand over should resolve the ask');
+  for (const ask of asks) {
+    assert.match(ask, /hasNativeUI\(\)/, `an unresolved ask:\n${ask}`);
+  }
+
+  // The root resolves it once and puts the answer in context, so the parts
+  // and the card's own reservation cannot disagree.
+  assert.match(inputSource, /const platformControls = native && hasNativeUI\(\)/);
+  assert.match(inputSource, /native: platformControls/);
+});
