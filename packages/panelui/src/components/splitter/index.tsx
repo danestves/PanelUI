@@ -389,6 +389,7 @@ function SplitterHandle({
   disabled,
   withGrip = true,
   accessibilityLabel = 'Resize panels',
+  style,
   ...props
 }: SplitterHandleProps) {
   const context = useSplitter('Splitter.Handle');
@@ -542,6 +543,7 @@ function SplitterHandle({
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View
+        {...props}
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel={accessibilityLabel}
@@ -550,8 +552,7 @@ function SplitterHandle({
         accessibilityActions={frozen ? undefined : [{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={frozen ? undefined : onAccessibilityAction}
         className={handle({ className })}
-        style={animatedStyle}
-        {...props}
+        style={[style, animatedStyle]}
       >
         <View className={line()} />
         {withGrip ? <View className={grip()} /> : null}
