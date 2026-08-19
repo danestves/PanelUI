@@ -449,7 +449,7 @@ function PieLoadingVersion() {
 
   useEffect(() => {
     if (status !== 'loading') return;
-    const timer = setTimeout(() => setStatus('ready'), 1400);
+    const timer = setTimeout(() => setStatus('ready'), 500);
     return () => clearTimeout(timer);
   }, [status]);
 
@@ -698,7 +698,7 @@ function PolarAreaLoadingVersion() {
 
   useEffect(() => {
     if (status !== 'loading') return;
-    const timer = setTimeout(() => setStatus('ready'), 1500);
+    const timer = setTimeout(() => setStatus('ready'), 500);
     return () => clearTimeout(timer);
   }, [status]);
 
@@ -953,7 +953,7 @@ function FunnelLoadingVersion() {
 
   useEffect(() => {
     if (status !== 'loading') return;
-    const timer = setTimeout(() => setStatus('ready'), 1500);
+    const timer = setTimeout(() => setStatus('ready'), 500);
     return () => clearTimeout(timer);
   }, [status]);
 
@@ -1165,7 +1165,7 @@ function TreemapLoadingVersion() {
 
   useEffect(() => {
     if (status !== 'loading') return;
-    const timer = setTimeout(() => setStatus('ready'), 1500);
+    const timer = setTimeout(() => setStatus('ready'), 500);
     return () => clearTimeout(timer);
   }, [status]);
 

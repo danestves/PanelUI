@@ -167,7 +167,7 @@ function ScatterLoadingVersion() {
   // run again from the button.
   useEffect(() => {
     if (status !== 'loading') return;
-    const timer = setTimeout(() => setStatus('ready'), 1400);
+    const timer = setTimeout(() => setStatus('ready'), 500);
     return () => clearTimeout(timer);
   }, [status]);
 

@@ -70,6 +70,7 @@ import { Text } from '../../primitives/text';
 import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import { compactNumber, useSeriesColor, xAt, yOf, type Plot } from '../../utils/chart';
 import { cn } from '../../utils/cn';
+import { useSkeletonHandoff } from '../../hooks/use-skeleton-handoff';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedG = Animated.createAnimatedComponent(G);
@@ -80,9 +81,6 @@ const AnimatedG = Animated.createAnimatedComponent(G);
  * duration however many points there are.
  */
 const STAGGER = 0.4;
-
-/** Milliseconds for the placeholder field to dissolve once the data arrives. */
-const SKELETON_FADE = 220;
 
 /** Milliseconds for a point to swell as it is selected, and settle as it is not. */
 const SELECT_DURATION = 140;
@@ -206,7 +204,7 @@ export interface ScatterChartProps extends ViewProps, ChartAccessibilityProps<Sc
   status?: ScatterChartStatus;
   /** Width ÷ height. `1` suits a scatter plot: neither axis is the important one. */
   aspectRatio?: number;
-  /** Milliseconds for the reveal on mount. */
+  /** Milliseconds for the reveal on mount. Defaults to `650`. */
   animationDuration?: number;
   /** Milliseconds for the axes to settle after the data changes. */
   domainDuration?: number;
@@ -240,7 +238,7 @@ const ScatterChartRoot = forwardRef<ScatterChartHandle, ScatterChartProps>(
       xDataKey = 'x',
       status = 'ready',
       aspectRatio = 1,
-      animationDuration = 900,
+      animationDuration = 650,
       domainDuration = 500,
       xDomain,
       yDomain,
@@ -869,27 +867,8 @@ function ScatterChartSkeleton({ count = 24, color }: ScatterChartSkeletonProps) 
   const { plot, status } = useChart('ScatterChart.Skeleton');
   const token = useCSSVariable('--color-skeleton');
   const fill = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
-  const reducedMotion = useReducedMotion();
 
-  const loading = status === 'loading';
-  const fade = useSharedValue(1);
-  // Mounted a beat longer than `loading`, so there is something to fade.
-  const [mounted, setMounted] = useState(loading);
-
-  useEffect(() => {
-    if (loading) {
-      fade.value = 1;
-      setMounted(true);
-      return;
-    }
-    if (reducedMotion) {
-      setMounted(false);
-      return;
-    }
-    fade.value = withTiming(0, { duration: SKELETON_FADE }, (finished) => {
-      if (finished) runOnJS(setMounted)(false);
-    });
-  }, [loading, reducedMotion, fade]);
+  const { mounted, opacity: fade } = useSkeletonHandoff(status === 'loading');
 
   const dots = useMemo(() => {
     // A cheap deterministic scatter: two irrational-ish strides that do not

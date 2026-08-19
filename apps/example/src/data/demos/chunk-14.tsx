@@ -524,10 +524,14 @@ function WaterfallReadoutVersion() {
 function WaterfallLoadingVersion() {
   const [status, setStatus] = useState<'loading' | 'ready'>('loading');
 
+  // Guarded on `status` and armed by it: "Load again" puts the chart back into
+  // loading, and that is what has to start the next timer. Keyed to mount, the
+  // button set a state nothing would ever move off again.
   useEffect(() => {
-    const timer = setTimeout(() => setStatus('ready'), 1600);
+    if (status !== 'loading') return;
+    const timer = setTimeout(() => setStatus('ready'), 500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [status]);
 
   return (
     <View className="flex-1 justify-center gap-4 p-4">

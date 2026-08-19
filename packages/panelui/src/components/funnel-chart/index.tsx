@@ -90,6 +90,7 @@ import { useDirection } from '../../hooks/use-direction';
 import { Text } from '../../primitives/text';
 import { compactNumber, ribbonPath, useSeriesColor } from '../../utils/chart';
 import { cn } from '../../utils/cn';
+import { useSkeletonHandoff } from '../../hooks/use-skeleton-handoff';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -790,12 +791,19 @@ function FunnelChartSkeleton({ color }: FunnelChartSkeletonProps) {
   const token = useCSSVariable('--color-skeleton');
   const fill = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
 
-  if (status !== 'loading' || width <= 0 || height <= 0) return null;
+  // Held through the fade rather than to the frame the data lands, so the plain
+  // taper dissolves under the stages growing across it instead of leaving a
+  // blank panel between the two.
+  const { mounted, opacity } = useSkeletonHandoff(status === 'loading');
+  const animatedProps = useAnimatedProps(() => ({ opacity: opacity.value }));
+
+  if (!mounted || width <= 0 || height <= 0) return null;
 
   const extent = Math.max(0, height / 2 - textBand);
 
   return (
-    <Path
+    <AnimatedPath
+      animatedProps={animatedProps}
       d={ribbonPath(0, width, extent, extent * 0.4, middle, curve)}
       fill={fill}
     />

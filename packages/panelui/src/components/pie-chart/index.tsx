@@ -70,6 +70,7 @@ import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
 import { compactNumber, useSeriesColor, wedgePath } from '../../utils/chart';
 import { cn } from '../../utils/cn';
+import { useSkeletonHandoff } from '../../hooks/use-skeleton-handoff';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -598,10 +599,17 @@ function PieChartSkeleton({ color }: PieChartSkeletonProps) {
   const token = useCSSVariable('--color-skeleton');
   const fill = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
 
-  if (status !== 'loading' || radius <= 0) return null;
+  // Held through the fade rather than to the frame the data lands, so the band
+  // dissolves under the wedges sweeping over it. Cut on `status` alone, the ring
+  // vanishes before the first wedge has any sweep to show.
+  const { mounted, opacity } = useSkeletonHandoff(status === 'loading');
+  const animatedProps = useAnimatedProps(() => ({ opacity: opacity.value }));
+
+  if (!mounted || radius <= 0) return null;
 
   return (
-    <Path
+    <AnimatedPath
+      animatedProps={animatedProps}
       d={wedgePath(size / 2, size / 2, radius, hole, origin, origin + span, 0)}
       fill={fill}
     />

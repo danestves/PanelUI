@@ -66,18 +66,26 @@ import {
   isValidElement,
   useContext,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react';
-import { Pressable, View, type LayoutChangeEvent, type ViewProps } from 'react-native';
+import {
+  Pressable,
+  View,
+  type LayoutChangeEvent,
+  type PressableProps,
+  type ViewProps,
+} from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
   useAnimatedProps,
   useDerivedValue,
+  useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withRepeat,
@@ -89,7 +97,10 @@ import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
 import { compactNumber, inkOn, useSeriesColor } from '../../utils/chart';
 import { cn } from '../../utils/cn';
+import { useSkeletonHandoff } from '../../hooks/use-skeleton-handoff';
 
+const AnimatedG = Animated.createAnimatedComponent(G);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
@@ -820,6 +831,9 @@ function TreemapChartSkeleton({ duration = 1400, color }: TreemapChartSkeletonPr
   const token = useCSSVariable('--color-skeleton');
   const base = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
   const highlight = useSeriesColor(undefined, 1);
+  // Unique per instance: a fixed id makes two of these on one screen share a
+  // gradient, and the second one to mount wins.
+  const gradientId = `panelui-treemap-skeleton-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const sweep = useSharedValue(0);
   const reducedMotion = useReducedMotion();
@@ -843,12 +857,16 @@ function TreemapChartSkeleton({ duration = 1400, color }: TreemapChartSkeletonPr
     x2: `${(sweep.value * 1.4 - 0.4 + 0.4) * 100}%`,
   }));
 
-  if (!loading || width <= 0 || height <= 0) return null;
+  // Held through the fade rather than to the frame the data lands: the box has
+  // to dissolve while the tiles grow through it, or the panel is empty for as
+  // long as the first tile takes to become visible.
+  const { mounted, opacity } = useSkeletonHandoff(loading);
+  const fadeProps = useAnimatedProps(() => ({ opacity: opacity.value }));
 
-  const gradientId = 'panelui-treemap-skeleton';
+  if (!mounted || width <= 0 || height <= 0) return null;
 
   return (
-    <G>
+    <AnimatedG animatedProps={fadeProps}>
       <Defs>
         <AnimatedLinearGradient id={gradientId} animatedProps={animatedProps} y1="0" y2="0">
           <Stop offset="0" stopColor={base} />
@@ -864,7 +882,7 @@ function TreemapChartSkeleton({ duration = 1400, color }: TreemapChartSkeletonPr
         rx={cornerRadius}
         fill={`url(#${gradientId})`}
       />
-    </G>
+    </AnimatedG>
   );
 }
 TreemapChartSkeleton.displayName = 'TreemapChart.Skeleton';
@@ -906,7 +924,7 @@ function TreemapChartLabels({
   formatValue,
   className,
 }: TreemapChartLabelsProps) {
-  const { tiles, minLabelSize, status, activeIndex, setActiveIndex } =
+  const { tiles, minLabelSize, reveal, windows, status, activeIndex, setActiveIndex } =
     useChart('TreemapChart.Labels');
   /*
    * The tiles down the ramp are drawn part-transparent, so what a label sits on
@@ -929,8 +947,10 @@ function TreemapChartLabels({
         const percent = Math.round(tile.share * 100);
         const ink = inkOn(tile.color, behind, tile.strength);
         return (
-          <Pressable
+          <TreemapChartLabel
             key={`${tile.label}-${index}`}
+            reveal={reveal}
+            window={windows[index] ?? FULL_WINDOW}
             accessibilityRole="button"
             accessibilityState={{ selected: activeIndex === index }}
             accessibilityLabel={`${tile.label}, ${format(tile.value, tile)}, ${percent} percent`}
@@ -962,12 +982,49 @@ function TreemapChartLabels({
                 {percent}%
               </Text>
             ) : null}
-          </Pressable>
+          </TreemapChartLabel>
         );
       })}
     </>
   );
 }
+
+const FULL_WINDOW = { from: 0, to: 1 };
+
+/**
+ * One tile's text, faded in on that tile's own slice of the reveal.
+ *
+ * Held at full opacity from the frame the data lands — which is what it used to
+ * do — every name and number sits at its final position over tiles that have no
+ * size yet, and the chart spends its whole entrance looking like a wireframe of
+ * itself. The label belongs to the tile, so it arrives with it.
+ */
+function TreemapChartLabel({
+  reveal,
+  window,
+  children,
+  style,
+  ...props
+}: {
+  reveal: SharedValue<number>;
+  window: { from: number; to: number };
+} & Omit<PressableProps, 'children'> & { children: ReactNode; className?: string }) {
+  const animatedStyle = useAnimatedStyle(() => {
+    const span = window.to - window.from || 1;
+    const raw = (reveal.value - window.from) / span;
+    const clamped = raw < 0 ? 0 : raw > 1 ? 1 : raw;
+    // Squared, so the text is still faint through the first half of the tile's
+    // growth and only reads once there is a tile to read it on.
+    return { opacity: clamped * clamped };
+  });
+
+  return (
+    <AnimatedPressable {...props} style={[style, animatedStyle]}>
+      {children}
+    </AnimatedPressable>
+  );
+}
+
 TreemapChartLabels.displayName = 'TreemapChart.Labels';
 TreemapChartLabels.slot = 'overlay' as const;
 

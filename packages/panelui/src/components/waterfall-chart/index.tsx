@@ -43,6 +43,7 @@ import {
   isValidElement,
   useContext,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -73,7 +74,9 @@ import {
 } from '../../primitives/finite-chart';
 import { barPath, compactNumber, type Plot } from '../../utils/chart';
 import { cn } from '../../utils/cn';
+import { useSkeletonHandoff } from '../../hooks/use-skeleton-handoff';
 
+const AnimatedG = Animated.createAnimatedComponent(G);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
@@ -983,6 +986,9 @@ function WaterfallChartSkeleton({
   const base = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
   const highlightToken = useCSSVariable('--color-chart-1');
   const highlight = typeof highlightToken === 'string' ? highlightToken : FALLBACK_TOTAL;
+  // Unique per instance: a fixed id makes two of these on one screen share a
+  // gradient, and the second one to mount wins.
+  const gradientId = `panelui-waterfall-skeleton-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const sweep = useSharedValue(0);
   const reducedMotion = useReducedMotion();
@@ -1032,12 +1038,16 @@ function WaterfallChartSkeleton({
     return path;
   }, [plot, horizontal, total, barGap, barWidth, cornerRadius]);
 
-  if (!loading || !d) return null;
+  // Held through the fade rather than to the frame the data lands: the bars
+  // grow out of the stubs, and cutting the stubs at the status change leaves
+  // the panel empty until the first bar has length.
+  const { mounted, opacity } = useSkeletonHandoff(loading);
+  const fadeProps = useAnimatedProps(() => ({ opacity: opacity.value }));
 
-  const gradientId = 'panelui-waterfall-skeleton';
+  if (!mounted || !d) return null;
 
   return (
-    <G>
+    <AnimatedG animatedProps={fadeProps}>
       <Defs>
         <AnimatedLinearGradient id={gradientId} animatedProps={animatedProps} y1="0" y2="0">
           <Stop offset="0" stopColor={base} />
@@ -1046,7 +1056,7 @@ function WaterfallChartSkeleton({
         </AnimatedLinearGradient>
       </Defs>
       <Path d={d} fill={`url(#${gradientId})`} />
-    </G>
+    </AnimatedG>
   );
 }
 WaterfallChartSkeleton.displayName = 'WaterfallChart.Skeleton';

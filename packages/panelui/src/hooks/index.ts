@@ -31,6 +31,11 @@ export {
   type UseRevealProgressResult,
 } from './use-reveal-progress';
 export {
+  useSkeletonHandoff,
+  SKELETON_FADE,
+  type UseSkeletonHandoffResult,
+} from './use-skeleton-handoff';
+export {
   useScrollSections,
   type UseScrollSectionsOptions,
   type UseScrollSectionsResult,
