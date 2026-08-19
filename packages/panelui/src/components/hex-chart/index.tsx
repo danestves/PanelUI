@@ -526,21 +526,37 @@ const HexChartRoot = forwardRef<HexChartHandle, HexChartProps>(function HexChart
             <>
               <Svg width={width} height={height}>
                 <Defs>
+                  {/*
+                   * The reveal's own geometry is declared statically as well as
+                   * animated, and it has to be. Animated props on an element
+                   * inside `Defs` do not reach the native clip on every
+                   * platform — Android is the one that does not — and with the
+                   * size coming only from the animation there is no size at all
+                   * where they do not: an empty clip, and a honeycomb whose
+                   * series never appear while its field draws normally.
+                   *
+                   * Declared, the worst case is the reveal not playing and the
+                   * split being there from the first frame, which is a chart
+                   * that is merely less pleasing rather than a chart that is
+                   * missing its answer.
+                   */}
                   <ClipPath id={clipId}>
                     {shape === 'blob' ? (
                       <AnimatedEllipse
                         cx={left + fieldWidth / 2}
                         cy={top + fieldHeight / 2}
+                        rx={(fieldWidth / 2) * CORNER_REACH}
+                        ry={(fieldHeight / 2) * CORNER_REACH}
                         animatedProps={ellipseProps}
                       />
                     ) : (
                       <AnimatedRect
-                          x={0}
-                          y={0}
-                          width={width}
-                          height={height}
-                          animatedProps={rectProps}
-                        />
+                        x={0}
+                        y={0}
+                        width={width}
+                        height={height}
+                        animatedProps={rectProps}
+                      />
                     )}
                   </ClipPath>
                 </Defs>

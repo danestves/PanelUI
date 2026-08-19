@@ -71,13 +71,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, {
   Circle,
-  ClipPath,
   Defs,
   G,
   Line as SvgLine,
   LinearGradient,
   Path,
-  Rect,
   Stop,
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
@@ -96,7 +94,6 @@ import {
 import { cn } from '../../utils/cn';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
@@ -114,7 +111,7 @@ const Y_AXIS_GUTTER = 6;
  * stays a flat list of children instead of two nested slots the caller has to
  * remember the order of.
  */
-type Layer = 'svg' | 'overlay' | 'header';
+type Layer = 'svg' | 'series' | 'overlay' | 'header';
 
 export type LineChartStatus = 'loading' | 'ready';
 export type LineChartCurve = 'monotone' | 'linear';
@@ -143,7 +140,6 @@ interface LineChartContextValue {
   activeIndex: SharedValue<number>;
   activeIndexJS: number;
   setActiveIndexJS: (index: number) => void;
-  clipId: string;
 }
 
 const LineChartContext = createContext<LineChartContextValue | null>(null);
@@ -242,7 +238,6 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [series, setSeries] = useState<[string, string][]>([]);
   const [activeIndexJS, setActiveIndexJS] = useState(-1);
-  const clipId = `panelui-clip-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const reveal = useSharedValue(0);
   const domainMin = useSharedValue(0);
@@ -373,7 +368,7 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
   // `replay()` re-runs the reveal — for a control the caller wires up.
   useImperativeHandle(ref, () => ({ replay: playReveal }), [playReveal]);
 
-  const clipProps = useAnimatedProps(() => ({ width: plot.width * reveal.value }));
+  const revealStyle = useAnimatedStyle(() => ({ width: plot.width * reveal.value }));
 
   // One place the crosshair index lands, so the chart's own children and a
   // readout outside it never disagree about which point is active.
@@ -411,7 +406,6 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
       activeIndex,
       activeIndexJS,
       setActiveIndexJS: handleActiveIndex,
-      clipId,
     }),
     // `plot` is rebuilt every render from `size`, so it is compared by value.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -433,11 +427,10 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
       activeIndex,
       activeIndexJS,
       handleActiveIndex,
-      clipId,
     ]
   );
 
-  const { svg, overlay, header } = partition(children);
+  const { svg, series: seriesLayer, overlay, header } = partition(children);
 
   /*
    * Two views, because the header is not part of the plot. `aspectRatio` and
@@ -472,32 +465,42 @@ const LineChartRoot = forwardRef<LineChartHandle, LineChartProps>(function LineC
           {plot.width > 0 ? (
             <>
               <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-                <Defs>
-                  {/*
-                   * One clip for everything in the plot. Sharing it is what
-                   * makes the reveal read as the chart arriving, rather than as
-                   * three separate things animating in at once.
-                   *
-                   * `width` is set statically as well as animated, and it has
-                   * to be. Animated props on an element inside `Defs` do not
-                   * reach the native clip on every platform, and with the width
-                   * coming only from the animation there is no width at all
-                   * when they do not — an empty clip, and a chart whose marks
-                   * are all invisible while its axes draw normally. Declared,
-                   * the worst case is the reveal not playing.
-                   */}
-                  <ClipPath id={clipId}>
-                    <AnimatedRect
-                      x={plot.left}
-                      y={0}
-                      width={plot.width}
-                      height={size.height}
-                      animatedProps={clipProps}
-                    />
-                  </ClipPath>
-                </Defs>
                 {svg}
               </Svg>
+              {/*
+               * The reveal is a view that grows, not an SVG clip path.
+               *
+               * It used to be an animated `<Rect>` inside `<Defs>`, and on
+               * Android those animated props never reach the native clip — the
+               * rect keeps whatever width was declared on it, so the chart drew
+               * complete and the reveal simply did not play. A view with
+               * `overflow: 'hidden'` is clipped by the platform itself, which
+               * both platforms agree on.
+               *
+               * Animating `width` is normally a layout pass per frame. Here the
+               * view is absolutely positioned and its only child is an `<Svg>`
+               * with an explicit width and height, so the work is one node and
+               * nothing around it moves.
+               *
+               * The inner `<Svg>` is pulled back by `plot.left` so the series
+               * keeps the same coordinate space as the grid underneath it —
+               * otherwise every mark would shift by the y-axis gutter.
+               */}
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  { position: 'absolute', top: 0, bottom: 0, left: plot.left, overflow: 'hidden' },
+                  revealStyle,
+                ]}
+              >
+                <Svg
+                  width={size.width}
+                  height={size.height}
+                  style={{ position: 'absolute', top: 0, left: -plot.left }}
+                >
+                  {seriesLayer}
+                </Svg>
+              </Animated.View>
               {overlay}
             </>
           ) : null}
@@ -511,20 +514,29 @@ LineChartRoot.displayName = 'LineChart';
 /** Sorts the children into the SVG tree and the view layer over it. */
 function partition(children: ReactNode) {
   const svg: ReactNode[] = [];
+  const series: ReactNode[] = [];
   const overlay: ReactNode[] = [];
   const header: ReactNode[] = [];
 
   Children.forEach(children, (child, index) => {
     if (!isValidElement(child)) return;
     const layer = (child.type as { layer?: Layer }).layer ?? 'svg';
-    (layer === 'header' ? header : layer === 'overlay' ? overlay : svg).push(
+    const bucket =
+      layer === 'header'
+        ? header
+        : layer === 'overlay'
+          ? overlay
+          : layer === 'series'
+            ? series
+            : svg;
+    bucket.push(
       // Children of a `Children.forEach` need keys of their own once they are
       // put into a new array.
       <ChildSlot key={index}>{child}</ChildSlot>
     );
   });
 
-  return { svg, overlay, header };
+  return { svg, series, overlay, header };
 }
 
 /** Identity wrapper, purely so the partitioned arrays can carry keys. */
@@ -600,7 +612,7 @@ function LineChartLine({
   dashArray,
   showMarkers = false,
 }: LineChartLineProps) {
-  const { data, plot, domainMin, domainMax, curve, status, registerSeries, unregisterSeries, clipId } =
+  const { data, plot, domainMin, domainMax, curve, status, registerSeries, unregisterSeries } =
     useChart('LineChart.Line');
   const stroke = useSeriesColor(color, colorIndex);
 
@@ -617,7 +629,7 @@ function LineChartLine({
   }));
 
   return (
-    <G clipPath={`url(#${clipId})`}>
+    <G>
       <AnimatedPath
         animatedProps={animatedProps}
         fill="none"
@@ -647,7 +659,7 @@ function LineChartLine({
   );
 }
 LineChartLine.displayName = 'LineChart.Line';
-LineChartLine.layer = 'svg' as Layer;
+LineChartLine.layer = 'series' as Layer;
 
 /** A dot at one point. Follows the y-domain tween exactly as the line does. */
 function PointMarker({
@@ -690,7 +702,7 @@ export interface LineChartAreaProps {
  * fills over each other make a third colour that means nothing.
  */
 function LineChartArea({ dataKey, color, colorIndex = 1, opacity = 0.18 }: LineChartAreaProps) {
-  const { data, plot, domainMin, domainMax, curve, status, clipId } = useChart('LineChart.Area');
+  const { data, plot, domainMin, domainMax, curve, status } = useChart('LineChart.Area');
   const fill = useSeriesColor(color, colorIndex);
   const gradientId = `panelui-area-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
@@ -702,7 +714,7 @@ function LineChartArea({ dataKey, color, colorIndex = 1, opacity = 0.18 }: LineC
   }));
 
   return (
-    <G clipPath={`url(#${clipId})`}>
+    <G>
       <Defs>
         <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={fill} stopOpacity={opacity} />
@@ -714,7 +726,7 @@ function LineChartArea({ dataKey, color, colorIndex = 1, opacity = 0.18 }: LineC
   );
 }
 LineChartArea.displayName = 'LineChart.Area';
-LineChartArea.layer = 'svg' as Layer;
+LineChartArea.layer = 'series' as Layer;
 
 export interface LineChartSkeletonProps {
   /** Milliseconds for one pass of the sweep. */
@@ -733,6 +745,9 @@ function LineChartSkeleton({ duration = 1400, color }: LineChartSkeletonProps) {
   const token = useCSSVariable('--color-skeleton');
   const base = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
   const highlight = useSeriesColor(undefined, 1);
+  // Unique per instance: a fixed id makes two of these on one screen share a
+  // gradient, and the second one to mount wins.
+  const gradientId = `panelui-chart-skeleton-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const sweep = useSharedValue(0);
   const reducedMotion = useReducedMotion();
@@ -759,7 +774,6 @@ function LineChartSkeleton({ duration = 1400, color }: LineChartSkeletonProps) {
   if (!loading) return null;
 
   const y = plot.top + plot.height / 2;
-  const gradientId = 'panelui-chart-skeleton';
 
   return (
     <G>

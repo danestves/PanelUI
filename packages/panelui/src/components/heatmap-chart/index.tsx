@@ -54,18 +54,18 @@ import Animated, {
   Easing,
   runOnJS,
   useAnimatedProps,
+  useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { ClipPath, Defs, G, Line as SvgLine, Rect } from 'react-native-svg';
+import Svg, { G, Line as SvgLine, Rect } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
 import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
 import { cn } from '../../utils/cn';
 import { normalizeWeekStart, startOfDay } from '../../utils/date';
 
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 /**
  * Rows in a week — the default, and what the calendar helper and the weekday
@@ -187,7 +187,6 @@ interface HeatmapContextValue {
   cornerRadius: number;
   inactiveOpacity: number;
   weekStartDay: number;
-  clipId: string;
   activeCell: HeatmapCell | null;
   setActiveCell: (cell: HeatmapCell | null) => void;
 }
@@ -409,7 +408,6 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
 ) {
   const [width, setWidth] = useState(0);
   const [activeCell, setActiveCellState] = useState<HeatmapCell | null>(null);
-  const clipId = `panelui-heat-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const reveal = useSharedValue(0);
   const reducedMotion = useReducedMotion();
@@ -551,7 +549,6 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
       cornerRadius,
       inactiveOpacity,
       weekStartDay,
-      clipId,
       activeCell,
       setActiveCell,
     }),
@@ -565,7 +562,6 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
       cornerRadius,
       inactiveOpacity,
       weekStartDay,
-      clipId,
       activeCell,
       setActiveCell,
     ]
@@ -576,7 +572,7 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
    * effect is the same — columns arriving in order — and it costs one animated
    * value instead of one per week, which for a year is fifty-two.
    */
-  const clipProps = useAnimatedProps(() => ({ width: grid.width * reveal.value }));
+  const revealStyle = useAnimatedStyle(() => ({ width: grid.width * reveal.value }));
 
   return (
     <HeatmapContext.Provider value={context}>
@@ -625,23 +621,32 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
           <View style={{ width: grid.width, height: grid.height }}>
             {grid.width > 0 ? (
               <>
-                <Svg width={grid.width} height={grid.height} style={StyleSheet.absoluteFill}>
-                  <Defs>
-                    <ClipPath id={clipId}>
-                      <AnimatedRect
-                        x={0}
-                        y={0}
-                        width={grid.width}
-                        height={grid.height}
-                        animatedProps={clipProps}
-                      />
-                    </ClipPath>
-                  </Defs>
-                  <G clipPath={`url(#${clipId})`}>
+                {/*
+                 * The reveal is a view that grows, not an SVG clip path.
+                 *
+                 * It used to be an animated `<Rect>` inside `<Defs>`, and on
+                 * Android those animated props never reach the native clip, so
+                 * the grid drew complete and the reveal did not play at all. A
+                 * view with `overflow: 'hidden'` is clipped by the platform
+                 * itself, which both platforms agree on.
+                 *
+                 * Animating `width` is normally a layout pass per frame. This
+                 * view is absolutely positioned and its only child is an
+                 * `<Svg>` with an explicit width and height, so it is one node
+                 * and nothing around it moves.
+                 */}
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    { position: 'absolute', top: 0, bottom: 0, left: 0, overflow: 'hidden' },
+                    revealStyle,
+                  ]}
+                >
+                  <Svg width={grid.width} height={grid.height}>
                     {parts.rules}
                     {parts.cells}
-                  </G>
-                </Svg>
+                  </Svg>
+                </Animated.View>
                 {parts.tooltip}
               </>
             ) : null}

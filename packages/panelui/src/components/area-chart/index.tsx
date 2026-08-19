@@ -59,7 +59,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, {
   Circle,
-  ClipPath,
   Defs,
   G,
   Line as SvgLine,
@@ -86,7 +85,6 @@ import {
 import { cn } from '../../utils/cn';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
@@ -110,7 +108,7 @@ const Y_AXIS_WIDTH = 44;
 /** Gap between the value labels and the plot they sit beside. */
 const Y_AXIS_GUTTER = 6;
 
-type Layer = 'svg' | 'overlay' | 'header';
+type Layer = 'svg' | 'series' | 'overlay' | 'header';
 
 export type AreaChartStatus = 'loading' | 'ready';
 export type AreaChartDatum = Record<string, string | number | null | undefined>;
@@ -131,7 +129,6 @@ interface AreaChartContextValue {
   activeIndex: SharedValue<number>;
   activeIndexJS: number;
   setActiveIndexJS: (index: number) => void;
-  clipId: string;
 }
 
 const AreaChartContext = createContext<AreaChartContextValue | null>(null);
@@ -210,15 +207,24 @@ function ChildSlot({ children }: { children: ReactNode }) {
 
 function partition(children: ReactNode) {
   const svg: ReactNode[] = [];
+  const series: ReactNode[] = [];
   const overlay: ReactNode[] = [];
   const header: ReactNode[] = [];
   Children.forEach(children, (child, index) => {
     if (!isValidElement(child)) return;
     const layer = (child.type as { layer?: Layer }).layer ?? 'svg';
     const slot = <ChildSlot key={index}>{child}</ChildSlot>;
-    (layer === 'header' ? header : layer === 'overlay' ? overlay : svg).push(slot);
+    const bucket =
+      layer === 'header'
+        ? header
+        : layer === 'overlay'
+          ? overlay
+          : layer === 'series'
+            ? series
+            : svg;
+    bucket.push(slot);
   });
-  return { svg, overlay, header };
+  return { svg, series, overlay, header };
 }
 
 const AreaChartRoot = forwardRef<AreaChartHandle, AreaChartProps>(function AreaChartRoot(
@@ -248,7 +254,6 @@ const AreaChartRoot = forwardRef<AreaChartHandle, AreaChartProps>(function AreaC
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [series, setSeries] = useState<[string, string][]>([]);
   const [activeIndexJS, setActiveIndexJS] = useState(-1);
-  const clipId = `panelui-area-clip-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const reveal = useSharedValue(0);
   const domainMin = useSharedValue(0);
@@ -386,7 +391,7 @@ const AreaChartRoot = forwardRef<AreaChartHandle, AreaChartProps>(function AreaC
 
   useImperativeHandle(ref, () => ({ replay: playReveal }), [playReveal]);
 
-  const clipProps = useAnimatedProps(() => ({ width: plot.width * reveal.value }));
+  const revealStyle = useAnimatedStyle(() => ({ width: plot.width * reveal.value }));
 
   const handleActiveIndex = useMemo(
     () => (index: number) => {
@@ -423,7 +428,6 @@ const AreaChartRoot = forwardRef<AreaChartHandle, AreaChartProps>(function AreaC
       activeIndex,
       activeIndexJS,
       setActiveIndexJS: handleActiveIndex,
-      clipId,
     }),
     // `plot` is rebuilt every render from `size`, so it is compared by value.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -446,11 +450,10 @@ const AreaChartRoot = forwardRef<AreaChartHandle, AreaChartProps>(function AreaC
       activeIndex,
       activeIndexJS,
       handleActiveIndex,
-      clipId,
     ]
   );
 
-  const { svg, overlay, header } = partition(children);
+  const { svg, series: seriesLayer, overlay, header } = partition(children);
 
   /*
    * Two views, because the header is not part of the plot. `aspectRatio` and
@@ -485,31 +488,41 @@ const AreaChartRoot = forwardRef<AreaChartHandle, AreaChartProps>(function AreaC
           {plot.width > 0 ? (
             <>
               <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-                <Defs>
-                  {/*
-                   * One clip for everything in the plot. Sharing it is what
-                   * makes the reveal read as the chart arriving rather than as
-                   * several bands animating in at once.
-                   *
-                   * `width` is set statically as well as animated, and it has
-                   * to be. Animated props on an element inside `Defs` do not
-                   * reach the native clip on every platform, and with the width
-                   * coming only from the animation there is no width at all
-                   * when they do not — an empty clip, and marks that never
-                   * appear while the axes draw normally.
-                   */}
-                  <ClipPath id={clipId}>
-                    <AnimatedRect
-                      x={plot.left}
-                      y={0}
-                      width={plot.width}
-                      height={size.height}
-                      animatedProps={clipProps}
-                    />
-                  </ClipPath>
-                </Defs>
                 {svg}
               </Svg>
+              {/*
+               * The reveal is a view that grows, not an SVG clip path.
+               *
+               * It used to be an animated `<Rect>` inside `<Defs>`, and on
+               * Android those animated props never reach the native clip — the
+               * rect keeps whatever width was declared on it, so the chart drew
+               * complete and the reveal simply did not play. A view with
+               * `overflow: 'hidden'` is clipped by the platform itself, which
+               * both platforms agree on.
+               *
+               * Animating `width` is normally a layout pass per frame. Here the
+               * view is absolutely positioned and its only child is an `<Svg>`
+               * with an explicit width and height, so the work is one node and
+               * nothing around it moves.
+               *
+               * The inner `<Svg>` is pulled back by `plot.left` so the bands
+               * keep the same coordinate space as the grid underneath them.
+               */}
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  { position: 'absolute', top: 0, bottom: 0, left: plot.left, overflow: 'hidden' },
+                  revealStyle,
+                ]}
+              >
+                <Svg
+                  width={size.width}
+                  height={size.height}
+                  style={{ position: 'absolute', top: 0, left: -plot.left }}
+                >
+                  {seriesLayer}
+                </Svg>
+              </Animated.View>
               {overlay}
             </>
           ) : null}
@@ -602,7 +615,6 @@ function AreaChartArea({
     unregisterSeries,
     domainMin,
     domainMax,
-    clipId,
   } = useChart('AreaChart.Area');
 
   const stroke = useSeriesColor(color, colorIndex);
@@ -650,7 +662,7 @@ function AreaChartArea({
   }));
 
   return (
-    <G clipPath={`url(#${clipId})`}>
+    <G>
       <Defs>
         <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={stroke} stopOpacity={topOpacity} />
@@ -672,7 +684,7 @@ function AreaChartArea({
   );
 }
 AreaChartArea.displayName = 'AreaChart.Area';
-AreaChartArea.layer = 'svg' as Layer;
+AreaChartArea.layer = 'series' as Layer;
 
 /** How much of the plot's height the resting band takes. */
 const SKELETON_BAND = 0.18;

@@ -89,7 +89,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, {
   Circle,
-  ClipPath,
   Defs,
   G,
   Line as SvgLine,
@@ -142,7 +141,6 @@ export {
 export type { Plot as PlotBox, ChartPoint } from '../../utils/chart';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 /** Room left around the plot for the axis labels and the markers' rings. */
@@ -168,7 +166,7 @@ const LABEL_WIDTH = 120;
  * stays a flat list of children instead of three nested slots whose order the
  * caller has to remember.
  */
-type Layer = 'svg' | 'overlay' | 'header';
+type Layer = 'svg' | 'series' | 'overlay' | 'header';
 
 export type PlotStatus = 'loading' | 'ready';
 export type PlotCurve = 'monotone' | 'linear';
@@ -229,7 +227,6 @@ export interface PlotGeometry {
   activeIndexJS: number;
   setActiveIndexJS: (index: number) => void;
   /** The clip every mark shares, so they are revealed as one drawing. */
-  clipId: string;
 }
 
 const PlotContext = createContext<PlotGeometry | null>(null);
@@ -355,7 +352,6 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [registrations, setRegistrations] = useState<PlotSeriesRegistration[]>([]);
   const [activeIndexJS, setActiveIndexJS] = useState(-1);
-  const clipId = `panelui-plot-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const reveal = useSharedValue(0);
   const domainMin = useSharedValue(0);
@@ -584,7 +580,6 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
       activeIndex,
       activeIndexJS,
       setActiveIndexJS: handleActiveIndex,
-      clipId,
     }),
     // `plot` is rebuilt every render from `size`, so it is compared by value.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -608,13 +603,12 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
       activeIndex,
       activeIndexJS,
       handleActiveIndex,
-      clipId,
     ]
   );
 
-  const clipProps = useAnimatedProps(() => ({ width: plot.width * reveal.value }));
+  const revealStyle = useAnimatedStyle(() => ({ width: plot.width * reveal.value }));
 
-  const { svg, overlay, header } = partition(children);
+  const { svg, series: seriesLayer, overlay, header } = partition(children);
 
   /*
    * Two views, because the header is not part of the plot. `aspectRatio` and
@@ -649,32 +643,45 @@ const PlotRoot = forwardRef<PlotHandle, PlotProps>(function PlotRoot(
           {plot.width > 0 ? (
             <>
               <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-                <Defs>
-                  {/*
-                   * One clip for every mark. Sharing it is what makes the reveal
-                   * read as the chart arriving, rather than as four separate
-                   * things animating in at once — which is the thing a composed
-                   * chart is most at risk of looking like.
-                   *
-                   * `width` is set statically as well as animated, and it has
-                   * to be. Animated props on an element inside `Defs` do not
-                   * reach the native clip on every platform, and with the width
-                   * coming only from the animation there is no width at all
-                   * when they do not — an empty clip, and marks that never
-                   * appear while the axes draw normally.
-                   */}
-                  <ClipPath id={clipId}>
-                    <AnimatedRect
-                      x={plot.left}
-                      y={0}
-                      width={plot.width}
-                      height={size.height}
-                      animatedProps={clipProps}
-                    />
-                  </ClipPath>
-                </Defs>
                 {svg}
               </Svg>
+              {/*
+               * One reveal for every mark, and it is a view that grows rather
+               * than an SVG clip path. Sharing it is what makes the reveal read
+               * as the chart arriving, rather than as four separate things
+               * animating in at once — which is the thing a composed chart is
+               * most at risk of looking like.
+               *
+               * It used to be an animated `<Rect>` inside `<Defs>`, and on
+               * Android those animated props never reach the native clip — the
+               * rect keeps whatever width was declared on it, so the marks drew
+               * complete and the reveal simply did not play. A view with
+               * `overflow: 'hidden'` is clipped by the platform itself, which
+               * both platforms agree on.
+               *
+               * Animating `width` is normally a layout pass per frame. Here the
+               * view is absolutely positioned and its only child is an `<Svg>`
+               * with an explicit width and height, so the work is one node and
+               * nothing around it moves.
+               *
+               * The inner `<Svg>` is pulled back by `plot.left` so the marks
+               * keep the same coordinate space as the grid underneath them.
+               */}
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  { position: 'absolute', top: 0, bottom: 0, left: plot.left, overflow: 'hidden' },
+                  revealStyle,
+                ]}
+              >
+                <Svg
+                  width={size.width}
+                  height={size.height}
+                  style={{ position: 'absolute', top: 0, left: -plot.left }}
+                >
+                  {seriesLayer}
+                </Svg>
+              </Animated.View>
               {overlay}
             </>
           ) : null}
@@ -688,20 +695,29 @@ PlotRoot.displayName = 'Plot';
 /** Sorts the children into the SVG tree, the view layer over it, and the header. */
 function partition(children: ReactNode) {
   const svg: ReactNode[] = [];
+  const series: ReactNode[] = [];
   const overlay: ReactNode[] = [];
   const header: ReactNode[] = [];
 
   Children.forEach(children, (child, index) => {
     if (!isValidElement(child)) return;
     const layer = (child.type as { layer?: Layer }).layer ?? 'svg';
-    (layer === 'header' ? header : layer === 'overlay' ? overlay : svg).push(
+    const bucket =
+      layer === 'header'
+        ? header
+        : layer === 'overlay'
+          ? overlay
+          : layer === 'series'
+            ? series
+            : svg;
+    bucket.push(
       // Children of a `Children.forEach` need keys of their own once they are
       // put into a new array.
       <ChildSlot key={index}>{child}</ChildSlot>
     );
   });
 
-  return { svg, overlay, header };
+  return { svg, series, overlay, header };
 }
 
 /** Identity wrapper, purely so the partitioned arrays can carry keys. */
@@ -801,7 +817,7 @@ function PlotLine({
   curve = 'monotone',
   dashArray,
 }: PlotLineProps) {
-  const { data, plot, xScale, domainMin, domainMax, status, clipId } =
+  const { data, plot, xScale, domainMin, domainMax, status } =
     useChart('Plot.Line');
   const stroke = useMark(dataKey, color, colorIndex);
 
@@ -830,7 +846,7 @@ function PlotLine({
   if (status === 'loading') return null;
 
   return (
-    <G clipPath={`url(#${clipId})`}>
+    <G>
       <AnimatedPath
         animatedProps={animatedProps}
         fill="none"
@@ -844,7 +860,7 @@ function PlotLine({
   );
 }
 PlotLine.displayName = 'Plot.Line';
-PlotLine.layer = 'svg' as Layer;
+PlotLine.layer = 'series' as Layer;
 
 export interface PlotAreaProps extends PlotSeriesProps {
   opacity?: number;
@@ -864,7 +880,7 @@ function PlotArea({
   opacity = 0.18,
   curve = 'monotone',
 }: PlotAreaProps) {
-  const { data, plot, xScale, domainMin, domainMax, status, clipId } =
+  const { data, plot, xScale, domainMin, domainMax, status } =
     useChart('Plot.Area');
   const fill = useMark(dataKey, color, colorIndex);
   const values = useMemo(() => columnValues(data, dataKey), [data, dataKey]);
@@ -882,13 +898,13 @@ function PlotArea({
   if (status === 'loading') return null;
 
   return (
-    <G clipPath={`url(#${clipId})`}>
+    <G>
       <AnimatedPath animatedProps={animatedProps} fill={fill} fillOpacity={opacity} />
     </G>
   );
 }
 PlotArea.displayName = 'Plot.Area';
-PlotArea.layer = 'svg' as Layer;
+PlotArea.layer = 'series' as Layer;
 
 export interface PlotBarsProps extends PlotSeriesProps {
   /** Fraction of each slice left empty, `0` to `1`. */
@@ -928,7 +944,7 @@ function PlotBars({
   opacity = 1,
   baseline = 0,
 }: PlotBarsProps) {
-  const { data, plot, domainMin, domainMax, status, clipId } = useChart('Plot.Bars');
+  const { data, plot, domainMin, domainMax, status } = useChart('Plot.Bars');
   const fill = useMark(dataKey, color, colorIndex);
   const values = useMemo(() => columnValues(data, dataKey), [data, dataKey]);
 
@@ -972,13 +988,13 @@ function PlotBars({
   if (status === 'loading') return null;
 
   return (
-    <G clipPath={`url(#${clipId})`}>
+    <G>
       <AnimatedPath animatedProps={animatedProps} fill={fill} fillOpacity={opacity} />
     </G>
   );
 }
 PlotBars.displayName = 'Plot.Bars';
-PlotBars.layer = 'svg' as Layer;
+PlotBars.layer = 'series' as Layer;
 // Read by the root before it resolves the scale: a mark with width cannot sit
 // on a point scale without half of the first and last one leaving the plot.
 PlotBars.mark = 'band' as const;
@@ -998,7 +1014,7 @@ function PlotDots({
   size = 3.5,
   ringWidth = 2,
 }: PlotDotsProps) {
-  const { data, plot, xScale, domainMin, domainMax, status, clipId } =
+  const { data, plot, xScale, domainMin, domainMax, status } =
     useChart('Plot.Dots');
   const fill = useMark(dataKey, color, colorIndex);
   const ringToken = useCSSVariable('--color-background');
@@ -1007,7 +1023,7 @@ function PlotDots({
   const banded = xScale === 'band';
 
   return (
-    <G clipPath={`url(#${clipId})`}>
+    <G>
       {status === 'loading'
         ? null
         : values.map((value, index) =>
@@ -1034,7 +1050,7 @@ function PlotDots({
   );
 }
 PlotDots.displayName = 'Plot.Dots';
-PlotDots.layer = 'svg' as Layer;
+PlotDots.layer = 'series' as Layer;
 
 /** One dot, whose y follows the domain tween. */
 function Dot({
@@ -1087,11 +1103,11 @@ export interface PlotLayerProps {
  * animates has to hold hooks of its own and a render prop is not a component.
  */
 function PlotLayer({ children }: PlotLayerProps) {
-  const { clipId } = useChart('Plot.Layer');
-  return <G clipPath={`url(#${clipId})`}>{children}</G>;
+  useChart('Plot.Layer');
+  return <G>{children}</G>;
 }
 PlotLayer.displayName = 'Plot.Layer';
-PlotLayer.layer = 'svg' as Layer;
+PlotLayer.layer = 'series' as Layer;
 
 /* -------------------------------------------------------------------------- */
 /* Overlay layer                                                              */
