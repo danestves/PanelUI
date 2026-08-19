@@ -44,7 +44,15 @@
  * Screen readers get one copy. The rest are duplicates of content already
  * announced, and hearing a sponsor list four times over is not thoroughness.
  */
-import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from 'react';
 import {
   Platform,
   Pressable,
@@ -99,7 +107,13 @@ export interface MarqueeProps extends Omit<ViewProps, 'children'> {
   reverse?: boolean;
   /** Set false to hold the content where it is. */
   playing?: boolean;
-  /** Show the built-in user pause/play control while motion is enabled. */
+  /**
+   * Show the built-in user pause/play control while motion is enabled.
+   *
+   * Defaults to `true` on its own, and to `false` inside a `Marquee.Group` —
+   * the group draws one control for everything in it, and a control per row is
+   * how two of them end up stacked on top of each other.
+   */
   showPauseControl?: boolean;
   /** Visible and spoken label for the moving state. */
   pauseLabel?: string;
@@ -109,7 +123,18 @@ export interface MarqueeProps extends Omit<ViewProps, 'children'> {
   onPlayingChange?: (playing: boolean) => void;
 }
 
-export function Marquee({
+/**
+ * Set by `Marquee.Group` so the marquees inside it stop drawing a pause control
+ * each and take the group's instead.
+ */
+interface MarqueeGroupContextValue {
+  /** True while the group's control is holding everything in it still. */
+  paused: boolean;
+}
+
+const MarqueeGroupContext = createContext<MarqueeGroupContextValue | null>(null);
+
+function MarqueeRoot({
   className,
   children,
   speed: speedProp = DEFAULT_MARQUEE_SPEED,
@@ -117,7 +142,7 @@ export function Marquee({
   direction = 'horizontal',
   reverse = false,
   playing = true,
-  showPauseControl = true,
+  showPauseControl,
   pauseLabel = 'Pause',
   playLabel = 'Play',
   onPlayingChange,
@@ -135,7 +160,13 @@ export function Marquee({
   const [content, setContent] = useState(0);
   const [userPaused, setUserPaused] = useState(false);
   const speed = normalizeMarqueeSpeed(speedProp);
-  const moving = playing && !userPaused;
+
+  // A group's pause is the same instruction as this one's, so it is read here
+  // rather than pushed down as a `playing` prop — a caller who set `playing`
+  // themselves should not have it overwritten by the container.
+  const group = useContext(MarqueeGroupContext);
+  const showControl = showPauseControl ?? group === null;
+  const moving = playing && !userPaused && !(group?.paused ?? false);
 
   // The distance from one copy to the same point on the next, and therefore
   // both the layout step and the exact loop length. They are the same number
@@ -250,7 +281,7 @@ export function Marquee({
           );
         })}
       </Animated.View>
-      {showPauseControl && playing && period > 0 && speed > 0 ? (
+      {showControl && playing && period > 0 && speed > 0 ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={userPaused ? playLabel : pauseLabel}
@@ -269,6 +300,98 @@ export function Marquee({
     </View>
   );
 }
+
+export interface MarqueeGroupProps extends ViewProps {
+  className?: string;
+  /** Set false to hold every marquee in the group where it is. */
+  playing?: boolean;
+  /** Show the group's pause/play control. */
+  showPauseControl?: boolean;
+  /** Visible and spoken label for the moving state. */
+  pauseLabel?: string;
+  /** Visible and spoken label for the user-paused state. */
+  playLabel?: string;
+  /** Reports changes made by the group's control. */
+  onPlayingChange?: (playing: boolean) => void;
+  children?: ReactNode;
+}
+
+/**
+ * Rows of travelling content that stop and start together, under one control.
+ *
+ * Moving content needs a way to stop it, so a marquee draws its own pause
+ * button. Stacked — two rows of logos travelling against each other — that is
+ * one button per row, each pinned to its own bottom corner, and the upper one
+ * lands on top of the row beneath it. Two buttons for one piece of motion, and
+ * one of them covering the content it belongs to.
+ *
+ * A group is the answer to both: the marquees inside it stop drawing their own
+ * control, and the group draws a single one below them rather than over them.
+ *
+ * ```tsx
+ * <Marquee.Group>
+ *   <Marquee>{topRow}</Marquee>
+ *   <Marquee reverse>{bottomRow}</Marquee>
+ * </Marquee.Group>
+ * ```
+ *
+ * Each marquee keeps its own `playing` prop. The group's pause is an additional
+ * hold, not a replacement — a row already held still stays still.
+ */
+function MarqueeGroup({
+  className,
+  children,
+  playing = true,
+  showPauseControl = true,
+  pauseLabel = 'Pause',
+  playLabel = 'Play',
+  onPlayingChange,
+  ...props
+}: MarqueeGroupProps) {
+  const [userPaused, setUserPaused] = useState(false);
+  const reducedMotion = useReducedMotion();
+
+  const value = useMemo(() => ({ paused: userPaused }), [userPaused]);
+
+  // Nothing is moving, so there is nothing to stop. The control is not hidden
+  // to save space — offering to pause content that is already still is the
+  // same lie as a disabled button with no reason on it.
+  const showControl = showPauseControl && playing && !reducedMotion;
+
+  return (
+    <MarqueeGroupContext.Provider value={value}>
+      <View {...props} className={cn('w-full gap-3', className)}>
+        {children}
+        {showControl ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={userPaused ? playLabel : pauseLabel}
+            // In flow and at the end, not floating over the last row. The
+            // control belongs to the group, and a group's control that covers
+            // one of its members is describing itself as part of that member.
+            className="min-h-12 self-end items-center justify-center rounded-full border border-border bg-background px-4"
+            onPress={() => {
+              const next = !userPaused;
+              setUserPaused(next);
+              onPlayingChange?.(!next);
+            }}
+          >
+            <Text className="text-xs font-medium text-foreground">
+              {userPaused ? playLabel : pauseLabel}
+            </Text>
+          </Pressable>
+        ) : null}
+      </View>
+    </MarqueeGroupContext.Provider>
+  );
+}
+MarqueeGroup.displayName = 'Marquee.Group';
+
+MarqueeRoot.displayName = 'Marquee';
+
+export const Marquee = Object.assign(MarqueeRoot, {
+  Group: MarqueeGroup,
+});
 
 const styles = StyleSheet.create({
   /* Laid out so it measures, hidden so it does not draw, and behind everything

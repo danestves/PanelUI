@@ -1210,7 +1210,10 @@ function MarqueeLogoWallVersion() {
         </Text>
       </View>
 
-      <View className="gap-3">
+      {/* Grouped, so the two rows share one pause control below them. Left to
+          themselves each row pins its own to its bottom corner, and the upper
+          one lands on top of the row underneath. */}
+      <Marquee.Group className="px-5">
         <Marquee spacing={12} speed={28} className="w-full">
           <View className="flex-row gap-3">
             {MARQUEE_BRANDS.map((brand) => (
@@ -1225,7 +1228,7 @@ function MarqueeLogoWallVersion() {
             ))}
           </View>
         </Marquee>
-      </View>
+      </Marquee.Group>
     </View>
   );
 }
@@ -1289,11 +1292,13 @@ function MarqueeFeedVersion() {
         <Switch value={playing} onValueChange={setPlaying} />
       </View>
 
+      {/* The switch in the header is the pause control here. */}
       <Marquee
         direction="vertical"
         spacing={12}
         speed={22}
         playing={playing}
+        showPauseControl={false}
         className="flex-1 w-full"
       >
         <View className="gap-3 px-5">
@@ -1333,7 +1338,7 @@ function MarqueeTwoRowDemo() {
   // Two rows travelling opposite ways is the arrangement that reads as motion
   // rather than as one row that happens to be sliding.
   return (
-    <View className="w-full gap-3">
+    <Marquee.Group className="w-full">
       <Marquee spacing={12} speed={35}>
         <View className="flex-row gap-3">
           {MARQUEE_STACK.map((label) => (
@@ -1350,7 +1355,7 @@ function MarqueeTwoRowDemo() {
           ))}
         </View>
       </Marquee>
-    </View>
+    </Marquee.Group>
   );
 }
 
@@ -1375,7 +1380,9 @@ function MarqueePlayingDemo() {
 
   return (
     <View className="w-full gap-4">
-      <Marquee spacing={12} speed={40} playing={playing}>
+      {/* The switch below is the pause control, so the built-in one is off:
+          two controls for one piece of state is two things to keep in step. */}
+      <Marquee spacing={12} speed={40} playing={playing} showPauseControl={false}>
         <View className="flex-row gap-3">
           {MARQUEE_STACK.map((label) => (
             <Badge key={label} variant="secondary">

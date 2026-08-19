@@ -744,6 +744,7 @@ export {
 export {
   Marquee,
   type MarqueeProps,
+  type MarqueeGroupProps,
   type MarqueeDirection,
 } from './components/marquee';
 export {
