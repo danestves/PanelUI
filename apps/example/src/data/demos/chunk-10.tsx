@@ -1115,7 +1115,7 @@ function VoiceDemo() {
 const ENTRIES: ComponentEntry[] = [
   {
     slug: 'ai-input',
-    name: 'AIInput',
+    name: 'aiInput',
     summary: 'A prompt composer, the sheet it opens, and a screen with no field on it',
     demos: [
       { label: 'At rest', render: () => <ComposerDemo /> },

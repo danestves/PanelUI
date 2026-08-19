@@ -119,6 +119,16 @@ function statusOf({ alpha, beta, addedIn, updatedIn }) {
 /** Options are an optional 4th element, so the common entry stays a triple. */
 const optionsOf = (entry) => entry[3] ?? {};
 const groupOf = (entry) => optionsOf(entry).group ?? DEFAULT_GROUP;
+/*
+ * What a reader sees the component called, which is not what they type.
+ *
+ * A meta entry's first field is the *identifier*: the page's import statement
+ * is built from it and so is every compound part name, so it has to stay
+ * something that can appear in a `.tsx` file. `title` is the label, for the one
+ * component whose name reads better than its identifier writes. Defaulting to
+ * the identifier is why every other entry needs nothing.
+ */
+const titleOf = (entry) => optionsOf(entry).title ?? entry[0];
 
 for (const group of Object.keys(GROUPS)) {
   fs.mkdirSync(path.join(contentDir, group), { recursive: true });
@@ -241,7 +251,7 @@ for (const [slug, entry] of Object.entries(meta)) {
     : '';
 
   sections.push(`---
-title: ${name}
+title: ${titleOf(entry)}
 description: ${yamlScalar(summary)}${status ? `\nstatus: ${status}` : ''}
 ---
 
@@ -433,13 +443,13 @@ const indexSections = Object.entries(CATEGORIES)
   .map(([category, [heading, lede]]) => {
     const entries = Object.entries(meta)
       .filter(([, entry]) => categoryOf(entry) === category)
-      .sort(([, a], [, b]) => a[0].localeCompare(b[0]));
+      .sort(([, a], [, b]) => titleOf(a).localeCompare(titleOf(b)));
     if (!entries.length) return null;
 
     const cards = entries
       .map(
         ([slug, entry]) =>
-          `  <Card title="${entry[0]}" href="/docs/${groupOf(entry)}/${slug}">\n` +
+          `  <Card title="${titleOf(entry)}" href="/docs/${groupOf(entry)}/${slug}">\n` +
           `    ${entry[1]}\n  </Card>`
       )
       .join('\n');
@@ -464,7 +474,7 @@ fs.writeFileSync(path.join(contentDir, 'components', 'index.mdx'), indexPage + '
 for (const [group, title] of Object.entries(GROUPS)) {
   const pages = Object.entries(meta)
     .filter(([, entry]) => groupOf(entry) === group)
-    .sort(([, a], [, b]) => a[0].localeCompare(b[0]))
+    .sort(([, a], [, b]) => titleOf(a).localeCompare(titleOf(b)))
     .map(([slug]) => slug);
 
   // The index leads its own group, and is not a component — hence `pages`
