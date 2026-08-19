@@ -85,7 +85,16 @@ const REDUCED_STEPS = 5;
 
 const progressButtonVariants = tv({
   slots: {
-    root: 'relative overflow-hidden rounded-lg border',
+    /*
+     * A pill, not the `rounded-lg` the other buttons take.
+     *
+     * The fill is clipped by this radius, so the shape of the button is also
+     * the shape of the wipe's leading edge as it comes out of the corner. On a
+     * small radius that edge emerges square from a rounded box, which reads as
+     * a rectangle sliding out from under the button rather than as the button
+     * filling up.
+     */
+    root: 'relative overflow-hidden rounded-full border',
     /*
      * The row inside the button. It is separate from `root` because the fill
      * has to sit over the whole button including its padding — a wipe that
@@ -129,21 +138,24 @@ const progressButtonVariants = tv({
       // Matched to Button's boxes, and `min-h-*` for the same reason: the
       // label's glyphs grow with the system text size and the box has to grow
       // with them.
+      // Wider than the equivalent Button, because the corner is a half-circle
+      // rather than a small radius: the curve eats into the side padding, and
+      // at Button's values the first and last glyphs sit against it.
       sm: {
         root: 'min-h-9',
-        content: 'min-h-9 gap-1.5 px-2.5 py-2',
+        content: 'min-h-9 gap-1.5 px-3.5 py-2',
         label: 'text-[14px]',
         fillLabel: 'text-[14px]',
       },
       md: {
         root: 'min-h-11',
-        content: 'min-h-11 px-4 py-2.5',
+        content: 'min-h-11 px-5 py-2.5',
         label: 'text-[16px]',
         fillLabel: 'text-[16px]',
       },
       lg: {
         root: 'min-h-12',
-        content: 'min-h-12 px-6 py-2.5',
+        content: 'min-h-12 px-7 py-2.5',
         label: 'text-[18px]',
         fillLabel: 'text-[18px]',
       },
