@@ -1,6 +1,13 @@
 {
   "slug": "ai-input",
   "intro": "The composer a person types a prompt into: a field that grows with what is written in it, a row of controls under it, and the sheet those controls open.\n\nThe field opens one line tall and follows the text up to `maxRows`. After that it holds its height and scrolls its own content, so the composer cannot grow until the send button is off the bottom of the screen. Five rows is the default.\n\nNothing here touches the microphone. There is a recording state and it draws a live meter, but the app owns the recorder and passes back a `level` and a `status` — which is what keeps the composer free of an audio dependency.\n\nThe surfaces ask for the iOS system material and get it on iOS 26 and above. Below that, on Android, and for anyone with Reduce Transparency switched on, they are drawn as solid token surfaces. Both are finished looks; see [Glass](/docs/components/glass) for why nothing is faked where the material does not exist.\n\nFor a plain multi-line field with a label and a character count, use [Textarea](/docs/components/textarea). For the answer coming back, use [Response](/docs/ai-components/response).",
+  "previewVideo": {
+    "src": "/previews/ai-input.mp4",
+    "poster": "/previews/ai-input-poster.jpg",
+    "alt": "The AIInput component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  },
   "usage": "<AIInput value={value} onValueChange={setValue} onSubmit={send}>\n  <AIInput.Field placeholder=\"Ask anything\" />\n  <AIInput.Toolbar>\n    <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={() => setSheet(true)} />\n    <AIInput.Pill label=\"Sonnet 4.6\" detail=\"High\" onPress={() => setModels(true)} />\n    <AIInput.Spacer />\n    <AIInput.Action label=\"Dictate\" icon={<MicIcon />} onPress={record} />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n</AIInput>",
   "extraImports": [
     "PlusIcon",
@@ -31,26 +38,58 @@
   "examples": [
     {
       "title": "Growing, and then scrolling",
+      "preview": {
+        "src": "/previews/ai-input-growing-and-then-scrolling.jpg",
+        "alt": "AIInput — Growing, and then scrolling.",
+        "width": 1179,
+        "height": 538
+      },
       "description": "`maxRows` is where the field stops. Up to it the composer follows the text; past it the height holds and the field scrolls, which is what keeps the toolbar on screen.\n\n`minRows` moves the floor if a composer should open taller than one line.",
       "code": "<AIInput value={value} onValueChange={setValue} maxRows={5}>\n  <AIInput.Field placeholder=\"Ask anything\" />\n  <AIInput.Toolbar>\n    <AIInput.Spacer />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n</AIInput>"
     },
     {
       "title": "On one line",
+      "preview": {
+        "src": "/previews/ai-input-on-one-line.jpg",
+        "alt": "AIInput — On one line.",
+        "width": 1179,
+        "height": 251
+      },
       "description": "`AIInput.Row` puts the field between the controls rather than above them, which is the whole composer in one pill.\n\nThe field still grows — it grows the row. Reach for it when the composer is always on screen, and for the stacked one when it is what the screen is for.",
       "code": "<AIInput value={value} onValueChange={setValue} onSubmit={send}>\n  <AIInput.Row>\n    <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={add} />\n    <AIInput.Field placeholder=\"Ask anything\" />\n    <AIInput.Action label=\"Dictate\" icon={<MicIcon />} onPress={record} />\n    <AIInput.Submit />\n  </AIInput.Row>\n</AIInput>"
     },
     {
       "title": "The platform's own controls",
+      "preview": {
+        "src": "/previews/ai-input-the-platform-s-own-controls.jpg",
+        "alt": "AIInput — The platform's own controls.",
+        "width": 1179,
+        "height": 457
+      },
       "description": "`native` hands a control to the platform, which draws it in its own material — Liquid Glass on iOS 26. The card behind it is still ours, and still glass.\n\nThe platform owns their colour, metrics and shape while this is on, so `className` and the theme tokens stop reaching them, and the row they sit in takes the platform's height rather than the one our own controls would need.\n\nThe platform is given text, never elements: a hosted view inside a labelled native button has no width anything can resolve. A pill's `detail` goes over as part of the label, so a handed-over pill is one label in one weight rather than a value and a quieter one beside it. An `indicator` is an element and cannot go at all — name the glyph with `indicatorSymbol` and the platform draws it from its own symbol set.",
       "code": "<AIInput native value={value} onValueChange={setValue}>\n  <AIInput.Field />\n  <AIInput.Toolbar>\n    <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={add} />\n    <AIInput.Pill label=\"Sonnet 4.6\" accessibilityLabel=\"Change model\" />\n    <AIInput.Spacer />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n</AIInput>"
     },
     {
       "title": "One button, three jobs",
+      "previewVideo": {
+        "src": "/previews/ai-input-one-button-three-jobs.mp4",
+        "poster": "/previews/ai-input-one-button-three-jobs-poster.jpg",
+        "alt": "AIInput — One button, three jobs.",
+        "width": 720,
+        "height": 1560
+      },
       "description": "`AIInput.Submit` reads `status` and whether anything has been typed, and offers the one thing that is worth doing: voice mode on an empty composer, send once there is a prompt, stop while the answer is arriving.\n\nOne control rather than three, because a row of dimmed siblings is a row of things that look broken.",
       "code": "<AIInput\n  value={value}\n  onValueChange={setValue}\n  status={status}\n  onSubmit={send}\n  onStop={stop}\n  onVoice={() => router.push('/voice')}\n>\n  <AIInput.Field />\n  <AIInput.Toolbar>\n    <AIInput.Spacer />\n    <AIInput.Submit />\n  </AIInput.Toolbar>\n</AIInput>"
     },
     {
       "title": "Recording, without a recorder",
+      "previewVideo": {
+        "src": "/previews/ai-input-recording-without-a-recorder.mp4",
+        "poster": "/previews/ai-input-recording-without-a-recorder-poster.jpg",
+        "alt": "AIInput — Recording, without a recorder.",
+        "width": 720,
+        "height": 1560
+      },
       "description": "The composer draws the meter; the app runs the recorder. Pass a Reanimated shared value as `level` and metering arriving every 30ms never re-renders anything above the composer.\n\nWith no `level` at all the meter animates plausible motion, so the screen can be built before any audio exists.",
       "code": "const level = useSharedValue(0);\n\n<AIInput status={recording ? 'recording' : 'ready'} level={level}\n  onRecordCancel={discard} onRecordConfirm={transcribe}>\n  <AIInput.Field placeholder=\"Chat with the model\" />\n  {recording ? <AIInput.Recording /> : (\n    <AIInput.Toolbar>\n      <AIInput.Spacer />\n      <AIInput.Action label=\"Dictate\" icon={<MicIcon />} onPress={start} />\n      <AIInput.Submit />\n    </AIInput.Toolbar>\n  )}\n</AIInput>"
     },
@@ -68,6 +107,13 @@
   "versions": [
     {
       "title": "In a chat",
+      "previewVideo": {
+        "src": "/previews/ai-input.mp4",
+        "poster": "/previews/ai-input-poster.jpg",
+        "alt": "AIInput — In a chat.",
+        "width": 720,
+        "height": 1560
+      },
       "description": "The composer docked above the keyboard, over a transcript. The page behind does not move — the composer travels with the keyboard instead.",
       "code": "<View className=\"flex-1\">\n  <MessageScroller>{turns}</MessageScroller>\n  <AIInput value={value} onValueChange={setValue} onSubmit={send} keyboardBottomInset={insets.bottom}>\n    <AIInput.Field placeholder=\"Chat with the model\" />\n    <AIInput.Toolbar>\n      <AIInput.Action label=\"Add\" icon={<PlusIcon />} onPress={() => setSheet(true)} />\n      <AIInput.Pill label=\"Sonnet 4.6\" detail=\"High\" onPress={() => setModels(true)} />\n      <AIInput.Spacer />\n      <AIInput.Submit />\n    </AIInput.Toolbar>\n  </AIInput>\n</View>"
     },
