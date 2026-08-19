@@ -64,6 +64,9 @@ import {
 } from 'react-native';
 import Animated, {
   interpolate,
+  interpolateColor,
+  runOnJS,
+  useAnimatedReaction,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useReducedMotion,
@@ -73,8 +76,99 @@ import Animated, {
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
+import { selectionTick } from '../../utils/haptics';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { TIMELINE_WIDE_COLUMN, timelineColumnOffsets, timelineColumnWidth } from './timeline-geometry';
+
+const AnimatedText = Animated.createAnimatedComponent(Text);
+
+/**
+ * A tick as the reading edge passes from one column to the next.
+ *
+ * The comparison runs on the UI thread every frame; the call back to
+ * JavaScript happens once per column crossed, which is the difference between
+ * feedback and a haptic per frame. Fired at the crossing itself rather than
+ * when the scroll settles, so the tick and the column arriving are the same
+ * moment — a haptic that lags what caused it reads as a glitch.
+ */
+function useColumnDetent(
+  scrollX: SharedValue<number>,
+  offsets: number[],
+  enabled: boolean
+) {
+  const nearest = useSharedValue(0);
+
+  useAnimatedReaction(
+    () => {
+      if (!enabled || offsets.length === 0) return 0;
+      let index = 0;
+      let best = Infinity;
+      for (let i = 0; i < offsets.length; i += 1) {
+        const distance = Math.abs(scrollX.value - (offsets[i] ?? 0));
+        if (distance < best) {
+          best = distance;
+          index = i;
+        }
+      }
+      return index;
+    },
+    (index, previous) => {
+      if (!enabled || previous === null || index === previous) return;
+      nearest.value = index;
+      runOnJS(selectionTick)();
+    }
+  );
+}
+
+
+/*
+ * Fallbacks for the two ends of the focus ramp, used only before the theme's
+ * variables have resolved. `interpolateColor` needs two real colours on the
+ * very first frame, and a missing one is a crash rather than a wrong shade.
+ */
+const INK_FALLBACK = { foreground: '#09090b', muted: '#71717a' };
+
+/**
+ * A column's text at full strength while it is the one being read, and muted
+ * while it is not.
+ *
+ * Horizontal only, and it is the piece that was missing. Scale and a small drop
+ * already picked the focused column out of the row, but every word in every
+ * column stayed the same muted grey — so the column you had scrolled to was
+ * nearer and no easier to read than the ones either side of it. Colour is what
+ * says *this is the one*, and it is the only cue that survives being looked at
+ * rather than glanced at.
+ *
+ * The ramp runs to the foreground token, which is what a heading uses. Anything
+ * softer is another grey, and the whole complaint about the old drawing was
+ * that it was grey.
+ *
+ * It is not disabled under reduced motion. The value is driven by scroll
+ * position rather than by a clock — the reader's own finger is what moves it —
+ * so there is no motion here to reduce. What that setting turns off is the
+ * scale and the drop, which is handled where those are.
+ */
+function useColumnInk(component: string) {
+  const { orientation, scrollX } = useTimeline(component);
+  const item = useContext(TimelineItemContext);
+  const foregroundToken = useCSSVariable('--color-foreground');
+  const mutedToken = useCSSVariable('--color-muted-foreground');
+
+  const horizontal = orientation === 'horizontal';
+  const offset = item?.offset ?? 0;
+  const width = Math.max(item?.columnWidth || TIMELINE_WIDE_COLUMN, 1);
+  const foreground =
+    typeof foregroundToken === 'string' ? foregroundToken : INK_FALLBACK.foreground;
+  const muted = typeof mutedToken === 'string' ? mutedToken : INK_FALLBACK.muted;
+
+  const style = useAnimatedStyle(() => {
+    const distance = Math.abs(scrollX.value - offset);
+    const away = interpolate(distance, [0, width], [0, 1], 'clamp');
+    return { color: interpolateColor(away, [0, 1], [foreground, muted]) };
+  });
+
+  return { horizontal, style };
+}
 
 export type TimelineVariant = 'dot' | 'icon' | 'numbered' | 'card' | 'compact';
 /** Semantic colour for a single event, independent of progress. */
@@ -315,6 +409,13 @@ export interface TimelineProps extends ViewProps {
    * halfway shows two half-columns and no whole one.
    */
   snap?: boolean;
+  /**
+   * Horizontal only: a tick as the reading edge passes from one column to the
+   * next. Needs `snap`, since a scroll that lands anywhere has no detents to
+   * feel. Off by default — a haptic per column is a lot for a long history, and
+   * whether this one is worth feeling is the caller's call.
+   */
+  haptics?: boolean;
   children?: ReactNode;
 }
 
@@ -326,6 +427,7 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
       variant = 'dot',
       orientation = 'vertical',
       snap = true,
+      haptics = false,
       children,
       ...props
     },
@@ -381,6 +483,8 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
     const onScroll = useAnimatedScrollHandler((event) => {
       scrollX.value = event.contentOffset.x;
     });
+
+    useColumnDetent(scrollX, offsets, horizontal && snap && haptics);
 
     if (!horizontal) {
       return (
@@ -841,13 +945,17 @@ TimelineIndicator.displayName = 'Timeline.Indicator';
  */
 const TimelineContent = forwardRef<View, ViewProps & { className?: string }>(
   ({ className, children, style, ...props }, ref) => {
-    const { variant, orientation, scrollX, animate } = useTimeline('Timeline.Content');
-    const { completed, tone, offset, columnWidth } =
-      useTimelineItem('Timeline.Content');
+    const { variant, orientation } = useTimeline('Timeline.Content');
+    const { completed, tone } = useTimelineItem('Timeline.Content');
     const { body, panel } = timelineVariants({ variant, tone, completed, orientation });
     const horizontal = orientation === 'horizontal';
 
-    /* Horizontal content stays fully opaque; scale and translation provide focus. */
+    /*
+     * Horizontal content is not dimmed as a block. The column already carries
+     * the focus — it is nearer, and its text runs to the foreground as it comes
+     * to the reading edge — and fading the whole slot on top of that would take
+     * the neighbours out of the timeline rather than out of the way.
+     */
 
     const inner =
       variant === 'card' ? (
@@ -865,14 +973,9 @@ const TimelineContent = forwardRef<View, ViewProps & { className?: string }>(
     }
 
     return (
-      <Animated.View
-        ref={ref}
-        className={body({ className })}
-        {...props}
-        style={style}
-      >
+      <View ref={ref} className={body({ className })} style={style} {...props}>
         {inner}
-      </Animated.View>
+      </View>
     );
   }
 );
@@ -898,10 +1001,16 @@ const TimelineHeading = forwardRef<View, ViewProps & { className?: string }>(
 );
 TimelineHeading.displayName = 'Timeline.Heading';
 
-const TimelineDate = forwardRef<RNText, TextProps>(({ className, ...props }, ref) => {
+const TimelineDate = forwardRef<RNText, TextProps>(({ className, style, ...props }, ref) => {
   const { variant, orientation } = useTimeline('Timeline.Date');
   const { date } = timelineVariants({ variant, orientation });
-  return <Text ref={ref} className={date({ className })} {...props} />;
+  const ink = useColumnInk('Timeline.Date');
+  if (!ink.horizontal) {
+    return <Text ref={ref} className={date({ className })} style={style} {...props} />;
+  }
+  return (
+    <AnimatedText ref={ref} className={date({ className })} style={[style, ink.style]} {...props} />
+  );
 });
 TimelineDate.displayName = 'Timeline.Date';
 
@@ -915,10 +1024,16 @@ const TimelineLabel = forwardRef<RNText, TextProps>(({ className, ...props }, re
 TimelineLabel.displayName = 'Timeline.Label';
 
 /** Muted supporting line — a person's name, a source. */
-const TimelineMeta = forwardRef<RNText, TextProps>(({ className, ...props }, ref) => {
+const TimelineMeta = forwardRef<RNText, TextProps>(({ className, style, ...props }, ref) => {
   const { variant, orientation } = useTimeline('Timeline.Meta');
   const { meta } = timelineVariants({ variant, orientation });
-  return <Text ref={ref} className={meta({ className })} {...props} />;
+  const ink = useColumnInk('Timeline.Meta');
+  if (!ink.horizontal) {
+    return <Text ref={ref} className={meta({ className })} style={style} {...props} />;
+  }
+  return (
+    <AnimatedText ref={ref} className={meta({ className })} style={[style, ink.style]} {...props} />
+  );
 });
 TimelineMeta.displayName = 'Timeline.Meta';
 
@@ -940,10 +1055,21 @@ const TimelineTrailing = forwardRef<RNText, TextProps>(
 TimelineTrailing.displayName = 'Timeline.Trailing';
 
 const TimelineDescription = forwardRef<RNText, TextProps>(
-  ({ className, ...props }, ref) => {
+  ({ className, style, ...props }, ref) => {
     const { variant, orientation } = useTimeline('Timeline.Description');
     const { content } = timelineVariants({ variant, orientation });
-    return <Text ref={ref} className={content({ className })} {...props} />;
+    const ink = useColumnInk('Timeline.Description');
+    if (!ink.horizontal) {
+      return <Text ref={ref} className={content({ className })} style={style} {...props} />;
+    }
+    return (
+      <AnimatedText
+        ref={ref}
+        className={content({ className })}
+        style={[style, ink.style]}
+        {...props}
+      />
+    );
   }
 );
 TimelineDescription.displayName = 'Timeline.Description';

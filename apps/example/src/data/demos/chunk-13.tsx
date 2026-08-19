@@ -890,7 +890,7 @@ function LifelineDemo() {
         </Text>
       </View>
 
-      <Timeline orientation="horizontal" value={LIFELINE.length - 1} className="pl-5">
+      <Timeline orientation="horizontal" haptics value={LIFELINE.length - 1} className="pl-5">
         {LIFELINE.map((entry, index) => (
           <Timeline.Item
             key={entry.year}
