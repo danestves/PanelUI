@@ -24,7 +24,7 @@
  * <SectionRail value={sections.active} onValueChange={sections.scrollTo}>…</SectionRail>
  * ```
  */
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   LayoutChangeEvent,
   NativeScrollEvent,
@@ -54,6 +54,7 @@ export interface UseScrollSectionsResult {
   /** Spread onto the ScrollView. */
   scrollProps: {
     onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    onMomentumScrollEnd: () => void;
     scrollEventThrottle: number;
   };
   /** `onLayout` for a section's wrapper: `onLayout={measure(id)}`. */
@@ -61,6 +62,13 @@ export interface UseScrollSectionsResult {
   /** Scroll a section to the top. Pass straight to a rail's `onValueChange`. */
   scrollTo: (id: string) => void;
 }
+
+/**
+ * How long a programmatic scroll is given to arrive before the scroll handler
+ * starts believing positions again. Only reached when the scroll had nowhere to
+ * go and no momentum end ever fires.
+ */
+const JUMP_TIMEOUT = 900;
 
 export function useScrollSections({
   ids,
@@ -70,6 +78,7 @@ export function useScrollSections({
 }: UseScrollSectionsOptions): UseScrollSectionsResult {
   const ref = useRef<ScrollView | null>(null);
   const offsets = useRef<Record<string, number>>({});
+  const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [active, setActive] = useState<string | undefined>(ids[0]);
 
   // Read inside the scroll handler, which must not be re-created on every
@@ -84,8 +93,23 @@ export function useScrollSections({
     []
   );
 
+  /*
+   * The section a `scrollTo` is travelling to, while it is still travelling.
+   *
+   * An animated scroll passes every section between here and there, and the
+   * scroll handler cannot tell those apart from sections the reader arrived at
+   * themselves — so it reported each one as active in turn. Downstream that is
+   * a real change of section every 16ms: a rail lighting up rows nobody chose,
+   * a haptic for each, and a jump that ends somewhere the reader watched it
+   * pass through. None of it happened; the reader asked for one section.
+   */
+  const jumpingTo = useRef<string | null>(null);
+
   const onScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      // Mid-jump, the position is the animation's and not the reader's.
+      if (jumpingTo.current !== null) return;
+
       const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
       const list = idsRef.current;
       if (!list.length) return;
@@ -112,15 +136,40 @@ export function useScrollSections({
     (id: string) => {
       const top = offsets.current[id];
       if (top === undefined) return;
+      jumpingTo.current = id;
+      if (settle.current) clearTimeout(settle.current);
+      /*
+       * A backstop, not the normal way out. `onMomentumScrollEnd` does not fire
+       * for a scroll that had nowhere to go — a jump to the section already on
+       * screen — and without this the handler would stay muted for good.
+       */
+      settle.current = setTimeout(() => {
+        jumpingTo.current = null;
+      }, JUMP_TIMEOUT);
       setActive(id);
       ref.current?.scrollTo({ y: Math.max(top - scrollPadding, 0), animated: true });
     },
     [scrollPadding]
   );
 
+  const onMomentumScrollEnd = useCallback(() => {
+    if (settle.current) {
+      clearTimeout(settle.current);
+      settle.current = null;
+    }
+    jumpingTo.current = null;
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (settle.current) clearTimeout(settle.current);
+    },
+    []
+  );
+
   const scrollProps = useMemo(
-    () => ({ onScroll, scrollEventThrottle: 16 }),
-    [onScroll]
+    () => ({ onScroll, onMomentumScrollEnd, scrollEventThrottle: 16 }),
+    [onScroll, onMomentumScrollEnd]
   );
 
   return { ref, active, scrollProps, measure, scrollTo };

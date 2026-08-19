@@ -58,10 +58,10 @@ import { selectionTick } from '../../utils/haptics';
 
 const SPRING = { damping: 20, stiffness: 260, mass: 0.6 } as const;
 /** Bar width at the top level, and how much each nested level takes off it. */
-const BAR_WIDTH = 16;
-const BAR_LEVEL_STEP = 4;
+const BAR_WIDTH = 14;
+const BAR_LEVEL_STEP = 3;
 /** How much wider the active bar gets, so position is readable at a glance. */
-const BAR_ACTIVE_EXTRA = 12;
+const BAR_ACTIVE_EXTRA = 10;
 /**
  * How much of that extra the bars either side of the active one keep.
  *
@@ -83,8 +83,17 @@ const BAR_REST_OPACITY = 0.32;
  * that a jump which never lands does not mute the next one.
  */
 const JUMP_TIMEOUT = 900;
+/**
+ * How long the rail stays quiet *after* a jump has landed.
+ *
+ * A caller may set the value optimistically, before the scroll it triggers has
+ * started — so arriving at the target is not proof the journey is over. This
+ * covers the tail of the animation, in which the scroller passes through the
+ * sections either side of the destination and reports each of them.
+ */
+const JUMP_SETTLE = 260;
 /** Indent per level in the expanded panel. */
-const ITEM_INDENT = 12;
+const ITEM_INDENT = 10;
 /**
  * How wide the panel may grow by default. A row spends at least 40pt on
  * indent, padding and the panel's own border before any text, so a tighter cap
@@ -92,7 +101,7 @@ const ITEM_INDENT = 12;
  */
 const PANEL_MAX_WIDTH = '78%' as const;
 /** …and a floor, so a rail with one short section still opens a readable panel. */
-const PANEL_MIN_WIDTH = 200;
+const PANEL_MIN_WIDTH = 184;
 
 export type SectionRailPlacement = 'left' | 'right';
 export type SectionRailAlign = 'center' | 'top' | 'bottom';
@@ -232,7 +241,7 @@ function SectionRailRoot({
    * the panel lit up a row nobody chose. Nothing between the tap and the
    * arrival is a section the reader went to, so nothing between them ticks.
    */
-  const jumpTo = useRef<string | null>(null);
+  const jumpTo = useRef<{ target: string; landed: boolean } | null>(null);
 
   const endJump = useCallback(() => {
     jumpTo.current = null;
@@ -244,7 +253,7 @@ function SectionRailRoot({
 
   const handleValueChange = useCallback(
     (next: string) => {
-      jumpTo.current = next;
+      jumpTo.current = { target: next, landed: false };
       if (jumpTimer.current) clearTimeout(jumpTimer.current);
       /*
        * A backstop, not the normal way out. A jump to a section the scroller
@@ -279,12 +288,23 @@ function SectionRailRoot({
       return;
     }
 
-    const target = jumpTo.current;
-    if (target !== null) {
-      // Still on the way. Only the section that was asked for ends the jump,
-      // and only it is worth feeling.
-      if (value !== target) return;
-      endJump();
+    const jump = jumpTo.current;
+    if (jump !== null) {
+      // Still on the way. Nothing the screen passes through is a section the
+      // reader went to, so nothing between the tap and the arrival ticks.
+      if (value !== jump.target) return;
+
+      // Arrived — worth feeling, once. The window stays armed a moment longer
+      // rather than closing here, because a caller that sets the value
+      // optimistically hands it to us *before* the scroll starts: closing on
+      // the first match would disarm the rail for the whole animation, which
+      // is the entire journey it was there to cover. Every section the screen
+      // then passed lit a row and fired a tick of its own, several of them
+      // inside a few hundred milliseconds.
+      if (jump.landed) return;
+      jump.landed = true;
+      if (jumpTimer.current) clearTimeout(jumpTimer.current);
+      jumpTimer.current = setTimeout(endJump, JUMP_SETTLE);
     }
 
     if (haptics) selectionTick();
@@ -366,10 +386,10 @@ function SectionRailTrigger({ className, children, ...props }: SectionRailTrigge
       accessibilityState={{ expanded: open }}
       onPress={() => setOpen(!open)}
       // Generous padding is the hit target; the bars themselves are hairlines.
-      hitSlop={8}
+      hitSlop={10}
       className={cn(
-        'gap-2 py-3',
-        placement === 'right' ? 'items-end ps-6 pe-2' : 'items-start ps-2 pe-6',
+        'gap-1.5 py-2.5',
+        placement === 'right' ? 'items-end ps-5 pe-2' : 'items-start ps-2 pe-5',
         className
       )}
       {...props}
@@ -549,7 +569,7 @@ function SectionRailPanel({
       style={[style, { maxWidth, minWidth: PANEL_MIN_WIDTH }]}
       accessibilityRole="menu"
       className={cn(
-        'gap-0.5 rounded-2xl border border-border bg-popover p-2 shadow-lg',
+        'gap-0.5 rounded-xl border border-border bg-popover p-1.5 shadow-lg',
         className
       )}
       {...props}
@@ -582,9 +602,9 @@ function SectionRailItem({ className, value, level = 0, children }: SectionRailI
       onPress={() => onValueChange?.(value)}
       // `paddingStart`, not `paddingLeft`: the indent has to fall on the same
       // side as the bar it belongs to, which is the trailing edge under RTL.
-      style={{ paddingStart: 12 + level * ITEM_INDENT }}
+      style={{ paddingStart: 10 + level * ITEM_INDENT }}
       className={cn(
-        'rounded-lg py-2 pe-2.5 active:bg-accent',
+        'rounded-lg py-1.5 pe-2 active:bg-accent',
         selected && 'bg-accent',
         className
       )}

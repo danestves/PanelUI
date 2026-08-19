@@ -458,6 +458,8 @@ function SectionRailPagerVersion() {
    * entirely between two and never shows.
    */
   const [pageHeight, setPageHeight] = useState(0);
+  // The page a tap asked for, while the scroller is still travelling to it.
+  const jumping = useRef<number | null>(null);
 
   return (
     <View className="flex-1">
@@ -468,10 +470,17 @@ function SectionRailPagerVersion() {
         scrollEventThrottle={16}
         onLayout={(event) => setPageHeight(event.nativeEvent.layout.height)}
         onScroll={(event) => {
+          // Muted while a jump is travelling: a paged scroll passes every page
+          // between here and there, and reporting each one is a rail lighting
+          // up rows nobody chose.
+          if (jumping.current !== null) return;
           const { contentOffset, layoutMeasurement } = event.nativeEvent;
           if (!layoutMeasurement.height) return;
           const next = Math.round(contentOffset.y / layoutMeasurement.height);
           if (next !== page) setPage(next);
+        }}
+        onMomentumScrollEnd={() => {
+          jumping.current = null;
         }}
       >
         {PAGER_SECTIONS.map((section, index) => (
@@ -503,6 +512,7 @@ function SectionRailPagerVersion() {
         onValueChange={(next) => {
           const index = PAGER_SECTIONS.findIndex((section) => section.id === next);
           if (index < 0 || !pageHeight) return;
+          jumping.current = index;
           setPage(index);
           scroller.current?.scrollTo({ y: index * pageHeight, animated: true });
         }}
