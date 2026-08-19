@@ -150,7 +150,16 @@ const SLIDE_FRACTION = 0.33;
 
 const aiInputVariants = tv({
   slots: {
-    root: 'w-full',
+    /*
+     * The card carries a shadow because the material does not carry an edge.
+     *
+     * Glass lifts its own edge against what is behind it, and over a light
+     * background there is nothing for it to lift against — the composer reads
+     * as a faint rectangle on white. The shadow is what separates it, and it
+     * is the same one everywhere rather than a light-mode special case: on a
+     * dark background a black shadow costs nothing and shows nothing.
+     */
+    root: 'w-full shadow-md',
     field: 'w-full bg-transparent px-4 font-normal text-foreground',
     // On one line the field is what takes up the slack between the controls,
     // and the row's own padding already stands it off the edge.
