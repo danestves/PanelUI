@@ -408,7 +408,7 @@ function BottomSheetContent({
     // sheet cannot measure RN views directly. Without it the sheet sizes to
     // nothing and the content spills outside its container.
     return (
-      <Host matchContents style={{ position: 'absolute' }}>
+      <Host matchContents ignoreSafeArea="keyboard" style={{ position: 'absolute' }}>
         <NativeBottomSheet
           isPresented={open}
           onDismiss={dismissible ? close : () => {}}

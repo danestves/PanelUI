@@ -567,7 +567,7 @@ export const Slider = forwardRef<View, SliderProps>(
           {/* A slider has no intrinsic width — it fills whatever it is given —
               so the width comes from ordinary layout and only the height is
               matched to the platform's content. */}
-          <Host matchContents={{ vertical: true }}>
+          <Host matchContents={{ vertical: true }} ignoreSafeArea="keyboard">
             <NativeSlider
               value={value}
               onValueChange={(next: number) => {

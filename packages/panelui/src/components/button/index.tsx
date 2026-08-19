@@ -379,7 +379,7 @@ export const Button = forwardRef<View, ButtonProps>(
       const nativeContent = prominent ? '#ffffff' : contentColor;
 
       return (
-        <Host matchContents>
+        <Host matchContents ignoreSafeArea="keyboard">
           <NativeButton
             label={isStringLabel ? children : undefined}
             variant={NATIVE_VARIANT[resolvedVariant ?? 'primary']}

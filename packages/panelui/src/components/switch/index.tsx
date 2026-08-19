@@ -128,7 +128,7 @@ export const Switch = forwardRef<View, SwitchProps>(
         // so the host is left to follow it. Pinning the host to a number
         // instead is what leaves the control laid out against a box it never
         // agreed to, and settling into it a frame later.
-        <Host matchContents>
+        <Host matchContents ignoreSafeArea="keyboard">
           <NativeSwitch
             value={value}
             onValueChange={(next: boolean) => onValueChange?.(next)}

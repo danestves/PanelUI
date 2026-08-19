@@ -440,7 +440,7 @@ function SelectRoot({
       // A picker fills the width of the row it sits in and reports its own
       // height — a menu is a compact button, a wheel a full rotor, and the
       // platform is the only thing that knows which by how much.
-      <Host matchContents={{ vertical: true }}>
+      <Host matchContents={{ vertical: true }} ignoreSafeArea="keyboard">
         <Picker
           selectedValue={value ?? firstEnabled?.value ?? ''}
           onValueChange={(next: string) => onValueChange(next)}

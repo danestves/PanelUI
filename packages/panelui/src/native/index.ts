@@ -39,6 +39,23 @@ interface NativeUIModule {
      * height is reported back.
      */
     matchContents?: boolean | { vertical?: boolean; horizontal?: boolean };
+    /**
+     * Which safe areas the host lets the platform inset its content for.
+     *
+     * Every host here passes `keyboard`, and it is not optional. A host is a
+     * hosting controller, and a hosting controller insets its content for the
+     * keyboard by default — so a control docked above the keyboard has its
+     * content moved *inside* the box React Native gave it, over whatever is
+     * above it, while React Native's own layout says nothing has moved. That
+     * is a composer whose buttons sit on its text until the next layout pass
+     * puts them back.
+     *
+     * React Native owns the layout of everything in this library, so a
+     * platform that moves content inside a box we positioned is never right.
+     * `keyboard` and not `all`: the notch and the home indicator are the
+     * platform's business and stay its business.
+     */
+    ignoreSafeArea?: 'all' | 'container' | 'keyboard';
     style?: unknown;
     [key: string]: unknown;
   }>;
