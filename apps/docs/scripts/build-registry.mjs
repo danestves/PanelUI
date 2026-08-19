@@ -90,6 +90,7 @@ const SUPPORT_DESCRIPTIONS = {
   'use-direction': 'Reads the nearest LTR or RTL direction, falling back to the device setting.',
   'use-reveal-progress': 'Reports how far an element has travelled through its scroll viewport.',
   'use-scroll-sections': 'Tracks the active measured section and scrolls directly to one.',
+  'use-skeleton-handoff': 'Holds a placeholder through a fade as the real content arrives.',
 };
 
 /* ------------------------------------------------------------------ *

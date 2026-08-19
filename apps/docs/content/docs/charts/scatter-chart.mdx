@@ -258,7 +258,7 @@ Two clouds sharing both domains, told apart by colour, with the key in a band ab
 | `xDataKey` | `string` | `'x'` | Key holding the x value. Unlike the other charts, this must be a number. |
 | `status` | `ScatterChartStatus` | `'ready'` | `loading` draws a still field of muted dots and settles into the real ones when it turns `ready`. One component throughout, rather than a spinner swapped for a chart — swapping loses the transition. |
 | `aspectRatio` | `number` | `1` | Width ÷ height. `1` suits a scatter plot: neither axis is the important one. |
-| `animationDuration` | `number` | `900` | Milliseconds for the reveal on mount. |
+| `animationDuration` | `number` | `650` | Milliseconds for the reveal on mount. Defaults to `650`. |
 | `domainDuration` | `number` | `500` | Milliseconds for the axes to settle after the data changes. |
 | `xDomain` | `[number, number]` | — | Fix the x-axis instead of deriving it from the data. |
 | `yDomain` | `[number, number]` | — | Fix the y-axis instead of deriving it from the data. |

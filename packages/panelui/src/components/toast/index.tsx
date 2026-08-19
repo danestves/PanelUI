@@ -28,12 +28,16 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   Extrapolation,
+  FadeIn,
   FadeInDown,
   FadeInUp,
+  FadeOut,
   Keyframe,
   interpolate,
   runOnJS,
   useAnimatedStyle,
+  useDerivedValue,
+  useReducedMotion,
   useSharedValue,
   withDecay,
   withSpring,
@@ -58,6 +62,13 @@ import {
 } from './toast-store';
 
 const SPRING = { damping: 20, stiffness: 260, mass: 0.6 } as const;
+
+/**
+ * The deck reshuffling after a dismissal. Slower and softer than the drag's
+ * spring: the cards behind are not what the reader is acting on, and a stack
+ * that snaps draws the eye to the wrong thing.
+ */
+const STACK_SPRING = { duration: 350, dampingRatio: 0.9 } as const;
 /** Drag distance past which a release dismisses. */
 const DISMISS_DISTANCE = 50;
 /** Fling speed past which a release dismisses regardless of distance. */
@@ -91,15 +102,24 @@ const enteringBottom = FadeInDown.springify()
   .withInitialValues({ opacity: 1, transform: [{ translateY: ENTER_OFFSET }] })
   .mass(3);
 
+/*
+ * It leaves the way it arrived, a little quicker.
+ *
+ * The curve was an ease-*in*, which starts slow — it spends the first frames of
+ * the exit barely moving, which is exactly the moment the reader is looking at
+ * the thing that just changed. This is the ease-out used everywhere else in the
+ * library, and the duration is a fifth under the entrance: the arrival earns
+ * the time, the departure does not.
+ */
 const exitKeyframe = (offset: number) =>
   new Keyframe({
     0: { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] },
     100: {
-      opacity: 0.5,
+      opacity: 0,
       transform: [{ translateY: offset }, { scale: 0.97 }],
-      easing: Easing.bezier(0.4, 0, 1, 1),
+      easing: Easing.bezier(0.23, 1, 0.32, 1),
     },
-  }).duration(150);
+  }).duration(240);
 
 const exitingTop = exitKeyframe(-ENTER_OFFSET);
 const exitingBottom = exitKeyframe(ENTER_OFFSET);
@@ -315,6 +335,7 @@ function ToastSlot({
   const placement = item.placement ?? 'bottom';
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
+  const reducedMotion = useReducedMotion();
   const hide = useCallback(() => toastStore.hide(item.id), [item.id]);
 
   // Drop this toast's measurement when it leaves, so the map cannot grow
@@ -387,22 +408,35 @@ function ToastSlot({
    * The whole deck takes the *newest* toast's height so the cards behind read
    * as a uniform stack rather than a ragged pile.
    */
+  /*
+   * How far back in the deck this toast is: 0 is the front one.
+   *
+   * Sprung rather than read straight off the props. Position used to be
+   * computed from `index` and `total` directly, so dismissing a toast in the
+   * middle teleported every card behind it forward a step between two frames.
+   * The deck reshuffling is the one moment the stack is worth watching, and it
+   * was the one moment it did not move.
+   */
+  const depth = useDerivedValue(() =>
+    reducedMotion ? total - 1 - index : withSpring(total - 1 - index, STACK_SPRING)
+  );
+
   const stackStyle = useAnimatedStyle(() => {
     // Fall back to this toast's own height until the front one is measured.
     const frontHeight = heights.value[frontId] ?? heights.value[item.id];
 
-    // Newest sits at 0; each one behind steps back by STACK_OFFSET and shrinks.
-    const inputRange = [total - 1, total - 2];
-    const offset = interpolate(index, inputRange, [0, STACK_OFFSET * stackSign], {
+    // Front sits at 0; each one behind steps back by STACK_OFFSET and shrinks.
+    const back = depth.value;
+    const offset = interpolate(back, [0, 1], [0, STACK_OFFSET * stackSign], {
       extrapolateLeft: Extrapolation.CLAMP,
     });
-    const stackScale = interpolate(index, inputRange, [1, STACK_SCALE_STEP], {
+    const stackScale = interpolate(back, [0, 1], [1, STACK_SCALE_STEP], {
       extrapolateLeft: Extrapolation.CLAMP,
     });
     // Anything past MAX_VISIBLE fades out rather than piling up forever.
     const opacity = interpolate(
-      index,
-      [total - MAX_VISIBLE, total - MAX_VISIBLE - 1],
+      back,
+      [MAX_VISIBLE - 1, MAX_VISIBLE],
       [1, 0],
       Extrapolation.CLAMP
     );
@@ -443,8 +477,23 @@ function ToastSlot({
 
   return (
     <Animated.View
-      entering={placement === 'top' ? enteringTop : enteringBottom}
-      exiting={placement === 'top' ? exitingTop : exitingBottom}
+      /* Reduced motion keeps the fade — a toast that appears with no transition
+         at all is a jump-cut, and the arrival still has to be noticed — and
+         drops the travel and the scale. */
+      entering={
+        reducedMotion
+          ? FadeIn.duration(150)
+          : placement === 'top'
+            ? enteringTop
+            : enteringBottom
+      }
+      exiting={
+        reducedMotion
+          ? FadeOut.duration(120)
+          : placement === 'top'
+            ? exitingTop
+            : exitingBottom
+      }
       pointerEvents="box-none"
       // Every toast is pinned to the same edge, so they overlap as a deck.
       // Newest on top. Horizontal inset lives here rather than as padding on

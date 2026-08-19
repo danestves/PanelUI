@@ -1,7 +1,6 @@
 ---
 title: Marquee
 description: Content that travels across its container on a loop.
-status: updated
 ---
 
 Repeats content end to end and travels it across the container, for a strip of logos, a ticker of prices or a row of names that should keep moving rather than stop at the edge.
@@ -48,6 +47,17 @@ npx panelui-cli@latest add marquee
 </Marquee>
 ```
 
+## Composition
+
+```tsx
+<Marquee.Group>
+  <Marquee>{topRow}</Marquee>
+  <Marquee reverse>{bottomRow}</Marquee>
+</Marquee.Group>
+```
+
+- **`Marquee.Group`** — See props below.
+
 ## Examples
 
 ### A strip of badges
@@ -66,13 +76,15 @@ The default: horizontal, travelling toward the end of the line at 40 points a se
 
 ### Two rows, opposite ways
 
-Two rows travelling against each other reads as motion, where a single row reads as one thing that happens to be sliding.
+Two rows travelling against each other read as motion, where one row reads as something sliding. They are one piece of motion, so they take one pause control: the group draws it below them, and the marquees inside stop drawing their own.
 
 ```tsx
-<View className="gap-3">
+<Marquee.Group className="w-full">
   <Marquee spacing={12} speed={35}>
     <View className="flex-row gap-3">
-      {stack.map((label) => <Chip key={label}>{label}</Chip>)}
+      {stack.map((label) => (
+        <Chip key={label}>{label}</Chip>
+      ))}
     </View>
   </Marquee>
   <Marquee spacing={12} speed={35} reverse>
@@ -82,7 +94,7 @@ Two rows travelling against each other reads as motion, where a single row reads
       ))}
     </View>
   </Marquee>
-</View>
+</Marquee.Group>
 ```
 
 ### Vertical
@@ -195,10 +207,21 @@ const [playing, setPlaying] = useState(true);
 | `direction` | `MarqueeDirection` | `'horizontal'` | Axis the content travels along. |
 | `reverse` | `boolean` | `false` | Send it the other way: toward the start of the line, or upward. Applied after the reading direction, not instead of it. |
 | `playing` | `boolean` | `true` | Set false to hold the content where it is. |
-| `showPauseControl` | `boolean` | `true` | Show the built-in user pause/play control while motion is enabled. |
+| `showPauseControl` | `boolean` | — | Show the built-in user pause/play control while motion is enabled. Defaults to `true` on its own, and to `false` inside a `Marquee.Group` — the group draws one control for everything in it, and a control per row is how two of them end up stacked on top of each other. |
 | `pauseLabel` | `string` | `'Pause'` | Visible and spoken label for the moving state. |
 | `playLabel` | `string` | `'Play'` | Visible and spoken label for the user-paused state. |
 | `onPlayingChange` | `(playing: boolean) => void` | — | Reports changes made by the built-in control. |
+
+### Marquee.Group
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `playing` | `boolean` | `true` | Set false to hold every marquee in the group where it is. |
+| `showPauseControl` | `boolean` | `true` | Show the group's pause/play control. |
+| `pauseLabel` | `string` | `'Pause'` | Visible and spoken label for the moving state. |
+| `playLabel` | `string` | `'Play'` | Visible and spoken label for the user-paused state. |
+| `onPlayingChange` | `(playing: boolean) => void` | — | Reports changes made by the group's control. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -214,7 +237,11 @@ A horizontal marquee travels toward the end of the line, so it reverses in a rig
 
 Screen readers and keyboard/pointer interaction are given one copy. Every repeated visual copy and the hidden measurement copy are inert, so an interactive child appears only once in focus and hit-testing order.
 
-Motion includes a visible 48-point Pause/Play control by default. Its labels can be localized with `pauseLabel` and `playLabel`; use `onPlayingChange` to observe the user choice. Set `showPauseControl={false}` only when an equivalent visible control exists elsewhere. `playing={false}` remains the externally owned way to hold the content still and suppresses the built-in control.
+Motion includes a visible 48-point Pause/Play control by default. Its labels can be localized with `pauseLabel` and `playLabel`; use `onPlayingChange` to observe the user choice. `playing={false}` remains the externally owned way to hold the content still, and suppresses the built-in control.
+
+**Stacked rows go in a `Marquee.Group`.** A control per marquee means one control per row, each pinned to its own bottom corner — the upper row's lands on top of the row beneath it. A group draws one control for everything inside it, below the rows rather than over them, and the marquees in it stop drawing their own. Each one keeps its own `playing` prop: the group's pause is an additional hold, not a replacement.
+
+Set `showPauseControl={false}` on a lone marquee only when an equivalent visible control exists elsewhere — a switch in the header that already governs `playing`, for instance. Inside a group it is already the default.
 
 ## Public exports
 
@@ -222,4 +249,4 @@ Motion includes a visible 48-point Pause/Play control by default. Its labels can
 
 **Values:** `Marquee`
 
-**Types:** `MarqueeProps`, `MarqueeDirection`
+**Types:** `MarqueeProps`, `MarqueeGroupProps`, `MarqueeDirection`

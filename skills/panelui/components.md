@@ -92,7 +92,7 @@ remember is a guess.
 | `ScrollFade` | Fades the edges of a scroll container. | `components/scroll-fade` |
 | `Separator` | Horizontal or vertical rule between content, optionally labelled. | `components/separator` |
 | `Splitter` | Panes that share a container, with a seam between them you can drag. | `components/splitter` |
-| `SplitView` | Two stacked panes whose seam settles on one of a few named heights. | `components/split-view` |
+| `SplitView` | Two resizable stacked panes that settle on one of a few named heights. | `components/split-view` |
 | `Surface` | Elevated container with a variant ladder. | `components/surface` |
 | `Typography` | Semantic text presets. | `components/typography` |
 

@@ -29,5 +29,9 @@ test('the body stays opaque while the column focus transform moves', () => {
 
 test('a column hands its geometry down instead of being measured twice', () => {
   assert.match(source, /showSeparator: !last,\s*\n\s*offset,\s*\n\s*columnWidth: columnWidth \?\? 0,/);
-  assert.match(source, /const \{ completed, tone, offset, columnWidth \} =/);
+  // `Timeline.Content` no longer takes the geometry: it does not animate, so
+  // the only readers are the item itself and the text parts that colour
+  // against it. Asking for numbers nothing uses is how a stale second copy of
+  // them appears later.
+  assert.match(source, /const item = useContext\(TimelineItemContext\);/);
 });

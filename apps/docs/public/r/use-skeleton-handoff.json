@@ -1,0 +1,17 @@
+{
+  "name": "use-skeleton-handoff",
+  "type": "registry:hook",
+  "description": "Holds a placeholder through a fade as the real content arrives.",
+  "registryDependencies": [],
+  "dependencies": [
+    "react-native-reanimated"
+  ],
+  "optionalDependencies": [],
+  "files": [
+    {
+      "path": "hooks/use-skeleton-handoff.ts",
+      "type": "registry:hook",
+      "content": "/**\n * Keeps a chart's placeholder on screen a beat past the data arriving, and\n * dissolves it while the real marks grow in.\n *\n * A skeleton cut at the exact frame `status` flips leaves the plot empty: the\n * placeholder is gone and the reveal has not started, so there is a blank frame\n * between two states that were both supposed to show something. Outliving the\n * status change by the length of the fade is what closes that gap, and it is\n * why the loading state reads as *becoming* the chart rather than as being\n * replaced by it.\n *\n * The fade runs on the UI thread; the unmount is scheduled back once, at the\n * end, so nothing re-renders per frame.\n *\n * ```tsx\n * const { mounted, opacity } = useSkeletonHandoff(status === 'loading');\n * const animatedProps = useAnimatedProps(() => ({ opacity: opacity.value }));\n * if (!mounted) return null;\n * return <AnimatedG animatedProps={animatedProps}>{…}</AnimatedG>;\n * ```\n */\nimport { useEffect, useState } from 'react';\nimport {\n  runOnJS,\n  useReducedMotion,\n  useSharedValue,\n  withTiming,\n  type SharedValue,\n} from 'react-native-reanimated';\n\n/** Milliseconds for a placeholder to dissolve once the data arrives. */\nexport const SKELETON_FADE = 220;\n\nexport interface UseSkeletonHandoffResult {\n  /** True while the placeholder should render — through the fade, not just the wait. */\n  mounted: boolean;\n  /** The placeholder's opacity, `1` while loading and tweened to `0` after. */\n  opacity: SharedValue<number>;\n}\n\nexport function useSkeletonHandoff(\n  loading: boolean,\n  duration: number = SKELETON_FADE\n): UseSkeletonHandoffResult {\n  const opacity = useSharedValue(loading ? 1 : 0);\n  // Mounted a beat longer than `loading`, so there is something to fade.\n  const [mounted, setMounted] = useState(loading);\n  const reducedMotion = useReducedMotion();\n\n  useEffect(() => {\n    if (loading) {\n      opacity.value = 1;\n      setMounted(true);\n      return;\n    }\n    // Reduced motion still wants the placeholder gone; it is the dissolve that\n    // is the motion, not the disappearance.\n    if (reducedMotion) {\n      opacity.value = 0;\n      setMounted(false);\n      return;\n    }\n    opacity.value = withTiming(0, { duration }, (finished) => {\n      if (finished) runOnJS(setMounted)(false);\n    });\n  }, [loading, reducedMotion, duration, opacity]);\n\n  return { mounted, opacity };\n}\n"
+    }
+  ]
+}

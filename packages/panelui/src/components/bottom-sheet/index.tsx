@@ -11,17 +11,26 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { Pressable, useWindowDimensions, View, type ViewProps } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type ViewProps,
+} from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Extrapolation,
   FadeIn,
+  interpolate,
   FadeOut,
   SlideInDown,
   SlideOutDown,
   runOnJS,
   useAnimatedScrollHandler,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring,
   withTiming,
@@ -36,10 +45,59 @@ import { Scrim } from '../../primitives/scrim';
 import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { cn } from '../../utils/cn';
+import { impactKnock } from '../../utils/haptics';
 
-const SPRING = { damping: 22, stiffness: 280, mass: 0.7 } as const;
+/**
+ * One spring for the whole surface, in Apple's two designer parameters rather
+ * than mass/stiffness/damping — the sheet arriving, the sheet snapping back and
+ * the sheet leaving used to be three slightly different springs, which is three
+ * different weights for one object.
+ *
+ * A little under critically damped, so it settles without a bounce. A sheet
+ * that overshoots reads as light, and a sheet is not light.
+ *
+ * Slower than the 300ms a small state change gets, and deliberately. This is a
+ * large surface travelling most of the screen, and it is the same category of
+ * movement as a screen transition rather than as a toggle — the platform's own
+ * sheets are slower still. Taken at toggle speed it arrives before the eye has
+ * followed it, which reads as a jump-cut to a different screen rather than as
+ * something coming up from the bottom.
+ */
+const SPRING = { duration: 420, dampingRatio: 0.9 } as const;
+
+/**
+ * Leaving, where the far side of the travel is off screen: clamped, because a
+ * spring allowed to overshoot past the bottom flashes a gap under the sheet on
+ * its way back.
+ */
+const EXIT_SPRING = { duration: 380, dampingRatio: 1, overshootClamping: true } as const;
+
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 800;
+
+/*
+ * Built once at module scope. A layout-animation builder constructed in render
+ * is a new object every commit, and the sheet re-renders while it is open.
+ */
+const ENTERING = SlideInDown.springify().dampingRatio(0.9).duration(420);
+// Leaving is quicker than arriving, but not by much: the sheet is still
+// crossing the whole screen, and a surface that big snapping out of existence
+// is more startling than the delay it saves is worth.
+const EXITING = SlideOutDown.springify().dampingRatio(1).duration(340);
+
+/**
+ * Where a flick would come to rest if it kept decelerating — Apple's
+ * exponential-decay form.
+ *
+ * Distance alone makes the sheet heavy: a short fast flick downward is
+ * unmistakably a dismissal, and asking it to also travel 120 points first means
+ * the reader has to throw the sheet twice.
+ */
+function project(velocity: number): number {
+  'worklet';
+  const decelerationRate = 0.998;
+  return ((velocity / 1000) * decelerationRate) / (1 - decelerationRate);
+}
 
 const sheetVariants = tv({
   base: 'border border-border bg-popover px-5 pt-2 shadow-lg',
@@ -287,6 +345,7 @@ function BottomSheetContent({
   const { open, setOpen } = context;
   const nativeSheet = useContext(NativeSheetContext);
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
+  const reducedMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(0);
   const closeTint = useCSSVariable('--color-muted-foreground');
@@ -353,15 +412,31 @@ function BottomSheetContent({
           translateY.value = next > 0 ? next : next / 3;
         })
         .onEnd((event) => {
+          /*
+           * Velocity decides as much as distance does, and it is handed to the
+           * animation rather than only consulted by it. A flat timing from
+           * wherever the finger let go ignores how fast it was moving, so the
+           * frame the touch ends is a visible seam between a fast drag and a
+           * slow slide — the single detail that separates a sheet that follows
+           * your hand from one that merely goes where you put it.
+           */
+          const projected = translateY.value + project(event.velocityY);
           if (
-            translateY.value > DISMISS_DISTANCE ||
+            projected > DISMISS_DISTANCE ||
             event.velocityY > DISMISS_VELOCITY
           ) {
-            translateY.value = withTiming(screenHeight, { duration: 200 }, () => {
-              runOnJS(close)();
-            });
+            translateY.value = withSpring(
+              screenHeight,
+              { ...EXIT_SPRING, velocity: event.velocityY },
+              (finished) => {
+                if (finished) runOnJS(close)();
+              }
+            );
           } else {
-            translateY.value = withSpring(0, SPRING);
+            translateY.value = withSpring(0, { ...SPRING, velocity: event.velocityY });
+            // It caught rather than went. Fired here, at the moment the sheet
+            // commits to staying, not when it finishes arriving.
+            runOnJS(impactKnock)();
           }
         }),
     // Rebuilt only when one of these changes. Built inline it would be a new
@@ -372,6 +447,15 @@ function BottomSheetContent({
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
+  }));
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      translateY.value,
+      [0, screenHeight],
+      [1, 0],
+      Extrapolation.CLAMP
+    ),
   }));
 
   /*
@@ -453,7 +537,12 @@ function BottomSheetContent({
           subtree — re-provide the context so nested consumers keep working. */}
       <BottomSheetContext.Provider value={context}>
         <View className="absolute inset-0 justify-end">
-        <View className="absolute inset-0">
+        {/* Derived from the same value the sheet moves on, so the backdrop
+            cannot disagree with it: dragging the sheet halfway down lightens
+            the screen behind it by half. Left to its own fade the scrim stayed
+            fully dark until the sheet had gone, which reads as a dimmed screen
+            with nothing on it. */}
+        <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
           {/* Scrim draws the backdrop and its own fade; the Pressable over it
               is what closes the sheet, since the scrim takes no touches. */}
           <Scrim blur={blur} />
@@ -462,11 +551,20 @@ function BottomSheetContent({
             className="flex-1"
             onPress={dismissible ? close : undefined}
           />
-        </View>
+        </Animated.View>
         <GestureDetector gesture={pan}>
           <Animated.View
-            entering={SlideInDown.springify().damping(22).stiffness(240).mass(0.8)}
-            exiting={SlideOutDown.duration(200)}
+            /*
+             * The same spring the drag settles with, so a sheet caught halfway
+             * through arriving and a sheet released after a drag are the same
+             * object moving at the same weight.
+             *
+             * Reduced motion keeps the scrim's fade and drops the slide: the
+             * state change still has to be legible, and it is the travel that
+             * setting is about.
+             */
+            entering={reducedMotion ? FadeIn.duration(150) : ENTERING}
+            exiting={reducedMotion ? FadeOut.duration(150) : EXITING}
             accessibilityViewIsModal
             className={sheetVariants({ detached, className })}
             {...props}

@@ -138,6 +138,7 @@
     "description": "Draggable sheet anchored to the bottom of the screen.",
     "registryDependencies": [
       "cn",
+      "haptics",
       "icons",
       "native",
       "portal",
@@ -625,7 +626,8 @@
       "chart",
       "cn",
       "text",
-      "use-direction"
+      "use-direction",
+      "use-skeleton-handoff"
     ],
     "docsPath": "charts/funnel-chart"
   },
@@ -1056,7 +1058,8 @@
     "registryDependencies": [
       "chart",
       "cn",
-      "text"
+      "text",
+      "use-skeleton-handoff"
     ],
     "docsPath": "charts/pie-chart"
   },
@@ -1315,7 +1318,8 @@
       "chart",
       "chart-accessibility",
       "cn",
-      "text"
+      "text",
+      "use-skeleton-handoff"
     ],
     "docsPath": "charts/scatter-chart"
   },
@@ -1569,7 +1573,7 @@
     "kind": "ui",
     "group": "components",
     "stability": "stable",
-    "description": "Two stacked panes whose seam settles on one of a few named heights.",
+    "description": "Two resizable stacked panes that settle on one of a few named heights.",
     "registryDependencies": [
       "haptics"
     ],
@@ -1803,6 +1807,7 @@
     "stability": "stable",
     "description": "A sequence of events, vertical or swiped sideways.",
     "registryDependencies": [
+      "haptics",
       "icons",
       "text"
     ],
@@ -1895,7 +1900,8 @@
     "registryDependencies": [
       "chart",
       "cn",
-      "text"
+      "text",
+      "use-skeleton-handoff"
     ],
     "docsPath": "charts/treemap-chart"
   },
@@ -2027,6 +2033,16 @@
     "docsPath": "hooks/use-scroll-sections"
   },
   {
+    "name": "use-skeleton-handoff",
+    "type": "registry:hook",
+    "kind": "hook",
+    "group": "hooks",
+    "stability": "stable",
+    "description": "Holds a placeholder through a fade as the real content arrives.",
+    "registryDependencies": [],
+    "docsPath": "hooks/use-skeleton-handoff"
+  },
+  {
     "name": "use-theme",
     "type": "registry:hook",
     "kind": "hook",
@@ -2048,7 +2064,8 @@
       "chart-accessibility",
       "cn",
       "finite-chart",
-      "text"
+      "text",
+      "use-skeleton-handoff"
     ],
     "docsPath": "charts/waterfall-chart"
   }

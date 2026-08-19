@@ -22,7 +22,7 @@ export const ACCESSIBILITY_SUITES = [
     class: 'perception',
     file: 'packages/panelui/test/timeline-contrast.test.mjs',
     count: 2,
-    anchor: 'horizontal Timeline keeps informative content fully opaque',
+    anchor: 'horizontal Timeline never fades informative content',
   },
   {
     class: 'perception',

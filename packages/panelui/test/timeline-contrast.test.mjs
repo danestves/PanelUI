@@ -23,17 +23,26 @@ function assertSource(source) {
   assert.match(column, /scale: 1 - away \* 0\.04/);
   assert.match(column, /translateY: away \* 4/);
   assert.doesNotMatch(source, /const bodyStyle = useAnimatedStyle/);
-  assert.match(source, /<Animated\.View[\s\S]{0,220}style=\{style\}/);
+
+  /*
+   * Focus is carried by colour, and it may only ever run *towards* the
+   * foreground token. Reversed — foreground at rest, muted on arrival — the
+   * ramp would take the column being read below the contrast of the ones
+   * either side of it, which is the failure this file exists to catch.
+   */
+  const ink = source.match(/const style = useAnimatedStyle\(\(\) => \{[\s\S]*?\n  \}\);/)?.[0];
+  assert.ok(ink, 'Timeline must keep its horizontal focus colour');
+  assert.match(ink, /interpolateColor\(away, \[0, 1\], \[foreground, muted\]\)/);
 }
 
-test('horizontal Timeline keeps informative content fully opaque', async () => {
+test('horizontal Timeline never fades informative content', async () => {
   assertSource(await readFile(new URL('packages/panelui/src/components/timeline/index.tsx', ROOT), 'utf8'));
   const white = [255, 255, 255], black = [0, 0, 0];
   assert.ok(contrast(composite(black, white, 0.18), white) < 2, 'old nested opacity could never meet AA');
   assert.ok(contrast(composite(black, white, 1), white) >= 4.5, 'full-opacity text preserves its token contrast');
 });
 
-test('the copied Timeline retains full-opacity content focus', async () => {
+test('the copied Timeline retains the same focus treatment', async () => {
   const item = JSON.parse(await readFile(new URL('apps/docs/public/r/timeline.json', ROOT), 'utf8'));
   const file = item.files.find((candidate) => candidate.path === 'ui/timeline.tsx');
   assert.ok(file);

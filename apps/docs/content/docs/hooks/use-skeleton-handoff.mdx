@@ -1,0 +1,77 @@
+---
+title: useSkeletonHandoff
+description: Keep a placeholder on screen through a fade while the real content arrives.
+---
+
+Returns a `mounted` flag and an `opacity` shared value for a loading
+placeholder. `mounted` stays true past the moment the data lands, for exactly as
+long as the fade takes, so the placeholder dissolves while the real content
+appears underneath it.
+
+A placeholder cut at the frame `loading` turns false leaves a gap: it is gone,
+and whatever replaces it has not started drawing yet. Both states were meant to
+show something, and for a frame or two neither does.
+
+## Usage
+
+```tsx
+import { useSkeletonHandoff } from 'panelui-native';
+import Animated, { useAnimatedProps } from 'react-native-reanimated';
+import { G } from 'react-native-svg';
+
+const AnimatedG = Animated.createAnimatedComponent(G);
+
+function ChartPlaceholder({ loading }: { loading: boolean }) {
+  const { mounted, opacity } = useSkeletonHandoff(loading);
+  const animatedProps = useAnimatedProps(() => ({ opacity: opacity.value }));
+
+  if (!mounted) return null;
+
+  return <AnimatedG animatedProps={animatedProps}>{/* the placeholder */}</AnimatedG>;
+}
+```
+
+The fade runs on the UI thread. The unmount is scheduled back to JavaScript once,
+at the end, so nothing re-renders per frame.
+
+For a view rather than an SVG node, read the same value with `useAnimatedStyle`:
+
+```tsx
+const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+```
+
+## Timing it against the reveal
+
+The default 220ms suits a reveal of roughly 500–700ms: the placeholder is still
+faintly there while the first marks grow, and gone well before the last of them
+lands. Pass a duration to match a slower entrance.
+
+```tsx
+const { mounted, opacity } = useSkeletonHandoff(loading, 320);
+```
+
+A fade longer than the reveal it covers is worse than a hard cut — the
+placeholder is still legible over content that has finished arriving, and the
+two read as two charts on top of each other.
+
+## Reduced motion
+
+With the setting on, the placeholder is removed immediately rather than fading.
+It is the dissolve that is the motion, not the disappearance, so nothing is lost
+by skipping it.
+
+## API Reference
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `loading` | `boolean` | — | True while the content is still on its way. |
+| `duration` | `number` | `220` | Milliseconds the placeholder takes to dissolve once it is not. |
+
+### Returns
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `mounted` | `boolean` | Whether to render the placeholder at all — true through the fade, not only through the wait. |
+| `opacity` | `SharedValue<number>` | `1` while loading, tweened to `0` after. Read it in a worklet. |

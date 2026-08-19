@@ -9,6 +9,7 @@
     "use-keyboard-avoidance",
     "use-reveal-progress",
     "use-scroll-sections",
+    "use-skeleton-handoff",
     "use-debounced-value",
     "use-previous",
     "use-back-handler",

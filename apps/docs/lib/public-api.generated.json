@@ -1,12 +1,12 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1146,
-    "values": 305,
-    "types": 841,
-    "modules": 140,
+    "exports": 1151,
+    "values": 307,
+    "types": 844,
+    "modules": 141,
     "components": 114,
-    "hooks": 12
+    "hooks": 13
   },
   "groups": {
     "components": [
@@ -2119,6 +2119,10 @@
             "kind": "type"
           },
           {
+            "name": "MarqueeGroupProps",
+            "kind": "type"
+          },
+          {
             "name": "MarqueeDirection",
             "kind": "type"
           }
@@ -3847,6 +3851,10 @@
           {
             "name": "SplitViewHandleProps",
             "kind": "type"
+          },
+          {
+            "name": "SplitViewVariant",
+            "kind": "type"
           }
         ]
       },
@@ -4884,6 +4892,25 @@
           },
           {
             "name": "UseScrollSectionsResult",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "hooks/use-skeleton-handoff.ts",
+        "slug": "use-skeleton-handoff",
+        "category": "hooks",
+        "symbols": [
+          {
+            "name": "useSkeletonHandoff",
+            "kind": "value"
+          },
+          {
+            "name": "SKELETON_FADE",
+            "kind": "value"
+          },
+          {
+            "name": "UseSkeletonHandoffResult",
             "kind": "type"
           }
         ]

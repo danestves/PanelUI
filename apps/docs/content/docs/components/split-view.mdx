@@ -1,10 +1,12 @@
 ---
 title: SplitView
-description: Two stacked panes whose seam settles on one of a few named heights.
+description: Two resizable stacked panes that settle on one of a few named heights.
 status: new
 ---
 
-Two stacked panes with a seam between them that settles on one of a few heights you name, rather than wherever the finger stopped.
+Two stacked panes you can resize, with a grip between them that settles on one of a few heights you name rather than wherever the finger stopped.
+
+Each pane gets a surface of its own on a recessed ground, and the grip sits in the gap between them. `variant="seam"` drops the surfaces and the gap for a hairline grip on a shared background, which is what a split inside a card or a sheet wants — a second surface there is a box in a box.
 
 Snap points are fractions of the room the panes share, so they mean the same thing on any screen and a rotation costs no re-measuring.
 
@@ -17,7 +19,7 @@ For panes that stop anywhere the reader lets go, and for more than two of them, 
 SplitView ships with the library — no separate install.
 
 ```tsx
-import { SplitView, ScrollView, Text, View } from 'panelui-native';
+import { SplitView, ScrollView, Text, View, Card } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -125,6 +127,24 @@ A pane clips what does not fit, so anything longer than the shortest snap point 
 </SplitView>
 ```
 
+### A seam instead of two surfaces
+
+Inside something that already has a surface — a card, a sheet — a second pair of them is a box in a box. `seam` drops the surfaces and the gap and leaves the grip.
+
+```tsx
+<Card>
+  <Card.Content className="p-0">
+    <SplitView variant="seam" className="h-72" snapPoints={[0.4, 0.7]}>
+      <SplitView.Top>{chart}</SplitView.Top>
+      <SplitView.DragArea>
+        <SplitView.Handle />
+      </SplitView.DragArea>
+      <SplitView.Bottom>{legend}</SplitView.Bottom>
+    </SplitView>
+  </Card.Content>
+</Card>
+```
+
 ### Driving it from outside
 
 Pass `snapIndex` to control which height the seam sits at, and move it with a control of your own. Pair it with `onSnapIndexChange` or a drag will spring back to the index the props still name.
@@ -150,9 +170,9 @@ const [index, setIndex] = useState(1);
 </View>
 ```
 
-### A seam that does not move
+### A split that does not move
 
-`disabled` freezes the seam. The panes keep the heights they have, and the screen reader is told the control is unavailable rather than left offering steps that do nothing.
+`disabled` freezes the grip. The panes keep the heights they have, and the screen reader is told the control is unavailable rather than left offering steps that do nothing.
 
 ```tsx
 <SplitView className="h-72" snapPoints={[0.5]} disabled>
@@ -164,6 +184,18 @@ const [index, setIndex] = useState(1);
 </SplitView>
 ```
 
+## Variants
+
+### `variant`
+
+- `panes` *(default)*
+- `seam`
+
+```tsx
+<SplitView variant="panes">…</SplitView>
+<SplitView variant="seam">…</SplitView>
+```
+
 ## API Reference
 
 ### SplitView
@@ -171,6 +203,7 @@ const [index, setIndex] = useState(1);
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
+| `variant` | `SplitViewVariant` | `'panes'` | How the split is drawn. `panes` gives each half its own rounded surface on a recessed ground, with the grip in the gap between them; `seam` is a hairline grip on a shared background, for a split inside something that already has a surface of its own. |
 | `snapPoints` | `readonly number[]` | — | Heights the seam settles on. A number at or below `1` is a fraction of the room the panes share; anything larger is points. Defaults to `[0.2, 0.5, 0.8]`. |
 | `minHeight` | `number` | — | Smallest the top pane may get, as a fraction or in points. Defaults to `100`. |
 | `maxHeight` | `number` | — | Largest the top pane may get, as a fraction or in points. A negative number is measured back from the bottom — `-80` leaves eighty points for the other pane. Defaults to all the room there is. |
@@ -242,4 +275,4 @@ Reach for SplitView when the layout has a few right answers — a map over a lis
 
 **Values:** `SplitView`, `useSplitView`
 
-**Types:** `SplitViewProps`, `SplitViewPaneProps`, `SplitViewDragAreaProps`, `SplitViewHandleProps`
+**Types:** `SplitViewProps`, `SplitViewPaneProps`, `SplitViewDragAreaProps`, `SplitViewHandleProps`, `SplitViewVariant`

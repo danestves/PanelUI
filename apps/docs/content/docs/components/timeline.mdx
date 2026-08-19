@@ -1,7 +1,6 @@
 ---
 title: Timeline
 description: A sequence of events, vertical or swiped sideways.
-status: updated
 ---
 
 A sequence of events, vertical by default.
@@ -292,6 +291,7 @@ Years as columns on a rail wider than the screen. The empty years carry the argu
 | `variant` | `TimelineVariant` | `dot` |  |
 | `orientation` | `TimelineOrientation` | `vertical` | Which way the sequence runs. `horizontal` lays the items out as columns on a rail wider than the screen, swiped through rather than scrolled down. |
 | `snap` | `boolean` | `true` | Horizontal only: land a flick on a column rather than between two. On by default, because the thing being moved between is a column — stopping halfway shows two half-columns and no whole one. |
+| `haptics` | `boolean` | `false` | Horizontal only: a tick as the reading edge passes from one column to the next. Needs `snap`, since a scroll that lands anywhere has no detents to feel. Off by default — a haptic per column is a lot for a long history, and whether this one is worth feeling is the caller's call. |
 
 ### Timeline.List
 
@@ -345,7 +345,11 @@ The rail is drawn once across the whole track and every column puts a tick on it
 
 A flick lands on a column rather than between two, which is what `snap` is for; turn it off for free scrolling.
 
-A column drops four points and scales down four percent as it leaves the reading edge, so the entry being read remains distinct without fading informative text. Dates, labels and descriptions stay fully opaque and retain the contrast of their theme tokens; contrast never depends on scroll position or reduced-motion preference.
+A column drops four points and scales down four percent as it leaves the reading edge, and its date, age and description run from the muted token to the foreground one as it arrives — the same colour a heading uses. Position alone made the focused column nearer and no easier to read than its neighbours; colour is what says which one you are on.
+
+The colour is driven by scroll position, not by a clock, so it is not disabled under reduced motion — the reader's own finger is what moves it. What that setting drops is the scale and the drop.
+
+`haptics` adds a tick as the reading edge passes from one column to the next. It needs `snap`, since a scroll that lands anywhere has no detents to feel, and it is off by default: a haptic per column is a lot for a long history.
 
 With the operating system set to reduce motion both curves are dropped and the rail simply scrolls.
 
