@@ -1007,15 +1007,15 @@ export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'split-view',
     name: 'SplitView',
-    summary: 'Two stacked panes whose seam settles on a named height',
+    summary: 'Two resizable stacked panes that settle on a named height',
     demos: [
       {
         label: 'A pane at three heights',
         render: () => (
           <View className="w-full">
-            <SplitView className="h-96 overflow-hidden rounded-2xl border border-border">
+            <SplitView className="h-96">
               <SplitView.Top>
-                <Half title="Map" body="Drag the handle down for more of it." className="bg-surface-secondary" />
+                <Half title="Map" body="Drag the handle down for more of it." />
               </SplitView.Top>
               <SplitView.DragArea>
                 <SplitView.Handle />
@@ -1032,7 +1032,7 @@ export const ENTRIES: ComponentEntry[] = [
         render: () => (
           <View className="w-full">
             <SplitView
-              className="h-96 overflow-hidden rounded-2xl border border-border"
+              className="h-96"
               snapPoints={[0.3, 0.75]}
               minHeight={96}
               defaultSnapIndex={0}
@@ -1044,7 +1044,7 @@ export const ENTRIES: ComponentEntry[] = [
                 <SplitView.Handle />
               </SplitView.DragArea>
               <SplitView.Bottom>
-                <Half title="Editor" body="index.tsx" className="bg-surface-secondary" />
+                <Half title="Editor" body="index.tsx" />
               </SplitView.Bottom>
             </SplitView>
           </View>
@@ -1055,7 +1055,7 @@ export const ENTRIES: ComponentEntry[] = [
         render: () => (
           <View className="w-full">
             <SplitView
-              className="h-96 overflow-hidden rounded-2xl border border-border"
+              className="h-96"
               snapPoints={[0.35, 0.8]}
             >
               <SplitView.Top>
@@ -1071,9 +1071,34 @@ export const ENTRIES: ComponentEntry[] = [
                 <SplitView.Handle />
               </SplitView.DragArea>
               <SplitView.Bottom>
-                <Half title="Detail" body="Takes whatever the list gave up." className="bg-surface-secondary" />
+                <Half title="Detail" body="Takes whatever the list gave up." />
               </SplitView.Bottom>
             </SplitView>
+          </View>
+        ),
+      },
+      {
+        label: 'A seam instead of two surfaces',
+        render: () => (
+          <View className="w-full">
+            {/* Inside something that already has a surface, a second pair of
+                them is a box in a box. `seam` drops the surfaces and the gap
+                and leaves the grip. */}
+            <Card>
+              <Card.Content className="p-0">
+                <SplitView variant="seam" className="h-72" snapPoints={[0.4, 0.7]}>
+                  <SplitView.Top>
+                    <Half title="Chart" body="No surface of its own." />
+                  </SplitView.Top>
+                  <SplitView.DragArea>
+                    <SplitView.Handle />
+                  </SplitView.DragArea>
+                  <SplitView.Bottom>
+                    <Half title="Legend" body="The card is the surface." />
+                  </SplitView.Bottom>
+                </SplitView>
+              </Card.Content>
+            </Card>
           </View>
         ),
       },
@@ -1083,7 +1108,7 @@ export const ENTRIES: ComponentEntry[] = [
         render: () => (
           <View className="w-full">
             <SplitView
-              className="h-72 overflow-hidden rounded-2xl border border-border"
+              className="h-72"
               snapPoints={[0.5]}
               disabled
             >
@@ -1094,7 +1119,7 @@ export const ENTRIES: ComponentEntry[] = [
                 <SplitView.Handle />
               </SplitView.DragArea>
               <SplitView.Bottom>
-                <Half title="Also fixed" body="" className="bg-surface-secondary" />
+                <Half title="Also fixed" body="" />
               </SplitView.Bottom>
             </SplitView>
           </View>

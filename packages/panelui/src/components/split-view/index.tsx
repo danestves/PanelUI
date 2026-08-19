@@ -79,10 +79,44 @@ const splitViewVariants = tv({
     root: 'w-full flex-col overflow-hidden',
     top: 'w-full overflow-hidden',
     bottom: 'w-full flex-1 overflow-hidden',
-    dragArea: 'w-full items-center justify-center py-2',
-    handle: 'h-1 w-10 rounded-full bg-muted-foreground/30',
+    dragArea: 'w-full items-center justify-center',
+    handle: 'rounded-full',
+  },
+  variants: {
+    /*
+     * How the split is drawn. The mechanics are the same either way — this is
+     * only what the reader sees, and what they see decides what they think the
+     * control is.
+     *
+     * `panes` gives each half a surface of its own on a recessed ground, with
+     * the grip in the gap between them. Two things you can resize, and a
+     * handle that belongs to neither.
+     *
+     * `seam` is a hairline grip on a shared background: no surfaces, no gap,
+     * the two halves reading as one region with a line through it. It suits a
+     * split inside something that already has a surface — a card, a sheet —
+     * where a second one is a box in a box.
+     */
+    variant: {
+      panes: {
+        root: 'bg-inset',
+        top: 'rounded-2xl bg-surface',
+        bottom: 'rounded-2xl bg-surface',
+        dragArea: 'py-3',
+        handle: 'h-1.5 w-12 bg-muted-foreground/50',
+      },
+      seam: {
+        dragArea: 'py-2',
+        handle: 'h-1 w-10 bg-muted-foreground/30',
+      },
+    },
+  },
+  defaultVariants: {
+    variant: 'panes',
   },
 });
+
+export type SplitViewVariant = 'panes' | 'seam';
 
 interface SplitViewContextValue {
   /** The top pane's height in points. Written by drags, read by both panes. */
@@ -101,6 +135,7 @@ interface SplitViewContextValue {
   snapTo: (index: number) => void;
   measureDragArea: (height: number) => void;
   dragAreaHeight: number;
+  variant: SplitViewVariant;
 }
 
 const SplitViewContext = createContext<SplitViewContextValue | null>(null);
@@ -123,6 +158,13 @@ export function useSplitView() {
 
 export interface SplitViewProps extends ViewProps {
   className?: string;
+  /**
+   * How the split is drawn. `panes` gives each half its own rounded surface on
+   * a recessed ground, with the grip in the gap between them; `seam` is a
+   * hairline grip on a shared background, for a split inside something that
+   * already has a surface of its own.
+   */
+  variant?: SplitViewVariant;
   /**
    * Heights the seam settles on. A number at or below `1` is a fraction of the
    * room the panes share; anything larger is points. Defaults to
@@ -154,6 +196,7 @@ export interface SplitViewProps extends ViewProps {
 
 function SplitViewRoot({
   className,
+  variant = 'panes',
   snapPoints,
   minHeight,
   maxHeight,
@@ -167,7 +210,7 @@ function SplitViewRoot({
   onLayout,
   ...props
 }: SplitViewProps) {
-  const { root } = splitViewVariants();
+  const { root } = splitViewVariants({ variant });
   const reducedMotion = useReducedMotion();
   const animate = !reducedMotion;
 
@@ -284,6 +327,7 @@ function SplitViewRoot({
       snapTo,
       measureDragArea,
       dragAreaHeight,
+      variant,
     }),
     [
       topHeight,
@@ -298,6 +342,7 @@ function SplitViewRoot({
       snapTo,
       measureDragArea,
       dragAreaHeight,
+      variant,
     ]
   );
 
@@ -325,7 +370,7 @@ export interface SplitViewPaneProps extends ViewProps {
  */
 function SplitViewTop({ className, children, style, ...props }: SplitViewPaneProps) {
   const context = useSplitViewContext('SplitView.Top');
-  const { top } = splitViewVariants();
+  const { top } = splitViewVariants({ variant: context.variant });
 
   const animatedStyle = useAnimatedStyle(() => ({
     height: context.topHeight.value,
@@ -356,8 +401,8 @@ function SplitViewTop({ className, children, style, ...props }: SplitViewPanePro
  * every frame of a drag rather than only at rest.
  */
 function SplitViewBottom({ className, children, ...props }: SplitViewPaneProps) {
-  useSplitViewContext('SplitView.Bottom');
-  const { bottom } = splitViewVariants();
+  const context = useSplitViewContext('SplitView.Bottom');
+  const { bottom } = splitViewVariants({ variant: context.variant });
 
   return (
     <View className={bottom({ className })} {...props}>
@@ -390,7 +435,7 @@ function SplitViewDragArea({
   ...props
 }: SplitViewDragAreaProps) {
   const context = useSplitViewContext('SplitView.DragArea');
-  const { dragArea } = splitViewVariants();
+  const { dragArea } = splitViewVariants({ variant: context.variant });
   const { topHeight, dragging, points, minPx, maxPx, room, disabled, snapTo } = context;
 
   const start = useSharedValue(0);
@@ -504,7 +549,7 @@ export interface SplitViewHandleProps extends ViewProps {
  */
 function SplitViewHandle({ className, children, style, ...props }: SplitViewHandleProps) {
   const context = useSplitViewContext('SplitView.Handle');
-  const { handle } = splitViewVariants();
+  const { handle } = splitViewVariants({ variant: context.variant });
   const { animate } = context;
 
   const animatedStyle = useAnimatedStyle(() => {

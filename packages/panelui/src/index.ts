@@ -1071,6 +1071,7 @@ export {
   type SplitViewPaneProps,
   type SplitViewDragAreaProps,
   type SplitViewHandleProps,
+  type SplitViewVariant,
 } from './components/split-view';
 export {
   Steps,

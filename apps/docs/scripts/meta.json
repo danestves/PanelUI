@@ -717,7 +717,7 @@
   ],
   "split-view": [
     "SplitView",
-    "Two stacked panes whose seam settles on one of a few named heights.",
+    "Two resizable stacked panes that settle on one of a few named heights.",
     "react native split view snap points resizable drawer pane",
     {
       "updatedIn": "0.76.0",
