@@ -757,6 +757,19 @@ export interface AIInputPillProps extends Omit<ViewProps, 'children'> {
   detail?: ReactNode;
   /** A glyph after the labels, for a pill that opens a list. */
   indicator?: ReactNode;
+  /**
+   * The platform's name for `indicator`, used when the pill is handed over.
+   *
+   * A native button takes a glyph as a name from the system's symbol set, not
+   * as an element — an element would have to be hosted, and a hosted view
+   * inside a labelled button has no width anything can resolve. So the two are
+   * separate props rather than one: `indicator` is what the drawn pill
+   * renders, this is what the handed-over one asks the platform for.
+   *
+   * A pill with an `indicator` and no symbol is still handed over, and has no
+   * glyph on it.
+   */
+  indicatorSymbol?: string;
   onPress?: () => void;
   disabled?: boolean;
   /** Names the control when the label alone does not say what changing it does. */
@@ -764,10 +777,16 @@ export interface AIInputPillProps extends Omit<ViewProps, 'children'> {
   /** Control size. Inherited from the composer when it is inside one. */
   size?: AIInputSize;
   /**
-   * Draw it as the platform's own button, in the system material. Only a
-   * string `label` can be handed over — a hosted view inside a native button
-   * has no width anything can resolve — so a pill given elements is drawn
-   * here whatever this says.
+   * Draw it as the platform's own button, in the system material.
+   *
+   * The platform is given text and a symbol name, never elements: a hosted
+   * view inside a labelled native button has no width anything can resolve. So
+   * a `label` or `detail` that is not a string is drawn here whatever this
+   * says, and an `indicator` reaches the platform only through
+   * `indicatorSymbol`.
+   *
+   * A handed-over pill is one label in the platform's own type, so `detail`
+   * stops reading as the quieter half of the pair.
    */
   native?: boolean;
 }
@@ -777,6 +796,7 @@ function AIInputPill({
   label,
   detail,
   indicator,
+  indicatorSymbol,
   onPress,
   disabled,
   accessibilityLabel,
@@ -791,17 +811,21 @@ function AIInputPill({
   const slots = aiInputVariants({ size });
 
   /*
-   * Only a plain string goes to the platform. Passing elements makes it host
-   * them, and a hosted view inside a labelled button leaves the width
-   * unresolved — which is not an exception anything here could catch but a
-   * crash in native code. A pill with a `detail` or an `indicator` is drawn.
+   * Only text goes to the platform. Passing elements makes it host them, and a
+   * hosted view inside a labelled button leaves the width unresolved — which
+   * is not an exception anything here could catch but a crash in native code.
+   *
+   * `detail` is text in every case that matters, so it goes over as part of the
+   * label rather than keeping the pill drawn; the platform sets one label in
+   * one weight, which is the same trade every handed-over control makes.
+   * `indicator` is an element and never goes, which is what `indicatorSymbol`
+   * is for.
    */
   const isNative =
     (native ?? context?.native ?? false) &&
     hasNativeUI() &&
     typeof label === 'string' &&
-    detail === undefined &&
-    indicator === undefined;
+    (detail === undefined || typeof detail === 'string');
 
   if (isNative) {
     return (
@@ -811,11 +835,12 @@ function AIInputPill({
           glass
           variant="secondary"
           size="sm"
+          systemImage={indicatorSymbol}
           accessibilityLabel={accessibilityLabel}
           disabled={isDisabled}
           onPress={onPress}
         >
-          {label as string}
+          {detail === undefined ? (label as string) : `${label} ${detail}`}
         </Button>
       </View>
     );

@@ -1098,6 +1098,7 @@ function VoiceDemo() {
         <AIInput.Pill
           label="Sonnet"
           indicator={<ChevronsUpDownIcon size={14} />}
+          indicatorSymbol="chevron.up.chevron.down"
           accessibilityLabel="Change model"
           onPress={() => setSheet(true)}
         />

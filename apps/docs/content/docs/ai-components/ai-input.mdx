@@ -119,7 +119,7 @@ The field still grows — it grows the row. Reach for it when the composer is al
 
 The platform owns their colour, metrics and shape while this is on, so `className` and the theme tokens stop reaching them, and the row they sit in takes the platform's height rather than the one our own controls would need.
 
-A pill with a `detail` or an `indicator` is drawn rather than handed over: only a plain string can go to a native button, because a hosted view inside one has no width anything can resolve.
+The platform is given text, never elements: a hosted view inside a labelled native button has no width anything can resolve. A pill's `detail` goes over as part of the label, so a handed-over pill is one label in one weight rather than a value and a quieter one beside it. An `indicator` is an element and cannot go at all — name the glyph with `indicatorSymbol` and the platform draws it from its own symbol set.
 
 ```tsx
 <AIInput native value={value} onValueChange={setValue}>
@@ -283,7 +283,12 @@ The screen with no field on it. The wash behind everything and the capsules over
   onClose={() => router.back()}
 >
   <AIInput.Action label="Add" icon={<PlusIcon />} onPress={add} />
-  <AIInput.Pill label="Sonnet" indicator={<ChevronsUpDownIcon size={14} />} onPress={models} />
+  <AIInput.Pill
+    label="Sonnet"
+    indicator={<ChevronsUpDownIcon size={14} />}
+    indicatorSymbol="chevron.up.chevron.down"
+    onPress={models}
+  />
 </AIInput.VoiceMode>
 ```
 
@@ -365,11 +370,12 @@ The screen with no field on it. The wash behind everything and the capsules over
 | `label` | `ReactNode` | — | The current value — a model name, a mode, a project. |
 | `detail` | `ReactNode` | — | A second, quieter value beside it. |
 | `indicator` | `ReactNode` | — | A glyph after the labels, for a pill that opens a list. |
+| `indicatorSymbol` | `string` | — | The platform's name for `indicator`, used when the pill is handed over. A native button takes a glyph as a name from the system's symbol set, not as an element — an element would have to be hosted, and a hosted view inside a labelled button has no width anything can resolve. So the two are separate props rather than one: `indicator` is what the drawn pill renders, this is what the handed-over one asks the platform for. A pill with an `indicator` and no symbol is still handed over, and has no glyph on it. |
 | `onPress` | `() => void` | — |  |
 | `disabled` | `boolean` | `false` |  |
 | `accessibilityLabel` | `string` | — | Names the control when the label alone does not say what changing it does. |
 | `size` | `AIInputSize` | `md` | Control size. Inherited from the composer when it is inside one. |
-| `native` | `boolean` | — | Draw it as the platform's own button, in the system material. Only a string `label` can be handed over — a hosted view inside a native button has no width anything can resolve — so a pill given elements is drawn here whatever this says. |
+| `native` | `boolean` | — | Draw it as the platform's own button, in the system material. The platform is given text and a symbol name, never elements: a hosted view inside a labelled native button has no width anything can resolve. So a `label` or `detail` that is not a string is drawn here whatever this says, and an `indicator` reaches the platform only through `indicatorSymbol`. A handed-over pill is one label in the platform's own type, so `detail` stops reading as the quieter half of the pair. |
 
 ### AIInput.Submit
 
