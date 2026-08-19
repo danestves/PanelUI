@@ -12,7 +12,7 @@ an existing app.
 
 | Package              | Current  | Release                                                         | Source                                                                                                 |
 | -------------------- | -------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `panelui-native`     | `0.77.0` | [npm](https://www.npmjs.com/package/panelui-native/v/0.77.0)    | [package.json](https://github.com/panel-ui/PanelUI/blob/main/packages/panelui/package.json)            |
+| `panelui-native`     | `0.78.0` | [npm](https://www.npmjs.com/package/panelui-native/v/0.78.0)    | [package.json](https://github.com/panel-ui/PanelUI/blob/main/packages/panelui/package.json)            |
 | `panelui-cli`        | `0.6.2`  | [npm](https://www.npmjs.com/package/panelui-cli/v/0.6.2)        | [package.json](https://github.com/panel-ui/PanelUI/blob/main/packages/cli/package.json)                |
 | `create-panelui-app` | `0.2.2`  | [npm](https://www.npmjs.com/package/create-panelui-app/v/0.2.2) | [package.json](https://github.com/panel-ui/PanelUI/blob/main/packages/create-panelui-app/package.json) |
 
@@ -77,6 +77,22 @@ its offset and scrim bounds.
 
 [Release](https://github.com/panel-ui/PanelUI/releases/tag/v0.60.0) ·
 [Source notes](https://github.com/panel-ui/PanelUI/blob/main/CHANGELOG.md#migration-0-60-0)
+
+### v0.78.0 — keep the old SplitView drawing with `variant="seam"`
+
+Nothing breaks and no code has to change, but **every existing `SplitView` looks different**: each
+pane now has a rounded surface of its own on a recessed ground, with the grip in a gap between
+them. It used to be a hairline grip on a shared background, which was indistinguishable from
+`Splitter`.
+
+Pass `variant="seam"` to keep the old drawing. It is the right choice inside something that
+already has a surface — a card, a sheet — where a second pair of them is a box in a box.
+
+The example demos also dropped the border and per-pane tint they used to tell the halves apart,
+since the panes now carry both. Your own wrapper may want the same trim.
+
+[Release](https://github.com/panel-ui/PanelUI/releases/tag/v0.78.0) ·
+[Source notes](https://github.com/panel-ui/PanelUI/blob/main/CHANGELOG.md#migration-0-78-0)
 
 For everything else — additions, fixes and changes that require no migration — continue in the
 [full changelog](https://github.com/panel-ui/PanelUI/blob/main/CHANGELOG.md) or browse

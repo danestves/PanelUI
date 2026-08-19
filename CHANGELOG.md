@@ -9,6 +9,141 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.78.0] — 2026-08-19
+
+### Added
+
+- **`ProgressButton`**, for the action a confirmation dialog exists to slow down.
+  A dialog asks the question somewhere else and takes the answer as a tap, which
+  makes it two taps — and two taps in a row is a rhythm a hand falls into. This
+  has to be held, and the fill on the button says for how much longer. Nothing
+  fires short of a complete fill: there is deliberately no tolerance near the
+  end, because a tolerance means the button sometimes commits after you have let
+  go on purpose.
+
+- **`Marquee.Group`**, for rows that travel together. Moving content needs a way
+  to stop it, so a marquee draws its own pause button — and two rows of logos
+  meant two buttons, each pinned to its own bottom corner, with the upper one
+  landing on top of the row beneath. A group draws one control for everything
+  inside it, below the rows rather than over them, and the marquees in it stop
+  drawing their own.
+
+- **`variant` on `SplitView`.** `seam` is the old drawing, for a split inside
+  something that already has a surface of its own.
+
+- **`haptics` on `Timeline`**, off by default: a tick as the reading edge passes
+  from one column to the next. Needs `snap`, since a scroll that lands anywhere
+  has no detents to feel.
+
+- **`useSkeletonHandoff`**, the hook behind the chart change below. Public
+  because anyone drawing their own loading state wants the same thing.
+
+### Changed
+
+- **`SplitView` is drawn as two panes.** Its grip was byte-for-byte `Splitter`'s
+  and its panes had no surface of their own, so the two components were
+  indistinguishable on screen while doing quite different things. Each half now
+  gets a rounded surface on a recessed ground, with the grip in a real gap
+  between them. **This changes how every existing `SplitView` looks** — pass
+  `variant="seam"` to keep the old drawing.
+
+- **A chart hands its skeleton over instead of cutting it.** Five charts dropped
+  their placeholder on the frame the data landed, while the reveal was still at
+  zero — a blank panel between two states that were both meant to show
+  something. `ScatterChart` already did this properly; pie, funnel, treemap,
+  waterfall and line now do too.
+
+- **`ScatterChart`'s reveal is 650ms**, down from 900ms, which is where the rest
+  of the charts sit.
+
+- **`Timeline`'s horizontal columns say which one you are reading.** A column
+  already came forward as it reached the reading edge, but every word in it
+  stayed the same muted grey as the columns either side — closer, and no easier
+  to read. Its date, age and description now run to the foreground token as it
+  arrives. Driven by scroll position rather than by a clock, so it survives
+  reduced motion; the scale and the drop still do not.
+
+- **`BottomSheet` hands the fling's velocity to the animation** instead of only
+  consulting it as a threshold. The frame the touch ended used to be a visible
+  seam between a fast drag and a slow slide. A quick flick now dismisses on its
+  projected resting point rather than having to travel 120 points first. One
+  spring for arriving, snapping back and leaving, where there were three
+  slightly different ones; the backdrop is derived from the drag, so it can no
+  longer stay fully dark while the sheet is halfway out.
+
+- **`Toast` exits on the same ease-out as everything else**, rather than an
+  ease-in that spent its first frames barely moving — exactly when you are
+  looking at what just changed. Its stack springs when a toast in the middle is
+  dismissed, instead of teleporting the cards behind it forward.
+
+- **`BottomSheet` and `Toast` respect reduced motion**, which neither did. Both
+  keep the fade and drop the travel.
+
+- **`SectionRail` is smaller throughout** — narrower bars, tighter trigger
+  padding, a smaller panel and rows. Same design, less of it.
+
+### Fixed
+
+- **The chart reveal now plays on Android** ([#200]). It was an animated `<Rect>`
+  inside `<Defs><ClipPath>`, and react-native-svg does not push animated prop
+  updates through to the native clip there, so the chart drew complete and the
+  animation was simply absent. `LineChart`, `AreaChart`, `HeatmapChart` and
+  `Plot` uncover their marks with a view under `overflow: 'hidden'` instead,
+  which the platform itself clips. `HexChart` grows an ellipse from the centre
+  of its field, which a rectangular view cannot express — it keeps the SVG clip
+  and has gained the static fallback it was missing, so where the animated props
+  do not arrive the reveal does not play rather than the series never appearing.
+
+- **One tap on `SectionRail` selects one section.** Tapping a row lit up three or
+  four in quick succession and fired a haptic for each. The rail had a window
+  meant to cover exactly this, and it was closing before the journey started:
+  `useScrollSections.scrollTo` sets the active section optimistically, so the
+  rail saw its target arrive on the next render and disarmed for the whole
+  animated scroll that followed. Fixed at both ends — the hook no longer reports
+  positions it is driving, and the rail no longer treats the first matching value
+  as arrival.
+
+- **`TreemapChart` no longer spends its entrance looking like a wireframe.** Its
+  labels were gated on the loading status alone, so every name and number sat at
+  its final position at full opacity over tiles that had no size yet. Each label
+  now arrives on its own tile's slice of the reveal.
+
+- **`WaterfallChart`'s loading demo shows the chart again.** Its timer was keyed
+  to mount, so pressing "Load again" put it into a state nothing would ever move
+  it out of — and a loading waterfall has no bars, so it rendered as an empty
+  panel.
+
+- **Two of the same chart on one screen no longer share a gradient.**
+  `TreemapChart`, `WaterfallChart` and `LineChart` gave their skeleton gradients
+  fixed ids, so the second to mount won.
+
+### Docs
+
+- **The "Updated" mark expires a release after it lands**, and says "Updated"
+  rather than "Update", which read as an instruction. It ran for the same three
+  minor releases as the "New" dot, which put it on a large share of the sidebar
+  at once — and a mark most rows carry is a mark nobody reads. "New" still runs
+  for three: a component arriving is worth a glance from anyone, where a
+  component changing only means something to a reader who already has it.
+
+<a id="migration-0-78-0"></a>
+
+### Migration
+
+Nothing here breaks and no code has to change. One thing looks different on its own, which is why
+it is written down rather than left to be noticed.
+
+- **Every existing `SplitView` is drawn differently.** Each pane now has a rounded surface of its
+  own on a recessed ground, with the grip in a gap between them. Pass `variant="seam"` to keep the
+  old hairline-on-a-shared-background drawing — the right choice inside something that already has
+  a surface, such as a card or a sheet, where a second pair of them is a box in a box.
+
+- **A wrapper around a `SplitView` may now be doing the panes' job twice.** The demos in this repo
+  were giving the split a rounded border and each half a tint, to tell the two apart; both are the
+  panes' own now, and both were removed. Check anything you wrapped one in for the same overlap.
+
+[#200]: https://github.com/panel-ui/PanelUI/issues/200
+
 ## [0.77.0] — 2026-08-19
 
 ### Added

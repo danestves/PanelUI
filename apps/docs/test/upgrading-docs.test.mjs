@@ -38,7 +38,10 @@ test("the upgrade hub is present exactly once in primary docs navigation", () =>
 
 test("every changelog migration has one versioned hub entry with real links", () => {
   const versions = migrationVersions();
-  assert.deepEqual(versions, ["0.60.0", "0.59.0", "0.46.0", "0.44.0"]);
+  // Newest first, matching the changelog. Every release listed here owes the
+  // hub an oldest-first entry, an anchor and both links; the loop below checks
+  // each one. Add a release when its changelog entry gains a Migration section.
+  assert.deepEqual(versions, ["0.78.0", "0.60.0", "0.59.0", "0.46.0", "0.44.0"]);
   const linkedAnchors = [
     ...hub.matchAll(/CHANGELOG\.md#(migration-[\d-]+)/g),
   ].map((match) => match[1]);
