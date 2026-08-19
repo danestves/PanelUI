@@ -1,0 +1,188 @@
+---
+title: ProgressButton
+description: Press and hold to confirm, with the wait drawn on the button.
+status: new
+---
+
+A button that has to be held rather than tapped. The wait is drawn on the button itself: a fill grows from the leading edge, and the action fires when it reaches the end.
+
+Use it for the action a confirmation dialog exists to slow down. A dialog asks the question somewhere else and takes the answer as a tap, which makes it two taps — and two taps in a row is a rhythm a hand falls into. A hold cannot be completed by accident and cannot be completed by habit.
+
+Nothing fires until the fill is complete. There is no tolerance near the end, because a tolerance means the button sometimes commits after the reader has deliberately let go. Released early, the fill drains back.
+
+For an action that is ordinary rather than irreversible, use [Button](/docs/components/button). For a wait the reader is not causing, use [Progress](/docs/components/progress).
+
+## Installation
+
+ProgressButton ships with the library — no separate install.
+
+```tsx
+import { ProgressButton, Text, View } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add progress-button
+```
+
+## Usage
+
+```tsx
+<ProgressButton onComplete={erase}>
+  <ProgressButton.Label>Hold to erase</ProgressButton.Label>
+</ProgressButton>
+```
+
+## Composition
+
+```tsx
+<ProgressButton>
+  <ProgressButton.Label>Hold to confirm</ProgressButton.Label>
+</ProgressButton>
+```
+
+`ProgressButton.Label` renders the text twice on purpose. A single label under a translucent wash goes muddy in the middle of the wipe, which is exactly where the eye is; two labels, each at full contrast on its own ground, never do. Both copies are laid out at the button's own width, so the boundary falls in the middle of a glyph rather than between two differently wrapped lines.
+
+## Examples
+
+### Hold to confirm
+
+The default: two seconds, and nothing happens until the fill reaches the end.
+
+```tsx
+<ProgressButton onComplete={() => erase()}>
+  <ProgressButton.Label>Hold to erase</ProgressButton.Label>
+</ProgressButton>
+```
+
+### How long the hold is
+
+`holdDuration` is in milliseconds. Longer for something with no undo, shorter for something merely worth pausing over. It is floored at 200ms — a hold that completes on touch-down is a button with extra steps.
+
+```tsx
+<ProgressButton holdDuration={3000} variant="destructive" onComplete={() => wipe()}>
+  <ProgressButton.Label>Hold to wipe the device</ProgressButton.Label>
+</ProgressButton>
+```
+
+### Offering itself again
+
+`autoReset` empties the fill after the action has landed, for a control the reader may want twice. Without it the button stays completed until something resets it.
+
+```tsx
+<ProgressButton autoReset autoResetDelay={1200} variant="success" onComplete={() => publish()}>
+  <ProgressButton.Label>Hold to publish</ProgressButton.Label>
+</ProgressButton>
+```
+
+### Owning the completed state
+
+Pass `completed` to drive it from outside — a request that has to succeed before the button is allowed to look finished. `onCompletedChange` reports both directions.
+
+```tsx
+const [done, setDone] = useState(false);
+
+<ProgressButton
+  completed={done}
+  onComplete={async () => {
+    await submit();
+    setDone(true);
+  }}
+  onCompletedChange={setDone}
+>
+  <ProgressButton.Label>Hold to submit</ProgressButton.Label>
+</ProgressButton>
+```
+
+### A tick as it takes, a knock as it lands
+
+`haptics` is off by default: whether an action is worth feeling is the caller's decision rather than the control's. The visual stands alone either way — haptics are off system-wide for many people and silent on most Android hardware.
+
+```tsx
+<ProgressButton haptics variant="destructive" onComplete={() => remove()}>
+  <ProgressButton.Label>Hold to delete</ProgressButton.Label>
+</ProgressButton>
+```
+
+## Variants
+
+### `variant`
+
+- `primary` *(default)*
+- `secondary`
+- `destructive`
+- `success`
+
+```tsx
+<ProgressButton variant="primary">…</ProgressButton>
+<ProgressButton variant="secondary">…</ProgressButton>
+<ProgressButton variant="destructive">…</ProgressButton>
+<ProgressButton variant="success">…</ProgressButton>
+```
+
+### `size`
+
+- `sm`
+- `md` *(default)*
+- `lg`
+
+```tsx
+<ProgressButton size="sm">…</ProgressButton>
+<ProgressButton size="md">…</ProgressButton>
+<ProgressButton size="lg">…</ProgressButton>
+```
+
+### `fullWidth`
+
+- `true`
+
+```tsx
+<ProgressButton fullWidth="true">…</ProgressButton>
+```
+
+## API Reference
+
+### ProgressButton
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `holdDuration` | `number` | — | Milliseconds the button has to be held. Defaults to `2000`, and is floored at `200` — a hold that completes on touch-down is a button with extra steps. |
+| `onComplete` | `() => void` | — | Fires once the hold has been sustained to the end. |
+| `onCompletedChange` | `(completed: boolean) => void` | — | Fires whenever the completed state changes, including on a reset. |
+| `completed` | `boolean` | — | Controlled completion. Leave unset to let the button own it. |
+| `autoReset` | `boolean` | `false` | Return to the unfilled state after `autoResetDelay`. |
+| `autoResetDelay` | `number` | — | Milliseconds to stay completed before resetting. Defaults to `1000`. |
+| `disabled` | `boolean` | `false` |  |
+| `haptics` | `boolean` | `false` | A tick as the hold takes, and a knock when it completes. Off by default: whether an action is worth feeling is the caller's call, not the control's. |
+
+### ProgressButton.Label
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+The fill grows on the UI thread and completion is read off the animation itself, not from a timer running beside it. Two clocks agree only while the app is idle; busy, a timer fires before the fill arrives, and the action happens earlier than the reader watched it happen.
+
+Releasing early drains the fill in proportion to how far it got, so abandoning a hold after a moment does not take the same time as abandoning it near the end. A fixed release makes a barely-started hold feel sticky, which reads as the button resisting being let go.
+
+**A few points of finger drift will not abandon a hold.** `pressRetentionOffset` is 16, because a hand resting on a control for two seconds moves.
+
+With the operating system set to reduce motion the fill advances in five steps instead of sweeping. It is still an indicator — a control that asks you to wait and shows nothing is a broken button, and what that setting is about is continuous movement.
+
+The button announces as a button, with a hint saying it has to be held and a checked state once it has been. A single activation from an assistive technology does nothing on its own, so the hint carries the instruction rather than leaving it to the visible label.
+
+`variant` sets which colour fills: `primary`, `secondary`, `destructive` and `success`. Every one of them draws the label in the fill's own foreground token, so contrast holds in both themes without a hardcoded value.
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `ProgressButton`, `useProgressButton`
+
+**Types:** `ProgressButtonProps`, `ProgressButtonLabelProps`, `ProgressButtonVariant`, `ProgressButtonSize`

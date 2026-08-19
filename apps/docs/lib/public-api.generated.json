@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1151,
-    "values": 307,
-    "types": 844,
-    "modules": 141,
-    "components": 114,
+    "exports": 1157,
+    "values": 309,
+    "types": 848,
+    "modules": 142,
+    "components": 115,
     "hooks": 13
   },
   "groups": {
@@ -3009,6 +3009,37 @@
           },
           {
             "name": "PostVote",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/progress-button/index.tsx",
+        "slug": "progress-button",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "ProgressButton",
+            "kind": "value"
+          },
+          {
+            "name": "useProgressButton",
+            "kind": "value"
+          },
+          {
+            "name": "ProgressButtonProps",
+            "kind": "type"
+          },
+          {
+            "name": "ProgressButtonLabelProps",
+            "kind": "type"
+          },
+          {
+            "name": "ProgressButtonVariant",
+            "kind": "type"
+          },
+          {
+            "name": "ProgressButtonSize",
             "kind": "type"
           }
         ]

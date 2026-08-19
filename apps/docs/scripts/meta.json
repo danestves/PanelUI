@@ -528,6 +528,15 @@
       "category": "feedback"
     }
   ],
+  "progress-button": [
+    "ProgressButton",
+    "Press and hold to confirm, with the wait drawn on the button.",
+    "react native hold to confirm button",
+    {
+      "addedIn": "0.78.0",
+      "category": "actions"
+    }
+  ],
   "questionnaire": [
     "Questionnaire",
     "One question at a time, with progress, validation and a way back.",

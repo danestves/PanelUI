@@ -1188,6 +1188,20 @@
     "docsPath": "components/progress"
   },
   {
+    "name": "progress-button",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Press and hold to confirm, with the wait drawn on the button.",
+    "registryDependencies": [
+      "cn",
+      "haptics",
+      "text"
+    ],
+    "docsPath": "components/progress-button"
+  },
+  {
     "name": "qr-code",
     "type": "registry:ui",
     "kind": "ui",

@@ -67,6 +67,7 @@
     "popover",
     "post",
     "progress",
+    "progress-button",
     "qr-code",
     "questionnaire",
     "radar-chart",
@@ -183,16 +184,16 @@
     }
   ],
   "counts": {
-    "componentModules": 114,
-    "packageComponentExports": 114,
-    "documentedComponents": 114,
-    "exampleEntries": 114,
+    "componentModules": 115,
+    "packageComponentExports": 115,
+    "documentedComponents": 115,
+    "exampleEntries": 115,
     "registry": {
-      "componentItems": 114,
+      "componentItems": 115,
       "supportItems": 36,
-      "totalItems": 150,
+      "totalItems": 151,
       "byType": {
-        "registry:ui": 129,
+        "registry:ui": 130,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1

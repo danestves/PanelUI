@@ -845,6 +845,14 @@ export {
 } from './components/post';
 export { Progress, type ProgressProps } from './components/progress';
 export {
+  ProgressButton,
+  useProgressButton,
+  type ProgressButtonProps,
+  type ProgressButtonLabelProps,
+  type ProgressButtonVariant,
+  type ProgressButtonSize,
+} from './components/progress-button';
+export {
   QRCode,
   type QRCodeProps,
   type QRCodeCanvasProps,

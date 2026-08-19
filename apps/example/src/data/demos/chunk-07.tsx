@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Bookmark, Copy, Flag, Link2, Pencil, Share2, Sparkles, TextSelect, Trash2 } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Pressable, View } from "react-native";
-import { Avatar, BottomSheet, Button, ContextMenu, Card, Frame, InfoIcon, Input, Item, Label, Marker, Message, Meter, MessageScroller, Planner, type PlannerEntry, PlusSquareIcon, Popover, Progress, QRCode, SendIcon, ShareNodesIcon, Separator, Shimmer, Text, XIcon } from "panelui-native";
+import { Avatar, BottomSheet, Button, ContextMenu, Card, Frame, InfoIcon, Input, Item, Label, Marker, Message, Meter, MessageScroller, Planner, type PlannerEntry, PlusSquareIcon, Popover, Progress, ProgressButton, QRCode, SendIcon, ShareNodesIcon, Separator, Shimmer, Text, XIcon } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 /** Stable remote portraits for the Avatar demos. */
@@ -919,6 +919,31 @@ function PlannerBareDemo() {
   );
 }
 
+/**
+ * A hold that lands, offers itself again, and reports what happened — which is
+ * the whole cycle, and the only way to see `autoReset` do anything.
+ */
+function ProgressButtonDemo() {
+  const [wiped, setWiped] = useState(0);
+
+  return (
+    <View className="w-full gap-3">
+      <ProgressButton
+        variant="destructive"
+        haptics
+        autoReset
+        fullWidth
+        onComplete={() => setWiped((count) => count + 1)}
+      >
+        <ProgressButton.Label>Hold to erase</ProgressButton.Label>
+      </ProgressButton>
+      <Text size="sm" muted>
+        {wiped === 0 ? 'Nothing erased yet' : `Erased ${wiped} time${wiped === 1 ? '' : 's'}`}
+      </Text>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'context-menu',
@@ -1356,6 +1381,70 @@ export const ENTRIES: ComponentEntry[] = [
               color="success"
             />
           </View>
+        ),
+      },
+    ],
+  },
+{
+    slug: 'progress-button',
+    name: 'ProgressButton',
+    summary: 'Press and hold to confirm, with the wait drawn on the button',
+    demos: [
+      { label: 'Hold to confirm', render: () => <ProgressButtonDemo /> },
+      {
+        label: 'Variants',
+        render: () => (
+          <View className="w-full gap-3">
+            <ProgressButton fullWidth onComplete={() => {}}>
+              <ProgressButton.Label>primary</ProgressButton.Label>
+            </ProgressButton>
+            <ProgressButton variant="secondary" fullWidth onComplete={() => {}}>
+              <ProgressButton.Label>secondary</ProgressButton.Label>
+            </ProgressButton>
+            <ProgressButton variant="destructive" fullWidth onComplete={() => {}}>
+              <ProgressButton.Label>destructive</ProgressButton.Label>
+            </ProgressButton>
+            <ProgressButton variant="success" fullWidth onComplete={() => {}}>
+              <ProgressButton.Label>success</ProgressButton.Label>
+            </ProgressButton>
+          </View>
+        ),
+      },
+      {
+        label: 'Sizes',
+        render: () => (
+          <View className="w-full items-start gap-3">
+            <ProgressButton size="sm" onComplete={() => {}}>
+              <ProgressButton.Label>Small</ProgressButton.Label>
+            </ProgressButton>
+            <ProgressButton size="md" onComplete={() => {}}>
+              <ProgressButton.Label>Medium</ProgressButton.Label>
+            </ProgressButton>
+            <ProgressButton size="lg" onComplete={() => {}}>
+              <ProgressButton.Label>Large</ProgressButton.Label>
+            </ProgressButton>
+          </View>
+        ),
+      },
+      {
+        label: 'How long the hold is',
+        render: () => (
+          <View className="w-full gap-3">
+            <ProgressButton holdDuration={600} fullWidth onComplete={() => {}}>
+              <ProgressButton.Label>Six hundred milliseconds</ProgressButton.Label>
+            </ProgressButton>
+            <ProgressButton holdDuration={3500} fullWidth onComplete={() => {}}>
+              <ProgressButton.Label>Three and a half seconds</ProgressButton.Label>
+            </ProgressButton>
+          </View>
+        ),
+      },
+      {
+        label: 'Disabled',
+        render: () => (
+          <ProgressButton disabled fullWidth onComplete={() => {}}>
+            <ProgressButton.Label>Nothing to confirm</ProgressButton.Label>
+          </ProgressButton>
         ),
       },
     ],

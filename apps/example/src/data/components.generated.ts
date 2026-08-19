@@ -67,6 +67,7 @@ export const COMPONENTS = [
   {"slug":"popover","name":"Popover","summary":"Panel anchored to the thing that opened it"},
   {"slug":"post","name":"Post","summary":"A card carrying something somebody said, and what everyone did about it"},
   {"slug":"progress","name":"Progress","summary":"Determinate and indeterminate progress bar"},
+  {"slug":"progress-button","name":"ProgressButton","summary":"Press and hold to confirm, with the wait drawn on the button"},
   {"slug":"qr-code","name":"QRCode","summary":"A string a camera can read"},
   {"slug":"questionnaire","name":"Questionnaire","summary":"One question at a time, with progress and a way back"},
   {"slug":"radar-chart","name":"RadarChart","summary":"Several measures of one thing, on one shape"},
