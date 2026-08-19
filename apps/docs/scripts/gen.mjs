@@ -79,30 +79,38 @@ const libVersion = JSON.parse(
 ).version;
 
 /**
- * How many minor releases a component keeps its sidebar dot.
+ * How many minor releases a mark survives, per mark.
  *
  * Deriving this from a version rather than hand-writing a `status` field means
  * nobody has to remember to take the badge off — which is the failure mode
  * every "new" marker has, and the reason half of them end up permanent.
+ *
+ * The two are not on the same schedule, because they are not the same news. A
+ * component arriving is worth knowing about for a while, whoever you are, so
+ * `new` runs for three. A component *changing* is only worth knowing about if
+ * you already have it and have not upgraded yet, and that audience has moved on
+ * by the next release — so `updated` runs for one, and is gone the moment
+ * anything else ships. Held for three it was on so many rows at once that it
+ * stopped pointing at anything.
  */
-const BADGE_FOR_MINORS = 3;
+const BADGE_FOR_MINORS = { new: 3, updated: 1 };
 
 /** True while `version` is recent enough to still be worth marking. */
-function isRecent(version) {
+function isRecent(version, mark) {
   if (!version) return false;
   const [thenMajor, thenMinor] = version.split('.').map(Number);
   const [major, minor] = libVersion.split('.').map(Number);
   if (major !== thenMajor) return major < thenMajor;
-  return minor - thenMinor < BADGE_FOR_MINORS;
+  return minor - thenMinor < BADGE_FOR_MINORS[mark];
 }
 
 /**
  * Which dot a component gets, if any.
  *
  * `addedIn` wins over `updatedIn`: a component that arrived and then changed
- * inside the same window is still news, and two dots on one row is noise. Both
- * expire on the same schedule — `updatedIn` is bumped by hand when a
- * component's API changes, and forgetting to clear it costs nothing.
+ * inside the same window is still news, and two marks on one row is noise.
+ * `updatedIn` is bumped by hand when a component's API changes, and forgetting
+ * to clear it costs nothing — it clears itself at the next release.
  */
 function statusOf({ alpha, beta, addedIn, updatedIn }) {
   // `alpha` and `beta` win and never expire: they state how settled the API
@@ -111,8 +119,8 @@ function statusOf({ alpha, beta, addedIn, updatedIn }) {
   // half-finished promotion reads as the more cautious of the two.
   if (alpha) return 'alpha';
   if (beta) return 'beta';
-  if (isRecent(addedIn)) return 'new';
-  if (isRecent(updatedIn)) return 'updated';
+  if (isRecent(addedIn, 'new')) return 'new';
+  if (isRecent(updatedIn, 'updated')) return 'updated';
   return null;
 }
 

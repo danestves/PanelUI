@@ -39,7 +39,7 @@ const DOTS: Record<string, { label: string; text?: string; className: string }> 
   new: { label: 'New', className: 'bg-blue-500' },
   updated: {
     label: 'Updated',
-    text: 'Update',
+    text: 'Updated',
     /*
      * Full-strength foreground, not the muted one. The pill sets its own
      * background, and muted-on-muted lands at 4.46:1 — under the 4.5:1 this
@@ -117,8 +117,10 @@ export const source = loader({
      * so it never competes with a genuinely new arrival.
      *
      * The `status` frontmatter is generated from each component's `addedIn` and
-     * `updatedIn` versions and disappears three minor releases later, so
-     * nothing here has to be cleaned up by hand.
+     * `updatedIn` versions, so nothing here has to be cleaned up by hand. "New"
+     * runs for three minor releases; "Updated" runs for one and is gone the
+     * moment anything else ships, because it only ever meant something to a
+     * reader who had the component already and had not upgraded yet.
      */
     statusBadgesPlugin({
       renderBadge: (status) => {

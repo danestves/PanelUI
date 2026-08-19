@@ -147,12 +147,19 @@ object. Four keys live there:
 "shimmer": ["Shimmer", "…", "…", { "group": "ai-components" }]
 ```
 
-**Both drive a dot in the docs sidebar** — blue for `addedIn`, grey for `updatedIn`. `gen.mjs`
-emits `status: new` or `status: updated` into the page's frontmatter while the library version is
-within **three minor releases** of the version given, and `lib/source.tsx` renders it as a dot.
-Past that window it stops being emitted and the badge disappears on the next regeneration. A
-component in both windows shows the blue dot only: it is still news, and two dots on one row is
-noise.
+**Both drive a mark in the docs sidebar** — a blue dot for `addedIn`, a grey **Updated** pill for
+`updatedIn`. `gen.mjs` emits `status: new` or `status: updated` into the page's frontmatter while
+the library version is inside that mark's window, and `lib/source.tsx` renders it.
+
+**The two windows are different lengths, and deliberately so.** `addedIn` runs for **three minor
+releases**: a component arriving is worth knowing about for a while, whoever you are. `updatedIn`
+runs for **one** — it is gone the moment anything else ships. A change only ever means something
+to a reader who already has the component and has not upgraded yet, and that reader has moved on
+by the next release. Held for three it was on so many rows at once that it stopped pointing at
+anything.
+
+Past its window a mark stops being emitted and disappears on the next regeneration. A component
+inside both windows shows the blue dot only: it is still news, and two marks on one row is noise.
 
 Never hand-write a `status` field into an MDX file — it is generated, and the next
 `docs:generate` will drop it. The whole point of deriving it is that nobody has to remember to

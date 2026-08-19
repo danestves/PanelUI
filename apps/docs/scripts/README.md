@@ -35,9 +35,10 @@ S=./scripts node scripts/gen.mjs       # api.json + usage/*.json -> MDX
 - `meta.json` maps each slug to its display name, one-line summary and primary search keyword,
   plus an optional options object: `group` (which sidebar section the page is filed under),
   `addedIn` (the version the component first shipped in — blue dot) and `updatedIn` (the version
-  its API last changed in — grey dot). Both dots expire three minor releases later, so neither
-  has to be cleared by hand, and neither `status` field is ever written into an MDX file
-  directly.
+  its API last changed in — a grey "Updated" pill). Both expire on their own, so neither has to be
+  cleared by hand, and neither `status` field is ever written into an MDX file directly. They
+  expire on different schedules: `addedIn` after three minor releases, `updatedIn` after one, so a
+  change is marked in the release it ships in and nowhere after it.
 
   `alpha` and `beta` are the exceptions: they are set and cleared by hand and never expire,
   because they state how settled the API is rather than which release it landed in. `alpha`
