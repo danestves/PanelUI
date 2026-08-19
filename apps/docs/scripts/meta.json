@@ -100,7 +100,7 @@
     "Pressable action with variants, sizes, loading state and icon slots.",
     "react native button",
     {
-      "updatedIn": "0.71.0",
+      "updatedIn": "0.77.0",
       "category": "actions"
     }
   ],
@@ -658,7 +658,7 @@
     "AIInput",
     "A prompt composer: a field that grows to five lines, a row of controls, and the sheet they open.",
     "react native ai chat composer prompt input",
-    { "group": "ai-components", "addedIn": "0.76.0", "alpha": true, "title": "aiInput" }
+    { "group": "ai-components", "addedIn": "0.76.0", "updatedIn": "0.77.0", "alpha": true, "title": "aiInput" }
   ],
   "shimmer": [
     "Shimmer",

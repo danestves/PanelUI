@@ -9,6 +9,56 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.77.0] — 2026-08-19
+
+### Added
+
+- **`systemImage` on `Button`.** A labelled native button had no way to carry an
+  icon: `startContent` is an element, an element has to be hosted inside the
+  native tree, and a hosted view inside a labelled button has no width anything
+  can resolve. `systemImage` names a glyph from the platform's own symbol set
+  instead, so nothing is hosted and there is nothing to resolve. iOS only —
+  Android has no equivalent set and a button there is its label alone.
+
+- **`indicatorSymbol` on `AIInput.Pill`**, which is the same idea one level up:
+  `indicator` is the element the drawn pill renders, `indicatorSymbol` is the
+  name the handed-over one asks the platform for.
+
+### Changed
+
+- **A pill with a `detail` is now handed to the platform.** `detail` is text, and
+  text does not need hosting, so it goes over as part of the label rather than
+  keeping the whole pill drawn. Three of the composer's four pills were drawn
+  before this and are platform controls now. The cost is that a handed-over pill
+  is one label in one weight, so `detail` stops reading as the quieter half of
+  the pair — the same trade every handed-over control already makes.
+
+- **The composer's card carries a shadow.** Glass lifts its own edge against
+  what is behind it, and over a light background there is nothing to lift
+  against; the composer read as a faint rectangle on white.
+
+- **`AIInput` is shown as `aiInput`** on its documentation page, in the sidebar
+  and in the example app. The export is unchanged and still `AIInput`.
+
+### Fixed
+
+- **The composer's buttons no longer draw over its own text above the
+  keyboard.** A native control is a SwiftUI view inside a hosting controller,
+  and a hosting controller insets its content for the keyboard by default. A
+  control docked above the keyboard therefore had its content moved *inside* the
+  box this library gave it, over whatever was above it, while React Native's own
+  layout said nothing had moved — which is why it snapped back on the next
+  keystroke and why the one control in that row drawn by this library never
+  moved at all. Every native host now refuses that one safe-area region.
+
+  This affected `Button`, `Switch`, `Slider`, `Select` and `BottomSheet` alike;
+  the composer is simply where a control sits close enough to the keyboard to
+  show it.
+
+### Docs
+
+- Previews for every version of the composer, recorded on a device.
+
 ## [0.76.0] — 2026-08-19
 
 ### Added
