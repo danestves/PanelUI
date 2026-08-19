@@ -207,6 +207,21 @@ export interface ButtonProps
    * default capsule.
    */
   glass?: boolean;
+  /**
+   * A glyph beside the label, named from the platform's own symbol set rather
+   * than passed as an element.
+   *
+   * This is how a labelled native button gets an icon at all. Elements have to
+   * be hosted inside the native tree, and a hosted view inside a labelled
+   * button has no width anything can resolve — so a name is not a shortcut
+   * here, it is the only form that works. The platform draws it, at its own
+   * size, in the label's colour.
+   *
+   * iOS only, and `native` only. Android's toolkit has no equivalent symbol
+   * set, so a button there is its label alone; the drawn button takes
+   * `startContent` and always did.
+   */
+  systemImage?: string;
 }
 
 /**
@@ -299,6 +314,7 @@ export const Button = forwardRef<View, ButtonProps>(
       startContent,
       endContent,
       native,
+      systemImage,
       glass = false,
       accessibilityState,
       ...props
@@ -382,6 +398,9 @@ export const Button = forwardRef<View, ButtonProps>(
         <Host matchContents ignoreSafeArea="keyboard">
           <NativeButton
             label={isStringLabel ? children : undefined}
+            // The platform only reads a symbol beside a label it drew itself,
+            // so an icon button — which has no label — never carries one.
+            systemImage={isStringLabel ? systemImage : undefined}
             variant={NATIVE_VARIANT[resolvedVariant ?? 'primary']}
             disabled={isDisabled}
             /*

@@ -72,12 +72,20 @@ system, do not pass `native`.
 | `disabled` | Passed through |
 | `variant` | Mapped: `primary`/`secondary`/`destructive` → filled, `outline`/`social` → outlined, `ghost` → text |
 | `size` | Sets the height |
+| `systemImage` | A glyph beside the label, named from the platform's symbol set. iOS only |
 | `fullWidth`, `className` | Ignored — see sizing below |
 | `loading`, `startContent`, `endContent` | Ignored |
 
 `loading` is the one to watch — a native button has no spinner state, so a
 loading button looks identical to an idle one. Disable it yourself, or do not
 use `native` on buttons that load.
+
+`startContent` is ignored because an element has to be hosted inside the native
+tree, and a hosted view inside a labelled button has no width anything can
+resolve. `systemImage` is how a native button gets an icon instead: it names one
+from the platform's own symbol set, and the platform draws it at its own size in
+the label's colour. Android has no equivalent set, so a button there is its
+label alone.
 
 A native button **sizes itself to its label**, the way a platform button is
 supposed to. It does not stretch to fill its container, which is why
