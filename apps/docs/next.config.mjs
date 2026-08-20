@@ -78,6 +78,16 @@ const config = {
         destination: '/docs/ai-components/soundwave',
         permanent: true,
       },
+      {
+        source: '/docs/components/panelside',
+        destination: '/docs/ai-components/panelside',
+        permanent: true,
+      },
+      {
+        source: '/docs/components/ai-input',
+        destination: '/docs/ai-components/ai-input',
+        permanent: true,
+      },
       // Field moved out of Form: it is a layout kit every control composes
       // into, not a piece of form state.
       {

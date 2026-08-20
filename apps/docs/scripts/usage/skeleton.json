@@ -1,6 +1,6 @@
 {
   "slug": "skeleton",
-  "intro": "A shimmer placeholder for content that has not loaded yet.\n\nSize it with Tailwind utilities, matching the shape of what is coming — a placeholder that is the wrong size moves the page when the real content lands.\n\nFor a shimmer over content that *is* there, use [Shimmer](/docs/components/shimmer).",
+  "intro": "A shimmer placeholder for content that has not loaded yet.\n\nSize it with Tailwind utilities, matching the shape of what is coming — a placeholder that is the wrong size moves the page when the real content lands.\n\nFor a shimmer over content that *is* there, use [Shimmer](/docs/ai-components/shimmer).",
   "usage": "<View className=\"flex-row items-center gap-3\">\n  <Skeleton className=\"h-12 w-12 rounded-full\" />\n  <View className=\"flex-1 gap-2\">\n    <Skeleton className=\"h-4 w-3/4\" />\n    <Skeleton className=\"h-4 w-1/2\" />\n  </View>\n</View>",
   "examples": [
     {

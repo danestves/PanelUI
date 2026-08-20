@@ -672,7 +672,6 @@
       "group": "ai-components",
       "addedIn": "0.76.0",
       "updatedIn": "0.77.0",
-      "alpha": true,
       "title": "aiInput"
     }
   ],
