@@ -51,6 +51,11 @@ export function releaseDuration(
   progress: number,
   full: number = DEFAULT_RELEASE_DURATION
 ): number {
+  // A worklet, because the only runtime that knows how far the fill actually
+  // got is the one animating it. Reading a shared value from JavaScript gives
+  // the value before the animation started, so the release has to be started
+  // from the UI thread — and that means this has to run there too.
+  'worklet';
   const travelled = Math.min(1, Math.max(0, progress));
   return Math.max(80, full * travelled);
 }
@@ -64,5 +69,20 @@ export function releaseDuration(
  * button sometimes fires when the reader let go early on purpose.
  */
 export function isComplete(progress: number): boolean {
+  'worklet';
   return progress >= 1;
+}
+
+/**
+ * How long it takes to cover the distance still ahead, at the fill's own rate.
+ *
+ * A press that arrives while the fill is on its way back should carry on from
+ * where it is rather than restarting the clock — otherwise a fill picked up at
+ * halfway takes the whole hold to cover the half that is left, and the second
+ * attempt is twice as slow as the first for no reason the reader can see.
+ */
+export function fillDuration(from: number, full: number): number {
+  'worklet';
+  const remaining = Math.min(1, Math.max(0, 1 - from));
+  return Math.max(80, full * remaining);
 }

@@ -15,6 +15,7 @@ import {
   DEFAULT_AUTO_RESET_DELAY,
   DEFAULT_HOLD_DURATION,
   DEFAULT_RELEASE_DURATION,
+  fillDuration,
   isComplete,
   releaseDuration,
   resolveHoldDuration,
@@ -63,6 +64,45 @@ test('the fill drains in proportion to how far it got', () => {
   // than let go.
   assert.ok(releaseDuration(0) >= 80);
   assert.ok(releaseDuration(0.001) >= 80);
+});
+
+test('the fill and the release are one animation in two directions', () => {
+  const hold = 2000;
+  // Whatever the split, going out and coming back cover the same ground at the
+  // same rate: a fill picked up at 0.3 has 0.7 to travel, and released there
+  // has 0.3 to travel home.
+  for (const at of [0.1, 0.25, 0.5, 0.75, 0.9]) {
+    assert.equal(fillDuration(at, hold) + releaseDuration(at, hold), hold);
+  }
+  assert.equal(fillDuration(0, hold), hold);
+  assert.equal(releaseDuration(1, hold), hold);
+});
+
+test('a press that catches the fill on its way back does not restart the clock', () => {
+  // The distance left, not the whole hold — otherwise the second attempt is
+  // slower than the first for no reason the reader can see.
+  assert.equal(fillDuration(0.5, 2000), 1000);
+  assert.ok(fillDuration(0.9, 2000) < fillDuration(0.1, 2000));
+  assert.ok(fillDuration(1, 2000) >= 80);
+  assert.ok(fillDuration(-1, 2000) <= 2000);
+});
+
+test('the release is started where the value actually lives', async () => {
+  const source = await readFile(
+    new URL('../src/components/progress-button/index.tsx', import.meta.url),
+    'utf8'
+  );
+
+  /*
+   * A shared value animated on the UI thread does not report back to
+   * JavaScript, so `progress.value` read from a press handler is the value
+   * from before the hold began. Computing the release from it made the fill
+   * vanish on touch-up instead of travelling home — silently, and with nothing
+   * in the types to say so.
+   */
+  assert.match(source, /runOnUI\(\(\) => \{\s*'worklet';\s*cancelAnimation\(progress\);\s*const from = progress\.value;\s*if \(from <= 0\) return;/);
+  assert.match(source, /duration: releaseDuration\(from, duration\)/);
+  assert.match(source, /duration: fillDuration\(from, duration\)/);
 });
 
 test('the release default is the hold default, not a number of its own', () => {

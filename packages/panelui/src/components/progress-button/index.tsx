@@ -64,6 +64,7 @@ import Animated, {
   Easing,
   cancelAnimation,
   runOnJS,
+  runOnUI,
   useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
@@ -79,6 +80,7 @@ import { Text, textChildren } from '../../primitives/text';
 import { impactKnock, selectionTick } from '../../utils/haptics';
 import {
   DEFAULT_AUTO_RESET_DELAY,
+  fillDuration,
   releaseDuration,
   resolveHoldDuration,
 } from './progress-button-hold';
@@ -336,26 +338,42 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
     }
   );
 
+  /*
+   * Both directions are started on the UI thread, and that is not a detail.
+   *
+   * A shared value animated on the UI thread does not report back to
+   * JavaScript, so `progress.value` read from a press handler is the value
+   * from before the hold began — zero. The release computed from it either did
+   * nothing or, worse, `cancelAnimation` wrote that stale zero back and the
+   * fill vanished on touch-up instead of travelling home.
+   *
+   * `runOnUI` puts the read where the value actually lives.
+   */
   const begin = useCallback(() => {
     if (disabled || completed) return;
     if (haptics) selectionTick();
-    cancelAnimation(progress);
-    if (reducedMotion) {
-      /*
-       * Stepped rather than smooth, and still a real indicator. What reduced
-       * motion is about is continuous movement, not the button telling you how
-       * much longer to wait — take that away and the control asks for a hold
-       * with nothing on screen to say why.
-       */
+    runOnUI(() => {
+      'worklet';
+      cancelAnimation(progress);
+      const from = progress.value;
+      if (from >= 1) return;
       progress.value = withTiming(1, {
-        duration,
-        easing: Easing.steps(REDUCED_STEPS, true),
+        // The distance still ahead, at the fill's own rate — so a press that
+        // catches the fill on its way back carries on from there rather than
+        // restarting the clock.
+        duration: fillDuration(from, duration),
+        /*
+         * Linear. A fill is constant motion, and an eased one misreports the
+         * wait: it races the first half and crawls the second, or the reverse.
+         *
+         * Under reduced motion it steps instead, and is still a real
+         * indicator — what that setting is about is continuous movement, not
+         * the button saying how much longer to wait. Take that away and the
+         * control asks for a hold with nothing on screen to say why.
+         */
+        easing: reducedMotion ? Easing.steps(REDUCED_STEPS, true) : Easing.linear,
       });
-      return;
-    }
-    // Linear. A fill is constant motion, and an eased one misreports the wait:
-    // it races the first half and crawls the second, or the reverse.
-    progress.value = withTiming(1, { duration, easing: Easing.linear });
+    })();
   }, [disabled, completed, haptics, progress, reducedMotion, duration]);
 
   const abandon = useCallback(() => {
@@ -367,22 +385,26 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
      * stopped working.
      */
     if (completedRef.current) return;
-    cancelAnimation(progress);
-    if (progress.value <= 0) return;
-    progress.value = withTiming(0, {
-      /*
-       * The fill, played backwards.
-       *
-       * Same rate, same easing, same stepping under reduced motion — only the
-       * direction differs. Let go at nine tenths of a two-second hold and the
-       * fill takes 1.8 seconds to travel back, which is the 1.8 seconds it
-       * took to get there. A fill that vanishes has been deleted; a fill that
-       * travels back has been let go, and the difference is the whole reason
-       * the wait is drawn on the button in the first place.
-       */
-      duration: releaseDuration(progress.value, duration),
-      easing: reducedMotion ? Easing.steps(REDUCED_STEPS, true) : Easing.linear,
-    });
+    runOnUI(() => {
+      'worklet';
+      cancelAnimation(progress);
+      const from = progress.value;
+      if (from <= 0) return;
+      progress.value = withTiming(0, {
+        /*
+         * The fill, played backwards.
+         *
+         * Same rate, same easing, same stepping under reduced motion — only
+         * the direction differs. Let go at nine tenths of a two-second hold
+         * and the fill takes 1.8 seconds to travel home, which is the 1.8
+         * seconds it took to get there. A fill that vanishes has been deleted;
+         * a fill that travels back has been let go, and telling those apart is
+         * the whole reason the wait is drawn on the button.
+         */
+        duration: releaseDuration(from, duration),
+        easing: reducedMotion ? Easing.steps(REDUCED_STEPS, true) : Easing.linear,
+      });
+    })();
   }, [progress, duration, reducedMotion]);
 
   const reset = useCallback(() => {
@@ -626,6 +648,7 @@ export {
   DEFAULT_AUTO_RESET_DELAY,
   DEFAULT_HOLD_DURATION,
   DEFAULT_RELEASE_DURATION,
+  fillDuration,
   isComplete,
   releaseDuration,
   resolveHoldDuration,
