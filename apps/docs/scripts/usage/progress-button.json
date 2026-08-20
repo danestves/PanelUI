@@ -2,18 +2,27 @@
   "slug": "progress-button",
   "intro": "A button that has to be held rather than tapped. The wait is drawn on the button itself: a fill grows from the leading edge, and the action fires when it reaches the end.\n\nUse it for the action a confirmation dialog exists to slow down. A dialog asks the question somewhere else and takes the answer as a tap, which makes it two taps — and two taps in a row is a rhythm a hand falls into. A hold cannot be completed by accident and cannot be completed by habit.\n\nNothing fires until the fill is complete. There is no tolerance near the end, because a tolerance means the button sometimes commits after the reader has deliberately let go. Released early, the fill drains back.\n\nFor an action that is ordinary rather than irreversible, use [Button](/docs/components/button). For a wait the reader is not causing, use [Progress](/docs/components/progress).",
   "usage": "<ProgressButton onComplete={erase}>\n  <ProgressButton.Label>Hold to erase</ProgressButton.Label>\n</ProgressButton>",
-  "extraImports": ["Text", "View"],
-  "anatomy": "<ProgressButton>\n  <ProgressButton.Label>Hold to confirm</ProgressButton.Label>\n</ProgressButton>",
+  "extraImports": [
+    "Text",
+    "View"
+  ],
+  "anatomy": "<ProgressButton>\n  <ProgressButton.Label>Hold to confirm</ProgressButton.Label>\n  <ProgressButton.Done />\n</ProgressButton>",
   "parts": {
     "ProgressButton": "The pressable. It owns the hold, the fill and the completed state.",
-    "ProgressButton.Label": "What the button says. Drawn twice — once on the button and once inside the fill in the inverted colour — so the words stay legible on both sides of the boundary."
+    "ProgressButton.Label": "What the button says. Drawn twice — once on the button and once inside the fill in the inverted colour — so the words stay legible on both sides of the boundary.",
+    "ProgressButton.Done": "What the button shows once the hold has landed. A tick by default, over the finished fill rather than beside the label, so the button does not change width at the moment it succeeds. One is drawn for you unless you write your own."
   },
-  "partNotes": "`ProgressButton.Label` renders the text twice on purpose. A single label under a translucent wash goes muddy in the middle of the wipe, which is exactly where the eye is; two labels, each at full contrast on its own ground, never do. Both copies are laid out at the button's own width, so the boundary falls in the middle of a glyph rather than between two differently wrapped lines.",
+  "partNotes": "`ProgressButton.Label` renders the text twice on purpose. A single label under a translucent wash goes muddy in the middle of the wipe, which is exactly where the eye is; two labels, each at full contrast on its own ground, never do. Both copies are laid out at the button's own width, so the boundary falls in the middle of a glyph rather than between two differently wrapped lines.\n\n`ProgressButton.Done` is added automatically, so most buttons never name it. Write it out to put something else there — a word beside the tick, an icon of your own — and it replaces the default rather than joining it.",
   "examples": [
     {
       "title": "Hold to confirm",
       "description": "The default: two seconds, and nothing happens until the fill reaches the end.",
       "code": "<ProgressButton onComplete={() => erase()}>\n  <ProgressButton.Label>Hold to erase</ProgressButton.Label>\n</ProgressButton>"
+    },
+    {
+      "title": "Hold to pay",
+      "description": "The fill runs out, the words go, and a tick arrives in their place. That last part is `ProgressButton.Done`, and it is drawn whether or not you name it — a hold that lands and shows nothing leaves the reader checking whether it worked.\n\n`autoReset` is deliberately absent here. A payment that offers itself again a second later is a payment somebody makes twice by leaning on the button.",
+      "code": "const [paid, setPaid] = useState(false);\n\n<ProgressButton\n  variant=\"success\"\n  haptics\n  fullWidth\n  completed={paid}\n  onComplete={() => setPaid(true)}\n  onCompletedChange={setPaid}\n>\n  <ProgressButton.Label>{paid ? 'Paid' : 'Hold to pay'}</ProgressButton.Label>\n</ProgressButton>"
     },
     {
       "title": "How long the hold is",
@@ -34,7 +43,12 @@
       "title": "A tick as it takes, a knock as it lands",
       "description": "`haptics` is off by default: whether an action is worth feeling is the caller's decision rather than the control's. The visual stands alone either way — haptics are off system-wide for many people and silent on most Android hardware.",
       "code": "<ProgressButton haptics variant=\"destructive\" onComplete={() => remove()}>\n  <ProgressButton.Label>Hold to delete</ProgressButton.Label>\n</ProgressButton>"
+    },
+    {
+      "title": "Something else at the end",
+      "description": "`ProgressButton.Done` takes children, which replace the tick. Everything inside it is drawn in the fill's own foreground colour, so an icon needs no colour of its own.",
+      "code": "<ProgressButton onComplete={() => archive()}>\n  <ProgressButton.Label>Hold to archive</ProgressButton.Label>\n  <ProgressButton.Done>\n    <Text className=\"text-primary-foreground\">Archived</Text>\n  </ProgressButton.Done>\n</ProgressButton>"
     }
   ],
-  "notes": "The fill grows on the UI thread and completion is read off the animation itself, not from a timer running beside it. Two clocks agree only while the app is idle; busy, a timer fires before the fill arrives, and the action happens earlier than the reader watched it happen.\n\nReleasing early drains the fill in proportion to how far it got, so abandoning a hold after a moment does not take the same time as abandoning it near the end. A fixed release makes a barely-started hold feel sticky, which reads as the button resisting being let go.\n\n**A few points of finger drift will not abandon a hold.** `pressRetentionOffset` is 16, because a hand resting on a control for two seconds moves.\n\nWith the operating system set to reduce motion the fill advances in five steps instead of sweeping. It is still an indicator — a control that asks you to wait and shows nothing is a broken button, and what that setting is about is continuous movement.\n\nThe button announces as a button, with a hint saying it has to be held and a checked state once it has been. A single activation from an assistive technology does nothing on its own, so the hint carries the instruction rather than leaving it to the visible label.\n\n`variant` sets which colour fills: `primary`, `secondary`, `destructive` and `success`. Every one of them draws the label in the fill's own foreground token, so contrast holds in both themes without a hardcoded value."
+  "notes": "The fill grows on the UI thread and completion is read off the animation itself, not from a timer running beside it. Two clocks agree only while the app is idle; busy, a timer fires before the fill arrives, and the action happens earlier than the reader watched it happen.\n\nReleasing early drains the fill in proportion to how far it got, so abandoning a hold after a moment does not take the same time as abandoning it near the end. A fixed release makes a barely-started hold feel sticky, which reads as the button resisting being let go.\n\n**The completed button stays completed.** Releasing after the fill has arrived does not drain it — only a release *before* it does. `autoReset` empties it after a delay, and a controlled `completed` empties it whenever you say so; without either, the button holds its finished state and stops accepting presses, which is the correct answer for an action that has already happened.\n\n**A few points of finger drift will not abandon a hold.** `pressRetentionOffset` is 16, because a hand resting on a control for two seconds moves.\n\nWith the operating system set to reduce motion the fill advances in five steps instead of sweeping. It is still an indicator — a control that asks you to wait and shows nothing is a broken button, and what that setting is about is continuous movement.\n\nThe button announces as a button, with a hint saying it has to be held and a checked state once it has been. A single activation from an assistive technology does nothing on its own, so the hint carries the instruction rather than leaving it to the visible label.\n\n`variant` sets which colour fills: `primary`, `secondary`, `destructive` and `success`. Every one of them draws the label in the fill's own foreground token, so contrast holds in both themes without a hardcoded value."
 }

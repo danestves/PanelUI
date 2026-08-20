@@ -849,6 +849,7 @@ export {
   useProgressButton,
   type ProgressButtonProps,
   type ProgressButtonLabelProps,
+  type ProgressButtonDoneProps,
   type ProgressButtonVariant,
   type ProgressButtonSize,
 } from './components/progress-button';

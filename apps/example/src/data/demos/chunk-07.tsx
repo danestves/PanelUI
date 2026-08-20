@@ -944,6 +944,45 @@ function ProgressButtonDemo() {
   );
 }
 
+/**
+ * A hold that lands on something, rather than on a counter.
+ *
+ * The tick is the whole point of the demo: at the end of the fill the words go
+ * and the completed drawing arrives in their place, so the button says the
+ * payment happened without a dialog opening to say it. `autoReset` is left off
+ * — a payment that offers itself again a second later is a payment you can make
+ * twice by leaning on it.
+ */
+function ProgressButtonPayDemo() {
+  const [paid, setPaid] = useState(false);
+
+  return (
+    <Card className="w-full">
+      <Card.Content className="gap-4">
+        <View className="flex-row items-baseline justify-between">
+          <Text size="sm" muted>
+            Total
+          </Text>
+          <Text size="2xl" weight="semibold">
+            £42.60
+          </Text>
+        </View>
+        <Separator />
+        <ProgressButton
+          variant="success"
+          haptics
+          fullWidth
+          completed={paid}
+          onComplete={() => setPaid(true)}
+          onCompletedChange={setPaid}
+        >
+          <ProgressButton.Label>{paid ? 'Paid' : 'Hold to pay'}</ProgressButton.Label>
+        </ProgressButton>
+      </Card.Content>
+    </Card>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'context-menu',
@@ -1391,20 +1430,21 @@ export const ENTRIES: ComponentEntry[] = [
     summary: 'Press and hold to confirm, with the wait drawn on the button',
     demos: [
       { label: 'Hold to confirm', render: () => <ProgressButtonDemo /> },
+      { label: 'Hold to pay', render: () => <ProgressButtonPayDemo /> },
       {
         label: 'Variants',
         render: () => (
           <View className="w-full gap-3">
-            <ProgressButton fullWidth onComplete={() => {}}>
+            <ProgressButton autoReset fullWidth onComplete={() => {}}>
               <ProgressButton.Label>primary</ProgressButton.Label>
             </ProgressButton>
-            <ProgressButton variant="secondary" fullWidth onComplete={() => {}}>
+            <ProgressButton variant="secondary" autoReset fullWidth onComplete={() => {}}>
               <ProgressButton.Label>secondary</ProgressButton.Label>
             </ProgressButton>
-            <ProgressButton variant="destructive" fullWidth onComplete={() => {}}>
+            <ProgressButton variant="destructive" autoReset fullWidth onComplete={() => {}}>
               <ProgressButton.Label>destructive</ProgressButton.Label>
             </ProgressButton>
-            <ProgressButton variant="success" fullWidth onComplete={() => {}}>
+            <ProgressButton variant="success" autoReset fullWidth onComplete={() => {}}>
               <ProgressButton.Label>success</ProgressButton.Label>
             </ProgressButton>
           </View>
@@ -1414,13 +1454,13 @@ export const ENTRIES: ComponentEntry[] = [
         label: 'Sizes',
         render: () => (
           <View className="w-full items-start gap-3">
-            <ProgressButton size="sm" onComplete={() => {}}>
+            <ProgressButton size="sm" autoReset onComplete={() => {}}>
               <ProgressButton.Label>Small</ProgressButton.Label>
             </ProgressButton>
-            <ProgressButton size="md" onComplete={() => {}}>
+            <ProgressButton size="md" autoReset onComplete={() => {}}>
               <ProgressButton.Label>Medium</ProgressButton.Label>
             </ProgressButton>
-            <ProgressButton size="lg" onComplete={() => {}}>
+            <ProgressButton size="lg" autoReset onComplete={() => {}}>
               <ProgressButton.Label>Large</ProgressButton.Label>
             </ProgressButton>
           </View>
@@ -1430,10 +1470,10 @@ export const ENTRIES: ComponentEntry[] = [
         label: 'How long the hold is',
         render: () => (
           <View className="w-full gap-3">
-            <ProgressButton holdDuration={600} fullWidth onComplete={() => {}}>
+            <ProgressButton holdDuration={600} autoReset fullWidth onComplete={() => {}}>
               <ProgressButton.Label>Six hundred milliseconds</ProgressButton.Label>
             </ProgressButton>
-            <ProgressButton holdDuration={3500} fullWidth onComplete={() => {}}>
+            <ProgressButton holdDuration={3500} autoReset fullWidth onComplete={() => {}}>
               <ProgressButton.Label>Three and a half seconds</ProgressButton.Label>
             </ProgressButton>
           </View>

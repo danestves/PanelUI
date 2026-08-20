@@ -41,8 +41,10 @@
  * is a broken button — so this is a coarser indicator, not the absence of one.
  */
 import {
+  Children,
   createContext,
   forwardRef,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -66,12 +68,14 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withSpring,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
+import { useCSSVariable } from 'uniwind';
+import { CheckIcon, IconColorProvider } from '../../icons';
 import { Text, textChildren } from '../../primitives/text';
-import { cn } from '../../utils/cn';
 import { impactKnock, selectionTick } from '../../utils/haptics';
 import {
   DEFAULT_AUTO_RESET_DELAY,
@@ -82,6 +86,32 @@ import {
 
 /** How many steps the reduced-motion fill advances in. */
 const REDUCED_STEPS = 5;
+
+/**
+ * The arrival of the completed drawing.
+ *
+ * A spring rather than a timing, and slightly overshooting: the fill has just
+ * spent two seconds moving at a constant rate, and something that lands with a
+ * little weight is what tells the reader the waiting part is over.
+ */
+const DONE_SPRING = { damping: 14, stiffness: 220, mass: 0.6 } as const;
+
+/** How long the completed drawing takes to leave again on a reset. */
+const DONE_EXIT = 140;
+
+/**
+ * Which token the tick is drawn in, per variant.
+ *
+ * It sits on the finished fill, so it takes that fill's own foreground rather
+ * than the button's — the same pairing `fillLabel` uses, which is what keeps
+ * the contrast right in both themes without a hardcoded colour.
+ */
+const DONE_TINT = {
+  primary: '--color-primary-foreground',
+  secondary: '--color-background',
+  destructive: '--color-destructive-solid-foreground',
+  success: '--color-success-solid-foreground',
+} as const;
 
 const progressButtonVariants = tv({
   slots: {
@@ -183,6 +213,12 @@ export type ProgressButtonSize = NonNullable<ProgressButtonVariantProps['size']>
 interface ProgressButtonContextValue {
   /** `0` to `1` across the hold. */
   progress: SharedValue<number>;
+  /**
+   * `0` to `1` across the arrival of the completed drawing. Separate from
+   * `progress` because the fill has finished by the time this starts, and the
+   * two would otherwise have to share one clock running at two speeds.
+   */
+  done: SharedValue<number>;
   /** Width of the button, so the fill's copy of the label can match it. */
   width: number;
   completed: boolean;
@@ -258,6 +294,7 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
   const reducedMotion = useReducedMotion();
 
   const progress = useSharedValue(0);
+  const done = useSharedValue(0);
   const [width, setWidth] = useState(0);
   const [internalCompleted, setInternalCompleted] = useState(false);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -265,7 +302,19 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
   const isControlled = completedProp !== undefined;
   const completed = isControlled ? completedProp : internalCompleted;
 
+  /*
+   * The reaction below watches a shared value, and a shared value can reach the
+   * end for reasons other than a hold — a controlled button being told it is
+   * complete fills instantly. Read from a ref rather than from `completed` so
+   * the guard sees the current answer without the reaction being rebuilt.
+   */
+  const completedRef = useRef(completed);
+  completedRef.current = completed;
+
   const finish = useCallback(() => {
+    // Already complete: the fill was set from outside, and firing the action
+    // again would run it a second time for something the reader did not do.
+    if (completedRef.current) return;
     if (!isControlled) setInternalCompleted(true);
     onCompletedChange?.(true);
     onComplete?.();
@@ -311,6 +360,14 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
   }, [disabled, completed, haptics, progress, reducedMotion, duration]);
 
   const abandon = useCallback(() => {
+    /*
+     * A completed hold has nothing to abandon. Without this the fill drains on
+     * the release that follows a successful hold — the button empties, looks
+     * untouched, and then refuses every press after it, because `begin` bails
+     * on a completed button. That combination is a control that has silently
+     * stopped working.
+     */
+    if (completedRef.current) return;
     cancelAnimation(progress);
     if (progress.value <= 0) return;
     progress.value = withTiming(0, {
@@ -337,19 +394,38 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
     };
   }, [completed, autoReset, autoResetDelay, reset]);
 
-  // A controlled button told it is no longer complete has to empty its fill,
-  // or the next hold starts from a bar that is already full.
+  /*
+   * The fill follows the completed state, in both directions.
+   *
+   * A controlled button told it is complete fills without a hold, and one told
+   * it is no longer complete empties — otherwise the next hold would start from
+   * a bar that is already full.
+   */
   useEffect(() => {
-    if (!completed) return;
-    progress.value = 1;
+    cancelAnimation(progress);
+    progress.value = completed ? 1 : 0;
   }, [completed, progress]);
+
+  /*
+   * And the completed drawing follows it too. Under reduced motion it is a
+   * swap: what that setting is about is movement, and a tick that grows is
+   * movement with nothing to report.
+   */
+  useEffect(() => {
+    if (reducedMotion) {
+      done.value = completed ? 1 : 0;
+      return;
+    }
+    done.value = completed ? withSpring(1, DONE_SPRING) : withTiming(0, { duration: DONE_EXIT });
+  }, [completed, done, reducedMotion]);
 
   useEffect(
     () => () => {
       cancelAnimation(progress);
+      cancelAnimation(done);
       if (resetTimer.current) clearTimeout(resetTimer.current);
     },
-    [progress]
+    [progress, done]
   );
 
   const onLayout = (event: LayoutChangeEvent) => {
@@ -358,14 +434,32 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
     props.onLayout?.(event);
   };
 
+  /*
+   * `slots` is rebuilt every render, so it is deliberately not a dependency —
+   * including it would make this memo re-run every time and hand every consumer
+   * a new object for no change. The variant and size it is derived from are the
+   * dependencies instead.
+   */
   const context = useMemo<ProgressButtonContextValue>(
-    () => ({ progress, width, completed, variant, size, slots }),
-    [progress, width, completed, variant, size, slots]
+    () => ({ progress, done, width, completed, variant, size, slots }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [progress, done, width, completed, variant, size]
   );
 
-  const body = children ?? (
+  /*
+   * The completed drawing is part of the button rather than something every
+   * call site has to remember, so one is added unless the caller wrote their
+   * own. A hold that lands and shows nothing is the reader wondering whether it
+   * worked, which is the thing this control exists to remove.
+   */
+  const written = Children.toArray(children);
+  const hasDone = written.some(
+    (child) => isValidElement(child) && child.type === ProgressButtonDone
+  );
+  const body = (
     <>
-      <ProgressButtonLabel>Hold to confirm</ProgressButtonLabel>
+      {written.length > 0 ? written : <ProgressButtonLabel>Hold to confirm</ProgressButtonLabel>}
+      {hasDone ? null : <ProgressButtonDone />}
     </>
   );
 
@@ -387,12 +481,18 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
           checked: completed,
         }}
         disabled={disabled}
+        /*
+         * The spread sits above the hold rather than below it. Underneath, a
+         * caller passing `onPressIn` — reasonably, to log a tap — would replace
+         * the gesture the whole control is, and the button would simply never
+         * fill.
+         */
+        {...props}
         onPressIn={begin}
         onPressOut={abandon}
         // A few points of drift should not abandon a hold the reader is
         // still making. Fingers move.
         pressRetentionOffset={16}
-        {...props}
         onLayout={onLayout}
         className={slots.root({ className })}
       >
@@ -416,12 +516,15 @@ export interface ProgressButtonLabelProps extends ViewProps {
  * middle of a glyph rather than between two differently laid-out lines.
  */
 function ProgressButtonLabel({ className, children, ...props }: ProgressButtonLabelProps) {
-  const { progress, width, slots } = useProgressButtonContext('ProgressButton.Label');
+  const { progress, done, width, slots } = useProgressButtonContext('ProgressButton.Label');
 
   const fillStyle = useAnimatedStyle(() => ({ width: width * progress.value }));
+  // Out of the way as the tick arrives. Both are centred, and two things
+  // stacked in the middle of a button is neither of them.
+  const labelStyle = useAnimatedStyle(() => ({ opacity: 1 - done.value }));
 
   return (
-    <View {...props} className={slots.content({ className })}>
+    <Animated.View {...props} style={labelStyle} className={slots.content({ className })}>
       {textChildren(children, (text) => (
         <Text className={slots.label()}>{text}</Text>
       ))}
@@ -444,15 +547,66 @@ function ProgressButtonLabel({ className, children, ...props }: ProgressButtonLa
           ))}
         </View>
       </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
 ProgressButtonLabel.displayName = 'ProgressButton.Label';
+
+export interface ProgressButtonDoneProps extends ViewProps {
+  className?: string;
+  /**
+   * What the button shows once the hold has landed. A tick on its own by
+   * default; children replace it, so a word beside one is
+   * `<ProgressButton.Done><CheckIcon /><Text>Paid</Text></ProgressButton.Done>`.
+   */
+  children?: ReactNode;
+}
+
+/**
+ * The drawing the button lands on.
+ *
+ * It sits over the finished fill rather than beside the label, so the button
+ * does not change width at the moment it completes — a control that resizes as
+ * it succeeds moves everything under it, and the reader's eye is on the button.
+ *
+ * One is added for you unless you write your own, because a hold that lands and
+ * shows nothing leaves the reader checking whether it worked.
+ */
+function ProgressButtonDone({ className, children, ...props }: ProgressButtonDoneProps) {
+  const { done, completed, variant, slots } = useProgressButtonContext('ProgressButton.Done');
+  const tint = useCSSVariable(DONE_TINT[variant]);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: done.value,
+    // From slightly under full size, so it reads as arriving rather than as
+    // having been there all along behind the label.
+    transform: [{ scale: 0.7 + done.value * 0.3 }],
+  }));
+
+  return (
+    <Animated.View
+      {...props}
+      // Never takes the press: the button underneath still owns it, which is
+      // what lets a completed button be reset and held again.
+      pointerEvents="none"
+      accessibilityElementsHidden={!completed}
+      importantForAccessibility={completed ? 'auto' : 'no-hide-descendants'}
+      style={[{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }, style]}
+      className={slots.content({ className })}
+    >
+      <IconColorProvider color={typeof tint === 'string' ? tint : undefined}>
+        {children ?? <CheckIcon size={18} />}
+      </IconColorProvider>
+    </Animated.View>
+  );
+}
+ProgressButtonDone.displayName = 'ProgressButton.Done';
 
 ProgressButtonRoot.displayName = 'ProgressButton';
 
 export const ProgressButton = Object.assign(ProgressButtonRoot, {
   Label: ProgressButtonLabel,
+  Done: ProgressButtonDone,
 });
 
 export {
