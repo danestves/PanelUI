@@ -34,6 +34,9 @@ export type LngLat = [number, number];
 /** `[west, south, east, north]`. */
 export type LngLatBounds = [number, number, number, number];
 
+/** `[x, y]` in points, measured from the map's own top-left corner. */
+export type PixelPoint = [number, number];
+
 /**
  * A MapLibre style document. Left loose on purpose: the spec is large, it is
  * versioned separately from this library, and the parts of it callers pass
@@ -121,7 +124,7 @@ interface MapLibreModule {
     touchPitch?: boolean;
     accessible?: boolean;
     importantForAccessibility?: 'auto' | 'yes' | 'no' | 'no-hide-descendants';
-    onPress?: (event: NativeEvent<{ coordinates: LngLat }>) => void;
+    onPress?: (event: NativeEvent<{ lngLat: LngLat; point: PixelPoint }>) => void;
     onDidFinishLoadingMap?: () => void;
     onRegionDidChange?: (event: NativeEvent<ViewState>) => void;
     children?: ReactNode;

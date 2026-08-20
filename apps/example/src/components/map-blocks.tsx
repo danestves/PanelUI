@@ -382,7 +382,9 @@ export function ChoroplethBlock() {
               };
             }}
           />
-          <Map.Controls position="top-right" />
+          {/* No position: the default corner, which nothing else on this
+              screen is using. */}
+          <Map.Controls />
         </Map>
       </View>
 

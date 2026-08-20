@@ -43,7 +43,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Pressable, View, type PressableProps, type ViewProps } from 'react-native';
+import { Pressable, StyleSheet, View, type PressableProps, type ViewProps } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { tv } from 'tailwind-variants';
 import { CompassIcon, CrosshairIcon, MinusIcon, PlusIcon } from '../../icons';
@@ -62,6 +62,7 @@ import {
   type LngLat,
   type LngLatBounds,
   type MapRef,
+  type PixelPoint,
   type StyleSpecification,
   type ViewState,
 } from './maplibre';
@@ -70,9 +71,10 @@ import {
   type MapFeatureAccessibility,
   type MapFeatureAccessibilityDescription,
 } from './map-accessibility';
+import { asMapLayer, partitionMapChildren } from './map-children';
 
 export { hasMapLibre, CARTO_SOURCE };
-export type { BasemapSource, BasemapTokens, LngLat, LngLatBounds, ViewState };
+export type { BasemapSource, BasemapTokens, LngLat, LngLatBounds, PixelPoint, ViewState };
 export type { MapFeatureAccessibility } from './map-accessibility';
 
 const mapVariants = tv({
@@ -251,8 +253,12 @@ export interface MapProps extends Omit<ViewProps, 'children'> {
   interactive?: boolean;
   /** Fires continuously while the map moves. */
   onViewStateChange?: (state: ViewState) => void;
-  /** Fires when the map is pressed somewhere that is not a feature. */
-  onPress?: (lngLat: LngLat) => void;
+  /**
+   * Fires when the map is pressed somewhere that is not a feature. The second
+   * argument is the same press in screen coordinates, for anchoring something
+   * of your own to where the finger landed.
+   */
+  onPress?: (lngLat: LngLat, point: PixelPoint) => void;
   /** Fires once the style has loaded and the first frame is drawn. */
   onReady?: () => void;
 }
@@ -386,9 +392,17 @@ const MapRoot = forwardRef<MapHandle, MapProps>(function MapRoot(
 
   const { Map: MapLibreMap, Camera } = MapLibre;
 
+  /*
+   * Only what the renderer understands is handed to it. Controls and any other
+   * chrome are drawn as a sibling above the map instead, because the native map
+   * view lays its own children out and would stretch an ordinary view over the
+   * whole surface — see `map-children.ts`.
+   */
+  const { layers, overlay } = partitionMapChildren(children);
+
   return (
-    <View className={slots.root({ className })} {...props}>
-      <MapContext.Provider value={context}>
+    <MapContext.Provider value={context}>
+      <View className={slots.root({ className })} {...props}>
         <MapLibreMap
           ref={mapRef}
           mapStyle={style}
@@ -417,7 +431,7 @@ const MapRoot = forwardRef<MapHandle, MapProps>(function MapRoot(
           }
           onPress={
             onPress
-              ? (event) => onPress(event.nativeEvent.coordinates)
+              ? (event) => onPress(event.nativeEvent.lngLat, event.nativeEvent.point)
               : undefined
           }
         >
@@ -433,38 +447,43 @@ const MapRoot = forwardRef<MapHandle, MapProps>(function MapRoot(
                 : { center: center ?? [0, 20], zoom, bearing, pitch }
             }
           />
-          {textChildren(children)}
+          {layers}
         </MapLibreMap>
-      </MapContext.Provider>
-      <View
-        accessibilityRole="list"
-        style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}
-      >
-        {[...accessibleFeatureGroups].flatMap(([groupId, group]) =>
-          group.features.map(({ feature, label, hint, state }, index) =>
-            group.onPress ? (
-              <Pressable
-                key={`${groupId}-${index}`}
-                accessibilityRole="button"
-                accessibilityLabel={label}
-                accessibilityHint={hint}
-                accessibilityState={state}
-                onPress={() => group.onPress?.(feature)}
-              />
-            ) : (
-              <View
-                key={`${groupId}-${index}`}
-                accessible
-                accessibilityRole="text"
-                accessibilityLabel={label}
-                accessibilityHint={hint}
-                accessibilityState={state}
-              />
+        {overlay.length > 0 ? (
+          <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+            {textChildren(overlay)}
+          </View>
+        ) : null}
+        <View
+          accessibilityRole="list"
+          style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}
+        >
+          {[...accessibleFeatureGroups].flatMap(([groupId, group]) =>
+            group.features.map(({ feature, label, hint, state }, index) =>
+              group.onPress ? (
+                <Pressable
+                  key={`${groupId}-${index}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={label}
+                  accessibilityHint={hint}
+                  accessibilityState={state}
+                  onPress={() => group.onPress?.(feature)}
+                />
+              ) : (
+                <View
+                  key={`${groupId}-${index}`}
+                  accessible
+                  accessibilityRole="text"
+                  accessibilityLabel={label}
+                  accessibilityHint={hint}
+                  accessibilityState={state}
+                />
+              )
             )
-          )
-        )}
+          )}
+        </View>
       </View>
-    </View>
+    </MapContext.Provider>
   );
 });
 MapRoot.displayName = 'Map';
@@ -578,6 +597,7 @@ function MapMarker({
   );
 }
 MapMarker.displayName = 'Map.Marker';
+asMapLayer(MapMarker);
 
 export interface MapLabelProps {
   children?: ReactNode;
@@ -691,6 +711,7 @@ function MapPopup({ children, className, title, lngLat }: MapPopupProps) {
   );
 }
 MapPopup.displayName = 'Map.Popup';
+asMapLayer(MapPopup);
 
 export interface MapControlsProps {
   /** Which corner the stack sits in. */
@@ -889,6 +910,7 @@ function MapRoute({
   );
 }
 MapRoute.displayName = 'Map.Route';
+asMapLayer(MapRoute);
 
 export interface MapArcProps {
   /** Where the arc starts. */
@@ -968,6 +990,7 @@ function MapArc({
   );
 }
 MapArc.displayName = 'Map.Arc';
+asMapLayer(MapArc);
 
 export interface MapGeoJSONProps {
   /** A Feature, FeatureCollection, or the URL of one. */
@@ -1042,6 +1065,7 @@ function MapGeoJSON({
   );
 }
 MapGeoJSON.displayName = 'Map.GeoJSON';
+asMapLayer(MapGeoJSON);
 
 export interface MapClusterProps {
   /** Point features to cluster. */
@@ -1140,6 +1164,7 @@ function MapCluster({
   );
 }
 MapCluster.displayName = 'Map.Cluster';
+asMapLayer(MapCluster);
 
 function useAccessibleMapFeatures(
   id: string,
@@ -1379,6 +1404,7 @@ function MapHeatmap({
   );
 }
 MapHeatmap.displayName = 'Map.Heatmap';
+asMapLayer(MapHeatmap);
 
 export interface MapUserLocationProps {
   /** Show which way the device is facing, not just where it is. */
@@ -1397,6 +1423,7 @@ function MapUserLocation({
   return <UserLocation heading={heading} accuracy={accuracy} />;
 }
 MapUserLocation.displayName = 'Map.UserLocation';
+asMapLayer(MapUserLocation);
 
 export const Map = Object.assign(MapRoot, {
   Marker: MapMarker,
