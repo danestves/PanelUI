@@ -12,6 +12,14 @@ It reads the live theme rather than keeping its own copy of the answer, so chang
 
 For a brand picker — Panel, Moon, Grass — use [useTheme](/docs/hooks/use-theme) with swatches of your own. This chooses the mode, not the family.
 
+<PreviewVideo
+  src="/previews/theme-selector.mp4"
+  poster="/previews/theme-selector-poster.jpg"
+  alt="The ThemeSelector component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 ThemeSelector ships with the library — no separate install.
@@ -50,6 +58,14 @@ Written without children the selector draws system, light and dark in that order
 
 No children and no value: the selector draws all three and reads the theme the app is actually on.
 
+<PreviewVideo
+  src="/previews/theme-selector-three-options-and-a-heading.mp4"
+  poster="/previews/theme-selector-three-options-and-a-heading-poster.jpg"
+  alt="ThemeSelector — Three options and a heading."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <ThemeSelector label="Choose a theme" />
 ```
@@ -58,13 +74,44 @@ No children and no value: the selector draws all three and reads the theme the a
 
 `variant="card"` draws a framed card with an accent on it instead of an app screen, and cuts the system option on the diagonal rather than down the middle. Same three choices; pick whichever miniature looks more like the app it is sitting in.
 
+<PreviewVideo
+  src="/previews/theme-selector-the-other-drawing.mp4"
+  poster="/previews/theme-selector-the-other-drawing-poster.jpg"
+  alt="ThemeSelector — The other drawing."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <ThemeSelector variant="card" label="Appearance" />
+```
+
+### Smaller
+
+`size="sm"` narrows the miniatures from 88 points to 72, for a settings screen where the theme is one row among several rather than what the screen is for.
+
+<PreviewVideo
+  src="/previews/theme-selector-smaller.mp4"
+  poster="/previews/theme-selector-smaller-poster.jpg"
+  alt="ThemeSelector — Smaller."
+  width={720}
+  height={1560}
+/>
+
+```tsx
+<ThemeSelector size="sm" variant="card" />
 ```
 
 ### Light and dark only
 
 Write the options out to drop one. Worth doing where following the device would be misleading — a reader whose device is set to dark and whose app is pinned to light should not be offered a `System` that changes both.
+
+<Preview
+  src="/previews/theme-selector-light-and-dark-only.jpg"
+  alt="ThemeSelector — Light and dark only."
+  width={1179}
+  height={484}
+/>
 
 ```tsx
 <ThemeSelector label="Appearance">
@@ -76,6 +123,14 @@ Write the options out to drop one. Worth doing where following the device would 
 ### Storing the choice
 
 `applyTheme={false}` stops the selector changing the theme, so the app can save the choice and apply it on the next launch as well as this one. `value` is then what decides which option is ringed.
+
+<PreviewVideo
+  src="/previews/theme-selector-storing-the-choice.mp4"
+  poster="/previews/theme-selector-storing-the-choice-poster.jpg"
+  alt="ThemeSelector — Storing the choice."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const [choice, setChoice] = useState<ThemeSelection>('system');

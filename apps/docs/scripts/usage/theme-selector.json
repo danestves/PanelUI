@@ -1,6 +1,13 @@
 {
   "slug": "theme-selector",
   "intro": "Three miniatures of a screen — light, dark, and the device's own setting — with the chosen one ringed.\n\nA row of words takes a third of the space and says the same thing, so this is not the cheaper control. What it buys is `System`, which is the option people hesitate over: a picture of a screen split down the middle explains it faster than a sentence does, and faster than trying it does.\n\nIt reads the live theme rather than keeping its own copy of the answer, so changing the theme anywhere else in the app moves the ring.\n\nFor a brand picker — Panel, Moon, Grass — use [useTheme](/docs/hooks/use-theme) with swatches of your own. This chooses the mode, not the family.",
+  "previewVideo": {
+    "src": "/previews/theme-selector.mp4",
+    "poster": "/previews/theme-selector-poster.jpg",
+    "alt": "The ThemeSelector component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  },
   "usage": "<ThemeSelector label=\"Choose a theme\" />",
   "extraImports": [
     "Field",
@@ -18,22 +25,61 @@
     {
       "title": "Three options and a heading",
       "description": "No children and no value: the selector draws all three and reads the theme the app is actually on.",
-      "code": "<ThemeSelector label=\"Choose a theme\" />"
+      "code": "<ThemeSelector label=\"Choose a theme\" />",
+      "previewVideo": {
+        "src": "/previews/theme-selector-three-options-and-a-heading.mp4",
+        "poster": "/previews/theme-selector-three-options-and-a-heading-poster.jpg",
+        "alt": "ThemeSelector — Three options and a heading.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "The other drawing",
       "description": "`variant=\"card\"` draws a framed card with an accent on it instead of an app screen, and cuts the system option on the diagonal rather than down the middle. Same three choices; pick whichever miniature looks more like the app it is sitting in.",
-      "code": "<ThemeSelector variant=\"card\" label=\"Appearance\" />"
+      "code": "<ThemeSelector variant=\"card\" label=\"Appearance\" />",
+      "previewVideo": {
+        "src": "/previews/theme-selector-the-other-drawing.mp4",
+        "poster": "/previews/theme-selector-the-other-drawing-poster.jpg",
+        "alt": "ThemeSelector — The other drawing.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "Smaller",
+      "description": "`size=\"sm\"` narrows the miniatures from 88 points to 72, for a settings screen where the theme is one row among several rather than what the screen is for.",
+      "code": "<ThemeSelector size=\"sm\" variant=\"card\" />",
+      "previewVideo": {
+        "src": "/previews/theme-selector-smaller.mp4",
+        "poster": "/previews/theme-selector-smaller-poster.jpg",
+        "alt": "ThemeSelector — Smaller.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Light and dark only",
       "description": "Write the options out to drop one. Worth doing where following the device would be misleading — a reader whose device is set to dark and whose app is pinned to light should not be offered a `System` that changes both.",
-      "code": "<ThemeSelector label=\"Appearance\">\n  <ThemeSelector.Option value=\"light\" />\n  <ThemeSelector.Option value=\"dark\" />\n</ThemeSelector>"
+      "code": "<ThemeSelector label=\"Appearance\">\n  <ThemeSelector.Option value=\"light\" />\n  <ThemeSelector.Option value=\"dark\" />\n</ThemeSelector>",
+      "preview": {
+        "src": "/previews/theme-selector-light-and-dark-only.jpg",
+        "alt": "ThemeSelector — Light and dark only.",
+        "width": 1179,
+        "height": 484
+      }
     },
     {
       "title": "Storing the choice",
       "description": "`applyTheme={false}` stops the selector changing the theme, so the app can save the choice and apply it on the next launch as well as this one. `value` is then what decides which option is ringed.",
-      "code": "const [choice, setChoice] = useState<ThemeSelection>('system');\n\n<ThemeSelector\n  value={choice}\n  applyTheme={false}\n  onValueChange={(next) => {\n    setChoice(next);\n    save(next);\n    apply(next);\n  }}\n/>"
+      "code": "const [choice, setChoice] = useState<ThemeSelection>('system');\n\n<ThemeSelector\n  value={choice}\n  applyTheme={false}\n  onValueChange={(next) => {\n    setChoice(next);\n    save(next);\n    apply(next);\n  }}\n/>",
+      "previewVideo": {
+        "src": "/previews/theme-selector-storing-the-choice.mp4",
+        "poster": "/previews/theme-selector-storing-the-choice-poster.jpg",
+        "alt": "ThemeSelector — Storing the choice.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Somewhere else in the app",
