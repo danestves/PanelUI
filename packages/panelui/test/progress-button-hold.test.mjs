@@ -100,9 +100,27 @@ test('the release is started where the value actually lives', async () => {
    * vanish on touch-up instead of travelling home — silently, and with nothing
    * in the types to say so.
    */
-  assert.match(source, /runOnUI\(\(\) => \{\s*'worklet';\s*cancelAnimation\(progress\);\s*const from = progress\.value;\s*if \(from <= 0\) return;/);
+  assert.match(source, /const rewind = useCallback\(\(\) => \{\s*runOnUI\(\(\) => \{\s*'worklet';/);
   assert.match(source, /duration: releaseDuration\(from, duration\)/);
   assert.match(source, /duration: fillDuration\(from, duration\)/);
+});
+
+test('nothing sets the fill to empty — every path travels there', async () => {
+  const source = await readFile(
+    new URL('../src/components/progress-button/index.tsx', import.meta.url),
+    'utf8'
+  );
+
+  // A hold let go, an `autoReset` landing, and a controlled button told it is
+  // no longer complete are three ways to end up at zero, and two of them used
+  // to assign it outright. They all go through the one rewind now.
+  const assignments = source.match(/progress\.value = 0;/g) ?? [];
+  assert.equal(
+    assignments.length,
+    1,
+    'only the rewind itself may assign zero, and only when there is nothing to travel'
+  );
+  assert.match(source, /const reset = useCallback\(\(\) => \{\s*rewind\(\);/);
 });
 
 test('the release default is the hold default, not a number of its own', () => {

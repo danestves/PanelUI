@@ -132,9 +132,13 @@ const progressButtonVariants = tv({
      * Drawn as outlines they were four different buttons before anything had
      * happened, and the one thing they all do — wait to be held — was the
      * thing the drawing did not say. A solid ground says it: the button is
-     * unfilled, and the fill is what the hold produces. It also puts the label
-     * on an opaque colour from the start, so the wipe crosses one boundary
-     * rather than fading a tinted label through a tinted wash.
+     * unfilled, and the fill is what the hold produces.
+     *
+     * The variant is still legible at rest, because the label carries its
+     * colour. That is the half worth keeping — a destructive hold should not
+     * look like an ordinary one before it is touched — and it is also the half
+     * that survives the wipe, since the fill covers the ground the label was
+     * standing on and the second copy takes over.
      */
     root: 'relative overflow-hidden rounded-full border border-transparent bg-secondary',
     /*
@@ -144,7 +148,7 @@ const progressButtonVariants = tv({
      * reads as a progress bar someone put inside a button.
      */
     content: 'flex-row items-center justify-center gap-2',
-    label: 'min-w-0 shrink text-center font-medium text-secondary-foreground',
+    label: 'min-w-0 shrink text-center font-medium',
     /** The inverted copy, drawn on the filled ground. */
     fill: '',
     fillLabel: 'min-w-0 shrink text-center font-medium',
@@ -152,18 +156,22 @@ const progressButtonVariants = tv({
   variants: {
     variant: {
       primary: {
+        label: 'text-primary',
         fill: 'bg-primary',
         fillLabel: 'text-primary-foreground',
       },
       secondary: {
+        label: 'text-secondary-foreground',
         fill: 'bg-foreground',
         fillLabel: 'text-background',
       },
       destructive: {
+        label: 'text-destructive',
         fill: 'bg-destructive',
         fillLabel: 'text-destructive-solid-foreground',
       },
       success: {
+        label: 'text-success',
         fill: 'bg-success',
         fillLabel: 'text-success-solid-foreground',
       },
@@ -379,6 +387,36 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
     })();
   }, [disabled, completed, haptics, progress, reducedMotion, duration]);
 
+  /*
+   * The fill, played backwards.
+   *
+   * Same rate, same easing, same stepping under reduced motion — only the
+   * direction differs. Let go at nine tenths of a two-second hold and the fill
+   * takes 1.8 seconds to travel home, which is the 1.8 seconds it took to get
+   * there. A fill that vanishes has been deleted; a fill that travels back has
+   * been let go, and telling those apart is the whole reason the wait is drawn
+   * on the button.
+   *
+   * Every path that empties the fill goes through here — a hold let go, an
+   * `autoReset` landing, a controlled button told it is no longer complete.
+   * They were three separate assignments and two of them snapped.
+   */
+  const rewind = useCallback(() => {
+    runOnUI(() => {
+      'worklet';
+      cancelAnimation(progress);
+      const from = progress.value;
+      if (from <= 0) {
+        progress.value = 0;
+        return;
+      }
+      progress.value = withTiming(0, {
+        duration: releaseDuration(from, duration),
+        easing: reducedMotion ? Easing.steps(REDUCED_STEPS, true) : Easing.linear,
+      });
+    })();
+  }, [progress, duration, reducedMotion]);
+
   const abandon = useCallback(() => {
     /*
      * A completed hold has nothing to abandon. Without this the fill drains on
@@ -388,34 +426,14 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
      * stopped working.
      */
     if (completedRef.current) return;
-    runOnUI(() => {
-      'worklet';
-      cancelAnimation(progress);
-      const from = progress.value;
-      if (from <= 0) return;
-      progress.value = withTiming(0, {
-        /*
-         * The fill, played backwards.
-         *
-         * Same rate, same easing, same stepping under reduced motion — only
-         * the direction differs. Let go at nine tenths of a two-second hold
-         * and the fill takes 1.8 seconds to travel home, which is the 1.8
-         * seconds it took to get there. A fill that vanishes has been deleted;
-         * a fill that travels back has been let go, and telling those apart is
-         * the whole reason the wait is drawn on the button.
-         */
-        duration: releaseDuration(from, duration),
-        easing: reducedMotion ? Easing.steps(REDUCED_STEPS, true) : Easing.linear,
-      });
-    })();
-  }, [progress, duration, reducedMotion]);
+    rewind();
+  }, [rewind]);
 
   const reset = useCallback(() => {
-    cancelAnimation(progress);
-    progress.value = 0;
+    rewind();
     if (!isControlled) setInternalCompleted(false);
     onCompletedChange?.(false);
-  }, [progress, isControlled, onCompletedChange]);
+  }, [rewind, isControlled, onCompletedChange]);
 
   useEffect(() => {
     if (!completed || !autoReset) return;
@@ -434,9 +452,13 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
    * a bar that is already full.
    */
   useEffect(() => {
-    cancelAnimation(progress);
-    progress.value = completed ? 1 : 0;
-  }, [completed, progress]);
+    if (completed) {
+      cancelAnimation(progress);
+      progress.value = 1;
+      return;
+    }
+    rewind();
+  }, [completed, progress, rewind]);
 
   /*
    * And the completed drawing follows it too. Under reduced motion it is a
