@@ -119,7 +119,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { EllipsisIcon, IconColorProvider, MenuIcon, SearchIcon } from '../../icons';
 import { Button } from '../button';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
-import { Text, textChildren } from '../../primitives/text';
+import { Text, textChildren, type TextProps } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { useDirectionSign } from '../../hooks/use-direction';
 import { cn } from '../../utils/cn';
@@ -888,17 +888,47 @@ function PanelsideGroupLabel({ className, children, ...props }: PanelsideGroupLa
   );
 }
 
+/**
+ * What a row's parts read off the row, rather than being handed it.
+ *
+ * A label goes medium and un-muted when the row is the current destination,
+ * and an icon takes the matching tint. Passing that to every part would mean
+ * `<Panelside.ItemLabel active={active}>` at every call site, with an `active`
+ * that has to be kept in step with the row's own.
+ */
+interface PanelsideItemContextValue {
+  active: boolean;
+  disabled: boolean;
+  size: PanelsideItemSize;
+  /** The colour an icon in this row should take, resolved once by the row. */
+  tint: string | undefined;
+}
+
+const PanelsideItemContext = createContext<PanelsideItemContextValue | null>(null);
+
+function usePanelsideItem(part: string): PanelsideItemContextValue {
+  const value = useContext(PanelsideItemContext);
+  if (!value) throw new Error(`${part} must be used inside a <Panelside.Item>.`);
+  return value;
+}
+
 export interface PanelsideItemProps extends Omit<PressableProps, 'children'> {
   className?: string;
-  /** Leading element — an icon, an avatar, a coloured dot. */
+  /**
+   * Leading element — an icon, an avatar, a coloured dot. The shorthand for
+   * `Panelside.ItemIcon`.
+   */
   icon?: ReactNode;
-  /** The row's text. Truncated to one line, since chat titles run long. */
+  /**
+   * The row's text, truncated to one line since chat titles run long. The
+   * shorthand for `Panelside.ItemLabel`.
+   */
   label?: string;
   /** Marks the row as the current destination. */
   active?: boolean;
   /**
    * Trailing count or status. A number or string renders as a pill; anything
-   * else renders as given.
+   * else renders as given. The shorthand for `Panelside.ItemBadge`.
    */
   badge?: ReactNode;
   disabled?: boolean;
@@ -908,10 +938,37 @@ export interface PanelsideItemProps extends Omit<PressableProps, 'children'> {
    * worth more than two extra rows.
    */
   size?: PanelsideItemSize;
-  /** Trailing content — usually a `Panelside.Action`. */
+  /**
+   * The row's contents, written out: `Panelside.ItemIcon`,
+   * `Panelside.ItemLabel`, `Panelside.ItemBadge` and `Panelside.Action`, in
+   * whatever order the row wants them. Anything else you draw works too.
+   *
+   * Children and the shorthand props compose — a row can take its label from
+   * `label` and still write a trailing `Panelside.Action` as a child.
+   */
   children?: ReactNode;
 }
 
+/**
+ * One destination, or one conversation.
+ *
+ * There are two ways to fill it, and they are the same row. The shorthand —
+ * `icon`, `label`, `badge` — covers the row every navigation panel has, and is
+ * what most call sites should use. The parts cover everything else: two lines
+ * of text, a label that is not a string, a badge before the label rather than
+ * after it, a trailing control that is not an overflow menu.
+ *
+ * ```tsx
+ * <Panelside.Item icon={<InboxIcon />} label="Inbox" badge={12} />
+ *
+ * <Panelside.Item active>
+ *   <Panelside.ItemIcon><Avatar size="xs" src={author.avatar} /></Panelside.ItemIcon>
+ *   <Panelside.ItemLabel>{thread.title}</Panelside.ItemLabel>
+ *   <Panelside.ItemBadge>{thread.unread}</Panelside.ItemBadge>
+ *   <Panelside.Action onPress={rename} />
+ * </Panelside.Item>
+ * ```
+ */
 function PanelsideItem({
   className,
   icon,
@@ -934,46 +991,122 @@ function PanelsideItem({
       ? restTint
       : undefined;
 
+  const context = useMemo<PanelsideItemContextValue>(
+    () => ({ active, disabled, size, tint }),
+    [active, disabled, size, tint]
+  );
+
+  /*
+   * The row needs something flexible in the middle or its trailing content
+   * floats next to the icon instead of sitting at the end. A label supplies
+   * that, and a written-out `Panelside.ItemLabel` supplies it too — so the
+   * spacer is only for the row that has neither, which is a row of nothing but
+   * an icon and a badge.
+   */
+  const filled = label !== undefined || children !== undefined;
+
   return (
-    <AnimatedPressable
-      className={itemVariants({ active, disabled, size, className })}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active, disabled }}
-      accessibilityLabel={label}
-      pressScale={0.985}
+    <PanelsideItemContext.Provider value={context}>
+      <AnimatedPressable
+        className={itemVariants({ active, disabled, size, className })}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityState={{ selected: active, disabled }}
+        accessibilityLabel={label}
+        pressScale={0.985}
+        {...props}
+      >
+        {icon ? <PanelsideItemIcon>{icon}</PanelsideItemIcon> : null}
+
+        {label !== undefined ? <PanelsideItemLabel>{label}</PanelsideItemLabel> : null}
+
+        {filled ? null : <View className="flex-1" />}
+
+        {badge !== undefined && badge !== null ? (
+          <PanelsideItemBadge>{badge}</PanelsideItemBadge>
+        ) : null}
+
+        {children}
+      </AnimatedPressable>
+    </PanelsideItemContext.Provider>
+  );
+}
+
+export interface PanelsideItemIconProps extends ViewProps {
+  className?: string;
+  children?: ReactNode;
+}
+
+/**
+ * The leading slot on a row.
+ *
+ * Whatever is inside it inherits the row's own tint rather than each call site
+ * passing a colour that stops being right the moment the row goes active.
+ */
+function PanelsideItemIcon({ className, children, ...props }: PanelsideItemIconProps) {
+  const { tint } = usePanelsideItem('Panelside.ItemIcon');
+
+  // No wrapper unless one was asked for: an icon is already the right size,
+  // and a `View` around it is a layout node between the row and its glyph.
+  if (className === undefined && Object.keys(props).length === 0) {
+    return <IconColorProvider color={tint}>{children}</IconColorProvider>;
+  }
+
+  return (
+    <View className={className} {...props}>
+      <IconColorProvider color={tint}>{children}</IconColorProvider>
+    </View>
+  );
+}
+
+export interface PanelsideItemLabelProps extends TextProps {
+  className?: string;
+  children?: ReactNode;
+}
+
+/**
+ * The row's text. It takes the flexible middle, so a long title truncates
+ * rather than pushing the badge and the action off the end of the panel.
+ */
+function PanelsideItemLabel({ className, children, ...props }: PanelsideItemLabelProps) {
+  const { active } = usePanelsideItem('Panelside.ItemLabel');
+
+  return (
+    <Text
+      size="base"
+      weight={active ? 'medium' : 'normal'}
+      muted={!active}
+      numberOfLines={1}
+      className={cn('flex-1', className)}
       {...props}
     >
-      {/* Icons inherit the row's state rather than each caller passing a
-          colour that stops being right the moment the row goes active. */}
-      {icon ? <IconColorProvider color={tint}>{icon}</IconColorProvider> : null}
-
-      {label ? (
-        <Text
-          size="base"
-          weight={active ? 'medium' : 'normal'}
-          muted={!active}
-          numberOfLines={1}
-          className="flex-1"
-        >
-          {label}
-        </Text>
-      ) : (
-        <View className="flex-1" />
-      )}
-
-      {typeof badge === 'string' || typeof badge === 'number' ? (
-        <View className="rounded-full bg-secondary px-2 py-0.5">
-          <Text size="xs" muted>
-            {badge}
-          </Text>
-        </View>
-      ) : (
-        badge
-      )}
-
       {children}
-    </AnimatedPressable>
+    </Text>
+  );
+}
+
+export interface PanelsideItemBadgeProps extends ViewProps {
+  className?: string;
+  children?: ReactNode;
+}
+
+/**
+ * The trailing count or status on a row. Text becomes a pill; anything else is
+ * drawn as given, so a dot or a chip needs no opting out of the pill.
+ */
+function PanelsideItemBadge({ className, children, ...props }: PanelsideItemBadgeProps) {
+  usePanelsideItem('Panelside.ItemBadge');
+
+  if (typeof children !== 'string' && typeof children !== 'number') {
+    return <>{children}</>;
+  }
+
+  return (
+    <View className={cn('rounded-full bg-secondary px-2 py-0.5', className)} {...props}>
+      <Text size="xs" muted>
+        {children}
+      </Text>
+    </View>
   );
 }
 
@@ -1456,6 +1589,9 @@ PanelsideContent.displayName = 'Panelside.Content';
 PanelsideGroup.displayName = 'Panelside.Group';
 PanelsideGroupLabel.displayName = 'Panelside.GroupLabel';
 PanelsideItem.displayName = 'Panelside.Item';
+PanelsideItemIcon.displayName = 'Panelside.ItemIcon';
+PanelsideItemLabel.displayName = 'Panelside.ItemLabel';
+PanelsideItemBadge.displayName = 'Panelside.ItemBadge';
 PanelsideAction.displayName = 'Panelside.Action';
 PanelsideFooter.displayName = 'Panelside.Footer';
 PanelsideCta.displayName = 'Panelside.Cta';
@@ -1470,6 +1606,9 @@ export const Panelside = Object.assign(PanelsideRoot, {
   Group: PanelsideGroup,
   GroupLabel: PanelsideGroupLabel,
   Item: PanelsideItem,
+  ItemIcon: PanelsideItemIcon,
+  ItemLabel: PanelsideItemLabel,
+  ItemBadge: PanelsideItemBadge,
   Action: PanelsideAction,
   Footer: PanelsideFooter,
   Cta: PanelsideCta,

@@ -12,9 +12,10 @@
  * when the behaviour does.
  */
 import { useMemo, useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { View } from 'react-native';
 import { router } from 'expo-router';
 import {
+  AIInput,
   Avatar,
   BottomSheet,
   Button,
@@ -30,7 +31,7 @@ import {
   PackageIcon,
   Panelside,
   PlusIcon,
-  SendIcon,
+  StarIcon,
   Text,
   XIcon,
   usePanelside,
@@ -136,13 +137,20 @@ function AssistantPanel({
         {starred.length > 0 && (
           <Panelside.Group>
             <Panelside.GroupLabel>Starred</Panelside.GroupLabel>
+            {/* The same row as the ones below, written out rather than passed
+                as props — which is how a row gets something the shorthand has
+                no argument for, here a star before the title. */}
             {starred.map((title) => (
               <Panelside.Item
                 key={title}
-                label={title}
                 active={title === activeId}
+                accessibilityLabel={title}
                 onPress={select && (() => select(title))}
               >
+                <Panelside.ItemIcon>
+                  <StarIcon size={16} />
+                </Panelside.ItemIcon>
+                <Panelside.ItemLabel>{title}</Panelside.ItemLabel>
                 <Panelside.Action label={`Options for ${title}`} />
               </Panelside.Item>
             ))}
@@ -510,9 +518,15 @@ export function PanelsideChatBlock() {
  * sheet is a real platform sheet, and the panel's compose button is a real
  * platform button.
  *
- * The transcript, the rows and the composer field stay ours, because there is
- * no platform control for any of them. A screen that went half-native would
- * match neither.
+ * The transcript and the rows stay ours, because there is no platform control
+ * for either. A screen that went half-native would match neither.
+ *
+ * The composer is `AIInput`, which is the component for this and hands its own
+ * controls to the platform under `native`. It used to be a bare `TextInput` in
+ * a rounded card with three buttons laid out beside it by hand — which is what
+ * `AIInput` is, written out again badly: no growth to five lines, no voice
+ * state on the submit button, and a placeholder colour read from a token here
+ * because a raw field has none.
  */
 function NativeChatScene() {
   const [turns, setTurns] = useState<Turn[]>(THREAD.slice(0, 2));
@@ -520,18 +534,14 @@ function NativeChatScene() {
   const [attaching, setAttaching] = useState(false);
   const insets = useSafeAreaInsets();
   const nextId = useRef(0);
-  // A bare TextInput has no themed placeholder of its own, and a native button
-  // never reaches the icon tint the styled one provides — so both are read here.
-  const [placeholderTint, glyph] = useCSSVariable([
-    '--color-muted-foreground',
-    '--color-foreground',
-  ]) as (string | undefined)[];
 
-  const send = () => {
-    const text = draft.trim();
+  const send = (value: string) => {
+    const text = value.trim();
     if (!text) return;
     nextId.current += 1;
     const id = nextId.current;
+    // The composer does not clear itself — the app owns the value, and a
+    // submit that failed should not have thrown the text away.
     setDraft('');
     setTurns((current) => [...current, { id: `u${id}`, role: 'user', text }]);
     setTimeout(() => {
@@ -566,63 +576,34 @@ function NativeChatScene() {
       </MessageScroller>
 
       {/*
-        A composer is a card, not a line. One row for what you are writing and
-        one for the controls, because a single row makes the field compete with
-        every button in it — the field ends up too short to read a sentence in
-        and the buttons too close together to hit.
+        `native` on the composer reaches every control in it — the two actions
+        and the submit button are all platform buttons in the system material.
+        The card around them is still ours: there is no platform composer.
+
+        Keyboard avoidance is turned off here because the panel is already
+        moving the whole scene, and two things lifting the same view is one
+        lift too many. The block does the bottom inset itself instead.
       */}
-      <View
-        className="px-3 pt-2"
-        style={{ paddingBottom: Math.max(insets.bottom, 10) }}
-      >
-        <View className="gap-2 rounded-3xl bg-secondary px-3 py-3">
-          {/*
-            No `leading-*`: a line-height step adds leading above the glyphs,
-            and in a field this short that is the difference between a
-            placeholder on the centre line and one sitting under it.
-          */}
-          <TextInput
-            value={draft}
-            onChangeText={setDraft}
-            placeholder="Message the assistant"
-            placeholderTextColor={placeholderTint}
-            multiline
-            className="max-h-32 min-h-6 px-1 text-[16px] text-foreground"
-          />
-
-          <View className="flex-row items-center gap-2">
-            <Button
-              native
-              glass
-              size="icon"
-              variant="ghost"
-              accessibilityLabel="Attach"
+      <View className="px-3 pt-2" style={{ paddingBottom: Math.max(insets.bottom, 10) }}>
+        <AIInput
+          native
+          avoidKeyboard={false}
+          value={draft}
+          onValueChange={setDraft}
+          onSubmit={send}
+        >
+          <AIInput.Field placeholder="Message the assistant" />
+          <AIInput.Toolbar>
+            <AIInput.Action
+              label="Attach"
+              icon={<PlusIcon size={20} />}
               onPress={() => setAttaching(true)}
-            >
-              <PlusIcon size={20} color={glyph} />
-            </Button>
-
-            <View className="flex-1" />
-
-            <Button native glass size="icon" variant="ghost" accessibilityLabel="Dictate">
-              <MicIcon size={19} color={glyph} />
-            </Button>
-
-            {/* Prominent glass: the tinted variant, and the platform paints
-                the icon white rather than reading a theme token. */}
-            <Button
-              native
-              glass
-              size="icon"
-              variant="primary"
-              accessibilityLabel="Send"
-              disabled={draft.trim() === ''}
-              onPress={send}
-            >
-              <SendIcon size={17} />
-            </Button>
-          </View>
-        </View>
+            />
+            <AIInput.Spacer />
+            <AIInput.Action label="Dictate" icon={<MicIcon size={19} />} />
+            <AIInput.Submit />
+          </AIInput.Toolbar>
+        </AIInput>
       </View>
 
       {/* A real platform sheet, resting at half height. */}
