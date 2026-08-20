@@ -11,6 +11,14 @@ The controls are the colour model made visible: a square where saturation runs a
 
 Nothing about a drag crosses to JavaScript: the four channels are shared values, and the hue behind the square, both thumb fills and the preview swatch are computed from them on the UI thread. The picked colour bridges back on change and again on release.
 
+<PreviewVideo
+  src="/previews/color-picker.mp4"
+  poster="/previews/color-picker-poster.jpg"
+  alt="The ColorPicker component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 ColorPicker ships with the library — no separate install.
@@ -111,6 +119,14 @@ Swap `Area` for `Wheel` and hue becomes the angle, saturation the radius. Bright
 
 Hold the colour in state and apply it to something. `onValueChange` fires on every frame of a drag; `onValueCommit` fires once on release — reach for it when the change writes anywhere.
 
+<PreviewVideo
+  src="/previews/color-picker-controlled.mp4"
+  poster="/previews/color-picker-controlled-poster.jpg"
+  alt="ColorPicker — Controlled."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [color, setColor] = useState('#22c55e');
 
@@ -129,6 +145,14 @@ const [color, setColor] = useState('#22c55e');
 
 Add `ColorPicker.Alpha` and the colour gains a fourth channel. `format` decides how it is written: `hex` grows an `#rrggbbaa` pair and the other two switch to their `a` forms, but only once the colour is actually translucent — an opaque colour written with a trailing `ff` is the same colour spelled in a way half the parsers in the world reject.
 
+<PreviewVideo
+  src="/previews/color-picker-with-opacity.mp4"
+  poster="/previews/color-picker-with-opacity-poster.jpg"
+  alt="ColorPicker — With opacity."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <ColorPicker defaultValue="rgba(59, 130, 246, 0.6)" format="rgb" onValueCommit={save}>
   <ColorPicker.Area height={150} />
@@ -141,6 +165,14 @@ Add `ColorPicker.Alpha` and the colour gains a fourth channel. `format` decides 
 ### Presets first
 
 Most colour choices are one of eight, and the square is for the ninth. Putting `ColorPicker.Swatches` above it makes the common case a single tap without hiding the rest. Unreadable strings are dropped rather than rendered as black — a row of presets with a mystery black one in it is worse than a shorter row.
+
+<PreviewVideo
+  src="/previews/color-picker-presets-first.mp4"
+  poster="/previews/color-picker-presets-first-poster.jpg"
+  alt="ColorPicker — Presets first."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <ColorPicker defaultValue="#f97316" onValueCommit={setColor} size="sm">
@@ -167,6 +199,13 @@ There is no minimum picker. A control that only needs a hue is the hue scale and
 
 Disabled applies to every input path: touch, presets, and assistive-technology adjustment actions all leave the colour unchanged.
 
+<Preview
+  src="/previews/color-picker-disabled.jpg"
+  alt="ColorPicker — Disabled."
+  width={1179}
+  height={853}
+/>
+
 ```tsx
 <ColorPicker defaultValue="#64748b" disabled>
   <ColorPicker.Area height={110} />
@@ -180,6 +219,14 @@ Disabled applies to every input path: touch, presets, and assistive-technology a
 ### Accent card
 
 Rows that read out a colour and open the picker over themselves when pressed.
+
+<PreviewVideo
+  src="/previews/color-picker-accent-card.mp4"
+  poster="/previews/color-picker-accent-card-poster.jpg"
+  alt="ColorPicker — Accent card."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <ColorPicker value={accent} onValueChange={setAccent} presentation="popover">
@@ -197,6 +244,14 @@ Rows that read out a colour and open the picker over themselves when pressed.
 ### In a sheet
 
 The same folded-away picker, brought up from the bottom edge.
+
+<PreviewVideo
+  src="/previews/color-picker-in-a-sheet.mp4"
+  poster="/previews/color-picker-in-a-sheet-poster.jpg"
+  alt="ColorPicker — In a sheet."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <ColorPicker value={color} onValueChange={setColor} presentation="bottom-sheet">
@@ -217,6 +272,14 @@ The same folded-away picker, brought up from the bottom edge.
 
 A labelled strip over the square, and a readout naming the track under it.
 
+<PreviewVideo
+  src="/previews/color-picker-inline-panel.mp4"
+  poster="/previews/color-picker-inline-panel-poster.jpg"
+  alt="ColorPicker — Inline panel."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <ColorPicker value={color} onValueChange={setColor}>
   <ColorPicker.Field label="Accent" />
@@ -231,6 +294,14 @@ A labelled strip over the square, and a readout naming the track under it.
 ### Wheel
 
 Hue around and saturation out, with brightness on a track of its own — folded away behind a row, the way the square is. The disc is a way of picking a colour rather than a different kind of control that has to live in the page.
+
+<PreviewVideo
+  src="/previews/color-picker-wheel.mp4"
+  poster="/previews/color-picker-wheel-poster.jpg"
+  alt="ColorPicker — Wheel."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <ColorPicker value={color} onValueChange={setColor} presentation="popover">
@@ -254,6 +325,14 @@ Hue around and saturation out, with brightness on a track of its own — folded 
 - `sm`
 - `md` *(default)*
 - `lg`
+
+<Preview
+  src="/previews/color-picker-size.jpg"
+  alt="ColorPicker — the sizes."
+  width={1179}
+  height={1656}
+  caption="sm and lg, which change the square and the tracks together."
+/>
 
 ```tsx
 <ColorPicker size="sm" defaultValue="#8b5cf6">…</ColorPicker>

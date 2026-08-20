@@ -12,6 +12,14 @@ Nothing fires until the fill is complete. There is no tolerance near the end, be
 
 For an action that is ordinary rather than irreversible, use [Button](/docs/components/button). For a wait the reader is not causing, use [Progress](/docs/components/progress).
 
+<PreviewVideo
+  src="/previews/progress-button.mp4"
+  poster="/previews/progress-button-poster.jpg"
+  alt="The ProgressButton component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 ## Installation
 
 ProgressButton ships with the library — no separate install.
@@ -53,6 +61,14 @@ npx panelui-cli@latest add progress-button
 
 The default: two seconds, and nothing happens until the fill reaches the end.
 
+<PreviewVideo
+  src="/previews/progress-button-hold-to-confirm.mp4"
+  poster="/previews/progress-button-hold-to-confirm-poster.jpg"
+  alt="ProgressButton — Hold to confirm."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <ProgressButton onComplete={() => erase()}>
   <ProgressButton.Label>Hold to erase</ProgressButton.Label>
@@ -66,6 +82,14 @@ The fill runs out, the words go, and a tick arrives in their place. That last pa
 The button sits on the tray below the panel rather than among the rows: the rows are what is being paid for, and this is the thing you do about them.
 
 `autoReset` is deliberately absent. A payment that offers itself again a second later is a payment somebody makes twice by leaning on the button.
+
+<PreviewVideo
+  src="/previews/progress-button-hold-to-pay.mp4"
+  poster="/previews/progress-button-hold-to-pay-poster.jpg"
+  alt="ProgressButton — Hold to pay."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const [paid, setPaid] = useState(false);
@@ -108,6 +132,14 @@ const [paid, setPaid] = useState(false);
 ### How long the hold is
 
 `holdDuration` is in milliseconds. Longer for something with no undo, shorter for something merely worth pausing over. It is floored at 200ms — a hold that completes on touch-down is a button with extra steps.
+
+<PreviewVideo
+  src="/previews/progress-button-how-long-the-hold-is.mp4"
+  poster="/previews/progress-button-how-long-the-hold-is-poster.jpg"
+  alt="ProgressButton — How long the hold is."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <ProgressButton holdDuration={3000} variant="destructive" onComplete={() => wipe()}>
@@ -167,6 +199,23 @@ const [done, setDone] = useState(false);
 </ProgressButton>
 ```
 
+### Nothing to confirm
+
+`disabled` dims the button and stops it taking a hold at all — the fill never starts, so there is no half-finished state to explain. Use it for a confirmation whose subject is not there yet, rather than letting the reader hold a button for two seconds to find out.
+
+<Preview
+  src="/previews/progress-button-disabled.jpg"
+  alt="ProgressButton — Nothing to confirm."
+  width={1179}
+  height={2556}
+/>
+
+```tsx
+<ProgressButton disabled fullWidth onComplete={() => wipe()}>
+  <ProgressButton.Label>Nothing to confirm</ProgressButton.Label>
+</ProgressButton>
+```
+
 ## Variants
 
 ### `variant`
@@ -175,6 +224,15 @@ const [done, setDone] = useState(false);
 - `secondary`
 - `destructive`
 - `success`
+
+<PreviewVideo
+  src="/previews/progress-button-variant.mp4"
+  poster="/previews/progress-button-variant-poster.jpg"
+  alt="ProgressButton — every variant, held in turn."
+  width={720}
+  height={1560}
+  caption="primary, destructive and success — the same button until it is held."
+/>
 
 ```tsx
 <ProgressButton variant="primary">…</ProgressButton>
@@ -188,6 +246,15 @@ const [done, setDone] = useState(false);
 - `sm`
 - `md` *(default)*
 - `lg`
+
+<PreviewVideo
+  src="/previews/progress-button-size.mp4"
+  poster="/previews/progress-button-size-poster.jpg"
+  alt="ProgressButton — the three sizes."
+  width={720}
+  height={1560}
+  caption="sm, md and lg."
+/>
 
 ```tsx
 <ProgressButton size="sm">…</ProgressButton>
@@ -216,7 +283,7 @@ const [done, setDone] = useState(false);
 | `completed` | `boolean` | — | Controlled completion. Leave unset to let the button own it. |
 | `autoReset` | `boolean` | `false` | Return to the unfilled state after `autoResetDelay`. |
 | `autoResetDelay` | `number` | — | Milliseconds to stay completed before resetting. Defaults to `1000`. |
-| `disabled` | `boolean` | `false` |  |
+| `disabled` | `boolean` | `false` | Dim the button and refuse the hold outright. The fill never starts, so there is no half-finished state to explain. |
 | `haptics` | `boolean` | `false` | A tick as the hold takes, and a knock when it completes. Off by default: whether an action is worth feeling is the caller's call, not the control's. |
 
 ### ProgressButton.Label

@@ -272,6 +272,10 @@ export interface ProgressButtonProps
   autoReset?: boolean;
   /** Milliseconds to stay completed before resetting. Defaults to `1000`. */
   autoResetDelay?: number;
+  /**
+   * Dim the button and refuse the hold outright. The fill never starts, so
+   * there is no half-finished state to explain.
+   */
   disabled?: boolean;
   /**
    * A tick as the hold takes, and a knock when it completes. Off by default:
