@@ -357,7 +357,7 @@ Edge nodes coloured by state, spread across the world. A marker is a React view,
 | `rotatable` | `boolean` | `false` | Let the map rotate and tilt. Off by default — most maps only pan and zoom. |
 | `interactive` | `boolean` | `true` | Turn off panning and zooming, for a map that is an illustration. |
 | `onViewStateChange` | `(state: ViewState) => void` | — | Fires continuously while the map moves. |
-| `onPress` | `(lngLat: LngLat) => void` | — | Fires when the map is pressed somewhere that is not a feature. |
+| `onPress` | `(lngLat: LngLat, point: PixelPoint) => void` | — | Fires when the map is pressed somewhere that is not a feature. The second argument is the same press in screen coordinates, for anchoring something of your own to where the finger landed. |
 | `onReady` | `() => void` | — | Fires once the style has loaded and the first frame is drawn. |
 
 ### Map.Marker
@@ -484,6 +484,12 @@ Pass `mapStyle` to skip all of it and use a style wholesale — the escape hatch
 ### Tile licensing
 
 `Map` defaults to CARTO's street tiles, which are free for non-commercial use and require a licence from CARTO for commercial use. That is a decision about your project rather than about this component, so `source` takes any provider serving the OpenMapTiles schema.
+
+### Controls and anything else you draw over the map
+
+`Map.Controls` — and any view of your own written as a child of `Map` — is drawn above the map rather than inside the renderer. The renderer's own view lays its children out itself, so a view handed to it arrives stretched to the full size of the map and covering it. Splitting them means `position` lands where it says it does, and a control group written to sit in a corner sits in that corner.
+
+What that leaves for you: put layers — `Map.Marker`, `Map.Route`, `Map.Arc`, `Map.GeoJSON`, `Map.Cluster`, `Map.Heatmap`, `Map.UserLocation` — inside `Map` and they reach the renderer. Everything else inside `Map` floats over it, positioned by your own classes, with touches passing through wherever it is not drawing.
 
 ### Markers or clusters
 

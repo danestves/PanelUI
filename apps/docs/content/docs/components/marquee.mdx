@@ -127,7 +127,8 @@ The built-in visible control meets the default pause requirement. Externally own
   </View>
 </Marquee>
 
-{/* Existing page-level controls can own the same state. */}
+{/* Existing page-level controls can own the same state. Turn the built-in
+    one off only when there is already a visible equivalent. */}
 <Marquee playing={playing} showPauseControl={false}>{/* … */}</Marquee>
 <Switch value={playing} onValueChange={setPlaying} />
 ```
@@ -169,10 +170,12 @@ Cards on the vertical axis. The container gives the height, because a vertical m
 
 Holding a card stops the travel. A post sliding out from under a finger cannot be read or tapped accurately, and the hold sits on a wrapper rather than on the card so the stats inside it keep their own presses.
 
+The switch in the header is the visible way to stop it, so the marquee's own control is turned off — two controls for one piece of motion is one too many.
+
 ```tsx
 const [playing, setPlaying] = useState(true);
 
-<Marquee direction="vertical" spacing={12} speed={22} playing={playing} className="flex-1">
+<Marquee direction="vertical" spacing={12} speed={22} playing={playing} showPauseControl={false} className="flex-1">
   <View className="gap-3">
     {posts.map((post) => (
       <Pressable
@@ -232,15 +235,17 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 A horizontal marquee travels toward the end of the line, so it reverses in a right-to-left subtree. `reverse` flips it again from wherever that leaves it.
 
+**Pausing freezes the content where it is** and resuming carries on from there, so a name stopped mid-travel is still the name you stopped on.
+
 **A vertical marquee needs a height.** A horizontal one takes its height from the content it measured, but a vertical one has nothing to take a height from and collapses. Give the container one.
 
 `speed` is points per second, so the cycle time follows from it and the measured content. Longer content takes proportionally longer rather than travelling faster, and two marquees at the same speed stay in step whatever is inside them. `spacing` is the minimum gap between copies. When a very short child would exceed the 32-copy mount budget, Marquee adds enough whitespace to preserve continuous coverage without mounting an unbounded number of subtrees. Non-finite speed values fall back to 40 points per second; negative or non-finite spacing is treated as zero, so invalid data cannot produce a non-finite animation or layout.
 
 Screen readers and keyboard/pointer interaction are given one copy. Every repeated visual copy and the hidden measurement copy are inert, so an interactive child appears only once in focus and hit-testing order.
 
-Motion includes a visible 48-point Pause/Play control by default. Its labels can be localized with `pauseLabel` and `playLabel`; use `onPlayingChange` to observe the user choice. `playing={false}` remains the externally owned way to hold the content still, and suppresses the built-in control.
+Motion includes a visible 48-point Pause/Play control by default, drawn **below** the content rather than over it. Over it, on a strip only as tall as a row of badges, the control was taller than the marquee — clipped by the track's own edge and sitting on the content it exists to let you read. So a marquee is now as tall as its content *plus* its control, and a container given a fixed height spends part of that height on it. Its labels can be localized with `pauseLabel` and `playLabel`; use `onPlayingChange` to observe the user choice. `playing={false}` remains the externally owned way to hold the content still, and suppresses the built-in control.
 
-**Stacked rows go in a `Marquee.Group`.** A control per marquee means one control per row, each pinned to its own bottom corner — the upper row's lands on top of the row beneath it. A group draws one control for everything inside it, below the rows rather than over them, and the marquees in it stop drawing their own. Each one keeps its own `playing` prop: the group's pause is an additional hold, not a replacement.
+**Stacked rows go in a `Marquee.Group`.** A control per marquee means one control per row, and two rows of logos do not need two ways to stop one piece of motion. A group draws a single control for everything inside it, and the marquees in it stop drawing their own. Each one keeps its own `playing` prop: the group's pause is an additional hold, not a replacement.
 
 Set `showPauseControl={false}` on a lone marquee only when an equivalent visible control exists elsewhere — a switch in the header that already governs `playing`, for instance. Inside a group it is already the default.
 

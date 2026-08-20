@@ -25,7 +25,7 @@ A button in the corner, and the screen slides across, shrinks, rounds its corner
 Panelside ships with the library — no separate install.
 
 ```tsx
-import { Panelside, Avatar, BottomSheet, Button, MenuIcon, MessageCircleIcon, PackageIcon, PlusIcon, Select, usePanelside } from 'panelui-native';
+import { Panelside, AIInput, Avatar, BottomSheet, Button, MenuIcon, MessageCircleIcon, MicIcon, PackageIcon, PlusIcon, Select, StarIcon, View, usePanelside } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -74,6 +74,9 @@ npx panelui-cli@latest add panelside
       <Panelside.Group>
         <Panelside.GroupLabel>…</Panelside.GroupLabel>
         <Panelside.Item>
+          <Panelside.ItemIcon>…</Panelside.ItemIcon>
+          <Panelside.ItemLabel>…</Panelside.ItemLabel>
+          <Panelside.ItemBadge>…</Panelside.ItemBadge>
           <Panelside.Action />
         </Panelside.Item>
       </Panelside.Group>
@@ -89,18 +92,9 @@ npx panelui-cli@latest add panelside
 </Panelside>
 ```
 
-- **`Panelside.Panel`** — The navigation surface, sitting behind the app. It is a column: a sticky header, a scroller, and a footer pinned to the bottom edge.
-- **`Panelside.Header`** — The panel's title row, and anything below it that should not scroll. It clears the status bar itself, because the panel draws behind it.
-- **`Panelside.Search`** — A compact filter field. It reports what was typed and nothing else — what counts as a match is yours, since a search that only read titles would be wrong for the first app that indexes message bodies.
-- **`Panelside.Content`** — The scrolling middle. It leaves room at the end for a floating footer, measured rather than assumed.
-- **`Panelside.Group`** — A run of related rows. Groups are the unit of spacing, so an empty one costs nothing to render conditionally.
-- **`Panelside.GroupLabel`** — The heading over a group — “Starred”, “Recents”, “Today”. Announced as a heading.
-- **`Panelside.Item`** — One destination or one conversation: a leading icon, a label truncated to a line, an optional badge, and an active state. `size="sm"` tightens the padding for a panel that has to show more history at once.
-- **`Panelside.Action`** — The trailing control on a row — rename, delete, the overflow menu. It takes its target back as touch slop rather than as layout, so it stays small next to a row-sized target.
-- **`Panelside.Footer`** — The bar across the bottom of the panel — an account control at one end, the compose button at the other. It floats over the list, with the list dissolving into the panel just above it: a solid bar would cut a strip out of the bottom of the scroller, and a transparent one would let rows show through the controls.
-- **`Panelside.Cta`** — The compose button. A pill rather than a rectangle, because it is the one control in the panel that is not a list row — 40pt by default so it sits level with the account button beside it, `size="lg"` for the taller one. Takes `native` to hand it to the platform, and `glass` to have the platform draw it in Liquid Glass.
-- **`Panelside.Scene`** — Your app. This is the half that moves, and naming it is the whole contract — everything inside it travels, rounds and dims together. It also draws a hairline along its edge as it goes, since two surfaces of the same colour meeting at a corner need something to say they are separate. `scale`, `radius` and `dim` are its numbers, and it takes the root's as defaults for all three.
-- **`Panelside.Trigger`** — Opens and closes the panel. Wraps a control of your own, or draws a plain one. It renders nothing at all when the panel is docked, since there would be nothing to toggle.
+A row can be filled two ways, and they are the same row. `icon`, `label` and `badge` are the shorthand for the row every navigation panel has; `Panelside.ItemIcon`, `Panelside.ItemLabel` and `Panelside.ItemBadge` are the same three slots written out, for a row that needs a different order, a label that is not a string, or something in a slot the prop cannot take.
+
+They compose rather than exclude each other — a row taking its label from `label` and writing a trailing `Panelside.Action` as a child is the ordinary case.
 
 <Diagram
   src="/diagrams/panelside-anatomy-dark.webp"
@@ -264,6 +258,25 @@ The panel is meant to be changed. `scale`, `radius` and `dim` set the curve for 
 </Panelside>
 ```
 
+### A row the props cannot describe
+
+`icon`, `label` and `badge` cover the row a navigation panel is made of, and most rows should use them. Write the parts out when the row needs something the props have no argument for — a different order, a label that is not a string, two things in the trailing slot.
+
+The two forms compose: a row can take its label from the prop and still write a `Panelside.Action` as a child, which is what every example above does.
+
+```tsx
+<Panelside.Item active={thread.id === current} onPress={() => open(thread)}>
+  <Panelside.ItemIcon>
+    <Avatar size="xs" fallback={thread.initials} />
+  </Panelside.ItemIcon>
+  <Panelside.ItemLabel>{thread.title}</Panelside.ItemLabel>
+  <Panelside.ItemBadge>
+    <View className="h-2 w-2 rounded-full bg-primary" />
+  </Panelside.ItemBadge>
+  <Panelside.Action label={`Options for ${thread.title}`} onPress={() => rename(thread)} />
+</Panelside.Item>
+```
+
 ## Versions
 
 ### Assistant
@@ -390,7 +403,11 @@ A streaming transcript in the scene, anchored and scrolling on its own while the
 
 ### Native chat
 
-Panelside has no `native` prop and cannot have one — the platform toolkits ship a switch, a picker, a sheet and a button, and none of them is a pushing navigation panel. What goes native is what is inside it.
+Panelside has no `native` prop and cannot have one — the platform toolkits ship a switch, a picker, a sheet and a button, and none of them is a pushing navigation panel. What goes native is what is inside it, and not all of it.
+
+The composer is `AIInput`, drawn by us rather than handed over. A control the platform draws itself does not survive the scene being moved and scaled on a shared value, which is what the panel does to everything in it — so the native half of this screen is the controls that sit still: the picker, the sheet, and the panel's own compose button.
+
+The composer's keyboard avoidance is off for the same reason. The panel is already moving the scene, and two things lifting one view is one lift too many.
 
 ```tsx
 <Panelside>
@@ -405,10 +422,15 @@ Panelside has no `native` prop and cannot have one — the platform toolkits shi
 
     <Transcript />
 
-    <View className="flex-row justify-between">
-      <Button native variant="ghost" onPress={() => setAttaching(true)}>Attach</Button>
-      <Button native onPress={send}>Send</Button>
-    </View>
+    <AIInput avoidKeyboard={false} value={draft} onValueChange={setDraft} onSubmit={send}>
+      <AIInput.Field placeholder="Message the assistant" />
+      <AIInput.Toolbar>
+        <AIInput.Action label="Attach" icon={<PlusIcon />} onPress={() => setAttaching(true)} />
+        <AIInput.Spacer />
+        <AIInput.Action label="Dictate" icon={<MicIcon />} />
+        <AIInput.Submit />
+      </AIInput.Toolbar>
+    </AIInput>
 
     <BottomSheet native open={attaching} onOpenChange={setAttaching} snapPoints={['half']}>
       <BottomSheet.Content>{/* … */}</BottomSheet.Content>
@@ -484,12 +506,30 @@ Panelside has no `native` prop and cannot have one — the platform toolkits shi
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `icon` | `ReactNode` | — | Leading element — an icon, an avatar, a coloured dot. |
-| `label` | `string` | — | The row's text. Truncated to one line, since chat titles run long. |
+| `icon` | `ReactNode` | — | Leading element — an icon, an avatar, a coloured dot. The shorthand for `Panelside.ItemIcon`. |
+| `label` | `string` | — | The row's text, truncated to one line since chat titles run long. The shorthand for `Panelside.ItemLabel`. |
 | `active` | `boolean` | `false` | Marks the row as the current destination. |
-| `badge` | `ReactNode` | — | Trailing count or status. A number or string renders as a pill; anything else renders as given. |
+| `badge` | `ReactNode` | — | Trailing count or status. A number or string renders as a pill; anything else renders as given. The shorthand for `Panelside.ItemBadge`. |
 | `disabled` | `boolean` | `false` |  |
 | `size` | `PanelsideItemSize` | `'default'` | Row density. `sm` tightens the padding for a panel that has to show more history at once, without touching the type size — a list you can read is worth more than two extra rows. |
+
+### Panelside.ItemIcon
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Panelside.ItemLabel
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Panelside.ItemBadge
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
 
 ### Panelside.Action
 
@@ -613,4 +653,4 @@ Every spring here resolves instantly to its target when the system setting is on
 
 **Values:** `Panelside`, `usePanelside`
 
-**Types:** `PanelsideProps`, `PanelsidePanelProps`, `PanelsideHeaderProps`, `PanelsideSearchProps`, `PanelsideContentProps`, `PanelsideGroupProps`, `PanelsideGroupLabelProps`, `PanelsideItemProps`, `PanelsideActionProps`, `PanelsideFooterProps`, `PanelsideCtaProps`, `PanelsideSceneProps`, `PanelsideTriggerProps`, `PanelsideMode`, `PanelsideSwipeFrom`, `PanelsideItemSize`, `PanelsideCtaSize`, `UsePanelsideResult`
+**Types:** `PanelsideProps`, `PanelsidePanelProps`, `PanelsideHeaderProps`, `PanelsideSearchProps`, `PanelsideContentProps`, `PanelsideGroupProps`, `PanelsideGroupLabelProps`, `PanelsideItemProps`, `PanelsideItemIconProps`, `PanelsideItemLabelProps`, `PanelsideItemBadgeProps`, `PanelsideActionProps`, `PanelsideFooterProps`, `PanelsideCtaProps`, `PanelsideSceneProps`, `PanelsideTriggerProps`, `PanelsideMode`, `PanelsideSwipeFrom`, `PanelsideItemSize`, `PanelsideCtaSize`, `UsePanelsideResult`

@@ -733,8 +733,10 @@ export {
   type MarkdownEditorToolbarProps,
   type MarkdownEditorInputProps,
   type MarkdownEditorPreviewProps,
+  type MarkdownEditorHandle,
   type MarkdownEditorMode,
   type MarkdownEditorAction,
+  type MarkdownEditorToolbarVariant,
   type EditorSelection,
   type EditResult,
 } from './components/markdown-editor';

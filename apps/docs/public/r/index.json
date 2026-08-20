@@ -17,7 +17,7 @@
     "type": "registry:ui",
     "kind": "ui",
     "group": "ai-components",
-    "stability": "alpha",
+    "stability": "stable",
     "description": "A prompt composer: a field that grows to five lines, a row of controls, and the sheet they open.",
     "registryDependencies": [
       "animated-pressable",
@@ -1195,8 +1195,8 @@
     "stability": "stable",
     "description": "Press and hold to confirm, with the wait drawn on the button.",
     "registryDependencies": [
-      "cn",
       "haptics",
+      "icons",
       "text"
     ],
     "docsPath": "components/progress-button"

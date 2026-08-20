@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1157,
+    "exports": 1163,
     "values": 309,
-    "types": 848,
+    "types": 854,
     "modules": 142,
     "components": 115,
     "hooks": 13
@@ -2065,11 +2065,19 @@
             "kind": "type"
           },
           {
+            "name": "MarkdownEditorHandle",
+            "kind": "type"
+          },
+          {
             "name": "MarkdownEditorMode",
             "kind": "type"
           },
           {
             "name": "MarkdownEditorAction",
+            "kind": "type"
+          },
+          {
+            "name": "MarkdownEditorToolbarVariant",
             "kind": "type"
           },
           {
@@ -2440,6 +2448,18 @@
           },
           {
             "name": "PanelsideItemProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideItemIconProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideItemLabelProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideItemBadgeProps",
             "kind": "type"
           },
           {
@@ -3032,6 +3052,10 @@
           },
           {
             "name": "ProgressButtonLabelProps",
+            "kind": "type"
+          },
+          {
+            "name": "ProgressButtonDoneProps",
             "kind": "type"
           },
           {

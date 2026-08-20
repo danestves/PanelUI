@@ -903,6 +903,25 @@ function MarkdownEditorComposerDemo() {
   );
 }
 
+/**
+ * The floating capsule, which is the toolbar written the other way.
+ *
+ * Icon-only, grouped by hairlines, with the way out of the writing pane as a
+ * round button beside it rather than a segment of it. Nothing else goes on the
+ * row — a capsule with a word count in it is a bar with rounded ends.
+ */
+function MarkdownEditorPillDemo() {
+  const [draft, setDraft] = useState('A note with a **bold** word, and a list:\n\n- one\n- two');
+
+  return (
+    <MarkdownEditor value={draft} onValueChange={setDraft} className="w-full">
+      <MarkdownEditor.Toolbar variant="pill" />
+      <MarkdownEditor.Input rows={8} placeholder="Write something…" />
+      <MarkdownEditor.Preview emptyText="Write a line and press the eye." />
+    </MarkdownEditor>
+  );
+}
+
 /** Starting on the reading side, for a draft that already exists. */
 function MarkdownEditorPreviewFirstDemo() {
   const [draft, setDraft] = useState(RELEASE_NOTE);
@@ -1647,6 +1666,7 @@ export const ENTRIES: ComponentEntry[] = [
     summary: 'A field for writing markdown, and a way to see it rendered',
     demos: [
       { label: 'The whole thing', render: () => <MarkdownEditorDemo /> },
+      { label: 'A floating toolbar', render: () => <MarkdownEditorPillDemo /> },
       { label: 'Reading first', render: () => <MarkdownEditorPreviewFirstDemo /> },
       { label: 'Composed by hand', render: () => <MarkdownEditorComposedDemo /> },
       { label: 'A comment box', render: () => <MarkdownEditorComposerDemo /> },

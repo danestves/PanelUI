@@ -17,7 +17,7 @@ For an action that is ordinary rather than irreversible, use [Button](/docs/comp
 ProgressButton ships with the library — no separate install.
 
 ```tsx
-import { ProgressButton, Text, View } from 'panelui-native';
+import { ProgressButton, Frame, Text, View } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -39,10 +39,13 @@ npx panelui-cli@latest add progress-button
 ```tsx
 <ProgressButton>
   <ProgressButton.Label>Hold to confirm</ProgressButton.Label>
+  <ProgressButton.Done />
 </ProgressButton>
 ```
 
 `ProgressButton.Label` renders the text twice on purpose. A single label under a translucent wash goes muddy in the middle of the wipe, which is exactly where the eye is; two labels, each at full contrast on its own ground, never do. Both copies are laid out at the button's own width, so the boundary falls in the middle of a glyph rather than between two differently wrapped lines.
+
+`ProgressButton.Done` is added automatically, so most buttons never name it. Write it out to put something else there — a word beside the tick, an icon of your own — and it replaces the default rather than joining it.
 
 ## Examples
 
@@ -54,6 +57,52 @@ The default: two seconds, and nothing happens until the fill reaches the end.
 <ProgressButton onComplete={() => erase()}>
   <ProgressButton.Label>Hold to erase</ProgressButton.Label>
 </ProgressButton>
+```
+
+### Hold to pay
+
+The fill runs out, the words go, and a tick arrives in their place. That last part is `ProgressButton.Done`, and it is drawn whether or not you name it — a hold that lands and shows nothing leaves the reader checking whether it worked.
+
+The button sits on the tray below the panel rather than among the rows: the rows are what is being paid for, and this is the thing you do about them.
+
+`autoReset` is deliberately absent. A payment that offers itself again a second later is a payment somebody makes twice by leaning on the button.
+
+```tsx
+const [paid, setPaid] = useState(false);
+
+<Frame>
+  <Frame.Header>
+    <Frame.Title>Checkout</Frame.Title>
+    <Frame.Action>Delivered Thursday</Frame.Action>
+  </Frame.Header>
+
+  <Frame.Panel>
+    {items.map((item) => (
+      <Frame.Row key={item.id}>
+        <Frame.Content>
+          <Frame.Title>{item.name}</Frame.Title>
+          <Frame.Description>{item.detail}</Frame.Description>
+        </Frame.Content>
+        <Frame.Actions>
+          <Text size="sm">{item.price}</Text>
+        </Frame.Actions>
+      </Frame.Row>
+    ))}
+  </Frame.Panel>
+
+  <View className="px-4 pb-3 pt-3">
+    <ProgressButton
+      variant="success"
+      haptics
+      fullWidth
+      completed={paid}
+      onComplete={() => setPaid(true)}
+      onCompletedChange={setPaid}
+    >
+      <ProgressButton.Label>{paid ? 'Paid' : 'Hold to pay'}</ProgressButton.Label>
+    </ProgressButton>
+  </View>
+</Frame>
 ```
 
 ### How long the hold is
@@ -102,6 +151,19 @@ const [done, setDone] = useState(false);
 ```tsx
 <ProgressButton haptics variant="destructive" onComplete={() => remove()}>
   <ProgressButton.Label>Hold to delete</ProgressButton.Label>
+</ProgressButton>
+```
+
+### Something else at the end
+
+`ProgressButton.Done` takes children, which replace the tick. Everything inside it is drawn in the fill's own foreground colour, so an icon needs no colour of its own.
+
+```tsx
+<ProgressButton onComplete={() => archive()}>
+  <ProgressButton.Label>Hold to archive</ProgressButton.Label>
+  <ProgressButton.Done>
+    <Text className="text-primary-foreground">Archived</Text>
+  </ProgressButton.Done>
 </ProgressButton>
 ```
 
@@ -163,13 +225,23 @@ const [done, setDone] = useState(false);
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 
+### ProgressButton.Done
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
 
 The fill grows on the UI thread and completion is read off the animation itself, not from a timer running beside it. Two clocks agree only while the app is idle; busy, a timer fires before the fill arrives, and the action happens earlier than the reader watched it happen.
 
-Releasing early drains the fill in proportion to how far it got, so abandoning a hold after a moment does not take the same time as abandoning it near the end. A fixed release makes a barely-started hold feel sticky, which reads as the button resisting being let go.
+**Releasing early plays the fill backwards.** One animation in two directions: same rate, same easing, same stepping under reduced motion. Letting go at nine tenths of a two-second hold takes 1.8 seconds to travel home, which is the 1.8 seconds it took to get there. A fill that vanishes has been deleted; a fill that travels back has been let go, and telling those apart is the reason the wait is drawn on the button at all.
+
+Pressing again while it is on its way back picks it up from where it is rather than restarting the clock, so a second attempt is never slower than the first. `autoReset` and a controlled `completed` going false rewind the same way — the fill is never set to empty, only ever travelled there.
+
+**The completed button stays completed.** Releasing after the fill has arrived does not drain it — only a release *before* it does. `autoReset` empties it after a delay, and a controlled `completed` empties it whenever you say so; without either, the button holds its finished state and stops accepting presses, which is the correct answer for an action that has already happened.
 
 **A few points of finger drift will not abandon a hold.** `pressRetentionOffset` is 16, because a hand resting on a control for two seconds moves.
 
@@ -177,7 +249,9 @@ With the operating system set to reduce motion the fill advances in five steps i
 
 The button announces as a button, with a hint saying it has to be held and a checked state once it has been. A single activation from an assistive technology does nothing on its own, so the hint carries the instruction rather than leaving it to the visible label.
 
-`variant` sets which colour fills: `primary`, `secondary`, `destructive` and `success`. Every one of them draws the label in the fill's own foreground token, so contrast holds in both themes without a hardcoded value.
+**Every variant rests on the same secondary surface, and carries its colour in the label.** `primary`, `secondary`, `destructive` and `success` differ in the word and in what comes across it, not in the shape of the button. Drawn as four different outlines they were four different buttons before anything had happened, and the one thing all of them do — wait to be held — was the thing the drawing did not say.
+
+The label is drawn twice, once on the surface in the variant's colour and once inside the fill in the fill's own foreground, so contrast holds on both sides of the wipe in either theme without a hardcoded value.
 
 ## Public exports
 
@@ -185,4 +259,4 @@ The button announces as a button, with a hint saying it has to be held and a che
 
 **Values:** `ProgressButton`, `useProgressButton`
 
-**Types:** `ProgressButtonProps`, `ProgressButtonLabelProps`, `ProgressButtonVariant`, `ProgressButtonSize`
+**Types:** `ProgressButtonProps`, `ProgressButtonLabelProps`, `ProgressButtonDoneProps`, `ProgressButtonVariant`, `ProgressButtonSize`

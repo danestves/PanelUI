@@ -4,11 +4,12 @@
   "usage": "const [draft, setDraft] = useState('');\n\n<MarkdownEditor value={draft} onValueChange={setDraft} rows={12} />",
   "extraImports": [
     "Button",
+    "MarkdownEditorHandle",
     "Text"
   ],
   "anatomy": "<MarkdownEditor>\n  <MarkdownEditor.Toolbar />   {/* formatting, and the write/preview switch */}\n  <MarkdownEditor.Input />     {/* draws while writing */}\n  <MarkdownEditor.Preview />   {/* draws while previewing */}\n</MarkdownEditor>",
   "parts": {
-    "Toolbar": "The formatting actions and the switch between writing and reading. `actions` chooses which actions appear and in what order; `showModeSwitch` drops the switch for an editor with no preview. It takes children too, which land beside the switch — a word count, a save state, a submit.",
+    "Toolbar": "The formatting actions and the switch between writing and reading. `variant` chooses the drawing: `bar` is the full-width row, `pill` the floating capsule. `actions` chooses which actions appear and in what order; `showModeSwitch` drops the switch for an editor with no preview. The bar takes children too, which land beside the switch — a word count, a save state, a submit.",
     "Input": "The field the markdown is written in — a `Textarea`, so everything that accepts applies. It renders nothing while the preview is up.",
     "Preview": "The draft, rendered. It renders nothing while the field is up, which is what makes the two one pane rather than two."
   },
@@ -25,6 +26,11 @@
         "width": 720,
         "height": 1560
       }
+    },
+    {
+      "title": "A floating toolbar",
+      "description": "`variant=\"pill\"` draws the capsule instead of the row: icon-only buttons grouped by hairlines, with the way out of the writing pane as a round button beside it rather than a segment of it.\n\nIt is a fixed row of targets, so it takes no children — a capsule with a word count in it is a bar with rounded ends. The capsule's own default set is eight actions rather than the bar's; pass `actions` to choose, and the hairlines follow wherever the family changes.",
+      "code": "<MarkdownEditor value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Toolbar variant=\"pill\" />\n  <MarkdownEditor.Input rows={8} placeholder=\"Write something…\" />\n  <MarkdownEditor.Preview emptyText=\"Write a line and press the eye.\" />\n</MarkdownEditor>"
     },
     {
       "title": "Starting on the reading side",
@@ -58,9 +64,14 @@
         "width": 1179,
         "height": 755
       }
+    },
+    {
+      "title": "Your own controls",
+      "description": "A `ref` gives you the same transforms the toolbar runs, so a keyboard accessory, a context-menu entry or a single Bold button somewhere else on the screen does not have to reimplement any of them. `getActive` reports what is already applied where the caret is, which is what a control of your own needs to draw itself correctly.",
+      "code": "const editor = useRef<MarkdownEditorHandle>(null);\n\n<MarkdownEditor ref={editor} value={draft} onValueChange={setDraft}>\n  <MarkdownEditor.Input rows={6} />\n</MarkdownEditor>\n\n<Button onPress={() => editor.current?.apply('bold')}>Bold</Button>\n<Button onPress={() => editor.current?.focus()}>Write</Button>"
     }
   ],
-  "notes": "### Where the caret lands\n\nEvery toolbar button is a function of the text and where the caret is in it, and what makes a formatting toolbar feel broken is never the characters it inserts — it is where the caret ends up afterwards. Three rules hold for all of them:\n\n- **Pressing twice undoes it.** A button that only ever adds is a button you can press once, and every press after that damages the text.\n- **A selection stays selected.** Bolding three words and then italicising the same three is two presses, not a press and a re-selection.\n- **With nothing selected, the caret lands where the writing goes** — between the new markers rather than after them.\n\nA line-level action — heading, list, quote — applies to every line the selection touches, even partly, and removes itself only when *all* of them already have it. A mixed block is a block someone is trying to make uniform, so the useful answer there is to add.\n\n### The field is monospaced, and does not correct you\n\nA markdown source is code as much as it is prose. Autocapitalisation and autocorrection are off, because an editor that capitalises the word after a fence, or rewrites a hyphen into an en dash, is an editor that quietly changes what the document renders as.\n\n### No platform markdown\n\nSwiftUI's `Text` can parse markdown and Jetpack Compose's cannot, so an editor backed by the platform would render on iOS and show a plain string on Android. The parser here is JavaScript and the output is React Native views, which is why the two platforms agree.",
+  "notes": "### What is already applied\n\nA button whose action is in effect where the caret is draws as pressed. Every formatting button is a toggle, and a toggle that looks the same in both states is a toggle nobody discovers is one — the rule below about pressing twice is only useful if the first press is visible.\n\nThe check runs when the caret moves or an action is applied, not on every keystroke: typing a letter cannot change what is applied at the caret, and eight predicates over the whole document per character is work nobody asked for.\n\n### Where the caret lands\n\nEvery toolbar button is a function of the text and where the caret is in it, and what makes a formatting toolbar feel broken is never the characters it inserts — it is where the caret ends up afterwards. Three rules hold for all of them:\n\n- **Pressing twice undoes it.** A button that only ever adds is a button you can press once, and every press after that damages the text.\n- **A selection stays selected.** Bolding three words and then italicising the same three is two presses, not a press and a re-selection.\n- **With nothing selected, the caret lands where the writing goes** — between the new markers rather than after them.\n\nA line-level action — heading, list, quote — applies to every line the selection touches, even partly, and removes itself only when *all* of them already have it. A mixed block is a block someone is trying to make uniform, so the useful answer there is to add.\n\nAfter one, the caret keeps its distance from the **end** of its line rather than from the start. These actions change what sits in front of the text, so a caret held at the same column lands inside the bullet it just gained.\n\nAn inline marker never spans a line break: a selection crossing one is wrapped line by line, because `**one\\ntwo**` is bold in no reader at all.\n\n### Return continues a list\n\nInside `- item` or `1. item`, Return starts the next item at the same indent, and numbered lists count on. On an item with nothing in it, Return ends the list — a writer pressing Return on an empty bullet has run out of items, and the alternative is a trail of empty bullets to delete by hand. Turn it off with `continueLists={false}`.\n\nIt is read off the text change rather than off the key, because a key event in a React Native field cannot be prevented: acting on the key would insert the marker *and* the line break the field was always going to add.\n\n### The field is monospaced, and does not correct you\n\nA markdown source is code as much as it is prose. Autocapitalisation and autocorrection are off, because an editor that capitalises the word after a fence, or rewrites a hyphen into an en dash, is an editor that quietly changes what the document renders as.\n\n### No platform markdown\n\nSwiftUI's `Text` can parse markdown and Jetpack Compose's cannot, so an editor backed by the platform would render on iOS and show a plain string on Android. The parser here is JavaScript and the output is React Native views, which is why the two platforms agree.",
   "previewVideo": {
     "src": "/previews/markdown-editor.mp4",
     "poster": "/previews/markdown-editor-poster.jpg",
