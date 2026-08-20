@@ -191,7 +191,7 @@
     },
     {
       "slug": "markdown-editor",
-      "signature": "8ea85cfcd64f4ab148dd13b10f67bd92f56778f6cabbe09e6ffcdb5db5c380ea"
+      "signature": "7a2c4a4c5733b09660a6d60163cafab1350a008ea8ceadb774e4e6c71a6cf256"
     },
     {
       "slug": "marker",
@@ -267,7 +267,7 @@
     },
     {
       "slug": "progress-button",
-      "signature": "8f77d599c29fb95f39ed9f12ebbc74721f2ccd6409e3bdd4c3f2fee4cc95bbe8"
+      "signature": "59514e9b692c2f12e76d1e122fb86a5041beff989b8488b03c1265c946095698"
     },
     {
       "slug": "qr-code",
@@ -416,6 +416,10 @@
     {
       "slug": "textarea",
       "signature": "7c2427d0c94a4c9f4b5243d80e4a2b2a9e2e6f153d755f80bd514a8ecf86de28"
+    },
+    {
+      "slug": "theme-selector",
+      "signature": "79dbd66aad0e673f35996500d379aa37b5292471ebb83ae038f1eb670e006f08"
     },
     {
       "slug": "thinking-orb",

@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-115 component modules. The **Docs** column is the path under
+116 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -51,6 +51,7 @@ remember is a guess.
 | `Switch` | Animated on/off toggle. | `components/switch` |
 | `TagInput` | A field whose value is a list of tokens rather than a string. | `components/tag-input` |
 | `Textarea` | Text field that runs to several lines, sized in rows. | `components/textarea` |
+| `ThemeSelector` | Light, dark or the device's setting, drawn as three miniature screens. | `components/theme-selector` |
 | `TimePicker` | A time of day, as a wheel, a clock or a swipeable scale. | `components/time-picker` |
 
 ## Overlays

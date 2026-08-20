@@ -173,6 +173,8 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   'toggle-button': () =>
     load13().then((module) => module.ENTRIES_BY_SLUG['toggle-button']),
   textarea: () => load13().then((module) => module.ENTRIES_BY_SLUG['textarea']),
+  'theme-selector': () =>
+    load13().then((module) => module.ENTRIES_BY_SLUG['theme-selector']),
   'tag-input': () =>
     load13().then((module) => module.ENTRIES_BY_SLUG['tag-input']),
   'time-picker': () =>

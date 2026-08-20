@@ -1,0 +1,45 @@
+{
+  "slug": "theme-selector",
+  "intro": "Three miniatures of a screen — light, dark, and the device's own setting — with the chosen one ringed.\n\nA row of words takes a third of the space and says the same thing, so this is not the cheaper control. What it buys is `System`, which is the option people hesitate over: a picture of a screen split down the middle explains it faster than a sentence does, and faster than trying it does.\n\nIt reads the live theme rather than keeping its own copy of the answer, so changing the theme anywhere else in the app moves the ring.\n\nFor a brand picker — Panel, Moon, Grass — use [useTheme](/docs/hooks/use-theme) with swatches of your own. This chooses the mode, not the family.",
+  "usage": "<ThemeSelector label=\"Choose a theme\" />",
+  "extraImports": [
+    "Field",
+    "Text",
+    "View",
+    "useThemeSelection"
+  ],
+  "anatomy": "<ThemeSelector>\n  <ThemeSelector.Option value=\"system\" />\n  <ThemeSelector.Option value=\"light\" />\n  <ThemeSelector.Option value=\"dark\" />\n</ThemeSelector>",
+  "parts": {
+    "ThemeSelector": "The row, and the heading over it. It announces as a radio group and owns which option is chosen.",
+    "ThemeSelector.Option": "One choice: a miniature and the word under it, both inside the target. Takes children to replace the miniature with a drawing of your own."
+  },
+  "partNotes": "Written without children the selector draws system, light and dark in that order, which is the whole component — most uses need no parts at all. Write them out to reorder them, drop one, or rename it: `<ThemeSelector.Option value=\"system\" label=\"Automatic\" />`.",
+  "examples": [
+    {
+      "title": "Three options and a heading",
+      "description": "No children and no value: the selector draws all three and reads the theme the app is actually on.",
+      "code": "<ThemeSelector label=\"Choose a theme\" />"
+    },
+    {
+      "title": "The other drawing",
+      "description": "`variant=\"card\"` draws a framed card with an accent on it instead of an app screen, and cuts the system option on the diagonal rather than down the middle. Same three choices; pick whichever miniature looks more like the app it is sitting in.",
+      "code": "<ThemeSelector variant=\"card\" label=\"Appearance\" />"
+    },
+    {
+      "title": "Light and dark only",
+      "description": "Write the options out to drop one. Worth doing where following the device would be misleading — a reader whose device is set to dark and whose app is pinned to light should not be offered a `System` that changes both.",
+      "code": "<ThemeSelector label=\"Appearance\">\n  <ThemeSelector.Option value=\"light\" />\n  <ThemeSelector.Option value=\"dark\" />\n</ThemeSelector>"
+    },
+    {
+      "title": "Storing the choice",
+      "description": "`applyTheme={false}` stops the selector changing the theme, so the app can save the choice and apply it on the next launch as well as this one. `value` is then what decides which option is ringed.",
+      "code": "const [choice, setChoice] = useState<ThemeSelection>('system');\n\n<ThemeSelector\n  value={choice}\n  applyTheme={false}\n  onValueChange={(next) => {\n    setChoice(next);\n    save(next);\n    apply(next);\n  }}\n/>"
+    },
+    {
+      "title": "Somewhere else in the app",
+      "description": "`useThemeSelection` is the same reading the selector does, for a settings row that reports the choice without offering it.",
+      "code": "const theme = useThemeSelection();\n\n<Field label=\"Appearance\">\n  <Text muted>{theme === 'system' ? 'Follows your device' : theme}</Text>\n</Field>"
+    }
+  ],
+  "notes": "### The miniatures are not made of your theme\n\nThey are drawn from fixed greys, which is the one decision here worth writing down. A preview built from the active theme's tokens shows the reader the theme they already have, three times over — the light option has to look light while the app around it is dark, or it is not a preview of anything. The ring and the labels do use tokens, because those belong to the app rather than to what is being previewed.\n\n### Light and dark stay inside the family\n\nA reader on `moon` who picks Light gets `moon`, not the default light theme. The selector changes the mode and leaves the family alone.\n\n**System is the exception, and cannot be otherwise.** Following the device means following what the device knows, and the device knows light and dark — so choosing it from a named family leaves that family behind. Where that matters, leave `System` out of the row.\n\n### It reads the theme rather than remembering it\n\nThere is already one answer to which theme the app is on, so the selector asks for it instead of keeping a copy that can drift. That is also what makes `System` reportable at all: the moment it is applied it resolves to light or dark, and the resulting theme name is indistinguishable from the same one chosen by hand. What separates them is whether the theme is still following the device, which is what `useThemeSelection` reads.\n\n### Accessibility\n\nThe row announces as a radio group and each option as a radio, so the whole control is one stop with three values rather than three separate buttons. The miniatures are decorative and are not announced — the word under each one is the option's name, and it is inside the target, because at this size it is the easier half to hit."
+}

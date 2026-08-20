@@ -662,6 +662,15 @@ export {
 } from './components/plot';
 export { Textarea, type TextareaProps } from './components/textarea';
 export {
+  ThemeSelector,
+  useThemeSelection,
+  type ThemeSelectorProps,
+  type ThemeSelectorOptionProps,
+  type ThemeSelection,
+  type ThemeSelectorSize,
+  type ThemePreviewVariant,
+} from './components/theme-selector';
+export {
   TagInput,
   type TagInputProps,
   type TagInputVariant,

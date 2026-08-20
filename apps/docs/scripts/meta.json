@@ -815,6 +815,15 @@
       "updatedIn": "0.75.0"
     }
   ],
+  "theme-selector": [
+    "ThemeSelector",
+    "Light, dark or the device's setting, drawn as three miniature screens.",
+    "react native theme switcher dark mode picker",
+    {
+      "addedIn": "0.79.0",
+      "category": "forms"
+    }
+  ],
   "textarea": [
     "Textarea",
     "Text field that runs to several lines, sized in rows.",

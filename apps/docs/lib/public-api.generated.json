@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1163,
-    "values": 309,
-    "types": 854,
-    "modules": 142,
-    "components": 115,
+    "exports": 1170,
+    "values": 311,
+    "types": 859,
+    "modules": 143,
+    "components": 116,
     "hooks": 13
   },
   "groups": {
@@ -4266,6 +4266,41 @@
           },
           {
             "name": "TextareaProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/theme-selector/index.tsx",
+        "slug": "theme-selector",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "ThemeSelector",
+            "kind": "value"
+          },
+          {
+            "name": "useThemeSelection",
+            "kind": "value"
+          },
+          {
+            "name": "ThemeSelectorProps",
+            "kind": "type"
+          },
+          {
+            "name": "ThemeSelectorOptionProps",
+            "kind": "type"
+          },
+          {
+            "name": "ThemeSelection",
+            "kind": "type"
+          },
+          {
+            "name": "ThemeSelectorSize",
+            "kind": "type"
+          },
+          {
+            "name": "ThemePreviewVariant",
             "kind": "type"
           }
         ]

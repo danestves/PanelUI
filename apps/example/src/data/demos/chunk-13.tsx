@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, Pressable, ScrollView, View } from "react-native";
-import { Badge, BellIcon, Button, Card, CardIcon, CheckIcon, FileIcon, FolderIcon, FolderOpenIcon, Frame, InfoIcon, Item, KeyboardAvoider, Label, PlusSquareIcon, ReceiptIcon, SendIcon, ShareNodesIcon, ShieldAlertIcon, ShieldCheckIcon, Spinner, TagInput, Text, Textarea, TimePicker, type TimeValue, formatTime, Timeline, Toast, ToggleButton, ToggleButtonGroup, Tooltip, Tree, useToast } from "panelui-native";
+import { Badge, BellIcon, Button, Card, CardIcon, CheckIcon, FileIcon, FolderIcon, FolderOpenIcon, Frame, InfoIcon, Item, KeyboardAvoider, Label, PlusSquareIcon, ReceiptIcon, SendIcon, ShareNodesIcon, ShieldAlertIcon, ShieldCheckIcon, Spinner, TagInput, Text, Textarea, ThemeSelector, type ThemeSelection, TimePicker, type TimeValue, formatTime, Timeline, Toast, ToggleButton, ToggleButtonGroup, Tooltip, Tree, useToast } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 const PHOTO = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=60';
@@ -1236,6 +1236,31 @@ function ToastDemo() {
   );
 }
 
+/**
+ * The choice stored rather than applied.
+ *
+ * `applyTheme={false}` is what a settings screen wants once the preference has
+ * to survive the app being closed: the app owns the value, writes it down, and
+ * applies it here and on the next launch alike.
+ */
+function ThemeSelectorStoredDemo() {
+  const [choice, setChoice] = useState<ThemeSelection>('system');
+
+  return (
+    <View className="w-full gap-3">
+      <ThemeSelector
+        label="Appearance"
+        value={choice}
+        applyTheme={false}
+        onValueChange={setChoice}
+      />
+      <Text size="sm" muted>
+        Stored as “{choice}” — nothing has changed the theme.
+      </Text>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'toggle-button',
@@ -1267,6 +1292,35 @@ export const ENTRIES: ComponentEntry[] = [
           </View>
         ),
       },
+    ],
+  },
+{
+    slug: 'theme-selector',
+    name: 'ThemeSelector',
+    summary: 'Light, dark or the device, drawn as three miniature screens',
+    demos: [
+      {
+        label: 'Three options and a heading',
+        render: () => <ThemeSelector label="Choose a theme" />,
+      },
+      {
+        label: 'The other drawing',
+        render: () => <ThemeSelector variant="card" label="Appearance" />,
+      },
+      {
+        label: 'Smaller',
+        render: () => <ThemeSelector size="sm" variant="card" />,
+      },
+      {
+        label: 'Light and dark only',
+        render: () => (
+          <ThemeSelector label="Appearance">
+            <ThemeSelector.Option value="light" />
+            <ThemeSelector.Option value="dark" />
+          </ThemeSelector>
+        ),
+      },
+      { label: 'Storing the choice', render: () => <ThemeSelectorStoredDemo /> },
     ],
   },
 {
