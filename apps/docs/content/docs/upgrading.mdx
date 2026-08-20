@@ -12,7 +12,7 @@ an existing app.
 
 | Package              | Current  | Release                                                         | Source                                                                                                 |
 | -------------------- | -------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `panelui-native`     | `0.78.0` | [npm](https://www.npmjs.com/package/panelui-native/v/0.78.0)    | [package.json](https://github.com/panel-ui/PanelUI/blob/main/packages/panelui/package.json)            |
+| `panelui-native`     | `0.79.0` | [npm](https://www.npmjs.com/package/panelui-native/v/0.79.0)    | [package.json](https://github.com/panel-ui/PanelUI/blob/main/packages/panelui/package.json)            |
 | `panelui-cli`        | `0.6.2`  | [npm](https://www.npmjs.com/package/panelui-cli/v/0.6.2)        | [package.json](https://github.com/panel-ui/PanelUI/blob/main/packages/cli/package.json)                |
 | `create-panelui-app` | `0.2.2`  | [npm](https://www.npmjs.com/package/create-panelui-app/v/0.2.2) | [package.json](https://github.com/panel-ui/PanelUI/blob/main/packages/create-panelui-app/package.json) |
 
@@ -93,6 +93,27 @@ since the panes now carry both. Your own wrapper may want the same trim.
 
 [Release](https://github.com/panel-ui/PanelUI/releases/tag/v0.78.0) ·
 [Source notes](https://github.com/panel-ui/PanelUI/blob/main/CHANGELOG.md#migration-0-78-0)
+
+### v0.79.0 — a Marquee is taller, and every ProgressButton variant shares a surface
+
+Nothing breaks and no code has to change, but two things look different.
+
+**Every `Marquee` gains height.** Its pause control used to float in a corner of the track and is
+drawn below the content now, in flow — the way a `Marquee.Group`'s always was. Floating, a 48pt
+target on a strip of badges half that tall was clipped by the track's own edge and sat on the
+content it exists to let you read. A marquee is therefore as tall as its content plus its control,
+and a container given a fixed height spends part of that height on it: a vertical one at `h-40`
+has about sixty points less track than it did.
+
+Pass `showPauseControl={false}` where an equivalent visible control already exists elsewhere, and
+the old height comes back with it.
+
+**Every `ProgressButton` variant rests on the same surface.** `primary`, `destructive` and
+`success` were outlines and are now solid secondary grounds carrying the variant's colour in the
+label. Nothing to change — the fill is unaffected — but a screen of them looks quieter than it did.
+
+[Release](https://github.com/panel-ui/PanelUI/releases/tag/v0.79.0) ·
+[Source notes](https://github.com/panel-ui/PanelUI/blob/main/CHANGELOG.md#migration-0-79-0)
 
 For everything else — additions, fixes and changes that require no migration — continue in the
 [full changelog](https://github.com/panel-ui/PanelUI/blob/main/CHANGELOG.md) or browse

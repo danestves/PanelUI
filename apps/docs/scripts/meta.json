@@ -429,6 +429,7 @@
     "A field for writing markdown, with a formatting toolbar and a rendered preview.",
     "react native markdown editor preview toolbar",
     {
+      "updatedIn": "0.79.0",
       "addedIn": "0.49.0",
       "category": "forms"
     }
@@ -439,7 +440,7 @@
     "react native map maplibre markers clusters",
     {
       "addedIn": "0.24.0",
-      "updatedIn": "0.65.0",
+      "updatedIn": "0.79.0",
       "alpha": true,
       "category": "data"
     }
@@ -467,7 +468,7 @@
     "Content that travels across its container on a loop.",
     "react native marquee ticker infinite scroll",
     {
-      "updatedIn": "0.78.0",
+      "updatedIn": "0.79.0",
       "addedIn": "0.69.0",
       "category": "media"
     }
@@ -533,6 +534,7 @@
     "Press and hold to confirm, with the wait drawn on the button.",
     "react native hold to confirm button",
     {
+      "updatedIn": "0.79.0",
       "addedIn": "0.78.0",
       "category": "actions"
     }
@@ -1001,7 +1003,7 @@
       "group": "ai-components",
       "addedIn": "0.34.0",
       "alpha": true,
-      "updatedIn": "0.41.0"
+      "updatedIn": "0.79.0"
     }
   ],
   "kpi": [

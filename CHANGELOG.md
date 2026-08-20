@@ -9,6 +9,149 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.79.0] — 2026-08-20
+
+### Added
+
+- **`ThemeSelector`**, for choosing light, dark or the device's own setting.
+  Three miniatures of a screen with the chosen one ringed — which costs three
+  times the space a row of words would, and buys `System`. That is the option
+  people hesitate over, and a picture of a screen split down the middle explains
+  it faster than a sentence does. Two drawings: `window` is an app screen split
+  down the middle, `card` a framed card cut on the diagonal.
+
+  It reads the live theme instead of keeping its own copy, so changing the theme
+  anywhere else moves the ring. That is also the only way `System` is reportable
+  at all: applied, it resolves to light or dark, and the result is
+  indistinguishable from the same choice made by hand. **`useThemeSelection`**
+  is the reading, public for a settings row that reports the choice without
+  offering it.
+
+- **`ProgressButton.Done`**, the drawing a completed hold lands on. A tick by
+  default, over the finished fill rather than beside the label, so the button
+  does not change width at the moment it succeeds. One is added unless you write
+  your own.
+
+- **`Panelside.ItemIcon`, `Panelside.ItemLabel` and `Panelside.ItemBadge`** —
+  the three slots a row already had, written out. For a row that needs a
+  different order, a label that is not a string, or something in a slot the prop
+  had no argument for. `icon`, `label` and `badge` stay and stay the right
+  answer for the ordinary row; the two forms compose.
+
+- **`variant` on `MarkdownEditor.Toolbar`.** `pill` is a floating capsule:
+  icon-only buttons grouped by hairlines, with the way out of the writing pane
+  as a round button beside it. `bar` remains the default. A button whose action
+  is already in effect where the caret is now draws as pressed — every one of
+  them is a toggle, and a toggle that looks the same in both states is a toggle
+  nobody discovers is one.
+
+- **An `image` action and a `ref` handle on `MarkdownEditor`.** The handle
+  carries the same transforms the toolbar runs, so a keyboard accessory or a
+  control of your own does not have to reimplement any of them.
+
+- **Return continues a list in `MarkdownEditor`**, at the same indent and
+  counting on through a numbered one; on an item with nothing in it, it ends the
+  list. Off with `continueLists={false}`.
+
+### Changed
+
+- **`ProgressButton` variants rest on one surface.** Three of the four were
+  outlines, which made them four different buttons before anything had happened
+  — and the one thing all of them do, wait to be held, was the thing the drawing
+  did not say. The variant's colour is carried by the label and by the fill.
+
+- **A lone `Marquee` draws its pause control below the content**, in flow, the
+  way a `Marquee.Group` already did. Floating in the corner it was a 48pt target
+  on a strip of badges half that tall: clipped by the track's own edge, and
+  covering the content it exists to let you read. A marquee is now as tall as its
+  content plus its control.
+
+- **`Map` splits its children.** Layers reach the renderer; controls, and any
+  chrome written at the call site, are drawn as a sibling above it where layout
+  still applies. `Map`'s `onPress` also hands back the press in screen
+  coordinates beside the geographic one.
+
+### Fixed
+
+- **`Map.Controls` no longer blanks the map on Android.** Every child was handed
+  to the native map view, which is a real `FrameLayout` there and lays its own
+  children out — so an ordinary view arrived with its computed frame thrown away,
+  stretched over the whole surface at the top-left. The corner a control group
+  asked for never applied, and the map it covered never showed. Reported by
+  [@yashDahiwale](https://github.com/yashDahiwale).
+
+- **`Map`'s `onPress` hands back a coordinate.** It read a field the renderer
+  has never emitted, so the argument was always `undefined`. It type-checked
+  because the props are declared by hand and the declaration carried the same
+  wrong name.
+
+- **`hasMapLibre` tells the truth in Expo Go.** The package resolving is not the
+  question — a client built without the native views has the JavaScript and none
+  of them. `Map` skipped the panel it draws for exactly this case and tried to
+  mount a view nothing had registered.
+
+- **`ProgressButton`'s fill travels back instead of vanishing.** The release was
+  never running: a shared value animated on the UI thread does not report back to
+  JavaScript, so the value read in the press handler was the one from before the
+  hold began, and `cancelAnimation` wrote that stale zero back across the thread.
+  Both directions are started on the thread that owns the value now, and every
+  path to empty — a hold let go, an `autoReset` landing, a controlled reset —
+  goes through one rewind.
+
+- **`ProgressButton` keeps taking presses after a successful hold.** The release
+  that followed one drained the fill, so the button looked untouched while it was
+  in fact complete — and a complete button refuses every press. Two more
+  alongside it: the effect meant to empty a controlled button's fill did the
+  opposite and fired `onComplete` twice, and the prop spread sat below the press
+  handlers, so a caller passing `onPressIn` replaced the gesture the control is.
+
+- **Pausing a `Marquee` freezes it where it is.** `cancelAnimation` already froze
+  the offset exactly where it had reached, and the line after it overwrote that
+  with zero on every toggle. Resuming carries on from where it stopped.
+
+- **Four caret bugs in `MarkdownEditor`.** A line action handed back the whole
+  block selected, so the next keystroke replaced the list it had just made; an
+  inline marker wrapped across a line break, which is emphasis in no reader at
+  all; the code button read only the caret's own line, so pressing it inside a
+  fence wrapped that fence in a second one; and the forced selection after an
+  edit was released before it had arrived, leaving the caret at the end of the
+  document.
+
+### Docs
+
+- Previews for **ColorPicker** and **ProgressButton**, recorded on a device.
+- The **Alpha** mark comes off **AI Input**: two releases without the API moving.
+- Three links in the prose pointed somewhere other than where the page lives,
+  two of them hard 404s — Drawer to Panelside, and AI Input to a Glass page that
+  has never existed.
+- An X link in the landing page's footer.
+
+<a id="migration-0-79-0"></a>
+
+### Migration
+
+Nothing here breaks and no code has to change. Two things look different on their own, which is
+why they are written down rather than left to be noticed.
+
+- **Every existing `Marquee` is taller.** Its pause control used to float in a corner of the
+  track; it is drawn below the content now, in flow, the way a `Marquee.Group`'s always was. A
+  marquee is therefore as tall as its content plus a 48pt control, and a container given a fixed
+  height spends part of that height on it — a vertical one at `h-40` has about sixty points less
+  track than it did. Pass `showPauseControl={false}` where an equivalent visible control already
+  exists elsewhere, and the old height comes back with it.
+
+- **Every `ProgressButton` variant is drawn on the same surface.** `primary`, `destructive` and
+  `success` were outlines and are now solid secondary grounds with the variant's colour in the
+  label. Nothing to change; the fill is unaffected, and a button that was distinguishable before
+  still is.
+
+### Fixed by report
+
+- [#201]: `Map`'s `onPress` and `Map.Controls` on Android, reported by
+  [@yashDahiwale](https://github.com/yashDahiwale).
+
+[#201]: https://github.com/panel-ui/PanelUI/issues/201
+
 ## [0.78.0] — 2026-08-19
 
 ### Added
