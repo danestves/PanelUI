@@ -403,11 +403,9 @@ A streaming transcript in the scene, anchored and scrolling on its own while the
 
 ### Native chat
 
-Panelside has no `native` prop and cannot have one — the platform toolkits ship a switch, a picker, a sheet and a button, and none of them is a pushing navigation panel. What goes native is what is inside it, and not all of it.
+Panelside has no `native` prop and cannot have one — the platform toolkits ship a switch, a picker, a sheet and a button, and none of them is a pushing navigation panel. What goes native is what is inside it.
 
-The composer is `AIInput`, drawn by us rather than handed over. A control the platform draws itself does not survive the scene being moved and scaled on a shared value, which is what the panel does to everything in it — so the native half of this screen is the controls that sit still: the picker, the sheet, and the panel's own compose button.
-
-The composer's keyboard avoidance is off for the same reason. The panel is already moving the scene, and two things lifting one view is one lift too many.
+The composer is `AIInput` under `native`, which hands its own controls to the platform the same way the picker and the sheet beside it are handed over. It is written the way the composer's own chat version is written, keyboard numbers included: the composer owns lifting itself, and is told how far it already sits above the bottom so it does not travel that distance twice.
 
 ```tsx
 <Panelside>
@@ -422,7 +420,14 @@ The composer's keyboard avoidance is off for the same reason. The panel is alrea
 
     <Transcript />
 
-    <AIInput avoidKeyboard={false} value={draft} onValueChange={setDraft} onSubmit={send}>
+    <AIInput
+      native
+      value={draft}
+      onValueChange={setDraft}
+      onSubmit={send}
+      keyboardBottomInset={Math.max(insets.bottom, 12)}
+      keyboardGap={12}
+    >
       <AIInput.Field placeholder="Message the assistant" />
       <AIInput.Toolbar>
         <AIInput.Action label="Attach" icon={<PlusIcon />} onPress={() => setAttaching(true)} />

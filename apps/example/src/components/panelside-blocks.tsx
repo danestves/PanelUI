@@ -576,31 +576,33 @@ function NativeChatScene() {
       </MessageScroller>
 
       {/*
-        `AIInput` without `native`, and deliberately.
+        The composer is `AIInput` under `native`, which hands the field's
+        controls to the platform the same way the picker and the sheet above it
+        are handed over.
 
-        The composer's controls under `native` are platform buttons hosting
-        their icons, and hosted platform views inside the scene Panelside
-        transforms crash on the first tap. The panel moves and scales the whole
-        scene on a shared value; a view the platform is drawing itself does not
-        survive being moved that way. So the composer here is ours, and the
-        native half of this screen is the controls that sit still — the picker,
-        the sheet, and the panel's own compose button.
-
-        Keyboard avoidance is off for the same reason the panel exists: it is
-        already moving the scene, and two things lifting the same view is one
-        lift too many. The block does the bottom inset itself instead.
+        Written the way the composer's own chat version is written, down to the
+        keyboard numbers: the composer owns lifting itself, and is told how far
+        it already sits above the bottom so it does not travel that distance
+        twice. Deviating from that shape is what broke it the first time.
       */}
-      <View className="px-3 pt-2" style={{ paddingBottom: Math.max(insets.bottom, 10) }}>
-        <AIInput avoidKeyboard={false} value={draft} onValueChange={setDraft} onSubmit={send}>
+      <View className="px-3 pt-2" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
+        <AIInput
+          native
+          value={draft}
+          onValueChange={setDraft}
+          onSubmit={send}
+          keyboardBottomInset={Math.max(insets.bottom, 12)}
+          keyboardGap={12}
+        >
           <AIInput.Field placeholder="Message the assistant" />
           <AIInput.Toolbar>
             <AIInput.Action
               label="Attach"
-              icon={<PlusIcon size={20} />}
+              icon={<PlusIcon size={17} />}
               onPress={() => setAttaching(true)}
             />
             <AIInput.Spacer />
-            <AIInput.Action label="Dictate" icon={<MicIcon size={19} />} />
+            <AIInput.Action label="Dictate" icon={<MicIcon size={15} />} />
             <AIInput.Submit />
           </AIInput.Toolbar>
         </AIInput>
