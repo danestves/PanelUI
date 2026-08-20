@@ -40,6 +40,8 @@ export const site = {
   package: 'panelui-native',
   repo: 'https://github.com/panel-ui/PanelUI',
   npm: 'https://www.npmjs.com/package/panelui-native',
+  /** Where the library is written about as it is being built. */
+  x: 'https://x.com/KhalidDevLog',
   /**
    * Google Analytics measurement ID. Not a secret — it ships in the page
    * source either way — but it lives here so a fork or a preview deploy can
