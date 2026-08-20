@@ -72,9 +72,45 @@ test('Marquee ships a visible user pause control by default', async () => {
   );
   assert.match(source, /showPauseControl = true/);
   assert.match(source, /const moving = playing && !userPaused/);
-  assert.match(source, /<Pressable[\s\S]*accessibilityRole="button"[\s\S]*min-h-12 min-w-12/);
+  assert.match(source, /<Pressable[\s\S]*accessibilityRole="button"[\s\S]*min-h-12/);
   assert.match(source, /onPlayingChange\?\.\(!next\)/);
   assert.match(source, /\{userPaused \? playLabel : pauseLabel\}/);
+
+  // Both controls — a lone marquee's and a group's — are drawn below the
+  // content in flow. Floating, a 48pt target was clipped by the track's own
+  // `overflow-hidden` and covered the content it exists to let you read.
+  const controls = source.match(/className="min-h-12 self-end[^"]*"/g) ?? [];
+  assert.equal(controls.length, 2);
+  for (const control of controls) assert.doesNotMatch(control, /absolute/);
+});
+
+test('a Marquee only offers to pause motion it actually has', async () => {
+  const source = await readFile(
+    new URL('../src/components/marquee/index.tsx', import.meta.url),
+    'utf8'
+  );
+  // Content that never measured never moves, and a control offering to stop it
+  // is the same lie as a disabled button with no reason on it.
+  assert.match(source, /const live = playing && !reducedMotion && period > 0 && speed > 0/);
+  assert.match(source, /\{showControl && live \?/);
+  // A group draws one control for its rows, so it has to be told by them.
+  assert.match(source, /liveRows\.size > 0/);
+});
+
+test('pausing a Marquee freezes it where it is', async () => {
+  const source = await readFile(
+    new URL('../src/components/marquee/index.tsx', import.meta.url),
+    'utf8'
+  );
+  // `cancelAnimation` leaves the offset where it reached, so the only reset
+  // allowed is the one a re-measure forces — `period` changing, and nothing
+  // else. Zeroing on every `moving` toggle sent the content back to the start.
+  const reset = source.match(/cancelAnimation\(offset\);\n\s*offset\.value = 0;\n\s*\}, \[offset, period\]\);/);
+  assert.ok(reset, 'the offset reset is keyed to the measurement, not to the pause');
+  // And the first leg after a resume covers the distance left rather than the
+  // whole loop, or the lap after a pause runs slower than every other lap.
+  assert.match(source, /const remaining = period - from;/);
+  assert.match(source, /duration: cycle \* \(remaining \/ period\)/);
 });
 
 test('only the spoken Marquee copy can receive pointer or keyboard interaction', async () => {

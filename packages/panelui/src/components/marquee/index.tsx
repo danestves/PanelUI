@@ -46,8 +46,10 @@
  */
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useId,
   useMemo,
   useState,
   type ComponentType,
@@ -131,6 +133,15 @@ export interface MarqueeProps extends Omit<ViewProps, 'children'> {
 interface MarqueeGroupContextValue {
   /** True while the group's control is holding everything in it still. */
   paused: boolean;
+  /**
+   * How a marquee inside the group reports whether it has a loop to stop.
+   *
+   * The group draws one control for everything in it, and it should not offer
+   * to pause content that never measured — the failure mode a marquee already
+   * has, where a child with no intrinsic size never starts. Only the marquees
+   * themselves know that, so they say so.
+   */
+  report: (id: string, live: boolean) => void;
 }
 
 const MarqueeGroupContext = createContext<MarqueeGroupContextValue | null>(null);
@@ -246,6 +257,24 @@ function MarqueeRoot({
     setContent(horizontal ? width : height);
   };
 
+  /*
+   * Whether there is motion here at all: content that measured, a speed to
+   * travel it at, and a `playing` that has not already stopped it from
+   * outside. A control offering to pause a still marquee is the same lie as a
+   * disabled button with no reason on it.
+   */
+  const live = playing && !reducedMotion && period > 0 && speed > 0;
+
+  // Reported to the group, if there is one, so its single control can be
+  // decided the same way this one's is.
+  const id = useId();
+  const report = group?.report;
+  useEffect(() => {
+    if (!report) return undefined;
+    report(id, live);
+    return () => report(id, false);
+  }, [report, id, live]);
+
   // Nothing to loop, so nothing to clip or clone: render the content plainly
   // and let it sit where it falls.
   if (reducedMotion) {
@@ -262,56 +291,61 @@ function MarqueeRoot({
   }
 
   return (
-    <View
-      className={cn('overflow-hidden', className)}
-      style={style}
-      onLayout={onContainerLayout}
-      {...props}
-    >
-      {/* Measured, never seen. A scroller on this axis is what frees the
-          content to report its own size instead of the container's. */}
-      <ScrollView
-        horizontal={horizontal}
-        scrollEnabled={false}
-        style={styles.measure}
-        pointerEvents="none"
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-      >
-        <InertView
-          inert={Platform.OS === 'web' ? true : undefined}
-          onLayout={onContentLayout}
+    <View className={cn('gap-3', className)} style={style} onLayout={onLayout} {...props}>
+      {/* The track, and only the track. The control below it is not clipped by
+          this and does not travel with it. */}
+      <View className="flex-1 overflow-hidden" onLayout={onContainerLayout}>
+        {/* Measured, never seen. A scroller on this axis is what frees the
+            content to report its own size instead of the container's. */}
+        <ScrollView
+          horizontal={horizontal}
+          scrollEnabled={false}
+          style={styles.measure}
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
         >
-          {children}
-        </InertView>
-      </ScrollView>
+          <InertView
+            inert={Platform.OS === 'web' ? true : undefined}
+            onLayout={onContentLayout}
+          >
+            {children}
+          </InertView>
+        </ScrollView>
 
-      <Animated.View style={[StyleSheet.absoluteFill, trackStyle]} pointerEvents="box-none">
-        {copies.map((index) => {
-          // Index 1 is the copy that starts flush with the container's edge,
-          // and it is the one a screen reader is given.
-          const spoken = index === 1;
-          const at = (index - 1) * period;
-          return (
-            <InertView
-              key={index}
-              style={[styles.copy, horizontal ? { left: at } : { top: at }]}
-              pointerEvents={spoken ? 'box-none' : 'none'}
-              inert={Platform.OS === 'web' && !spoken ? true : undefined}
-              aria-hidden={!spoken}
-              accessibilityElementsHidden={!spoken}
-              importantForAccessibility={spoken ? 'auto' : 'no-hide-descendants'}
-            >
-              {children}
-            </InertView>
-          );
-        })}
-      </Animated.View>
-      {showControl && playing && period > 0 && speed > 0 ? (
+        <Animated.View style={[StyleSheet.absoluteFill, trackStyle]} pointerEvents="box-none">
+          {copies.map((index) => {
+            // Index 1 is the copy that starts flush with the container's edge,
+            // and it is the one a screen reader is given.
+            const spoken = index === 1;
+            const at = (index - 1) * period;
+            return (
+              <InertView
+                key={index}
+                style={[styles.copy, horizontal ? { left: at } : { top: at }]}
+                pointerEvents={spoken ? 'box-none' : 'none'}
+                inert={Platform.OS === 'web' && !spoken ? true : undefined}
+                aria-hidden={!spoken}
+                accessibilityElementsHidden={!spoken}
+                importantForAccessibility={spoken ? 'auto' : 'no-hide-descendants'}
+              >
+                {children}
+              </InertView>
+            );
+          })}
+        </Animated.View>
+      </View>
+      {showControl && live ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={userPaused ? playLabel : pauseLabel}
-          className="absolute bottom-2 end-2 min-h-12 min-w-12 items-center justify-center rounded-full border border-border bg-background/95 px-3"
+          /*
+           * Below the content, in flow, the way a group's control already is.
+           * Floating over the track it was clipped by the track's own
+           * `overflow-hidden` — a 48pt target on a strip of badges half that
+           * tall — and it covered the content it was there to let you read.
+           */
+          className="min-h-12 self-end items-center justify-center rounded-full border border-border bg-background px-4"
           onPress={() => {
             const next = !userPaused;
             setUserPaused(next);
@@ -375,14 +409,27 @@ function MarqueeGroup({
   ...props
 }: MarqueeGroupProps) {
   const [userPaused, setUserPaused] = useState(false);
+  const [liveRows, setLiveRows] = useState<ReadonlySet<string>>(() => new Set());
   const reducedMotion = useReducedMotion();
 
-  const value = useMemo(() => ({ paused: userPaused }), [userPaused]);
+  // Each marquee inside says whether it has a loop to stop, and the group's
+  // control is drawn only if at least one of them does.
+  const report = useCallback((id: string, live: boolean) => {
+    setLiveRows((current) => {
+      if (current.has(id) === live) return current;
+      const next = new Set(current);
+      if (live) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const value = useMemo(() => ({ paused: userPaused, report }), [userPaused, report]);
 
   // Nothing is moving, so there is nothing to stop. The control is not hidden
   // to save space — offering to pause content that is already still is the
   // same lie as a disabled button with no reason on it.
-  const showControl = showPauseControl && playing && !reducedMotion;
+  const showControl = showPauseControl && playing && !reducedMotion && liveRows.size > 0;
 
   return (
     <MarqueeGroupContext.Provider value={value}>
