@@ -1468,9 +1468,6 @@ export const ENTRIES: ComponentEntry[] = [
             <ProgressButton autoReset fullWidth onComplete={() => {}}>
               <ProgressButton.Label>primary</ProgressButton.Label>
             </ProgressButton>
-            <ProgressButton variant="secondary" autoReset fullWidth onComplete={() => {}}>
-              <ProgressButton.Label>secondary</ProgressButton.Label>
-            </ProgressButton>
             <ProgressButton variant="destructive" autoReset fullWidth onComplete={() => {}}>
               <ProgressButton.Label>destructive</ProgressButton.Label>
             </ProgressButton>
