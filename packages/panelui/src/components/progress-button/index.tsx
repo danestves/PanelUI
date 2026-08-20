@@ -81,7 +81,6 @@ import {
   DEFAULT_AUTO_RESET_DELAY,
   releaseDuration,
   resolveHoldDuration,
-  rewindDuration,
 } from './progress-button-hold';
 
 /** How many steps the reduced-motion fill advances in. */
@@ -291,7 +290,6 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
 ) {
   const slots = progressButtonVariants({ variant, size, fullWidth, disabled });
   const duration = resolveHoldDuration(holdDuration);
-  const rewind = rewindDuration(duration);
   const reducedMotion = useReducedMotion();
 
   const progress = useSharedValue(0);
@@ -373,21 +371,19 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
     if (progress.value <= 0) return;
     progress.value = withTiming(0, {
       /*
-       * The fill run backwards, not a snap back to empty.
+       * The fill, played backwards.
        *
-       * The wait was drawn on the button, so undoing it is worth drawing too —
-       * the reader watching the fill go is what tells them nothing was
-       * confirmed. Faster than the fill, because this is undoing rather than
-       * reporting, and proportional to how far it got: a hold abandoned at a
-       * tenth of the way should not take as long to give up as one abandoned
-       * at nine tenths.
+       * Same rate, same easing, same stepping under reduced motion — only the
+       * direction differs. Let go at nine tenths of a two-second hold and the
+       * fill takes 1.8 seconds to travel back, which is the 1.8 seconds it
+       * took to get there. A fill that vanishes has been deleted; a fill that
+       * travels back has been let go, and the difference is the whole reason
+       * the wait is drawn on the button in the first place.
        */
-      duration: releaseDuration(progress.value, rewind),
-      // Linear, like the fill. An eased release decelerates into empty, which
-      // reads as the button settling rather than as the wait being discarded.
-      easing: Easing.linear,
+      duration: releaseDuration(progress.value, duration),
+      easing: reducedMotion ? Easing.steps(REDUCED_STEPS, true) : Easing.linear,
     });
-  }, [progress, rewind]);
+  }, [progress, duration, reducedMotion]);
 
   const reset = useCallback(() => {
     cancelAnimation(progress);
@@ -630,11 +626,7 @@ export {
   DEFAULT_AUTO_RESET_DELAY,
   DEFAULT_HOLD_DURATION,
   DEFAULT_RELEASE_DURATION,
-  MAX_REWIND_DURATION,
-  MIN_REWIND_DURATION,
-  REWIND_FRACTION,
   isComplete,
   releaseDuration,
   resolveHoldDuration,
-  rewindDuration,
 } from './progress-button-hold';

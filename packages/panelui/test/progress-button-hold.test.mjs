@@ -15,12 +15,9 @@ import {
   DEFAULT_AUTO_RESET_DELAY,
   DEFAULT_HOLD_DURATION,
   DEFAULT_RELEASE_DURATION,
-  MAX_REWIND_DURATION,
-  MIN_REWIND_DURATION,
   isComplete,
   releaseDuration,
   resolveHoldDuration,
-  rewindDuration,
 } from '../src/components/progress-button/progress-button-hold.ts';
 
 test('a hold cannot be made instant', () => {
@@ -47,6 +44,16 @@ test('only a full fill counts as a confirmation', () => {
   assert.equal(isComplete(0), false);
 });
 
+test('the release is the fill played backwards, at the fill\'s own rate', () => {
+  // Whatever the hold was, giving it back covers the distance left at exactly
+  // the rate it was earned at: half a 3000ms hold takes 1500ms to travel home.
+  for (const hold of [600, 2000, 3500]) {
+    assert.equal(releaseDuration(1, hold), hold);
+    assert.equal(releaseDuration(0.5, hold), hold / 2);
+    assert.equal(releaseDuration(0.9, hold), hold * 0.9);
+  }
+});
+
 test('the fill drains in proportion to how far it got', () => {
   const far = releaseDuration(1);
   const near = releaseDuration(0.1);
@@ -56,6 +63,12 @@ test('the fill drains in proportion to how far it got', () => {
   // than let go.
   assert.ok(releaseDuration(0) >= 80);
   assert.ok(releaseDuration(0.001) >= 80);
+});
+
+test('the release default is the hold default, not a number of its own', () => {
+  // Two constants that have to stay equal is one constant. The component
+  // passes the resolved hold duration anyway; this is only the fallback.
+  assert.equal(DEFAULT_RELEASE_DURATION, DEFAULT_HOLD_DURATION);
 });
 
 test('out-of-range progress cannot produce a negative or unbounded release', () => {
@@ -83,26 +96,6 @@ test('completion is read off the animation, not timed beside it', async () => {
     /setTimeout\([^)]*\bfinish\b/,
     'completion must not be scheduled on a JS timer'
   );
-});
-
-test('the rewind is scaled to the hold, and clamped at both ends', () => {
-  // The drain is the fill run backwards, so a longer hold gets a longer rewind
-  // — but not an unbounded one, or a ten-second hold spends four seconds
-  // disagreeing with the reader who let go.
-  assert.equal(rewindDuration(1000), 400);
-  assert.ok(rewindDuration(3000) > rewindDuration(1000));
-  assert.equal(rewindDuration(200), MIN_REWIND_DURATION);
-  assert.equal(rewindDuration(60000), MAX_REWIND_DURATION);
-});
-
-test('a rewind is slower than a snap, and never longer than the hold', () => {
-  for (const hold of [200, 600, 2000, 3500, 10000]) {
-    const rewind = rewindDuration(hold);
-    assert.ok(rewind >= MIN_REWIND_DURATION);
-    assert.ok(rewind <= MAX_REWIND_DURATION);
-    // Undoing, not reporting: the release always beats the fill it is undoing.
-    assert.ok(rewind < hold || hold <= MIN_REWIND_DURATION);
-  }
 });
 
 test('the auto-reset delay is a real default', () => {

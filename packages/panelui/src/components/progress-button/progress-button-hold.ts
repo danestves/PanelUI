@@ -9,22 +9,14 @@
 export const DEFAULT_HOLD_DURATION = 2000;
 
 /**
- * The longest a full fill takes to rewind, and the shortest.
+ * Milliseconds a complete fill takes to rewind, when the hold length is not
+ * known — the default only exists so {@link releaseDuration} has one.
  *
- * The drain is the fill run backwards rather than a snap, so it is derived from
- * the hold rather than fixed: a three-second hold that empties in a quarter of
- * a second reads as the button discarding the wait, and the reader watching it
- * go is what tells them nothing was confirmed. Faster than the fill, because it
- * is undoing rather than reporting — see {@link rewindDuration}.
+ * The component always passes the hold's own duration instead: the drain is
+ * the fill running backwards at the same rate, so a two-second hold takes two
+ * seconds to give back.
  */
-export const MIN_REWIND_DURATION = 200;
-export const MAX_REWIND_DURATION = 700;
-
-/** What fraction of the hold a complete rewind takes. */
-export const REWIND_FRACTION = 0.4;
-
-/** Milliseconds the fill takes to drain when a hold is abandoned. */
-export const DEFAULT_RELEASE_DURATION = 240;
+export const DEFAULT_RELEASE_DURATION = DEFAULT_HOLD_DURATION;
 
 /** Milliseconds before an `autoReset` button offers itself again. */
 export const DEFAULT_AUTO_RESET_DELAY = 1000;
@@ -46,10 +38,14 @@ export function resolveHoldDuration(duration: number | undefined): number {
 /**
  * How long the fill should take to drain from where it is.
  *
- * Proportional to how far it got, so abandoning a hold at a tenth of the way
- * does not take the same quarter-second as abandoning it at nine tenths. A
- * fixed release makes a barely-started hold feel sticky, which reads as the
- * control resisting being let go.
+ * The fill, run backwards. `full` is the hold's own duration, so the drain
+ * covers the distance left at exactly the rate it was filled at: let go at
+ * nine tenths of a two-second hold and it takes 1.8 seconds to give back, the
+ * same 1.8 seconds it took to earn.
+ *
+ * That is the point of it. The wait was drawn on the button, so undoing the
+ * wait is worth drawing too — a fill that vanishes has been deleted, and a
+ * fill that travels back has been let go.
  */
 export function releaseDuration(
   progress: number,
@@ -57,19 +53,6 @@ export function releaseDuration(
 ): number {
   const travelled = Math.min(1, Math.max(0, progress));
   return Math.max(80, full * travelled);
-}
-
-/**
- * How long a complete rewind takes, for a hold of a given length.
- *
- * Scaled to the hold so the drain is recognisably the same motion in reverse,
- * and clamped at both ends: a 200ms hold should not empty in 80ms, which is a
- * flicker, and a ten-second one should not take four seconds to give up, which
- * is the reader waiting for the button to finish disagreeing with them.
- */
-export function rewindDuration(holdDuration: number): number {
-  const scaled = holdDuration * REWIND_FRACTION;
-  return Math.min(MAX_REWIND_DURATION, Math.max(MIN_REWIND_DURATION, scaled));
 }
 
 /**
