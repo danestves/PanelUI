@@ -66,6 +66,13 @@ const themeSelectorVariants = tv({
      * miniature would change size as you picked it.
      */
     frame: 'overflow-hidden rounded-xl border-2 p-1',
+    /*
+     * The artwork's own corners, rounded to sit concentrically inside the
+     * frame: the frame's radius less the padding between them. A square
+     * miniature inside a rounded ring reads as a screenshot somebody pasted in
+     * — the two edges have to curve together or neither should.
+     */
+    preview: 'overflow-hidden rounded-lg',
     label: 'text-center',
   },
   variants: {
@@ -249,13 +256,15 @@ function ThemeSelectorOption({
       className={slots.option({ className })}
     >
       <View className={slots.frame()}>
-        {children ?? (
-          <ThemePreview
-            mode={value}
-            variant={context.variant}
-            width={PREVIEW_WIDTH[context.size]}
-          />
-        )}
+        <View className={slots.preview()}>
+          {children ?? (
+            <ThemePreview
+              mode={value}
+              variant={context.variant}
+              width={PREVIEW_WIDTH[context.size]}
+            />
+          )}
+        </View>
       </View>
       <Text size="sm" className={slots.label()}>
         {name}

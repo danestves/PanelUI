@@ -108,13 +108,23 @@ function WindowHalf({ palette, side }: { palette: Palette; side: 'left' | 'right
  * card — a framed card, with an accent on it
  * -------------------------------------------------------------------------- */
 
+/*
+ * The card fills its box rather than floating inside it.
+ *
+ * It used to carry a margin of its own, which then sat on top of the padding
+ * between the artwork and the ring around it — two gaps doing one job, and the
+ * bigger the miniature the further apart they held the two edges.
+ */
+const CARD_FRAME = { x: 0, y: 0, width: 88, height: 70, rx: 16 } as const;
+const CARD_SURFACE = { x: 8, y: 8, width: 72, height: 54, rx: 10 } as const;
+
 function CardBody({ palette }: { palette: Palette }) {
   return (
     <>
-      <Rect x={4} y={4} width={80} height={62} rx={14} fill={palette.ground} />
-      <Rect x={12} y={12} width={64} height={46} rx={9} fill={palette.surface} />
-      <Rect x={20} y={21} width={32} height={4} rx={2} fill={palette.line} />
-      <Rect x={20} y={29} width={22} height={4} rx={2} fill={palette.line} />
+      <Rect {...CARD_FRAME} fill={palette.ground} />
+      <Rect {...CARD_SURFACE} fill={palette.surface} />
+      <Rect x={17} y={18} width={34} height={4} rx={2} fill={palette.line} />
+      <Rect x={17} y={26} width={23} height={4} rx={2} fill={palette.line} />
     </>
   );
 }
@@ -160,10 +170,10 @@ export function ThemePreview({ mode, variant = 'window', width }: ThemePreviewPr
             */}
             <Defs>
               <ClipPath id={`${clip}-frame`}>
-                <Rect x={4} y={4} width={80} height={62} rx={14} />
+                <Rect {...CARD_FRAME} />
               </ClipPath>
               <ClipPath id={`${clip}-card`}>
-                <Rect x={12} y={12} width={64} height={46} rx={9} />
+                <Rect {...CARD_SURFACE} />
               </ClipPath>
             </Defs>
             <G clipPath={`url(#${clip}-frame)`}>
@@ -175,7 +185,7 @@ export function ThemePreview({ mode, variant = 'window', width }: ThemePreviewPr
           </>
         ) : null}
 
-        <Circle cx={62} cy={45} r={7} fill={ACCENT} />
+        <Circle cx={64} cy={47} r={8} fill={ACCENT} />
       </Svg>
     );
   }
