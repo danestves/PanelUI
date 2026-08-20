@@ -576,22 +576,22 @@ function NativeChatScene() {
       </MessageScroller>
 
       {/*
-        `native` on the composer reaches every control in it — the two actions
-        and the submit button are all platform buttons in the system material.
-        The card around them is still ours: there is no platform composer.
+        `AIInput` without `native`, and deliberately.
 
-        Keyboard avoidance is turned off here because the panel is already
-        moving the whole scene, and two things lifting the same view is one
+        The composer's controls under `native` are platform buttons hosting
+        their icons, and hosted platform views inside the scene Panelside
+        transforms crash on the first tap. The panel moves and scales the whole
+        scene on a shared value; a view the platform is drawing itself does not
+        survive being moved that way. So the composer here is ours, and the
+        native half of this screen is the controls that sit still — the picker,
+        the sheet, and the panel's own compose button.
+
+        Keyboard avoidance is off for the same reason the panel exists: it is
+        already moving the scene, and two things lifting the same view is one
         lift too many. The block does the bottom inset itself instead.
       */}
       <View className="px-3 pt-2" style={{ paddingBottom: Math.max(insets.bottom, 10) }}>
-        <AIInput
-          native
-          avoidKeyboard={false}
-          value={draft}
-          onValueChange={setDraft}
-          onSubmit={send}
-        >
+        <AIInput avoidKeyboard={false} value={draft} onValueChange={setDraft} onSubmit={send}>
           <AIInput.Field placeholder="Message the assistant" />
           <AIInput.Toolbar>
             <AIInput.Action
