@@ -27,6 +27,7 @@
  * below against the package rather than assuming they survived.
  */
 import type { ComponentType, ReactElement, ReactNode, Ref } from 'react';
+import { TurboModuleRegistry } from 'react-native';
 
 /** `[longitude, latitude]` — the order the style spec uses, not the spoken one. */
 export type LngLat = [number, number];
@@ -176,11 +177,34 @@ interface MapLibreModule {
 }
 
 /**
+ * Whether the renderer's native half is actually in this binary.
+ *
+ * The JavaScript resolving is not the question. A project that installed the
+ * package and then ran in a client built without it — Expo Go being the one
+ * everybody meets — has the JavaScript and none of the native views, and a
+ * `require` that succeeds there is a `require` that lies. The component would
+ * then try to mount a view nothing has registered, which is a crash in native
+ * code where a `try` in JavaScript has nothing to catch.
+ *
+ * `TurboModuleRegistry.get` answers the real question and returns null instead
+ * of throwing, so the graceful fallback the component already draws is reached
+ * rather than skipped.
+ */
+function nativeRendererPresent(): boolean {
+  try {
+    return TurboModuleRegistry.get('MLRNMapViewModule') !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * The renderer, or null when it is not installed. Resolved once at module
  * load — the require is cheap, and caching it keeps a try/catch out of render.
  */
 const maplibre: MapLibreModule | null = (() => {
   try {
+    if (!nativeRendererPresent()) return null;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('@maplibre/maplibre-react-native') as MapLibreModule;
   } catch {
@@ -191,9 +215,10 @@ const maplibre: MapLibreModule | null = (() => {
 /**
  * True when a map can actually be drawn.
  *
- * False in any client that cannot load native modules, and in any project that
- * has not installed the renderer. Worth checking before routing somewhere whose
- * whole content is a map.
+ * False in any client that cannot load native modules — Expo Go included, even
+ * with the package installed — and in any project that has not installed the
+ * renderer. Worth checking before routing somewhere whose whole content is a
+ * map.
  */
 export const hasMapLibre = maplibre !== null;
 
