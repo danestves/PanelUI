@@ -8,6 +8,21 @@
 /** Milliseconds a hold has to be sustained before it counts. */
 export const DEFAULT_HOLD_DURATION = 2000;
 
+/**
+ * The longest a full fill takes to rewind, and the shortest.
+ *
+ * The drain is the fill run backwards rather than a snap, so it is derived from
+ * the hold rather than fixed: a three-second hold that empties in a quarter of
+ * a second reads as the button discarding the wait, and the reader watching it
+ * go is what tells them nothing was confirmed. Faster than the fill, because it
+ * is undoing rather than reporting — see {@link rewindDuration}.
+ */
+export const MIN_REWIND_DURATION = 200;
+export const MAX_REWIND_DURATION = 700;
+
+/** What fraction of the hold a complete rewind takes. */
+export const REWIND_FRACTION = 0.4;
+
 /** Milliseconds the fill takes to drain when a hold is abandoned. */
 export const DEFAULT_RELEASE_DURATION = 240;
 
@@ -42,6 +57,19 @@ export function releaseDuration(
 ): number {
   const travelled = Math.min(1, Math.max(0, progress));
   return Math.max(80, full * travelled);
+}
+
+/**
+ * How long a complete rewind takes, for a hold of a given length.
+ *
+ * Scaled to the hold so the drain is recognisably the same motion in reverse,
+ * and clamped at both ends: a 200ms hold should not empty in 80ms, which is a
+ * flicker, and a ten-second one should not take four seconds to give up, which
+ * is the reader waiting for the button to finish disagreeing with them.
+ */
+export function rewindDuration(holdDuration: number): number {
+  const scaled = holdDuration * REWIND_FRACTION;
+  return Math.min(MAX_REWIND_DURATION, Math.max(MIN_REWIND_DURATION, scaled));
 }
 
 /**

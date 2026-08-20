@@ -15,9 +15,12 @@ import {
   DEFAULT_AUTO_RESET_DELAY,
   DEFAULT_HOLD_DURATION,
   DEFAULT_RELEASE_DURATION,
+  MAX_REWIND_DURATION,
+  MIN_REWIND_DURATION,
   isComplete,
   releaseDuration,
   resolveHoldDuration,
+  rewindDuration,
 } from '../src/components/progress-button/progress-button-hold.ts';
 
 test('a hold cannot be made instant', () => {
@@ -80,6 +83,26 @@ test('completion is read off the animation, not timed beside it', async () => {
     /setTimeout\([^)]*\bfinish\b/,
     'completion must not be scheduled on a JS timer'
   );
+});
+
+test('the rewind is scaled to the hold, and clamped at both ends', () => {
+  // The drain is the fill run backwards, so a longer hold gets a longer rewind
+  // — but not an unbounded one, or a ten-second hold spends four seconds
+  // disagreeing with the reader who let go.
+  assert.equal(rewindDuration(1000), 400);
+  assert.ok(rewindDuration(3000) > rewindDuration(1000));
+  assert.equal(rewindDuration(200), MIN_REWIND_DURATION);
+  assert.equal(rewindDuration(60000), MAX_REWIND_DURATION);
+});
+
+test('a rewind is slower than a snap, and never longer than the hold', () => {
+  for (const hold of [200, 600, 2000, 3500, 10000]) {
+    const rewind = rewindDuration(hold);
+    assert.ok(rewind >= MIN_REWIND_DURATION);
+    assert.ok(rewind <= MAX_REWIND_DURATION);
+    // Undoing, not reporting: the release always beats the fill it is undoing.
+    assert.ok(rewind < hold || hold <= MIN_REWIND_DURATION);
+  }
 });
 
 test('the auto-reset delay is a real default', () => {
