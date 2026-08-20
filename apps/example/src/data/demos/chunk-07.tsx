@@ -957,17 +957,47 @@ function ProgressButtonPayDemo() {
   const [paid, setPaid] = useState(false);
 
   return (
-    <Card className="w-full">
-      <Card.Content className="gap-4">
-        <View className="flex-row items-baseline justify-between">
-          <Text size="sm" muted>
-            Total
-          </Text>
-          <Text size="2xl" weight="semibold">
-            £42.60
-          </Text>
-        </View>
-        <Separator />
+    <Frame className="w-full">
+      <Frame.Header>
+        <Frame.Title>Checkout</Frame.Title>
+        <Frame.Action>Delivered Thursday</Frame.Action>
+      </Frame.Header>
+
+      <Frame.Panel>
+        <Frame.Row>
+          <Frame.Content>
+            <Frame.Title>Kettle</Frame.Title>
+            <Frame.Description>Matte black</Frame.Description>
+          </Frame.Content>
+          <Frame.Actions>
+            <Text size="sm">£34.00</Text>
+          </Frame.Actions>
+        </Frame.Row>
+        <Frame.Row>
+          <Frame.Content>
+            <Frame.Title>Delivery</Frame.Title>
+            <Frame.Description>Before noon</Frame.Description>
+          </Frame.Content>
+          <Frame.Actions>
+            <Text size="sm">£8.60</Text>
+          </Frame.Actions>
+        </Frame.Row>
+        <Frame.Row>
+          <Frame.Content>
+            <Frame.Title>Total</Frame.Title>
+          </Frame.Content>
+          <Frame.Actions>
+            <Text size="base" weight="semibold">
+              £42.60
+            </Text>
+          </Frame.Actions>
+        </Frame.Row>
+      </Frame.Panel>
+
+      {/* On the tray rather than in the card: the rows are what is being paid
+          for, and the button is the thing you do about them. Padded to the
+          header's own inset so both sides of the panel line up. */}
+      <View className="px-4 pb-3 pt-3">
         <ProgressButton
           variant="success"
           haptics
@@ -978,8 +1008,8 @@ function ProgressButtonPayDemo() {
         >
           <ProgressButton.Label>{paid ? 'Paid' : 'Hold to pay'}</ProgressButton.Label>
         </ProgressButton>
-      </Card.Content>
-    </Card>
+      </View>
+    </Frame>
   );
 }
 

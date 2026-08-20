@@ -3,6 +3,7 @@
   "intro": "A button that has to be held rather than tapped. The wait is drawn on the button itself: a fill grows from the leading edge, and the action fires when it reaches the end.\n\nUse it for the action a confirmation dialog exists to slow down. A dialog asks the question somewhere else and takes the answer as a tap, which makes it two taps — and two taps in a row is a rhythm a hand falls into. A hold cannot be completed by accident and cannot be completed by habit.\n\nNothing fires until the fill is complete. There is no tolerance near the end, because a tolerance means the button sometimes commits after the reader has deliberately let go. Released early, the fill drains back.\n\nFor an action that is ordinary rather than irreversible, use [Button](/docs/components/button). For a wait the reader is not causing, use [Progress](/docs/components/progress).",
   "usage": "<ProgressButton onComplete={erase}>\n  <ProgressButton.Label>Hold to erase</ProgressButton.Label>\n</ProgressButton>",
   "extraImports": [
+    "Frame",
     "Text",
     "View"
   ],
@@ -21,8 +22,8 @@
     },
     {
       "title": "Hold to pay",
-      "description": "The fill runs out, the words go, and a tick arrives in their place. That last part is `ProgressButton.Done`, and it is drawn whether or not you name it — a hold that lands and shows nothing leaves the reader checking whether it worked.\n\n`autoReset` is deliberately absent here. A payment that offers itself again a second later is a payment somebody makes twice by leaning on the button.",
-      "code": "const [paid, setPaid] = useState(false);\n\n<ProgressButton\n  variant=\"success\"\n  haptics\n  fullWidth\n  completed={paid}\n  onComplete={() => setPaid(true)}\n  onCompletedChange={setPaid}\n>\n  <ProgressButton.Label>{paid ? 'Paid' : 'Hold to pay'}</ProgressButton.Label>\n</ProgressButton>"
+      "description": "The fill runs out, the words go, and a tick arrives in their place. That last part is `ProgressButton.Done`, and it is drawn whether or not you name it — a hold that lands and shows nothing leaves the reader checking whether it worked.\n\nThe button sits on the tray below the panel rather than among the rows: the rows are what is being paid for, and this is the thing you do about them.\n\n`autoReset` is deliberately absent. A payment that offers itself again a second later is a payment somebody makes twice by leaning on the button.",
+      "code": "const [paid, setPaid] = useState(false);\n\n<Frame>\n  <Frame.Header>\n    <Frame.Title>Checkout</Frame.Title>\n    <Frame.Action>Delivered Thursday</Frame.Action>\n  </Frame.Header>\n\n  <Frame.Panel>\n    {items.map((item) => (\n      <Frame.Row key={item.id}>\n        <Frame.Content>\n          <Frame.Title>{item.name}</Frame.Title>\n          <Frame.Description>{item.detail}</Frame.Description>\n        </Frame.Content>\n        <Frame.Actions>\n          <Text size=\"sm\">{item.price}</Text>\n        </Frame.Actions>\n      </Frame.Row>\n    ))}\n  </Frame.Panel>\n\n  <View className=\"px-4 pb-3 pt-3\">\n    <ProgressButton\n      variant=\"success\"\n      haptics\n      fullWidth\n      completed={paid}\n      onComplete={() => setPaid(true)}\n      onCompletedChange={setPaid}\n    >\n      <ProgressButton.Label>{paid ? 'Paid' : 'Hold to pay'}</ProgressButton.Label>\n    </ProgressButton>\n  </View>\n</Frame>"
     },
     {
       "title": "How long the hold is",

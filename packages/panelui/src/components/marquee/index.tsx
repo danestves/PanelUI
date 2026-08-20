@@ -69,6 +69,7 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withRepeat,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import { useDirectionSign } from '../../hooks/use-direction';
@@ -185,18 +186,43 @@ function MarqueeRoot({
 
   const offset = useSharedValue(0);
 
+  /*
+   * A re-measure is the only thing allowed to move the content back to the
+   * start. The loop length has changed, so an offset taken against the old one
+   * no longer means anything.
+   */
   useEffect(() => {
     cancelAnimation(offset);
     offset.value = 0;
+  }, [offset, period]);
+
+  /*
+   * Pausing freezes where it is. `cancelAnimation` already leaves the shared
+   * value at whatever it had reached, so stopping is simply not starting again
+   * — the content stays exactly where the reader stopped it, which is the
+   * whole point of a pause control on something they are trying to read.
+   *
+   * Resuming picks up from there. The first leg is shortened to the distance
+   * actually left, or the lap after a pause would run at a fraction of the
+   * speed every other lap runs at.
+   */
+  useEffect(() => {
+    cancelAnimation(offset);
     if (reducedMotion || !moving || period <= 0 || speed <= 0) return undefined;
-    offset.value = withRepeat(
-      withTiming(period, {
-        duration: (period / speed) * 1000,
-        easing: Easing.linear,
-      }),
-      -1,
-      false
+
+    const cycle = (period / speed) * 1000;
+    const from = ((offset.value % period) + period) % period;
+    const remaining = period - from;
+
+    offset.value = from;
+    offset.value = withSequence(
+      withTiming(period, { duration: cycle * (remaining / period), easing: Easing.linear }),
+      // Back to the seam in no time at all. The state at `period` is the state
+      // at `0`, so this is a bookkeeping step rather than a visible one.
+      withTiming(0, { duration: 0 }),
+      withRepeat(withTiming(period, { duration: cycle, easing: Easing.linear }), -1, false)
     );
+
     return () => cancelAnimation(offset);
   }, [offset, period, moving, reducedMotion, speed]);
 

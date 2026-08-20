@@ -516,15 +516,12 @@ export interface ProgressButtonLabelProps extends ViewProps {
  * middle of a glyph rather than between two differently laid-out lines.
  */
 function ProgressButtonLabel({ className, children, ...props }: ProgressButtonLabelProps) {
-  const { progress, done, width, slots } = useProgressButtonContext('ProgressButton.Label');
+  const { progress, width, slots } = useProgressButtonContext('ProgressButton.Label');
 
   const fillStyle = useAnimatedStyle(() => ({ width: width * progress.value }));
-  // Out of the way as the tick arrives. Both are centred, and two things
-  // stacked in the middle of a button is neither of them.
-  const labelStyle = useAnimatedStyle(() => ({ opacity: 1 - done.value }));
 
   return (
-    <Animated.View {...props} style={labelStyle} className={slots.content({ className })}>
+    <View {...props} className={slots.content({ className })}>
       {textChildren(children, (text) => (
         <Text className={slots.label()}>{text}</Text>
       ))}
@@ -547,7 +544,7 @@ function ProgressButtonLabel({ className, children, ...props }: ProgressButtonLa
           ))}
         </View>
       </Animated.View>
-    </Animated.View>
+    </View>
   );
 }
 ProgressButtonLabel.displayName = 'ProgressButton.Label';
@@ -576,12 +573,19 @@ function ProgressButtonDone({ className, children, ...props }: ProgressButtonDon
   const { done, completed, variant, slots } = useProgressButtonContext('ProgressButton.Done');
   const tint = useCSSVariable(DONE_TINT[variant]);
 
-  const style = useAnimatedStyle(() => ({
-    opacity: done.value,
-    // From slightly under full size, so it reads as arriving rather than as
-    // having been there all along behind the label.
-    transform: [{ scale: 0.7 + done.value * 0.3 }],
-  }));
+  /*
+   * It carries the fill's own colour and covers the button edge to edge.
+   *
+   * The alternative — fading the label out from under it — takes the fill with
+   * it, because the fill is drawn inside the label so that the two copies of
+   * the text line up. The button would empty at the exact moment it succeeded,
+   * and the tick, drawn in the colour that reads against a full fill, would be
+   * left standing on nothing.
+   */
+  const style = useAnimatedStyle(() => ({ opacity: done.value }));
+  // The tick arrives from slightly under full size. The ground it lands on
+  // does not: a background box that grows reads as the button resizing.
+  const markStyle = useAnimatedStyle(() => ({ transform: [{ scale: 0.7 + done.value * 0.3 }] }));
 
   return (
     <Animated.View
@@ -592,11 +596,13 @@ function ProgressButtonDone({ className, children, ...props }: ProgressButtonDon
       accessibilityElementsHidden={!completed}
       importantForAccessibility={completed ? 'auto' : 'no-hide-descendants'}
       style={[{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }, style]}
-      className={slots.content({ className })}
+      className={slots.fill({ className: slots.content({ className }) })}
     >
-      <IconColorProvider color={typeof tint === 'string' ? tint : undefined}>
-        {children ?? <CheckIcon size={18} />}
-      </IconColorProvider>
+      <Animated.View style={markStyle} className={slots.content()}>
+        <IconColorProvider color={typeof tint === 'string' ? tint : undefined}>
+          {children ?? <CheckIcon size={18} />}
+        </IconColorProvider>
+      </Animated.View>
     </Animated.View>
   );
 }
