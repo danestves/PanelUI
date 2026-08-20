@@ -125,7 +125,18 @@ const progressButtonVariants = tv({
      * a rectangle sliding out from under the button rather than as the button
      * filling up.
      */
-    root: 'relative overflow-hidden rounded-full border',
+    /*
+     * Every variant rests on the same secondary surface, and `variant` decides
+     * only what colour comes across it.
+     *
+     * Drawn as outlines they were four different buttons before anything had
+     * happened, and the one thing they all do — wait to be held — was the
+     * thing the drawing did not say. A solid ground says it: the button is
+     * unfilled, and the fill is what the hold produces. It also puts the label
+     * on an opaque colour from the start, so the wipe crosses one boundary
+     * rather than fading a tinted label through a tinted wash.
+     */
+    root: 'relative overflow-hidden rounded-full border border-transparent bg-secondary',
     /*
      * The row inside the button. It is separate from `root` because the fill
      * has to sit over the whole button including its padding — a wipe that
@@ -133,7 +144,7 @@ const progressButtonVariants = tv({
      * reads as a progress bar someone put inside a button.
      */
     content: 'flex-row items-center justify-center gap-2',
-    label: 'min-w-0 shrink text-center font-medium',
+    label: 'min-w-0 shrink text-center font-medium text-secondary-foreground',
     /** The inverted copy, drawn on the filled ground. */
     fill: '',
     fillLabel: 'min-w-0 shrink text-center font-medium',
@@ -141,26 +152,18 @@ const progressButtonVariants = tv({
   variants: {
     variant: {
       primary: {
-        root: 'border-primary bg-transparent',
-        label: 'text-primary',
         fill: 'bg-primary',
         fillLabel: 'text-primary-foreground',
       },
       secondary: {
-        root: 'border-transparent bg-secondary',
-        label: 'text-secondary-foreground',
         fill: 'bg-foreground',
         fillLabel: 'text-background',
       },
       destructive: {
-        root: 'border-destructive bg-transparent',
-        label: 'text-destructive',
         fill: 'bg-destructive',
         fillLabel: 'text-destructive-solid-foreground',
       },
       success: {
-        root: 'border-success bg-transparent',
-        label: 'text-success',
         fill: 'bg-success',
         fillLabel: 'text-success-solid-foreground',
       },
