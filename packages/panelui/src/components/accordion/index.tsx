@@ -31,6 +31,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -323,8 +324,20 @@ const AccordionIndicator = forwardRef<View, AccordionIndicatorProps>(
     const { indicator } = accordionVariants({ variant });
     const reducedMotion = useReducedMotion();
     const progress = useSharedValue(isExpanded ? 1 : 0);
+    const first = useRef(true);
 
     useEffect(() => {
+      // There is nothing to travel on mount: the item is already open or shut,
+      // and the chevron already points that way. Animating anyway would
+      // schedule a 0-to-0 timing per indicator, and a screen that mounts a list
+      // of them pays for every one before it can draw. The angle is assigned
+      // rather than assumed — a plain number registers no animation, and an
+      // indicator left at the wrong angle stays wrong for as long as it lives.
+      if (first.current) {
+        first.current = false;
+        progress.value = isExpanded ? 1 : 0;
+        return;
+      }
       progress.value = reducedMotion
         ? isExpanded
           ? 1
