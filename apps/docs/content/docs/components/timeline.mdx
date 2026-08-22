@@ -3,6 +3,13 @@ title: Timeline
 description: A sequence of events, vertical or swiped sideways.
 ---
 
+<Preview
+  src="/previews/timeline.jpg"
+  alt="The Timeline component, running in the example app."
+  width={1179}
+  height={977}
+/>
+
 A sequence of events, vertical by default.
 
 `value` marks how far along the sequence is; `tone` colours an individual event by kind, independently of that progress.
@@ -10,13 +17,6 @@ A sequence of events, vertical by default.
 `orientation="horizontal"` lays the items out as columns on a rail wider than the screen, swiped through rather than scrolled down. Reach for it when the span is long enough that read downwards it becomes a page nobody finishes.
 
 **A horizontal timeline scrolls off the side, and that is what buys each column its width.** An item carrying content takes a readable column; an item carrying none collapses to a tick, so a quiet stretch of years compresses instead of paying full width for nothing. Give `Timeline.Item` a `width` to override that.
-
-<Preview
-  src="/previews/timeline.jpg"
-  alt="The Timeline component, running in the example app."
-  width={1179}
-  height={977}
-/>
 
 ## Installation
 

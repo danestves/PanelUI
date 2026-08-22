@@ -3,10 +3,6 @@ title: Signature
 description: Sign with a finger, and get the result back out as SVG or PNG.
 ---
 
-A surface you sign with a finger, and a handle for getting the result back out as SVG or PNG.
-
-The stroke being drawn is built on the UI thread and never reaches React, so the line keeps up with the fingertip. Finished strokes become static paths that never animate again.
-
 <PreviewVideo
   src="/previews/signature.mp4"
   poster="/previews/signature-poster.jpg"
@@ -14,6 +10,10 @@ The stroke being drawn is built on the UI thread and never reaches React, so the
   width={720}
   height={1560}
 />
+
+A surface you sign with a finger, and a handle for getting the result back out as SVG or PNG.
+
+The stroke being drawn is built on the UI thread and never reaches React, so the line keeps up with the fingertip. Finished strokes become static paths that never animate again.
 
 ## Installation
 

@@ -4,6 +4,16 @@ description: Vector map whose basemap is drawn from your theme tokens.
 status: alpha
 ---
 
+<Callout type="warn">Alpha — the API is still moving. Expect it to change in a minor release.</Callout>
+
+<PreviewVideo
+  src="/previews/map.mp4"
+  poster="/previews/map-poster.jpg"
+  alt="The Map component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 A vector map whose basemap is drawn from your theme tokens rather than shipped as a finished style.
 
 A hosted style gives you two maps, a light one and a dark one. PanelUI has six themes, and a map that stays grey while the rest of the screen turns green is the one rectangle on the page that visibly does not belong to it. The tiles still come from a provider — that is the part worth paying for — but every colour in the style is a token your theme already resolved, so a new theme gets a matching basemap without anyone drawing one.
@@ -23,16 +33,6 @@ npx expo run:ios   # or: eas build --profile development --platform ios
 
 Without it `Map` renders a message saying so rather than throwing, so a screen that embeds one still loads. Check `hasMapLibre` before routing somewhere whose whole content is a map.
 </Callout>
-
-<Callout type="warn">Alpha — the API is still moving. Expect it to change in a minor release.</Callout>
-
-<PreviewVideo
-  src="/previews/map.mp4"
-  poster="/previews/map-poster.jpg"
-  alt="The Map component, running in the example app."
-  width={720}
-  height={1560}
-/>
 
 ## Installation
 

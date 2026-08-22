@@ -3,14 +3,6 @@ title: Slider
 description: Pick a value, or a span, by dragging a thumb along a track.
 ---
 
-A value picked by dragging a thumb along a track, or a span picked by two.
-
-The thumb is a pill exactly as tall as the track, so nothing has to escape the track to be drawn whole, with a knob inside it that shrinks while you drag.
-
-Position and fill are animated on the UI thread, so dragging never round-trips through React; the value bridges back on change and again on release.
-
-For an exact number, use [NumberInput](/docs/components/number-input) — past a handful of steps, typing beats dragging.
-
 <Preview
   src="/previews/slider.jpg"
   alt="Four sliders on a dark screen. The first is labelled Volume with 40% on the right, its light fill ending in a pill-shaped thumb with a dark knob inside it; below are a green slider at about two thirds and an orange one at about half; the last is dimmed and labelled Locked, 30."
@@ -18,6 +10,14 @@ For an exact number, use [NumberInput](/docs/components/number-input) — past a
   height={831}
   caption="The pill thumb at three sizes and colours, running in the example app."
 />
+
+A value picked by dragging a thumb along a track, or a span picked by two.
+
+The thumb is a pill exactly as tall as the track, so nothing has to escape the track to be drawn whole, with a knob inside it that shrinks while you drag.
+
+Position and fill are animated on the UI thread, so dragging never round-trips through React; the value bridges back on change and again on release.
+
+For an exact number, use [NumberInput](/docs/components/number-input) — past a handful of steps, typing beats dragging.
 
 ## Installation
 

@@ -3,12 +3,6 @@ title: Fab
 description: The floating action button — one action pinned over the content, with an optional dial of others behind it.
 ---
 
-A single action, floating over the screen it belongs to.
-
-It covers some of the content underneath it, and the bottom-right corner of a scrolling list is exactly where the last row ends up. Pad the bottom of the list so the last row can clear it — nothing here can work out how tall your list is.
-
-That trade is worth making for one action. It stops being worth it at three: a corner with three buttons in it is a toolbar in the wrong place. When a screen has several actions, put a [ButtonGroup](/docs/components/button-group) in a bar instead, or — if one of them really does lead — keep this and put the rest behind a `Fab.Group`.
-
 <PreviewVideo
   src="/previews/fab.mp4"
   poster="/previews/fab-poster.jpg"
@@ -16,6 +10,12 @@ That trade is worth making for one action. It stops being worth it at three: a c
   width={720}
   height={1560}
 />
+
+A single action, floating over the screen it belongs to.
+
+It covers some of the content underneath it, and the bottom-right corner of a scrolling list is exactly where the last row ends up. Pad the bottom of the list so the last row can clear it — nothing here can work out how tall your list is.
+
+That trade is worth making for one action. It stops being worth it at three: a corner with three buttons in it is a toolbar in the wrong place. When a screen has several actions, put a [ButtonGroup](/docs/components/button-group) in a bar instead, or — if one of them really does lead — keep this and put the rest behind a `Fab.Group`.
 
 ## Installation
 

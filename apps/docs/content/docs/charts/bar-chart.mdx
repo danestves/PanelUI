@@ -3,14 +3,6 @@ title: BarChart
 description: Categories compared by length, grouped or stacked.
 ---
 
-Categories compared by length, grouped or stacked, drawn and animated on the UI thread.
-
-Composed the way every chart here is: the grid, each series, the axes and the readout are separate children, so a chart that wants no grid simply does not have one.
-
-**The baseline is zero and stays zero.** A [LineChart](/docs/charts/line-chart) may crop its axis to the range the data occupies, because its job is to show change. A bar's job is to compare lengths, and a bar cropped at the bottom is a length that lies — twice as tall no longer means twice as much.
-
-**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
-
 <PreviewVideo
   src="/previews/bar-chart.mp4"
   poster="/previews/bar-chart-poster.jpg"
@@ -18,6 +10,14 @@ Composed the way every chart here is: the grid, each series, the axes and the re
   width={720}
   height={688}
 />
+
+Categories compared by length, grouped or stacked, drawn and animated on the UI thread.
+
+Composed the way every chart here is: the grid, each series, the axes and the readout are separate children, so a chart that wants no grid simply does not have one.
+
+**The baseline is zero and stays zero.** A [LineChart](/docs/charts/line-chart) may crop its axis to the range the data occupies, because its job is to show change. A bar's job is to compare lengths, and a bar cropped at the bottom is a length that lies — twice as tall no longer means twice as much.
+
+**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
 
 ## Installation
 

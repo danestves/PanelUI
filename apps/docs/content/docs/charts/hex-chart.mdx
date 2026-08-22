@@ -3,14 +3,6 @@ title: HexChart
 description: A whole broken into parts, counted out in cells.
 ---
 
-A total broken into parts, counted out in cells.
-
-Each series gets a number of hexagons proportional to its share, so a series worth a tenth of the total is a tenth of the cells — and the reader can confirm it by counting rather than by judging an angle.
-
-**The limit is the small end.** Every cell is a whole unit, so a series worth less than half a cell rounds away to nothing. Use it for shares of a few percent and up. For a long tail of small values, use a [BarChart](/docs/charts/bar-chart); for the same total split by angle rather than by count, use a [PieChart](/docs/charts/pie-chart).
-
-**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
-
 <PreviewVideo
   src="/previews/hex-chart.mp4"
   poster="/previews/hex-chart-poster.jpg"
@@ -18,6 +10,14 @@ Each series gets a number of hexagons proportional to its share, so a series wor
   width={720}
   height={1560}
 />
+
+A total broken into parts, counted out in cells.
+
+Each series gets a number of hexagons proportional to its share, so a series worth a tenth of the total is a tenth of the cells — and the reader can confirm it by counting rather than by judging an angle.
+
+**The limit is the small end.** Every cell is a whole unit, so a series worth less than half a cell rounds away to nothing. Use it for shares of a few percent and up. For a long tail of small values, use a [BarChart](/docs/charts/bar-chart); for the same total split by angle rather than by count, use a [PieChart](/docs/charts/pie-chart).
+
+**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
 
 ## Installation
 

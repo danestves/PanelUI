@@ -4,6 +4,8 @@ description: Pick several things at once, on a screen or in a sheet.
 status: alpha
 ---
 
+<Callout type="warn">Alpha — the API is still moving. Expect it to change in a minor release.</Callout>
+
 Pick several things at once — messages to archive, people to share with, colours to apply, files to move.
 
 It comes two ways round. **On a screen it is a mode**: the list is there to be read, and a long press turns it into one you can pick from. **In a sheet it is a picker**: `SelectionMode.Sheet` was opened in order to choose something, so it is choosing from the moment it appears, with the actions in the sheet's footer.
@@ -11,8 +13,6 @@ It comes two ways round. **On a screen it is a mode**: the list is there to be r
 `SelectionMode.Item` wraps whatever you put in it rather than replacing it — a row, an avatar, a colour swatch, a slide thumbnail — so one component covers all of those without a prop for each.
 
 For picking *one* thing, use [Select](/docs/components/select) or [RadioGroup](/docs/components/radio-group). For one row and the things you can do to it, use [Swipe](/docs/components/swipe).
-
-<Callout type="warn">Alpha — the API is still moving. Expect it to change in a minor release.</Callout>
 
 ## Installation
 

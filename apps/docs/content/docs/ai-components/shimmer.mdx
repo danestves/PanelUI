@@ -3,12 +3,6 @@ title: Shimmer
 description: Animated highlight sweeping across content.
 ---
 
-A highlight that sweeps through text and content, for loading, thinking and streaming states.
-
-The content is used as a mask and a gradient band is swept behind it on the UI thread, so the highlight is clipped to the glyph shapes — the letters catch the light rather than sitting under a passing overlay.
-
-For a placeholder where there is no content yet, use [Skeleton](/docs/components/skeleton).
-
 <PreviewVideo
   src="/previews/shimmer.mp4"
   poster="/previews/shimmer-poster.jpg"
@@ -17,6 +11,12 @@ For a placeholder where there is no content yet, use [Skeleton](/docs/components
   height={1122}
   caption="The sweep is clipped to the glyphs, so the letters catch the light rather than a box over them."
 />
+
+A highlight that sweeps through text and content, for loading, thinking and streaming states.
+
+The content is used as a mask and a gradient band is swept behind it on the UI thread, so the highlight is clipped to the glyph shapes — the letters catch the light rather than sitting under a passing overlay.
+
+For a placeholder where there is no content yet, use [Skeleton](/docs/components/skeleton).
 
 ## Installation
 

@@ -3,18 +3,18 @@ title: Popover
 description: Panel anchored to the element that opened it.
 ---
 
-A panel anchored to the thing that opened it.
-
-Use it when the context around the trigger has to stay visible. A [Dialog](/docs/components/dialog) takes the screen and asks to be dealt with; a popover stays beside its trigger.
-
-**Placement is a preference, not a promise.** The trigger is measured in window coordinates when it is pressed, the panel measures itself on its first layout, and the two are reconciled against the safe area — so `placement="bottom"` means *below, if below fits*, and a trigger near the bottom of the screen opens upwards instead of off the edge.
-
 <Preview
   src="/previews/popover.jpg"
   alt="The Popover component, running in the example app."
   width={1179}
   height={1045}
 />
+
+A panel anchored to the thing that opened it.
+
+Use it when the context around the trigger has to stay visible. A [Dialog](/docs/components/dialog) takes the screen and asks to be dealt with; a popover stays beside its trigger.
+
+**Placement is a preference, not a promise.** The trigger is measured in window coordinates when it is pressed, the panel measures itself on its first layout, and the two are reconciled against the safe area — so `placement="bottom"` means *below, if below fits*, and a trigger near the bottom of the screen opens upwards instead of off the edge.
 
 ## Installation
 

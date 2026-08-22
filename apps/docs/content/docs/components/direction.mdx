@@ -3,12 +3,6 @@ title: Direction
 description: Reading direction for everything below it.
 ---
 
-Sets the reading direction for everything below it.
-
-Rows, `start`/`end` insets and horizontal padding mirror natively, so a right-to-left locale needs one wrapper rather than a mirrored copy of every screen.
-
-The flip is the layout engine's own, which is why this is a component rather than a bare context — `direction` is a style, so a subtree is the unit it applies to. Unlike forcing the whole process right-to-left, it takes effect on the next frame, can be scoped to part of a screen, and can be nested: an identifier or a phone number can stay left-to-right inside a right-to-left page.
-
 <PreviewVideo
   src="/previews/direction.mp4"
   poster="/previews/direction-poster.jpg"
@@ -16,6 +10,12 @@ The flip is the layout engine's own, which is why this is a component rather tha
   width={720}
   height={1560}
 />
+
+Sets the reading direction for everything below it.
+
+Rows, `start`/`end` insets and horizontal padding mirror natively, so a right-to-left locale needs one wrapper rather than a mirrored copy of every screen.
+
+The flip is the layout engine's own, which is why this is a component rather than a bare context — `direction` is a style, so a subtree is the unit it applies to. Unlike forcing the whole process right-to-left, it takes effect on the next frame, can be scoped to part of a screen, and can be nested: an identifier or a phone number can stay left-to-right inside a right-to-left page.
 
 ## Installation
 

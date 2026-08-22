@@ -4,6 +4,14 @@ description: Content that travels across its container on a loop.
 status: updated
 ---
 
+<PreviewVideo
+  src="/previews/marquee.mp4"
+  poster="/previews/marquee-poster.jpg"
+  alt="The Marquee component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 Repeats content end to end and travels it across the container, for a strip of logos, a ticker of prices or a row of names that should keep moving rather than stop at the edge.
 
 The content is measured once and tiled enough times to cover the container. One track holds every copy and it is the track that moves, so the animation is a single UI-thread node. At most 32 copies are mounted: exceptionally short content receives extra whitespace instead of multiplying its React subtree hundreds of times.
@@ -13,14 +21,6 @@ The loop is exactly one layout period long, which is why the seam never shows: t
 Content has to have a size of its own to be measured. A child stretched to `flex-1`, or an image with no width and height, measures as nothing and the marquee will not start.
 
 For content the reader should be able to move themselves, use a `ScrollView` and put [ScrollFade](/docs/components/scroll-fade) around it.
-
-<PreviewVideo
-  src="/previews/marquee.mp4"
-  poster="/previews/marquee-poster.jpg"
-  alt="The Marquee component, running in the example app."
-  width={720}
-  height={1560}
-/>
 
 ## Installation
 

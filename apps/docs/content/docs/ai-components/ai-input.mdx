@@ -3,6 +3,14 @@ title: aiInput
 description: "A prompt composer: a field that grows to five lines, a row of controls, and the sheet they open."
 ---
 
+<PreviewVideo
+  src="/previews/ai-input.mp4"
+  poster="/previews/ai-input-poster.jpg"
+  alt="The AIInput component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 The composer a person types a prompt into: a field that grows with what is written in it, a row of controls under it, and the sheet those controls open.
 
 The field opens one line tall and follows the text up to `maxRows`. After that it holds its height and scrolls its own content, so the composer cannot grow until the send button is off the bottom of the screen. Five rows is the default.
@@ -12,14 +20,6 @@ Nothing here touches the microphone. There is a recording state and it draws a l
 The surfaces ask for the iOS system material and get it on iOS 26 and above. Below that, on Android, and for anyone with Reduce Transparency switched on, they are drawn as solid token surfaces. Both are finished looks — nothing is faked where the material does not exist, which is the same rule [Button](/docs/components/button) follows and explains.
 
 For a plain multi-line field with a label and a character count, use [Textarea](/docs/components/textarea). For the answer coming back, use [Response](/docs/ai-components/response).
-
-<PreviewVideo
-  src="/previews/ai-input.mp4"
-  poster="/previews/ai-input-poster.jpg"
-  alt="The AIInput component, running in the example app."
-  width={720}
-  height={1560}
-/>
 
 ## Installation
 

@@ -3,12 +3,6 @@ title: Response
 description: A model's answer, rendered as markdown while it is still arriving.
 ---
 
-A model's answer, rendered as markdown while it is still arriving.
-
-An answer *is* markdown — it has headings, lists and fenced code in it, because that is what a model writes — and rendering it as one run of plain text throws away the structure the model went to the trouble of producing.
-
-So this renders it through the library's own parts: [Typography](/docs/components/typography) for prose, [CodeBlock](/docs/ai-components/code-block) for fences, [Table](/docs/components/table) for tables. Nothing here draws its own type or colours, because an answer inside a message bubble should look like the app it is in rather than like a document viewer. It brings no new dependencies.
-
 <PreviewVideo
   src="/previews/response.mp4"
   poster="/previews/response-poster.jpg"
@@ -16,6 +10,12 @@ So this renders it through the library's own parts: [Typography](/docs/component
   width={720}
   height={1142}
 />
+
+A model's answer, rendered as markdown while it is still arriving.
+
+An answer *is* markdown — it has headings, lists and fenced code in it, because that is what a model writes — and rendering it as one run of plain text throws away the structure the model went to the trouble of producing.
+
+So this renders it through the library's own parts: [Typography](/docs/components/typography) for prose, [CodeBlock](/docs/ai-components/code-block) for fences, [Table](/docs/components/table) for tables. Nothing here draws its own type or colours, because an answer inside a message bubble should look like the app it is in rather than like a document viewer. It brings no new dependencies.
 
 ## Installation
 

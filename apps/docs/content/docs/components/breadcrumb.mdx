@@ -3,18 +3,18 @@ title: Breadcrumb
 description: The trail of links back up the hierarchy to the current page.
 ---
 
-The trail back up a hierarchy: a row of links ending in the page you are on.
-
-The last crumb is not a link, because you cannot navigate to where you already are. It renders as a plain label marked as current rather than as a dead tappable target.
-
-Separators are the component's job. `Breadcrumb.List` drops a chevron between the crumbs it holds, so a trail is only its items — there is no separator to forget, and none left dangling at the end.
-
 <Preview
   src="/previews/breadcrumb.jpg"
   alt="A three-step trail reading Home, Components, Breadcrumb, separated by chevrons. The first two are muted links; the last is white and unlinked, because it is the page you are already on."
   width={1179}
   height={243}
 />
+
+The trail back up a hierarchy: a row of links ending in the page you are on.
+
+The last crumb is not a link, because you cannot navigate to where you already are. It renders as a plain label marked as current rather than as a dead tappable target.
+
+Separators are the component's job. `Breadcrumb.List` drops a chevron between the crumbs it holds, so a trail is only its items — there is no separator to forget, and none left dangling at the end.
 
 ## Installation
 

@@ -4,14 +4,6 @@ description: Press and hold to confirm, with the wait drawn on the button.
 status: new
 ---
 
-A button that has to be held rather than tapped. The wait is drawn on the button itself: a fill grows from the leading edge, and the action fires when it reaches the end.
-
-Use it for the action a confirmation dialog exists to slow down. A dialog asks the question somewhere else and takes the answer as a tap, which makes it two taps — and two taps in a row is a rhythm a hand falls into. A hold cannot be completed by accident and cannot be completed by habit.
-
-Nothing fires until the fill is complete. There is no tolerance near the end, because a tolerance means the button sometimes commits after the reader has deliberately let go. Released early, the fill drains back.
-
-For an action that is ordinary rather than irreversible, use [Button](/docs/components/button). For a wait the reader is not causing, use [Progress](/docs/components/progress).
-
 <PreviewVideo
   src="/previews/progress-button.mp4"
   poster="/previews/progress-button-poster.jpg"
@@ -19,6 +11,14 @@ For an action that is ordinary rather than irreversible, use [Button](/docs/comp
   width={720}
   height={1560}
 />
+
+A button that has to be held rather than tapped. The wait is drawn on the button itself: a fill grows from the leading edge, and the action fires when it reaches the end.
+
+Use it for the action a confirmation dialog exists to slow down. A dialog asks the question somewhere else and takes the answer as a tap, which makes it two taps — and two taps in a row is a rhythm a hand falls into. A hold cannot be completed by accident and cannot be completed by habit.
+
+Nothing fires until the fill is complete. There is no tolerance near the end, because a tolerance means the button sometimes commits after the reader has deliberately let go. Released early, the fill drains back.
+
+For an action that is ordinary rather than irreversible, use [Button](/docs/components/button). For a wait the reader is not causing, use [Progress](/docs/components/progress).
 
 ## Installation
 

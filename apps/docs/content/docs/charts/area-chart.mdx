@@ -3,12 +3,6 @@ title: AreaChart
 description: Filled bands over time, stacked or overlaid.
 ---
 
-Filled bands over time, stacked or overlaid.
-
-**This is not `LineChart.Area`.** Shading under a line is one series saying *this is the shape of the thing*. An area chart answers *what is it made of*, and that needs stacking — each band sits on the running total of the ones below it, so the top edge is the whole and each thickness is a share.
-
-**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
-
 <PreviewVideo
   src="/previews/area-chart.mp4"
   poster="/previews/area-chart-poster.jpg"
@@ -16,6 +10,12 @@ Filled bands over time, stacked or overlaid.
   width={720}
   height={718}
 />
+
+Filled bands over time, stacked or overlaid.
+
+**This is not `LineChart.Area`.** Shading under a line is one series saying *this is the shape of the thing*. An area chart answers *what is it made of*, and that needs stacking — each band sits on the running total of the ones below it, so the top edge is the whole and each thickness is a share.
+
+**If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
 
 ## Installation
 

@@ -3,6 +3,14 @@ title: LineChart
 description: Animated time series, drawn on the UI thread.
 ---
 
+<PreviewVideo
+  src="/previews/line-chart.mp4"
+  poster="/previews/line-chart-poster.jpg"
+  alt="The LineChart component, running in the example app."
+  width={720}
+  height={680}
+/>
+
 A time series, drawn and animated on the UI thread.
 
 The chart is composed rather than configured: the grid, each series, the axis and the crosshair are separate children, so a chart that wants no grid simply does not have one. A single component with twenty booleans is how charts become unreadable at the call site.
@@ -12,14 +20,6 @@ Colours come from the `--color-chart-1` … `--color-chart-5` tokens, so a chart
 For what a series is *made of* rather than its shape, use an [AreaChart](/docs/charts/area-chart).
 
 **If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
-
-<PreviewVideo
-  src="/previews/line-chart.mp4"
-  poster="/previews/line-chart-poster.jpg"
-  alt="The LineChart component, running in the example app."
-  width={720}
-  height={680}
-/>
 
 ## Installation
 

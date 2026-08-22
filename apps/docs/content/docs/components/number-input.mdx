@@ -3,6 +3,13 @@ title: NumberInput
 description: Numeric field stepped by buttons or typed by hand.
 ---
 
+<Preview
+  src="/previews/number-input.jpg"
+  alt="The NumberInput component, running in the example app."
+  width={1179}
+  height={850}
+/>
+
 A number stepped by a − and a + at the ends, or typed straight into the field between them.
 
 Both doors stay open on purpose: past a handful of steps, tapping to a value is worse than typing it.
@@ -10,13 +17,6 @@ Both doors stay open on purpose: past a handful of steps, tapping to a value is 
 The ends repeat when held — after a short delay, then faster — so walking from 0 to 200 is a press rather than two hundred. Everything reconciles through a single value, clamped to `min`/`max` and snapped to `step`.
 
 For a value picked along a range rather than counted, use [Slider](/docs/components/slider).
-
-<Preview
-  src="/previews/number-input.jpg"
-  alt="The NumberInput component, running in the example app."
-  width={1179}
-  height={850}
-/>
 
 ## Installation
 

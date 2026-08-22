@@ -3,6 +3,14 @@ title: FunnelChart
 description: Where a population drained away, one step at a time.
 ---
 
+<PreviewVideo
+  src="/previews/funnel-chart.mp4"
+  poster="/previews/funnel-chart-poster.jpg"
+  alt="The FunnelChart component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 Where a population drained away, one step at a time.
 
 Every stage is a subset of the one above it, in the order the steps happen. That is a stronger claim than a bar chart makes, and it is what makes the interesting number the *ratio* between two stages rather than any stage's value: how many of the people who started checking out entered a card.
@@ -12,14 +20,6 @@ It is drawn as one ribbon across the card. The stages divide the width between t
 **Only use it when each stage really is a subset of the last.** For categories that do not nest, use a [BarChart](/docs/charts/bar-chart).
 
 **If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
-
-<PreviewVideo
-  src="/previews/funnel-chart.mp4"
-  poster="/previews/funnel-chart-poster.jpg"
-  alt="The FunnelChart component, running in the example app."
-  width={720}
-  height={1560}
-/>
 
 ## Installation
 

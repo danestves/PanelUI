@@ -3,18 +3,18 @@ title: GridItem
 description: Bento tiles, and the grid that places them.
 ---
 
-Bento tiles, and the grid that places them.
-
-[Item](/docs/components/item) is a row, and a list of rows is a column of views — the layout falls out of flexbox and nothing has to be measured. A bento is not that: tiles are different sizes and the grid still has to line up, so a wide tile and the two square ones beside it share a left edge, and a tall one runs past its neighbour with the next tile filling in underneath.
-
-A wrapping row cannot do the last of those — wrapping puts whatever did not fit on a *new line*, so nothing ever tucks under a tall tile. `GridItem.Group` measures itself, walks its children into the first free cell that fits each one, and positions them. Every tile is a whole number of cells, which is what makes the edges line up.
-
 <Preview
   src="/previews/grid-item.jpg"
   alt="The GridItem component, running in the example app."
   width={1179}
   height={1096}
 />
+
+Bento tiles, and the grid that places them.
+
+[Item](/docs/components/item) is a row, and a list of rows is a column of views — the layout falls out of flexbox and nothing has to be measured. A bento is not that: tiles are different sizes and the grid still has to line up, so a wide tile and the two square ones beside it share a left edge, and a tall one runs past its neighbour with the next tile filling in underneath.
+
+A wrapping row cannot do the last of those — wrapping puts whatever did not fit on a *new line*, so nothing ever tucks under a tall tile. `GridItem.Group` measures itself, walks its children into the first free cell that fits each one, and positions them. Every tile is a whole number of cells, which is what makes the edges line up.
 
 ## Installation
 

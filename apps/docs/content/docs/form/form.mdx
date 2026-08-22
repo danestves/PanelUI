@@ -3,6 +3,13 @@ title: Form
 description: Form state — values, validation and submission — with no form library underneath.
 ---
 
+<Preview
+  src="/previews/form.jpg"
+  alt="The Form component, running in the example app."
+  width={1179}
+  height={950}
+/>
+
 Form state — values, errors, touched state and the submission lifecycle — with no form library underneath.
 
 `useForm` holds it, built on `useReducer`. `Form` and `Form.Field` bind that state to a control, so `form` does not have to be threaded through every field by hand.
@@ -10,13 +17,6 @@ Form state — values, errors, touched state and the submission lifecycle — wi
 For the layout around a control rather than its state, use [Field](/docs/components/field).
 
 `createForm<TValues>()` binds that value shape once, so field names, values, validators and render props stay typed through JSX without changing the runtime.
-
-<Preview
-  src="/previews/form.jpg"
-  alt="The Form component, running in the example app."
-  width={1179}
-  height={950}
-/>
 
 ## Installation
 

@@ -3,6 +3,13 @@ title: Surface
 description: Elevated container with a variant ladder.
 ---
 
+<Preview
+  src="/previews/surface.jpg"
+  alt="The Surface component, running in the example app."
+  width={1179}
+  height={917}
+/>
+
 An elevated container, with a variant ladder for building hierarchy.
 
 Nest the variants: each level sits one step further from the page background than the one around it.
@@ -10,13 +17,6 @@ Nest the variants: each level sits one step further from the page background tha
 Both the fill **and the corner radius** follow the active theme. The variants resolve to themed surface tokens and `rounded-3xl` resolves through the per-theme radius scale, so the same Surface is a 24px corner under Panel and a 32px one under Moon without knowing about either.
 
 For a surface with a header, body and footer, use [Card](/docs/components/card).
-
-<Preview
-  src="/previews/surface.jpg"
-  alt="The Surface component, running in the example app."
-  width={1179}
-  height={917}
-/>
 
 ## Installation
 

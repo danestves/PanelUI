@@ -4,6 +4,8 @@ description: A chart you assemble out of its marks.
 status: alpha
 ---
 
+<Callout type="warn">Alpha — the API is still moving. Expect it to change in a minor release.</Callout>
+
 Charts for the shapes this library does not already ship.
 
 Every other chart here answers one question completely, and decides everything else for you. `Plot` decides nothing: it measures a box, resolves one scale, and hands both to whatever marks you put inside it. Columns with a line over them, a series against a shaded band, a mark you wrote yourself — all of them are children, drawn in the order they are written.
@@ -11,8 +13,6 @@ Every other chart here answers one question completely, and decides everything e
 **Reach for a named chart first.** [LineChart](/docs/charts/line-chart), [BarChart](/docs/charts/bar-chart) and [AreaChart](/docs/charts/area-chart) carry decisions this one leaves to you — where the baseline belongs, what a gap in a series means, how a loading state should read — and a chart assembled here has to make each of them again.
 
 It is marked alpha. The parts are settled; the names of the geometry `usePlot` hands out are the part most likely to move.
-
-<Callout type="warn">Alpha — the API is still moving. Expect it to change in a minor release.</Callout>
 
 ## Installation
 

@@ -3,6 +3,14 @@ title: LiveLineChart
 description: A reading that keeps arriving, against a window that keeps moving.
 ---
 
+<PreviewVideo
+  src="/previews/live-line-chart.mp4"
+  poster="/previews/live-line-chart-poster.jpg"
+  alt="The LiveLineChart component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 Use it for a number that keeps arriving — a metric off a socket, a sensor, a queue depth. Each reading is placed at the time it carries against a window running from `window` seconds ago to now, so the gaps between readings are part of what is drawn.
 
 The window is tied to the wall clock, not to the data. The line drifts left whether or not anything is arriving, so a feed that stalls shows as a flat run reaching back from the tip. That costs a frame callback for as long as the chart is mounted; `paused` and `status="loading"` stop it, and it never starts when the platform asks for reduced motion — the window then advances as each reading lands instead.
@@ -12,14 +20,6 @@ A screen reader receives one read-only chart snapshot rather than a new node for
 For a fixed series that is not going to grow — a week of visits, twelve months of revenue — use [LineChart](/docs/charts/line-chart). It places points by their position in the list, which is the right answer when the spacing between them is not the subject.
 
 **If the chart you need is not one of these**, [Plot](/docs/charts/plot) is the same drawing machinery with nothing decided: you compose the marks — columns, lines, fills, dots, and marks you write yourself — over one measured box and one shared scale.
-
-<PreviewVideo
-  src="/previews/live-line-chart.mp4"
-  poster="/previews/live-line-chart-poster.jpg"
-  alt="The LiveLineChart component, running in the example app."
-  width={720}
-  height={1560}
-/>
 
 ## Installation
 

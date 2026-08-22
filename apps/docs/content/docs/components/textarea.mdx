@@ -3,6 +3,13 @@ title: Textarea
 description: Text field that runs to several lines, sized in rows.
 ---
 
+<Preview
+  src="/previews/textarea.jpg"
+  alt="The Textarea component, running in the example app."
+  width={1179}
+  height={1118}
+/>
+
 A text field that runs to several lines, sized in rows.
 
 Its height is given in `rows` rather than pixels, so it composes with `size` instead of fighting it — three rows of 14px text and three rows of 16px text are different heights, and both are three rows.
@@ -10,13 +17,6 @@ Its height is given in `rows` rather than pixels, so it composes with `size` ins
 `autoGrow` lets the field follow its content up to `maxRows` and scroll past that, which is what a composer wants: it starts small, opens up as you write, and stops before it eats the screen.
 
 Everything else it shares with [Input](/docs/components/input) — the animated focus border, the label, description and error line, and the keyboard avoidance.
-
-<Preview
-  src="/previews/textarea.jpg"
-  alt="The Textarea component, running in the example app."
-  width={1179}
-  height={1118}
-/>
 
 ## Installation
 

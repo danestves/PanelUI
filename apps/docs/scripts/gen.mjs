@@ -229,14 +229,16 @@ for (const [slug, entry] of Object.entries(meta)) {
   const sections = [];
 
   /*
-   * A screenshot of the component running on a device, directly under the
-   * intro — the first thing on the page should be what the thing looks like,
-   * not a paragraph about it.
+   * A screenshot of the component running on a device, and it goes first — the
+   * first thing on the page should be what the thing looks like, not a
+   * paragraph about it. The title and the summary are already above it, drawn
+   * from the frontmatter by the page itself, so a reader has the name and the
+   * one-line description before the image and the prose after it.
    */
   const preview = u.preview
-    ? `\n\n${previewTag(u.preview)}`
+    ? previewTag(u.preview)
     : u.previewVideo
-      ? `\n\n${previewVideoTag(u.previewVideo)}`
+      ? previewVideoTag(u.previewVideo)
       : '';
 
   const status = statusOf(options);
@@ -255,15 +257,22 @@ for (const [slug, entry] of Object.entries(meta)) {
     beta: 'Beta — the API has settled, but has not seen enough use to promise it will not move again.',
   };
   const maturity = MATURITY[status]
-    ? `\n\n<Callout type="warn">${MATURITY[status]}</Callout>`
+    ? `<Callout type="warn">${MATURITY[status]}</Callout>`
     : '';
+
+  /*
+   * The maturity warning stays above the image. It is the one thing on the page
+   * a reader is worse off for meeting late, and at one line it costs the
+   * preview almost nothing.
+   */
+  const lede = [maturity, preview, u.intro ?? summary].filter(Boolean).join('\n\n');
 
   sections.push(`---
 title: ${titleOf(entry)}
 description: ${yamlScalar(summary)}${status ? `\nstatus: ${status}` : ''}
 ---
 
-${u.intro ?? summary}${maturity}${preview}
+${lede}
 
 ## Installation
 
