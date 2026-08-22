@@ -9,8 +9,10 @@ const source = await readFile(
 
 // The shared value is seeded from `isExpanded`, so a mount-time `withTiming`
 // would animate from a value to itself. One indicator hides that cost; a list
-// of them pays it before the screen can draw.
-const MOUNT_GUARD = /const first = useRef\(true\);[\s\S]*?if \(first\.current\) \{\s*first\.current = false;\s*return;\s*\}\s*progress\.value =/;
+// of them pays it before the screen can draw. The first pass assigns the angle
+// instead — a plain number schedules nothing, and leaves nothing to assume.
+const MOUNT_GUARD =
+  /const first = useRef\(true\);[\s\S]*?if \(first\.current\) \{\s*first\.current = false;\s*progress\.value = isExpanded \? 1 : 0;\s*return;\s*\}/;
 
 test('Accordion.Indicator does not animate on mount', () => {
   assert.match(source, /const progress = useSharedValue\(isExpanded \? 1 : 0\)/);

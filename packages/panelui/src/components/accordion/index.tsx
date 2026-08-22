@@ -327,12 +327,15 @@ const AccordionIndicator = forwardRef<View, AccordionIndicatorProps>(
     const first = useRef(true);
 
     useEffect(() => {
-      // The shared value already starts at the angle this item is open to, so
-      // there is nothing to travel on mount. Animating anyway would schedule a
-      // 0-to-0 timing per indicator, and a screen that mounts a list of them
-      // pays for every one before it can draw.
+      // There is nothing to travel on mount: the item is already open or shut,
+      // and the chevron already points that way. Animating anyway would
+      // schedule a 0-to-0 timing per indicator, and a screen that mounts a list
+      // of them pays for every one before it can draw. The angle is assigned
+      // rather than assumed — a plain number registers no animation, and an
+      // indicator left at the wrong angle stays wrong for as long as it lives.
       if (first.current) {
         first.current = false;
+        progress.value = isExpanded ? 1 : 0;
         return;
       }
       progress.value = reducedMotion
