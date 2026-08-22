@@ -9,6 +9,30 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.79.1] — 2026-08-22
+
+### Fixed
+
+- **`Accordion.Indicator` scheduled an animation it had nowhere to travel.** The chevron's
+  shared value is seeded from whether the section is open, and a mount effect then assigned
+  that same value again through a timing — a 0-to-0 transition per indicator, run before the
+  screen could draw. One indicator hides the cost; a list of them does not, and a bottom sheet
+  holding thirteen collapsed items took a visible beat to present on Android. The effect now
+  skips its first run and settles the angle outright. The chevron animates when a section
+  actually opens or closes, as before.
+
+### Docs
+
+- **Every component page opens on the component.** The preview — the recording or screenshot of
+  it running on a device — now leads the page body, with the prose underneath it. It used to sit
+  below a median of four paragraphs, which meant scrolling past a wall of text, and past a
+  restatement of the one-line summary already printed under the title, to reach the one thing on
+  the page that answers "what is this". No page lost a word; the blocks swapped places. Alpha and
+  beta warnings stay above the image.
+
+- **`ThemeSelector` has its previews**, recorded on a device, on the page and beside each
+  version.
+
 ## [0.79.0] — 2026-08-20
 
 ### Added
