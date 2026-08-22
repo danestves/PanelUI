@@ -31,6 +31,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -323,8 +324,17 @@ const AccordionIndicator = forwardRef<View, AccordionIndicatorProps>(
     const { indicator } = accordionVariants({ variant });
     const reducedMotion = useReducedMotion();
     const progress = useSharedValue(isExpanded ? 1 : 0);
+    const first = useRef(true);
 
     useEffect(() => {
+      // The shared value already starts at the angle this item is open to, so
+      // there is nothing to travel on mount. Animating anyway would schedule a
+      // 0-to-0 timing per indicator, and a screen that mounts a list of them
+      // pays for every one before it can draw.
+      if (first.current) {
+        first.current = false;
+        return;
+      }
       progress.value = reducedMotion
         ? isExpanded
           ? 1
