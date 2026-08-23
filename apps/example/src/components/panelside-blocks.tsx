@@ -31,7 +31,6 @@ import {
   PackageIcon,
   Panelside,
   PlusIcon,
-  StarIcon,
   Text,
   XIcon,
   usePanelside,
@@ -137,22 +136,17 @@ function AssistantPanel({
         {starred.length > 0 && (
           <Panelside.Group>
             <Panelside.GroupLabel>Starred</Panelside.GroupLabel>
-            {/* The same row as the ones below, written out rather than passed
-                as props — which is how a row gets something the shorthand has
-                no argument for, here a star before the title. */}
+            {/* No star glyph on the rows. The group label says Starred, and
+                repeating it on every row underneath it spends the leading slot
+                — the one place a row could carry something a reader does not
+                already know — on saying the heading again. */}
             {starred.map((title) => (
               <Panelside.Item
                 key={title}
+                label={title}
                 active={title === activeId}
-                accessibilityLabel={title}
                 onPress={select && (() => select(title))}
-              >
-                <Panelside.ItemIcon>
-                  <StarIcon size={16} />
-                </Panelside.ItemIcon>
-                <Panelside.ItemLabel>{title}</Panelside.ItemLabel>
-                <Panelside.Action label={`Options for ${title}`} />
-              </Panelside.Item>
+              />
             ))}
           </Panelside.Group>
         )}
@@ -166,9 +160,7 @@ function AssistantPanel({
                 label={title}
                 active={title === activeId}
                 onPress={select && (() => select(title))}
-              >
-                <Panelside.Action label={`Options for ${title}`} />
-              </Panelside.Item>
+              />
             ))}
           </Panelside.Group>
         )}
@@ -182,25 +174,42 @@ function AssistantPanel({
         )}
       </Panelside.Content>
 
+      {/* Transparent: the history runs under the two controls rather than
+          being cut off above a band, which is what makes the panel read as one
+          surface with things floating on it. */}
       <Panelside.Footer>
-        {/* No label: the avatar is the account, and a name beside it is one
-            more thing between the compose button and the edge of the panel.
-            Without a label the row stretches on its own, which is what pushes
-            the button to the trailing end. */}
-        {/* `md`, not `lg`: a 56pt avatar is taller than the pill beside it, and
-            the footer row ends up sized by the account button rather than by
-            the thing the footer is for. */}
-        <Panelside.Item
-          className="flex-1"
-          icon={<Avatar size="md" fallback="K" />}
-          accessibilityLabel="Account"
-        />
+        {/* The compose pill leads, and the account button is pushed to the
+            trailing end by the spacer between them. No label on the account:
+            the avatar is the account, and a name beside it is one more thing
+            between the compose button and the edge of the panel. */}
         <Panelside.Cta
           icon={<PlusIcon size={18} />}
           label="New chat"
           native={native}
           glass={native}
         />
+        <View className="flex-1" />
+        {/*
+          A native button hosting the avatar, which is the one hosted-view
+          shape that measures: an icon button is a square the component sizes,
+          so the avatar inside it has a definite box above it on both axes. A
+          labelled native button hosting a view does not, and dies in native
+          code.
+        */}
+        <Button
+          native={native}
+          glass={native}
+          size="icon"
+          variant="ghost"
+          className={native ? undefined : 'h-11 w-11 rounded-full'}
+          accessibilityLabel="Account"
+        >
+          {/* 28pt, not the 32pt `sm`: the native icon button hosts its glyph
+              in a 44pt frame with 6pt of padding around it, and a 32pt avatar
+              fills that exactly. A frame with nothing to spare is the case the
+              measurement chain is not allowed to be in. */}
+          <Avatar size="sm" fallback="K" className="h-7 w-7" />
+        </Button>
       </Panelside.Footer>
     </Panelside.Panel>
   );

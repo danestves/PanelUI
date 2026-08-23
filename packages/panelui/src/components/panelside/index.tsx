@@ -248,6 +248,15 @@ export type PanelsideMode = 'push' | 'overlay';
 export type PanelsideSwipeFrom = 'anywhere' | 'edge';
 export type PanelsideItemSize = 'default' | 'sm';
 export type PanelsideCtaSize = 'default' | 'lg';
+/**
+ * What a header or a footer paints behind itself.
+ *
+ * `transparent` paints nothing, and the list runs the full height of the panel
+ * underneath it. `fade` dissolves the list into the panel background over the
+ * strip above the controls. `solid` is a band with an edge on it, for a footer
+ * that is a row of the layout rather than something floating over one.
+ */
+export type PanelsideSurface = 'transparent' | 'fade' | 'solid';
 
 const itemVariants = tv({
   // No width: in a group it stretches on its own, and pinning it to full width
@@ -272,9 +281,14 @@ const itemVariants = tv({
 const ctaVariants = tv({
   // Taller and wider than a list row's control. It is the one thing in the
   // panel you are meant to reach for without reading, so it should not be the
-  // same size as the eight chat titles above it — but it shares its footer row
-  // with an account button, and a pill that stands a whole step above that row
-  // makes the footer taller than anything in the panel needs it to be.
+  // same size as the eight chat titles above it.
+  //
+  // It used to be 40pt, chosen to sit level with the account button beside it.
+  // That is the wrong thing to size it against: the account button is a target
+  // you find once, and the compose pill is the one pressed every session — at
+  // matching heights the two read as a pair of equals and the pill stopped
+  // being the thing the footer is for. Four points is enough to separate them
+  // without making the footer taller than the panel needs.
   base: 'shrink flex-row items-center justify-center rounded-full',
   variants: {
     variant: {
@@ -282,8 +296,8 @@ const ctaVariants = tv({
       secondary: 'bg-secondary',
     },
     size: {
-      default: 'h-10 gap-2 px-5',
-      lg: 'h-12 gap-2 px-6',
+      default: 'h-11 gap-2 px-6',
+      lg: 'h-13 gap-2.5 px-7',
     },
   },
   defaultVariants: {
@@ -726,6 +740,20 @@ export interface PanelsideHeaderProps extends ViewProps {
   title?: string;
   /** A single element pinned to the trailing end of the title row. */
   action?: ReactNode;
+  /**
+   * What the header paints behind itself.
+   *
+   * `transparent` is the default and paints nothing, so the header is the
+   * panel's own surface with a title on it rather than a bar sitting on top of
+   * one. In the panel's normal stacking that is the whole story — the header
+   * takes a row and the list starts below it.
+   *
+   * `fade` and `solid` are for a header the caller has lifted out of that
+   * stack — `className="absolute start-0 end-0 top-0"` — so the list runs
+   * underneath it. They are the two shapes `Panelside.Footer` offers, drawn
+   * the other way up.
+   */
+  surface?: PanelsideSurface;
   /** Anything below the title row — a search field, a workspace switcher. */
   children?: ReactNode;
 }
@@ -734,11 +762,14 @@ function PanelsideHeader({
   className,
   title,
   action,
+  surface = 'transparent',
   children,
   style,
   ...props
 }: PanelsideHeaderProps) {
   const insets = useSafeAreaInsets();
+  const background = useCSSVariable('--color-background');
+  const solid = typeof background === 'string' ? background : '#000000';
 
   return (
     <View
@@ -750,9 +781,32 @@ function PanelsideHeader({
       // `px-3` matches the scroller below it, so the search field and the rows
       // share one edge. A header inset further would leave the field floating
       // a few points inside the list it filters.
-      className={cn('gap-3 px-3 pb-3', className)}
+      className={cn(
+        'gap-3 px-3 pb-3',
+        surface === 'solid' && 'border-b border-border bg-background',
+        className
+      )}
       {...props}
     >
+      {/* The footer's fade, upside down: opaque under the title and clearing to
+          nothing at the bottom edge, so a row scrolled up into the header
+          dissolves rather than sliding out from under a line. */}
+      {surface === 'fade' ? (
+        <>
+          <View
+            pointerEvents="none"
+            className="absolute end-0 start-0 top-0 bg-background"
+            style={{ bottom: FOOTER_FADE }}
+          />
+          <LinearGradient
+            colors={[solid, `${solid}00`]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            pointerEvents="none"
+            style={[styles.rise, { height: FOOTER_FADE }]}
+          />
+        </>
+      ) : null}
       {(title || action) && (
         <View className="h-9 flex-row items-center justify-between gap-2">
           {title ? (
@@ -1153,21 +1207,42 @@ export interface PanelsideFooterProps extends ViewProps {
    * leaves exactly this footer's height of room at the end.
    */
   floating?: boolean;
+  /**
+   * What the footer paints behind its controls.
+   *
+   * `transparent` is the default and paints nothing: the list runs under the
+   * controls, which is how the panel reads as one surface with two things
+   * floating on it rather than as a list with a bar bolted to the bottom.
+   *
+   * `fade` dissolves the list into the panel background over the strip above
+   * the controls. It costs a band of the panel, and buys a compose button that
+   * never has a chat title running through its label — worth turning on for a
+   * panel whose history is long enough that something is always underneath.
+   *
+   * `solid` is a band with a hairline over it, for a footer that is a row of
+   * the layout. Implied by `floating={false}`, which has no list to float over.
+   */
+  surface?: PanelsideSurface;
   children?: ReactNode;
 }
 
 function PanelsideFooter({
   className,
   floating = true,
+  surface = 'transparent',
   children,
   style,
   ...props
 }: PanelsideFooterProps) {
   const insets = useSafeAreaInsets();
-  const surface = useContext(PanelsideSurfaceContext);
-  const setFooterHeight = surface?.setFooterHeight;
+  const panel = useContext(PanelsideSurfaceContext);
+  const setFooterHeight = panel?.setFooterHeight;
   const background = useCSSVariable('--color-background');
   const solid = typeof background === 'string' ? background : '#000000';
+
+  // A footer in the flow has nothing to float over, so the only thing it can
+  // be is the band — whatever was asked for.
+  const paint = floating ? surface : 'solid';
 
   const onLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -1181,7 +1256,7 @@ function PanelsideFooter({
       onLayout={floating ? onLayout : undefined}
       style={[
         { paddingBottom: Math.max(insets.bottom, 12) },
-        floating ? { paddingTop: FOOTER_FADE } : null,
+        floating ? { paddingTop: paint === 'fade' ? FOOTER_FADE : 12 } : null,
         style,
       ]}
       className={cn(
@@ -1196,22 +1271,16 @@ function PanelsideFooter({
       {...props}
     >
       {/*
-        A floating footer has no edge and no bar. A solid one cuts a strip out
-        of the bottom of the list; a transparent one lets rows slide under the
-        controls and show through the labels. So it is neither: the top
-        `FOOTER_FADE` points are a gradient the list dissolves into, and
-        everything below that — the band the controls actually sit in — is
-        plain background.
-
-        The fade has to finish *above* the first control, not run through it.
-        Two layers rather than one gradient across the whole box, because a
-        gradient sized to the box puts its midpoint wherever the box happens to
-        be tall, which is exactly where the labels are.
+        The fade is two layers rather than one gradient across the whole box.
+        A gradient sized to the box puts its midpoint wherever the box happens
+        to be tall, which is exactly where the labels are — so the top
+        `FOOTER_FADE` points are the gradient and everything below it, the band
+        the controls actually sit in, is plain background.
 
         Both are inside the footer's own bounds, so neither depends on a parent
         that does not clip its children.
       */}
-      {floating ? (
+      {paint === 'fade' ? (
         <>
           <LinearGradient
             colors={[`${solid}00`, solid]}
@@ -1227,6 +1296,12 @@ function PanelsideFooter({
           />
         </>
       ) : null}
+      {paint === 'solid' && floating ? (
+        <View
+          pointerEvents="none"
+          className="absolute bottom-0 end-0 start-0 top-0 border-t border-border bg-background"
+        />
+      ) : null}
       {textChildren(children)}
     </View>
   );
@@ -1234,6 +1309,7 @@ function PanelsideFooter({
 
 const styles = StyleSheet.create({
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
+  rise: { position: 'absolute', bottom: 0, left: 0, right: 0 },
 });
 
 export interface PanelsideCtaProps extends Omit<PressableProps, 'children'> {
@@ -1245,9 +1321,10 @@ export interface PanelsideCtaProps extends Omit<PressableProps, 'children'> {
   /** `primary` is the filled accent pill; `secondary` is the quiet one. */
   variant?: 'primary' | 'secondary';
   /**
-   * How tall the pill is. `default` is 40pt, which sits level with the account
-   * button beside it in the footer; `lg` is the 48pt pill, for a panel where
-   * the call to action is the only thing in the row.
+   * How tall the pill is. `default` is 44pt — a step above the account button
+   * beside it, so the footer reads as one primary control and one secondary
+   * one. `lg` is 52pt, for a panel where the call to action is the only thing
+   * in the row.
    *
    * Ignored under `native` — the platform sizes its own button, and asks for a
    * control size rather than a height.

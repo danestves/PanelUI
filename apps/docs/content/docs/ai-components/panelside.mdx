@@ -25,7 +25,7 @@ A button in the corner, and the screen slides across, shrinks, rounds its corner
 Panelside ships with the library — no separate install.
 
 ```tsx
-import { Panelside, AIInput, Avatar, BottomSheet, Button, MenuIcon, MessageCircleIcon, MicIcon, PackageIcon, PlusIcon, Select, StarIcon, View, usePanelside } from 'panelui-native';
+import { Panelside, AIInput, Avatar, BottomSheet, Button, MenuIcon, MessageCircleIcon, MicIcon, PackageIcon, PlusIcon, Select, View, usePanelside } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -77,7 +77,6 @@ npx panelui-cli@latest add panelside
           <Panelside.ItemIcon>…</Panelside.ItemIcon>
           <Panelside.ItemLabel>…</Panelside.ItemLabel>
           <Panelside.ItemBadge>…</Panelside.ItemBadge>
-          <Panelside.Action />
         </Panelside.Item>
       </Panelside.Group>
     </Panelside.Content>
@@ -94,7 +93,7 @@ npx panelui-cli@latest add panelside
 
 A row can be filled two ways, and they are the same row. `icon`, `label` and `badge` are the shorthand for the row every navigation panel has; `Panelside.ItemIcon`, `Panelside.ItemLabel` and `Panelside.ItemBadge` are the same three slots written out, for a row that needs a different order, a label that is not a string, or something in a slot the prop cannot take.
 
-They compose rather than exclude each other — a row taking its label from `label` and writing a trailing `Panelside.Action` as a child is the ordinary case.
+They compose rather than exclude each other — a row can take its label from `label` and still write a trailing `Panelside.Action` as a child.
 
 <Diagram
   src="/diagrams/panelside-anatomy-dark.webp"
@@ -262,7 +261,7 @@ The panel is meant to be changed. `scale`, `radius` and `dim` set the curve for 
 
 `icon`, `label` and `badge` cover the row a navigation panel is made of, and most rows should use them. Write the parts out when the row needs something the props have no argument for — a different order, a label that is not a string, two things in the trailing slot.
 
-The two forms compose: a row can take its label from the prop and still write a `Panelside.Action` as a child, which is what every example above does.
+The two forms compose: a row can take its label from the prop and still write a `Panelside.Action` as a child.
 
 ```tsx
 <Panelside.Item active={thread.id === current} onPress={() => open(thread)}>
@@ -479,6 +478,7 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | `className` | `string` | — |  |
 | `title` | `string` | — | Rendered as the heading. Omit it and supply your own in `children`. |
 | `action` | `ReactNode` | — | A single element pinned to the trailing end of the title row. |
+| `surface` | `PanelsideSurface` | `'transparent'` | What the header paints behind itself. `transparent` is the default and paints nothing, so the header is the panel's own surface with a title on it rather than a bar sitting on top of one. In the panel's normal stacking that is the whole story — the header takes a row and the list starts below it. `fade` and `solid` are for a header the caller has lifted out of that stack — `className="absolute start-0 end-0 top-0"` — so the list runs underneath it. They are the two shapes `Panelside.Footer` offers, drawn the other way up. |
 
 ### Panelside.Search
 
@@ -549,6 +549,7 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `floating` | `boolean` | `true` | Overlay the scrolling list instead of taking a row below it. Default true — the list runs the full height of the panel behind it, and `Panelside.Content` leaves exactly this footer's height of room at the end. |
+| `surface` | `PanelsideSurface` | `'transparent'` | What the footer paints behind its controls. `transparent` is the default and paints nothing: the list runs under the controls, which is how the panel reads as one surface with two things floating on it rather than as a list with a bar bolted to the bottom. `fade` dissolves the list into the panel background over the strip above the controls. It costs a band of the panel, and buys a compose button that never has a chat title running through its label — worth turning on for a panel whose history is long enough that something is always underneath. `solid` is a band with a hairline over it, for a footer that is a row of the layout. Implied by `floating={false}`, which has no list to float over. |
 
 ### Panelside.Cta
 
@@ -558,7 +559,7 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | `label` | `string` | — | The button's text. |
 | `icon` | `ReactNode` | — | Leading element, usually an icon. |
 | `variant` | `'primary' \| 'secondary'` | `'primary'` | `primary` is the filled accent pill; `secondary` is the quiet one. |
-| `size` | `PanelsideCtaSize` | `'default'` | How tall the pill is. `default` is 40pt, which sits level with the account button beside it in the footer; `lg` is the 48pt pill, for a panel where the call to action is the only thing in the row. Ignored under `native` — the platform sizes its own button, and asks for a control size rather than a height. |
+| `size` | `PanelsideCtaSize` | `'default'` | How tall the pill is. `default` is 44pt — a step above the account button beside it, so the footer reads as one primary control and one secondary one. `lg` is 52pt, for a panel where the call to action is the only thing in the row. Ignored under `native` — the platform sizes its own button, and asks for a control size rather than a height. |
 | `native` | `boolean` | `false` | Render the platform's own button instead of the pill. Requires the optional `@expo/ui` package; without it this prop does nothing. **Theme tokens do not apply** — the platform draws the button, so `className` and `icon` are ignored and it sizes itself to `label`. |
 | `glass` | `boolean` | `false` | Draw the native button in the platform's Liquid Glass material. Requires `native`, and iOS 26 or later; ignored anywhere else. |
 
