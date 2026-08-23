@@ -169,8 +169,15 @@ const DETENT_FRACTION = { half: 0.5, full: 0.9 } as const;
  * that smaller box inside the taller sheet, which is why a short sheet shows
  * its content floating in the middle. Filling the detent leaves nothing to
  * centre, so the content sits where it was written: at the top.
+ *
+ * Exported because a floor is not always enough. Content that is a *column* —
+ * a list between a header and a composer — needs a definite height above it
+ * before anything in it can be `flex-1`, and a minimum is not definite: the
+ * list sizes to its own rows instead and pushes the composer off the bottom of
+ * the sheet. Anything building that shape asks for the same number here rather
+ * than working out the platform's detents a second time and disagreeing.
  */
-function detentFloor(
+export function bottomSheetDetentHeight(
   snapPoints: BottomSheetProps['snapPoints'],
   screenHeight: number
 ): number | undefined {
@@ -516,7 +523,7 @@ function BottomSheetContent({
                   // against, so `100%` measures against nothing and the
                   // content lays out wider than the sheet it sits in.
                   width: screenWidth,
-                  minHeight: detentFloor(snapPoints, screenHeight),
+                  minHeight: bottomSheetDetentHeight(snapPoints, screenHeight),
                   paddingBottom: Math.max(insets.bottom, 16),
                 }}
               >

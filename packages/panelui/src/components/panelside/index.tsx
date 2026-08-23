@@ -118,9 +118,15 @@ import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { EllipsisIcon, IconColorProvider, MenuIcon, SearchIcon, XIcon } from '../../icons';
-import { BottomSheet, type BottomSheetBodyProps, type BottomSheetProps } from '../bottom-sheet';
+import {
+  BottomSheet,
+  bottomSheetDetentHeight,
+  type BottomSheetBodyProps,
+  type BottomSheetProps,
+} from '../bottom-sheet';
 import { Button } from '../button';
 import { Tabs } from '../tabs';
+import { getNativeUI } from '../../native';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
 import { KeyboardAvoider } from '../../primitives/keyboard-avoider';
 import { Text, textChildren, type TextProps } from '../../primitives/text';
@@ -246,6 +252,13 @@ const FOOTER_FADE = 28;
  * already sits above before it travels with the keyboard.
  */
 const SHEET_BOTTOM_PADDING = 16;
+
+/**
+ * The top padding the search surface asks `BottomSheet.Content` for, and takes
+ * back off the column's height. Smaller than the sheet's own default, because
+ * this surface leads with a round button rather than with a title.
+ */
+const SHEET_TOP_PADDING = 12;
 
 /** Progress past which a layer is treated as fully hidden for accessibility. */
 const HIDDEN_EPSILON = 0.05;
@@ -1863,6 +1876,15 @@ export interface PanelsideSearchSheetProps {
   snapPoints?: BottomSheetProps['snapPoints'];
   /** Gap between the field and the top of the keyboard. */
   keyboardGap?: number;
+  /**
+   * Draw the round dismiss button at the leading edge of the top row. On by
+   * default — it is the way out of a surface that covers the screen, and it
+   * belongs where a thumb reaching across arrives rather than in the corner
+   * furthest from one.
+   */
+  showClose?: boolean;
+  /** What a screen reader announces for that button. */
+  closeLabel?: string;
   children?: ReactNode;
 }
 
@@ -1906,10 +1928,15 @@ function PanelsideSearchSheet({
   native = true,
   snapPoints,
   keyboardGap = 10,
+  showClose = true,
+  closeLabel = 'Close search',
   children,
 }: PanelsideSearchSheetProps) {
   const { searchOpen, setSearchOpen } = usePanelsideContext('Panelside.SearchSheet');
   const insets = useSafeAreaInsets();
+  const { height: screenHeight } = useWindowDimensions();
+  const tint = useCSSVariable('--color-foreground');
+  const glyph = typeof tint === 'string' ? tint : undefined;
 
   const [uncontrolledQuery, setUncontrolledQuery] = useState(defaultValue);
   const [uncontrolledTab, setUncontrolledTab] = useState(defaultTab);
@@ -1944,6 +1971,8 @@ function PanelsideSearchSheet({
 
   const close = useCallback(() => setOpen(false), [setOpen]);
 
+  const detents = snapPoints ?? (['full'] as const satisfies BottomSheetProps['snapPoints']);
+
   /*
    * What `BottomSheet.Content` pads the bottom of the sheet by. The field
    * already sits that far above the screen edge, and docking travels by the
@@ -1953,36 +1982,78 @@ function PanelsideSearchSheet({
    */
   const bottomInset = Math.max(insets.bottom, SHEET_BOTTOM_PADDING) - keyboardGap;
 
+  /*
+   * A definite height for the column, not `flex-1` against the sheet's own.
+   *
+   * The platform sheet gives its hosted content a *minimum* height, and a
+   * minimum is not something `flex-1` can divide: the results list sizes to
+   * its own rows instead, grows past the sheet, and pushes the field off the
+   * bottom — which is a search surface with no way to type in it. So the
+   * column is told exactly how tall it is, and the list gets the room left
+   * between the tabs and the field.
+   *
+   * Only under the platform sheet. The styled one is laid out by us and has a
+   * real height already, so `flex-1` resolves there and a second opinion about
+   * how tall the sheet is would only be a chance to disagree with it.
+   */
+  const hosted = native && getNativeUI() !== null;
+  const columnHeight = hosted
+    ? (bottomSheetDetentHeight(detents as BottomSheetProps['snapPoints'], screenHeight) ??
+        screenHeight * 0.9) -
+      SHEET_TOP_PADDING -
+      Math.max(insets.bottom, SHEET_BOTTOM_PADDING)
+    : undefined;
+
   const context = useMemo<PanelsideSearchSheetContextValue>(
     () => ({ open, query, setQuery, tab: activeTab, setTab, close, bottomInset }),
     [activeTab, bottomInset, close, open, query, setQuery, setTab]
   );
 
   return (
-    <PanelsideSearchSheetContext.Provider value={context}>
-      <BottomSheet
-        native={native}
-        open={open}
-        onOpenChange={setOpen}
-        snapPoints={snapPoints ?? ['full']}
-      >
+    <BottomSheet
+      native={native}
+      open={open}
+      onOpenChange={setOpen}
+      snapPoints={detents as BottomSheetProps['snapPoints']}
+    >
+      {/*
+        `showClose` off on the sheet itself: this surface draws its own, at the
+        leading edge of the top row, where the reference for this pattern puts
+        it and where a thumb reaching across the screen arrives.
+      */}
+      <BottomSheet.Content size="full" showClose={false} className="gap-0 px-0 pt-3">
         {/*
-          `showClose` off: the field row draws its own ✕ at the bottom, next to
-          the thumb that is already there. A second one in the top corner is a
-          dismiss control at the far end of the screen from the only thing on
-          it you are touching.
+          The provider is *inside* Content, not around the sheet.
+
+          The styled sheet mounts its content through a portal, under the
+          portal host and outside this component's subtree — so a provider
+          wrapped around the sheet is a provider the children never see, and
+          every part below throws about not being inside a `SearchSheet`. Only
+          the native path happened to work, because the platform hosts the
+          content in place.
         */}
-        <BottomSheet.Content size="full" showClose={false} className="gap-0 px-0">
-          {/*
-            `flex-1` against the height the sheet has already fixed — `full` on
-            the styled sheet, the detent's floor on the native one. Without a
-            definite height above it the results would size to their own
-            content and the field would follow them up the screen.
-          */}
-          <View className={cn('flex-1 gap-2', className)}>{children}</View>
-        </BottomSheet.Content>
-      </BottomSheet>
-    </PanelsideSearchSheetContext.Provider>
+        <PanelsideSearchSheetContext.Provider value={context}>
+          <View
+            className={cn('gap-2', columnHeight === undefined && 'flex-1', className)}
+            style={columnHeight === undefined ? undefined : { height: columnHeight }}
+          >
+            {showClose ? (
+              <View className="flex-row px-4 pb-1">
+                <AnimatedPressable
+                  onPress={close}
+                  accessibilityRole="button"
+                  accessibilityLabel={closeLabel}
+                  className="h-9 w-9 items-center justify-center rounded-full bg-secondary"
+                >
+                  <XIcon size={17} color={glyph} />
+                </AnimatedPressable>
+              </View>
+            ) : null}
+            {children}
+          </View>
+        </PanelsideSearchSheetContext.Provider>
+      </BottomSheet.Content>
+    </BottomSheet>
   );
 }
 
@@ -2131,14 +2202,6 @@ function PanelsideSearchResult({
 export interface PanelsideSearchFieldProps extends TextInputProps {
   className?: string;
   containerClassName?: string;
-  /**
-   * Show the round dismiss button beside the field. On by default — it is the
-   * way out of the surface, and it belongs next to the thumb that is typing
-   * rather than in the corner furthest from it.
-   */
-  showClose?: boolean;
-  /** What a screen reader announces for that button. */
-  closeLabel?: string;
 }
 
 /**
@@ -2148,18 +2211,20 @@ export interface PanelsideSearchFieldProps extends TextInputProps {
  * comes up: a field at the top of a full-height sheet is at the far end of the
  * screen from both, and every character typed into it is read at the other
  * end of a list that is moving.
+ *
+ * The way out of the surface is not here — `Panelside.SearchSheet` draws it at
+ * the leading edge of the top row, so the dismiss control does not move with
+ * the keyboard and is not one mis-tap away from the field.
  */
 function PanelsideSearchField({
   className,
   containerClassName,
   placeholder = 'Search',
-  showClose = true,
-  closeLabel = 'Close search',
   value,
   onChangeText,
   ...props
 }: PanelsideSearchFieldProps) {
-  const { open, query, setQuery, close, bottomInset } = usePanelsideSearchSheet(
+  const { open, query, setQuery, bottomInset } = usePanelsideSearchSheet(
     'Panelside.SearchField'
   );
   const placeholderTint = useCSSVariable('--color-muted-foreground');
@@ -2186,11 +2251,11 @@ function PanelsideSearchField({
       mode="dock"
       active={open}
       bottomInset={bottomInset}
-      className="w-full flex-row items-center gap-2 px-4 pb-1"
+      className="w-full px-4 pb-1"
     >
       <View
         className={cn(
-          'h-12 flex-1 flex-row items-center gap-2 rounded-full bg-secondary px-4',
+          'h-12 w-full flex-row items-center gap-2 rounded-full bg-secondary px-4',
           containerClassName
         )}
       >
@@ -2221,16 +2286,6 @@ function PanelsideSearchField({
         ) : null}
       </View>
 
-      {showClose ? (
-        <AnimatedPressable
-          onPress={close}
-          accessibilityRole="button"
-          accessibilityLabel={closeLabel}
-          className="h-12 w-12 items-center justify-center rounded-full bg-secondary"
-        >
-          <XIcon size={18} color={typeof textTint === 'string' ? textTint : undefined} />
-        </AnimatedPressable>
-      ) : null}
     </KeyboardAvoider>
   );
 }

@@ -209,6 +209,7 @@ return (
         ))}
       </Panelside.SearchResults>
 
+      {/* The sheet draws the dismiss ✕ above the tabs itself. */}
       <Panelside.SearchField placeholder="Search chats, images and files" />
     </Panelside.SearchSheet>
   </Panelside>
@@ -646,6 +647,8 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | `native` | `boolean` | `true` | Present the platform's own sheet. Default true, because this one is the whole screen and the system's presentation, detents and dismiss gesture are the ones people already know. Requires the optional `@expo/ui` package; without it the styled sheet renders instead. |
 | `snapPoints` | `BottomSheetProps['snapPoints']` | — | Heights the sheet can rest at. Defaults to the tall one. |
 | `keyboardGap` | `number` | `10` | Gap between the field and the top of the keyboard. |
+| `showClose` | `boolean` | `true` | Draw the round dismiss button at the leading edge of the top row. On by default — it is the way out of a surface that covers the screen, and it belongs where a thumb reaching across arrives rather than in the corner furthest from one. |
+| `closeLabel` | `string` | `'Close search'` | What a screen reader announces for that button. |
 
 ### Panelside.SearchTabs
 
@@ -683,8 +686,6 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `containerClassName` | `string` | — |  |
-| `showClose` | `boolean` | `true` | Show the round dismiss button beside the field. On by default — it is the way out of the surface, and it belongs next to the thumb that is typing rather than in the corner furthest from it. |
-| `closeLabel` | `string` | `'Close search'` | What a screen reader announces for that button. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -744,6 +745,10 @@ Being covered says nothing to a screen reader: without help it reads out a navig
 `Panelside.SearchTrigger` and `Panelside.SearchSheet` are two halves in two subtrees — the button is in the header, the sheet is a sibling of the panel. The open state therefore lives on the root, and `usePanelside()` exposes it as `searchOpen` and `setSearchOpen` for a button of your own. Pass `open` and `onOpenChange` to the sheet to take it over instead.
 
 The sheet is `native` by default, which means the platform presents it and owns its detents, its scroll interaction and its dismiss gesture. It needs the optional `@expo/ui`; without it the styled sheet renders and nothing else changes.
+
+Down the sheet: the dismiss button, the tabs, the results, the field. The ✕ leads rather than trails because it is the way out of a surface covering the whole screen, and it sits at the top so it does not move when the keyboard does.
+
+The column is given a definite height under the platform sheet rather than `flex-1`. A hosted sheet hands its content a *minimum* height, and a minimum is not something flex can divide — the results list sizes to its own rows, grows past the sheet, and pushes the field off the bottom.
 
 The field docks to the keyboard rather than the sheet: the platform sheet is told to ignore the keyboard's safe area, so the field travels by the keyboard's height less the inset it already sits above, and the results stay where they are behind it. `keyboardGap` is the space left between the two.
 

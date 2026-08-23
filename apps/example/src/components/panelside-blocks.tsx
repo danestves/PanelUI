@@ -266,27 +266,28 @@ function AssistantPanel({
           glass={native}
         />
         <View className="flex-1" />
-        {/*
-          A native button hosting the avatar, which is the one hosted-view
-          shape that measures: an icon button is a square the component sizes,
-          so the avatar inside it has a definite box above it on both axes. A
-          labelled native button hosting a view does not, and dies in native
-          code.
-        */}
-        <Button
-          native={native}
-          glass={native}
-          size="icon"
-          variant="ghost"
-          className={native ? undefined : 'h-11 w-11 rounded-full'}
-          accessibilityLabel="Account"
-        >
-          {/* 28pt, not the 32pt `sm`: the native icon button hosts its glyph
-              in a 44pt frame with 6pt of padding around it, and a 32pt avatar
-              fills that exactly. A frame with nothing to spare is the case the
-              measurement chain is not allowed to be in. */}
-          <Avatar size="sm" fallback="K" className="h-7 w-7" />
-        </Button>
+        {native ? (
+          /*
+            The initial as a plain string, not an `Avatar` hosted inside the
+            button.
+            
+            A string is the platform's own text: it needs no `RNHostView`, no
+            measurement chain and no frame with room to spare, and the platform
+            draws its glass around it the way it draws it around any other
+            label. Hosting a React Native circle in there to get the same
+            letter is the expensive way to arrive at what the platform already
+            does — and it is the shape that has cost two crashes.
+          */
+          <Button native glass size="icon" variant="ghost" accessibilityLabel="Account">
+            K
+          </Button>
+        ) : (
+          /* Ours, and the size it always was: a 40pt avatar in a row. */
+          <Panelside.Item
+            icon={<Avatar size="md" fallback="K" />}
+            accessibilityLabel="Account"
+          />
+        )}
       </Panelside.Footer>
     </Panelside.Panel>
   );
