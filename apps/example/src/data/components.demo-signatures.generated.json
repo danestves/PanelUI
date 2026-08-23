@@ -271,7 +271,7 @@
     },
     {
       "slug": "qr-code",
-      "signature": "d10e3d7a1c751e9fbef70326bd5c20e454786dc38c4c97cd3b339a0257515b04"
+      "signature": "4091abe544947de3308378e6208fb682ad5a58d2f00f864c16f276b2e0b59bbb"
     },
     {
       "slug": "questionnaire",
@@ -427,7 +427,7 @@
     },
     {
       "slug": "timeline",
-      "signature": "0def30ba9ea9ef2502ea4043eca9c1c327275c4959165fd400119fdd8f3c7e1f"
+      "signature": "0f61ad9b60638183acd1fd10636b7f0d256f118040e4386e1939e8a826214e6a"
     },
     {
       "slug": "time-picker",

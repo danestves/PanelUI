@@ -820,44 +820,121 @@ function TimelineDemo({
 }
 
 /**
- * A span of years on a rail you swipe through.
+ * A working life on a rail you swipe through.
  *
  * The shape a long history wants. Read top to bottom it is a page nobody
- * reaches the end of; laid out sideways, a year is a column and the whole run
+ * reaches the end of; laid out sideways, a stop is a column and the whole run
  * is one gesture.
  *
- * The empty years carry the argument. 2018, 2020, 2021 and 2024 have nothing on
- * them and collapse to a tick, so a quiet stretch costs a thumb-width instead
- * of a screen and the years that did something keep their room. Nothing sets a
- * width here — the columns take it from whether they have content.
+ * The quiet stretches carry the argument. A year with nothing on it collapses
+ * to a tick, so it costs a thumb-width instead of a screen and the years that
+ * did something keep their room. Nothing sets a width here — the columns take
+ * it from whether they have content.
+ *
+ * Nothing is written above the rail per column. The masthead says where you
+ * are, once, and it changes as you drag — which is the whole reason
+ * `onColumnChange` exists. Repeating a year over every tick as well is the
+ * same fact printed twice, and the smaller of the two copies is the one nobody
+ * can read.
  */
-const LIFELINE = [
+
+/**
+ * The marks.
+ *
+ * Three are real company marks in their own colours, drawn by the library and
+ * used for the company each belongs to. The rest are plainly generic app tiles
+ * with an initial in them — a placeholder that looks like a placeholder, which
+ * is the honest thing to put in a logo slot for a company that does not exist.
+ */
+function AppTile({ letter, className }: { letter: string; className?: string }) {
+  return (
+    <View
+      className={`h-11 w-11 items-center justify-center rounded-2xl border-2 border-background ${className}`}
+    >
+      <Text size="lg" weight="bold" className="text-white">
+        {letter}
+      </Text>
+    </View>
+  );
+}
+
+function MarkTile({ children }: { children: React.ReactNode }) {
+  return (
+    <View className="h-11 w-11 items-center justify-center rounded-2xl border-2 border-background bg-white">
+      {children}
+    </View>
+  );
+}
+
+const LIFELINE: {
+  year: string;
+  label: string;
+  title: string;
+  mark: React.ReactNode;
+  initials: string;
+  events: string[];
+}[] = [
   {
     year: '2016',
-    age: '0',
+    label: 'Started at',
+    title: 'Northgate',
+    mark: <AppTile letter="N" className="bg-emerald-600" />,
+    initials: 'KA',
     events: ['First commit, on a train, in a single file.'],
   },
   {
     year: '2017',
-    age: '1',
+    label: 'Shipped at',
+    title: 'Northgate',
+    mark: <AppTile letter="N" className="bg-emerald-600" />,
+    initials: 'KA',
     events: [
       'Rewrote the layout engine after the first real app hit sixty screens.',
       'Ten components, all of them buttons in disguise.',
     ],
   },
-  { year: '2018', age: '2', events: [] },
+  {
+    year: '2018',
+    label: 'Quiet year at',
+    title: 'Northgate',
+    mark: <AppTile letter="N" className="bg-emerald-600" />,
+    initials: 'KA',
+    events: [],
+  },
   {
     year: '2019',
-    age: '3',
+    label: 'Joined',
+    title: 'Apple',
+    mark: (
+      <MarkTile>
+        <AppleIcon size={20} color="#000000" />
+      </MarkTile>
+    ),
+    initials: 'KA',
     events: [
       'Moved the animations onto the UI thread and stopped apologising for the list.',
     ],
   },
-  { year: '2020', age: '4', events: [] },
-  { year: '2021', age: '5', events: [] },
+  { year: '2020', label: 'Still at', title: 'Apple', mark: (
+      <MarkTile>
+        <AppleIcon size={20} color="#000000" />
+      </MarkTile>
+    ), initials: 'KA', events: [] },
+  { year: '2021', label: 'Still at', title: 'Apple', mark: (
+      <MarkTile>
+        <AppleIcon size={20} color="#000000" />
+      </MarkTile>
+    ), initials: 'KA', events: [] },
   {
     year: '2022',
-    age: '6',
+    label: 'Joined',
+    title: 'Google',
+    mark: (
+      <MarkTile>
+        <GoogleIcon size={20} />
+      </MarkTile>
+    ),
+    initials: 'KA',
     events: [
       'Design tokens became one file, and dark mode stopped being a fork.',
       'The docs started generating themselves from the source.',
@@ -865,13 +942,34 @@ const LIFELINE = [
   },
   {
     year: '2023',
-    age: '7',
+    label: 'Shipped at',
+    title: 'Google',
+    mark: (
+      <MarkTile>
+        <GoogleIcon size={20} />
+      </MarkTile>
+    ),
+    initials: 'KA',
     events: ['Charts arrived — twelve of them, all on one scale engine.'],
   },
-  { year: '2024', age: '8', events: [] },
+  {
+    year: '2024',
+    label: 'Quiet year at',
+    title: 'Google',
+    mark: (
+      <MarkTile>
+        <GoogleIcon size={20} />
+      </MarkTile>
+    ),
+    initials: 'KA',
+    events: [],
+  },
   {
     year: '2025',
-    age: '9',
+    label: 'Left for',
+    title: 'PanelUI',
+    mark: <AppTile letter="P" className="bg-indigo-600" />,
+    initials: 'KA',
     events: [
       'The registry shipped, so a component could be copied instead of installed.',
     ],
@@ -879,54 +977,54 @@ const LIFELINE = [
 ];
 
 function LifelineDemo() {
+  /*
+   * Which column the reading edge is on. The masthead is the only thing that
+   * reads it, and it is a state update per column rather than per frame — the
+   * timeline reports the crossing, not the scroll.
+   */
+  const [active, setActive] = useState(0);
+  const entry = LIFELINE[active] ?? LIFELINE[0]!;
+
   return (
     <View className="flex-1 justify-center">
       {/*
-        The masthead: the marks, then what the run is, then its name. Two real
-        company marks rather than coloured squares, because a placeholder in a
-        logo slot only demonstrates that there is a slot.
-
-        Google's is in its four brand colours; Apple's is monochrome, which is
-        not an omission — Apple's guidelines require the mark to take the
-        colour of the text beside it, so it is the one brand mark in the set
-        that follows the icon colour context.
+        The masthead: the marks, then what happened, then where. All three come
+        from the column at the reading edge, so a drag changes the pair of
+        tiles, the line above and the name — which is what makes the rail feel
+        like it is moving through something rather than under a heading.
       */}
       <Timeline.Masthead
         className="px-5 pb-8"
         media={
           <>
-            {/* White tiles, on both themes. A brand mark is drawn for a light
-                ground — Apple's is black by its own guidelines, and Google's
-                four colours were picked against white — so the tile carries
-                the ground rather than the theme deciding whether the mark is
-                visible. The ring is the panel's background, which is what
-                separates the two where they overlap. */}
-            <View className="h-11 w-11 items-center justify-center rounded-2xl border-2 border-background bg-white">
-              <AppleIcon size={20} color="#000000" />
+            <View className="h-11 w-11 items-center justify-center rounded-2xl border-2 border-background bg-secondary">
+              <Text size="sm" weight="semibold">
+                {entry.initials}
+              </Text>
             </View>
-            <View className="-ms-3 h-11 w-11 items-center justify-center rounded-2xl border-2 border-background bg-white">
-              <GoogleIcon size={20} />
-            </View>
+            <View className="-ms-3">{entry.mark}</View>
           </>
         }
-        label="Built for"
-        title="iOS and Android"
+        label={entry.label}
+        title={entry.title}
       />
 
-      <Timeline orientation="horizontal" haptics value={LIFELINE.length - 1} className="pl-5">
-        {LIFELINE.map((entry, index) => (
+      <Timeline
+        orientation="horizontal"
+        haptics
+        value={LIFELINE.length - 1}
+        onColumnChange={setActive}
+        className="pl-5"
+      >
+        {LIFELINE.map((item, index) => (
           <Timeline.Item
-            key={entry.year}
+            key={item.year}
             step={index}
             last={index === LIFELINE.length - 1}
           >
-            <Timeline.Aside>
-              <Timeline.Meta>{entry.age}</Timeline.Meta>
-              <Timeline.Date>{entry.year}</Timeline.Date>
-            </Timeline.Aside>
             <Timeline.Indicator />
             <Timeline.Content>
-              {entry.events.map((event) => (
+              {item.events.map((event) => (
                 <Timeline.Description key={event} className="pb-3">
                   {event}
                 </Timeline.Description>
@@ -1495,11 +1593,11 @@ export const ENTRIES: ComponentEntry[] = [
       { label: 'Ledger', render: () => <LedgerDemo /> },
       { label: 'Handoff', render: () => <HandoffDemo /> },
       {
-        label: 'A decade, sideways',
+        label: 'A working life, sideways',
         id: 'horizontal',
         fullPage: true,
         description:
-          'Years as columns on a rail wider than the screen. Quiet years collapse to a tick; a flick lands on a column.',
+          'Stops as columns on a rail wider than the screen, with a masthead that follows the drag.',
         render: () => <LifelineDemo />,
       },
     ],

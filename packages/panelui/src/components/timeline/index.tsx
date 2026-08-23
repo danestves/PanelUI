@@ -49,6 +49,7 @@ import {
   createContext,
   forwardRef,
   isValidElement,
+  useCallback,
   useContext,
   useMemo,
   type ReactElement,
@@ -94,9 +95,26 @@ const AnimatedText = Animated.createAnimatedComponent(Text);
 function useColumnDetent(
   scrollX: SharedValue<number>,
   offsets: number[],
-  enabled: boolean
+  haptics: boolean,
+  onColumnChange?: (index: number) => void
 ) {
   const nearest = useSharedValue(0);
+
+  /*
+   * A stable function for `runOnJS`. The prop itself is a fresh closure on
+   * every render, and handing that to the UI thread re-serialises it on every
+   * frame the reaction is rebuilt.
+   */
+  const report = useCallback(
+    (index: number) => {
+      onColumnChange?.(index);
+    },
+    [onColumnChange]
+  );
+
+  // Nothing to compute unless somebody is listening. The reaction runs on
+  // every scroll frame, so a timeline that wants neither pays nothing.
+  const enabled = haptics || onColumnChange !== undefined;
 
   useAnimatedReaction(
     () => {
@@ -115,7 +133,8 @@ function useColumnDetent(
     (index, previous) => {
       if (!enabled || previous === null || index === previous) return;
       nearest.value = index;
-      runOnJS(selectionTick)();
+      if (haptics) runOnJS(selectionTick)();
+      if (onColumnChange !== undefined) runOnJS(report)(index);
     }
   );
 }
@@ -184,10 +203,18 @@ const TimelineColumnOffsetContext = createContext<number | null>(null);
  *
  * The rail has to land on exactly the same line in every column, and the
  * simplest way to guarantee that is to make the band above it a fixed height
- * rather than to position the rail against measured content. So the aside is
- * `HORIZONTAL_RAIL_TOP` tall in every column, the rail is drawn once across the
- * whole track at that offset, and each column's tick is pulled up by half its
- * own height to sit centred on it.
+ * rather than to position the rail against measured content.
+ *
+ * So the *column* reserves it, as padding, and the rail is drawn once across
+ * the whole track at that offset. Each column's tick is the first thing after
+ * the padding and is pulled up by half its own height to straddle the line.
+ *
+ * `Timeline.Aside` fills that band with a negative margin equal to its own
+ * height: it draws inside the reserved strip and takes no flow height of its
+ * own. That is what makes it optional. Reserved by the aside instead, a column
+ * without one put its tick at the top of the column and 64 points above the
+ * rail — which is not a mistake anyone makes twice, but is also not a mistake
+ * the component should let anyone make once.
  */
 const HORIZONTAL_RAIL_TOP = 64;
 const HORIZONTAL_TICK_HEIGHT = 10;
@@ -300,6 +327,7 @@ const timelineVariants = tv({
       horizontal: {
         item: 'w-auto shrink-0 flex-col gap-0 pr-6',
         aside: 'w-auto items-start justify-end gap-0 pb-2 pt-0',
+        // Reserved by the column, not by whatever it happens to contain.
         rail: 'w-full items-start',
         body: 'w-auto flex-none pb-0 pt-5',
         title: 'text-sm',
@@ -449,6 +477,24 @@ export interface TimelineProps extends ViewProps {
    * whether this one is worth feeling is the caller's call.
    */
   haptics?: boolean;
+  /**
+   * Horizontal only: which column is at the reading edge, reported as it
+   * changes.
+   *
+   * For anything outside the rail that belongs to the column being read — a
+   * masthead naming it, a caption, a picture. Without it that block can only
+   * show the same thing for the whole run, which makes a swipe through ten
+   * columns a swipe under one unchanging heading.
+   *
+   * The index is the column's position among the rendered items, not its
+   * `step`: `step` is the progress value and may be sparse or repeated, so it
+   * cannot address a column.
+   *
+   * It fires on the crossing, not per frame — the reading edge passing from
+   * one column to the next — so it is a state update per column rather than
+   * per scroll event.
+   */
+  onColumnChange?: (index: number) => void;
   children?: ReactNode;
 }
 
@@ -461,6 +507,7 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
       orientation = 'vertical',
       snap = true,
       haptics = false,
+      onColumnChange,
       children,
       ...props
     },
@@ -517,7 +564,7 @@ const TimelineRoot = forwardRef<View, TimelineProps>(
       scrollX.value = event.contentOffset.x;
     });
 
-    useColumnDetent(scrollX, offsets, horizontal && snap && haptics);
+    useColumnDetent(scrollX, offsets, horizontal && snap && haptics, horizontal ? onColumnChange : undefined);
 
     if (!horizontal) {
       return (
@@ -810,7 +857,13 @@ const TimelineItem = forwardRef<View, TimelineItemProps>(
           ref={ref}
           className={item({ className })}
           {...props}
-          style={[style, { width: columnWidth }, columnStyle]}
+          style={[
+            style,
+            // The band above the rail, reserved whether or not this column
+            // writes a `Timeline.Aside` into it.
+            { width: columnWidth, paddingTop: HORIZONTAL_RAIL_TOP },
+            columnStyle,
+          ]}
         >
           {virtualized && !last ? (
             <View
@@ -850,14 +903,15 @@ const TimelineAside = forwardRef<View, ViewProps & { className?: string }>(
         ref={ref}
         className={aside({ className })}
         /*
-         * Horizontal: this band's height is where the rail lands, so it is
-         * fixed rather than sized to whatever the column happens to put in it.
-         * A column with a longer label would otherwise push its own tick below
-         * everybody else's and the rail would stop being a line.
+         * Horizontal: this draws *into* the band the column has already
+         * reserved, rather than being the thing that reserves it — hence the
+         * negative margin cancelling its own height. A column with a longer
+         * label therefore cannot push its own tick below everybody else's, and
+         * a column with no aside at all still has its tick on the rail.
          */
         style={
           orientation === 'horizontal'
-            ? [{ height: HORIZONTAL_RAIL_TOP }, style]
+            ? [{ height: HORIZONTAL_RAIL_TOP, marginTop: -HORIZONTAL_RAIL_TOP }, style]
             : style
         }
         {...props}

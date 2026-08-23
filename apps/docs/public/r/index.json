@@ -1044,6 +1044,7 @@
       "haptics",
       "icons",
       "keyboard-avoider",
+      "native",
       "tabs",
       "text",
       "use-back-handler",
