@@ -23,7 +23,7 @@ A sequence of events, vertical by default.
 Timeline ships with the library — no separate install.
 
 ```tsx
-import { Timeline } from 'panelui-native';
+import { Timeline, AppleIcon, GoogleIcon, View } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -86,6 +86,8 @@ npx panelui-cli@latest add timeline
   </Timeline.Item>
 </Timeline>
 
+<Timeline.Masthead media={…} label="…" title="…" />
+
 <Timeline orientation="horizontal">
   <Timeline.Item step={0}>
     <Timeline.Aside>
@@ -103,6 +105,7 @@ npx panelui-cli@latest add timeline
 - **`Timeline.List`** — See props below.
 - **`Timeline.Item`** — One event. `step` is its position, `last` stops the connector.
 - **`Timeline.Aside`** — Right-aligned meta column left of the rail. Place it before the indicator.
+- **`Timeline.Masthead`** — The block above a horizontal rail, saying what the run of columns is: `media` (a logo pair, an avatar stack), then `label`, then `title`. It sits outside the `Timeline` because it belongs to the whole run rather than to any column, and a horizontal `Timeline` lays out nothing but columns. The two lines are typeset as one unit — the label a size below the title and muted, with tight leading — which a pair of `Text`s written at the call site is not.
 - **`Timeline.Indicator`** — The node on the rail, with the connector below it. Horizontal, it is a tick on the shared rail and takes no children.
 - **`Timeline.Content`** — Everything right of the rail — and everything below it when the timeline runs sideways, where it fades further than the column around it as that column leaves the reading edge.
 - **`Timeline.Header`** — Title row: heading left, trailing slot right.
@@ -213,7 +216,25 @@ Only the native FlatList window mounts. Return a Timeline.Item and let the list 
 
 Years as columns on a rail wider than the screen. The empty years carry the argument: they collapse to a tick, so the quiet stretch costs a thumb-width instead of a screen and the years that did something keep their room. Nothing sets a width — the columns take it from whether they have content.
 
+`Timeline.Masthead` sits above the rail and says what the run is. It is one part rather than two `Text`s because the label and the name have to be typeset as one unit: set a step apart with an ordinary paragraph gap they read as a small heading followed by a bigger unrelated one.
+
 ```tsx
+<Timeline.Masthead
+  media={
+    <>
+      <View className="h-11 w-11 items-center justify-center rounded-2xl border-2 border-background bg-white">
+        <AppleIcon size={20} color="#000000" />
+      </View>
+      <View className="-ms-3 h-11 w-11 items-center justify-center rounded-2xl border-2 border-background bg-white">
+        <GoogleIcon size={20} />
+      </View>
+    </>
+  }
+  label="Built for"
+  title="iOS and Android"
+  className="px-5 pb-8"
+/>
+
 <Timeline orientation="horizontal" value={years.length - 1} className="pl-5">
   {years.map((entry, index) => (
     <Timeline.Item key={entry.year} step={index} last={index === years.length - 1}>
@@ -329,6 +350,15 @@ Years as columns on a rail wider than the screen. The empty years carry the argu
 | `label` | `string` | — |  |
 | `value` | `string` | `0` |  |
 
+### Timeline.Masthead
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `media` | `ReactNode` | — | What sits above the two lines — a logo pair, an avatar stack, a single mark. Anything; the slot only lays it out in a row. |
+| `label` | `string` | — | The small line: what kind of thing the run below is. |
+| `title` | `string` | — | The name of it, in the size the eye lands on first. |
+
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
@@ -340,6 +370,8 @@ Colour follows one rule: **progress is solid, event kind is tinted**. An untoned
 Icons inside `Timeline.Indicator` inherit a colour that reads against the node, so they stay legible in every theme without a hardcoded value.
 
 ### Horizontal
+
+`Timeline.Masthead` goes above the rail — outside the `Timeline`, because a horizontal one lays out columns and the masthead belongs to the whole run. Media, then a small label, then the name.
 
 The rail is drawn once across the whole track and every column puts a tick on it. What keeps those ticks on one line is that the band above the rail is a fixed height in every column — so `Timeline.Aside` is where the date and any label go, and a taller label does not push one column's tick below its neighbours'.
 

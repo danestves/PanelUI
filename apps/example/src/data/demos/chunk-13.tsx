@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, Pressable, ScrollView, View } from "react-native";
-import { Badge, BellIcon, Button, Card, CardIcon, CheckIcon, FileIcon, FolderIcon, FolderOpenIcon, Frame, InfoIcon, Item, KeyboardAvoider, Label, PlusSquareIcon, ReceiptIcon, SendIcon, ShareNodesIcon, ShieldAlertIcon, ShieldCheckIcon, Spinner, TagInput, Text, Textarea, ThemeSelector, type ThemeSelection, TimePicker, type TimeValue, formatTime, Timeline, Toast, ToggleButton, ToggleButtonGroup, Tooltip, Tree, useToast } from "panelui-native";
+import { AppleIcon, Badge, BellIcon, Button, Card, CardIcon, CheckIcon, FileIcon, FolderIcon, FolderOpenIcon, Frame, GoogleIcon, InfoIcon, Item, KeyboardAvoider, Label, PlusSquareIcon, ReceiptIcon, SendIcon, ShareNodesIcon, ShieldAlertIcon, ShieldCheckIcon, Spinner, TagInput, Text, Textarea, ThemeSelector, type ThemeSelection, TimePicker, type TimeValue, formatTime, Timeline, Toast, ToggleButton, ToggleButtonGroup, Tooltip, Tree, useToast } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 const PHOTO = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=60';
@@ -881,14 +881,37 @@ const LIFELINE = [
 function LifelineDemo() {
   return (
     <View className="flex-1 justify-center">
-      <View className="gap-1 px-5 pb-8">
-        <Text size="sm" muted>
-          Swipe
-        </Text>
-        <Text size="xl" weight="semibold">
-          Ten years of it
-        </Text>
-      </View>
+      {/*
+        The masthead: the marks, then what the run is, then its name. Two real
+        company marks rather than coloured squares, because a placeholder in a
+        logo slot only demonstrates that there is a slot.
+
+        Google's is in its four brand colours; Apple's is monochrome, which is
+        not an omission — Apple's guidelines require the mark to take the
+        colour of the text beside it, so it is the one brand mark in the set
+        that follows the icon colour context.
+      */}
+      <Timeline.Masthead
+        className="px-5 pb-8"
+        media={
+          <>
+            {/* White tiles, on both themes. A brand mark is drawn for a light
+                ground — Apple's is black by its own guidelines, and Google's
+                four colours were picked against white — so the tile carries
+                the ground rather than the theme deciding whether the mark is
+                visible. The ring is the panel's background, which is what
+                separates the two where they overlap. */}
+            <View className="h-11 w-11 items-center justify-center rounded-2xl border-2 border-background bg-white">
+              <AppleIcon size={20} color="#000000" />
+            </View>
+            <View className="-ms-3 h-11 w-11 items-center justify-center rounded-2xl border-2 border-background bg-white">
+              <GoogleIcon size={20} />
+            </View>
+          </>
+        }
+        label="Built for"
+        title="iOS and Android"
+      />
 
       <Timeline orientation="horizontal" haptics value={LIFELINE.length - 1} className="pl-5">
         {LIFELINE.map((entry, index) => (

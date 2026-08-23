@@ -239,6 +239,25 @@ const timelineVariants = tv({
     stats: 'mt-2 flex-row gap-6 rounded-xl border border-border px-3.5 py-2.5',
     statLabel: 'text-xs text-muted-foreground',
     statValue: 'text-sm font-medium text-foreground',
+    /*
+     * The masthead over a horizontal rail: what the run of columns is, said
+     * once, above them.
+     *
+     * `gap-0` between the two lines and tight leading on both, because they
+     * are one thing rather than two — a label and the name it introduces. Set
+     * a step apart with a normal paragraph gap they read as a small heading
+     * followed by a bigger unrelated one, which is what the pair looked like
+     * before.
+     *
+     * The label is a size below the title and muted rather than the same size
+     * in a lighter weight: at the same size the eye reads the grey one first
+     * because it is on the left of the taller one, and the name — the part
+     * anybody is actually looking for — arrives second.
+     */
+    masthead: 'gap-2',
+    mastheadMedia: 'flex-row items-center',
+    mastheadLabel: 'text-lg font-medium leading-tight text-muted-foreground',
+    mastheadTitle: 'text-2xl font-semibold leading-tight text-foreground',
   },
   variants: {
     variant: {
@@ -280,10 +299,24 @@ const timelineVariants = tv({
       vertical: {},
       horizontal: {
         item: 'w-auto shrink-0 flex-col gap-0 pr-6',
-        aside: 'w-auto items-start justify-end gap-1 pb-2 pt-0',
+        aside: 'w-auto items-start justify-end gap-0 pb-2 pt-0',
         rail: 'w-full items-start',
         body: 'w-auto flex-none pb-0 pt-5',
         title: 'text-sm',
+        /*
+         * A column's date is its name, not a caption on it. At `text-xs` next
+         * to a `text-xs` meta line the two were a two-line grey block and the
+         * year — the only thing distinguishing one column from the next — had
+         * to be looked for. The meta line stays small above it and the pair
+         * closes up, so they read as one label with an eyebrow rather than as
+         * two.
+         *
+         * Colour is left alone: `useColumnInk` animates it per column so the
+         * one you have landed on is the one in full ink, and a colour in the
+         * class would be overridden by that anyway.
+         */
+        date: 'text-sm font-semibold leading-tight',
+        meta: 'text-[11px] font-medium leading-tight',
       },
     },
   },
@@ -1104,10 +1137,74 @@ const TimelineStat = forwardRef<View, TimelineStatProps>(
 );
 TimelineStat.displayName = 'Timeline.Stat';
 
+export interface TimelineMastheadProps extends ViewProps {
+  className?: string;
+  /**
+   * What sits above the two lines — a logo pair, an avatar stack, a single
+   * mark. Anything; the slot only lays it out in a row.
+   */
+  media?: ReactNode;
+  /** The small line: what kind of thing the run below is. */
+  label?: string;
+  /** The name of it, in the size the eye lands on first. */
+  title?: string;
+  /** Anything else, below the title. */
+  children?: ReactNode;
+}
+
+/**
+ * The block above a horizontal rail, saying what the run of columns is.
+ *
+ * Media, then a small label, then the name — the order a reader takes them in
+ * anyway, and the reason it is a part rather than two `Text`s at every call
+ * site: the pair has to be typeset as one unit, and a masthead written by hand
+ * is a heading above another heading.
+ *
+ * ```tsx
+ * <Timeline.Masthead
+ *   media={
+ *     <Avatar.Group size="sm">
+ *       <Avatar fallback="A"><AppleIcon size={18} /></Avatar>
+ *     </Avatar.Group>
+ *   }
+ *   label="Built for"
+ *   title="iOS and Android"
+ * />
+ *
+ * <Timeline orientation="horizontal">…</Timeline>
+ * ```
+ *
+ * It sits outside the `Timeline`, above it, because it belongs to the whole
+ * run rather than to any column in it — and a column is the only thing a
+ * horizontal `Timeline` lays out.
+ */
+const TimelineMasthead = forwardRef<View, TimelineMastheadProps>(
+  ({ className, media, label, title, children, ...props }, ref) => {
+    const { masthead, mastheadMedia, mastheadLabel, mastheadTitle } = timelineVariants({
+      orientation: 'horizontal',
+    });
+
+    return (
+      <View ref={ref} className={masthead({ className })} {...props}>
+        {media ? <View className={mastheadMedia()}>{media}</View> : null}
+        {label !== undefined || title !== undefined ? (
+          <View>
+            {label !== undefined ? <Text className={mastheadLabel()}>{label}</Text> : null}
+            {title !== undefined ? <Text className={mastheadTitle()}>{title}</Text> : null}
+          </View>
+        ) : null}
+        {children}
+      </View>
+    );
+  }
+);
+TimelineMasthead.displayName = 'Timeline.Masthead';
+
 export const Timeline = Object.assign(TimelineRoot, {
   List: TimelineList,
   Item: TimelineItem,
   Aside: TimelineAside,
+  Masthead: TimelineMasthead,
   Indicator: TimelineIndicator,
   Content: TimelineContent,
   Header: TimelineHeader,
