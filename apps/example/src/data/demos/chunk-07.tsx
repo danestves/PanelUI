@@ -788,14 +788,18 @@ function QRCodeStylesVersion() {
   return (
     <ScrollView
       className="flex-1"
-      contentContainerClassName="items-center gap-8 p-6"
+      // Two to a row, with real space between them. Stacked in one column at
+      // full size the codes ran into each other, and a quiet zone that touches
+      // the next code is a quiet zone a scanner cannot find the edge of — the
+      // gap is part of the code, not padding around it.
+      contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 gap-y-10 p-6"
       showsVerticalScrollIndicator={false}
     >
       {QR_STYLES.map((style) => (
         <QRCode
           key={style.label}
           value="https://panelui.dev"
-          size="md"
+          size="sm"
           // Shaping spends error correction, so the level goes up with it. `H`
           // tolerates about 30% loss, which is what pays for a diamond body.
           errorCorrection="H"
@@ -813,37 +817,56 @@ function QRCodeStylesVersion() {
 }
 
 /**
- * The three parts of a code, coloured separately.
+ * The same code in six palettes.
  *
  * The body, the rings and the centres are three `<Path>`s, so they take three
  * colours — which is what a brand actually asks for, rather than one tint over
- * everything. What it must not do is lower the contrast between the ink and
- * the plate: a scanner needs the two to be far apart in brightness, and a pale
- * brand colour on white is a code that works in the studio and not in a room.
+ * everything. Six of them together is the only way to see that the *palette*
+ * is the variable and the code is not: same value, same shapes, six looks.
+ *
+ * No frame around them, deliberately. A titled tray is a different thing being
+ * demonstrated, and six trays would be a page about trays.
+ *
+ * What none of them does is lower the contrast between the ink and the plate.
+ * A scanner needs the two far apart in brightness, so every body here is dark
+ * and every plate is light — the hue is free, the tone is not. A pale brand
+ * colour on white is a code that works in the studio and not in a room.
  */
+const QR_PALETTES: {
+  label: string;
+  color: string;
+  eyeFrameColor: string;
+  eyeBallColor: string;
+}[] = [
+  { label: 'Indigo', color: '#1f2937', eyeFrameColor: '#4338ca', eyeBallColor: '#f97316' },
+  { label: 'Forest', color: '#14532d', eyeFrameColor: '#166534', eyeBallColor: '#65a30d' },
+  { label: 'Plum', color: '#3b0764', eyeFrameColor: '#7e22ce', eyeBallColor: '#db2777' },
+  { label: 'Ink', color: '#111827', eyeFrameColor: '#111827', eyeBallColor: '#dc2626' },
+  { label: 'Ocean', color: '#0c4a6e', eyeFrameColor: '#0369a1', eyeBallColor: '#0891b2' },
+  { label: 'Ember', color: '#431407', eyeFrameColor: '#c2410c', eyeBallColor: '#f59e0b' },
+];
+
 function QRCodeBrandVersion() {
   return (
-    <View className="flex-1 items-center justify-center gap-4 p-4">
-      <QRCode value="https://panelui.dev" size="lg" errorCorrection="H">
-        <QRCode.Frame>
-          <QRCode.Header>
-            <QRCode.Title>Brand colours</QRCode.Title>
-            <QRCode.Action>panelui.dev</QRCode.Action>
-          </QRCode.Header>
-          <QRCode.Panel>
-            <QRCode.Canvas
-              moduleShape="rounded"
-              eyeFrameShape="rounded"
-              eyeBallShape="rounded"
-              color="#1f2937"
-              eyeFrameColor="#4338ca"
-              eyeBallColor="#f97316"
-            />
-          </QRCode.Panel>
-        </QRCode.Frame>
-        <QRCode.Caption>Three paths, three colours</QRCode.Caption>
-      </QRCode>
-    </View>
+    <ScrollView
+      className="flex-1"
+      contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 gap-y-10 p-6"
+      showsVerticalScrollIndicator={false}
+    >
+      {QR_PALETTES.map((palette) => (
+        <QRCode key={palette.label} value="https://panelui.dev" size="sm" errorCorrection="H">
+          <QRCode.Canvas
+            moduleShape="rounded"
+            eyeFrameShape="rounded"
+            eyeBallShape="rounded"
+            color={palette.color}
+            eyeFrameColor={palette.eyeFrameColor}
+            eyeBallColor={palette.eyeBallColor}
+          />
+          <QRCode.Caption>{palette.label}</QRCode.Caption>
+        </QRCode>
+      ))}
+    </ScrollView>
   );
 }
 
@@ -1517,7 +1540,8 @@ export const ENTRIES: ComponentEntry[] = [
         label: 'Branded',
         id: 'branded',
         fullPage: true,
-        description: 'Body, rings and centres coloured separately — three paths, three colours.',
+        description:
+          'The same code in six palettes — body, rings and centres coloured separately.',
         render: () => <QRCodeBrandVersion />,
       },
     ],

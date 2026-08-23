@@ -14,7 +14,7 @@ The encoder is ours and has no dependency behind it: the version grows to fit wh
 QRCode ships with the library — no separate install.
 
 ```tsx
-import { QRCode, Button, Text, Avatar } from 'panelui-native';
+import { QRCode, Avatar, Button, ScrollView, Text } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -283,43 +283,47 @@ Folded away behind a row until it is wanted, the way a colour picker folds away.
 
 Each module and eye shape in turn, at `H`, so what each one costs in ink is visible. They all read; the point of putting them together is that they do not read equally.
 
+Two to a row with real space between them. A quiet zone that touches the next code is a quiet zone a reader cannot find the edge of — the gap is part of the code, not padding around it.
+
 ```tsx
-{styles.map((style) => (
-  <QRCode key={style.label} value="https://panelui.dev" size="md" errorCorrection="H">
-    <QRCode.Canvas
-      moduleShape={style.module}
-      eyeFrameShape={style.frame}
-      eyeBallShape={style.ball}
-    />
-    <QRCode.Caption>{style.label}</QRCode.Caption>
-  </QRCode>
-))}
+<ScrollView contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 gap-y-10 p-6">
+  {styles.map((style) => (
+    <QRCode key={style.label} value="https://panelui.dev" size="sm" errorCorrection="H">
+      <QRCode.Canvas
+        moduleShape={style.module}
+        eyeFrameShape={style.frame}
+        eyeBallShape={style.ball}
+      />
+      <QRCode.Caption>{style.label}</QRCode.Caption>
+    </QRCode>
+  ))}
+</ScrollView>
 ```
 
 ### Branded
 
-Body, rings and centres coloured separately. Three paths, three colours — which is what a brand asks for, rather than one tint over everything.
+The same code in six palettes. The body, the rings and the centres are three paths, so they take three colours — which is what a brand asks for, rather than one tint over everything.
+
+No frame around them: a titled tray is a different thing being demonstrated, and six trays would be a page about trays.
+
+Every body here is dark and every plate is light. The hue is free; the tone is not.
 
 ```tsx
-<QRCode value="https://panelui.dev" size="lg" errorCorrection="H">
-  <QRCode.Frame>
-    <QRCode.Header>
-      <QRCode.Title>Brand colours</QRCode.Title>
-      <QRCode.Action>panelui.dev</QRCode.Action>
-    </QRCode.Header>
-    <QRCode.Panel>
+<ScrollView contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 gap-y-10 p-6">
+  {palettes.map((palette) => (
+    <QRCode key={palette.label} value="https://panelui.dev" size="sm" errorCorrection="H">
       <QRCode.Canvas
         moduleShape="rounded"
         eyeFrameShape="rounded"
         eyeBallShape="rounded"
-        color="#1f2937"
-        eyeFrameColor="#4338ca"
-        eyeBallColor="#f97316"
+        color={palette.color}
+        eyeFrameColor={palette.eyeFrameColor}
+        eyeBallColor={palette.eyeBallColor}
       />
-    </QRCode.Panel>
-  </QRCode.Frame>
-  <QRCode.Caption>Three paths, three colours</QRCode.Caption>
-</QRCode>
+      <QRCode.Caption>{palette.label}</QRCode.Caption>
+    </QRCode>
+  ))}
+</ScrollView>
 ```
 
 ## Variants

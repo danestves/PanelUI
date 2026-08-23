@@ -3,9 +3,10 @@
   "intro": "A string drawn as something a camera can read — bare, framed, titled, or folded away behind a button.\n\nGive it a `value` and compose the shape around it.\n\nThe encoder is ours and has no dependency behind it: the version grows to fit whatever you pass, and the whole code is drawn as a single path rather than one node per module — which for a dense code is the difference between appearing and appearing eventually.",
   "usage": "<QRCode value=\"https://panelui.dev\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>Documentation</QRCode.Title>\n    </QRCode.Header>\n    <QRCode.Panel>\n      <QRCode.Canvas />\n    </QRCode.Panel>\n  </QRCode.Frame>\n  <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n</QRCode>",
   "extraImports": [
+    "Avatar",
     "Button",
-    "Text",
-    "Avatar"
+    "ScrollView",
+    "Text"
   ],
   "anatomy": "<QRCode value=\"…\" presentation=\"popover\">\n  <QRCode.Trigger>                      {/* …or no Trigger/Content at all, */}\n    <Button>Show the code</Button>      {/* and the parts draw where they are */}\n  </QRCode.Trigger>\n  <QRCode.Content>\n    <QRCode.Frame>                      {/* the tray */}\n      <QRCode.Header>                   {/* the strip across the top of it */}\n        <QRCode.Title>Pair a device</QRCode.Title>\n        <QRCode.Action>Expires in 5m</QRCode.Action>\n      </QRCode.Header>\n      <QRCode.Panel>                    {/* the card the code is drawn on */}\n        <QRCode.Canvas />               {/* the code itself */}\n        <QRCode.Logo>…</QRCode.Logo>    {/* clears a square in the middle */}\n      </QRCode.Panel>\n    </QRCode.Frame>\n    <QRCode.Caption>Scan to open the docs</QRCode.Caption>\n    <QRCode.Value />                    {/* the string, for anyone who cannot scan */}\n  </QRCode.Content>\n</QRCode>",
   "parts": {
@@ -92,13 +93,13 @@
     },
     {
       "title": "Every style",
-      "description": "Each module and eye shape in turn, at `H`, so what each one costs in ink is visible. They all read; the point of putting them together is that they do not read equally.",
-      "code": "{styles.map((style) => (\n  <QRCode key={style.label} value=\"https://panelui.dev\" size=\"md\" errorCorrection=\"H\">\n    <QRCode.Canvas\n      moduleShape={style.module}\n      eyeFrameShape={style.frame}\n      eyeBallShape={style.ball}\n    />\n    <QRCode.Caption>{style.label}</QRCode.Caption>\n  </QRCode>\n))}"
+      "description": "Each module and eye shape in turn, at `H`, so what each one costs in ink is visible. They all read; the point of putting them together is that they do not read equally.\n\nTwo to a row with real space between them. A quiet zone that touches the next code is a quiet zone a reader cannot find the edge of — the gap is part of the code, not padding around it.",
+      "code": "<ScrollView contentContainerClassName=\"flex-row flex-wrap justify-center gap-x-8 gap-y-10 p-6\">\n  {styles.map((style) => (\n    <QRCode key={style.label} value=\"https://panelui.dev\" size=\"sm\" errorCorrection=\"H\">\n      <QRCode.Canvas\n        moduleShape={style.module}\n        eyeFrameShape={style.frame}\n        eyeBallShape={style.ball}\n      />\n      <QRCode.Caption>{style.label}</QRCode.Caption>\n    </QRCode>\n  ))}\n</ScrollView>"
     },
     {
       "title": "Branded",
-      "description": "Body, rings and centres coloured separately. Three paths, three colours — which is what a brand asks for, rather than one tint over everything.",
-      "code": "<QRCode value=\"https://panelui.dev\" size=\"lg\" errorCorrection=\"H\">\n  <QRCode.Frame>\n    <QRCode.Header>\n      <QRCode.Title>Brand colours</QRCode.Title>\n      <QRCode.Action>panelui.dev</QRCode.Action>\n    </QRCode.Header>\n    <QRCode.Panel>\n      <QRCode.Canvas\n        moduleShape=\"rounded\"\n        eyeFrameShape=\"rounded\"\n        eyeBallShape=\"rounded\"\n        color=\"#1f2937\"\n        eyeFrameColor=\"#4338ca\"\n        eyeBallColor=\"#f97316\"\n      />\n    </QRCode.Panel>\n  </QRCode.Frame>\n  <QRCode.Caption>Three paths, three colours</QRCode.Caption>\n</QRCode>"
+      "description": "The same code in six palettes. The body, the rings and the centres are three paths, so they take three colours — which is what a brand asks for, rather than one tint over everything.\n\nNo frame around them: a titled tray is a different thing being demonstrated, and six trays would be a page about trays.\n\nEvery body here is dark and every plate is light. The hue is free; the tone is not.",
+      "code": "<ScrollView contentContainerClassName=\"flex-row flex-wrap justify-center gap-x-8 gap-y-10 p-6\">\n  {palettes.map((palette) => (\n    <QRCode key={palette.label} value=\"https://panelui.dev\" size=\"sm\" errorCorrection=\"H\">\n      <QRCode.Canvas\n        moduleShape=\"rounded\"\n        eyeFrameShape=\"rounded\"\n        eyeBallShape=\"rounded\"\n        color={palette.color}\n        eyeFrameColor={palette.eyeFrameColor}\n        eyeBallColor={palette.eyeBallColor}\n      />\n      <QRCode.Caption>{palette.label}</QRCode.Caption>\n    </QRCode>\n  ))}\n</ScrollView>"
     }
   ]
 }
