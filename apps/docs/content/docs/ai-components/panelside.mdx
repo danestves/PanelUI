@@ -25,7 +25,7 @@ A button in the corner, and the screen slides across, shrinks, rounds its corner
 Panelside ships with the library — no separate install.
 
 ```tsx
-import { Panelside, AIInput, Avatar, BottomSheet, Button, MenuIcon, MessageCircleIcon, MicIcon, PackageIcon, PlusIcon, Select, View, usePanelside } from 'panelui-native';
+import { Panelside, AIInput, Avatar, BottomSheet, Button, FileIcon, ImageIcon, MenuIcon, MessageCircleIcon, MicIcon, PackageIcon, PlusIcon, Select, SparklesIcon, View, usePanelside } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -39,9 +39,7 @@ npx panelui-cli@latest add panelside
 ```tsx
 <Panelside>
   <Panelside.Panel>
-    <Panelside.Header title="Assistant">
-      <Panelside.Search value={query} onChangeText={setQuery} />
-    </Panelside.Header>
+    <Panelside.Header title="Assistant" action={<Panelside.SearchTrigger />} />
 
     <Panelside.Content>
       <Panelside.Group>
@@ -59,6 +57,15 @@ npx panelui-cli@latest add panelside
     <Panelside.Trigger />
     <Conversation />
   </Panelside.Scene>
+
+  <Panelside.SearchSheet value={query} onValueChange={setQuery}>
+    <Panelside.SearchResults>
+      {hits.map((hit) => (
+        <Panelside.SearchResult key={hit.id} title={hit.title} description={hit.kind} />
+      ))}
+    </Panelside.SearchResults>
+    <Panelside.SearchField />
+  </Panelside.SearchSheet>
 </Panelside>
 ```
 
@@ -67,9 +74,7 @@ npx panelui-cli@latest add panelside
 ```tsx
 <Panelside>
   <Panelside.Panel>
-    <Panelside.Header>
-      <Panelside.Search />
-    </Panelside.Header>
+    <Panelside.Header action={<Panelside.SearchTrigger />} />
     <Panelside.Content>
       <Panelside.Group>
         <Panelside.GroupLabel>…</Panelside.GroupLabel>
@@ -88,6 +93,16 @@ npx panelui-cli@latest add panelside
   <Panelside.Scene>
     <Panelside.Trigger />
   </Panelside.Scene>
+
+  <Panelside.SearchSheet>
+    <Panelside.SearchTabs>
+      <Panelside.SearchTab />
+    </Panelside.SearchTabs>
+    <Panelside.SearchResults>
+      <Panelside.SearchResult />
+    </Panelside.SearchResults>
+    <Panelside.SearchField />
+  </Panelside.SearchSheet>
 </Panelside>
 ```
 
@@ -137,40 +152,66 @@ Two groups, because they are two different things. The first is where you can go
 </Panelside.Content>
 ```
 
-### Searching the history
+### Search, as a surface rather than a row
 
-`Panelside.Search` reports what was typed; deciding what matches is yours. Filtering to nothing renders nothing, so the groups can be dropped entirely rather than left as empty headings.
+A field in the header is the obvious way to put search in a navigation panel, and it is the wrong one on a phone. The panel is most of the screen and the field is forty points of it, so a search that returns anything has to push the history down a screen it already fills — and the field is at the top, which is the far end of the screen from the keyboard that just opened.
+
+So the button is in the header and the surface is a sheet. The tabs narrow what is searched, the results fill the middle, and the field sits at the bottom where the thumb already is.
+
+The sheet reports the query and the selected tab. What counts as a match is yours: a search that only read chat titles would be wrong for the first app that indexes message bodies.
+
+Put it under `<Panelside>` and outside `Panelside.Panel` — a sheet is presented over the whole app, and the panel is a layer that slides under it.
 
 ```tsx
 const [query, setQuery] = useState('');
+const [tab, setTab] = useState('all');
 
 const results = useMemo(() => {
   const needle = query.trim().toLowerCase();
-  if (!needle) return chats;
-  return chats.filter((chat) => chat.title.toLowerCase().includes(needle));
-}, [chats, query]);
+  return corpus.filter(
+    (item) =>
+      (tab === 'all' || item.kind === tab) &&
+      (needle === '' || item.title.toLowerCase().includes(needle))
+  );
+}, [query, tab]);
 
 return (
-  <Panelside.Panel>
-    <Panelside.Header title="Assistant">
-      <Panelside.Search
-        value={query}
-        onChangeText={setQuery}
-        placeholder="Search chats"
-      />
-    </Panelside.Header>
+  <Panelside>
+    <Panelside.Panel>
+      <Panelside.Header title="Assistant" action={<Panelside.SearchTrigger />} />
+      <Panelside.Content>{history}</Panelside.Content>
+    </Panelside.Panel>
 
-    <Panelside.Content>
-      {results.length > 0 && (
-        <Panelside.Group>
-          <Panelside.GroupLabel>Recents</Panelside.GroupLabel>
-          {results.map((chat) => (
-            <Panelside.Item key={chat.id} label={chat.title} />
-          ))}
-        </Panelside.Group>
-      )}
-    </Panelside.Content>
-  </Panelside.Panel>
+    <Panelside.Scene>{app}</Panelside.Scene>
+
+    <Panelside.SearchSheet
+      value={query}
+      onValueChange={setQuery}
+      tab={tab}
+      onTabChange={setTab}
+    >
+      <Panelside.SearchTabs>
+        <Panelside.SearchTab value="all" icon={<SparklesIcon size={16} />}>All</Panelside.SearchTab>
+        <Panelside.SearchTab value="chats" icon={<MessageCircleIcon size={16} />}>Chats</Panelside.SearchTab>
+        <Panelside.SearchTab value="images" icon={<ImageIcon size={16} />}>Images</Panelside.SearchTab>
+        <Panelside.SearchTab value="documents" icon={<FileIcon size={16} />}>Documents</Panelside.SearchTab>
+      </Panelside.SearchTabs>
+
+      <Panelside.SearchResults>
+        {results.map((item) => (
+          <Panelside.SearchResult
+            key={item.id}
+            media={<FileIcon size={18} />}
+            title={item.title}
+            description={item.kind}
+            onPress={() => open(item)}
+          />
+        ))}
+      </Panelside.SearchResults>
+
+      <Panelside.SearchField placeholder="Search chats, images and files" />
+    </Panelside.SearchSheet>
+  </Panelside>
 );
 ```
 
@@ -580,6 +621,71 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | `className` | `string` | — |  |
 | `label` | `string` | `'Open navigation panel'` | What a screen reader announces. |
 
+### Panelside.SearchTrigger
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `label` | `string` | `'Search'` | What a screen reader announces. |
+| `native` | `boolean` | `false` | Render the platform's own button instead of the circle. Requires the optional `@expo/ui` package; without it this prop does nothing. |
+| `glass` | `boolean` | `false` | Draw the native button in the platform's Liquid Glass material. Requires `native`, and iOS 26 or later; ignored anywhere else. |
+
+### Panelside.SearchSheet
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `open` | `boolean` | — | Controlled. Omit it and the sheet follows the root's `searchOpen`. |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
+| `value` | `string` | — | The query. Controlled; pair it with `onValueChange`. |
+| `defaultValue` | `string` | `''` |  |
+| `onValueChange` | `(value: string) => void` | — |  |
+| `tab` | `string` | — | Which tab is selected — the `value` of a `Panelside.SearchTab`. |
+| `defaultTab` | `string` | `''` | Which tab starts selected, when the sheet is not controlling `tab`. Set it to the first tab's `value`: the expanding row shows the selected tab open and the rest as their icons, so with nothing selected every tab is closed and the row is a line of unlabelled glyphs. |
+| `onTabChange` | `(tab: string) => void` | — |  |
+| `native` | `boolean` | `true` | Present the platform's own sheet. Default true, because this one is the whole screen and the system's presentation, detents and dismiss gesture are the ones people already know. Requires the optional `@expo/ui` package; without it the styled sheet renders instead. |
+| `snapPoints` | `BottomSheetProps['snapPoints']` | — | Heights the sheet can rest at. Defaults to the tall one. |
+| `keyboardGap` | `number` | `10` | Gap between the field and the top of the keyboard. |
+
+### Panelside.SearchTabs
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Panelside.SearchTab
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `string` | — | What selecting this tab reports as the sheet's `tab`. |
+| `icon` | `ReactNode` | — | Required: a closed tab is its icon and nothing else. |
+
+### Panelside.SearchResults
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `contentContainerClassName` | `string` | — |  |
+
+### Panelside.SearchResult
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `media` | `ReactNode` | — | Leading element — a thumbnail, an icon, an avatar. |
+| `title` | `string` | — | The result's name, truncated to one line. |
+| `description` | `string` | — | What kind of thing it is, or where it was found. |
+
+### Panelside.SearchField
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `containerClassName` | `string` | — |  |
+| `showClose` | `boolean` | `true` | Show the round dismiss button beside the field. On by default — it is the way out of the surface, and it belongs next to the thumb that is typing rather than in the corner furthest from it. |
+| `closeLabel` | `string` | `'Close search'` | What a screen reader announces for that button. |
+
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
 ## Notes
@@ -632,6 +738,16 @@ Give the screen another way back when you do — Panelside is usually the root o
 ### Both halves leave the accessibility tree
 
 Being covered says nothing to a screen reader: without help it reads out a navigation list nobody can see, or the app underneath an open panel. Panelside hides whichever half is not in front, so a swipe through the elements only ever reaches what is actually on the screen.
+
+### Search is a surface, not a row
+
+`Panelside.SearchTrigger` and `Panelside.SearchSheet` are two halves in two subtrees — the button is in the header, the sheet is a sibling of the panel. The open state therefore lives on the root, and `usePanelside()` exposes it as `searchOpen` and `setSearchOpen` for a button of your own. Pass `open` and `onOpenChange` to the sheet to take it over instead.
+
+The sheet is `native` by default, which means the platform presents it and owns its detents, its scroll interaction and its dismiss gesture. It needs the optional `@expo/ui`; without it the styled sheet renders and nothing else changes.
+
+The field docks to the keyboard rather than the sheet: the platform sheet is told to ignore the keyboard's safe area, so the field travels by the keyboard's height less the inset it already sits above, and the results stay where they are behind it. `keyboardGap` is the space left between the two.
+
+`Panelside.Search`, the inline field, is still exported. It is the right shape for a docked panel on a tablet, where there is width for a field and no keyboard covering half the screen.
 
 ### There is no `native` prop
 

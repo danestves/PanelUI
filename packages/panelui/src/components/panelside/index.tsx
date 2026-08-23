@@ -84,6 +84,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactElement,
   type ReactNode,
@@ -116,9 +117,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { LinearGradient } from 'expo-linear-gradient';
-import { EllipsisIcon, IconColorProvider, MenuIcon, SearchIcon } from '../../icons';
+import { EllipsisIcon, IconColorProvider, MenuIcon, SearchIcon, XIcon } from '../../icons';
+import { BottomSheet, type BottomSheetBodyProps, type BottomSheetProps } from '../bottom-sheet';
 import { Button } from '../button';
+import { Tabs } from '../tabs';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
+import { KeyboardAvoider } from '../../primitives/keyboard-avoider';
 import { Text, textChildren, type TextProps } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import { useDirectionSign } from '../../hooks/use-direction';
@@ -236,6 +240,13 @@ const DOCK_WIDTH_MAX = 320;
 /** How far above the floating footer the list starts dissolving into it. */
 const FOOTER_FADE = 28;
 
+/**
+ * What `BottomSheet.Content` leaves below its last child, maxed against the
+ * home indicator. Mirrored here so the search field can subtract the strip it
+ * already sits above before it travels with the keyboard.
+ */
+const SHEET_BOTTOM_PADDING = 16;
+
 /** Progress past which a layer is treated as fully hidden for accessibility. */
 const HIDDEN_EPSILON = 0.05;
 
@@ -322,6 +333,16 @@ interface PanelsideContextValue {
   scale?: number;
   radius?: number;
   dim?: number;
+  /**
+   * Whether the search surface is up.
+   *
+   * It lives on the root rather than on the sheet because the two halves of
+   * search are in different subtrees: the button is in the header and the
+   * sheet is a sibling of the panel. Anything else means every app wiring one
+   * `useState` through both.
+   */
+  searchOpen: boolean;
+  setSearchOpen: (open: boolean) => void;
 }
 
 const PanelsideContext = createContext<PanelsideContextValue | null>(null);
@@ -346,6 +367,9 @@ export interface UsePanelsideResult {
   progress: SharedValue<number>;
   /** True while the panel is docked open beside the scene. */
   docked: boolean;
+  /** Whether the search surface is up. `Panelside.SearchTrigger` sets it. */
+  searchOpen: boolean;
+  setSearchOpen: (open: boolean) => void;
 }
 
 /**
@@ -354,8 +378,9 @@ export interface UsePanelsideResult {
  * lives.
  */
 export function usePanelside(): UsePanelsideResult {
-  const { open, setOpen, toggle, progress, docked } = usePanelsideContext('usePanelside');
-  return { open, setOpen, toggle, progress, docked };
+  const { open, setOpen, toggle, progress, docked, searchOpen, setSearchOpen } =
+    usePanelsideContext('usePanelside');
+  return { open, setOpen, toggle, progress, docked, searchOpen, setSearchOpen };
 }
 
 /**
@@ -478,6 +503,7 @@ function PanelsideRoot({
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const controlled = controlledOpen !== undefined;
   const open = controlled ? controlledOpen : uncontrolledOpen;
+  const [searchOpen, setSearchOpen] = useState(false);
 
   /*
    * Measured rather than taken from the window, because Panelside does not
@@ -654,8 +680,23 @@ function PanelsideRoot({
       scale,
       radius,
       dim,
+      searchOpen,
+      setSearchOpen,
     }),
-    [dim, dismissible, docked, mode, open, progress, radius, scale, setOpen, toggle, width]
+    [
+      dim,
+      dismissible,
+      docked,
+      mode,
+      open,
+      progress,
+      radius,
+      scale,
+      searchOpen,
+      setOpen,
+      toggle,
+      width,
+    ]
   );
 
   return (
@@ -1659,6 +1700,541 @@ function PanelsideTrigger({
   );
 }
 
+/* ------------------------------------------------------------------ *
+ * Search.
+ *
+ * A field in the header is the obvious way to put search in a navigation
+ * panel, and it is the wrong one on a phone. The panel is 80% of the screen
+ * and the field is 40 points of it, so a search that returns anything has to
+ * push the history down the screen it is already filling — and the field is at
+ * the top, which is the far end of the screen from the keyboard that has just
+ * opened under it.
+ *
+ * So search is a surface rather than a row. A round button in the header opens
+ * a sheet that is the whole screen; the tabs across the top narrow what is
+ * being searched; the results fill the middle; and the field is at the bottom,
+ * where the thumb already is, riding the keyboard rather than hiding behind
+ * it.
+ *
+ * `Panelside.Search` — the inline field — is still exported, and is still
+ * right for a docked panel on a tablet, where there is width for a field and
+ * no keyboard covering half the screen.
+ * ------------------------------------------------------------------ */
+
+export interface PanelsideSearchTriggerProps extends Omit<PressableProps, 'children'> {
+  className?: string;
+  /** What a screen reader announces. */
+  label?: string;
+  /** Replaces the default magnifier. */
+  children?: ReactNode;
+  /**
+   * Render the platform's own button instead of the circle. Requires the
+   * optional `@expo/ui` package; without it this prop does nothing.
+   */
+  native?: boolean;
+  /**
+   * Draw the native button in the platform's Liquid Glass material. Requires
+   * `native`, and iOS 26 or later; ignored anywhere else.
+   */
+  glass?: boolean;
+}
+
+/**
+ * The button that opens the search surface. Goes in `Panelside.Header`'s
+ * `action` slot.
+ *
+ * It toggles the root's `searchOpen`, which `Panelside.SearchSheet` reads —
+ * so the two need nothing wired between them.
+ */
+function PanelsideSearchTrigger({
+  className,
+  label = 'Search',
+  children,
+  native = false,
+  glass = false,
+  onPress,
+  ...props
+}: PanelsideSearchTriggerProps) {
+  const { setSearchOpen } = usePanelsideContext('Panelside.SearchTrigger');
+  const tint = useCSSVariable('--color-foreground');
+  const color = typeof tint === 'string' ? tint : undefined;
+
+  const open = useCallback(
+    (event: Parameters<NonNullable<PressableProps['onPress']>>[0]) => {
+      onPress?.(event);
+      setSearchOpen(true);
+    },
+    [onPress, setSearchOpen]
+  );
+
+  const glyph = children ?? <SearchIcon size={18} color={native ? color : undefined} />;
+
+  if (native) {
+    return (
+      <Button
+        native
+        glass={glass}
+        size="icon"
+        variant="ghost"
+        accessibilityLabel={label}
+        onPress={open}
+      >
+        {glyph}
+      </Button>
+    );
+  }
+
+  return (
+    <AnimatedPressable
+      {...props}
+      onPress={open}
+      className={cn(
+        // Filled rather than outlined. It sits on the panel's own surface with
+        // nothing else on that row, so an outline at this size reads as an
+        // empty circle before it reads as a control.
+        'h-10 w-10 items-center justify-center rounded-full bg-secondary',
+        className
+      )}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <IconColorProvider color={color}>{glyph}</IconColorProvider>
+    </AnimatedPressable>
+  );
+}
+
+interface PanelsideSearchSheetContextValue {
+  /**
+   * Whether the sheet is up.
+   *
+   * The field needs it, and cannot read it from being mounted: under `native`
+   * the platform owns presentation, so the content stays mounted for the life
+   * of the screen and only `isPresented` changes. An `autoFocus` on a field
+   * inside it would fire at app start, opening the keyboard over a sheet
+   * nobody has asked for.
+   */
+  open: boolean;
+  query: string;
+  setQuery: (query: string) => void;
+  tab: string;
+  setTab: (tab: string) => void;
+  close: () => void;
+  /** The inset the field already sits above, so docking does not travel it twice. */
+  bottomInset: number;
+}
+
+const PanelsideSearchSheetContext = createContext<PanelsideSearchSheetContextValue | null>(
+  null
+);
+
+function usePanelsideSearchSheet(part: string): PanelsideSearchSheetContextValue {
+  const value = useContext(PanelsideSearchSheetContext);
+  if (!value) throw new Error(`${part} must be used inside a <Panelside.SearchSheet>.`);
+  return value;
+}
+
+export interface PanelsideSearchSheetProps {
+  className?: string;
+  /** Controlled. Omit it and the sheet follows the root's `searchOpen`. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** The query. Controlled; pair it with `onValueChange`. */
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  /** Which tab is selected — the `value` of a `Panelside.SearchTab`. */
+  tab?: string;
+  /**
+   * Which tab starts selected, when the sheet is not controlling `tab`. Set it
+   * to the first tab's `value`: the expanding row shows the selected tab open
+   * and the rest as their icons, so with nothing selected every tab is closed
+   * and the row is a line of unlabelled glyphs.
+   */
+  defaultTab?: string;
+  onTabChange?: (tab: string) => void;
+  /**
+   * Present the platform's own sheet. Default true, because this one is the
+   * whole screen and the system's presentation, detents and dismiss gesture
+   * are the ones people already know. Requires the optional `@expo/ui`
+   * package; without it the styled sheet renders instead.
+   */
+  native?: boolean;
+  /** Heights the sheet can rest at. Defaults to the tall one. */
+  snapPoints?: BottomSheetProps['snapPoints'];
+  /** Gap between the field and the top of the keyboard. */
+  keyboardGap?: number;
+  children?: ReactNode;
+}
+
+/**
+ * The search surface: tabs, results, and a field at the bottom.
+ *
+ * ```tsx
+ * <Panelside.SearchSheet value={query} onValueChange={setQuery} tab={tab} onTabChange={setTab}>
+ *   <Panelside.SearchTabs>
+ *     <Panelside.SearchTab value="all" icon={<SparklesIcon size={16} />}>All</Panelside.SearchTab>
+ *     <Panelside.SearchTab value="chats" icon={<MessageCircleIcon size={16} />}>Chats</Panelside.SearchTab>
+ *   </Panelside.SearchTabs>
+ *
+ *   <Panelside.SearchResults>
+ *     {hits.map((hit) => (
+ *       <Panelside.SearchResult key={hit.id} title={hit.title} description={hit.kind} />
+ *     ))}
+ *   </Panelside.SearchResults>
+ *
+ *   <Panelside.SearchField placeholder="Search chats" />
+ * </Panelside.SearchSheet>
+ * ```
+ *
+ * Put it under `<Panelside>` and outside `Panelside.Panel` — a sheet is
+ * presented over the whole app, and the panel is a layer that slides.
+ *
+ * It reports what was typed and which tab is selected. What counts as a match,
+ * and what a result is, are yours: a search that only read chat titles would
+ * be wrong for the first app that indexes message bodies.
+ */
+function PanelsideSearchSheet({
+  className,
+  open: openProp,
+  onOpenChange,
+  value,
+  defaultValue = '',
+  onValueChange,
+  tab,
+  defaultTab = '',
+  onTabChange,
+  native = true,
+  snapPoints,
+  keyboardGap = 10,
+  children,
+}: PanelsideSearchSheetProps) {
+  const { searchOpen, setSearchOpen } = usePanelsideContext('Panelside.SearchSheet');
+  const insets = useSafeAreaInsets();
+
+  const [uncontrolledQuery, setUncontrolledQuery] = useState(defaultValue);
+  const [uncontrolledTab, setUncontrolledTab] = useState(defaultTab);
+
+  const open = openProp ?? searchOpen;
+  const query = value ?? uncontrolledQuery;
+  const activeTab = tab ?? uncontrolledTab;
+
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (openProp === undefined) setSearchOpen(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange, openProp, setSearchOpen]
+  );
+
+  const setQuery = useCallback(
+    (next: string) => {
+      if (value === undefined) setUncontrolledQuery(next);
+      onValueChange?.(next);
+    },
+    [onValueChange, value]
+  );
+
+  const setTab = useCallback(
+    (next: string) => {
+      if (tab === undefined) setUncontrolledTab(next);
+      onTabChange?.(next);
+    },
+    [onTabChange, tab]
+  );
+
+  const close = useCallback(() => setOpen(false), [setOpen]);
+
+  /*
+   * What `BottomSheet.Content` pads the bottom of the sheet by. The field
+   * already sits that far above the screen edge, and docking travels by the
+   * keyboard's height less whatever the element has already cleared — so
+   * getting this wrong is a gap under the field, or the field over the
+   * keyboard's top row.
+   */
+  const bottomInset = Math.max(insets.bottom, SHEET_BOTTOM_PADDING) - keyboardGap;
+
+  const context = useMemo<PanelsideSearchSheetContextValue>(
+    () => ({ open, query, setQuery, tab: activeTab, setTab, close, bottomInset }),
+    [activeTab, bottomInset, close, open, query, setQuery, setTab]
+  );
+
+  return (
+    <PanelsideSearchSheetContext.Provider value={context}>
+      <BottomSheet
+        native={native}
+        open={open}
+        onOpenChange={setOpen}
+        snapPoints={snapPoints ?? ['full']}
+      >
+        {/*
+          `showClose` off: the field row draws its own ✕ at the bottom, next to
+          the thumb that is already there. A second one in the top corner is a
+          dismiss control at the far end of the screen from the only thing on
+          it you are touching.
+        */}
+        <BottomSheet.Content size="full" showClose={false} className="gap-0 px-0">
+          {/*
+            `flex-1` against the height the sheet has already fixed — `full` on
+            the styled sheet, the detent's floor on the native one. Without a
+            definite height above it the results would size to their own
+            content and the field would follow them up the screen.
+          */}
+          <View className={cn('flex-1 gap-2', className)}>{children}</View>
+        </BottomSheet.Content>
+      </BottomSheet>
+    </PanelsideSearchSheetContext.Provider>
+  );
+}
+
+export interface PanelsideSearchTabsProps {
+  className?: string;
+  children?: ReactNode;
+}
+
+/**
+ * The row across the top of the search sheet, narrowing what is searched.
+ *
+ * The expanding variant: only the selected tab is open, and the rest are their
+ * icons. A row of four full labels takes the whole width to say four words
+ * nobody rereads, and this row has to leave the results the screen.
+ *
+ * Every `Panelside.SearchTab` therefore needs an `icon` — a closed tab has
+ * nothing else to be.
+ */
+function PanelsideSearchTabs({ className, children }: PanelsideSearchTabsProps) {
+  const { tab, setTab } = usePanelsideSearchSheet('Panelside.SearchTabs');
+
+  return (
+    <Tabs
+      variant="expanding"
+      value={tab}
+      onValueChange={setTab}
+      defaultValue={tab}
+      className={cn('px-4 pt-1', className)}
+    >
+      <Tabs.List>{children}</Tabs.List>
+    </Tabs>
+  );
+}
+
+export interface PanelsideSearchTabProps {
+  className?: string;
+  /** What selecting this tab reports as the sheet's `tab`. */
+  value: string;
+  /** Required: a closed tab is its icon and nothing else. */
+  icon: ReactNode;
+  children?: ReactNode;
+}
+
+function PanelsideSearchTab({ className, value, icon, children }: PanelsideSearchTabProps) {
+  return (
+    <Tabs.Trigger value={value} icon={icon} className={className}>
+      {children}
+    </Tabs.Trigger>
+  );
+}
+
+export interface PanelsideSearchResultsProps extends BottomSheetBodyProps {
+  className?: string;
+  contentContainerClassName?: string;
+  children?: ReactNode;
+}
+
+/**
+ * The scrolling middle of the search sheet.
+ *
+ * `BottomSheet.Body` rather than a `ScrollView`, so the list's scroll and the
+ * sheet's dismiss drag agree on which of them a downward pull belongs to.
+ */
+function PanelsideSearchResults({
+  className,
+  contentContainerClassName,
+  children,
+  ...props
+}: PanelsideSearchResultsProps) {
+  usePanelsideSearchSheet('Panelside.SearchResults');
+
+  return (
+    <BottomSheet.Body
+      className={cn('flex-1', className)}
+      contentContainerClassName={cn('gap-1 px-4 pb-4 pt-1', contentContainerClassName)}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+      {...props}
+    >
+      {textChildren(children)}
+    </BottomSheet.Body>
+  );
+}
+
+export interface PanelsideSearchResultProps extends Omit<PressableProps, 'children'> {
+  className?: string;
+  /** Leading element — a thumbnail, an icon, an avatar. */
+  media?: ReactNode;
+  /** The result's name, truncated to one line. */
+  title?: string;
+  /** What kind of thing it is, or where it was found. */
+  description?: string;
+  children?: ReactNode;
+}
+
+/**
+ * One hit. A leading thumbnail, a title, and a line saying what it is.
+ *
+ * Taller than a `Panelside.Item`, and deliberately: a navigation row is a
+ * place you already know the name of, and a result is a thing you are deciding
+ * about — the second line is what the decision is made on.
+ */
+function PanelsideSearchResult({
+  className,
+  media,
+  title,
+  description,
+  children,
+  ...props
+}: PanelsideSearchResultProps) {
+  const tint = useCSSVariable('--color-muted-foreground');
+  const color = typeof tint === 'string' ? tint : undefined;
+
+  return (
+    <AnimatedPressable
+      className={cn('flex-row items-center gap-3 rounded-xl px-2 py-2', className)}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      pressScale={0.985}
+      {...props}
+    >
+      {media ? (
+        <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-secondary">
+          <IconColorProvider color={color}>{media}</IconColorProvider>
+        </View>
+      ) : null}
+      {title !== undefined || description !== undefined ? (
+        <View className="flex-1 gap-0.5">
+          {title !== undefined ? (
+            <Text size="base" weight="medium" numberOfLines={1}>
+              {title}
+            </Text>
+          ) : null}
+          {description !== undefined ? (
+            <Text size="sm" muted numberOfLines={1}>
+              {description}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+      {children}
+    </AnimatedPressable>
+  );
+}
+
+export interface PanelsideSearchFieldProps extends TextInputProps {
+  className?: string;
+  containerClassName?: string;
+  /**
+   * Show the round dismiss button beside the field. On by default — it is the
+   * way out of the surface, and it belongs next to the thumb that is typing
+   * rather than in the corner furthest from it.
+   */
+  showClose?: boolean;
+  /** What a screen reader announces for that button. */
+  closeLabel?: string;
+}
+
+/**
+ * The field, at the bottom of the sheet, riding the keyboard.
+ *
+ * At the bottom because that is where the thumb is and where the keyboard
+ * comes up: a field at the top of a full-height sheet is at the far end of the
+ * screen from both, and every character typed into it is read at the other
+ * end of a list that is moving.
+ */
+function PanelsideSearchField({
+  className,
+  containerClassName,
+  placeholder = 'Search',
+  showClose = true,
+  closeLabel = 'Close search',
+  value,
+  onChangeText,
+  ...props
+}: PanelsideSearchFieldProps) {
+  const { open, query, setQuery, close, bottomInset } = usePanelsideSearchSheet(
+    'Panelside.SearchField'
+  );
+  const placeholderTint = useCSSVariable('--color-muted-foreground');
+  const textTint = useCSSVariable('--color-foreground');
+  const muted = typeof placeholderTint === 'string' ? placeholderTint : undefined;
+  const field = useRef<TextInput>(null);
+
+  const text = value ?? query;
+  const change = onChangeText ?? setQuery;
+
+  /*
+   * Focus on the transition rather than with `autoFocus`. Under `native` the
+   * sheet's content is mounted for the life of the screen and only
+   * `isPresented` changes, so `autoFocus` fires once — at startup, on a sheet
+   * that is not up — and the keyboard opens over whatever is.
+   */
+  useEffect(() => {
+    if (open) field.current?.focus();
+    else field.current?.blur();
+  }, [open]);
+
+  return (
+    <KeyboardAvoider
+      mode="dock"
+      active={open}
+      bottomInset={bottomInset}
+      className="w-full flex-row items-center gap-2 px-4 pb-1"
+    >
+      <View
+        className={cn(
+          'h-12 flex-1 flex-row items-center gap-2 rounded-full bg-secondary px-4',
+          containerClassName
+        )}
+      >
+        <SearchIcon size={17} color={muted} />
+        <TextInput
+          ref={field}
+          value={text}
+          onChangeText={change}
+          placeholder={placeholder}
+          placeholderTextColor={muted}
+          /* `text-[16px]` rather than a `text-*` step — see Panelside.Search. */
+          className={cn('h-full flex-1 font-normal text-[16px] text-foreground', className)}
+          style={typeof textTint === 'string' ? { color: textTint } : undefined}
+          accessibilityRole="search"
+          returnKeyType="search"
+          {...props}
+        />
+        {text.length > 0 ? (
+          <AnimatedPressable
+            onPress={() => change('')}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Clear search"
+            className="h-5 w-5 items-center justify-center rounded-full bg-muted"
+          >
+            <XIcon size={12} color={muted} />
+          </AnimatedPressable>
+        ) : null}
+      </View>
+
+      {showClose ? (
+        <AnimatedPressable
+          onPress={close}
+          accessibilityRole="button"
+          accessibilityLabel={closeLabel}
+          className="h-12 w-12 items-center justify-center rounded-full bg-secondary"
+        >
+          <XIcon size={18} color={typeof textTint === 'string' ? textTint : undefined} />
+        </AnimatedPressable>
+      ) : null}
+    </KeyboardAvoider>
+  );
+}
+
 PanelsidePanel.displayName = 'Panelside.Panel';
 PanelsideHeader.displayName = 'Panelside.Header';
 PanelsideSearch.displayName = 'Panelside.Search';
@@ -1674,6 +2250,13 @@ PanelsideFooter.displayName = 'Panelside.Footer';
 PanelsideCta.displayName = 'Panelside.Cta';
 PanelsideScene.displayName = 'Panelside.Scene';
 PanelsideTrigger.displayName = 'Panelside.Trigger';
+PanelsideSearchTrigger.displayName = 'Panelside.SearchTrigger';
+PanelsideSearchSheet.displayName = 'Panelside.SearchSheet';
+PanelsideSearchTabs.displayName = 'Panelside.SearchTabs';
+PanelsideSearchTab.displayName = 'Panelside.SearchTab';
+PanelsideSearchResults.displayName = 'Panelside.SearchResults';
+PanelsideSearchResult.displayName = 'Panelside.SearchResult';
+PanelsideSearchField.displayName = 'Panelside.SearchField';
 
 export const Panelside = Object.assign(PanelsideRoot, {
   Panel: PanelsidePanel,
@@ -1691,4 +2274,11 @@ export const Panelside = Object.assign(PanelsideRoot, {
   Cta: PanelsideCta,
   Scene: PanelsideScene,
   Trigger: PanelsideTrigger,
+  SearchTrigger: PanelsideSearchTrigger,
+  SearchSheet: PanelsideSearchSheet,
+  SearchTabs: PanelsideSearchTabs,
+  SearchTab: PanelsideSearchTab,
+  SearchResults: PanelsideSearchResults,
+  SearchResult: PanelsideSearchResult,
+  SearchField: PanelsideSearchField,
 });

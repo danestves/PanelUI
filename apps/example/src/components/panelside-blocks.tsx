@@ -31,6 +31,7 @@ import {
   PackageIcon,
   Panelside,
   PlusIcon,
+  SparklesIcon,
   Text,
   XIcon,
   usePanelside,
@@ -65,6 +66,101 @@ const RECENTS = [
 ];
 
 /**
+ * What the search surface searches.
+ *
+ * Three kinds rather than one, because that is what the tabs are for: a set of
+ * tabs over a corpus of one kind is four ways of saying the same thing.
+ */
+const SEARCHABLE: { id: string; title: string; kind: 'chats' | 'images' | 'documents' }[] = [
+  ...RECENTS.map((title) => ({ id: title, title, kind: 'chats' as const })),
+  ...STARRED.map((title) => ({ id: title, title, kind: 'chats' as const })),
+  { id: 'i1', title: 'Panel anatomy sketch.png', kind: 'images' },
+  { id: 'i2', title: 'Token ramp, six themes.png', kind: 'images' },
+  { id: 'i3', title: 'Chart gallery contact sheet.png', kind: 'images' },
+  { id: 'd1', title: 'Migration notes.md', kind: 'documents' },
+  { id: 'd2', title: 'Release checklist.pdf', kind: 'documents' },
+  { id: 'd3', title: 'Accessibility audit.csv', kind: 'documents' },
+];
+
+const KIND_LABEL = { chats: 'Chat', images: 'Image', documents: 'Document' } as const;
+const KIND_ICON = {
+  chats: <MessageCircleIcon size={18} />,
+  images: <ImageIcon size={18} />,
+  documents: <FileIcon size={18} />,
+} as const;
+
+const SEARCH_TABS = [
+  { value: 'all', label: 'All', icon: <SparklesIcon size={16} /> },
+  { value: 'chats', label: 'Chats', icon: <MessageCircleIcon size={16} /> },
+  { value: 'images', label: 'Images', icon: <ImageIcon size={16} /> },
+  { value: 'documents', label: 'Documents', icon: <FileIcon size={16} /> },
+];
+
+/**
+ * The search surface, shared by every demo.
+ *
+ * It is a sibling of the panel rather than a child of it: a sheet is presented
+ * over the whole app, and the panel is a layer that slides sideways under it.
+ *
+ * The filtering is here rather than in the component, for the same reason the
+ * history filtering used to be — the panel does not know what a chat is, and a
+ * search that only matched titles would be wrong for the first app that
+ * indexes message bodies.
+ */
+function AssistantSearch({ native = false }: { native?: boolean }) {
+  const [query, setQuery] = useState('');
+  const [tab, setTab] = useState('all');
+
+  const results = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return SEARCHABLE.filter(
+      (item) =>
+        (tab === 'all' || item.kind === tab) &&
+        (needle === '' || item.title.toLowerCase().includes(needle))
+    );
+  }, [query, tab]);
+
+  return (
+    <Panelside.SearchSheet
+      native={native}
+      value={query}
+      onValueChange={setQuery}
+      tab={tab}
+      onTabChange={setTab}
+    >
+      <Panelside.SearchTabs>
+        {SEARCH_TABS.map((entry) => (
+          <Panelside.SearchTab key={entry.value} value={entry.value} icon={entry.icon}>
+            {entry.label}
+          </Panelside.SearchTab>
+        ))}
+      </Panelside.SearchTabs>
+
+      <Panelside.SearchResults>
+        {results.length === 0 ? (
+          <View className="items-center px-6 py-10">
+            <Text size="sm" muted>
+              Nothing matches “{query.trim()}”.
+            </Text>
+          </View>
+        ) : (
+          results.map((item) => (
+            <Panelside.SearchResult
+              key={item.id}
+              media={KIND_ICON[item.kind]}
+              title={item.title}
+              description={KIND_LABEL[item.kind]}
+            />
+          ))
+        )}
+      </Panelside.SearchResults>
+
+      <Panelside.SearchField placeholder="Search chats, images and files" />
+    </Panelside.SearchSheet>
+  );
+}
+
+/**
  * The panel, shared by all six demos.
  *
  * `native` only reaches the one control that has a platform equivalent. There
@@ -83,7 +179,6 @@ function AssistantPanel({
   /** Given, every history row becomes a destination. */
   onSelect?: (title: string) => void;
 }) {
-  const [query, setQuery] = useState('');
   const { setOpen } = usePanelside();
 
   // Selecting a destination closes the panel. Leaving it open would mean the
@@ -95,43 +190,32 @@ function AssistantPanel({
       }
     : undefined;
 
-  // Filtering lives here rather than in the component: the panel does not know
-  // what a history entry is, and a search that only matched titles would be
-  // wrong for the first app that indexes message bodies too.
-  const { starred, recents } = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    const match = (title: string) => title.toLowerCase().includes(needle);
-    return needle
-      ? { starred: STARRED.filter(match), recents: RECENTS.filter(match) }
-      : { starred: STARRED, recents: RECENTS };
-  }, [query]);
-
-  const empty = starred.length === 0 && recents.length === 0;
+  const starred = STARRED;
+  const recents = RECENTS;
 
   return (
     <Panelside.Panel>
-      <Panelside.Header title="Assistant">
-        <Panelside.Search
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search chats"
-        />
-      </Panelside.Header>
+      {/* The search button goes in the header's trailing slot, and the surface
+          it opens is a sibling of the panel — see AssistantSearch below. A
+          field here would be 40 points of an 80%-wide panel, at the far end of
+          the screen from the keyboard it opens. */}
+      <Panelside.Header
+        title="Assistant"
+        action={<Panelside.SearchTrigger native={native} glass={native} />}
+      />
 
       <Panelside.Content>
-        {query.trim() === '' && (
-          <Panelside.Group>
-            {NAV.map((item, index) => (
-              <Panelside.Item
-                key={item.id}
-                icon={item.icon}
-                label={item.label}
-                badge={item.badge}
-                active={index === 0}
-              />
-            ))}
-          </Panelside.Group>
-        )}
+        <Panelside.Group>
+          {NAV.map((item, index) => (
+            <Panelside.Item
+              key={item.id}
+              icon={item.icon}
+              label={item.label}
+              badge={item.badge}
+              active={index === 0}
+            />
+          ))}
+        </Panelside.Group>
 
         {starred.length > 0 && (
           <Panelside.Group>
@@ -165,13 +249,6 @@ function AssistantPanel({
           </Panelside.Group>
         )}
 
-        {empty && (
-          <View className="items-center px-6 py-10">
-            <Text size="sm" muted>
-              Nothing matches “{query.trim()}”.
-            </Text>
-          </View>
-        )}
       </Panelside.Content>
 
       {/* Transparent: the history runs under the two controls rather than
@@ -380,6 +457,7 @@ function AssistantDemo({
         <SceneBar title={title} native={native} />
         {scene ?? <Transcript />}
       </Panelside.Scene>
+      <AssistantSearch native={native} />
     </Panelside>
   );
 }

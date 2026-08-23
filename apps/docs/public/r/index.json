@@ -1038,10 +1038,13 @@
     "description": "Navigation panel that moves the app aside instead of covering it.",
     "registryDependencies": [
       "animated-pressable",
+      "bottom-sheet",
       "button",
       "cn",
       "haptics",
       "icons",
+      "keyboard-avoider",
+      "tabs",
       "text",
       "use-back-handler",
       "use-direction"
