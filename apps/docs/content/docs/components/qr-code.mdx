@@ -188,6 +188,41 @@ No tray, no caption — the code and nothing else.
 </QRCode>
 ```
 
+### Shaping it
+
+A code is three things wearing one colour: the body, which carries the data, and the three corner eyes, each a ring with a square in it. Each takes its own shape.
+
+`rounded` and `classy` join to their neighbours — a corner is rounded only where both cells touching it are light — so a run of modules is one stroke rather than a string of beads with a light seam through it.
+
+`dot` and `diamond` do not tile, and cost read distance for it: `dot` covers about two thirds of each cell and `diamond` exactly half, so the same code is a fainter code at the same size. Raise `errorCorrection` with them.
+
+Every shape here keeps the centre of its cell dark and stays inside it, which is what a reader samples, and every eye stays exactly seven modules across, which is what a reader finds the code by. Both are checked in the library's tests.
+
+```tsx
+<QRCode value="https://panelui.dev" size="lg" errorCorrection="H">
+  <QRCode.Canvas moduleShape="rounded" eyeFrameShape="circle" eyeBallShape="dot" />
+</QRCode>
+```
+
+### Colouring the three parts
+
+The body, the rings and the centres are three paths, so they take three colours. `eyeFrameColor` falls back to `color`, and `eyeBallColor` to `eyeFrameColor`, so one override is enough for the common case.
+
+Contrast with the plate is the constraint. A reader needs the ink and the paper far apart in brightness, and a pale brand colour on white is a code that works on the screen it was designed on and not in a room. Keep the plate light and the ink dark, whatever the hue.
+
+```tsx
+<QRCode value="https://panelui.dev" size="lg" errorCorrection="H">
+  <QRCode.Canvas
+    moduleShape="rounded"
+    eyeFrameShape="rounded"
+    eyeBallShape="rounded"
+    color="#1f2937"
+    eyeFrameColor="#4338ca"
+    eyeBallColor="#f97316"
+  />
+</QRCode>
+```
+
 ## Versions
 
 ### Framed
@@ -244,6 +279,49 @@ Folded away behind a row until it is wanted, the way a colour picker folds away.
 </QRCode>
 ```
 
+### Every style
+
+Each module and eye shape in turn, at `H`, so what each one costs in ink is visible. They all read; the point of putting them together is that they do not read equally.
+
+```tsx
+{styles.map((style) => (
+  <QRCode key={style.label} value="https://panelui.dev" size="md" errorCorrection="H">
+    <QRCode.Canvas
+      moduleShape={style.module}
+      eyeFrameShape={style.frame}
+      eyeBallShape={style.ball}
+    />
+    <QRCode.Caption>{style.label}</QRCode.Caption>
+  </QRCode>
+))}
+```
+
+### Branded
+
+Body, rings and centres coloured separately. Three paths, three colours — which is what a brand asks for, rather than one tint over everything.
+
+```tsx
+<QRCode value="https://panelui.dev" size="lg" errorCorrection="H">
+  <QRCode.Frame>
+    <QRCode.Header>
+      <QRCode.Title>Brand colours</QRCode.Title>
+      <QRCode.Action>panelui.dev</QRCode.Action>
+    </QRCode.Header>
+    <QRCode.Panel>
+      <QRCode.Canvas
+        moduleShape="rounded"
+        eyeFrameShape="rounded"
+        eyeBallShape="rounded"
+        color="#1f2937"
+        eyeFrameColor="#4338ca"
+        eyeBallColor="#f97316"
+      />
+    </QRCode.Panel>
+  </QRCode.Frame>
+  <QRCode.Caption>Three paths, three colours</QRCode.Caption>
+</QRCode>
+```
+
 ## Variants
 
 ### `size`
@@ -286,6 +364,11 @@ Folded away behind a row until it is wanted, the way a colour picker folds away.
 | `pixelSize` | `number` | — | Side length in points. Defaults to the size variant's. |
 | `color` | `string` | — | Dark modules. See the note below before overriding this. |
 | `backgroundColor` | `string` | — | The plate the modules sit on. See the note below. |
+| `moduleShape` | `QRCodeModuleShape` | `'square'` | How a data module is drawn. `rounded` and `classy` join to their neighbours — a corner is rounded only where both cells touching it are light — so a run reads as one stroke rather than as a string of beads with a light seam through it. `dot` and `diamond` do not tile, and cost read distance for it: `dot` covers about two thirds of its cell and `diamond` exactly half, so the same code is a fainter code at the same size. Raise `errorCorrection` with them, and check a printed one rather than a screen. |
+| `eyeFrameShape` | `QRCodeEyeFrameShape` | `'square'` | How the ring around each of the three corner eyes is drawn. |
+| `eyeBallShape` | `QRCodeEyeBallShape` | `'square'` | How the square inside each corner eye is drawn. |
+| `eyeFrameColor` | `string` | — | The three corner rings. Defaults to `color`. |
+| `eyeBallColor` | `string` | — | The three corner centres. Defaults to `eyeFrameColor`, then `color`. |
 
 ### QRCode.Frame
 
@@ -356,12 +439,22 @@ The QR **version** — the module count, 21×21 up to 177×177 — is chosen as 
 
 `M` is the default because a code on a screen is not being damaged by anything. Raise it when the code will be printed, put on something curved, or covered in the middle — and a `QRCode.Logo` raises it for you if the level you asked for could not afford the square it clears.
 
+### Shape and colour, without breaking it
+
+A reader does two things, and both survive every shape here.
+
+It **finds** a code by the three corner eyes — by the 1:1:3:1:1 run of dark and light through the middle of one — which holds while the eye is exactly seven modules across. Every `eyeFrameShape` is, and the shapes that are not symmetric turn to face outwards so all three read the same way round.
+
+It **reads** each module by sampling the centre of that module's cell. Every `moduleShape` keeps that centre dark and stays inside its own cell, so a shaped module reads exactly as a square does.
+
+What a shape does cost is **ink**. `dot` covers about two thirds of its cell and `diamond` exactly half, so the same code at the same size is a fainter one, read from closer. Raise `errorCorrection` when you shape a code, and check a printed one rather than one on a screen — a display is backlit and paper is not.
+
 ### Making it scannable
 
 Three things decide whether a code reads, and none of them is the code:
 
 - **The quiet zone.** Four modules of clear space all round, which `QRCode.Canvas` draws and paints. Do not clip it, and do not put the code flush against a border.
-- **Contrast, the right way round.** Dark modules on a light field, and `QRCode.Canvas` draws that way whatever the theme is doing. It is the one thing in the library that ignores the tokens, and it is deliberate: inverted, a code is rejected outright by a good share of scanners and found late by most of the rest, which turns a dark theme into a bug report about a code that "sometimes does not work". On a light theme the plate is white on a near-white card and reads as nothing at all, which is the intended outcome. `color` and `backgroundColor` override both.
+- **Contrast, the right way round.** Dark modules on a light field, and `QRCode.Canvas` draws that way whatever the theme is doing. It is the one thing in the library that ignores the tokens, and it is deliberate: inverted, a code is rejected outright by a good share of scanners and found late by most of the rest, which turns a dark theme into a bug report about a code that "sometimes does not work". On a light theme the plate is white on a near-white card and reads as nothing at all, which is the intended outcome. `color`, `eyeFrameColor`, `eyeBallColor` and `backgroundColor` override the ink and the plate — but not the rule: keep the plate light and the ink dark, whatever the hue.
 - **Size.** A code needs roughly one point per module at arm's length. `sm` is 128 points, which is fine for a version 2 code and marginal for a version 10 one; `lg` is 240.
 
 ### Accessibility
@@ -374,4 +467,4 @@ The canvas has an image role and a label naming what it encodes, so a screen rea
 
 **Values:** `QRCode`
 
-**Types:** `QRCodeProps`, `QRCodeCanvasProps`, `QRCodeFrameProps`, `QRCodeHeaderProps`, `QRCodeTitleProps`, `QRCodeActionProps`, `QRCodePanelProps`, `QRCodeDescriptionProps`, `QRCodeCaptionProps`, `QRCodeValueProps`, `QRCodeLogoProps`, `QRCodeTriggerProps`, `QRCodeContentProps`, `QRCodeSize`, `QRCodePresentation`, `ErrorCorrectionLevel`
+**Types:** `QRCodeProps`, `QRCodeCanvasProps`, `QRCodeFrameProps`, `QRCodeHeaderProps`, `QRCodeTitleProps`, `QRCodeActionProps`, `QRCodePanelProps`, `QRCodeDescriptionProps`, `QRCodeCaptionProps`, `QRCodeValueProps`, `QRCodeLogoProps`, `QRCodeTriggerProps`, `QRCodeContentProps`, `QRCodeSize`, `QRCodePresentation`, `QRCodeModuleShape`, `QRCodeEyeFrameShape`, `QRCodeEyeBallShape`, `ErrorCorrectionLevel`

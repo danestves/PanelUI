@@ -16,16 +16,32 @@
  *
  * ## What it draws
  *
- * Every dark module is one subpath of a single `<Path>`, not a `<Rect>` of its
+ * Three `<Path>`s: the body, the three corner rings, and the three corner
+ * centres. Every module is a subpath of one of them, not a `<Rect>` of its
  * own. A version 10 code is 3,481 modules; half of them dark is seventeen
  * hundred native views for a picture that never changes, and the difference
- * between that and one node is the difference between a code that appears and
- * one that appears eventually.
+ * between that and three nodes is the difference between a code that appears
+ * and one that appears eventually.
+ *
+ * Three rather than one because they are the three things worth colouring and
+ * shaping separately. A code is found by its corner eyes before a single
+ * module is read, so they are the part a design touches first — and the part
+ * it is most dangerous to touch badly.
  *
  * The colours come from the theme, so a code drawn on a card is legible on
  * every one of them — and light-on-dark is drawn the way scanners expect it,
  * with the quiet zone painted rather than left transparent. A code with
  * nothing behind it reads at about half the distance.
+ *
+ * ## Shaping it
+ *
+ * `moduleShape`, `eyeFrameShape` and `eyeBallShape` on `QRCode.Canvas` change
+ * the geometry; `color`, `eyeFrameColor`, `eyeBallColor` and `backgroundColor`
+ * change the ink. A scanner samples the centre of each cell, so every shape
+ * here reads exactly as a square does — what changes is how much of the cell
+ * is covered. `dot` fills about two thirds of it and `diamond` half, which is
+ * read distance spent on a look. Raise `errorCorrection` to pay for it, and
+ * check a printed code rather than one on a screen.
  *
  * ## The hole in the middle
  *
@@ -52,8 +68,19 @@ import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { Popover, type PopoverContentProps } from '../popover';
 import { encodeQr, type ErrorCorrectionLevel, type QrMatrix } from './qr-encode';
+import {
+  eyeBallPath,
+  eyeFramePath,
+  finderOrigins,
+  inFinder,
+  modulePath,
+  type QRCodeEyeBallShape,
+  type QRCodeEyeFrameShape,
+  type QRCodeModuleShape,
+} from './qr-shapes';
 
 export type { ErrorCorrectionLevel };
+export type { QRCodeModuleShape, QRCodeEyeFrameShape, QRCodeEyeBallShape };
 
 const qrCodeVariants = tv({
   slots: {
@@ -260,6 +287,27 @@ export interface QRCodeCanvasProps extends Omit<ViewProps, 'children'> {
   color?: string;
   /** The plate the modules sit on. See the note below. */
   backgroundColor?: string;
+  /**
+   * How a data module is drawn.
+   *
+   * `rounded` and `classy` join to their neighbours — a corner is rounded only
+   * where both cells touching it are light — so a run reads as one stroke
+   * rather than as a string of beads with a light seam through it.
+   *
+   * `dot` and `diamond` do not tile, and cost read distance for it: `dot`
+   * covers about two thirds of its cell and `diamond` exactly half, so the
+   * same code is a fainter code at the same size. Raise `errorCorrection` with
+   * them, and check a printed one rather than a screen.
+   */
+  moduleShape?: QRCodeModuleShape;
+  /** How the ring around each of the three corner eyes is drawn. */
+  eyeFrameShape?: QRCodeEyeFrameShape;
+  /** How the square inside each corner eye is drawn. */
+  eyeBallShape?: QRCodeEyeBallShape;
+  /** The three corner rings. Defaults to `color`. */
+  eyeFrameColor?: string;
+  /** The three corner centres. Defaults to `eyeFrameColor`, then `color`. */
+  eyeBallColor?: string;
 }
 
 /**
@@ -282,38 +330,88 @@ const PLATE = '#ffffff';
 const MODULE = '#111111';
 
 const QRCodeCanvas = forwardRef<View, QRCodeCanvasProps>(
-  ({ className, pixelSize, color, backgroundColor, ...props }, ref) => {
+  (
+    {
+      className,
+      pixelSize,
+      color,
+      backgroundColor,
+      moduleShape = 'square',
+      eyeFrameShape = 'square',
+      eyeBallShape = 'square',
+      eyeFrameColor,
+      eyeBallColor,
+      ...props
+    },
+    ref
+  ) => {
     const { matrix, error, value, size, logoFraction } = useQRCode('QRCode.Canvas');
 
     const side = pixelSize ?? CANVAS_SIZE[size];
     const dark = color ?? MODULE;
     const light = backgroundColor ?? PLATE;
+    const frameInk = eyeFrameColor ?? dark;
+    const ballInk = eyeBallColor ?? frameInk;
 
     /*
-     * One path for every dark module.
+     * Three paths for the whole code: the body, the three corner rings, and
+     * the three corner centres.
      *
-     * The viewBox is in module units, so the path is written once and scales
-     * to whatever `side` is — no arithmetic per module, and no rounding gaps
+     * Three rather than one because they are three different things a reader
+     * can colour and shape separately — and still three rather than one node
+     * per module, which is what a version 10 code would cost: 3,481 cells,
+     * half of them dark, seventeen hundred native views for a picture that
+     * never changes.
+     *
+     * The viewBox is in module units, so a shape is written once and scales to
+     * whatever `side` is — no arithmetic per module, and no rounding gaps
      * between neighbours at fractional sizes.
      */
-    const path = useMemo(() => {
-      if (!matrix) return '';
+    const paths = useMemo(() => {
+      if (!matrix) return { body: '', frames: '', balls: '' };
 
       const hole = logoFraction ? holeBounds(matrix.size, logoFraction) : null;
+
+      /*
+       * The body, as its own matrix rather than as a filter inside the loop.
+       * The rounded shapes ask their neighbours whether a corner is free, and
+       * the answer has to be about what is *drawn* — a module beside the logo
+       * hole or beside an eye has nothing there to join to, and joining to it
+       * leaves a squared-off corner facing a gap.
+       */
+      const body: boolean[][] = [];
+      for (let y = 0; y < matrix.size; y++) {
+        const row: boolean[] = [];
+        for (let x = 0; x < matrix.size; x++) {
+          const lit =
+            !!matrix.modules[y]![x] &&
+            !inFinder(x, y, matrix.size) &&
+            // Modules under the logo are not drawn at all — drawing them and
+            // covering them leaves a dark edge wherever the logo is smaller
+            // than the square it cleared.
+            !(hole && x >= hole.from && x < hole.to && y >= hole.from && y < hole.to);
+          row.push(lit);
+        }
+        body.push(row);
+      }
 
       let d = '';
       for (let y = 0; y < matrix.size; y++) {
         for (let x = 0; x < matrix.size; x++) {
-          if (!matrix.modules[y]![x]) continue;
-          // Modules under the logo are not drawn at all — drawing them and
-          // covering them leaves a dark edge wherever the logo is smaller
-          // than the square it cleared.
-          if (hole && x >= hole.from && x < hole.to && y >= hole.from && y < hole.to) continue;
-          d += `M${x + QUIET_ZONE} ${y + QUIET_ZONE}h1v1h-1z`;
+          if (!body[y]![x]) continue;
+          d += modulePath(moduleShape, body, x, y, matrix.size, QUIET_ZONE);
         }
       }
-      return d;
-    }, [matrix, logoFraction]);
+
+      let frames = '';
+      let balls = '';
+      for (const [x, y, corner] of finderOrigins(matrix.size)) {
+        frames += eyeFramePath(eyeFrameShape, x, y, QUIET_ZONE, corner);
+        balls += eyeBallPath(eyeBallShape, x, y, QUIET_ZONE);
+      }
+
+      return { body: d, frames, balls };
+    }, [matrix, logoFraction, moduleShape, eyeFrameShape, eyeBallShape]);
 
     if (error) {
       // A box the size the code would have been, so the layout does not jump
@@ -349,7 +447,15 @@ const QRCodeCanvas = forwardRef<View, QRCodeCanvasProps>(
               Rounded, because at this point it is an object on the card rather
               than a rectangle of paper. */}
           <Rect x={0} y={0} width={grid} height={grid} rx={2.5} fill={light} />
-          <Path d={path} fill={dark} />
+          <Path d={paths.body} fill={dark} />
+          {/* `evenodd` is what makes the ring a ring: the 5×5 subpath inside
+              the 7×7 one is a hole rather than a second filled square. A
+              stroke would be centred on its path and put the eye's outer edge
+              half a module outside the seven the specification allows, and the
+              width of that square is the one measurement a scanner takes
+              before it reads anything. */}
+          <Path d={paths.frames} fill={frameInk} fillRule="evenodd" />
+          <Path d={paths.balls} fill={ballInk} />
         </Svg>
       </View>
     );

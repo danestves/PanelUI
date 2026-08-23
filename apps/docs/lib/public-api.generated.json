@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1170,
+    "exports": 1173,
     "values": 311,
-    "types": 859,
+    "types": 862,
     "modules": 143,
     "components": 116,
     "hooks": 13
@@ -3150,6 +3150,18 @@
           },
           {
             "name": "QRCodePresentation",
+            "kind": "type"
+          },
+          {
+            "name": "QRCodeModuleShape",
+            "kind": "type"
+          },
+          {
+            "name": "QRCodeEyeFrameShape",
+            "kind": "type"
+          },
+          {
+            "name": "QRCodeEyeBallShape",
             "kind": "type"
           },
           {

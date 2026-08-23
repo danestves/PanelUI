@@ -884,6 +884,9 @@ export {
   type QRCodeContentProps,
   type QRCodeSize,
   type QRCodePresentation,
+  type QRCodeModuleShape,
+  type QRCodeEyeFrameShape,
+  type QRCodeEyeBallShape,
   type ErrorCorrectionLevel,
 } from './components/qr-code';
 export {

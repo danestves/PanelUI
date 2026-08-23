@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bookmark, Copy, Flag, Link2, Pencil, Share2, Sparkles, TextSelect, Trash2 } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pressable, View } from "react-native";
-import { Avatar, BottomSheet, Button, ContextMenu, Card, Frame, InfoIcon, Input, Item, Label, Marker, Message, Meter, MessageScroller, Planner, type PlannerEntry, PlusSquareIcon, Popover, Progress, ProgressButton, QRCode, SendIcon, ShareNodesIcon, Separator, Shimmer, Text, XIcon } from "panelui-native";
+import { Pressable, ScrollView, View } from "react-native";
+import { Avatar, BottomSheet, Button, ContextMenu, Card, Frame, InfoIcon, Input, Item, Label, Marker, Message, Meter, MessageScroller, Planner, type PlannerEntry, PlusSquareIcon, Popover, Progress, ProgressButton, QRCode, type QRCodeEyeBallShape, type QRCodeEyeFrameShape, type QRCodeModuleShape, SendIcon, ShareNodesIcon, Separator, Shimmer, Text, XIcon } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 /** Stable remote portraits for the Avatar demos. */
@@ -762,6 +762,91 @@ function QRCodeHeaderVersion() {
   );
 }
 
+/**
+ * Every module shape and every eye shape, side by side.
+ *
+ * Side by side because that is the only way the trade-off is visible: the
+ * shapes further down the row cover less of each cell than a square does, and
+ * a code that has lost a third of its ink is a code you have to be closer to.
+ * At `H` all of them read; the point of showing them together is that they do
+ * not read equally.
+ */
+const QR_STYLES: {
+  label: string;
+  module: QRCodeModuleShape;
+  frame: QRCodeEyeFrameShape;
+  ball: QRCodeEyeBallShape;
+}[] = [
+  { label: 'Square', module: 'square', frame: 'square', ball: 'square' },
+  { label: 'Rounded', module: 'rounded', frame: 'rounded', ball: 'rounded' },
+  { label: 'Dots', module: 'dot', frame: 'circle', ball: 'dot' },
+  { label: 'Classy', module: 'classy', frame: 'leaf', ball: 'leaf' },
+  { label: 'Diamond', module: 'diamond', frame: 'shield', ball: 'diamond' },
+];
+
+function QRCodeStylesVersion() {
+  return (
+    <ScrollView
+      className="flex-1"
+      contentContainerClassName="items-center gap-8 p-6"
+      showsVerticalScrollIndicator={false}
+    >
+      {QR_STYLES.map((style) => (
+        <QRCode
+          key={style.label}
+          value="https://panelui.dev"
+          size="md"
+          // Shaping spends error correction, so the level goes up with it. `H`
+          // tolerates about 30% loss, which is what pays for a diamond body.
+          errorCorrection="H"
+        >
+          <QRCode.Canvas
+            moduleShape={style.module}
+            eyeFrameShape={style.frame}
+            eyeBallShape={style.ball}
+          />
+          <QRCode.Caption>{style.label}</QRCode.Caption>
+        </QRCode>
+      ))}
+    </ScrollView>
+  );
+}
+
+/**
+ * The three parts of a code, coloured separately.
+ *
+ * The body, the rings and the centres are three `<Path>`s, so they take three
+ * colours — which is what a brand actually asks for, rather than one tint over
+ * everything. What it must not do is lower the contrast between the ink and
+ * the plate: a scanner needs the two to be far apart in brightness, and a pale
+ * brand colour on white is a code that works in the studio and not in a room.
+ */
+function QRCodeBrandVersion() {
+  return (
+    <View className="flex-1 items-center justify-center gap-4 p-4">
+      <QRCode value="https://panelui.dev" size="lg" errorCorrection="H">
+        <QRCode.Frame>
+          <QRCode.Header>
+            <QRCode.Title>Brand colours</QRCode.Title>
+            <QRCode.Action>panelui.dev</QRCode.Action>
+          </QRCode.Header>
+          <QRCode.Panel>
+            <QRCode.Canvas
+              moduleShape="rounded"
+              eyeFrameShape="rounded"
+              eyeBallShape="rounded"
+              color="#1f2937"
+              eyeFrameColor="#4338ca"
+              eyeBallColor="#f97316"
+            />
+          </QRCode.Panel>
+        </QRCode.Frame>
+        <QRCode.Caption>Three paths, three colours</QRCode.Caption>
+      </QRCode>
+    </View>
+  );
+}
+
 /** Folded away behind a row, the way the colour picker folds away. */
 function QRCodePopoverVersion() {
   return (
@@ -1393,6 +1478,47 @@ export const ENTRIES: ComponentEntry[] = [
             </QRCode.Frame>
           </QRCode>
         ),
+      },
+      {
+        label: 'Module shapes',
+        render: () => (
+          <View className="w-full flex-row items-center justify-around">
+            {(['square', 'rounded', 'dot'] as const).map((shape) => (
+              <QRCode key={shape} value="https://panelui.dev" size="sm" errorCorrection="H">
+                <QRCode.Canvas moduleShape={shape} />
+                <QRCode.Caption>{shape}</QRCode.Caption>
+              </QRCode>
+            ))}
+          </View>
+        ),
+      },
+      {
+        label: 'Eye shapes',
+        render: () => (
+          <View className="w-full flex-row items-center justify-around">
+            {(['rounded', 'circle', 'shield'] as const).map((shape) => (
+              <QRCode key={shape} value="https://panelui.dev" size="sm" errorCorrection="H">
+                <QRCode.Canvas eyeFrameShape={shape} eyeBallShape="rounded" />
+                <QRCode.Caption>{shape}</QRCode.Caption>
+              </QRCode>
+            ))}
+          </View>
+        ),
+      },
+      {
+        label: 'Every style',
+        id: 'styles',
+        fullPage: true,
+        description:
+          'Each module and eye shape in turn, so what each one costs in ink is visible.',
+        render: () => <QRCodeStylesVersion />,
+      },
+      {
+        label: 'Branded',
+        id: 'branded',
+        fullPage: true,
+        description: 'Body, rings and centres coloured separately — three paths, three colours.',
+        render: () => <QRCodeBrandVersion />,
       },
     ],
   },
