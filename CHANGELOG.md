@@ -9,6 +9,83 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.80.0] — 2026-08-23
+
+### Added
+
+- **`QRCode` takes a shape and a colour for each of its three parts.** A code is three things
+  wearing one colour: the body, which carries the data, and the three corner eyes, each a ring
+  with a square inside it. `moduleShape`, `eyeFrameShape` and `eyeBallShape` on `QRCode.Canvas`
+  change the geometry; `eyeFrameColor` and `eyeBallColor` join `color` and `backgroundColor` for
+  the ink. `rounded` and `classy` join to their neighbours, so a run of modules is one stroke
+  rather than a string of beads with a light seam through it.
+
+  Scannability is a constraint here rather than a preference, and it is tested: every eye stays
+  exactly seven modules across, which is what a reader finds a code by, and every module shape
+  covers the centre of its own cell without leaving it, which is what a reader reads. What
+  shaping does cost is ink — `dot` covers about two thirds of a cell and `diamond` exactly half
+  — so raise `errorCorrection` with it and check a printed code rather than one on a screen.
+
+- **`Panelside` search is a surface rather than a row.** `Panelside.SearchTrigger` goes in the
+  header's action slot and opens `Panelside.SearchSheet`: a sheet the height of the screen
+  holding a dismiss button, `Panelside.SearchTabs` to narrow what is searched,
+  `Panelside.SearchResults`, and `Panelside.SearchField` docked to the keyboard. The open state
+  lives on the root, so the button and the sheet — which are in different subtrees — need
+  nothing wired between them; `usePanelside()` exposes it as `searchOpen`.
+
+  A field in the header is the obvious way to do this and the wrong one on a phone: the panel is
+  most of the screen, the field is forty points of it, and a search that returns anything has to
+  push the history down a screen it already fills — from the top, which is the far end of the
+  screen from the keyboard that just opened. `Panelside.Search`, the inline field, is still
+  exported and is still right for a docked panel on a tablet.
+
+- **`Panelside.Footer` and `Panelside.Header` take `surface`.** `transparent` is the new default
+  and paints nothing, so the history runs under the controls and the panel reads as one surface
+  with two things floating on it. `fade` is the previous behaviour — the list dissolving into the
+  panel above the controls — and `solid` is a band with an edge, which `floating={false}` implies.
+
+- **`Timeline.Masthead`**, the block above a horizontal rail: media, a small label, then the
+  name. One part rather than two `Text`s at the call site, because the pair has to be typeset as
+  one unit — set a step apart with an ordinary paragraph gap they read as a heading followed by a
+  bigger unrelated one.
+
+- **`Timeline` reports which column you are on.** `onColumnChange` fires as the reading edge
+  crosses from one column to the next, so a masthead, a caption or a picture outside the rail can
+  belong to the column being read. Without it, swiping through ten columns is swiping under one
+  unchanging heading. It is one state update per column, not per frame.
+
+### Changed
+
+- **`Panelside.Cta` is 44pt, and `size="lg"` is 52pt.** At 40 it matched the account button
+  beside it, and the two read as a pair of equals — which is not what the footer is for.
+
+- **The band above a horizontal `Timeline`'s rail is reserved by the column**, not by whatever it
+  contains, so `Timeline.Aside` is optional. It draws into the strip with a negative margin
+  cancelling its own height. Reserved by the aside, as before, a column written without one put
+  its tick a whole band above the rail and the rail stopped being a line.
+
+### Fixed
+
+- **The `Panelside` search parts threw outside the sheet.** The styled sheet mounts its content
+  through a portal, under the portal host and outside the component's subtree, so a provider
+  wrapped around the sheet was one the children never saw. Only the platform sheet worked,
+  because it hosts its content in place.
+
+- **The search sheet's column had no height to divide.** A hosted sheet hands its content a
+  *minimum* height, and a minimum is not something `flex-1` can share out — the results list
+  sized to its own rows, grew past the sheet, and pushed the field off the bottom, which is a
+  search surface with no way to type into it.
+
+### Docs
+
+- **`/docs/components` is a gallery, and moves to the Sections group.** Every component is a card
+  with its name, its description and a wireframe of the shape it makes — you recognise the row of
+  chips, or the sheet coming up from the bottom, before you have read the word. A list of a
+  hundred and sixteen names only works for somebody who already knows what the library calls
+  things, which is the one thing a reader on that page does not. The URL is unchanged.
+
+- **`QRCode` has its previews**, recorded on a device, on the page and beside each version.
+
 ## [0.79.1] — 2026-08-22
 
 ### Fixed

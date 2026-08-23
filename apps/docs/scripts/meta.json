@@ -852,7 +852,7 @@
     "react native timeline",
     {
       "category": "data",
-      "updatedIn": "0.78.0"
+      "updatedIn": "0.80.0"
     }
   ],
   "toast": [
@@ -1003,7 +1003,7 @@
       "group": "ai-components",
       "addedIn": "0.34.0",
       "alpha": true,
-      "updatedIn": "0.79.0"
+      "updatedIn": "0.80.0"
     }
   ],
   "kpi": [
@@ -1053,7 +1053,8 @@
     "react native qr code generator scan",
     {
       "addedIn": "0.57.0",
-      "category": "media"
+      "category": "media",
+      "updatedIn": "0.80.0"
     }
   ],
   "selection-mode": [
