@@ -122,7 +122,10 @@ function documentedComponents() {
   const groups = ["components", "charts", "form", "ai-components"];
   return groups.flatMap((group) => {
     const pages = readJson(`apps/docs/content/docs/${group}/meta.json`).pages;
-    return pages.filter((page) => page !== "index");
+    // `index` is the group's own overview page, and `!index` is the same page
+    // excluded from the group because the sidebar files it elsewhere. Neither
+    // is a component, so neither belongs in the parity check.
+    return pages.filter((page) => page !== "index" && page !== "!index");
   });
 }
 

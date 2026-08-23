@@ -448,42 +448,35 @@ Every part also accepts the underlying React Native props (\`ViewProps\` or \`Te
  */
 /*
  * The components index at /docs/components — every component the library has,
- * in sections, on one page.
+ * as a card with a picture of the shape it makes.
  *
  * Generated for the same reason the pages are: a hand-written index of a
  * hundred links is a list that is wrong by the next release, and this is the
- * page a reader lands on to find out whether the thing they want exists. It is
- * also most of what links the component pages together, which is what a
- * crawler follows.
+ * page a reader lands on to find out whether the thing they want exists.
+ *
+ * The page itself is one line, because the grid is a React component —
+ * `components/component-gallery.tsx` — reading this same meta.json. The
+ * sections, their headings and the wireframe for each component live there,
+ * with the markup that draws them; emitting a hundred and sixteen cards of MDX
+ * from here would put the layout in one file and the pictures in another.
  */
-const indexSections = Object.entries(CATEGORIES)
-  .map(([category, [heading, lede]]) => {
-    const entries = Object.entries(meta)
-      .filter(([, entry]) => categoryOf(entry) === category)
-      .sort(([, a], [, b]) => titleOf(a).localeCompare(titleOf(b)));
-    if (!entries.length) return null;
-
-    const cards = entries
-      .map(
-        ([slug, entry]) =>
-          `  <Card title="${titleOf(entry)}" href="/docs/${groupOf(entry)}/${slug}">\n` +
-          `    ${entry[1]}\n  </Card>`
-      )
-      .join('\n');
-
-    return `## ${heading}\n\n${lede}\n\n<Cards>\n${cards}\n</Cards>`;
-  })
-  .filter(Boolean);
-
 const indexPage = [
+  /*
+   * `full` because the grid is the page and the page has no prose headings for
+   * a table of contents to list — the section headings are rendered by the
+   * gallery component, which the MDX pipeline never sees. Without it the
+   * layout still reserves the column, and four cards sit beside a strip of
+   * nothing.
+   */
   `---
 title: Components
 description: Every component module in PanelUI, by what it is for — ${Object.keys(meta).length} component modules, each with its anatomy, props and variants.
+full: true
 ---`,
   `All ${Object.keys(meta).length} component modules, grouped by the job they do. Every page covers the ` +
     `anatomy, every prop and every variant, read straight from the library's TypeScript so it ` +
     `cannot drift from the code.`,
-  ...indexSections,
+  '<ComponentGallery />',
 ].join('\n\n');
 
 fs.writeFileSync(path.join(contentDir, 'components', 'index.mdx'), indexPage + '\n');
@@ -494,9 +487,14 @@ for (const [group, title] of Object.entries(GROUPS)) {
     .sort(([, a], [, b]) => titleOf(a).localeCompare(titleOf(b)))
     .map(([slug]) => slug);
 
-  // The index leads its own group, and is not a component — hence `pages`
-  // rather than the component list wherever a count is wanted.
-  const listed = group === 'components' ? ['index', ...pages] : pages;
+  /*
+   * The components index is filed under Sections in the sidebar, beside the
+   * other pages that orient somebody rather than document one thing — see the
+   * root meta.json, which names it directly. `!index` is the exclude marker:
+   * without it the folder's own index is prepended when `...components` is
+   * expanded at the root, and the page appears twice.
+   */
+  const listed = group === 'components' ? ['!index', ...pages] : pages;
 
   const dir = path.join(contentDir, group);
   fs.writeFileSync(
@@ -504,7 +502,14 @@ for (const [group, title] of Object.entries(GROUPS)) {
     JSON.stringify({ title, pages: listed }, null, 2) + '\n'
   );
 
-  const keep = new Set([...listed.map((slug) => `${slug}.mdx`), 'meta.json']);
+  // `listed` can carry fumadocs' `!` exclude marker, which is a statement
+  // about the sidebar rather than about the file — the page is still written
+  // and still has a URL, so stripping the marker here is what stops the
+  // cleanup below deleting the file it was just told to write.
+  const keep = new Set([
+    ...listed.map((slug) => `${slug.replace(/^!/, '')}.mdx`),
+    'meta.json',
+  ]);
   for (const file of fs.readdirSync(dir)) {
     if (!keep.has(file)) fs.rmSync(path.join(dir, file));
   }

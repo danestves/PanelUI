@@ -2,6 +2,7 @@
   "pages": [
     "---Sections---",
     "index",
+    "components/index",
     "installation",
     "upgrading",
     "cli",
