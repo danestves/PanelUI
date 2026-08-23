@@ -3,6 +3,13 @@ title: QRCode
 description: A string a camera can read — framed, titled, or folded away behind a button.
 ---
 
+<Preview
+  src="/previews/qr-code.jpg"
+  alt="Five QR codes in the example app, one per module and eye shape."
+  width={1179}
+  height={1748}
+/>
+
 A string drawn as something a camera can read — bare, framed, titled, or folded away behind a button.
 
 Give it a `value` and compose the shape around it.
@@ -14,7 +21,7 @@ The encoder is ours and has no dependency behind it: the version grows to fit wh
 QRCode ships with the library — no separate install.
 
 ```tsx
-import { QRCode, Avatar, Button, ScrollView, Text } from 'panelui-native';
+import { QRCode, Avatar, Button, ScrollView, Text, View } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -188,6 +195,32 @@ No tray, no caption — the code and nothing else.
 </QRCode>
 ```
 
+### What a correction level costs
+
+The same string at `L` and at `H`. The redundancy is made of modules, so the code that can survive losing 30% of itself is visibly denser than the one that can survive 7% — and a denser code at the same physical size is one a camera has to get closer to.
+
+That is the whole trade. Raise it when the code will be printed, folded, put on something curved or covered in the middle, and leave it at `M` for a code on a screen, which nothing is damaging.
+
+<Preview
+  src="/previews/qr-code-error-correction.jpg"
+  alt="The same code at correction level L and at level H, the second visibly denser."
+  width={1179}
+  height={543}
+/>
+
+```tsx
+<View className="flex-row items-center justify-around">
+  <QRCode value="https://panelui.dev" size="sm" errorCorrection="L">
+    <QRCode.Canvas />
+    <QRCode.Caption>L</QRCode.Caption>
+  </QRCode>
+  <QRCode value="https://panelui.dev" size="sm" errorCorrection="H">
+    <QRCode.Canvas />
+    <QRCode.Caption>H</QRCode.Caption>
+  </QRCode>
+</View>
+```
+
 ### Shaping it
 
 A code is three things wearing one colour: the body, which carries the data, and the three corner eyes, each a ring with a square in it. Each takes its own shape.
@@ -229,6 +262,13 @@ Contrast with the plate is the constraint. A reader needs the ink and the paper 
 
 The tray, the title strip, and the code on the card inside it.
 
+<Preview
+  src="/previews/qr-code-framed.jpg"
+  alt="A QR code in a titled tray, with a caption under it."
+  width={1179}
+  height={1120}
+/>
+
 ```tsx
 <QRCode value="https://panelui.dev" size="lg">
   <QRCode.Frame>
@@ -248,6 +288,13 @@ The tray, the title strip, and the code on the card inside it.
 
 A trailing slot in the header, and the encoded string underneath.
 
+<Preview
+  src="/previews/qr-code-with-a-header.jpg"
+  alt="A pairing code with a title strip, an expiry, a mark in the middle and the string underneath."
+  width={1179}
+  height={1105}
+/>
+
 ```tsx
 <QRCode value="https://panelui.dev/pair/8f2a41" size="lg">
   <QRCode.Frame>
@@ -263,9 +310,17 @@ A trailing slot in the header, and the encoded string underneath.
 </QRCode>
 ```
 
-### In a popover
+### Folded away
 
 Folded away behind a row until it is wanted, the way a colour picker folds away.
+
+<PreviewVideo
+  src="/previews/qr-code-folded-away.mp4"
+  poster="/previews/qr-code-folded-away-poster.jpg"
+  alt="A QR code brought up in a popover from a row, and dismissed again."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <QRCode value="https://panelui.dev" presentation="popover">
@@ -284,6 +339,13 @@ Folded away behind a row until it is wanted, the way a colour picker folds away.
 Each module and eye shape in turn, at `H`, so what each one costs in ink is visible. They all read; the point of putting them together is that they do not read equally.
 
 Two to a row with real space between them. A quiet zone that touches the next code is a quiet zone a reader cannot find the edge of — the gap is part of the code, not padding around it.
+
+<Preview
+  src="/previews/qr-code-every-style.jpg"
+  alt="The five module and eye shapes: square, rounded, dots, classy and diamond."
+  width={1179}
+  height={1748}
+/>
 
 ```tsx
 <ScrollView contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 gap-y-10 p-6">
@@ -307,6 +369,13 @@ The same code in six palettes. The body, the rings and the centres are three pat
 No frame around them: a titled tray is a different thing being demonstrated, and six trays would be a page about trays.
 
 Every body here is dark and every plate is light. The hue is free; the tone is not.
+
+<Preview
+  src="/previews/qr-code-branded.jpg"
+  alt="The same code in six palettes, with the body, the rings and the centres coloured separately."
+  width={1179}
+  height={1776}
+/>
 
 ```tsx
 <ScrollView contentContainerClassName="flex-row flex-wrap justify-center gap-x-8 gap-y-10 p-6">
