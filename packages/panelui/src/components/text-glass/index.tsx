@@ -58,7 +58,7 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
  * between two strokes is time in which nothing is drawn, so it has to be
  * spent in the same currency as the drawing to keep the pen's speed even.
  */
-const LIFT = 90;
+const LIFT = 180;
 
 /** How much of its own draw a stroke spends fading in. */
 const FADE = 0.35;
@@ -250,7 +250,7 @@ export function TextGlass({
       strokes: drawn,
       box: viewBox ?? measuredBox,
       // A longer word takes longer to write, unless a duration is asked for.
-      span: duration ?? Math.round(900 + lengths.reduce((sum, l) => sum + l, 0) * 1.2),
+      span: duration ?? Math.round(700 + lengths.reduce((sum, l) => sum + l, 0) * 0.9),
     };
   }, [paths, word, viewBox, duration, strokeWidth]);
 
