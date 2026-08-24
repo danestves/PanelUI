@@ -91,6 +91,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -269,17 +270,6 @@ const SHEET_BOTTOM_PADDING = 16;
  */
 const SHEET_TOP_PADDING = 12;
 
-/**
- * The strip above the field over which the results dissolve into the sheet.
- *
- * The field rides the keyboard by translating, not by taking a row of the
- * layout, so once it is up the list is behind it. It has to paint a ground of
- * its own or the rows read straight through a pill whose fill is a few percent
- * of an opaque colour — and a ground that simply begins is a hard edge across
- * a scrolling list, so the top of it is a fade.
- */
-const FIELD_FADE = 20;
-
 /** Progress past which a layer is treated as fully hidden for accessibility. */
 const HIDDEN_EPSILON = 0.05;
 
@@ -303,6 +293,15 @@ const GLYPH_STROKE = 1.8;
  * that decides how a panel looks, since every surface here provides a colour.
  */
 const GLYPH_FALLBACK = '#737373';
+
+/**
+ * Floor for a row's action menu.
+ *
+ * Wide enough for a verb and its glyph with the label doing the growing. Left
+ * to size itself, a menu takes its width from the one thing in each row that
+ * is not flexible — the glyph — and comes up as a column of icons.
+ */
+const ACTIONS_MIN_WIDTH = 220;
 
 /**
  * One of the panel's own glyphs.
@@ -336,7 +335,7 @@ function Glyph({
 export type PanelsideMode = 'push' | 'overlay';
 export type PanelsideSwipeFrom = 'anywhere' | 'edge';
 export type PanelsideItemSize = 'default' | 'sm';
-export type PanelsideCtaSize = 'default' | 'lg';
+export type PanelsideCtaSize = 'default' | 'lg' | 'xl';
 /**
  * What a header or a footer paints behind itself.
  *
@@ -389,6 +388,7 @@ const ctaVariants = tv({
     size: {
       default: 'h-11 gap-2 px-6',
       lg: 'h-13 gap-2.5 px-7',
+      xl: 'h-14 gap-3 px-8',
     },
   },
   defaultVariants: {
@@ -1441,8 +1441,15 @@ export interface PanelsideItemActionsProps {
   placement?: MenuContentProps['placement'];
   /** How it lines up on that edge. Defaults to the button's trailing edge. */
   align?: MenuContentProps['align'];
+  /**
+   * Floor for the menu's width. A panel sized to its contents takes its width
+   * from whatever inside it is not flexible — in a row of a flexible label and
+   * a fixed glyph, that is the glyph, and the menu comes up as a column of
+   * icons with the words squeezed out of it.
+   */
+  minWidth?: number;
   /** Passed through to the panel — `width`, `maxHeight`, `offset` and the rest. */
-  contentProps?: Omit<MenuContentProps, 'children' | 'placement' | 'align'>;
+  contentProps?: Omit<MenuContentProps, 'children' | 'placement' | 'align' | 'minWidth'>;
   /** The rows: `Menu.Item`, `Menu.Separator`, `Menu.Label`. */
   children?: ReactNode;
 }
@@ -1475,6 +1482,7 @@ function PanelsideItemActions({
   icon,
   placement = 'bottom',
   align = 'end',
+  minWidth = ACTIONS_MIN_WIDTH,
   contentProps,
   children,
 }: PanelsideItemActionsProps) {
@@ -1489,6 +1497,7 @@ function PanelsideItemActions({
         placement={placement}
         align={align}
         width="content-fit"
+        minWidth={minWidth}
         {...contentProps}
       >
         {children}
@@ -1623,10 +1632,11 @@ export interface PanelsideCtaProps extends Omit<PressableProps, 'children'> {
    * How tall the pill is. `default` is 44pt — a step above the account button
    * beside it, so the footer reads as one primary control and one secondary
    * one. `lg` is 52pt, for a panel where the call to action is the only thing
-   * in the row.
+   * in the row, and `xl` is 56pt.
    *
    * Ignored under `native` — the platform sizes its own button, and asks for a
-   * control size rather than a height.
+   * control size rather than a height. The three steps reach the platform's
+   * regular, large and extra-large controls.
    */
   size?: PanelsideCtaSize;
   /**
@@ -1675,7 +1685,7 @@ function PanelsideCta({
         glass={glass}
         // The platform sizes a native button from its label, so a height means
         // nothing here — the step is asked for as a control size instead.
-        size={size === 'lg' ? 'lg' : 'md'}
+        size={size === 'default' ? 'md' : size}
         variant={variant}
         accessibilityLabel={label}
         // Pressable allows `null` for disabled; Button does not.
@@ -1693,7 +1703,7 @@ function PanelsideCta({
           React view in it to pad, and hosting one to get a view leaves a width
           nothing knows in advance.
 
-          So this one is sized rather than padded — `size="lg"` reaches the
+          So this one is sized rather than padded — the size reaches the
           platform as a control size, which scales the room the style leaves
           around the label and the label with it.
         */}
@@ -2259,6 +2269,16 @@ export interface PanelsideSearchSheetProps {
    * same shape.
    */
   closeVariant?: PanelsideControlVariant;
+  /**
+   * Draw that button as the platform's own, the way `Panelside.SearchTrigger`
+   * does. Independent of `native` on the sheet itself: the surface can be ours
+   * while the two controls on either end of it are the platform's, which is
+   * the arrangement a native screen wants when the sheet's own presentation
+   * cannot hold this content.
+   */
+  closeNative?: boolean;
+  /** Draw that native button in the platform's Liquid Glass material. */
+  closeGlass?: boolean;
   children?: ReactNode;
 }
 
@@ -2305,6 +2325,8 @@ function PanelsideSearchSheet({
   showClose = true,
   closeLabel = 'Close search',
   closeVariant = 'filled',
+  closeNative = false,
+  closeGlass = false,
   children,
 }: PanelsideSearchSheetProps) {
   const { searchOpen, setSearchOpen } = usePanelsideContext('Panelside.SearchSheet');
@@ -2320,8 +2342,20 @@ function PanelsideSearchSheet({
   const query = value ?? uncontrolledQuery;
   const activeTab = tab ?? uncontrolledTab;
 
+  /*
+   * Closing takes the keyboard with it, wherever the close came from — the
+   * button, a drag on the sheet, or the system back gesture.
+   *
+   * Leaving it to the field's own blur is too late. The field blurs when
+   * `open` goes false, but the sheet is already on its way out by then: the
+   * styled one unmounts its portal after the exit animation, and the platform
+   * one keeps its content mounted and only stops presenting it. Either way the
+   * blur lands on a field nothing can see, and the keyboard stays up until the
+   * system notices for itself, some seconds later, that nothing is focused.
+   */
   const setOpen = useCallback(
     (next: boolean) => {
+      if (!next) Keyboard.dismiss();
       if (openProp === undefined) setSearchOpen(next);
       onOpenChange?.(next);
     },
@@ -2414,17 +2448,30 @@ function PanelsideSearchSheet({
           >
             {showClose ? (
               <View className="flex-row px-4 pb-1">
-                <AnimatedPressable
-                  onPress={close}
-                  accessibilityRole="button"
-                  accessibilityLabel={closeLabel}
-                  className={cn(
-                    'h-9 w-9 items-center justify-center rounded-full',
-                    closeVariant === 'outline' ? 'border border-border' : 'bg-secondary'
-                  )}
-                >
-                  <Glyph icon={Cancel01Icon} size={17} color={glyph} />
-                </AnimatedPressable>
+                {closeNative ? (
+                  <Button
+                    native
+                    glass={closeGlass}
+                    size="icon"
+                    variant="ghost"
+                    accessibilityLabel={closeLabel}
+                    onPress={close}
+                  >
+                    <Glyph icon={Cancel01Icon} size={17} color={glyph} />
+                  </Button>
+                ) : (
+                  <AnimatedPressable
+                    onPress={close}
+                    accessibilityRole="button"
+                    accessibilityLabel={closeLabel}
+                    className={cn(
+                      'h-9 w-9 items-center justify-center rounded-full',
+                      closeVariant === 'outline' ? 'border border-border' : 'bg-secondary'
+                    )}
+                  >
+                    <Glyph icon={Cancel01Icon} size={17} color={glyph} />
+                  </AnimatedPressable>
+                )}
               </View>
             ) : null}
             {children}
@@ -2498,7 +2545,11 @@ export interface PanelsideSearchTabProps {
 
 function PanelsideSearchTab({ className, value, icon, children }: PanelsideSearchTabProps) {
   return (
-    <Tabs.Trigger value={value} icon={icon} className={className}>
+    // A step of padding above the tab row's own. This row is the only control
+    // on a surface that is otherwise a list and a field, and a closed tab here
+    // is a glyph with nothing else to be aimed at by — so it is sized to be
+    // hit rather than to the density a row of labelled tabs can afford.
+    <Tabs.Trigger value={value} icon={icon} className={cn('px-4 py-3', className)}>
       {children}
     </Tabs.Trigger>
   );
@@ -2628,9 +2679,7 @@ function PanelsideSearchField({
   );
   const placeholderTint = useCSSVariable('--color-muted-foreground');
   const textTint = useCSSVariable('--color-foreground');
-  const background = useCSSVariable('--color-background');
   const muted = typeof placeholderTint === 'string' ? placeholderTint : undefined;
-  const sheetGround = typeof background === 'string' ? background : '#000000';
   const field = useRef<TextInput>(null);
 
   const text = value ?? query;
@@ -2652,32 +2701,22 @@ function PanelsideSearchField({
       mode="dock"
       active={open}
       bottomInset={bottomInset}
-      className="w-full px-4 pb-1 pt-1"
+      className="w-full px-4 pb-1"
     >
       {/*
-        The ground, in the same two layers the panel's footer uses: the top
-        `FIELD_FADE` points are the gradient the list dissolves into, and
-        everything below it — the band the pill actually sits in — is the
-        sheet's own background, opaque.
+        An opaque surface with a ring, not the secondary tint the rest of the
+        panel's controls use.
 
-        Both are inside the avoider's bounds, so they travel with the field
-        rather than staying behind where it was.
+        The field rides the keyboard by translating rather than by taking a row
+        of the layout, so once it is up the results are directly behind it —
+        and the secondary token is a few percent of a colour, which the list
+        then reads straight through, taking the placeholder with it. The ring
+        is what a floating pill needs to have an edge once its fill is the same
+        colour as most of the sheet.
       */}
-      <LinearGradient
-        colors={[`${sheetGround}00`, sheetGround]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        pointerEvents="none"
-        style={[styles.fade, { height: FIELD_FADE }]}
-      />
-      <View
-        pointerEvents="none"
-        className="absolute bottom-0 end-0 start-0 bg-background"
-        style={{ top: FIELD_FADE }}
-      />
       <View
         className={cn(
-          'h-12 w-full flex-row items-center gap-2 rounded-full bg-secondary px-4',
+          'h-12 w-full flex-row items-center gap-2 rounded-full border border-border bg-surface px-4 shadow-lg',
           containerClassName
         )}
       >
