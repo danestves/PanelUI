@@ -151,10 +151,10 @@ const dayVariants = tv({
      * icon, and a circle wastes the corners it needs for them.
      */
     /*
-     * The transparent border is load-bearing: today and the open day both draw
-     * one, and a cell that only grows a border when it is picked shifts its
-     * contents by a point at the moment you look at it. Every cell reserves the
-     * point; the variants below only colour it.
+     * The transparent border is load-bearing: the open day draws one, and a
+     * cell that only grows a border when it is picked shifts its contents by a
+     * point at the moment you look at it. Every cell reserves the point; the
+     * variants below only colour it.
      */
     cell: 'mx-0.5 h-14 flex-1 rounded-xl border border-transparent px-1.5 pt-1.5',
     number: 'text-xs leading-none',
@@ -168,22 +168,21 @@ const dayVariants = tv({
       false: { cell: 'bg-muted/15', number: 'text-muted-foreground/40' },
     },
     /*
-     * Today rings the tile; the open day fills it. Two rings would be the
-     * problem — two channels are not, and the ring is the one that has to
+     * Today fills the tile; the open day rings it. Two fills would be the
+     * problem — two channels are not, and the fill is the one that has to
      * survive being read at a glance across forty-two tiles.
+     *
+     * A lit tile rather than an outline, because today's mark is on screen
+     * permanently and a hairline in the foreground colour is then the loudest
+     * thing on the grid. Twelve percent reads as "this one" beside neighbours
+     * at three, without drawing a line around it. The two marks no longer
+     * contend for the same property, so a day that is both needs no rule of
+     * its own — it takes the fill from one and the border from the other.
      */
-    today: { true: { cell: 'border-foreground', number: 'font-semibold' } },
-    selected: { true: { cell: 'border-primary/60 bg-primary/10' } },
+    today: { true: { cell: 'bg-foreground/12', number: 'font-semibold' } },
+    selected: { true: { cell: 'border-primary' } },
     disabled: { true: { cell: 'opacity-40' } },
   },
-  compoundVariants: [
-    /*
-     * Today, and open. Declaration order would otherwise hand the border to
-     * `selected` and lose the one mark that says which day it actually is —
-     * so the ring is restated over the fill.
-     */
-    { today: true, selected: true, class: { cell: 'border-foreground bg-primary/10' } },
-  ],
   defaultVariants: { inMonth: true },
 });
 
