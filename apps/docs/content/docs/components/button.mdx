@@ -163,6 +163,7 @@ The `social` variant is a neutral surface sized for a full-width column of provi
 - `sm`
 - `md` *(default)*
 - `lg`
+- `xl`
 - `icon`
 
 <Preview
@@ -176,6 +177,7 @@ The `social` variant is a neutral surface sized for a full-width column of provi
 <Button size="sm">Small</Button>
 <Button size="md">Medium</Button>
 <Button size="lg">Large</Button>
+<Button size="xl">Extra large</Button>
 <Button size="icon" accessibilityLabel="Search">
   <SearchIcon size={18} />
 </Button>
@@ -212,7 +214,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ### Large text
 
-Portable labelled buttons keep their 36/44/48dp default size as a minimum, not a ceiling. With Dynamic Type or Android font scaling, the label uses its intrinsic line box, wraps when its container is constrained, and grows the button with its vertical padding. Start/end icons keep their requested size. `size="icon"` remains a fixed square because it has no visible text; give it an `accessibilityLabel`.
+Portable labelled buttons keep their 36/44/48/56dp default size as a minimum, not a ceiling. `xl` is the step above `lg`, for the one control a screen is built around — a compose button in a navigation panel, a primary action alone at the bottom of a sheet. With Dynamic Type or Android font scaling, the label uses its intrinsic line box, wraps when its container is constrained, and grows the button with its vertical padding. Start/end icons keep their requested size. `size="icon"` remains a fixed square because it has no visible text; give it an `accessibilityLabel`.
 
 ### Native rendering
 
@@ -228,7 +230,7 @@ See [Native rendering](/docs/native) for the full prop-by-prop breakdown.
 
 `glass` draws a `native` button in the material iOS 26 uses for its own floating controls. It needs `native` — on its own it does nothing — and on an older iOS, on Android, or without `@expo/ui` the button keeps its ordinary platform style rather than failing.
 
-`primary` and `destructive` take the prominent variant, which keeps the accent tint a filled button is supposed to have; every other variant takes the plain one. A `native` icon button is drawn round rather than in the platform's default capsule — a lone glyph in a capsule reads as a text button somebody forgot to label. A labelled `native` button is sized through the platform's control scale, which `size` maps onto — that scales the room the style leaves around the label, and the label with it. An icon button is sized by padding on the glyph instead: the platform draws a button's background around its *label*, so padding the button pads outside the chrome and a frame only re-centres it.
+`primary` and `destructive` take the prominent variant, which keeps the accent tint a filled button is supposed to have; every other variant takes the plain one. A `native` icon button is drawn round rather than in the platform's default capsule — a lone glyph in a capsule reads as a text button somebody forgot to label. A labelled `native` button is sized through the platform's control scale, which `size` maps onto — that scales the room the style leaves around the label, and the label with it. `sm`, `md`, `lg` and `xl` reach the platform's small, regular, large and extra-large controls; `lg` is as big as a platform button goes without `xl`. An icon button is sized by padding on the glyph instead: the platform draws a button's background around its *label*, so padding the button pads outside the chrome and a frame only re-centres it.
 
 ```tsx
 <Button native glass size="icon" variant="ghost">

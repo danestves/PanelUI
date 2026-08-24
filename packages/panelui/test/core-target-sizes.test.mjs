@@ -10,7 +10,7 @@ test('compact core controls keep 48dp interaction boxes', async () => {
     ['button', 'checkbox', 'radio-group', 'switch', 'carousel'].map(component)
   );
 
-  assert.match(button, /const BUTTON_HIT_SLOP = \{ sm: 6, md: 2, lg: 0, icon: 2 \}/);
+  assert.match(button, /const BUTTON_HIT_SLOP = \{ sm: 6, md: 2, lg: 0, xl: 0, icon: 2 \}/);
   assert.match(button, /hitSlop=\{attached \? undefined : BUTTON_HIT_SLOP/);
   assert.match(button, /sm: \{ root: 'min-h-9 min-w-9 /);
   assert.match(button, /md: \{ root: 'min-h-11 min-w-11 /);

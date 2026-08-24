@@ -63,6 +63,12 @@ const buttonVariants = tv({
       sm: { root: 'min-h-9 min-w-9 gap-1.5 px-2.5 py-2', label: 'text-[14px]' },
       md: { root: 'min-h-11 min-w-11 px-4 py-2.5', label: 'text-[16px]' },
       lg: { root: 'min-h-12 px-6 py-2.5', label: 'text-[18px]' },
+      // A step above `lg`, for the one control a screen is built around — a
+      // compose button in a navigation panel, a primary action alone at the
+      // bottom of a sheet. It maps onto the platform's own extra-large control
+      // size under `native`, which is the size it exists to reach: below it,
+      // `large` is the biggest a platform button can be asked to be.
+      xl: { root: 'min-h-14 px-8 py-3', label: 'text-[18px]' },
       // Icon-only controls have no scalable label, so their square is stable.
       icon: { root: 'h-11 w-11 px-0' },
     },
@@ -140,10 +146,10 @@ export function useButtonGroup(): ButtonGroupContextValue | null {
  */
 const ATTACHED = 'rounded-none border-transparent shadow-none active:bg-accent';
 
-const SPINNER_SIZE = { sm: 'sm', md: 'sm', lg: 'md', icon: 'sm' } as const;
+const SPINNER_SIZE = { sm: 'sm', md: 'sm', lg: 'md', xl: 'md', icon: 'sm' } as const;
 
 /** Extra room around the styled sizes so even the compact button reaches 48dp. */
-const BUTTON_HIT_SLOP = { sm: 6, md: 2, lg: 0, icon: 2 } as const;
+const BUTTON_HIT_SLOP = { sm: 6, md: 2, lg: 0, xl: 0, icon: 2 } as const;
 
 /**
  * The theme token each variant's content reads against. Icons in the content
@@ -239,6 +245,7 @@ const NATIVE_HEIGHT: Record<NonNullable<ButtonVariantProps['size']>, number> = {
   sm: 36,
   md: 44,
   lg: 48,
+  xl: 56,
   icon: 44,
 };
 
@@ -283,6 +290,7 @@ const NATIVE_CONTROL_SIZE = {
   sm: 'small',
   md: 'regular',
   lg: 'large',
+  xl: 'extraLarge',
   icon: 'regular',
 } as const;
 

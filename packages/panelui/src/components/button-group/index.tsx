@@ -85,6 +85,7 @@ const buttonGroupVariants = tv({
       sm: { root: 'rounded-lg' },
       md: { root: 'rounded-xl' },
       lg: { root: 'rounded-xl' },
+      xl: { root: 'rounded-2xl' },
       icon: { root: 'rounded-xl' },
     },
     fullWidth: {
