@@ -118,6 +118,8 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   shimmer: () => load08().then((module) => module.ENTRIES_BY_SLUG['shimmer']),
   'text-animation': () =>
     load08().then((module) => module.ENTRIES_BY_SLUG['text-animation']),
+  'text-glass': () =>
+    load08().then((module) => module.ENTRIES_BY_SLUG['text-glass']),
   'scroll-text': () =>
     load09().then((module) => module.ENTRIES_BY_SLUG['scroll-text']),
   'funnel-chart': () =>

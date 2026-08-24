@@ -1676,6 +1676,24 @@ const scrollText = (
   </Stack>
 );
 
+/* The wordmark itself, two thirds written — the dash gap is the effect. */
+const textGlass = (
+  <svg
+    viewBox="-14 -137 366 170"
+    className="w-44 text-fd-primary/70"
+    fill="none"
+  >
+    <path
+      d="M 0 0 c 6 -30 18 -78 28 -106 c 4 -11 0 -18 -6 -14 c -6 4 -9 14 -8 26 c 2 24 5 76 8 109 c 3 -32 13 -58 27 -58 c 12 0 14 20 8 58 c 4 8 6 4 15 -15 c 3 0 6 0 9 0 c 6 -14 17 -30 26 -40 c 6 -7 3 -16 -6 -14 c -14 3 -22 22 -18 42 c 3 17 15 27 32 27 c 9 0 17 -5 24 -15 c 3 0 6 0 9 0 c 6 -30 18 -80 28 -108 c 4 -11 0 -18 -6 -14 c -6 4 -9 14 -8 26 c 2 24 6 78 10 111 c 3 8 14 6 28 -15 c 3 0 6 0 9 0 c 6 -30 18 -80 28 -108 c 4 -11 0 -18 -6 -14 c -6 4 -9 14 -8 26 c 2 24 6 78 10 111 c 3 8 14 6 28 -15 c 3 0 6 0 9 0 c 7 -16 18 -34 27 -42 c 5 -5 2 -12 -7 -11 c -14 2 -23 24 -18 43 c 4 16 16 26 32 21 c 13 -4 19 -16 19 -32 c 0 -9 -2 -15 -5 -19 c 9 -1 14 2 16 8"
+      stroke="currentColor"
+      strokeWidth="15"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeDasharray="985 1524"
+    />
+  </svg>
+);
+
 const textAnimation = (
   <Stack className="w-40 gap-2">
     <Bar className="w-full" />
@@ -2011,6 +2029,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
   'qr-code': qrCode,
   'scroll-text': scrollText,
   'text-animation': textAnimation,
+  'text-glass': textGlass,
 
   // AI components
   'ai-input': aiInput,

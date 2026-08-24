@@ -1074,6 +1074,12 @@ export {
   type TextAnimationScrollingProps,
 } from './components/text-animation';
 export {
+  TextGlass,
+  type TextGlassProps,
+  type TextGlassStroke,
+  type TextGlassWord,
+} from './components/text-glass';
+export {
   ScrollCanvas,
   type ScrollCanvasProps,
   type ScrollCanvasEffect,

@@ -1755,6 +1755,18 @@
     "docsPath": "components/text-animation"
   },
   {
+    "name": "text-glass",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "A word that writes itself on, stroke by stroke.",
+    "registryDependencies": [
+      "cn"
+    ],
+    "docsPath": "components/text-glass"
+  },
+  {
     "name": "textarea",
     "type": "registry:ui",
     "kind": "ui",

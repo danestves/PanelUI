@@ -1,0 +1,44 @@
+{
+  "slug": "text-glass",
+  "intro": "A word drawn as a line that lays itself down, stroke by stroke, in the order a hand would write it. For a splash screen, an onboarding first frame, or the top of an empty state — somewhere a word is the whole of what is on screen and worth watching arrive.\n\nIt writes one of five built-in words, or paths of your own.",
+  "usage": "<TextGlass word=\"hello\" />",
+  "extraImports": ["Button", "Text", "View"],
+  "notes": "### The five words\n\n`word` picks one of `hello`, `khalid`, `hi`, `welcome` or `thanks`. Each is drawn from a script alphabet rather than stored as a finished shape, so the letters are consistent between them.\n\nThe lettering is the component's own. It is not a font, and it does not fall back to one — a device with no fonts installed draws exactly the same word.\n\n### Writing something else\n\nPass `paths` and a `viewBox` to draw anything. The paths are drawn in the order given, which is the order they are written in, and each is measured so it gets time in proportion to its own length.\n\n```tsx\n<TextGlass\n  viewBox=\"0 0 240 100\"\n  strokeWidth={9}\n  paths={[{ d: 'M 20 70 C 30 20 45 20 48 45' }, { d: 'M 84 68 C 92 30 104 28 108 48' }]}\n/>\n```\n\nA path containing an elliptical arc (`A` or `a`) cannot be measured. Give it a `length` and it is used as passed; leave it out and that stroke draws at the wrong speed.\n\nWhen you pass `paths`, set `accessibilityLabel` too. A built-in word announces itself; your paths cannot say what they spell.\n\n### Sizing\n\n`height` is in points and the width follows from the viewBox, so a word keeps its proportions at any size. The component takes exactly that box — put the centring on the parent.\n\n### Timing\n\n`duration` is the whole word in milliseconds, pen lifts included, and defaults to a length the word earns: a longer word takes longer. Each stroke's share is proportional to how long its line is, so the pen travels at one speed rather than racing through a dot and crawling through an ascender.\n\n`onDone` fires once, when the last stroke lands. Under `loop` it does not fire again on later passes.\n\n### Writing it a second time\n\nThe draw is a one-shot on mount. To run it again, change the component's `key` — there is no imperative replay, because a wordmark that can be restarted from the outside is a wordmark whose state two things can disagree about.\n\n```tsx\nconst [run, setRun] = useState(0);\n\n<TextGlass key={run} word=\"hello\" />\n<Button onPress={() => setRun((count) => count + 1)}>Again</Button>\n```\n\n### Reduced motion\n\nThe finished word, drawn, immediately — and `onDone` still fires. `enabled={false}` does the same thing deliberately, for a word that should be present without arriving.",
+  "examples": [
+    {
+      "title": "Basic",
+      "description": "`hello` at the default height of 80 points, in the theme's foreground.",
+      "code": "<TextGlass word=\"hello\" />"
+    },
+    {
+      "title": "The five words",
+      "description": "Each is set from the same alphabet, so they sit together at one size.",
+      "code": "<View className=\"items-center gap-3\">\n  <TextGlass word=\"hello\" height={56} />\n  <TextGlass word=\"khalid\" height={56} />\n  <TextGlass word=\"hi\" height={56} />\n  <TextGlass word=\"welcome\" height={56} />\n  <TextGlass word=\"thanks\" height={56} />\n</View>"
+    },
+    {
+      "title": "Slower, and in a colour of its own",
+      "description": "`duration` is the whole word. A heavier `strokeWidth` is in viewBox units, so it scales with `height` rather than against it.",
+      "code": "<TextGlass\n  word=\"welcome\"\n  height={80}\n  duration={4200}\n  color=\"#6366f1\"\n  strokeWidth={11}\n/>"
+    },
+    {
+      "title": "Writing it again",
+      "description": "Remounting on a key is the replay. `onDone` says when there is something to replay.",
+      "code": "const [run, setRun] = useState(0);\nconst [done, setDone] = useState(false);\n\n<TextGlass key={run} word=\"hello\" height={90} onDone={() => setDone(true)} />\n<Button\n  variant=\"secondary\"\n  onPress={() => {\n    setDone(false);\n    setRun((count) => count + 1);\n  }}\n>\n  {done ? 'Write it again' : 'Writing…'}\n</Button>"
+    },
+    {
+      "title": "One word after another",
+      "description": "`onDone` advancing the index, and the index as the key, is the whole sequencer.",
+      "code": "const WORDS = ['hi', 'welcome', 'thanks'] as const;\nconst [index, setIndex] = useState(0);\n\n<TextGlass\n  key={index}\n  word={WORDS[index]}\n  height={80}\n  onDone={() => setIndex((at) => (at + 1) % WORDS.length)}\n/>"
+    },
+    {
+      "title": "Paths of your own",
+      "description": "Three strokes and the box they are drawn in. Each is measured, so the pen keeps one speed across all three.",
+      "code": "<TextGlass\n  height={70}\n  viewBox=\"0 0 240 100\"\n  strokeWidth={9}\n  accessibilityLabel=\"Signed\"\n  paths={[\n    { d: 'M 20 70 C 30 20 45 20 48 45 C 51 70 40 80 34 72 C 28 64 44 44 70 40' },\n    { d: 'M 84 68 C 92 30 104 28 108 48 C 112 68 100 78 96 70 C 92 62 108 44 132 42' },\n    { d: 'M 146 44 C 168 36 190 40 206 56' },\n  ]}\n/>"
+    },
+    {
+      "title": "Held still",
+      "description": "`enabled={false}` draws the finished word and never animates it — the same frame reduced motion gets.",
+      "code": "<TextGlass word=\"hello\" height={70} enabled={false} />"
+    }
+  ]
+}

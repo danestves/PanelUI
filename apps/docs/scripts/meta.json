@@ -638,6 +638,15 @@
       "category": "media"
     }
   ],
+  "text-glass": [
+    "TextGlass",
+    "A word that writes itself on, stroke by stroke.",
+    "react native handwriting svg draw animation",
+    {
+      "addedIn": "0.82.0",
+      "category": "media"
+    }
+  ],
   "section-rail": [
     "SectionRail",
     "Floating section navigator for a long screen.",
