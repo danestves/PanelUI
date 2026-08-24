@@ -974,49 +974,7 @@ function plannerAppEntries(month: Date): PlannerEntry[] {
   ].map(on);
 }
 
-const PLANNER_SCHEDULE_CATEGORIES = [
-  { id: 'work', label: 'Work' },
-  { id: 'personal', label: 'Personal' },
-  { id: 'travel', label: 'Travel' },
-];
 
-/*
- * The scroller runs past the end of a month, so this covers several — entries
- * built for one month alone would leave every week either side of it empty,
- * which is the one thing a scrolling calendar makes obvious.
- *
- * Built once from today rather than from the month on show: regenerating them
- * as the scroll changed the month would replace every entry's identity under a
- * list that is mid-flight.
- */
-function plannerScheduleEntries(): PlannerEntry[] {
-  const base = new Date();
-  const out: PlannerEntry[] = [];
-  const at = (offset: number, hour: number, minute: number, label: string, category: string) => {
-    const date = new Date(base.getFullYear(), base.getMonth(), base.getDate() + offset, hour, minute);
-    out.push({ id: `${label}-${offset}-${hour}`, date, label, category });
-  };
-  const week = [
-    [0, 9, 0, 'Standup', 'work'],
-    [0, 11, 30, 'Design review', 'work'],
-    [0, 16, 0, 'One to one', 'work'],
-    [1, 9, 0, 'Standup', 'work'],
-    [2, 14, 0, 'Retro', 'work'],
-    [3, 19, 30, 'Dinner', 'personal'],
-    [5, 10, 0, 'Long run', 'personal'],
-  ] as const;
-  // Ten weeks back and twelve forward, so there is something on screen wherever
-  // the scroll lands within the range the demo can reach.
-  for (let offset = -10; offset <= 12; offset += 1) {
-    for (const [day, hour, minute, label, category] of week) {
-      at(offset * 7 + day, hour, minute, label, category);
-    }
-  }
-  at(9, 7, 10, 'Flight to Lisbon', 'travel');
-  at(12, 18, 45, 'Flight home', 'travel');
-  at(-4, 10, 0, 'Dentist', 'personal');
-  return out;
-}
 
 function PlannerDayList({ entries }: { entries: PlannerEntry[] }) {
   if (entries.length === 0) {
@@ -1045,6 +1003,31 @@ function PlannerDayList({ entries }: { entries: PlannerEntry[] }) {
         </View>
       ))}
     </View>
+  );
+}
+
+function PlannerDemo() {
+  const [month, setMonth] = useState(() => new Date());
+  return (
+    <Planner
+      month={month}
+      onMonthChange={setMonth}
+      entries={plannerEntries(month)}
+      categories={PLANNER_CATEGORIES}
+    >
+      <Planner.Header>
+        <Planner.Title />
+        <Planner.Today />
+        <Planner.Nav />
+      </Planner.Header>
+      <Planner.Grid />
+      <Planner.Legend counts>
+        <Planner.Summary />
+      </Planner.Legend>
+      <Planner.Details>
+        {(_date, dayEntries) => <PlannerDayList entries={dayEntries} />}
+      </Planner.Details>
+    </Planner>
   );
 }
 
@@ -1103,32 +1086,6 @@ function PlannerTilesDemo() {
         <Planner.Nav />
       </Planner.Header>
       <Planner.Grid />
-    </Planner>
-  );
-}
-
-function PlannerScreenDemo() {
-  const [month, setMonth] = useState(() => new Date());
-  const [day, setDay] = useState<Date | null>(null);
-  const entries = useMemo(() => plannerScheduleEntries(), []);
-  return (
-    <Planner
-      fill
-      variant="calendar"
-      frame={false}
-      month={month}
-      onMonthChange={setMonth}
-      selected={day}
-      onSelectedChange={setDay}
-      entries={entries}
-      categories={PLANNER_SCHEDULE_CATEGORIES}
-    >
-      <Planner.Header>
-        <Planner.Title />
-        <Planner.Today />
-        <Planner.Nav />
-      </Planner.Header>
-      <Planner.Scroller />
     </Planner>
   );
 }
@@ -1398,14 +1355,7 @@ export const ENTRIES: ComponentEntry[] = [
     name: 'Planner',
     summary: 'A month of days, each carrying what falls on it',
     demos: [
-      {
-        label: 'A month and its day',
-        id: 'screen',
-        fullPage: true,
-        description:
-          'The weeks of the year, scrolled through rather than paged, with every entry named in its day.',
-        render: () => <PlannerScreenDemo />,
-      },
+      { label: 'A month of renewals', render: () => <PlannerDemo /> },
       { label: 'Opening a day', render: () => <PlannerDetailsDemo /> },
       { label: 'Icon tiles', render: () => <PlannerTilesDemo /> },
       { label: 'Without the frame', render: () => <PlannerBareDemo /> },
