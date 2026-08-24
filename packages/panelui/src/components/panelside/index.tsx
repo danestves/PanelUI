@@ -117,7 +117,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { LinearGradient } from 'expo-linear-gradient';
-import { EllipsisIcon, IconColorProvider, MenuIcon, SearchIcon, XIcon } from '../../icons';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
+import {
+  Cancel01Icon,
+  Menu01Icon,
+  MoreHorizontalIcon,
+  Search01Icon,
+} from '@hugeicons/core-free-icons';
+import { IconColorProvider, useIconColor } from '../../icons';
 import {
   BottomSheet,
   bottomSheetDetentHeight,
@@ -267,6 +274,51 @@ const clamp = (value: number, min: number, max: number) => {
   'worklet';
   return Math.min(Math.max(value, min), max);
 };
+
+/**
+ * The stroke weight the panel's glyphs are drawn at.
+ *
+ * A shade heavier than the icon set's own default. The panel sits over a
+ * dimmed screen and its rows are quiet by design, so a hairline glyph goes
+ * soft against them at the sizes used here.
+ */
+const GLYPH_STROKE = 1.8;
+
+/**
+ * What a glyph is drawn in when nothing has said. The same neutral the rest of
+ * the chrome falls back to — visible against either theme, and never the thing
+ * that decides how a panel looks, since every surface here provides a colour.
+ */
+const GLYPH_FALLBACK = '#737373';
+
+/**
+ * One of the panel's own glyphs.
+ *
+ * It exists to keep the colour contract the rest of the library has: an icon
+ * takes an explicit colour, then the one an enclosing surface is providing,
+ * and only then falls back. The drawing component underneath knows nothing
+ * about that inheritance and needs the resolved value handed to it.
+ */
+function Glyph({
+  icon,
+  size = 20,
+  color,
+}: {
+  icon: IconSvgElement;
+  size?: number;
+  color?: string;
+}) {
+  const inherited = useIconColor();
+
+  return (
+    <HugeiconsIcon
+      icon={icon}
+      size={size}
+      color={color ?? inherited ?? GLYPH_FALLBACK}
+      strokeWidth={GLYPH_STROKE}
+    />
+  );
+}
 
 export type PanelsideMode = 'push' | 'overlay';
 export type PanelsideSwipeFrom = 'anywhere' | 'edge';
@@ -908,7 +960,7 @@ function PanelsideSearch({
         containerClassName
       )}
     >
-      <SearchIcon size={16} color={muted} />
+      <Glyph icon={Search01Icon} size={16} color={muted} />
       <TextInput
         placeholder={placeholder}
         placeholderTextColor={muted}
@@ -1248,7 +1300,7 @@ function PanelsideAction({
       hitSlop={8}
       {...props}
     >
-      {children ?? <EllipsisIcon size={18} color={color} />}
+      {children ?? <Glyph icon={MoreHorizontalIcon} size={18} color={color} />}
     </AnimatedPressable>
   );
 }
@@ -1708,7 +1760,7 @@ function PanelsideTrigger({
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <MenuIcon size={20} color={color} />
+      <Glyph icon={Menu01Icon} size={20} color={color} />
     </AnimatedPressable>
   );
 }
@@ -1780,7 +1832,7 @@ function PanelsideSearchTrigger({
     [onPress, setSearchOpen]
   );
 
-  const glyph = children ?? <SearchIcon size={18} color={native ? color : undefined} />;
+  const glyph = children ?? <Glyph icon={Search01Icon} size={18} color={native ? color : undefined} />;
 
   if (native) {
     return (
@@ -2045,7 +2097,7 @@ function PanelsideSearchSheet({
                   accessibilityLabel={closeLabel}
                   className="h-9 w-9 items-center justify-center rounded-full bg-secondary"
                 >
-                  <XIcon size={17} color={glyph} />
+                  <Glyph icon={Cancel01Icon} size={17} color={glyph} />
                 </AnimatedPressable>
               </View>
             ) : null}
@@ -2259,7 +2311,7 @@ function PanelsideSearchField({
           containerClassName
         )}
       >
-        <SearchIcon size={17} color={muted} />
+        <Glyph icon={Search01Icon} size={17} color={muted} />
         <TextInput
           ref={field}
           value={text}
@@ -2281,7 +2333,7 @@ function PanelsideSearchField({
             accessibilityLabel="Clear search"
             className="h-5 w-5 items-center justify-center rounded-full bg-muted"
           >
-            <XIcon size={12} color={muted} />
+            <Glyph icon={Cancel01Icon} size={12} color={muted} />
           </AnimatedPressable>
         ) : null}
       </View>

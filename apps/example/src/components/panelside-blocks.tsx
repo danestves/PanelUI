@@ -19,33 +19,50 @@ import {
   Avatar,
   BottomSheet,
   Button,
-  FileIcon,
-  ImageIcon,
   Item,
   Marker,
-  MenuIcon,
   Message,
-  MessageCircleIcon,
   MessageScroller,
-  MicIcon,
-  PackageIcon,
   Panelside,
-  PlusIcon,
-  SparklesIcon,
   Text,
-  XIcon,
+  useIconColor,
   usePanelside,
   type PanelsideProps,
   type PanelsideSceneProps,
 } from 'panelui-native';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
+import {
+  BubbleChatIcon,
+  Cancel01Icon,
+  File01Icon,
+  Image01Icon,
+  Menu01Icon,
+  Mic01Icon,
+  Package01Icon,
+  PlusSignIcon,
+  SourceCodeIcon,
+  SparklesIcon,
+} from '@hugeicons/core-free-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
 
+/**
+ * One glyph, drawn at the weight the panel's own chrome uses.
+ *
+ * Panelside tints whatever goes in an icon slot by providing a colour around
+ * it, so the wrapper reads that and hands it down — the drawing component
+ * underneath takes a colour and knows nothing about inheriting one.
+ */
+function Glyph({ icon, size = 20 }: { icon: IconSvgElement; size?: number }) {
+  const color = useIconColor();
+  return <HugeiconsIcon icon={icon} size={size} color={color ?? '#737373'} strokeWidth={1.8} />;
+}
+
 const NAV = [
-  { id: 'chats', label: 'Chats', icon: <MessageCircleIcon size={20} /> },
-  { id: 'projects', label: 'Projects', icon: <PackageIcon size={20} />, badge: 4 },
-  { id: 'artifacts', label: 'Artifacts', icon: <ImageIcon size={20} /> },
-  { id: 'code', label: 'Code', icon: <FileIcon size={20} /> },
+  { id: 'chats', label: 'Chats', icon: <Glyph icon={BubbleChatIcon} /> },
+  { id: 'projects', label: 'Projects', icon: <Glyph icon={Package01Icon} />, badge: 4 },
+  { id: 'artifacts', label: 'Artifacts', icon: <Glyph icon={Image01Icon} /> },
+  { id: 'code', label: 'Code', icon: <Glyph icon={SourceCodeIcon} /> },
 ];
 
 const STARRED = [
@@ -84,16 +101,16 @@ const SEARCHABLE: { id: string; title: string; kind: 'chats' | 'images' | 'docum
 
 const KIND_LABEL = { chats: 'Chat', images: 'Image', documents: 'Document' } as const;
 const KIND_ICON = {
-  chats: <MessageCircleIcon size={18} />,
-  images: <ImageIcon size={18} />,
-  documents: <FileIcon size={18} />,
+  chats: <Glyph icon={BubbleChatIcon} size={18} />,
+  images: <Glyph icon={Image01Icon} size={18} />,
+  documents: <Glyph icon={File01Icon} size={18} />,
 } as const;
 
 const SEARCH_TABS = [
-  { value: 'all', label: 'All', icon: <SparklesIcon size={16} /> },
-  { value: 'chats', label: 'Chats', icon: <MessageCircleIcon size={16} /> },
-  { value: 'images', label: 'Images', icon: <ImageIcon size={16} /> },
-  { value: 'documents', label: 'Documents', icon: <FileIcon size={16} /> },
+  { value: 'all', label: 'All', icon: <Glyph icon={SparklesIcon} size={16} /> },
+  { value: 'chats', label: 'Chats', icon: <Glyph icon={BubbleChatIcon} size={16} /> },
+  { value: 'images', label: 'Images', icon: <Glyph icon={Image01Icon} size={16} /> },
+  { value: 'documents', label: 'Documents', icon: <Glyph icon={File01Icon} size={16} /> },
 ];
 
 /**
@@ -260,7 +277,7 @@ function AssistantPanel({
             the avatar is the account, and a name beside it is one more thing
             between the compose button and the edge of the panel. */}
         <Panelside.Cta
-          icon={<PlusIcon size={18} />}
+          icon={<Glyph icon={PlusSignIcon} size={18} />}
           label="New chat"
           native={native}
           glass={native}
@@ -312,15 +329,16 @@ function AssistantPanel({
  * design and is what the Liquid Glass material wants to sit in — the material
  * is the chrome, and a border under it is a second edge.
  *
- * The platform also stops tinting the icon for us — the themed content colour
- * is applied inside the styled button, which a native one never reaches — so
- * the colour is passed in by hand.
+ * The colour is passed in by hand on both paths. A native button never reaches
+ * the themed content colour a styled one applies around its child, and the
+ * glyphs here are drawn by a component that takes a colour rather than
+ * inheriting one — so neither half can be left to work it out.
  */
 function SceneBar({ title, native = false }: { title: string; native?: boolean }) {
   const insets = useSafeAreaInsets();
   const { docked } = usePanelside();
   const tint = useCSSVariable('--color-foreground');
-  const glyph = native && typeof tint === 'string' ? tint : undefined;
+  const glyph = typeof tint === 'string' ? tint : undefined;
 
   const shape = native ? undefined : 'h-10 w-10 rounded-full';
   const variant = native ? 'ghost' : 'outline';
@@ -339,7 +357,7 @@ function SceneBar({ title, native = false }: { title: string; native?: boolean }
           className={shape}
           accessibilityLabel="Open navigation panel"
         >
-          <MenuIcon size={20} color={glyph} />
+          <HugeiconsIcon icon={Menu01Icon} size={20} color={glyph ?? '#737373'} strokeWidth={1.8} />
         </Button>
       </Panelside.Trigger>
 
@@ -363,7 +381,7 @@ function SceneBar({ title, native = false }: { title: string; native?: boolean }
         accessibilityLabel="Close demo"
         onPress={() => router.back()}
       >
-        <XIcon size={18} color={glyph} />
+        <HugeiconsIcon icon={Cancel01Icon} size={18} color={glyph ?? '#737373'} strokeWidth={1.8} />
       </Button>
     </View>
   );
@@ -686,11 +704,11 @@ function NativeChatScene() {
           <AIInput.Toolbar>
             <AIInput.Action
               label="Attach"
-              icon={<PlusIcon size={17} />}
+              icon={<Glyph icon={PlusSignIcon} size={17} />}
               onPress={() => setAttaching(true)}
             />
             <AIInput.Spacer />
-            <AIInput.Action label="Dictate" icon={<MicIcon size={15} />} />
+            <AIInput.Action label="Dictate" icon={<Glyph icon={Mic01Icon} size={15} />} />
             <AIInput.Submit />
           </AIInput.Toolbar>
         </AIInput>

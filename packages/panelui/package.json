@@ -149,6 +149,8 @@
     "uniwind": ">=1.0.0"
   },
   "dependencies": {
+    "@hugeicons/core-free-icons": "^4.3.0",
+    "@hugeicons/react-native": "^1.0.16",
     "clsx": "^2.1.1",
     "lucide-react-native": "^1.28.0",
     "tailwind-merge": "^3.3.1",
