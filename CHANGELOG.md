@@ -9,6 +9,53 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.81.0] — 2026-08-24
+
+### Added
+
+- **`Planner` draws a day three ways.** `variant` picks one: `default` is the date, a marker and
+  small icons it had before; `tiles` gives the day over to a single large icon with the date in
+  the corner and the tile tinted behind it; `calendar` names every entry in a block of its colour
+  under a centred date, on an open grid ruled off by week rather than boxed per day.
+- **An entry can carry its own `color`.** It wins over its category's, which is what a brand
+  needs — a logo belongs to the thing rather than to the group it was filed under, and a month of
+  them would otherwise need one category per row.
+- **`Planner.Scroller` replaces `Planner.Grid` with the weeks of the year in one scroll.** Reach
+  for it when the question is what is coming rather than what this month looks like: the week
+  straddling a month boundary is then drawn once, in one piece, instead of appearing cut in half
+  at the bottom of one page and again at the top of the next. The range is bounded, at `weeks`
+  either side of the month it opened on, because a scroller has to know its own height to place a
+  scrollbar and to reach a month without rendering its way there. The header follows the scroll
+  and stays quiet while it does; the arrows and the Today pill still announce, because those are
+  deliberate moves and a scroll is not.
+- **`fill` stretches a planner to its container** instead of standing it at its own height, for a
+  planner that owns a screen. It needs a height to fill, so give it a `flex-1` parent.
+
+### Changed
+
+- **A `tiles` month draws only the weeks it spans**, sharing out the height six weeks would have
+  taken. A five-week month therefore leaves neither a band of empty space under the last row nor a
+  panel that changes size as you page through the year — the two ways this usually goes wrong.
+  Its tiles are slightly taller than a six-week month's, which is the price of both.
+- **Pressing the open day closes it.** The mark was a one-way door: a planner with no `Details`
+  bound has nothing to dismiss, so the day you pressed stayed marked until you pressed a different
+  one, with no way back to none selected.
+- **The month arrows are pinned to the right edge** by their own margin rather than by whatever
+  sits beside them growing to push them there.
+- Weekday headings can be narrow — a single letter — where the column is already unambiguous by
+  position. `tiles` uses them.
+
+### Fixed
+
+- **Keyboard movement steps over cells a look leaves blank.** `tiles` draws nothing for the days
+  either side of the month, and an arrow key aimed at one of those found no cell to focus and
+  stopped dead. Movement now carries on in the direction asked for until it reaches a day that is
+  really there, and stays where it started rather than running off the grid.
+
+### Docs
+
+- The Planner page carries previews recorded on a device.
+
 ## [0.80.0] — 2026-08-23
 
 ### Added
