@@ -542,6 +542,7 @@ export {
   type PanelsideItemLabelProps,
   type PanelsideItemBadgeProps,
   type PanelsideActionProps,
+  type PanelsideItemActionsProps,
   type PanelsideFooterProps,
   type PanelsideCtaProps,
   type PanelsideSceneProps,

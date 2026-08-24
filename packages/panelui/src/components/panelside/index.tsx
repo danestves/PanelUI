@@ -133,6 +133,7 @@ import {
   type BottomSheetProps,
 } from '../bottom-sheet';
 import { Button } from '../button';
+import { Menu, type MenuContentProps } from '../menu';
 import { Tabs } from '../tabs';
 import { getNativeUI } from '../../native';
 import { AnimatedPressable } from '../../primitives/animated-pressable';
@@ -1400,6 +1401,7 @@ function PanelsideAction({
   className,
   label = 'More options',
   children,
+  onPress,
   ...props
 }: PanelsideActionProps) {
   const tint = useCSSVariable('--color-muted-foreground');
@@ -1413,10 +1415,85 @@ function PanelsideAction({
       // The glyph is small and sits next to a row-sized target, so it takes
       // the difference back as slop rather than as layout.
       hitSlop={8}
+      // The row underneath is pressable and usually navigates. A press that
+      // reached both would open the menu and leave the thing it is about.
+      onPress={(event) => {
+        event.stopPropagation();
+        onPress?.(event);
+      }}
       {...props}
     >
       {children ?? <Glyph icon={MoreHorizontalIcon} size={18} color={color} />}
     </AnimatedPressable>
+  );
+}
+
+export interface PanelsideItemActionsProps {
+  className?: string;
+  /**
+   * What a screen reader announces for the button. The control is an
+   * unlabelled glyph, so this is the only description it has.
+   */
+  label?: string;
+  /** Replaces the default overflow glyph. */
+  icon?: ReactNode;
+  /** Where the panel opens relative to the button. Defaults to below it. */
+  placement?: MenuContentProps['placement'];
+  /** How it lines up on that edge. Defaults to the button's trailing edge. */
+  align?: MenuContentProps['align'];
+  /** Passed through to the panel — `width`, `maxHeight`, `offset` and the rest. */
+  contentProps?: Omit<MenuContentProps, 'children' | 'placement' | 'align'>;
+  /** The rows: `Menu.Item`, `Menu.Separator`, `Menu.Label`. */
+  children?: ReactNode;
+}
+
+/**
+ * A row's actions, behind an overflow button at the end of it.
+ *
+ * ```tsx
+ * <Panelside.Item label={chat.title} to={chat.id}>
+ *   <Panelside.ItemActions>
+ *     <Menu.Item onSelect={rename}>Rename</Menu.Item>
+ *     <Menu.Separator />
+ *     <Menu.Item variant="destructive" onSelect={remove}>Delete</Menu.Item>
+ *   </Panelside.ItemActions>
+ * </Panelside.Item>
+ * ```
+ *
+ * The panel is anchored to the button rather than presented from the bottom of
+ * the screen, so it lines up with the row it belongs to and the list it came
+ * from stays readable behind it. It is also narrow: the panel it opens in is a
+ * fraction of the screen, and a sheet covering that to offer four verbs costs
+ * more than it says.
+ *
+ * Pressing the button does not press the row. A row that navigates would
+ * otherwise navigate away from the thing the menu is about.
+ */
+function PanelsideItemActions({
+  className,
+  label = 'More options',
+  icon,
+  placement = 'bottom',
+  align = 'end',
+  contentProps,
+  children,
+}: PanelsideItemActionsProps) {
+  return (
+    <Menu>
+      <Menu.Trigger>
+        <PanelsideAction className={className} label={label}>
+          {icon}
+        </PanelsideAction>
+      </Menu.Trigger>
+      <Menu.Content
+        placement={placement}
+        align={align}
+        width="content-fit"
+        {...contentProps}
+      >
+        {children}
+      </Menu.Content>
+    </Menu>
   );
 }
 
@@ -2646,6 +2723,7 @@ PanelsideItemIcon.displayName = 'Panelside.ItemIcon';
 PanelsideItemLabel.displayName = 'Panelside.ItemLabel';
 PanelsideItemBadge.displayName = 'Panelside.ItemBadge';
 PanelsideAction.displayName = 'Panelside.Action';
+PanelsideItemActions.displayName = 'Panelside.ItemActions';
 PanelsideFooter.displayName = 'Panelside.Footer';
 PanelsideCta.displayName = 'Panelside.Cta';
 PanelsideScene.displayName = 'Panelside.Scene';
@@ -2672,6 +2750,7 @@ export const Panelside = Object.assign(PanelsideRoot, {
   ItemLabel: PanelsideItemLabel,
   ItemBadge: PanelsideItemBadge,
   Action: PanelsideAction,
+  ItemActions: PanelsideItemActions,
   Footer: PanelsideFooter,
   Cta: PanelsideCta,
   Scene: PanelsideScene,
