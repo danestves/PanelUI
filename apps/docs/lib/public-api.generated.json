@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1175,
+    "exports": 1187,
     "values": 311,
-    "types": 864,
+    "types": 876,
     "modules": 143,
     "components": 116,
     "hooks": 13
@@ -2467,6 +2467,10 @@
             "kind": "type"
           },
           {
+            "name": "PanelsideItemActionsProps",
+            "kind": "type"
+          },
+          {
             "name": "PanelsideFooterProps",
             "kind": "type"
           },
@@ -2479,7 +2483,43 @@
             "kind": "type"
           },
           {
+            "name": "PanelsidePagesProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsidePageProps",
+            "kind": "type"
+          },
+          {
             "name": "PanelsideTriggerProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideSearchTriggerProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideSearchSheetProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideSearchTabsProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideSearchTabProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideSearchResultsProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideSearchResultProps",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideSearchFieldProps",
             "kind": "type"
           },
           {
@@ -2496,6 +2536,14 @@
           },
           {
             "name": "PanelsideCtaSize",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideSurface",
+            "kind": "type"
+          },
+          {
+            "name": "PanelsideControlVariant",
             "kind": "type"
           },
           {

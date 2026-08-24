@@ -25,7 +25,7 @@ A button in the corner, and the screen slides across, shrinks, rounds its corner
 Panelside ships with the library — no separate install.
 
 ```tsx
-import { Panelside, AIInput, Avatar, BottomSheet, Button, FileIcon, ImageIcon, MenuIcon, MessageCircleIcon, MicIcon, PackageIcon, PlusIcon, Select, SparklesIcon, View, usePanelside } from 'panelui-native';
+import { Panelside, AIInput, Avatar, BottomSheet, Button, FileIcon, ImageIcon, Menu, MenuIcon, MessageCircleIcon, MicIcon, PackageIcon, PencilIcon, PlusIcon, ShareNodesIcon, SparklesIcon, StarIcon, TrashIcon, View, usePanelside } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -82,6 +82,7 @@ npx panelui-cli@latest add panelside
           <Panelside.ItemIcon>…</Panelside.ItemIcon>
           <Panelside.ItemLabel>…</Panelside.ItemLabel>
           <Panelside.ItemBadge>…</Panelside.ItemBadge>
+          <Panelside.ItemActions>…</Panelside.ItemActions>
         </Panelside.Item>
       </Panelside.Group>
     </Panelside.Content>
@@ -92,6 +93,9 @@ npx panelui-cli@latest add panelside
 
   <Panelside.Scene>
     <Panelside.Trigger />
+    <Panelside.Pages>
+      <Panelside.Page />
+    </Panelside.Pages>
   </Panelside.Scene>
 
   <Panelside.SearchSheet>
@@ -216,6 +220,73 @@ return (
 );
 ```
 
+### Pages, and rows that go to them
+
+A navigation panel is usually wired the same way at every call site: a piece of state for what is open, an `active` computed against it on every row, an `onPress` that sets it, and a close after.
+
+The panel holds the route instead. A row takes a `to`, and from that one prop it marks itself as the current destination, sets the route and closes the panel. `Panelside.Pages` shows the `Panelside.Page` whose `value` matches.
+
+A page is mounted the first time it is visited and stays mounted after that, hidden rather than removed — so returning to one is a style change rather than a mount, with its list intact and its scroll position where you left it. Pass `keepAlive={false}` on a page whose contents go stale.
+
+`route` and `onRouteChange` make it controlled, for a route that comes from somewhere else. `usePanelside()` gives you `route` and `navigate` for a control of your own.
+
+```tsx
+<Panelside defaultRoute="inbox">
+  <Panelside.Panel>
+    <Panelside.Content>
+      <Panelside.Group>
+        <Panelside.Item icon={<MessageCircleIcon size={20} />} label="Inbox" to="inbox" />
+        <Panelside.Item icon={<PencilIcon size={20} />} label="Drafts" to="drafts" />
+      </Panelside.Group>
+
+      <Panelside.Group>
+        <Panelside.GroupLabel>Recents</Panelside.GroupLabel>
+        {chats.map((chat) => (
+          <Panelside.Item key={chat.id} label={chat.title} to={`chat/${chat.id}`} />
+        ))}
+      </Panelside.Group>
+    </Panelside.Content>
+  </Panelside.Panel>
+
+  <Panelside.Scene>
+    <Panelside.Pages>
+      <Panelside.Page value="inbox"><Inbox /></Panelside.Page>
+      <Panelside.Page value="drafts"><Drafts /></Panelside.Page>
+      {chats.map((chat) => (
+        <Panelside.Page key={chat.id} value={`chat/${chat.id}`}>
+          <Conversation id={chat.id} />
+        </Panelside.Page>
+      ))}
+    </Panelside.Pages>
+  </Panelside.Scene>
+</Panelside>
+```
+
+### Actions on a row
+
+`Panelside.ItemActions` is the overflow button with a menu on it. Give it `Menu.Item` rows and it draws the button, opens the panel and dismisses it.
+
+The menu is anchored to the button rather than presented from the bottom of the screen. The panel is a fraction of the screen wide, so an anchored menu lines up with the row it belongs to and leaves the list readable behind it, where a sheet covering both to offer four verbs costs more than it says. `placement` and `align` move it.
+
+Pressing the button does not press the row, so a row that navigates stays where it is.
+
+```tsx
+<Panelside.Item label={chat.title} to={`chat/${chat.id}`}>
+  <Panelside.ItemActions label={`Options for ${chat.title}`}>
+    <Menu.Item icon={<PencilIcon size={17} />} onSelect={() => rename(chat)}>Rename</Menu.Item>
+    <Menu.Item icon={<StarIcon size={17} />} onSelect={() => star(chat)}>Star</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item
+      variant="destructive"
+      icon={<TrashIcon size={17} />}
+      onSelect={() => remove(chat)}
+    >
+      Delete
+    </Menu.Item>
+  </Panelside.ItemActions>
+</Panelside.Item>
+```
+
 ### A trigger of your own
 
 Given a child, `Panelside.Trigger` chains the toggle onto that element's own `onPress` rather than replacing it. A control sitting on the app's bare surface needs a shape to be findable, which is why this is usually a Button rather than an icon on its own. `outline` rather than a filled variant: the trigger sits on the app's own surface with nothing around it, so it needs a shape to be findable — and a second filled surface on a screen that already has the panel's is one too many.
@@ -336,39 +407,54 @@ The default shape. Swipe in from the leading edge and the screen slides, shrinks
 
 ### Open a conversation
 
-The panel used as navigation rather than as a display. Pressing a row sets the conversation the scene shows and closes the panel on the way — leaving it open would put the thing you just navigated to behind the thing you navigated from. The row you are on stays `active`, because a history list where nothing is marked answers what you could open and never what you have open.
+The panel used as navigation rather than as a display. A row is a `to` and nothing else: pressing it sets the route, marks itself as the current destination and closes the panel — leaving it open would put the thing you just navigated to behind the thing you navigated from.
+
+Each conversation is a `Panelside.Page`. The first press mounts one and it stays mounted after that, so going back to a conversation you have already read does not rebuild it.
 
 ```tsx
-const [active, setActive] = useState(chats[0]);
+const [route, setRoute] = useState(chats[0]);
 
-function Panel() {
-  const { setOpen } = usePanelside();
+<Panelside haptics route={route} onRouteChange={setRoute}>
+  <Panelside.Panel>
+    <Panelside.Content>
+      {chats.map((chat) => (
+        <Panelside.Item key={chat} label={chat} to={chat} />
+      ))}
+    </Panelside.Content>
+  </Panelside.Panel>
 
-  return (
-    <Panelside.Panel>
-      <Panelside.Content>
-        {chats.map((chat) => (
-          <Panelside.Item
-            key={chat}
-            label={chat}
-            active={chat === active}
-            onPress={() => {
-              setActive(chat);
-              setOpen(false);
-            }}
-          />
-        ))}
-      </Panelside.Content>
-    </Panelside.Panel>
-  );
-}
-
-<Panelside haptics>
-  <Panel />
   <Panelside.Scene>
-    <Conversation title={active} />
+    <Panelside.Pages>
+      {chats.map((chat) => (
+        <Panelside.Page key={chat} value={chat}>
+          <Conversation title={chat} />
+        </Panelside.Page>
+      ))}
+    </Panelside.Pages>
   </Panelside.Scene>
 </Panelside>
+```
+
+### Row actions
+
+Every conversation carries a “…”. The menu behind it renames, stars, shares or deletes the row it belongs to, and the list changes underneath — anchored to the button, so it lines up with the row and the history stays readable behind it.
+
+```tsx
+<Panelside.Item label={chat} active={chat === active} onPress={() => setActive(chat)}>
+  <Panelside.ItemActions>
+    <Menu.Item icon={<PencilIcon size={17} />} onSelect={() => rename(chat)}>Rename</Menu.Item>
+    <Menu.Item icon={<StarIcon size={17} />} onSelect={() => star(chat)}>Star</Menu.Item>
+    <Menu.Item icon={<ShareNodesIcon size={17} />}>Share</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item
+      variant="destructive"
+      icon={<TrashIcon size={17} />}
+      onSelect={() => remove(chat)}
+    >
+      Delete
+    </Menu.Item>
+  </Panelside.ItemActions>
+</Panelside.Item>
 ```
 
 ### Overlay
@@ -444,21 +530,31 @@ A streaming transcript in the scene, anchored and scrolling on its own while the
 
 ### Native chat
 
-Panelside has no `native` prop and cannot have one — the platform toolkits ship a switch, a picker, a sheet and a button, and none of them is a pushing navigation panel. What goes native is what is inside it.
+Panelside has no `native` prop and cannot have one — the platform toolkits ship a switch, a picker, a sheet and a button, and none of them is a pushing navigation panel. What goes native is what is inside it: the panel's compose and account buttons, the trigger that opens search, and the attachment sheet.
 
-The composer is `AIInput` under `native`, which hands its own controls to the platform the same way the picker and the sheet beside it are handed over. It is written the way the composer's own chat version is written, keyboard numbers included: the composer owns lifting itself, and is told how far it already sits above the bottom so it does not travel that distance twice.
+The composer is `AIInput` under `native`, which hands its own controls to the platform the same way the buttons beside it are handed over. It is written the way the composer's own chat version is written, keyboard numbers included: the composer owns lifting itself, and is told how far it already sits above the bottom so it does not travel that distance twice.
+
+The search surface stays ours. It is the whole screen and it docks a field to the keyboard, and a hosted column of that shape inside the platform's own sheet is a measurement with nothing definite in it — so `Panelside.SearchSheet` takes `native={false}` here while the button that opens it stays the platform's.
 
 ```tsx
 <Panelside>
-  <AssistantPanel />
+  <Panelside.Panel>
+    <Panelside.Header
+      title="Assistant"
+      action={<Panelside.SearchTrigger native glass />}
+    />
+    <Panelside.Content>{history}</Panelside.Content>
+    <Panelside.Footer>
+      <Panelside.Cta label="New chat" size="lg" native glass />
+      <View className="flex-1" />
+      {/* A plain string, not an Avatar hosted inside the button. */}
+      <Button native glass size="lg" variant="ghost" accessibilityLabel="Account">
+        K
+      </Button>
+    </Panelside.Footer>
+  </Panelside.Panel>
+
   <Panelside.Scene>
-    <SceneBar />
-
-    <Select native value={model} onValueChange={setModel}>
-      <Select.Item value="fast" label="Fast" />
-      <Select.Item value="balanced" label="Balanced" />
-    </Select>
-
     <Transcript />
 
     <AIInput
@@ -482,6 +578,9 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
       <BottomSheet.Content>{/* … */}</BottomSheet.Content>
     </BottomSheet>
   </Panelside.Scene>
+
+  {/* Ours, even here. */}
+  <Panelside.SearchSheet native={false}>{/* … */}</Panelside.SearchSheet>
 </Panelside>
 ```
 
@@ -505,6 +604,9 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | `scale` | `number` | — | How far the scene shrinks at full open, as a scale factor. Sets the default for every `Panelside.Scene` underneath; the scene's own prop still wins. Here so the three numbers that describe the curve can be set once where the panel is configured, rather than on a part further down. |
 | `radius` | `number` | — | The corner radius the scene reaches at full open, in points. |
 | `dim` | `number` | — | How far the scene is dimmed at full open, 0 to 1. |
+| `route` | `string` | — | Which page the scene is showing. Controlled; pair it with `onRouteChange`. A route is any string you choose. It is matched against `Panelside.Page`'s `value` and against `Panelside.Item`'s `to`, so a row marks itself as the current destination and the scene swaps to the page without either being wired to the other. |
+| `defaultRoute` | `string` | `''` | Which page the scene starts on, when the panel is not controlling `route`. |
+| `onRouteChange` | `(route: string) => void` | — | Called with the route a row navigated to. |
 | `className` | `string` | — |  |
 
 ### Panelside.Panel
@@ -555,7 +657,9 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | `className` | `string` | — |  |
 | `icon` | `ReactNode` | — | Leading element — an icon, an avatar, a coloured dot. The shorthand for `Panelside.ItemIcon`. |
 | `label` | `string` | — | The row's text, truncated to one line since chat titles run long. The shorthand for `Panelside.ItemLabel`. |
-| `active` | `boolean` | `false` | Marks the row as the current destination. |
+| `to` | `string` | — | The page this row goes to — a `Panelside.Page`'s `value`. Pressing it sets the panel's route, and the row marks itself active while that route is the current one. It also closes the panel, since the thing you just moved to would otherwise be behind the thing you moved from. `active` and `onPress` still win where they are passed, so a row can navigate and do something else as well. |
+| `closeOnNavigate` | `boolean` | `true` | Leave the panel open after navigating. Off by default. |
+| `active` | `boolean` | — | Marks the row as the current destination. Derived from `to` when given. |
 | `badge` | `ReactNode` | — | Trailing count or status. A number or string renders as a pill; anything else renders as given. The shorthand for `Panelside.ItemBadge`. |
 | `disabled` | `boolean` | `false` |  |
 | `size` | `PanelsideItemSize` | `'default'` | Row density. `sm` tightens the padding for a panel that has to show more history at once, without touching the type size — a list you can read is worth more than two extra rows. |
@@ -584,6 +688,17 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `label` | `string` | `'More options'` | What a screen reader announces. The default control is an unlabelled glyph, so this is the only description it has. |
+
+### Panelside.ItemActions
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `label` | `string` | `'More options'` | What a screen reader announces for the button. The control is an unlabelled glyph, so this is the only description it has. |
+| `icon` | `ReactNode` | — | Replaces the default overflow glyph. |
+| `placement` | `MenuContentProps['placement']` | `'bottom'` | Where the panel opens relative to the button. Defaults to below it. |
+| `align` | `MenuContentProps['align']` | `'end'` | How it lines up on that edge. Defaults to the button's trailing edge. |
+| `contentProps` | `Omit<MenuContentProps, 'children' \| 'placement' \| 'align'>` | — | Passed through to the panel — `width`, `maxHeight`, `offset` and the rest. |
 
 ### Panelside.Footer
 
@@ -615,6 +730,21 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | `dim` | `number` | — | How far the scene dims at full travel, 0 to 1. Default 0.45. |
 | `scrimClassName` | `string` | — | Styles the layer that dims the scene. Its opacity is `dim`'s to set, so this is for the colour — a scrim that is not black, for a light theme where black at 45% reads as a hole rather than as shade. |
 
+### Panelside.Pages
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Panelside.Page
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `string` | — | What a row's `to` has to equal for this page to be the one shown. |
+| `keepAlive` | `boolean` | — | Keep the page mounted once it has been visited. Default true, which is what makes going back to it instant. Off, it is torn down on the way out and rebuilt on the way in. |
+| `hidden` | `boolean` | `false` | Set by `Panelside.Pages`. A hidden page is laid out by nobody, is not in the accessibility tree, and takes no touches — but it is still mounted, which is the whole point of it. |
+
 ### Panelside.Trigger
 
 | Prop | Type | Default | Description |
@@ -628,6 +758,7 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `label` | `string` | `'Search'` | What a screen reader announces. |
+| `variant` | `PanelsideControlVariant` | `'filled'` | `filled` is the default: a circle in the secondary surface, which is what a control sitting alone on the panel's own surface needs to read as one. `outline` is a ring and no fill, for a panel whose other controls are outlined too — a filled circle among them is the only thing on the screen claiming to be a second primary. Ignored under `native`, where the platform owns the button's chrome. |
 | `native` | `boolean` | `false` | Render the platform's own button instead of the circle. Requires the optional `@expo/ui` package; without it this prop does nothing. |
 | `glass` | `boolean` | `false` | Draw the native button in the platform's Liquid Glass material. Requires `native`, and iOS 26 or later; ignored anywhere else. |
 
@@ -649,12 +780,15 @@ The composer is `AIInput` under `native`, which hands its own controls to the pl
 | `keyboardGap` | `number` | `10` | Gap between the field and the top of the keyboard. |
 | `showClose` | `boolean` | `true` | Draw the round dismiss button at the leading edge of the top row. On by default — it is the way out of a surface that covers the screen, and it belongs where a thumb reaching across arrives rather than in the corner furthest from one. |
 | `closeLabel` | `string` | `'Close search'` | What a screen reader announces for that button. |
+| `closeVariant` | `PanelsideControlVariant` | `'filled'` | How that button is drawn. Matches `Panelside.SearchTrigger`'s `variant`, so the control that opens the surface and the one that closes it are the same shape. |
 
 ### Panelside.SearchTabs
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
+| `align` | `'start' \| 'center'` | `'center'` | Where the row sits across the sheet. Default `center`. Centred because only the selected tab is open and the rest are their icons, so the row's width changes as you move through it — anchored to the leading edge that change reads as the row growing and shrinking, and centred it reads as the selection moving. `start` anchors it to the leading edge, for a sheet whose tabs are wide enough to fill the row anyway. |
+| `listClassName` | `string` | — | Applied to the row itself rather than to the box around it. |
 
 ### Panelside.SearchTab
 
@@ -764,9 +898,17 @@ The platform toolkits behind the `native` prop on Button, Select, Switch and Bot
 
 Off by default, and it needs the optional `expo-haptics`; without it the prop is silent rather than an error.
 
+### Which sheet the search surface is
+
+`Panelside.SearchSheet` presents the platform's own sheet by default, which needs the optional `@expo/ui`; without it the styled sheet renders instead.
+
+Pass `native={false}` where the surface docks a field to the keyboard, as this one does. The platform's sheet gives its hosted content a minimum height rather than a real one, and a column that has to fit a list between tabs and a keyboard-tracking field inside a box of that shape is a measurement with nothing definite in it. That failure happens below JavaScript, so it is a crash rather than a wrong layout.
+
+The button is a separate decision. `Panelside.SearchTrigger` still takes `native` and `glass`, so the control can be the platform's while what it opens is ours.
+
 ### What is yours to change
 
-Every part takes `className`. On top of that: `width` and `dock` decide the geometry, `scale`, `radius` and `dim` the curve — settable on the root as defaults for every scene, or per scene — `scrimClassName` the colour of the dim, and `size` on `Panelside.Cta` and `Panelside.Item` the density of the two things in the panel that are not text. `swipeFrom` and `edgeWidth` decide where a swipe may start, and `swipeEnabled` turns it off.
+Every part takes `className`. On top of that: `width` and `dock` decide the geometry, `scale`, `radius` and `dim` the curve — settable on the root as defaults for every scene, or per scene — `scrimClassName` the colour of the dim, and `size` on `Panelside.Cta` and `Panelside.Item` the density of the two things in the panel that are not text. `swipeFrom` and `edgeWidth` decide where a swipe may start, and `swipeEnabled` turns it off. `variant` on `Panelside.SearchTrigger` and `closeVariant` on `Panelside.SearchSheet` swap the two round controls between a fill and a ring, for a panel whose other controls are outlined; `align` on `Panelside.SearchTabs` puts the tab row back against the leading edge.
 
 ### Reduced motion
 
@@ -780,4 +922,4 @@ Every spring here resolves instantly to its target when the system setting is on
 
 **Values:** `Panelside`, `usePanelside`
 
-**Types:** `PanelsideProps`, `PanelsidePanelProps`, `PanelsideHeaderProps`, `PanelsideSearchProps`, `PanelsideContentProps`, `PanelsideGroupProps`, `PanelsideGroupLabelProps`, `PanelsideItemProps`, `PanelsideItemIconProps`, `PanelsideItemLabelProps`, `PanelsideItemBadgeProps`, `PanelsideActionProps`, `PanelsideFooterProps`, `PanelsideCtaProps`, `PanelsideSceneProps`, `PanelsideTriggerProps`, `PanelsideMode`, `PanelsideSwipeFrom`, `PanelsideItemSize`, `PanelsideCtaSize`, `UsePanelsideResult`
+**Types:** `PanelsideProps`, `PanelsidePanelProps`, `PanelsideHeaderProps`, `PanelsideSearchProps`, `PanelsideContentProps`, `PanelsideGroupProps`, `PanelsideGroupLabelProps`, `PanelsideItemProps`, `PanelsideItemIconProps`, `PanelsideItemLabelProps`, `PanelsideItemBadgeProps`, `PanelsideActionProps`, `PanelsideItemActionsProps`, `PanelsideFooterProps`, `PanelsideCtaProps`, `PanelsideSceneProps`, `PanelsidePagesProps`, `PanelsidePageProps`, `PanelsideTriggerProps`, `PanelsideSearchTriggerProps`, `PanelsideSearchSheetProps`, `PanelsideSearchTabsProps`, `PanelsideSearchTabProps`, `PanelsideSearchResultsProps`, `PanelsideSearchResultProps`, `PanelsideSearchFieldProps`, `PanelsideMode`, `PanelsideSwipeFrom`, `PanelsideItemSize`, `PanelsideCtaSize`, `PanelsideSurface`, `PanelsideControlVariant`, `UsePanelsideResult`
