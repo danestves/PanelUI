@@ -267,6 +267,17 @@ const SHEET_BOTTOM_PADDING = 16;
  */
 const SHEET_TOP_PADDING = 12;
 
+/**
+ * The strip above the field over which the results dissolve into the sheet.
+ *
+ * The field rides the keyboard by translating, not by taking a row of the
+ * layout, so once it is up the list is behind it. It has to paint a ground of
+ * its own or the rows read straight through a pill whose fill is a few percent
+ * of an opaque colour — and a ground that simply begins is a hard edge across
+ * a scrolling list, so the top of it is a fade.
+ */
+const FIELD_FADE = 20;
+
 /** Progress past which a layer is treated as fully hidden for accessibility. */
 const HIDDEN_EPSILON = 0.05;
 
@@ -2119,6 +2130,20 @@ function PanelsideSearchSheet({
 
 export interface PanelsideSearchTabsProps {
   className?: string;
+  /**
+   * Where the row sits across the sheet. Default `center`.
+   *
+   * Centred because only the selected tab is open and the rest are their
+   * icons, so the row's width changes as you move through it — anchored to the
+   * leading edge that change reads as the row growing and shrinking, and
+   * centred it reads as the selection moving.
+   *
+   * `start` anchors it to the leading edge, for a sheet whose tabs are wide
+   * enough to fill the row anyway.
+   */
+  align?: 'start' | 'center';
+  /** Applied to the row itself rather than to the box around it. */
+  listClassName?: string;
   children?: ReactNode;
 }
 
@@ -2132,7 +2157,12 @@ export interface PanelsideSearchTabsProps {
  * Every `Panelside.SearchTab` therefore needs an `icon` — a closed tab has
  * nothing else to be.
  */
-function PanelsideSearchTabs({ className, children }: PanelsideSearchTabsProps) {
+function PanelsideSearchTabs({
+  className,
+  align = 'center',
+  listClassName,
+  children,
+}: PanelsideSearchTabsProps) {
   const { tab, setTab } = usePanelsideSearchSheet('Panelside.SearchTabs');
 
   return (
@@ -2143,7 +2173,9 @@ function PanelsideSearchTabs({ className, children }: PanelsideSearchTabsProps) 
       defaultValue={tab}
       className={cn('px-4 pt-1', className)}
     >
-      <Tabs.List>{children}</Tabs.List>
+      <Tabs.List className={cn(align === 'center' && 'justify-center', listClassName)}>
+        {children}
+      </Tabs.List>
     </Tabs>
   );
 }
@@ -2289,7 +2321,9 @@ function PanelsideSearchField({
   );
   const placeholderTint = useCSSVariable('--color-muted-foreground');
   const textTint = useCSSVariable('--color-foreground');
+  const background = useCSSVariable('--color-background');
   const muted = typeof placeholderTint === 'string' ? placeholderTint : undefined;
+  const sheetGround = typeof background === 'string' ? background : '#000000';
   const field = useRef<TextInput>(null);
 
   const text = value ?? query;
@@ -2311,8 +2345,29 @@ function PanelsideSearchField({
       mode="dock"
       active={open}
       bottomInset={bottomInset}
-      className="w-full px-4 pb-1"
+      className="w-full px-4 pb-1 pt-1"
     >
+      {/*
+        The ground, in the same two layers the panel's footer uses: the top
+        `FIELD_FADE` points are the gradient the list dissolves into, and
+        everything below it — the band the pill actually sits in — is the
+        sheet's own background, opaque.
+
+        Both are inside the avoider's bounds, so they travel with the field
+        rather than staying behind where it was.
+      */}
+      <LinearGradient
+        colors={[`${sheetGround}00`, sheetGround]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        pointerEvents="none"
+        style={[styles.fade, { height: FIELD_FADE }]}
+      />
+      <View
+        pointerEvents="none"
+        className="absolute bottom-0 end-0 start-0 bg-background"
+        style={{ top: FIELD_FADE }}
+      />
       <View
         className={cn(
           'h-12 w-full flex-row items-center gap-2 rounded-full bg-secondary px-4',
