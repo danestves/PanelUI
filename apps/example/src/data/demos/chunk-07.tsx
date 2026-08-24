@@ -1013,7 +1013,7 @@ function PlannerDetailsDemo() {
 function PlannerBareDemo() {
   const [month, setMonth] = useState(() => new Date());
   return (
-    <Card className="w-full p-2">
+    <View className="w-full">
       <Planner
         frame={false}
         month={month}
@@ -1023,7 +1023,7 @@ function PlannerBareDemo() {
       >
         <Planner.Grid />
       </Planner>
-    </Card>
+    </View>
   );
 }
 
