@@ -344,6 +344,8 @@ export type PanelsideCtaSize = 'default' | 'lg';
  * that is a row of the layout rather than something floating over one.
  */
 export type PanelsideSurface = 'transparent' | 'fade' | 'solid';
+/** How the panel's small round controls are drawn: a fill, or a ring. */
+export type PanelsideControlVariant = 'filled' | 'outline';
 
 const itemVariants = tv({
   // No width: in a group it stretches on its own, and pinning it to full width
@@ -1809,6 +1811,17 @@ export interface PanelsideSearchTriggerProps extends Omit<PressableProps, 'child
   className?: string;
   /** What a screen reader announces. */
   label?: string;
+  /**
+   * `filled` is the default: a circle in the secondary surface, which is what
+   * a control sitting alone on the panel's own surface needs to read as one.
+   *
+   * `outline` is a ring and no fill, for a panel whose other controls are
+   * outlined too — a filled circle among them is the only thing on the screen
+   * claiming to be a second primary.
+   *
+   * Ignored under `native`, where the platform owns the button's chrome.
+   */
+  variant?: PanelsideControlVariant;
   /** Replaces the default magnifier. */
   children?: ReactNode;
   /**
@@ -1833,6 +1846,7 @@ export interface PanelsideSearchTriggerProps extends Omit<PressableProps, 'child
 function PanelsideSearchTrigger({
   className,
   label = 'Search',
+  variant = 'filled',
   children,
   native = false,
   glass = false,
@@ -1873,10 +1887,12 @@ function PanelsideSearchTrigger({
       {...props}
       onPress={open}
       className={cn(
-        // Filled rather than outlined. It sits on the panel's own surface with
-        // nothing else on that row, so an outline at this size reads as an
-        // empty circle before it reads as a control.
-        'h-10 w-10 items-center justify-center rounded-full bg-secondary',
+        'h-10 w-10 items-center justify-center rounded-full',
+        // Filled by default. It sits on the panel's own surface with nothing
+        // else on that row, so an outline at this size reads as an empty
+        // circle before it reads as a control — which stops being true the
+        // moment the rest of the screen's controls are outlined as well.
+        variant === 'outline' ? 'border border-border' : 'bg-secondary',
         className
       )}
       accessibilityRole="button"
@@ -1956,6 +1972,12 @@ export interface PanelsideSearchSheetProps {
   showClose?: boolean;
   /** What a screen reader announces for that button. */
   closeLabel?: string;
+  /**
+   * How that button is drawn. Matches `Panelside.SearchTrigger`'s `variant`,
+   * so the control that opens the surface and the one that closes it are the
+   * same shape.
+   */
+  closeVariant?: PanelsideControlVariant;
   children?: ReactNode;
 }
 
@@ -2001,6 +2023,7 @@ function PanelsideSearchSheet({
   keyboardGap = 10,
   showClose = true,
   closeLabel = 'Close search',
+  closeVariant = 'filled',
   children,
 }: PanelsideSearchSheetProps) {
   const { searchOpen, setSearchOpen } = usePanelsideContext('Panelside.SearchSheet');
@@ -2114,7 +2137,10 @@ function PanelsideSearchSheet({
                   onPress={close}
                   accessibilityRole="button"
                   accessibilityLabel={closeLabel}
-                  className="h-9 w-9 items-center justify-center rounded-full bg-secondary"
+                  className={cn(
+                    'h-9 w-9 items-center justify-center rounded-full',
+                    closeVariant === 'outline' ? 'border border-border' : 'bg-secondary'
+                  )}
                 >
                   <Glyph icon={Cancel01Icon} size={17} color={glyph} />
                 </AnimatedPressable>
