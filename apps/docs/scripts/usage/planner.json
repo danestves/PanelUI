@@ -1,5 +1,12 @@
 {
   "slug": "planner",
+  "previewVideo": {
+    "src": "/previews/planner.mp4",
+    "poster": "/previews/planner-poster.jpg",
+    "alt": "The Planner component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  },
   "intro": "A month grid where every day carries what falls on it — a marker, an icon, and a count you can hear. Pressing a day opens what is on it.\n\nIt is not a date picker. [Calendar](/docs/components/calendar) exists to choose a date and answer with one; `Planner` shows what is already on the days, and its selection exists to open something rather than to be submitted. Reach for `Calendar` when the answer is a date, and for `Planner` when the date is the question.\n\nThe grid is always six weeks. A month spans five or six depending on the weekday it starts on, and drawn at its natural height the panel changes size as you page through the year — which makes the days appear to move under your thumb.",
   "usage": "const [month, setMonth] = useState(new Date());\n\n<Planner\n  month={month}\n  onMonthChange={setMonth}\n  entries={renewals}\n  categories={[\n    { id: 'monthly', label: 'Monthly' },\n    { id: 'yearly', label: 'Yearly' },\n  ]}\n>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Today />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n  <Planner.Legend />\n</Planner>",
   "extraImports": [
@@ -28,12 +35,26 @@
     {
       "title": "A month of renewals",
       "description": "The ordinary case. Entries in any order, two categories, and the legend that reads them.",
-      "code": "const [month, setMonth] = useState(new Date(2026, 0));\n\n<Planner\n  month={month}\n  onMonthChange={setMonth}\n  entries={[\n    { id: 'n', date: new Date(2026, 0, 2), label: 'Netflix', category: 'monthly' },\n    { id: 'a', date: new Date(2026, 0, 7), label: 'Adobe', category: 'monthly' },\n    { id: 'f', date: new Date(2026, 0, 10), label: 'Figma', category: 'yearly' },\n  ]}\n  categories={[\n    { id: 'monthly', label: 'Monthly' },\n    { id: 'yearly', label: 'Yearly' },\n  ]}\n>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Today />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n  <Planner.Legend counts>\n    <Planner.Summary />\n  </Planner.Legend>\n</Planner>"
+      "code": "const [month, setMonth] = useState(new Date(2026, 0));\n\n<Planner\n  month={month}\n  onMonthChange={setMonth}\n  entries={[\n    { id: 'n', date: new Date(2026, 0, 2), label: 'Netflix', category: 'monthly' },\n    { id: 'a', date: new Date(2026, 0, 7), label: 'Adobe', category: 'monthly' },\n    { id: 'f', date: new Date(2026, 0, 10), label: 'Figma', category: 'yearly' },\n  ]}\n  categories={[\n    { id: 'monthly', label: 'Monthly' },\n    { id: 'yearly', label: 'Yearly' },\n  ]}\n>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Today />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n  <Planner.Legend counts>\n    <Planner.Summary />\n  </Planner.Legend>\n</Planner>",
+      "previewVideo": {
+        "src": "/previews/planner-a-month-of-renewals.mp4",
+        "poster": "/previews/planner-a-month-of-renewals-poster.jpg",
+        "alt": "Planner — A month of renewals.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Opening a day",
       "description": "`Details` binds a dialog to the open day. The planner owns the binding; what the dialog says is yours, because the contents of a day are your data.",
-      "code": "<Planner entries={entries} categories={categories}>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n  <Planner.Details>\n    {(date, dayEntries) =>\n      dayEntries.length === 0 ? (\n        <Text muted size=\"sm\">Nothing on this day.</Text>\n      ) : (\n        dayEntries.map((entry) => (\n          <Item key={entry.id}>\n            <Item.Content>\n              <Item.Title>{entry.label}</Item.Title>\n            </Item.Content>\n          </Item>\n        ))\n      )\n    }\n  </Planner.Details>\n</Planner>"
+      "code": "<Planner entries={entries} categories={categories}>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n  <Planner.Details>\n    {(date, dayEntries) =>\n      dayEntries.length === 0 ? (\n        <Text muted size=\"sm\">Nothing on this day.</Text>\n      ) : (\n        dayEntries.map((entry) => (\n          <Item key={entry.id}>\n            <Item.Content>\n              <Item.Title>{entry.label}</Item.Title>\n            </Item.Content>\n          </Item>\n        ))\n      )\n    }\n  </Planner.Details>\n</Planner>",
+      "previewVideo": {
+        "src": "/previews/planner-opening-a-day.mp4",
+        "poster": "/previews/planner-opening-a-day-poster.jpg",
+        "alt": "Planner — Opening a day.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Pushing a screen instead",
@@ -48,7 +69,13 @@
     {
       "title": "Without the frame",
       "description": "For a planner inside a sheet, a dialog or a card that already draws its own boundary.",
-      "code": "<BottomSheet open={open} onOpenChange={setOpen}>\n  <BottomSheet.Content>\n    <Planner frame={false} entries={entries} categories={categories}>\n      <Planner.Grid />\n      <Planner.Legend />\n    </Planner>\n  </BottomSheet.Content>\n</BottomSheet>"
+      "code": "<BottomSheet open={open} onOpenChange={setOpen}>\n  <BottomSheet.Content>\n    <Planner frame={false} entries={entries} categories={categories}>\n      <Planner.Grid />\n      <Planner.Legend />\n    </Planner>\n  </BottomSheet.Content>\n</BottomSheet>",
+      "preview": {
+        "src": "/previews/planner-without-the-frame.jpg",
+        "alt": "Planner — Without the frame.",
+        "width": 1179,
+        "height": 1231
+      }
     },
     {
       "title": "A cell of your own",
@@ -58,7 +85,14 @@
     {
       "title": "A month of icons",
       "description": "`variant=\"tiles\"` gives each day over to the one thing on it. The entry's `icon` is drawn large and centred, its `color` tints the tile, and the date moves into the corner.\n\nDays either side of the month are left blank in this look.",
-      "code": "<Planner\n  variant=\"tiles\"\n  entries={[\n    { id: 'n', date: new Date(2026, 0, 3), label: 'Netflix', color: '#e50914', icon: <Image source={netflix} style={{ width: 26, height: 26, borderRadius: 6 }} /> },\n    { id: 's', date: new Date(2026, 0, 8), label: 'Spotify', color: '#1db954', icon: <Image source={spotify} style={{ width: 26, height: 26, borderRadius: 6 }} /> },\n  ]}\n>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Today />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n</Planner>"
+      "code": "<Planner\n  variant=\"tiles\"\n  entries={[\n    { id: 'n', date: new Date(2026, 0, 3), label: 'Netflix', color: '#e50914', icon: <Image source={netflix} style={{ width: 26, height: 26, borderRadius: 6 }} /> },\n    { id: 's', date: new Date(2026, 0, 8), label: 'Spotify', color: '#1db954', icon: <Image source={spotify} style={{ width: 26, height: 26, borderRadius: 6 }} /> },\n  ]}\n>\n  <Planner.Header>\n    <Planner.Title />\n    <Planner.Today />\n    <Planner.Nav />\n  </Planner.Header>\n  <Planner.Grid />\n</Planner>",
+      "previewVideo": {
+        "src": "/previews/planner-a-month-of-icons.mp4",
+        "poster": "/previews/planner-a-month-of-icons-poster.jpg",
+        "alt": "Planner — A month of icons.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "A year you can scroll",

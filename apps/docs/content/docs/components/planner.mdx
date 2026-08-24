@@ -3,6 +3,14 @@ title: Planner
 description: A month of days, each carrying what falls on it.
 ---
 
+<PreviewVideo
+  src="/previews/planner.mp4"
+  poster="/previews/planner-poster.jpg"
+  alt="The Planner component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 A month grid where every day carries what falls on it — a marker, an icon, and a count you can hear. Pressing a day opens what is on it.
 
 It is not a date picker. [Calendar](/docs/components/calendar) exists to choose a date and answer with one; `Planner` shows what is already on the days, and its selection exists to open something rather than to be submitted. Reach for `Calendar` when the answer is a date, and for `Planner` when the date is the question.
@@ -76,6 +84,14 @@ const [month, setMonth] = useState(new Date());
 
 The ordinary case. Entries in any order, two categories, and the legend that reads them.
 
+<PreviewVideo
+  src="/previews/planner-a-month-of-renewals.mp4"
+  poster="/previews/planner-a-month-of-renewals-poster.jpg"
+  alt="Planner — A month of renewals."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [month, setMonth] = useState(new Date(2026, 0));
 
@@ -107,6 +123,14 @@ const [month, setMonth] = useState(new Date(2026, 0));
 ### Opening a day
 
 `Details` binds a dialog to the open day. The planner owns the binding; what the dialog says is yours, because the contents of a day are your data.
+
+<PreviewVideo
+  src="/previews/planner-opening-a-day.mp4"
+  poster="/previews/planner-opening-a-day-poster.jpg"
+  alt="Planner — Opening a day."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Planner entries={entries} categories={categories}>
@@ -178,6 +202,13 @@ An entry's `icon` is drawn in its day. `entryLimit` caps how many a cell draws b
 
 For a planner inside a sheet, a dialog or a card that already draws its own boundary.
 
+<Preview
+  src="/previews/planner-without-the-frame.jpg"
+  alt="Planner — Without the frame."
+  width={1179}
+  height={1231}
+/>
+
 ```tsx
 <BottomSheet open={open} onOpenChange={setOpen}>
   <BottomSheet.Content>
@@ -215,6 +246,14 @@ For a planner inside a sheet, a dialog or a card that already draws its own boun
 `variant="tiles"` gives each day over to the one thing on it. The entry's `icon` is drawn large and centred, its `color` tints the tile, and the date moves into the corner.
 
 Days either side of the month are left blank in this look.
+
+<PreviewVideo
+  src="/previews/planner-a-month-of-icons.mp4"
+  poster="/previews/planner-a-month-of-icons-poster.jpg"
+  alt="Planner — A month of icons."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Planner
