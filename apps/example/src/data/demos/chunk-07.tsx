@@ -1048,31 +1048,6 @@ function PlannerDayList({ entries }: { entries: PlannerEntry[] }) {
   );
 }
 
-function PlannerDemo() {
-  const [month, setMonth] = useState(() => new Date());
-  return (
-    <Planner
-      month={month}
-      onMonthChange={setMonth}
-      entries={plannerEntries(month)}
-      categories={PLANNER_CATEGORIES}
-    >
-      <Planner.Header>
-        <Planner.Title />
-        <Planner.Today />
-        <Planner.Nav />
-      </Planner.Header>
-      <Planner.Grid />
-      <Planner.Legend counts>
-        <Planner.Summary />
-      </Planner.Legend>
-      <Planner.Details>
-        {(_date, dayEntries) => <PlannerDayList entries={dayEntries} />}
-      </Planner.Details>
-    </Planner>
-  );
-}
-
 function PlannerDetailsDemo() {
   const [month, setMonth] = useState(() => new Date());
   const entries = plannerEntries(month);
@@ -1431,7 +1406,6 @@ export const ENTRIES: ComponentEntry[] = [
           'The weeks of the year, scrolled through rather than paged, with every entry named in its day.',
         render: () => <PlannerScreenDemo />,
       },
-      { label: 'A month of renewals', render: () => <PlannerDemo /> },
       { label: 'Opening a day', render: () => <PlannerDetailsDemo /> },
       { label: 'Icon tiles', render: () => <PlannerTilesDemo /> },
       { label: 'Without the frame', render: () => <PlannerBareDemo /> },
