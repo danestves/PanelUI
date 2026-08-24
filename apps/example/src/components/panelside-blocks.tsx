@@ -12,7 +12,7 @@
  * when the behaviour does.
  */
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { router } from 'expo-router';
 import {
   AIInput,
@@ -136,7 +136,13 @@ const SEARCH_TABS = [
  * JavaScript, where there is nothing to catch it. The trigger that opens it is
  * still the platform's button under `native`; what is inside is ours.
  */
-function AssistantSearch({ variant }: { variant?: 'filled' | 'outline' }) {
+function AssistantSearch({
+  variant,
+  native = false,
+}: {
+  variant?: 'filled' | 'outline';
+  native?: boolean;
+}) {
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState('all');
 
@@ -152,6 +158,8 @@ function AssistantSearch({ variant }: { variant?: 'filled' | 'outline' }) {
   return (
     <Panelside.SearchSheet
       native={false}
+      closeNative={native}
+      closeGlass={native}
       closeVariant={variant}
       value={query}
       onValueChange={setQuery}
@@ -317,7 +325,7 @@ function AssistantPanel({
           className="shrink-0"
           icon={<Glyph icon={PlusSignIcon} size={18} />}
           label="New chat"
-          size={native ? 'lg' : 'default'}
+          size={native ? 'xl' : 'default'}
           native={native}
           glass={native}
         />
@@ -334,21 +342,22 @@ function AssistantPanel({
             letter is the expensive way to arrive at what the platform already
             does — and it is the shape that has cost two crashes.
           */
-          <Button native glass size="lg" variant="ghost" accessibilityLabel="Account">
+          <Button native glass size="xl" variant="ghost" accessibilityLabel="Account">
             K
           </Button>
         ) : (
-          /* A button rather than a row: a row is a thing that stretches, and
-             this one has a fixed 40pt square to be. Outlined, like everything
-             else here that is not the compose pill. */
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-10 w-10 shrink-0 rounded-full p-0"
+          /* The avatar itself, pressable. An avatar inside a button is two
+             rings and two surfaces drawn around one face — the avatar already
+             is the shape, and putting a control around it only says so twice.
+             `shrink-0` because it has a fixed square to be, and the compose
+             pill beside it is the thing that gives way. */
+          <Pressable
+            accessibilityRole="button"
             accessibilityLabel="Account"
+            className="shrink-0"
           >
-            <Avatar size="sm" fallback="K" />
-          </Button>
+            <Avatar size="md" fallback="K" />
+          </Pressable>
         )}
       </Panelside.Footer>
     </Panelside.Panel>
@@ -537,7 +546,7 @@ function AssistantDemo({
         <SceneBar title={title} native={native} />
         {scene ?? <Transcript />}
       </Panelside.Scene>
-      <AssistantSearch variant={native ? undefined : 'outline'} />
+      <AssistantSearch native={native} variant={native ? undefined : 'outline'} />
     </Panelside>
   );
 }
