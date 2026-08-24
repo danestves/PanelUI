@@ -153,3 +153,36 @@ export function summariseMonth<T extends PlannerDatedEntry>(
     })),
   };
 }
+
+/**
+ * Minutes since midnight, or `null` for an entry that lands exactly on it.
+ *
+ * The grid has only ever read an entry's day, so a date with no time set is
+ * midnight — and that is indistinguishable from something genuinely scheduled
+ * at 00:00. Reading it as all-day is the right way round: a set of entries
+ * built without times renders as a list of things happening that day, which is
+ * what it is, rather than as a column of midnights.
+ */
+export function entryTimeMinutes(date: Date): number | null {
+  const minutes = date.getHours() * 60 + date.getMinutes();
+  return minutes === 0 ? null : minutes;
+}
+
+/**
+ * All-day first, then by time, keeping the caller's order within each.
+ *
+ * All-day leads because it frames the rest of the day rather than falling at a
+ * point in it, and a list that opens with "All day" reads as a heading for
+ * what follows.
+ */
+export function sortByTime<T extends PlannerDatedEntry>(entries: readonly T[]): T[] {
+  return entries
+    .map((entry, index) => ({ entry, index, at: entryTimeMinutes(entry.date) }))
+    .sort((a, b) => {
+      if (a.at === null && b.at === null) return a.index - b.index;
+      if (a.at === null) return -1;
+      if (b.at === null) return 1;
+      return a.at === b.at ? a.index - b.index : a.at - b.at;
+    })
+    .map(({ entry }) => entry);
+}

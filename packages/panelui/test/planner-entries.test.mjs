@@ -5,6 +5,8 @@ import {
   dayAccessibilityLabel,
   dayKey,
   entriesOn,
+  entryTimeMinutes,
+  sortByTime,
   summariseMonth,
   visibleEntries,
 } from '../src/components/planner/planner-entries.ts';
@@ -186,4 +188,33 @@ test('month summaries inspect the fixed grid, not every entry in other months', 
     total: 1,
     categories: [{ id: 'current', label: 'Current', count: 1 }],
   });
+});
+
+test('midnight reads as all-day, any other time as a point in the day', () => {
+  assert.equal(entryTimeMinutes(new Date(2026, 0, 16)), null);
+  assert.equal(entryTimeMinutes(new Date(2026, 0, 16, 0, 0, 30)), null);
+  assert.equal(entryTimeMinutes(new Date(2026, 0, 16, 9, 0)), 540);
+  assert.equal(entryTimeMinutes(new Date(2026, 0, 16, 23, 59)), 1439);
+});
+
+test('a day sorts all-day first, then by time, stably', () => {
+  const at = (hour, minute, id) => ({ id, date: new Date(2026, 0, 16, hour, minute) });
+  const sorted = sortByTime([
+    at(16, 0, 'one-to-one'),
+    at(0, 0, 'leave'),
+    at(9, 0, 'standup'),
+    at(0, 0, 'holiday'),
+    at(9, 0, 'sync'),
+  ]);
+  assert.deepEqual(
+    sorted.map((entry) => entry.id),
+    ['leave', 'holiday', 'standup', 'sync', 'one-to-one']
+  );
+});
+
+test('sorting leaves the caller its own array', () => {
+  const entries = [{ id: 'b', date: new Date(2026, 0, 16, 9) }, { id: 'a', date: new Date(2026, 0, 16) }];
+  const sorted = sortByTime(entries);
+  assert.notEqual(sorted, entries);
+  assert.equal(entries[0].id, 'b');
 });
