@@ -1162,8 +1162,16 @@ function PanelsideItem({
    * that, and a written-out `Panelside.ItemLabel` supplies it too — so the
    * spacer is only for the row that has neither, which is a row of nothing but
    * an icon and a badge.
+   *
+   * And only where there is something to push. A row of nothing but an icon
+   * has no trailing content, and a spacer in it is not inert: laid out against
+   * the width available rather than against the row's own contents, it expands,
+   * takes the space with it, and squeezes whatever shares the line — which is
+   * how an icon-only row in a footer beside a compose button cropped that
+   * button's label and left its own icon short of the trailing edge.
    */
   const filled = label !== undefined || children !== undefined;
+  const trailing = badge !== undefined && badge !== null;
 
   return (
     <PanelsideItemContext.Provider value={context}>
@@ -1180,7 +1188,7 @@ function PanelsideItem({
 
         {label !== undefined ? <PanelsideItemLabel>{label}</PanelsideItemLabel> : null}
 
-        {filled ? null : <View className="flex-1" />}
+        {filled || !trailing ? null : <View className="flex-1" />}
 
         {badge !== undefined && badge !== null ? (
           <PanelsideItemBadge>{badge}</PanelsideItemBadge>
