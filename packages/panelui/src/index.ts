@@ -545,6 +545,8 @@ export {
   type PanelsideFooterProps,
   type PanelsideCtaProps,
   type PanelsideSceneProps,
+  type PanelsidePagesProps,
+  type PanelsidePageProps,
   type PanelsideTriggerProps,
   type PanelsideSearchTriggerProps,
   type PanelsideSearchSheetProps,

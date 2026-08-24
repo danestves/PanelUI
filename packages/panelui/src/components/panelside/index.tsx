@@ -77,6 +77,7 @@
  * rather than travelling.
  */
 import {
+  Children,
   cloneElement,
   createContext,
   isValidElement,
@@ -421,6 +422,15 @@ interface PanelsideContextValue {
    */
   searchOpen: boolean;
   setSearchOpen: (open: boolean) => void;
+  /**
+   * The page the scene is showing.
+   *
+   * On the root for the same reason `searchOpen` is: the rows that navigate
+   * are in the panel and the pages are in the scene, which are different
+   * subtrees. Anything else is one `useState` every app threads through both.
+   */
+  route: string;
+  navigate: (route: string) => void;
 }
 
 const PanelsideContext = createContext<PanelsideContextValue | null>(null);
@@ -448,6 +458,10 @@ export interface UsePanelsideResult {
   /** Whether the search surface is up. `Panelside.SearchTrigger` sets it. */
   searchOpen: boolean;
   setSearchOpen: (open: boolean) => void;
+  /** The page the scene is showing — a `Panelside.Page`'s `value`. */
+  route: string;
+  /** Go to a page, closing the panel on the way. */
+  navigate: (route: string) => void;
 }
 
 /**
@@ -456,9 +470,20 @@ export interface UsePanelsideResult {
  * lives.
  */
 export function usePanelside(): UsePanelsideResult {
-  const { open, setOpen, toggle, progress, docked, searchOpen, setSearchOpen } =
+  const { open, setOpen, toggle, progress, docked, searchOpen, setSearchOpen, route, navigate } =
     usePanelsideContext('usePanelside');
-  return { open, setOpen, toggle, progress, docked, searchOpen, setSearchOpen };
+
+  // `navigate` closes the panel. The root cannot do it there without making
+  // its own `setOpen` a dependency of the callback every row holds.
+  const go = useCallback(
+    (next: string) => {
+      navigate(next);
+      setOpen(false);
+    },
+    [navigate, setOpen]
+  );
+
+  return { open, setOpen, toggle, progress, docked, searchOpen, setSearchOpen, route, navigate: go };
 }
 
 /**
@@ -554,6 +579,19 @@ export interface PanelsideProps {
   radius?: number;
   /** How far the scene is dimmed at full open, 0 to 1. */
   dim?: number;
+  /**
+   * Which page the scene is showing. Controlled; pair it with `onRouteChange`.
+   *
+   * A route is any string you choose. It is matched against
+   * `Panelside.Page`'s `value` and against `Panelside.Item`'s `to`, so a row
+   * marks itself as the current destination and the scene swaps to the page
+   * without either being wired to the other.
+   */
+  route?: string;
+  /** Which page the scene starts on, when the panel is not controlling `route`. */
+  defaultRoute?: string;
+  /** Called with the route a row navigated to. */
+  onRouteChange?: (route: string) => void;
   className?: string;
 }
 
@@ -573,6 +611,9 @@ function PanelsideRoot({
   scale,
   radius,
   dim,
+  route: controlledRoute,
+  defaultRoute = '',
+  onRouteChange,
   className,
 }: PanelsideProps) {
   const { width: windowWidth } = useWindowDimensions();
@@ -582,6 +623,23 @@ function PanelsideRoot({
   const controlled = controlledOpen !== undefined;
   const open = controlled ? controlledOpen : uncontrolledOpen;
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const [uncontrolledRoute, setUncontrolledRoute] = useState(defaultRoute);
+  const route = controlledRoute ?? uncontrolledRoute;
+
+  /*
+   * Navigating closes the panel, and does so here rather than at each call
+   * site. The thing you just moved to would otherwise be behind the thing you
+   * moved from, which is the one arrangement no app wants — and a row that has
+   * to be told to close is a row every app writes the same three lines for.
+   */
+  const navigate = useCallback(
+    (next: string) => {
+      if (controlledRoute === undefined) setUncontrolledRoute(next);
+      onRouteChange?.(next);
+    },
+    [controlledRoute, onRouteChange]
+  );
 
   /*
    * Measured rather than taken from the window, because Panelside does not
@@ -760,15 +818,19 @@ function PanelsideRoot({
       dim,
       searchOpen,
       setSearchOpen,
+      route,
+      navigate,
     }),
     [
       dim,
       dismissible,
       docked,
       mode,
+      navigate,
       open,
       progress,
       radius,
+      route,
       scale,
       searchOpen,
       setOpen,
@@ -1097,7 +1159,20 @@ export interface PanelsideItemProps extends Omit<PressableProps, 'children'> {
    * shorthand for `Panelside.ItemLabel`.
    */
   label?: string;
-  /** Marks the row as the current destination. */
+  /**
+   * The page this row goes to — a `Panelside.Page`'s `value`.
+   *
+   * Pressing it sets the panel's route, and the row marks itself active while
+   * that route is the current one. It also closes the panel, since the thing
+   * you just moved to would otherwise be behind the thing you moved from.
+   *
+   * `active` and `onPress` still win where they are passed, so a row can
+   * navigate and do something else as well.
+   */
+  to?: string;
+  /** Leave the panel open after navigating. Off by default. */
+  closeOnNavigate?: boolean;
+  /** Marks the row as the current destination. Derived from `to` when given. */
   active?: boolean;
   /**
    * Trailing count or status. A number or string renders as a pill; anything
@@ -1146,15 +1221,33 @@ function PanelsideItem({
   className,
   icon,
   label,
-  active = false,
+  to,
+  closeOnNavigate = true,
+  active: activeProp,
   badge,
   disabled = false,
   size = 'default',
+  onPress,
   children,
   ...props
 }: PanelsideItemProps) {
+  const panel = useContext(PanelsideContext);
   const restTint = useCSSVariable('--color-muted-foreground');
   const activeTint = useCSSVariable('--color-foreground');
+
+  // A row outside a `<Panelside>` still works — the parts are usable on their
+  // own — it simply has no route to match against.
+  const active = activeProp ?? (to !== undefined && panel?.route === to);
+
+  const press = useCallback(
+    (event: Parameters<NonNullable<PressableProps['onPress']>>[0]) => {
+      onPress?.(event);
+      if (to === undefined || !panel) return;
+      panel.navigate(to);
+      if (closeOnNavigate) panel.setOpen(false);
+    },
+    [closeOnNavigate, onPress, panel, to]
+  );
 
   const tint = active
     ? typeof activeTint === 'string'
@@ -1195,6 +1288,7 @@ function PanelsideItem({
         accessibilityState={{ selected: active, disabled }}
         accessibilityLabel={label}
         pressScale={0.985}
+        onPress={to !== undefined || onPress ? press : undefined}
         {...props}
       >
         {icon ? <PanelsideItemIcon>{icon}</PanelsideItemIcon> : null}
@@ -1437,6 +1531,7 @@ function PanelsideFooter({
 const styles = StyleSheet.create({
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   rise: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  hidden: { display: 'none' },
 });
 
 export interface PanelsideCtaProps extends Omit<PressableProps, 'children'> {
@@ -1731,6 +1826,115 @@ function PanelsideScene({
         />
       ) : null}
     </Animated.View>
+  );
+}
+
+export interface PanelsidePagesProps extends ViewProps {
+  className?: string;
+  /** `Panelside.Page` elements. Anything else is rendered as given. */
+  children?: ReactNode;
+}
+
+/**
+ * The pages the panel navigates between.
+ *
+ * Put it inside `Panelside.Scene` and give each page a `value` that a row's
+ * `to` matches. Nothing is wired between the two: the row sets the panel's
+ * route, and the page whose value equals it is the one shown.
+ *
+ * ```tsx
+ * <Panelside.Scene>
+ *   <Panelside.Pages>
+ *     <Panelside.Page value="inbox"><Inbox /></Panelside.Page>
+ *     <Panelside.Page value="drafts"><Drafts /></Panelside.Page>
+ *   </Panelside.Pages>
+ * </Panelside.Scene>
+ * ```
+ *
+ * A page is mounted the first time it is visited and stays mounted after
+ * that, hidden rather than removed. Going back to one is then a style change
+ * rather than a mount: its list does not rebuild, its scroll position is where
+ * you left it, and whatever it was fetching is already there. A page whose
+ * contents go stale — or whose data is large enough that keeping it is worse
+ * than fetching it again — takes `keepAlive={false}`.
+ */
+function PanelsidePages({ className, children, ...props }: PanelsidePagesProps) {
+  const { route } = usePanelsideContext('Panelside.Pages');
+
+  /*
+   * Which pages have ever been the route.
+   *
+   * A `Set` in state rather than a ref: mounting a page for the first time has
+   * to be a render, and the ref would not cause one. It only ever grows, and
+   * only by one entry per page, so the identity change per first visit costs
+   * nothing after the pages have all been seen once.
+   */
+  const [visited, setVisited] = useState<readonly string[]>(() => [route]);
+
+  useEffect(() => {
+    setVisited((current) => (current.includes(route) ? current : [...current, route]));
+  }, [route]);
+
+  return (
+    <View className={cn('flex-1', className)} {...props}>
+      {Children.map(children, (child) => {
+        if (!isValidElement<PanelsidePageProps>(child) || child.type !== PanelsidePage) {
+          return child;
+        }
+
+        const { value, keepAlive = true } = child.props;
+        const current = value === route;
+        if (!current && (!keepAlive || !visited.includes(value))) return null;
+
+        return cloneElement(child, { hidden: !current });
+      })}
+    </View>
+  );
+}
+
+export interface PanelsidePageProps extends ViewProps {
+  className?: string;
+  /** What a row's `to` has to equal for this page to be the one shown. */
+  value: string;
+  /**
+   * Keep the page mounted once it has been visited. Default true, which is
+   * what makes going back to it instant. Off, it is torn down on the way out
+   * and rebuilt on the way in.
+   */
+  keepAlive?: boolean;
+  /**
+   * Set by `Panelside.Pages`. A hidden page is laid out by nobody, is not in
+   * the accessibility tree, and takes no touches — but it is still mounted,
+   * which is the whole point of it.
+   */
+  hidden?: boolean;
+  children?: ReactNode;
+}
+
+/** One page. Only meaningful inside `Panelside.Pages`. */
+function PanelsidePage({
+  className,
+  value,
+  keepAlive,
+  hidden = false,
+  children,
+  style,
+  ...props
+}: PanelsidePageProps) {
+  // `display: none` rather than unmounting, and rather than opacity: it takes
+  // the page out of layout entirely, so a hidden page costs no measurement,
+  // while its component tree — and everything it is holding — stays.
+  return (
+    <View
+      accessibilityElementsHidden={hidden}
+      importantForAccessibility={hidden ? 'no-hide-descendants' : 'auto'}
+      pointerEvents={hidden ? 'none' : 'auto'}
+      style={[hidden ? styles.hidden : null, style]}
+      className={cn('flex-1', className)}
+      {...props}
+    >
+      {textChildren(children)}
+    </View>
   );
 }
 
@@ -2445,6 +2649,8 @@ PanelsideAction.displayName = 'Panelside.Action';
 PanelsideFooter.displayName = 'Panelside.Footer';
 PanelsideCta.displayName = 'Panelside.Cta';
 PanelsideScene.displayName = 'Panelside.Scene';
+PanelsidePages.displayName = 'Panelside.Pages';
+PanelsidePage.displayName = 'Panelside.Page';
 PanelsideTrigger.displayName = 'Panelside.Trigger';
 PanelsideSearchTrigger.displayName = 'Panelside.SearchTrigger';
 PanelsideSearchSheet.displayName = 'Panelside.SearchSheet';
@@ -2469,6 +2675,8 @@ export const Panelside = Object.assign(PanelsideRoot, {
   Footer: PanelsideFooter,
   Cta: PanelsideCta,
   Scene: PanelsideScene,
+  Pages: PanelsidePages,
+  Page: PanelsidePage,
   Trigger: PanelsideTrigger,
   SearchTrigger: PanelsideSearchTrigger,
   SearchSheet: PanelsideSearchSheet,
