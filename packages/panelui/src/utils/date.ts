@@ -535,13 +535,23 @@ export function monthNames(locale: DateLocale, style: 'long' | 'short' = 'long')
 }
 
 /** Column headings, rotated so the first one is `weekStartsOn`. */
-export function weekdayNames(locale: DateLocale, weekStartsOn: number): string[] {
+export function weekdayNames(
+  locale: DateLocale,
+  weekStartsOn: number,
+  /*
+   * `narrow` is a single letter in most locales, and several of them repeat —
+   * English has T twice and S twice. That is only safe where the column it
+   * heads is already unambiguous by position, which is why it is a caller's
+   * choice rather than the default.
+   */
+  width: 'short' | 'narrow' = 'short'
+): string[] {
   const first = normalizeWeekStart(weekStartsOn);
   // 2021-08-01 was a Sunday, so adding the index lands on each weekday in turn.
   return Array.from({ length: 7 }, (_unused, day) => {
     const index = (day + first) % 7;
-    const formatted = formatGregory(new Date(2021, 7, 1 + index), locale, { weekday: 'short' });
-    return formatted ?? WEEKDAYS_EN[index]!;
+    const formatted = formatGregory(new Date(2021, 7, 1 + index), locale, { weekday: width });
+    return formatted ?? (width === 'narrow' ? WEEKDAYS_EN[index]![0]! : WEEKDAYS_EN[index]!);
   });
 }
 
