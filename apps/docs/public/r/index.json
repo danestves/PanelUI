@@ -1096,7 +1096,8 @@
       "dialog",
       "frame",
       "icons",
-      "text"
+      "text",
+      "time"
     ],
     "docsPath": "components/planner"
   },

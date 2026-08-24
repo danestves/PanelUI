@@ -932,6 +932,87 @@ function plannerEntries(month: Date): PlannerEntry[] {
   ];
 }
 
+/*
+ * The tiles look gives a whole day over to one mark, so these carry an icon
+ * and a category — the icon is what the cell draws, the category is what tints
+ * it. Colours come from the theme's chart palette rather than hardcoded hex,
+ * so the tints follow it into every theme.
+ */
+const PLANNER_APP_CATEGORIES = [
+  { id: 'social', label: 'Social' },
+  { id: 'work', label: 'Work' },
+  { id: 'health', label: 'Health' },
+  { id: 'money', label: 'Money' },
+];
+
+function plannerAppEntries(month: Date): PlannerEntry[] {
+  const on = (day: number, label: string, category: string, initials: string) => ({
+    id: `${label}-${day}`,
+    date: new Date(month.getFullYear(), month.getMonth(), day),
+    label,
+    category,
+    icon: <Avatar size="sm" fallback={initials} />,
+  });
+  return [
+    on(3, 'Standup', 'work', 'ST'),
+    on(8, 'Gym', 'health', 'GY'),
+    on(11, 'Payday', 'money', 'PA'),
+    on(15, 'Launch', 'work', 'LA'),
+    on(17, 'Long run', 'health', 'LR'),
+    on(22, 'Team social', 'social', 'TS'),
+    on(28, 'Rent', 'money', 'RE'),
+  ];
+}
+
+const PLANNER_SCHEDULE_CATEGORIES = [
+  { id: 'work', label: 'Work' },
+  { id: 'personal', label: 'Personal' },
+  { id: 'travel', label: 'Travel' },
+];
+
+/*
+ * Times matter here: the agenda reads them off the date, and an entry left on
+ * midnight is listed as all-day. Both shapes are in the set so the list shows
+ * what it does with each.
+ */
+function plannerScheduleEntries(month: Date): PlannerEntry[] {
+  const at = (
+    day: number,
+    hour: number,
+    minute: number,
+    label: string,
+    category: string
+  ) => ({
+    id: `${label}-${day}-${hour}`,
+    date: new Date(month.getFullYear(), month.getMonth(), day, hour, minute),
+    label,
+    category,
+  });
+  const allDay = (day: number, label: string, category: string) => ({
+    id: `${label}-${day}`,
+    date: new Date(month.getFullYear(), month.getMonth(), day),
+    label,
+    category,
+  });
+  const today = new Date().getDate();
+  return [
+    at(today, 9, 0, 'Standup', 'work'),
+    at(today, 11, 30, 'Design review', 'work'),
+    at(today, 16, 0, 'One to one', 'work'),
+    at(today, 19, 30, 'Dinner', 'personal'),
+    allDay(today, 'On call', 'work'),
+    at(3, 9, 0, 'Standup', 'work'),
+    at(5, 14, 0, 'Retro', 'work'),
+    at(9, 7, 10, 'Flight to Lisbon', 'travel'),
+    allDay(10, 'Offsite', 'work'),
+    allDay(11, 'Offsite', 'work'),
+    at(12, 18, 45, 'Flight home', 'travel'),
+    at(18, 10, 0, 'Dentist', 'personal'),
+    at(23, 20, 0, 'Birthday drinks', 'personal'),
+    at(26, 9, 0, 'Standup', 'work'),
+  ];
+}
+
 function PlannerDayList({ entries }: { entries: PlannerEntry[] }) {
   if (entries.length === 0) {
     return (
@@ -1022,6 +1103,54 @@ function PlannerBareDemo() {
         categories={PLANNER_CATEGORIES}
       >
         <Planner.Grid />
+      </Planner>
+    </View>
+  );
+}
+
+function PlannerTilesDemo() {
+  const [month, setMonth] = useState(() => new Date());
+  return (
+    <Planner
+      variant="tiles"
+      month={month}
+      onMonthChange={setMonth}
+      entries={plannerAppEntries(month)}
+      categories={PLANNER_APP_CATEGORIES}
+    >
+      <Planner.Header>
+        <Planner.Title />
+        <Planner.Today />
+        <Planner.Nav />
+      </Planner.Header>
+      <Planner.Grid />
+    </Planner>
+  );
+}
+
+function PlannerScreenDemo() {
+  const [month, setMonth] = useState(() => new Date());
+  const [day, setDay] = useState<Date | null>(() => new Date());
+  return (
+    <View className="flex-1 p-4">
+      <Planner
+        fill
+        variant="chips"
+        frame={false}
+        month={month}
+        onMonthChange={setMonth}
+        selected={day}
+        onSelectedChange={setDay}
+        entries={plannerScheduleEntries(month)}
+        categories={PLANNER_SCHEDULE_CATEGORIES}
+      >
+        <Planner.Header>
+          <Planner.Title />
+          <Planner.Today />
+          <Planner.Nav />
+        </Planner.Header>
+        <Planner.Grid />
+        <Planner.Agenda hourCycle={24} />
       </Planner>
     </View>
   );
@@ -1292,8 +1421,17 @@ export const ENTRIES: ComponentEntry[] = [
     name: 'Planner',
     summary: 'A month of days, each carrying what falls on it',
     demos: [
+      {
+        label: 'A month and its day',
+        id: 'screen',
+        fullPage: true,
+        description:
+          'The whole screen: six weeks of named entries, and what falls on the day you tap listed under them.',
+        render: () => <PlannerScreenDemo />,
+      },
       { label: 'A month of renewals', render: () => <PlannerDemo /> },
       { label: 'Opening a day', render: () => <PlannerDetailsDemo /> },
+      { label: 'Icon tiles', render: () => <PlannerTilesDemo /> },
       { label: 'Without the frame', render: () => <PlannerBareDemo /> },
     ],
   },

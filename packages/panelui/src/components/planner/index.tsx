@@ -74,6 +74,7 @@ import {
   AppState,
   Platform,
   Pressable,
+  ScrollView,
   View,
   type ViewProps,
 } from 'react-native';
@@ -101,10 +102,13 @@ import {
 } from '../../utils/date';
 import { Dialog } from '../dialog';
 import { Frame } from '../frame';
+import { formatTime, timeFromDate, type HourCycle } from '../../utils/time';
 import {
   bucketByDay,
   dayAccessibilityLabel,
   entriesOn,
+  entryTimeMinutes,
+  sortByTime,
   summariseMonth,
   visibleEntries,
   type PlannerCountedCategory,
@@ -117,11 +121,30 @@ import {
 } from './planner-lifecycle';
 import { millisecondsUntilNextLocalDay } from './planner-today';
 
-/** How many of a day's entries a cell draws before it stops and counts. */
-const DEFAULT_ENTRY_LIMIT = 2;
+/**
+ * How many of a day's entries a cell draws before it stops and counts.
+ *
+ * `chips` gets one more because a chip is a row and a cell tall enough to name
+ * an entry is tall enough for three; `tiles` draws a single icon at the size of
+ * the tile, so the limit there is the look rather than a number.
+ */
+const DEFAULT_ENTRY_LIMIT: Record<PlannerVariant, number> = {
+  default: 2,
+  tiles: 1,
+  chips: 3,
+};
 
 /** The palette a category takes its dot from when it does not name a colour. */
 const PALETTE_SIZE = 5;
+
+/**
+ * How strongly a `tiles` day takes its category's colour.
+ *
+ * Low enough that the date in the corner and the icon over it both stay
+ * legible, high enough that the tile reads as coloured rather than as a tile
+ * somebody spilled something on.
+ */
+const TILE_TINT_OPACITY = 0.22;
 
 /** Stable wrapper keeps the native method's receiver and the hook dependency steady. */
 const announceMonth = (label: string) => {
@@ -135,6 +158,14 @@ const plannerVariants = tv({
     heading: 'flex-1 text-center',
     legend: 'flex-row flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3',
     swatch: 'h-2 w-2 rounded-full',
+  },
+  variants: {
+    /*
+     * The weeks share out the height instead of standing at their own. The
+     * weekday row keeps its natural height — it is a label, and stretching it
+     * only moves the letters away from the column they name.
+     */
+    fill: { true: { grid: 'flex-1', week: 'flex-1' } },
   },
 });
 
@@ -160,8 +191,45 @@ const dayVariants = tv({
     number: 'text-xs leading-none',
     marker: 'absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full',
     body: 'flex-1 flex-row items-center justify-center gap-0.5 pb-1',
+    /** The colour a day's entries give it, drawn under everything else. */
+    tint: 'absolute inset-0 rounded-xl',
+    /** One entry, named, in a cell with the height to name it. */
+    chip: 'w-full flex-row items-center gap-1 overflow-hidden rounded-md px-1 py-0.5',
+    overflow: 'leading-none',
   },
   variants: {
+    /*
+     * What a cell draws. One axis, because these are three answers to the same
+     * question and a cell can only give one of them.
+     */
+    variant: {
+      default: {},
+      /*
+       * A tile per day, carrying the one thing on it at the size of a mark
+       * rather than a marker. The date moves out of the way into the corner:
+       * it is how you find the day you want, not what the cell is showing.
+       */
+      tiles: {
+        cell: 'h-16 items-center justify-center px-0 pt-0',
+        number: 'absolute bottom-1.5 right-1.5 text-[10px]',
+        overflow: 'absolute left-1.5 top-1.5 leading-none',
+      },
+      /*
+       * Labelled entries stacked down the cell. A chip carries a word, so it
+       * needs a height a marker does not — hence the taller floor, and why
+       * `fill` is what this look really wants.
+       */
+      chips: {
+        cell: 'min-h-20 items-stretch gap-0.5 px-1 pb-1 pt-1',
+        body: 'flex-col items-stretch justify-start gap-0.5 pb-0',
+      },
+    },
+    /*
+     * Cells stretch to their container rather than standing at a fixed height.
+     * The grid is still six weeks, so what changes is how tall a week is, not
+     * how many there are.
+     */
+    fill: { true: { cell: 'h-auto min-h-0 flex-1' } },
     /** Inside the month being shown, as opposed to the days either side. */
     inMonth: {
       true: { cell: 'bg-muted/40', number: 'text-foreground' },
@@ -183,12 +251,22 @@ const dayVariants = tv({
     selected: { true: { cell: 'border-primary' } },
     disabled: { true: { cell: 'opacity-40' } },
   },
-  defaultVariants: { inMonth: true },
+  defaultVariants: { inMonth: true, variant: 'default' },
 });
 
 /* ------------------------------------------------------------------ *
  * Data
  * ------------------------------------------------------------------ */
+
+/**
+ * What a day cell draws.
+ *
+ * `default` is a number, a marker and small icons. `tiles` gives the day over
+ * to one large icon tinted with its category's colour, with the date in the
+ * corner. `chips` names each entry in a pill, which takes the height `fill`
+ * gives it.
+ */
+export type PlannerVariant = 'default' | 'tiles' | 'chips';
 
 /** One thing that falls on a day. */
 export interface PlannerEntry {
@@ -230,6 +308,8 @@ interface PlannerContextValue {
   colorOf: (category: string | undefined) => string | undefined;
   summary: { total: number; categories: PlannerCountedCategory[] };
   entryLimit: number;
+  variant: PlannerVariant;
+  fill: boolean;
   weekStartsOn: number;
   grid: Date[][];
   locale: DateLocale;
@@ -324,7 +404,21 @@ export interface PlannerProps extends Omit<ViewProps, 'children'> {
   onSelectedChange?: (date: Date | null) => void;
   /** Runs before the selection moves, whether or not `Details` is present. */
   onDayPress?: (date: Date, entries: PlannerEntry[]) => void;
-  /** How many entries a cell draws before it counts the rest. Default `2`. */
+  /**
+   * What each day draws. `tiles` is one large icon per day, tinted by its
+   * category; `chips` names every entry and needs the height to do it.
+   */
+  variant?: PlannerVariant;
+  /**
+   * Stretch the grid to its container instead of standing at its own height.
+   * For a planner that owns a screen — the six weeks share out whatever is
+   * left after the header, the legend and anything below them.
+   */
+  fill?: boolean;
+  /**
+   * How many entries a cell draws before it counts the rest. Default `2`, or
+   * `3` under `chips`, which has the room; `tiles` draws one whatever you say.
+   */
   entryLimit?: number;
   /** First day of the week, 0 is Sunday. Defaults to the locale's. */
   weekStartsOn?: number | 'auto';
@@ -348,7 +442,9 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
       defaultSelected = null,
       onSelectedChange,
       onDayPress,
-      entryLimit = DEFAULT_ENTRY_LIMIT,
+      variant = 'default',
+      fill = false,
+      entryLimit,
       weekStartsOn = 'auto',
       locale,
       calendar = 'gregory',
@@ -358,6 +454,7 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
     },
     ref
   ) => {
+    const resolvedEntryLimit = entryLimit ?? DEFAULT_ENTRY_LIMIT[variant];
     const system = resolveCalendar(calendar, locale);
     const palette = usePalette();
     const today = useToday();
@@ -456,7 +553,9 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
         categoryLabels,
         colorOf,
         summary,
-        entryLimit,
+        entryLimit: resolvedEntryLimit,
+        variant,
+        fill,
         weekStartsOn: normalizedWeekStart,
         grid,
         locale,
@@ -466,8 +565,8 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
       }),
       [
         month, setMonth, today, selected, select, days, categories, categoryLabels,
-        colorOf, summary, entryLimit, normalizedWeekStart, grid, locale, system,
-        isInMonth, onDayPress,
+        colorOf, summary, resolvedEntryLimit, variant, fill, normalizedWeekStart,
+        grid, locale, system, isInMonth, onDayPress,
       ]
     );
 
@@ -487,13 +586,16 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
         {frame ? (
           // Full width by default: the grid is seven equal columns, and a
           // container that sizes to its content collapses them to the width of
-          // a two-digit number.
-          <Frame ref={ref} className={cn('w-full', className)} {...props}>
+          // a two-digit number. Under `fill` the panel has to flex too, or the
+          // grid inside it stretches against a container that does not.
+          <Frame ref={ref} className={cn('w-full', fill && 'flex-1', className)} {...props}>
             {header}
-            <Frame.Panel dividers={false}>{body}</Frame.Panel>
+            <Frame.Panel dividers={false} className={fill ? 'flex-1' : undefined}>
+              {body}
+            </Frame.Panel>
           </Frame>
         ) : (
-          <View ref={ref} className={cn('w-full', className)} {...props}>
+          <View ref={ref} className={cn('w-full', fill && 'flex-1', className)} {...props}>
             {header}
             {body}
           </View>
@@ -685,17 +787,30 @@ const PlannerGridNavigationContext = createContext<PlannerGridNavigationContextV
  * weekday headings are hidden rather than read out 42 times over.
  */
 function PlannerGrid({ className, renderDay }: PlannerGridProps) {
-  const { grid: weeks, weekStartsOn, locale, selected, today, isInMonth } =
+  const { grid: weeks, weekStartsOn, locale, selected, today, isInMonth, variant, fill } =
     usePlanner('Planner.Grid');
-  const { grid, week: weekRow, heading } = plannerVariants();
+  const { grid, week: weekRow, heading } = plannerVariants({ fill });
+  /*
+   * `tiles` leaves the days either side of the month blank, so its columns are
+   * told apart by position alone and a single letter is enough to head them.
+   */
   const headings = useMemo(
-    () => weekdayNames(locale, weekStartsOn),
-    [locale, weekStartsOn]
+    () => weekdayNames(locale, weekStartsOn, variant === 'tiles' ? 'narrow' : 'short'),
+    [locale, weekStartsOn, variant]
   );
   const dates = useMemo(() => weeks.flat(), [weeks]);
   const indexByDay = useMemo(
     () => new Map(dates.map((date, index) => [date.getTime(), index])),
     [dates]
+  );
+  /*
+   * A blank cell has nothing to focus, so arrow keys step over it rather than
+   * landing on a day that is not drawn and losing focus altogether.
+   */
+  const navigable = useMemo(
+    () =>
+      variant === 'tiles' ? (index: number) => isInMonth(dates[index] ?? today) : undefined,
+    [variant, dates, isInMonth, today]
   );
   const initialDay = selected ?? today;
   const [activeDay, setActiveDay] = useState(initialDay.getTime());
@@ -719,13 +834,19 @@ function PlannerGrid({ className, renderDay }: PlannerGridProps) {
   );
   const focus = useCallback(
     (index: number, event: PlannerGridKeyDownEvent) => {
-      const target = plannerGridTarget(event.nativeEvent.key ?? '', index, dates.length);
+      const target = plannerGridTarget(
+        event.nativeEvent.key ?? '',
+        index,
+        dates.length,
+        7,
+        navigable
+      );
       if (target === null) return;
       event.preventDefault();
       makeActive(target);
       refs.current.get(target)?.focus();
     },
-    [dates.length, makeActive]
+    [dates.length, makeActive, navigable]
   );
   const navigation = useMemo<PlannerGridNavigationContextValue>(
     () => ({ activeIndex, indexByDay, register, focus, makeActive }),
@@ -740,8 +861,13 @@ function PlannerGrid({ className, renderDay }: PlannerGridProps) {
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
         >
-          {headings.map((label) => (
-            <Text key={label} size="xs" muted className={heading()}>
+          {/*
+            Keyed by position rather than by the word: narrow names repeat in
+            plenty of locales — English has T twice and S twice — and a column
+            is identified by where it is, not by the letter over it.
+          */}
+          {headings.map((label, position) => (
+            <Text key={position} size="xs" muted className={heading()}>
               {label.toUpperCase()}
             </Text>
           ))}
@@ -769,7 +895,7 @@ export interface PlannerDayProps {
 function PlannerDay({ date, renderDay }: PlannerDayProps) {
   const {
     days, today, selected, select, colorOf, categoryLabels,
-    entryLimit, locale, system, isInMonth, onDayPress,
+    entryLimit, variant, fill, locale, system, isInMonth, onDayPress,
   } = usePlanner('Planner.Day');
   const navigation = useContext(PlannerGridNavigationContext);
   const registerGridCell = navigation?.register;
@@ -782,7 +908,14 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
   const isSelected = selected ? isSameDay(date, selected) : false;
   const { shown, overflow } = visibleEntries(entries, entryLimit);
   const drawable = shown.filter((entry) => entry.icon);
-  const styles = dayVariants({ inMonth, today: isToday, selected: isSelected });
+  const styles = dayVariants({ variant, fill, inMonth, today: isToday, selected: isSelected });
+  /*
+   * The colour the day's entries give it. The first entry naming a category the
+   * planner knows wins, and an uncategorised day gets nothing — the tint is a
+   * signal about what is on the day, so a day with no answer stays plain rather
+   * than being coloured for the sake of it.
+   */
+  const tint = markerColor(entries, colorOf);
 
   const label = dayAccessibilityLabel(
     calendarLongDate(date, system, locale),
@@ -828,6 +961,23 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
     );
   }
 
+  /*
+   * `tiles` leaves the days either side of the month out altogether. The row
+   * still holds their column, so the grid is six weeks whatever month it is
+   * showing, but there is no tile, no number and nothing to press or to read
+   * out: a blank is the answer, and drawing a faded one only invites the press
+   * it is going to ignore.
+   */
+  if (variant === 'tiles' && !inMonth) {
+    return (
+      <View
+        className={cn('mx-0.5 flex-1', fill ? 'min-h-0' : 'h-16')}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      />
+    );
+  }
+
   return (
     <Pressable
       {...(webGridProps as ViewProps)}
@@ -838,10 +988,37 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
       accessibilityState={{ selected: isSelected }}
       className={styles.cell()}
     >
+      {/*
+        The tint sits under the content rather than on the cell itself: the
+        colour arrives as a runtime string from the theme, so it cannot go
+        through a class with an opacity on it, and painting the cell at full
+        strength would take the number down with it.
+      */}
+      {variant === 'tiles' && tint ? (
+        <View
+          pointerEvents="none"
+          className={styles.tint()}
+          style={{ backgroundColor: tint, opacity: TILE_TINT_OPACITY }}
+        />
+      ) : null}
+
       <Text className={styles.number()}>{calendarDayNumber(date, system, locale)}</Text>
 
-      {entries.length > 0 ? (
-        <View className={styles.marker()} style={{ backgroundColor: markerColor(entries, colorOf) }} />
+      {variant === 'default' && entries.length > 0 ? (
+        <View className={styles.marker()} style={{ backgroundColor: tint }} />
+      ) : null}
+
+      {variant === 'chips' ? (
+        <View className={styles.body()}>
+          {shown.map((entry) => (
+            <PlannerChip key={entry.id} entry={entry} color={colorOf(entry.category)} />
+          ))}
+          {overflow > 0 ? (
+            <Text size="xs" muted className={styles.overflow()} numberOfLines={1}>
+              +{overflow} more
+            </Text>
+          ) : null}
+        </View>
       ) : null}
 
       {/*
@@ -850,19 +1027,49 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
         "something is here" with its marker; adding a bare "+3" under an empty
         row says it twice, in a way that looks like a stray number.
       */}
-      {drawable.length > 0 ? (
+      {variant !== 'chips' && drawable.length > 0 ? (
         <View className={styles.body()}>
           {drawable.map((entry) => (
             <View key={entry.id}>{entry.icon}</View>
           ))}
           {overflow > 0 ? (
-            <Text size="xs" muted className="leading-none">
+            <Text size="xs" muted className={styles.overflow()}>
               +{overflow}
             </Text>
           ) : null}
         </View>
       ) : null}
     </Pressable>
+  );
+}
+
+/**
+ * One named entry inside a `chips` cell.
+ *
+ * A wash of the category's colour rather than a solid pill of it, with a bar
+ * of the colour at full strength down the leading edge. A solid chip would
+ * have to carry its label in a colour chosen against it, and a category colour
+ * is the caller's — there is no knowing what would be legible on top.
+ */
+function PlannerChip({ entry, color }: { entry: PlannerEntry; color?: string }) {
+  const { chip } = dayVariants();
+  return (
+    <View className={chip()}>
+      {color ? (
+        <>
+          <View
+            pointerEvents="none"
+            className="absolute inset-0"
+            style={{ backgroundColor: color, opacity: TILE_TINT_OPACITY }}
+          />
+          <View className="h-full w-0.5 rounded-full" style={{ backgroundColor: color }} />
+        </>
+      ) : null}
+      {entry.icon}
+      <Text size="xs" numberOfLines={1} className="min-w-0 flex-1 leading-none">
+        {entry.label}
+      </Text>
+    </View>
   );
 }
 PlannerDay.displayName = 'Planner.Day';
@@ -1012,6 +1219,120 @@ function PlannerDetails({ className, title, description, children }: PlannerDeta
 }
 PlannerDetails.displayName = 'Planner.Details';
 
+/* ------------------------------------------------------------------ *
+ * Agenda
+ * ------------------------------------------------------------------ */
+
+export interface PlannerAgendaProps {
+  className?: string;
+  /** 12- or 24-hour times. Defaults to 12. */
+  hourCycle?: HourCycle;
+  /** Replaces the line shown when the day carries nothing. */
+  empty?: ReactNode;
+  /** Draws the rows yourself, the way `Details` does. */
+  children?: (date: Date, entries: PlannerEntry[]) => ReactNode;
+}
+
+/**
+ * What falls on the open day, listed under the grid.
+ *
+ * The same data `Details` puts in a dialog, shown in place instead. Which one
+ * to reach for is a question about the screen rather than about the data: a
+ * planner sharing a screen opens a dialog over it, and a planner that owns one
+ * has the room to keep the list on show while you move between days.
+ *
+ * It falls back to today when nothing is open, so the list is never empty on
+ * arrival for want of a press.
+ */
+function PlannerAgenda({ className, hourCycle = 12, empty, children }: PlannerAgendaProps) {
+  const { selected, days, system, locale, colorOf, categoryLabels } =
+    usePlanner('Planner.Agenda');
+  const day = selected ?? undefined;
+  const entries = useMemo(
+    () => (day ? sortByTime(entriesOn(days, day)) : []),
+    [day, days]
+  );
+
+  return (
+    <View className={cn('flex-1 gap-2 border-t border-border px-4 pt-3', className)}>
+      <Text size="sm" weight="medium">
+        {day ? calendarLongDate(day, system, locale) : ''}
+      </Text>
+      {day && children ? (
+        children(day, entries)
+      ) : entries.length === 0 ? (
+        <Text size="sm" muted>
+          {empty ?? 'Nothing on this day.'}
+        </Text>
+      ) : (
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 16, gap: 2 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {entries.map((entry) => (
+            <PlannerAgendaRow
+              key={entry.id}
+              entry={entry}
+              color={colorOf(entry.category)}
+              category={entry.category ? categoryLabels.get(entry.category) : undefined}
+              hourCycle={hourCycle}
+              locale={locale}
+            />
+          ))}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+PlannerAgenda.displayName = 'Planner.Agenda';
+
+/**
+ * One entry in the agenda.
+ *
+ * The time column is a fixed width so the labels line up down the list, and an
+ * entry landing exactly on midnight reads as all-day: the grid has only ever
+ * used an entry's day, so a set built without times would otherwise render as
+ * a column of midnights.
+ */
+function PlannerAgendaRow({
+  entry,
+  color,
+  category,
+  hourCycle,
+  locale,
+}: {
+  entry: PlannerEntry;
+  color?: string;
+  category?: string;
+  hourCycle: HourCycle;
+  locale: DateLocale;
+}) {
+  const at = entryTimeMinutes(entry.date);
+  const when = at === null ? 'All day' : formatTime(timeFromDate(entry.date), { hourCycle, locale });
+
+  return (
+    <View className="flex-row items-center gap-3 py-1.5">
+      <View
+        className="h-8 w-0.5 rounded-full bg-border"
+        style={color ? { backgroundColor: color } : undefined}
+      />
+      <Text size="xs" muted className="w-16">
+        {when}
+      </Text>
+      {entry.icon}
+      <Text size="sm" numberOfLines={1} className="min-w-0 flex-1">
+        {entry.label}
+      </Text>
+      {category ? (
+        <Text size="xs" muted>
+          {category}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
 export const Planner = Object.assign(PlannerRoot, {
   Header: PlannerHeader,
   Title: PlannerTitle,
@@ -1023,6 +1344,7 @@ export const Planner = Object.assign(PlannerRoot, {
   Legend: PlannerLegend,
   Summary: PlannerSummary,
   Footer: PlannerFooter,
+  Agenda: PlannerAgenda,
   Details: PlannerDetails,
 });
 
