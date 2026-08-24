@@ -72,10 +72,11 @@ import {
 import {
   AccessibilityInfo,
   AppState,
+  FlatList,
   Platform,
   Pressable,
-  ScrollView,
   View,
+  type ViewToken,
   type ViewProps,
 } from 'react-native';
 import { tv } from 'tailwind-variants';
@@ -102,19 +103,17 @@ import {
 } from '../../utils/date';
 import { Dialog } from '../dialog';
 import { Frame } from '../frame';
-import { formatTime, timeFromDate, type HourCycle } from '../../utils/time';
 import {
   bucketByDay,
   dayAccessibilityLabel,
   entriesOn,
-  entryTimeMinutes,
-  sortByTime,
   summariseMonth,
   visibleEntries,
   type PlannerCountedCategory,
 } from './planner-entries';
 import { usePlannerMonthAnnouncement } from './planner-announcement';
 import { plannerGridTarget } from './planner-grid-navigation';
+import { weekAnchor, weekDays, weekIndex, weekRange } from './planner-weeks';
 import {
   usePlannerMonthLifecycle,
   usePlannerSelectionLifecycle,
@@ -124,14 +123,14 @@ import { millisecondsUntilNextLocalDay } from './planner-today';
 /**
  * How many of a day's entries a cell draws before it stops and counts.
  *
- * `chips` gets one more because a chip is a row and a cell tall enough to name
- * an entry is tall enough for three; `tiles` draws a single icon at the size of
- * the tile, so the limit there is the look rather than a number.
+ * `calendar` gets one more because a named entry is a row, and a cell tall
+ * enough to name one is tall enough for three; `tiles` draws a single icon at
+ * the size of the tile, so the limit there is the look rather than a number.
  */
 const DEFAULT_ENTRY_LIMIT: Record<PlannerVariant, number> = {
   default: 2,
   tiles: 1,
-  chips: 3,
+  calendar: 3,
 };
 
 /** The palette a category takes its dot from when it does not name a colour. */
@@ -141,10 +140,25 @@ const PALETTE_SIZE = 5;
  * How strongly a `tiles` day takes its category's colour.
  *
  * Low enough that the date in the corner and the icon over it both stay
- * legible, high enough that the tile reads as coloured rather than as a tile
- * somebody spilled something on.
+ * legible, high enough that a brand colour arrives as that brand rather than as
+ * a grey tile with a suggestion of one.
  */
-const TILE_TINT_OPACITY = 0.22;
+const TILE_TINT_OPACITY = 0.32;
+
+/**
+ * The height a `tiles` grid reserves, and what it is made of.
+ *
+ * Six weeks' worth, always — but only the weeks the month actually spans are
+ * drawn, and they share the reserved height out between them. A five-week
+ * month therefore has slightly taller tiles than a six-week one and no band of
+ * empty space under the last row, while the panel itself never changes size as
+ * you page through the year. Reserving the height and leaving the sixth row
+ * blank, or dropping the row and letting the panel shrink, each fix one of
+ * those at the cost of the other.
+ */
+const TILE_ROW_HEIGHT = 64;
+const TILE_ROW_GAP = 4;
+const TILE_GRID_HEIGHT = TILE_ROW_HEIGHT * 6 + TILE_ROW_GAP * 5;
 
 /** Stable wrapper keeps the native method's receiver and the hook dependency steady. */
 const announceMonth = (label: string) => {
@@ -182,10 +196,10 @@ const dayVariants = tv({
      * icon, and a circle wastes the corners it needs for them.
      */
     /*
-     * The transparent border is load-bearing: the open day draws one, and a
-     * cell that only grows a border when it is picked shifts its contents by a
-     * point at the moment you look at it. Every cell reserves the point; the
-     * variants below only colour it.
+     * The transparent border is load-bearing: today and the open day both draw
+     * one, and a cell that only grows a border when it is picked shifts its
+     * contents by a point at the moment you look at it. Every cell reserves the
+     * point; the variants below only colour it.
      */
     cell: 'mx-0.5 h-14 flex-1 rounded-xl border border-transparent px-1.5 pt-1.5',
     number: 'text-xs leading-none',
@@ -193,37 +207,19 @@ const dayVariants = tv({
     body: 'flex-1 flex-row items-center justify-center gap-0.5 pb-1',
     /** The colour a day's entries give it, drawn under everything else. */
     tint: 'absolute inset-0 rounded-xl',
+    /*
+     * The corners of a tile. These are Views rather than classes on the Text
+     * itself: a Text takes its typography from a class but not its position,
+     * so a number told to sit in a corner stayed where the layout put it —
+     * dead centre, under the icon.
+     */
+    corner: 'absolute bottom-1 right-1.5',
+    counter: 'absolute left-1.5 top-1',
     /** One entry, named, in a cell with the height to name it. */
-    chip: 'w-full flex-row items-center gap-1 overflow-hidden rounded-md px-1 py-0.5',
+    chip: 'w-full overflow-hidden rounded-sm bg-muted px-1 py-0.5',
     overflow: 'leading-none',
   },
   variants: {
-    /*
-     * What a cell draws. One axis, because these are three answers to the same
-     * question and a cell can only give one of them.
-     */
-    variant: {
-      default: {},
-      /*
-       * A tile per day, carrying the one thing on it at the size of a mark
-       * rather than a marker. The date moves out of the way into the corner:
-       * it is how you find the day you want, not what the cell is showing.
-       */
-      tiles: {
-        cell: 'h-16 items-center justify-center px-0 pt-0',
-        number: 'absolute bottom-1.5 right-1.5 text-[10px]',
-        overflow: 'absolute left-1.5 top-1.5 leading-none',
-      },
-      /*
-       * Labelled entries stacked down the cell. A chip carries a word, so it
-       * needs a height a marker does not — hence the taller floor, and why
-       * `fill` is what this look really wants.
-       */
-      chips: {
-        cell: 'min-h-20 items-stretch gap-0.5 px-1 pb-1 pt-1',
-        body: 'flex-col items-stretch justify-start gap-0.5 pb-0',
-      },
-    },
     /*
      * Cells stretch to their container rather than standing at a fixed height.
      * The grid is still six weeks, so what changes is how tall a week is, not
@@ -236,21 +232,54 @@ const dayVariants = tv({
       false: { cell: 'bg-muted/15', number: 'text-muted-foreground/40' },
     },
     /*
-     * Today fills the tile; the open day rings it. Two fills would be the
-     * problem — two channels are not, and the fill is the one that has to
+     * Today rings the tile; the open day fills it. Two rings would be the
+     * problem — two channels are not, and the ring is the one that has to
      * survive being read at a glance across forty-two tiles.
-     *
-     * A lit tile rather than an outline, because today's mark is on screen
-     * permanently and a hairline in the foreground colour is then the loudest
-     * thing on the grid. Twelve percent reads as "this one" beside neighbours
-     * at three, without drawing a line around it. The two marks no longer
-     * contend for the same property, so a day that is both needs no rule of
-     * its own — it takes the fill from one and the border from the other.
      */
-    today: { true: { cell: 'bg-foreground/12', number: 'font-semibold' } },
-    selected: { true: { cell: 'border-primary' } },
+    today: { true: { cell: 'border-foreground', number: 'font-semibold' } },
+    selected: { true: { cell: 'border-primary/60 bg-primary/10' } },
     disabled: { true: { cell: 'opacity-40' } },
+    /*
+     * What a cell draws. One axis, because these are three answers to the same
+     * question and a cell can only give one of them.
+     *
+     * Last, so a look can undo what the states above it set. `calendar` has no
+     * tile to ring or fill, so it has to be able to take the background and the
+     * border back off a cell that today or the open day just gave one to.
+     */
+    variant: {
+      default: {},
+      /*
+       * A tile per day, carrying the one thing on it at the size of a mark
+       * rather than a marker. The date moves out of the way into the corner:
+       * it is how you find the day you want, not what the cell is showing.
+       */
+      tiles: {
+        cell: 'h-full items-center justify-center px-0 pt-0',
+        overflow: 'leading-none',
+      },
+      /*
+       * Named entries stacked down an open cell. No tile, because a tile per
+       * day and a block per entry are two boxes saying the same thing and the
+       * entries are the ones carrying words — the weeks are ruled off instead,
+       * which separates them without enclosing anything.
+       */
+      calendar: {
+        cell: 'mx-0 h-full min-h-0 items-stretch gap-px rounded-none border-transparent bg-transparent px-1 pb-1 pt-1.5',
+        number: 'text-center',
+        body: 'flex-col items-stretch justify-start gap-px pb-0',
+        overflow: 'text-center leading-none',
+      },
+    },
   },
+  compoundVariants: [
+    /*
+     * Today, and open. Declaration order would otherwise hand the border to
+     * `selected` and lose the one mark that says which day it actually is —
+     * so the ring is restated over the fill.
+     */
+    { today: true, selected: true, class: { cell: 'border-foreground bg-primary/10' } },
+  ],
   defaultVariants: { inMonth: true, variant: 'default' },
 });
 
@@ -263,10 +292,10 @@ const dayVariants = tv({
  *
  * `default` is a number, a marker and small icons. `tiles` gives the day over
  * to one large icon tinted with its category's colour, with the date in the
- * corner. `chips` names each entry in a pill, which takes the height `fill`
- * gives it.
+ * corner. `calendar` names each entry in a block under a centred date, on an
+ * open grid ruled off by week.
  */
-export type PlannerVariant = 'default' | 'tiles' | 'chips';
+export type PlannerVariant = 'default' | 'tiles' | 'calendar';
 
 /** One thing that falls on a day. */
 export interface PlannerEntry {
@@ -280,6 +309,12 @@ export interface PlannerEntry {
   category?: string;
   /** Drawn in the cell — a brand mark, an avatar, a glyph. */
   icon?: ReactNode;
+  /**
+   * This entry's own colour, for a mark that belongs to the entry rather than
+   * to a group of them — a brand. It wins over the category's colour, and
+   * under `tiles` it is what tints the day.
+   */
+  color?: string;
 }
 
 /** A group of entries: the key to a colour, and a line in the legend. */
@@ -299,6 +334,8 @@ export interface PlannerCategory {
 interface PlannerContextValue {
   month: Date;
   setMonth: (month: Date) => void;
+  /** Moves the month without announcing it. For scrolling, which is continuous. */
+  syncMonth: (month: Date) => void;
   today: Date;
   selected: Date | null;
   select: (date: Date | null) => void;
@@ -406,7 +443,7 @@ export interface PlannerProps extends Omit<ViewProps, 'children'> {
   onDayPress?: (date: Date, entries: PlannerEntry[]) => void;
   /**
    * What each day draws. `tiles` is one large icon per day, tinted by its
-   * category; `chips` names every entry and needs the height to do it.
+   * category; `calendar` names every entry and needs the height to do it.
    */
   variant?: PlannerVariant;
   /**
@@ -417,7 +454,8 @@ export interface PlannerProps extends Omit<ViewProps, 'children'> {
   fill?: boolean;
   /**
    * How many entries a cell draws before it counts the rest. Default `2`, or
-   * `3` under `chips`, which has the room; `tiles` draws one whatever you say.
+   * `3` under `calendar`, which has the room; `tiles` draws one whatever you
+   * pass.
    */
   entryLimit?: number;
   /** First day of the week, 0 is Sunday. Defaults to the locale's. */
@@ -481,6 +519,18 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
       monthLabel: calendarMonthLabel(month, system, locale),
       announce: announceMonth,
     });
+    /*
+     * Scrolling changes the month continuously, and announcing each one as it
+     * goes would talk over somebody reading the weeks. The announcement belongs
+     * to a deliberate move — the arrows, the Today pill — so a scroll reports
+     * the change and stays quiet about it.
+     */
+    const syncMonth = useCallback(
+      (next: Date) => {
+        requestMonth(next);
+      },
+      [requestMonth]
+    );
     const setMonth = useCallback(
       (next: Date) => {
         expectMonthAnnouncement(settleMonth(next));
@@ -545,6 +595,7 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
       () => ({
         month,
         setMonth,
+        syncMonth,
         today,
         selected,
         select,
@@ -564,7 +615,7 @@ const PlannerRoot = forwardRef<View, PlannerProps>(
         onDayPress,
       }),
       [
-        month, setMonth, today, selected, select, days, categories, categoryLabels,
+        month, setMonth, syncMonth, today, selected, select, days, categories, categoryLabels,
         colorOf, summary, resolvedEntryLimit, variant, fill, normalizedWeekStart,
         grid, locale, system, isInMonth, onDayPress,
       ]
@@ -633,9 +684,15 @@ function PlannerHeader({ children }: PlannerHeaderProps) {
 
   return (
     <Frame.Header>
-      <View className="min-w-0 flex-1 flex-row items-center gap-2">{lead}</View>
+      <View className="min-w-0 shrink flex-row items-center gap-2">{lead}</View>
+      {/*
+        `ml-auto` rather than a flexible lead. The nav belongs against the right
+        edge whatever is to its left — one short title, a title and a pill, or
+        nothing at all — and pushing it there with a margin says that directly
+        instead of leaving it to whether the thing beside it happened to grow.
+      */}
       {trailing.length > 0 ? (
-        <View className="shrink-0 flex-row items-center gap-1.5">{trailing}</View>
+        <View className="ml-auto shrink-0 flex-row items-center gap-1.5">{trailing}</View>
       ) : null}
     </Frame.Header>
   );
@@ -798,7 +855,16 @@ function PlannerGrid({ className, renderDay }: PlannerGridProps) {
     () => weekdayNames(locale, weekStartsOn, variant === 'tiles' ? 'narrow' : 'short'),
     [locale, weekStartsOn, variant]
   );
-  const dates = useMemo(() => weeks.flat(), [weeks]);
+  /*
+   * `tiles` draws nothing for the days either side of the month, so a week made
+   * only of those is a band of empty space rather than a week. It is dropped,
+   * and the grid keeps its height by letting the weeks that remain stretch.
+   */
+  const shownWeeks = useMemo(
+    () => (variant === 'tiles' ? weeks.filter((week) => week.some(isInMonth)) : weeks),
+    [weeks, variant, isInMonth]
+  );
+  const dates = useMemo(() => shownWeeks.flat(), [shownWeeks]);
   const indexByDay = useMemo(
     () => new Map(dates.map((date, index) => [date.getTime(), index])),
     [dates]
@@ -855,7 +921,10 @@ function PlannerGrid({ className, renderDay }: PlannerGridProps) {
 
   return (
     <PlannerGridNavigationContext.Provider value={renderDay ? null : navigation}>
-      <View className={grid({ className })}>
+      <View
+        className={grid({ className })}
+        style={variant === 'tiles' && !fill ? { height: TILE_GRID_HEIGHT } : undefined}
+      >
         <View
           className={weekRow()}
           accessibilityElementsHidden
@@ -873,8 +942,8 @@ function PlannerGrid({ className, renderDay }: PlannerGridProps) {
           ))}
         </View>
 
-        {weeks.map((week, index) => (
-          <View key={index} className={weekRow()}>
+        {shownWeeks.map((week, index) => (
+          <View key={index} className={cn(weekRow(), variant === 'tiles' && 'flex-1')}>
             {week.map((date) => (
               <PlannerDay key={date.getTime()} date={date} renderDay={renderDay} />
             ))}
@@ -923,9 +992,15 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
     categoryLabels
   );
 
+  /*
+   * Pressing the open day again closes it. Without this the mark is a one-way
+   * door: a planner with no `Details` bound has nothing to dismiss, so the day
+   * you pressed stays ringed until you press a different one and there is no
+   * way back to none selected.
+   */
   const press = () => {
     onDayPress?.(date, entries);
-    select(date);
+    select(isSelected ? null : date);
   };
   const gridIndex = navigation?.indexByDay.get(date.getTime());
   const setRef = useCallback(
@@ -1002,20 +1077,58 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
         />
       ) : null}
 
-      <Text className={styles.number()}>{calendarDayNumber(date, system, locale)}</Text>
+      {variant === 'tiles' ? (
+        <View className={styles.corner()} pointerEvents="none">
+          <Text size="xs" className={styles.number()}>
+            {calendarDayNumber(date, system, locale)}
+          </Text>
+        </View>
+      ) : variant === 'calendar' ? (
+        /*
+         * A disc around the date rather than a ring around the cell. There is
+         * no tile here to ring, and the date is the only thing in the cell that
+         * is always present — so it is the only place a mark can go and be
+         * found in the same spot on every day of the month.
+         */
+        <View
+          className={cn(
+            'h-6 w-6 items-center justify-center self-center rounded-full',
+            isToday && 'bg-primary'
+          )}
+        >
+          <Text
+            size="xs"
+            className={cn(styles.number(), isToday && 'text-primary-foreground')}
+          >
+            {calendarDayNumber(date, system, locale)}
+          </Text>
+        </View>
+      ) : (
+        <Text className={styles.number()}>{calendarDayNumber(date, system, locale)}</Text>
+      )}
 
       {variant === 'default' && entries.length > 0 ? (
         <View className={styles.marker()} style={{ backgroundColor: tint }} />
       ) : null}
 
-      {variant === 'chips' ? (
+      {variant === 'calendar' ? (
         <View className={styles.body()}>
           {shown.map((entry) => (
-            <PlannerChip key={entry.id} entry={entry} color={colorOf(entry.category)} />
+            <PlannerChip
+              key={entry.id}
+              entry={entry}
+              color={entry.color ?? colorOf(entry.category)}
+            />
           ))}
+          {/*
+            Three dots, not a count. The cell has already run out of room for
+            the entries themselves, and "+2 more" spends a whole row of that
+            room on a number nobody acts on — the dots say there is more and
+            leave the row for an entry.
+          */}
           {overflow > 0 ? (
             <Text size="xs" muted className={styles.overflow()} numberOfLines={1}>
-              +{overflow} more
+              •••
             </Text>
           ) : null}
         </View>
@@ -1027,12 +1140,20 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
         "something is here" with its marker; adding a bare "+3" under an empty
         row says it twice, in a way that looks like a stray number.
       */}
-      {variant !== 'chips' && drawable.length > 0 ? (
+      {variant === 'tiles' && overflow > 0 ? (
+        <View className={styles.counter()} pointerEvents="none">
+          <Text size="xs" muted className={styles.overflow()}>
+            +{overflow}
+          </Text>
+        </View>
+      ) : null}
+
+      {variant !== 'calendar' && drawable.length > 0 ? (
         <View className={styles.body()}>
           {drawable.map((entry) => (
             <View key={entry.id}>{entry.icon}</View>
           ))}
-          {overflow > 0 ? (
+          {variant !== 'tiles' && overflow > 0 ? (
             <Text size="xs" muted className={styles.overflow()}>
               +{overflow}
             </Text>
@@ -1044,35 +1165,29 @@ function PlannerDay({ date, renderDay }: PlannerDayProps) {
 }
 
 /**
- * One named entry inside a `chips` cell.
+ * One named entry inside a `calendar` cell.
  *
- * A wash of the category's colour rather than a solid pill of it, with a bar
- * of the colour at full strength down the leading edge. A solid chip would
- * have to carry its label in a colour chosen against it, and a category colour
- * is the caller's — there is no knowing what would be legible on top.
+ * A solid block of the entry's colour with light text on it. That is a real
+ * constraint rather than a free choice: the colour is the caller's, so a pale
+ * one will not carry white well — but a wash with the label in the foreground
+ * colour makes every entry the same weight and loses the one thing the colour
+ * was for, which is telling them apart down a column at a glance.
  */
 function PlannerChip({ entry, color }: { entry: PlannerEntry; color?: string }) {
   const { chip } = dayVariants();
   return (
-    <View className={chip()}>
-      {color ? (
-        <>
-          <View
-            pointerEvents="none"
-            className="absolute inset-0"
-            style={{ backgroundColor: color, opacity: TILE_TINT_OPACITY }}
-          />
-          <View className="h-full w-0.5 rounded-full" style={{ backgroundColor: color }} />
-        </>
-      ) : null}
-      {entry.icon}
-      <Text size="xs" numberOfLines={1} className="min-w-0 flex-1 leading-none">
+    <View className={chip()} style={color ? { backgroundColor: color } : undefined}>
+      <Text
+        size="xs"
+        numberOfLines={1}
+        className={cn('leading-none', !color && 'text-foreground')}
+        style={color ? { color: '#ffffff' } : undefined}
+      >
         {entry.label}
       </Text>
     </View>
   );
 }
-PlannerDay.displayName = 'Planner.Day';
 
 /**
  * The dot's colour: the first entry that names a category the planner knows.
@@ -1086,7 +1201,9 @@ function markerColor(
   colorOf: (category: string | undefined) => string | undefined
 ): string | undefined {
   for (const entry of entries) {
-    const color = colorOf(entry.category);
+    // The entry's own colour first: a brand belongs to the thing, not to the
+    // group it was filed under.
+    const color = entry.color ?? colorOf(entry.category);
     if (color) return color;
   }
   return undefined;
@@ -1220,118 +1337,158 @@ function PlannerDetails({ className, title, description, children }: PlannerDeta
 PlannerDetails.displayName = 'Planner.Details';
 
 /* ------------------------------------------------------------------ *
- * Agenda
+ * Scroller
  * ------------------------------------------------------------------ */
 
-export interface PlannerAgendaProps {
+/** How many weeks either side of the opening month a scroller reaches by default. */
+const DEFAULT_SCROLLER_WEEKS = 53;
+
+/** The height of one week row, and enough of it for a date and three entries. */
+const DEFAULT_WEEK_HEIGHT = 96;
+
+export interface PlannerScrollerProps {
   className?: string;
-  /** 12- or 24-hour times. Defaults to 12. */
-  hourCycle?: HourCycle;
-  /** Replaces the line shown when the day carries nothing. */
-  empty?: ReactNode;
-  /** Draws the rows yourself, the way `Details` does. */
-  children?: (date: Date, entries: PlannerEntry[]) => ReactNode;
+  /**
+   * How many weeks either side of the opening month can be reached. Default
+   * `53`, about a year each way.
+   */
+  weeks?: number;
+  /** The height of one week row. Default `96`. */
+  rowHeight?: number;
+  /** Draws a cell yourself. It is handed the day and what falls on it. */
+  renderDay?: PlannerDayRenderer;
 }
 
 /**
- * What falls on the open day, listed under the grid.
+ * The weeks of the year, scrolled through rather than paged.
  *
- * The same data `Details` puts in a dialog, shown in place instead. Which one
- * to reach for is a question about the screen rather than about the data: a
- * planner sharing a screen opens a dialog over it, and a planner that owns one
- * has the room to keep the list on show while you move between days.
+ * A month grid answers "what does this month look like"; a scroller answers
+ * "what is coming", which does not stop at the end of a month. The week
+ * straddling the boundary is drawn once, in one piece, instead of appearing cut
+ * in half at the bottom of one page and again at the top of the next.
  *
- * It falls back to today when nothing is open, so the list is never empty on
- * arrival for want of a press.
+ * The range is bounded rather than endless. A scroller has to know its own
+ * height to place a scrollbar and to jump to a month without rendering its way
+ * there, and neither is possible over a list with no end.
+ *
+ * The month in the header follows the scroll: whichever month holds most of the
+ * first week on screen is the one named, and the days either side of it grey
+ * out. `Planner.Nav` and `Planner.Today` still work — they scroll the list
+ * rather than replacing what is in it.
  */
-function PlannerAgenda({ className, hourCycle = 12, empty, children }: PlannerAgendaProps) {
-  const { selected, days, system, locale, colorOf, categoryLabels } =
-    usePlanner('Planner.Agenda');
-  const day = selected ?? undefined;
-  const entries = useMemo(
-    () => (day ? sortByTime(entriesOn(days, day)) : []),
-    [day, days]
+function PlannerScroller({
+  className,
+  weeks: span = DEFAULT_SCROLLER_WEEKS,
+  rowHeight = DEFAULT_WEEK_HEIGHT,
+  renderDay,
+}: PlannerScrollerProps) {
+  const { month, syncMonth, weekStartsOn, locale, variant, system } =
+    usePlanner('Planner.Scroller');
+  const { week: weekRow, heading } = plannerVariants();
+  const list = useRef<FlatList<Date>>(null);
+
+  /*
+   * The range is anchored where the planner opened and never rebuilt. Rebuilding
+   * it around the current month would move every row's index under the scroll
+   * position each time the month changed, which is the one thing a list being
+   * scrolled must not do.
+   */
+  const [anchor] = useState(() => month);
+  const range = useMemo(
+    () => weekRange(anchor, weekStartsOn, span, span),
+    [anchor, weekStartsOn, span]
   );
 
-  return (
-    <View className={cn('flex-1 gap-2 border-t border-border px-4 pt-3', className)}>
-      <Text size="sm" weight="medium">
-        {day ? calendarLongDate(day, system, locale) : ''}
-      </Text>
-      {day && children ? (
-        children(day, entries)
-      ) : entries.length === 0 ? (
-        <Text size="sm" muted>
-          {empty ?? 'Nothing on this day.'}
-        </Text>
-      ) : (
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingBottom: 16, gap: 2 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {entries.map((entry) => (
-            <PlannerAgendaRow
-              key={entry.id}
-              entry={entry}
-              color={colorOf(entry.category)}
-              category={entry.category ? categoryLabels.get(entry.category) : undefined}
-              hourCycle={hourCycle}
-              locale={locale}
-            />
-          ))}
-        </ScrollView>
-      )}
-    </View>
+  const headings = useMemo(
+    () => weekdayNames(locale, weekStartsOn, 'narrow'),
+    [locale, weekStartsOn]
   );
-}
-PlannerAgenda.displayName = 'Planner.Agenda';
 
-/**
- * One entry in the agenda.
- *
- * The time column is a fixed width so the labels line up down the list, and an
- * entry landing exactly on midnight reads as all-day: the grid has only ever
- * used an entry's day, so a set built without times would otherwise render as
- * a column of midnights.
- */
-function PlannerAgendaRow({
-  entry,
-  color,
-  category,
-  hourCycle,
-  locale,
-}: {
-  entry: PlannerEntry;
-  color?: string;
-  category?: string;
-  hourCycle: HourCycle;
-  locale: DateLocale;
-}) {
-  const at = entryTimeMinutes(entry.date);
-  const when = at === null ? 'All day' : formatTime(timeFromDate(entry.date), { hourCycle, locale });
+  /*
+   * Which month the scroll is showing, reported up but not acted on here. The
+   * ref is what stops a scroll that stays inside one month from setting it over
+   * and over, and what stops the scroll this component performs in answer to a
+   * month change from reporting that same month straight back.
+   */
+  const reported = useRef(month.getTime());
+  const onViewable = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    const first = viewableItems[0]?.item as Date | undefined;
+    if (!first) return;
+    const next = startOfCalendarMonth(weekAnchor(first), system, locale);
+    if (next.getTime() === reported.current) return;
+    reported.current = next.getTime();
+    syncMonth(next);
+  });
+
+  /*
+   * A month arriving from outside — the arrows, the Today pill, a controlled
+   * prop — scrolls the list to it. A month the scroll itself just reported is
+   * already there, and scrolling to it again would fight the finger.
+   */
+  useEffect(() => {
+    if (month.getTime() === reported.current) return;
+    reported.current = month.getTime();
+    const index = weekIndex(range, month, weekStartsOn);
+    if (index >= 0) list.current?.scrollToIndex({ index, animated: true });
+  }, [month, range, weekStartsOn]);
+
+  const initialIndex = Math.max(0, weekIndex(range, month, weekStartsOn));
 
   return (
-    <View className="flex-row items-center gap-3 py-1.5">
+    <View className={cn('flex-1', className)}>
       <View
-        className="h-8 w-0.5 rounded-full bg-border"
-        style={color ? { backgroundColor: color } : undefined}
+        className={cn(weekRow(), 'px-1 pb-1')}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        {headings.map((label, position) => (
+          <Text key={position} size="xs" muted className={heading()}>
+            {label.toUpperCase()}
+          </Text>
+        ))}
+      </View>
+
+      <FlatList
+        ref={list}
+        data={range}
+        keyExtractor={(weekStart) => String(weekStart.getTime())}
+        initialScrollIndex={initialIndex}
+        // Every row is the same height, so the list can place any of them
+        // without measuring — which is what makes jumping to a month cheap.
+        getItemLayout={(_unused, index) => ({
+          length: rowHeight,
+          offset: rowHeight * index,
+          index,
+        })}
+        onViewableItemsChanged={onViewable.current}
+        viewabilityConfig={VIEWABILITY}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <View
+            className={cn(
+              weekRow(),
+              'border-t border-border px-1',
+              variant === 'calendar' && 'items-stretch'
+            )}
+            style={{ height: rowHeight }}
+          >
+            {weekDays(item).map((date) => (
+              <PlannerDay key={date.getTime()} date={date} renderDay={renderDay} />
+            ))}
+          </View>
+        )}
       />
-      <Text size="xs" muted className="w-16">
-        {when}
-      </Text>
-      {entry.icon}
-      <Text size="sm" numberOfLines={1} className="min-w-0 flex-1">
-        {entry.label}
-      </Text>
-      {category ? (
-        <Text size="xs" muted>
-          {category}
-        </Text>
-      ) : null}
     </View>
   );
 }
+PlannerScroller.displayName = 'Planner.Scroller';
+
+/*
+ * The first row more than half on screen is the one that names the month. A
+ * lower threshold hands the month over while the week is still mostly below the
+ * fold, which reads as the header changing early.
+ */
+const VIEWABILITY = { itemVisiblePercentThreshold: 60 };
 
 export const Planner = Object.assign(PlannerRoot, {
   Header: PlannerHeader,
@@ -1340,11 +1497,11 @@ export const Planner = Object.assign(PlannerRoot, {
   Nav: PlannerNav,
   Action: PlannerAction,
   Grid: PlannerGrid,
+  Scroller: PlannerScroller,
   Day: PlannerDay,
   Legend: PlannerLegend,
   Summary: PlannerSummary,
   Footer: PlannerFooter,
-  Agenda: PlannerAgenda,
   Details: PlannerDetails,
 });
 

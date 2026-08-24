@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bookmark, Copy, Flag, Link2, Pencil, Share2, Sparkles, TextSelect, Trash2 } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pressable, ScrollView, View } from "react-native";
+import { Image, Pressable, ScrollView, View } from "react-native";
 import { Avatar, BottomSheet, Button, ContextMenu, Card, Frame, InfoIcon, Input, Item, Label, Marker, Message, Meter, MessageScroller, Planner, type PlannerEntry, PlusSquareIcon, Popover, Progress, ProgressButton, QRCode, type QRCodeEyeBallShape, type QRCodeEyeFrameShape, type QRCodeModuleShape, SendIcon, ShareNodesIcon, Separator, Shimmer, Text, XIcon } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
@@ -933,35 +933,45 @@ function plannerEntries(month: Date): PlannerEntry[] {
 }
 
 /*
- * The tiles look gives a whole day over to one mark, so these carry an icon
- * and a category — the icon is what the cell draws, the category is what tints
- * it. Colours come from the theme's chart palette rather than hardcoded hex,
- * so the tints follow it into every theme.
+ * The tiles look gives a whole day over to one mark, so each of these carries a
+ * real logo and the brand's own colour. The colour is on the entry rather than
+ * on a category: a brand belongs to the thing, not to a group it was filed
+ * under, and a set like this would otherwise need one category per row.
+ *
+ * Logos are fetched as favicons so the demo carries no binary assets.
  */
-const PLANNER_APP_CATEGORIES = [
-  { id: 'social', label: 'Social' },
-  { id: 'work', label: 'Work' },
-  { id: 'health', label: 'Health' },
-  { id: 'money', label: 'Money' },
-];
+const brand = (
+  day: number,
+  label: string,
+  domain: string,
+  color: string
+): PlannerEntry => ({
+  id: `${label}-${day}`,
+  date: new Date(2026, 0, day),
+  label,
+  color,
+  icon: (
+    <Image
+      source={{ uri: `https://www.google.com/s2/favicons?domain=${domain}&sz=128` }}
+      style={{ width: 26, height: 26, borderRadius: 6 }}
+    />
+  ),
+});
 
 function plannerAppEntries(month: Date): PlannerEntry[] {
-  const on = (day: number, label: string, category: string, initials: string) => ({
-    id: `${label}-${day}`,
-    date: new Date(month.getFullYear(), month.getMonth(), day),
-    label,
-    category,
-    icon: <Avatar size="sm" fallback={initials} />,
+  const on = (entry: PlannerEntry): PlannerEntry => ({
+    ...entry,
+    date: new Date(month.getFullYear(), month.getMonth(), entry.date.getDate()),
   });
   return [
-    on(3, 'Standup', 'work', 'ST'),
-    on(8, 'Gym', 'health', 'GY'),
-    on(11, 'Payday', 'money', 'PA'),
-    on(15, 'Launch', 'work', 'LA'),
-    on(17, 'Long run', 'health', 'LR'),
-    on(22, 'Team social', 'social', 'TS'),
-    on(28, 'Rent', 'money', 'RE'),
-  ];
+    brand(3, 'Netflix', 'netflix.com', '#e50914'),
+    brand(8, 'Spotify', 'spotify.com', '#1db954'),
+    brand(11, 'Figma', 'figma.com', '#f24e1e'),
+    brand(15, 'YouTube', 'youtube.com', '#ff0000'),
+    brand(17, 'Dropbox', 'dropbox.com', '#0061ff'),
+    brand(22, 'Slack', 'slack.com', '#611f69'),
+    brand(28, 'Linear', 'linear.app', '#5e6ad2'),
+  ].map(on);
 }
 
 const PLANNER_SCHEDULE_CATEGORIES = [
@@ -971,46 +981,41 @@ const PLANNER_SCHEDULE_CATEGORIES = [
 ];
 
 /*
- * Times matter here: the agenda reads them off the date, and an entry left on
- * midnight is listed as all-day. Both shapes are in the set so the list shows
- * what it does with each.
+ * The scroller runs past the end of a month, so this covers several — entries
+ * built for one month alone would leave every week either side of it empty,
+ * which is the one thing a scrolling calendar makes obvious.
+ *
+ * Built once from today rather than from the month on show: regenerating them
+ * as the scroll changed the month would replace every entry's identity under a
+ * list that is mid-flight.
  */
-function plannerScheduleEntries(month: Date): PlannerEntry[] {
-  const at = (
-    day: number,
-    hour: number,
-    minute: number,
-    label: string,
-    category: string
-  ) => ({
-    id: `${label}-${day}-${hour}`,
-    date: new Date(month.getFullYear(), month.getMonth(), day, hour, minute),
-    label,
-    category,
-  });
-  const allDay = (day: number, label: string, category: string) => ({
-    id: `${label}-${day}`,
-    date: new Date(month.getFullYear(), month.getMonth(), day),
-    label,
-    category,
-  });
-  const today = new Date().getDate();
-  return [
-    at(today, 9, 0, 'Standup', 'work'),
-    at(today, 11, 30, 'Design review', 'work'),
-    at(today, 16, 0, 'One to one', 'work'),
-    at(today, 19, 30, 'Dinner', 'personal'),
-    allDay(today, 'On call', 'work'),
-    at(3, 9, 0, 'Standup', 'work'),
-    at(5, 14, 0, 'Retro', 'work'),
-    at(9, 7, 10, 'Flight to Lisbon', 'travel'),
-    allDay(10, 'Offsite', 'work'),
-    allDay(11, 'Offsite', 'work'),
-    at(12, 18, 45, 'Flight home', 'travel'),
-    at(18, 10, 0, 'Dentist', 'personal'),
-    at(23, 20, 0, 'Birthday drinks', 'personal'),
-    at(26, 9, 0, 'Standup', 'work'),
-  ];
+function plannerScheduleEntries(): PlannerEntry[] {
+  const base = new Date();
+  const out: PlannerEntry[] = [];
+  const at = (offset: number, hour: number, minute: number, label: string, category: string) => {
+    const date = new Date(base.getFullYear(), base.getMonth(), base.getDate() + offset, hour, minute);
+    out.push({ id: `${label}-${offset}-${hour}`, date, label, category });
+  };
+  const week = [
+    [0, 9, 0, 'Standup', 'work'],
+    [0, 11, 30, 'Design review', 'work'],
+    [0, 16, 0, 'One to one', 'work'],
+    [1, 9, 0, 'Standup', 'work'],
+    [2, 14, 0, 'Retro', 'work'],
+    [3, 19, 30, 'Dinner', 'personal'],
+    [5, 10, 0, 'Long run', 'personal'],
+  ] as const;
+  // Ten weeks back and twelve forward, so there is something on screen wherever
+  // the scroll lands within the range the demo can reach.
+  for (let offset = -10; offset <= 12; offset += 1) {
+    for (const [day, hour, minute, label, category] of week) {
+      at(offset * 7 + day, hour, minute, label, category);
+    }
+  }
+  at(9, 7, 10, 'Flight to Lisbon', 'travel');
+  at(12, 18, 45, 'Flight home', 'travel');
+  at(-4, 10, 0, 'Dentist', 'personal');
+  return out;
 }
 
 function PlannerDayList({ entries }: { entries: PlannerEntry[] }) {
@@ -1116,7 +1121,6 @@ function PlannerTilesDemo() {
       month={month}
       onMonthChange={setMonth}
       entries={plannerAppEntries(month)}
-      categories={PLANNER_APP_CATEGORIES}
     >
       <Planner.Header>
         <Planner.Title />
@@ -1130,29 +1134,27 @@ function PlannerTilesDemo() {
 
 function PlannerScreenDemo() {
   const [month, setMonth] = useState(() => new Date());
-  const [day, setDay] = useState<Date | null>(() => new Date());
+  const [day, setDay] = useState<Date | null>(null);
+  const entries = useMemo(() => plannerScheduleEntries(), []);
   return (
-    <View className="flex-1 p-4">
-      <Planner
-        fill
-        variant="chips"
-        frame={false}
-        month={month}
-        onMonthChange={setMonth}
-        selected={day}
-        onSelectedChange={setDay}
-        entries={plannerScheduleEntries(month)}
-        categories={PLANNER_SCHEDULE_CATEGORIES}
-      >
-        <Planner.Header>
-          <Planner.Title />
-          <Planner.Today />
-          <Planner.Nav />
-        </Planner.Header>
-        <Planner.Grid />
-        <Planner.Agenda hourCycle={24} />
-      </Planner>
-    </View>
+    <Planner
+      fill
+      variant="calendar"
+      frame={false}
+      month={month}
+      onMonthChange={setMonth}
+      selected={day}
+      onSelectedChange={setDay}
+      entries={entries}
+      categories={PLANNER_SCHEDULE_CATEGORIES}
+    >
+      <Planner.Header>
+        <Planner.Title />
+        <Planner.Today />
+        <Planner.Nav />
+      </Planner.Header>
+      <Planner.Scroller />
+    </Planner>
   );
 }
 
@@ -1426,7 +1428,7 @@ export const ENTRIES: ComponentEntry[] = [
         id: 'screen',
         fullPage: true,
         description:
-          'The whole screen: six weeks of named entries, and what falls on the day you tap listed under them.',
+          'The weeks of the year, scrolled through rather than paged, with every entry named in its day.',
         render: () => <PlannerScreenDemo />,
       },
       { label: 'A month of renewals', render: () => <PlannerDemo /> },

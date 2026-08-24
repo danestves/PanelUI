@@ -833,6 +833,8 @@ export {
   type PlannerNavProps,
   type PlannerActionProps,
   type PlannerGridProps,
+  type PlannerScrollerProps,
+  type PlannerVariant,
   type PlannerDayProps,
   type PlannerDayState,
   type PlannerDayRenderer,

@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1173,
+    "exports": 1175,
     "values": 311,
-    "types": 862,
+    "types": 864,
     "modules": 143,
     "components": 116,
     "hooks": 13
@@ -2665,6 +2665,14 @@
           },
           {
             "name": "PlannerGridProps",
+            "kind": "type"
+          },
+          {
+            "name": "PlannerScrollerProps",
+            "kind": "type"
+          },
+          {
+            "name": "PlannerVariant",
             "kind": "type"
           },
           {
