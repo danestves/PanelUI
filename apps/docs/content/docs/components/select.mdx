@@ -1,6 +1,7 @@
 ---
 title: Select
 description: Picker shown in a bottom sheet, expanded in place, or floating over the page.
+status: updated
 ---
 
 <PreviewVideo
@@ -188,6 +189,33 @@ Headings make a long list scannable before the filter narrows it.
 </Select>
 ```
 
+### Restyling the field and its filter
+
+`className` is the wrapper; `triggerClassName` is the field. The filter takes the same pair one level down — `searchContainerClassName` for the box, `searchInputClassName` for the text in it.
+
+```tsx
+<Select
+  searchable
+  searchPlaceholder="Search cities"
+  emptyMessage="No city by that name"
+  value={zone}
+  onValueChange={setZone}
+  placeholder="Select a time zone"
+  title="Time zone"
+  className="w-full"
+  triggerClassName="rounded-full border-primary bg-primary/5 px-5"
+  valueClassName="text-primary"
+  placeholderClassName="italic"
+  searchContainerClassName="rounded-full bg-muted"
+  searchInputClassName="text-sm"
+  emptyClassName="py-10 text-base"
+>
+  {timezones.map((tz) => (
+    <Select.Item key={tz.value} value={tz.value} label={tz.label} />
+  ))}
+</Select>
+```
+
 ## Variants
 
 ### `presentation`
@@ -222,6 +250,8 @@ Headings make a long list scannable before the filter narrows it.
 | --- | --- | --- | --- |
 | `value` | `string` | — |  |
 | `label` | `string` | — |  |
+| `className` | `string` | — | Extra classes for the option row. |
+| `labelClassName` | `string` | — | Extra classes for the option's label. |
 | `disabled` | `boolean` | — | Shows the option but refuses it — a plan above the current tier, a region with nothing in stock. Kept in the list rather than dropped from it, because an option that vanishes reads as one that never existed. |
 
 ### Select.Group
@@ -236,11 +266,19 @@ Headings make a long list scannable before the filter narrows it.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `className` | `string` | — |  |
-| `value` | `string` | — |  |
-| `onValueChange` | `(value: string) => void` | — |  |
-| `placeholder` | `string` | `'Select an option'` |  |
-| `disabled` | `boolean` | — |  |
+| `className` | `string` | — | Extra classes for the wrapper around the trigger — the box the select occupies in your layout, which is where margins and widths belong. To restyle the field itself, use `triggerClassName`. |
+| `value` | `string` | — | The selected option's `value`. Leave unset for the placeholder. |
+| `onValueChange` | `(value: string) => void` | — | Called with the `value` of the option that was picked. |
+| `placeholder` | `string` | `'Select an option'` | Shown on the trigger while nothing is selected. |
+| `disabled` | `boolean` | — | Refuses the trigger and dims it. The options cannot be opened. |
+| `triggerClassName` | `string` | — | Extra classes for the trigger — the field you press to open the list. |
+| `valueClassName` | `string` | — | Extra classes for the selected option's text on the trigger. |
+| `placeholderClassName` | `string` | — | Extra classes for the placeholder text on the trigger. |
+| `listClassName` | `string` | — | Extra classes for the surface the options sit on. In `sheet` the sheet is that surface, so this reaches the block of options inside it instead. |
+| `searchClassName` | `string` | — | Extra classes for the row the filter field sits in. `searchable` only. |
+| `searchInputClassName` | `string` | — | Extra classes for the filter field itself. `searchable` only. |
+| `searchContainerClassName` | `string` | — | Extra classes for the box drawn around the filter field — its fill, border and radius. `searchable` only. |
+| `emptyClassName` | `string` | — | Extra classes for the message shown when the filter matches nothing. |
 | `presentation` | `SelectPresentation` | `'sheet'` | Where the options appear. `sheet` takes the bottom of the screen, `inline` expands the list in layout flow, `overlay` floats it above the page anchored to the trigger. |
 | `title` | `string` | — | Sheet title shown above the options. `sheet` presentation only. |
 | `contentWidth` | `'trigger' \| 'content' \| number` | `'trigger'` | Width of the floating list. `trigger` matches the trigger, `content` sizes to the longest option, or pass a pixel value. `overlay` only. |
@@ -264,11 +302,35 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 `overlay` floats the list through a portal, anchored to the trigger and flipped above it when there is no room below. Nothing else on the screen moves. `contentWidth` and `offset` apply here only.
 
+### Styling
+
+`className` is the wrapper around the trigger — the box the select occupies in your layout, and where widths and margins belong. It is not the field. To restyle the field itself, use `triggerClassName`.
+
+Everything else the control draws has its own prop, so nothing has to be reached through a parent selector:
+
+| Prop | Where it lands |
+| --- | --- |
+| `className` | The wrapper around the trigger |
+| `triggerClassName` | The trigger — the field you press |
+| `valueClassName` | The selected option's text on the trigger |
+| `placeholderClassName` | The placeholder text on the trigger |
+| `listClassName` | The surface the options sit on |
+| `searchClassName` | The row the filter field sits in |
+| `searchInputClassName` | The filter field itself |
+| `searchContainerClassName` | The box drawn around the filter field |
+| `emptyClassName` | The message shown when the filter matches nothing |
+
+`Select.Item` takes `className` and `labelClassName`, and `Select.Group` takes `className` and `labelClassName`, so an individual option or heading can be styled where the whole list should not be.
+
+In `sheet` there is no list surface of the select's own — the sheet is the surface — so `listClassName` lands on the block of options inside it.
+
+None of these reach a `native` picker. The platform draws that one.
+
 ### Native rendering
 
 Pass `native` to render the platform’s own picker instead — SwiftUI on iOS, Jetpack Compose on Android. It needs the optional `@expo/ui` package and is a silent no-op without it.
 
-**Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className`, `presentation` and most styling props are ignored. A native picker always has a selection, so an unset `value` shows the first option rather than the placeholder — set an initial value or add an explicit "None" item.
+**Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className`, `triggerClassName`, `presentation` and every other styling prop are ignored. A native picker always has a selection, so an unset `value` shows the first option rather than the placeholder — set an initial value or add an explicit "None" item.
 
 The portable native picker cannot disable one option independently. When any `Select.Item` is disabled, Select keeps the styled presentation even if `native` is requested, so the disabled choice remains visible without becoming selectable.
 
@@ -277,6 +339,8 @@ See [Native rendering](/docs/native) for the full prop-by-prop breakdown.
 ### Filtering a long list
 
 `searchable` puts a filter above the options in every presentation, matching case-insensitively on any part of an option's label. It narrows what is *shown* rather than what is declared, so the options stay where they are and nothing has to be lifted into state; `searchPlaceholder` names the field and `emptyMessage` replaces the list when nothing matches. The filter clears itself when the list closes, so it is never waiting there the next time with most of the options missing.
+
+`searchClassName`, `searchInputClassName` and `searchContainerClassName` restyle the field: the row it sits in, the text and its placeholder, and the box drawn around it. The last of those is the one to reach for to change its fill, border or radius, because those belong to the box rather than to the text inside it.
 
 The field is deliberately not focused on open — on a phone that throws the keyboard over the list you are trying to look at — and the option scrollers dismiss the keyboard on a drag, so you can get back to reading without first tapping somewhere neutral.
 

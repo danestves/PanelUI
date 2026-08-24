@@ -662,7 +662,7 @@
     "Picker shown in a bottom sheet, expanded in place, or floating over the page.",
     "expo select component",
     {
-      "updatedIn": "0.75.0",
+      "updatedIn": "0.82.0",
       "category": "forms"
     }
   ],

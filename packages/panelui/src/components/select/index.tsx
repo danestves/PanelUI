@@ -81,6 +81,11 @@ const selectVariants = tv({
     triggerLabel: 'flex-1 text-base font-medium text-foreground',
     placeholder: 'flex-1 text-base text-muted-foreground',
     list: 'overflow-hidden rounded-xl border border-border bg-popover p-2 shadow-sm',
+    // The block of options inside a sheet. The sheet is the surface there, so
+    // this is what `listClassName` has to reach instead of `list`.
+    options: 'gap-1 pb-2',
+    search: 'pb-2',
+    empty: 'px-3 py-6 text-center text-sm text-muted-foreground',
     item: 'flex-row items-center gap-2 rounded-lg px-3 py-3',
     itemLabel: 'flex-1 text-base font-medium text-foreground',
     itemIndicator: 'h-5 w-5 items-center justify-center',
@@ -120,6 +125,10 @@ const SelectContext = createContext<SelectContextValue | null>(null);
 export interface SelectItemProps {
   value: string;
   label: string;
+  /** Extra classes for the option row. */
+  className?: string;
+  /** Extra classes for the option's label. */
+  labelClassName?: string;
   /**
    * Shows the option but refuses it — a plan above the current tier, a region
    * with nothing in stock. Kept in the list rather than dropped from it, because
@@ -129,7 +138,7 @@ export interface SelectItemProps {
 }
 
 /** Declarative option. Rendered inside whichever surface is presenting. */
-function SelectItem({ value, label, disabled }: SelectItemProps) {
+function SelectItem({ value, label, disabled, className, labelClassName }: SelectItemProps) {
   const context = useContext(SelectContext);
   if (!context) {
     throw new Error('Select.Item must be used within a <Select>');
@@ -148,9 +157,9 @@ function SelectItem({ value, label, disabled }: SelectItemProps) {
       accessibilityState={{ selected, disabled: !!disabled }}
       disabled={disabled}
       onPress={() => context.onSelect(value)}
-      className={item()}
+      className={item({ className })}
     >
-      <Text className={itemLabel()}>{label}</Text>
+      <Text className={itemLabel({ className: labelClassName })}>{label}</Text>
       <View className={itemIndicator()}>
         {selected ? (
           <CheckIcon
@@ -262,11 +271,42 @@ interface Anchor {
 }
 
 export interface SelectProps {
+  /**
+   * Extra classes for the wrapper around the trigger — the box the select
+   * occupies in your layout, which is where margins and widths belong. To
+   * restyle the field itself, use `triggerClassName`.
+   */
   className?: string;
+  /** The selected option's `value`. Leave unset for the placeholder. */
   value?: string;
+  /** Called with the `value` of the option that was picked. */
   onValueChange: (value: string) => void;
+  /** Shown on the trigger while nothing is selected. */
   placeholder?: string;
+  /** Refuses the trigger and dims it. The options cannot be opened. */
   disabled?: boolean;
+  /** Extra classes for the trigger — the field you press to open the list. */
+  triggerClassName?: string;
+  /** Extra classes for the selected option's text on the trigger. */
+  valueClassName?: string;
+  /** Extra classes for the placeholder text on the trigger. */
+  placeholderClassName?: string;
+  /**
+   * Extra classes for the surface the options sit on. In `sheet` the sheet is
+   * that surface, so this reaches the block of options inside it instead.
+   */
+  listClassName?: string;
+  /** Extra classes for the row the filter field sits in. `searchable` only. */
+  searchClassName?: string;
+  /** Extra classes for the filter field itself. `searchable` only. */
+  searchInputClassName?: string;
+  /**
+   * Extra classes for the box drawn around the filter field — its fill, border
+   * and radius. `searchable` only.
+   */
+  searchContainerClassName?: string;
+  /** Extra classes for the message shown when the filter matches nothing. */
+  emptyClassName?: string;
   /**
    * Where the options appear. `sheet` takes the bottom of the screen, `inline`
    * expands the list in layout flow, `overlay` floats it above the page
@@ -321,6 +361,14 @@ function SelectRoot({
   onValueChange,
   placeholder = 'Select an option',
   disabled,
+  triggerClassName,
+  valueClassName,
+  placeholderClassName,
+  listClassName,
+  searchClassName,
+  searchInputClassName,
+  searchContainerClassName,
+  emptyClassName,
   presentation = 'sheet',
   title,
   contentWidth = 'trigger',
@@ -468,12 +516,12 @@ function SelectRoot({
       accessibilityState={{ disabled: !!disabled, expanded: open }}
       disabled={disabled}
       onPress={toggle}
-      className={slots.trigger()}
+      className={slots.trigger({ className: triggerClassName })}
     >
       {selectedLabel ? (
-        <Text className={slots.triggerLabel()}>{selectedLabel}</Text>
+        <Text className={slots.triggerLabel({ className: valueClassName })}>{selectedLabel}</Text>
       ) : (
-        <Text className={slots.placeholder()}>{placeholder}</Text>
+        <Text className={slots.placeholder({ className: placeholderClassName })}>{placeholder}</Text>
       )}
       <Animated.View style={chevronStyle}>
         <ChevronDownIcon
@@ -490,7 +538,7 @@ function SelectRoot({
    * what it is.
    */
   const search = searchable ? (
-    <View className="pb-2">
+    <View className={slots.search({ className: searchClassName })}>
       <InputGroup>
         <InputGroup.Prefix isDecorative>
           <SearchIcon
@@ -501,6 +549,8 @@ function SelectRoot({
         <InputGroup.Input
           variant="filled"
           size="sm"
+          className={searchInputClassName}
+          containerClassName={searchContainerClassName}
           value={query}
           onChangeText={setQuery}
           placeholder={searchPlaceholder}
@@ -520,9 +570,7 @@ function SelectRoot({
     ) : filtered.length ? (
       filtered
     ) : (
-      <Text className="px-3 py-6 text-center text-sm text-muted-foreground">
-        {emptyMessage}
-      </Text>
+      <Text className={slots.empty({ className: emptyClassName })}>{emptyMessage}</Text>
     );
 
   if (presentation === 'sheet') {
@@ -556,7 +604,7 @@ function SelectRoot({
                 keyboardDismissMode="on-drag"
                 keyboardShouldPersistTaps="handled"
               >
-                <View className="gap-1 pb-2">{optionList}</View>
+                <View className={slots.options({ className: listClassName })}>{optionList}</View>
               </ScrollView>
             </SelectContext.Provider>
           </BottomSheet.Content>
@@ -574,7 +622,7 @@ function SelectRoot({
             <Animated.View
               entering={FadeIn.duration(140)}
               exiting={FadeOut.duration(120)}
-              className={slots.list()}
+              className={slots.list({ className: listClassName })}
             >
               {search}
               {optionList}
@@ -651,7 +699,7 @@ function SelectRoot({
                * has to say it itself.
                */
               accessibilityViewIsModal
-              className={slots.list()}
+              className={slots.list({ className: listClassName })}
             >
               {search}
               <ScrollView
