@@ -11,7 +11,7 @@
  * scene holds, which is the point worth showing: the anatomy does not change
  * when the behaviour does.
  */
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -21,6 +21,7 @@ import {
   Button,
   Item,
   Marker,
+  Menu,
   Message,
   MessageScroller,
   Panelside,
@@ -34,14 +35,18 @@ import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
 import {
   BubbleChatIcon,
   Cancel01Icon,
+  Delete02Icon,
   File01Icon,
   Image01Icon,
   Menu01Icon,
   Mic01Icon,
   Package01Icon,
+  PencilEdit02Icon,
   PlusSignIcon,
+  Share01Icon,
   SourceCodeIcon,
   SparklesIcon,
+  StarIcon,
 } from '@hugeicons/core-free-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
@@ -123,8 +128,15 @@ const SEARCH_TABS = [
  * history filtering used to be — the panel does not know what a chat is, and a
  * search that only matched titles would be wrong for the first app that
  * indexes message bodies.
+ *
+ * It is the styled sheet in every version, the native one included. This
+ * surface is the whole screen and it docks a field to the keyboard, and a
+ * hosted column of that shape inside the platform's own sheet is a
+ * measurement with no definite answer anywhere in it — which fails below
+ * JavaScript, where there is nothing to catch it. The trigger that opens it is
+ * still the platform's button under `native`; what is inside is ours.
  */
-function AssistantSearch({ native = false }: { native?: boolean }) {
+function AssistantSearch({ variant }: { variant?: 'filled' | 'outline' }) {
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState('all');
 
@@ -139,7 +151,8 @@ function AssistantSearch({ native = false }: { native?: boolean }) {
 
   return (
     <Panelside.SearchSheet
-      native={native}
+      native={false}
+      closeVariant={variant}
       value={query}
       onValueChange={setQuery}
       tab={tab}
@@ -178,28 +191,43 @@ function AssistantSearch({ native = false }: { native?: boolean }) {
 }
 
 /**
- * The panel, shared by all six demos.
+ * The panel, shared by every demo.
  *
- * `native` only reaches the one control that has a platform equivalent. There
- * is no native list row and no native search field, so the rest stays ours —
+ * `native` only reaches the controls that have a platform equivalent. There is
+ * no native list row and no native search field, so the rest stays ours —
  * which is the honest answer rather than a half-native panel that matches
  * neither.
+ *
+ * Everything below that is not native is `outline`: a ring and no fill, so the
+ * compose pill is the only filled thing in the panel and reads as the one
+ * control the footer is for.
  */
 function AssistantPanel({
   native = false,
   activeId,
   onSelect,
+  routed = false,
+  actions,
+  starred = STARRED,
+  recents = RECENTS,
 }: {
   native?: boolean;
   /** The conversation currently open in the scene, if the demo tracks one. */
   activeId?: string;
   /** Given, every history row becomes a destination. */
   onSelect?: (title: string) => void;
+  /** Given, the rows navigate through the panel's own route instead. */
+  routed?: boolean;
+  /** Given, every history row carries an overflow menu built from it. */
+  actions?: (title: string) => ReactNode;
+  starred?: readonly string[];
+  recents?: readonly string[];
 }) {
   const { setOpen } = usePanelside();
 
   // Selecting a destination closes the panel. Leaving it open would mean the
-  // thing you just navigated to is behind the thing you navigated from.
+  // thing you just navigated to is behind the thing you navigated from. The
+  // routed demo does not need this — `to` closes the panel itself.
   const select = onSelect
     ? (title: string) => {
         onSelect(title);
@@ -207,8 +235,7 @@ function AssistantPanel({
       }
     : undefined;
 
-  const starred = STARRED;
-  const recents = RECENTS;
+  const control = native ? undefined : ('outline' as const);
 
   return (
     <Panelside.Panel>
@@ -218,7 +245,7 @@ function AssistantPanel({
           the screen from the keyboard it opens. */}
       <Panelside.Header
         title="Assistant"
-        action={<Panelside.SearchTrigger native={native} glass={native} />}
+        action={<Panelside.SearchTrigger native={native} glass={native} variant={control} />}
       />
 
       <Panelside.Content>
@@ -245,9 +272,12 @@ function AssistantPanel({
               <Panelside.Item
                 key={title}
                 label={title}
-                active={title === activeId}
+                to={routed ? title : undefined}
+                active={routed ? undefined : title === activeId}
                 onPress={select && (() => select(title))}
-              />
+              >
+                {actions?.(title)}
+              </Panelside.Item>
             ))}
           </Panelside.Group>
         )}
@@ -259,9 +289,12 @@ function AssistantPanel({
               <Panelside.Item
                 key={title}
                 label={title}
-                active={title === activeId}
+                to={routed ? title : undefined}
+                active={routed ? undefined : title === activeId}
                 onPress={select && (() => select(title))}
-              />
+              >
+                {actions?.(title)}
+              </Panelside.Item>
             ))}
           </Panelside.Group>
         )}
@@ -275,10 +308,16 @@ function AssistantPanel({
         {/* The compose pill leads, and the account button is pushed to the
             trailing end by the spacer between them. No label on the account:
             the avatar is the account, and a name beside it is one more thing
-            between the compose button and the edge of the panel. */}
+            between the compose button and the edge of the panel.
+
+            A size up under `native`. The platform's own metrics land the two
+            controls a step smaller than ours do, which reads as the footer of
+            a different panel than the one every other version has. */}
         <Panelside.Cta
+          className="shrink-0"
           icon={<Glyph icon={PlusSignIcon} size={18} />}
           label="New chat"
+          size={native ? 'lg' : 'default'}
           native={native}
           glass={native}
         />
@@ -295,15 +334,21 @@ function AssistantPanel({
             letter is the expensive way to arrive at what the platform already
             does — and it is the shape that has cost two crashes.
           */
-          <Button native glass size="icon" variant="ghost" accessibilityLabel="Account">
+          <Button native glass size="lg" variant="ghost" accessibilityLabel="Account">
             K
           </Button>
         ) : (
-          /* Ours, and the size it always was: a 40pt avatar in a row. */
-          <Panelside.Item
-            icon={<Avatar size="md" fallback="K" />}
+          /* A button rather than a row: a row is a thing that stretches, and
+             this one has a fixed 40pt square to be. Outlined, like everything
+             else here that is not the compose pill. */
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-10 w-10 shrink-0 rounded-full p-0"
             accessibilityLabel="Account"
-          />
+          >
+            <Avatar size="sm" fallback="K" />
+          </Button>
         )}
       </Panelside.Footer>
     </Panelside.Panel>
@@ -458,6 +503,10 @@ function AssistantDemo({
   title = 'Migrating the design tokens',
   activeId,
   onSelect,
+  routed,
+  actions,
+  starred,
+  recents,
   ...props
 }: Partial<PanelsideProps> & {
   sceneProps?: Partial<PanelsideSceneProps>;
@@ -466,17 +515,29 @@ function AssistantDemo({
   title?: string;
   activeId?: string;
   onSelect?: (title: string) => void;
+  routed?: boolean;
+  actions?: (title: string) => ReactNode;
+  starred?: readonly string[];
+  recents?: readonly string[];
 }) {
   return (
     // On in every demo: the swipe is the way this component is opened, and a
     // tick where it commits is what tells your thumb it took.
     <Panelside haptics {...props}>
-      <AssistantPanel native={native} activeId={activeId} onSelect={onSelect} />
+      <AssistantPanel
+        native={native}
+        activeId={activeId}
+        onSelect={onSelect}
+        routed={routed}
+        actions={actions}
+        starred={starred}
+        recents={recents}
+      />
       <Panelside.Scene {...sceneProps}>
         <SceneBar title={title} native={native} />
         {scene ?? <Transcript />}
       </Panelside.Scene>
-      <AssistantSearch native={native} />
+      <AssistantSearch variant={native ? undefined : 'outline'} />
     </Panelside>
   );
 }
@@ -779,24 +840,104 @@ function ConversationScene({ title }: { title: string }) {
   );
 }
 
+const CONVERSATIONS = [...STARRED, ...RECENTS];
+
 /**
  * The panel used as navigation rather than as a display: press a conversation
  * and the scene becomes that conversation, with the panel closing itself on
  * the way.
  *
- * The selected row stays marked. A history list where nothing is active tells
- * you what you could open and never what you have open, which is the question
- * anyone opening the panel a second time is asking.
+ * The panel holds the route, so a row is a `to` and nothing else — no state
+ * threaded through the list, no `active` computed per row, no closing written
+ * out. The selected row stays marked from the same prop: a history list where
+ * nothing is active tells you what you could open and never what you have
+ * open, which is the question anyone opening the panel a second time is
+ * asking.
+ *
+ * Each conversation is a `Panelside.Page`. The first press mounts one; every
+ * press after that is a style change, so going back to a conversation you have
+ * already read does not rebuild it.
  */
 export function PanelsideNavigateBlock() {
+  const [route, setRoute] = useState(CONVERSATIONS[0] as string);
+
+  return (
+    <AssistantDemo
+      routed
+      route={route}
+      onRouteChange={setRoute}
+      title={route}
+      scene={
+        <Panelside.Pages>
+          {CONVERSATIONS.map((title) => (
+            <Panelside.Page key={title} value={title}>
+              <ConversationScene title={title} />
+            </Panelside.Page>
+          ))}
+        </Panelside.Pages>
+      }
+    />
+  );
+}
+
+/**
+ * Every conversation carries a "…". The menu it opens renames, stars, shares
+ * or deletes the row it belongs to, and the list changes underneath — a menu
+ * whose rows only close it proves nothing about where the actions go.
+ */
+export function PanelsideActionsBlock() {
+  const [starred, setStarred] = useState<readonly string[]>(STARRED);
+  const [recents, setRecents] = useState<readonly string[]>(RECENTS);
   const [active, setActive] = useState(STARRED[0] as string);
+
+  const rename = (title: string) => {
+    const next = `${title} (renamed)`;
+    const swap = (list: readonly string[]) =>
+      list.map((entry) => (entry === title ? next : entry));
+    setStarred(swap);
+    setRecents(swap);
+    setActive((current) => (current === title ? next : current));
+  };
+
+  const star = (title: string) => {
+    if (starred.includes(title)) return;
+    setStarred((list) => [...list, title]);
+    setRecents((list) => list.filter((entry) => entry !== title));
+  };
+
+  const remove = (title: string) => {
+    const drop = (list: readonly string[]) => list.filter((entry) => entry !== title);
+    setStarred(drop);
+    setRecents(drop);
+  };
 
   return (
     <AssistantDemo
       title={active}
       activeId={active}
       onSelect={setActive}
+      starred={starred}
+      recents={recents}
       scene={<ConversationScene title={active} />}
+      actions={(title) => (
+        <Panelside.ItemActions>
+          <Menu.Item icon={<Glyph icon={PencilEdit02Icon} size={17} />} onSelect={() => rename(title)}>
+            Rename
+          </Menu.Item>
+          <Menu.Item icon={<Glyph icon={StarIcon} size={17} />} onSelect={() => star(title)}>
+            Star
+          </Menu.Item>
+          <Menu.Item icon={<Glyph icon={Share01Icon} size={17} />}>Share</Menu.Item>
+          <Menu.Separator />
+          <Menu.Item
+            variant="destructive"
+            icon={<Glyph icon={Delete02Icon} size={17} />}
+            onSelect={() => remove(title)}
+          >
+            Delete
+          </Menu.Item>
+        </Panelside.ItemActions>
+      )}
     />
   );
 }

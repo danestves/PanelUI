@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScrollView, View, type LayoutChangeEvent } from "react-native";
 import { Avatar, Badge, BookmarkIcon, BellIcon, Button, Card, Frame, PlusIcon, SearchIcon, Skeleton, SplitView, Splitter, Switch, Text, Tooltip, Tour, Typography, WaterfallChart, type WaterfallDatum, waterfallSteps } from "panelui-native";
-import { PanelsideAssistantBlock, PanelsideChatBlock, PanelsideCurveBlock, PanelsideDockedBlock, PanelsideNativeBlock, PanelsideNavigateBlock, PanelsideOverlayBlock } from "../../components/panelside-blocks";
+import { PanelsideActionsBlock, PanelsideAssistantBlock, PanelsideChatBlock, PanelsideCurveBlock, PanelsideDockedBlock, PanelsideNativeBlock, PanelsideNavigateBlock, PanelsideOverlayBlock } from "../../components/panelside-blocks";
 import type { ComponentEntry } from '../component-types';
 
 /** Two series side by side, which is what a bar chart is for. */
@@ -811,6 +811,15 @@ export const ENTRIES: ComponentEntry[] = [
         fullBleed: true,
         description: 'Press a chat and the screen becomes it, with the panel closing itself.',
         render: () => <PanelsideNavigateBlock />,
+      },
+      {
+        label: 'Row actions',
+        id: 'actions',
+        fullPage: true,
+        fullBleed: true,
+        description:
+          'Every conversation carries a “…”: rename it, star it, share it or delete it without leaving the panel.',
+        render: () => <PanelsideActionsBlock />,
       },
       {
         label: 'Overlay',
