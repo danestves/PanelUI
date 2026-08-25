@@ -120,12 +120,10 @@ import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
-import {
-  Cancel01Icon,
-  Menu01Icon,
-  MoreHorizontalIcon,
-  Search01Icon,
-} from '@hugeicons/core-free-icons';
+import Cancel01Icon from '@hugeicons/core-free-icons/Cancel01Icon';
+import Menu01Icon from '@hugeicons/core-free-icons/Menu01Icon';
+import MoreHorizontalIcon from '@hugeicons/core-free-icons/MoreHorizontalIcon';
+import Search01Icon from '@hugeicons/core-free-icons/Search01Icon';
 import { IconColorProvider, useIconColor } from '../../icons';
 import {
   BottomSheet,

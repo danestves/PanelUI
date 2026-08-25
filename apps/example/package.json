@@ -22,7 +22,6 @@
     "expo-router": "^57.0.7",
     "expo-status-bar": "~57.0.1",
     "expo-updates": "~57.0.10",
-    "lucide-react-native": "^1.28.0",
     "panelui-native": "*",
     "react": "19.2.3",
     "react-native": "0.86.0",

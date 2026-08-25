@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bookmark, Copy, Flag, Link2, Pencil, Share2, Sparkles, TextSelect, Trash2 } from "lucide-react-native";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import Flag01Icon from "@hugeicons/core-free-icons/Flag01Icon";
+import TextSelectIcon from "@hugeicons/core-free-icons/TextSelectIcon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, Pressable, ScrollView, View } from "react-native";
-import { Avatar, BottomSheet, Button, ContextMenu, Card, Frame, InfoIcon, Input, Item, Label, Marker, Message, Meter, MessageScroller, Planner, type PlannerEntry, PlusSquareIcon, Popover, Progress, ProgressButton, QRCode, type QRCodeEyeBallShape, type QRCodeEyeFrameShape, type QRCodeModuleShape, SendIcon, ShareNodesIcon, Separator, Shimmer, Text, XIcon } from "panelui-native";
+import { Avatar, BookmarkIcon, BottomSheet, Button, Card, ContextMenu, CopyIcon, Frame, InfoIcon, Input, Item, Label, LinkIcon, Marker, Message, MessageScroller, Meter, PencilIcon, Planner, PlusSquareIcon, Popover, Progress, ProgressButton, QRCode, SendIcon, Separator, ShareNodesIcon, Shimmer, SparklesIcon, Text, TrashIcon, type PlannerEntry, type QRCodeEyeBallShape, type QRCodeEyeFrameShape, type QRCodeModuleShape, XIcon } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 /** Stable remote portraits for the Avatar demos. */
@@ -456,19 +458,19 @@ function ContextMenuMessageDemo() {
 
         <ContextMenu.Content>
           <ContextMenu.Item
-            icon={<Sparkles size={18} />}
+            icon={<SparklesIcon size={18} />}
             onSelect={() => setLast('Ask AI')}
           >
             Ask AI
           </ContextMenu.Item>
-          <ContextMenu.Item icon={<Share2 size={18} />} onSelect={() => setLast('Share')}>
+          <ContextMenu.Item icon={<ShareNodesIcon size={18} />} onSelect={() => setLast('Share')}>
             Share
           </ContextMenu.Item>
-          <ContextMenu.Item icon={<Copy size={18} />} onSelect={() => setLast('Copy')}>
+          <ContextMenu.Item icon={<CopyIcon size={18} />} onSelect={() => setLast('Copy')}>
             Copy
           </ContextMenu.Item>
           <ContextMenu.Item
-            icon={<TextSelect size={18} />}
+            icon={<HugeiconsIcon icon={TextSelectIcon} size={18} />}
             onSelect={() => setLast('Select text')}
           >
             Select text
@@ -478,7 +480,7 @@ function ContextMenuMessageDemo() {
 
           <ContextMenu.Item
             variant="destructive"
-            icon={<Flag size={18} />}
+            icon={<HugeiconsIcon icon={Flag01Icon} size={18} />}
             onSelect={() => setLast('Report')}
           >
             Report
@@ -521,15 +523,15 @@ function ContextMenuPreviewDemo() {
           <ContextMenu.Preview />
 
           <ContextMenu.Item
-            icon={<Bookmark size={18} />}
+            icon={<BookmarkIcon size={18} />}
             onSelect={() => setLast('Save')}
           >
             Save
           </ContextMenu.Item>
-          <ContextMenu.Item icon={<Link2 size={18} />} onSelect={() => setLast('Copy link')}>
+          <ContextMenu.Item icon={<LinkIcon size={18} />} onSelect={() => setLast('Copy link')}>
             Copy link
           </ContextMenu.Item>
-          <ContextMenu.Item icon={<Share2 size={18} />} onSelect={() => setLast('Share')}>
+          <ContextMenu.Item icon={<ShareNodesIcon size={18} />} onSelect={() => setLast('Share')}>
             Share
           </ContextMenu.Item>
 
@@ -537,7 +539,7 @@ function ContextMenuPreviewDemo() {
 
           <ContextMenu.Item
             variant="destructive"
-            icon={<Trash2 size={18} />}
+            icon={<TrashIcon size={18} />}
             onSelect={() => setLast('Delete')}
           >
             Delete
@@ -580,7 +582,7 @@ function ContextMenuRowDemo() {
 
         <ContextMenu.Content align="end">
           <ContextMenu.Item
-            icon={<Pencil size={18} />}
+            icon={<PencilIcon size={18} />}
             onSelect={() => setStatus('Held — chose Rename.')}
           >
             Rename
@@ -593,7 +595,7 @@ function ContextMenuRowDemo() {
           <ContextMenu.Separator />
           <ContextMenu.Item
             variant="destructive"
-            icon={<Trash2 size={18} />}
+            icon={<TrashIcon size={18} />}
             onSelect={() => setStatus('Held — chose Delete.')}
           >
             Delete
@@ -647,9 +649,9 @@ function ContextMenuPlacementDemo() {
           </ContextMenu.Trigger>
 
           <ContextMenu.Content placement={place.placement} align={place.align}>
-            <ContextMenu.Item icon={<Share2 size={18} />}>Share</ContextMenu.Item>
-            <ContextMenu.Item icon={<Copy size={18} />}>Copy</ContextMenu.Item>
-            <ContextMenu.Item icon={<Bookmark size={18} />}>Save</ContextMenu.Item>
+            <ContextMenu.Item icon={<ShareNodesIcon size={18} />}>Share</ContextMenu.Item>
+            <ContextMenu.Item icon={<CopyIcon size={18} />}>Copy</ContextMenu.Item>
+            <ContextMenu.Item icon={<BookmarkIcon size={18} />}>Save</ContextMenu.Item>
           </ContextMenu.Content>
         </ContextMenu>
       ))}
@@ -684,25 +686,25 @@ function ContextMenuSheetDemo() {
 
         <ContextMenu.Content>
           <ContextMenu.Label>Quarterly report.pdf</ContextMenu.Label>
-          <ContextMenu.Item icon={<Share2 size={18} />} onSelect={() => setLast('Share')}>
+          <ContextMenu.Item icon={<ShareNodesIcon size={18} />} onSelect={() => setLast('Share')}>
             Share
           </ContextMenu.Item>
-          <ContextMenu.Item icon={<Link2 size={18} />} onSelect={() => setLast('Copy link')}>
+          <ContextMenu.Item icon={<LinkIcon size={18} />} onSelect={() => setLast('Copy link')}>
             Copy link
           </ContextMenu.Item>
           <ContextMenu.Item
-            icon={<Bookmark size={18} />}
+            icon={<BookmarkIcon size={18} />}
             onSelect={() => setLast('Save for later')}
           >
             Save for later
           </ContextMenu.Item>
-          <ContextMenu.Item icon={<Pencil size={18} />} onSelect={() => setLast('Rename')}>
+          <ContextMenu.Item icon={<PencilIcon size={18} />} onSelect={() => setLast('Rename')}>
             Rename
           </ContextMenu.Item>
           <ContextMenu.Separator />
           <ContextMenu.Item
             variant="destructive"
-            icon={<Trash2 size={18} />}
+            icon={<TrashIcon size={18} />}
             onSelect={() => setLast('Delete')}
           >
             Delete

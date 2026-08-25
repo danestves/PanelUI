@@ -771,6 +771,7 @@
     "registryDependencies": [
       "chart",
       "cn",
+      "icons",
       "line-chart",
       "progress",
       "surface",
@@ -905,6 +906,7 @@
     "registryDependencies": [
       "cn",
       "haptics",
+      "icons",
       "popover",
       "text",
       "use-direction"

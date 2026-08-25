@@ -8,8 +8,21 @@
  * correct on the day it is written and silently wrong after the first time
  * somebody nudges a curve.
  *
- * So the paths are extracted at build time and re-emitted as plain SVG. The
- * transform is small because the source is regular:
+ * So each glyph is resolved at build time and re-emitted as plain SVG, in two
+ * passes because the set is drawn two ways.
+ *
+ * ## The mapped icons
+ *
+ * Most of the set is `icon(HgSomething, { … })` — a glyph from the icon
+ * package plus the size, colour and weight it is normally drawn at. Those are
+ * read straight from the package's own data, which is already a list of
+ * `[tag, attributes]` pairs, so there is nothing to parse: the alias imports
+ * name the glyph, the declaration names the weight, and the pair is enough.
+ *
+ * ## The four drawn by hand
+ *
+ * Google, Facebook, Apple and BadgeCheck are still JSX in the library source,
+ * so those are parsed out of it:
  *
  *   - `width`/`height` are dropped; the gallery sizes each icon itself.
  *   - `stroke={resolved}` and `fill={resolved}` become `currentColor`, which
@@ -18,12 +31,11 @@
  *     Google's four colours.
  *   - A prop-driven ternary resolves to its default branch, so a toggle icon
  *     shows its resting state.
- *   - `{...props}` and `{...flip}` are dropped: one is the caller's, and the
- *     other is a right-to-left mirror that has no meaning in a specimen sheet.
+ *   - `{...props}` is dropped: it is the caller's, not the drawing's.
  *
- * Anything it cannot parse throws rather than being skipped. A gallery that
- * quietly omits an icon is worse than one that fails the build, because the
- * missing icon is exactly what a reader came to look for.
+ * Anything either pass cannot resolve throws rather than being skipped. A
+ * gallery that quietly omits an icon is worse than one that fails the build,
+ * because the missing icon is exactly what a reader came to look for.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -121,8 +133,68 @@ function parseDefaults(signature) {
 
 const icons = [];
 
-// Each icon is one exported function up to the next one, which is enough of a
-// boundary because the file is a flat list of them.
+/**
+ * The glyph each alias stands for: `import HgSearch01Icon from '…/Search01Icon'`.
+ */
+const aliases = new Map(
+  [...src.matchAll(/^import (Hg\w+) from '@hugeicons\/core-free-icons\/(\w+)';$/gm)].map(
+    (match) => [match[1], match[2]]
+  )
+);
+
+/** The default weight the library draws the set at, read rather than assumed. */
+const strokeDefault = Number(src.match(/^const STROKE = ([\d.]+);$/m)?.[1]);
+if (!Number.isFinite(strokeDefault)) throw new Error('Cannot find the STROKE default');
+
+/** Attribute keys carried in the glyph data that mean nothing in the markup. */
+const GLYPH_DROP = new Set(['key']);
+
+for (const match of src.matchAll(
+  /^export const (\w+Icon) = icon\((Hg\w+), \{([\s\S]*?)\}\);$/gm
+)) {
+  const [, name, alias, options] = match;
+  const glyphName = aliases.get(alias);
+  if (!glyphName) throw new Error(`${name}: no import found for ${alias}`);
+
+  const size = Number(options.match(/size:\s*(\d+)/)?.[1]);
+  if (!Number.isFinite(size)) throw new Error(`${name}: no size`);
+  const strokeWidth = Number(options.match(/strokeWidth:\s*([\d.]+)/)?.[1] ?? strokeDefault);
+
+  const glyph = (
+    await import(`@hugeicons/core-free-icons/${glyphName}`)
+  ).default;
+  if (!Array.isArray(glyph) || glyph.length === 0) {
+    throw new Error(`${name}: ${glyphName} is not a glyph`);
+  }
+
+  const markup = glyph
+    .map(([tag, attrs]) => {
+      const pairs = Object.entries(attrs)
+        .filter(([key]) => !GLYPH_DROP.has(key))
+        // The library overrides the drawing's own weight; see the note on
+        // weight in the icon set. Doing it here too is what keeps the gallery
+        // and the app the same picture.
+        .map(([key, value]) => [ATTR[key] ?? key, key === 'strokeWidth' ? strokeWidth : value])
+        .map(([key, value]) => `${key}="${value}"`);
+      return `<${tag.toLowerCase()} ${pairs.join(' ')} />`;
+    })
+    .join('');
+
+  icons.push({
+    name,
+    size,
+    viewBox: '0 0 24 24',
+    // A fillable glyph is drawn in its resting state, which is unfilled — the
+    // same rule the hand-drawn pass applies to a toggle's ternary.
+    fill: 'none',
+    markup,
+    brand: false,
+  });
+}
+
+
+// The four drawn by hand are the only `export function` icons left in the
+// file, so this matches exactly them.
 const bodies = [
   ...src.matchAll(
     /export function (\w+Icon)\s*\(([\s\S]*?)\)\s*(?::[^{]*?)?\{([\s\S]*?)\n\}/g

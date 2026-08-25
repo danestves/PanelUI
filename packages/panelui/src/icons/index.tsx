@@ -1,34 +1,139 @@
 /**
  * Icon set.
  *
- * Two families live here:
- * - Stroked 24×24 icons on Lucide geometry, for chrome such as chevrons and
- *   the close button.
- * - Filled 16×16 status icons for Alert and Toast indicators, which read
- *   better small than a stroked equivalent would.
+ * Every glyph is a 24×24 stroked drawing, sized and coloured by the caller.
+ * They exist so the library can draw its own chrome — chevrons, a close
+ * button, a check inside a checkbox — without every consumer having to choose
+ * an icon package before a Select will render.
  *
- * Every icon resolves its colour in the same order: an explicit `color` prop,
- * then the colour inherited from an enclosing `IconColorProvider`, then its
- * own fallback. Coloured surfaces such as Button provide the foreground that
- * reads against them, so icons follow the theme without callers hardcoding a
- * hex — which breaks the moment the theme inverts.
+ * ## How a colour is resolved
  *
- * Brand marks (Google, Facebook, Apple) are the exception: they carry their
- * own colours and ignore the context.
+ * In one order, always: an explicit `color` prop, then the colour inherited
+ * from an enclosing `IconColorProvider`, then the icon's own fallback.
+ * Coloured surfaces such as Button provide the foreground that reads against
+ * them, so an icon dropped into one follows the theme without the caller
+ * hardcoding a hex — which is what breaks the moment the theme inverts.
+ *
+ * ## Weight
+ *
+ * `strokeWidth` defaults to 2 rather than to the drawing's own 1.5. The set is
+ * drawn at 24 and used at 14–20, and a hairline that reads correctly at full
+ * size thins to nothing at two thirds of it. A few glyphs carry their own
+ * weight because they sit beside something they have to match: the check and
+ * the bar inside a checkbox, the grip on a drag handle.
+ *
+ * ## Mirroring
  *
  * A glyph whose *meaning* is a horizontal direction mirrors in a right-to-left
- * subtree — the chevrons, the outward arrow, the send plane. Everything else
- * is drawn once and left alone, including the vertical arrows, since the
- * vertical axis does not mirror, and including asymmetric glyphs that are not
- * directions (a magnifier, a pencil, a play triangle).
+ * subtree — the two side chevrons, the outward arrow, the send plane. Yoga
+ * moves a chevron to the other end of its row but cannot turn the glyph
+ * around, so without this an RTL list row ends up with a right-pointing
+ * chevron on its left edge, pointing back at the text.
+ *
+ * Everything else is drawn once and left alone. The vertical axis does not
+ * mirror, and an icon that is merely asymmetric — a magnifier, a pencil, a
+ * play triangle — means the same thing either way round; flipping it would
+ * only be a wrong drawing.
+ *
+ * A mirroring icon always carries a transform, identity included. Dropping the
+ * prop leaves the last matrix the view was given in place, so a glyph mirrored
+ * once stays mirrored when the direction flips back — the arrows in an app
+ * that can switch direction at runtime end up pointing at the text one toggle
+ * in, and never recover.
+ *
+ * ## The four drawn by hand
+ *
+ * Google, Facebook and Apple carry their own palettes, and a brand mark
+ * repainted to match a surface is no longer the mark. `BadgeCheckIcon` is
+ * two-tone by design — a solid badge with a check punched through it in a
+ * second colour — and `checkColor` is a public prop that a single-colour
+ * outline could only ignore. All four are drawn here rather than mapped.
  */
 import { createContext, useContext, type ReactNode } from 'react';
-import Svg, { Circle, G, Path, type SvgProps } from 'react-native-svg';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
+import Svg, { G, Path, type SvgProps } from 'react-native-svg';
 import { useDirection } from '../hooks/use-direction';
+import HgAlert02Icon from '@hugeicons/core-free-icons/Alert02Icon';
+import HgArrowDown01Icon from '@hugeicons/core-free-icons/ArrowDown01Icon';
+import HgArrowDown02Icon from '@hugeicons/core-free-icons/ArrowDown02Icon';
+import HgArrowLeft01Icon from '@hugeicons/core-free-icons/ArrowLeft01Icon';
+import HgArrowRight01Icon from '@hugeicons/core-free-icons/ArrowRight01Icon';
+import HgArrowUp01Icon from '@hugeicons/core-free-icons/ArrowUp01Icon';
+import HgArrowUp02Icon from '@hugeicons/core-free-icons/ArrowUp02Icon';
+import HgArrowUpRight01Icon from '@hugeicons/core-free-icons/ArrowUpRight01Icon';
+import HgAttachment01Icon from '@hugeicons/core-free-icons/Attachment01Icon';
+import HgAudioWave01Icon from '@hugeicons/core-free-icons/AudioWave01Icon';
+import HgBookmark01Icon from '@hugeicons/core-free-icons/Bookmark01Icon';
+import HgBubbleChatIcon from '@hugeicons/core-free-icons/BubbleChatIcon';
+import HgCalendar03Icon from '@hugeicons/core-free-icons/Calendar03Icon';
+import HgCamera01Icon from '@hugeicons/core-free-icons/Camera01Icon';
+import HgCancel01Icon from '@hugeicons/core-free-icons/Cancel01Icon';
+import HgCheckListIcon from '@hugeicons/core-free-icons/CheckListIcon';
+import HgCheckmarkCircle01Icon from '@hugeicons/core-free-icons/CheckmarkCircle01Icon';
+import HgCircleIcon from '@hugeicons/core-free-icons/CircleIcon';
+import HgClock01Icon from '@hugeicons/core-free-icons/Clock01Icon';
+import HgCodeIcon from '@hugeicons/core-free-icons/CodeIcon';
+import HgCompassIcon from '@hugeicons/core-free-icons/CompassIcon';
+import HgCopy01Icon from '@hugeicons/core-free-icons/Copy01Icon';
+import HgCreditCardIcon from '@hugeicons/core-free-icons/CreditCardIcon';
+import HgCrosshairIcon from '@hugeicons/core-free-icons/CrosshairIcon';
+import HgDelete02Icon from '@hugeicons/core-free-icons/Delete02Icon';
+import HgDownload01Icon from '@hugeicons/core-free-icons/Download01Icon';
+import HgDragDropVerticalIcon from '@hugeicons/core-free-icons/DragDropVerticalIcon';
+import HgEyeIcon from '@hugeicons/core-free-icons/EyeIcon';
+import HgFavouriteIcon from '@hugeicons/core-free-icons/FavouriteIcon';
+import HgFile01Icon from '@hugeicons/core-free-icons/File01Icon';
+import HgFolder01Icon from '@hugeicons/core-free-icons/Folder01Icon';
+import HgFolderOpenIcon from '@hugeicons/core-free-icons/FolderOpenIcon';
+import HgFullScreenIcon from '@hugeicons/core-free-icons/FullScreenIcon';
+import HgGlobeIcon from '@hugeicons/core-free-icons/GlobeIcon';
+import HgHeading01Icon from '@hugeicons/core-free-icons/Heading01Icon';
+import HgImage01Icon from '@hugeicons/core-free-icons/Image01Icon';
+import HgInformationCircleIcon from '@hugeicons/core-free-icons/InformationCircleIcon';
+import HgKeyboardIcon from '@hugeicons/core-free-icons/KeyboardIcon';
+import HgLeftToRightListBulletIcon from '@hugeicons/core-free-icons/LeftToRightListBulletIcon';
+import HgLeftToRightListNumberIcon from '@hugeicons/core-free-icons/LeftToRightListNumberIcon';
+import HgLink01Icon from '@hugeicons/core-free-icons/Link01Icon';
+import HgLockIcon from '@hugeicons/core-free-icons/LockIcon';
+import HgLockOpenIcon from '@hugeicons/core-free-icons/LockOpenIcon';
+import HgMenu01Icon from '@hugeicons/core-free-icons/Menu01Icon';
+import HgMic01Icon from '@hugeicons/core-free-icons/Mic01Icon';
+import HgMinusSignIcon from '@hugeicons/core-free-icons/MinusSignIcon';
+import HgMoonIcon from '@hugeicons/core-free-icons/MoonIcon';
+import HgMoreHorizontalIcon from '@hugeicons/core-free-icons/MoreHorizontalIcon';
+import HgNotification03Icon from '@hugeicons/core-free-icons/Notification03Icon';
+import HgPackageIcon from '@hugeicons/core-free-icons/PackageIcon';
+import HgPauseIcon from '@hugeicons/core-free-icons/PauseIcon';
+import HgPencilEdit01Icon from '@hugeicons/core-free-icons/PencilEdit01Icon';
+import HgPlayIcon from '@hugeicons/core-free-icons/PlayIcon';
+import HgPlusSignIcon from '@hugeicons/core-free-icons/PlusSignIcon';
+import HgPlusSignSquareIcon from '@hugeicons/core-free-icons/PlusSignSquareIcon';
+import HgQuoteDownIcon from '@hugeicons/core-free-icons/QuoteDownIcon';
+import HgReceiptIcon from '@hugeicons/core-free-icons/ReceiptIcon';
+import HgRefreshCcwIcon from '@hugeicons/core-free-icons/RefreshCcwIcon';
+import HgRefreshCwIcon from '@hugeicons/core-free-icons/RefreshCwIcon';
+import HgRepeatIcon from '@hugeicons/core-free-icons/RepeatIcon';
+import HgSearch01Icon from '@hugeicons/core-free-icons/Search01Icon';
+import HgSent02Icon from '@hugeicons/core-free-icons/Sent02Icon';
+import HgSentIcon from '@hugeicons/core-free-icons/SentIcon';
+import HgShare08Icon from '@hugeicons/core-free-icons/Share08Icon';
+import HgShieldAlertIcon from '@hugeicons/core-free-icons/ShieldAlertIcon';
+import HgShieldCheckIcon from '@hugeicons/core-free-icons/ShieldCheckIcon';
+import HgSparklesIcon from '@hugeicons/core-free-icons/SparklesIcon';
+import HgStarIcon from '@hugeicons/core-free-icons/StarIcon';
+import HgSun03Icon from '@hugeicons/core-free-icons/Sun03Icon';
+import HgTextBoldIcon from '@hugeicons/core-free-icons/TextBoldIcon';
+import HgTextItalicIcon from '@hugeicons/core-free-icons/TextItalicIcon';
+import HgTick02Icon from '@hugeicons/core-free-icons/Tick02Icon';
+import HgUnfoldMoreIcon from '@hugeicons/core-free-icons/UnfoldMoreIcon';
 
 export interface IconProps extends SvgProps {
+  /** Both dimensions — icons are always square. */
   size?: number;
+  /** Overrides the inherited colour and the icon's own fallback. */
   color?: string;
+  /** Line weight. Defaults to 2, or to the glyph's own where it has one. */
+  strokeWidth?: number;
 }
 
 /**
@@ -68,378 +173,243 @@ const decorative = {
   importantForAccessibility: 'no-hide-descendants',
 } as const;
 
-/* -------------------------------------------------------------------------- */
-/* Stroked chrome icons                                                       */
-/* -------------------------------------------------------------------------- */
+/** The default line weight. See the note on weight above. */
+const STROKE = 2;
 
-export function CheckIcon({ size = 14, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#fff');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M20 6 9 17l-5-5"
-        stroke={resolved}
-        strokeWidth={3}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+interface IconDefaults {
+  /** Both dimensions at the size this glyph is normally drawn. */
+  size: number;
+  /** The colour used when neither a prop nor a provider supplies one. */
+  color: string;
+  /** Overrides `STROKE` for a glyph that has to match something beside it. */
+  strokeWidth?: number;
+  /** Whether the glyph's meaning is a horizontal direction. */
+  flip?: boolean;
+  /** Whether the glyph is a toggle that can be solid. See `ToggleIconProps`. */
+  fillable?: boolean;
 }
 
 /**
- * A single bar. Its weight is a prop because it has two jobs: it is the
- * indeterminate mark inside a checkbox, where it has to carry the same weight
- * as the check it stands in for, and it is the decrement half of a stepper,
- * where it has to match the plus beside it. Those are different weights, and a
- * bar that is heavier than the + it pairs with reads as a different glyph.
+ * Builds one icon from a glyph and the defaults it is normally drawn with.
+ *
+ * A factory rather than seventy near-identical components: what varies between
+ * them is data, and what does not — the colour order, the weight default, the
+ * mirror, the fill toggle, the prop passthrough — is worth having in exactly
+ * one place, where a fix reaches the whole set at once.
  */
-export function MinusIcon({ size = 14, color, strokeWidth = 3, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#fff');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M5 12h14"
-        stroke={resolved}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeLinejoin="round"
+function icon(glyph: IconSvgElement, defaults: IconDefaults) {
+  function Icon({
+    size = defaults.size,
+    color,
+    strokeWidth,
+    filled,
+    style,
+    ...props
+  }: ToggleIconProps) {
+    const resolved = useResolvedColor(color, defaults.color);
+    const rtl = useDirection() === 'rtl';
+    return (
+      <HugeiconsIcon
+        icon={glyph}
+        size={size}
+        color={resolved}
+        strokeWidth={strokeWidth ?? defaults.strokeWidth ?? STROKE}
+        fill={defaults.fillable && filled ? resolved : 'none'}
+        style={defaults.flip ? [{ transform: [{ scaleX: rtl ? -1 : 1 }] }, style] : style}
+        {...props}
       />
-    </Svg>
-  );
+    );
+  }
+
+  return Icon;
 }
 
-export function ChevronUpIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m18 15-6-6-6 6"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
+/* -------------------------------------------------------------------------- */
+/* Chrome                                                                   */
+/* -------------------------------------------------------------------------- */
 
-export function CalendarIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
+export const ChevronUpIcon = icon(HgArrowUp01Icon, { size: 16, color: '#737373' });
+export const ChevronDownIcon = icon(HgArrowDown01Icon, { size: 16, color: '#737373' });
+export const ChevronLeftIcon = icon(HgArrowLeft01Icon, {
+  size: 16,
+  color: '#737373',
+  flip: true,
+});
+export const ChevronRightIcon = icon(HgArrowRight01Icon, {
+  size: 16,
+  color: '#737373',
+  flip: true,
+});
+export const ChevronsUpDownIcon = icon(HgUnfoldMoreIcon, { size: 16, color: '#737373' });
+export const EllipsisIcon = icon(HgMoreHorizontalIcon, { size: 16, color: '#737373' });
+export const MenuIcon = icon(HgMenu01Icon, { size: 20, color: '#737373' });
+export const XIcon = icon(HgCancel01Icon, { size: 16, color: '#737373' });
+export const SearchIcon = icon(HgSearch01Icon, { size: 16, color: '#737373' });
+export const ArrowUpRightIcon = icon(HgArrowUpRight01Icon, {
+  size: 20,
+  color: '#fff',
+  flip: true,
+});
+export const PlusIcon = icon(HgPlusSignIcon, { size: 16, color: '#737373' });
+export const MinusIcon = icon(HgMinusSignIcon, { size: 14, color: '#fff', strokeWidth: 3 });
+export const CheckIcon = icon(HgTick02Icon, { size: 14, color: '#fff', strokeWidth: 3 });
+export const CircleIcon = icon(HgCircleIcon, { size: 16, color: '#737373', fillable: true });
+export const GripVerticalIcon = icon(HgDragDropVerticalIcon, {
+  size: 16,
+  color: '#737373',
+  strokeWidth: 2.5,
+});
+export const MaximizeIcon = icon(HgFullScreenIcon, { size: 16, color: '#737373' });
 
-/** A clock face reading ten past ten — the hour, a time field, a schedule. */
-export function ClockIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Circle
-        cx={12}
-        cy={12}
-        r={9}
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M12 7v5l3.5 2"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
+/* -------------------------------------------------------------------------- */
+/* Status                                                                   */
+/* -------------------------------------------------------------------------- */
 
-/** A keyboard — swapping a gesture-driven control for typed entry. */
-export function KeyboardIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M7 9h.01M11 9h.01M15 9h.01M7 12h.01M11 12h.01M15 12h.01M8 15h8"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
+export const InfoIcon = icon(HgInformationCircleIcon, { size: 20, color: 'currentColor' });
+export const CheckCircleIcon = icon(HgCheckmarkCircle01Icon, {
+  size: 20,
+  color: 'currentColor',
+});
+export const AlertTriangleIcon = icon(HgAlert02Icon, { size: 20, color: 'currentColor' });
+export const ShieldAlertIcon = icon(HgShieldAlertIcon, { size: 16, color: '#737373' });
+export const ShieldCheckIcon = icon(HgShieldCheckIcon, { size: 16, color: '#737373' });
+export const BellIcon = icon(HgNotification03Icon, { size: 16, color: '#737373' });
 
-export function BookmarkIcon({
-  size = 16,
-  color,
-  filled,
-  ...props
-}: IconProps & { filled?: boolean }) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"
-        fill={filled ? resolved : 'none'}
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
+/* -------------------------------------------------------------------------- */
+/* Time and place                                                           */
+/* -------------------------------------------------------------------------- */
 
-export function ChevronDownIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m6 9 6 6 6-6"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
+export const CalendarIcon = icon(HgCalendar03Icon, { size: 16, color: '#737373' });
+export const ClockIcon = icon(HgClock01Icon, { size: 16, color: '#737373' });
+export const GlobeIcon = icon(HgGlobeIcon, { size: 16, color: '#737373' });
+export const CompassIcon = icon(HgCompassIcon, { size: 16, color: '#737373' });
+export const CrosshairIcon = icon(HgCrosshairIcon, { size: 16, color: '#737373' });
+
+/* -------------------------------------------------------------------------- */
+/* Text and editing                                                         */
+/* -------------------------------------------------------------------------- */
+
+export const BoldIcon = icon(HgTextBoldIcon, { size: 16, color: '#737373' });
+export const ItalicIcon = icon(HgTextItalicIcon, { size: 16, color: '#737373' });
+export const HeadingIcon = icon(HgHeading01Icon, { size: 16, color: '#737373' });
+export const ListIcon = icon(HgLeftToRightListBulletIcon, { size: 16, color: '#737373' });
+export const ListOrderedIcon = icon(HgLeftToRightListNumberIcon, {
+  size: 16,
+  color: '#737373',
+});
+export const ListChecksIcon = icon(HgCheckListIcon, { size: 16, color: '#737373' });
+export const QuoteIcon = icon(HgQuoteDownIcon, { size: 16, color: '#737373' });
+export const CodeIcon = icon(HgCodeIcon, { size: 16, color: '#737373' });
+export const PencilIcon = icon(HgPencilEdit01Icon, { size: 16, color: '#737373' });
+export const KeyboardIcon = icon(HgKeyboardIcon, { size: 16, color: '#737373' });
+
+/* -------------------------------------------------------------------------- */
+/* Files and media                                                          */
+/* -------------------------------------------------------------------------- */
+
+export const FileIcon = icon(HgFile01Icon, { size: 16, color: '#737373' });
+export const FolderIcon = icon(HgFolder01Icon, { size: 16, color: '#737373' });
+export const FolderOpenIcon = icon(HgFolderOpenIcon, { size: 16, color: '#737373' });
+export const ImageIcon = icon(HgImage01Icon, { size: 16, color: '#737373' });
+export const PaperclipIcon = icon(HgAttachment01Icon, { size: 16, color: '#737373' });
+export const CameraIcon = icon(HgCamera01Icon, { size: 16, color: '#737373' });
+export const MicIcon = icon(HgMic01Icon, { size: 16, color: '#737373' });
+export const AudioLinesIcon = icon(HgAudioWave01Icon, { size: 16, color: '#737373' });
+export const PlayIcon = icon(HgPlayIcon, { size: 16, color: '#737373' });
+export const PauseIcon = icon(HgPauseIcon, { size: 16, color: '#737373', strokeWidth: 1.5 });
+export const DownloadIcon = icon(HgDownload01Icon, { size: 16, color: '#737373' });
+export const PackageIcon = icon(HgPackageIcon, { size: 16, color: '#737373' });
+
+/* -------------------------------------------------------------------------- */
+/* Actions                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export const CopyIcon = icon(HgCopy01Icon, { size: 16, color: '#737373' });
+export const LinkIcon = icon(HgLink01Icon, { size: 16, color: '#737373' });
+export const ShareNodesIcon = icon(HgShare08Icon, { size: 16, color: '#737373' });
+export const SendIcon = icon(HgSentIcon, { size: 16, color: '#737373', flip: true });
+export const SendArrowIcon = icon(HgSent02Icon, {
+  size: 16,
+  color: '#737373',
+  strokeWidth: 2.5,
+});
+export const TrashIcon = icon(HgDelete02Icon, { size: 16, color: '#737373' });
+export const RotateCcwIcon = icon(HgRefreshCcwIcon, { size: 16, color: '#737373' });
+export const RotateCwIcon = icon(HgRefreshCwIcon, { size: 16, color: '#737373' });
+export const RepeatIcon = icon(HgRepeatIcon, { size: 16, color: '#737373' });
+export const PlusSquareIcon = icon(HgPlusSignSquareIcon, { size: 16, color: '#737373' });
+export const EyeIcon = icon(HgEyeIcon, { size: 16, color: '#737373' });
+export const LockIcon = icon(HgLockIcon, { size: 16, color: '#737373' });
+export const UnlockIcon = icon(HgLockOpenIcon, { size: 16, color: '#737373' });
+
+/* -------------------------------------------------------------------------- */
+/* Marks and moods                                                          */
+/* -------------------------------------------------------------------------- */
+
+export const StarIcon = icon(HgStarIcon, {
+  size: 20,
+  color: '#737373',
+  strokeWidth: 1.6,
+  fillable: true,
+});
+export const HeartIcon = icon(HgFavouriteIcon, {
+  size: 16,
+  color: '#737373',
+  fillable: true,
+});
+export const BookmarkIcon = icon(HgBookmark01Icon, {
+  size: 16,
+  color: '#737373',
+  fillable: true,
+});
+export const SparklesIcon = icon(HgSparklesIcon, { size: 16, color: '#737373' });
+export const MessageCircleIcon = icon(HgBubbleChatIcon, {
+  size: 16,
+  color: '#737373',
+  fillable: true,
+});
+export const CardIcon = icon(HgCreditCardIcon, { size: 16, color: '#737373' });
+export const ReceiptIcon = icon(HgReceiptIcon, { size: 16, color: '#737373' });
+export const SunIcon = icon(HgSun03Icon, { size: 18, color: '#f5f5f5' });
+export const MoonIcon = icon(HgMoonIcon, { size: 18, color: '#262626' });
+
+/* -------------------------------------------------------------------------- */
+/* A post's toggles                                                         */
+/* -------------------------------------------------------------------------- */
+
+export const ArrowUpIcon = icon(HgArrowUp02Icon, {
+  size: 16,
+  color: '#737373',
+  fillable: true,
+});
+export const ArrowDownIcon = icon(HgArrowDown02Icon, {
+  size: 16,
+  color: '#737373',
+  fillable: true,
+});
+
+/* -------------------------------------------------------------------------- */
+/* Drawn by hand                                                            */
+/* -------------------------------------------------------------------------- */
 
 /**
- * Mirrors a directional glyph in a right-to-left subtree.
+ * The icons a post's action row is made of.
  *
- * Yoga moves a chevron to the other end of its row, but it cannot turn the
- * glyph around — so an RTL list row ends up with a right-pointing chevron on
- * its left edge, pointing back at the text. These arrows mean "onward" and
- * "back", and which way that is depends on which way you read.
- *
- * Only for glyphs whose meaning *is* a direction. An icon that happens to be
- * asymmetric — a pencil, a magnifier — means the same thing either way round,
- * and flipping it is just a wrong drawing. The vertical axis never mirrors, so
- * the up and down glyphs stay as they are drawn.
- *
- * Left-to-right gets an identity transform rather than no transform at all.
- * Dropping the prop leaves the last matrix the view was given in place, so a
- * glyph mirrored once stays mirrored when the direction flips back — the
- * arrows in an app that can switch direction at runtime end up pointing at the
- * text one toggle in, and never recover.
+ * These are the only ones in the set that take `filled`, and it is not a
+ * stylistic choice: a like, a save and a vote are toggles, and the outline and
+ * the solid are the two states of one control. Drawn as two different icons
+ * they would swap shape under the finger; drawn as one that fills, the shape
+ * stays put and only the inside changes.
  */
-const IDENTITY = 'translate(0 0)';
-const MIRROR = 'scale(-1 1) translate(-24 0)';
-
-function useFlip(): { transform: string } {
-  return { transform: useDirection() === 'rtl' ? MIRROR : IDENTITY };
+export interface ToggleIconProps extends IconProps {
+  /** Solid rather than outlined — the on state of a like, a save, a vote. */
+  filled?: boolean;
 }
 
-export function ChevronLeftIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  const flip = useFlip();
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m15 18-6-6 6-6"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        {...flip}
-      />
-    </Svg>
-  );
+export interface BadgeCheckIconProps extends IconProps {
+  /** The tick's colour when the rosette is solid. Defaults to white. */
+  checkColor?: string;
 }
-
-export function ChevronRightIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  const flip = useFlip();
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m9 18 6-6-6-6"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        {...flip}
-      />
-    </Svg>
-  );
-}
-
-export function EllipsisIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Circle cx={5} cy={12} r={1.6} fill={resolved} />
-      <Circle cx={12} cy={12} r={1.6} fill={resolved} />
-      <Circle cx={19} cy={12} r={1.6} fill={resolved} />
-    </Svg>
-  );
-}
-
-export function MenuIcon({ size = 20, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M4 6h16M4 12h16M4 18h16"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-export function XIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M18 6 6 18M6 6l12 12"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function SearchIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Circle cx={11} cy={11} r={8} stroke={resolved} strokeWidth={2} />
-      <Path
-        d="m21 21-4.3-4.3"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function ArrowUpRightIcon({ size = 20, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#fff');
-  const flip = useFlip();
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M7 17 17 7M8 7h9v9"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        {...flip}
-      />
-    </Svg>
-  );
-}
-
-export function SunIcon({ size = 18, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#f5f5f5');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Circle cx={12} cy={12} r={4} stroke={resolved} strokeWidth={2} />
-      <Path
-        d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-export function MoonIcon({ size = 18, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#262626');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Filled status icons (Alert / Toast indicators)                             */
-/* -------------------------------------------------------------------------- */
-
-/** Info circle. Used for `default`, `info` and `destructive` status. */
-export function InfoIcon({ size = 20, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, 'currentColor');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 16 16" fill={resolved} {...decorative} {...props}>
-      <Path
-        d="M8 13.5a5.5 5.5 0 1 0 0-11a5.5 5.5 0 0 0 0 11M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14m1-9.5a1 1 0 1 1-2 0a1 1 0 0 1 2 0m-.25 3a.75.75 0 0 0-1.5 0V11a.75.75 0 0 0 1.5 0z"
-        fillRule="evenodd"
-        clipRule="evenodd"
-      />
-    </Svg>
-  );
-}
-
-/** Check circle. Used for `success` status. */
-export function CheckCircleIcon({ size = 20, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, 'currentColor');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 16 16" fill={resolved} {...decorative} {...props}>
-      <Path
-        d="M13.5 8a5.5 5.5 0 1 1-11 0a5.5 5.5 0 0 1 11 0M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0m-3.9-1.55a.75.75 0 1 0-1.2-.9L7.419 8.858L6.03 7.47a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.13-.08z"
-        fillRule="evenodd"
-        clipRule="evenodd"
-      />
-    </Svg>
-  );
-}
-
-/** Warning triangle. Used for `warning` status. */
-export function AlertTriangleIcon({ size = 20, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, 'currentColor');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 16 16" fill={resolved} {...decorative} {...props}>
-      <Path
-        d="M7.134 2.994L2.217 11.5a1 1 0 0 0 .866 1.5h9.834a1 1 0 0 0 .866-1.5L8.866 2.993a1 1 0 0 0-1.732 0m3.03-.75c-.962-1.665-3.366-1.665-4.329 0L.918 10.749c-.963 1.666.24 3.751 2.165 3.751h9.834c1.925 0 3.128-2.085 2.164-3.751zM8 5a.75.75 0 0 1 .75.75v2a.75.75 0 0 1-1.5 0v-2A.75.75 0 0 1 8 5m1 5.75a1 1 0 1 1-2 0a1 1 0 0 1 2 0"
-        fillRule="evenodd"
-        clipRule="evenodd"
-      />
-    </Svg>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Brand marks                                                                */
-/* -------------------------------------------------------------------------- */
-
-/*
- * These keep their official colours and so opt out of the icon colour
- * context — recolouring a brand mark to match a button is a trademark
- * problem, not a theming one.
- */
 
 /** Google "G", in the four official brand colours. */
 export function GoogleIcon({ size = 18, ...props }: Omit<IconProps, 'color'>) {
@@ -468,6 +438,8 @@ export function GoogleIcon({ size = 18, ...props }: Omit<IconProps, 'color'>) {
 }
 
 /** Facebook "f" mark. */
+
+/** Facebook "f" mark. */
 export function FacebookIcon({ size = 18, ...props }: Omit<IconProps, 'color'>) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" {...decorative} {...props}>
@@ -478,6 +450,12 @@ export function FacebookIcon({ size = 18, ...props }: Omit<IconProps, 'color'>) 
     </Svg>
   );
 }
+
+/**
+ * Apple mark. Monochrome by design, so unlike the other brand marks it does
+ * follow the icon colour context — Apple's guidelines require it to match the
+ * button's text colour.
+ */
 
 /**
  * Apple mark. Monochrome by design, so unlike the other brand marks it does
@@ -499,973 +477,6 @@ export function AppleIcon({ size = 18, color, ...props }: IconProps) {
 /* -------------------------------------------------------------------------- */
 /* Event icons (Timeline and other status surfaces)                           */
 /* -------------------------------------------------------------------------- */
-
-export function PlusSquareIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM12 8v8M8 12h8"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Three connected nodes — a branch, a share, a fan-out. */
-export function ShareNodesIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Circle cx={18} cy={5} r={2.5} stroke={resolved} strokeWidth={2} />
-      <Circle cx={6} cy={12} r={2.5} stroke={resolved} strokeWidth={2} />
-      <Circle cx={18} cy={19} r={2.5} stroke={resolved} strokeWidth={2} />
-      <Path
-        d="m8.6 10.7 6.8-4M8.6 13.3l6.8 4"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-/** Shield with an exclamation — a tripped guardrail. */
-export function ShieldAlertIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M12 2.5 4.5 5.5v6c0 4.6 3.2 8.6 7.5 10 4.3-1.4 7.5-5.4 7.5-10v-6z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-      <Path d="M12 8v4" stroke={resolved} strokeWidth={2} strokeLinecap="round" />
-      <Circle cx={12} cy={15.5} r={1} fill={resolved} />
-    </Svg>
-  );
-}
-
-/** Shield with a check — a passed verification. */
-export function ShieldCheckIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M12 2.5 4.5 5.5v6c0 4.6 3.2 8.6 7.5 10 4.3-1.4 7.5-5.4 7.5-10v-6z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-      <Path
-        d="m9 12 2 2 4-4"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function BellIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function PackageIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m12 2.5 8 4.5v10l-8 4.5-8-4.5V7zM4 7l8 4.5L20 7M12 11.5V21"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function CardIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function ReceiptIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M5 3h14v18l-2.3-1.6L14.4 21l-2.4-1.6L9.6 21l-2.3-1.6L5 21zM9 8h6M9 12h6"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Paper plane — sent, submitted, approved-and-forwarded. */
-export function SendIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  const flip = useFlip();
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M21.5 2.5 2.5 10l7.5 3 3 7.5z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinejoin="round"
-        {...flip}
-      />
-    </Svg>
-  );
-}
-
-/** Document with a folded corner — a file attachment. */
-export function FileIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/* ------------------------------------------------------------------ *
- * Text formatting. Drawn as the letterforms and marks an editor's
- * toolbar uses, rather than as pictures of them — a B that is a bold B
- * is read before it is recognised.
- * ------------------------------------------------------------------ */
-
-/** Bold — the two-bowled B. */
-export function BoldIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M6 4h8a4 4 0 0 1 0 8H6zM6 12h9a4 4 0 0 1 0 8H6z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Italic — a slanted stroke between its serifs. */
-export function ItalicIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M19 4h-9M14 20H5M15 4 9 20"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Heading — the crossbar H. */
-export function HeadingIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M6 12h12M6 20V4M18 20V4"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Bulleted list — three rules, each behind a dot. */
-export function ListIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Numbered list — the same rules, counted. */
-export function ListOrderedIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M10 6h11M10 12h11M10 18h11M4 4h1v4M4 8h2M6 15a1.5 1.5 0 1 0-2-1.4M4 17l2-2M4 17h2"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Block quote — the rule a quoted passage is set behind. */
-export function QuoteIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M4 5v14M9 7h11M9 12h11M9 17h7"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Code — the pair of angle brackets. */
-export function CodeIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m8 18-6-6 6-6M16 6l6 6-6 6"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Closed folder with a tab — a branch nobody has opened yet. */
-export function FolderIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/**
- * Folder tipped open, its front face sheared to the side — the same branch
- * once it is expanded. Drawn as a separate glyph rather than a rotation of
- * `FolderIcon`, because a folder that opens by spinning reads as a mistake.
- */
-export function FolderOpenIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M6 14l1.45-2.9A2 2 0 0 1 9.24 10H22a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Framed picture with a sun and a corner peak — an image attachment. */
-export function ImageIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M4 4h16v16H4z M8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM20 15l-4.5-4.5L6 20"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** A paperclip — attaching a file to a composer. */
-export function PaperclipIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M21 8.5 11.3 18.2a4 4 0 0 1-5.6-5.6l9-9a2.5 2.5 0 0 1 3.6 3.6l-9 9a1 1 0 0 1-1.5-1.5l8.3-8.3"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** A capsule on a stand — a microphone, for anything voice. */
-/** A voice waveform — dictation, voice mode, a recording that has a shape. */
-export function AudioLinesIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function MicIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11v1a7 7 0 0 0 14 0v-1M12 19v3"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** A filled triangle — start playback. */
-export function PlayIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path d="M7 4.5v15l13-7.5z" fill={resolved} stroke={resolved} strokeWidth={2} strokeLinejoin="round" />
-    </Svg>
-  );
-}
-
-/** Two filled bars — hold playback where it is. */
-export function PauseIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path d="M8 5h2v14H8zM14 5h2v14h-2z" fill={resolved} stroke={resolved} strokeWidth={1.5} strokeLinejoin="round" />
-    </Svg>
-  );
-}
-
-/**
- * A five-pointed star — the mark of a Rating. `filled` paints the interior;
- * left hollow it is the outline of an unearned star. Both share the same
- * geometry, so a filled star clipped over an empty one lines up to the pixel.
- */
-export function StarIcon({
-  size = 20,
-  color,
-  filled = false,
-  ...props
-}: IconProps & { filled?: boolean }) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.82 6.2 20.86l1.11-6.46-4.7-4.58 6.49-.94z"
-        fill={filled ? resolved : 'none'}
-        stroke={resolved}
-        strokeWidth={1.6}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-/** A pencil at an angle — draw, sign, edit by hand. */
-export function PencilIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** An arrow curling anticlockwise — undo, reset, start over. */
-export function RotateCcwIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M3 12a9 9 0 1 0 2.64-6.36L3 8"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M3 3v5h5"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** An arrow curling clockwise — redo, put back what was undone. */
-export function RotateCwIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M21 12a9 9 0 1 1-2.64-6.36L21 8"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M21 3v5h-5"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** A bin — discard what is there. */
-export function TrashIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M4 7h16M10 4h4M6 7l1 13h10l1-13"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/**
- * Two columns of dots — the grip on a row that can be dragged somewhere else.
- *
- * Dots rather than the stacked rules of a menu glyph, and two columns rather
- * than one: the pattern has to read as a surface to take hold of from either
- * side, and a single column reads as a divider instead.
- */
-export function GripVerticalIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01"
-        stroke={resolved}
-        strokeWidth={2.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** An arrow into a tray — save the thing to a file. */
-export function DownloadIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** A cross of two strokes — zoom in, add. Pairs with MinusIcon. */
-export function PlusIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M12 5v14M5 12h14"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-/** Four corners pushing outward — fit everything into view. */
-export function MaximizeIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Crosshairs on a centre dot — put me where I actually am. */
-export function CrosshairIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Circle cx={12} cy={12} r={7} stroke={resolved} strokeWidth={2} />
-      <Path
-        d="M12 2v3M12 19v3M2 12h3M19 12h3"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-      <Circle cx={12} cy={12} r={1.5} fill={resolved} />
-    </Svg>
-  );
-}
-
-/** A compass needle — which way is north. */
-export function GlobeIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Circle
-        cx={12}
-        cy={12}
-        r={10}
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function CameraIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Circle
-        cx={12}
-        cy={13}
-        r={3}
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/**
- * The glyph on a control that opens a list of values — a stacked pair, because
- * one chevron promises a direction the control does not travel in.
- */
-export function ChevronsUpDownIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m7 15 5 5 5-5M7 9l5-5 5 5"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function CompassIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Circle cx={12} cy={12} r={9} stroke={resolved} strokeWidth={2} />
-      <Path
-        d="M15.5 8.5l-2 5-5 2 2-5 5-2z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** A closed padlock — the thing behind it cannot be moved. */
-export function LockIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M5 11h14v10H5z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M8 11V7a4 4 0 0 1 8 0v4"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-/** The same padlock with its shackle swung open — freely movable. */
-export function UnlockIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M5 11h14v10H5z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M8 11V7a4 4 0 0 1 7.5-2"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-/**
- * Four-pointed sparkles. The mark for a model doing something on your behalf —
- * a reasoning step, a generated plan — where a gear or a brain reads as
- * machinery rather than as assistance.
- */
-export function SparklesIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M11 3 12.6 8.4 18 10l-5.4 1.6L11 17l-1.6-5.4L4 10l5.4-1.6z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M18 15.5 18.7 18l2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7z"
-        stroke={resolved}
-        strokeWidth={1.6}
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Two stacked sheets — the copy action, paired with CheckIcon once it has run. */
-export function CopyIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M9 9h10v12H9z"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M15 5H5v12h2"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Two links of a chain, for a row that opens somewhere outside the app. */
-export function LinkIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** A list with its items ticked off — a plan, or a run of steps. */
-export function ListChecksIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m3 6 1.8 1.8L8 4.5M3 16l1.8 1.8L8 14.5"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M12 6.5h9M12 17.5h9"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-/** A hollow ring, for a step that has not started. */
-export function CircleIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Circle cx={12} cy={12} r={8} stroke={resolved} strokeWidth={2} />
-    </Svg>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Social                                                                     */
-/* -------------------------------------------------------------------------- */
-
-/**
- * The icons a post's action row is made of.
- *
- * These are the only ones in the set that take `filled`, and it is not a
- * stylistic choice: a like, a save and a vote are toggles, and the outline and
- * the solid are the two states of one control. Drawn as two different icons
- * they would swap shape under the finger; drawn as one that fills, the shape
- * stays put and only the inside changes.
- */
-export interface ToggleIconProps extends IconProps {
-  /** Solid rather than outlined — the on state of a like, a save, a vote. */
-  filled?: boolean;
-}
-
-/** Upvote. Filled once the vote is cast. */
-/**
- * A plain up arrow, drawn symmetrically about the centre of its box so it sits
- * dead centre in a circular button.
- *
- * Distinct from `ArrowUpIcon`, which is the heavy solid arrow a vote control
- * wants, and from `SendIcon`, which is a paper plane. This is the one a
- * composer's send button uses.
- */
-export function SendArrowIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m5 12 7-7 7 7M12 19V5"
-        stroke={resolved}
-        strokeWidth={2.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function ArrowUpIcon({ size = 16, color, filled, ...props }: ToggleIconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M9 18v-6H5l7-7 7 7h-4v6z"
-        fill={filled ? resolved : 'none'}
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Downvote. The same arrow, turned over. */
-export function ArrowDownIcon({ size = 16, color, filled, ...props }: ToggleIconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M9 6v6H5l7 7 7-7h-4V6z"
-        fill={filled ? resolved : 'none'}
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** A like. */
-export function HeartIcon({ size = 16, color, filled, ...props }: ToggleIconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
-        fill={filled ? resolved : 'none'}
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** A reply, or the count of them. */
-export function MessageCircleIcon({ size = 16, color, filled, ...props }: ToggleIconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"
-        fill={filled ? resolved : 'none'}
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** Views — how many times a thing has been seen rather than acted on. */
-export function EyeIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Circle cx={12} cy={12} r={3} stroke={resolved} strokeWidth={2} />
-    </Svg>
-  );
-}
-
-/** A repost — the same thing sent round again. */
-export function RepeatIcon({ size = 16, color, ...props }: IconProps) {
-  const resolved = useResolvedColor(color, '#737373');
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...props}>
-      <Path
-        d="m2 9 3-3 3 3M5 6v10a2 2 0 0 0 2 2h6M22 15l-3 3-3-3M19 18V8a2 2 0 0 0-2-2h-6"
-        stroke={resolved}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export interface BadgeCheckIconProps extends IconProps {
-  /** The tick's colour when the rosette is solid. Defaults to white. */
-  checkColor?: string;
-}
 
 /**
  * The verified rosette.

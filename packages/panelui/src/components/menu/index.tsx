@@ -57,12 +57,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
-import Check from 'lucide-react-native/icons/check';
-import ChevronLeft from 'lucide-react-native/icons/chevron-left';
-import ChevronRight from 'lucide-react-native/icons/chevron-right';
-import Circle from 'lucide-react-native/icons/circle';
 import { Text, textChildren } from '../../primitives/text';
-import { useDirection, useDirectionSign } from '../../hooks/use-direction';
+import { useDirectionSign } from '../../hooks/use-direction';
+import { CheckIcon, ChevronRightIcon, CircleIcon } from '../../icons';
 import { selectionTick } from '../../utils/haptics';
 import { cn } from '../../utils/cn';
 import { Popover, type PopoverContentProps, type PopoverProps } from '../popover';
@@ -570,7 +567,7 @@ export function MenuCheckboxItem({
       // as a different row rather than the same one in a new state.
       icon={
         checked ? (
-          <Check
+          <CheckIcon
             size={16}
             strokeWidth={INDICATOR_STROKE}
             color={tint ?? INDICATOR_FALLBACK}
@@ -654,14 +651,14 @@ export function MenuRadioItem({
             // the tick beside it, and drawing one of the two as a rounded box
             // is what makes them optically different sizes at the same nominal
             // one.
-            <Circle
+            <CircleIcon
               size={8}
+              filled
               strokeWidth={INDICATOR_STROKE}
               color={tint ?? INDICATOR_FALLBACK}
-              fill={tint ?? INDICATOR_FALLBACK}
             />
           ) : (
-            <Check
+            <CheckIcon
               size={16}
               strokeWidth={INDICATOR_STROKE}
               color={tint ?? INDICATOR_FALLBACK}
@@ -737,13 +734,8 @@ export interface MenuSubTriggerProps
 export function MenuSubTrigger({ className, children, icon, onSelect, ...props }: MenuSubTriggerProps) {
   const { open, toggle } = useMenuSub('Menu.SubTrigger');
   const sign = useDirectionSign();
-  const direction = useDirection();
   const reducedMotion = useReducedMotion();
   const chevronTint = useTint('--color-muted-foreground');
-  // The glyph mirrors by being the other glyph. A `scaleX` flip would work on
-  // a chevron, but it also flips the rotation below with it — and this one is
-  // already being rotated.
-  const Chevron = direction === 'rtl' ? ChevronLeft : ChevronRight;
   const progress = useSharedValue(open ? 1 : 0);
 
   useEffect(() => {
@@ -769,7 +761,10 @@ export function MenuSubTrigger({ className, children, icon, onSelect, ...props }
       className={className}
       trailing={
         <Animated.View style={chevronStyle}>
-          <Chevron
+          {/* The mirror and the rotation sit on different views, so they
+              compose: the glyph turns itself around under RTL, and the parent
+              turns the result through the same quarter the other way. */}
+          <ChevronRightIcon
             size={16}
             strokeWidth={INDICATOR_STROKE}
             color={chevronTint ?? INDICATOR_FALLBACK}

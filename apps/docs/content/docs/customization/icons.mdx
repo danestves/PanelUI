@@ -3,10 +3,15 @@ title: Icons
 description: Every icon in the library, what to import, and how they take their colour and size.
 ---
 
-PanelUI ships a small icon set — enough to draw its own components without
-pulling in a dependency, and enough for most of an app. Every one is a React
-component exported from the package, so there is nothing to install and no
-sprite sheet to load.
+PanelUI ships a small icon set — enough to draw its own components, and enough
+for most of an app. Every one is a React component exported from the package,
+so there is nothing to install alongside it and no sprite sheet to load.
+
+The glyphs come from Hugeicons, which the package depends on; the wrappers are
+what make them behave like part of the library — a per-icon default size, the
+inherited colour below, and the right-to-left mirroring further down. Four are
+drawn by hand instead: the Google, Facebook and Apple marks carry their own
+palettes, and `BadgeCheckIcon` is two-tone.
 
 ```tsx
 import { SearchIcon, ClockIcon } from 'panelui-native';
@@ -38,8 +43,22 @@ to copy its tag.
 Each icon has a default suited to where it is normally drawn, so most call
 sites can leave it off. Most default to **16**. `CheckIcon` and `MinusIcon`
 default to 14, being the glyphs inside a checkbox. Eleven that are usually
-drawn larger — the brand marks, the sun and moon toggles, the filled status
-icons, `MenuIcon`, `ArrowUpRightIcon` and `StarIcon` — default to 18 or 20.
+drawn larger — the brand marks, the sun and moon toggles, the status icons,
+`MenuIcon`, `ArrowUpRightIcon` and `StarIcon` — default to 18 or 20.
+
+## Weight
+
+`strokeWidth` sets the line weight, and defaults to **2**.
+
+```tsx
+<BellIcon strokeWidth={1.5} />
+```
+
+The set is drawn at 24 and used at 14 to 20, and a hairline that reads
+correctly at full size thins to nothing at two thirds of it — so the default is
+heavier than the drawings' own. A few glyphs carry their own weight because
+they sit beside something they have to match: the check and the bar inside a
+checkbox, the grip on a drag handle.
 
 ## Colour
 
@@ -107,25 +126,37 @@ inside it, which defaults to white.
 
 ## Direction
 
-`ChevronLeftIcon` and `ChevronRightIcon` mirror themselves inside a
-`Direction dir="rtl"` subtree. Yoga moves a chevron to the other end of its
-row, but it cannot turn the glyph around — so without this an RTL list row ends
-up with a right-pointing chevron on its left edge, pointing back at the text.
+Four icons mirror themselves inside a `Direction dir="rtl"` subtree:
+`ChevronLeftIcon`, `ChevronRightIcon`, `ArrowUpRightIcon` and `SendIcon`. Yoga
+moves a chevron to the other end of its row, but it cannot turn the glyph
+around — so without this an RTL list row ends up with a right-pointing chevron
+on its left edge, pointing back at the text.
 
 Only glyphs whose meaning *is* a direction do this. A pencil or a magnifier
 means the same thing either way round, and flipping it would just be a wrong
-drawing.
+drawing. The vertical axis does not mirror either, so `ChevronUpIcon` and
+`ChevronDownIcon` stay as they are drawn.
 
 ## Using another icon set
 
 Nothing in PanelUI requires its own icons. Every prop that takes an icon takes
-any React element, so a `lucide-react-native` or `@expo/vector-icons` component
-drops straight in:
+any React element, so a component from `@expo/vector-icons`, or one you drew
+yourself, drops straight in:
 
 ```tsx
-import { Rocket } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 
-<Button startContent={<Rocket size={16} />}>Launch</Button>
+<Button startContent={<Feather name="send" size={16} />}>Launch</Button>
+```
+
+The whole of Hugeicons is available too, since the package already depends on
+it — the set here is the part the library needed, not a limit:
+
+```tsx
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import RocketIcon from '@hugeicons/core-free-icons/Rocket01Icon';
+
+<Button startContent={<HugeiconsIcon icon={RocketIcon} size={16} />}>Launch</Button>
 ```
 
 The one thing you give up is the colour context: a third-party icon does not
@@ -133,7 +164,7 @@ know about `IconColorProvider`, so on a coloured surface it needs the colour
 passing explicitly.
 
 ```tsx
-<Button startContent={<Rocket size={16} color="white" />}>Launch</Button>
+<Button startContent={<Feather name="send" size={16} color="white" />}>Launch</Button>
 ```
 
 ## Next

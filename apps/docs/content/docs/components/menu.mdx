@@ -338,6 +338,7 @@ The panel's surface is a layer rather than a background, so it can be replaced. 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `transform` | `[{ rotate: ${progress.value * 90 * sign}deg }],` | — |  |
+| `compose` | `the glyph turns itself around under RTL, and the parent` | — |  |
 
 ### Menu.SubContent
 
@@ -355,7 +356,7 @@ Every row carries the `menuitem` role, and a checkbox, radio or submenu row publ
 
 ### Indicators, and your own icons
 
-The tick, the radio dot and the submenu chevron are drawn with [`lucide-react-native`](https://lucide.dev), which Menu depends on. They are tinted from `--color-popover-foreground` and `--color-muted-foreground`, and the chevron becomes the mirrored glyph under RTL rather than being flipped — it is already being rotated, and a `scaleX` would rotate the wrong way with it.
+The tick, the radio dot and the submenu chevron come from the library's own icon set, tinted from `--color-popover-foreground` and `--color-muted-foreground`. The chevron mirrors itself under RTL, and the quarter turn that opens a submenu is applied to the view around it — two transforms on two views, which compose, rather than one view trying to carry both.
 
 `Menu.Item`’s `icon` prop takes any element, from any set, drawn in an 18pt column. Icons from outside this library do not read the ambient icon colour, so pass `color` yourself:
 

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { DollarSign, Target } from "lucide-react-native";
+import { HugeiconsIcon } from "@hugeicons/react-native";
+import Dollar01Icon from "@hugeicons/core-free-icons/Dollar01Icon";
 import { Pressable, ScrollView, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { Avatar, Badge, BookmarkIcon, Button, Card, CheckIcon, Chip, DownloadIcon, EllipsisIcon, Frame, InfoIcon, Input, Item, Kpi, Label, LockIcon, LineChart, type LineChartHandle, Loader, type LoaderVariant, MarkdownEditor, Marker, Marquee, Menu, Message, MessageCircleIcon, PackageIcon, PencilIcon, PlusSquareIcon, Post, Progress, RadarChart, type RadarChartDatum, RadioGroup, SearchIcon, ShareNodesIcon, ShieldCheckIcon, Separator, Surface, Switch, Tabs, Text, Tooltip, TrashIcon, useToast } from "panelui-native";
+import { Avatar, Badge, BookmarkIcon, Button, Card, CheckIcon, Chip, CrosshairIcon, DownloadIcon, EllipsisIcon, Frame, InfoIcon, Input, Item, Kpi, Label, LineChart, Loader, LockIcon, MarkdownEditor, Marker, Marquee, Menu, Message, MessageCircleIcon, PackageIcon, PencilIcon, PlusSquareIcon, Post, Progress, RadarChart, RadioGroup, SearchIcon, Separator, ShareNodesIcon, ShieldCheckIcon, Surface, Switch, Tabs, Text, Tooltip, TrashIcon, type LineChartHandle, type LoaderVariant, type RadarChartDatum, useToast } from "panelui-native";
 import { useCSSVariable } from "uniwind";
 import { ChoroplethBlock, DeliveryTrackerBlock, HeatmapBlock, LogisticsNetworkBlock, PlacesBlock, StoreLocatorBlock, UptimeMonitorBlock } from "../../components/map-blocks";
 import type { ComponentEntry } from '../component-types';
@@ -585,7 +586,7 @@ function KpiProgressVersion() {
             <Kpi surface={false} colorIndex={4}>
               <Kpi.Header>
                 <Kpi.Icon tone="good">
-                  <Target size={16} color="#27a644" />
+                  <CrosshairIcon size={16} color="#27a644" />
                 </Kpi.Icon>
                 <Kpi.Title>Quarterly revenue</Kpi.Title>
                 <Kpi.Trend value={7.8} variant="badge" />
@@ -603,7 +604,7 @@ function KpiProgressVersion() {
             <Kpi surface={false} colorIndex={2}>
               <Kpi.Header>
                 <Kpi.Icon>
-                  <DollarSign size={16} color="#8a8f98" />
+                  <HugeiconsIcon icon={Dollar01Icon} size={16} color="#8a8f98" />
                 </Kpi.Icon>
                 <Kpi.Title>New customers</Kpi.Title>
                 <Kpi.Trend value={4.2} variant="badge" />

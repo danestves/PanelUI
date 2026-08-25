@@ -28,11 +28,9 @@
  */
 import { createContext, forwardRef, useContext, useMemo, type ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
-import ArrowDown from 'lucide-react-native/icons/arrow-down';
-import ArrowUp from 'lucide-react-native/icons/arrow-up';
-import Minus from 'lucide-react-native/icons/minus';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
+import { ArrowDownIcon, ArrowUpIcon, MinusIcon } from '../../icons';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { type SeriesColorIndex } from '../../utils/chart';
@@ -442,7 +440,7 @@ function KpiTrend({
   const raw = tone === 'good' ? goodTint : tone === 'bad' ? badTint : mutedTint;
   const tint = typeof raw === 'string' ? raw : '#737373';
 
-  const Arrow = flat ? Minus : rising ? ArrowUp : ArrowDown;
+  const Arrow = flat ? MinusIcon : rising ? ArrowUpIcon : ArrowDownIcon;
 
   const label = format
     ? format(value)
