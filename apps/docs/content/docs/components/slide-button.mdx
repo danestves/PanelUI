@@ -56,13 +56,26 @@ The default. Nine tenths of the rail, then it fires.
 </SlideButton>
 ```
 
-### Something destructive
+### How far it has to go
 
-`threshold={1}` asks the thumb to reach the far end exactly, and there is no velocity shortcut past it.
+`threshold` is the fraction of the rail that counts, `0.9` by default. Lower it where the gesture is the point rather than the caution; raise it to `1` for something destructive, which asks the handle to reach the far end exactly and leaves no velocity shortcut past it.
+
+<PreviewVideo
+  src="/previews/slide-button-how-far-it-has-to-go.mp4"
+  poster="/previews/slide-button-how-far-it-has-to-go-poster.jpg"
+  alt="A screen recording of two slide buttons on a dark phone screen, labelled “Halfway is enough” and “All the way, no shortcut”. The first is dragged a little past the middle and completes, its handle springing to the far end with a tick. The second, in red, is dragged the same distance and springs back to the start instead."
+  width={720}
+  height={1560}
+  caption="The same drag: enough for a threshold of a half, refused by one of exactly one."
+/>
 
 ```tsx
-<SlideButton variant="destructive" threshold={1} onComplete={wipe}>
-  <SlideButton.Label>Slide to erase everything</SlideButton.Label>
+<SlideButton threshold={0.5} autoReset fullWidth onComplete={go}>
+  <SlideButton.Label>Halfway is enough</SlideButton.Label>
+</SlideButton>
+
+<SlideButton variant="destructive" threshold={1} autoReset fullWidth onComplete={wipe}>
+  <SlideButton.Label>All the way, no shortcut</SlideButton.Label>
 </SlideButton>
 ```
 
@@ -98,6 +111,15 @@ const [sent, setSent] = useState(false);
 
 Children of `SlideButton.Thumb` replace the chevron. The tick still lands on completion.
 
+<PreviewVideo
+  src="/previews/slide-button-a-glyph-of-your-own.mp4"
+  poster="/previews/slide-button-a-glyph-of-your-own-poster.jpg"
+  alt="A screen recording of a slide button labelled “Slide to unlock” on a dark phone screen. A padlock sits in the handle in place of the chevron. The handle is dragged the length of the rail, leaving a trail behind it, and springs back to the start."
+  width={720}
+  height={1560}
+  caption="Children of the handle replace the chevron; the tick that lands on completion is drawn either way."
+/>
+
 ```tsx
 <SlideButton onComplete={unlock}>
   <SlideButton.Label>Slide to unlock</SlideButton.Label>
@@ -107,16 +129,42 @@ Children of `SlideButton.Thumb` replace the chevron. The tick still lands on com
 </SlideButton>
 ```
 
-### Sizes and variants
+### Variants
 
-Matched to ProgressButton's boxes, so the two line up in a column. There is no `primary`: the handle is neutral and the rail carries the variant, which left `primary` drawing the same picture as `secondary` in any theme whose primary is close to its foreground.
+The handle stays neutral in every variant and the rail carries the colour, so the eye lands on the distance rather than on the handle. There is no `primary`: with a neutral handle it drew the same picture as `secondary` in any theme whose primary sits close to its foreground.
+
+<PreviewVideo
+  src="/previews/slide-button-variants.mp4"
+  poster="/previews/slide-button-variants-poster.jpg"
+  alt="A screen recording of three slide buttons stacked on a dark phone screen, labelled secondary, destructive in red and success in green. Each is dragged across in turn; the trail left behind the handle takes that row's colour, the handle stays neutral throughout, and a tick replaces the chevron as each one lands before it resets itself."
+  width={720}
+  height={1560}
+  caption="The trail carries the variant. The handle does not."
+/>
+
+```tsx
+<SlideButton autoReset fullWidth onComplete={go}>
+  <SlideButton.Label>secondary</SlideButton.Label>
+</SlideButton>
+
+<SlideButton variant="destructive" autoReset fullWidth onComplete={go}>
+  <SlideButton.Label>destructive</SlideButton.Label>
+</SlideButton>
+
+<SlideButton variant="success" autoReset fullWidth onComplete={go}>
+  <SlideButton.Label>success</SlideButton.Label>
+</SlideButton>
+```
+
+### Sizes
+
+Matched to ProgressButton's boxes, so the two line up in a column.
 
 <Preview
-  src="/previews/slide-button-sizes-and-variants.jpg"
-  alt="Three slide buttons stacked on a dark screen, labelled Small, Medium and Large. Each is a pill-shaped rail with a wider pill-shaped handle resting at its left end, a chevron centred in the handle, and the label centred in the rail. The handles grow with the size while the rails stay the same width."
+  src="/previews/slide-button-sizes.jpg"
+  alt="Three slide buttons stacked on a dark screen, labelled Small, Medium and Large. Each is a pill-shaped rail with a wider pill-shaped handle resting at its left end, a chevron centred in the handle, and the label centred in the rail. The handle grows with the size and the rail's height goes with it."
   width={1179}
   height={597}
-  caption="The handle grows with the size; the rail's height goes with it."
 />
 
 ```tsx
@@ -124,8 +172,12 @@ Matched to ProgressButton's boxes, so the two line up in a column. There is no `
   <SlideButton.Label>Small</SlideButton.Label>
 </SlideButton>
 
-<SlideButton size="lg" variant="destructive" fullWidth onComplete={go}>
-  <SlideButton.Label>Large, destructive</SlideButton.Label>
+<SlideButton size="md" fullWidth onComplete={go}>
+  <SlideButton.Label>Medium</SlideButton.Label>
+</SlideButton>
+
+<SlideButton size="lg" fullWidth onComplete={go}>
+  <SlideButton.Label>Large</SlideButton.Label>
 </SlideButton>
 ```
 
