@@ -1085,6 +1085,15 @@ export {
   type ThinkingOrbState,
 } from './components/thinking-orb';
 export { Skeleton, type SkeletonProps } from './components/skeleton';
+export {
+  SlideButton,
+  useSlideButton,
+  type SlideButtonProps,
+  type SlideButtonLabelProps,
+  type SlideButtonThumbProps,
+  type SlideButtonVariant,
+  type SlideButtonSize,
+} from './components/slide-button';
 export { Slider, type SliderProps } from './components/slider';
 export {
   Sortable,

@@ -1522,6 +1522,21 @@
     "docsPath": "components/skeleton"
   },
   {
+    "name": "slide-button",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Drag across to confirm, with the distance drawn on the button.",
+    "registryDependencies": [
+      "haptics",
+      "icons",
+      "text",
+      "use-direction"
+    ],
+    "docsPath": "components/slide-button"
+  },
+  {
     "name": "slider",
     "type": "registry:ui",
     "kind": "ui",

@@ -106,6 +106,7 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   meter: () => load07().then((module) => module.ENTRIES_BY_SLUG['meter']),
   progress: () => load07().then((module) => module.ENTRIES_BY_SLUG['progress']),
   'progress-button': () => load07().then((module) => module.ENTRIES_BY_SLUG['progress-button']),
+  'slide-button': () => load07().then((module) => module.ENTRIES_BY_SLUG['slide-button']),
   'radio-group': () =>
     load08().then((module) => module.ENTRIES_BY_SLUG['radio-group']),
   rating: () => load08().then((module) => module.ENTRIES_BY_SLUG['rating']),

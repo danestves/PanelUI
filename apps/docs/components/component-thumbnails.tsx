@@ -130,6 +130,13 @@ const menu = (
   </Plate>
 );
 
+/* A pill rail with the thumb partway along it — the position is the silhouette. */
+const slideButton = (
+  <Fill className="relative h-11 w-36 rounded-full">
+    <Accent className="absolute start-[58%] top-1 h-9 w-9 rounded-full" />
+  </Fill>
+);
+
 const progressButton = (
   <div className="relative h-9 w-32 overflow-hidden rounded-lg bg-fd-muted-foreground/15">
     <Accent className="absolute inset-y-0 start-0 w-2/3 rounded-none" />
@@ -1897,6 +1904,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
   fab,
   menu,
   'progress-button': progressButton,
+  'slide-button': slideButton,
   'selection-mode': selectionMode,
   swipe,
   'toggle-button': toggleButton,

@@ -88,6 +88,7 @@ export const COMPONENTS = [
   {"slug":"shimmer","name":"Shimmer","summary":"Animated highlight sweeping across content"},
   {"slug":"signature","name":"Signature","summary":"Sign with a finger, and get the result back out"},
   {"slug":"skeleton","name":"Skeleton","summary":"Shimmer placeholder for loading content"},
+  {"slug":"slide-button","name":"SlideButton","summary":"Drag across to confirm, with the distance drawn on the button"},
   {"slug":"slider","name":"Slider","summary":"Pick a value by dragging a thumb along a track"},
   {"slug":"sortable","name":"Sortable","summary":"A list whose rows can be dragged into a different order"},
   {"slug":"soundwave","name":"Soundwave","summary":"What a voice looks like while an app listens"},

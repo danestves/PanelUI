@@ -1,0 +1,50 @@
+{
+  "slug": "slide-button",
+  "intro": "A button confirmed by dragging a thumb across it rather than by tapping it.\n\nUse it where an action deserves a moment's deliberation and a dialog would be too much ceremony — shipping a build, ending a shift, transferring money. It cannot be reached by a stray tap, and it cannot be reached by habit, because the movement is different from every other button on the screen.\n\nA slide asks for a movement and shows a distance. [ProgressButton](/docs/components/progress-button) asks for time and shows a clock — reach for that one when the action should feel expensive rather than deliberate.",
+  "usage": "<SlideButton onComplete={ship}>\n  <SlideButton.Label>Slide to ship</SlideButton.Label>\n</SlideButton>",
+  "parts": {
+    "Label": "What the button says. It fades as the thumb approaches, so the two never collide.",
+    "Thumb": "The disc the finger moves. Pass children to replace the chevron; the tick that lands on completion is drawn either way."
+  },
+  "notes": "### What counts as a slide\n\nNothing fires until the thumb clears `threshold`, which defaults to nine tenths of the rail. Released short, it springs home.\n\nReleased short but travelling, it is honoured. The velocity at the moment of release is projected forward and added to the distance already covered, so a flick that had plainly committed is not refused on a technicality. The lookahead is small — a fling from halfway does not complete an action the reader was only playing with.\n\nRaise `threshold` to `1` for something destructive, which asks the thumb to reach the far end exactly. It cannot be lowered below `0.1`: a slide that fires the moment the thumb moves is a button with a gesture in front of it.\n\n### Sliding without a finger\n\nA drag is not available to a screen reader, so the rail is also a button. It publishes an `activate` action, and performing that action completes the slide and fires `onComplete` — the same outcome, reached the only way that path allows.\n\nName it with `accessibilityActionLabel`, in the imperative and in terms of what happens: \"Ship the build\", not \"Slide to ship\". The instruction to drag is meaningless where dragging is not possible.\n\n### Right to left\n\nThe rail runs the other way inside a `Direction dir=\"rtl\"` subtree: the thumb rests at the right edge, travels left, and the chevron turns around with it. Nothing needs passing for this.\n\n### After it completes\n\nThe thumb stays at the far end and the chevron crosses into a tick. Set `autoReset` to send it home again after `autoResetDelay`, which suits a control used repeatedly; leave it off where the completed state is the point.\n\n`completed` makes it controlled, for the common case where the action is asynchronous and the button should not claim success until the server agrees.\n\n### Motion\n\nThe drag follows the finger exactly — there is no easing on the way out, because a thumb that lags its own finger reads as a slow app rather than a heavy control. Only the release is sprung, and the release carries the velocity the gesture already had.\n\nUnder reduced motion the springs become short timings. The thumb still travels: a confirmation control that shows nothing is a broken button, so this is a plainer movement rather than none.",
+  "examples": [
+    {
+      "title": "Confirming an action",
+      "description": "The default. Nine tenths of the rail, then it fires.",
+      "code": "<SlideButton onComplete={() => ship()}>\n  <SlideButton.Label>Slide to ship</SlideButton.Label>\n</SlideButton>"
+    },
+    {
+      "title": "Something destructive",
+      "description": "`threshold={1}` asks the thumb to reach the far end exactly, and there is no velocity shortcut past it.",
+      "code": "<SlideButton variant=\"destructive\" threshold={1} onComplete={wipe}>\n  <SlideButton.Label>Slide to erase everything</SlideButton.Label>\n</SlideButton>"
+    },
+    {
+      "title": "Waiting on the server",
+      "description": "Controlled, so the button does not claim success before the request has. The thumb sits at the far end while the call is in flight and stays there once it lands.",
+      "code": "const [sent, setSent] = useState(false);\n\n<SlideButton\n  completed={sent}\n  onComplete={async () => {\n    await transfer();\n    setSent(true);\n  }}\n>\n  <SlideButton.Label>Slide to transfer $240</SlideButton.Label>\n</SlideButton>"
+    },
+    {
+      "title": "Offering itself again",
+      "description": "`autoReset` sends the thumb home after a second, for a control used several times in a row.",
+      "code": "<SlideButton variant=\"success\" autoReset onComplete={checkIn}>\n  <SlideButton.Label>Slide to check in</SlideButton.Label>\n</SlideButton>"
+    },
+    {
+      "title": "A glyph of your own",
+      "description": "Children of `SlideButton.Thumb` replace the chevron. The tick still lands on completion.",
+      "code": "<SlideButton onComplete={unlock}>\n  <SlideButton.Label>Slide to unlock</SlideButton.Label>\n  <SlideButton.Thumb>\n    <UnlockIcon size={20} />\n  </SlideButton.Thumb>\n</SlideButton>"
+    },
+    {
+      "title": "Sizes and variants",
+      "description": "Matched to ProgressButton's boxes, so the two line up in a column.",
+      "code": "<SlideButton size=\"sm\" fullWidth onComplete={go}>\n  <SlideButton.Label>Small</SlideButton.Label>\n</SlideButton>\n\n<SlideButton size=\"lg\" variant=\"secondary\" fullWidth onComplete={go}>\n  <SlideButton.Label>Large, secondary</SlideButton.Label>\n</SlideButton>"
+    },
+    {
+      "title": "Named for a screen reader",
+      "description": "The rail publishes an `activate` action, because a drag cannot be performed there. Name it after what happens, not after the gesture.",
+      "code": "<SlideButton\n  accessibilityActionLabel=\"End the shift\"\n  haptics\n  onComplete={endShift}\n>\n  <SlideButton.Label>Slide to end shift</SlideButton.Label>\n</SlideButton>"
+    }
+  ],
+  "extraImports": [
+    "UnlockIcon"
+  ]
+}

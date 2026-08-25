@@ -529,6 +529,15 @@
       "category": "feedback"
     }
   ],
+  "slide-button": [
+    "SlideButton",
+    "Drag across to confirm, with the distance drawn on the button.",
+    "react native slide to confirm button",
+    {
+      "addedIn": "0.82.0",
+      "category": "actions"
+    }
+  ],
   "progress-button": [
     "ProgressButton",
     "Press and hold to confirm, with the wait drawn on the button.",

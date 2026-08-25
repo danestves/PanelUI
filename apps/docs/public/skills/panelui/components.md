@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-116 component modules. The **Docs** column is the path under
+117 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -20,6 +20,7 @@ remember is a guess.
 | `Menu` | The list of things you can do to something. | `components/menu` |
 | `ProgressButton` | Press and hold to confirm, with the wait drawn on the button. | `components/progress-button` |
 | `SelectionMode` *(alpha)* | Pick several things at once, on a screen or in a sheet. | `components/selection-mode` |
+| `SlideButton` | Drag across to confirm, with the distance drawn on the button. | `components/slide-button` |
 | `Swipe` | A row that slides aside to reveal the things you can do to it. | `components/swipe` |
 | `ToggleButton` | A button that stays down, on its own or in a group. | `components/toggle-button` |
 

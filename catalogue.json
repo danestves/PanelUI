@@ -88,6 +88,7 @@
     "shimmer",
     "signature",
     "skeleton",
+    "slide-button",
     "slider",
     "sortable",
     "soundwave",
@@ -185,16 +186,16 @@
     }
   ],
   "counts": {
-    "componentModules": 116,
-    "packageComponentExports": 116,
-    "documentedComponents": 116,
-    "exampleEntries": 116,
+    "componentModules": 117,
+    "packageComponentExports": 117,
+    "documentedComponents": 117,
+    "exampleEntries": 117,
     "registry": {
-      "componentItems": 116,
+      "componentItems": 117,
       "supportItems": 36,
-      "totalItems": 152,
+      "totalItems": 153,
       "byType": {
-        "registry:ui": 131,
+        "registry:ui": 132,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1

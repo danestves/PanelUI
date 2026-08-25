@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1188,
-    "values": 312,
-    "types": 876,
-    "modules": 143,
-    "components": 116,
+    "exports": 1195,
+    "values": 314,
+    "types": 881,
+    "modules": 144,
+    "components": 117,
     "hooks": 13
   },
   "groups": {
@@ -3827,6 +3827,41 @@
           },
           {
             "name": "SkeletonProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/slide-button/index.tsx",
+        "slug": "slide-button",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "SlideButton",
+            "kind": "value"
+          },
+          {
+            "name": "useSlideButton",
+            "kind": "value"
+          },
+          {
+            "name": "SlideButtonProps",
+            "kind": "type"
+          },
+          {
+            "name": "SlideButtonLabelProps",
+            "kind": "type"
+          },
+          {
+            "name": "SlideButtonThumbProps",
+            "kind": "type"
+          },
+          {
+            "name": "SlideButtonVariant",
+            "kind": "type"
+          },
+          {
+            "name": "SlideButtonSize",
             "kind": "type"
           }
         ]
