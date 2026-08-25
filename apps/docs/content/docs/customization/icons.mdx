@@ -56,9 +56,13 @@ drawn larger — the brand marks, the sun and moon toggles, the status icons,
 
 The set is drawn at 24 and used at 14 to 20, and a hairline that reads
 correctly at full size thins to nothing at two thirds of it — so the default is
-heavier than the drawings' own. A few glyphs carry their own weight because
-they sit beside something they have to match: the check and the bar inside a
-checkbox, the grip on a drag handle.
+heavier than the drawings' own.
+
+Six carry their own weight, because each sits beside something it has to match
+rather than because it looks better alone. `CheckIcon` and `MinusIcon` are 3,
+being the two glyphs a checkbox shows in the same square. `GripVerticalIcon`
+and `SendArrowIcon` are 2.5, `StarIcon` is 1.6 and `PauseIcon` is 1.5. Pass
+`strokeWidth` to override any of them.
 
 ## Colour
 
@@ -117,9 +121,14 @@ bookmark that has been saved, a vote that has been cast.
 <BookmarkIcon filled={saved} />
 ```
 
-`HeartIcon`, `BookmarkIcon`, `StarIcon`, `ArrowUpIcon`, `ArrowDownIcon` and
-`MessageCircleIcon` take it. The outline stays put and only the inside changes,
-so the row does not shift when the state does.
+`HeartIcon`, `BookmarkIcon`, `StarIcon`, `ArrowUpIcon`, `ArrowDownIcon`,
+`MessageCircleIcon` and `CircleIcon` take it. The outline stays put and only the
+inside changes, so the row does not shift when the state does.
+
+`CircleIcon` is the odd one in that list: it is there because a filled disc is
+what a selected radio row shows, and drawing that as a rounded `View` instead
+makes it optically a different size from the tick beside it at the same nominal
+one.
 
 `BadgeCheckIcon` is filled either way and takes a `checkColor` for the tick
 inside it, which defaults to white.
