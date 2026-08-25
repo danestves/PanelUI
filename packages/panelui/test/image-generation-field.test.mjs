@@ -72,21 +72,31 @@ test('the grid is built once per size, not once per frame', () => {
   assert.match(callback, /clock\.value \+= Math\.min\(/, 'it should only advance the clock');
 });
 
-test('the light is clipped to the dots rather than drawn over them', () => {
-  // Clipping is what makes the light land on the field instead of over it.
-  assert.match(source, /<ClipPath id=\{clipId\}>\s*<Path d=\{grid\} \/>\s*<\/ClipPath>/);
-  assert.equal((source.match(/clipPath=\{`url\(#\$\{clipId\}\)`\}/g) ?? []).length, 3);
+/*
+ * The light is the dots' own fill, not a shape clipped to them.
+ *
+ * Clipping to a path with hundreds of subpaths is re-rasterized every time the
+ * view is drawn, which scrolling does constantly — it was the second version's
+ * reason for stalling a page of these. As a gradient fill each dot takes its
+ * brightness from where it sits, and nothing is clipped at all.
+ */
+test('nothing is clipped', () => {
+  assert.ok(!source.includes('ClipPath'), 'no clip path');
+  assert.ok(!source.includes('clipPath='), 'nothing clipped');
+  assert.ok(!source.includes('<Mask'), 'no mask either');
+});
+
+test('the grid is one path filled with the light', () => {
+  assert.match(source, /<Path d=\{grid\} fill=\{`url\(#\$\{paintId\}\)`\} \/>/);
+  assert.equal((source.match(/<Path d=\{grid\}/g) ?? []).length, 1, 'drawn once, not twice');
 });
 
 /*
  * Two fields on one screen is exactly what a page of these is, and an SVG id is
- * looked up by name. Shared ids mean one field draws and the rest go blank.
+ * looked up by name. A shared id means one field draws and the rest go blank.
  */
-test('the gradients and the clip are named per instance', () => {
-  assert.match(source, /const uid = useId\(\)\.replace\(/);
-  for (const name of ['lightId', 'bandId', 'clipId']) {
-    assert.match(source, new RegExp(`const ${name} = \`panelui-ig-[a-z]+-\\\$\\{uid\\}\``));
-  }
+test('the gradient is named per instance', () => {
+  assert.match(source, /const paintId = `panelui-ig-\$\{useId\(\)\.replace\(/);
   assert.ok(!/id="panelui-ig/.test(source), 'no literal ids');
 });
 
@@ -103,14 +113,12 @@ test('the drifting light stays around the middle', () => {
   }
 });
 
-test('the pulse leaves the centre and fades out', () => {
-  const [nearScale, nearStrength] = pulseAt(0);
-  const [farScale, farStrength] = pulseAt(2000);
-  assert.ok(farScale > nearScale, 'it should travel outward');
-  assert.ok(farStrength < nearStrength, 'and fade as it goes');
-  // It repeats rather than running away.
-  const [wrappedScale] = pulseAt(2200);
-  assert.ok(Math.abs(wrappedScale - nearScale) < 0.01);
+test('the pulse leaves the centre and repeats', () => {
+  assert.equal(pulseAt(0), 0);
+  assert.ok(pulseAt(1100) > 0.45 && pulseAt(1100) < 0.55, 'halfway at half a period');
+  // It wraps rather than running away, and the ring restarting at the centre
+  // is the same event happening again rather than a flash.
+  assert.ok(pulseAt(2200) < 0.01);
 });
 
 test('the scan crosses and repeats', () => {

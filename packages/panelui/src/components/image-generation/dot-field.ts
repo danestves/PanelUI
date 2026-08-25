@@ -113,18 +113,18 @@ export function driftAt(time: number, width: number, height: number): [number, n
 export const PULSE_PERIOD = 2200;
 
 /**
- * How far out the pulse has travelled, and how solid it still is.
+ * How far out the pulse's ring has travelled, as `0` to `1` of the light's
+ * radius.
  *
- * A ring leaving the centre and fading as it goes, so the field reads as
- * something being developed outward from the middle rather than swept. It
- * fades on a curve rather than linearly: a ring that is still half visible at
- * the edge of the box reads as a rectangle, because that is where it is cut
- * off.
+ * A ring leaving the centre, so the field reads as something being developed
+ * outward from the middle rather than swept across. It is a ring rather than a
+ * growing disc because a disc that reaches the edge and restarts is a flash;
+ * a ring simply leaves, and the next one starting at the centre is the same
+ * event happening again.
  */
-export function pulseAt(time: number): [number, number] {
+export function pulseAt(time: number): number {
   'worklet';
-  const phase = (time % PULSE_PERIOD) / PULSE_PERIOD;
-  return [0.15 + phase * 1.15, (1 - phase) * (1 - phase)];
+  return (time % PULSE_PERIOD) / PULSE_PERIOD;
 }
 
 /** One pass of the scan, in milliseconds. */
