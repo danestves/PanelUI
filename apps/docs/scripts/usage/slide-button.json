@@ -36,12 +36,30 @@
     {
       "title": "Sizes and variants",
       "description": "Matched to ProgressButton's boxes, so the two line up in a column. There is no `primary`: the handle is neutral and the rail carries the variant, which left `primary` drawing the same picture as `secondary` in any theme whose primary is close to its foreground.",
-      "code": "<SlideButton size=\"sm\" fullWidth onComplete={go}>\n  <SlideButton.Label>Small</SlideButton.Label>\n</SlideButton>\n\n<SlideButton size=\"lg\" variant=\"destructive\" fullWidth onComplete={go}>\n  <SlideButton.Label>Large, destructive</SlideButton.Label>\n</SlideButton>"
+      "code": "<SlideButton size=\"sm\" fullWidth onComplete={go}>\n  <SlideButton.Label>Small</SlideButton.Label>\n</SlideButton>\n\n<SlideButton size=\"lg\" variant=\"destructive\" fullWidth onComplete={go}>\n  <SlideButton.Label>Large, destructive</SlideButton.Label>\n</SlideButton>",
+      "preview": {
+        "src": "/previews/slide-button-sizes-and-variants.jpg",
+        "alt": "Three slide buttons stacked on a dark screen, labelled Small, Medium and Large. Each is a pill-shaped rail with a wider pill-shaped handle resting at its left end, a chevron centred in the handle, and the label centred in the rail. The handles grow with the size while the rails stay the same width.",
+        "width": 1179,
+        "height": 597,
+        "caption": "The handle grows with the size; the rail's height goes with it."
+      }
     },
     {
       "title": "Named for a screen reader",
       "description": "The rail publishes an `activate` action, because a drag cannot be performed there. Name it after what happens, not after the gesture.",
       "code": "<SlideButton\n  accessibilityActionLabel=\"End the shift\"\n  haptics\n  onComplete={endShift}\n>\n  <SlideButton.Label>Slide to end shift</SlideButton.Label>\n</SlideButton>"
+    },
+    {
+      "title": "Refused",
+      "description": "`disabled` dims the whole control and the drag simply does not take. The handle stays where it is rather than following the finger and springing back, which would read as the slide having failed rather than as having been refused.",
+      "code": "<SlideButton disabled fullWidth onComplete={go}>\n  <SlideButton.Label>Nothing to confirm</SlideButton.Label>\n</SlideButton>",
+      "preview": {
+        "src": "/previews/slide-button-refused.jpg",
+        "alt": "A single slide button on a dark screen, dimmed. The rail, the handle at its left end and the label “Nothing to confirm” are all faded, so the control reads as present but unavailable.",
+        "width": 1179,
+        "height": 245
+      }
     }
   ],
   "extraImports": [

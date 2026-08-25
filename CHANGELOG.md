@@ -9,6 +9,85 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.82.0] — 2026-08-25
+
+### Added
+
+- **`SlideButton` — drag across to confirm.** For an action worth a moment's deliberation, where
+  a hold is the wrong shape. `ProgressButton` asks for time and shows a clock; this asks for a
+  movement and shows a distance, so the reader sets the pace and still cannot arrive by tapping.
+  Nothing fires until the handle clears `threshold` (nine tenths of the rail by default;
+  `threshold={1}` asks it to reach the end exactly). A slide let go short but still travelling is
+  honoured — the velocity is projected forward, over a window short enough that a flick from
+  halfway does nothing.
+
+  It works without a finger: the rail publishes an `activate` accessibility action, because a
+  confirmation control reachable only by dragging is one some people cannot use. Name it with
+  `accessibilityActionLabel`, after what happens rather than after the gesture. Right-to-left is
+  handled — the handle rests at the far edge and travels the other way.
+
+- **`ImageGeneration` — the place an image will be, while it is being made.** *(beta)* A generated
+  image arrives seconds after it is asked for, at a size nobody knew in advance, so without
+  something reserving the box the screen reflows under the reader's thumb. This takes the aspect
+  ratio up front and fills the box with a field of dots until there is a picture.
+
+  `status` moves the picture through the work rather than switching it, and `refining` is the step
+  worth having: the field is at half strength and the image is already coming through it. An
+  image that appears the instant the field vanishes has been swapped in; one that surfaces
+  through it has been developed. `animation` picks how the light moves — `drift`, `pulse` or
+  `scan`.
+
+- **`Select` hands over its search query.** `useSelectSearch()` returns what was typed, so a
+  caller rendering options with a virtualized list can filter their own data. `valueLabel` gives
+  the trigger a label for a row that may never have been drawn.
+
+- **`SlideButton` and `ImageGeneration` are on the components index**, under Actions and AI
+  components.
+
+### Changed
+
+- **Every icon is drawn from one source.** The set was two families of hand-drawn SVG plus a
+  Lucide dependency that `Menu` and `KPI` reached past it for — three drawings of a check in one
+  library, and a required runtime dependency for seven glyphs. Every glyph now comes from
+  Hugeicons, and `lucide-react-native` is gone from the package.
+
+  The public surface is unchanged: the same 77 exported names, `IconProps`, `IconColorProvider`,
+  `ToggleIconProps` and `BadgeCheckIconProps` all mean what they meant, and the 54 components
+  that import from the set did not change. The wrapper keeps what a bare glyph would lose — the
+  per-icon default size, the colour order, the right-to-left mirror on the four glyphs whose
+  meaning is a direction, and `filled` on the six toggles a post's action row is made of.
+
+  `strokeWidth` defaults to 2 rather than the drawings' own 1.5: the set is drawn at 24 and used
+  at 14–20, where a hairline thins to nothing. **Expect the whole library's icons to look
+  slightly different.** Four stay hand-drawn — the Google, Facebook and Apple marks carry their
+  own palettes, and `BadgeCheckIcon` is two-tone.
+
+- **`TextGlass` is withdrawn.** It was added after 0.81.0 and never published, so nothing depends
+  on it.
+
+### Fixed
+
+- **A bottom sheet reopened straight after closing.** The subtree was removed from React in the
+  same commit `open` flipped, while an `exiting` layout animation was still declared on it —
+  Reanimated then held the detached views until that spring settled, and a reopen inside that
+  window raced it. One animation owns the whole travel now, and the tree comes down from its
+  completion callback rather than during it. Reopening mid-exit catches the same sheet on its way
+  down.
+
+  A `native` sheet gains the presentation queue the platform does not have: UIKit refuses to
+  present while the previous sheet is dismissing and drops the request, so one arriving during a
+  dismissal is held and replayed from the platform's own `onDismiss`.
+
+- **`Portal` tore itself down on every render.** `children` is a new element each time its owner
+  renders, and one effect did both the mounting and the unmounting — so every render deleted the
+  key from the store and put it back, twice through a full re-render of the host, for an overlay
+  that re-renders while it is open.
+
+- **`Select` dropped children it did not recognise.** The filter kept items and groups and
+  discarded everything else, so a `Select.Item` rendered by a virtualized list vanished the moment
+  anybody typed, and so did a caption or a divider. It keeps what it has no opinion about now, and
+  `No matches` is only shown when there were options to match.
+
 ## [0.81.0] — 2026-08-24
 
 ### Added
