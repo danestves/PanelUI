@@ -38,7 +38,7 @@
  * placeholder that shows nothing is indistinguishable from a component that
  * failed to load, so this is a quieter picture rather than an empty one.
  */
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -46,13 +46,22 @@ import {
   type LayoutChangeEvent,
   type ViewProps,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, {
+  Circle,
+  ClipPath,
+  Defs,
+  LinearGradient,
+  Path,
+  RadialGradient,
+  Rect,
+  Stop,
+} from 'react-native-svg';
 import Animated, {
   Easing,
   cancelAnimation,
-  runOnUI,
   useAnimatedProps,
   useAnimatedStyle,
+  useDerivedValue,
   useFrameCallback,
   useReducedMotion,
   useSharedValue,
@@ -66,7 +75,15 @@ import { useDirectionSign } from '../../hooks/use-direction';
 import { AlertTriangleIcon, CheckIcon, RotateCcwIcon } from '../../icons';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
-import { BANDS, bandOpacity, renderField } from './dot-field';
+import {
+  DOT_REST_OPACITY,
+  driftAt,
+  gridPath,
+  lightRadius,
+  pulseAt,
+  scanAt,
+  type DotFieldAnimation,
+} from './dot-field';
 
 /** How far the generation has got. */
 export type ImageGenerationStatus =
@@ -160,35 +177,21 @@ const imageGenerationVariants = tv({
   },
 });
 
-const BAND_INDICES = Array.from({ length: BANDS }, (_unused, index) => index);
-
-const AnimatedPath = Animated.createAnimatedComponent(Path);
-
-/**
- * One opacity level's worth of dots, as a single path.
- *
- * A component rather than a loop of `useAnimatedProps` in the parent, so each
- * band owns exactly one hook — the count is a module constant, but hooks in a
- * loop is a rule waiting to be broken by whoever makes it configurable.
- */
-function DotBand({
-  index,
-  paths,
-  color,
-}: {
-  index: number;
-  paths: SharedValue<string[]>;
-  color: string;
-}) {
-  const animatedProps = useAnimatedProps(() => ({ d: paths.value[index] ?? '' }));
-
-  return <AnimatedPath animatedProps={animatedProps} fill={color} fillOpacity={bandOpacity(index)} />;
-}
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 export interface ImageGenerationFieldProps extends Omit<ViewProps, 'children'> {
   className?: string;
   /** Holds the light still, at one representative frame. */
   paused?: boolean;
+  /**
+   * How the light behind the dots moves.
+   *
+   * `drift` wanders around the middle; `pulse` leaves the centre as a ring
+   * and fades; `scan` crosses the box as a band. All three cost the same,
+   * which is two numbers a frame however big the field is.
+   */
+  animation?: DotFieldAnimation;
 }
 
 /**
@@ -201,18 +204,42 @@ export interface ImageGenerationFieldProps extends Omit<ViewProps, 'children'> {
 function ImageGenerationField({
   className,
   paused = false,
+  animation = 'drift',
   style,
   ...props
 }: ImageGenerationFieldProps) {
   const reducedMotion = useReducedMotion();
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const clock = useSharedValue(0);
-  const paths = useSharedValue<string[]>([]);
+  const clock = useSharedValue(STILL_FRAME);
+
+  /*
+   * The gradients and the clip are named per instance.
+   *
+   * An SVG id is looked up by name, and two fields on one screen — which is
+   * exactly what a page of these is — would otherwise both point at whichever
+   * definition was mounted last. The symptom is one field drawing correctly
+   * and the rest going blank, which reads as a bug in the component rather
+   * than as two things sharing a name.
+   */
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const lightId = `panelui-ig-light-${uid}`;
+  const bandId = `panelui-ig-band-${uid}`;
+  const clipId = `panelui-ig-dots-${uid}`;
 
   const tint = useCSSVariable('--color-muted-foreground');
   const color = typeof tint === 'string' ? tint : '#737373';
 
   const running = !paused && !reducedMotion;
+
+  /*
+   * The grid is built once per size and never again.
+   *
+   * It is the expensive half — hundreds of arcs in a string — and none of it
+   * changes as the light moves. Rebuilding it every frame was what made a page
+   * showing several of these stall on scroll.
+   */
+  const grid = useMemo(() => gridPath(size.width, size.height), [size.width, size.height]);
+  const radius = lightRadius(size.width, size.height);
 
   const frame = useFrameCallback((info) => {
     'worklet';
@@ -220,7 +247,6 @@ function ImageGenerationField({
     // not jump the light to wherever the clock would have carried it. A
     // dropped frame is clamped: a 300ms hitch played back whole is a lurch.
     clock.value += Math.min(info.timeSincePreviousFrame ?? 16, 48);
-    paths.value = renderField(size.width, size.height, clock.value);
   }, false);
 
   const { setActive } = frame;
@@ -230,20 +256,27 @@ function ImageGenerationField({
   }, [running, setActive]);
 
   /*
-   * A still field is not an empty one.
-   *
-   * Reduced motion and `paused` both get a frame with the light somewhere
-   * legible rather than nothing at all — which is the difference between "not
-   * animating" and "failed to load". It also draws the first frame before the
-   * frame callback has had one, so the box is never briefly blank.
+   * A still field is not an empty one. Reduced motion and `paused` both keep
+   * the light somewhere legible rather than losing it, which is the difference
+   * between "not animating" and "failed to load".
    */
-  useEffect(() => {
-    if (running) return;
-    runOnUI(() => {
-      'worklet';
-      paths.value = renderField(size.width, size.height, clock.value || STILL_FRAME);
-    })();
-  }, [clock, paths, running, size.height, size.width]);
+  const driftProps = useAnimatedProps(() => {
+    const [x, y] = driftAt(clock.value, size.width, size.height);
+    return { cx: x, cy: y };
+  });
+
+  const pulseProps = useAnimatedProps(() => {
+    const [scale, strength] = pulseAt(clock.value);
+    return { r: radius * scale, opacity: strength };
+  });
+
+  const scanX = useDerivedValue(() => {
+    // The band starts and ends a full width clear of the box, so it ramps in
+    // and out at the edges rather than arriving at full strength against them.
+    const width = size.width;
+    return -width + scanAt(clock.value) * width * 2;
+  });
+  const scanProps = useAnimatedProps(() => ({ x: scanX.value }));
 
   const onLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -260,11 +293,57 @@ function ImageGenerationField({
       style={[StyleSheet.absoluteFill, style]}
       {...props}
     >
-      {size.width > 0 && size.height > 0 ? (
+      {grid ? (
         <Svg width={size.width} height={size.height}>
-          {BAND_INDICES.map((index) => (
-            <DotBand key={index} index={index} paths={paths} color={color} />
-          ))}
+          <Defs>
+            {/* Soft at the centre and gone at the rim, so the light has no
+                edge for the eye to find. */}
+            <RadialGradient id={lightId} cx="50%" cy="50%" r="50%">
+              <Stop offset="0" stopColor={color} stopOpacity="0.95" />
+              <Stop offset="0.55" stopColor={color} stopOpacity="0.45" />
+              <Stop offset="1" stopColor={color} stopOpacity="0" />
+            </RadialGradient>
+            <LinearGradient id={bandId} x1="0" y1="0" x2="1" y2="0">
+              <Stop offset="0" stopColor={color} stopOpacity="0" />
+              <Stop offset="0.5" stopColor={color} stopOpacity="0.9" />
+              <Stop offset="1" stopColor={color} stopOpacity="0" />
+            </LinearGradient>
+            {/* The dots are the window the light is seen through. Clipping to
+                them is what makes the light land *on* the field rather than
+                over it. */}
+            <ClipPath id={clipId}>
+              <Path d={grid} />
+            </ClipPath>
+          </Defs>
+
+          {/* The field at rest, under everything. */}
+          <Path d={grid} fill={color} fillOpacity={DOT_REST_OPACITY} />
+
+          {animation === 'drift' ? (
+            <AnimatedCircle
+              animatedProps={driftProps}
+              r={radius}
+              fill={`url(#${lightId})`}
+              clipPath={`url(#${clipId})`}
+            />
+          ) : animation === 'pulse' ? (
+            <AnimatedCircle
+              animatedProps={pulseProps}
+              cx={size.width / 2}
+              cy={size.height / 2}
+              fill={`url(#${lightId})`}
+              clipPath={`url(#${clipId})`}
+            />
+          ) : (
+            <AnimatedRect
+              animatedProps={scanProps}
+              y={0}
+              width={size.width}
+              height={size.height}
+              fill={`url(#${bandId})`}
+              clipPath={`url(#${clipId})`}
+            />
+          )}
         </Svg>
       ) : null}
     </View>
@@ -292,6 +371,12 @@ export interface ImageGenerationProps extends Omit<ViewProps, 'children'> {
   aspectRatio?: number;
   /** `compact` caps the width at a thumbnail and centres it; `fluid` fills. */
   size?: 'compact' | 'fluid';
+  /**
+   * How the light behind the dots moves while there is work outstanding.
+   * `drift` wanders, `pulse` leaves the centre as a ring, `scan` crosses as a
+   * band. All three cost the same.
+   */
+  animation?: DotFieldAnimation;
   /** Replaces the sentence under the frame. */
   statusText?: string;
   /** Hides the status line, leaving the frame and the prompt. */
@@ -364,6 +449,7 @@ function ImageGenerationRoot({
   resolution = '1024 × 1024',
   aspectRatio = 1,
   size = 'compact',
+  animation = 'drift',
   statusText,
   showStatus = true,
   onRetry,
@@ -433,7 +519,7 @@ function ImageGenerationRoot({
           style={[StyleSheet.absoluteFill, fieldStyle]}
           pointerEvents="none"
         >
-          <ImageGenerationField paused={!working} />
+          <ImageGenerationField paused={!working} animation={animation} />
         </Animated.View>
 
         {resolution ? <Text className={slots.resolution()}>{resolution}</Text> : null}

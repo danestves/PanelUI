@@ -87,18 +87,14 @@ const DONE_EXIT = 140;
 const REDUCED_SNAP = 160;
 
 /**
- * Which token the thumb's glyph is drawn in, per variant.
+ * The thumb is neutral, and the rail around it carries the variant.
  *
- * The thumb carries the variant's solid fill, so its contents take that fill's
- * foreground rather than the button's — which is what keeps the contrast right
- * in both themes without a hardcoded colour.
+ * Drawn in the accent it was the loudest thing on the control, which put the
+ * eye on the handle rather than on the distance — and the distance is the
+ * question the button is asking. Neutral, it reads as a physical thing being
+ * moved across a coloured track, which is what it is.
  */
-const THUMB_TINT = {
-  primary: '--color-primary-foreground',
-  secondary: '--color-background',
-  destructive: '--color-destructive-solid-foreground',
-  success: '--color-success-solid-foreground',
-} as const;
+const THUMB_GLYPH = '--color-muted-foreground';
 
 const slideButtonVariants = tv({
   slots: {
@@ -113,25 +109,22 @@ const slideButtonVariants = tv({
     fill: 'absolute bottom-0 top-0',
     /** The label, centred in the rail rather than in the space beside it. */
     label: 'text-center font-medium',
-    /** The draggable disc. */
-    thumb: 'absolute items-center justify-center rounded-full',
+    /**
+     * The draggable handle. Wider than it is tall, so it reads as something to
+     * push rather than as a dot that happens to be on a track — and the extra
+     * width is what gives the chevron room to sit in without crowding the
+     * curve at either end.
+     */
+    thumb: 'absolute items-center justify-center rounded-full bg-card shadow-sm',
     /** What the thumb holds — a chevron at rest, a tick once it has arrived. */
     thumbContent: 'items-center justify-center',
   },
   variants: {
     variant: {
-      primary: { label: 'text-primary', fill: 'bg-primary/20', thumb: 'bg-primary' },
-      secondary: {
-        label: 'text-secondary-foreground',
-        fill: 'bg-foreground/15',
-        thumb: 'bg-foreground',
-      },
-      destructive: {
-        label: 'text-destructive',
-        fill: 'bg-destructive/20',
-        thumb: 'bg-destructive',
-      },
-      success: { label: 'text-success', fill: 'bg-success/20', thumb: 'bg-success' },
+      primary: { label: 'text-primary', fill: 'bg-primary/25' },
+      secondary: { label: 'text-secondary-foreground', fill: 'bg-foreground/15' },
+      destructive: { label: 'text-destructive', fill: 'bg-destructive/25' },
+      success: { label: 'text-success', fill: 'bg-success/25' },
     },
     size: {
       // Matched to ProgressButton's boxes so the two line up in a column, and
@@ -161,8 +154,12 @@ export type SlideButtonVariant = NonNullable<SlideButtonVariantProps['variant']>
 /** How big a slide button is. */
 export type SlideButtonSize = NonNullable<SlideButtonVariantProps['size']>;
 
-/** The thumb's diameter, per size. It is a square, so this is both dimensions. */
-const THUMB_SIZE = { sm: 36, md: 44, lg: 48 } as const;
+/** The thumb's box, per size. A stadium, so the two differ. */
+const THUMB_SIZE = {
+  sm: { width: 60, height: 36 },
+  md: { width: 74, height: 44 },
+  lg: { width: 82, height: 48 },
+} as const;
 
 /** The rail's own padding — the gap the thumb sits inside. */
 const RAIL_INSET = 4;
@@ -280,7 +277,7 @@ function SlideButtonRoot(
   const controlled = completedProp !== undefined;
   const completed = controlled ? completedProp : internalCompleted;
 
-  const thumbSize = THUMB_SIZE[size];
+  const thumbWidth = THUMB_SIZE[size].width;
 
   useEffect(() => {
     threshold.value = resolveThreshold(thresholdProp);
@@ -436,10 +433,10 @@ function SlideButtonRoot(
     (event: LayoutChangeEvent) => {
       travel.value = Math.max(
         0,
-        event.nativeEvent.layout.width - thumbSize - RAIL_INSET * 2
+        event.nativeEvent.layout.width - thumbWidth - RAIL_INSET * 2
       );
     },
-    [thumbSize, travel]
+    [thumbWidth, travel]
   );
 
   const slots = slideButtonVariants({ variant, size, fullWidth, disabled });
@@ -502,15 +499,20 @@ function SlideButtonRoot(
 
 /** The travelled part of the rail. Drawn by the root; not a public part. */
 function SlideButtonFill() {
-  const { progress, travel, slots, size } = useSlideButtonContext('SlideButton.Fill');
+  const { progress, travel, slots } = useSlideButtonContext('SlideButton.Fill');
   const sign = useDirectionSign();
-  const thumbSize = THUMB_SIZE[size];
 
-  // A width in points rather than a percentage: the fill ends under the middle
-  // of the thumb, which is a distance the rail knows and a fraction of the rail
-  // is not.
+  /*
+   * The fill ends exactly at the thumb's tail — the same number the thumb is
+   * translated by, so the two edges are one edge.
+   *
+   * Ending it under the middle of the thumb instead put the boundary inside
+   * the handle, so the coloured trail appeared to come out of the middle of it
+   * rather than to be left behind it. It is the trail, and a trail starts
+   * where the thing that made it currently is.
+   */
   const style = useAnimatedStyle(() => ({
-    width: RAIL_INSET + thumbSize / 2 + progress.value * travel.value,
+    width: RAIL_INSET + progress.value * travel.value,
   }));
 
   return (
@@ -531,26 +533,28 @@ export interface SlideButtonLabelProps extends ViewProps {
 /**
  * What the button says.
  *
- * It fades as the thumb approaches rather than sliding aside: the thumb is
- * about to occupy the space the label is in, and two things moving toward each
- * other at different speeds reads as a collision rather than as one making
- * room for the other.
+ * Centred in the whole rail rather than in the space beside the thumb, and it
+ * does not move or fade — the thumb simply passes over it, and the rail's own
+ * clip takes the rest.
+ *
+ * Fading it out was worse in a way that only shows on a device: the label
+ * disappears while there is still most of a rail left to cross, so the button
+ * spends the second half of the gesture saying nothing at all. Covered
+ * instead, the text is legible right up to the moment the handle reaches it,
+ * which is also the moment the reader no longer needs it.
  */
 function SlideButtonLabel({ className, style, children, ...props }: SlideButtonLabelProps) {
-  const { progress, slots } = useSlideButtonContext('SlideButton.Label');
-  const fade = useAnimatedStyle(() => ({
-    opacity: 1 - Math.min(1, progress.value * 1.6),
-  }));
+  const { slots } = useSlideButtonContext('SlideButton.Label');
 
   return (
-    <Animated.View
+    <View
       pointerEvents="none"
       className="flex-1 items-center justify-center"
-      style={[fade, style]}
+      style={style}
       {...props}
     >
       <Text className={slots.label({ className })}>{children}</Text>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -568,12 +572,12 @@ export interface SlideButtonThumbProps extends ViewProps {
  * pass. It sits absolutely at the rail's leading inset and travels from there.
  */
 function SlideButtonThumb({ className, style, children, ...props }: SlideButtonThumbProps) {
-  const { progress, travel, done, completed, slots, variant, size } =
+  const { progress, travel, done, completed, slots, size } =
     useSlideButtonContext('SlideButton.Thumb');
   const sign = useDirectionSign();
-  const thumbSize = THUMB_SIZE[size];
+  const box = THUMB_SIZE[size];
 
-  const tint = useCSSVariable(THUMB_TINT[variant]);
+  const tint = useCSSVariable(THUMB_GLYPH);
   const glyphColor = typeof tint === 'string' ? tint : undefined;
 
   const slide = useAnimatedStyle(() => ({
@@ -592,8 +596,8 @@ function SlideButtonThumb({ className, style, children, ...props }: SlideButtonT
       className={slots.thumb({ className })}
       style={[
         {
-          width: thumbSize,
-          height: thumbSize,
+          width: box.width,
+          height: box.height,
           [sign === 1 ? 'left' : 'right']: RAIL_INSET,
         },
         slide,

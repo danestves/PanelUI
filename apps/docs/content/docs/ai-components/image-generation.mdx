@@ -83,6 +83,16 @@ const [status, setStatus] = useState<ImageGenerationStatus>('queued');
 </ImageGeneration>
 ```
 
+### How the light moves
+
+Three ways, at the same cost. Reach for `pulse` where the image is being developed rather than assembled, and `scan` where a row of them should feel like one process passing over all of them.
+
+```tsx
+<ImageGeneration status="generating" animation="drift" />
+<ImageGeneration status="generating" animation="pulse" />
+<ImageGeneration status="generating" animation="scan" />
+```
+
 ### When it fails
 
 `onRetry` is what puts a button under the card. Without it the error is reported and nothing is offered, which is right when the failure is not the reader's to fix.
@@ -107,7 +117,7 @@ const [status, setStatus] = useState<ImageGenerationStatus>('queued');
 
 ### Several at once
 
-One status line over a row of tiles, rather than one under each. `showStatus={false}` drops the sentence and `resolution=""` drops the badge, which is what makes a tile small enough to sit beside others.
+One status line over a row of tiles, rather than one under each. `showStatus={false}` drops the sentence and `resolution=""` drops the badge, which is what makes a tile small enough to sit beside others. Several fields on one screen is the case the drawing is cheap for.
 
 ```tsx
 <Text className="text-sm font-medium">Creating 3 images</Text>
@@ -129,7 +139,7 @@ One status line over a row of tiles, rather than one under each. `showStatus={fa
 
 ### In a conversation
 
-The box is the right shape from the moment the request goes in, so the reply under it never moves as the image lands. That is the whole job, and it is the one thing a card sitting alone on a page cannot show.
+The box is the right shape from the moment the request goes in, so the reply under it never moves as the image lands. That is the whole job, and it is the one thing a card sitting alone on a page cannot show. It stays at the default `compact` width — an image in a conversation is one turn among many, and a card the width of the screen makes the transcript around it look like a caption.
 
 ```tsx
 const [status, setStatus] = useState<ImageGenerationStatus>('queued');
@@ -218,6 +228,7 @@ const done = status === 'complete';
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `paused` | `boolean` | `false` | Holds the light still, at one representative frame. |
+| `animation` | `DotFieldAnimation` | `'drift'` | How the light behind the dots moves. `drift` wanders around the middle; `pulse` leaves the centre as a ring and fades; `scan` crosses the box as a band. All three cost the same, which is two numbers a frame however big the field is. |
 
 ### ImageGeneration
 
@@ -230,6 +241,7 @@ const done = status === 'complete';
 | `resolution` | `string` | `'1024 × 1024'` | Shown in the corner of the frame. Pass an empty string to drop it. |
 | `aspectRatio` | `number` | `1` | The box's shape, as width over height. Defaults to `1` — square, which is what most models return, and what the frame must be before there is an image to measure. |
 | `size` | `'compact' \| 'fluid'` | `'compact'` | `compact` caps the width at a thumbnail and centres it; `fluid` fills. |
+| `animation` | `DotFieldAnimation` | `'drift'` | How the light behind the dots moves while there is work outstanding. `drift` wanders, `pulse` leaves the centre as a ring, `scan` crosses as a band. All three cost the same. |
 | `statusText` | `string` | — | Replaces the sentence under the frame. |
 | `showStatus` | `boolean` | `true` | Hides the status line, leaving the frame and the prompt. |
 | `onRetry` | `() => void` | — | Shown as a button under an `error`. Without it there is no button. |

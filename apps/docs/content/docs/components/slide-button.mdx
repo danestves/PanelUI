@@ -204,6 +204,14 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ## Notes
 
+### How it is drawn
+
+The handle is a stadium rather than a disc, and it is neutral: the rail around it carries the variant's colour, and the trail it leaves behind carries it too. Drawn in the accent, the handle was the loudest thing on the control, which put the eye on it rather than on the distance — and the distance is the question the button is asking.
+
+The trail ends exactly at the handle's tail, so the two edges are one edge and the colour reads as something left behind rather than as something coming out of the middle of the handle.
+
+The label is centred in the whole rail and does not move or fade. The handle simply passes over it. Fading it out looked tidier and read worse: the label disappears while there is most of a rail left to cross, so the button spends the second half of the gesture saying nothing.
+
 ### What counts as a slide
 
 Nothing fires until the thumb clears `threshold`, which defaults to nine tenths of the rail. Released short, it springs home.

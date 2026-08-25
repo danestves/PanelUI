@@ -23,6 +23,11 @@
       "code": "<ImageGeneration status={status} aspectRatio={3 / 4} resolution=\"768 × 1024\">\n  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />\n</ImageGeneration>"
     },
     {
+      "title": "How the light moves",
+      "description": "Three ways, at the same cost. Reach for `pulse` where the image is being developed rather than assembled, and `scan` where a row of them should feel like one process passing over all of them.",
+      "code": "<ImageGeneration status=\"generating\" animation=\"drift\" />\n<ImageGeneration status=\"generating\" animation=\"pulse\" />\n<ImageGeneration status=\"generating\" animation=\"scan\" />"
+    },
+    {
       "title": "When it fails",
       "description": "`onRetry` is what puts a button under the card. Without it the error is reported and nothing is offered, which is right when the failure is not the reader's to fix.",
       "code": "<ImageGeneration\n  status=\"error\"\n  prompt=\"a quiet mountain landscape at sunset\"\n  onRetry={regenerate}\n/>"
@@ -34,7 +39,7 @@
     },
     {
       "title": "Several at once",
-      "description": "One status line over a row of tiles, rather than one under each. `showStatus={false}` drops the sentence and `resolution=\"\"` drops the badge, which is what makes a tile small enough to sit beside others.",
+      "description": "One status line over a row of tiles, rather than one under each. `showStatus={false}` drops the sentence and `resolution=\"\"` drops the badge, which is what makes a tile small enough to sit beside others. Several fields on one screen is the case the drawing is cheap for.",
       "code": "<Text className=\"text-sm font-medium\">Creating 3 images</Text>\n<View className=\"mt-2 flex-row gap-2\">\n  {jobs.map((job) => (\n    <ImageGeneration\n      key={job.id}\n      size=\"fluid\"\n      className=\"flex-1\"\n      status={job.status}\n      showStatus={false}\n      resolution=\"\"\n    />\n  ))}\n</View>"
     }
   ],
@@ -42,7 +47,7 @@
   "versions": [
     {
       "title": "In a conversation",
-      "description": "The box is the right shape from the moment the request goes in, so the reply under it never moves as the image lands. That is the whole job, and it is the one thing a card sitting alone on a page cannot show.",
+      "description": "The box is the right shape from the moment the request goes in, so the reply under it never moves as the image lands. That is the whole job, and it is the one thing a card sitting alone on a page cannot show. It stays at the default `compact` width — an image in a conversation is one turn among many, and a card the width of the screen makes the transcript around it look like a caption.",
       "code": "const [status, setStatus] = useState<ImageGenerationStatus>('queued');\nconst done = status === 'complete';\n\n<MessageScroller className=\"flex-1\">\n  <MessageScroller.Viewport>\n    <MessageScroller.Content className=\"gap-4 px-5 py-6\">\n      <MessageScroller.Item messageId=\"ask\">\n        <Message align=\"end\">\n          <Message.Content>\n            <Message.Bubble>\n              <Message.BubbleContent>\n                Draw me a quiet mountain landscape at sunset.\n              </Message.BubbleContent>\n            </Message.Bubble>\n          </Message.Content>\n        </Message>\n      </MessageScroller.Item>\n\n      <MessageScroller.Item messageId=\"image\">\n        <Message align=\"start\">\n          <Message.Avatar>\n            <Avatar size=\"sm\" fallback=\"AI\" />\n          </Message.Avatar>\n          <Message.Content>\n            <ImageGeneration\n              size=\"fluid\"\n              status={status}\n              prompt=\"a quiet mountain landscape at sunset\"\n              resolution=\"1024 × 1024\"\n            >\n              <Image\n                source={{ uri: MOUNTAIN }}\n                style={{ width: '100%', height: '100%' }}\n              />\n            </ImageGeneration>\n          </Message.Content>\n        </Message>\n      </MessageScroller.Item>\n\n      {done ? (\n        <MessageScroller.Item messageId=\"reply\">\n          <Response>\n            Here it is — late light on the far ridge, and the valley already in\n            shadow. Say the word and I will try a wider crop.\n          </Response>\n        </MessageScroller.Item>\n      ) : null}\n\n      <MessageScroller.Item messageId=\"again\">\n        <Button variant=\"secondary\" onPress={() => setAt(0)}>\n          Ask again\n        </Button>\n      </MessageScroller.Item>\n    </MessageScroller.Content>\n  </MessageScroller.Viewport>\n</MessageScroller>"
     }
   ],

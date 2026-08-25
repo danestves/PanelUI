@@ -174,6 +174,21 @@ test('the rail, not the surface, carries the ref and the accessibility', () => {
 test('the fill is a width in points, not a percentage string', () => {
   // A style value that is sometimes a number and sometimes a string is a class
   // of bug worth not having in a view that updates every frame.
-  assert.match(source, /width: RAIL_INSET \+ thumbSize \/ 2 \+ progress\.value \* travel\.value/);
+  assert.match(source, /width: RAIL_INSET \+ progress\.value \* travel\.value/);
   assert.ok(!/width: `\$\{/.test(source), 'no template-literal width');
+});
+
+/*
+ * The trail ends where the thumb is, not inside it.
+ *
+ * Ending it under the middle of the handle put the boundary inside the thing
+ * that made it, so the colour appeared to come out of the middle of the thumb
+ * rather than to be left behind it.
+ */
+test('the fill and the thumb share an edge', () => {
+  const fill = source.match(/width: RAIL_INSET \+ ([^,\n]+),/)?.[1];
+  const thumb = source.match(/transform: \[\{ translateX: ([^}]+) \}\]/)?.[1];
+  assert.ok(fill && thumb, 'could not read both offsets');
+  assert.equal(fill.trim(), 'progress.value * travel.value');
+  assert.equal(thumb.trim(), 'progress.value * travel.value * sign');
 });

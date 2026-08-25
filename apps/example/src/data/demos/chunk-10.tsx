@@ -1195,8 +1195,11 @@ function ImageGenerationChatVersion() {
                 <Avatar size="sm" fallback="AI" />
               </Message.Avatar>
               <Message.Content>
+                {/* A thumbnail, not a full-width plate. An image in a
+                    conversation is one turn among many, and a card the width of
+                    the screen makes the transcript around it look like a
+                    caption. */}
                 <ImageGeneration
-                  size="fluid"
                   status={status}
                   prompt="a quiet mountain landscape at sunset"
                   resolution="1024 × 1024"
@@ -1396,6 +1399,18 @@ const ENTRIES: ComponentEntry[] = [
             prompt="a quiet mountain landscape at sunset"
             onRetry={() => {}}
           />
+        ),
+      },
+      {
+        label: 'A light that pulses',
+        render: () => (
+          <ImageGeneration status="generating" animation="pulse" resolution="" />
+        ),
+      },
+      {
+        label: 'A light that scans',
+        render: () => (
+          <ImageGeneration status="generating" animation="scan" resolution="" />
         ),
       },
       {
