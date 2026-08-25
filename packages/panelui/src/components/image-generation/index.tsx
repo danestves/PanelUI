@@ -46,7 +46,7 @@ import {
   type LayoutChangeEvent,
   type ViewProps,
 } from 'react-native';
-import Svg, { Defs, LinearGradient, Path, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -67,11 +67,9 @@ import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import {
   DOT_REST_OPACITY,
-  driftAt,
+  frameAt,
   gridPath,
-  lightRadius,
-  pulseAt,
-  scanAt,
+  litFrames,
   type DotFieldAnimation,
 } from './dot-field';
 
@@ -167,20 +165,17 @@ const imageGenerationVariants = tv({
   },
 });
 
-const AnimatedRadialGradient = Animated.createAnimatedComponent(RadialGradient);
-const AnimatedStop = Animated.createAnimatedComponent(Stop);
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 export interface ImageGenerationFieldProps extends Omit<ViewProps, 'children'> {
   className?: string;
   /** Holds the light still, at one representative frame. */
   paused?: boolean;
   /**
-   * How the light behind the dots moves.
+   * How the light moves through the field.
    *
-   * `drift` wanders around the middle; `pulse` leaves the centre as a ring and
-   * fades; `scan` crosses the box as a band. All three cost the same, which is
-   * two numbers a frame however big the field is.
+   * `drift` wanders around the middle; `pulse` is a ring leaving the centre;
+   * `scan` crosses as a band. All three cost the same.
    */
   animation?: DotFieldAnimation;
 }
@@ -192,18 +187,12 @@ export interface ImageGenerationFieldProps extends Omit<ViewProps, 'children'> {
  * what it draws has no intrinsic height — laid out normally it measures to
  * nothing and draws a single row of dots along the top.
  *
- * ## How it is cheap
+ * ## What it costs
  *
- * One path, drawn once when the box is measured, filled with a gradient. The
- * light is the gradient's own centre, so each dot takes its brightness from
- * where it happens to sit and nothing has to be told which dots are lit.
- * Moving the light is two numbers a frame, whatever the field's size.
- *
- * The two versions before this one both animated the dots themselves — first
- * by rebuilding every arc as a string each frame, then by clipping a shape of
- * light to a path with hundreds of subpaths in it. Both made a screen showing
- * several of these stall on scroll, the second because a complex clip is
- * re-rasterized every time the view is drawn, which scrolling does constantly.
+ * Two paths: the resting grid, and the lit dots over it. Both are built when
+ * the box is measured — every frame of the loop at once — so running it is
+ * handing over a string that already exists, and a page of these costs the
+ * same as a page of static drawings plus one property assignment each.
  */
 function ImageGenerationField({
   className,
@@ -219,27 +208,16 @@ function ImageGenerationField({
   const tint = useCSSVariable('--color-muted-foreground');
   const color = typeof tint === 'string' ? tint : '#737373';
 
-  /*
-   * The gradient is named per instance.
-   *
-   * An SVG id is looked up by name, and several fields on one screen — which is
-   * exactly what a page of these is — would otherwise all point at whichever
-   * definition mounted last. The symptom is one field drawing and the rest
-   * going blank, which reads as a bug in the component rather than as two
-   * things sharing a name.
-   */
-  const paintId = `panelui-ig-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
-
   const running = !paused && !reducedMotion;
 
-  /*
-   * Built once per size and not touched again. It is the expensive half —
-   * hundreds of arcs in a string — and none of it changes as the light moves.
-   */
-  const grid = useMemo(() => gridPath(size.width, size.height), [size.width, size.height]);
-  const radius = lightRadius(size.width, size.height);
-  // The pulse has to reach the corners, or the ring stops before the field does.
-  const pulseRadius = Math.sqrt(size.width * size.width + size.height * size.height) / 2;
+  const grid = useMemo(
+    () => gridPath(size.width, size.height),
+    [size.width, size.height]
+  );
+  const frames = useMemo(
+    () => litFrames(size.width, size.height, animation),
+    [animation, size.width, size.height]
+  );
 
   const frame = useFrameCallback((info) => {
     'worklet';
@@ -256,27 +234,16 @@ function ImageGenerationField({
   }, [running, setActive]);
 
   /*
-   * A still field is not an empty one. Reduced motion and `paused` both leave
-   * the light somewhere legible rather than losing it, which is the difference
-   * between "not animating" and "failed to load" — the clock starts at a frame
-   * with the light off centre rather than at zero.
+   * A still field is not an empty one.
+   *
+   * Held and reduced-motion fields keep whichever frame the clock is on, and
+   * the clock starts partway through the loop rather than at zero — so the
+   * light is somewhere legible rather than dead centre or absent, which is the
+   * difference between "not animating" and "failed to load".
    */
-  const driftProps = useAnimatedProps(() => {
-    const [x, y] = driftAt(clock.value, size.width, size.height);
-    return { cx: x, cy: y, r: radius };
-  });
-
-  // The ring's position, as an offset along a gradient that spans the box.
-  // Bright at the offset and resting on both sides of it, so what travels is a
-  // band of light rather than a disc that grows and starts over.
-  const pulseProps = useAnimatedProps(() => ({ offset: pulseAt(clock.value) }));
-
-  const scanProps = useAnimatedProps(() => {
-    // The band starts and ends a full width clear of the box, so it ramps in
-    // and out at the edges rather than arriving at full strength against them.
-    const head = -size.width + scanAt(clock.value) * size.width * 2;
-    return { x1: head, x2: head + size.width };
-  });
+  const animatedProps = useAnimatedProps(() => ({
+    d: frames[frameAt(clock.value, animation)] ?? '',
+  }));
 
   const onLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -295,55 +262,12 @@ function ImageGenerationField({
     >
       {grid ? (
         <Svg width={size.width} height={size.height}>
-          <Defs>
-            {animation === 'scan' ? (
-              <AnimatedLinearGradient
-                id={paintId}
-                animatedProps={scanProps}
-                gradientUnits="userSpaceOnUse"
-                y1={0}
-                y2={0}
-              >
-                <Stop offset="0" stopColor={color} stopOpacity={DOT_REST_OPACITY} />
-                <Stop offset="0.5" stopColor={color} stopOpacity="0.95" />
-                <Stop offset="1" stopColor={color} stopOpacity={DOT_REST_OPACITY} />
-              </AnimatedLinearGradient>
-            ) : animation === 'pulse' ? (
-              <RadialGradient
-                id={paintId}
-                gradientUnits="userSpaceOnUse"
-                cx={size.width / 2}
-                cy={size.height / 2}
-                r={pulseRadius}
-              >
-                <Stop offset="0" stopColor={color} stopOpacity={DOT_REST_OPACITY} />
-                <AnimatedStop
-                  animatedProps={pulseProps}
-                  stopColor={color}
-                  stopOpacity="0.95"
-                />
-                <Stop offset="1" stopColor={color} stopOpacity={DOT_REST_OPACITY} />
-              </RadialGradient>
-            ) : (
-              <AnimatedRadialGradient
-                id={paintId}
-                animatedProps={driftProps}
-                gradientUnits="userSpaceOnUse"
-              >
-                {/* Soft at the centre and down to the resting opacity at the
-                    rim rather than to nothing, so a dot the light has not
-                    reached is still a dot. */}
-                <Stop offset="0" stopColor={color} stopOpacity="0.95" />
-                <Stop offset="0.55" stopColor={color} stopOpacity="0.5" />
-                <Stop offset="1" stopColor={color} stopOpacity={DOT_REST_OPACITY} />
-              </AnimatedRadialGradient>
-            )}
-          </Defs>
-
-          {/* One path, filled with the light itself. Each dot takes its
-              brightness from where it sits in the gradient, so nothing has to
-              be told which dots are lit and nothing is clipped. */}
-          <Path d={grid} fill={`url(#${paintId})`} />
+          {/* The field at rest, under everything and never touched again. */}
+          <Path d={grid} fill={color} fillOpacity={DOT_REST_OPACITY} />
+          {/* The dots the light has reached, drawn larger over their own
+              resting copies rather than instead of them — so a dot brightens
+              in place instead of appearing to move. */}
+          <AnimatedPath animatedProps={animatedProps} fill={color} fillOpacity={0.9} />
         </Svg>
       ) : null}
     </View>

@@ -1,8 +1,10 @@
 ---
 title: ImageGeneration
 description: The place an image will be, while it is being made.
-status: new
+status: beta
 ---
+
+<Callout type="warn">Beta — the API has settled, but has not seen enough use to promise it will not move again.</Callout>
 
 A box that holds an image's place while the image is being made, then hands it over.
 
@@ -228,7 +230,7 @@ const done = status === 'complete';
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `paused` | `boolean` | `false` | Holds the light still, at one representative frame. |
-| `animation` | `DotFieldAnimation` | `'drift'` | How the light behind the dots moves. `drift` wanders around the middle; `pulse` leaves the centre as a ring and fades; `scan` crosses the box as a band. All three cost the same, which is two numbers a frame however big the field is. |
+| `animation` | `DotFieldAnimation` | `'drift'` | How the light moves through the field. `drift` wanders around the middle; `pulse` is a ring leaving the centre; `scan` crosses as a band. All three cost the same. |
 
 ### ImageGeneration
 

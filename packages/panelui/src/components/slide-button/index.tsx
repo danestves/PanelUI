@@ -77,8 +77,21 @@ import {
   resolveThreshold,
 } from './slide-button-track';
 
-/** How the thumb settles when it is let go, in either direction. */
-const SPRING = { damping: 22, stiffness: 220, mass: 0.7 } as const;
+/**
+ * How the handle settles when it is let go, in either direction.
+ *
+ * Clamped, because the rail has hard ends and the release carries the drag's
+ * own velocity into the spring. Unclamped, a fast flick overshoots past the
+ * end, disappears behind the rail's clip and comes back — which reads as the
+ * control having been thrown rather than moved, and is worst on exactly the
+ * gesture people make when they are confident.
+ */
+const SPRING = {
+  damping: 22,
+  stiffness: 220,
+  mass: 0.7,
+  overshootClamping: true,
+} as const;
 
 /** How long the completed drawing takes to leave again on a reset. */
 const DONE_EXIT = 140;
@@ -128,10 +141,9 @@ const slideButtonVariants = tv({
   },
   variants: {
     variant: {
-      primary: { label: 'text-primary', fill: 'bg-primary/25' },
-      secondary: { label: 'text-secondary-foreground', fill: 'bg-foreground/15' },
-      destructive: { label: 'text-destructive', fill: 'bg-destructive/25' },
-      success: { label: 'text-success', fill: 'bg-success/25' },
+      secondary: { label: 'text-secondary-foreground', fill: 'bg-foreground/10' },
+      destructive: { label: 'text-destructive', fill: 'bg-destructive/20' },
+      success: { label: 'text-success', fill: 'bg-success/20' },
     },
     size: {
       // Matched to ProgressButton's boxes so the two line up in a column, and
@@ -149,7 +161,16 @@ const slideButtonVariants = tv({
     },
   },
   defaultVariants: {
-    variant: 'primary',
+    /*
+     * `secondary`, where ProgressButton's default is `primary`.
+     *
+     * The handle here is neutral and the rail carries the variant, so what
+     * `primary` had left to say was a wash of the accent behind the handle —
+     * and in a theme whose primary is close to its foreground that is the same
+     * drawing as `secondary`. A variant nobody can tell from another one is not
+     * a choice, so it is gone rather than kept for symmetry.
+     */
+    variant: 'secondary',
     size: 'md',
   },
 });
@@ -241,7 +262,7 @@ export interface SlideButtonProps
 function SlideButtonRoot(
   {
     className,
-    variant = 'primary',
+    variant = 'secondary',
     size = 'md',
     fullWidth,
     threshold: thresholdProp,
@@ -506,21 +527,30 @@ function SlideButtonRoot(
 
 /** The travelled part of the rail. Drawn by the root; not a public part. */
 function SlideButtonFill() {
-  const { progress, travel, slots } = useSlideButtonContext('SlideButton.Fill');
+  const { progress, travel, slots, size } = useSlideButtonContext('SlideButton.Fill');
   const sign = useDirectionSign();
+  const overlap = THUMB_SIZE[size].width / 2;
 
   /*
-   * The trail starts where the handle starts and ends where the handle is, so
-   * the two share an edge and it is zero wide until something has been
-   * dragged.
+   * The trail runs from the handle's own starting edge to somewhere under the
+   * handle, and it is zero wide until something has been dragged.
    *
-   * Two earlier versions got this wrong in opposite directions. Ending it under
-   * the middle of the handle put the boundary inside the thing that made it, so
-   * the colour appeared to come out of the handle rather than to be left behind
-   * it. Starting it at the rail's outer edge left a slice of colour showing
-   * beside the handle before the button had been touched at all.
+   * Both ends are load-bearing, and both were wrong once.
+   *
+   * Its leading end is rounded, like the rail. Stopped exactly at the handle's
+   * tail that cap met the handle's own cap, and the two facing curves left a
+   * lens of bare track between them — two pills on a rail rather than a track
+   * being filled in, most obviously at the far end where the reader is looking.
+   * Carrying the extra half-handle-width keeps that cap under the handle at
+   * every point of the travel: always ahead of the tail, never past the centre.
+   *
+   * The other end is why the whole width is scaled rather than offset. Adding a
+   * constant put a slice of colour beside the handle on a button nobody had
+   * touched.
    */
-  const style = useAnimatedStyle(() => ({ width: progress.value * travel.value }));
+  const style = useAnimatedStyle(() => ({
+    width: progress.value * (travel.value + overlap),
+  }));
 
   return (
     <Animated.View

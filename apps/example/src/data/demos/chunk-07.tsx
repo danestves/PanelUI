@@ -1726,9 +1726,6 @@ export const ENTRIES: ComponentEntry[] = [
         render: () => (
           <View className="w-full gap-3">
             <SlideButton autoReset fullWidth onComplete={() => {}}>
-              <SlideButton.Label>primary</SlideButton.Label>
-            </SlideButton>
-            <SlideButton variant="secondary" autoReset fullWidth onComplete={() => {}}>
               <SlideButton.Label>secondary</SlideButton.Label>
             </SlideButton>
             <SlideButton variant="destructive" autoReset fullWidth onComplete={() => {}}>

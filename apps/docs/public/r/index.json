@@ -711,7 +711,7 @@
     "type": "registry:ui",
     "kind": "ui",
     "group": "ai-components",
-    "stability": "stable",
+    "stability": "beta",
     "description": "The place an image will be, while it is being made.",
     "registryDependencies": [
       "cn",

@@ -109,15 +109,15 @@ Children of `SlideButton.Thumb` replace the chevron. The tick still lands on com
 
 ### Sizes and variants
 
-Matched to ProgressButton's boxes, so the two line up in a column.
+Matched to ProgressButton's boxes, so the two line up in a column. There is no `primary`: the handle is neutral and the rail carries the variant, which left `primary` drawing the same picture as `secondary` in any theme whose primary is close to its foreground.
 
 ```tsx
 <SlideButton size="sm" fullWidth onComplete={go}>
   <SlideButton.Label>Small</SlideButton.Label>
 </SlideButton>
 
-<SlideButton size="lg" variant="secondary" fullWidth onComplete={go}>
-  <SlideButton.Label>Large, secondary</SlideButton.Label>
+<SlideButton size="lg" variant="destructive" fullWidth onComplete={go}>
+  <SlideButton.Label>Large, destructive</SlideButton.Label>
 </SlideButton>
 ```
 
@@ -139,13 +139,11 @@ The rail publishes an `activate` action, because a drag cannot be performed ther
 
 ### `variant`
 
-- `primary` *(default)*
-- `secondary`
+- `secondary` *(default)*
 - `destructive`
 - `success`
 
 ```tsx
-<SlideButton variant="primary">…</SlideButton>
 <SlideButton variant="secondary">…</SlideButton>
 <SlideButton variant="destructive">…</SlideButton>
 <SlideButton variant="success">…</SlideButton>

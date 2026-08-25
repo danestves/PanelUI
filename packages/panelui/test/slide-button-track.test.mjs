@@ -174,7 +174,7 @@ test('the rail, not the surface, carries the ref and the accessibility', () => {
 test('the fill is a width in points, not a percentage string', () => {
   // A style value that is sometimes a number and sometimes a string is a class
   // of bug worth not having in a view that updates every frame.
-  assert.match(source, /width: progress\.value \* travel\.value/);
+  assert.match(source, /width: progress\.value \* \(travel\.value \+ overlap\)/);
   assert.ok(!/width: `\$\{/.test(source), 'no template-literal width');
 });
 
@@ -185,16 +185,23 @@ test('the fill is a width in points, not a percentage string', () => {
  * that made it, so the colour appeared to come out of the middle of the thumb
  * rather than to be left behind it.
  */
-test('the trail and the handle share an edge, and both start inset', () => {
-  const fill = source.match(/width: ([^}]+) \}\)\);/)?.[1];
-  const thumb = source.match(/transform: \[\{ translateX: ([^}]+) \}\]/)?.[1];
-  assert.ok(fill && thumb, 'could not read both offsets');
-  assert.equal(fill.trim(), 'progress.value * travel.value');
-  assert.equal(thumb.trim(), 'progress.value * travel.value * sign');
-  // Both are laid out from the same inset, which is what makes the shared edge
-  // an edge rather than a near miss.
-  assert.match(source, /\[sign === 1 \? 'left' : 'right'\]: RAIL_INSET,\n        \},\n        style,/);
-  assert.match(source, /\[sign === 1 \? 'left' : 'right'\]: RAIL_INSET,\n        \},\n        slide,/);
+/*
+ * The trail's leading end is rounded, like the rail. Stopped exactly at the
+ * handle's tail that cap meets the handle's own cap, and the two facing curves
+ * leave a lens of bare track between them — two pills on a rail rather than a
+ * track being filled in. Carrying half a handle-width keeps the cap under the
+ * handle: always ahead of the tail, never past the centre.
+ */
+test('the trail is always ahead of the handle tail and behind its centre', () => {
+  const overlap = 37; // half of the medium handle's width
+  const travel = 200;
+  for (const progress of [0.01, 0.25, 0.5, 0.75, 1]) {
+    const trailEdge = progress * (travel + overlap);
+    const tail = progress * travel;
+    const centre = progress * travel + overlap;
+    assert.ok(trailEdge >= tail, `trail behind the tail at ${progress}`);
+    assert.ok(trailEdge <= centre, `trail past the centre at ${progress}`);
+  }
 });
 
 /*
@@ -202,7 +209,32 @@ test('the trail and the handle share an edge, and both start inset', () => {
  * handle at rest is a control that looks part-finished.
  */
 test('the trail is zero wide at rest', () => {
-  const width = source.match(/const style = useAnimatedStyle\(\(\) => \(\{ width: ([^}]+) \}\)\);/)?.[1];
+  const width = source.match(/width: progress\.value \* \(([^)]+)\)/)?.[1];
   assert.ok(width, 'could not read the trail width');
-  assert.ok(!width.includes('RAIL_INSET'), 'no constant term, or it shows at rest');
+  // Every term is scaled by progress, so at rest the whole thing is zero.
+  assert.ok(!/^\s*RAIL_INSET/.test(width), 'no constant term, or it shows at rest');
+  assert.equal(0 * (200 + 37), 0);
+});
+
+test('the trail and the handle are laid out from the same inset', () => {
+  assert.match(source, /\[sign === 1 \? 'left' : 'right'\]: RAIL_INSET,\n        \},\n        style,/);
+  assert.match(source, /\[sign === 1 \? 'left' : 'right'\]: RAIL_INSET,\n        \},\n        slide,/);
+});
+
+/*
+ * The rail has hard ends, and the release hands the drag's own velocity to the
+ * spring. Unclamped, a fast flick overshoots past the end, disappears behind
+ * the rail's clip and comes back — worst on exactly the gesture people make
+ * when they are sure.
+ */
+test('the settle cannot overshoot either end', () => {
+  const spring = source.match(/const SPRING = \{([\s\S]*?)\} as const;/)?.[1];
+  assert.ok(spring, 'could not read the spring');
+  assert.match(spring, /overshootClamping: true/);
+});
+
+test('both ends are sprung with the same config', () => {
+  // One spring for home and for the far end, so a slide that was refused and
+  // one that was honoured are the same object moving at the same weight.
+  assert.match(source, /withSpring\(committed \? 1 : 0, \{ \.\.\.SPRING, velocity \}\)/);
 });

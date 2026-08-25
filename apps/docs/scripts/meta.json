@@ -692,7 +692,8 @@
     "react native ai image generation placeholder",
     {
       "addedIn": "0.82.0",
-      "group": "ai-components"
+      "group": "ai-components",
+      "beta": true
     }
   ],
   "shimmer": [
