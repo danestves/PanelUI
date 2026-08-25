@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1191,
-    "values": 312,
-    "types": 879,
-    "modules": 144,
-    "components": 117,
+    "exports": 1187,
+    "values": 311,
+    "types": 876,
+    "modules": 143,
+    "components": 116,
     "hooks": 13
   },
   "groups": {
@@ -4319,29 +4319,6 @@
           },
           {
             "name": "TextAnimationScrollingProps",
-            "kind": "type"
-          }
-        ]
-      },
-      {
-        "source": "components/text-glass/index.tsx",
-        "slug": "text-glass",
-        "category": "components",
-        "symbols": [
-          {
-            "name": "TextGlass",
-            "kind": "value"
-          },
-          {
-            "name": "TextGlassProps",
-            "kind": "type"
-          },
-          {
-            "name": "TextGlassStroke",
-            "kind": "type"
-          },
-          {
-            "name": "TextGlassWord",
             "kind": "type"
           }
         ]

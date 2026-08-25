@@ -105,7 +105,6 @@ export const COMPONENTS = [
   {"slug":"task","name":"Task","summary":"One step an agent took, and what it did there"},
   {"slug":"text-animation","name":"TextAnimation","summary":"Five ways a piece of text or a number arrives"},
   {"slug":"textarea","name":"Textarea","summary":"Text that runs to several lines, sized in rows"},
-  {"slug":"text-glass","name":"TextGlass","summary":"A word that writes itself on, stroke by stroke"},
   {"slug":"theme-selector","name":"ThemeSelector","summary":"Light, dark or the device, drawn as three miniature screens"},
   {"slug":"thinking-orb","name":"ThinkingOrb","summary":"Dotted orb saying which kind of busy an agent is"},
   {"slug":"timeline","name":"Timeline","summary":"Vertical sequence of events"},

@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-117 component modules. The **Docs** column is the path under
+116 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -157,7 +157,6 @@ remember is a guess.
 | `QRCode` | A string a camera can read — framed, titled, or folded away behind a button. | `components/qr-code` |
 | `ScrollText` | Text that resolves word by word as you scroll. | `components/scroll-text` |
 | `TextAnimation` | Five ways a piece of text or a number arrives. | `components/text-animation` |
-| `TextGlass` | A word that writes itself on, stroke by stroke. | `components/text-glass` |
 
 ## AI components
 

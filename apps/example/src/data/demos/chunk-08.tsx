@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { ScrollView, View } from "react-native";
-import { Alert, Avatar, Button, Card, CheckIcon, FolderIcon, Input, Item, Label, RadioGroup, Rating, Select, SelectionMode, SectionRail, Separator, Shimmer, Skeleton, Slider, Surface, Text, TextAnimation, TextGlass, ToggleButton, ToggleButtonGroup, TrashIcon, hasNativeUI, useScrollSections } from "panelui-native";
+import { Alert, Avatar, Button, Card, CheckIcon, FolderIcon, Input, Item, Label, RadioGroup, Rating, Select, SelectionMode, SectionRail, Separator, Shimmer, Skeleton, Slider, Surface, Text, TextAnimation, ToggleButton, ToggleButtonGroup, TrashIcon, hasNativeUI, useScrollSections } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 function RadioGroupDemo() {
@@ -959,69 +959,6 @@ function SelectionModeAlwaysOnDemo() {
   );
 }
 
-/**
- * Rewriting on demand. The word is keyed on the run count so the whole
- * component remounts, which is the only way to start a draw again from
- * nothing — the animation is a one-shot on mount.
- */
-function TextGlassReplayDemo() {
-  const [run, setRun] = useState(0);
-  const [done, setDone] = useState(false);
-
-  return (
-    <View className="w-full items-center gap-4">
-      <TextGlass
-        key={run}
-        word="hello"
-        height={90}
-        onDone={() => setDone(true)}
-      />
-      <Button
-        variant="secondary"
-        onPress={() => {
-          setDone(false);
-          setRun((count) => count + 1);
-        }}
-      >
-        {done ? 'Write it again' : 'Writing…'}
-      </Button>
-    </View>
-  );
-}
-
-/** One word after another, each starting when the last one finishes. */
-function TextGlassSequenceDemo() {
-  const WORDS = ['hi', 'welcome', 'thanks'] as const;
-  const [index, setIndex] = useState(0);
-
-  return (
-    <View className="w-full items-center">
-      <TextGlass
-        key={index}
-        word={WORDS[index]}
-        height={80}
-        onDone={() => setIndex((at) => (at + 1) % WORDS.length)}
-      />
-    </View>
-  );
-}
-
-/** A signature drawn from paths of your own rather than a built-in word. */
-function TextGlassCustomDemo() {
-  return (
-    <TextGlass
-      height={70}
-      viewBox="0 0 240 100"
-      strokeWidth={9}
-      paths={[
-        { d: 'M 20 70 C 30 20 45 20 48 45 C 51 70 40 80 34 72 C 28 64 44 44 70 40' },
-        { d: 'M 84 68 C 92 30 104 28 108 48 C 112 68 100 78 96 70 C 92 62 108 44 132 42' },
-        { d: 'M 146 44 C 168 36 190 40 206 56' },
-      ]}
-    />
-  );
-}
-
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'radio-group',
@@ -1406,45 +1343,6 @@ export const ENTRIES: ComponentEntry[] = [
       { label: 'Sliding a price', render: () => <SlidingPriceDemo /> },
       { label: 'Scrolling', render: () => <ScrollingDemo /> },
       { label: 'Shared configuration', render: () => <TextAnimationGroupDemo /> },
-    ],
-  },
-  {
-    slug: 'text-glass',
-    name: 'TextGlass',
-    summary: 'A word that writes itself on, stroke by stroke',
-    demos: [
-      { label: 'Default', render: () => <TextGlass /> },
-      {
-        label: 'The five words',
-        render: () => (
-          <View className="w-full items-center gap-3">
-            <TextGlass word="hello" height={56} />
-            <TextGlass word="khalid" height={56} />
-            <TextGlass word="hi" height={56} />
-            <TextGlass word="welcome" height={56} />
-            <TextGlass word="thanks" height={56} />
-          </View>
-        ),
-      },
-      {
-        label: 'Slower, and in the accent',
-        render: () => (
-          <TextGlass
-            word="welcome"
-            height={80}
-            duration={4200}
-            color="#6366f1"
-            strokeWidth={11}
-          />
-        ),
-      },
-      { label: 'Writing it again', render: () => <TextGlassReplayDemo /> },
-      { label: 'One word after another', render: () => <TextGlassSequenceDemo /> },
-      { label: 'Paths of your own', render: () => <TextGlassCustomDemo /> },
-      {
-        label: 'Held still',
-        render: () => <TextGlass word="hello" height={70} enabled={false} />,
-      },
     ],
   }
 ];

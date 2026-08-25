@@ -104,7 +104,6 @@
     "tag-input",
     "task",
     "text-animation",
-    "text-glass",
     "textarea",
     "theme-selector",
     "thinking-orb",
@@ -186,16 +185,16 @@
     }
   ],
   "counts": {
-    "componentModules": 117,
-    "packageComponentExports": 117,
-    "documentedComponents": 117,
-    "exampleEntries": 117,
+    "componentModules": 116,
+    "packageComponentExports": 116,
+    "documentedComponents": 116,
+    "exampleEntries": 116,
     "registry": {
-      "componentItems": 117,
+      "componentItems": 116,
       "supportItems": 36,
-      "totalItems": 153,
+      "totalItems": 152,
       "byType": {
-        "registry:ui": 132,
+        "registry:ui": 131,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1
