@@ -15,7 +15,7 @@ For a loading state with no shape to reserve, use [Skeleton](/docs/components/sk
 ImageGeneration ships with the library — no separate install.
 
 ```tsx
-import { ImageGeneration } from 'panelui-native';
+import { ImageGeneration, Avatar, Message, MessageScroller, Response } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -95,12 +95,23 @@ const [status, setStatus] = useState<ImageGenerationStatus>('queued');
 />
 ```
 
-### Just the frame
+### The field on its own
 
-`showStatus={false}` drops the sentence, for a grid where one status line covers every tile.
+`ImageGeneration.Field` is the dot field without the frame around it, for a placeholder that is not an image. It fills its parent.
 
 ```tsx
-<View className="flex-row gap-2">
+<View className="h-32 w-full overflow-hidden rounded-xl bg-muted">
+  <ImageGeneration.Field />
+</View>
+```
+
+### Several at once
+
+One status line over a row of tiles, rather than one under each. `showStatus={false}` drops the sentence and `resolution=""` drops the badge, which is what makes a tile small enough to sit beside others.
+
+```tsx
+<Text className="text-sm font-medium">Creating 3 images</Text>
+<View className="mt-2 flex-row gap-2">
   {jobs.map((job) => (
     <ImageGeneration
       key={job.id}
@@ -114,14 +125,69 @@ const [status, setStatus] = useState<ImageGenerationStatus>('queued');
 </View>
 ```
 
-### The field on its own
+## Versions
 
-`ImageGeneration.Field` is the dot field without the frame around it, for a placeholder that is not an image. It fills its parent.
+### In a conversation
+
+The box is the right shape from the moment the request goes in, so the reply under it never moves as the image lands. That is the whole job, and it is the one thing a card sitting alone on a page cannot show.
 
 ```tsx
-<View className="h-32 w-full overflow-hidden rounded-xl bg-muted">
-  <ImageGeneration.Field />
-</View>
+const [status, setStatus] = useState<ImageGenerationStatus>('queued');
+const done = status === 'complete';
+
+<MessageScroller className="flex-1">
+  <MessageScroller.Viewport>
+    <MessageScroller.Content className="gap-4 px-5 py-6">
+      <MessageScroller.Item messageId="ask">
+        <Message align="end">
+          <Message.Content>
+            <Message.Bubble>
+              <Message.BubbleContent>
+                Draw me a quiet mountain landscape at sunset.
+              </Message.BubbleContent>
+            </Message.Bubble>
+          </Message.Content>
+        </Message>
+      </MessageScroller.Item>
+
+      <MessageScroller.Item messageId="image">
+        <Message align="start">
+          <Message.Avatar>
+            <Avatar size="sm" fallback="AI" />
+          </Message.Avatar>
+          <Message.Content>
+            <ImageGeneration
+              size="fluid"
+              status={status}
+              prompt="a quiet mountain landscape at sunset"
+              resolution="1024 × 1024"
+            >
+              <Image
+                source={{ uri: MOUNTAIN }}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </ImageGeneration>
+          </Message.Content>
+        </Message>
+      </MessageScroller.Item>
+
+      {done ? (
+        <MessageScroller.Item messageId="reply">
+          <Response>
+            Here it is — late light on the far ridge, and the valley already in
+            shadow. Say the word and I will try a wider crop.
+          </Response>
+        </MessageScroller.Item>
+      ) : null}
+
+      <MessageScroller.Item messageId="again">
+        <Button variant="secondary" onPress={() => setAt(0)}>
+          Ask again
+        </Button>
+      </MessageScroller.Item>
+    </MessageScroller.Content>
+  </MessageScroller.Viewport>
+</MessageScroller>
 ```
 
 ## Variants
@@ -151,7 +217,7 @@ const [status, setStatus] = useState<ImageGenerationStatus>('queued');
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `paused` | `boolean` | — | Stops the band and draws one still frame of the field. |
+| `paused` | `boolean` | `false` | Holds the light still, at one representative frame. |
 
 ### ImageGeneration
 
@@ -189,11 +255,13 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 `refining` is the overlap, and it is the step worth having. An image that appears the instant the field vanishes has been swapped in; one that surfaces through it has been developed. Skip straight from `generating` to `complete` if your model gives you nothing to show in between, but pass through `refining` if it does.
 
-### What it costs to draw
+### The light, and what it costs
 
-The field is around five hundred dots, and it costs twenty-two animated values a frame. Each column is one animated view holding its own dots, so the band's brightness is computed per column rather than per dot — the dots inside a column never move independently of it, and at this size nobody can tell.
+A region of light drifts around the middle of the box. A dot near it is brighter, larger, and pushed a little away from its centre — that displacement is what makes the light read as something passing over the grid rather than as the grid changing colour. The falloff is a smoothstep, so the light has no rim for the eye to find.
 
-The per-dot brightness underneath the band is fixed and derived from the dot's own coordinates, which is what stops the field reading as clean vertical stripes sweeping past.
+Every dot at its own opacity would be one drawing each, and a field this size has hundreds. They are banded into five opacity levels instead, one path per level, so the whole field is five native updates a frame rather than five hundred — and at a dot radius of one point the steps between levels are not visible.
+
+A box big enough to want more than nine hundred dots gets the same picture drawn coarser rather than a thousand more circles rebuilt every frame.
 
 ### Reduced motion
 

@@ -2,8 +2,12 @@
  * The arithmetic behind a slide, kept out of the component so it can be tested
  * without a renderer — the same split `progress-button-hold` uses.
  *
- * Everything here is a worklet, because the only runtime that knows where the
- * thumb actually is during a drag is the one moving it.
+ * The gesture's worklets carry their own copies of these three lines rather
+ * than calling in here. A pan handler is the one place in the library that
+ * cannot afford a surprise: a worklet reaching across a module boundary for a
+ * helper that reaches across again for another is a chain with more ways to go
+ * wrong than the arithmetic is long. What lives here is the definition, and
+ * the tests hold the component to it.
  */
 
 /** The fraction of the rail that has to be covered for the slide to count. */
@@ -41,7 +45,6 @@ export const OVERSHOOT_FRICTION = 8;
  * something destructive.
  */
 export function resolveThreshold(threshold: number | undefined): number {
-  'worklet';
   if (threshold === undefined || !Number.isFinite(threshold)) return DEFAULT_THRESHOLD;
   return Math.min(1, Math.max(0.1, threshold));
 }
@@ -55,7 +58,6 @@ export function resolveThreshold(threshold: number | undefined): number {
  * finish.
  */
 export function progressFor(translation: number, travel: number): number {
-  'worklet';
   if (travel <= 0) return 0;
   return clamp(translation / travel, 0, 1);
 }
@@ -68,7 +70,6 @@ export function progressFor(translation: number, travel: number): number {
  * than as a heavy control.
  */
 export function offsetFor(translation: number, travel: number): number {
-  'worklet';
   if (travel <= 0) return 0;
   if (translation < 0) return translation / OVERSHOOT_FRICTION;
   if (translation <= travel) return translation;
@@ -88,7 +89,6 @@ export function isCommitted(
   travel: number,
   threshold: number
 ): boolean {
-  'worklet';
   if (travel <= 0) return false;
   const projected = progress + (velocity * VELOCITY_LOOKAHEAD) / travel;
   return projected >= threshold;
@@ -96,6 +96,5 @@ export function isCommitted(
 
 /** Keeps a number inside a range. Exported because the tests read it. */
 export function clamp(value: number, low: number, high: number): number {
-  'worklet';
   return Math.min(high, Math.max(low, value));
 }

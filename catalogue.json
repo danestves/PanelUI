@@ -4,7 +4,6 @@
     "accordion",
     "ai-input",
     "alert",
-    "approval-card",
     "area-chart",
     "attachment",
     "avatar",
@@ -188,16 +187,16 @@
     }
   ],
   "counts": {
-    "componentModules": 119,
-    "packageComponentExports": 119,
-    "documentedComponents": 119,
-    "exampleEntries": 119,
+    "componentModules": 118,
+    "packageComponentExports": 118,
+    "documentedComponents": 118,
+    "exampleEntries": 118,
     "registry": {
-      "componentItems": 119,
+      "componentItems": 118,
       "supportItems": 36,
-      "totalItems": 155,
+      "totalItems": 154,
       "byType": {
-        "registry:ui": 134,
+        "registry:ui": 133,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1

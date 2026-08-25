@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1206,
-    "values": 316,
-    "types": 890,
-    "modules": 146,
-    "components": 119,
+    "exports": 1199,
+    "values": 315,
+    "types": 884,
+    "modules": 145,
+    "components": 118,
     "hooks": 13
   },
   "groups": {
@@ -139,41 +139,6 @@
           },
           {
             "name": "AlertIndicatorProps",
-            "kind": "type"
-          }
-        ]
-      },
-      {
-        "source": "components/approval-card/index.tsx",
-        "slug": "approval-card",
-        "category": "components",
-        "symbols": [
-          {
-            "name": "ApprovalCard",
-            "kind": "value"
-          },
-          {
-            "name": "ApprovalCardProps",
-            "kind": "type"
-          },
-          {
-            "name": "ApprovalCardStatus",
-            "kind": "type"
-          },
-          {
-            "name": "ApprovalCardQuestion",
-            "kind": "type"
-          },
-          {
-            "name": "ApprovalCardOption",
-            "kind": "type"
-          },
-          {
-            "name": "ApprovalCardAnswer",
-            "kind": "type"
-          },
-          {
-            "name": "ApprovalCardAnswers",
             "kind": "type"
           }
         ]

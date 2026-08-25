@@ -59,27 +59,6 @@
     "registryDependencies": []
   },
   {
-    "name": "approval-card",
-    "type": "registry:ui",
-    "kind": "ui",
-    "group": "ai-components",
-    "stability": "stable",
-    "description": "Where an agent stops and waits for a person.",
-    "registryDependencies": [
-      "button",
-      "checkbox",
-      "cn",
-      "collapse",
-      "controllable-state",
-      "icons",
-      "input",
-      "radio-group",
-      "spinner",
-      "text"
-    ],
-    "docsPath": "ai-components/approval-card"
-  },
-  {
     "name": "area-chart",
     "type": "registry:ui",
     "kind": "chart",

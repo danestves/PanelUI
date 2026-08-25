@@ -38,12 +38,22 @@
  * placeholder that shows nothing is indistinguishable from a component that
  * failed to load, so this is a quieter picture rather than an empty one.
  */
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Pressable, View, type LayoutChangeEvent, type ViewProps } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+  type ViewProps,
+} from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import Animated, {
   Easing,
   cancelAnimation,
+  runOnUI,
+  useAnimatedProps,
   useAnimatedStyle,
+  useFrameCallback,
   useReducedMotion,
   useSharedValue,
   withRepeat,
@@ -56,6 +66,7 @@ import { useDirectionSign } from '../../hooks/use-direction';
 import { AlertTriangleIcon, CheckIcon, RotateCcwIcon } from '../../icons';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
+import { BANDS, bandOpacity, renderField } from './dot-field';
 
 /** How far the generation has got. */
 export type ImageGenerationStatus =
@@ -66,26 +77,12 @@ export type ImageGenerationStatus =
   | 'error';
 
 /**
- * Columns in the dot field.
+ * The moment a held field is frozen at.
  *
- * Fixed rather than derived from the width, because each column is a component
- * with a hook in it and React needs the count to be the same on every render.
- * The spacing adapts instead, so the field fills whatever box it is given.
+ * Not zero: at zero the light sits dead centre, which reads as a target rather
+ * than as something passing through.
  */
-const COLUMNS = 22;
-
-/** How many columns the travelling band covers, half to each side of its centre. */
-const BAND = 5;
-
-/** The field's opacity where the band is not, and where it is. */
-const DOT_REST = 0.18;
-const DOT_LIT = 1;
-
-/** One pass of the band across the field. */
-const SWEEP_DURATION = 2600;
-
-/** Where the band sits when the animation is stopped. */
-const STILL_HEAD = COLUMNS * 0.38;
+const STILL_FRAME = 900;
 
 /** How visible the field is at each step of the work. */
 const FIELD_OPACITY: Record<ImageGenerationStatus, number> = {
@@ -163,115 +160,95 @@ const imageGenerationVariants = tv({
   },
 });
 
-/**
- * A dot's share of the light, from its own coordinates.
- *
- * Deterministic, so it does not change between renders and never has to be
- * stored. The two frequencies are irrational to each other, which is what
- * keeps the pattern from repeating across a field this size and reading as a
- * weave.
- */
-function dotWeight(column: number, row: number): number {
-  const noise = Math.sin(column * 12.9898 + row * 78.233) * 43758.5453;
-  return 0.45 + (noise - Math.floor(noise)) * 0.55;
-}
+const BAND_INDICES = Array.from({ length: BANDS }, (_unused, index) => index);
 
-interface DotColumnProps {
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+/**
+ * One opacity level's worth of dots, as a single path.
+ *
+ * A component rather than a loop of `useAnimatedProps` in the parent, so each
+ * band owns exactly one hook — the count is a module constant, but hooks in a
+ * loop is a rule waiting to be broken by whoever makes it configurable.
+ */
+function DotBand({
+  index,
+  paths,
+  color,
+}: {
   index: number;
-  rows: number;
-  gap: number;
-  dot: number;
-  head: SharedValue<number>;
+  paths: SharedValue<string[]>;
   color: string;
+}) {
+  const animatedProps = useAnimatedProps(() => ({ d: paths.value[index] ?? '' }));
+
+  return <AnimatedPath animatedProps={animatedProps} fill={color} fillOpacity={bandOpacity(index)} />;
 }
 
-/**
- * One column of the field.
- *
- * The whole column takes the band's brightness at its position, and each dot
- * inside scales that by its own fixed weight. One animated style per column is
- * the entire cost of the field.
- */
-function DotColumn({ index, rows, gap, dot, head, color }: DotColumnProps) {
-  const style = useAnimatedStyle(() => {
-    const distance = Math.abs(index - head.value);
-    const lit = Math.max(0, 1 - distance / BAND);
-    // Squared, so the band has a soft centre and a definite edge rather than
-    // a linear ramp, which at this size reads as a grey wash.
-    return { opacity: DOT_REST + lit * lit * (DOT_LIT - DOT_REST) };
-  });
-
-  const dots = useMemo(
-    () =>
-      Array.from({ length: rows }, (_, row) => (
-        <View
-          key={row}
-          style={{
-            width: dot,
-            height: dot,
-            borderRadius: dot / 2,
-            backgroundColor: color,
-            opacity: dotWeight(index, row),
-            marginTop: row === 0 ? 0 : gap - dot,
-          }}
-        />
-      )),
-    [color, dot, gap, index, rows]
-  );
-
-  return <Animated.View style={style}>{dots}</Animated.View>;
-}
-
-export interface ImageGenerationFieldProps extends ViewProps {
+export interface ImageGenerationFieldProps extends Omit<ViewProps, 'children'> {
   className?: string;
-  /** Stops the band and draws one still frame of the field. */
+  /** Holds the light still, at one representative frame. */
   paused?: boolean;
 }
 
 /**
  * The dot field on its own, for a placeholder that is not an image.
  *
- * It fills its parent, so give it a box.
+ * It fills its parent absolutely rather than sizing to its contents, because
+ * what it draws has no intrinsic height — laid out normally it measures to
+ * nothing and draws a single row of dots along the top.
  */
-function ImageGenerationField({ className, paused = false, ...props }: ImageGenerationFieldProps) {
+function ImageGenerationField({
+  className,
+  paused = false,
+  style,
+  ...props
+}: ImageGenerationFieldProps) {
   const reducedMotion = useReducedMotion();
-  const sign = useDirectionSign();
-  const head = useSharedValue(STILL_HEAD);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const clock = useSharedValue(0);
+  const paths = useSharedValue<string[]>([]);
 
   const tint = useCSSVariable('--color-muted-foreground');
   const color = typeof tint === 'string' ? tint : '#737373';
 
-  const still = paused || reducedMotion;
+  const running = !paused && !reducedMotion;
 
+  const frame = useFrameCallback((info) => {
+    'worklet';
+    // Accumulated rather than read off the total, so pausing and resuming does
+    // not jump the light to wherever the clock would have carried it. A
+    // dropped frame is clamped: a 300ms hitch played back whole is a lurch.
+    clock.value += Math.min(info.timeSincePreviousFrame ?? 16, 48);
+    paths.value = renderField(size.width, size.height, clock.value);
+  }, false);
+
+  const { setActive } = frame;
   useEffect(() => {
-    if (still) {
-      cancelAnimation(head);
-      head.value = STILL_HEAD;
-      return;
-    }
+    setActive(running);
+    return () => setActive(false);
+  }, [running, setActive]);
 
-    // The band starts and ends clear of the field so it ramps in and out at
-    // the edges rather than appearing at full strength against them.
-    const from = sign === 1 ? -BAND : COLUMNS + BAND;
-    const to = sign === 1 ? COLUMNS + BAND : -BAND;
-    head.value = from;
-    head.value = withRepeat(
-      withTiming(to, { duration: SWEEP_DURATION, easing: Easing.linear }),
-      -1
-    );
-
-    return () => cancelAnimation(head);
-  }, [head, sign, still]);
+  /*
+   * A still field is not an empty one.
+   *
+   * Reduced motion and `paused` both get a frame with the light somewhere
+   * legible rather than nothing at all — which is the difference between "not
+   * animating" and "failed to load". It also draws the first frame before the
+   * frame callback has had one, so the box is never briefly blank.
+   */
+  useEffect(() => {
+    if (running) return;
+    runOnUI(() => {
+      'worklet';
+      paths.value = renderField(size.width, size.height, clock.value || STILL_FRAME);
+    })();
+  }, [clock, paths, running, size.height, size.width]);
 
   const onLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
-    setSize({ width, height });
+    setSize((was) => (was.width === width && was.height === height ? was : { width, height }));
   };
-
-  const gap = size.width > 0 ? size.width / COLUMNS : 0;
-  const dot = Math.max(1.5, Math.min(3, gap * 0.3));
-  const rows = gap > 0 ? Math.max(1, Math.floor(size.height / gap)) : 0;
 
   return (
     <View
@@ -279,22 +256,17 @@ function ImageGenerationField({ className, paused = false, ...props }: ImageGene
       importantForAccessibility="no-hide-descendants"
       pointerEvents="none"
       onLayout={onLayout}
-      className={cn('flex-row items-start justify-between overflow-hidden px-2 py-2', className)}
+      className={className}
+      style={[StyleSheet.absoluteFill, style]}
       {...props}
     >
-      {rows > 0
-        ? Array.from({ length: COLUMNS }, (_, index) => (
-            <DotColumn
-              key={index}
-              index={index}
-              rows={rows}
-              gap={gap}
-              dot={dot}
-              head={head}
-              color={color}
-            />
-          ))
-        : null}
+      {size.width > 0 && size.height > 0 ? (
+        <Svg width={size.width} height={size.height}>
+          {BAND_INDICES.map((index) => (
+            <DotBand key={index} index={index} paths={paths} color={color} />
+          ))}
+        </Svg>
+      ) : null}
     </View>
   );
 }
@@ -453,10 +425,14 @@ function ImageGenerationRoot({
           {children}
         </Animated.View>
 
-        {/* Kept mounted at zero rather than unmounted: it is a grid of views,
-            and tearing it down mid-fade is a stutter at exactly the moment the
-            image is arriving. */}
-        <Animated.View className="absolute inset-0" style={fieldStyle} pointerEvents="none">
+        {/* Kept mounted at zero rather than unmounted, so the image is not
+            fading in over a box that is simultaneously being torn down. The
+            field stops drawing as soon as there is no work left, so an idle
+            one costs nothing but the views. */}
+        <Animated.View
+          style={[StyleSheet.absoluteFill, fieldStyle]}
+          pointerEvents="none"
+        >
           <ImageGenerationField paused={!working} />
         </Animated.View>
 

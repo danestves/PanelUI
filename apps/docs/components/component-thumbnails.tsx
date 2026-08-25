@@ -1818,25 +1818,6 @@ const imageGeneration = (
   </Stack>
 );
 
-/* A question with two options under it, and the row of buttons it ends on. */
-const approvalCard = (
-  <Plate className="w-40 gap-2 p-3">
-    <Bar className="w-28" />
-    <Row className="gap-2">
-      <div className="h-2.5 w-2.5 rounded-full border border-fd-muted-foreground/40" />
-      <Bar className="w-20" faint />
-    </Row>
-    <Row className="gap-2">
-      <div className="h-2.5 w-2.5 rounded-full border border-fd-muted-foreground/40" />
-      <Bar className="w-16" faint />
-    </Row>
-    <Row className="gap-1.5 pt-1">
-      <Accent className="h-5 w-12 rounded-md" />
-      <Fill className="h-5 w-12 rounded-md" />
-    </Row>
-  </Plate>
-);
-
 const shimmer = (
   <div className="relative w-40 overflow-hidden">
     <Stack className="gap-2">
@@ -2062,7 +2043,6 @@ const THUMBNAILS: Record<string, ReactNode> = {
   plan,
   reasoning,
   response,
-  'approval-card': approvalCard,
   shimmer,
   'image-generation': imageGeneration,
   soundwave,

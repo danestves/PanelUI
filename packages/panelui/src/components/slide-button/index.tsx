@@ -52,11 +52,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import {
-  View,
-  type LayoutChangeEvent,
-  type ViewProps,
-} from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent, type ViewProps } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
@@ -76,9 +72,8 @@ import { Text, textChildren } from '../../primitives/text';
 import { impactKnock, selectionTick } from '../../utils/haptics';
 import {
   DEFAULT_AUTO_RESET_DELAY,
-  isCommitted,
-  offsetFor,
-  progressFor,
+  OVERSHOOT_FRICTION,
+  VELOCITY_LOOKAHEAD,
   resolveThreshold,
 } from './slide-button-track';
 
@@ -95,9 +90,8 @@ const REDUCED_SNAP = 160;
  * Which token the thumb's glyph is drawn in, per variant.
  *
  * The thumb carries the variant's solid fill, so its contents take that fill's
- * foreground rather than the button's — the same pairing `fillLabel` uses in
- * ProgressButton, which is what keeps the contrast right in both themes
- * without a hardcoded colour.
+ * foreground rather than the button's — which is what keeps the contrast right
+ * in both themes without a hardcoded colour.
  */
 const THUMB_TINT = {
   primary: '--color-primary-foreground',
@@ -116,9 +110,9 @@ const slideButtonVariants = tv({
      */
     root: 'relative flex-row items-center overflow-hidden rounded-full border border-transparent bg-secondary',
     /** The travelled part of the rail, behind the thumb. */
-    fill: 'absolute bottom-0 left-0 top-0',
+    fill: 'absolute bottom-0 top-0',
     /** The label, centred in the rail rather than in the space beside it. */
-    label: 'min-w-0 shrink text-center font-medium',
+    label: 'text-center font-medium',
     /** The draggable disc. */
     thumb: 'absolute items-center justify-center rounded-full',
     /** What the thumb holds — a chevron at rest, a tick once it has arrived. */
@@ -170,19 +164,15 @@ export type SlideButtonSize = NonNullable<SlideButtonVariantProps['size']>;
 /** The thumb's diameter, per size. It is a square, so this is both dimensions. */
 const THUMB_SIZE = { sm: 36, md: 44, lg: 48 } as const;
 
-/** The rail's own padding, per size — the gap the thumb sits inside. */
-const RAIL_INSET = { sm: 4, md: 4, lg: 4 } as const;
+/** The rail's own padding — the gap the thumb sits inside. */
+const RAIL_INSET = 4;
 
 interface SlideButtonContextValue {
   /** `0` to `1` across the rail. */
   progress: SharedValue<number>;
-  /** Points the thumb can actually cover: the rail, less the thumb and insets. */
-  travel: number;
-  /**
-   * `0` to `1` across the arrival of the completed drawing. Separate from
-   * `progress` because the thumb has finished travelling by the time this
-   * starts, and the two would otherwise have to share a timeline.
-   */
+  /** Points the thumb can cover: the rail, less the thumb and both insets. */
+  travel: SharedValue<number>;
+  /** `0` to `1` across the arrival of the completed drawing. */
   done: SharedValue<number>;
   /** Whether the slide has been completed. */
   completed: boolean;
@@ -267,25 +257,42 @@ function SlideButtonRoot(
 ) {
   const reducedMotion = useReducedMotion();
   const sign = useDirectionSign();
+
   const progress = useSharedValue(0);
   const done = useSharedValue(0);
   const armed = useSharedValue(false);
   const origin = useSharedValue(0);
 
-  const [width, setWidth] = useState(0);
+  /*
+   * The rail's measurements live in shared values, not in the render's
+   * closure.
+   *
+   * A gesture built over plain numbers is a new gesture the first time the rail
+   * is measured and again every time anything else changes — and re-attaching a
+   * handler mid-drag is how a live touch gets dropped. Built over shared values
+   * it is constructed once and reads the current numbers when it runs.
+   */
+  const travel = useSharedValue(0);
+  const threshold = useSharedValue(resolveThreshold(thresholdProp));
+  const active = useSharedValue(false);
+
   const [internalCompleted, setInternalCompleted] = useState(false);
   const controlled = completedProp !== undefined;
   const completed = controlled ? completedProp : internalCompleted;
 
   const thumbSize = THUMB_SIZE[size];
-  const inset = RAIL_INSET[size];
-  const travel = Math.max(0, width - thumbSize - inset * 2);
-  const threshold = resolveThreshold(thresholdProp);
+
+  useEffect(() => {
+    threshold.value = resolveThreshold(thresholdProp);
+  }, [threshold, thresholdProp]);
+
+  useEffect(() => {
+    active.value = !disabled && !completed;
+  }, [active, completed, disabled]);
 
   /*
-   * Read by the gesture's worklets through `runOnJS` callbacks, which are
-   * built once. A ref rather than a dependency, so the gesture does not have
-   * to be rebuilt — and rebuilding it mid-drag drops the live touch.
+   * Read from the gesture through `runOnJS`, so they have to be current
+   * without the gesture being rebuilt to see them.
    */
   const completedRef = useRef(completed);
   completedRef.current = completed;
@@ -293,6 +300,8 @@ function SlideButtonRoot(
   onCompleteRef.current = onComplete;
   const onCompletedChangeRef = useRef(onCompletedChange);
   onCompletedChangeRef.current = onCompletedChange;
+  const hapticsRef = useRef(haptics);
+  hapticsRef.current = haptics;
 
   const finish = useCallback(() => {
     if (completedRef.current) return;
@@ -300,12 +309,12 @@ function SlideButtonRoot(
     setInternalCompleted(true);
     onCompletedChangeRef.current?.(true);
     onCompleteRef.current?.();
-    if (haptics) impactKnock();
-  }, [haptics]);
+    if (hapticsRef.current) impactKnock();
+  }, []);
 
   const tick = useCallback(() => {
-    if (haptics) selectionTick();
-  }, [haptics]);
+    if (hapticsRef.current) selectionTick();
+  }, []);
 
   const reset = useCallback(() => {
     completedRef.current = false;
@@ -322,10 +331,17 @@ function SlideButtonRoot(
     finish();
   }, [disabled, finish, progress, reducedMotion]);
 
+  /*
+   * Built once. The arithmetic is written out here rather than called from
+   * `slide-button-track`: a pan handler is the one place in the library that
+   * cannot afford a surprise, and a worklet reaching across a module boundary
+   * for a helper that reaches across again is a chain with more ways to fail
+   * than the three lines are long. The module holds the definition and the
+   * tests hold this to it.
+   */
   const gesture = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(!disabled && !completed && travel > 0)
         /*
          * A drag has to travel before it takes the touch, or a slide button
          * inside a scroller steals every vertical flick that starts on it.
@@ -333,16 +349,30 @@ function SlideButtonRoot(
         .activeOffsetX([-12, 12])
         .failOffsetY([-14, 14])
         .onBegin(() => {
-          origin.value = progress.value * travel;
+          'worklet';
+          origin.value = progress.value * travel.value;
           armed.value = false;
         })
         .onUpdate((event) => {
+          'worklet';
+          if (!active.value || travel.value <= 0) return;
+
           // Every raw pixel goes through `sign`: in a right-to-left subtree the
           // rail runs the other way, and the gesture reports screen space.
-          const translation = origin.value + event.translationX * sign;
-          progress.value = progressFor(offsetFor(translation, travel), travel);
+          const moved = origin.value + event.translationX * sign;
+          const span = travel.value;
 
-          const reached = progress.value >= threshold;
+          // The finger is followed exactly inside the rail, and let go of
+          // gradually past either end — a thumb that lags reads as a slow app,
+          // and one that stops dead reads as a broken control.
+          let at = moved;
+          if (moved < 0) at = moved / OVERSHOOT_FRICTION;
+          else if (moved > span) at = span + (moved - span) / OVERSHOOT_FRICTION;
+
+          const next = Math.min(1, Math.max(0, at / span));
+          progress.value = next;
+
+          const reached = next >= threshold.value;
           if (reached !== armed.value) {
             armed.value = reached;
             // Once per crossing, not once per frame — the arming is the event
@@ -351,43 +381,33 @@ function SlideButtonRoot(
           }
         })
         .onEnd((event) => {
-          const committed = isCommitted(
-            progress.value,
-            event.velocityX * sign,
-            travel,
-            threshold
-          );
+          'worklet';
           armed.value = false;
+          if (!active.value || travel.value <= 0) return;
 
-          if (committed) {
-            // The velocity is handed to the spring rather than merely consulted,
-            // so the thumb carries the speed it already had into the last of
-            // the rail instead of restarting from rest.
-            progress.value = withSpring(1, { ...SPRING, velocity: event.velocityX * sign });
-            runOnJS(finish)();
-            return;
-          }
+          // Where it got to, plus where its speed was about to carry it.
+          const carried = (event.velocityX * sign * VELOCITY_LOOKAHEAD) / travel.value;
+          const committed = progress.value + carried >= threshold.value;
 
-          progress.value = withSpring(0, { ...SPRING, velocity: event.velocityX * sign });
+          // The velocity is handed to the spring rather than merely consulted,
+          // so the thumb keeps the speed it already had instead of restarting
+          // from rest.
+          const velocity = event.velocityX * sign;
+          progress.value = withSpring(committed ? 1 : 0, { ...SPRING, velocity });
+          if (committed) runOnJS(finish)();
         }),
-    [armed, completed, disabled, finish, origin, progress, sign, threshold, tick, travel]
+    [active, armed, finish, origin, progress, sign, threshold, tick, travel]
   );
 
   /*
-   * A controlled completion arrives without a drag behind it, and a reset
-   * arrives without one either — so the thumb is put where the state says it
-   * should be rather than left wherever the finger left it.
+   * A controlled completion arrives without a drag behind it, and so does a
+   * reset — so the thumb is put where the state says it should be rather than
+   * left wherever the finger left it.
    */
   useEffect(() => {
-    if (completed) {
-      progress.value = reducedMotion
-        ? withTiming(1, { duration: REDUCED_SNAP })
-        : withSpring(1, SPRING);
-      return;
-    }
     progress.value = reducedMotion
-      ? withTiming(0, { duration: REDUCED_SNAP })
-      : withSpring(0, SPRING);
+      ? withTiming(completed ? 1 : 0, { duration: REDUCED_SNAP })
+      : withSpring(completed ? 1 : 0, SPRING);
   }, [completed, progress, reducedMotion]);
 
   useEffect(() => {
@@ -412,9 +432,15 @@ function SlideButtonRoot(
     [done, progress]
   );
 
-  const onLayout = useCallback((event: LayoutChangeEvent) => {
-    setWidth(event.nativeEvent.layout.width);
-  }, []);
+  const onLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      travel.value = Math.max(
+        0,
+        event.nativeEvent.layout.width - thumbSize - RAIL_INSET * 2
+      );
+    },
+    [thumbSize, travel]
+  );
 
   const slots = slideButtonVariants({ variant, size, fullWidth, disabled });
 
@@ -424,8 +450,8 @@ function SlideButtonRoot(
   );
 
   /*
-   * A caller who wrote no thumb still gets one. The thumb is the control —
-   * a slide button without it is a label in a box — so it is appended rather
+   * A caller who wrote no thumb still gets one. The thumb is the control — a
+   * slide button without it is a label in a box — so it is appended rather
    * than left to the caller to remember.
    */
   const hasThumb = Children.toArray(children).some(
@@ -434,39 +460,66 @@ function SlideButtonRoot(
 
   return (
     <SlideButtonContext.Provider value={context}>
-      <GestureDetector gesture={gesture}>
-        <Animated.View
-          ref={ref}
-          accessible
-          accessibilityRole="button"
-          accessibilityHint="Slide to confirm"
-          accessibilityState={{ ...accessibilityState, disabled, checked: completed }}
-          // A drag cannot be performed by a screen reader, so the same action
-          // is offered as one it can perform.
-          accessibilityActions={[{ name: 'activate', label: accessibilityActionLabel }]}
-          onAccessibilityAction={activate}
-          onLayout={onLayout}
-          // After the spread, so a caller's own `onLayout` or accessibility
-          // state cannot take the measurement the control runs on.
-          {...props}
-          className={slots.root({ className })}
-        >
-          <SlideButtonFill />
-          {textChildren(children, (text) => (
-            <SlideButtonLabel>{text}</SlideButtonLabel>
-          ))}
-          {hasThumb ? null : <SlideButtonThumb />}
-        </Animated.View>
-      </GestureDetector>
+      <View
+        ref={ref}
+        accessible
+        accessibilityRole="button"
+        accessibilityHint="Slide to confirm"
+        accessibilityState={{ ...accessibilityState, disabled, checked: completed }}
+        // A drag cannot be performed by a screen reader, so the same outcome is
+        // offered as an action it can perform.
+        accessibilityActions={[{ name: 'activate', label: accessibilityActionLabel }]}
+        onAccessibilityAction={activate}
+        onLayout={onLayout}
+        // After the spread, so a caller's own `onLayout` or accessibility state
+        // cannot take the measurement the control runs on.
+        {...props}
+        className={slots.root({ className })}
+      >
+        <SlideButtonFill />
+        {textChildren(children, (text) => (
+          <SlideButtonLabel>{text}</SlideButtonLabel>
+        ))}
+        {hasThumb ? null : <SlideButtonThumb />}
+
+        {/*
+          * The touch surface, and nothing else.
+          *
+          * The gesture's view carries no styling, no measurement and no
+          * accessibility of its own — those all belong to the rail above, and
+          * a detector whose child is also doing four other jobs is a detector
+          * whose child can be re-created for four other reasons. It sits last
+          * so it is over everything, which is what makes the whole rail
+          * draggable rather than only the parts with nothing on them.
+          */}
+        <GestureDetector gesture={gesture}>
+          <Animated.View style={StyleSheet.absoluteFill} />
+        </GestureDetector>
+      </View>
     </SlideButtonContext.Provider>
   );
 }
 
 /** The travelled part of the rail. Drawn by the root; not a public part. */
 function SlideButtonFill() {
-  const { progress, slots } = useSlideButtonContext('SlideButton.Fill');
-  const style = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));
-  return <Animated.View pointerEvents="none" className={slots.fill()} style={style} />;
+  const { progress, travel, slots, size } = useSlideButtonContext('SlideButton.Fill');
+  const sign = useDirectionSign();
+  const thumbSize = THUMB_SIZE[size];
+
+  // A width in points rather than a percentage: the fill ends under the middle
+  // of the thumb, which is a distance the rail knows and a fraction of the rail
+  // is not.
+  const style = useAnimatedStyle(() => ({
+    width: RAIL_INSET + thumbSize / 2 + progress.value * travel.value,
+  }));
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      className={slots.fill()}
+      style={[{ [sign === 1 ? 'left' : 'right']: 0 }, style]}
+    />
+  );
 }
 
 export interface SlideButtonLabelProps extends ViewProps {
@@ -483,9 +536,9 @@ export interface SlideButtonLabelProps extends ViewProps {
  * other at different speeds reads as a collision rather than as one making
  * room for the other.
  */
-function SlideButtonLabel({ className, children, ...props }: SlideButtonLabelProps) {
+function SlideButtonLabel({ className, style, children, ...props }: SlideButtonLabelProps) {
   const { progress, slots } = useSlideButtonContext('SlideButton.Label');
-  const style = useAnimatedStyle(() => ({
+  const fade = useAnimatedStyle(() => ({
     opacity: 1 - Math.min(1, progress.value * 1.6),
   }));
 
@@ -493,7 +546,7 @@ function SlideButtonLabel({ className, children, ...props }: SlideButtonLabelPro
     <Animated.View
       pointerEvents="none"
       className="flex-1 items-center justify-center"
-      style={style}
+      style={[fade, style]}
       {...props}
     >
       <Text className={slots.label({ className })}>{children}</Text>
@@ -511,21 +564,20 @@ export interface SlideButtonThumbProps extends ViewProps {
 /**
  * The disc the finger moves.
  *
- * Translated rather than laid out at a position, so the drag costs no layout
+ * Translated rather than laid out at a position, so a drag costs no layout
  * pass. It sits absolutely at the rail's leading inset and travels from there.
  */
-function SlideButtonThumb({ className, children, ...props }: SlideButtonThumbProps) {
+function SlideButtonThumb({ className, style, children, ...props }: SlideButtonThumbProps) {
   const { progress, travel, done, completed, slots, variant, size } =
     useSlideButtonContext('SlideButton.Thumb');
   const sign = useDirectionSign();
   const thumbSize = THUMB_SIZE[size];
-  const inset = RAIL_INSET[size];
 
   const tint = useCSSVariable(THUMB_TINT[variant]);
   const glyphColor = typeof tint === 'string' ? tint : undefined;
 
-  const style = useAnimatedStyle(() => ({
-    transform: [{ translateX: progress.value * travel * sign }],
+  const slide = useAnimatedStyle(() => ({
+    transform: [{ translateX: progress.value * travel.value * sign }],
   }));
 
   const chevronStyle = useAnimatedStyle(() => ({ opacity: 1 - done.value }));
@@ -539,7 +591,12 @@ function SlideButtonThumb({ className, children, ...props }: SlideButtonThumbPro
       pointerEvents="none"
       className={slots.thumb({ className })}
       style={[
-        { width: thumbSize, height: thumbSize, [sign === 1 ? 'left' : 'right']: inset },
+        {
+          width: thumbSize,
+          height: thumbSize,
+          [sign === 1 ? 'left' : 'right']: RAIL_INSET,
+        },
+        slide,
         style,
       ]}
       {...props}
@@ -548,12 +605,12 @@ function SlideButtonThumb({ className, children, ...props }: SlideButtonThumbPro
         <Animated.View className={slots.thumbContent()} style={chevronStyle}>
           {children ?? <ChevronRightIcon size={20} />}
         </Animated.View>
-        {/* Lifted over the chevron rather than swapped with it: the two cross
-            through each other, and a swap would pop one glyph out and the
-            other in on the same frame. */}
+        {/* Lifted over the chevron rather than swapped with it, so the two
+            cross through each other instead of one popping out and the other
+            in on the same frame. */}
         <Animated.View
           className={slots.thumbContent()}
-          style={[{ position: 'absolute' }, checkStyle]}
+          style={[StyleSheet.absoluteFill, checkStyle]}
           accessibilityElementsHidden={!completed}
           importantForAccessibility={completed ? 'auto' : 'no-hide-descendants'}
         >
@@ -564,7 +621,6 @@ function SlideButtonThumb({ className, children, ...props }: SlideButtonThumbPro
   );
 }
 
-SlideButtonRoot.displayName = 'SlideButton';
 SlideButtonLabel.displayName = 'SlideButton.Label';
 SlideButtonThumb.displayName = 'SlideButton.Thumb';
 
@@ -575,12 +631,3 @@ export const SlideButton = Object.assign(SlideButtonWithRef, {
   Label: SlideButtonLabel,
   Thumb: SlideButtonThumb,
 });
-
-export {
-  DEFAULT_AUTO_RESET_DELAY,
-  DEFAULT_THRESHOLD,
-  isCommitted,
-  offsetFor,
-  progressFor,
-  resolveThreshold,
-} from './slide-button-track';
