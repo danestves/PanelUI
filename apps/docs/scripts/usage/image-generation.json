@@ -1,0 +1,42 @@
+{
+  "slug": "image-generation",
+  "intro": "A box that holds an image's place while the image is being made, then hands it over.\n\nA generated image arrives seconds after it is asked for, at a size nobody knew in advance. Without something reserving the space, the screen reflows under the reader's thumb at the moment they were about to tap. This takes the aspect ratio up front and fills the box with a field of dots until there is a picture to show.\n\nFor a loading state with no shape to reserve, use [Skeleton](/docs/components/skeleton). For text arriving a token at a time, use [Shimmer](/docs/ai-components/shimmer).",
+  "usage": "import { Image } from 'react-native';\n\n<ImageGeneration status={status} prompt=\"a quiet mountain at sunset\">\n  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />\n</ImageGeneration>",
+  "parts": {
+    "Field": "The dot field on its own, for a placeholder that is not an image. It fills its parent, so give it a box."
+  },
+  "notes": "### The five steps\n\n`status` moves the picture through the work rather than switching it.\n\n| | The field | The image |\n| --- | --- | --- |\n| `queued` | Full | Not shown |\n| `generating` | Full | Not shown |\n| `refining` | Half | Coming through |\n| `complete` | Gone | Full |\n| `error` | Gone | Dimmed |\n\n`refining` is the overlap, and it is the step worth having. An image that appears the instant the field vanishes has been swapped in; one that surfaces through it has been developed. Skip straight from `generating` to `complete` if your model gives you nothing to show in between, but pass through `refining` if it does.\n\n### What it costs to draw\n\nThe field is around five hundred dots, and it costs twenty-two animated values a frame. Each column is one animated view holding its own dots, so the band's brightness is computed per column rather than per dot — the dots inside a column never move independently of it, and at this size nobody can tell.\n\nThe per-dot brightness underneath the band is fixed and derived from the dot's own coordinates, which is what stops the field reading as clean vertical stripes sweeping past.\n\n### Reduced motion\n\nThe band stops and the field is drawn at one still frame of itself. A placeholder showing nothing is indistinguishable from a component that failed to load, so this is a quieter picture rather than an empty one.\n\n### The image itself\n\n`children` is whatever fills the frame — an `Image`, a video, a canvas. Give it `width: '100%'` and `height: '100%'`; the frame is already the right shape, and a child that sizes itself will not match it.\n\nThe fade is opacity and a small settle in scale. There is no blur ramp: React Native has no equivalent that runs on the UI thread, and reaching for a blur package would make an optional dependency load-bearing for the look of a placeholder.\n\n### Announcing it\n\nThe frame carries `busy` while there is work outstanding, so a screen reader says the box is not the answer yet, and the status line is a live region. The image itself is hidden from the reader until it has arrived — there is nothing to describe before then.",
+  "examples": [
+    {
+      "title": "Through the work",
+      "description": "The common path. The box is the right shape from the first frame, so nothing below it moves when the image lands.",
+      "code": "const [status, setStatus] = useState<ImageGenerationStatus>('queued');\n\n<ImageGeneration\n  status={status}\n  prompt=\"a quiet mountain landscape at sunset\"\n  resolution=\"1024 × 1024\"\n>\n  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />\n</ImageGeneration>"
+    },
+    {
+      "title": "Filling the width",
+      "description": "`compact` caps the box at a thumbnail and centres it, which suits a result inside a conversation. `fluid` takes whatever width it is given.",
+      "code": "<ImageGeneration size=\"fluid\" status=\"generating\" aspectRatio={16 / 9} />"
+    },
+    {
+      "title": "A shape that is not square",
+      "description": "`aspectRatio` is width over height, and it has to be right before there is an image to measure — that is the whole job.",
+      "code": "<ImageGeneration status={status} aspectRatio={3 / 4} resolution=\"768 × 1024\">\n  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />\n</ImageGeneration>"
+    },
+    {
+      "title": "When it fails",
+      "description": "`onRetry` is what puts a button under the card. Without it the error is reported and nothing is offered, which is right when the failure is not the reader's to fix.",
+      "code": "<ImageGeneration\n  status=\"error\"\n  prompt=\"a quiet mountain landscape at sunset\"\n  onRetry={regenerate}\n/>"
+    },
+    {
+      "title": "Just the frame",
+      "description": "`showStatus={false}` drops the sentence, for a grid where one status line covers every tile.",
+      "code": "<View className=\"flex-row gap-2\">\n  {jobs.map((job) => (\n    <ImageGeneration\n      key={job.id}\n      size=\"fluid\"\n      className=\"flex-1\"\n      status={job.status}\n      showStatus={false}\n      resolution=\"\"\n    />\n  ))}\n</View>"
+    },
+    {
+      "title": "The field on its own",
+      "description": "`ImageGeneration.Field` is the dot field without the frame around it, for a placeholder that is not an image. It fills its parent.",
+      "code": "<View className=\"h-32 w-full overflow-hidden rounded-xl bg-muted\">\n  <ImageGeneration.Field />\n</View>"
+    }
+  ],
+  "anatomy": "<ImageGeneration status={status}>\n  {/* the finished image, once there is one */}\n</ImageGeneration>\n\n{/* Or the field on its own, in a box of your own. */}\n<ImageGeneration.Field />"
+}

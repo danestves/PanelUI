@@ -1,0 +1,218 @@
+---
+title: ImageGeneration
+description: The place an image will be, while it is being made.
+status: new
+---
+
+A box that holds an image's place while the image is being made, then hands it over.
+
+A generated image arrives seconds after it is asked for, at a size nobody knew in advance. Without something reserving the space, the screen reflows under the reader's thumb at the moment they were about to tap. This takes the aspect ratio up front and fills the box with a field of dots until there is a picture to show.
+
+For a loading state with no shape to reserve, use [Skeleton](/docs/components/skeleton). For text arriving a token at a time, use [Shimmer](/docs/ai-components/shimmer).
+
+## Installation
+
+ImageGeneration ships with the library — no separate install.
+
+```tsx
+import { ImageGeneration } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add image-generation
+```
+
+## Usage
+
+```tsx
+import { Image } from 'react-native';
+
+<ImageGeneration status={status} prompt="a quiet mountain at sunset">
+  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />
+</ImageGeneration>
+```
+
+## Composition
+
+```tsx
+<ImageGeneration status={status}>
+  {/* the finished image, once there is one */}
+</ImageGeneration>
+
+{/* Or the field on its own, in a box of your own. */}
+<ImageGeneration.Field />
+```
+
+- **`ImageGeneration.Field`** — The dot field on its own, for a placeholder that is not an image. It fills its parent, so give it a box.
+
+## Examples
+
+### Through the work
+
+The common path. The box is the right shape from the first frame, so nothing below it moves when the image lands.
+
+```tsx
+const [status, setStatus] = useState<ImageGenerationStatus>('queued');
+
+<ImageGeneration
+  status={status}
+  prompt="a quiet mountain landscape at sunset"
+  resolution="1024 × 1024"
+>
+  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />
+</ImageGeneration>
+```
+
+### Filling the width
+
+`compact` caps the box at a thumbnail and centres it, which suits a result inside a conversation. `fluid` takes whatever width it is given.
+
+```tsx
+<ImageGeneration size="fluid" status="generating" aspectRatio={16 / 9} />
+```
+
+### A shape that is not square
+
+`aspectRatio` is width over height, and it has to be right before there is an image to measure — that is the whole job.
+
+```tsx
+<ImageGeneration status={status} aspectRatio={3 / 4} resolution="768 × 1024">
+  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />
+</ImageGeneration>
+```
+
+### When it fails
+
+`onRetry` is what puts a button under the card. Without it the error is reported and nothing is offered, which is right when the failure is not the reader's to fix.
+
+```tsx
+<ImageGeneration
+  status="error"
+  prompt="a quiet mountain landscape at sunset"
+  onRetry={regenerate}
+/>
+```
+
+### Just the frame
+
+`showStatus={false}` drops the sentence, for a grid where one status line covers every tile.
+
+```tsx
+<View className="flex-row gap-2">
+  {jobs.map((job) => (
+    <ImageGeneration
+      key={job.id}
+      size="fluid"
+      className="flex-1"
+      status={job.status}
+      showStatus={false}
+      resolution=""
+    />
+  ))}
+</View>
+```
+
+### The field on its own
+
+`ImageGeneration.Field` is the dot field without the frame around it, for a placeholder that is not an image. It fills its parent.
+
+```tsx
+<View className="h-32 w-full overflow-hidden rounded-xl bg-muted">
+  <ImageGeneration.Field />
+</View>
+```
+
+## Variants
+
+### `size`
+
+- `compact` *(default)*
+- `fluid`
+
+```tsx
+<ImageGeneration size="compact">…</ImageGeneration>
+<ImageGeneration size="fluid">…</ImageGeneration>
+```
+
+### `error`
+
+- `true`
+
+```tsx
+<ImageGeneration error="true">…</ImageGeneration>
+```
+
+## API Reference
+
+### ImageGeneration.Field
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `paused` | `boolean` | — | Stops the band and draws one still frame of the field. |
+
+### ImageGeneration
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `status` | `ImageGenerationStatus` | `'generating'` | How far the generation has got. Defaults to `generating`. |
+| `label` | `string` | — | What the box is, for a screen reader. Defaults to the status text, with the prompt after it where there is one. |
+| `prompt` | `string` | — | The instruction the image was made from. Shown under the status. |
+| `resolution` | `string` | `'1024 × 1024'` | Shown in the corner of the frame. Pass an empty string to drop it. |
+| `aspectRatio` | `number` | `1` | The box's shape, as width over height. Defaults to `1` — square, which is what most models return, and what the frame must be before there is an image to measure. |
+| `size` | `'compact' \| 'fluid'` | `'compact'` | `compact` caps the width at a thumbnail and centres it; `fluid` fills. |
+| `statusText` | `string` | — | Replaces the sentence under the frame. |
+| `showStatus` | `boolean` | `true` | Hides the status line, leaving the frame and the prompt. |
+| `onRetry` | `() => void` | — | Shown as a button under an `error`. Without it there is no button. |
+| `frameClassName` | `string` | — | Extra classes for the frame — its radius, ground and aspect. |
+| `mediaClassName` | `string` | — | Extra classes for the layer the image sits in. |
+| `statusClassName` | `string` | — | Extra classes for the status line. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### The five steps
+
+`status` moves the picture through the work rather than switching it.
+
+| | The field | The image |
+| --- | --- | --- |
+| `queued` | Full | Not shown |
+| `generating` | Full | Not shown |
+| `refining` | Half | Coming through |
+| `complete` | Gone | Full |
+| `error` | Gone | Dimmed |
+
+`refining` is the overlap, and it is the step worth having. An image that appears the instant the field vanishes has been swapped in; one that surfaces through it has been developed. Skip straight from `generating` to `complete` if your model gives you nothing to show in between, but pass through `refining` if it does.
+
+### What it costs to draw
+
+The field is around five hundred dots, and it costs twenty-two animated values a frame. Each column is one animated view holding its own dots, so the band's brightness is computed per column rather than per dot — the dots inside a column never move independently of it, and at this size nobody can tell.
+
+The per-dot brightness underneath the band is fixed and derived from the dot's own coordinates, which is what stops the field reading as clean vertical stripes sweeping past.
+
+### Reduced motion
+
+The band stops and the field is drawn at one still frame of itself. A placeholder showing nothing is indistinguishable from a component that failed to load, so this is a quieter picture rather than an empty one.
+
+### The image itself
+
+`children` is whatever fills the frame — an `Image`, a video, a canvas. Give it `width: '100%'` and `height: '100%'`; the frame is already the right shape, and a child that sizes itself will not match it.
+
+The fade is opacity and a small settle in scale. There is no blur ramp: React Native has no equivalent that runs on the UI thread, and reaching for a blur package would make an optional dependency load-bearing for the look of a placeholder.
+
+### Announcing it
+
+The frame carries `busy` while there is work outstanding, so a screen reader says the box is not the answer yet, and the status line is a live region. The image itself is hidden from the reader until it has arrived — there is nothing to describe before then.
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `ImageGeneration`
+
+**Types:** `ImageGenerationProps`, `ImageGenerationFieldProps`, `ImageGenerationStatus`

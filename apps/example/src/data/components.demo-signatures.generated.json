@@ -14,6 +14,10 @@
       "signature": "3991043b7eae92fcc325f19b143760401584d3a0d820f1f9a9ae0d0a7abbeb99"
     },
     {
+      "slug": "approval-card",
+      "signature": "8f5eed64798868b04af9661cba816e261570ef9dfa9240cdb805ae6f7dbb97ae"
+    },
+    {
       "slug": "area-chart",
       "signature": "7d1f4099983da8e421fd8c3dc751a8672f05fb3b834984d49598d30e02ffbc30"
     },
@@ -152,6 +156,10 @@
     {
       "slug": "hex-chart",
       "signature": "594837d80a471f8ce55b19c025eda064fd600bc745a7c72f202df507e1a9b261"
+    },
+    {
+      "slug": "image-generation",
+      "signature": "1e997149fe9122bcfbd0a079a55ed6de2c0b071e70fd57debd4abf8e929d60c2"
     },
     {
       "slug": "input",

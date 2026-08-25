@@ -686,6 +686,24 @@
       "title": "aiInput"
     }
   ],
+  "image-generation": [
+    "ImageGeneration",
+    "The place an image will be, while it is being made.",
+    "react native ai image generation placeholder",
+    {
+      "addedIn": "0.82.0",
+      "group": "ai-components"
+    }
+  ],
+  "approval-card": [
+    "ApprovalCard",
+    "Where an agent stops and waits for a person.",
+    "react native ai human in the loop approval",
+    {
+      "addedIn": "0.82.0",
+      "group": "ai-components"
+    }
+  ],
   "shimmer": [
     "Shimmer",
     "Animated highlight sweeping across content.",

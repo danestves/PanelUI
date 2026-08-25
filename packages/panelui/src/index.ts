@@ -79,6 +79,15 @@ export {
   type AttachmentState,
 } from './components/attachment';
 export {
+  ApprovalCard,
+  type ApprovalCardProps,
+  type ApprovalCardStatus,
+  type ApprovalCardQuestion,
+  type ApprovalCardOption,
+  type ApprovalCardAnswer,
+  type ApprovalCardAnswers,
+} from './components/approval-card';
+export {
   AreaChart,
   useAreaChart,
   type AreaChartProps,
@@ -515,6 +524,12 @@ export {
   type FormFieldRenderProps,
   type UseFieldOptions,
 } from './components/form';
+export {
+  ImageGeneration,
+  type ImageGenerationProps,
+  type ImageGenerationFieldProps,
+  type ImageGenerationStatus,
+} from './components/image-generation';
 export { Input, type InputProps } from './components/input';
 export {
   InputGroup,

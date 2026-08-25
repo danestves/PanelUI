@@ -140,6 +140,10 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
     load10().then((module) => module.ENTRIES_BY_SLUG['scroll-canvas']),
   'thinking-orb': () =>
     load10().then((module) => module.ENTRIES_BY_SLUG['thinking-orb']),
+  'approval-card': () =>
+    load10().then((module) => module.ENTRIES_BY_SLUG['approval-card']),
+  'image-generation': () =>
+    load10().then((module) => module.ENTRIES_BY_SLUG['image-generation']),
   reasoning: () =>
     load10().then((module) => module.ENTRIES_BY_SLUG['reasoning']),
   sources: () => load10().then((module) => module.ENTRIES_BY_SLUG['sources']),

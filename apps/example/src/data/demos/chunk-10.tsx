@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { ScrollView, View } from "react-native";
+import { Image, ScrollView, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AIInput, Avatar, Badge, Button, CameraIcon, ChevronsUpDownIcon, CodeBlock, FileIcon, Frame, GlobeIcon, Item, Marker, Message, MessageScroller, MicIcon, Plan, PlusIcon, Reasoning, Response, ScatterChart, ScrollCanvas, ScrollProgress, SearchIcon, Separator, Shimmer, Skeleton, Slider, Sources, Switch, Task, Text, ThinkingOrb, Tooltip, type AIInputStatus } from "panelui-native";
+import { AIInput, type AIInputStatus, ApprovalCard, type ApprovalCardQuestion, type ApprovalCardStatus, Avatar, Badge, Button, CameraIcon, ChevronsUpDownIcon, CodeBlock, FileIcon, Frame, GlobeIcon, ImageGeneration, type ImageGenerationStatus, Item, Marker, Message, MessageScroller, MicIcon, Plan, PlusIcon, Reasoning, Response, ScatterChart, ScrollCanvas, ScrollProgress, SearchIcon, Separator, Shimmer, Skeleton, Slider, Sources, Switch, Task, Text, ThinkingOrb, Tooltip } from "panelui-native";
 import { router } from "expo-router";
 import { useCSSVariable } from "uniwind";
 import type { ComponentEntry } from '../component-types';
@@ -1112,6 +1112,208 @@ function VoiceDemo() {
 /* Catalogue                                                                  */
 /* -------------------------------------------------------------------------- */
 
+const IMAGE_STEPS: ImageGenerationStatus[] = ['queued', 'generating', 'refining', 'complete'];
+
+/** The whole run, on a loop, so the overlap in the middle is visible. */
+function ImageGenerationDemo() {
+  const [at, setAt] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setAt((step) => (step + 1) % IMAGE_STEPS.length), 1800);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <View className="w-full items-center gap-4">
+      <ImageGeneration
+        status={IMAGE_STEPS[at]}
+        prompt="a quiet mountain landscape at sunset"
+        resolution="1024 × 1024"
+      >
+        <Image
+          source={{ uri: 'https://picsum.photos/seed/panelui-mountain/512/512' }}
+          style={{ width: '100%', height: '100%' }}
+        />
+      </ImageGeneration>
+      <Button variant="secondary" onPress={() => setAt(0)}>
+        Start again
+      </Button>
+    </View>
+  );
+}
+
+/** Every step at once, so they can be compared rather than remembered. */
+function ImageGenerationStepsDemo() {
+  return (
+    <View className="w-full gap-5">
+      {IMAGE_STEPS.map((status) => (
+        <ImageGeneration key={status} status={status} resolution="">
+          <Image
+            source={{ uri: 'https://picsum.photos/seed/panelui-steps/512/512' }}
+            style={{ width: '100%', height: '100%' }}
+          />
+        </ImageGeneration>
+      ))}
+    </View>
+  );
+}
+
+function ApprovalCardDemo() {
+  const [status, setStatus] = useState<ApprovalCardStatus>('pending');
+
+  return (
+    <View className="w-full gap-3">
+      <ApprovalCard
+        title="Apply these changes?"
+        description="Six files, one migration. Nothing is written until you say so."
+        status={status}
+        onApprove={() => setStatus('approved')}
+        onRequestChanges={() => setStatus('changes-requested')}
+        onReject={() => setStatus('rejected')}
+        result="Applied to main."
+      />
+      <Button variant="secondary" onPress={() => setStatus('pending')}>
+        Reset
+      </Button>
+    </View>
+  );
+}
+
+const APPROVAL_QUESTIONS: ApprovalCardQuestion[] = [
+  {
+    id: 'scope',
+    title: 'How focused should the first release be?',
+    description: 'This decides what goes in 0.1.0 and what waits.',
+    options: [
+      { value: 'focused', label: 'A focused starter set' },
+      { value: 'broad', label: 'A broader collection' },
+    ],
+    allowCustom: true,
+    customPlaceholder: 'Describe another scope…',
+  },
+  {
+    id: 'platforms',
+    title: 'Which platforms should it ship on?',
+    multiple: true,
+    options: [
+      { value: 'ios', label: 'iOS' },
+      { value: 'android', label: 'Android' },
+      { value: 'web', label: 'Web', description: 'Adds a build step' },
+    ],
+  },
+];
+
+function ApprovalCardQuestionsDemo() {
+  const [status, setStatus] = useState<ApprovalCardStatus>('pending');
+  const [step, setStep] = useState(0);
+
+  return (
+    <View className="w-full gap-3">
+      <ApprovalCard
+        questions={APPROVAL_QUESTIONS}
+        status={status}
+        step={step}
+        onStepChange={setStep}
+        submitLabel="Send answers"
+        onSubmit={() => setStatus('answered')}
+        result="Two responses sent to the agent."
+      />
+      <Button
+        variant="secondary"
+        onPress={() => {
+          setStep(0);
+          setStatus('pending');
+        }}
+      >
+        Reset
+      </Button>
+    </View>
+  );
+}
+
+/**
+ * The card in the place it belongs.
+ *
+ * A run that stops at it: the agent says what it has done, says why the next
+ * step is not its to take, and waits. On its own the card is a shape; here it
+ * is the thing the transcript is waiting on, which is the part worth showing.
+ */
+function ApprovalCardRunVersion() {
+  const [status, setStatus] = useState<ApprovalCardStatus>('pending');
+  const answered = status !== 'pending' && status !== 'submitting';
+
+  return (
+    <MessageScroller className="flex-1">
+      <MessageScroller.Viewport>
+        <MessageScroller.Content className="gap-4 px-5 py-6">
+          <MessageScroller.Item messageId="ask">
+            <Message align="end">
+              <Message.Content>
+                <Message.Bubble>
+                  <Message.BubbleContent>
+                    Tidy up the release branch and cut 0.9.0.
+                  </Message.BubbleContent>
+                </Message.Bubble>
+              </Message.Content>
+            </Message>
+          </MessageScroller.Item>
+
+          <MessageScroller.Item messageId="work">
+            <View className="gap-2">
+              <Task status="complete">
+                <Task.Trigger title="Read the branch" />
+                <Task.Content>
+                  <Task.Item>
+                    Opened <Task.File icon={<FileIcon size={12} />}>CHANGELOG.md</Task.File>
+                  </Task.Item>
+                  <Task.Item>Found 3 commits to squash</Task.Item>
+                </Task.Content>
+              </Task>
+
+              <Reasoning defaultOpen={false} duration={4}>
+                <Reasoning.Trigger />
+                <Reasoning.Content>
+                  Two of the three are documentation-only, so squashing them loses
+                  nothing. The third is a contributor&apos;s, and squashing it drops
+                  their authorship — which is not mine to decide.
+                </Reasoning.Content>
+              </Reasoning>
+            </View>
+          </MessageScroller.Item>
+
+          <MessageScroller.Item messageId="approval">
+            <ApprovalCard
+              title="Squash all three commits?"
+              description="One is a contributor's, and squashing drops their authorship."
+              status={status}
+              onApprove={() => setStatus('approved')}
+              onRequestChanges={() => setStatus('changes-requested')}
+              onReject={() => setStatus('rejected')}
+              result={
+                status === 'approved'
+                  ? 'Squashed all three.'
+                  : status === 'changes-requested'
+                    ? 'Squashed the two documentation commits, kept the third.'
+                    : 'Left the history alone.'
+              }
+            />
+          </MessageScroller.Item>
+
+          {answered ? (
+            <MessageScroller.Item messageId="done">
+              <Response>
+                {status === 'rejected'
+                  ? 'Left the history as it was. 0.9.0 is tagged from the branch unchanged.'
+                  : '0.9.0 is tagged and the branch is clean.'}
+              </Response>
+            </MessageScroller.Item>
+          ) : null}
+        </MessageScroller.Content>
+      </MessageScroller.Viewport>
+    </MessageScroller>
+  );
+}
+
 const ENTRIES: ComponentEntry[] = [
   {
     slug: 'ai-input',
@@ -1251,6 +1453,64 @@ const ENTRIES: ComponentEntry[] = [
         fullPage: true,
         description: 'What `speed` and `paused` do to a running orb.',
         render: () => <ThinkingOrbControlsVersion />,
+      },
+    ],
+  },
+{
+    slug: 'image-generation',
+    name: 'ImageGeneration',
+    summary: 'The place an image will be, while it is being made',
+    demos: [
+      { label: 'Through the work', render: () => <ImageGenerationDemo /> },
+      { label: 'Every step', render: () => <ImageGenerationStepsDemo /> },
+      {
+        label: 'Wider than a thumbnail',
+        render: () => <ImageGeneration size="fluid" status="generating" aspectRatio={16 / 9} />,
+      },
+      {
+        label: 'When it fails',
+        render: () => (
+          <ImageGeneration
+            status="error"
+            prompt="a quiet mountain landscape at sunset"
+            onRetry={() => {}}
+          />
+        ),
+      },
+      {
+        label: 'The field alone',
+        render: () => (
+          <View className="h-32 w-full overflow-hidden rounded-xl bg-muted">
+            <ImageGeneration.Field />
+          </View>
+        ),
+      },
+    ],
+  },
+{
+    slug: 'approval-card',
+    name: 'ApprovalCard',
+    summary: 'Where an agent stops and waits for a person',
+    demos: [
+      { label: 'A decision', render: () => <ApprovalCardDemo /> },
+      { label: 'A run of questions', render: () => <ApprovalCardQuestionsDemo /> },
+      {
+        label: 'Answered, and left in place',
+        render: () => (
+          <ApprovalCard
+            title="Apply these changes?"
+            status="approved"
+            result="Applied to main, 4 minutes ago."
+          />
+        ),
+      },
+      {
+        label: 'In a run',
+        id: 'in-a-run',
+        fullPage: true,
+        description:
+          'The card in the place it belongs: a transcript that stops at it, and carries on once the answer is in.',
+        render: () => <ApprovalCardRunVersion />,
       },
     ],
   },

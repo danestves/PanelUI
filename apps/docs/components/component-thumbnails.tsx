@@ -1802,6 +1802,41 @@ const response = (
   </Stack>
 );
 
+/* A square of dots with a band of them lit — the field, at rest. */
+const imageGeneration = (
+  <Stack className="w-32 gap-2">
+    <Plate className="grid h-24 w-32 grid-cols-8 place-items-center gap-1 p-2">
+      {Array.from({ length: 40 }, (_, index) => (
+        <div
+          key={index}
+          className="h-1 w-1 rounded-full bg-fd-muted-foreground"
+          style={{ opacity: index % 8 === 3 || index % 8 === 4 ? 0.85 : 0.2 }}
+        />
+      ))}
+    </Plate>
+    <Bar className="w-20" />
+  </Stack>
+);
+
+/* A question with two options under it, and the row of buttons it ends on. */
+const approvalCard = (
+  <Plate className="w-40 gap-2 p-3">
+    <Bar className="w-28" />
+    <Row className="gap-2">
+      <div className="h-2.5 w-2.5 rounded-full border border-fd-muted-foreground/40" />
+      <Bar className="w-20" faint />
+    </Row>
+    <Row className="gap-2">
+      <div className="h-2.5 w-2.5 rounded-full border border-fd-muted-foreground/40" />
+      <Bar className="w-16" faint />
+    </Row>
+    <Row className="gap-1.5 pt-1">
+      <Accent className="h-5 w-12 rounded-md" />
+      <Fill className="h-5 w-12 rounded-md" />
+    </Row>
+  </Plate>
+);
+
 const shimmer = (
   <div className="relative w-40 overflow-hidden">
     <Stack className="gap-2">
@@ -2027,7 +2062,9 @@ const THUMBNAILS: Record<string, ReactNode> = {
   plan,
   reasoning,
   response,
+  'approval-card': approvalCard,
   shimmer,
+  'image-generation': imageGeneration,
   soundwave,
   sources,
   task,
