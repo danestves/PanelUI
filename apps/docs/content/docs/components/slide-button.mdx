@@ -4,6 +4,15 @@ description: Drag across to confirm, with the distance drawn on the button.
 status: new
 ---
 
+<PreviewVideo
+  src="/previews/slide-button.mp4"
+  poster="/previews/slide-button-poster.jpg"
+  alt="A screen recording of the SlideButton demo on a dark phone screen. Each example is dragged in turn: a button labelled “Slide to ship” that lands on “Shipped” with a tick, a transfer that goes through “Sending…” to “Sent”, three coloured variants whose trails take their own colour, three sizes, two buttons with different thresholds, one with a padlock in the handle, and a dimmed one that refuses the drag."
+  width={720}
+  height={1560}
+  caption="The handle stays neutral and the rail carries the colour, so what the eye follows is the distance."
+/>
+
 A button confirmed by dragging a thumb across it rather than by tapping it.
 
 Use it where an action deserves a moment's deliberation and a dialog would be too much ceremony — shipping a build, ending a shift, transferring money. It cannot be reached by a stray tap, and it cannot be reached by habit, because the movement is different from every other button on the screen.
@@ -50,6 +59,15 @@ npx panelui-cli@latest add slide-button
 
 The default. Nine tenths of the rail, then it fires.
 
+<PreviewVideo
+  src="/previews/slide-button-confirming-an-action.mp4"
+  poster="/previews/slide-button-confirming-an-action-poster.jpg"
+  alt="A screen recording of a slide button labelled “Slide to ship” on a dark phone screen. The handle is dragged the length of the rail, leaving a trail behind it, and lands at the far end with a tick as the label becomes “Shipped”. A Reset button below returns it to the start."
+  width={720}
+  height={1560}
+  caption="The label is covered by the handle rather than faded, so it is legible until the moment it stops mattering."
+/>
+
 ```tsx
 <SlideButton onComplete={() => ship()}>
   <SlideButton.Label>Slide to ship</SlideButton.Label>
@@ -82,6 +100,15 @@ The default. Nine tenths of the rail, then it fires.
 ### Waiting on the server
 
 Controlled, so the button does not claim success before the request has. The thumb sits at the far end while the call is in flight and stays there once it lands.
+
+<PreviewVideo
+  src="/previews/slide-button-waiting-on-the-server.mp4"
+  poster="/previews/slide-button-waiting-on-the-server-poster.jpg"
+  alt="A screen recording of a slide button labelled “Slide to transfer $240” on a dark phone screen. It is dragged across and the label becomes “Sending…” with the handle held at the far end, then “Sent” once the request lands."
+  width={720}
+  height={1560}
+  caption="Held at the far end while the request is in flight, so the control does not claim success before the server has."
+/>
 
 ```tsx
 const [sent, setSent] = useState(false);

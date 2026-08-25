@@ -11,7 +11,15 @@
     {
       "title": "Confirming an action",
       "description": "The default. Nine tenths of the rail, then it fires.",
-      "code": "<SlideButton onComplete={() => ship()}>\n  <SlideButton.Label>Slide to ship</SlideButton.Label>\n</SlideButton>"
+      "code": "<SlideButton onComplete={() => ship()}>\n  <SlideButton.Label>Slide to ship</SlideButton.Label>\n</SlideButton>",
+      "previewVideo": {
+        "src": "/previews/slide-button-confirming-an-action.mp4",
+        "poster": "/previews/slide-button-confirming-an-action-poster.jpg",
+        "alt": "A screen recording of a slide button labelled “Slide to ship” on a dark phone screen. The handle is dragged the length of the rail, leaving a trail behind it, and lands at the far end with a tick as the label becomes “Shipped”. A Reset button below returns it to the start.",
+        "width": 720,
+        "height": 1560,
+        "caption": "The label is covered by the handle rather than faded, so it is legible until the moment it stops mattering."
+      }
     },
     {
       "title": "How far it has to go",
@@ -29,7 +37,15 @@
     {
       "title": "Waiting on the server",
       "description": "Controlled, so the button does not claim success before the request has. The thumb sits at the far end while the call is in flight and stays there once it lands.",
-      "code": "const [sent, setSent] = useState(false);\n\n<SlideButton\n  completed={sent}\n  onComplete={async () => {\n    await transfer();\n    setSent(true);\n  }}\n>\n  <SlideButton.Label>Slide to transfer $240</SlideButton.Label>\n</SlideButton>"
+      "code": "const [sent, setSent] = useState(false);\n\n<SlideButton\n  completed={sent}\n  onComplete={async () => {\n    await transfer();\n    setSent(true);\n  }}\n>\n  <SlideButton.Label>Slide to transfer $240</SlideButton.Label>\n</SlideButton>",
+      "previewVideo": {
+        "src": "/previews/slide-button-waiting-on-the-server.mp4",
+        "poster": "/previews/slide-button-waiting-on-the-server-poster.jpg",
+        "alt": "A screen recording of a slide button labelled “Slide to transfer $240” on a dark phone screen. It is dragged across and the label becomes “Sending…” with the handle held at the far end, then “Sent” once the request lands.",
+        "width": 720,
+        "height": 1560,
+        "caption": "Held at the far end while the request is in flight, so the control does not claim success before the server has."
+      }
     },
     {
       "title": "Offering itself again",
@@ -92,5 +108,13 @@
   ],
   "extraImports": [
     "UnlockIcon"
-  ]
+  ],
+  "previewVideo": {
+    "src": "/previews/slide-button.mp4",
+    "poster": "/previews/slide-button-poster.jpg",
+    "alt": "A screen recording of the SlideButton demo on a dark phone screen. Each example is dragged in turn: a button labelled “Slide to ship” that lands on “Shipped” with a tick, a transfer that goes through “Sending…” to “Sent”, three coloured variants whose trails take their own colour, three sizes, two buttons with different thresholds, one with a padlock in the handle, and a dimmed one that refuses the drag.",
+    "width": 720,
+    "height": 1560,
+    "caption": "The handle stays neutral and the rail carries the colour, so what the eye follows is the distance."
+  }
 }
