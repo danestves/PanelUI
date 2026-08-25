@@ -14,7 +14,7 @@
     "registry:build": "node scripts/build-registry.mjs",
     "prebuild": "node scripts/extract-icons.mjs && node scripts/build-registry.mjs && node scripts/build-api-reference.mjs --check && node scripts/build-skill.mjs && node scripts/build-skill-assets.mjs"
   },
-  "//browserslist": "Next's default target still down-levels Array.prototype.at, Object.hasOwn and friends, shipping ~14KB of polyfills for engines that have had them since 2021. This is a docs site for a React Native library — its readers are on current browsers.",
+  "//browserslist": "Next's default target still down-levels Array.prototype.at, Object.hasOwn and friends, shipping ~14KB of polyfills for engines that have had them since 2021. This is a docs site for a React Native library \u2014 its readers are on current browsers.",
   "browserslist": [
     "chrome >= 111",
     "edge >= 111",
@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@hugeicons/core-free-icons": "^4.3.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/mdx": "^2.0.13",
     "@types/node": "^24.0.0",

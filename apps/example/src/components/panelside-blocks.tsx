@@ -32,22 +32,23 @@ import {
   type PanelsideSceneProps,
 } from 'panelui-native';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
-import {
-  BubbleChatIcon,
-  Cancel01Icon,
-  Delete02Icon,
-  File01Icon,
-  Image01Icon,
-  Menu01Icon,
-  Mic01Icon,
-  Package01Icon,
-  PencilEdit02Icon,
-  PlusSignIcon,
-  Share01Icon,
-  SourceCodeIcon,
-  SparklesIcon,
-  StarIcon,
-} from '@hugeicons/core-free-icons';
+// Deep imports, not the barrel. The barrel is one module that re-exports
+// every icon in the set, and Metro follows all of them — six thousand
+// modules and seven megabytes of source, for the fourteen used here.
+import BubbleChatIcon from '@hugeicons/core-free-icons/BubbleChatIcon';
+import Cancel01Icon from '@hugeicons/core-free-icons/Cancel01Icon';
+import Delete02Icon from '@hugeicons/core-free-icons/Delete02Icon';
+import File01Icon from '@hugeicons/core-free-icons/File01Icon';
+import Image01Icon from '@hugeicons/core-free-icons/Image01Icon';
+import Menu01Icon from '@hugeicons/core-free-icons/Menu01Icon';
+import Mic01Icon from '@hugeicons/core-free-icons/Mic01Icon';
+import Package01Icon from '@hugeicons/core-free-icons/Package01Icon';
+import PencilEdit02Icon from '@hugeicons/core-free-icons/PencilEdit02Icon';
+import PlusSignIcon from '@hugeicons/core-free-icons/PlusSignIcon';
+import Share01Icon from '@hugeicons/core-free-icons/Share01Icon';
+import SourceCodeIcon from '@hugeicons/core-free-icons/SourceCodeIcon';
+import SparklesIcon from '@hugeicons/core-free-icons/SparklesIcon';
+import StarIcon from '@hugeicons/core-free-icons/StarIcon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
 

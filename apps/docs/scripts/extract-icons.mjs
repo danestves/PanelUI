@@ -19,6 +19,12 @@
  * `[tag, attributes]` pairs, so there is nothing to parse: the alias imports
  * name the glyph, the declaration names the weight, and the pair is enough.
  *
+ * That makes `@hugeicons/core-free-icons` a real dependency of this workspace
+ * rather than only of the library, and it is declared as one. Left to resolve
+ * through the monorepo's hoisted `node_modules` it works on a developer's
+ * machine and fails on the deploy, which installs this workspace's own
+ * dependencies and nothing else.
+ *
  * ## The four drawn by hand
  *
  * Google, Facebook, Apple and BadgeCheck are still JSX in the library source,
