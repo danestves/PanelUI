@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ComponentProps,
   type ReactElement,
@@ -23,10 +24,9 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Extrapolation,
   FadeIn,
+  cancelAnimation,
   interpolate,
-  FadeOut,
   SlideInDown,
-  SlideOutDown,
   runOnJS,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -80,10 +80,6 @@ const DISMISS_VELOCITY = 800;
  * is a new object every commit, and the sheet re-renders while it is open.
  */
 const ENTERING = SlideInDown.springify().dampingRatio(0.9).duration(420);
-// Leaving is quicker than arriving, but not by much: the sheet is still
-// crossing the whole screen, and a surface that big snapping out of existence
-// is more startling than the delay it saves is worth.
-const EXITING = SlideOutDown.springify().dampingRatio(1).duration(340);
 
 /**
  * Where a flick would come to rest if it kept decelerating — Apple's
@@ -375,15 +371,98 @@ function BottomSheetContent({
   useBackHandler(open && dismissible, close);
 
   /*
-   * The offset survives a close — the early return below sits after every
-   * hook, so this component keeps its state while the sheet is hidden. A
-   * swipe-dismiss leaves it parked a screen height down, and without this the
-   * next open would draw the sheet below the fold behind a full backdrop:
-   * a dimmed screen with nothing on it and no reachable close button.
+   * The sheet outlives `open`, and this is what keeps it alive.
+   *
+   * It used to be removed from the tree in the same commit `open` flipped,
+   * while an `exiting` layout animation was still declared on it. Reanimated
+   * then held the detached views until that spring settled — and a `duration`
+   * on a `springify()` animation is a target rather than a stop, so how long
+   * that took was not something this file decided. Reopening inside that window
+   * put a second sheet on screen with nothing coordinating the two.
+   *
+   * Now one animation owns the whole travel. Closing springs the sheet down and
+   * clears `presented` from the spring's own completion callback, so the tree
+   * comes down *after* the movement rather than during it. The backdrop is
+   * derived from the same value, so it goes with it.
+   *
+   * Reopening mid-exit is the case this really fixes: `presented` is still
+   * true, so nothing remounts and nothing new is scheduled — the spring is
+   * cancelled and the same sheet is caught on its way down.
    */
+  const [presented, setPresented] = useState(open);
+
   useEffect(() => {
-    if (open) translateY.value = 0;
-  }, [open, translateY]);
+    if (open) {
+      cancelAnimation(translateY);
+      if (!presented) {
+        // A fresh mount starts at rest and ENTERING does the travel. Catching
+        // one that is still on screen must not reset it under the finger, so
+        // this only runs when the sheet had actually gone.
+        translateY.value = 0;
+        setPresented(true);
+        return;
+      }
+      translateY.value = reducedMotion
+        ? withTiming(0, { duration: 150 })
+        : withSpring(0, SPRING);
+      return;
+    }
+
+    if (!presented) return;
+
+    const land = (finished?: boolean) => {
+      'worklet';
+      if (finished) runOnJS(setPresented)(false);
+    };
+    translateY.value = reducedMotion
+      ? withTiming(screenHeight, { duration: 150 }, land)
+      : withSpring(screenHeight, EXIT_SPRING, land);
+  }, [open, presented, reducedMotion, screenHeight, translateY]);
+
+  /*
+   * The native sheet's own presentation queue, which the platform does not have.
+   *
+   * UIKit refuses to present a sheet while the previous one is still being
+   * dismissed, and the request is dropped rather than queued — so a close
+   * followed immediately by an open leaves nothing on screen, and the reader
+   * sees a sheet that "took a moment" or never came at all.
+   *
+   * `isPresented` is therefore driven from here rather than straight from
+   * `open`. A present that arrives during a dismissal is held, and replayed
+   * from the platform's own `onDismiss`, which is the only signal that says the
+   * previous sheet has finished going away.
+   */
+  const [nativePresented, setNativePresented] = useState(open);
+  const nativeDismissing = useRef(false);
+  const openRef = useRef(open);
+  openRef.current = open;
+
+  useEffect(() => {
+    if (!nativeSheet) return;
+
+    if (open) {
+      if (nativeDismissing.current) return;
+      setNativePresented(true);
+      return;
+    }
+
+    if (nativePresented) nativeDismissing.current = true;
+    setNativePresented(false);
+  }, [nativePresented, nativeSheet, open]);
+
+  const onNativeDismiss = useCallback(() => {
+    // Ours, or the reader's? A dismissal we asked for has to hand the queue
+    // back; one the reader performed has to be reported as a close.
+    const wasOurs = nativeDismissing.current;
+    nativeDismissing.current = false;
+
+    if (wasOurs) {
+      if (openRef.current) setNativePresented(true);
+      return;
+    }
+
+    if (dismissible) close();
+  }, [close, dismissible]);
 
   const pan = useMemo(
     () =>
@@ -501,8 +580,8 @@ function BottomSheetContent({
     return (
       <Host matchContents ignoreSafeArea="keyboard" style={{ position: 'absolute' }}>
         <NativeBottomSheet
-          isPresented={open}
-          onDismiss={dismissible ? close : () => {}}
+          isPresented={nativePresented}
+          onDismiss={onNativeDismiss}
           snapPoints={snapPoints}
         >
           <RNHostView matchContents>
@@ -536,7 +615,9 @@ function BottomSheetContent({
     );
   }
 
-  if (!open) return null;
+  // `presented`, not `open`: the sheet stays in the tree until its own exit
+  // animation has finished putting it away.
+  if (!presented) return null;
 
   return (
     <ModalPortal>
@@ -571,7 +652,6 @@ function BottomSheetContent({
              * setting is about.
              */
             entering={reducedMotion ? FadeIn.duration(150) : ENTERING}
-            exiting={reducedMotion ? FadeOut.duration(150) : EXITING}
             accessibilityViewIsModal
             className={sheetVariants({ detached, className })}
             {...props}

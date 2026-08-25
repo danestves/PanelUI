@@ -75,10 +75,24 @@ export function Portal({ children }: { children: ReactNode }) {
   const store = usePortalStore('Portal');
   const key = useId();
 
+  /*
+   * Two effects, because they answer to different things.
+   *
+   * `children` is a new element on every render of whatever owns the portal,
+   * so an effect that both mounted and unmounted on it ran `unmount` then
+   * `mount` for every one of those renders — deleting the key from the store
+   * and putting it straight back, twice through `emit`, twice through a new
+   * Map, and a full re-render of the host each time. An open sheet re-rendering
+   * as its content changes paid that on every frame it changed on.
+   *
+   * Split, the update is an update and the teardown happens once, when the
+   * portal actually goes away.
+   */
   useEffect(() => {
     store.mount(key, children);
-    return () => store.unmount(key);
   }, [store, key, children]);
+
+  useEffect(() => () => store.unmount(key), [store, key]);
 
   return null;
 }
