@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1187,
-    "values": 311,
+    "exports": 1188,
+    "values": 312,
     "types": 876,
     "modules": 143,
     "components": 116,
@@ -3680,6 +3680,10 @@
         "symbols": [
           {
             "name": "Select",
+            "kind": "value"
+          },
+          {
+            "name": "useSelectSearch",
             "kind": "value"
           },
           {

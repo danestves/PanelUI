@@ -334,6 +334,7 @@ export {
 } from './components/radar-chart';
 export {
   Select,
+  useSelectSearch,
   type SelectProps,
   type SelectItemProps,
   type SelectGroupProps,

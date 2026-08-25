@@ -118,9 +118,43 @@ export type SelectPresentation = 'sheet' | 'inline' | 'overlay';
 interface SelectContextValue {
   value: string | undefined;
   onSelect: (value: string) => void;
+  query: string;
+  setQuery: (query: string) => void;
 }
 
 const SelectContext = createContext<SelectContextValue | null>(null);
+
+/**
+ * The filter field's text, from inside an open Select.
+ *
+ * Select can only filter the options it renders itself. A caller who hands it
+ * a virtualized list is rendering their own rows, from their own data, and
+ * this is how they get the query to filter that data with — `Select.Item`
+ * still works wherever those rows put it, because selection travels by
+ * context rather than by position.
+ *
+ * ```tsx
+ * function Options() {
+ *   const { query } = useSelectSearch();
+ *   const rows = useMemo(() => filter(timezones, query), [query]);
+ *   return (
+ *     <FlashList
+ *       data={rows}
+ *       renderItem={({ item }) => <Select.Item value={item.id} label={item.name} />}
+ *     />
+ *   );
+ * }
+ * ```
+ *
+ * `setQuery` is there for a caller who wants to clear or seed the field.
+ */
+export function useSelectSearch(): { query: string; setQuery: (query: string) => void } {
+  const context = useContext(SelectContext);
+  if (!context) {
+    throw new Error('useSelectSearch must be used within a <Select>');
+  }
+  return { query: context.query, setQuery: context.setQuery };
+}
 
 export interface SelectItemProps {
   value: string;
@@ -229,37 +263,62 @@ function eachOption(children: ReactNode, visit: (option: SelectItemProps) => voi
   });
 }
 
+/** What a pass of the filter left, and how much there was to filter. */
+interface FilterResult {
+  /** The children to render. */
+  kept: ReactNode[];
+  /** How many `Select.Item`s the pass saw, at any depth it can reach. */
+  seen: number;
+}
+
 /**
  * The children a query leaves standing.
  *
  * A group is rebuilt around whatever survives inside it and dropped when that
  * is nothing — a heading with no options under it reads as a section that
- * failed to load rather than one the filter emptied. Anything that is neither
- * an item nor a group is left alone: a caption or a divider the caller put in
- * the list is not something a filter has an opinion about.
+ * failed to load rather than one the filter emptied.
+ *
+ * Anything that is neither an item nor a group is left alone: a caption or a
+ * divider the caller put in the list is not something a filter has an opinion
+ * about, and neither is a list component rendering its own rows. Dropping
+ * those was how a `Select.Item` inside a virtualized list disappeared the
+ * moment anybody typed — the list was not an item, so nothing kept it.
+ *
+ * `seen` is what tells an empty result from an unfilterable one. Zero items
+ * seen means the caller is rendering their own rows and filtering them
+ * themselves through `useSelectSearch`, so there is nothing to call empty.
  */
-function filterOptions(children: ReactNode, needle: string): ReactNode[] {
+function filterOptions(children: ReactNode, needle: string): FilterResult {
   const kept: ReactNode[] = [];
+  let seen = 0;
 
   Children.forEach(children, (child) => {
-    if (!isValidElement(child)) return;
+    if (!isValidElement(child)) {
+      if (child !== null && child !== undefined && child !== false) kept.push(child);
+      return;
+    }
 
     if (child.type === SelectGroup) {
       const props = child.props as SelectGroupProps;
       const inner = filterOptions(props.children, needle);
-      if (inner.length) {
-        kept.push(cloneElement(child as ReactElement<SelectGroupProps>, {}, inner));
+      seen += inner.seen;
+      if (inner.kept.length) {
+        kept.push(cloneElement(child as ReactElement<SelectGroupProps>, {}, inner.kept));
       }
       return;
     }
 
     if (child.type === SelectItem) {
+      seen += 1;
       const { label } = child.props as SelectItemProps;
       if (label.toLowerCase().includes(needle)) kept.push(child);
+      return;
     }
+
+    kept.push(child);
   });
 
-  return kept;
+  return { kept, seen };
 }
 
 /** Trigger frame in window coordinates, measured when the list opens. */
@@ -279,6 +338,16 @@ export interface SelectProps {
   className?: string;
   /** The selected option's `value`. Leave unset for the placeholder. */
   value?: string;
+  /**
+   * What the trigger shows for the current `value`.
+   *
+   * Select reads the label off its `Select.Item` children, which it cannot do
+   * when a list component renders those rows — the elements do not exist until
+   * the list decides to draw them, and the selected one may be scrolled far
+   * out of view. Pass the label yourself in that case; otherwise leave it
+   * unset and the trigger will find it.
+   */
+  valueLabel?: string;
   /** Called with the `value` of the option that was picked. */
   onValueChange: (value: string) => void;
   /** Shown on the trigger while nothing is selected. */
@@ -358,6 +427,7 @@ export interface SelectProps {
 function SelectRoot({
   className,
   value,
+  valueLabel,
   onValueChange,
   placeholder = 'Select an option',
   disabled,
@@ -405,8 +475,8 @@ function SelectRoot({
     native && nativeSelectSupportsOptions(options) ? getNativeUI() : null;
 
   const selectedLabel = useMemo(
-    () => options.find((option) => option.value === value)?.label,
-    [options, value]
+    () => valueLabel ?? options.find((option) => option.value === value)?.label,
+    [options, value, valueLabel]
   );
 
   /*
@@ -421,6 +491,14 @@ function SelectRoot({
 
     return filterOptions(children, needle);
   }, [children, query, searchable]);
+
+  /*
+   * Nothing left, out of something there was. A caller rendering their own
+   * rows filters them themselves, so `seen` is zero and their list stands —
+   * saying "no matches" over the top of it would be Select claiming to know an
+   * answer it was never shown.
+   */
+  const noMatches = filtered !== null && filtered.seen > 0 && filtered.kept.length === 0;
 
   const close = useCallback(() => {
     chevron.value = withTiming(0, { duration: 160 });
@@ -468,8 +546,10 @@ function SelectRoot({
         onValueChange(next);
         close();
       },
+      query,
+      setQuery,
     }),
-    [value, onValueChange, close]
+    [value, onValueChange, close, query]
   );
 
   const slots = selectVariants({ disabled: !!disabled, presentation });
@@ -564,14 +644,13 @@ function SelectRoot({
     </View>
   ) : null;
 
-  const optionList =
-    filtered === null ? (
-      textChildren(children)
-    ) : filtered.length ? (
-      filtered
-    ) : (
-      <Text className={slots.empty({ className: emptyClassName })}>{emptyMessage}</Text>
-    );
+  const optionList = noMatches ? (
+    <Text className={slots.empty({ className: emptyClassName })}>{emptyMessage}</Text>
+  ) : filtered === null ? (
+    textChildren(children)
+  ) : (
+    filtered.kept
+  );
 
   if (presentation === 'sheet') {
     return (
