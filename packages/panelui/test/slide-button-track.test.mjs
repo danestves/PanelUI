@@ -174,7 +174,7 @@ test('the rail, not the surface, carries the ref and the accessibility', () => {
 test('the fill is a width in points, not a percentage string', () => {
   // A style value that is sometimes a number and sometimes a string is a class
   // of bug worth not having in a view that updates every frame.
-  assert.match(source, /width: RAIL_INSET \+ progress\.value \* travel\.value/);
+  assert.match(source, /width: progress\.value \* travel\.value/);
   assert.ok(!/width: `\$\{/.test(source), 'no template-literal width');
 });
 
@@ -185,10 +185,24 @@ test('the fill is a width in points, not a percentage string', () => {
  * that made it, so the colour appeared to come out of the middle of the thumb
  * rather than to be left behind it.
  */
-test('the fill and the thumb share an edge', () => {
-  const fill = source.match(/width: RAIL_INSET \+ ([^,\n]+),/)?.[1];
+test('the trail and the handle share an edge, and both start inset', () => {
+  const fill = source.match(/width: ([^}]+) \}\)\);/)?.[1];
   const thumb = source.match(/transform: \[\{ translateX: ([^}]+) \}\]/)?.[1];
   assert.ok(fill && thumb, 'could not read both offsets');
   assert.equal(fill.trim(), 'progress.value * travel.value');
   assert.equal(thumb.trim(), 'progress.value * travel.value * sign');
+  // Both are laid out from the same inset, which is what makes the shared edge
+  // an edge rather than a near miss.
+  assert.match(source, /\[sign === 1 \? 'left' : 'right'\]: RAIL_INSET,\n        \},\n        style,/);
+  assert.match(source, /\[sign === 1 \? 'left' : 'right'\]: RAIL_INSET,\n        \},\n        slide,/);
+});
+
+/*
+ * Nothing to see before anything has been dragged. A slice of colour beside the
+ * handle at rest is a control that looks part-finished.
+ */
+test('the trail is zero wide at rest', () => {
+  const width = source.match(/const style = useAnimatedStyle\(\(\) => \(\{ width: ([^}]+) \}\)\);/)?.[1];
+  assert.ok(width, 'could not read the trail width');
+  assert.ok(!width.includes('RAIL_INSET'), 'no constant term, or it shows at rest');
 });

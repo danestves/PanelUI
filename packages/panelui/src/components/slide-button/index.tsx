@@ -105,8 +105,15 @@ const slideButtonVariants = tv({
      * the corner.
      */
     root: 'relative flex-row items-center overflow-hidden rounded-full border border-transparent bg-secondary',
-    /** The travelled part of the rail, behind the thumb. */
-    fill: 'absolute bottom-0 top-0',
+    /**
+     * The ground the handle has covered.
+     *
+     * Inset on every side by the same padding the handle sits in, so at rest
+     * it is exactly zero wide and there is nothing to see — a trail with a
+     * sliver of colour in it before anything has been dragged is a control
+     * that looks part-finished.
+     */
+    fill: 'absolute rounded-full',
     /** The label, centred in the rail rather than in the space beside it. */
     label: 'text-center font-medium',
     /**
@@ -503,23 +510,30 @@ function SlideButtonFill() {
   const sign = useDirectionSign();
 
   /*
-   * The fill ends exactly at the thumb's tail — the same number the thumb is
-   * translated by, so the two edges are one edge.
+   * The trail starts where the handle starts and ends where the handle is, so
+   * the two share an edge and it is zero wide until something has been
+   * dragged.
    *
-   * Ending it under the middle of the thumb instead put the boundary inside
-   * the handle, so the coloured trail appeared to come out of the middle of it
-   * rather than to be left behind it. It is the trail, and a trail starts
-   * where the thing that made it currently is.
+   * Two earlier versions got this wrong in opposite directions. Ending it under
+   * the middle of the handle put the boundary inside the thing that made it, so
+   * the colour appeared to come out of the handle rather than to be left behind
+   * it. Starting it at the rail's outer edge left a slice of colour showing
+   * beside the handle before the button had been touched at all.
    */
-  const style = useAnimatedStyle(() => ({
-    width: RAIL_INSET + progress.value * travel.value,
-  }));
+  const style = useAnimatedStyle(() => ({ width: progress.value * travel.value }));
 
   return (
     <Animated.View
       pointerEvents="none"
       className={slots.fill()}
-      style={[{ [sign === 1 ? 'left' : 'right']: 0 }, style]}
+      style={[
+        {
+          top: RAIL_INSET,
+          bottom: RAIL_INSET,
+          [sign === 1 ? 'left' : 'right']: RAIL_INSET,
+        },
+        style,
+      ]}
     />
   );
 }
