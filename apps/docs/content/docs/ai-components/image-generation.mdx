@@ -6,6 +6,14 @@ status: beta
 
 <Callout type="warn">Beta — the API has settled, but has not seen enough use to promise it will not move again.</Callout>
 
+<PreviewVideo
+  src="/previews/image-generation.mp4"
+  poster="/previews/image-generation-poster.jpg"
+  alt="The ImageGeneration component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 A box that holds an image's place while the image is being made, then hands it over.
 
 A generated image arrives seconds after it is asked for, at a size nobody knew in advance. Without something reserving the space, the screen reflows under the reader's thumb at the moment they were about to tap. This takes the aspect ratio up front and fills the box with a field of dots until there is a picture to show.
@@ -55,6 +63,14 @@ import { Image } from 'react-native';
 
 The common path. The box is the right shape from the first frame, so nothing below it moves when the image lands.
 
+<PreviewVideo
+  src="/previews/image-generation-through-the-work.mp4"
+  poster="/previews/image-generation-through-the-work-poster.jpg"
+  alt="ImageGeneration — Through the work."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [status, setStatus] = useState<ImageGenerationStatus>('queued');
 
@@ -70,6 +86,14 @@ const [status, setStatus] = useState<ImageGenerationStatus>('queued');
 ### Filling the width
 
 `compact` caps the box at a thumbnail and centres it, which suits a result inside a conversation. `fluid` takes whatever width it is given.
+
+<PreviewVideo
+  src="/previews/image-generation-filling-the-width.mp4"
+  poster="/previews/image-generation-filling-the-width-poster.jpg"
+  alt="ImageGeneration — Filling the width."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <ImageGeneration size="fluid" status="generating" aspectRatio={16 / 9} />
@@ -99,6 +123,13 @@ Three ways, at the same cost. Reach for `pulse` where the image is being develop
 
 `onRetry` is what puts a button under the card. Without it the error is reported and nothing is offered, which is right when the failure is not the reader's to fix.
 
+<Preview
+  src="/previews/image-generation-when-it-fails.jpg"
+  alt="ImageGeneration — When it fails."
+  width={1179}
+  height={975}
+/>
+
 ```tsx
 <ImageGeneration
   status="error"
@@ -110,6 +141,14 @@ Three ways, at the same cost. Reach for `pulse` where the image is being develop
 ### The field on its own
 
 `ImageGeneration.Field` is the dot field without the frame around it, for a placeholder that is not an image. It fills its parent.
+
+<PreviewVideo
+  src="/previews/image-generation-the-field-on-its-own.mp4"
+  poster="/previews/image-generation-the-field-on-its-own-poster.jpg"
+  alt="ImageGeneration — The field on its own."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <View className="h-32 w-full overflow-hidden rounded-xl bg-muted">
@@ -142,6 +181,14 @@ One status line over a row of tiles, rather than one under each. `showStatus={fa
 ### In a conversation
 
 The box is the right shape from the moment the request goes in, so the reply under it never moves as the image lands. That is the whole job, and it is the one thing a card sitting alone on a page cannot show. It stays at the default `compact` width — an image in a conversation is one turn among many, and a card the width of the screen makes the transcript around it look like a caption.
+
+<PreviewVideo
+  src="/previews/image-generation-in-a-conversation.mp4"
+  poster="/previews/image-generation-in-a-conversation-poster.jpg"
+  alt="ImageGeneration — In a conversation."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const [status, setStatus] = useState<ImageGenerationStatus>('queued');
@@ -220,6 +267,89 @@ const done = status === 'complete';
 
 ```tsx
 <ImageGeneration error="true">…</ImageGeneration>
+```
+
+### `status`
+
+- `queued`
+- `generating` *(default)*
+- `refining`
+- `complete`
+- `error`
+
+<PreviewVideo
+  src="/previews/image-generation-queued.mp4"
+  poster="/previews/image-generation-queued-poster.jpg"
+  alt="ImageGeneration — status queued."
+  width={720}
+  height={1560}
+  caption="queued"
+/>
+
+<PreviewVideo
+  src="/previews/image-generation-generating.mp4"
+  poster="/previews/image-generation-generating-poster.jpg"
+  alt="ImageGeneration — status generating."
+  width={720}
+  height={1560}
+  caption="generating"
+/>
+
+<PreviewVideo
+  src="/previews/image-generation-refining.mp4"
+  poster="/previews/image-generation-refining-poster.jpg"
+  alt="ImageGeneration — status refining."
+  width={720}
+  height={1560}
+  caption="refining"
+/>
+
+<Preview
+  src="/previews/image-generation-complete.jpg"
+  alt="ImageGeneration — status complete."
+  width={1179}
+  height={793}
+  caption="complete"
+/>
+
+```tsx
+<ImageGeneration status="queued" />
+<ImageGeneration status="generating" />
+<ImageGeneration status="refining" />
+<ImageGeneration status="complete">
+  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />
+</ImageGeneration>
+<ImageGeneration status="error" onRetry={regenerate} />
+```
+
+### `animation`
+
+- `drift` *(default)*
+- `pulse`
+- `scan`
+
+<PreviewVideo
+  src="/previews/image-generation-pulse.mp4"
+  poster="/previews/image-generation-pulse-poster.jpg"
+  alt="ImageGeneration — animation pulse."
+  width={720}
+  height={1560}
+  caption="pulse"
+/>
+
+<PreviewVideo
+  src="/previews/image-generation-scan.mp4"
+  poster="/previews/image-generation-scan-poster.jpg"
+  alt="ImageGeneration — animation scan."
+  width={720}
+  height={1560}
+  caption="scan"
+/>
+
+```tsx
+<ImageGeneration status="generating" animation="drift" />
+<ImageGeneration status="generating" animation="pulse" />
+<ImageGeneration status="generating" animation="scan" />
 ```
 
 ## API Reference

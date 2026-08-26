@@ -1,5 +1,12 @@
 {
   "slug": "image-generation",
+  "previewVideo": {
+    "src": "/previews/image-generation.mp4",
+    "poster": "/previews/image-generation-poster.jpg",
+    "alt": "The ImageGeneration component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  },
   "intro": "A box that holds an image's place while the image is being made, then hands it over.\n\nA generated image arrives seconds after it is asked for, at a size nobody knew in advance. Without something reserving the space, the screen reflows under the reader's thumb at the moment they were about to tap. This takes the aspect ratio up front and fills the box with a field of dots until there is a picture to show.\n\nFor a loading state with no shape to reserve, use [Skeleton](/docs/components/skeleton). For text arriving a token at a time, use [Shimmer](/docs/ai-components/shimmer).",
   "usage": "import { Image } from 'react-native';\n\n<ImageGeneration status={status} prompt=\"a quiet mountain at sunset\">\n  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />\n</ImageGeneration>",
   "parts": {
@@ -10,12 +17,26 @@
     {
       "title": "Through the work",
       "description": "The common path. The box is the right shape from the first frame, so nothing below it moves when the image lands.",
-      "code": "const [status, setStatus] = useState<ImageGenerationStatus>('queued');\n\n<ImageGeneration\n  status={status}\n  prompt=\"a quiet mountain landscape at sunset\"\n  resolution=\"1024 × 1024\"\n>\n  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />\n</ImageGeneration>"
+      "code": "const [status, setStatus] = useState<ImageGenerationStatus>('queued');\n\n<ImageGeneration\n  status={status}\n  prompt=\"a quiet mountain landscape at sunset\"\n  resolution=\"1024 × 1024\"\n>\n  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />\n</ImageGeneration>",
+      "previewVideo": {
+        "src": "/previews/image-generation-through-the-work.mp4",
+        "poster": "/previews/image-generation-through-the-work-poster.jpg",
+        "alt": "ImageGeneration — Through the work.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Filling the width",
       "description": "`compact` caps the box at a thumbnail and centres it, which suits a result inside a conversation. `fluid` takes whatever width it is given.",
-      "code": "<ImageGeneration size=\"fluid\" status=\"generating\" aspectRatio={16 / 9} />"
+      "code": "<ImageGeneration size=\"fluid\" status=\"generating\" aspectRatio={16 / 9} />",
+      "previewVideo": {
+        "src": "/previews/image-generation-filling-the-width.mp4",
+        "poster": "/previews/image-generation-filling-the-width-poster.jpg",
+        "alt": "ImageGeneration — Filling the width.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "A shape that is not square",
@@ -30,12 +51,25 @@
     {
       "title": "When it fails",
       "description": "`onRetry` is what puts a button under the card. Without it the error is reported and nothing is offered, which is right when the failure is not the reader's to fix.",
-      "code": "<ImageGeneration\n  status=\"error\"\n  prompt=\"a quiet mountain landscape at sunset\"\n  onRetry={regenerate}\n/>"
+      "code": "<ImageGeneration\n  status=\"error\"\n  prompt=\"a quiet mountain landscape at sunset\"\n  onRetry={regenerate}\n/>",
+      "preview": {
+        "src": "/previews/image-generation-when-it-fails.jpg",
+        "alt": "ImageGeneration — When it fails.",
+        "width": 1179,
+        "height": 975
+      }
     },
     {
       "title": "The field on its own",
       "description": "`ImageGeneration.Field` is the dot field without the frame around it, for a placeholder that is not an image. It fills its parent.",
-      "code": "<View className=\"h-32 w-full overflow-hidden rounded-xl bg-muted\">\n  <ImageGeneration.Field />\n</View>"
+      "code": "<View className=\"h-32 w-full overflow-hidden rounded-xl bg-muted\">\n  <ImageGeneration.Field />\n</View>",
+      "previewVideo": {
+        "src": "/previews/image-generation-the-field-on-its-own.mp4",
+        "poster": "/previews/image-generation-the-field-on-its-own-poster.jpg",
+        "alt": "ImageGeneration — The field on its own.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Several at once",
@@ -48,7 +82,14 @@
     {
       "title": "In a conversation",
       "description": "The box is the right shape from the moment the request goes in, so the reply under it never moves as the image lands. That is the whole job, and it is the one thing a card sitting alone on a page cannot show. It stays at the default `compact` width — an image in a conversation is one turn among many, and a card the width of the screen makes the transcript around it look like a caption.",
-      "code": "const [status, setStatus] = useState<ImageGenerationStatus>('queued');\nconst done = status === 'complete';\n\n<MessageScroller className=\"flex-1\">\n  <MessageScroller.Viewport>\n    <MessageScroller.Content className=\"gap-4 px-5 py-6\">\n      <MessageScroller.Item messageId=\"ask\">\n        <Message align=\"end\">\n          <Message.Content>\n            <Message.Bubble>\n              <Message.BubbleContent>\n                Draw me a quiet mountain landscape at sunset.\n              </Message.BubbleContent>\n            </Message.Bubble>\n          </Message.Content>\n        </Message>\n      </MessageScroller.Item>\n\n      <MessageScroller.Item messageId=\"image\">\n        <Message align=\"start\">\n          <Message.Avatar>\n            <Avatar size=\"sm\" fallback=\"AI\" />\n          </Message.Avatar>\n          <Message.Content>\n            <ImageGeneration\n              size=\"fluid\"\n              status={status}\n              prompt=\"a quiet mountain landscape at sunset\"\n              resolution=\"1024 × 1024\"\n            >\n              <Image\n                source={{ uri: MOUNTAIN }}\n                style={{ width: '100%', height: '100%' }}\n              />\n            </ImageGeneration>\n          </Message.Content>\n        </Message>\n      </MessageScroller.Item>\n\n      {done ? (\n        <MessageScroller.Item messageId=\"reply\">\n          <Response>\n            Here it is — late light on the far ridge, and the valley already in\n            shadow. Say the word and I will try a wider crop.\n          </Response>\n        </MessageScroller.Item>\n      ) : null}\n\n      <MessageScroller.Item messageId=\"again\">\n        <Button variant=\"secondary\" onPress={() => setAt(0)}>\n          Ask again\n        </Button>\n      </MessageScroller.Item>\n    </MessageScroller.Content>\n  </MessageScroller.Viewport>\n</MessageScroller>"
+      "code": "const [status, setStatus] = useState<ImageGenerationStatus>('queued');\nconst done = status === 'complete';\n\n<MessageScroller className=\"flex-1\">\n  <MessageScroller.Viewport>\n    <MessageScroller.Content className=\"gap-4 px-5 py-6\">\n      <MessageScroller.Item messageId=\"ask\">\n        <Message align=\"end\">\n          <Message.Content>\n            <Message.Bubble>\n              <Message.BubbleContent>\n                Draw me a quiet mountain landscape at sunset.\n              </Message.BubbleContent>\n            </Message.Bubble>\n          </Message.Content>\n        </Message>\n      </MessageScroller.Item>\n\n      <MessageScroller.Item messageId=\"image\">\n        <Message align=\"start\">\n          <Message.Avatar>\n            <Avatar size=\"sm\" fallback=\"AI\" />\n          </Message.Avatar>\n          <Message.Content>\n            <ImageGeneration\n              size=\"fluid\"\n              status={status}\n              prompt=\"a quiet mountain landscape at sunset\"\n              resolution=\"1024 × 1024\"\n            >\n              <Image\n                source={{ uri: MOUNTAIN }}\n                style={{ width: '100%', height: '100%' }}\n              />\n            </ImageGeneration>\n          </Message.Content>\n        </Message>\n      </MessageScroller.Item>\n\n      {done ? (\n        <MessageScroller.Item messageId=\"reply\">\n          <Response>\n            Here it is — late light on the far ridge, and the valley already in\n            shadow. Say the word and I will try a wider crop.\n          </Response>\n        </MessageScroller.Item>\n      ) : null}\n\n      <MessageScroller.Item messageId=\"again\">\n        <Button variant=\"secondary\" onPress={() => setAt(0)}>\n          Ask again\n        </Button>\n      </MessageScroller.Item>\n    </MessageScroller.Content>\n  </MessageScroller.Viewport>\n</MessageScroller>",
+      "previewVideo": {
+        "src": "/previews/image-generation-in-a-conversation.mp4",
+        "poster": "/previews/image-generation-in-a-conversation-poster.jpg",
+        "alt": "ImageGeneration — In a conversation.",
+        "width": 720,
+        "height": 1560
+      }
     }
   ],
   "extraImports": [
@@ -56,5 +97,88 @@
     "Message",
     "MessageScroller",
     "Response"
-  ]
+  ],
+  "extraVariants": {
+    "status": [
+      "queued",
+      "generating",
+      "refining",
+      "complete",
+      "error"
+    ],
+    "animation": [
+      "drift",
+      "pulse",
+      "scan"
+    ]
+  },
+  "variantCode": {
+    "status": "<ImageGeneration status=\"queued\" />\n<ImageGeneration status=\"generating\" />\n<ImageGeneration status=\"refining\" />\n<ImageGeneration status=\"complete\">\n  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} />\n</ImageGeneration>\n<ImageGeneration status=\"error\" onRetry={regenerate} />",
+    "animation": "<ImageGeneration status=\"generating\" animation=\"drift\" />\n<ImageGeneration status=\"generating\" animation=\"pulse\" />\n<ImageGeneration status=\"generating\" animation=\"scan\" />"
+  },
+  "variantMedia": {
+    "status": [
+      {
+        "previewVideo": {
+          "src": "/previews/image-generation-queued.mp4",
+          "poster": "/previews/image-generation-queued-poster.jpg",
+          "alt": "ImageGeneration — status queued.",
+          "width": 720,
+          "height": 1560,
+          "caption": "queued"
+        }
+      },
+      {
+        "previewVideo": {
+          "src": "/previews/image-generation-generating.mp4",
+          "poster": "/previews/image-generation-generating-poster.jpg",
+          "alt": "ImageGeneration — status generating.",
+          "width": 720,
+          "height": 1560,
+          "caption": "generating"
+        }
+      },
+      {
+        "previewVideo": {
+          "src": "/previews/image-generation-refining.mp4",
+          "poster": "/previews/image-generation-refining-poster.jpg",
+          "alt": "ImageGeneration — status refining.",
+          "width": 720,
+          "height": 1560,
+          "caption": "refining"
+        }
+      },
+      {
+        "preview": {
+          "src": "/previews/image-generation-complete.jpg",
+          "alt": "ImageGeneration — status complete.",
+          "width": 1179,
+          "height": 793,
+          "caption": "complete"
+        }
+      }
+    ],
+    "animation": [
+      {
+        "previewVideo": {
+          "src": "/previews/image-generation-pulse.mp4",
+          "poster": "/previews/image-generation-pulse-poster.jpg",
+          "alt": "ImageGeneration — animation pulse.",
+          "width": 720,
+          "height": 1560,
+          "caption": "pulse"
+        }
+      },
+      {
+        "previewVideo": {
+          "src": "/previews/image-generation-scan.mp4",
+          "poster": "/previews/image-generation-scan-poster.jpg",
+          "alt": "ImageGeneration — animation scan.",
+          "width": 720,
+          "height": 1560,
+          "caption": "scan"
+        }
+      }
+    ]
+  }
 }
