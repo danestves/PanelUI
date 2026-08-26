@@ -234,6 +234,7 @@ Filters are the honest case for the height: there are more of them than fits, an
 | `defaultOpen` | `boolean` | `false` |  |
 | `native` | `boolean` | — | Present the platform's own sheet instead of this one, so it gets the system's detents, scroll interaction and dismiss gesture. Requires the optional `@expo/ui` package; without it this prop does nothing. **Theme tokens do not apply to the sheet chrome** — the platform draws the container, so `BottomSheet.Content`'s `className` and its drag handle are ignored. The content inside is still yours. |
 | `snapPoints` | `('half' \| 'full' \| { fraction: number } \| { height: number })[]` | — | Heights the native sheet can rest at. Omit to size to the content. `{ fraction }` and `{ height }` are iOS-only; Android snaps them to the nearest of `half` / `full`. |
+| `nativeBackground` | `boolean \| string` | — | Paint the native sheet a solid colour instead of the material the platform draws it in by default. The platform's sheet is translucent — on iOS 26 that is Liquid Glass — and what is behind it shows through. That is right for a sheet laid over content worth glimpsing and wrong for one that is a surface of the app's own, where the app's ground shifting under it reads as a mistake. `true` uses the theme's popover surface, so the sheet matches the rest of the app in both schemes. A string paints that colour exactly. It only reaches the platform's sheet, so it does nothing without `native`. On iOS below 16.4 the sheet keeps its material. |
 
 ### BottomSheet.Content
 
@@ -300,6 +301,22 @@ Pass `native` to render the platform's own sheet instead — SwiftUI on iOS, Jet
 **Theme tokens do not apply in native mode**: the platform draws the control with its own colours and metrics, so `className` and most styling props are ignored. Only the chrome is the platform's — the content inside stays yours and stays themed. Adds a `snapPoints` prop for the detents the sheet rests at.
 
 See [Native rendering](/docs/native) for the full prop-by-prop breakdown.
+
+### The native sheet's surface
+
+The platform draws its sheet in a translucent material — on iOS 26 that is
+Liquid Glass — and what is behind it shows through. That is right for a sheet
+laid over content worth glimpsing, and wrong for one that is a surface of the
+app's own, where the ground shifting under it reads as a mistake.
+
+`nativeBackground` paints it solid instead. `true` uses the theme's popover
+surface, so the sheet matches the rest of the app in both schemes; a string
+paints that colour exactly.
+
+It reaches the sheet's own chrome — the grabber's strip at the top and the
+safe-area inset at the bottom — which a background on the content stops short
+of. It needs `native`, since only the platform's sheet has a material to drop,
+and on iOS below 16.4 the sheet keeps that material.
 
 **A close button sits in the top-right by default.** Drop it with `showClose={false}` when the sheet is already dismissible by drag or backdrop and the corner X would be clutter. The native sheet ignores it — the platform provides its own affordances.
 

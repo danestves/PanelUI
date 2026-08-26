@@ -153,6 +153,7 @@ initial value, or add an explicit "None" item.
 | --- | --- |
 | `open` / `onOpenChange` / `defaultOpen` | Passed through |
 | `snapPoints` | Detents the sheet rests at — **native only** |
+| `nativeBackground` | Paints the sheet solid instead of translucent — **native only** |
 | `dismissible` | Passed through |
 | `BottomSheet.Content` `className` | Ignored — the platform draws the container |
 
@@ -162,6 +163,13 @@ dismiss gesture — belongs to the platform.
 
 `snapPoints` takes `'half'`, `'full'`, `{ fraction }` or `{ height }`. The last
 two are iOS-only; Android snaps them to the nearest of half and full.
+
+The platform draws its sheet in a translucent material, which on iOS 26 is
+Liquid Glass. `nativeBackground` is the way out of it: `true` paints the sheet
+the theme's popover surface, and a string paints that colour. It reaches the
+sheet's own chrome — the grabber's strip and the safe-area inset — where a
+background on the content would stop short of both. On iOS below 16.4 it is
+inert and the sheet keeps its material.
 
 ## Notes
 

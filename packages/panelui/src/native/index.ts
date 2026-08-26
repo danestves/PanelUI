@@ -145,6 +145,20 @@ interface SwiftUIModifiers {
     cornerRadius?: number
   ) => unknown;
   controlSize: (size: 'mini' | 'small' | 'regular' | 'large' | 'extraLarge') => unknown;
+  /**
+   * Paints a sheet's own surface, rather than a background behind its content.
+   *
+   * It is the only way out of the material a sheet is drawn in by default, and
+   * it reaches what an ordinary background cannot: the grabber's strip at the
+   * top and the safe-area inset at the bottom, which belong to the sheet's
+   * chrome and not to anything hosted inside it.
+   *
+   * **iOS 16.4 and up.** Below that it is inert and the sheet keeps its
+   * material — the same shape as glass being inert below iOS 26, and the same
+   * trap: indistinguishable from the prop not working. Check the OS before
+   * changing any code on a report of "the colour did nothing".
+   */
+  presentationBackground: (color: string) => unknown;
 }
 
 let modifiersResolved = false;
@@ -164,4 +178,35 @@ export function getSwiftUIModifiers(): SwiftUIModifiers | null {
   }
 
   return modifiers;
+}
+
+/**
+ * The Compose view modifiers — the other half of the same door.
+ *
+ * Android's toolkit has its own modifier system and its own vocabulary, so a
+ * modifier built for one platform is not a modifier the other can read. Where
+ * both are asked the same question the answers are written separately, here and
+ * above, rather than one being sent to both.
+ */
+interface ComposeModifiers {
+  background: (color: string) => unknown;
+}
+
+let composeResolved = false;
+let compose: ComposeModifiers | null = null;
+
+export function getComposeModifiers(): ComposeModifiers | null {
+  if (composeResolved) return compose;
+  composeResolved = true;
+
+  if (Platform.OS !== 'android') return null;
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    compose = require('@expo/ui/jetpack-compose/modifiers') as ComposeModifiers;
+  } catch {
+    compose = null;
+  }
+
+  return compose;
 }

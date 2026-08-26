@@ -38,7 +38,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tv } from 'tailwind-variants';
-import { getNativeUI } from '../../native';
+import { getComposeModifiers, getNativeUI, getSwiftUIModifiers } from '../../native';
 import { XIcon } from '../../icons';
 import { ModalPortal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
@@ -149,6 +149,22 @@ export interface BottomSheetProps {
    * nearest of `half` / `full`.
    */
   snapPoints?: ('half' | 'full' | { fraction: number } | { height: number })[];
+  /**
+   * Paint the native sheet a solid colour instead of the material the platform
+   * draws it in by default.
+   *
+   * The platform's sheet is translucent — on iOS 26 that is Liquid Glass — and
+   * what is behind it shows through. That is right for a sheet laid over
+   * content worth glimpsing and wrong for one that is a surface of the app's
+   * own, where the app's ground shifting under it reads as a mistake.
+   *
+   * `true` uses the theme's popover surface, so the sheet matches the rest of
+   * the app in both schemes. A string paints that colour exactly.
+   *
+   * It only reaches the platform's sheet, so it does nothing without `native`.
+   * On iOS below 16.4 the sheet keeps its material.
+   */
+  nativeBackground?: boolean | string;
 }
 
 /**
@@ -192,12 +208,36 @@ export function bottomSheetDetentHeight(
 }
 
 /**
+ * The modifier that paints a native sheet's own surface, for whichever toolkit
+ * is drawing it — or nothing, where neither is reachable.
+ *
+ * A sheet's surface is not the background of anything hosted in it. The
+ * grabber's strip at the top and the safe-area inset at the bottom are the
+ * sheet's own chrome, and a colour put behind the content stops short of both
+ * of them — so the sheet arrives two-tone, and shifts as it moves between
+ * detents. These two reach the surface itself.
+ *
+ * The toolkits do not share a vocabulary, so the question is asked of each in
+ * its own terms rather than one answer being sent to both.
+ */
+function nativeSheetSurface(color: string): unknown[] | undefined {
+  const swiftUI = getSwiftUIModifiers();
+  if (swiftUI) return [swiftUI.presentationBackground(color)];
+
+  const compose = getComposeModifiers();
+  if (compose) return [compose.background(color)];
+
+  return undefined;
+}
+
+/**
  * Set by the root so Content knows the platform is drawing the sheet, and with
  * which detents. Null means the styled sheet renders.
  */
 const NativeSheetContext = createContext<{
   nativeUI: NonNullable<ReturnType<typeof getNativeUI>>;
   snapPoints: BottomSheetProps['snapPoints'];
+  background: BottomSheetProps['nativeBackground'];
 } | null>(null);
 
 /**
@@ -225,6 +265,7 @@ function BottomSheetRoot({
   defaultOpen = false,
   native,
   snapPoints,
+  nativeBackground,
 }: BottomSheetProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isControlled = open !== undefined;
@@ -245,8 +286,8 @@ function BottomSheetRoot({
 
   const nativeUI = native ? getNativeUI() : null;
   const nativeSheet = useMemo(
-    () => (nativeUI ? { nativeUI, snapPoints } : null),
-    [nativeUI, snapPoints]
+    () => (nativeUI ? { nativeUI, snapPoints, background: nativeBackground } : null),
+    [nativeBackground, nativeUI, snapPoints]
   );
 
   return (
@@ -352,6 +393,10 @@ function BottomSheetContent({
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(0);
   const closeTint = useCSSVariable('--color-muted-foreground');
+  // Read unconditionally, used only by the native branch: the platform draws
+  // that sheet's container, so a token can only reach it as a colour handed
+  // over, never as a class.
+  const popoverSurface = useCSSVariable('--color-popover');
 
   /*
    * The scrolling body's gesture, if there is one. It is built here rather
@@ -571,6 +616,22 @@ function BottomSheetContent({
      */
     const snapPoints =
       nativeSheet.snapPoints ?? (size === 'auto' ? undefined : [size]);
+    /*
+     * `true` means the theme's surface, and a string means itself. A token
+     * that did not resolve is dropped rather than passed on — an unresolved
+     * colour reaching the platform is a sheet painted some default, which is
+     * further from the material than leaving the material alone.
+     */
+    const requested = nativeSheet.background;
+    const surface =
+      requested === true
+        ? typeof popoverSurface === 'string'
+          ? popoverSurface
+          : undefined
+        : typeof requested === 'string'
+          ? requested
+          : undefined;
+    const modifiers = surface ? nativeSheetSurface(surface) : undefined;
     // The platform owns presentation, so this stays mounted and toggles
     // isPresented rather than unmounting on close.
     //
@@ -583,6 +644,7 @@ function BottomSheetContent({
           isPresented={nativePresented}
           onDismiss={onNativeDismiss}
           snapPoints={snapPoints}
+          modifiers={modifiers}
         >
           <RNHostView matchContents>
             <BottomSheetContext.Provider value={context}>

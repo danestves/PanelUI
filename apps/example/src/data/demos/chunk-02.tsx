@@ -796,31 +796,50 @@ function GlassButtonDemo() {
   );
 }
 
-function NativeBottomSheetDemo() {
+// The two sit next to each other on purpose. A material is only legible
+// against something that is not one, and on a device below iOS 16.4 the pair
+// looks identical — which is the difference between the prop being inert and
+// the prop being broken.
+function NativeBottomSheetDemo({ solid = false }: { solid?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
     <NativeDemo>
-      <BottomSheet native snapPoints={['half']} open={open} onOpenChange={setOpen}>
+      <BottomSheet
+        native
+        nativeBackground={solid}
+        snapPoints={['half']}
+        open={open}
+        onOpenChange={setOpen}
+      >
         <BottomSheet.Trigger>
           <Button variant="outline" fullWidth>
-            Open the platform sheet
+            {solid ? 'Open the solid sheet' : 'Open the platform sheet'}
           </Button>
         </BottomSheet.Trigger>
         <BottomSheet.Content className="gap-3">
           <Text size="lg" weight="semibold">
-            Platform chrome, your content
+            {solid ? 'The theme’s surface' : 'Platform chrome, your content'}
           </Text>
           <Text size="sm" muted>
-            The container, corner radius, grabber and dismiss gesture belong to
-            the platform. Everything in here is still themed — and it starts at
-            the top of the sheet rather than floating in the middle of it.
+            {solid
+              ? 'Painted with the theme’s popover surface instead of the material the platform draws it in, so what is behind the sheet stops showing through it.'
+              : 'The container, corner radius, grabber and dismiss gesture belong to the platform. Everything in here is still themed — and it starts at the top of the sheet rather than floating in the middle of it.'}
           </Text>
           <Item.Group className="mt-1">
             <Item size="sm">
               <Item.Content>
                 <Item.Title>Detent</Item.Title>
                 <Item.Description>Half height, set by snapPoints.</Item.Description>
+              </Item.Content>
+            </Item>
+            <Item.Separator />
+            <Item size="sm">
+              <Item.Content>
+                <Item.Title>Surface</Item.Title>
+                <Item.Description>
+                  {solid ? 'Solid, from the theme.' : 'The platform’s own material.'}
+                </Item.Description>
               </Item.Content>
             </Item>
             <Item.Separator />
@@ -1147,6 +1166,7 @@ export const ENTRIES: ComponentEntry[] = [
         ),
       },
       { label: 'Native', render: () => <NativeBottomSheetDemo /> },
+      { label: 'Native, solid', render: () => <NativeBottomSheetDemo solid /> },
     ],
   },
 {
