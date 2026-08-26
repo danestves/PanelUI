@@ -25,6 +25,15 @@ export const DOT_LIT_RADIUS = 1.9;
 /** How visible the resting grid is, under everything. */
 export const DOT_REST_OPACITY = 0.16;
 
+/**
+ * How visible the lit dots are, together.
+ *
+ * "Together" is the operative word: they are drawn as two layers fading into
+ * one another, and this is what the pair composites to, not what either one
+ * carries. {@link crossfadeAlphas} is what holds that true.
+ */
+export const LIT_OPACITY = 0.9;
+
 /** How many still frames one loop is drawn as. */
 export const FRAMES = 24;
 
@@ -118,11 +127,20 @@ export function influenceAt(distance: number, radius: number): number {
 /**
  * Where the light is at a phase of the loop, and how wide it reaches.
  *
- * `drift` wanders around the middle — two periods that do not divide into each
- * other, so the path never closes into a loop the eye can learn, and small
- * amplitudes because a light that reaches the corners stops reading as one
- * source. `pulse` is a ring leaving the centre. `scan` crosses as a band, which
- * is the same maths with the light infinitely tall.
+ * `drift` wanders around the middle on a figure-eight: one horizontal pass to
+ * two vertical, so the path arrives back where it started and the loop has no
+ * seam in it. The amplitudes are small because a light that reaches the corners
+ * stops reading as one source.
+ *
+ * The two frequencies used not to divide into each other, on the reasoning that
+ * a path which never closes is one the eye cannot learn. It closes anyway —
+ * every animation here restarts at the end of its period — so all that bought
+ * was a jump of four normal steps, once a pass. A figure-eight is not a shape
+ * anybody follows over four seconds of soft light on a dot grid.
+ *
+ * `pulse` is a ring leaving the centre, and has expanded past the last dot
+ * before it restarts, so it fades out rather than snapping back. `scan` crosses
+ * as a band, which is the same maths with the light infinitely tall.
  */
 function lightAt(
   animation: DotFieldAnimation,
@@ -157,7 +175,7 @@ function lightAt(
 
   return {
     x: width / 2 + Math.sin(turn) * width * 0.26,
-    y: height / 2 + Math.cos(turn * 1.37) * height * 0.22,
+    y: height / 2 + Math.cos(turn * 2) * height * 0.22,
     radius: short * 0.42,
     ring: 0,
   };
@@ -169,19 +187,25 @@ function lightAt(
  * Only the dots the light actually reaches are in it — the rest are already
  * drawn by the resting grid underneath, so this is a fraction of the field
  * rather than all of it.
+ *
+ * `points` is the same grid {@link anchors} would build, passed in by a caller
+ * that is about to ask for every frame of a loop. Building it here instead cost
+ * a fresh array of several hundred pairs per frame, to arrive at the identical
+ * grid twenty-four times over.
  */
 export function litPath(
   width: number,
   height: number,
   phase: number,
-  animation: DotFieldAnimation = 'drift'
+  animation: DotFieldAnimation = 'drift',
+  points?: [number, number][]
 ): string {
   if (width <= 0 || height <= 0) return '';
 
   const light = lightAt(animation, phase, width, height);
   let path = '';
 
-  for (const [x, y] of anchors(width, height)) {
+  for (const [x, y] of points ?? anchors(width, height)) {
     const deltaX = x - light.x;
     const deltaY = Number.isNaN(light.y) ? 0 : y - light.y;
     const distance = Math.abs(
@@ -206,8 +230,9 @@ export function litFrames(
   height: number,
   animation: DotFieldAnimation = 'drift'
 ): string[] {
+  const points = width > 0 && height > 0 ? anchors(width, height) : [];
   return Array.from({ length: FRAMES }, (_unused, index) =>
-    litPath(width, height, index / FRAMES, animation)
+    litPath(width, height, index / FRAMES, animation, points)
   );
 }
 
@@ -223,4 +248,35 @@ export function frameAt(time: number, animation: DotFieldAnimation): number {
   'worklet';
   const phase = (time % PERIOD[animation]) / PERIOD[animation];
   return Math.min(FRAMES - 1, Math.floor(phase * FRAMES));
+}
+
+/**
+ * Where a moment falls in the loop, as a frame index with its fraction kept.
+ *
+ * {@link frameAt} rounds this down, and rounding it down is what made the field
+ * a flipbook: twenty-four pictures spread over the period, which on the slowest
+ * animation is a new one every 175ms however fast the screen refreshes. The
+ * fraction is what the two layers cross-fade on, so the light moves at the rate
+ * the display can draw rather than the rate the frames were built at.
+ */
+export function framePhase(time: number, animation: DotFieldAnimation): number {
+  'worklet';
+  return ((time % PERIOD[animation]) / PERIOD[animation]) * FRAMES;
+}
+
+/**
+ * What the outgoing and incoming layers are worth, a fraction `t` of the way
+ * from one frame to the next.
+ *
+ * Not `[1 - t, t]`. The layers are drawn over one another, so a dot lit in both
+ * of them composites to `1 - (1-a)(1-b)`, and two half-strength copies of it
+ * come to 0.70 rather than 0.90 — the field dips a fifth in the middle of every
+ * step, which six steps a second turns into a flicker. So only the outgoing
+ * layer ramps, and the incoming one is solved for: whatever leaves the pair at
+ * {@link LIT_OPACITY} the whole way across.
+ */
+export function crossfadeAlphas(t: number): [number, number] {
+  'worklet';
+  const out = LIT_OPACITY * (1 - t);
+  return [out, 1 - (1 - LIT_OPACITY) / (1 - out)];
 }

@@ -18,9 +18,12 @@ import {
   DOT_RADIUS,
   DOT_REST_OPACITY,
   FRAMES,
+  LIT_OPACITY,
   PERIOD,
+  crossfadeAlphas,
   dotCount,
   frameAt,
+  framePhase,
   gapFor,
   gridPath,
   influenceAt,
@@ -82,8 +85,40 @@ test('every frame is built once, not per frame', () => {
   }
   assert.match(callback, /clock\.value \+= Math\.min\(/, 'it should only advance the clock');
 
-  // And what is handed over each frame is an index into that array.
-  assert.match(source, /d: frames\[frameAt\(clock\.value, animation\)\] \?\? ''/);
+  // And what is handed over is an index into that array, twice: the frame
+  // being left and the frame being arrived at.
+  assert.match(source, /d: frames\[Math\.floor\(framePhase\(clock\.value, animation\)\)\] \?\? ''/);
+  assert.match(
+    source,
+    /d: frames\[\(Math\.floor\(framePhase\(clock\.value, animation\)\) \+ 1\) % FRAMES\] \?\? ''/
+  );
+});
+
+/*
+ * What moves between one frame and the next is two view opacities, and nothing
+ * else. A value that changes every frame returned beside `d` would defeat
+ * Reanimated's shallow-equal gate and push the path string every frame too —
+ * and every push of a path is a fresh parse of several hundred subpaths, which
+ * is the cost the prebuilt frames exist to avoid.
+ */
+test('the path and the opacity are animated apart', () => {
+  for (const slot of ['slotA', 'slotB']) {
+    const updater = source.slice(
+      source.indexOf(`const ${slot} = useAnimatedProps(`),
+      source.indexOf('}));', source.indexOf(`const ${slot} = useAnimatedProps(`))
+    );
+    assert.ok(updater.includes('d:'), `${slot} should return a path`);
+    assert.ok(!updater.includes('opacity'), `${slot} must not return an opacity`);
+  }
+
+  for (const ramp of ['fadeOut', 'fadeIn']) {
+    const updater = source.slice(
+      source.indexOf(`const ${ramp} = useAnimatedStyle(`),
+      source.indexOf('}));', source.indexOf(`const ${ramp} = useAnimatedStyle(`))
+    );
+    assert.ok(updater.includes('opacity:'), `${ramp} should return an opacity`);
+    assert.ok(!updater.includes('d:'), `${ramp} must not return a path`);
+  }
 });
 
 test('nothing is clipped or masked', () => {
@@ -97,7 +132,43 @@ test('nothing is clipped or masked', () => {
 test('the lit dots are drawn over the resting grid, not instead of it', () => {
   // A dot brightens in place rather than appearing to move.
   assert.match(source, /<Path d=\{grid\} fill=\{color\} fillOpacity=\{DOT_REST_OPACITY\} \/>/);
-  assert.match(source, /<AnimatedPath animatedProps=\{animatedProps\} fill=\{color\}/);
+  assert.match(source, /<AnimatedPath animatedProps=\{slotA\} fill=\{color\} \/>/);
+  assert.match(source, /<AnimatedPath animatedProps=\{slotB\} fill=\{color\} \/>/);
+});
+
+test('the two layers come to one brightness at every point of the ramp', () => {
+  // Drawn over one another, so a dot lit in both composites to
+  // 1 - (1-a)(1-b). A plain cross-fade dips a fifth in the middle of every
+  // step, and six steps a second makes that a flicker.
+  for (let step = 0; step <= 20; step += 1) {
+    const [out, arriving] = crossfadeAlphas(step / 20);
+    const together = 1 - (1 - out) * (1 - arriving);
+    assert.ok(
+      Math.abs(together - LIT_OPACITY) < 1e-9,
+      `at ${step / 20} the pair came to ${together}`
+    );
+    for (const alpha of [out, arriving]) {
+      assert.ok(alpha >= 0 && alpha <= 1, `${alpha} is not an opacity`);
+    }
+  }
+
+  // And the ends hand the field wholly to one layer or the other.
+  assert.deepEqual(crossfadeAlphas(0), [LIT_OPACITY, 0]);
+  assert.deepEqual(crossfadeAlphas(1), [0, LIT_OPACITY]);
+});
+
+test('the fraction between frames is kept, not rounded away', () => {
+  for (const animation of ['drift', 'pulse', 'scan']) {
+    for (const time of [0, 1, 999, PERIOD[animation] - 1, PERIOD[animation], 1e6]) {
+      const phase = framePhase(time, animation);
+      assert.ok(phase >= 0 && phase < FRAMES, `${animation} at ${time} gave ${phase}`);
+      // It is the same clock frameAt reads, one rounding later.
+      assert.equal(Math.floor(phase), frameAt(time, animation));
+    }
+  }
+
+  // Somewhere between two frames, or there is nothing to cross-fade on.
+  assert.ok(framePhase(PERIOD.drift / FRAMES / 2, 'drift') % 1 > 0);
 });
 
 test('a frame lights some of the field but never all of it', () => {
@@ -111,13 +182,58 @@ test('a frame lights some of the field but never all of it', () => {
   }
 });
 
+/** Every circle in a path, as `[centreX, centreY, radius]`. */
+const dots = (d) =>
+  [...d.matchAll(/M(-?[\d.]+),(-?[\d.]+)a([\d.]+)/g)].map(([, x, y, r]) => [
+    Number(x) + Number(r),
+    Number(y),
+    Number(r),
+  ]);
+
+/**
+ * Where the light is in a frame: its dots' centroid, weighted by how far each
+ * one has been grown past resting. A dot the light barely reached pulls on it
+ * barely.
+ */
+const lightIn = (d) => {
+  let x = 0;
+  let y = 0;
+  let total = 0;
+  for (const [dotX, dotY, radius] of dots(d)) {
+    const weight = radius - DOT_RADIUS;
+    x += dotX * weight;
+    y += dotY * weight;
+    total += weight;
+  }
+  return total > 0 ? [x / total, y / total] : [Number.NaN, Number.NaN];
+};
+
+const apart = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+
 test('the loop closes rather than jumping', () => {
-  // The last frame and the first have to be neighbours, or the light snaps
-  // back across the box once a cycle.
+  /*
+   * Where the light is, not how many dots it lit.
+   *
+   * This used to compare circle counts, which a snap passes: the disc has the
+   * same area wherever it is, so a frame that has jumped across the box counts
+   * the same as one that has not. `drift` did jump — 65pt against a typical
+   * step of 15pt, once every pass — and this test said it did not.
+   *
+   * `drift` is the one held to it. `pulse` is a ring that has expanded past
+   * every dot before it restarts, so it has faded out rather than moved, and
+   * `scan` is a band that leaves one edge and returns at the other by design.
+   */
   const frames = litFrames(208, 208, 'drift');
-  const near = Math.abs(circles(frames[0]) - circles(frames[FRAMES - 1]));
-  const step = Math.abs(circles(frames[0]) - circles(frames[1]));
-  assert.ok(near <= step * 3, `${near} vs a typical step of ${step}`);
+  const steps = [];
+  for (let index = 0; index < FRAMES - 1; index += 1) {
+    steps.push(apart(lightIn(frames[index]), lightIn(frames[index + 1])));
+  }
+  const typical = [...steps].sort((a, b) => a - b)[Math.floor(steps.length / 2)];
+  const wrap = apart(lightIn(frames[FRAMES - 1]), lightIn(frames[0]));
+  assert.ok(
+    wrap <= typical * 2,
+    `wrapped ${wrap.toFixed(1)}pt against a typical step of ${typical.toFixed(1)}pt`
+  );
 });
 
 test('every animation has a period and every moment has a frame', () => {

@@ -716,8 +716,7 @@
     "registryDependencies": [
       "cn",
       "icons",
-      "text",
-      "use-direction"
+      "text"
     ],
     "docsPath": "ai-components/image-generation"
   },

@@ -15,14 +15,22 @@
  *
  * ## The dot field
  *
- * A grid of dots with a soft band of light travelling across it. Each column
- * is one animated view holding its own dots, so a field of five hundred dots
- * costs twenty-two worklets a frame rather than five hundred — the dots inside
- * a column never move independently of it, and at this scale nobody can tell.
+ * A grid of dots with a soft light moving through it, drawn as three layers:
+ * the field at rest, and two copies of the lit dots fading into one another.
  *
- * The per-dot brightness underneath the band is fixed, and comes from the
- * dot's own coordinates. Without it the field reads as clean vertical stripes
- * sweeping past; with it, it reads as the individual dots lighting up.
+ * Every picture the loop will ever draw is built when the box is measured, so
+ * running it hands over a string that already exists. That leaves twenty-four
+ * pictures to spread across the pass, which on its own is a flipbook — a new
+ * one every 175ms, however fast the screen refreshes. The two layers are what
+ * fills the gap: one holds the frame being left and one the frame being
+ * arrived at, and only their opacities move, which the compositor animates at
+ * the display's own rate without the drawing being touched.
+ *
+ * They are opacities on views rather than on the dots, and that is not a
+ * detail. A value that changes every frame sitting beside the path string
+ * pushes the path every frame too, and every push of a path is a re-parse of
+ * several hundred subpaths — which is the cost this whole arrangement exists
+ * to avoid. Kept apart, the path is pushed only when it actually changes.
  *
  * ## What arrives, and when
  *
@@ -34,11 +42,11 @@
  *
  * ## Reduced motion
  *
- * The band stops, and the field is drawn at one still frame of itself. A
+ * The light stops, and the field holds wherever the clock was left. A
  * placeholder that shows nothing is indistinguishable from a component that
  * failed to load, so this is a quieter picture rather than an empty one.
  */
-import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -61,13 +69,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
-import { useDirectionSign } from '../../hooks/use-direction';
 import { AlertTriangleIcon, CheckIcon, RotateCcwIcon } from '../../icons';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import {
   DOT_REST_OPACITY,
-  frameAt,
+  FRAMES,
+  crossfadeAlphas,
+  framePhase,
   gridPath,
   litFrames,
   type DotFieldAnimation,
@@ -241,8 +250,21 @@ function ImageGenerationField({
    * light is somewhere legible rather than dead centre or absent, which is the
    * difference between "not animating" and "failed to load".
    */
-  const animatedProps = useAnimatedProps(() => ({
-    d: frames[frameAt(clock.value, animation)] ?? '',
+  const slotA = useAnimatedProps(() => ({
+    d: frames[Math.floor(framePhase(clock.value, animation))] ?? '',
+  }));
+  const slotB = useAnimatedProps(() => ({
+    d: frames[(Math.floor(framePhase(clock.value, animation)) + 1) % FRAMES] ?? '',
+  }));
+
+  // Only these move between one frame and the next, and a view's opacity is a
+  // layer alpha — so the drawing underneath is composited again rather than
+  // drawn again.
+  const fadeOut = useAnimatedStyle(() => ({
+    opacity: crossfadeAlphas(framePhase(clock.value, animation) % 1)[0],
+  }));
+  const fadeIn = useAnimatedStyle(() => ({
+    opacity: crossfadeAlphas(framePhase(clock.value, animation) % 1)[1],
   }));
 
   const onLayout = (event: LayoutChangeEvent) => {
@@ -261,14 +283,41 @@ function ImageGenerationField({
       {...props}
     >
       {grid ? (
-        <Svg width={size.width} height={size.height}>
+        <>
           {/* The field at rest, under everything and never touched again. */}
-          <Path d={grid} fill={color} fillOpacity={DOT_REST_OPACITY} />
+          <Svg
+            width={size.width}
+            height={size.height}
+            style={StyleSheet.absoluteFill}
+          >
+            <Path d={grid} fill={color} fillOpacity={DOT_REST_OPACITY} />
+          </Svg>
           {/* The dots the light has reached, drawn larger over their own
               resting copies rather than instead of them — so a dot brightens
-              in place instead of appearing to move. */}
-          <AnimatedPath animatedProps={animatedProps} fill={color} fillOpacity={0.9} />
-        </Svg>
+              in place instead of appearing to move.
+
+              Two of them: the frame being left and the frame being arrived at.
+              Each carries its dots at full strength and the pair is brought to
+              LIT_OPACITY by the views, because what fades has to be the layer
+              and not the fill — see crossfadeAlphas for why the ramps are not
+              simply t and 1 - t. */}
+          <Animated.View
+            style={[StyleSheet.absoluteFill, fadeOut]}
+            pointerEvents="none"
+          >
+            <Svg width={size.width} height={size.height}>
+              <AnimatedPath animatedProps={slotA} fill={color} />
+            </Svg>
+          </Animated.View>
+          <Animated.View
+            style={[StyleSheet.absoluteFill, fadeIn]}
+            pointerEvents="none"
+          >
+            <Svg width={size.width} height={size.height}>
+              <AnimatedPath animatedProps={slotB} fill={color} />
+            </Svg>
+          </Animated.View>
+        </>
       ) : null}
     </View>
   );
