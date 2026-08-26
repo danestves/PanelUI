@@ -165,7 +165,7 @@ remember is a guess.
 | --- | --- | --- |
 | `AIInput` | A prompt composer: a field that grows to five lines, a row of controls, and the sheet they open. | `ai-components/ai-input` |
 | `CodeBlock` | A fenced snippet, syntax-coloured and scrolled sideways. | `ai-components/code-block` |
-| `ImageGeneration` *(beta)* | The place an image will be, while it is being made. | `ai-components/image-generation` |
+| `ImageGeneration` | The place an image will be, while it is being made. | `ai-components/image-generation` |
 | `Panelside` *(alpha)* | Navigation panel that moves the app aside instead of covering it. | `ai-components/panelside` |
 | `Plan` | What an agent intends to do, before it does it. | `ai-components/plan` |
 | `Reasoning` | The model's working, shown while it happens and folded away after. | `ai-components/reasoning` |
