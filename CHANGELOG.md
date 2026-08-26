@@ -9,6 +9,57 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.83.0] — 2026-08-26
+
+### Added
+
+- **`BottomSheet` can drop the platform's material.** A `native` sheet is drawn by the platform in
+  a translucent material — on iOS 26 that is Liquid Glass — and what is behind it shows through.
+  That is right for a sheet laid over content worth glimpsing and wrong for one that is a surface
+  of the app's own, where the ground shifting under it reads as a mistake. `nativeBackground`
+  paints it solid instead: `true` takes the theme's popover surface so the sheet matches the app
+  in both schemes, and a string takes that colour exactly.
+
+  It reaches the sheet's own chrome — the grabber's strip and the safe-area inset — which a
+  background on the content stops short of, so the sheet would otherwise arrive two-tone and shift
+  between detents. It needs `native`, since only the platform's sheet has a material to drop, and
+  on iOS below 16.4 the sheet keeps that material.
+
+### Changed
+
+- **`ImageGeneration`'s field moves at the rate the screen draws.** It was a flipbook: twenty-four
+  pictures built when the box is measured, with the clock rounded down to one of them, so on the
+  default `drift` the picture changed 5.7 times a second however fast the display refreshed. It is
+  now two layers — the frame being left and the frame being arrived at — cross-fading on the
+  fraction that used to be discarded, so the light moves continuously while the drawing itself is
+  still handed over only when it actually changes.
+
+  The drift path also closes now. Its two frequencies used not to divide into each other, on the
+  reasoning that a path which never closes is one the eye cannot learn; it closes anyway at the end
+  of the pass, so all that bought was a jump of four normal steps every four seconds.
+
+### Fixed
+
+- **A native `BottomSheet` opened once and then never again.** The queue that holds a present
+  arriving mid-dismissal waits for the platform to report the previous sheet has gone, and the
+  platform only reports the dismissals it was not asked for: one we requested leaves the value
+  already where it would have written it, so the change is suppressed at the source. Waiting for a
+  report that was never sent held every later present for ever. The reader's dismissal still ends
+  on the report; ours ends on a window past the system's own sheet transition, and on the report
+  too if one arrives.
+
+- **panelui.dev had not built since 0.82.0 was tagged**, and the example app's export budget had
+  been red for days. The icon package is declared where the docs workspace can claim it rather
+  than resolved through hoisting, and the glyphs the example app uses are deep imports rather than
+  the barrel, which re-exports the entire set.
+
+### Docs
+
+- **`ImageGeneration` has its recordings**, including one per step of `status` and per value of
+  `animation` — both select behaviour rather than classes, and both are easier seen than read.
+- **`SlideButton` has its recordings**, top preview included.
+- **The icon page lists the filled set** and the six glyphs whose default weight is not the set's.
+
 ## [0.82.0] — 2026-08-25
 
 ### Added
