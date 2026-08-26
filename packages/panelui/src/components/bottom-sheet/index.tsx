@@ -175,6 +175,22 @@ export interface BottomSheetProps {
 const DETENT_FRACTION = { half: 0.5, full: 0.9 } as const;
 
 /**
+ * How long to treat a dismissal *we* asked for as still in flight.
+ *
+ * A timer, because there is nothing to wait on. The platform reports a
+ * dismissal the reader performed — that report is the binding writing its new
+ * value back — but not one we asked for, where the binding already holds the
+ * value it would have written and the change is suppressed at the source. So
+ * the only sheet whose departure can be observed is the one we did not ask to
+ * leave.
+ *
+ * Comfortably past the system's own sheet transition, since the cost of being
+ * late is a present held a little longer than it needed to be, and the cost of
+ * being early is the platform dropping it and no sheet at all.
+ */
+const NATIVE_DISMISS_MS = 400;
+
+/**
  * The height the content should at least fill for a given set of detents.
  *
  * Without this the hosted content sizes to itself and the platform centres
@@ -473,24 +489,43 @@ function BottomSheetContent({
    * sees a sheet that "took a moment" or never came at all.
    *
    * `isPresented` is therefore driven from here rather than straight from
-   * `open`. A present that arrives during a dismissal is held, and replayed
-   * from the platform's own `onDismiss`, which is the only signal that says the
-   * previous sheet has finished going away.
+   * `open`: a present that arrives during a dismissal is held, and let through
+   * once that dismissal is over.
    *
-   * Which makes it the one signal the queue must never wait for twice. Only a
-   * sheet the platform still has on screen can be in the middle of going away,
-   * so what arms the wait is `nativeOnScreen` — the platform's own account of
-   * that — and not our record of what we last asked for. Armed from the latter
-   * it caught the reader's own swipe: the platform reported the sheet gone,
-   * `close` flipped `open`, and the queue then began waiting for a second
-   * report of a dismissal that had already finished. None ever came, so every
-   * present after the first was held for ever and the sheet opened once.
+   * Knowing when it is over is the hard half, because it depends on who asked.
+   * A dismissal the reader performed is reported — that report is the platform
+   * writing the new value back to us. One we asked for is not: the value is
+   * already what the platform would have written, so the change is suppressed
+   * at the source and no report is ever sent. A queue that waits for one
+   * regardless waits for ever, and every present after the first is held —
+   * which is a sheet that opens once and then never again, whether the flag was
+   * raised by the reader's swipe or by a Close button inside the sheet.
+   *
+   * So the two are ended by their own means: the reader's by the report, ours
+   * by {@link NATIVE_DISMISS_MS} — and by the report as well, if one turns up,
+   * since arriving early is only ever an improvement.
    */
   const [nativePresented, setNativePresented] = useState(open);
   const nativeOnScreen = useRef(open);
   const nativeDismissing = useRef(false);
+  const nativeDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openRef = useRef(open);
   openRef.current = open;
+
+  /** The dismissal is over: let a held present through, if one is waiting. */
+  const endNativeDismissal = useCallback(() => {
+    if (nativeDismissTimer.current !== null) {
+      clearTimeout(nativeDismissTimer.current);
+      nativeDismissTimer.current = null;
+    }
+    if (!nativeDismissing.current) return;
+    nativeDismissing.current = false;
+
+    if (openRef.current) {
+      nativeOnScreen.current = true;
+      setNativePresented(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!nativeSheet) return;
@@ -502,30 +537,38 @@ function BottomSheetContent({
       return;
     }
 
-    if (nativeOnScreen.current) nativeDismissing.current = true;
+    // Only a sheet the platform still has on screen can be in the middle of
+    // leaving. One the reader already swiped away has reported itself gone.
+    if (nativeOnScreen.current) {
+      nativeOnScreen.current = false;
+      nativeDismissing.current = true;
+      if (nativeDismissTimer.current !== null) clearTimeout(nativeDismissTimer.current);
+      nativeDismissTimer.current = setTimeout(endNativeDismissal, NATIVE_DISMISS_MS);
+    }
     setNativePresented(false);
-  }, [nativeSheet, open]);
+  }, [endNativeDismissal, nativeSheet, open]);
+
+  useEffect(
+    () => () => {
+      if (nativeDismissTimer.current !== null) clearTimeout(nativeDismissTimer.current);
+    },
+    []
+  );
 
   const onNativeDismiss = useCallback(() => {
     // The platform reporting that its sheet has gone. Whatever asked for it,
-    // there is nothing on screen now, and nothing left to wait for.
+    // there is nothing on screen now.
     nativeOnScreen.current = false;
 
-    // Ours, or the reader's? A dismissal we asked for has to hand the queue
-    // back; one the reader performed has to be reported as a close.
-    const wasOurs = nativeDismissing.current;
-    nativeDismissing.current = false;
-
-    if (wasOurs) {
-      if (openRef.current) {
-        nativeOnScreen.current = true;
-        setNativePresented(true);
-      }
+    // Ours, or the reader's? A dismissal we asked for hands the queue back
+    // ahead of its window; one the reader performed is a close to report.
+    if (nativeDismissing.current) {
+      endNativeDismissal();
       return;
     }
 
     if (dismissible) close();
-  }, [close, dismissible]);
+  }, [close, dismissible, endNativeDismissal]);
 
   const pan = useMemo(
     () =>

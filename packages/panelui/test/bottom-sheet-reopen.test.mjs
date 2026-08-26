@@ -59,11 +59,10 @@ test('reopening mid-exit catches the same sheet', () => {
 test('the native sheet holds a present that arrives mid-dismissal', () => {
   assert.match(sheet, /isPresented=\{nativePresented\}/);
   assert.match(sheet, /onDismiss=\{onNativeDismiss\}/);
+  // Held while a dismissal is in flight...
   assert.match(sheet, /if \(nativeDismissing\.current\) return;/);
-  assert.match(
-    sheet,
-    /if \(wasOurs\) \{\s*if \(openRef\.current\) \{\s*nativeOnScreen\.current = true;\s*setNativePresented\(true\);/
-  );
+  // ...and let through by whatever ends it, from the one place that can.
+  assert.match(sheet, /const endNativeDismissal = useCallback\(\(\) => \{/);
 });
 
 test('a dismissal the reader performed is still reported as a close', () => {
@@ -71,39 +70,44 @@ test('a dismissal the reader performed is still reported as a close', () => {
 });
 
 /*
- * Reported as a native sheet that opened once and then never again.
+ * Reported twice as a native sheet that opened once and then never again.
  *
- * The queue waits for `onDismiss` before it lets the next present through, and
- * that report only ever comes for a sheet the platform still had on screen.
- * Arming the wait from `nativePresented` — our record of what we last asked
- * for — caught the reader's own swipe: the platform reported the sheet gone,
- * `close` flipped `open`, and the effect then began waiting for a second
- * report of a dismissal that had already finished. None came, the flag stayed
- * up, and every present after the first was held for ever.
+ * The queue holds a present that arrives mid-dismissal and lets it through
+ * when the dismissal is over, so everything turns on knowing when that is —
+ * and the answer depends on who asked. The platform reports a dismissal the
+ * reader performed, because that report *is* the new value being written back
+ * to us. It says nothing about one we asked for: the value is already what it
+ * would have written, so the change is suppressed at the source.
  *
- * The four paths this has to keep straight, all of which end with the flag
- * down and nothing held:
+ * Both reports arrived as one, and each half of the mistake killed the sheet
+ * on its own. Waiting on our own record of what was last asked for armed the
+ * queue on the reader's swipe, after the platform had already said the sheet
+ * was gone. Waiting on `onDismiss` for a dismissal we asked for armed it on
+ * the Close button inside the sheet, for a report that was never sent. Either
+ * way the flag stayed up and every later present was held for ever.
  *
- *   reader swipes    onDismiss (not ours) -> close -> open false, never armed
- *   Close button     open false -> armed -> onDismiss (ours) -> flag down
- *   close, reopen    present held while armed, replayed from onDismiss
- *   reopen after     flag already down, presents straight away
+ * The paths this has to keep straight, all of which end with the flag down:
+ *
+ *   reader swipes     onDismiss (not ours) -> close -> never armed
+ *   Close button      armed -> no report ever comes -> ended by the window
+ *   close, reopen     held while armed, let through when the window ends
+ *   reopen long after flag already down, presents straight away
  */
 test('a sheet the reader swiped away leaves nothing for the queue to wait for', () => {
   // Armed from the platform's account of what is on screen...
-  assert.match(sheet, /if \(nativeOnScreen\.current\) nativeDismissing\.current = true;/);
+  assert.match(sheet, /if \(nativeOnScreen\.current\) \{\s*nativeOnScreen\.current = false;\s*nativeDismissing\.current = true;/);
   // ...and never from our own record of what we last asked for.
   assert.doesNotMatch(sheet, /if \(nativePresented\) nativeDismissing\.current = true;/);
 
   // `onDismiss` is the platform saying the sheet has gone, whoever asked for
-  // it — so it is cleared there before the question of whose dismissal it was.
+  // it — so it is recorded there before the question of whose dismissal it was.
   const dismiss = sheet.slice(
     sheet.indexOf('const onNativeDismiss = useCallback('),
     sheet.indexOf('const pan = useMemo(')
   );
   assert.ok(
     dismiss.indexOf('nativeOnScreen.current = false;') <
-      dismiss.indexOf('const wasOurs = nativeDismissing.current;'),
+      dismiss.indexOf('if (nativeDismissing.current) {'),
     'the platform report has to land before the queue reads the flag'
   );
 
@@ -113,7 +117,35 @@ test('a sheet the reader swiped away leaves nothing for the queue to wait for', 
     sheet.indexOf('const [nativePresented, setNativePresented] = useState(open);'),
     sheet.indexOf('const onNativeDismiss = useCallback(')
   );
-  assert.match(queue, /\}, \[nativeSheet, open\]\);/);
+  assert.match(queue, /\}, \[endNativeDismissal, nativeSheet, open\]\);/);
+});
+
+test('a dismissal we asked for ends on its own, with nothing to wait for', () => {
+  // The Close button inside the sheet is this path, and it gets no report at
+  // all — so the window is the only thing that can end it.
+  assert.match(sheet, /const NATIVE_DISMISS_MS = \d+;/);
+  assert.match(
+    sheet,
+    /nativeDismissTimer\.current = setTimeout\(endNativeDismissal, NATIVE_DISMISS_MS\);/
+  );
+
+  // A report arriving early ends it early rather than being ignored.
+  assert.match(
+    sheet,
+    /if \(nativeDismissing\.current\) \{\s*endNativeDismissal\(\);\s*return;\s*\}/
+  );
+
+  // Ending it is what lets the held present through.
+  assert.match(
+    sheet,
+    /nativeDismissing\.current = false;\s*if \(openRef\.current\) \{\s*nativeOnScreen\.current = true;\s*setNativePresented\(true\);/
+  );
+
+  // And the window never outlives the sheet.
+  assert.match(
+    sheet,
+    /\(\) => \(\) => \{\s*if \(nativeDismissTimer\.current !== null\) clearTimeout\(nativeDismissTimer\.current\);/
+  );
 });
 
 /*
