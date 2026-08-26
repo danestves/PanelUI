@@ -60,11 +60,60 @@ test('the native sheet holds a present that arrives mid-dismissal', () => {
   assert.match(sheet, /isPresented=\{nativePresented\}/);
   assert.match(sheet, /onDismiss=\{onNativeDismiss\}/);
   assert.match(sheet, /if \(nativeDismissing\.current\) return;/);
-  assert.match(sheet, /if \(wasOurs\) \{\s*if \(openRef\.current\) setNativePresented\(true\);/);
+  assert.match(
+    sheet,
+    /if \(wasOurs\) \{\s*if \(openRef\.current\) \{\s*nativeOnScreen\.current = true;\s*setNativePresented\(true\);/
+  );
 });
 
 test('a dismissal the reader performed is still reported as a close', () => {
   assert.match(sheet, /if \(dismissible\) close\(\);/);
+});
+
+/*
+ * Reported as a native sheet that opened once and then never again.
+ *
+ * The queue waits for `onDismiss` before it lets the next present through, and
+ * that report only ever comes for a sheet the platform still had on screen.
+ * Arming the wait from `nativePresented` — our record of what we last asked
+ * for — caught the reader's own swipe: the platform reported the sheet gone,
+ * `close` flipped `open`, and the effect then began waiting for a second
+ * report of a dismissal that had already finished. None came, the flag stayed
+ * up, and every present after the first was held for ever.
+ *
+ * The four paths this has to keep straight, all of which end with the flag
+ * down and nothing held:
+ *
+ *   reader swipes    onDismiss (not ours) -> close -> open false, never armed
+ *   Close button     open false -> armed -> onDismiss (ours) -> flag down
+ *   close, reopen    present held while armed, replayed from onDismiss
+ *   reopen after     flag already down, presents straight away
+ */
+test('a sheet the reader swiped away leaves nothing for the queue to wait for', () => {
+  // Armed from the platform's account of what is on screen...
+  assert.match(sheet, /if \(nativeOnScreen\.current\) nativeDismissing\.current = true;/);
+  // ...and never from our own record of what we last asked for.
+  assert.doesNotMatch(sheet, /if \(nativePresented\) nativeDismissing\.current = true;/);
+
+  // `onDismiss` is the platform saying the sheet has gone, whoever asked for
+  // it — so it is cleared there before the question of whose dismissal it was.
+  const dismiss = sheet.slice(
+    sheet.indexOf('const onNativeDismiss = useCallback('),
+    sheet.indexOf('const pan = useMemo(')
+  );
+  assert.ok(
+    dismiss.indexOf('nativeOnScreen.current = false;') <
+      dismiss.indexOf('const wasOurs = nativeDismissing.current;'),
+    'the platform report has to land before the queue reads the flag'
+  );
+
+  // And the effect no longer re-runs on our own bookkeeping, which is what
+  // gave the stale flag a second chance to be set.
+  const queue = sheet.slice(
+    sheet.indexOf('const [nativePresented, setNativePresented] = useState(open);'),
+    sheet.indexOf('const onNativeDismiss = useCallback(')
+  );
+  assert.match(queue, /\}, \[nativeSheet, open\]\);/);
 });
 
 /*

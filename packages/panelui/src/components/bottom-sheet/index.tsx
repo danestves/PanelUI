@@ -476,8 +476,18 @@ function BottomSheetContent({
    * `open`. A present that arrives during a dismissal is held, and replayed
    * from the platform's own `onDismiss`, which is the only signal that says the
    * previous sheet has finished going away.
+   *
+   * Which makes it the one signal the queue must never wait for twice. Only a
+   * sheet the platform still has on screen can be in the middle of going away,
+   * so what arms the wait is `nativeOnScreen` — the platform's own account of
+   * that — and not our record of what we last asked for. Armed from the latter
+   * it caught the reader's own swipe: the platform reported the sheet gone,
+   * `close` flipped `open`, and the queue then began waiting for a second
+   * report of a dismissal that had already finished. None ever came, so every
+   * present after the first was held for ever and the sheet opened once.
    */
   const [nativePresented, setNativePresented] = useState(open);
+  const nativeOnScreen = useRef(open);
   const nativeDismissing = useRef(false);
   const openRef = useRef(open);
   openRef.current = open;
@@ -487,22 +497,30 @@ function BottomSheetContent({
 
     if (open) {
       if (nativeDismissing.current) return;
+      nativeOnScreen.current = true;
       setNativePresented(true);
       return;
     }
 
-    if (nativePresented) nativeDismissing.current = true;
+    if (nativeOnScreen.current) nativeDismissing.current = true;
     setNativePresented(false);
-  }, [nativePresented, nativeSheet, open]);
+  }, [nativeSheet, open]);
 
   const onNativeDismiss = useCallback(() => {
+    // The platform reporting that its sheet has gone. Whatever asked for it,
+    // there is nothing on screen now, and nothing left to wait for.
+    nativeOnScreen.current = false;
+
     // Ours, or the reader's? A dismissal we asked for has to hand the queue
     // back; one the reader performed has to be reported as a close.
     const wasOurs = nativeDismissing.current;
     nativeDismissing.current = false;
 
     if (wasOurs) {
-      if (openRef.current) setNativePresented(true);
+      if (openRef.current) {
+        nativeOnScreen.current = true;
+        setNativePresented(true);
+      }
       return;
     }
 
