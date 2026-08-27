@@ -20,6 +20,7 @@ import {
   BottomSheet,
   Button,
   Item,
+  KeyboardAvoider,
   Marker,
   Menu,
   Message,
@@ -149,6 +150,17 @@ const CHATS: { id: string; title: string; when: string; pinned?: boolean }[] = [
   { id: 'c11', title: 'Onboarding email sequence', when: '2 wk. ago' },
 ];
 
+/**
+ * How much room the floating chrome needs, so the scroller can reserve it.
+ *
+ * Measured rather than guessed would be better, but a re-measure on every
+ * layout to place padding that never changes is a re-render for nothing —
+ * these are the two bars' own fixed heights, and they are here where changing
+ * one means changing the other.
+ */
+const HEADER_HEIGHT = 52;
+const FOOTER_HEIGHT = 112;
+
 const FILTERS = [
   { value: 'all', label: 'All chats', icon: BubbleChatIcon },
   { value: 'pinned', label: 'Pinned', icon: PinIcon },
@@ -265,34 +277,24 @@ function SearchScene({
 
   return (
     <View className="flex-1">
-      <View
-        style={{ paddingTop: insets.top + 8 }}
-        className="flex-row items-center gap-2 px-3 pb-3"
-      >
-        <Panelside.Trigger>
-          <Button
-            native={native}
-            glass={native}
-            size="icon"
-            variant={native ? 'ghost' : 'outline'}
-            className={shape}
-            accessibilityLabel="Open navigation panel"
-          >
-            <HugeiconsIcon icon={Menu01Icon} size={20} color={glyph ?? '#737373'} strokeWidth={1.8} />
-          </Button>
-        </Panelside.Trigger>
-
-        <Text size="lg" weight="semibold" numberOfLines={1} className="flex-1 text-center">
-          Chats
-        </Text>
-
-        <ChatFilterMenu value={filter} onChange={setFilter} native={native} />
-      </View>
-
+      {/*
+        The list is the page, and the chrome floats over it.
+        
+        In flow the two bars were opaque bands with the list squeezed between
+        them, which is a screen in three parts rather than a list you are
+        looking at. The room they need is reserved by the scroller's own
+        content padding instead, so the rows travel underneath and the page
+        reads as one surface.
+      */}
       <ScrollView
         className="flex-1"
         keyboardShouldPersistTaps="handled"
-        contentContainerClassName="gap-2 px-4 pb-4"
+        showsVerticalScrollIndicator={false}
+        contentContainerClassName="gap-2 px-4"
+        contentContainerStyle={{
+          paddingTop: insets.top + HEADER_HEIGHT,
+          paddingBottom: Math.max(insets.bottom, 12) + FOOTER_HEIGHT,
+        }}
       >
         {results.length === 0 ? (
           <View className="items-center px-6 py-16">
@@ -321,31 +323,83 @@ function SearchScene({
         )}
       </ScrollView>
 
-      {/* Over the list rather than above it, so the rows run under it and the
-          page reads as one surface with a control floating on it. */}
-      <View className="items-end px-4 pb-2" pointerEvents="box-none">
-        <Button
-          native={native}
-          glass={native}
-          variant="primary"
-          startContent={
-            native ? undefined : <HugeiconsIcon icon={PlusSignIcon} size={18} color="#0a0a0a" />
-          }
-          onPress={() => onOpen('New chat')}
-        >
-          New chat
-        </Button>
+      {/* `box-none` so the bar takes no touches of its own and the rows
+          underneath stay pressable right up to the buttons. */}
+      <View
+        pointerEvents="box-none"
+        style={{ paddingTop: insets.top + 8 }}
+        className="absolute end-0 start-0 top-0 flex-row items-center px-3 pb-3"
+      >
+        <Panelside.Trigger>
+          <Button
+            native={native}
+            glass={native}
+            size="icon"
+            variant={native ? 'ghost' : 'outline'}
+            className={shape}
+            accessibilityLabel="Open navigation panel"
+          >
+            <HugeiconsIcon icon={Menu01Icon} size={20} color={glyph ?? '#737373'} strokeWidth={1.8} />
+          </Button>
+        </Panelside.Trigger>
+
+        <Text size="lg" weight="semibold" numberOfLines={1} className="flex-1 text-center">
+          Chats
+        </Text>
+
+        {/*
+          A box of the same width as the button opposite, and the title centres
+          between them.
+          
+          Under `native` the filter is the platform's own popover host, which
+          reports as an auto-sized leaf with no width of its own — so a
+          `flex-1` title centred itself inside a box that was not the row, and
+          the button ended up against the title instead of at the edge.
+        */}
+        <View className="w-10 items-end" pointerEvents="box-none">
+          <ChatFilterMenu value={filter} onChange={setFilter} native={native} />
+        </View>
       </View>
 
-      <View style={{ paddingBottom: Math.max(insets.bottom, 12) }} className="px-4 pt-1">
-        <SearchBar
-          variant="filled"
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search"
-          cancel="never"
-        />
-      </View>
+      {/*
+        The compose pill and the field are one piece of chrome, so one avoider
+        carries both: docking them separately would leave the pill behind on
+        the screen the field just left.
+      */}
+      <KeyboardAvoider
+        mode="dock"
+        bottomInset={Math.max(insets.bottom, 12)}
+        pointerEvents="box-none"
+        className="absolute bottom-0 end-0 start-0"
+        style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+      >
+        <View className="items-end px-4 pb-3" pointerEvents="box-none">
+          <Button
+            native={native}
+            glass={native}
+            variant="primary"
+            className={native ? undefined : 'rounded-full'}
+            // `Glyph` rather than the drawing component directly: the button
+            // provides the colour that reads against its own fill, and only
+            // the wrapper is listening for it.
+            startContent={native ? undefined : <Glyph icon={PlusSignIcon} size={18} />}
+            onPress={() => onOpen('New chat')}
+          >
+            New chat
+          </Button>
+        </View>
+
+        <View className="px-4">
+          <SearchBar
+            shape="pill"
+            variant="filled"
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search"
+            cancel="never"
+          />
+        </View>
+      </KeyboardAvoider>
     </View>
   );
 }
