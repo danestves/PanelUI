@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1201,
+    "exports": 1195,
     "values": 316,
-    "types": 885,
+    "types": 879,
     "modules": 146,
     "components": 119,
     "hooks": 13
@@ -2534,30 +2534,6 @@
           },
           {
             "name": "PanelsideSearchTriggerProps",
-            "kind": "type"
-          },
-          {
-            "name": "PanelsideSearchSheetProps",
-            "kind": "type"
-          },
-          {
-            "name": "PanelsideSearchTabsProps",
-            "kind": "type"
-          },
-          {
-            "name": "PanelsideSearchTabProps",
-            "kind": "type"
-          },
-          {
-            "name": "PanelsideSearchResultsProps",
-            "kind": "type"
-          },
-          {
-            "name": "PanelsideSearchResultProps",
-            "kind": "type"
-          },
-          {
-            "name": "PanelsideSearchFieldProps",
             "kind": "type"
           },
           {

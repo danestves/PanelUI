@@ -12,7 +12,7 @@
  * when the behaviour does.
  */
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
 import {
   AIInput,
@@ -25,6 +25,8 @@ import {
   Message,
   MessageScroller,
   Panelside,
+  Popover,
+  SearchBar,
   Text,
   useIconColor,
   usePanelside,
@@ -36,7 +38,22 @@ import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
 // every icon in the set, and Metro follows all of them — six thousand
 // modules and seven megabytes of source, for the fourteen used here.
 import BubbleChatIcon from '@hugeicons/core-free-icons/BubbleChatIcon';
+import Analytics01Icon from '@hugeicons/core-free-icons/Analytics01Icon';
+import ArrowRight01Icon from '@hugeicons/core-free-icons/ArrowRight01Icon';
 import Cancel01Icon from '@hugeicons/core-free-icons/Cancel01Icon';
+import DollarCircleIcon from '@hugeicons/core-free-icons/DollarCircleIcon';
+import FilterHorizontalIcon from '@hugeicons/core-free-icons/FilterHorizontalIcon';
+import GiftIcon from '@hugeicons/core-free-icons/GiftIcon';
+import InformationCircleIcon from '@hugeicons/core-free-icons/InformationCircleIcon';
+import Link01Icon from '@hugeicons/core-free-icons/Link01Icon';
+import Moon02Icon from '@hugeicons/core-free-icons/Moon02Icon';
+import Notification01Icon from '@hugeicons/core-free-icons/Notification01Icon';
+import PinIcon from '@hugeicons/core-free-icons/PinIcon';
+import PlugSocketIcon from '@hugeicons/core-free-icons/PlugSocketIcon';
+import SecurityLockIcon from '@hugeicons/core-free-icons/SecurityLockIcon';
+import Settings02Icon from '@hugeicons/core-free-icons/Settings02Icon';
+import Tick02Icon from '@hugeicons/core-free-icons/Tick02Icon';
+import UserIcon from '@hugeicons/core-free-icons/UserIcon';
 import Delete02Icon from '@hugeicons/core-free-icons/Delete02Icon';
 import File01Icon from '@hugeicons/core-free-icons/File01Icon';
 import Image01Icon from '@hugeicons/core-free-icons/Image01Icon';
@@ -112,90 +129,379 @@ const KIND_ICON = {
   documents: <Glyph icon={File01Icon} size={18} />,
 } as const;
 
-const SEARCH_TABS = [
-  { value: 'all', label: 'All', icon: <Glyph icon={SparklesIcon} size={16} /> },
-  { value: 'chats', label: 'Chats', icon: <Glyph icon={BubbleChatIcon} size={16} /> },
-  { value: 'images', label: 'Images', icon: <Glyph icon={Image01Icon} size={16} /> },
-  { value: 'documents', label: 'Documents', icon: <Glyph icon={File01Icon} size={16} /> },
+/**
+ * The chats the search page lists, with when they were last touched.
+ *
+ * A time on every row, because a list of chat titles sorted by recency with no
+ * dates on it is a list whose order the reader has to take on trust.
+ */
+const CHATS: { id: string; title: string; when: string; pinned?: boolean }[] = [
+  { id: 'c1', title: 'Migrating the design tokens', when: '29m ago', pinned: true },
+  { id: 'c2', title: 'Why is the bundle 4 MB', when: '3h ago' },
+  { id: 'c3', title: 'Draft: quarterly retro notes', when: 'yesterday' },
+  { id: 'c4', title: 'Refactor the settings screen', when: '4d ago', pinned: true },
+  { id: 'c5', title: 'Copy for the empty states', when: '5d ago' },
+  { id: 'c6', title: 'Comparing chart libraries', when: 'last wk.' },
+  { id: 'c7', title: 'Accessibility pass on forms', when: 'last wk.' },
+  { id: 'c8', title: 'Weekly standup summary', when: 'last wk.' },
+  { id: 'c9', title: 'Launch announcement thread', when: 'last wk.', pinned: true },
+  { id: 'c10', title: 'Pricing page rewrite', when: '2 wk. ago' },
+  { id: 'c11', title: 'Onboarding email sequence', when: '2 wk. ago' },
 ];
 
+const FILTERS = [
+  { value: 'all', label: 'All chats', icon: BubbleChatIcon },
+  { value: 'pinned', label: 'Pinned', icon: PinIcon },
+] as const;
+
+type ChatFilter = (typeof FILTERS)[number]['value'];
+
 /**
- * The search surface, shared by every demo.
+ * The filter, in a popover anchored to the button that opened it.
  *
- * It is a sibling of the panel rather than a child of it: a sheet is presented
- * over the whole app, and the panel is a layer that slides sideways under it.
- *
- * The filtering is here rather than in the component, for the same reason the
- * history filtering used to be — the panel does not know what a chat is, and a
- * search that only matched titles would be wrong for the first app that
- * indexes message bodies.
- *
- * It is the styled sheet in every version, the native one included. This
- * surface is the whole screen and it docks a field to the keyboard, and a
- * hosted column of that shape inside the platform's own sheet is a
- * measurement with no definite answer anywhere in it — which fails below
- * JavaScript, where there is nothing to catch it. The trigger that opens it is
- * still the platform's button under `native`; what is inside is ours.
+ * A popover rather than a sheet: there are two options and the list behind
+ * them is what you are filtering, so covering it to choose is covering the
+ * answer. Under `native` the platform draws the panel — which is why the
+ * content states a width, since a hosted subtree has no parent for a
+ * percentage to resolve against.
  */
-function AssistantSearch({
-  variant,
+function ChatFilterMenu({
+  value,
+  onChange,
   native = false,
 }: {
-  variant?: 'filled' | 'outline';
+  value: ChatFilter;
+  onChange: (next: ChatFilter) => void;
   native?: boolean;
 }) {
+  const tint = useCSSVariable('--color-foreground');
+  const glyph = typeof tint === 'string' ? tint : undefined;
+
+  return (
+    <Popover native={native}>
+      <Popover.Trigger>
+        <Button
+          native={native}
+          glass={native}
+          size="icon"
+          variant={native ? 'ghost' : 'outline'}
+          className={native ? undefined : 'h-10 w-10 rounded-full'}
+          accessibilityLabel="Filter chats"
+        >
+          <HugeiconsIcon
+            icon={FilterHorizontalIcon}
+            size={20}
+            color={glyph ?? '#737373'}
+            strokeWidth={1.8}
+          />
+        </Button>
+      </Popover.Trigger>
+      <Popover.Content width={220} placement="bottom" align="end">
+        {FILTERS.map((filter) => (
+          <Popover.Close key={filter.value}>
+            <Item size="sm" variant="default" onPress={() => onChange(filter.value)}>
+              {/* The tick keeps its space when it is not drawn, so choosing the
+                  other option does not shift the labels one glyph to the left. */}
+              <Item.Media variant="icon" className="w-5">
+                {value === filter.value ? <Glyph icon={Tick02Icon} size={16} /> : null}
+              </Item.Media>
+              <Item.Media variant="icon">
+                <Glyph icon={filter.icon} size={18} />
+              </Item.Media>
+              <Item.Content>
+                <Item.Title>{filter.label}</Item.Title>
+              </Item.Content>
+            </Item>
+          </Popover.Close>
+        ))}
+      </Popover.Content>
+    </Popover>
+  );
+}
+
+/**
+ * The search page.
+ *
+ * A page rather than a sheet. Searching your chats is somewhere you go and
+ * stay for a while — you read the list, filter it, type, read it again — and a
+ * sheet over the screen you came from spends the whole time covering the thing
+ * it is a list of. It also gives the field the whole screen above it to put
+ * results in, instead of the half a sheet leaves once the keyboard is up.
+ *
+ * There is no way back on this page, and that is the design: the panel is
+ * behind the button at the leading edge and every chat in it is a destination,
+ * and the compose pill above the field starts a new one. A search page you
+ * have to dismiss to use is a search page with a modal's manners.
+ *
+ * The field is at the bottom, where the thumb is and where the keyboard comes
+ * up. At the top it would be at the far end of the screen from both, and every
+ * character typed into it would be read at the other end of a list that is
+ * moving.
+ */
+function SearchScene({
+  native = false,
+  onOpen,
+}: {
+  native?: boolean;
+  onOpen: (title: string) => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const tint = useCSSVariable('--color-foreground');
+  const glyph = typeof tint === 'string' ? tint : undefined;
+
   const [query, setQuery] = useState('');
-  const [tab, setTab] = useState('all');
+  const [filter, setFilter] = useState<ChatFilter>('all');
 
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return SEARCHABLE.filter(
-      (item) =>
-        (tab === 'all' || item.kind === tab) &&
-        (needle === '' || item.title.toLowerCase().includes(needle))
+    return CHATS.filter(
+      (chat) =>
+        (filter === 'all' || chat.pinned) &&
+        (needle === '' || chat.title.toLowerCase().includes(needle))
     );
-  }, [query, tab]);
+  }, [filter, query]);
+
+  const shape = native ? undefined : 'h-10 w-10 rounded-full';
 
   return (
-    <Panelside.SearchSheet
-      native={false}
-      closeNative={native}
-      closeGlass={native}
-      closeVariant={variant}
-      value={query}
-      onValueChange={setQuery}
-      tab={tab}
-      onTabChange={setTab}
-    >
-      <Panelside.SearchTabs>
-        {SEARCH_TABS.map((entry) => (
-          <Panelside.SearchTab key={entry.value} value={entry.value} icon={entry.icon}>
-            {entry.label}
-          </Panelside.SearchTab>
-        ))}
-      </Panelside.SearchTabs>
+    <View className="flex-1">
+      <View
+        style={{ paddingTop: insets.top + 8 }}
+        className="flex-row items-center gap-2 px-3 pb-3"
+      >
+        <Panelside.Trigger>
+          <Button
+            native={native}
+            glass={native}
+            size="icon"
+            variant={native ? 'ghost' : 'outline'}
+            className={shape}
+            accessibilityLabel="Open navigation panel"
+          >
+            <HugeiconsIcon icon={Menu01Icon} size={20} color={glyph ?? '#737373'} strokeWidth={1.8} />
+          </Button>
+        </Panelside.Trigger>
 
-      <Panelside.SearchResults>
+        <Text size="lg" weight="semibold" numberOfLines={1} className="flex-1 text-center">
+          Chats
+        </Text>
+
+        <ChatFilterMenu value={filter} onChange={setFilter} native={native} />
+      </View>
+
+      <ScrollView
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        contentContainerClassName="gap-2 px-4 pb-4"
+      >
         {results.length === 0 ? (
-          <View className="items-center px-6 py-10">
+          <View className="items-center px-6 py-16">
             <Text size="sm" muted>
               Nothing matches “{query.trim()}”.
             </Text>
           </View>
         ) : (
-          results.map((item) => (
-            <Panelside.SearchResult
-              key={item.id}
-              media={KIND_ICON[item.kind]}
-              title={item.title}
-              description={KIND_LABEL[item.kind]}
-            />
+          results.map((chat) => (
+            <Item
+              key={chat.id}
+              variant="muted"
+              size="sm"
+              className="rounded-2xl"
+              onPress={() => onOpen(chat.title)}
+            >
+              <Item.Media variant="icon">
+                <Glyph icon={BubbleChatIcon} size={18} />
+              </Item.Media>
+              <Item.Content>
+                <Item.Title numberOfLines={1}>{chat.title}</Item.Title>
+                <Item.Description>{chat.when}</Item.Description>
+              </Item.Content>
+            </Item>
           ))
         )}
-      </Panelside.SearchResults>
+      </ScrollView>
 
-      <Panelside.SearchField placeholder="Search chats, images and files" />
-    </Panelside.SearchSheet>
+      {/* Over the list rather than above it, so the rows run under it and the
+          page reads as one surface with a control floating on it. */}
+      <View className="items-end px-4 pb-2" pointerEvents="box-none">
+        <Button
+          native={native}
+          glass={native}
+          variant="primary"
+          startContent={
+            native ? undefined : <HugeiconsIcon icon={PlusSignIcon} size={18} color="#0a0a0a" />
+          }
+          onPress={() => onOpen('New chat')}
+        >
+          New chat
+        </Button>
+      </View>
+
+      <View style={{ paddingBottom: Math.max(insets.bottom, 12) }} className="px-4 pt-1">
+        <SearchBar
+          variant="filled"
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search"
+          cancel="never"
+        />
+      </View>
+    </View>
+  );
+}
+
+/**
+ * What the account sheet lists. Two groups, because the rows split cleanly in
+ * two and a settings screen of eleven undivided rows is a list you scan rather
+ * than read.
+ */
+const SETTINGS_GROUPS: {
+  label: string;
+  rows: { id: string; label: string; icon: IconSvgElement; value?: string }[];
+}[] = [
+  {
+    label: 'Account',
+    rows: [
+      { id: 'profile', label: 'Profile', icon: UserIcon },
+      { id: 'billing', label: 'Billing', icon: DollarCircleIcon, value: 'Pro plan' },
+      { id: 'usage', label: 'Usage', icon: Analytics01Icon },
+      { id: 'notifications', label: 'Notifications', icon: Notification01Icon },
+      { id: 'focus', label: 'Time & focus', icon: Moon02Icon },
+      { id: 'privacy', label: 'Privacy', icon: SecurityLockIcon },
+      { id: 'links', label: 'Shared links', icon: Link01Icon },
+    ],
+  },
+  {
+    label: 'App',
+    rows: [
+      { id: 'capabilities', label: 'Capabilities', icon: Settings02Icon },
+      { id: 'connectors', label: 'Connectors', icon: PlugSocketIcon },
+    ],
+  },
+];
+
+/**
+ * The account sheet, opened from the avatar in the panel's footer.
+ *
+ * Full height, because it is a settings screen rather than a confirmation: the
+ * rows go on past the fold and a sheet that stops halfway is one you have to
+ * drag before you can read it.
+ *
+ * Under `native` it is the platform's own sheet, painted solid rather than
+ * left in the material. A settings list is a column of rows on a surface, and
+ * a translucent surface with a moving screen behind it makes every one of
+ * those rows harder to read for nothing — the material is for a sheet you are
+ * meant to see past, and this is not one.
+ *
+ * The rows themselves stay ours on both paths. There is no platform list row
+ * that takes a leading glyph, a trailing value and a chevron and still follows
+ * the theme, so a half-native sheet would match neither.
+ */
+function SettingsSheet({
+  open,
+  onOpenChange,
+  native = false,
+}: {
+  open: boolean;
+  onOpenChange: (next: boolean) => void;
+  native?: boolean;
+}) {
+  const shape = native ? undefined : 'h-10 w-10 rounded-full';
+  const accent = useCSSVariable('--color-primary');
+  const accentTint = typeof accent === 'string' ? accent : '#5e6ad2';
+
+  return (
+    <BottomSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      native={native}
+      nativeBackground={native}
+      snapPoints={['full']}
+    >
+      <BottomSheet.Content size="full" showClose={false} className="gap-4 px-0">
+        <View className="flex-row items-center gap-2 px-4">
+          <Button
+            native={native}
+            glass={native}
+            size="icon"
+            variant={native ? 'ghost' : 'outline'}
+            className={shape}
+            accessibilityLabel="Close settings"
+            onPress={() => onOpenChange(false)}
+          >
+            <Glyph icon={Cancel01Icon} size={18} />
+          </Button>
+
+          <Text size="lg" weight="semibold" className="flex-1 text-center">
+            Settings
+          </Text>
+
+          <Button
+            native={native}
+            glass={native}
+            size="icon"
+            variant={native ? 'ghost' : 'outline'}
+            className={shape}
+            accessibilityLabel="About"
+          >
+            <Glyph icon={InformationCircleIcon} size={18} />
+          </Button>
+        </View>
+
+        <BottomSheet.Body contentContainerClassName="gap-6 px-4 pb-6">
+          <Item variant="muted" size="sm" className="rounded-2xl">
+            <Item.Content>
+              <Item.Title numberOfLines={1}>khalid@example.com</Item.Title>
+            </Item.Content>
+          </Item>
+
+          {/* The one row that is not a destination, so it is the one row drawn
+              in the accent. */}
+          <Item variant="muted" size="sm" className="rounded-2xl">
+            <Item.Media variant="icon">
+              {/* The accent by hand: the row's own glyph slot tints to the
+                  list's colour, and this row is the one that is not a
+                  destination. */}
+              <HugeiconsIcon icon={GiftIcon} size={18} color={accentTint} strokeWidth={1.8} />
+            </Item.Media>
+            <Item.Content>
+              <Item.Title className="text-primary">Give the gift of PanelUI</Item.Title>
+            </Item.Content>
+          </Item>
+
+          {SETTINGS_GROUPS.map((group) => (
+            <View key={group.label} className="gap-2">
+              <Text size="sm" muted className="px-1">
+                {group.label}
+              </Text>
+              <Item.Group className="overflow-hidden rounded-2xl">
+                {group.rows.map((row, index) => (
+                  <View key={row.id}>
+                    {index === 0 ? null : <Item.Separator className="ms-14" />}
+                    <Item variant="muted" size="sm" className="rounded-none">
+                      <Item.Media variant="icon">
+                        <Glyph icon={row.icon} size={18} />
+                      </Item.Media>
+                      <Item.Content>
+                        <Item.Title>{row.label}</Item.Title>
+                      </Item.Content>
+                      <Item.Actions>
+                        {row.value ? (
+                          <Text size="sm" muted>
+                            {row.value}
+                          </Text>
+                        ) : null}
+                        <Glyph icon={ArrowRight01Icon} size={16} />
+                      </Item.Actions>
+                    </Item>
+                  </View>
+                ))}
+              </Item.Group>
+            </View>
+          ))}
+        </BottomSheet.Body>
+      </BottomSheet.Content>
+    </BottomSheet>
   );
 }
 
@@ -219,6 +525,8 @@ function AssistantPanel({
   actions,
   starred = STARRED,
   recents = RECENTS,
+  onSearch,
+  onAccount,
 }: {
   native?: boolean;
   /** The conversation currently open in the scene, if the demo tracks one. */
@@ -231,6 +539,10 @@ function AssistantPanel({
   actions?: (title: string) => ReactNode;
   starred?: readonly string[];
   recents?: readonly string[];
+  /** Where the header's search button goes. */
+  onSearch?: () => void;
+  /** Where the footer's avatar goes. */
+  onAccount?: () => void;
 }) {
   const { setOpen } = usePanelside();
 
@@ -248,13 +560,24 @@ function AssistantPanel({
 
   return (
     <Panelside.Panel>
-      {/* The search button goes in the header's trailing slot, and the surface
-          it opens is a sibling of the panel — see AssistantSearch below. A
-          field here would be 40 points of an 80%-wide panel, at the far end of
-          the screen from the keyboard it opens. */}
+      {/* The search button goes in the header's trailing slot, and what it
+          opens is the demo's to decide — here, the scene becomes the search
+          page. A field in the header instead would be 40 points of an
+          80%-wide panel, at the far end of the screen from the keyboard it
+          opens. */}
       <Panelside.Header
         title="Assistant"
-        action={<Panelside.SearchTrigger native={native} glass={native} variant={control} />}
+        action={
+          <Panelside.SearchTrigger
+            native={native}
+            glass={native}
+            variant={control}
+            onPress={() => {
+              onSearch?.();
+              setOpen(false);
+            }}
+          />
+        }
       />
 
       <Panelside.Content>
@@ -343,7 +666,14 @@ function AssistantPanel({
             letter is the expensive way to arrive at what the platform already
             does — and it is the shape that has cost two crashes.
           */
-          <Button native glass size="xl" variant="ghost" accessibilityLabel="Account">
+          <Button
+            native
+            glass
+            size="xl"
+            variant="ghost"
+            accessibilityLabel="Account"
+            onPress={onAccount}
+          >
             K
           </Button>
         ) : (
@@ -356,6 +686,7 @@ function AssistantPanel({
             accessibilityRole="button"
             accessibilityLabel="Account"
             className="shrink-0"
+            onPress={onAccount}
           >
             <Avatar size="md" fallback="K" />
           </Pressable>
@@ -517,6 +848,7 @@ function AssistantDemo({
   actions,
   starred,
   recents,
+  onOpenChat,
   ...props
 }: Partial<PanelsideProps> & {
   sceneProps?: Partial<PanelsideSceneProps>;
@@ -529,7 +861,38 @@ function AssistantDemo({
   actions?: (title: string) => ReactNode;
   starred?: readonly string[];
   recents?: readonly string[];
+  /**
+   * Given, opening a chat from the search page goes through the demo's own
+   * navigation instead of this one's.
+   *
+   * The two demos that route — by the panel's route, and by a selected title —
+   * already own where the scene goes. Setting a second piece of state here
+   * would leave the title saying one thing and the page showing another.
+   */
+  onOpenChat?: (title: string) => void;
 }) {
+  /*
+   * Two pieces of demo state, both about where the search page fits.
+   *
+   * `searching` replaces the scene rather than covering it — the search page
+   * *is* the screen while you are on it, which is the whole difference between
+   * it and the sheet it replaced. `opened` is the conversation the search page
+   * sent you to, so leaving search lands on that chat rather than back where
+   * you started; a search you have to undo is a search that did nothing.
+   */
+  const [searching, setSearching] = useState(false);
+  const [account, setAccount] = useState(false);
+  const [opened, setOpened] = useState<string | null>(null);
+
+  const openChat = (chat: string) => {
+    setSearching(false);
+    if (onOpenChat) onOpenChat(chat);
+    // A demo that brought its own scene keeps it: replacing the content here
+    // would throw away the thing that version exists to show, and changing
+    // only the title would leave the bar naming a chat the page is not.
+    else if (!scene) setOpened(chat);
+  };
+
   return (
     // On in every demo: the swipe is the way this component is opened, and a
     // tick where it commits is what tells your thumb it took.
@@ -542,12 +905,20 @@ function AssistantDemo({
         actions={actions}
         starred={starred}
         recents={recents}
+        onSearch={() => setSearching(true)}
+        onAccount={() => setAccount(true)}
       />
       <Panelside.Scene {...sceneProps}>
-        <SceneBar title={title} native={native} />
-        {scene ?? <Transcript />}
+        {searching ? (
+          <SearchScene native={native} onOpen={openChat} />
+        ) : (
+          <>
+            <SceneBar title={opened ?? title} native={native} />
+            {scene ?? (opened ? <ConversationScene title={opened} /> : <Transcript />)}
+          </>
+        )}
       </Panelside.Scene>
-      <AssistantSearch native={native} variant={native ? undefined : 'outline'} />
+      <SettingsSheet open={account} onOpenChange={setAccount} native={native} />
     </Panelside>
   );
 }
@@ -594,7 +965,11 @@ function DockedScene() {
  * have room. The trigger removes itself, since there is nothing to toggle.
  */
 export function PanelsideDockedBlock() {
-  return <AssistantDemo dock={700} title="Weekly standup summary" scene={<DockedScene />} />;
+  const [title, setTitle] = useState('Weekly standup summary');
+
+  return (
+    <AssistantDemo dock={700} title={title} onOpenChat={setTitle} scene={<DockedScene />} />
+  );
 }
 
 /**
@@ -683,7 +1058,9 @@ function ChatScene() {
 }
 
 export function PanelsideChatBlock() {
-  return <AssistantDemo scene={<ChatScene />} title="Theme tokens" />;
+  const [title, setTitle] = useState('Theme tokens');
+
+  return <AssistantDemo scene={<ChatScene />} title={title} onOpenChat={setTitle} />;
 }
 
 /**
@@ -805,11 +1182,18 @@ function NativeChatScene() {
 }
 
 export function PanelsideNativeBlock() {
+  const [title, setTitle] = useState('Refactor the settings screen');
+
   return (
     <AssistantDemo
       native
       scene={<NativeChatScene />}
-      title="Refactor the settings screen"
+      title={title}
+      // The scene is the native composer either way, so opening a chat from
+      // the search page moves the title rather than the transcript — enough to
+      // show the page went somewhere without swapping out what the version is
+      // here to demonstrate.
+      onOpenChat={setTitle}
     />
   );
 }
@@ -877,9 +1261,13 @@ export function PanelsideNavigateBlock() {
       route={route}
       onRouteChange={setRoute}
       title={route}
+      // The search page opens a chat by setting the route, the same way a row
+      // in the panel does. A page for the compose pill to land on, too — the
+      // route it sets has to be one of these or the scene shows nothing.
+      onOpenChat={setRoute}
       scene={
         <Panelside.Pages>
-          {CONVERSATIONS.map((title) => (
+          {['New chat', ...CONVERSATIONS].map((title) => (
             <Panelside.Page key={title} value={title}>
               <ConversationScene title={title} />
             </Panelside.Page>
@@ -926,6 +1314,7 @@ export function PanelsideActionsBlock() {
       title={active}
       activeId={active}
       onSelect={setActive}
+      onOpenChat={setActive}
       starred={starred}
       recents={recents}
       scene={<ConversationScene title={active} />}

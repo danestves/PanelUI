@@ -1030,7 +1030,7 @@
       "group": "ai-components",
       "addedIn": "0.34.0",
       "alpha": true,
-      "updatedIn": "0.80.0"
+      "updatedIn": "0.84.0"
     }
   ],
   "kpi": [
