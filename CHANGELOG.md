@@ -9,6 +9,67 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.84.0] — 2026-08-27
+
+### Added
+
+- **`CircularText`** — text set around a circle, turning. For a badge, a seal, a mark around a
+  logo: decoration whose job is to be a shape first and a sentence second. Each character is placed
+  on the curve and turned to sit square on it, so the ring closes and the text along the bottom is
+  upside down, which is what makes it read as a circle rather than as a sentence bent into one.
+  `spread` gives it less than a full turn, `reverse` sends it the other way, `paused` stops it where
+  it is and resumes from there. Under reduce motion the ring is drawn once and held still — the
+  shape carries the meaning, and the rotation is the part that setting exists to remove.
+- **`Popover` can be the platform's own.** `native` hands the panel to SwiftUI, the way it already
+  works for the sheet, the button and the picker: the platform draws the container, its radius, its
+  shadow and its arrow, and holds the anchored shape on a phone instead of adapting to a sheet.
+  iOS only, and deliberately so — Compose's nearest relative is a dropdown menu, a different control
+  with different rules, so Android and web keep the styled panel and the same tree works on all
+  three. Give the content a `width`: a hosted subtree has no parent for a percentage to resolve
+  against, so one that does not state its width reports none and the popover sizes to nothing.
+
+### Changed
+
+- **`Panelside`'s search is a page rather than a sheet.** `Panelside.SearchSheet`,
+  `Panelside.SearchTabs`, `Panelside.SearchTab`, `Panelside.SearchResults`,
+  `Panelside.SearchResult` and `Panelside.SearchField` are **removed**, along with `searchOpen` and
+  `setSearchOpen` on the root and on `usePanelside()`. `Panelside.SearchTrigger` stays, keeps its
+  `variant`, `native` and `glass`, and now only reports the press.
+
+  Searching your chats is somewhere you go and stay for a while: you read the list, filter it,
+  type, read it again. A sheet over the screen you came from spends all of that covering the thing
+  it is a list of, and leaves the field half a screen to put results in once the keyboard is up.
+  Where search lives is a decision about the app, so the trigger reports the press and the rest is
+  yours — a scene of your own, a `Panelside.Page`, a screen pushed onto the router's stack.
+
+### Fixed
+
+- **The direction glyphs mirror again in a right-to-left subtree.** The two side chevrons, the
+  outward arrow and the send plane are all declared to mirror and none of them did: the transform
+  was applied as a `style` on the drawing component, which destructures `style` out of its props
+  and never puts it back, so it was discarded in silence. Every other prop on the same element
+  arrived, which is why it survived a release — an RTL list row got a right-pointing chevron on its
+  leading edge, pointing back at the text, and nothing in the source looked wrong. It now goes on a
+  view, which cannot lose it, and that view also carries the caller's own `style`, which was being
+  thrown away with it.
+- **A `Marquee` with no height of its own draws its content.** Its visible copies are positioned
+  inside a track that fills the row rather than measuring one, so a marquee inside a container that
+  sizes to its contents had nothing to fill: the copies were clipped away and the pause control,
+  which is not clipped, was all that was left. `live` — which decides whether a control is offered,
+  and which a group asks its rows for — now comes from the copy count rather than from the period,
+  so a row that renders nothing no longer reports itself as moving.
+
+### Docs
+
+- Each `Toast` variant has its own page. Six ways of raising one shared a screen, which made the
+  demo a column of six outline buttons: whichever you pressed, what you were looking at was the
+  other five.
+- The `Marquee` note that said a horizontal marquee takes its height from its content said the
+  wrong thing, and the documented snippet had no height either, so anyone copying it landed on the
+  same empty strip.
+- `CircularText` ships with its recordings — the page's top preview and one for each of its five
+  versions.
+
 ## [0.83.0] — 2026-08-26
 
 ### Added
