@@ -12,7 +12,7 @@
  * when the behaviour does.
  */
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Platform, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import {
   AIInput,
@@ -160,6 +160,8 @@ const CHATS: { id: string; title: string; when: string; pinned?: boolean }[] = [
  */
 const HEADER_HEIGHT = 52;
 const FOOTER_HEIGHT = 112;
+/** …and the settings sheet's, which the platform list has to be sized around. */
+const SHEET_HEADER_HEIGHT = 92;
 
 const FILTERS = [
   { value: 'all', label: 'All chats', icon: BubbleChatIcon },
@@ -411,28 +413,154 @@ function SearchScene({
  */
 const SETTINGS_GROUPS: {
   label: string;
-  rows: { id: string; label: string; icon: IconSvgElement; value?: string }[];
+  rows: { id: string; label: string; icon: IconSvgElement; symbol: string; value?: string }[];
 }[] = [
   {
     label: 'Account',
     rows: [
-      { id: 'profile', label: 'Profile', icon: UserIcon },
-      { id: 'billing', label: 'Billing', icon: DollarCircleIcon, value: 'Pro plan' },
-      { id: 'usage', label: 'Usage', icon: Analytics01Icon },
-      { id: 'notifications', label: 'Notifications', icon: Notification01Icon },
-      { id: 'focus', label: 'Time & focus', icon: Moon02Icon },
-      { id: 'privacy', label: 'Privacy', icon: SecurityLockIcon },
-      { id: 'links', label: 'Shared links', icon: Link01Icon },
+      { id: 'profile', label: 'Profile', icon: UserIcon, symbol: 'person.circle' },
+      {
+        id: 'billing',
+        label: 'Billing',
+        icon: DollarCircleIcon,
+        symbol: 'dollarsign.circle',
+        value: 'Pro plan',
+      },
+      {
+        id: 'usage',
+        label: 'Usage',
+        icon: Analytics01Icon,
+        symbol: 'chart.line.uptrend.xyaxis',
+      },
+      { id: 'notifications', label: 'Notifications', icon: Notification01Icon, symbol: 'bell' },
+      { id: 'focus', label: 'Time & focus', icon: Moon02Icon, symbol: 'moon' },
+      { id: 'privacy', label: 'Privacy', icon: SecurityLockIcon, symbol: 'lock.shield' },
+      { id: 'links', label: 'Shared links', icon: Link01Icon, symbol: 'link' },
     ],
   },
   {
     label: 'App',
     rows: [
-      { id: 'capabilities', label: 'Capabilities', icon: Settings02Icon },
-      { id: 'connectors', label: 'Connectors', icon: PlugSocketIcon },
+      {
+        id: 'capabilities',
+        label: 'Capabilities',
+        icon: Settings02Icon,
+        symbol: 'slider.horizontal.3',
+      },
+      { id: 'connectors', label: 'Connectors', icon: PlugSocketIcon, symbol: 'powerplug' },
     ],
   },
 ];
+
+/**
+ * The SwiftUI list components, resolved once and only where they exist.
+ *
+ * A lazy require rather than an import: `@expo/ui/swift-ui` asks the platform
+ * for its native views at module scope, and there are no `ExpoUI` views on
+ * Android or on the web. Reaching for them there throws before anything has a
+ * chance to choose the styled rows instead.
+ */
+let swiftUIList: Record<string, any> | null | undefined;
+
+function getSwiftUIList() {
+  if (swiftUIList !== undefined) return swiftUIList;
+  if (Platform.OS !== 'ios') {
+    swiftUIList = null;
+    return swiftUIList;
+  }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const views = require('@expo/ui/swift-ui');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const modifiers = require('@expo/ui/swift-ui/modifiers');
+    swiftUIList = views.List && views.Section && views.Label ? { ...views, ...modifiers } : null;
+  } catch {
+    swiftUIList = null;
+  }
+  return swiftUIList;
+}
+
+/**
+ * The account rows as the platform draws them.
+ *
+ * A SwiftUI list, and nothing of ours inside it: the glyphs are SF Symbols and
+ * the values are the platform's own text, so there is no React Native view
+ * hosted anywhere in the list. That is deliberate rather than lazy — a hosted
+ * view inside a native control needs a definite size above it on both axes,
+ * and a list of rows whose heights the platform decides is exactly the shape
+ * that cannot give it one.
+ *
+ * `insetGrouped` is the settings-screen style. Its own background is turned
+ * off so the groups sit on the sheet's solid surface rather than on a second
+ * one the platform paints underneath them.
+ */
+function NativeSettingsList({ height }: { height: number }) {
+  const ui = getSwiftUIList();
+  if (!ui) return null;
+
+  const { Host, List, Section, Label, Text: SwiftText, HStack, Spacer, listStyle,
+    scrollContentBackground } = ui;
+
+  return (
+    // A list fills the space it is given rather than sizing to its contents,
+    // so the host is told to measure the viewport and handed a height. With
+    // `matchContents` — right for every other control here — it would ask the
+    // list how tall it is, and the list would answer by asking back.
+    <Host useViewportSizeMeasurement style={{ height }}>
+      <List modifiers={[listStyle('insetGrouped'), scrollContentBackground('hidden')]}>
+        <Section>
+          <SwiftText>khalid@example.com</SwiftText>
+          <Label title="Give the gift of PanelUI" systemImage="gift" />
+        </Section>
+
+        {SETTINGS_GROUPS.map((group) => (
+          <Section key={group.label} title={group.label}>
+            {group.rows.map((row) => (
+              <HStack key={row.id} spacing={12}>
+                <Label title={row.label} systemImage={row.symbol} />
+                <Spacer />
+                {row.value ? <SwiftText>{row.value}</SwiftText> : null}
+              </HStack>
+            ))}
+          </Section>
+        ))}
+      </List>
+    </Host>
+  );
+}
+
+/** One settings row, as we draw it. */
+function SettingsRow({
+  label,
+  icon,
+  value,
+}: {
+  label: string;
+  icon: IconSvgElement;
+  value?: string;
+}) {
+  return (
+    <Item variant="muted" size="sm" className="rounded-none">
+      {/* No `Item.Media`: its icon slot draws a bordered box, and a settings
+          list of eleven boxed glyphs is eleven more edges than the rows need.
+          The glyph and the width it sits in are enough. */}
+      <View className="w-7 items-center">
+        <Glyph icon={icon} size={19} />
+      </View>
+      <Item.Content>
+        <Item.Title>{label}</Item.Title>
+      </Item.Content>
+      <Item.Actions>
+        {value ? (
+          <Text size="sm" muted>
+            {value}
+          </Text>
+        ) : null}
+        <Glyph icon={ArrowRight01Icon} size={16} />
+      </Item.Actions>
+    </Item>
+  );
+}
 
 /**
  * The account sheet, opened from the avatar in the panel's footer.
@@ -442,14 +570,10 @@ const SETTINGS_GROUPS: {
  * drag before you can read it.
  *
  * Under `native` it is the platform's own sheet, painted solid rather than
- * left in the material. A settings list is a column of rows on a surface, and
+ * left in the material — a settings list is a column of rows on a surface, and
  * a translucent surface with a moving screen behind it makes every one of
- * those rows harder to read for nothing — the material is for a sheet you are
- * meant to see past, and this is not one.
- *
- * The rows themselves stay ours on both paths. There is no platform list row
- * that takes a leading glyph, a trailing value and a chevron and still follows
- * the theme, so a half-native sheet would match neither.
+ * those rows harder to read for nothing. The rows inside it are the platform's
+ * too, on iOS. Android has no equivalent list here, so it keeps ours.
  */
 function SettingsSheet({
   open,
@@ -460,9 +584,16 @@ function SettingsSheet({
   onOpenChange: (next: boolean) => void;
   native?: boolean;
 }) {
+  const insets = useSafeAreaInsets();
+  const { height: screenHeight } = useWindowDimensions();
   const shape = native ? undefined : 'h-10 w-10 rounded-full';
   const accent = useCSSVariable('--color-primary');
   const accentTint = typeof accent === 'string' ? accent : '#5e6ad2';
+
+  const platformRows = native ? getSwiftUIList() !== null : false;
+  // What the sheet's own chrome leaves for the list: its detent, less the
+  // header row and the safe area it already pads for.
+  const listHeight = screenHeight * 0.94 - SHEET_HEADER_HEIGHT - Math.max(insets.bottom, 16);
 
   return (
     <BottomSheet
@@ -472,88 +603,95 @@ function SettingsSheet({
       nativeBackground={native}
       snapPoints={['full']}
     >
-      <BottomSheet.Content size="full" showClose={false} className="gap-4 px-0">
-        <View className="flex-row items-center gap-2 px-4">
-          <Button
-            native={native}
-            glass={native}
-            size="icon"
-            variant={native ? 'ghost' : 'outline'}
-            className={shape}
-            accessibilityLabel="Close settings"
-            onPress={() => onOpenChange(false)}
-          >
-            <Glyph icon={Cancel01Icon} size={18} />
-          </Button>
+      {/*
+        The top padding, not the horizontal one, is what was wrong here. The
+        platform draws its grabber *inside* the sheet, over the first 24 to 28
+        points of whatever is hosted in it, and the wrapper's own 20 was all
+        that stood clear of it — so the header row arrived with its top third
+        behind the grabber.
+      */}
+      <BottomSheet.Content
+        size="full"
+        showClose={false}
+        className={native ? 'gap-3 pt-9' : 'gap-3'}
+      >
+        <BottomSheet.Header className="pb-0 pe-0">
+          <View className="flex-row items-center">
+            <Button
+              native={native}
+              glass={native}
+              size="icon"
+              variant={native ? 'ghost' : 'outline'}
+              className={shape}
+              accessibilityLabel="Close settings"
+              onPress={() => onOpenChange(false)}
+            >
+              <Glyph icon={Cancel01Icon} size={18} />
+            </Button>
 
-          <Text size="lg" weight="semibold" className="flex-1 text-center">
-            Settings
-          </Text>
+            <Text size="lg" weight="semibold" className="flex-1 text-center">
+              Settings
+            </Text>
 
-          <Button
-            native={native}
-            glass={native}
-            size="icon"
-            variant={native ? 'ghost' : 'outline'}
-            className={shape}
-            accessibilityLabel="About"
-          >
-            <Glyph icon={InformationCircleIcon} size={18} />
-          </Button>
-        </View>
-
-        <BottomSheet.Body contentContainerClassName="gap-6 px-4 pb-6">
-          <Item variant="muted" size="sm" className="rounded-2xl">
-            <Item.Content>
-              <Item.Title numberOfLines={1}>khalid@example.com</Item.Title>
-            </Item.Content>
-          </Item>
-
-          {/* The one row that is not a destination, so it is the one row drawn
-              in the accent. */}
-          <Item variant="muted" size="sm" className="rounded-2xl">
-            <Item.Media variant="icon">
-              {/* The accent by hand: the row's own glyph slot tints to the
-                  list's colour, and this row is the one that is not a
-                  destination. */}
-              <HugeiconsIcon icon={GiftIcon} size={18} color={accentTint} strokeWidth={1.8} />
-            </Item.Media>
-            <Item.Content>
-              <Item.Title className="text-primary">Give the gift of PanelUI</Item.Title>
-            </Item.Content>
-          </Item>
-
-          {SETTINGS_GROUPS.map((group) => (
-            <View key={group.label} className="gap-2">
-              <Text size="sm" muted className="px-1">
-                {group.label}
-              </Text>
-              <Item.Group className="overflow-hidden rounded-2xl">
-                {group.rows.map((row, index) => (
-                  <View key={row.id}>
-                    {index === 0 ? null : <Item.Separator className="ms-14" />}
-                    <Item variant="muted" size="sm" className="rounded-none">
-                      <Item.Media variant="icon">
-                        <Glyph icon={row.icon} size={18} />
-                      </Item.Media>
-                      <Item.Content>
-                        <Item.Title>{row.label}</Item.Title>
-                      </Item.Content>
-                      <Item.Actions>
-                        {row.value ? (
-                          <Text size="sm" muted>
-                            {row.value}
-                          </Text>
-                        ) : null}
-                        <Glyph icon={ArrowRight01Icon} size={16} />
-                      </Item.Actions>
-                    </Item>
-                  </View>
-                ))}
-              </Item.Group>
+            {/* Matched to the button opposite so the title centres between
+                them — under `native` the platform's button has no width we
+                know, and a `flex-1` title centres in whatever is left. */}
+            <View className="w-10 items-end">
+              <Button
+                native={native}
+                glass={native}
+                size="icon"
+                variant={native ? 'ghost' : 'outline'}
+                className={shape}
+                accessibilityLabel="About"
+              >
+                <Glyph icon={InformationCircleIcon} size={18} />
+              </Button>
             </View>
-          ))}
-        </BottomSheet.Body>
+          </View>
+        </BottomSheet.Header>
+
+        {platformRows ? (
+          <NativeSettingsList height={listHeight} />
+        ) : (
+          <BottomSheet.Body contentContainerClassName="gap-6 pb-6">
+            <Item variant="muted" size="sm" className="rounded-2xl">
+              <Item.Content>
+                <Item.Title numberOfLines={1}>khalid@example.com</Item.Title>
+              </Item.Content>
+            </Item>
+
+            {/* The one row that is not a destination, so it is the one row
+                drawn in the accent. */}
+            <Item variant="muted" size="sm" className="rounded-2xl">
+              <View className="w-7 items-center">
+                <HugeiconsIcon icon={GiftIcon} size={19} color={accentTint} strokeWidth={1.8} />
+              </View>
+              <Item.Content>
+                <Item.Title className="text-primary">Give the gift of PanelUI</Item.Title>
+              </Item.Content>
+            </Item>
+
+            {SETTINGS_GROUPS.map((group) => (
+              <View key={group.label} className="gap-2">
+                <Text size="sm" muted className="px-1">
+                  {group.label}
+                </Text>
+                <Item.Group className="overflow-hidden rounded-2xl">
+                  {group.rows.map((row, index) => (
+                    <View key={row.id}>
+                      {/* Inset to the label rather than run edge to edge: a
+                          full-width rule cuts the glyph column off from the
+                          text it belongs to. */}
+                      {index === 0 ? null : <Item.Separator className="ms-11" />}
+                      <SettingsRow label={row.label} icon={row.icon} value={row.value} />
+                    </View>
+                  ))}
+                </Item.Group>
+              </View>
+            ))}
+          </BottomSheet.Body>
+        )}
       </BottomSheet.Content>
     </BottomSheet>
   );
