@@ -50,6 +50,7 @@
  * outline could only ignore. All four are drawn here rather than mapped.
  */
 import { createContext, useContext, type ReactNode } from 'react';
+import { View } from 'react-native';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
 import Svg, { G, Path, type SvgProps } from 'react-native-svg';
 import { useDirection } from '../hooks/use-direction';
@@ -208,16 +209,36 @@ function icon(glyph: IconSvgElement, defaults: IconDefaults) {
   }: ToggleIconProps) {
     const resolved = useResolvedColor(color, defaults.color);
     const rtl = useDirection() === 'rtl';
-    return (
+
+    const drawing = (
       <HugeiconsIcon
         icon={glyph}
         size={size}
         color={resolved}
         strokeWidth={strokeWidth ?? defaults.strokeWidth ?? STROKE}
         fill={defaults.fillable && filled ? resolved : 'none'}
-        style={defaults.flip ? [{ transform: [{ scaleX: rtl ? -1 : 1 }] }, style] : style}
+        style={defaults.flip ? undefined : style}
         {...props}
       />
+    );
+
+    if (!defaults.flip) return drawing;
+
+    /*
+     * The mirror goes on a view around the glyph, not on the glyph.
+     *
+     * The drawing component takes a `style` prop and drops it: it destructures
+     * `style` out of its props and never puts it back, and the interop layer
+     * that would otherwise have carried it is a package this library does not
+     * use. A transform handed to it is silently discarded, which is a chevron
+     * that keeps pointing right in a right-to-left row — and a failure with
+     * nothing to see, since every other prop on the same element does arrive.
+     *
+     * A plain view cannot lose it. It also puts the caller's own `style` back
+     * on the outside, where it is applied rather than thrown away.
+     */
+    return (
+      <View style={[{ transform: [{ scaleX: rtl ? -1 : 1 }] }, style]}>{drawing}</View>
     );
   }
 

@@ -53,16 +53,33 @@ test('the vertical chevrons do not mirror', () => {
  */
 test('the mirror is applied as a transform with an identity branch', () => {
   assert.match(source, /const rtl = useDirection\(\) === 'rtl';/);
-  assert.match(
-    source,
-    /defaults\.flip\s*\?\s*\[\{ transform: \[\{ scaleX: rtl \? -1 : 1 \}\] \}, style\]\s*:\s*style/
-  );
+  assert.match(source, /transform: \[\{ scaleX: rtl \? -1 : 1 \}\]/);
 });
 
-test('a non-mirroring icon is given no transform of its own', () => {
-  // The false branch passes the caller's style straight through, so nothing
-  // the library did not ask for ends up on a glyph that never turns around.
-  assert.match(source, /\}\] \}, style\]\s*:\s*style\}/);
+/*
+ * And it is applied by a view, not handed to the drawing component.
+ *
+ * `@hugeicons/react-native` destructures `style` out of its props and never
+ * puts it back; the interop layer that would otherwise have carried it is a
+ * package this library does not use. So a transform passed to it as a style is
+ * discarded in silence — every other prop on the same element still arrives,
+ * which is why it went unnoticed for a release. A plain view cannot lose it.
+ */
+test('the mirror sits on a view rather than on the drawing component', () => {
+  assert.match(
+    source,
+    /<View style=\{\[\{ transform: \[\{ scaleX: rtl \? -1 : 1 \}\] \}, style\]\}>\{drawing\}<\/View>/
+  );
+  const element = source.match(/<HugeiconsIcon[\s\S]*?\/>/);
+  assert.ok(element, 'the factory draws through HugeiconsIcon');
+  assert.doesNotMatch(element[0], /transform:/);
+});
+
+test('a non-mirroring icon is given no wrapper of its own', () => {
+  // It returns the glyph itself, so nothing the library did not ask for ends
+  // up in the tree around an icon that never turns around.
+  assert.match(source, /if \(!defaults\.flip\) return drawing;/);
+  assert.match(source, /style=\{defaults\.flip \? undefined : style\}/);
 });
 
 test('Menu leans on the icon mirroring rather than swapping the glyph', async () => {
