@@ -91,7 +91,13 @@ test('a Marquee only offers to pause motion it actually has', async () => {
   );
   // Content that never measured never moves, and a control offering to stop it
   // is the same lie as a disabled button with no reason on it.
-  assert.match(source, /const live = playing && !reducedMotion && period > 0 && speed > 0/);
+  //
+  // Keyed to the copy count rather than to the period. Content that measured
+  // inside a container that did not has a period — it is the content's own
+  // length — and no copies to draw it with, so asking the period reported a
+  // row that renders nothing as live and drew a pause control over an empty
+  // strip. The count is the number that agrees with what is on screen.
+  assert.match(source, /const live = playing && !reducedMotion && layout\.count > 0 && speed > 0/);
   assert.match(source, /\{showControl && live \?/);
   // A group draws one control for its rows, so it has to be told by them.
   assert.match(source, /liveRows\.size > 0/);

@@ -145,22 +145,22 @@ The marks take the foreground colour rather than each brand's own. Eight brand c
 ```tsx
 const second = [...brands.slice(4), ...brands.slice(0, 4)];
 
-<View className="gap-3">
-  <Marquee spacing={12} speed={28}>
+<Marquee.Group>
+  <Marquee spacing={12} speed={28} className="h-11">
     <View className="flex-row gap-3">
       {brands.map((brand) => (
         <BrandMark key={brand.name} name={brand.name} path={brand.path} />
       ))}
     </View>
   </Marquee>
-  <Marquee spacing={12} speed={28} reverse>
+  <Marquee spacing={12} speed={28} reverse className="h-11">
     <View className="flex-row gap-3">
       {second.map((brand) => (
         <BrandMark key={brand.name} name={brand.name} path={brand.path} />
       ))}
     </View>
   </Marquee>
-</View>
+</Marquee.Group>
 ```
 
 ### A feed that keeps moving
@@ -236,7 +236,7 @@ A horizontal marquee travels toward the end of the line, so it reverses in a rig
 
 **Pausing freezes the content where it is** and resuming carries on from there, so a name stopped mid-travel is still the name you stopped on.
 
-**A vertical marquee needs a height.** A horizontal one takes its height from the content it measured, but a vertical one has nothing to take a height from and collapses. Give the container one.
+**A marquee's track fills the row it is given rather than measuring one for itself, so give it a height wherever its container sizes to its contents.** A vertical marquee always needs one — it has no content width to take a height from. A horizontal marquee is fine inside a parent with room to give, but inside a container that sizes to what is in it there is nothing to fill: the content is clipped to nothing while the pause control below it still draws, which reads as a marquee that is one button and no marquee. Set the height the content is drawn at.
 
 `speed` is points per second, so the cycle time follows from it and the measured content. Longer content takes proportionally longer rather than travelling faster, and two marquees at the same speed stay in step whatever is inside them. `spacing` is the minimum gap between copies. When a very short child would exceed the 32-copy mount budget, Marquee adds enough whitespace to preserve continuous coverage without mounting an unbounded number of subtrees. Non-finite speed values fall back to 40 points per second; negative or non-finite spacing is treated as zero, so invalid data cannot produce a non-finite animation or layout.
 

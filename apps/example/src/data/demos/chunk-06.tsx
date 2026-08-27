@@ -1232,16 +1232,22 @@ function MarqueeLogoWallVersion() {
 
       {/* Grouped, so the two rows share one pause control below them. Left to
           themselves each row pins its own to its bottom corner, and the upper
-          one lands on top of the row underneath. */}
+          one lands on top of the row underneath.
+
+          The height on each row is the band the marks are drawn at, and it is
+          not optional: a marquee's track fills the row rather than measuring
+          it, so a row inside a container that sizes to its contents has
+          nothing to fill and clips the marks away — leaving the group's pause
+          control sitting over an empty strip. */}
       <Marquee.Group className="px-5">
-        <Marquee spacing={12} speed={28} className="w-full">
+        <Marquee spacing={12} speed={28} className="h-11 w-full">
           <View className="flex-row gap-3">
             {MARQUEE_BRANDS.map((brand) => (
               <BrandMark key={brand.name} name={brand.name} path={brand.path} />
             ))}
           </View>
         </Marquee>
-        <Marquee spacing={12} speed={28} reverse className="w-full">
+        <Marquee spacing={12} speed={28} reverse className="h-11 w-full">
           <View className="flex-row gap-3">
             {second.map((brand) => (
               <BrandMark key={brand.name} name={brand.name} path={brand.path} />

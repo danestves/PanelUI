@@ -258,12 +258,19 @@ function MarqueeRoot({
   };
 
   /*
-   * Whether there is motion here at all: content that measured, a speed to
-   * travel it at, and a `playing` that has not already stopped it from
-   * outside. A control offering to pause a still marquee is the same lie as a
-   * disabled button with no reason on it.
+   * Whether there is motion here at all: copies on screen, a speed to travel
+   * them at, and a `playing` that has not already stopped it from outside. A
+   * control offering to pause a still marquee is the same lie as a disabled
+   * button with no reason on it.
+   *
+   * The copy count, not the period. Content that measured while its container
+   * did not has a period — it is the content's own length — and no copies to
+   * draw, because there is no width to lay them across. Asking the period
+   * meant a row that renders nothing still reported itself live, and a group
+   * drew a pause control for it: a marquee that is one button and no content,
+   * which is the shape of the bug this replaced.
    */
-  const live = playing && !reducedMotion && period > 0 && speed > 0;
+  const live = playing && !reducedMotion && layout.count > 0 && speed > 0;
 
   // Reported to the group, if there is one, so its single control can be
   // decided the same way this one's is.
