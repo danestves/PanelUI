@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { ScrollView, View } from "react-native";
-import { Alert, Avatar, Button, Card, CheckIcon, CircularText, FolderIcon, Input, Item, Label, RadioGroup, Rating, Select, SelectionMode, SectionRail, Separator, Shimmer, Skeleton, Slider, Surface, Text, TextAnimation, ToggleButton, ToggleButtonGroup, TrashIcon, hasNativeUI, useScrollSections } from "panelui-native";
+import { Alert, Avatar, Button, Card, CheckIcon, CircularText, FolderIcon, Input, Item, Label, RadioGroup, Rating, Select, SelectionMode, SectionRail, Separator, Shimmer, Skeleton, Slider, Spinner, Surface, Text, TextAnimation, ToggleButton, ToggleButtonGroup, TrashIcon, hasNativeUI, useScrollSections } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 function RadioGroupDemo() {
@@ -970,7 +970,7 @@ function CircularTextSealVersion() {
   return (
     <View className="flex-1 items-center justify-center">
       <View className="items-center justify-center">
-        <CircularText radius={110} textClassName="text-sm font-bold tracking-[0.2em]">
+        <CircularText radius={110} textClassName="text-base font-bold tracking-[0.2em]">
           PANELUI · COMPONENTS FOR REACT NATIVE ·
         </CircularText>
         {/* Stacked, not nested: the ring leaves its centre empty and turns,
@@ -988,7 +988,7 @@ function CircularTextRingsVersion() {
   return (
     <View className="flex-1 items-center justify-center">
       <View className="items-center justify-center">
-        <CircularText radius={130} textClassName="text-xs font-bold tracking-[0.25em]">
+        <CircularText radius={130} textClassName="text-base font-bold tracking-[0.25em]">
           OUTER RING · OUTER RING · OUTER RING ·
         </CircularText>
         <View className="absolute">
@@ -996,7 +996,7 @@ function CircularTextRingsVersion() {
             reverse
             radius={86}
             spinDuration={14000}
-            textClassName="text-[11px] font-medium tracking-widest"
+            textClassName="text-sm font-medium tracking-widest"
           >
             INNER · INNER · INNER ·
           </CircularText>
@@ -1020,10 +1020,54 @@ function CircularTextArcVersion() {
         radius={100}
         spread={200}
         startAngle={-100}
-        textClassName="text-sm font-semibold tracking-wider"
+        textClassName="text-lg font-semibold tracking-wider"
       >
         ARRIVING SHORTLY
       </CircularText>
+    </View>
+  );
+}
+
+/**
+ * The ring at badge size.
+ *
+ * Small enough to sit beside something rather than be the thing you are
+ * looking at, which is most of what a ring of text is actually for — a count
+ * with its own label wrapped round it, on a card or a header.
+ */
+function CircularTextBadgeVersion() {
+  return (
+    <View className="flex-1 items-center justify-center">
+      <View className="items-center justify-center">
+        <CircularText radius={62} spinDuration={16000} textClassName="text-[10px] font-bold tracking-[0.18em]">
+          NEW THIS WEEK ·
+        </CircularText>
+        <Text size="2xl" weight="bold" className="absolute">
+          12
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * A ring around a spinner.
+ *
+ * The two motions are deliberately different speeds. Matched, they read as one
+ * object that failed to line up; a slow ring around a quick spinner reads as
+ * what it is — a label on something that is working.
+ */
+function CircularTextLoadingVersion() {
+  return (
+    <View className="flex-1 items-center justify-center">
+      <View className="items-center justify-center">
+        <CircularText radius={78} spinDuration={9000} textClassName="text-xs font-semibold tracking-[0.3em]">
+          GENERATING · GENERATING ·
+        </CircularText>
+        <View className="absolute">
+          <Spinner size="lg" label="Generating" />
+        </View>
+      </View>
     </View>
   );
 }
@@ -1034,7 +1078,7 @@ function CircularTextPausedDemo() {
 
   return (
     <View className="w-full items-center gap-4">
-      <CircularText paused={paused} radius={78} textClassName="text-xs font-semibold tracking-widest">
+      <CircularText paused={paused} radius={82} textClassName="text-sm font-semibold tracking-widest">
         HOLD TO STOP · HOLD TO STOP ·
       </CircularText>
       <Button variant="outline" onPress={() => setPaused((value) => !value)}>
@@ -1456,6 +1500,20 @@ export const ENTRIES: ComponentEntry[] = [
         fullPage: true,
         description: 'Less than a full turn, starting where you put it.',
         render: () => <CircularTextArcVersion />,
+      },
+      {
+        label: 'A badge',
+        id: 'badge',
+        fullPage: true,
+        description: 'The ring at badge size, wrapped round a count.',
+        render: () => <CircularTextBadgeVersion />,
+      },
+      {
+        label: 'A loading ring',
+        id: 'loading',
+        fullPage: true,
+        description: 'A slow ring of text around a spinner that is not slow.',
+        render: () => <CircularTextLoadingVersion />,
       },
       { label: 'Holding it still', render: () => <CircularTextPausedDemo /> },
     ],

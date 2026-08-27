@@ -17,7 +17,7 @@ For text that animates on its own timing, use [TextAnimation](/docs/components/t
 CircularText ships with the library — no separate install.
 
 ```tsx
-import { CircularText, Text } from 'panelui-native';
+import { CircularText, Text, Spinner } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -29,7 +29,7 @@ npx panelui-cli@latest add circular-text
 ## Usage
 
 ```tsx
-<CircularText radius={90} textClassName="text-sm font-bold tracking-widest">
+<CircularText radius={90} textClassName="text-base font-bold tracking-widest">
   PANELUI · COMPONENTS FOR REACT NATIVE ·
 </CircularText>
 ```
@@ -45,7 +45,7 @@ The ring draws nothing inside itself, so anything in the centre is a second laye
   <CircularText
     radius={90}
     spinDuration={24000}
-    textClassName="text-xs font-bold tracking-[0.2em]"
+    textClassName="text-base font-bold tracking-[0.2em]"
   >
     PANELUI · COMPONENTS FOR REACT NATIVE ·
   </CircularText>
@@ -62,7 +62,7 @@ The ring draws nothing inside itself, so anything in the centre is a second laye
 An arc has two ends and the text reaches both of them. A full turn has neither, because the end of the string is adjacent to its start.
 
 ```tsx
-<CircularText radius={80} spread={180} startAngle={-90} textClassName="text-sm font-medium">
+<CircularText radius={80} spread={180} startAngle={-90} textClassName="text-lg font-medium">
   ARRIVING SHORTLY
 </CircularText>
 ```
@@ -75,7 +75,7 @@ An arc has two ends and the text reaches both of them. A full turn has neither, 
 const [paused, setPaused] = useState(false);
 
 <Pressable onPressIn={() => setPaused(true)} onPressOut={() => setPaused(false)}>
-  <CircularText paused={paused} radius={70} textClassName="text-xs font-semibold">
+  <CircularText paused={paused} radius={70} textClassName="text-sm font-semibold">
     HOLD TO STOP ·
   </CircularText>
 </Pressable>
@@ -87,11 +87,11 @@ const [paused, setPaused] = useState(false);
 
 ```tsx
 <View className="h-[200px] w-[200px] items-center justify-center">
-  <CircularText radius={100} textClassName="text-xs font-bold tracking-widest">
+  <CircularText radius={100} textClassName="text-base font-bold tracking-widest">
     OUTER RING · OUTER RING ·
   </CircularText>
   <View className="absolute">
-    <CircularText reverse radius={64} spinDuration={14000} textClassName="text-[10px] font-medium">
+    <CircularText reverse radius={64} spinDuration={14000} textClassName="text-lg font-medium">
       INNER RING · INNER RING ·
     </CircularText>
   </View>
@@ -105,7 +105,7 @@ const [paused, setPaused] = useState(false);
 The default shape: a full turn, a wide letter-spacing and a separator holding the two halves of the phrase apart.
 
 ```tsx
-<CircularText radius={90} textClassName="text-xs font-bold tracking-[0.2em]">
+<CircularText radius={90} textClassName="text-base font-bold tracking-[0.2em]">
   PANELUI · COMPONENTS FOR REACT NATIVE ·
 </CircularText>
 ```
@@ -115,8 +115,8 @@ The default shape: a full turn, a wide letter-spacing and a separator holding th
 An outer ring and an inner one turning against each other, at different speeds and sizes.
 
 ```tsx
-<CircularText radius={100} textClassName="text-xs font-bold tracking-widest">…</CircularText>
-<CircularText reverse radius={64} spinDuration={14000} textClassName="text-[10px]">…</CircularText>
+<CircularText radius={100} textClassName="text-base font-bold tracking-widest">…</CircularText>
+<CircularText reverse radius={64} spinDuration={14000} textClassName="text-sm">…</CircularText>
 ```
 
 ### An arc
@@ -124,9 +124,39 @@ An outer ring and an inner one turning against each other, at different speeds a
 Less than a full turn, starting where you put it. The text reaches both ends of the arc rather than stopping short of the second one.
 
 ```tsx
-<CircularText radius={80} spread={200} startAngle={-100} textClassName="text-sm font-medium">
+<CircularText radius={80} spread={200} startAngle={-100} textClassName="text-lg font-medium">
   ARRIVING SHORTLY
 </CircularText>
+```
+
+### A badge
+
+The ring at badge size, wrapped round a count. Small enough to sit beside something rather than be the thing you are looking at, which is most of what a ring of text is for.
+
+```tsx
+<View className="h-[124px] w-[124px] items-center justify-center">
+  <CircularText radius={62} spinDuration={16000} textClassName="text-[10px] font-bold tracking-[0.18em]">
+    NEW THIS WEEK ·
+  </CircularText>
+  <Text size="2xl" weight="bold" className="absolute">
+    12
+  </Text>
+</View>
+```
+
+### A loading ring
+
+A slow ring of text around a spinner that is not slow. The two speeds are deliberately different: matched, they read as one object that failed to line up.
+
+```tsx
+<View className="h-[156px] w-[156px] items-center justify-center">
+  <CircularText radius={78} spinDuration={9000} textClassName="text-xs font-semibold tracking-[0.3em]">
+    GENERATING · GENERATING ·
+  </CircularText>
+  <View className="absolute">
+    <Spinner size="lg" label="Generating" />
+  </View>
+</View>
 ```
 
 ## API Reference
@@ -151,6 +181,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 **With the operating system set to reduce motion the ring is drawn once and held still.** Not a slower turn — none. The shape carries the whole meaning, and the rotation is exactly the part that setting exists to remove.
 
 `spinDuration` is milliseconds for one full turn, and the default of 20 seconds is deliberately slow. A ring turning at the speed of a spinner reads as something loading.
+
+**The characters are drawn a step larger than body text**, because text bent round a circle is read a letter at a time rather than as a word, and at body size the ring reads as a texture instead of as a phrase. `textClassName` overrides it.
 
 **`radius` is also half the component's width and height.** The ring is a square that measures `radius * 2` on both axes, and the characters hang inside its edge — so a larger text size moves them inward rather than making the component bigger. Nothing is laid out around the ring, so give it the space it needs.
 

@@ -27,11 +27,29 @@ const circularTextVariants = tv({
 });
 
 const glyphVariants = tv({
-  // Every character gets a box the full size of the ring, centred on the same
-  // point, so rotating one swings its character around the circle without any
-  // per-character arithmetic reaching the transform.
-  base: 'absolute inset-0 items-center',
+  /*
+   * Every character gets a box the size of the ring, laid over the same point,
+   * with the character at the top edge of it. Rotating the box about its own
+   * centre — which is the ring's centre — is what swings the character round
+   * the circle, and it means no per-character arithmetic reaches the transform
+   * beyond the one angle.
+   *
+   * The box's size is set inline rather than by a utility, and that is not
+   * decoration: a box that states its own width and height cannot end up with
+   * a different one, and one glyph sitting at twice the radius of the rest is
+   * exactly what a box of the wrong size looks like.
+   */
+  base: 'items-center justify-start',
 });
+
+/**
+ * The glyph size the ring is drawn at unless the caller says otherwise.
+ *
+ * A step up from the body default. Text bent round a circle is read a letter
+ * at a time rather than as a word, and at body size the letters are small
+ * enough that the ring reads as a texture instead of as a phrase.
+ */
+const GLYPH_TEXT = 'text-lg';
 
 export interface CircularTextProps extends Omit<ViewProps, 'children'> {
   /**
@@ -179,9 +197,16 @@ export function CircularText({
           <View
             key={`${glyph.character}-${glyph.index}`}
             className={glyphVariants()}
-            style={{ transform: [{ rotate: `${glyph.angle}deg` }] }}
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: size,
+              height: size,
+              transform: [{ rotate: `${glyph.angle}deg` }],
+            }}
           >
-            <Text className={textClassName}>{glyph.character}</Text>
+            <Text className={cn(GLYPH_TEXT, textClassName)}>{glyph.character}</Text>
           </View>
         ))}
       </Animated.View>

@@ -1,48 +1,59 @@
 {
   "slug": "circular-text",
   "intro": "For a badge, a seal, a mark set around a logo — decoration whose job is to be a shape first and a sentence second.\n\nEach character is placed on the curve and turned to sit square on it, so the ring closes and the text along the bottom is upside down. That is what makes it read as a circle rather than as a sentence bent into one.\n\n**The centre is empty and nothing is laid out in it.** The component measures `radius * 2` on both axes and draws only the ring; put a logo inside by stacking the two, not by passing it as a child.\n\nFor text that animates on its own timing, use [TextAnimation](/docs/components/text-animation). For text that travels past a boundary, use [Marquee](/docs/components/marquee).",
-  "usage": "<CircularText radius={90} textClassName=\"text-sm font-bold tracking-widest\">\n  PANELUI · COMPONENTS FOR REACT NATIVE ·\n</CircularText>",
+  "usage": "<CircularText radius={90} textClassName=\"text-base font-bold tracking-widest\">\n  PANELUI · COMPONENTS FOR REACT NATIVE ·\n</CircularText>",
   "extraImports": [
-    "Text"
+    "Text",
+    "Spinner"
   ],
   "examples": [
     {
       "title": "A mark in the middle",
       "description": "The ring draws nothing inside itself, so anything in the centre is a second layer rather than a child. Stack them and centre both: the ring turns, the mark does not.",
-      "code": "<View className=\"h-[180px] w-[180px] items-center justify-center\">\n  <CircularText\n    radius={90}\n    spinDuration={24000}\n    textClassName=\"text-xs font-bold tracking-[0.2em]\"\n  >\n    PANELUI · COMPONENTS FOR REACT NATIVE ·\n  </CircularText>\n  <Text size=\"2xl\" weight=\"bold\" className=\"absolute\">\n    P\n  </Text>\n</View>"
+      "code": "<View className=\"h-[180px] w-[180px] items-center justify-center\">\n  <CircularText\n    radius={90}\n    spinDuration={24000}\n    textClassName=\"text-base font-bold tracking-[0.2em]\"\n  >\n    PANELUI · COMPONENTS FOR REACT NATIVE ·\n  </CircularText>\n  <Text size=\"2xl\" weight=\"bold\" className=\"absolute\">\n    P\n  </Text>\n</View>"
     },
     {
       "title": "Half a circle",
       "description": "`spread` is the arc the text is given, and `startAngle` is where it begins — measured clockwise from the top, so `-90` starts it at the leading edge.\n\nAn arc has two ends and the text reaches both of them. A full turn has neither, because the end of the string is adjacent to its start.",
-      "code": "<CircularText radius={80} spread={180} startAngle={-90} textClassName=\"text-sm font-medium\">\n  ARRIVING SHORTLY\n</CircularText>"
+      "code": "<CircularText radius={80} spread={180} startAngle={-90} textClassName=\"text-lg font-medium\">\n  ARRIVING SHORTLY\n</CircularText>"
     },
     {
       "title": "Holding it still",
       "description": "`paused` stops the ring where it is and resumes from there, so a ring paused mid-word is still on that word when it starts again. Use it to stop the motion while something else on the screen is asking to be read.",
-      "code": "const [paused, setPaused] = useState(false);\n\n<Pressable onPressIn={() => setPaused(true)} onPressOut={() => setPaused(false)}>\n  <CircularText paused={paused} radius={70} textClassName=\"text-xs font-semibold\">\n    HOLD TO STOP ·\n  </CircularText>\n</Pressable>"
+      "code": "const [paused, setPaused] = useState(false);\n\n<Pressable onPressIn={() => setPaused(true)} onPressOut={() => setPaused(false)}>\n  <CircularText paused={paused} radius={70} textClassName=\"text-sm font-semibold\">\n    HOLD TO STOP ·\n  </CircularText>\n</Pressable>"
     },
     {
       "title": "The other way round",
       "description": "`reverse` turns it anticlockwise. Two rings at different radii turning against each other is the one place it earns its keep — going the same way they read as one object that failed to line up.",
-      "code": "<View className=\"h-[200px] w-[200px] items-center justify-center\">\n  <CircularText radius={100} textClassName=\"text-xs font-bold tracking-widest\">\n    OUTER RING · OUTER RING ·\n  </CircularText>\n  <View className=\"absolute\">\n    <CircularText reverse radius={64} spinDuration={14000} textClassName=\"text-[10px] font-medium\">\n      INNER RING · INNER RING ·\n    </CircularText>\n  </View>\n</View>"
+      "code": "<View className=\"h-[200px] w-[200px] items-center justify-center\">\n  <CircularText radius={100} textClassName=\"text-base font-bold tracking-widest\">\n    OUTER RING · OUTER RING ·\n  </CircularText>\n  <View className=\"absolute\">\n    <CircularText reverse radius={64} spinDuration={14000} textClassName=\"text-lg font-medium\">\n      INNER RING · INNER RING ·\n    </CircularText>\n  </View>\n</View>"
     }
   ],
   "versions": [
     {
       "title": "A seal",
       "description": "The default shape: a full turn, a wide letter-spacing and a separator holding the two halves of the phrase apart.",
-      "code": "<CircularText radius={90} textClassName=\"text-xs font-bold tracking-[0.2em]\">\n  PANELUI · COMPONENTS FOR REACT NATIVE ·\n</CircularText>"
+      "code": "<CircularText radius={90} textClassName=\"text-base font-bold tracking-[0.2em]\">\n  PANELUI · COMPONENTS FOR REACT NATIVE ·\n</CircularText>"
     },
     {
       "title": "Two rings",
       "description": "An outer ring and an inner one turning against each other, at different speeds and sizes.",
-      "code": "<CircularText radius={100} textClassName=\"text-xs font-bold tracking-widest\">…</CircularText>\n<CircularText reverse radius={64} spinDuration={14000} textClassName=\"text-[10px]\">…</CircularText>"
+      "code": "<CircularText radius={100} textClassName=\"text-base font-bold tracking-widest\">…</CircularText>\n<CircularText reverse radius={64} spinDuration={14000} textClassName=\"text-sm\">…</CircularText>"
     },
     {
       "title": "An arc",
       "description": "Less than a full turn, starting where you put it. The text reaches both ends of the arc rather than stopping short of the second one.",
-      "code": "<CircularText radius={80} spread={200} startAngle={-100} textClassName=\"text-sm font-medium\">\n  ARRIVING SHORTLY\n</CircularText>"
+      "code": "<CircularText radius={80} spread={200} startAngle={-100} textClassName=\"text-lg font-medium\">\n  ARRIVING SHORTLY\n</CircularText>"
+    },
+    {
+      "title": "A badge",
+      "description": "The ring at badge size, wrapped round a count. Small enough to sit beside something rather than be the thing you are looking at, which is most of what a ring of text is for.",
+      "code": "<View className=\"h-[124px] w-[124px] items-center justify-center\">\n  <CircularText radius={62} spinDuration={16000} textClassName=\"text-[10px] font-bold tracking-[0.18em]\">\n    NEW THIS WEEK ·\n  </CircularText>\n  <Text size=\"2xl\" weight=\"bold\" className=\"absolute\">\n    12\n  </Text>\n</View>"
+    },
+    {
+      "title": "A loading ring",
+      "description": "A slow ring of text around a spinner that is not slow. The two speeds are deliberately different: matched, they read as one object that failed to line up.",
+      "code": "<View className=\"h-[156px] w-[156px] items-center justify-center\">\n  <CircularText radius={78} spinDuration={9000} textClassName=\"text-xs font-semibold tracking-[0.3em]\">\n    GENERATING · GENERATING ·\n  </CircularText>\n  <View className=\"absolute\">\n    <Spinner size=\"lg\" label=\"Generating\" />\n  </View>\n</View>"
     }
   ],
-  "notes": "**With the operating system set to reduce motion the ring is drawn once and held still.** Not a slower turn — none. The shape carries the whole meaning, and the rotation is exactly the part that setting exists to remove.\n\n`spinDuration` is milliseconds for one full turn, and the default of 20 seconds is deliberately slow. A ring turning at the speed of a spinner reads as something loading.\n\n**`radius` is also half the component's width and height.** The ring is a square that measures `radius * 2` on both axes, and the characters hang inside its edge — so a larger text size moves them inward rather than making the component bigger. Nothing is laid out around the ring, so give it the space it needs.\n\nThe text is announced once, as a single label. The characters are hidden from assistive technology as a group, because a ring read out character by character is a string spelled one letter at a time.\n\nGive it a string, not elements. Each character is placed and turned on its own, so there is nothing inside for markup to apply to; style the whole set with `textClassName`.\n\nA non-finite `radius`, `spinDuration` or `spread` falls back to its default, and a negative one is treated as zero, so bad data cannot produce a transform that never resolves. `spread` is clamped to a full turn: past that the characters would overlap the ones already there."
+  "notes": "**With the operating system set to reduce motion the ring is drawn once and held still.** Not a slower turn — none. The shape carries the whole meaning, and the rotation is exactly the part that setting exists to remove.\n\n`spinDuration` is milliseconds for one full turn, and the default of 20 seconds is deliberately slow. A ring turning at the speed of a spinner reads as something loading.\n\n**The characters are drawn a step larger than body text**, because text bent round a circle is read a letter at a time rather than as a word, and at body size the ring reads as a texture instead of as a phrase. `textClassName` overrides it.\n\n**`radius` is also half the component's width and height.** The ring is a square that measures `radius * 2` on both axes, and the characters hang inside its edge — so a larger text size moves them inward rather than making the component bigger. Nothing is laid out around the ring, so give it the space it needs.\n\nThe text is announced once, as a single label. The characters are hidden from assistive technology as a group, because a ring read out character by character is a string spelled one letter at a time.\n\nGive it a string, not elements. Each character is placed and turned on its own, so there is nothing inside for markup to apply to; style the whole set with `textClassName`.\n\nA non-finite `radius`, `spinDuration` or `spread` falls back to its default, and a negative one is treated as zero, so bad data cannot produce a transform that never resolves. `spread` is clamped to a full turn: past that the characters would overlap the ones already there."
 }
