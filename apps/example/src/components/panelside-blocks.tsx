@@ -12,13 +12,14 @@
  * when the behaviour does.
  */
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { Platform, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
 import {
   AIInput,
   Avatar,
   BottomSheet,
   Button,
+  Glass,
   Item,
   KeyboardAvoider,
   Marker,
@@ -160,8 +161,8 @@ const CHATS: { id: string; title: string; when: string; pinned?: boolean }[] = [
  */
 const HEADER_HEIGHT = 52;
 const FOOTER_HEIGHT = 112;
-/** …and the settings sheet's, which the platform list has to be sized around. */
-const SHEET_HEADER_HEIGHT = 92;
+/** Points the docked bar keeps between itself and the top of the keyboard. */
+const KEYBOARD_GAP = 12;
 
 const FILTERS = [
   { value: 'all', label: 'All chats', icon: BubbleChatIcon },
@@ -325,12 +326,24 @@ function SearchScene({
         )}
       </ScrollView>
 
-      {/* `box-none` so the bar takes no touches of its own and the rows
-          underneath stay pressable right up to the buttons. */}
-      <View
+      {/*
+        The bar spans the screen, and says so in points rather than in classes.
+        
+        `start-0 end-0` left the row shrink-to-fit, which is why the title sat
+        against the panel button and the filter sat against the title: there
+        was no width for a centred title to be centred in.
+        
+        Its backing is the material rather than nothing. Fully transparent, the
+        rows travelling underneath were read *through* the title — two pieces
+        of text in the same place, neither of them legible. Off iOS 26 the
+        material is a solid surface, which does the same job less prettily.
+      */}
+      <Glass
+        radius={0}
+        fallbackClassName="bg-background"
         pointerEvents="box-none"
-        style={{ paddingTop: insets.top + 8 }}
-        className="absolute end-0 start-0 top-0 flex-row items-center px-3 pb-3"
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingTop: insets.top + 8 }}
+        className="flex-row items-center px-3 pb-3"
       >
         <Panelside.Trigger>
           <Button
@@ -361,7 +374,7 @@ function SearchScene({
         <View className="w-10 items-end" pointerEvents="box-none">
           <ChatFilterMenu value={filter} onChange={setFilter} native={native} />
         </View>
-      </View>
+      </Glass>
 
       {/*
         The compose pill and the field are one piece of chrome, so one avoider
@@ -370,10 +383,12 @@ function SearchScene({
       */}
       <KeyboardAvoider
         mode="dock"
-        bottomInset={Math.max(insets.bottom, 12)}
+        // Short of where the bar actually sits, by the gap it should keep. A
+        // bar that reports its true inset arrives flush against the keyboard,
+        // with the field's edge on the top row of keys.
+        bottomInset={Math.max(insets.bottom, 12) - KEYBOARD_GAP}
         pointerEvents="box-none"
-        className="absolute bottom-0 end-0 start-0"
-        style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+        style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
       >
         <View className="items-end px-4 pb-3" pointerEvents="box-none">
           <Button
@@ -391,7 +406,15 @@ function SearchScene({
           </Button>
         </View>
 
-        <View className="px-4">
+        {/* The field's own fill is translucent, so on nothing it showed the
+            row travelling underneath straight through the placeholder. The
+            strip behind it is what it is read against. */}
+        <Glass
+          radius={0}
+          fallbackClassName="bg-background"
+          className="px-4 pt-2"
+          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+        >
           <SearchBar
             shape="pill"
             variant="filled"
@@ -400,7 +423,7 @@ function SearchScene({
             placeholder="Search"
             cancel="never"
           />
-        </View>
+        </Glass>
       </KeyboardAvoider>
     </View>
   );
@@ -460,7 +483,7 @@ const SETTINGS_GROUPS: {
  * Android or on the web. Reaching for them there throws before anything has a
  * chance to choose the styled rows instead.
  */
-let swiftUIList: Record<string, any> | null | undefined;
+let swiftUIList: { views: any; modifiers: any } | null | undefined;
 
 function getSwiftUIList() {
   if (swiftUIList !== undefined) return swiftUIList;
@@ -473,7 +496,9 @@ function getSwiftUIList() {
     const views = require('@expo/ui/swift-ui');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const modifiers = require('@expo/ui/swift-ui/modifiers');
-    swiftUIList = views.List && views.Section && views.Label ? { ...views, ...modifiers } : null;
+    // Kept apart rather than merged: both namespaces are large and a view and
+    // a modifier sharing a name would silently shadow one another.
+    swiftUIList = views.List && views.Section && views.Image ? { views, modifiers } : null;
   } catch {
     swiftUIList = null;
   }
@@ -484,11 +509,17 @@ function getSwiftUIList() {
  * The account rows as the platform draws them.
  *
  * A SwiftUI list, and nothing of ours inside it: the glyphs are SF Symbols and
- * the values are the platform's own text, so there is no React Native view
- * hosted anywhere in the list. That is deliberate rather than lazy — a hosted
- * view inside a native control needs a definite size above it on both axes,
- * and a list of rows whose heights the platform decides is exactly the shape
- * that cannot give it one.
+ * the text is the platform's own, so there is no React Native view hosted
+ * anywhere in the list. That is deliberate rather than lazy — a hosted view
+ * inside a native control needs a definite size above it on both axes, and a
+ * list of rows whose heights the platform decides is exactly the shape that
+ * cannot give it one.
+ *
+ * Rows are built from an `HStack` rather than from `Label`, because a `Label`
+ * tints its glyph with the accent and gives no room for a trailing value or a
+ * chevron. A settings row is a grey glyph, a name, what it is currently set
+ * to, and a chevron saying it goes somewhere — four things, and only the
+ * stack takes four.
  *
  * `insetGrouped` is the settings-screen style. Its own background is turned
  * off so the groups sit on the sheet's solid surface rather than on a second
@@ -496,30 +527,42 @@ function getSwiftUIList() {
  */
 function NativeSettingsList({ height }: { height: number }) {
   const ui = getSwiftUIList();
-  if (!ui) return null;
+  if (!ui || height <= 0) return null;
 
-  const { Host, List, Section, Label, Text: SwiftText, HStack, Spacer, listStyle,
-    scrollContentBackground } = ui;
+  const { Host, List, Section, Image, Text: SwiftText, HStack, Spacer } = ui.views;
+  const { listStyle, scrollContentBackground, foregroundStyle } = ui.modifiers;
+
+  const secondary = foregroundStyle({ type: 'hierarchical', style: 'secondary' });
+  const chevron = <Image systemName="chevron.right" size={13} color="secondary" />;
 
   return (
     // A list fills the space it is given rather than sizing to its contents,
-    // so the host is told to measure the viewport and handed a height. With
-    // `matchContents` — right for every other control here — it would ask the
-    // list how tall it is, and the list would answer by asking back.
+    // so the host is told to measure the viewport and handed the height its
+    // container actually turned out to be. With `matchContents` — right for
+    // every other control here — it would ask the list how tall it is, and
+    // the list would answer by asking back.
     <Host useViewportSizeMeasurement style={{ height }}>
       <List modifiers={[listStyle('insetGrouped'), scrollContentBackground('hidden')]}>
         <Section>
           <SwiftText>khalid@example.com</SwiftText>
-          <Label title="Give the gift of PanelUI" systemImage="gift" />
+          <HStack spacing={12}>
+            <Image systemName="gift" size={20} color="blue" />
+            <SwiftText>Give the gift of PanelUI</SwiftText>
+            <Spacer />
+          </HStack>
         </Section>
 
         {SETTINGS_GROUPS.map((group) => (
           <Section key={group.label} title={group.label}>
             {group.rows.map((row) => (
               <HStack key={row.id} spacing={12}>
-                <Label title={row.label} systemImage={row.symbol} />
+                <Image systemName={row.symbol} size={20} color="secondary" />
+                <SwiftText>{row.label}</SwiftText>
                 <Spacer />
-                {row.value ? <SwiftText>{row.value}</SwiftText> : null}
+                {row.value ? (
+                  <SwiftText modifiers={[secondary]}>{row.value}</SwiftText>
+                ) : null}
+                {chevron}
               </HStack>
             ))}
           </Section>
@@ -540,15 +583,19 @@ function SettingsRow({
   value?: string;
 }) {
   return (
-    <Item variant="muted" size="sm" className="rounded-none">
+    // Full density and a wide glyph column. At `sm` the rows were 44 points
+    // of a list you scroll rather than read, with the glyphs crowding the
+    // labels — a settings screen is somewhere you stop, and it should have the
+    // room the platform's own gives it.
+    <Item variant="muted" className="rounded-none py-3.5">
       {/* No `Item.Media`: its icon slot draws a bordered box, and a settings
           list of eleven boxed glyphs is eleven more edges than the rows need.
           The glyph and the width it sits in are enough. */}
-      <View className="w-7 items-center">
-        <Glyph icon={icon} size={19} />
+      <View className="w-9 items-center">
+        <Glyph icon={icon} size={22} />
       </View>
       <Item.Content>
-        <Item.Title>{label}</Item.Title>
+        <Item.Title size="base">{label}</Item.Title>
       </Item.Content>
       <Item.Actions>
         {value ? (
@@ -584,16 +631,22 @@ function SettingsSheet({
   onOpenChange: (next: boolean) => void;
   native?: boolean;
 }) {
-  const insets = useSafeAreaInsets();
-  const { height: screenHeight } = useWindowDimensions();
   const shape = native ? undefined : 'h-10 w-10 rounded-full';
   const accent = useCSSVariable('--color-primary');
   const accentTint = typeof accent === 'string' ? accent : '#5e6ad2';
 
   const platformRows = native ? getSwiftUIList() !== null : false;
-  // What the sheet's own chrome leaves for the list: its detent, less the
-  // header row and the safe area it already pads for.
-  const listHeight = screenHeight * 0.94 - SHEET_HEADER_HEIGHT - Math.max(insets.bottom, 16);
+
+  /*
+   * Measured, not calculated.
+   *
+   * A native list has to be handed a height, and working one out from the
+   * screen and the detent overshot by the sheet's own padding — so the list
+   * ran past the bottom of the sheet, was clipped there, and left a band of
+   * bare surface under the last row it could draw. What the container turned
+   * out to be is the only number that cannot be wrong.
+   */
+  const [listHeight, setListHeight] = useState(0);
 
   return (
     <BottomSheet
@@ -615,8 +668,11 @@ function SettingsSheet({
         showClose={false}
         className={native ? 'gap-3 pt-9' : 'gap-3'}
       >
-        <BottomSheet.Header className="pb-0 pe-0">
-          <View className="flex-row items-center">
+        {/* The material behind the buttons, so the rows scrolling under them
+            are visibly behind rather than competing with them. Off iOS 26 it
+            is a solid surface, which does the same job less prettily. */}
+        <BottomSheet.Header className="-mx-5 px-0 pb-0 pe-0">
+          <Glass radius={0} fallbackClassName="bg-popover" className="flex-row items-center px-5 pb-3">
             <Button
               native={native}
               glass={native}
@@ -648,11 +704,16 @@ function SettingsSheet({
                 <Glyph icon={InformationCircleIcon} size={18} />
               </Button>
             </View>
-          </View>
+          </Glass>
         </BottomSheet.Header>
 
         {platformRows ? (
-          <NativeSettingsList height={listHeight} />
+          <View
+            className="flex-1"
+            onLayout={(event) => setListHeight(event.nativeEvent.layout.height)}
+          >
+            <NativeSettingsList height={listHeight} />
+          </View>
         ) : (
           <BottomSheet.Body contentContainerClassName="gap-6 pb-6">
             <Item variant="muted" size="sm" className="rounded-2xl">
@@ -664,8 +725,8 @@ function SettingsSheet({
             {/* The one row that is not a destination, so it is the one row
                 drawn in the accent. */}
             <Item variant="muted" size="sm" className="rounded-2xl">
-              <View className="w-7 items-center">
-                <HugeiconsIcon icon={GiftIcon} size={19} color={accentTint} strokeWidth={1.8} />
+              <View className="w-9 items-center">
+                <HugeiconsIcon icon={GiftIcon} size={22} color={accentTint} strokeWidth={1.8} />
               </View>
               <Item.Content>
                 <Item.Title className="text-primary">Give the gift of PanelUI</Item.Title>
@@ -683,7 +744,7 @@ function SettingsSheet({
                       {/* Inset to the label rather than run edge to edge: a
                           full-width rule cuts the glyph column off from the
                           text it belongs to. */}
-                      {index === 0 ? null : <Item.Separator className="ms-11" />}
+                      {index === 0 ? null : <Item.Separator className="ms-14" />}
                       <SettingsRow label={row.label} icon={row.icon} value={row.value} />
                     </View>
                   ))}
