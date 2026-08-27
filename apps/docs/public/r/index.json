@@ -1170,6 +1170,7 @@
     "registryDependencies": [
       "bottom-sheet",
       "cn",
+      "native",
       "portal",
       "scrim",
       "text",

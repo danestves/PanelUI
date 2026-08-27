@@ -1,6 +1,7 @@
 ---
 title: Popover
 description: Panel anchored to the element that opened it.
+status: updated
 ---
 
 <Preview
@@ -21,7 +22,7 @@ Use it when the context around the trigger has to stay visible. A [Dialog](/docs
 Popover ships with the library — no separate install.
 
 ```tsx
-import { Popover, Button, Input, Text, InfoIcon, ShareNodesIcon } from 'panelui-native';
+import { Popover, Button, Input, Text, InfoIcon, ShareNodesIcon, Item, MessageCircleIcon, ListIcon } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -189,6 +190,34 @@ Set `presentation="bottom-sheet"` on the root and the same content opens in a dr
 </Popover>
 ```
 
+### The platform's own popover
+
+`native` hands the panel to SwiftUI. The platform draws the container, its corner radius, its shadow and its arrow, and keeps the anchored shape on a phone rather than adapting to a sheet.
+
+Give the content a `width`: the platform sizes its popover to what is hosted in it, and a subtree with no width of its own has nothing to report. iOS only — Android and web keep the styled panel, so the same tree works everywhere.
+
+```tsx
+<Popover native>
+  <Popover.Trigger>
+    <Button native glass size="icon" variant="ghost" accessibilityLabel="Filter">
+      <ListIcon size={18} />
+    </Button>
+  </Popover.Trigger>
+  <Popover.Content width={220} placement="bottom">
+    <Popover.Close>
+      <Item size="sm" onPress={() => setFilter('all')}>
+        <Item.Media variant="icon">
+          <MessageCircleIcon size={16} />
+        </Item.Media>
+        <Item.Content>
+          <Item.Title>All chats</Item.Title>
+        </Item.Content>
+      </Item>
+    </Popover.Close>
+  </Popover.Content>
+</Popover>
+```
+
 ### Owning the panel's surface
 
 `unstyled` drops the panel's background, border, padding and shadow and keeps only its position and its size, so the surface can be drawn by the caller. `background` then takes a layer rendered behind the content and — importantly — outside the scroller, so a surface stays put while the content moves over it.
@@ -219,6 +248,7 @@ Set `presentation="bottom-sheet"` on the root and the same content opens in a dr
 | `onOpenChange` | `(open: boolean) => void` | — |  |
 | `defaultOpen` | `boolean` | `false` | Initial state when uncontrolled. |
 | `presentation` | `PopoverPresentation` | `'popover'` | `popover` is the anchored panel. `bottom-sheet` presents the content in a draggable sheet instead — better on a small screen, or when the content is a form rather than a menu. Placement, align and the arrow do not apply to a sheet. |
+| `native` | `boolean` | `false` | Present the platform's own popover instead of this one. Requires the optional `@expo/ui`. **iOS only.** SwiftUI has a popover that anchors to a view and keeps its anchored shape on a phone rather than becoming a sheet; Compose's nearest relative is a dropdown menu, which is a different control with different rules. Android and web keep the styled panel, as does an iOS device without `@expo/ui` installed. **The platform draws the container, so theme tokens do not reach it.** The panel's surface, its corner radius, its shadow and its arrow are the system's; `className` on `Popover.Content` styles what is *inside* it. `align`, `offset`, `alignOffset`, `scrim` and `blur` have no native equivalent and are ignored; `placement` becomes the edge the arrow is asked for. **Give the content a `width`.** The platform sizes its popover to what is hosted in it, and a React Native subtree with no width of its own has nothing to report — the same rule that governs every hosted view. `Popover.Content` defaults to a sensible one under `native`, but a panel whose rows need more room should say so. |
 
 ### Popover.Content
 
@@ -279,6 +309,14 @@ Use a **BottomSheet** instead when the content is long, needs its own scroll, or
 ### Focus after closing
 
 On the web, closing returns keyboard focus to the element that had it before the overlay opened. Nested overlays return to the still-open parent first. If that element was removed or disabled while the overlay was open, it is skipped rather than focusing a stale control. Native screen-reader containment remains the platform's `accessibilityViewIsModal` behaviour.
+
+### The platform's popover
+
+`native` presents SwiftUI's popover instead of this one, and needs the optional `@expo/ui`. **It is iOS only.** SwiftUI has a popover that anchors to a view and holds that shape on a compact screen; Compose's nearest relative is a dropdown menu, which is a different control with different rules, so Android and web keep the styled panel rather than approximating one.
+
+**The platform draws the container, so theme tokens do not reach it.** The surface, the radius, the shadow and the arrow are the system's, and `className` on `Popover.Content` styles what is inside them. `align`, `offset`, `alignOffset`, `scrim` and `blur` have no native equivalent and are ignored; `placement` becomes the edge the arrow is asked for.
+
+**Give the content a `width`.** A React Native subtree hosted inside the platform's popover has no parent for a percentage or a flex basis to resolve against, so a panel that does not state its width reports none and the popover sizes to nothing. The same rule governs the trigger: an icon button is a square the component sizes, which is why it works, and a label with no width is the shape to avoid.
 
 ## Public exports
 

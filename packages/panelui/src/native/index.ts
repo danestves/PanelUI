@@ -161,6 +161,61 @@ interface SwiftUIModifiers {
   presentationBackground: (color: string) => unknown;
 }
 
+/**
+ * The SwiftUI-only components, for the ones the universal set does not carry.
+ *
+ * `@expo/ui` exports a portable component for everything both toolkits agree
+ * on, and that is what `getNativeUI` reaches. A popover is not on that list:
+ * SwiftUI has one that anchors to a view and adapts itself on a compact
+ * screen, and Compose's nearest relative is a dropdown menu, which is a
+ * different control with different rules. Rather than pretend the two are one
+ * thing, the iOS one is reached here and Android keeps the styled panel.
+ */
+interface SwiftUIComponents {
+  Host: ComponentType<{
+    children?: ReactNode;
+    matchContents?: boolean | { vertical?: boolean; horizontal?: boolean };
+    ignoreSafeArea?: unknown;
+    style?: unknown;
+  }>;
+  RNHostView: ComponentType<{ children?: ReactNode; matchContents?: boolean }>;
+  Popover: ComponentType<{
+    children?: ReactNode;
+    isPresented?: boolean;
+    onIsPresentedChange?: (isPresented: boolean) => void;
+    attachmentAnchor?: 'leading' | 'trailing' | 'center' | 'top' | 'bottom';
+    arrowEdge?: 'leading' | 'trailing' | 'top' | 'bottom' | 'none';
+  }> & {
+    Trigger: ComponentType<{ children?: ReactNode }>;
+    Content: ComponentType<{ children?: ReactNode }>;
+  };
+}
+
+let swiftUIResolved = false;
+let swiftUI: SwiftUIComponents | null = null;
+
+export function getSwiftUI(): SwiftUIComponents | null {
+  if (swiftUIResolved) return swiftUI;
+  swiftUIResolved = true;
+
+  if (Platform.OS !== 'ios') return null;
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const module = require('@expo/ui/swift-ui') as Partial<SwiftUIComponents>;
+    // A version without the popover is not an error; it is a fallback to the
+    // styled panel, which is what every missing native path here does.
+    swiftUI =
+      module.Host && module.RNHostView && module.Popover
+        ? (module as SwiftUIComponents)
+        : null;
+  } catch {
+    swiftUI = null;
+  }
+
+  return swiftUI;
+}
+
 let modifiersResolved = false;
 let modifiers: SwiftUIModifiers | null = null;
 

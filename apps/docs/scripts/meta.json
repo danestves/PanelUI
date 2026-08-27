@@ -516,7 +516,7 @@
     "Panel anchored to the element that opened it.",
     "react native popover",
     {
-      "updatedIn": "0.71.0",
+      "updatedIn": "0.84.0",
       "category": "overlays"
     }
   ],

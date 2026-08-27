@@ -30,6 +30,7 @@
  * and jump into place.
  */
 import {
+  Children,
   cloneElement,
   createContext,
   isValidElement,
@@ -62,6 +63,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FocusRestorePortal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { useBackHandler } from '../../hooks/use-back-handler';
+import { getSwiftUI } from '../../native';
 import { BottomSheet } from '../bottom-sheet';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
@@ -116,6 +118,8 @@ interface PopoverContextValue {
   setArrowOffset: (offset: number) => void;
   /** Whether Content is presenting as a bottom sheet — Arrow is null then. */
   presentation: PopoverPresentation;
+  /** Whether the platform is drawing the panel. Trigger and Content both read it. */
+  native: boolean;
 }
 
 export type PopoverPresentation = 'popover' | 'bottom-sheet';
@@ -176,6 +180,30 @@ export interface PopoverProps {
    * sheet.
    */
   presentation?: PopoverPresentation;
+  /**
+   * Present the platform's own popover instead of this one. Requires the
+   * optional `@expo/ui`.
+   *
+   * **iOS only.** SwiftUI has a popover that anchors to a view and keeps its
+   * anchored shape on a phone rather than becoming a sheet; Compose's nearest
+   * relative is a dropdown menu, which is a different control with different
+   * rules. Android and web keep the styled panel, as does an iOS device
+   * without `@expo/ui` installed.
+   *
+   * **The platform draws the container, so theme tokens do not reach it.** The
+   * panel's surface, its corner radius, its shadow and its arrow are the
+   * system's; `className` on `Popover.Content` styles what is *inside* it.
+   * `align`, `offset`, `alignOffset`, `scrim` and `blur` have no native
+   * equivalent and are ignored; `placement` becomes the edge the arrow is
+   * asked for.
+   *
+   * **Give the content a `width`.** The platform sizes its popover to what is
+   * hosted in it, and a React Native subtree with no width of its own has
+   * nothing to report — the same rule that governs every hosted view.
+   * `Popover.Content` defaults to a sensible one under `native`, but a panel
+   * whose rows need more room should say so.
+   */
+  native?: boolean;
 }
 
 function PopoverRoot({
@@ -184,6 +212,7 @@ function PopoverRoot({
   onOpenChange,
   defaultOpen = false,
   presentation = 'popover',
+  native = false,
 }: PopoverProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const [trigger, setTrigger] = useState<TriggerRect | null>(null);
@@ -201,6 +230,16 @@ function PopoverRoot({
     [isControlled, onOpenChange]
   );
 
+  /*
+   * The platform's popover, where it is reachable and the caller asked for it.
+   *
+   * A sheet presentation is left alone: `native` names which popover to draw,
+   * and asking for both a sheet and a popover is a contradiction rather than a
+   * combination.
+   */
+  const swiftUI = native && presentation === 'popover' ? getSwiftUI() : null;
+  const nativeActive = swiftUI !== null;
+
   const context = useMemo(
     () => ({
       open: resolvedOpen,
@@ -212,11 +251,95 @@ function PopoverRoot({
       arrowOffset,
       setArrowOffset,
       presentation,
+      native: nativeActive,
     }),
-    [resolvedOpen, setOpen, trigger, placement, arrowOffset, presentation]
+    [resolvedOpen, setOpen, trigger, placement, arrowOffset, presentation, nativeActive]
   );
 
-  return <PopoverContext.Provider value={context}>{children}</PopoverContext.Provider>;
+  return (
+    <PopoverContext.Provider value={context}>
+      {swiftUI ? <NativePopover swiftUI={swiftUI}>{children}</NativePopover> : children}
+    </PopoverContext.Provider>
+  );
+}
+
+/** Default width for a hosted panel, in points. Room for a short menu row. */
+const NATIVE_PANEL_WIDTH = 240;
+
+/** `placement` in the platform's vocabulary. */
+const ARROW_EDGE = {
+  top: 'top',
+  bottom: 'bottom',
+  left: 'leading',
+  right: 'trailing',
+} as const;
+
+/**
+ * The platform's popover, with our trigger and our content hosted inside it.
+ *
+ * SwiftUI attaches a popover to a view, so the two halves this component keeps
+ * as siblings have to become parent and child: the trigger is what the panel
+ * points at, and the platform will not anchor to something it cannot see. So
+ * the children are read here and placed into the two slots the platform
+ * expects, rather than the caller having to write a different tree under
+ * `native` than without it.
+ *
+ * Both halves are React Native, so both are wrapped in the host view that lets
+ * the platform measure them. The trigger is given no press handling of its
+ * own — `Popover.Trigger` already toggles the state this reads, and the
+ * platform presents from that.
+ */
+function NativePopover({
+  swiftUI,
+  children,
+}: {
+  swiftUI: NonNullable<ReturnType<typeof getSwiftUI>>;
+  children: ReactNode;
+}) {
+  const { open, setOpen } = usePopover('Popover');
+  const { Host, RNHostView, Popover: PlatformPopover } = swiftUI;
+
+  let trigger: ReactNode = null;
+  let content: ReactElement<PopoverContentProps> | null = null;
+
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement(child)) continue;
+    if (child.type === PopoverTrigger) trigger = child;
+    else if (child.type === PopoverContent) {
+      content = child as ReactElement<PopoverContentProps>;
+    }
+  }
+
+  const contentProps = content?.props;
+  const width =
+    typeof contentProps?.width === 'number' ? contentProps.width : NATIVE_PANEL_WIDTH;
+
+  return (
+    <Host matchContents ignoreSafeArea="keyboard">
+      <PlatformPopover
+        isPresented={open}
+        onIsPresentedChange={setOpen}
+        arrowEdge={ARROW_EDGE[contentProps?.placement ?? 'bottom']}
+      >
+        <PlatformPopover.Trigger>
+          <RNHostView matchContents>{trigger}</RNHostView>
+        </PlatformPopover.Trigger>
+        <PlatformPopover.Content>
+          <RNHostView matchContents>
+            {/*
+              An explicit width, not a class. Inside the host there is no
+              parent for a percentage or a flex basis to resolve against, so a
+              panel that does not state its width reports none and the platform
+              sizes its popover to nothing.
+            */}
+            <View style={{ width }} className={cn('gap-1 p-2', contentProps?.className)}>
+              {textChildren(contentProps?.children)}
+            </View>
+          </RNHostView>
+        </PlatformPopover.Content>
+      </PlatformPopover>
+    </Host>
+  );
 }
 
 export interface PopoverTriggerProps {
@@ -231,7 +354,7 @@ export interface PopoverTriggerProps {
  * and only a wrapper we own is guaranteed to be measurable.
  */
 function PopoverTrigger({ children }: PopoverTriggerProps) {
-  const { open, setOpen, setTrigger } = usePopover('Popover.Trigger');
+  const { open, setOpen, setTrigger, native } = usePopover('Popover.Trigger');
   const ref = useRef<View>(null);
 
   const measureThenToggle = (...args: unknown[]) => {
@@ -239,6 +362,17 @@ function PopoverTrigger({ children }: PopoverTriggerProps) {
 
     if (open) {
       setOpen(false);
+      return;
+    }
+
+    /*
+     * Nothing to measure when the platform is drawing the panel: it anchors to
+     * this trigger itself, and asking a view hosted inside the native tree for
+     * its window coordinates is a callback that may never come back — which
+     * would leave the press doing nothing at all.
+     */
+    if (native) {
+      setOpen(true);
       return;
     }
 
@@ -363,7 +497,8 @@ function PopoverContent({
   ...props
 }: PopoverContentProps) {
   const context = usePopover('Popover.Content');
-  const { open, setOpen, trigger, setPlacement, setArrowOffset, presentation } = context;
+  const { open, setOpen, trigger, setPlacement, setArrowOffset, presentation, native } =
+    context;
 
   // The anchored panel owns the Android back button while it is up. The sheet
   // presentation is left alone — BottomSheet installs its own handler.
@@ -509,6 +644,13 @@ function PopoverContent({
    * the surface it is merged into the sheet's own padding classes and replaces
    * them, so a panel asking for `p-3` silently strips the sheet's `px-5 pt-2`.
    */
+  /*
+   * Already drawn. Under `native` the root reads this element's props and
+   * hosts its children inside the platform's own popover, so rendering the
+   * styled panel here as well would put a second one on the screen.
+   */
+  if (native) return null;
+
   if (presentation === 'bottom-sheet') {
     return (
       <BottomSheet open={open} onOpenChange={setOpen}>
