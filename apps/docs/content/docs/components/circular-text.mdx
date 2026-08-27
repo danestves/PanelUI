@@ -4,6 +4,14 @@ description: Text set around a circle, turning.
 status: new
 ---
 
+<PreviewVideo
+  src="/previews/circular-text.mp4"
+  poster="/previews/circular-text-poster.jpg"
+  alt="The CircularText component, running in the example app."
+  width={720}
+  height={462}
+/>
+
 For a badge, a seal, a mark set around a logo — decoration whose job is to be a shape first and a sentence second.
 
 Each character is placed on the curve and turned to sit square on it, so the ring closes and the text along the bottom is upside down. That is what makes it read as a circle rather than as a sentence bent into one.
@@ -104,6 +112,14 @@ const [paused, setPaused] = useState(false);
 
 The default shape: a full turn, a wide letter-spacing and a separator holding the two halves of the phrase apart.
 
+<PreviewVideo
+  src="/previews/circular-text-a-seal.mp4"
+  poster="/previews/circular-text-a-seal-poster.jpg"
+  alt="CircularText — A seal."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <CircularText radius={90} textClassName="text-base font-bold tracking-[0.2em]">
   PANELUI · COMPONENTS FOR REACT NATIVE ·
@@ -114,6 +130,14 @@ The default shape: a full turn, a wide letter-spacing and a separator holding th
 
 An outer ring and an inner one turning against each other, at different speeds and sizes.
 
+<PreviewVideo
+  src="/previews/circular-text-two-rings.mp4"
+  poster="/previews/circular-text-two-rings-poster.jpg"
+  alt="CircularText — Two rings."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <CircularText radius={100} textClassName="text-base font-bold tracking-widest">…</CircularText>
 <CircularText reverse radius={64} spinDuration={14000} textClassName="text-sm">…</CircularText>
@@ -122,6 +146,14 @@ An outer ring and an inner one turning against each other, at different speeds a
 ### An arc
 
 Less than a full turn, starting where you put it. The text reaches both ends of the arc rather than stopping short of the second one.
+
+<PreviewVideo
+  src="/previews/circular-text-an-arc.mp4"
+  poster="/previews/circular-text-an-arc-poster.jpg"
+  alt="CircularText — An arc."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <CircularText radius={80} spread={200} startAngle={-100} textClassName="text-lg font-medium">
@@ -132,6 +164,14 @@ Less than a full turn, starting where you put it. The text reaches both ends of 
 ### A badge
 
 The ring at badge size, wrapped round a count. Small enough to sit beside something rather than be the thing you are looking at, which is most of what a ring of text is for.
+
+<PreviewVideo
+  src="/previews/circular-text-a-badge.mp4"
+  poster="/previews/circular-text-a-badge-poster.jpg"
+  alt="CircularText — A badge."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <View className="h-[124px] w-[124px] items-center justify-center">
@@ -147,6 +187,14 @@ The ring at badge size, wrapped round a count. Small enough to sit beside someth
 ### A loading ring
 
 A slow ring of text around a spinner that is not slow. The two speeds are deliberately different: matched, they read as one object that failed to line up.
+
+<PreviewVideo
+  src="/previews/circular-text-a-loading-ring.mp4"
+  poster="/previews/circular-text-a-loading-ring-poster.jpg"
+  alt="CircularText — A loading ring."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <View className="h-[156px] w-[156px] items-center justify-center">
