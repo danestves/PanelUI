@@ -33,5 +33,37 @@
   ],
   "variantCode": {
     "variant": "toast({ variant: 'default', title: 'Saved' });\ntoast({ variant: 'info', title: 'Syncing' });\ntoast({ variant: 'success', title: 'Deployed' });\ntoast({ variant: 'warning', title: 'Almost out of space' });\ntoast({ variant: 'destructive', title: 'Upload failed' });"
-  }
+  },
+  "versions": [
+    {
+      "title": "Simple string",
+      "description": "A string on its own. No title, no description, no action — the whole toast is the sentence, which is what a copy-to-clipboard or a saved-draft actually has to say.",
+      "code": "toast.show('Link copied to clipboard');"
+    },
+    {
+      "title": "With action",
+      "description": "A title, a description and one thing to do about the result. `actionLabel` draws the control; the toast stays up long enough to reach it.",
+      "code": "toast.show({\n  variant: 'success',\n  label: 'Deployment complete',\n  description: 'panelui.dev is live on production.',\n  actionLabel: 'View',\n});"
+    },
+    {
+      "title": "Destructive, top",
+      "description": "A failure raised at the top edge. `placement` is per-toast rather than per-app, because the edge a message belongs at follows from the message: a result of something you just did belongs near your thumb, and a failure you did not ask for does not.",
+      "code": "toast.show({\n  variant: 'destructive',\n  label: 'Upload failed',\n  description: 'The file exceeds the 25 MB limit.',\n  placement: 'top',\n});"
+    },
+    {
+      "title": "Stack four",
+      "description": "Four arriving in turn. Three are visible at once — the newest in front, the rest peeking out behind it — and the deck collapses as each is dismissed.\n\nThey are fired a fifth of a second apart rather than together, because the deck is built by things arriving: four on one frame is a stack that was already there.",
+      "code": "(['default', 'info', 'success', 'warning'] as const).forEach((variant, index) =>\n  setTimeout(\n    () =>\n      toast.show({\n        variant,\n        label: `Notification ${index + 1}`,\n        description: 'Swipe down to dismiss the front one.',\n        duration: 8000,\n      }),\n    index * 220\n  )\n);"
+    },
+    {
+      "title": "Hide all",
+      "description": "Clearing the whole queue at once, whatever is in it. Use it when the thing the toasts were about has gone — a screen the user has left, a job they cancelled.",
+      "code": "toast.hideAll();"
+    },
+    {
+      "title": "Custom component",
+      "description": "The toast drawn entirely by the caller. The deck still owns its timing, its position and its swipe; `component` only replaces what is inside. `hide` is handed in so a control of your own can dismiss it.",
+      "code": "toast.show({\n  duration: 6000,\n  component: ({ hide }) => (\n    <Toast variant=\"info\" onHide={hide}>\n      <Toast.Indicator />\n      <Toast.Content>\n        <Toast.Title>Custom component</Toast.Title>\n        <Toast.Description>Rendered entirely by the caller.</Toast.Description>\n      </Toast.Content>\n      <Toast.Close />\n    </Toast>\n  ),\n});"
+    }
+  ]
 }

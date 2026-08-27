@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, Pressable, ScrollView, View } from "react-native";
 import { AppleIcon, Badge, BellIcon, Button, Card, CardIcon, CheckIcon, FileIcon, FolderIcon, FolderOpenIcon, Frame, GoogleIcon, InfoIcon, Item, KeyboardAvoider, Label, PlusSquareIcon, ReceiptIcon, SendIcon, ShareNodesIcon, ShieldAlertIcon, ShieldCheckIcon, Spinner, TagInput, Text, Textarea, ThemeSelector, type ThemeSelection, TimePicker, type TimeValue, formatTime, Timeline, Toast, ToggleButton, ToggleButtonGroup, Tooltip, Tree, useToast } from "panelui-native";
@@ -1272,14 +1272,40 @@ function TreeNavDemo() {
   );
 }
 
-function ToastDemo() {
+/**
+ * One version page, and the reason there is a wrapper at all.
+ *
+ * The toast store is a single module-level queue with one viewport, mounted
+ * once for the whole app — which is what lets `toast.show()` be called from
+ * anywhere, and what means a toast raised here is still counting down after
+ * you have left. Clearing on the way out is how each of these pages starts on
+ * an empty screen rather than on whatever the last one left behind.
+ */
+function ToastVersion({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
+
+  useEffect(() => () => toast.hideAll(), [toast]);
+
+  return <View className="flex-1 justify-center gap-3 px-5">{children}</View>;
+}
+
+function ToastStringVersion() {
   const { toast } = useToast();
 
   return (
-    <View className="w-full gap-3">
+    <ToastVersion>
       <Button variant="outline" onPress={() => toast.show('Link copied to clipboard')}>
         Simple string
       </Button>
+    </ToastVersion>
+  );
+}
+
+function ToastActionVersion() {
+  const { toast } = useToast();
+
+  return (
+    <ToastVersion>
       <Button
         variant="outline"
         onPress={() =>
@@ -1293,6 +1319,15 @@ function ToastDemo() {
       >
         With action
       </Button>
+    </ToastVersion>
+  );
+}
+
+function ToastDestructiveVersion() {
+  const { toast } = useToast();
+
+  return (
+    <ToastVersion>
       <Button
         variant="outline"
         onPress={() =>
@@ -1306,11 +1341,21 @@ function ToastDemo() {
       >
         Destructive, top
       </Button>
+    </ToastVersion>
+  );
+}
+
+function ToastStackVersion() {
+  const { toast } = useToast();
+
+  return (
+    <ToastVersion>
       <Button
         variant="outline"
         onPress={() => {
-          // Fire several at once to show the deck: newest in front, the rest
-          // peeking out behind it.
+          // Fired a fifth of a second apart rather than together: the deck is
+          // built by things arriving, and four toasts on one frame is a deck
+          // that was already there.
           (['default', 'info', 'success', 'warning'] as const).forEach(
             (variant, index) =>
               setTimeout(
@@ -1328,9 +1373,47 @@ function ToastDemo() {
       >
         Stack four
       </Button>
+    </ToastVersion>
+  );
+}
+
+function ToastHideAllVersion() {
+  const { toast } = useToast();
+
+  return (
+    <ToastVersion>
+      {/* Something to clear, first. `hideAll` on an empty queue is a button
+          that does nothing, which demonstrates nothing. */}
+      <Button
+        variant="outline"
+        onPress={() =>
+          (['info', 'success', 'warning'] as const).forEach((variant, index) =>
+            setTimeout(
+              () =>
+                toast.show({
+                  variant,
+                  label: `Notification ${index + 1}`,
+                  duration: 20000,
+                }),
+              index * 220
+            )
+          )
+        }
+      >
+        Raise three
+      </Button>
       <Button variant="ghost" onPress={() => toast.hideAll()}>
         Hide all
       </Button>
+    </ToastVersion>
+  );
+}
+
+function ToastCustomVersion() {
+  const { toast } = useToast();
+
+  return (
+    <ToastVersion>
       <Button
         variant="outline"
         onPress={() =>
@@ -1353,7 +1436,7 @@ function ToastDemo() {
       >
         Custom component
       </Button>
-    </View>
+    </ToastVersion>
   );
 }
 
@@ -1607,7 +1690,48 @@ export const ENTRIES: ComponentEntry[] = [
     name: 'Toast',
     summary: 'Transient notification with swipe to dismiss',
     demos: [
-      { label: 'Usage patterns', render: () => <ToastDemo /> },
+      {
+        label: 'Simple string',
+        id: 'string',
+        fullPage: true,
+        description: 'A string on its own, for a result that needs no title and no action.',
+        render: () => <ToastStringVersion />,
+      },
+      {
+        label: 'With action',
+        id: 'action',
+        fullPage: true,
+        description: 'A title, a description and one thing to do about it.',
+        render: () => <ToastActionVersion />,
+      },
+      {
+        label: 'Destructive, top',
+        id: 'destructive',
+        fullPage: true,
+        description: 'A failure, raised at the top edge instead of the bottom.',
+        render: () => <ToastDestructiveVersion />,
+      },
+      {
+        label: 'Stack four',
+        id: 'stack',
+        fullPage: true,
+        description: 'Four arriving in turn — the newest in front, the rest peeking out behind it.',
+        render: () => <ToastStackVersion />,
+      },
+      {
+        label: 'Hide all',
+        id: 'hide-all',
+        fullPage: true,
+        description: 'Clearing the whole queue at once, whatever is in it.',
+        render: () => <ToastHideAllVersion />,
+      },
+      {
+        label: 'Custom component',
+        id: 'custom',
+        fullPage: true,
+        description: 'The toast drawn entirely by the caller, with the deck still managing it.',
+        render: () => <ToastCustomVersion />,
+      },
       {
         label: 'Anatomy',
         render: () => (
