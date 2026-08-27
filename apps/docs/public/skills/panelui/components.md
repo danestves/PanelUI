@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-118 component modules. The **Docs** column is the path under
+119 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -151,6 +151,7 @@ remember is a guess.
 | --- | --- | --- |
 | `Attachment` | File row with upload states, built on Item. | `components/attachment` |
 | `Avatar` | User image with an initials fallback, a badge overlay, and a stack for a group of them. | `components/avatar` |
+| `CircularText` | Text set around a circle, turning. | `components/circular-text` |
 | `Marquee` | Content that travels across its container on a loop. | `components/marquee` |
 | `Message` | Chat turn with avatar, bubble, header and footer. | `components/message` |
 | `MessageScroller` | Scroll behaviour a chat transcript needs. | `components/message-scroller` |

@@ -116,6 +116,8 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
     load08().then((module) => module.ENTRIES_BY_SLUG['selection-mode']),
   select: () => load08().then((module) => module.ENTRIES_BY_SLUG['select']),
   surface: () => load08().then((module) => module.ENTRIES_BY_SLUG['surface']),
+  'circular-text': () =>
+    load08().then((module) => module.ENTRIES_BY_SLUG['circular-text']),
   shimmer: () => load08().then((module) => module.ENTRIES_BY_SLUG['shimmer']),
   'text-animation': () =>
     load08().then((module) => module.ENTRIES_BY_SLUG['text-animation']),

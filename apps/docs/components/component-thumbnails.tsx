@@ -1568,6 +1568,20 @@ const avatar = (
  * the gradient was always a shade out. A chip running off the edge says the
  * same thing and cannot be wrong.
  */
+const circularText = (
+  <div className="relative size-24">
+    {Array.from('PANELUI · CIRCULAR TEXT ·').map((character, index, all) => (
+      <span
+        key={`${character}-${index}`}
+        className="absolute inset-0 flex items-start justify-center text-[9px] font-bold tracking-[0.2em] text-fd-muted-foreground"
+        style={{ transform: `rotate(${(360 / all.length) * index}deg)` }}
+      >
+        {character}
+      </span>
+    ))}
+  </div>
+);
+
 const marquee = (
   <div className="flex w-full max-w-52 justify-center overflow-hidden">
     <Row className="w-max shrink-0 gap-2">
@@ -2028,6 +2042,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
   // Media and motion
   attachment,
   avatar,
+  'circular-text': circularText,
   marquee,
   message,
   'message-scroller': messageScroller,

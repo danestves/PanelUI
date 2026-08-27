@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1199,
-    "values": 315,
-    "types": 884,
-    "modules": 145,
-    "components": 118,
+    "exports": 1201,
+    "values": 316,
+    "types": 885,
+    "modules": 146,
+    "components": 119,
     "hooks": 13
   },
   "groups": {
@@ -680,6 +680,21 @@
           },
           {
             "name": "ChipSize",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/circular-text/index.tsx",
+        "slug": "circular-text",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "CircularText",
+            "kind": "value"
+          },
+          {
+            "name": "CircularTextProps",
             "kind": "type"
           }
         ]

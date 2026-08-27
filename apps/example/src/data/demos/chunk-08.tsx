@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { ScrollView, View } from "react-native";
-import { Alert, Avatar, Button, Card, CheckIcon, FolderIcon, Input, Item, Label, RadioGroup, Rating, Select, SelectionMode, SectionRail, Separator, Shimmer, Skeleton, Slider, Surface, Text, TextAnimation, ToggleButton, ToggleButtonGroup, TrashIcon, hasNativeUI, useScrollSections } from "panelui-native";
+import { Alert, Avatar, Button, Card, CheckIcon, CircularText, FolderIcon, Input, Item, Label, RadioGroup, Rating, Select, SelectionMode, SectionRail, Separator, Shimmer, Skeleton, Slider, Surface, Text, TextAnimation, ToggleButton, ToggleButtonGroup, TrashIcon, hasNativeUI, useScrollSections } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 function RadioGroupDemo() {
@@ -959,6 +959,92 @@ function SelectionModeAlwaysOnDemo() {
   );
 }
 
+/**
+ * The seal: a full turn at the default speed.
+ *
+ * The separator between the two halves of the phrase is doing real work — a
+ * ring with no break in it reads as one continuous word, because the place a
+ * sentence ends is the one thing a circle cannot show.
+ */
+function CircularTextSealVersion() {
+  return (
+    <View className="flex-1 items-center justify-center">
+      <View className="items-center justify-center">
+        <CircularText radius={110} textClassName="text-sm font-bold tracking-[0.2em]">
+          PANELUI · COMPONENTS FOR REACT NATIVE ·
+        </CircularText>
+        {/* Stacked, not nested: the ring leaves its centre empty and turns,
+            and a mark passed inside it would turn with it. */}
+        <Text size="3xl" weight="bold" className="absolute">
+          P
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/** Two rings turning against each other, which is what `reverse` is for. */
+function CircularTextRingsVersion() {
+  return (
+    <View className="flex-1 items-center justify-center">
+      <View className="items-center justify-center">
+        <CircularText radius={130} textClassName="text-xs font-bold tracking-[0.25em]">
+          OUTER RING · OUTER RING · OUTER RING ·
+        </CircularText>
+        <View className="absolute">
+          <CircularText
+            reverse
+            radius={86}
+            spinDuration={14000}
+            textClassName="text-[11px] font-medium tracking-widest"
+          >
+            INNER · INNER · INNER ·
+          </CircularText>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Less than a full turn.
+ *
+ * An arc has two ends, and the text reaches both of them rather than stopping
+ * short of the second — which is the one thing that separates an arc from a
+ * ring that happens to be missing some of its characters.
+ */
+function CircularTextArcVersion() {
+  return (
+    <View className="flex-1 items-center justify-center gap-10">
+      <CircularText
+        radius={100}
+        spread={200}
+        startAngle={-100}
+        textClassName="text-sm font-semibold tracking-wider"
+      >
+        ARRIVING SHORTLY
+      </CircularText>
+    </View>
+  );
+}
+
+/** Held where it is, and carrying on from there. */
+function CircularTextPausedDemo() {
+  const [paused, setPaused] = useState(false);
+
+  return (
+    <View className="w-full items-center gap-4">
+      <CircularText paused={paused} radius={78} textClassName="text-xs font-semibold tracking-widest">
+        HOLD TO STOP · HOLD TO STOP ·
+      </CircularText>
+      <Button variant="outline" onPress={() => setPaused((value) => !value)}>
+        {paused ? 'Resume' : 'Pause'}
+      </Button>
+    </View>
+  );
+}
+
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'radio-group',
@@ -1343,6 +1429,35 @@ export const ENTRIES: ComponentEntry[] = [
       { label: 'Sliding a price', render: () => <SlidingPriceDemo /> },
       { label: 'Scrolling', render: () => <ScrollingDemo /> },
       { label: 'Shared configuration', render: () => <TextAnimationGroupDemo /> },
+    ],
+  },
+{
+    slug: 'circular-text',
+    name: 'CircularText',
+    summary: 'Text set around a circle, turning',
+    demos: [
+      {
+        label: 'A seal',
+        id: 'seal',
+        fullPage: true,
+        description: 'A full turn, with a mark stacked in the centre the ring leaves empty.',
+        render: () => <CircularTextSealVersion />,
+      },
+      {
+        label: 'Two rings',
+        id: 'rings',
+        fullPage: true,
+        description: 'An outer ring and an inner one turning against each other.',
+        render: () => <CircularTextRingsVersion />,
+      },
+      {
+        label: 'An arc',
+        id: 'arc',
+        fullPage: true,
+        description: 'Less than a full turn, starting where you put it.',
+        render: () => <CircularTextArcVersion />,
+      },
+      { label: 'Holding it still', render: () => <CircularTextPausedDemo /> },
     ],
   }
 ];

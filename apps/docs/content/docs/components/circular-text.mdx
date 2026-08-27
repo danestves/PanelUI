@@ -1,0 +1,169 @@
+---
+title: CircularText
+description: Text set around a circle, turning.
+status: new
+---
+
+For a badge, a seal, a mark set around a logo — decoration whose job is to be a shape first and a sentence second.
+
+Each character is placed on the curve and turned to sit square on it, so the ring closes and the text along the bottom is upside down. That is what makes it read as a circle rather than as a sentence bent into one.
+
+**The centre is empty and nothing is laid out in it.** The component measures `radius * 2` on both axes and draws only the ring; put a logo inside by stacking the two, not by passing it as a child.
+
+For text that animates on its own timing, use [TextAnimation](/docs/components/text-animation). For text that travels past a boundary, use [Marquee](/docs/components/marquee).
+
+## Installation
+
+CircularText ships with the library — no separate install.
+
+```tsx
+import { CircularText, Text } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add circular-text
+```
+
+## Usage
+
+```tsx
+<CircularText radius={90} textClassName="text-sm font-bold tracking-widest">
+  PANELUI · COMPONENTS FOR REACT NATIVE ·
+</CircularText>
+```
+
+## Examples
+
+### A mark in the middle
+
+The ring draws nothing inside itself, so anything in the centre is a second layer rather than a child. Stack them and centre both: the ring turns, the mark does not.
+
+```tsx
+<View className="h-[180px] w-[180px] items-center justify-center">
+  <CircularText
+    radius={90}
+    spinDuration={24000}
+    textClassName="text-xs font-bold tracking-[0.2em]"
+  >
+    PANELUI · COMPONENTS FOR REACT NATIVE ·
+  </CircularText>
+  <Text size="2xl" weight="bold" className="absolute">
+    P
+  </Text>
+</View>
+```
+
+### Half a circle
+
+`spread` is the arc the text is given, and `startAngle` is where it begins — measured clockwise from the top, so `-90` starts it at the leading edge.
+
+An arc has two ends and the text reaches both of them. A full turn has neither, because the end of the string is adjacent to its start.
+
+```tsx
+<CircularText radius={80} spread={180} startAngle={-90} textClassName="text-sm font-medium">
+  ARRIVING SHORTLY
+</CircularText>
+```
+
+### Holding it still
+
+`paused` stops the ring where it is and resumes from there, so a ring paused mid-word is still on that word when it starts again. Use it to stop the motion while something else on the screen is asking to be read.
+
+```tsx
+const [paused, setPaused] = useState(false);
+
+<Pressable onPressIn={() => setPaused(true)} onPressOut={() => setPaused(false)}>
+  <CircularText paused={paused} radius={70} textClassName="text-xs font-semibold">
+    HOLD TO STOP ·
+  </CircularText>
+</Pressable>
+```
+
+### The other way round
+
+`reverse` turns it anticlockwise. Two rings at different radii turning against each other is the one place it earns its keep — going the same way they read as one object that failed to line up.
+
+```tsx
+<View className="h-[200px] w-[200px] items-center justify-center">
+  <CircularText radius={100} textClassName="text-xs font-bold tracking-widest">
+    OUTER RING · OUTER RING ·
+  </CircularText>
+  <View className="absolute">
+    <CircularText reverse radius={64} spinDuration={14000} textClassName="text-[10px] font-medium">
+      INNER RING · INNER RING ·
+    </CircularText>
+  </View>
+</View>
+```
+
+## Versions
+
+### A seal
+
+The default shape: a full turn, a wide letter-spacing and a separator holding the two halves of the phrase apart.
+
+```tsx
+<CircularText radius={90} textClassName="text-xs font-bold tracking-[0.2em]">
+  PANELUI · COMPONENTS FOR REACT NATIVE ·
+</CircularText>
+```
+
+### Two rings
+
+An outer ring and an inner one turning against each other, at different speeds and sizes.
+
+```tsx
+<CircularText radius={100} textClassName="text-xs font-bold tracking-widest">…</CircularText>
+<CircularText reverse radius={64} spinDuration={14000} textClassName="text-[10px]">…</CircularText>
+```
+
+### An arc
+
+Less than a full turn, starting where you put it. The text reaches both ends of the arc rather than stopping short of the second one.
+
+```tsx
+<CircularText radius={80} spread={200} startAngle={-100} textClassName="text-sm font-medium">
+  ARRIVING SHORTLY
+</CircularText>
+```
+
+## API Reference
+
+### CircularText
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `radius` | `number` | — | Points from the centre of the ring to the outside of the text. It is also half the component's width and height — the ring is a square that measures `radius * 2` on both axes, and the characters hang inside its edge. Nothing is laid out around it, so give the space it needs. |
+| `spinDuration` | `number` | — | Milliseconds for one full turn. Slow by default: it is decoration, and a ring that turns at the speed of a spinner reads as something loading. |
+| `reverse` | `boolean` | `false` | Turn anticlockwise. |
+| `paused` | `boolean` | `false` | Hold the ring where it is. It stops in place rather than returning to the top, and resumes from there, so a ring paused mid-word is still on that word when it starts again. |
+| `spread` | `number` | — | Degrees of the circle the text is spread across. The whole way round by default. A full turn has no last gap, since the end of the string is adjacent to its start. Anything less is an arc with two ends, and the text reaches both of them. |
+| `startAngle` | `number` | `0` | Degrees clockwise from the top that the first character sits at. |
+| `className` | `string` | — | Classes for the ring's own box. |
+| `textClassName` | `string` | — | Classes for the characters — size, weight, colour, tracking. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+**With the operating system set to reduce motion the ring is drawn once and held still.** Not a slower turn — none. The shape carries the whole meaning, and the rotation is exactly the part that setting exists to remove.
+
+`spinDuration` is milliseconds for one full turn, and the default of 20 seconds is deliberately slow. A ring turning at the speed of a spinner reads as something loading.
+
+**`radius` is also half the component's width and height.** The ring is a square that measures `radius * 2` on both axes, and the characters hang inside its edge — so a larger text size moves them inward rather than making the component bigger. Nothing is laid out around the ring, so give it the space it needs.
+
+The text is announced once, as a single label. The characters are hidden from assistive technology as a group, because a ring read out character by character is a string spelled one letter at a time.
+
+Give it a string, not elements. Each character is placed and turned on its own, so there is nothing inside for markup to apply to; style the whole set with `textClassName`.
+
+A non-finite `radius`, `spinDuration` or `spread` falls back to its default, and a negative one is treated as zero, so bad data cannot produce a transform that never resolves. `spread` is clamped to a full turn: past that the characters would overlap the ones already there.
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `CircularText`
+
+**Types:** `CircularTextProps`

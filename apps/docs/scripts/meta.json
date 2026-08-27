@@ -647,6 +647,15 @@
       "category": "media"
     }
   ],
+  "circular-text": [
+    "CircularText",
+    "Text set around a circle, turning.",
+    "react native circular text rotating badge seal",
+    {
+      "addedIn": "0.84.0",
+      "category": "media"
+    }
+  ],
   "section-rail": [
     "SectionRail",
     "Floating section navigator for a long screen.",

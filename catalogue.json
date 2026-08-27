@@ -19,6 +19,7 @@
     "carousel",
     "checkbox",
     "chip",
+    "circular-text",
     "code-block",
     "collapsible",
     "color-picker",
@@ -187,16 +188,16 @@
     }
   ],
   "counts": {
-    "componentModules": 118,
-    "packageComponentExports": 118,
-    "documentedComponents": 118,
-    "exampleEntries": 118,
+    "componentModules": 119,
+    "packageComponentExports": 119,
+    "documentedComponents": 119,
+    "exampleEntries": 119,
     "registry": {
-      "componentItems": 118,
+      "componentItems": 119,
       "supportItems": 36,
-      "totalItems": 154,
+      "totalItems": 155,
       "byType": {
-        "registry:ui": 133,
+        "registry:ui": 134,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1

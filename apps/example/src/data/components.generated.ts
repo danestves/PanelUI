@@ -19,6 +19,7 @@ export const COMPONENTS = [
   {"slug":"carousel","name":"Carousel","summary":"A run of slides, one at a time, dragged with a finger"},
   {"slug":"checkbox","name":"Checkbox","summary":"Multi-select control with label"},
   {"slug":"chip","name":"Chip","summary":"Interactive pill — filter, tag, or token"},
+  {"slug":"circular-text","name":"CircularText","summary":"Text set around a circle, turning"},
   {"slug":"code-block","name":"CodeBlock","summary":"A fenced snippet, coloured and scrolled sideways"},
   {"slug":"collapsible","name":"Collapsible","summary":"One section, shown and hidden by its own header"},
   {"slug":"color-picker","name":"ColorPicker","summary":"A colour chosen by dragging, not by typing"},

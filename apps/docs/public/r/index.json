@@ -299,6 +299,19 @@
     "docsPath": "components/chip"
   },
   {
+    "name": "circular-text",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Text set around a circle, turning.",
+    "registryDependencies": [
+      "cn",
+      "text"
+    ],
+    "docsPath": "components/circular-text"
+  },
+  {
     "name": "cn",
     "type": "registry:lib",
     "kind": "lib",

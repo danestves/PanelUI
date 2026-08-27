@@ -421,6 +421,7 @@ export {
   type ChipVariant,
   type ChipSize,
 } from './components/chip';
+export { CircularText, type CircularTextProps } from './components/circular-text';
 export {
   Collapsible,
   type CollapsibleProps,
