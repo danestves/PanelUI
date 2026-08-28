@@ -18,9 +18,17 @@
  * **Theme tokens do not apply in native mode.** The platform draws the control
  * with its own colours, metrics and typography — that is the entire point, and
  * it means `className` and the variant props are ignored on those components.
+ *
+ * The one exception is which appearance it draws: `colorScheme` is the single
+ * theme signal the toolkit accepts, and `NativeHost` is what passes it. Mount
+ * every host through that rather than reaching for `Host` directly, or the
+ * control resolves its own appearance from the system and stops tracking the
+ * app's theme.
  */
 import { Platform } from 'react-native';
 import type { ComponentType, ReactNode } from 'react';
+
+export { NativeHost, type NativeHostProps } from './native-host';
 
 interface NativeUIModule {
   Host: ComponentType<{
@@ -56,6 +64,14 @@ interface NativeUIModule {
      * platform's business and stay its business.
      */
     ignoreSafeArea?: 'all' | 'container' | 'keyboard';
+    /**
+     * The appearance the platform draws the hosted control in.
+     *
+     * Passed by `NativeHost` from the app's own theme, because the host would
+     * otherwise resolve it from the system — which is a different question,
+     * and one whose answer does not change when the theme does.
+     */
+    colorScheme?: 'light' | 'dark';
     style?: unknown;
     [key: string]: unknown;
   }>;
@@ -175,7 +191,9 @@ interface SwiftUIComponents {
   Host: ComponentType<{
     children?: ReactNode;
     matchContents?: boolean | { vertical?: boolean; horizontal?: boolean };
-    ignoreSafeArea?: unknown;
+    ignoreSafeArea?: 'all' | 'container' | 'keyboard';
+    /** As on the portable host above — see `NativeHost`. */
+    colorScheme?: 'light' | 'dark';
     style?: unknown;
   }>;
   RNHostView: ComponentType<{ children?: ReactNode; matchContents?: boolean }>;

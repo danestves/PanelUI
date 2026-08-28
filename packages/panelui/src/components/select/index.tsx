@@ -63,7 +63,7 @@ import Animated, {
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { CheckIcon, ChevronDownIcon, SearchIcon } from '../../icons';
-import { getNativeUI } from '../../native';
+import { NativeHost, getNativeUI } from '../../native';
 import { Portal } from '../../primitives/portal';
 import { Text, textChildren } from '../../primitives/text';
 import { useBackHandler } from '../../hooks/use-back-handler';
@@ -568,7 +568,7 @@ function SelectRoot({
       // A picker fills the width of the row it sits in and reports its own
       // height — a menu is a compact button, a wheel a full rotor, and the
       // platform is the only thing that knows which by how much.
-      <Host matchContents={{ vertical: true }} ignoreSafeArea="keyboard">
+      <NativeHost host={Host} matchContents={{ vertical: true }} ignoreSafeArea="keyboard">
         <Picker
           selectedValue={value ?? firstEnabled?.value ?? ''}
           onValueChange={(next: string) => onValueChange(next)}
@@ -579,7 +579,7 @@ function SelectRoot({
             <Picker.Item key={option.value} label={option.label} value={option.value} />
           ))}
         </Picker>
-      </Host>
+      </NativeHost>
     );
   }
 

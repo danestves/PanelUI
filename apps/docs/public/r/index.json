@@ -653,7 +653,8 @@
     "description": "The iOS system material, drawn where it exists and a solid surface everywhere else.",
     "registryDependencies": [
       "cn",
-      "scrim"
+      "scrim",
+      "use-theme"
     ]
   },
   {
@@ -998,7 +999,9 @@
     "group": "utilities",
     "stability": "stable",
     "description": "Optional bridge to the platform UI toolkit, behind the `native` prop.",
-    "registryDependencies": []
+    "registryDependencies": [
+      "use-theme"
+    ]
   },
   {
     "name": "number-input",

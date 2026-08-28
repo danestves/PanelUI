@@ -44,6 +44,7 @@
  */
 import type { ComponentType, ReactNode } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
+import { useThemeMode } from '../theme/use-theme';
 import { cn } from '../utils/cn';
 import { useReduceTransparency } from './scrim';
 
@@ -144,6 +145,16 @@ export function Glass({
   ...props
 }: GlassProps) {
   const reduceTransparency = useReduceTransparency();
+  /*
+   * Which appearance the material is drawn in, from the app's theme rather
+   * than the phone's.
+   *
+   * The material's own default follows the system, so an app running a dark
+   * theme on a phone set to light draws light glass over dark content — and a
+   * theme changed at runtime leaves it where it was, because the system
+   * appearance never moved.
+   */
+  const { mode } = useThemeMode();
   // Not knowing yet counts as "do not draw it": the material arriving a frame
   // late is invisible, and one flashing at somebody who opted out is not.
   const material = GlassView !== null && reduceTransparency === false;
@@ -159,6 +170,7 @@ export function Glass({
         <GlassView
           glassEffectStyle={variant}
           tintColor={tint}
+          colorScheme={mode}
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, shape]}
         />

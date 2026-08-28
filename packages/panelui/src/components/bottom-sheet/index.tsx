@@ -38,7 +38,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tv } from 'tailwind-variants';
-import { getComposeModifiers, getNativeUI, getSwiftUIModifiers } from '../../native';
+import { NativeHost, getComposeModifiers, getNativeUI, getSwiftUIModifiers } from '../../native';
 import { XIcon } from '../../icons';
 import { ModalPortal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
@@ -700,7 +700,12 @@ function BottomSheetContent({
     // sheet cannot measure RN views directly. Without it the sheet sizes to
     // nothing and the content spills outside its container.
     return (
-      <Host matchContents ignoreSafeArea="keyboard" style={{ position: 'absolute' }}>
+      <NativeHost
+        host={Host}
+        matchContents
+        ignoreSafeArea="keyboard"
+        style={{ position: 'absolute' }}
+      >
         <NativeBottomSheet
           isPresented={nativePresented}
           onDismiss={onNativeDismiss}
@@ -734,7 +739,7 @@ function BottomSheetContent({
             </BottomSheetContext.Provider>
           </RNHostView>
         </NativeBottomSheet>
-      </Host>
+      </NativeHost>
     );
   }
 

@@ -202,12 +202,18 @@ register(
   () => `${ALIAS.lib}/haptics`
 );
 
+// `native-host.tsx` rides with the bridge rather than standing on its own:
+// it is the bridge's only React component, and nothing imports one without
+// the other.
 register(
   'native',
   'registry:lib',
-  [path.join(SRC, 'native/index.ts')],
-  () => 'lib/native.ts',
-  () => `${ALIAS.lib}/native`
+  [path.join(SRC, 'native/index.ts'), path.join(SRC, 'native/native-host.tsx')],
+  (f) => (path.basename(f) === 'index.ts' ? 'lib/native.ts' : `lib/${path.basename(f)}`),
+  (f) =>
+    path.basename(f) === 'index.ts'
+      ? `${ALIAS.lib}/native`
+      : `${ALIAS.lib}/${path.basename(f).replace(/\.tsx$/, '')}`
 );
 
 for (const file of fs.readdirSync(path.join(SRC, 'hooks')).sort()) {

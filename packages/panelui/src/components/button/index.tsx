@@ -9,7 +9,7 @@ import {
 import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
 import { IconColorProvider } from '../../icons';
-import { getNativeUI, getSwiftUIModifiers } from '../../native';
+import { NativeHost, getNativeUI, getSwiftUIModifiers } from '../../native';
 import { Spinner } from '../spinner';
 
 const buttonVariants = tv({
@@ -403,7 +403,7 @@ export const Button = forwardRef<View, ButtonProps>(
       const nativeContent = prominent ? '#ffffff' : contentColor;
 
       return (
-        <Host matchContents ignoreSafeArea="keyboard">
+        <NativeHost host={Host} matchContents ignoreSafeArea="keyboard">
           <NativeButton
             label={isStringLabel ? children : undefined}
             // The platform only reads a symbol beside a label it drew itself,
@@ -461,7 +461,7 @@ export const Button = forwardRef<View, ButtonProps>(
               </RNHostView>
             )}
           </NativeButton>
-        </Host>
+        </NativeHost>
       );
     }
 

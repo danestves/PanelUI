@@ -42,7 +42,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useDirectionSign } from '../../hooks/use-direction';
-import { getNativeUI } from '../../native';
+import { NativeHost, getNativeUI } from '../../native';
 import { Text } from '../../primitives/text';
 import { selectionTick } from '../../utils/haptics';
 
@@ -567,7 +567,7 @@ export const Slider = forwardRef<View, SliderProps>(
           {/* A slider has no intrinsic width — it fills whatever it is given —
               so the width comes from ordinary layout and only the height is
               matched to the platform's content. */}
-          <Host matchContents={{ vertical: true }} ignoreSafeArea="keyboard">
+          <NativeHost host={Host} matchContents={{ vertical: true }} ignoreSafeArea="keyboard">
             <NativeSlider
               value={value}
               onValueChange={(next: number) => {
@@ -578,7 +578,7 @@ export const Slider = forwardRef<View, SliderProps>(
               step={step}
               disabled={disabled}
             />
-          </Host>
+          </NativeHost>
         </View>
       );
     }

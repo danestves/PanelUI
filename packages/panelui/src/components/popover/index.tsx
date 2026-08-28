@@ -63,7 +63,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FocusRestorePortal } from '../../primitives/portal';
 import { Scrim } from '../../primitives/scrim';
 import { useBackHandler } from '../../hooks/use-back-handler';
-import { getSwiftUI } from '../../native';
+import { NativeHost, getSwiftUI } from '../../native';
 import { BottomSheet } from '../bottom-sheet';
 import { Text, type TextProps, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
@@ -315,7 +315,7 @@ function NativePopover({
     typeof contentProps?.width === 'number' ? contentProps.width : NATIVE_PANEL_WIDTH;
 
   return (
-    <Host matchContents ignoreSafeArea="keyboard">
+    <NativeHost host={Host} matchContents ignoreSafeArea="keyboard">
       <PlatformPopover
         isPresented={open}
         onIsPresentedChange={setOpen}
@@ -338,7 +338,7 @@ function NativePopover({
           </RNHostView>
         </PlatformPopover.Content>
       </PlatformPopover>
-    </Host>
+    </NativeHost>
   );
 }
 
