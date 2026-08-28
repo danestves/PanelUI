@@ -1,0 +1,39 @@
+{
+  "slug": "flip-card",
+  "intro": "For content that is genuinely two-sided \u2014 a bank card and its security code, a term and its definition, a photograph and what it is of.\n\n**The front sizes the card.** The back is laid over it and given that box to fill, so a back with more in it than the front overflows rather than growing the card. Put a height on the root when the two faces differ; a card that changed height halfway through the turn would move everything under it.\n\nIt is not for progressive disclosure. The back replaces the front rather than extending it, so anything the reader needs to compare across the turn belongs in [Collapsible](/docs/components/collapsible) or a second card.",
+  "usage": "<FlipCard>\n  <FlipCard.Front className=\"items-center justify-center rounded-2xl bg-card p-6\">\n    <Text>Tap me</Text>\n  </FlipCard.Front>\n  <FlipCard.Back className=\"items-center justify-center rounded-2xl bg-primary p-6\">\n    <Text className=\"text-primary-foreground\">The other side</Text>\n  </FlipCard.Back>\n</FlipCard>",
+  "extraImports": [
+    "Text",
+    "Button",
+    "View"
+  ],
+  "anatomy": "<FlipCard>\n  <FlipCard.Front />\n  <FlipCard.Back />\n</FlipCard>",
+  "parts": {
+    "FlipCard": "The card, the turn and whatever triggers it. Takes the direction, the rotation and the trigger, and holds `flipped` when the caller does not.",
+    "FlipCard.Front": "The face showing at rest. Its size is the card's size, on both axes.",
+    "FlipCard.Back": "The face the turn reveals, laid over the front and given the front's box."
+  },
+  "examples": [
+    {
+      "title": "A bank card",
+      "description": "The case the component exists for. The number, the holder and the expiry are on the front; the stripe and the security code are on the back, because that is where they are on the object.\n\nGive the root a height. The back of a card carries less than the front and would otherwise be handed a box the front's content decided.",
+      "code": "<FlipCard className=\"h-[200px] w-full\">\n  <FlipCard.Front className=\"h-full justify-between rounded-2xl bg-primary p-5\">\n    <Text className=\"text-primary-foreground\">PanelUI Bank</Text>\n    <Text size=\"xl\" className=\"tracking-[3px] text-primary-foreground\">\n      4242 4242 4242 4242\n    </Text>\n    <View className=\"flex-row justify-between\">\n      <Text size=\"sm\" className=\"text-primary-foreground\">K. ABDI</Text>\n      <Text size=\"sm\" className=\"text-primary-foreground\">09/29</Text>\n    </View>\n  </FlipCard.Front>\n  <FlipCard.Back className=\"h-full rounded-2xl bg-surface-secondary py-5\">\n    <View className=\"h-10 w-full bg-foreground/80\" />\n    <View className=\"mt-5 flex-row items-center justify-end gap-3 px-5\">\n      <Text size=\"sm\" muted>CVC</Text>\n      <View className=\"rounded-md bg-background px-3 py-1\">\n        <Text className=\"font-mono\">829</Text>\n      </View>\n    </View>\n  </FlipCard.Back>\n</FlipCard>"
+    },
+    {
+      "title": "Turning it the other way",
+      "description": "`direction=\"vertical\"` turns the card top over bottom about its horizontal axis instead of left to right.\n\nIt is the right choice when the card sits in a row of others: a horizontal turn sweeps the near edge out over its neighbours, and a vertical one stays inside the card's own column.",
+      "code": "<FlipCard direction=\"vertical\" className=\"h-[140px]\">\n  <FlipCard.Front className=\"h-full items-center justify-center rounded-2xl bg-card\">\n    <Text size=\"2xl\" weight=\"bold\">37\u00b0</Text>\n  </FlipCard.Front>\n  <FlipCard.Back className=\"h-full items-center justify-center rounded-2xl bg-card\">\n    <Text size=\"2xl\" weight=\"bold\">99\u00b0F</Text>\n  </FlipCard.Back>\n</FlipCard>"
+    },
+    {
+      "title": "Flipped from somewhere else",
+      "description": "Pass `flipped` to hold the state yourself, and `trigger=\"none\"` so the card does not also turn under a tap. Use it when the control that reveals the back is not the card \u2014 a button in a toolbar, a row in a list, a switch.",
+      "code": "const [flipped, setFlipped] = useState(false);\n\n<View className=\"gap-3\">\n  <FlipCard flipped={flipped} trigger=\"none\" className=\"h-[140px]\">\n    <FlipCard.Front className=\"h-full items-center justify-center rounded-2xl bg-card\">\n      <Text>Front</Text>\n    </FlipCard.Front>\n    <FlipCard.Back className=\"h-full items-center justify-center rounded-2xl bg-card\">\n      <Text>Back</Text>\n    </FlipCard.Back>\n  </FlipCard>\n  <Button onPress={() => setFlipped((on) => !on)}>Turn it over</Button>\n</View>"
+    },
+    {
+      "title": "Turning it with a finger",
+      "description": "`trigger=\"drag\"` turns the card with the drag and springs to whichever face is nearer when you let go. A short drag travelling fast is honoured rather than refused on a technicality.\n\nThe drag replaces the tap rather than joining it, so the card also takes an `activate` accessibility action \u2014 a card that can only be turned by dragging is a card some readers can never see the back of.",
+      "code": "<FlipCard trigger=\"drag\" className=\"h-[140px]\">\n  <FlipCard.Front className=\"h-full items-center justify-center rounded-2xl bg-card\">\n    <Text muted>Drag across</Text>\n  </FlipCard.Front>\n  <FlipCard.Back className=\"h-full items-center justify-center rounded-2xl bg-card\">\n    <Text>Let go and it settles</Text>\n  </FlipCard.Back>\n</FlipCard>"
+    }
+  ],
+  "notes": "### Both faces are hidden twice\n\n`backfaceVisibility` is the mechanism, and it is not reliable on every Android surface. So the face that has turned away is also faded out and dropped behind at the halfway point, off the same value that drives the turn. Two mechanisms for one job, because the failure of the first is a card showing both faces mirrored through each other and nothing in the tree that says why.\n\n### Under reduce motion\n\nThe faces swap with no turn at all \u2014 not a shorter turn, none. The rotation is the part that moves and moving is what the setting is about; which face is showing is the information, and it is kept.\n\n### What is yours to change\n\n`perspective` sets how deep the turn looks, in points. Smaller is more dramatic, because the near edge swings further out; below about 400 a full-width card starts to read as a door rather than a card. `rotation=\"reverse\"` sends the turn the other way, which is worth having when two cards side by side should not turn identically.\n\n`useFlipCard()` returns the settled face, the direction, and `progress` \u2014 a shared value running 0 to 1 across the turn \u2014 so a face can drive its own animation off the same turn rather than starting a second one beside it."
+}

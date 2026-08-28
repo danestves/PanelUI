@@ -223,6 +223,15 @@ export {
   type FlowPoint,
 } from './components/flow';
 export {
+  FlipCard,
+  useFlipCard,
+  type FlipCardProps,
+  type FlipCardFaceProps,
+  type FlipCardDirection,
+  type FlipCardRotation,
+  type FlipCardTrigger,
+} from './components/flip-card';
+export {
   FunnelChart,
   useFunnelChart,
   type FunnelChartProps,

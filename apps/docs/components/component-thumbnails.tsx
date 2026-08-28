@@ -1582,6 +1582,13 @@ const circularText = (
   </div>
 );
 
+const flipCard = (
+  <div className="relative size-24 [perspective:600px]">
+    <div className="absolute inset-x-2 inset-y-4 rounded-lg border border-fd-border bg-fd-muted [transform:rotateY(-28deg)]" />
+    <div className="absolute inset-x-2 inset-y-4 rounded-lg border border-fd-border bg-fd-card [transform:rotateY(24deg)_translateZ(10px)]" />
+  </div>
+);
+
 const marquee = (
   <div className="flex w-full max-w-52 justify-center overflow-hidden">
     <Row className="w-max shrink-0 gap-2">
@@ -2043,6 +2050,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
   attachment,
   avatar,
   'circular-text': circularText,
+  'flip-card': flipCard,
   marquee,
   message,
   'message-scroller': messageScroller,

@@ -196,7 +196,7 @@ The component subpath is the slug from its documentation URL. The public utiliti
 `color` and `time`; the other foundation leaves are `animated-pressable`, `keyboard-avoider` and
 `scroll-progress` under `panelui-native/primitives/`.
 
-**Prefer the subpath for anything you ship.** The root entry re-exports all 119 components and
+**Prefer the subpath for anything you ship.** The root entry re-exports all 120 components and
 Metro does not tree-shake, so one name from it loads every component and everything they import —
 including the charts' SVG graphs and the map. On a desktop simulator that is invisible. On an
 Android device it is not: the whole library evaluates before your first screen paints, and under

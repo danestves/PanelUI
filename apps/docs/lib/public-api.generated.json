@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1195,
-    "values": 316,
-    "types": 879,
-    "modules": 146,
-    "components": 119,
+    "exports": 1202,
+    "values": 318,
+    "types": 884,
+    "modules": 147,
+    "components": 120,
     "hooks": 13
   },
   "groups": {
@@ -1158,6 +1158,41 @@
           },
           {
             "name": "FieldTitleProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/flip-card/index.tsx",
+        "slug": "flip-card",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "FlipCard",
+            "kind": "value"
+          },
+          {
+            "name": "useFlipCard",
+            "kind": "value"
+          },
+          {
+            "name": "FlipCardProps",
+            "kind": "type"
+          },
+          {
+            "name": "FlipCardFaceProps",
+            "kind": "type"
+          },
+          {
+            "name": "FlipCardDirection",
+            "kind": "type"
+          },
+          {
+            "name": "FlipCardRotation",
+            "kind": "type"
+          },
+          {
+            "name": "FlipCardTrigger",
             "kind": "type"
           }
         ]

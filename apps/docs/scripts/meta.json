@@ -106,7 +106,7 @@
   ],
   "button-group": [
     "ButtonGroup",
-    "Several buttons drawn as one control — a segmented run, a split action, a toolbar.",
+    "Several buttons drawn as one control \u2014 a segmented run, a split action, a toolbar.",
     "react native button group segmented control split button",
     {
       "addedIn": "0.49.0",
@@ -153,7 +153,7 @@
   ],
   "chip": [
     "Chip",
-    "Interactive pill — a filter, a tag, or a removable token.",
+    "Interactive pill \u2014 a filter, a tag, or a removable token.",
     "react native chip",
     {
       "addedIn": "0.13.0",
@@ -171,7 +171,7 @@
   ],
   "color-picker": [
     "ColorPicker",
-    "A colour chosen by dragging — a saturation square or a wheel, a hue scale, and opacity.",
+    "A colour chosen by dragging \u2014 a saturation square or a wheel, a hue scale, and opacity.",
     "react native color picker",
     {
       "addedIn": "0.42.0",
@@ -238,7 +238,7 @@
   ],
   "fab": [
     "Fab",
-    "The floating action button — one action pinned over the content, with an optional dial of others behind it.",
+    "The floating action button \u2014 one action pinned over the content, with an optional dial of others behind it.",
     "react native floating action button fab speed dial",
     {
       "addedIn": "0.49.0",
@@ -258,13 +258,22 @@
   ],
   "form": [
     "Form",
-    "Form state — values, validation and submission — with no form library underneath.",
+    "Form state \u2014 values, validation and submission \u2014 with no form library underneath.",
     "react native form hook",
     {
       "group": "form",
       "addedIn": "0.17.0",
       "updatedIn": "0.38.0",
       "category": "forms"
+    }
+  ],
+  "flip-card": [
+    "FlipCard",
+    "Two faces of one card, and a turn between them.",
+    "react native flip card 3d rotate front back",
+    {
+      "addedIn": "0.85.0",
+      "category": "media"
     }
   ],
   "flow": [
@@ -279,7 +288,7 @@
   ],
   "frame": [
     "Frame",
-    "Widget shell — a card of rows sitting in a titled tray.",
+    "Widget shell \u2014 a card of rows sitting in a titled tray.",
     "react native list section",
     {
       "updatedIn": "0.19.0",
@@ -1006,7 +1015,7 @@
   ],
   "post": [
     "Post",
-    "A social card — author, body, media and the counts underneath, with the votes animated.",
+    "A social card \u2014 author, body, media and the counts underneath, with the votes animated.",
     "react native social post card component",
     {
       "addedIn": "0.32.0",
@@ -1076,7 +1085,7 @@
   ],
   "qr-code": [
     "QRCode",
-    "A string a camera can read — framed, titled, or folded away behind a button.",
+    "A string a camera can read \u2014 framed, titled, or folded away behind a button.",
     "react native qr code generator scan",
     {
       "addedIn": "0.57.0",

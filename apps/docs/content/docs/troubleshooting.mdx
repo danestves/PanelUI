@@ -18,7 +18,7 @@ fault in any one component — and the OS kills the process instead of reporting
 why there is nothing to read.
 
 **PanelUI's root entry re-exports every component.** `import { Button } from 'panelui-native'`
-loads all 119 of them and everything they import, because Metro does not tree-shake. On a device
+loads all 120 of them and everything they import, because Metro does not tree-shake. On a device
 under memory pressure that is enough on its own.
 
 Import through the subpaths instead. They are part of the package's `exports` map and are typed

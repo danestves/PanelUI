@@ -118,6 +118,7 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   surface: () => load08().then((module) => module.ENTRIES_BY_SLUG['surface']),
   'circular-text': () =>
     load08().then((module) => module.ENTRIES_BY_SLUG['circular-text']),
+  'flip-card': () => load08().then((module) => module.ENTRIES_BY_SLUG['flip-card']),
   shimmer: () => load08().then((module) => module.ENTRIES_BY_SLUG['shimmer']),
   'text-animation': () =>
     load08().then((module) => module.ENTRIES_BY_SLUG['text-animation']),

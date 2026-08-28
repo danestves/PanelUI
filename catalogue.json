@@ -33,6 +33,7 @@
     "empty-state",
     "fab",
     "field",
+    "flip-card",
     "flow",
     "form",
     "frame",
@@ -188,16 +189,16 @@
     }
   ],
   "counts": {
-    "componentModules": 119,
-    "packageComponentExports": 119,
-    "documentedComponents": 119,
-    "exampleEntries": 119,
+    "componentModules": 120,
+    "packageComponentExports": 120,
+    "documentedComponents": 120,
+    "exampleEntries": 120,
     "registry": {
-      "componentItems": 119,
+      "componentItems": 120,
       "supportItems": 36,
-      "totalItems": 155,
+      "totalItems": 156,
       "byType": {
-        "registry:ui": 134,
+        "registry:ui": 135,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1

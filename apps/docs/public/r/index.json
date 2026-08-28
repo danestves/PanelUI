@@ -581,6 +581,18 @@
     "registryDependencies": []
   },
   {
+    "name": "flip-card",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Two faces of one card, and a turn between them.",
+    "registryDependencies": [
+      "cn"
+    ],
+    "docsPath": "components/flip-card"
+  },
+  {
     "name": "flow",
     "type": "registry:ui",
     "kind": "ui",

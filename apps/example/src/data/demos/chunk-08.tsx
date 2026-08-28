@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { ScrollView, View } from "react-native";
-import { Alert, Avatar, Button, Card, CheckIcon, CircularText, FolderIcon, Input, Item, Label, RadioGroup, Rating, Select, SelectionMode, SectionRail, Separator, Shimmer, Skeleton, Slider, Spinner, Surface, Text, TextAnimation, ToggleButton, ToggleButtonGroup, TrashIcon, hasNativeUI, useScrollSections } from "panelui-native";
+import { Alert, Avatar, Button, Card, CheckIcon, CircularText, FlipCard, FolderIcon, Input, Item, Label, RadioGroup, Rating, Select, SelectionMode, SectionRail, Separator, Shimmer, Skeleton, Slider, Spinner, Surface, Text, TextAnimation, ToggleButton, ToggleButtonGroup, TrashIcon, hasNativeUI, useScrollSections } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 function RadioGroupDemo() {
@@ -1089,6 +1089,113 @@ function CircularTextPausedDemo() {
 }
 
 
+/**
+ * The card that made this component worth building.
+ *
+ * The number, the holder and the expiry are on the front and the stripe and
+ * the code are on the back, because that is where they are on the object —
+ * which is the whole test for whether something should be a flip card at all.
+ *
+ * Placeholder digits, and visibly so: 4242 is the test number every payment
+ * processor documents, and nobody has to wonder whether a real card went into
+ * a demo.
+ */
+function FlipCardBankDemo() {
+  return (
+    <FlipCard className="h-[200px] w-full">
+      <FlipCard.Front className="h-full justify-between rounded-2xl bg-primary p-5">
+        <View className="flex-row items-center justify-between">
+          <Text size="sm" weight="medium" className="text-primary-foreground">
+            PanelUI Bank
+          </Text>
+          <View className="h-6 w-8 rounded bg-primary-foreground/25" />
+        </View>
+        <Text size="xl" className="tracking-[3px] text-primary-foreground">
+          4242 4242 4242 4242
+        </Text>
+        <View className="flex-row justify-between">
+          <Text size="sm" className="text-primary-foreground/80">
+            K. ABDI
+          </Text>
+          <Text size="sm" className="text-primary-foreground/80">
+            09/29
+          </Text>
+        </View>
+      </FlipCard.Front>
+      <FlipCard.Back className="h-full justify-start rounded-2xl bg-surface-secondary py-5">
+        <View className="h-10 w-full bg-foreground/80" />
+        <View className="mt-5 flex-row items-center justify-end gap-3 px-5">
+          <Text size="sm" muted>
+            CVC
+          </Text>
+          <View className="rounded-md bg-background px-3 py-1">
+            <Text className="font-mono">829</Text>
+          </View>
+        </View>
+      </FlipCard.Back>
+    </FlipCard>
+  );
+}
+
+/** Top over bottom, for a card that sits in a column of others. */
+function FlipCardVerticalDemo() {
+  return (
+    <FlipCard direction="vertical" className="h-[140px] w-full">
+      <FlipCard.Front className="h-full items-center justify-center rounded-2xl border border-border bg-card">
+        <Text size="3xl" weight="bold">
+          37°
+        </Text>
+        <Text size="sm" muted>
+          Celsius
+        </Text>
+      </FlipCard.Front>
+      <FlipCard.Back className="h-full items-center justify-center rounded-2xl border border-border bg-card">
+        <Text size="3xl" weight="bold">
+          99°
+        </Text>
+        <Text size="sm" muted>
+          Fahrenheit
+        </Text>
+      </FlipCard.Back>
+    </FlipCard>
+  );
+}
+
+/** The card turned from a control that is not the card. */
+function FlipCardControlledDemo() {
+  const [flipped, setFlipped] = useState(false);
+
+  return (
+    <View className="w-full gap-3">
+      <FlipCard flipped={flipped} trigger="none" className="h-[140px] w-full">
+        <FlipCard.Front className="h-full items-center justify-center rounded-2xl border border-border bg-card">
+          <Text weight="medium">The question</Text>
+        </FlipCard.Front>
+        <FlipCard.Back className="h-full items-center justify-center rounded-2xl border border-border bg-card">
+          <Text weight="medium">The answer</Text>
+        </FlipCard.Back>
+      </FlipCard>
+      <Button variant="outline" onPress={() => setFlipped((on) => !on)}>
+        {flipped ? 'Back to the question' : 'Show the answer'}
+      </Button>
+    </View>
+  );
+}
+
+/** Turned with the finger, and settled on whichever face is nearer. */
+function FlipCardDragDemo() {
+  return (
+    <FlipCard trigger="drag" className="h-[140px] w-full">
+      <FlipCard.Front className="h-full items-center justify-center rounded-2xl border border-border bg-card">
+        <Text muted>Drag across it</Text>
+      </FlipCard.Front>
+      <FlipCard.Back className="h-full items-center justify-center rounded-2xl border border-border bg-card">
+        <Text>Let go and it settles</Text>
+      </FlipCard.Back>
+    </FlipCard>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'radio-group',
@@ -1473,6 +1580,18 @@ export const ENTRIES: ComponentEntry[] = [
       { label: 'Sliding a price', render: () => <SlidingPriceDemo /> },
       { label: 'Scrolling', render: () => <ScrollingDemo /> },
       { label: 'Shared configuration', render: () => <TextAnimationGroupDemo /> },
+    ],
+  },
+
+{
+    slug: 'flip-card',
+    name: 'FlipCard',
+    summary: 'Two faces of one card, and a turn between them',
+    demos: [
+      { label: 'A bank card', render: () => <FlipCardBankDemo /> },
+      { label: 'Turning it the other way', render: () => <FlipCardVerticalDemo /> },
+      { label: 'Flipped from somewhere else', render: () => <FlipCardControlledDemo /> },
+      { label: 'Turning it with a finger', render: () => <FlipCardDragDemo /> },
     ],
   },
 {

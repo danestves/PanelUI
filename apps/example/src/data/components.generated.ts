@@ -33,6 +33,7 @@ export const COMPONENTS = [
   {"slug":"empty-state","name":"EmptyState","summary":"Placeholder for a view with no content"},
   {"slug":"fab","name":"Fab","summary":"The floating action button, and the dial behind it"},
   {"slug":"field","name":"Field","summary":"Layout and validation-state kit for a form control"},
+  {"slug":"flip-card","name":"FlipCard","summary":"Two faces of one card, and a turn between them"},
   {"slug":"flow","name":"Flow","summary":"Pan-and-zoom canvas of draggable nodes joined by animated edges"},
   {"slug":"form","name":"Form","summary":"Form state with no form library underneath"},
   {"slug":"frame","name":"Frame","summary":"Widget shell with a titled header and a flush inner card"},
