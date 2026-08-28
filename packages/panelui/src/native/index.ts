@@ -34,17 +34,24 @@ interface NativeUIModule {
   Host: ComponentType<{
     children?: ReactNode;
     /**
-     * Whether the host resizes itself to the platform content.
+     * Which axes the platform is allowed to size.
      *
-     * This is on for every control here, and it is the whole answer to the
-     * jump. Sizing the *host* and leaving the control unsized inside it hands
-     * the platform a box it never agreed to: it lays out against its own
-     * intrinsic size, and settles into the box on the first thing that forces
-     * a second pass — which for a button is the first press.
+     * **It is not a one-off measurement.** An axis given to `matchContents` is
+     * given for good: the host writes the platform's measured size straight
+     * into the layout every time the platform's geometry changes, and dirties
+     * the layout when it does. So a control that lays itself out again under a
+     * press drags its box with it, and everything below it moves — which is
+     * the defect this spent three attempts on, twice reasoning about the first
+     * measurement when the problem was every one after it.
      *
-     * The per-axis form is for a control with no intrinsic width, like a
-     * slider or a picker: the width comes from ordinary layout and only the
-     * height is reported back.
+     * The rule that comes out of that: **never hand over an axis whose size
+     * you already know.** State it in `style` instead and match only what is
+     * genuinely the platform's — a labelled button's width, a toggle's width.
+     * An axis left out is never written to, so an explicit size on it is safe.
+     *
+     * Where nothing can be stated the axis has to stay matched. A picker is
+     * the honest example: a menu is a compact button and a wheel is a rotor,
+     * and only the platform knows which it drew.
      */
     matchContents?: boolean | { vertical?: boolean; horizontal?: boolean };
     /**

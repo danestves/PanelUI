@@ -79,6 +79,15 @@ export interface SwitchProps
  * Animated switch. Thumb position and active-track opacity are driven on the
  * UI thread; toggling never re-renders beyond the value change itself.
  */
+/**
+ * The box the platform toggle is given, in points.
+ *
+ * Taller than either platform's switch — 31 on iOS, 32 on Android — so the
+ * control is never clipped by the box it is centred in, and short enough that
+ * a row built around it is still a row.
+ */
+const NATIVE_TOGGLE_HEIGHT = 32;
+
 export const Switch = forwardRef<View, SwitchProps>(
   (
     {
@@ -124,11 +133,23 @@ export const Switch = forwardRef<View, SwitchProps>(
     if (nativeUI) {
       const { Host, Switch: NativeSwitch } = nativeUI;
       return (
-        // A platform toggle has a definite intrinsic size on both platforms,
-        // so the host is left to follow it. Pinning the host to a number
-        // instead is what leaves the control laid out against a box it never
-        // agreed to, and settling into it a frame later.
-        <NativeHost host={Host} matchContents ignoreSafeArea="keyboard">
+        /*
+         * The height is stated; only the width is matched.
+         *
+         * `matchContents` hands an axis to the platform for good — the host
+         * writes the measured size back into the layout every time the
+         * platform's geometry changes, not once on mount — and the vertical
+         * axis is the one that moves everything below it when it does. A
+         * toggle's height is the one number here that does not vary, so it is
+         * given rather than asked for; its width is the platform's and stays
+         * the platform's.
+         */
+        <NativeHost
+          host={Host}
+          matchContents={{ horizontal: true }}
+          ignoreSafeArea="keyboard"
+          style={{ height: NATIVE_TOGGLE_HEIGHT }}
+        >
           <NativeSwitch
             value={value}
             onValueChange={(next: boolean) => onValueChange?.(next)}

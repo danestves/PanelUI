@@ -112,3 +112,46 @@ test('the toolkit host is only ever reached through NativeHost', async () => {
   );
   assert.equal(wrapperTags, 1, `expected exactly one host in ${WRAPPER}, found ${wrapperTags}`);
 });
+
+test('a native host never hands over an axis whose size we already know', async () => {
+  /*
+   * `matchContents` is not a one-off measurement. The axis it is given is
+   * written back into the layout on every platform geometry change, and the
+   * layout is dirtied each time — so a control that lays itself out again
+   * under a press moves its own box, and everything below it moves with it.
+   *
+   * Three fixes went at this from the other end before the mechanism was read
+   * out of the platform source, so the rule is pinned here rather than left in
+   * a comment: where the height is a number we can state, it is stated, and
+   * only what is genuinely the platform's is matched.
+   *
+   * The exceptions are listed rather than assumed. A picker's height is a menu
+   * or a rotor and only the platform knows which; a popover's host wraps a
+   * trigger we did not draw; the sheet is positioned absolutely, so a size it
+   * writes cannot move anything else.
+   */
+  const stateTheHeight = [
+    'components/button/index.tsx',
+    'components/switch/index.tsx',
+    'components/slider/index.tsx',
+  ];
+
+  for (const file of stateTheHeight) {
+    const content = await readFile(new URL(file, SRC), 'utf8');
+    const tags = openingTags(content, 'NativeHost');
+    assert.ok(tags.length > 0, `${file}: expected a native host`);
+
+    for (const tag of tags) {
+      assert.doesNotMatch(
+        tag,
+        /matchContents(\s|>)|matchContents=\{true\}|vertical:\s*true/,
+        `${file}: ${tag} hands the vertical axis to the platform — state the height instead`
+      );
+      assert.match(
+        tag,
+        /style=\{/,
+        `${file}: ${tag} must state its own box, or the platform's writeback owns it`
+      );
+    }
+  }
+});

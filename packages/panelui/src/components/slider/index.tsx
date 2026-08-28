@@ -102,6 +102,15 @@ const sliderVariants = tv({
 /** Thumb width per size. Wider than it is tall, so the pill reads as a grip. */
 const THUMB_WIDTH: Record<'sm' | 'md' | 'lg', number> = { sm: 24, md: 28, lg: 32 };
 
+/**
+ * The box the platform slider is given, in points.
+ *
+ * Both platforms draw a slider shorter than this and centre it, so the number
+ * is the row's height rather than the control's — and at 44 it is also the
+ * smallest a thing you drag is allowed to be.
+ */
+const NATIVE_SLIDER_HEIGHT = 44;
+
 type SliderVariantProps = VariantProps<typeof sliderVariants>;
 
 export interface SliderProps extends Omit<SliderVariantProps, 'disabled'> {
@@ -564,10 +573,23 @@ export const Slider = forwardRef<View, SliderProps>(
       return (
         <View ref={ref} className={slots.root({ className })}>
           {header}
-          {/* A slider has no intrinsic width — it fills whatever it is given —
-              so the width comes from ordinary layout and only the height is
-              matched to the platform's content. */}
-          <NativeHost host={Host} matchContents={{ vertical: true }} ignoreSafeArea="keyboard">
+          {/*
+            Neither axis is left to the platform.
+
+            A slider has no intrinsic width — it fills whatever it is given —
+            so ordinary layout was always going to decide that. The height was
+            being matched, and matching is not a one-off: the host writes the
+            platform's measured size back into the layout on every geometry
+            change, so the row's height moved whenever the control was touched
+            and everything below it moved with it. The height is stated
+            instead.
+          */}
+          <NativeHost
+            host={Host}
+            matchContents={false}
+            ignoreSafeArea="keyboard"
+            style={{ height: NATIVE_SLIDER_HEIGHT }}
+          >
             <NativeSlider
               value={value}
               onValueChange={(next: number) => {
