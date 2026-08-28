@@ -9,6 +9,62 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.85.0] — 2026-08-28
+
+### Added
+
+- **`FlipCard`** — two faces of one card, and a turn between them. For content that is genuinely
+  two-sided: a bank card and its security code, a term and its definition, a photograph and what it
+  is of. `trigger` decides what turns it — a tap, a drag that follows the finger and springs to
+  whichever face is nearer on release, or nothing at all for a card driven by `flipped` from a
+  control elsewhere. `direction="vertical"` turns it top over bottom, which is what a card in a
+  column wants: a horizontal turn sweeps the near edge out over its neighbours. Both faces are
+  hidden twice, because `backfaceVisibility` is not reliable on every Android surface and its
+  failure is a card showing both faces mirrored through each other. Under reduce motion the faces
+  swap with no turn at all.
+- **`panelui-native/icons` and `panelui-native/primitives/text`** are now subpaths. They were the
+  two things an app reached for first once it was importing by subpath, and the two whose absence
+  sent it back to the root entry.
+
+### Fixed
+
+- **Native controls follow the app's theme.** A hosting controller resolves its colour scheme from
+  the system appearance, not from the theme the app is running — so an app in a dark theme on a
+  phone set to light drew a light platform control beside dark content, and a theme changed at
+  runtime left the control where it was. `colorScheme` is the one theme signal the toolkit accepts
+  and nothing was passing it. Button, Switch, Slider, Select, BottomSheet, Popover and `Glass` all
+  do now.
+- **Native controls no longer move under the press.** `matchContents` is not a measurement taken
+  once on mount: the host writes the platform's measured size into the layout on every geometry
+  change the platform reports, so a control that lays itself out again under a press dragged its
+  box and everything below it. Button, Switch and Slider now state the height they already know and
+  match only the axis that is genuinely the platform's. Select and Popover still match both, and
+  that is deliberate — a picker is a compact menu or a full rotor, and only the platform knows
+  which it drew.
+
+### Changed
+
+- **The search page in the Panelside demos is rebuilt.** The field and a Cancel are at the top, so
+  the page has a way out that is not "open a panel to escape a search". Results are grouped — chats,
+  messages, images, files — with the query marked inside each line, because which section a row is
+  in answers "is this a file or a conversation" and a mixed list of twelve titles cannot. Before
+  anything is typed it shows recent searches and what was last open. Nothing exported changed;
+  `Panelside.SearchTrigger` still draws a button and reports a press, but an app that copied the
+  old page's shape from the documentation will find a different one there now.
+
+### Docs
+
+- A **Troubleshooting** page, for the failures that happen after the install works: an app that
+  closes on Android with nothing in the terminal, the `Cannot find native module 'ExpoAsset'`
+  triple that means the versions do not match the SDK, `adb logcat` as the one thing that names
+  either, and the optional packages whose absence looks like a prop that does not work.
+- **Import through the subpaths for anything you ship.** The root entry re-exports all 120
+  components and Metro does not tree-shake, so one name from it loads every one of them. On a
+  desktop simulator that is invisible; on an Android device the whole library evaluates before the
+  first screen paints. Installation and the package README now say so, and the example app's own
+  boot path was changed to match.
+- The **TreemapChart** page has its recordings — the top preview and three of its four versions.
+
 ## [0.84.0] — 2026-08-27
 
 ### Added
