@@ -3,6 +3,14 @@ title: TreemapChart
 description: A total, cut into the parts it is made of, sized by area.
 ---
 
+<PreviewVideo
+  src="/previews/treemap-chart.mp4"
+  poster="/previews/treemap-chart-poster.jpg"
+  alt="The TreemapChart component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 Use it to show what a total is made of when there are too many parts for a dial. Each tile is one part, and its area is its share of the whole.
 
 The count is the thing that decides between the two. Up to about six parts a [PieChart](/docs/charts/pie-chart) is easier to read and more familiar. Past that its small slices become slivers with nowhere to put a name, while a rectangle can still be read at a tenth the size and has a flat side to write on.
@@ -124,6 +132,14 @@ Undivided on purpose: placeholder tiles would be a made-up split, and a reader h
 
 Eight parts of one bill, each labelled with what it cost.
 
+<PreviewVideo
+  src="/previews/treemap-chart-basic.mp4"
+  poster="/previews/treemap-chart-basic-poster.jpg"
+  alt="TreemapChart — Basic."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <TreemapChart data={spend}>
   <TreemapChart.Header title="Total this month" value="£48,200" caption="Compute is 38% of it" />
@@ -136,6 +152,14 @@ Eight parts of one bill, each labelled with what it cost.
 ### Long tail
 
 Twenty-two countries, eight named and the rest gathered into one tile, with a legend that stops after six.
+
+<PreviewVideo
+  src="/previews/treemap-chart-long-tail.mp4"
+  poster="/previews/treemap-chart-long-tail-poster.jpg"
+  alt="TreemapChart — Long tail."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <TreemapChart data={countries} maxTiles={9} otherLabel="Rest of world">
@@ -150,6 +174,14 @@ Twenty-two countries, eight named and the rest gathered into one tile, with a le
 ### Selection
 
 One line in its own colour, and the header reading whichever tile is picked. `activeIndex` counts the tiles as laid out — largest first — so reading the selection back means looking it up in that order.
+
+<PreviewVideo
+  src="/previews/treemap-chart-selection.mp4"
+  poster="/previews/treemap-chart-selection-poster.jpg"
+  alt="TreemapChart — Selection."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <TreemapChart data={budget} activeIndex={selected} onActiveIndexChange={setSelected}>
