@@ -144,11 +144,11 @@ Two groups, because they are two different things. The first is where you can go
 
 ### Search, as a page rather than a panel
 
-A field in the header is the obvious way to put search in a navigation panel, and it is the wrong one on a phone. The panel is most of the screen and the field is forty points of it, so a search that returns anything has to push the history down a screen it already fills — and the field is at the top, which is the far end of the screen from the keyboard that just opened.
+A field in the header is the obvious way to put search in a navigation panel, and it is the wrong one on a phone. The panel is most of the screen and the field is forty points of it, so a search that returns anything has to push the history down a screen it already fills.
 
 So the button is in the header and what it opens is a page. Searching your chats is somewhere you go and stay for a while, and a surface over the screen you came from spends that time covering the thing it is a list of.
 
-`Panelside.SearchTrigger` draws the button and reports the press. Where search lives is a decision about the app — a scene of your own, a `Panelside.Page`, a screen pushed onto the router's stack — so the component does not answer it for you.
+`Panelside.SearchTrigger` draws the button and reports the press. Where search lives is a decision about the app — a scene of your own, a `Panelside.Page`, a screen pushed onto the router's stack — so the component does not answer it for you. Give the page a way back: `SearchBar` with `cancel="always"` draws the field and the Cancel beside it, and calls `onCancel` once the field has emptied and dropped focus.
 
 ```tsx
 const [searching, setSearching] = useState(false);
@@ -171,7 +171,25 @@ return (
     </Panelside.Panel>
 
     <Panelside.Scene>
-      {searching ? <SearchPage onOpen={openChat} /> : app}
+      {searching ? (
+        <View className="flex-1">
+          <View className="px-4 pb-2.5">
+            <SearchBar
+              shape="pill"
+              variant="filled"
+              value={query}
+              onChangeText={setQuery}
+              onCancel={() => setSearching(false)}
+              placeholder="Search chats, images, files"
+              cancel="always"
+              autoFocus
+            />
+          </View>
+          {results}
+        </View>
+      ) : (
+        app
+      )}
     </Panelside.Scene>
   </Panelside>
 );
@@ -513,11 +531,11 @@ A streaming transcript in the scene, anchored and scrolling on its own while the
 
 ### Native chat
 
-Panelside has no `native` prop and cannot have one — the platform toolkits ship a switch, a picker, a sheet and a button, and none of them is a pushing navigation panel. What goes native is what is inside it: the panel's compose and account buttons, the search button, the search page's own controls, the filter popover, the account sheet and the attachment sheet.
+Panelside has no `native` prop and cannot have one — the platform toolkits ship a switch, a picker, a sheet and a button, and none of them is a pushing navigation panel. What goes native is what is inside it: the panel's compose and account buttons, the search button, the account sheet and the attachment sheet.
 
 The composer is `AIInput` under `native`, which hands its own controls to the platform the same way the buttons beside it are handed over. It is written the way the composer's own chat version is written, keyboard numbers included: the composer owns lifting itself, and is told how far it already sits above the bottom so it does not travel that distance twice.
 
-The search page's own chrome goes native with the rest: the panel button, the filter and the compose pill are the platform's, and the filter's popover is `Popover` under `native`. The rows and the field stay ours — there is no platform list row that takes a leading glyph and a trailing time and still follows the theme.
+The search page stays ours end to end, and that is a decision rather than an omission. Its field, its filter chips and its grouped rows have no platform equivalent that takes a leading tile, a marked-up title and a trailing meta line and still follows the theme — and a page whose every row is half-platform reads as two designs.
 
 The account sheet is the platform's, painted solid with `nativeBackground`, and on iOS its rows are the platform's too — a SwiftUI list with SF Symbols, and nothing of ours hosted inside it. A hosted view inside a native control needs a definite size above it on both axes, and a list whose row heights the platform decides cannot give it one. Android has no equivalent list here, so it keeps ours.
 
@@ -818,8 +836,7 @@ platform's, and it does nothing else — where search lives is `onPress`'s to de
 
 **A field in the header is the obvious answer and the wrong one on a phone.** The panel is most
 of the screen and the field is forty points of it, so results have to push the history down a
-screen it already fills, and the field is at the top — the far end of the screen from the
-keyboard that just opened.
+screen it already fills.
 
 **A surface over the app is the second wrong answer.** Searching your chats is somewhere you go
 and stay for a while: you read the list, filter it, type, read it again. A sheet spends all of
@@ -827,9 +844,21 @@ that covering the thing it is a list of, and gives the field half a screen to pu
 once the keyboard is up.
 
 So a page. Swap what `Panelside.Scene` renders, or give the scene a `Panelside.Page` and
-`navigate` to it. Put the field at the bottom, where the thumb is and where the keyboard comes
-up, and leave the panel button at the leading edge as the way onward — a search page you have to
-dismiss to use has a modal's manners.
+`navigate` to it.
+
+Put the field at the top with a Cancel beside it. `SearchBar` draws both — pass
+`cancel="always"`, and its `onCancel` fires after the field has emptied and dropped focus, which
+is the order a page that is about to close wants. The page needs a way out: it is somewhere you
+arrive at, look at, and leave, and leaving by the panel button means opening a panel to escape a
+search.
+
+Group the results and mark the match. Which section a row is in answers "is this a file or a
+conversation", which a mixed list of twelve titles cannot; and highlighting the query inside the
+line answers "why is this row in front of me" for a title that contains it once in the middle of
+eight words.
+
+Before anything is typed, show recent searches and what was last open. Those are what a search
+screen is opened for most of the time, and answering them without a query saves the query.
 
 `Panelside.Search`, the inline field, is still exported. It is the right shape for a docked panel
 on a tablet, where there is width for a field and no keyboard covering half the screen.

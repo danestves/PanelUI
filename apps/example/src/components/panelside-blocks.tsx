@@ -11,7 +11,7 @@
  * scene holds, which is the point worth showing: the anatomy does not change
  * when the behaviour does.
  */
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -19,15 +19,14 @@ import {
   Avatar,
   BottomSheet,
   Button,
+  Chip,
   Glass,
   Item,
-  KeyboardAvoider,
   Marker,
   Menu,
   Message,
   MessageScroller,
   Panelside,
-  Popover,
   SearchBar,
   Text,
   useIconColor,
@@ -44,22 +43,21 @@ import Analytics01Icon from '@hugeicons/core-free-icons/Analytics01Icon';
 import ArrowRight01Icon from '@hugeicons/core-free-icons/ArrowRight01Icon';
 import Cancel01Icon from '@hugeicons/core-free-icons/Cancel01Icon';
 import DollarCircleIcon from '@hugeicons/core-free-icons/DollarCircleIcon';
-import FilterHorizontalIcon from '@hugeicons/core-free-icons/FilterHorizontalIcon';
 import GiftIcon from '@hugeicons/core-free-icons/GiftIcon';
 import InformationCircleIcon from '@hugeicons/core-free-icons/InformationCircleIcon';
 import Link01Icon from '@hugeicons/core-free-icons/Link01Icon';
 import Moon02Icon from '@hugeicons/core-free-icons/Moon02Icon';
 import Notification01Icon from '@hugeicons/core-free-icons/Notification01Icon';
-import PinIcon from '@hugeicons/core-free-icons/PinIcon';
 import PlugSocketIcon from '@hugeicons/core-free-icons/PlugSocketIcon';
 import SecurityLockIcon from '@hugeicons/core-free-icons/SecurityLockIcon';
 import Settings02Icon from '@hugeicons/core-free-icons/Settings02Icon';
-import Tick02Icon from '@hugeicons/core-free-icons/Tick02Icon';
 import UserIcon from '@hugeicons/core-free-icons/UserIcon';
 import Delete02Icon from '@hugeicons/core-free-icons/Delete02Icon';
 import File01Icon from '@hugeicons/core-free-icons/File01Icon';
 import Image01Icon from '@hugeicons/core-free-icons/Image01Icon';
 import Menu01Icon from '@hugeicons/core-free-icons/Menu01Icon';
+import Message01Icon from '@hugeicons/core-free-icons/Message01Icon';
+import Clock01Icon from '@hugeicons/core-free-icons/Clock01Icon';
 import Mic01Icon from '@hugeicons/core-free-icons/Mic01Icon';
 import Package01Icon from '@hugeicons/core-free-icons/Package01Icon';
 import PencilEdit02Icon from '@hugeicons/core-free-icons/PencilEdit02Icon';
@@ -108,28 +106,121 @@ const RECENTS = [
 ];
 
 /**
- * What the search surface searches.
+ * What the search page searches.
  *
- * Three kinds rather than one, because that is what the tabs are for: a set of
- * tabs over a corpus of one kind is four ways of saying the same thing.
+ * Four kinds rather than one, because that is what the filters are for: a row
+ * of filters over a corpus of one kind is five ways of saying the same thing.
+ *
+ * Every row carries a `meta` line. A result is a thing you are choosing
+ * between others like it, and a column of bare titles gives you nothing to
+ * choose on.
  */
-const SEARCHABLE: { id: string; title: string; kind: 'chats' | 'images' | 'documents' }[] = [
-  ...RECENTS.map((title) => ({ id: title, title, kind: 'chats' as const })),
-  ...STARRED.map((title) => ({ id: title, title, kind: 'chats' as const })),
-  { id: 'i1', title: 'Panel anatomy sketch.png', kind: 'images' },
-  { id: 'i2', title: 'Token ramp, six themes.png', kind: 'images' },
-  { id: 'i3', title: 'Chart gallery contact sheet.png', kind: 'images' },
-  { id: 'd1', title: 'Migration notes.md', kind: 'documents' },
-  { id: 'd2', title: 'Release checklist.pdf', kind: 'documents' },
-  { id: 'd3', title: 'Accessibility audit.csv', kind: 'documents' },
+type SearchKind = 'chats' | 'messages' | 'images' | 'files';
+
+const SEARCHABLE: { id: string; kind: SearchKind; title: string; meta: string }[] = [
+  { id: 'c1', kind: 'chats', title: 'PanelUI logo concepts', meta: '4m ago · 18 messages' },
+  { id: 'c2', kind: 'chats', title: 'Migrating the design tokens', meta: '29m ago · 7 messages' },
+  { id: 'c3', kind: 'chats', title: 'Brand marks for the docs site', meta: '2h ago · 24 messages' },
+  { id: 'c4', kind: 'chats', title: 'Comparing chart libraries', meta: 'last wk. · 11 messages' },
+  {
+    id: 'm1',
+    kind: 'messages',
+    title: 'a second logo concept with tighter counters',
+    meta: 'Brand marks for the docs site · yesterday',
+  },
+  {
+    id: 'm2',
+    kind: 'messages',
+    title: 'the tokens migration is done except for the charts',
+    meta: 'Migrating the design tokens · 29m ago',
+  },
+  { id: 'i1', kind: 'images', title: 'grid.png', meta: 'PNG · 240 KB' },
+  { id: 'i2', kind: 'images', title: 'marks.png', meta: 'PNG · 512 KB' },
+  { id: 'i3', kind: 'images', title: 'board.png', meta: 'PNG · 1.1 MB' },
+  { id: 'i4', kind: 'images', title: 'ramp.png', meta: 'PNG · 96 KB' },
+  { id: 'f1', kind: 'files', title: 'logo concept brief.pdf', meta: 'PDF · 1.2 MB · yesterday' },
+  { id: 'f2', kind: 'files', title: 'Release checklist.pdf', meta: 'PDF · 84 KB · last wk.' },
+  { id: 'f3', kind: 'files', title: 'Accessibility audit.csv', meta: 'CSV · 12 KB · last wk.' },
 ];
 
-const KIND_LABEL = { chats: 'Chat', images: 'Image', documents: 'Document' } as const;
 const KIND_ICON = {
-  chats: <Glyph icon={BubbleChatIcon} size={18} />,
-  images: <Glyph icon={Image01Icon} size={18} />,
-  documents: <Glyph icon={File01Icon} size={18} />,
+  chats: <Glyph icon={BubbleChatIcon} size={17} />,
+  messages: <Glyph icon={Message01Icon} size={17} />,
+  images: <Glyph icon={Image01Icon} size={17} />,
+  files: <Glyph icon={File01Icon} size={17} />,
 } as const;
+
+/** Section headings, in the order the page lists them. */
+const KIND_SECTION: { kind: SearchKind; label: string }[] = [
+  { kind: 'chats', label: 'Chats' },
+  { kind: 'messages', label: 'Messages' },
+  { kind: 'images', label: 'Images' },
+  { kind: 'files', label: 'Files' },
+];
+
+/** The filter row above the results. `all` is the resting one. */
+const SEARCH_FILTERS: { value: 'all' | SearchKind; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'chats', label: 'Chats' },
+  { value: 'messages', label: 'Messages' },
+  { value: 'images', label: 'Images' },
+  { value: 'files', label: 'Files' },
+];
+
+/** Thumbnails the images section shows before it offers the rest. */
+const IMAGE_TILES = 3;
+
+/** What the page offers before anything has been typed. */
+const RECENT_SEARCHES = ['logo concept', 'reanimated worklet', 'hotels in Riyadh', 'invoice.pdf'];
+
+/**
+ * A label split into the runs that match the query and the runs that do not,
+ * so the match can be drawn differently from the rest of the line.
+ *
+ * Highlighting is not decoration here. A result list answers "why is this
+ * row in front of me", and on a title that contains the query once in the
+ * middle of eight words, marking it is the whole answer.
+ */
+function splitOnMatch(text: string, query: string): { text: string; match: boolean }[] {
+  const needle = query.trim();
+  if (!needle) return [{ text, match: false }];
+
+  const haystack = text.toLowerCase();
+  const lower = needle.toLowerCase();
+  const parts: { text: string; match: boolean }[] = [];
+
+  let at = 0;
+  for (let found = haystack.indexOf(lower); found !== -1; found = haystack.indexOf(lower, at)) {
+    if (found > at) parts.push({ text: text.slice(at, found), match: false });
+    parts.push({ text: text.slice(found, found + needle.length), match: true });
+    at = found + needle.length;
+  }
+  if (at < text.length) parts.push({ text: text.slice(at), match: false });
+  return parts;
+}
+
+/**
+ * One line of a result, with the query marked inside it.
+ *
+ * Nested `Text` rather than two siblings: the match sits mid-word often enough
+ * that anything laying the runs out as separate boxes breaks the line in the
+ * wrong place.
+ */
+function Match({ text, query }: { text: string; query: string }) {
+  return (
+    <>
+      {splitOnMatch(text, query).map((part, index) =>
+        part.match ? (
+          <Text key={index} className="bg-success-subtle text-primary">
+            {part.text}
+          </Text>
+        ) : (
+          part.text
+        )
+      )}
+    </>
+  );
+}
 
 /**
  * The chats the search page lists, with when they were last touched.
@@ -152,85 +243,69 @@ const CHATS: { id: string; title: string; when: string; pinned?: boolean }[] = [
 ];
 
 /**
- * How much room the floating chrome needs, so the scroller can reserve it.
+ * A section heading over a group of results.
  *
- * Measured rather than guessed would be better, but a re-measure on every
- * layout to place padding that never changes is a re-render for nothing —
- * these are the two bars' own fixed heights, and they are here where changing
- * one means changing the other.
+ * The count on the right is there because a section you have scrolled past the
+ * top of is a section whose size you cannot see. Where there are more than the
+ * page shows, it becomes the way to the rest instead.
  */
-const HEADER_HEIGHT = 52;
-const FOOTER_HEIGHT = 112;
-/** Points the docked bar keeps between itself and the top of the keyboard. */
-const KEYBOARD_GAP = 12;
-
-const FILTERS = [
-  { value: 'all', label: 'All chats', icon: BubbleChatIcon },
-  { value: 'pinned', label: 'Pinned', icon: PinIcon },
-] as const;
-
-type ChatFilter = (typeof FILTERS)[number]['value'];
-
-/**
- * The filter, in a popover anchored to the button that opened it.
- *
- * A popover rather than a sheet: there are two options and the list behind
- * them is what you are filtering, so covering it to choose is covering the
- * answer. Under `native` the platform draws the panel — which is why the
- * content states a width, since a hosted subtree has no parent for a
- * percentage to resolve against.
- */
-function ChatFilterMenu({
-  value,
-  onChange,
-  native = false,
+function SearchSectionHeader({
+  label,
+  count,
+  more,
+  onMore,
 }: {
-  value: ChatFilter;
-  onChange: (next: ChatFilter) => void;
-  native?: boolean;
+  label: string;
+  count: number;
+  more?: string;
+  onMore?: () => void;
 }) {
-  const tint = useCSSVariable('--color-foreground');
-  const glyph = typeof tint === 'string' ? tint : undefined;
-
   return (
-    <Popover native={native}>
-      <Popover.Trigger>
-        <Button
-          native={native}
-          glass={native}
-          size="icon"
-          variant={native ? 'ghost' : 'outline'}
-          className={native ? undefined : 'h-10 w-10 rounded-full'}
-          accessibilityLabel="Filter chats"
-        >
-          <HugeiconsIcon
-            icon={FilterHorizontalIcon}
-            size={20}
-            color={glyph ?? '#737373'}
-            strokeWidth={1.8}
-          />
-        </Button>
-      </Popover.Trigger>
-      <Popover.Content width={220} placement="bottom" align="end">
-        {FILTERS.map((filter) => (
-          <Popover.Close key={filter.value}>
-            <Item size="sm" variant="default" onPress={() => onChange(filter.value)}>
-              {/* The tick keeps its space when it is not drawn, so choosing the
-                  other option does not shift the labels one glyph to the left. */}
-              <Item.Media variant="icon" className="w-5">
-                {value === filter.value ? <Glyph icon={Tick02Icon} size={16} /> : null}
-              </Item.Media>
-              <Item.Media variant="icon">
-                <Glyph icon={filter.icon} size={18} />
-              </Item.Media>
-              <Item.Content>
-                <Item.Title>{filter.label}</Item.Title>
-              </Item.Content>
-            </Item>
-          </Popover.Close>
-        ))}
-      </Popover.Content>
-    </Popover>
+    <View className="flex-row items-baseline justify-between px-1.5">
+      <Text size="xs" weight="medium" muted className="uppercase tracking-[1.2px]">
+        {label}
+      </Text>
+      {more ? (
+        <Pressable onPress={onMore} accessibilityRole="button" accessibilityLabel={more}>
+          <Text size="sm" className="text-primary">
+            {more}
+          </Text>
+        </Pressable>
+      ) : (
+        <Text size="sm" muted className="opacity-70">
+          {count}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+/** One result row: a tile, the line the match is in, and what it belongs to. */
+function SearchResultRow({
+  kind,
+  title,
+  meta,
+  query,
+  onPress,
+}: {
+  kind: SearchKind;
+  title: string;
+  meta: string;
+  query: string;
+  onPress: () => void;
+}) {
+  return (
+    <Item size="sm" className="rounded-none px-3.5 py-2.5" onPress={onPress}>
+      <Item.Media variant="icon" className="h-[34px] w-[34px] rounded-md border-0">
+        {KIND_ICON[kind]}
+      </Item.Media>
+      <Item.Content>
+        <Item.Title numberOfLines={1}>
+          <Match text={title} query={query} />
+        </Item.Title>
+        <Item.Description numberOfLines={1}>{meta}</Item.Description>
+      </Item.Content>
+    </Item>
   );
 }
 
@@ -243,192 +318,267 @@ function ChatFilterMenu({
  * it is a list of. It also gives the field the whole screen above it to put
  * results in, instead of the half a sheet leaves once the keyboard is up.
  *
- * There is no way back on this page, and that is the design: the panel is
- * behind the button at the leading edge and every chat in it is a destination,
- * and the compose pill above the field starts a new one. A search page you
- * have to dismiss to use is a search page with a modal's manners.
+ * The field is at the top, with Cancel beside it. Both belong to the same
+ * decision: this is a place you arrive at, look at, and leave, and the control
+ * you leave by has to be somewhere you can find without reading the page.
  *
- * The field is at the bottom, where the thumb is and where the keyboard comes
- * up. At the top it would be at the far end of the screen from both, and every
- * character typed into it would be read at the other end of a list that is
- * moving.
+ * ## The page has two states, and the empty one is the interesting one
+ *
+ * Before anything is typed it shows what you searched for recently and what
+ * you were last reading. Those are the two things a search screen is opened
+ * for most of the time, and a screen that answers them without a query saves
+ * the query.
+ *
+ * With a query it becomes sections — chats, messages, images, files — each a
+ * card of rows with the match marked inside the line. Grouping matters more
+ * than ranking here: "which of these is a file and which is a conversation" is
+ * the question a mixed list of twelve titles cannot answer.
  */
 function SearchScene({
-  native = false,
   onOpen,
+  onClose,
 }: {
-  native?: boolean;
   onOpen: (title: string) => void;
+  onClose: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const tint = useCSSVariable('--color-foreground');
-  const glyph = typeof tint === 'string' ? tint : undefined;
 
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<ChatFilter>('all');
+  const [filter, setFilter] = useState<'all' | SearchKind>('all');
+  const [recents, setRecents] = useState(RECENT_SEARCHES);
 
-  const results = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return CHATS.filter(
-      (chat) =>
-        (filter === 'all' || chat.pinned) &&
-        (needle === '' || chat.title.toLowerCase().includes(needle))
+  const needle = query.trim().toLowerCase();
+
+  /*
+   * Grouped in one pass rather than filtered per section: the sections are a
+   * partition of one result set, and running the predicate four times over the
+   * same corpus is four chances for them to disagree about what matched.
+   */
+  const sections = useMemo(() => {
+    const matched = SEARCHABLE.filter(
+      (entry) =>
+        (filter === 'all' || entry.kind === filter) &&
+        (needle === '' ||
+          entry.title.toLowerCase().includes(needle) ||
+          entry.meta.toLowerCase().includes(needle))
     );
-  }, [filter, query]);
+    return KIND_SECTION.map(({ kind, label }) => ({
+      kind,
+      label,
+      rows: matched.filter((entry) => entry.kind === kind),
+    })).filter((section) => section.rows.length > 0);
+  }, [filter, needle]);
 
-  const shape = native ? undefined : 'h-10 w-10 rounded-full';
+  const total = sections.reduce((sum, section) => sum + section.rows.length, 0);
+
+  const search = (next: string) => {
+    setQuery(next);
+    if (next.trim() === '') setFilter('all');
+  };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1" style={{ paddingTop: insets.top }}>
       {/*
-        The list is the page, and the chrome floats over it.
-        
-        In flow the two bars were opaque bands with the list squeezed between
-        them, which is a screen in three parts rather than a list you are
-        looking at. The room they need is reserved by the scroller's own
-        content padding instead, so the rows travel underneath and the page
-        reads as one surface.
+        The field and Cancel are one row, and the row is the top of the page
+        rather than a bar over it. Nothing scrolls underneath it, so it needs
+        no material to stay legible.
       */}
+      <View className="px-4 pb-2.5 pt-0.5">
+        {/* `cancel="always"` rather than a Cancel of our own: the field draws
+            it, keeps it beside itself, and empties and blurs before the page
+            hears about it — which is the order this page wants, since it is
+            leaving. */}
+        <SearchBar
+          shape="pill"
+          variant="filled"
+          value={query}
+          onChangeText={search}
+          onCancel={onClose}
+          placeholder="Search chats, images, files"
+          cancel="always"
+          autoFocus
+        />
+      </View>
+
+      {/*
+        The filters arrive with the first character. Before that there is
+        nothing to narrow, and five chips over an empty page are five controls
+        that do nothing.
+      */}
+      {needle === '' ? null : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerClassName="gap-2 px-4 pb-3"
+        >
+          {SEARCH_FILTERS.map((entry) => (
+            <Chip
+              key={entry.value}
+              size="md"
+              selected={filter === entry.value}
+              onPress={() => setFilter(entry.value)}
+              className={filter === entry.value ? 'border-accent bg-accent' : undefined}
+              labelClassName={filter === entry.value ? 'text-accent-foreground' : undefined}
+            >
+              {entry.label}
+            </Chip>
+          ))}
+        </ScrollView>
+      )}
+
       <ScrollView
         className="flex-1"
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="gap-2 px-4"
-        contentContainerStyle={{
-          paddingTop: insets.top + HEADER_HEIGHT,
-          paddingBottom: Math.max(insets.bottom, 12) + FOOTER_HEIGHT,
-        }}
+        contentContainerClassName="gap-4 px-4"
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 12) + 24 }}
       >
-        {results.length === 0 ? (
-          <View className="items-center px-6 py-16">
-            <Text size="sm" muted>
+        {needle === '' ? (
+          <>
+            <View className="gap-2">
+              <View className="flex-row items-baseline justify-between px-1.5">
+                <Text size="xs" weight="medium" muted className="uppercase tracking-[1.2px]">
+                  Recent searches
+                </Text>
+                {recents.length ? (
+                  <Pressable
+                    onPress={() => setRecents([])}
+                    accessibilityRole="button"
+                    accessibilityLabel="Clear recent searches"
+                  >
+                    <Text size="sm" className="text-primary">
+                      Clear
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
+
+              {/* Ungrouped rows, unlike the results below. A recent search is
+                  a word you typed, not a thing in the app — putting them in the
+                  same card as the chats says they are the same kind of row. */}
+              {recents.length ? (
+                recents.map((entry) => (
+                  <Pressable
+                    key={entry}
+                    onPress={() => search(entry)}
+                    className="h-11 flex-row items-center gap-3.5 px-1.5"
+                    accessibilityRole="button"
+                    accessibilityLabel={`Search again for ${entry}`}
+                  >
+                    <Glyph icon={Clock01Icon} size={18} />
+                    <Text size="base" numberOfLines={1} className="flex-1">
+                      {entry}
+                    </Text>
+                    <Pressable
+                      onPress={() => setRecents((all) => all.filter((one) => one !== entry))}
+                      hitSlop={12}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove ${entry} from recent searches`}
+                    >
+                      <Glyph icon={Cancel01Icon} size={15} />
+                    </Pressable>
+                  </Pressable>
+                ))
+              ) : (
+                <Text size="sm" muted className="px-1.5 py-2">
+                  Nothing searched yet.
+                </Text>
+              )}
+            </View>
+
+            <View className="gap-2">
+              <Text
+                size="xs"
+                weight="medium"
+                muted
+                className="px-1.5 uppercase tracking-[1.2px]"
+              >
+                Jump back in
+              </Text>
+              <Item.Group className="overflow-hidden rounded-2xl bg-surface">
+                {CHATS.slice(0, 3).map((chat, index) => (
+                  <Fragment key={chat.id}>
+                    {index === 0 ? null : <Item.Separator className="ms-[60px]" />}
+                    <SearchResultRow
+                      kind="chats"
+                      title={chat.title}
+                      meta={chat.when}
+                      query=""
+                      onPress={() => onOpen(chat.title)}
+                    />
+                  </Fragment>
+                ))}
+              </Item.Group>
+            </View>
+          </>
+        ) : total === 0 ? (
+          <View className="items-center gap-1 px-6 py-16">
+            <Text size="base" weight="medium">
+              No results
+            </Text>
+            <Text size="sm" muted className="text-center">
               Nothing matches “{query.trim()}”.
             </Text>
           </View>
         ) : (
-          results.map((chat) => (
-            <Item
-              key={chat.id}
-              variant="muted"
-              size="sm"
-              className="rounded-2xl"
-              onPress={() => onOpen(chat.title)}
-            >
-              <Item.Media variant="icon">
-                <Glyph icon={BubbleChatIcon} size={18} />
-              </Item.Media>
-              <Item.Content>
-                <Item.Title numberOfLines={1}>{chat.title}</Item.Title>
-                <Item.Description>{chat.when}</Item.Description>
-              </Item.Content>
-            </Item>
+          sections.map((section) => (
+            <View key={section.kind} className="gap-1.5">
+              <SearchSectionHeader
+                label={section.label}
+                count={section.rows.length}
+                // Images are the one section the page truncates, so it is the
+                // one that needs a way to the rest. Narrowing the filter to
+                // that kind *is* the rest of them.
+                more={
+                  section.kind === 'images' && section.rows.length > IMAGE_TILES
+                    ? `See all ${section.rows.length}`
+                    : undefined
+                }
+                onMore={() => setFilter(section.kind)}
+              />
+              {section.kind === 'images' ? (
+                /* Images are looked at, not read. Three across shows the thing
+                   itself where a row of filenames would show its name. */
+                <View className="flex-row gap-2">
+                  {section.rows.slice(0, IMAGE_TILES).map((entry) => (
+                    <Pressable
+                      key={entry.id}
+                      onPress={() => onOpen(entry.title)}
+                      className="h-[92px] flex-1 justify-end rounded-xl bg-surface-secondary p-2"
+                      accessibilityRole="button"
+                      accessibilityLabel={entry.title}
+                    >
+                      <Text size="xs" muted className="font-mono">
+                        {entry.title}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : (
+                <Item.Group className="overflow-hidden rounded-2xl bg-surface">
+                  {section.rows.map((entry, index) => (
+                    <Fragment key={entry.id}>
+                      {index === 0 ? null : <Item.Separator className="ms-[60px]" />}
+                      <SearchResultRow
+                        kind={entry.kind}
+                        title={entry.title}
+                        meta={entry.meta}
+                        query={query}
+                        onPress={() => onOpen(entry.title)}
+                      />
+                    </Fragment>
+                  ))}
+                </Item.Group>
+              )}
+            </View>
           ))
         )}
       </ScrollView>
-
-      {/*
-        The bar spans the screen, and says so in points rather than in classes.
-        
-        `start-0 end-0` left the row shrink-to-fit, which is why the title sat
-        against the panel button and the filter sat against the title: there
-        was no width for a centred title to be centred in.
-        
-        Its backing is the material rather than nothing. Fully transparent, the
-        rows travelling underneath were read *through* the title — two pieces
-        of text in the same place, neither of them legible. Off iOS 26 the
-        material is a solid surface, which does the same job less prettily.
-      */}
-      <Glass
-        radius={0}
-        fallbackClassName="bg-background"
-        pointerEvents="box-none"
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingTop: insets.top + 8 }}
-        className="flex-row items-center px-3 pb-3"
-      >
-        <Panelside.Trigger>
-          <Button
-            native={native}
-            glass={native}
-            size="icon"
-            variant={native ? 'ghost' : 'outline'}
-            className={shape}
-            accessibilityLabel="Open navigation panel"
-          >
-            <HugeiconsIcon icon={Menu01Icon} size={20} color={glyph ?? '#737373'} strokeWidth={1.8} />
-          </Button>
-        </Panelside.Trigger>
-
-        <Text size="lg" weight="semibold" numberOfLines={1} className="flex-1 text-center">
-          Chats
-        </Text>
-
-        {/*
-          A box of the same width as the button opposite, and the title centres
-          between them.
-          
-          Under `native` the filter is the platform's own popover host, which
-          reports as an auto-sized leaf with no width of its own — so a
-          `flex-1` title centred itself inside a box that was not the row, and
-          the button ended up against the title instead of at the edge.
-        */}
-        <View className="w-10 items-end" pointerEvents="box-none">
-          <ChatFilterMenu value={filter} onChange={setFilter} native={native} />
-        </View>
-      </Glass>
-
-      {/*
-        The compose pill and the field are one piece of chrome, so one avoider
-        carries both: docking them separately would leave the pill behind on
-        the screen the field just left.
-      */}
-      <KeyboardAvoider
-        mode="dock"
-        // Short of where the bar actually sits, by the gap it should keep. A
-        // bar that reports its true inset arrives flush against the keyboard,
-        // with the field's edge on the top row of keys.
-        bottomInset={Math.max(insets.bottom, 12) - KEYBOARD_GAP}
-        pointerEvents="box-none"
-        style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
-      >
-        <View className="items-end px-4 pb-3" pointerEvents="box-none">
-          <Button
-            native={native}
-            glass={native}
-            variant="primary"
-            className={native ? undefined : 'rounded-full'}
-            // `Glyph` rather than the drawing component directly: the button
-            // provides the colour that reads against its own fill, and only
-            // the wrapper is listening for it.
-            startContent={native ? undefined : <Glyph icon={PlusSignIcon} size={18} />}
-            onPress={() => onOpen('New chat')}
-          >
-            New chat
-          </Button>
-        </View>
-
-        {/* The field's own fill is translucent, so on nothing it showed the
-            row travelling underneath straight through the placeholder. The
-            strip behind it is what it is read against. */}
-        <Glass
-          radius={0}
-          fallbackClassName="bg-background"
-          className="px-4 pt-2"
-          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
-        >
-          <SearchBar
-            shape="pill"
-            variant="filled"
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search"
-            cancel="never"
-          />
-        </Glass>
-      </KeyboardAvoider>
     </View>
   );
 }
-
 /**
  * What the account sheet lists. Two groups, because the rows split cleanly in
  * two and a settings screen of eleven undivided rows is a list you scan rather
@@ -1163,7 +1313,7 @@ function AssistantDemo({
       />
       <Panelside.Scene {...sceneProps}>
         {searching ? (
-          <SearchScene native={native} onOpen={openChat} />
+          <SearchScene onOpen={openChat} onClose={() => setSearching(false)} />
         ) : (
           <>
             <SceneBar title={opened ?? title} native={native} />
