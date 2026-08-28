@@ -6,7 +6,7 @@ status: new
 
 For content that is genuinely two-sided — a bank card and its security code, a term and its definition, a photograph and what it is of.
 
-**The front sizes the card.** The back is laid over it and given that box to fill, so a back with more in it than the front overflows rather than growing the card. Put a height on the root when the two faces differ; a card that changed height halfway through the turn would move everything under it.
+**One box, and both faces in it.** State the height on the root and both faces take it; leave it off and the front's own content decides, with the back given whatever that came to. A back with more in it than the front overflows rather than growing the card — a card whose height changed halfway through the turn would move everything under it.
 
 It is not for progressive disclosure. The back replaces the front rather than extending it, so anything the reader needs to compare across the turn belongs in [Collapsible](/docs/components/collapsible) or a second card.
 
@@ -53,9 +53,9 @@ npx panelui-cli@latest add flip-card
 
 ### A bank card
 
-The case the component exists for. The number, the holder and the expiry are on the front; the stripe and the security code are on the back, because that is where they are on the object.
+The case the component exists for. The number, the holder and the expiry are on the front; the stripe and the security code are on the back, because that is where they are on the object — which is the whole test for whether something should be a flip card at all.
 
-Give the root a height. The back of a card carries less than the front and would otherwise be handed a box the front's content decided.
+The height is on the root, so both faces are handed the same box.
 
 ```tsx
 <FlipCard className="h-[200px] w-full">

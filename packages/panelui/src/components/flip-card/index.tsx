@@ -18,13 +18,16 @@
  * it, so anything the reader needs to compare across the turn belongs in
  * [Collapsible](../collapsible) or a second card instead.
  *
- * ## The front sizes the card
+ * ## One box, and both faces in it
  *
- * The back is laid over the front, so the card is the front's size and the
- * back is given that box to fill. A back with more in it than the front will
- * overflow rather than grow the card, and the fix is a height on the root
- * rather than more padding on the back — a card whose height changed halfway
- * through the turn would be a card that moved everything under it.
+ * The back is laid over the front, so there is one box and the two faces fill
+ * it. State the height on the root and both faces take it; leave it off and
+ * the front's own content decides, with the back given whatever that came to.
+ *
+ * A back with more in it than the front overflows rather than growing the
+ * card, and the fix is a height on the root rather than more padding on the
+ * back — a card whose height changed halfway through the turn would be a card
+ * that moved everything under it.
  *
  * ## Both faces are hidden the same way twice
  *
@@ -313,6 +316,18 @@ const FlipCardRoot = forwardRef<View, FlipCardProps>(
       [direction, flip, flipped, perspective, progress, rotation]
     );
 
+    /*
+     * The gesture goes on the card itself rather than on a view around it.
+     *
+     * A wrapper is an extra box with no width of its own, and a card sized
+     * `w-full` inside one is asking for a percentage of nothing — which is how
+     * a two-hundred-point card ended up taller than the screen and hanging off
+     * the side of it.
+     *
+     * The accessibility action rides here for the same reason. A drag is not
+     * available to a screen reader, and a card that can only be turned by
+     * dragging is a card some readers can never see the back of.
+     */
     const card = (
       <View
         ref={ref}
@@ -322,8 +337,13 @@ const FlipCardRoot = forwardRef<View, FlipCardProps>(
               ? event.nativeEvent.layout.width
               : event.nativeEvent.layout.height;
         }}
+        accessible={trigger !== 'none'}
         accessibilityRole={trigger === 'none' ? undefined : 'button'}
         accessibilityState={{ expanded: flipped }}
+        accessibilityActions={
+          trigger === 'none' ? undefined : [{ name: 'activate', label: 'Flip the card over' }]
+        }
+        onAccessibilityAction={trigger === 'none' ? undefined : flip}
         {...props}
         className={root({ className })}
       >
@@ -331,7 +351,7 @@ const FlipCardRoot = forwardRef<View, FlipCardProps>(
             the front's size on both axes and the back is handed that box. */}
         <Animated.View
           style={frontStyle}
-          className={face()}
+          className={face({ className: 'grow' })}
           accessibilityElementsHidden={flipped}
           importantForAccessibility={flipped ? 'no-hide-descendants' : 'auto'}
         >
@@ -350,28 +370,10 @@ const FlipCardRoot = forwardRef<View, FlipCardProps>(
 
     return (
       <FlipCardContext.Provider value={context}>
-        {trigger === 'none' ? (
-          card
-        ) : (
-          /*
-           * A gesture rather than a Pressable, and no press feedback with it.
-           * The card already answers the touch by turning; dipping it first
-           * makes the turn look like it started late.
-           *
-           * The accessibility action is not a lesser path: a drag is not
-           * available to a screen reader, and a card that can only be turned
-           * by dragging is a card some readers can never see the back of.
-           */
-          <GestureDetector gesture={gesture}>
-            <View
-              accessible
-              accessibilityActions={[{ name: 'activate', label: 'Flip the card over' }]}
-              onAccessibilityAction={flip}
-            >
-              {card}
-            </View>
-          </GestureDetector>
-        )}
+        {/* A gesture rather than a Pressable, and no press feedback with it.
+            The card already answers the touch by turning; dipping it first
+            makes the turn look like it started late. */}
+        {trigger === 'none' ? card : <GestureDetector gesture={gesture}>{card}</GestureDetector>}
       </FlipCardContext.Provider>
     );
   }
@@ -390,7 +392,10 @@ const FlipCardFront = forwardRef<View, FlipCardFaceProps>(({ className, ...props
     // away; the opacity on the animated parent is the second.
     style={{ backfaceVisibility: 'hidden' }}
     {...props}
-    className={cn('w-full', className)}
+    // `h-full` of a card that states no height is ignored rather than
+    // collapsing, so one shape covers both: a card given a height is filled,
+    // and a card left to its content still measures it.
+    className={cn('h-full w-full', className)}
   />
 ));
 
