@@ -233,13 +233,15 @@ export interface ButtonProps
 /**
  * Height given to the platform button, matching the styled scale above.
  *
- * It goes on the button rather than on the host, and that distinction is the
- * whole fix for the jump. A host sized to a number with an unsized control
- * inside it hands the platform a box the control never agreed to: SwiftUI and
- * Compose both lay out against their own intrinsic size and only settle into
- * the box when something forces a second pass — which for a button is the
- * first press. Given a definite height of its own, the button has nothing left
- * to recompute, and the host follows it with `matchContents`.
+ * It goes on the host as well as on the button, and the host is the half that
+ * stops the jump. `matchContents` does not mean "size the host once" — it
+ * means the host keeps its React Native box equal to whatever SwiftUI most
+ * recently laid out, and a button laying itself out again is what a press is.
+ * So the box moved under the press, and everything below it moved with it.
+ *
+ * A height we already know is not a question worth asking the platform, so it
+ * is not asked: the host states it, and `matchContents` is narrowed to the
+ * axis that is genuinely unknown. See the host in the native branch below.
  */
 const NATIVE_HEIGHT: Record<NonNullable<ButtonVariantProps['size']>, number> = {
   sm: 36,
@@ -402,8 +404,31 @@ export const Button = forwardRef<View, ButtonProps>(
        */
       const nativeContent = prominent ? '#ffffff' : contentColor;
 
+      /*
+       * The box React Native reserves for the platform button, stated rather
+       * than measured.
+       *
+       * An icon button is a square we chose, so both axes are known and the
+       * host is asked to match nothing. A labelled button's width is its
+       * text's and known only to the platform, so the height is stated and
+       * only the width is matched.
+       *
+       * Leaving both to `matchContents` is what made the button move on its
+       * first press: the host tracks SwiftUI's latest layout, and a pressed
+       * button lays out again.
+       */
+      const hostFrame =
+        resolvedSize === 'icon'
+          ? { width: NATIVE_ICON_FRAME, height: NATIVE_ICON_FRAME }
+          : { height: NATIVE_HEIGHT[resolvedSize ?? 'md'] };
+
       return (
-        <NativeHost host={Host} matchContents ignoreSafeArea="keyboard">
+        <NativeHost
+          host={Host}
+          matchContents={resolvedSize === 'icon' ? false : { horizontal: true }}
+          ignoreSafeArea="keyboard"
+          style={hostFrame}
+        >
           <NativeButton
             label={isStringLabel ? children : undefined}
             // The platform only reads a symbol beside a label it drew itself,
@@ -421,11 +446,7 @@ export const Button = forwardRef<View, ButtonProps>(
              * background around. The frame only has to be large enough to hold
              * the result.
              */
-            style={
-              resolvedSize === 'icon'
-                ? { width: NATIVE_ICON_FRAME, height: NATIVE_ICON_FRAME }
-                : { height: NATIVE_HEIGHT[resolvedSize ?? 'md'] }
-            }
+            style={hostFrame}
             modifiers={nativeModifiers.length ? nativeModifiers : undefined}
             onPress={props.onPress}
           >
