@@ -11,6 +11,9 @@ There are two ways in, and which one you want depends on whether the app exists 
 - **Node 20+**.
 - No Xcode, no Android Studio, no `prebuild`. PanelUI is pure TypeScript with no native modules,
   so it runs in Expo Go.
+- Let `expo install` choose the versions. Setting `react-native` by hand in `package.json` is the
+  usual cause of [`Cannot find native module`](/docs/troubleshooting#cannot-find-native-module-expoasset)
+  at startup — the SDK decides which React Native goes with it.
 
 ## Option 1: a new project
 
@@ -285,7 +288,8 @@ npx expo start --clear
 Then drop this on a screen — `src/app/index.tsx` in a fresh app:
 
 ```tsx
-import { Button, Card } from 'panelui-native';
+import { Button } from 'panelui-native/components/button';
+import { Card } from 'panelui-native/components/card';
 import { View } from 'react-native';
 
 export default function Home() {
@@ -316,6 +320,37 @@ start at the top of [Troubleshooting](#troubleshooting).
   `Cannot use @variant with unknown variant`. Stop the server and start it again; `--clear` on a
   running one is not enough.
 </Callout>
+
+## Two ways to import
+
+Both of these work, and they resolve to the same component:
+
+```tsx
+import { Button } from 'panelui-native';                  // the root
+import { Button } from 'panelui-native/components/button'; // the subpath
+```
+
+The root entry re-exports all 119 components, and Metro does not tree-shake — so importing one
+name from it loads every component and everything they import. The subpath loads that component
+alone.
+
+On a desktop simulator you will not notice. On an Android device, or in Expo Go, the difference is
+large enough to matter: the whole library evaluates before your first screen paints, which on a
+device under memory pressure is enough for the OS to end the process with nothing in the terminal.
+If that is what you are seeing, [Troubleshooting](/docs/troubleshooting#the-app-closes-on-android-with-no-error)
+has the rest of it.
+
+The subpath is the component's URL slug, and the other three you will want are named:
+
+```tsx
+import { PanelUIProvider } from 'panelui-native/provider';
+import { useThemeMode, PANEL_THEMES } from 'panelui-native/theme';
+import { Text } from 'panelui-native/primitives/text';
+import { ChevronLeftIcon } from 'panelui-native/icons';
+import { BottomSheet } from 'panelui-native/components/bottom-sheet';
+```
+
+Use the root while you are trying things out; move to subpaths for anything you ship.
 
 ## Using Expo Router
 
@@ -374,6 +409,10 @@ registered themes. Commit it, or add it to `.gitignore` and let it regenerate �
 long as it is covered by your `tsconfig.json` `include`.
 
 ## Troubleshooting
+
+Everything here is about getting the first bundle to build and the first screen to paint. For an
+app that installs cleanly and then crashes, closes on Android, or reports a missing native module,
+see [Troubleshooting](/docs/troubleshooting).
 
 ### `Unable to resolve module @react-native-masked-view/masked-view` (or `expo-linear-gradient`)
 

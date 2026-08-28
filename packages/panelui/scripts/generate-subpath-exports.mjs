@@ -44,6 +44,10 @@ for (const name of hooks) {
 const leaves = [
   ['./provider', 'providers/panel-ui-provider.tsx'],
   ['./theme', 'theme/use-theme.ts'],
+  // The two an app reaches for first once it is importing by subpath rather
+  // than from the root, and the two whose absence sent it back to the root.
+  ['./icons', 'icons/index.tsx'],
+  ['./primitives/text', 'primitives/text.tsx'],
   ['./primitives/animated-pressable', 'primitives/animated-pressable.tsx'],
   ['./primitives/keyboard-avoider', 'primitives/keyboard-avoider.tsx'],
   ['./primitives/scrim', 'primitives/scrim.tsx'],
@@ -64,8 +68,11 @@ const generated = {
 
 for (const [subpath, source] of leaves) {
   const stem = source.replace(/\.tsx?$/, '');
+  // A directory is imported by its name, not by its `index` — `./icons`, not
+  // `./icons/index` — so that is the specifier the barrel is searched for.
+  const specifier = stem.replace(/\/index$/, '');
   if (!existsSync(resolve(root, `src/${source}`))) throw new Error(`Missing ${source}`);
-  if (!rootBarrel.includes(`from './${stem}'`)) {
+  if (!rootBarrel.includes(`from './${specifier}'`)) {
     throw new Error(`Leaf subpath is not root-public: ${subpath}`);
   }
   if (generated[subpath]) throw new Error(`Duplicate subpath: ${subpath}`);
@@ -77,6 +84,7 @@ const managed = (key) =>
   key === './hooks/*' ||
   key === './provider' ||
   key === './theme' ||
+  key === './icons' ||
   key.startsWith('./primitives/') ||
   key.startsWith('./utils/');
 const actual = Object.fromEntries(Object.entries(json.exports).filter(([key]) => managed(key)));

@@ -1,0 +1,122 @@
+---
+title: Troubleshooting
+description: What to do when the app installs cleanly and then crashes, closes or refuses to start — on Android, in Expo Go, and after a version change.
+---
+
+This page is for failures that happen *after* PanelUI is installed and bundling. For a screen
+where nothing is styled, or a module that will not resolve, start at
+[Installation → Troubleshooting](/docs/installation#troubleshooting) instead.
+
+## The app closes on Android with no error
+
+Bundling finishes, Expo Go opens the project, and the app disappears. Nothing in the terminal,
+nothing in the LogBox.
+
+A JavaScript exception would show in one or the other, so a silent close means the native process
+went down. On Android that is usually the OS reclaiming memory from a large bundle rather than a
+fault in any one component — and the OS kills the process instead of reporting anything, which is
+why there is nothing to read.
+
+**PanelUI's root entry re-exports every component.** `import { Button } from 'panelui-native'`
+loads all 119 of them and everything they import, because Metro does not tree-shake. On a device
+under memory pressure that is enough on its own.
+
+Import through the subpaths instead. They are part of the package's `exports` map and are typed
+identically:
+
+```tsx
+import { PanelUIProvider } from 'panelui-native/provider';
+import { useThemeMode } from 'panelui-native/theme';
+import { Button } from 'panelui-native/components/button';
+import { Card } from 'panelui-native/components/card';
+```
+
+The slug is the one in the component's URL — `panelui-native/components/bottom-sheet`,
+`panelui-native/components/line-chart`.
+
+Change the root layout and one screen first, with everything else commented out. If the app opens
+that way and closes with the root import, it is the bundle. If it closes either way it is not,
+and the next section is where to look.
+
+### Reading what actually happened
+
+Android will tell you, and it is the one thing the Metro terminal cannot. With the emulator or
+device attached:
+
+```bash
+adb logcat -c && adb logcat | grep -iE "fatal|tombstone|died|AndroidRuntime|expo"
+```
+
+Reproduce the crash with that running. A native abort names the library it came from; a
+low-memory kill says so in as many words.
+
+## `Cannot find native module 'ExpoAsset'`
+
+Usually arriving together, and usually all three at once:
+
+```
+WARN  No native ExponentConstants module found, are you sure the expo-constants'
+      module is linked properly?
+ERROR [runtime not ready]: Error: Cannot find native module 'ExpoAsset'
+ERROR [runtime not ready]: Invariant Violation: "main" has not been registered.
+```
+
+The JavaScript in the bundle does not match the native code in the client running it. Expo Go
+ships a fixed set of native modules built against one React Native version, so a project pinned to
+a different one hands it a bundle its native side cannot serve. `ExponentConstants` and `ExpoAsset`
+are the first two modules the entry file reaches for, and `AppRegistry` never gets as far as
+registering `main` because the entry throws before it.
+
+The usual cause is `react-native` pinned by hand in `package.json`. **Do not set it directly** —
+the Expo SDK decides which version goes with it. SDK 57 is React Native 0.86.
+
+```bash
+npx expo install --check     # names every package that is on the wrong version
+npx expo install --fix       # sets them all to what the SDK expects
+npx expo start --clear
+```
+
+`npx expo-doctor` is worth a run too; it catches the same class of problem in the config.
+
+The `"main" has not been registered` line has one other cause worth ruling out first: a Metro
+server started in a different folder from the app. Stop it and start it in the project root.
+
+## The example app closes in Expo Go
+
+That one is expected. The showcase in `apps/example` needs a development build, because `Map`'s
+renderer is native code that Expo Go's prebuilt binary does not contain:
+
+```bash
+npx expo prebuild --clean
+npx expo run:android      # or: npx expo run:ios
+```
+
+It says nothing about your own app. The library ships no native code of its own, and everything
+except `Map` runs in Expo Go.
+
+## An optional feature does nothing
+
+Several components reach for a package that is not installed by default, and every one of them
+falls back rather than throwing — which means a missing package looks like a prop that does not
+work.
+
+| Missing | What stops happening |
+| --- | --- |
+| `@expo/ui` | `native` renders the styled component instead of the platform control |
+| `expo-glass-effect` | `glass` and `Glass` draw a solid surface |
+| `expo-haptics` | `haptics` is silent |
+| `expo-blur` | `Scrim` dims without blurring |
+| `@maplibre/maplibre-react-native` | `Map` draws a panel naming the build it needs |
+| `react-native-keyboard-controller` | `KeyboardAvoider` falls back to the platform's own events |
+
+Install the one you want with `npx expo install`, and rebuild if it is native.
+
+Liquid Glass has a second condition that is not a package: **it is iOS 26 and up**. Below that the
+modifier is inert and the control keeps its ordinary platform style, which is indistinguishable
+from `glass` not working. Check the OS before changing any code.
+
+## Something else
+
+[Open an issue](https://github.com/panel-ui/PanelUI/issues) with your `package.json`, your
+`metro.config.js` and — for anything that closes rather than errors — the `adb logcat` output from
+the section above. That is usually enough to name it in one reply.

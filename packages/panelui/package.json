@@ -32,6 +32,16 @@
       "react-native": "./src/theme/use-theme.ts",
       "default": "./lib/module/theme/use-theme.js"
     },
+    "./icons": {
+      "types": "./lib/typescript/src/icons/index.d.ts",
+      "react-native": "./src/icons/index.tsx",
+      "default": "./lib/module/icons/index.js"
+    },
+    "./primitives/text": {
+      "types": "./lib/typescript/src/primitives/text.d.ts",
+      "react-native": "./src/primitives/text.tsx",
+      "default": "./lib/module/primitives/text.js"
+    },
     "./primitives/animated-pressable": {
       "types": "./lib/typescript/src/primitives/animated-pressable.d.ts",
       "react-native": "./src/primitives/animated-pressable.tsx",

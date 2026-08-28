@@ -6,7 +6,9 @@
  * correctly in all six themes — including their differing radius scales.
  */
 import { Pressable, View } from 'react-native';
-import { ArrowUpRightIcon, Text, useThemeMode } from 'panelui-native';
+import { ArrowUpRightIcon } from 'panelui-native/icons';
+import { Text } from 'panelui-native/primitives/text';
+import { useThemeMode } from 'panelui-native/theme';
 
 export interface HomeCardProps {
   title: string;

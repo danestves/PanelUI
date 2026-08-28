@@ -5,13 +5,9 @@
 import { Image, Pressable, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  ChevronLeftIcon,
-  MoonIcon,
-  SunIcon,
-  Text,
-  useThemeMode,
-} from 'panelui-native';
+import { ChevronLeftIcon, MoonIcon, SunIcon } from 'panelui-native/icons';
+import { Text } from 'panelui-native/primitives/text';
+import { useThemeMode } from 'panelui-native/theme';
 
 const CIRCLE = 'h-11 w-11 items-center justify-center rounded-full border border-border bg-surface';
 

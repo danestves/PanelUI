@@ -172,15 +172,14 @@ you are done. Unstyled text on a white screen means the styles are not reaching 
 
 ## Components
 
-The root entry remains the shortest import for most apps:
+The root entry is the shortest import, and the one to reach for while you are trying things out:
 
 ```tsx
 import { Button, useBreakpoint, formatTime } from 'panelui-native';
 ```
 
-For explicit module boundaries, every component and public hook also has a subpath. The public
-utilities are `cn`, `color`, and `time`. Provider, theme, and standalone foundations that do not
-expose internal helpers have explicit leaves too:
+Every component, hook, utility and foundation also has a subpath, exposing the same
+implementations and the same types:
 
 ```tsx
 import { Button } from 'panelui-native/components/button';
@@ -188,15 +187,21 @@ import { useBreakpoint } from 'panelui-native/hooks/use-breakpoint';
 import { formatTime } from 'panelui-native/utils/time';
 import { PanelUIProvider } from 'panelui-native/provider';
 import { useTheme } from 'panelui-native/theme';
+import { Text } from 'panelui-native/primitives/text';
+import { ChevronLeftIcon } from 'panelui-native/icons';
 import { Scrim } from 'panelui-native/primitives/scrim';
 ```
 
-The other foundation leaves are `animated-pressable`, `keyboard-avoider`, and
+The component subpath is the slug from its documentation URL. The public utilities are `cn`,
+`color` and `time`; the other foundation leaves are `animated-pressable`, `keyboard-avoider` and
 `scroll-progress` under `panelui-native/primitives/`.
 
-These imports expose the same implementations and types as the root entry. They are an
-organization and tooling boundary; they do not promise a smaller bundle without measuring your
-consumer bundler.
+**Prefer the subpath for anything you ship.** The root entry re-exports all 119 components and
+Metro does not tree-shake, so one name from it loads every component and everything they import —
+including the charts' SVG graphs and the map. On a desktop simulator that is invisible. On an
+Android device it is not: the whole library evaluates before your first screen paints, and under
+memory pressure the OS can end the process with nothing in the terminal to explain it. See
+[Troubleshooting](https://panelui.dev/docs/troubleshooting).
 
 | Component | What it does |
 | --- | --- |
@@ -452,6 +457,10 @@ changes natively.
 
 Yes. PanelUI is pure TypeScript with no native modules, so no development build or prebuild is
 required.
+
+If an app closes in Expo Go on Android with nothing in the terminal, import through the subpaths
+rather than the root — see [Components](#components) above and
+[Troubleshooting](https://panelui.dev/docs/troubleshooting).
 
 ### Is it accessible?
 

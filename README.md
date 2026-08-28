@@ -200,10 +200,16 @@ smoke-test the whole library in all six themes before a release.
 git clone https://github.com/panel-ui/PanelUI.git
 cd PanelUI
 npm install
+npx expo prebuild --clean   # in apps/example, once
 npm run example
 ```
 
-Then press `i` for iOS or `a` for Android.
+**The showcase needs a development build; it does not run in Expo Go.** One component is the
+reason — `Map`, whose renderer is native code that Expo Go's prebuilt binary does not contain.
+Opening it in Expo Go closes the app with nothing in the terminal, which looks like a crash in
+the library and is not one. See [`apps/example/README.md`](apps/example/README.md).
+
+The library itself is a different matter: it ships no native code and runs in Expo Go.
 
 ## Contributing
 

@@ -4,7 +4,17 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
-import { PanelUIProvider, useThemeMode } from 'panelui-native';
+/*
+ * Through the subpaths, not the root.
+ *
+ * `panelui-native`'s root entry re-exports all 119 components, and Metro does
+ * not tree-shake — so importing the provider from it evaluates every chart's
+ * SVG graph, the map, the signature pad and the rest before the first frame.
+ * The screens under this layout load their demos in chunks; the layout itself
+ * has no reason to bring the library with it.
+ */
+import { PanelUIProvider } from 'panelui-native/provider';
+import { useThemeMode } from 'panelui-native/theme';
 
 /**
  * React Navigation paints its own theme background over every screen

@@ -1,6 +1,6 @@
 import { ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
-import { PANEL_THEMES } from 'panelui-native';
+import { PANEL_THEMES } from 'panelui-native/theme';
 import { HomeCard } from '../src/components/home-card';
 import { ScreenHeader } from '../src/components/screen-header';
 import { BLOCKS } from '../src/data/blocks';
