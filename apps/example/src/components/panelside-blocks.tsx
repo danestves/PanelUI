@@ -406,25 +406,38 @@ function SearchScene({
         that do nothing.
       */}
       {needle === '' ? null : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerClassName="gap-2 px-4 pb-3"
-        >
-          {SEARCH_FILTERS.map((entry) => (
-            <Chip
-              key={entry.value}
-              size="md"
-              selected={filter === entry.value}
-              onPress={() => setFilter(entry.value)}
-              className={filter === entry.value ? 'border-accent bg-accent' : undefined}
-              labelClassName={filter === entry.value ? 'text-accent-foreground' : undefined}
-            >
-              {entry.label}
-            </Chip>
-          ))}
-        </ScrollView>
+        /*
+         * The row states its own height, and the scroller inside it is told
+         * not to grow.
+         *
+         * A horizontal scroller in a column has no height of its own and takes
+         * whatever is going on its cross axis — which here was most of the
+         * screen, with the results pushed off the bottom of it and a chip row
+         * four hundred points tall that read as empty space.
+         */
+        <View className="h-8 px-4">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            className="grow-0"
+            contentContainerClassName="gap-2"
+          >
+            {SEARCH_FILTERS.map((entry) => (
+              <Chip
+                key={entry.value}
+                size="md"
+                // `selected` is already the accent fill this wants — it is
+                // what the variant is for. Only the height is ours.
+                selected={filter === entry.value}
+                onPress={() => setFilter(entry.value)}
+                className="h-8 px-3.5"
+              >
+                {entry.label}
+              </Chip>
+            ))}
+          </ScrollView>
+        </View>
       )}
 
       <ScrollView
@@ -432,12 +445,13 @@ function SearchScene({
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="gap-4 px-4"
+        contentInsetAdjustmentBehavior="never"
+        contentContainerClassName="gap-5 px-4 pt-3"
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 12) + 24 }}
       >
         {needle === '' ? (
           <>
-            <View className="gap-2">
+            <View className="gap-1.5">
               <View className="flex-row items-baseline justify-between px-1.5">
                 <Text size="xs" weight="medium" muted className="uppercase tracking-[1.2px]">
                   Recent searches
@@ -459,28 +473,32 @@ function SearchScene({
                   a word you typed, not a thing in the app — putting them in the
                   same card as the chats says they are the same kind of row. */}
               {recents.length ? (
-                recents.map((entry) => (
-                  <Pressable
-                    key={entry}
-                    onPress={() => search(entry)}
-                    className="h-11 flex-row items-center gap-3.5 px-1.5"
-                    accessibilityRole="button"
-                    accessibilityLabel={`Search again for ${entry}`}
-                  >
-                    <Glyph icon={Clock01Icon} size={18} />
-                    <Text size="base" numberOfLines={1} className="flex-1">
-                      {entry}
-                    </Text>
+                /* Flush, not spaced. A gap between the rows of one list turns
+                   four recent searches into four things rather than one list. */
+                <View>
+                  {recents.map((entry) => (
                     <Pressable
-                      onPress={() => setRecents((all) => all.filter((one) => one !== entry))}
-                      hitSlop={12}
+                      key={entry}
+                      onPress={() => search(entry)}
+                      className="h-11 flex-row items-center gap-4 px-1.5"
                       accessibilityRole="button"
-                      accessibilityLabel={`Remove ${entry} from recent searches`}
+                      accessibilityLabel={`Search again for ${entry}`}
                     >
-                      <Glyph icon={Cancel01Icon} size={15} />
+                      <Glyph icon={Clock01Icon} size={18} />
+                      <Text size="base" numberOfLines={1} className="flex-1">
+                        {entry}
+                      </Text>
+                      <Pressable
+                        onPress={() => setRecents((all) => all.filter((one) => one !== entry))}
+                        hitSlop={12}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove ${entry} from recent searches`}
+                      >
+                        <Glyph icon={Cancel01Icon} size={15} />
+                      </Pressable>
                     </Pressable>
-                  </Pressable>
-                ))
+                  ))}
+                </View>
               ) : (
                 <Text size="sm" muted className="px-1.5 py-2">
                   Nothing searched yet.
@@ -488,7 +506,7 @@ function SearchScene({
               )}
             </View>
 
-            <View className="gap-2">
+            <View className="gap-1.5">
               <Text
                 size="xs"
                 weight="medium"
