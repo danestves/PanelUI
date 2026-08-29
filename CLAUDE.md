@@ -306,6 +306,45 @@ in the Metro terminal. What it produces:
 If there are no JavaScript frames, the fault is not in the JavaScript. Do not go looking through
 components for it.
 
+### Read the client binary. It is the only thing that actually knows
+
+Every file below is a guess about a client. The client itself is not: the Expo Go app bundle
+carries the versions it was compiled against, in plain text, and reading them takes a minute.
+
+```bash
+# every Expo Go build ever released, iOS simulator + Android APK
+gh api "repos/expo/expo-go-releases/releases?per_page=100" \
+  --jq '.[] | select(.tag_name|startswith("Expo-Go-57")) | "\(.tag_name)  \(.published_at)"'
+
+curl -sL -o go.tar.gz \
+  "https://github.com/expo/expo-go-releases/releases/download/Expo-Go-57.0.5/Expo-Go-57.0.5.tar.gz"
+mkdir -p "Expo Go.app" && tar -xzf go.tar.gz -C "Expo Go.app"   # the tarball is the bundle contents
+
+strings -a "Expo Go.app/Expo Go" | grep -oE "react-native@0\.8[0-9]\.[0-9]+" | sort -u
+strings -a "Expo Go.app/Expo Go" | grep -oE "^(0\.10|4\.5)\.[0-9]+$" | sort -u   # worklets, reanimated
+```
+
+The build paths left in the debug info are `.pnpm` directories with the version in the name, which
+is how a package's exact version falls out. This is how the table below was established, after a
+day of guessing at it:
+
+| Client | react-native | worklets | reanimated |
+| --- | --- | --- | --- |
+| Expo Go 57.0.5 | 0.86.0 | 0.10.0 | 4.5.0 |
+| Expo Go 57.0.6 | 0.86.2 | 0.10.1 | 4.5.1 |
+| Expo Go 57.0.9 | 0.86.3 | — | — |
+
+**Three patch releases of the same client, three different react-native versions.** That is the
+whole problem in one row, and it is why "SDK 57" is not a specification of anything.
+
+To match a simulator to a device, install the client that matches — never move the tree:
+
+```bash
+xcrun simctl uninstall <device-id> host.exp.Exponent
+xcrun simctl install <device-id> "Expo Go.app"
+xcrun simctl openurl <device-id> "exp://127.0.0.1:8081"   # bypasses the CLI's own client management
+```
+
 ### Which file says what a client contains
 
 None of them say it for *the device in the room*, which is the point. Each answers a narrower
@@ -313,7 +352,9 @@ question, and all three have been mistaken for the general answer here:
 
 - `expo/bundledNativeModules.json` — what a **development build** would compile with the
   installed `expo` package. `expo install --check` reads this, so that check will pass on a pin
-  no client can run.
+  no client can run. Measured: `expo@57.0.7` names worklets 0.10.0 while the Expo Go client
+  released a day earlier contains 0.10.1, so `expo install --fix` can move a working tree onto
+  versions the installed client segfaults on.
 - `templates/expo-app` — a starter project. That its numbers usually run in Expo Go is a
   consequence, not a promise.
 - `https://api.expo.dev/v2/versions/latest` — what the **current** client contains. Right for a
