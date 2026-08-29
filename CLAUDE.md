@@ -264,6 +264,94 @@ Verify with `npm run typecheck`, `npm run build` and `npm run docs:generate` ins
 plainly which parts of a change are unverified until somebody runs it. When a change genuinely
 needs eyes on a device, ask; do not start one and report back.
 
+## Never change a native version to fix a crash you cannot see
+
+This cost a working day and four commits, three of which made it worse, and the whole failure is
+one mistaken assumption: that the versions in this repository decide what runs on a device. They
+do not. **The client on the device decides, and nothing here can see it.**
+
+### The client is a build, and it has a date
+
+Expo Go is a prebuilt binary whose native side is compiled against exact versions. It is not one
+thing:
+
+- A **simulator or emulator** runs whatever `expo start --go` fetched *today*. It is current by
+  construction, and it updates without anyone deciding to update it.
+- A **physical iPhone** runs whichever client was installed on it, frozen at the day it was
+  built. Expo Go on the App Store stops at SDK 54, so anything newer arrives through
+  [sign.expo.dev](https://sign.expo.dev/) (free provisioning, about a week per certificate) or
+  `eas go` (TestFlight, paid membership). Both age in place until somebody re-runs them.
+- A **physical Android device** sideloads an APK from [expo.dev/go](https://expo.dev/go), with
+  the same problem and no store to quietly update it.
+
+So "it works on the simulator and crashes on the phone" is the expected shape of a client that is
+weeks behind, not evidence of a bug in the code. **Establish which client the device is running
+before touching a version.** On this repository that answer was in the first line of the crash
+report the entire time, and three commits were written without reading it.
+
+### Read the crash before changing anything
+
+A version mismatch does not raise a JavaScript error, so there is nothing in LogBox and nothing
+in the Metro terminal. What it produces:
+
+- **iOS** — `EXC_BAD_ACCESS` / `SIGSEGV` on the JavaScript thread, in a stack that runs from
+  Hermes into the app binary and back with no JavaScript frames in it. Registers holding
+  `0xfffa000000000000` are Hermes NaN-boxed values being read as pointers: native code
+  disagreeing with the JavaScript about a JSI layout. TestFlight feedback lands in
+  `~/Downloads`; the `Version:` line names the client, and the build number is a Unix timestamp
+  — `node -p "new Date(<n>*1000).toISOString()"` gives the day the client was built.
+- **Android** — the process closes with nothing anywhere. `adb logcat` is the only thing that
+  says why, and reanimated and worklets abort during module init, before LogBox exists.
+
+If there are no JavaScript frames, the fault is not in the JavaScript. Do not go looking through
+components for it.
+
+### Which file says what a client contains
+
+None of them say it for *the device in the room*, which is the point. Each answers a narrower
+question, and all three have been mistaken for the general answer here:
+
+- `expo/bundledNativeModules.json` — what a **development build** would compile with the
+  installed `expo` package. `expo install --check` reads this, so that check will pass on a pin
+  no client can run.
+- `templates/expo-app` — a starter project. That its numbers usually run in Expo Go is a
+  consequence, not a promise.
+- `https://api.expo.dev/v2/versions/latest` — what the **current** client contains. Right for a
+  simulator, wrong for any device that has not been refreshed.
+
+The versions have to match the client the device actually has. When they disagree, the two ways
+out are to refresh the client or to pin back to it, and **that is the user's call, not a
+judgement to make from the version numbers.**
+
+### Regenerating the lockfile moves far more than the diff shows
+
+`rm package-lock.json && npm install` walks **every** tilde and caret dependency to its newest
+patch. A commit about de-duplicating four packages moved twenty, `expo` 57.0.7 to 57.0.18 and
+`expo-modules-core` 57.0.6 to 57.0.14 among them — the JSI bridge every `expo-*` module talks
+through, upgraded invisibly inside a change about something else. Before committing a
+regenerated lockfile, diff the resolved versions and say in the commit body what moved.
+
+And **deleting the lockfile is not enough** to change a pin: npm also reuses whatever already
+fills a slot in `node_modules`, so an install over the old tree can give one workspace the new
+version and leave the hoisted copy for everything else — two copies, from following the fix for
+two copies. Remove both, or use `npm ci` when the lockfile is already the state you want:
+
+```bash
+rm -rf node_modules apps/*/node_modules packages/*/node_modules package-lock.json && npm install
+```
+
+### One change, then ask somebody to launch it
+
+A native version change cannot be verified by `typecheck`, `build` or the contract tests. Every
+gate in this repository passed on all three broken pins. Change **one** thing, say plainly that
+it is unverified, and ask the user to run it before changing a second. Four version changes in
+one day, each reasoned from a different file and none of them launched, is how a working tree
+became a broken one.
+
+When a repair does turn out to be wrong, `git checkout <last-known-good> -- <manifests>
+package-lock.json` followed by `npm ci` restores a tree exactly rather than approximately. Reach
+for that early; it is cheaper than another theory.
+
 ## Reviewing and landing pull requests
 
 Batches of contributor PRs arrive together, and "review them" means the same thing every time:
