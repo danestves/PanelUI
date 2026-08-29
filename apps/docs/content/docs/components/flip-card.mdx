@@ -15,7 +15,7 @@ It is not for progressive disclosure. The back replaces the front rather than ex
 FlipCard ships with the library — no separate install.
 
 ```tsx
-import { FlipCard, Text, Button, View } from 'panelui-native';
+import { FlipCard, Text, View, Image, Avatar, Badge, Button, Card, Chip, Item, QRCode, Rating } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -57,10 +57,20 @@ The case the component exists for. The number, the holder and the expiry are on 
 
 The height is on the root, so both faces are handed the same box.
 
+The issuer's mark sits opposite the name, tinted to `--color-primary-foreground` rather than swapped for a light and a dark file: the face is `bg-primary` in every theme, and that is the token which reads against it.
+
 ```tsx
 <FlipCard className="h-[200px] w-full">
   <FlipCard.Front className="h-full justify-between rounded-2xl bg-primary p-5">
-    <Text className="text-primary-foreground">PanelUI Bank</Text>
+    <View className="flex-row items-center justify-between">
+      <Text className="text-primary-foreground">PanelUI Bank</Text>
+      <Image
+        source={require('./assets/logo.png')}
+        style={{ width: 26, height: 26, tintColor: brandMark }}
+        resizeMode="contain"
+        accessibilityLabel="PanelUI"
+      />
+    </View>
     <Text size="xl" className="tracking-[3px] text-primary-foreground">
       4242 4242 4242 4242
     </Text>
@@ -77,6 +87,174 @@ The height is on the root, so both faces are handed the same box.
         <Text className="font-mono">829</Text>
       </View>
     </View>
+  </FlipCard.Back>
+</FlipCard>
+```
+
+### A hotel room
+
+The listing on the front — where it is, how it is rated, what it starts at — and the rooms with their prices on the back.
+
+Nothing on the front is repeated on the back, and nothing on the back has to be compared with the front. That is the test: content that is two-sided rather than summarised and expanded. For the other shape, where the detail extends what is above it, use [Collapsible](/docs/components/collapsible).
+
+The faces are [Card](/docs/components/card)s, so they are the same surface as every other card on the screen and only the turn belongs to this component.
+
+```tsx
+<FlipCard className="h-[420px] w-full">
+  <FlipCard.Front className="h-full">
+    <Card className="h-full overflow-hidden">
+      <Image source={photo} className="h-40 w-full" />
+      <Card.Header>
+        <View className="flex-row items-start justify-between gap-3">
+          <View className="shrink gap-1">
+            <Card.Title>The Wharf House</Card.Title>
+            <Card.Description>Old Town · 400m from the harbour</Card.Description>
+          </View>
+          <Badge variant="success">9.1</Badge>
+        </View>
+        <Rating value={4.5} readOnly size="sm" />
+      </Card.Header>
+      <Card.Content>
+        <Text size="xl" weight="semibold">$180</Text>
+      </Card.Content>
+    </Card>
+  </FlipCard.Front>
+
+  <FlipCard.Back className="h-full">
+    <Card className="h-full">
+      <Card.Header>
+        <Card.Title>Rooms</Card.Title>
+        <Card.Description>Free cancellation until 24 hours before</Card.Description>
+      </Card.Header>
+      <Card.Content className="gap-3">
+        {rooms.map((room) => (
+          <View key={room.name} className="flex-row items-center justify-between">
+            <Text size="sm" weight="medium">{room.name}</Text>
+            <Text size="sm" weight="semibold">{room.price}</Text>
+          </View>
+        ))}
+      </Card.Content>
+      <Card.Footer variant="panel">
+        <Button size="sm" onPress={book}>Book</Button>
+      </Card.Footer>
+    </Card>
+  </FlipCard.Back>
+</FlipCard>
+```
+
+### A product
+
+A shop's grid has room for a name and a price. The fabric, the sizes left and the delivery are what decide the sale, and they are normally a page away — this puts them on the other side of the same tile.
+
+`direction="vertical"` because a card in a grid has neighbours either side of it: a horizontal turn sweeps its near edge out over them, and a vertical one stays inside its own column.
+
+```tsx
+<FlipCard direction="vertical" className="h-[400px] w-full">
+  <FlipCard.Front className="h-full">
+    <Card className="h-full overflow-hidden">
+      <Image source={photo} className="h-48 w-full" />
+      <Card.Header>
+        <Card.Title>Heavyweight Tee</Card.Title>
+        <Card.Description>Organic cotton, boxy fit</Card.Description>
+      </Card.Header>
+      <Card.Content>
+        <Text size="xl" weight="semibold">$48</Text>
+      </Card.Content>
+    </Card>
+  </FlipCard.Front>
+
+  <FlipCard.Back className="h-full">
+    <Card className="h-full">
+      <Card.Header>
+        <Card.Title>Heavyweight Tee</Card.Title>
+        <Card.Description>280gsm combed cotton, pre-shrunk. Ships in two days.</Card.Description>
+      </Card.Header>
+      <Card.Content className="gap-2">
+        <View className="flex-row flex-wrap gap-2">
+          {sizes.map((size) => (
+            <Chip key={size.label} size="sm" disabled={size.soldOut}>{size.label}</Chip>
+          ))}
+        </View>
+      </Card.Content>
+      <Card.Footer variant="panel">
+        <Button size="sm" onPress={addToBag}>Add to bag</Button>
+      </Card.Footer>
+    </Card>
+  </FlipCard.Back>
+</FlipCard>
+```
+
+### An event ticket
+
+The strongest case after a bank card, and for the same reason: the code really is on the back. A ticket is read by a person on the front and by a scanner on the back, and the two are never needed at once.
+
+[QRCode](/docs/components/qr-code) is drawn as a bare `QRCode.Canvas` here. Its frame, title and caption would be a second card inside the one already being turned.
+
+```tsx
+<FlipCard className="h-[400px] w-full">
+  <FlipCard.Front className="h-full justify-between rounded-2xl bg-primary p-6">
+    <View className="gap-1">
+      <Text size="xs" className="text-primary-foreground">SAT 14 SEPTEMBER · 20:00</Text>
+      <Text size="2xl" weight="semibold" className="text-primary-foreground">Night Signal</Text>
+      <Text size="sm" className="text-primary-foreground">The Foundry, Manchester</Text>
+    </View>
+    <View className="flex-row justify-between">
+      {fields.map((field) => (
+        <View key={field.label} className="gap-1">
+          <Text size="xs" className="text-primary-foreground">{field.label}</Text>
+          <Text size="lg" weight="semibold" className="text-primary-foreground">{field.value}</Text>
+        </View>
+      ))}
+    </View>
+  </FlipCard.Front>
+
+  <FlipCard.Back className="h-full items-center justify-center gap-4 rounded-2xl border border-border bg-card p-6">
+    <QRCode value="https://example.com/t/NS-8842-14C" size="md">
+      <QRCode.Canvas />
+    </QRCode>
+    <Text size="sm" weight="medium" className="font-mono">NS-8842-14C</Text>
+  </FlipCard.Back>
+</FlipCard>
+```
+
+### A profile
+
+A directory is a grid of names, and everything worth knowing about somebody is on the page you have to leave the grid for. The card carries it instead.
+
+**Size the card for the taller face.** A face is given the front's box and overflows rather than growing it, so a back with more in it than the front needs the height stated for the back.
+
+```tsx
+<FlipCard className="h-[440px] w-full">
+  <FlipCard.Front className="h-full">
+    <Card className="h-full items-center justify-center gap-3 p-6">
+      <Avatar size="xl" fallback="RM" />
+      <Text size="lg" weight="semibold">Rosa Marín</Text>
+      <Text size="sm" muted>Staff Engineer · Platform</Text>
+      <Badge variant="secondary">Lisbon · UTC+1</Badge>
+    </Card>
+  </FlipCard.Front>
+
+  <FlipCard.Back className="h-full">
+    <Card className="h-full">
+      <Card.Header>
+        <Card.Title>Rosa Marín</Card.Title>
+        <Card.Description>Twelve years on build tooling.</Card.Description>
+      </Card.Header>
+      <Card.Content className="gap-4">
+        <View className="flex-row flex-wrap gap-2">
+          {skills.map((skill) => <Chip key={skill} size="sm">{skill}</Chip>)}
+        </View>
+        <Item.Group>
+          {contacts.map((contact) => (
+            <Item key={contact.value}>
+              <Item.Content>
+                <Item.Title>{contact.value}</Item.Title>
+              </Item.Content>
+            </Item>
+          ))}
+        </Item.Group>
+      </Card.Content>
+    </Card>
   </FlipCard.Back>
 </FlipCard>
 ```
