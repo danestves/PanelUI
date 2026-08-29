@@ -9,6 +9,40 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.86.0] — 2026-08-29
+
+### Added
+
+- **`ProgressButton`** gains **`shape`**, so a hold-to-confirm button can carry the same corner as
+  the buttons beside it instead of always being the rounded one in the row.
+
+### Fixed
+
+- **`BottomSheet`** no longer opens to a fully opaque scrim over an empty screen. The backdrop's
+  opacity is interpolated from the sheet's own `translateY`, but the entrance travel belonged to a
+  layout animation — a different mechanism, which does not replay when the sheet remounts inside
+  the portal. Two sheets sharing a screen was enough to leave one parked off-screen for good, with
+  the scrim already dimmed. The entrance is `translateY` now, so there is only one value to be
+  wrong and the scrim cannot outrun the sheet. Reduced motion still starts at rest and fades.
+- **`Tabs`** stops flashing the first tab on the way to the selected one. A row long enough to
+  scroll used to render at its start and then travel, which reads as the wrong tab being briefly
+  active on every mount.
+- **Expo Go boots the gallery.** `PanelUIProvider` mounted the keyboard controller's provider on
+  the strength of a `require` succeeding, but a package being resolvable is not the same as its
+  native half being present — in Expo Go every call into it throws from a proxy, at mount, outside
+  the `try`. Both the provider and `useKeyboardAvoidance` ask `TurboModuleRegistry` first, and they
+  ask on the first render rather than while the consuming app is still evaluating its imports.
+
+### Docs
+
+- **`FlipCard`**'s four versions are designed rather than dropped into a card shell — each front
+  laid out to its own rhythm, each card sized to its taller face, and the grey placeholder bands
+  that read as a failed image are gone.
+- **Troubleshooting** carries what a version mismatch with the Expo Go client actually looks like,
+  and the part that is easy to miss: the client on a device is a build with a date. A simulator
+  refetches a current one; a phone keeps whichever was installed. The same project will run on one
+  and close on the other with nothing to read.
+
 ## [0.85.0] — 2026-08-28
 
 ### Added
