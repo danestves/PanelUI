@@ -224,7 +224,35 @@ for (const [slug, entry] of Object.entries(meta)) {
     : u.extraImports
       ? [u.extraImports]
       : [];
-  const imports = [name, ...extra];
+  /*
+   * `extraImports` names everything a page's examples reach for, and not all of
+   * it is ours. `View` and `Image` come from React Native, and putting them in
+   * the `panelui-native` line was a copyable import that does not resolve —
+   * which is the one thing an installation snippet must not be.
+   */
+  const RN_EXPORTS = new Set([
+    'ActivityIndicator',
+    'Alert',
+    'Dimensions',
+    'FlatList',
+    'Image',
+    'KeyboardAvoidingView',
+    'Linking',
+    'Platform',
+    'Pressable',
+    'ScrollView',
+    'SectionList',
+    'StyleSheet',
+    'TouchableOpacity',
+    'View',
+  ]);
+  // `Alert` is ours as well as React Native's, and where the page is about it
+  // the component is the one being imported.
+  const fromReactNative = extra.filter((item) => RN_EXPORTS.has(item) && item !== name);
+  const imports = [name, ...extra.filter((item) => !fromReactNative.includes(item))];
+  const reactNativeImport = fromReactNative.length
+    ? `\nimport { ${fromReactNative.join(', ')} } from 'react-native';`
+    : '';
 
   const sections = [];
 
@@ -279,7 +307,7 @@ ${lede}
 ${name} ships with the library — no separate install.
 
 \`\`\`tsx
-import { ${imports.join(', ')} } from 'panelui-native';
+import { ${imports.join(', ')} } from 'panelui-native';${reactNativeImport}
 \`\`\`
 
 Or copy the source into your project, to own and edit it:
