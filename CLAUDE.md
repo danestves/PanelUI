@@ -328,14 +328,25 @@ The build paths left in the debug info are `.pnpm` directories with the version 
 is how a package's exact version falls out. This is how the table below was established, after a
 day of guessing at it:
 
-| Client | react-native | worklets | reanimated |
-| --- | --- | --- | --- |
-| Expo Go 57.0.5 | 0.86.0 | 0.10.0 | 4.5.0 |
-| Expo Go 57.0.6 | 0.86.2 | 0.10.1 | 4.5.1 |
-| Expo Go 57.0.9 | 0.86.3 | — | — |
+| Client | react-native | worklets | reanimated | gesture-handler |
+| --- | --- | --- | --- | --- |
+| Expo Go 57.0.5 | 0.86.0 | 0.10.0 | 4.5.0 | 2.32.0 |
+| Expo Go 57.0.6 | 0.86.2 | 0.10.1 | 4.5.1 | 2.32.0 |
+| Expo Go 57.0.9 | 0.86.2 | 0.10.1 | 4.5.1 | 2.32.0 |
 
-**Three patch releases of the same client, three different react-native versions.** That is the
-whole problem in one row, and it is why "SDK 57" is not a specification of anything.
+Measured, not read off a manifest — and the measurement is the point, because
+**`api.expo.dev/v2/versions/latest` reports `facebookReactNativeVersion: 0.86.3` for SDK 57 and
+no shipped client contains it.** That endpoint is a recommendation for a development build. It
+was taken for a description of the client here and it is not one.
+
+The client moved *within* the SDK: 57.0.5 and 57.0.6 are one patch release apart and disagree
+about three packages. "SDK 57" therefore specifies nothing on its own, and the only correct pin
+is the one belonging to the client the device has.
+
+**Android and iOS are not released together.** `expo-go-releases` shipped an `.apk` for 57.0.9
+and iOS-only tarballs for 57.0.5 through 57.0.8, so an Android device cannot install the client
+an iOS device is on. Where a project must run on both, the tree has to match a release that
+exists for both — and refreshing the older device's client is usually the only way there.
 
 To match a simulator to a device, install the client that matches — never move the tree:
 
