@@ -48,7 +48,10 @@ test('reopening mid-exit catches the same sheet', () => {
   // `!presented`, are together what stop a second sheet being scheduled over
   // one that is still leaving.
   assert.match(sheet, /if \(open\) \{\s*cancelAnimation\(translateY\);/);
-  assert.match(sheet, /if \(!presented\) \{[\s\S]*?translateY\.value = 0;[\s\S]*?setPresented\(true\);/);
+  assert.match(
+    sheet,
+    /if \(!presented\) \{[\s\S]*?translateY\.value = reducedMotion \? 0 : screenHeight;[\s\S]*?setPresented\(true\);/
+  );
 });
 
 /*

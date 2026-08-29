@@ -26,7 +26,6 @@ import Animated, {
   FadeIn,
   cancelAnimation,
   interpolate,
-  SlideInDown,
   runOnJS,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -74,12 +73,6 @@ const EXIT_SPRING = { duration: 380, dampingRatio: 1, overshootClamping: true } 
 
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 800;
-
-/*
- * Built once at module scope. A layout-animation builder constructed in render
- * is a new object every commit, and the sheet re-renders while it is open.
- */
-const ENTERING = SlideInDown.springify().dampingRatio(0.9).duration(420);
 
 /**
  * Where a flick would come to rest if it kept decelerating — Apple's
@@ -407,7 +400,21 @@ function BottomSheetContent({
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
-  const translateY = useSharedValue(0);
+  /*
+   * Starts off screen, and the entrance is this value moving to zero.
+   *
+   * It used to start at rest and hand the travel to a `SlideInDown` layout
+   * animation, which is a different mechanism with a different owner: the
+   * backdrop is interpolated from `translateY`, so a sheet parked at that
+   * animation's initial offset while `translateY` read zero drew a fully opaque
+   * scrim over an empty screen. A layout animation that does not replay on a
+   * remount inside the portal — two sheets sharing a screen is enough — left it
+   * there for good, with no way back.
+   *
+   * Under reduced motion there is no travel to make, so it starts at rest and
+   * the scrim's fade carries the change on its own.
+   */
+  const translateY = useSharedValue(reducedMotion ? 0 : screenHeight);
   const closeTint = useCSSVariable('--color-muted-foreground');
   // Read unconditionally, used only by the native branch: the platform draws
   // that sheet's container, so a token can only reach it as a colour handed
@@ -456,10 +463,13 @@ function BottomSheetContent({
     if (open) {
       cancelAnimation(translateY);
       if (!presented) {
-        // A fresh mount starts at rest and ENTERING does the travel. Catching
-        // one that is still on screen must not reset it under the finger, so
-        // this only runs when the sheet had actually gone.
-        translateY.value = 0;
+        /*
+         * A fresh mount starts off screen and this effect's own re-run — it
+         * depends on `presented` — springs it up. Catching one that is still on
+         * screen must not reset it under the finger, so this only runs when the
+         * sheet had actually gone.
+         */
+        translateY.value = reducedMotion ? 0 : screenHeight;
         setPresented(true);
         return;
       }
@@ -779,7 +789,7 @@ function BottomSheetContent({
              * state change still has to be legible, and it is the travel that
              * setting is about.
              */
-            entering={reducedMotion ? FadeIn.duration(150) : ENTERING}
+            entering={reducedMotion ? FadeIn.duration(150) : undefined}
             accessibilityViewIsModal
             className={sheetVariants({ detached, className })}
             {...props}
