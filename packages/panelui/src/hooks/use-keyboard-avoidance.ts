@@ -134,11 +134,26 @@ function nativeControllerPresent(): boolean {
 }
 
 /**
- * Resolved once, at module load, so the hook below always calls the same
- * underlying hook — swapping between them per render would break the rules of
- * hooks.
+ * Resolved on the first render rather than at module load, and then never
+ * again.
+ *
+ * The resolution asks the native module registry a question, and this module is
+ * reachable from the package's root entry — so at module scope that question
+ * was being asked while a consuming app was still evaluating its imports,
+ * before the runtime had finished standing up. By the first render it is up.
+ *
+ * Caching it is what keeps the rules of hooks: `useKeyboardHeight` always calls
+ * the same underlying hook, because the implementation is chosen once and
+ * cannot change afterwards.
  */
-const useKeyboardHeight: KeyboardHeightHook = (() => {
+let keyboardHeightImpl: KeyboardHeightHook | undefined;
+
+function useKeyboardHeight(): SharedValue<number> {
+  if (!keyboardHeightImpl) keyboardHeightImpl = resolveKeyboardHeight();
+  return keyboardHeightImpl();
+}
+
+const resolveKeyboardHeight = (): KeyboardHeightHook => {
   try {
     if (!nativeControllerPresent()) return () => useAnimatedKeyboard().height;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -157,7 +172,7 @@ const useKeyboardHeight: KeyboardHeightHook = (() => {
   }
 
   return () => useAnimatedKeyboard().height;
-})();
+};
 
 /** True when the keyboard controller is driving this, rather than the fallback. */
 export function hasKeyboardController(): boolean {
