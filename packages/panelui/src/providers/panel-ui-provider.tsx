@@ -25,17 +25,34 @@ import { cn } from '../utils/cn';
  *
  * `TurboModuleRegistry.get` answers the real question and returns null rather
  * than throwing, so the pass-through is reached instead.
+ *
+ * Resolved on the first render rather than when this module is evaluated. This
+ * file is the first thing a consuming app imports, and asking the native module
+ * registry a question before the runtime has finished standing up is a question
+ * asked too early — by the first render it is up, and the answer cannot change
+ * afterwards. The result is cached so the component type is stable: swapping it
+ * between renders would unmount and rebuild everything below it.
  */
-const KeyboardProvider: ComponentType<{ children?: ReactNode }> = (() => {
+let keyboardProvider: ComponentType<{ children?: ReactNode }> | undefined;
+
+function resolveKeyboardProvider(): ComponentType<{ children?: ReactNode }> {
+  if (keyboardProvider) return keyboardProvider;
+
+  let resolved: ComponentType<{ children?: ReactNode }> = Fragment;
   try {
-    if (TurboModuleRegistry.get('KeyboardController') === null) return Fragment;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const controller = require('react-native-keyboard-controller');
-    return controller?.KeyboardProvider ?? Fragment;
+    if (TurboModuleRegistry.get('KeyboardController') !== null) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const controller = require('react-native-keyboard-controller');
+      resolved = controller?.KeyboardProvider ?? Fragment;
+    }
   } catch {
-    return Fragment;
+    // Not installed, or installed without its native half. Either way the
+    // pass-through is the answer.
   }
-})();
+
+  keyboardProvider = resolved;
+  return resolved;
+}
 
 export interface PanelUIProviderProps {
   children: ReactNode;
@@ -68,6 +85,10 @@ export function PanelUIProvider({
   className,
   background = true,
 }: PanelUIProviderProps) {
+  // Resolved once, on the first render of the first provider in the app, and
+  // cached from there. See {@link resolveKeyboardProvider}.
+  const KeyboardProvider = resolveKeyboardProvider();
+
   return (
     <GestureHandlerRootView style={styles.root}>
       {/* Outermost of ours, so every field below it can avoid the keyboard.

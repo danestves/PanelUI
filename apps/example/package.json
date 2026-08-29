@@ -24,7 +24,7 @@
     "expo-updates": "~57.0.10",
     "panelui-native": "*",
     "react": "19.2.3",
-    "react-native": "0.86.3",
+    "react-native": "0.86.2",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-keyboard-controller": "1.21.9",
     "react-native-reanimated": "4.5.1",
