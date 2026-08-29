@@ -49,15 +49,45 @@ while an app with its own nested pin reaches that one, and both go into a single
 Reanimated aborts on a second instance during module init, before the LogBox exists, which is an
 app that closes on Android with nothing in the terminal and nothing in the Metro log.
 
-The versions are the SDK's own, taken from `node_modules/expo/bundledNativeModules.json` and
-checked against it by `test/sdk-version-parity.test.mjs`. They are not a free choice: Expo Go is a
-prebuilt binary whose native side is compiled against exact versions, so pinning a *different* one
-causes the same silent close from the other direction — and an override is invisible to
-`expo install --check`, which reads what is declared. Copying the numbers by hand is how that
-happened once already.
+The versions are the ones the Expo Go client contains, recorded in `test/expo-go-client.json` by
+`scripts/expo-client-versions.mjs` and checked by `test/sdk-version-parity.test.mjs`. They are
+not a free choice and they are not the newest ones: Expo Go is a prebuilt binary whose native
+side is compiled against exact versions, so pinning a *different* one causes the same silent
+close from the other direction — and an override is invisible to `expo install --check`, which
+reads what is declared.
 
-If you ever change one of those versions, delete `package-lock.json` before reinstalling: npm
-reuses a stale lockfile rather than re-resolving when only the overrides change.
+The authority is Expo's version manifest, `https://api.expo.dev/v2/versions/latest`, which is
+what `expo.dev/go` and `eas go` build from. Neither `expo/bundledNativeModules.json` nor
+`templates/expo-app` is: the first says what a *development build* would compile, the second is
+a starter project. Both have been taken for it here, and each was wrong by a patch — which is a
+crash on a device and nothing at all on a simulator.
+
+`test/expo-go-client.json` also records the resolved `expo` and `expo-modules-core` versions,
+because those are declared as ranges and a regenerated lockfile walks them forward with nothing
+to see in any diff. Refresh it deliberately:
+
+```bash
+node scripts/expo-client-versions.mjs            # report drift
+node scripts/expo-client-versions.mjs --update   # record it
+```
+
+If you ever change one of those versions, reinstall from nothing:
+
+```bash
+rm -rf node_modules apps/*/node_modules packages/*/node_modules package-lock.json
+npm install
+```
+
+Deleting the lockfile is not enough. npm reuses a stale lockfile rather than re-resolving when
+only the overrides change, *and* it reuses whatever already fills a slot in `node_modules` — so
+an install over the old tree can give one workspace the new version and leave the hoisted copy
+behind for everything else. Two copies, from following the fix for two copies.
+
+**The client on a device is a build with a date.** A simulator gets whatever `expo start --go`
+fetches today; a phone keeps the client installed on it. App Store Expo Go stops at SDK 54, so
+for SDK 55 and later a physical iPhone runs a [sign.expo.dev](https://sign.expo.dev/) or
+`eas go` build that ages in place — re-run it after upgrading anything native, or the versions
+here will be right and the phone will still crash.
 
 ## After a dependency change, start with `--clear`
 

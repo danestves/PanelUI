@@ -53,20 +53,30 @@ npm ls react react-native react-native-reanimated react-native-worklets
 ```
 
 More than one version listed for any of them is the answer. Pin it in `overrides` in the root
-`package.json`, to the version the Expo SDK ships:
+`package.json`, to the version the Expo Go client contains — the next section is where that
+number comes from:
 
 ```json
 "overrides": {
   "react": "19.2.3",
   "react-native": "0.86.3",
-  "react-native-reanimated": "4.5.0",
-  "react-native-worklets": "0.10.0"
+  "react-native-reanimated": "4.5.1",
+  "react-native-worklets": "0.10.1"
 }
 ```
 
-Then **delete `package-lock.json` and reinstall**. npm reuses a stale lockfile rather than
-re-resolving when only the overrides change, so an install on top of the old one leaves the tree
-exactly as it was.
+Then reinstall from nothing:
+
+```bash
+rm -rf node_modules apps/*/node_modules packages/*/node_modules package-lock.json
+npm install
+```
+
+**Deleting the lockfile is not enough on its own.** npm reuses a stale lockfile rather than
+re-resolving when only the overrides change, and it also reuses whatever already fills a slot in
+`node_modules` — so an install that keeps the old tree can hand the new version to one workspace
+and leave the hoisted copy behind for everything else. That is two copies, arrived at by
+following the fix for having two copies.
 
 ### A version Expo Go was not built against
 
@@ -78,13 +88,15 @@ JavaScript from a different one is a mismatch it cannot report — and for
 before the LogBox exists. The process goes down with nothing on the screen and nothing in the
 terminal, which is the same silence as the section above and a different cause.
 
-`expo start` says so in one line as it launches, and it is easy to read past:
+On iOS it is a segmentation fault rather than a silent close, and the crash report says so: an
+`EXC_BAD_ACCESS` on the JavaScript thread, in a stack that runs from Hermes into the app binary
+and back. There is no JavaScript in it, because no JavaScript ran wrong.
+
+`expo start` names the problem in one line as it launches, and it is easy to read past:
 
 ```
 2 packages may need updating. Run npx expo install --check for details.
 ```
-
-Run it. It names them:
 
 ```bash
 npx expo install --check    # names every package on the wrong version
@@ -92,10 +104,47 @@ npx expo install --fix      # sets them all to what the SDK expects
 ```
 
 **If you pin versions in `overrides`, that check cannot see them** — it reads what is declared,
-and an override outranks a declaration. Take the versions from
-`node_modules/expo/bundledNativeModules.json`, which is the file the check itself reads, rather
-than from a copy of it written down somewhere. An override copied by hand goes stale the first
-time the SDK moves, and the failure it causes looks nothing like a version problem.
+and an override outranks a declaration.
+
+#### Which file actually says what the client contains
+
+Expo's version manifest, and nothing else:
+
+```bash
+curl -s https://api.expo.dev/v2/versions/latest \
+  | jq '.data.sdkVersions["57.0.0"] | {iosClientVersion, facebookReactNativeVersion}'
+```
+
+This is what [expo.dev/go](https://expo.dev/go) and `eas go` build from. Two other files get
+mistaken for it and both answer a different question:
+
+- **`expo/bundledNativeModules.json`** describes what a *development build* would compile with
+  the installed `expo` package. It is the file `expo install --check` reads, which is why that
+  check will happily agree with a pin no client can run.
+- **A starter template's `package.json`**, yours or anybody's. That its numbers usually run in
+  Expo Go is a consequence, not a promise.
+
+#### The client is a build, and it has a date
+
+This is the one that gets missed, because the project looks fine and it is.
+
+A simulator runs whatever `expo start --go` fetched today. A physical device keeps the client
+that was installed on it, and that client's native side is frozen at the day it was built. The
+same project will then run in a simulator and crash on a phone — not because anything is wrong
+with the code, but because the two are different binaries weeks apart.
+
+Expo Go on the Apple App Store stops at SDK 54. For SDK 55 and later, on a physical iPhone:
+
+- **[sign.expo.dev](https://sign.expo.dev/)** — pick the SDK, install with free Apple ID
+  provisioning. The certificate lasts about a week, then re-sign.
+- **`eas go`** — builds Expo Go on EAS and delivers it through your own TestFlight. Needs a paid
+  Apple Developer membership. **Re-run it after upgrading anything native**; the build you
+  installed a month ago is a month-old client.
+
+On Android, an emulator or a simulator, [expo.dev/go](https://expo.dev/go) has every build.
+
+If a device crashes on a project a simulator runs, check the client's build date before changing
+a single version. Nothing in a repository can see it, and no amount of pinning fixes it.
 
 ### A cache describing a tree that has moved
 
