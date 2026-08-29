@@ -97,6 +97,27 @@ and an override outranks a declaration. Take the versions from
 than from a copy of it written down somewhere. An override copied by hand goes stale the first
 time the SDK moves, and the failure it causes looks nothing like a version problem.
 
+### A cache describing a tree that has moved
+
+After any reinstall that changes where a package lives, start once with `--clear`:
+
+```bash
+npx expo start --clear
+```
+
+Metro's caches are keyed on file contents and paths, not on where a package resolved from last
+time or on the version of the Babel plugin that transformed something. Neither error it produces
+mentions caching:
+
+```
+Unable to resolve "react-native-safe-area-context" from expo-router
+[Worklets] Mismatch between JavaScript code version and Worklets Babel plugin version (0.10.1 vs. 0.10.0)
+```
+
+The first is a path cached from before the package moved; the second is transformed output stamped
+by the plugin version that was installed when the cache was written. Both survive deleting
+`node_modules`, because neither lives there.
+
 ### Reading what actually happened
 
 Android will tell you, and it is the one thing the Metro terminal cannot. With the emulator or

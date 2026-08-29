@@ -59,6 +59,27 @@ happened once already.
 If you ever change one of those versions, delete `package-lock.json` before reinstalling: npm
 reuses a stale lockfile rather than re-resolving when only the overrides change.
 
+## After a dependency change, start with `--clear`
+
+```bash
+npm run example:go:clear
+```
+
+Metro's caches are keyed on file contents and paths, not on where a package was resolved from
+last time or on the version of the Babel plugin that transformed something. So a reinstall that
+moves a package leaves a cache describing a tree that no longer exists, and what comes out does
+not mention caching at all:
+
+```
+Unable to resolve "react-native-safe-area-context" from expo-router
+[Worklets] Mismatch between JavaScript code version and Worklets Babel plugin version (0.10.1 vs. 0.10.0)
+```
+
+The first is a path cached from before the package moved. The second is transformed output stamped
+by the plugin version that was installed when it was cached. `npm run reset` clears the same
+caches without starting anything, and works on Windows, which the shell one-liner it replaced did
+not.
+
 ## Building with EAS
 
 `eas.json` defines four profiles:
