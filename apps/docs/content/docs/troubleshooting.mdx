@@ -38,6 +38,36 @@ Change the root layout and one screen first, with everything else commented out.
 that way and closes with the root import, it is the bundle. If it closes either way it is not,
 and the next section is where to look.
 
+### Two copies of one package
+
+Most likely in a monorepo, and it produces exactly the same silence.
+
+Metro resolves a package by walking up from the file that asked for it, so a workspace with its
+own pinned copy of `react-native-reanimated` and a shared library that resolves to the hoisted one
+put **both** into a single bundle. Nothing warns about it. Reanimated aborts on a second instance
+during module init, before the LogBox exists, and two copies of React break every context in the
+tree.
+
+```bash
+npm ls react react-native react-native-reanimated react-native-worklets
+```
+
+More than one version listed for any of them is the answer. Pin it in `overrides` in the root
+`package.json`, to the version the Expo SDK ships:
+
+```json
+"overrides": {
+  "react": "19.2.3",
+  "react-native": "0.86.3",
+  "react-native-reanimated": "4.5.0",
+  "react-native-worklets": "0.10.0"
+}
+```
+
+Then **delete `package-lock.json` and reinstall**. npm reuses a stale lockfile rather than
+re-resolving when only the overrides change, so an install on top of the old one leaves the tree
+exactly as it was.
+
 ### Reading what actually happened
 
 Android will tell you, and it is the one thing the Metro terminal cannot. With the emulator or
@@ -81,18 +111,21 @@ npx expo start --clear
 The `"main" has not been registered` line has one other cause worth ruling out first: a Metro
 server started in a different folder from the app. Stop it and start it in the project root.
 
-## The example app closes in Expo Go
+## The example app in Expo Go
 
-That one is expected. The showcase in `apps/example` needs a development build, because `Map`'s
-renderer is native code that Expo Go's prebuilt binary does not contain:
+The showcase in `apps/example` runs in Expo Go, with one exception. Start it there with
+`npm run example:go` — `expo-dev-client` is one of its dependencies, so a plain `expo start` opens
+the development build instead.
+
+`Map` is the exception: its renderer is native code that Expo Go's prebuilt binary does not
+contain, so those screens draw a panel naming the build they need. For them:
 
 ```bash
 npx expo prebuild --clean
 npx expo run:android      # or: npx expo run:ios
 ```
 
-It says nothing about your own app. The library ships no native code of its own, and everything
-except `Map` runs in Expo Go.
+None of this says anything about your own app. The library ships no native code of its own.
 
 ## An optional feature does nothing
 

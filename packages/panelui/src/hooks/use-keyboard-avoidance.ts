@@ -46,6 +46,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import {
+  TurboModuleRegistry,
   useWindowDimensions,
   type LayoutChangeEvent,
   type View,
@@ -117,12 +118,29 @@ export interface UseKeyboardAvoidanceResult {
 type KeyboardHeightHook = () => SharedValue<number>;
 
 /**
+ * Whether the controller's native module is actually in this client.
+ *
+ * Resolving the package is not the same as being able to use it: in Expo Go the
+ * JavaScript is in `node_modules` and requires cleanly, and every call into it
+ * throws from a proxy that reports the package as unlinked. A `try`/`catch`
+ * around the require never sees that, because it happens later.
+ */
+function nativeControllerPresent(): boolean {
+  try {
+    return TurboModuleRegistry.get('KeyboardController') !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Resolved once, at module load, so the hook below always calls the same
  * underlying hook — swapping between them per render would break the rules of
  * hooks.
  */
 const useKeyboardHeight: KeyboardHeightHook = (() => {
   try {
+    if (!nativeControllerPresent()) return () => useAnimatedKeyboard().height;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const controller = require('react-native-keyboard-controller');
     if (typeof controller?.useReanimatedKeyboardAnimation === 'function') {
@@ -144,6 +162,7 @@ const useKeyboardHeight: KeyboardHeightHook = (() => {
 /** True when the keyboard controller is driving this, rather than the fallback. */
 export function hasKeyboardController(): boolean {
   try {
+    if (!nativeControllerPresent()) return false;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return typeof require('react-native-keyboard-controller')
       ?.useReanimatedKeyboardAnimation === 'function';

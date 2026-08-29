@@ -1,5 +1,5 @@
 import { Fragment, type ComponentType, type ReactNode } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, TurboModuleRegistry, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   PortalHost,
@@ -15,9 +15,20 @@ import { cn } from '../utils/cn';
  * avoidance simply does nothing. Mount it here when the package is installed
  * so `avoidKeyboard` works without any extra setup, and fall back to a
  * pass-through when it is not.
+ *
+ * Installed is not the same question as usable, and the difference is what a
+ * `try`/`catch` around the `require` cannot see. In a client that loads no
+ * native modules of its own — Expo Go — the JavaScript is in `node_modules`
+ * and resolves, so the require succeeds and hands back a provider whose native
+ * side is absent. The throw then lands when that provider mounts, outside the
+ * `try`, and takes the app down before anything has painted.
+ *
+ * `TurboModuleRegistry.get` answers the real question and returns null rather
+ * than throwing, so the pass-through is reached instead.
  */
 const KeyboardProvider: ComponentType<{ children?: ReactNode }> = (() => {
   try {
+    if (TurboModuleRegistry.get('KeyboardController') === null) return Fragment;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const controller = require('react-native-keyboard-controller');
     return controller?.KeyboardProvider ?? Fragment;
