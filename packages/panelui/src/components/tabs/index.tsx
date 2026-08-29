@@ -225,8 +225,6 @@ interface TabsContextValue {
   registerLayout: (value: string, layout: TabLayout) => void;
   layouts: Record<string, TabLayout>;
   variant: TabsVariant;
-  scrollable: boolean;
-  setScrollable: (scrollable: boolean) => void;
   keepMounted: TabsKeepMounted;
   /**
    * Whether the panels are in a strip rather than stacked in place.
@@ -240,6 +238,23 @@ interface TabsContextValue {
 }
 
 const TabsContext = createContext<TabsContextValue | null>(null);
+
+/**
+ * Whether the row the trigger is in scrolls, published by that row.
+ *
+ * It is a `Tabs.List` prop and it decides a trigger's width — intrinsic in a
+ * scroller, an equal share in a fixed row — so the two have to agree in the
+ * commit they are laid out in. Routed through the root it arrived one commit
+ * late: every trigger was measured once at its equal-share position, the
+ * indicator snapped to that geometry because it was the first measurement it
+ * had, and the second pass moved everything. With enough tabs to need a
+ * scroller in the first place, the gap between the two geometries is most of
+ * the row.
+ *
+ * Separate from the root's context so it can be provided by the list, and
+ * defaulted so a trigger outside one still resolves.
+ */
+const TabsListContext = createContext(false);
 
 function useTabs(component: string): TabsContextValue {
   const context = useContext(TabsContext);
@@ -371,9 +386,6 @@ function TabsRoot({
 }: TabsProps) {
   const [internalValue, setInternalValue] = useState(defaultValue);
   const [layouts, setLayouts] = useState<Record<string, TabLayout>>({});
-  // Published by the List rather than the root, because it is the List that
-  // decides whether it scrolls — but the Triggers below it need to know.
-  const [scrollable, setScrollable] = useState(false);
   const isControlled = value !== undefined;
   const resolvedValue = isControlled ? value : internalValue;
   const animationDisabled = animation === 'disable-all';
@@ -415,8 +427,6 @@ function TabsRoot({
       registerLayout,
       layouts,
       variant,
-      scrollable,
-      setScrollable,
       keepMounted,
       pager: paged,
       animationDisabled,
@@ -427,7 +437,6 @@ function TabsRoot({
       registerLayout,
       layouts,
       variant,
-      scrollable,
       keepMounted,
       paged,
       animationDisabled,
@@ -481,9 +490,23 @@ function TabsPager({
 
   const order = useMemo(() => panels.map((panel) => panel.props.value), [panels]);
   const count = panels.length;
-  // An unknown value shows the first panel rather than none of them: a tab set
-  // with nothing in it is a harder thing to debug than one showing the wrong tab.
-  const active = Math.max(0, order.indexOf(value));
+  /*
+   * The index of the value, or the last one that resolved.
+   *
+   * A value that is not among the panels is a moment rather than a state: a
+   * controlled parent part-way through an update, panels rebuilt from a `map`
+   * whose keys changed. Falling back to zero for that moment springs the strip
+   * to the first panel and back, which is a visible flicker for something that
+   * was never wrong. Holding the last index shows the panel that was already
+   * there until the new one arrives.
+   *
+   * Zero remains the answer when nothing has ever resolved — a tab set with
+   * nothing in it is a harder thing to debug than one showing the wrong tab.
+   */
+  const resolved = order.indexOf(value);
+  const lastResolved = useRef(0);
+  if (resolved >= 0) lastResolved.current = resolved;
+  const active = resolved >= 0 ? resolved : Math.min(lastResolved.current, count - 1);
 
   const [width, setWidth] = useState(0);
   const position = useSharedValue(active);
@@ -640,9 +663,22 @@ function TabsPager({
     [sign, commit, position, start, dragging, widthValue, countValue]
   );
 
-  const strip = useAnimatedStyle(() => ({
-    transform: [{ translateX: -position.value * widthValue.value * sign }],
-  }));
+  /*
+   * The width comes in as the React value, not through `widthValue`.
+   *
+   * `widthValue` is mirrored from state in an effect, so it is a commit behind
+   * — and the commit it is behind by is the one where the strip first appears.
+   * For that frame the transform evaluated to `-position × 0`, which is panel
+   * zero on screen whichever tab is active: the tab set opened on the first
+   * panel and jumped to the right one. Reading `width` here re-creates the
+   * style when it changes, so the first frame of the strip is already in the
+   * right place. `widthValue` is still what the gesture reads, because a
+   * worklet cannot see React state.
+   */
+  const strip = useAnimatedStyle(
+    () => ({ transform: [{ translateX: -position.value * width * sign }] }),
+    [width, sign]
+  );
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     const measured = event.nativeEvent.layout;
@@ -755,27 +791,54 @@ export interface TabsListProps extends ViewProps {
   children: ReactNode;
 }
 
+/**
+ * Where the active tab should sit in the scroller, or null when it cannot be
+ * known yet.
+ *
+ * A little in from the edge rather than flush against it, so the tab does not
+ * read as the last one in the row.
+ */
+function scrollTarget(layout: TabLayout | undefined): number | null {
+  if (!layout) return null;
+  return Math.max(layout.x - 24, 0);
+}
+
 function TabsList({ className, scrollable = false, children, ...props }: TabsListProps) {
-  const { variant, setScrollable, value, layouts } = useTabs('Tabs.List');
+  const { variant, value, layouts } = useTabs('Tabs.List');
   const { list } = tabsVariants({ variant });
   const scroller = useRef<ScrollView>(null);
 
-  useEffect(() => {
-    setScrollable(scrollable);
-  }, [scrollable, setScrollable]);
+  /*
+   * Where the row should be, kept as a ref rather than only applied once.
+   *
+   * A horizontal scroller does not always keep its offset when its content is
+   * laid out again, and the row is laid out again on every switch — so the
+   * scroller can be left at zero, showing the first tab, with nothing in this
+   * component's state disagreeing. Re-applying the target from
+   * `onContentSizeChange` puts it back where the selection says it should be.
+   */
+  const target = scrollTarget(layouts[value]);
+  const targetRef = useRef<number | null>(target);
+  targetRef.current = target;
+  const settled = useRef(false);
 
-  // Bring the active tab into view when it changes from elsewhere — a
+  // Bring the active tab into view when the selection changes — a press, a
   // controlled switch, or a swipe on the panel below.
-  const activeLayout = layouts[value];
   useEffect(() => {
-    if (!scrollable || !activeLayout) return;
+    if (!scrollable || target === null) return;
     scroller.current?.scrollTo({
-      // Land the tab a little in from the edge rather than flush against it,
-      // so it does not read as the last one in the row.
-      x: Math.max(activeLayout.x - 24, 0),
-      animated: true,
+      x: target,
+      // The first measurement has nowhere to travel from: animating it is a
+      // row that visibly slides into place as the screen appears.
+      animated: settled.current,
     });
-  }, [scrollable, activeLayout?.x, activeLayout]);
+    settled.current = true;
+  }, [scrollable, value, target]);
+
+  const restore = useCallback(() => {
+    if (!scrollable || targetRef.current === null) return;
+    scroller.current?.scrollTo({ x: targetRef.current, animated: false });
+  }, [scrollable]);
 
   const row = (
     <View {...props} accessibilityRole="tablist" className={cn(list(), className)}>
@@ -786,7 +849,14 @@ function TabsList({ className, scrollable = false, children, ...props }: TabsLis
     </View>
   );
 
-  if (!scrollable) return row;
+  /*
+   * The triggers are told whether they are in a scroller here rather than
+   * through the root, so their width and the row they are measured in belong to
+   * one commit. See {@link TabsListContext}.
+   */
+  const scoped = <TabsListContext.Provider value={scrollable}>{row}</TabsListContext.Provider>;
+
+  if (!scrollable) return scoped;
 
   return (
     <ScrollView
@@ -796,8 +866,9 @@ function TabsList({ className, scrollable = false, children, ...props }: TabsLis
       // The row measures itself, and the indicator is positioned against it,
       // so the scroller must not stretch it to the viewport width.
       contentContainerStyle={{ flexGrow: 0 }}
+      onContentSizeChange={restore}
     >
-      {row}
+      {scoped}
     </ScrollView>
   );
 }
@@ -826,20 +897,30 @@ function TabsTrigger({
   children,
 }: TabsTriggerProps) {
   const context = useTabs('Tabs.Trigger');
+  const scrollable = useContext(TabsListContext);
   const active = context.value === value;
   const slots = tabsVariants({
     variant: context.variant,
     active,
     disabled,
-    scrollable: context.scrollable,
+    scrollable,
   });
 
+  /*
+   * Bound to `registerLayout` alone, which is stable for the life of the tab
+   * set — not to the whole context, which is rebuilt every time any trigger
+   * registers. Depending on the context made this a new function on every
+   * measurement, so a layout burst handed every trigger a new `onLayout` for
+   * every *other* trigger's measurement: quadratic prop updates in exactly the
+   * case that has enough tabs to be slow.
+   */
+  const { registerLayout } = context;
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { x, width } = event.nativeEvent.layout;
-      context.registerLayout(value, { x, width });
+      registerLayout(value, { x, width });
     },
-    [context, value]
+    [registerLayout, value]
   );
 
   if (context.variant === 'expanding') {

@@ -17,7 +17,12 @@ function assertTabListOwnership(source) {
 test('Tabs.List owns the tablist role in fixed and scrollable layouts', async () => {
   const source = await readFile(sourcePath, 'utf8');
   assertTabListOwnership(source);
-  assert.match(source, /const row = \([\s\S]*if \(!scrollable\) return row;[\s\S]*\{row\}/);
+  // The same row in both layouts, wrapped once so the triggers inside it know
+  // which one they are in before they are measured.
+  assert.match(
+    source,
+    /const row = \([\s\S]*<TabsListContext\.Provider value=\{scrollable\}>\{row\}[\s\S]*if \(!scrollable\) return scoped;[\s\S]*\{scoped\}/
+  );
 });
 
 test('the copied Tabs source retains the list semantic contract', async () => {
