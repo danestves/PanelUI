@@ -4,14 +4,12 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import BedDoubleIcon from "@hugeicons/core-free-icons/BedDoubleIcon";
 import Call02Icon from "@hugeicons/core-free-icons/Call02Icon";
 import Coffee01Icon from "@hugeicons/core-free-icons/Coffee01Icon";
-import Hotel01Icon from "@hugeicons/core-free-icons/Hotel01Icon";
 import Location01Icon from "@hugeicons/core-free-icons/Location01Icon";
 import Mail01Icon from "@hugeicons/core-free-icons/Mail01Icon";
 import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
-import TShirtIcon from "@hugeicons/core-free-icons/TShirtIcon";
 import Ticket01Icon from "@hugeicons/core-free-icons/Ticket01Icon";
 import Wifi01Icon from "@hugeicons/core-free-icons/Wifi01Icon";
-import { Alert, Avatar, Badge, Button, Card, CheckIcon, Chip, CircularText, FlipCard, FolderIcon, Input, Item, Label, QRCode, RadioGroup, Rating, Select, SelectionMode, SectionRail, Separator, Shimmer, Skeleton, Slider, Spinner, Surface, Text, TextAnimation, ToggleButton, ToggleButtonGroup, TrashIcon, hasNativeUI, useScrollSections } from "panelui-native";
+import { Alert, Avatar, Badge, Button, Card, CheckIcon, Chip, CircularText, FlipCard, FolderIcon, Input, Item, Label, QRCode, RadioGroup, Rating, Select, SelectionMode, SectionRail, Separator, Shimmer, Skeleton, Slider, Spinner, Surface, Text, TextAnimation, ToggleButton, ToggleButtonGroup, TrashIcon, cn, hasNativeUI, useScrollSections } from "panelui-native";
 import { useCSSVariable } from 'uniwind';
 import type { ComponentEntry } from '../component-types';
 
@@ -1256,12 +1254,24 @@ const PRODUCT_SIZES = [
   { label: 'XL', soldOut: false },
 ];
 
-const PRODUCT_COLOURS = ['Bone', 'Slate', 'Moss'];
+/* The swatches are the garment's real colours, which is the one thing a
+   photograph of a plain tee would have said that its name does not. */
+const PRODUCT_COLOURS = [
+  { name: 'Bone', swatch: '#E7E1D5' },
+  { name: 'Slate', swatch: '#5A6470' },
+  { name: 'Moss', swatch: '#6B7355' },
+];
 
 const TICKET_FIELDS = [
   { label: 'GATE', value: 'C' },
   { label: 'ROW', value: '14' },
   { label: 'SEAT', value: '22' },
+];
+
+const PROFILE_STATS = [
+  { value: '12 yrs', label: 'Experience' },
+  { value: 'Lisbon', label: 'UTC+1' },
+  { value: '4', label: 'Reports' },
 ];
 
 const PROFILE_SKILLS = ['Build systems', 'Gradle', 'Xcode', 'CI', 'Release'];
@@ -1294,66 +1304,89 @@ function TurnHint({ label = 'Tap to turn' }: { label?: string }) {
 /**
  * A room, and what it costs.
  *
- * The front is the decision — where it is, how it is rated, what it starts at —
- * and the back is the detail somebody wants only once they are interested: the
- * rooms, their prices, what is included. Two sides of one listing rather than a
- * summary and an expansion, which is the test for whether a flip card is the
- * right shape: nothing on the front is repeated on the back, and nothing on the
- * back has to be compared with the front.
+ * The front is the decision — where it is, how it is rated, what it starts at.
+ * The back is the detail somebody wants only once they are interested. Nothing
+ * on the front is repeated on the back and nothing on the back has to be
+ * compared with the front, which is the test for whether a flip card is the
+ * right shape at all.
  *
- * Built out of `Card`, so the faces are the same surface as every other card on
- * the screen and only the turn is this component's.
+ * There is no photograph, and no grey rectangle standing in for one either: a
+ * placeholder with an icon in the middle of it reads as an image that failed to
+ * load. The band carries the name instead, which is what a photograph would
+ * have had text over anyway.
  */
 function FlipCardHotelVersion() {
   const muted = useTint('--color-muted-foreground');
+  const onPrimary = useTint('--color-primary-foreground');
 
   return (
     <View className="flex-1 justify-center px-5">
-      <FlipCard className="h-[420px] w-full">
+      <FlipCard className="h-[360px] w-full">
         <FlipCard.Front className="h-full">
           <Card className="h-full overflow-hidden">
-            {/* The photograph's place. A demo has no photograph, and a grey
-                rectangle pretending to be one is worse than a filled panel
-                that says what would be there. */}
-            <View className="h-40 w-full items-center justify-center bg-primary/10">
-              <HugeiconsIcon icon={Hotel01Icon} size={44} color={muted} />
-            </View>
-            <Card.Header>
-              <View className="flex-row items-start justify-between gap-3">
-                <View className="shrink gap-1">
-                  <Card.Title>The Wharf House</Card.Title>
+            <View className="justify-between bg-primary p-5" style={{ height: 190 }}>
+              <View className="flex-row items-start justify-between">
+                <View className="rounded-md bg-primary-foreground/15 px-2 py-1">
+                  <Text size="xs" weight="medium" className="text-primary-foreground">
+                    9.1 · Excellent
+                  </Text>
+                </View>
+              </View>
+              <View className="gap-2">
+                <View className="gap-1">
+                  <Text size="2xl" weight="semibold" className="text-primary-foreground">
+                    The Wharf House
+                  </Text>
                   <View className="flex-row items-center gap-1.5">
-                    <HugeiconsIcon icon={Location01Icon} size={13} color={muted} />
-                    <Card.Description>Old Town · 400m from the harbour</Card.Description>
+                    <HugeiconsIcon icon={Location01Icon} size={13} color={onPrimary} />
+                    <Text size="sm" className="text-primary-foreground/80">
+                      Old Town · 400m from the harbour
+                    </Text>
                   </View>
                 </View>
-                <Badge variant="success">9.1</Badge>
+                <View className="flex-row items-center gap-2">
+                  <Rating value={4.5} readOnly size="sm" />
+                  <Text size="xs" className="text-primary-foreground/60">
+                    128 reviews
+                  </Text>
+                </View>
               </View>
-              <Rating value={4.5} readOnly size="sm" />
-            </Card.Header>
-            <Card.Content className="gap-3">
-              <View className="flex-row items-baseline gap-2">
-                <Text size="xl" weight="semibold">
-                  $180
-                </Text>
-                <Text size="sm" muted>
-                  a night, taxes included
-                </Text>
+            </View>
+
+            <View className="flex-1 justify-between p-5">
+              <Text size="sm" muted>
+                Free cancellation until 24 hours before
+              </Text>
+              <View className="flex-row items-end justify-between">
+                <View className="flex-row items-baseline gap-1.5">
+                  <Text size="2xl" weight="semibold">
+                    $180
+                  </Text>
+                  <Text size="sm" muted>
+                    a night
+                  </Text>
+                </View>
+                <TurnHint label="Rooms" />
               </View>
-              <TurnHint label="Tap for rooms and prices" />
-            </Card.Content>
+            </View>
           </Card>
         </FlipCard.Front>
 
         <FlipCard.Back className="h-full">
-          <Card className="h-full">
-            <Card.Header>
-              <Card.Title>Rooms</Card.Title>
-              <Card.Description>Free cancellation until 24 hours before</Card.Description>
-            </Card.Header>
-            <Card.Content className="gap-3">
-              {HOTEL_ROOMS.map((room) => (
-                <View key={room.name} className="flex-row items-center justify-between gap-3">
+          <Card className="h-full justify-between p-5">
+            <Text size="lg" weight="semibold">
+              Rooms
+            </Text>
+
+            <View>
+              {HOTEL_ROOMS.map((room, index) => (
+                <View
+                  key={room.name}
+                  className={cn(
+                    'flex-row items-center justify-between gap-3 py-3',
+                    index > 0 && 'border-t border-border'
+                  )}
+                >
                   <View className="shrink gap-0.5">
                     <Text size="sm" weight="medium">
                       {room.name}
@@ -1367,21 +1400,24 @@ function FlipCardHotelVersion() {
                   </Text>
                 </View>
               ))}
-              <Separator />
+            </View>
+
+            <View className="gap-3">
               <View className="flex-row flex-wrap gap-2">
                 {HOTEL_AMENITIES.map((amenity) => (
-                  <Chip key={amenity.label} size="sm" start={<HugeiconsIcon icon={amenity.icon} size={13} color={muted} />}>
+                  <Chip
+                    key={amenity.label}
+                    size="sm"
+                    start={<HugeiconsIcon icon={amenity.icon} size={13} color={muted} />}
+                  >
                     {amenity.label}
                   </Chip>
                 ))}
               </View>
-            </Card.Content>
-            <Card.Footer variant="panel" className="justify-between">
-              <TurnHint label="Tap to go back" />
-              <Button size="sm" onPress={() => {}}>
-                Book
+              <Button fullWidth onPress={() => {}}>
+                Book from $180
               </Button>
-            </Card.Footer>
+            </View>
           </Card>
         </FlipCard.Back>
       </FlipCard>
@@ -1392,84 +1428,107 @@ function FlipCardHotelVersion() {
 /**
  * The thing, and its particulars.
  *
- * A shop's grid has room for a name and a price and nothing else, and the
- * detail that decides the sale — the fabric, the sizes left, whether it ships
- * today — is a page away. This puts it on the other side of the same tile.
+ * A shop's grid has room for a name and a price; the fabric, the sizes left and
+ * the delivery are what decide the sale, and they are normally a page away.
+ *
+ * The band at the top is the garment's colours rather than a picture of it —
+ * real information, and the one thing a photograph of a plain tee would have
+ * told you that the name does not.
  *
  * `direction="vertical"` because a card in a grid has neighbours either side of
  * it: a horizontal turn sweeps its near edge out over them, and a vertical one
  * stays inside its own column.
  */
 function FlipCardProductVersion() {
-  const muted = useTint('--color-muted-foreground');
-
   return (
     <View className="flex-1 justify-center px-5">
-      <FlipCard direction="vertical" className="h-[400px] w-full">
+      <FlipCard direction="vertical" className="h-[340px] w-full">
         <FlipCard.Front className="h-full">
           <Card className="h-full overflow-hidden">
-            <View className="h-48 w-full items-center justify-center bg-surface-secondary">
-              <HugeiconsIcon icon={TShirtIcon} size={44} color={muted} />
+            <View
+              className="items-center justify-center gap-4 bg-inset"
+              style={{ height: 150 }}
+            >
+              <View className="flex-row gap-3">
+                {PRODUCT_COLOURS.map((colour, index) => (
+                  <View
+                    key={colour.name}
+                    className={cn(
+                      'h-11 w-11 rounded-full border',
+                      index === 0 ? 'border-foreground' : 'border-border'
+                    )}
+                    style={{ backgroundColor: colour.swatch }}
+                  />
+                ))}
+              </View>
+              <Text size="xs" muted>
+                Bone · Slate · Moss
+              </Text>
             </View>
-            <Card.Header>
+
+            <View className="flex-1 justify-between p-5">
               <View className="flex-row items-start justify-between gap-3">
-                <View className="shrink gap-1">
-                  <Card.Title>Heavyweight Tee</Card.Title>
-                  <Card.Description>Organic cotton, boxy fit</Card.Description>
+                <View className="shrink gap-0.5">
+                  <Text size="lg" weight="semibold">
+                    Heavyweight Tee
+                  </Text>
+                  <Text size="sm" muted>
+                    Organic cotton, boxy fit
+                  </Text>
                 </View>
                 <Badge variant="secondary">3 left</Badge>
               </View>
-            </Card.Header>
-            <Card.Content className="gap-3">
-              <Text size="xl" weight="semibold">
-                $48
+              <Text size="sm" muted>
+                Ships in two days
               </Text>
-              <TurnHint label="Tap for sizes and detail" />
-            </Card.Content>
+              <View className="flex-row items-end justify-between">
+                <Text size="2xl" weight="semibold">
+                  $48
+                </Text>
+                <TurnHint label="Sizes" />
+              </View>
+            </View>
           </Card>
         </FlipCard.Front>
 
         <FlipCard.Back className="h-full">
-          <Card className="h-full">
-            <Card.Header>
-              <Card.Title>Heavyweight Tee</Card.Title>
-              <Card.Description>
+          <Card className="h-full justify-between p-5">
+            <View className="gap-1">
+              <Text size="lg" weight="semibold">
+                Heavyweight Tee
+              </Text>
+              <Text size="sm" muted>
                 280gsm combed cotton, pre-shrunk, with a ribbed collar that keeps its
-                shape. Ships in two days.
-              </Card.Description>
-            </Card.Header>
-            <Card.Content className="gap-4">
-              <View className="gap-2">
-                <Text size="xs" weight="medium" muted>
-                  SIZE
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {PRODUCT_SIZES.map((size) => (
-                    <Chip key={size.label} size="sm" disabled={size.soldOut}>
-                      {size.label}
-                    </Chip>
-                  ))}
-                </View>
+                shape.
+              </Text>
+            </View>
+
+            <View className="gap-2">
+              <Text size="xs" weight="medium" muted>
+                SIZE
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {PRODUCT_SIZES.map((size) => (
+                  <Chip key={size.label} size="sm" disabled={size.soldOut}>
+                    {size.soldOut ? `${size.label} — sold out` : size.label}
+                  </Chip>
+                ))}
               </View>
-              <View className="gap-2">
-                <Text size="xs" weight="medium" muted>
-                  COLOUR
+            </View>
+
+            <View className="gap-3">
+              <View className="flex-row items-center justify-between border-t border-border pt-3">
+                <Text size="sm" muted>
+                  Delivery
                 </Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {PRODUCT_COLOURS.map((colour) => (
-                    <Chip key={colour} size="sm">
-                      {colour}
-                    </Chip>
-                  ))}
-                </View>
+                <Text size="sm" weight="medium">
+                  Two days, free
+                </Text>
               </View>
-            </Card.Content>
-            <Card.Footer variant="panel" className="justify-between">
-              <TurnHint label="Tap to go back" />
-              <Button size="sm" onPress={() => {}}>
-                Add to bag
+              <Button fullWidth onPress={() => {}}>
+                Add to bag · $48
               </Button>
-            </Card.Footer>
+            </View>
           </Card>
         </FlipCard.Back>
       </FlipCard>
@@ -1481,17 +1540,21 @@ function FlipCardProductVersion() {
  * The strongest case after a bank card: the code really is on the back.
  *
  * A ticket is read by a person on the front and by a scanner on the back, and
- * the two never need to be seen at once. Turning it over is what somebody does
- * at the door anyway.
+ * the two are never needed at once. Turning it over is what somebody does at
+ * the door anyway.
+ *
+ * The dashed rule is where a paper ticket tears. It is doing real work here —
+ * it separates what you read walking in from what you read looking for your
+ * seat, and it is the line that says "ticket" before any of the words do.
  */
 function FlipCardTicketVersion() {
   const onPrimary = useTint('--color-primary-foreground');
 
   return (
     <View className="flex-1 justify-center px-5">
-      <FlipCard className="h-[400px] w-full">
+      <FlipCard className="h-[320px] w-full">
         <FlipCard.Front className="h-full justify-between rounded-2xl bg-primary p-6">
-          <View className="flex-row items-start justify-between">
+          <View className="flex-row items-start justify-between gap-3">
             <View className="shrink gap-1">
               <Text size="xs" weight="medium" className="text-primary-foreground/70">
                 SAT 14 SEPTEMBER · 20:00
@@ -1503,34 +1566,38 @@ function FlipCardTicketVersion() {
                 The Foundry, Manchester
               </Text>
             </View>
-            <HugeiconsIcon icon={Ticket01Icon} size={26} color={onPrimary} />
+            <HugeiconsIcon icon={Ticket01Icon} size={24} color={onPrimary} />
           </View>
 
-          <View className="flex-row justify-between">
-            {TICKET_FIELDS.map((field) => (
-              <View key={field.label} className="gap-1">
-                <Text size="xs" className="text-primary-foreground/60">
-                  {field.label}
-                </Text>
-                <Text size="lg" weight="semibold" className="text-primary-foreground">
-                  {field.value}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          <View className="flex-row items-center gap-1.5">
-            <HugeiconsIcon icon={RefreshIcon} size={13} color={onPrimary} />
-            <Text size="xs" className="text-primary-foreground/70">
-              Tap for the code
-            </Text>
+          <View className="gap-5">
+            <View className="border-t border-dashed border-primary-foreground/30" />
+            <View className="flex-row justify-between">
+              {TICKET_FIELDS.map((field) => (
+                <View key={field.label} className="gap-1">
+                  <Text size="xs" className="text-primary-foreground/60">
+                    {field.label}
+                  </Text>
+                  <Text size="xl" weight="semibold" className="text-primary-foreground">
+                    {field.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            <View className="flex-row items-center gap-1.5">
+              <HugeiconsIcon icon={RefreshIcon} size={13} color={onPrimary} />
+              <Text size="xs" className="text-primary-foreground/70">
+                Tap for the code
+              </Text>
+            </View>
           </View>
         </FlipCard.Front>
 
-        <FlipCard.Back className="h-full items-center justify-center gap-4 rounded-2xl border border-border bg-card p-6">
-          {/* The canvas on its own: the frame, the title and the caption are
-              already the card's, and drawing them twice makes the back look
-              like a widget somebody dropped onto a ticket. */}
+        <FlipCard.Back className="h-full items-center justify-between rounded-2xl border border-border bg-card p-6">
+          <Text size="xs" weight="medium" muted>
+            NIGHT SIGNAL · GATE C
+          </Text>
+          {/* The canvas on its own: a frame, a title and a caption around it
+              would be a second card inside the one already being turned. */}
           <QRCode value="https://panelui.dev/t/NS-8842-14C" size="md">
             <QRCode.Canvas />
           </QRCode>
@@ -1554,64 +1621,80 @@ function FlipCardTicketVersion() {
  * A directory is a grid of names, and everything worth knowing about somebody
  * is on the page you have to leave the grid for. The card carries it instead,
  * and the grid keeps its shape.
+ *
+ * Left-aligned rather than centred. A centred avatar over a centred name in a
+ * box this size is a memorial plaque; ranged left with the detail under it, it
+ * is a directory entry.
  */
 function FlipCardProfileVersion() {
   const muted = useTint('--color-muted-foreground');
 
   return (
     <View className="flex-1 justify-center px-5">
-      {/* Sized for the back, which is the taller of the two faces: a face
-          overflows rather than growing the card it is in. */}
-      <FlipCard className="h-[440px] w-full">
+      <FlipCard className="h-[320px] w-full">
         <FlipCard.Front className="h-full">
-          <Card className="h-full items-center justify-center gap-3 p-6">
-            <Avatar size="xl" fallback="RM" />
-            <View className="items-center gap-1">
-              <Text size="lg" weight="semibold">
-                Rosa Marín
-              </Text>
-              <Text size="sm" muted>
-                Staff Engineer · Platform
-              </Text>
+          <Card className="h-full justify-between p-6">
+            <View className="gap-4">
+              <Avatar size="xl" fallback="RM" />
+              <View className="gap-1">
+                <Text size="2xl" weight="semibold">
+                  Rosa Marín
+                </Text>
+                <Text size="sm" muted>
+                  Staff Engineer · Platform
+                </Text>
+              </View>
             </View>
-            <Badge variant="secondary">Lisbon · UTC+1</Badge>
-            <TurnHint />
+
+            <View className="gap-4">
+              <View className="flex-row">
+                {PROFILE_STATS.map((stat, index) => (
+                  <View
+                    key={stat.label}
+                    className={cn('flex-1 gap-0.5', index > 0 && 'border-l border-border pl-4')}
+                  >
+                    <Text size="lg" weight="semibold">
+                      {stat.value}
+                    </Text>
+                    <Text size="xs" muted>
+                      {stat.label}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+              <TurnHint />
+            </View>
           </Card>
         </FlipCard.Front>
 
         <FlipCard.Back className="h-full">
-          <Card className="h-full">
-            <Card.Header>
-              <Card.Title>Rosa Marín</Card.Title>
-              <Card.Description>
+          <Card className="h-full justify-between p-6">
+            <View className="gap-2">
+              <Text size="lg" weight="semibold">
+                Rosa Marín
+              </Text>
+              <Text size="sm" muted>
                 Twelve years on build tooling. Currently pulling the mobile release
                 pipeline apart so it can be put back together in under ten minutes.
-              </Card.Description>
-            </Card.Header>
-            <Card.Content className="gap-4">
-              <View className="flex-row flex-wrap gap-2">
-                {PROFILE_SKILLS.map((skill) => (
-                  <Chip key={skill} size="sm">
-                    {skill}
-                  </Chip>
-                ))}
-              </View>
-              <Item.Group>
-                {PROFILE_CONTACTS.map((contact) => (
-                  <Item key={contact.value}>
-                    <Item.Media>
-                      <HugeiconsIcon icon={contact.icon} size={16} color={muted} />
-                    </Item.Media>
-                    <Item.Content>
-                      <Item.Title>{contact.value}</Item.Title>
-                    </Item.Content>
-                  </Item>
-                ))}
-              </Item.Group>
-            </Card.Content>
-            <Card.Footer variant="panel">
-              <TurnHint label="Tap to go back" />
-            </Card.Footer>
+              </Text>
+            </View>
+
+            <View className="flex-row flex-wrap gap-2">
+              {PROFILE_SKILLS.map((skill) => (
+                <Chip key={skill} size="sm">
+                  {skill}
+                </Chip>
+              ))}
+            </View>
+
+            <View className="gap-3">
+              {PROFILE_CONTACTS.map((contact) => (
+                <View key={contact.value} className="flex-row items-center gap-2.5">
+                  <HugeiconsIcon icon={contact.icon} size={15} color={muted} />
+                  <Text size="sm">{contact.value}</Text>
+                </View>
+              ))}
+            </View>
           </Card>
         </FlipCard.Back>
       </FlipCard>
