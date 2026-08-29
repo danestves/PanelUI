@@ -68,6 +68,35 @@ Then **delete `package-lock.json` and reinstall**. npm reuses a stale lockfile r
 re-resolving when only the overrides change, so an install on top of the old one leaves the tree
 exactly as it was.
 
+### A version Expo Go was not built against
+
+One copy is not enough on its own: it has to be the *right* copy.
+
+Expo Go is a prebuilt binary, and its native side is compiled against exact versions. Handing it
+JavaScript from a different one is a mismatch it cannot report — and for
+`react-native-reanimated` and `react-native-worklets` it is fatal, because they install a runtime
+before the LogBox exists. The process goes down with nothing on the screen and nothing in the
+terminal, which is the same silence as the section above and a different cause.
+
+`expo start` says so in one line as it launches, and it is easy to read past:
+
+```
+2 packages may need updating. Run npx expo install --check for details.
+```
+
+Run it. It names them:
+
+```bash
+npx expo install --check    # names every package on the wrong version
+npx expo install --fix      # sets them all to what the SDK expects
+```
+
+**If you pin versions in `overrides`, that check cannot see them** — it reads what is declared,
+and an override outranks a declaration. Take the versions from
+`node_modules/expo/bundledNativeModules.json`, which is the file the check itself reads, rather
+than from a copy of it written down somewhere. An override copied by hand goes stale the first
+time the SDK moves, and the failure it causes looks nothing like a version problem.
+
 ### Reading what actually happened
 
 Android will tell you, and it is the one thing the Metro terminal cannot. With the emulator or

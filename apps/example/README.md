@@ -49,6 +49,13 @@ while an app with its own nested pin reaches that one, and both go into a single
 Reanimated aborts on a second instance during module init, before the LogBox exists, which is an
 app that closes on Android with nothing in the terminal and nothing in the Metro log.
 
+The versions are the SDK's own, taken from `node_modules/expo/bundledNativeModules.json` and
+checked against it by `test/sdk-version-parity.test.mjs`. They are not a free choice: Expo Go is a
+prebuilt binary whose native side is compiled against exact versions, so pinning a *different* one
+causes the same silent close from the other direction — and an override is invisible to
+`expo install --check`, which reads what is declared. Copying the numbers by hand is how that
+happened once already.
+
 If you ever change one of those versions, delete `package-lock.json` before reinstalling: npm
 reuses a stale lockfile rather than re-resolving when only the overrides change.
 
