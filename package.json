@@ -24,23 +24,12 @@
     "catalogue:generate": "node scripts/catalogue-manifest.mjs",
     "release:check": "node scripts/release-parity.mjs",
     "themes:check": "node scripts/theme-manifest.mjs",
-    "reset": "node scripts/reset-caches.mjs",
+    "reset": "rm -rf apps/example/.expo apps/example/node_modules/.cache node_modules/.cache $TMPDIR/metro-* $TMPDIR/haste-map-* 2>/dev/null; echo \"caches cleared\"",
     "docs": "npm run dev --workspace=docs",
     "template": "node scripts/template-preview.mjs",
     "template:parity": "node scripts/template-parity.mjs",
     "performance:example": "node scripts/verify-example-export.mjs",
     "performance:check": "npm run verify:package --workspace=panelui-native && npm run benchmark:planner --workspace=panelui-native && npm run benchmark:components --workspace=panelui-native && node scripts/verify-registry-budgets.mjs"
-  },
-  "overrides": {
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-native": "0.86.3",
-    "react-native-gesture-handler": "2.32.0",
-    "react-native-reanimated": "4.5.1",
-    "react-native-safe-area-context": "5.7.0",
-    "react-native-screens": "4.26.0",
-    "react-native-svg": "15.15.4",
-    "react-native-worklets": "0.10.1"
   },
   "engines": {
     "node": ">=20"
