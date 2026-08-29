@@ -1801,6 +1801,19 @@ export const ENTRIES: ComponentEntry[] = [
       { label: 'Hold to confirm', render: () => <ProgressButtonDemo /> },
       { label: 'Hold to pay', render: () => <ProgressButtonPayDemo /> },
       {
+        label: 'The shape of an ordinary button',
+        render: () => (
+          <View className="w-full gap-3">
+            <ProgressButton shape="rounded" autoReset fullWidth onComplete={() => {}}>
+              <ProgressButton.Label>Hold to delete</ProgressButton.Label>
+            </ProgressButton>
+            <Button variant="outline" fullWidth onPress={() => {}}>
+              Cancel
+            </Button>
+          </View>
+        ),
+      },
+      {
         label: 'Variants',
         render: () => (
           <View className="w-full gap-3">

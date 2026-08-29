@@ -5,7 +5,8 @@
   "extraImports": [
     "Frame",
     "Text",
-    "View"
+    "View",
+    "Button"
   ],
   "anatomy": "<ProgressButton>\n  <ProgressButton.Label>Hold to confirm</ProgressButton.Label>\n  <ProgressButton.Done />\n</ProgressButton>",
   "parts": {
@@ -38,6 +39,11 @@
         "width": 720,
         "height": 1560
       }
+    },
+    {
+      "title": "The shape of an ordinary button",
+      "description": "`shape=\"rounded\"` gives the button [Button](/docs/components/button)'s box exactly — the same radius, side padding and minimum width, at heights that already matched. Use it where the hold sits in a row of ordinary buttons and a lone pill would read as a different kind of control rather than as the one that has to be held.\n\nThe default is `pill`, and it is the default for a reason: the fill is clipped by the corner, so a half-circle sends the wipe's leading edge out as a curve and the button reads as filling up. A small radius sends it out square.",
+      "code": "<View className=\"gap-3\">\n  <ProgressButton shape=\"rounded\" fullWidth onComplete={() => remove()}>\n    <ProgressButton.Label>Hold to delete</ProgressButton.Label>\n  </ProgressButton>\n  <Button variant=\"outline\" fullWidth onPress={() => close()}>\n    Cancel\n  </Button>\n</View>"
     },
     {
       "title": "How long the hold is",

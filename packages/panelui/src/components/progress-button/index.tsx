@@ -117,15 +117,6 @@ const DONE_TINT = {
 const progressButtonVariants = tv({
   slots: {
     /*
-     * A pill, not the `rounded-lg` the other buttons take.
-     *
-     * The fill is clipped by this radius, so the shape of the button is also
-     * the shape of the wipe's leading edge as it comes out of the corner. On a
-     * small radius that edge emerges square from a rounded box, which reads as
-     * a rectangle sliding out from under the button rather than as the button
-     * filling up.
-     */
-    /*
      * Every variant rests on the same secondary surface, and `variant` decides
      * only what colour comes across it.
      *
@@ -140,7 +131,7 @@ const progressButtonVariants = tv({
      * that survives the wipe, since the fill covers the ground the label was
      * standing on and the second copy takes over.
      */
-    root: 'relative overflow-hidden rounded-full border border-transparent bg-secondary',
+    root: 'relative overflow-hidden border border-transparent bg-secondary',
     /*
      * The row inside the button. It is separate from `root` because the fill
      * has to sit over the whole button including its padding — a wipe that
@@ -179,28 +170,49 @@ const progressButtonVariants = tv({
     size: {
       // Matched to Button's boxes, and `min-h-*` for the same reason: the
       // label's glyphs grow with the system text size and the box has to grow
-      // with them.
-      // Wider than the equivalent Button, because the corner is a half-circle
-      // rather than a small radius: the curve eats into the side padding, and
-      // at Button's values the first and last glyphs sit against it.
+      // with them. The side padding is `shape`'s to decide, below.
       sm: {
         root: 'min-h-9',
-        content: 'min-h-9 gap-1.5 px-3.5 py-2',
+        content: 'min-h-9 gap-1.5 py-2',
         label: 'text-[14px]',
         fillLabel: 'text-[14px]',
       },
       md: {
         root: 'min-h-11',
-        content: 'min-h-11 px-5 py-2.5',
+        content: 'min-h-11 py-2.5',
         label: 'text-[16px]',
         fillLabel: 'text-[16px]',
       },
       lg: {
         root: 'min-h-12',
-        content: 'min-h-12 px-7 py-2.5',
+        content: 'min-h-12 py-2.5',
         label: 'text-[18px]',
         fillLabel: 'text-[18px]',
       },
+    },
+    /*
+     * The corner, and the side padding that follows from it.
+     *
+     * The fill is clipped by the button's radius, so the shape of the button is
+     * also the shape of the wipe's leading edge as it comes out of the corner.
+     * A pill sends that edge out as a curve, which reads as the button filling
+     * up; a small radius sends it out square, which reads as a rectangle
+     * sliding out from under the button. That is why `pill` is the default and
+     * stays it.
+     *
+     * `rounded` is for a progress button standing in a row of ordinary ones —
+     * a form's footer, a toolbar, a card's actions — where a lone pill among
+     * `rounded-lg` buttons reads as a different kind of control rather than as
+     * the one that has to be held. It is `Button`'s box exactly: same radius,
+     * same padding, same minimum width, and the heights already agreed.
+     */
+    shape: {
+      // The radius is only on the root. It has `overflow-hidden`, so it is what
+      // clips the fill — and the fill's own leading edge has to stay straight:
+      // rounding it would round the wipe's front as well as the button's
+      // corner, which is a bar with a domed end travelling across the button.
+      pill: { root: 'rounded-full' },
+      rounded: { root: 'rounded-lg' },
     },
     fullWidth: {
       true: { root: 'w-full' },
@@ -209,9 +221,22 @@ const progressButtonVariants = tv({
       true: { root: 'opacity-[0.64]' },
     },
   },
+  compoundVariants: [
+    // A pill is wider than the equivalent Button at every size, because the
+    // corner is a half-circle rather than a small radius: the curve eats into
+    // the side padding, and at Button's values the first and last glyphs sit
+    // against it. `rounded` has Button's corner, so it takes Button's padding.
+    { shape: 'pill', size: 'sm', class: { content: 'px-3.5' } },
+    { shape: 'pill', size: 'md', class: { content: 'px-5' } },
+    { shape: 'pill', size: 'lg', class: { content: 'px-7' } },
+    { shape: 'rounded', size: 'sm', class: { root: 'min-w-9', content: 'px-2.5' } },
+    { shape: 'rounded', size: 'md', class: { root: 'min-w-11', content: 'px-4' } },
+    { shape: 'rounded', size: 'lg', class: { content: 'px-6' } },
+  ],
   defaultVariants: {
     variant: 'primary',
     size: 'md',
+    shape: 'pill',
   },
 });
 
@@ -221,6 +246,8 @@ type ProgressButtonVariantProps = VariantProps<typeof progressButtonVariants>;
 export type ProgressButtonVariant = NonNullable<ProgressButtonVariantProps['variant']>;
 /** How big a progress button is. */
 export type ProgressButtonSize = NonNullable<ProgressButtonVariantProps['size']>;
+/** What corner a progress button has. */
+export type ProgressButtonShape = NonNullable<ProgressButtonVariantProps['shape']>;
 
 interface ProgressButtonContextValue {
   /** `0` to `1` across the hold. */
@@ -282,6 +309,18 @@ export interface ProgressButtonProps
    * whether an action is worth feeling is the caller's call, not the control's.
    */
   haptics?: boolean;
+  /**
+   * The corner. `pill` by default — the fill is clipped by it, so a half-circle
+   * sends the wipe's leading edge out as a curve and the button reads as
+   * filling up.
+   *
+   * `rounded` gives it [Button](/docs/components/button)'s box exactly: the
+   * same radius, side padding and minimum width, at heights that already
+   * matched. Use it where the hold stands in a row of ordinary buttons — a
+   * form's footer, a toolbar, a card's actions — and a lone pill would read as
+   * a different kind of control rather than as the one that has to be held.
+   */
+  shape?: ProgressButtonShape;
   children?: ReactNode;
 }
 
@@ -290,6 +329,7 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
     className,
     variant = 'primary',
     size = 'md',
+    shape = 'pill',
     fullWidth,
     holdDuration,
     onComplete,
@@ -305,7 +345,7 @@ const ProgressButtonRoot = forwardRef<View, ProgressButtonProps>(function Progre
   },
   ref
 ) {
-  const slots = progressButtonVariants({ variant, size, fullWidth, disabled });
+  const slots = progressButtonVariants({ variant, size, shape, fullWidth, disabled });
   const duration = resolveHoldDuration(holdDuration);
   const reducedMotion = useReducedMotion();
 

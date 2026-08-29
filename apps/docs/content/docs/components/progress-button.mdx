@@ -24,7 +24,7 @@ For an action that is ordinary rather than irreversible, use [Button](/docs/comp
 ProgressButton ships with the library — no separate install.
 
 ```tsx
-import { ProgressButton, Frame, Text, View } from 'panelui-native';
+import { ProgressButton, Frame, Text, View, Button } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -126,6 +126,23 @@ const [paid, setPaid] = useState(false);
     </ProgressButton>
   </View>
 </Frame>
+```
+
+### The shape of an ordinary button
+
+`shape="rounded"` gives the button [Button](/docs/components/button)'s box exactly — the same radius, side padding and minimum width, at heights that already matched. Use it where the hold sits in a row of ordinary buttons and a lone pill would read as a different kind of control rather than as the one that has to be held.
+
+The default is `pill`, and it is the default for a reason: the fill is clipped by the corner, so a half-circle sends the wipe's leading edge out as a curve and the button reads as filling up. A small radius sends it out square.
+
+```tsx
+<View className="gap-3">
+  <ProgressButton shape="rounded" fullWidth onComplete={() => remove()}>
+    <ProgressButton.Label>Hold to delete</ProgressButton.Label>
+  </ProgressButton>
+  <Button variant="outline" fullWidth onPress={() => close()}>
+    Cancel
+  </Button>
+</View>
 ```
 
 ### How long the hold is
@@ -261,6 +278,16 @@ const [done, setDone] = useState(false);
 <ProgressButton size="lg">…</ProgressButton>
 ```
 
+### `shape`
+
+- `pill` *(default)*
+- `rounded`
+
+```tsx
+<ProgressButton shape="pill">…</ProgressButton>
+<ProgressButton shape="rounded">…</ProgressButton>
+```
+
 ### `fullWidth`
 
 - `true`
@@ -284,6 +311,7 @@ const [done, setDone] = useState(false);
 | `autoResetDelay` | `number` | — | Milliseconds to stay completed before resetting. Defaults to `1000`. |
 | `disabled` | `boolean` | `false` | Dim the button and refuse the hold outright. The fill never starts, so there is no half-finished state to explain. |
 | `haptics` | `boolean` | `false` | A tick as the hold takes, and a knock when it completes. Off by default: whether an action is worth feeling is the caller's call, not the control's. |
+| `shape` | `ProgressButtonShape` | `pill` | The corner. `pill` by default — the fill is clipped by it, so a half-circle sends the wipe's leading edge out as a curve and the button reads as filling up. `rounded` gives it [Button](/docs/components/button)'s box exactly: the same radius, side padding and minimum width, at heights that already matched. Use it where the hold stands in a row of ordinary buttons — a form's footer, a toolbar, a card's actions — and a lone pill would read as a different kind of control rather than as the one that has to be held. |
 
 ### ProgressButton.Label
 
