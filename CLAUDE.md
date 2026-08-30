@@ -246,13 +246,34 @@ which is worse than the gap it filled.
 ## Commands (run from repo root)
 
 - `npm install` — install all workspace deps
-- `npm run example` — start the example app (Metro/Expo dev server)
+- **`npm run example:go:clear` — the command that runs the project.** Starts the example for
+  Expo Go and clears Metro's cache first. Prefer it whenever anything has changed: it is the only
+  one of the three that is correct no matter what state the tree is in.
+- `npm run example:go` — the same server, reusing Metro's cache. Faster to boot, and safe only
+  when no dependency has moved since the last run.
+- `npm run example` — **does not target Expo Go.** `apps/example` depends on `expo-dev-client`
+  directly, and the CLI reads that as a request for a development build. Use it only when that is
+  what you want.
 - `npm test` — discover and run every repository contract test; rejects focused `.only` tests
 - `npm run typecheck` — typecheck all workspaces
 - `npm run build` — build the library with react-native-builder-bob (output: `lib/`)
 - `npm run docs` — start the docs site; `npm run build --workspace=docs` for a production build
 - Publish: **nobody runs `npm publish` by hand.** Cutting a GitHub release publishes the package
   it is tagged for — see below.
+
+**After changing any dependency, start with `:clear` once.** Metro's transform cache key does not
+include the version of the Babel plugins that produced the cached output, so a plugin upgrade
+leaves the old output in place and the new runtime rejects it:
+
+```
+[Worklets] Mismatch between JavaScript code version and Worklets Babel plugin version
+(0.10.1 vs. 0.10.0)
+```
+
+Both numbers there are worklets. The first is the runtime that was installed; the second is what
+the cached transform was built by. Nothing is wrong with the tree when this appears — checking
+`node_modules` will show one version and only one — and no reinstall fixes it. Clearing the cache
+does, and it costs one slow bundle.
 
 ### Never launch a simulator on your own
 
@@ -327,7 +348,7 @@ const isAutoDevClient = args['--dev-client'] == null && args['--go'] == null
   && hasDirectDevClientDependency(projectRoot);
 ```
 
-So plain `npm run example` never targets Expo Go. Use `npm run example:go`. This is worth ruling
+So plain `npm run example` never targets Expo Go. Use `npm run example:go:clear`. This is worth ruling
 out early — it is free to check and it looks like a version problem — but it was not the cause of
 either crash here, and a wrong theory that fits the timeline still costs a launch to disprove.
 
