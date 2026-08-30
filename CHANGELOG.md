@@ -9,6 +9,30 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.86.1] — 2026-08-30
+
+**No library changes.** `panelui-native` is identical to 0.86.0 — nothing under `src` moved. The
+release exists to publish the documentation below, and there is nothing to gain by upgrading to it.
+
+### Docs
+
+- **`FlipCard`** has a recording of every version on its page, and one at the top. The versions
+  answer different questions — what a listing card holds back, what a shop grid has no room for,
+  what a ticket shows a scanner — and none of that survives a still frame of a card that has not
+  been turned.
+- **`FlipCard`**'s code samples match the versions beside them again. Six of the eight described
+  the previous design: a coloured band over a white body, an avatar with the default border on a
+  face that border cannot be seen against, and three demonstrations whose two sides were styled
+  alike. A sample that disagrees with the video above it is worse than no sample.
+- The drag sample no longer imports `RefreshIcon`. It is not exported — the glyph belongs to the
+  example app's icon package — so anyone copying the sample got an unresolved import.
+
+### Changed
+
+- The example app pins `react-native` 0.86.2, `react-native-worklets` 0.10.1 and
+  `react-native-reanimated` 4.5.1, measured out of the Expo Go client rather than read off a
+  manifest. This affects running the gallery from a checkout; it does not reach the package.
+
 ## [0.86.0] — 2026-08-29
 
 ### Added
