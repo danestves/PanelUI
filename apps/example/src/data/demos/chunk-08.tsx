@@ -1333,7 +1333,7 @@ function FlipCardHotelVersion() {
 
   return (
     <View className="flex-1 justify-center px-5">
-      <FlipCard className="h-[360px] w-full">
+      <FlipCard className="h-[340px] w-full">
         <FlipCard.Front className="h-full">
           {/* One field of colour, not a coloured band over a white body. The
               split reads as two cards glued together at this size, and the
@@ -1363,7 +1363,10 @@ function FlipCardHotelVersion() {
               </View>
             </View>
 
+            {/* The rule anchors the footer, so the space above it reads as
+                deliberate rather than as a card that ran out of content. */}
             <View className="gap-3">
+              <View className="border-t border-primary-foreground/15" />
               <Text size="sm" className="text-primary-foreground/70">
                 Free cancellation until 24 hours before
               </Text>
