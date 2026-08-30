@@ -1288,13 +1288,25 @@ const PROFILE_CONTACTS = [
  * the whole of the back is hidden behind knowing it is there. Every version
  * below carries one, in the corner the eye reaches last.
  */
-function TurnHint({ label = 'Tap to turn' }: { label?: string }) {
-  const tint = useTint('--color-muted-foreground');
+function TurnHint({
+  label = 'Tap to turn',
+  onPrimary = false,
+}: {
+  label?: string;
+  /** Set on a `bg-primary` face, where the muted token has no contrast left. */
+  onPrimary?: boolean;
+}) {
+  const mutedTint = useTint('--color-muted-foreground');
+  const primaryTint = useTint('--color-primary-foreground');
 
   return (
     <View className="flex-row items-center gap-1.5">
-      <HugeiconsIcon icon={RefreshIcon} size={13} color={tint} />
-      <Text size="xs" muted>
+      <HugeiconsIcon
+        icon={RefreshIcon}
+        size={13}
+        color={onPrimary ? primaryTint : mutedTint}
+      />
+      <Text size="xs" muted={!onPrimary} className={cn(onPrimary && 'text-primary-foreground/70')}>
         {label}
       </Text>
     </View>
@@ -1323,50 +1335,48 @@ function FlipCardHotelVersion() {
     <View className="flex-1 justify-center px-5">
       <FlipCard className="h-[360px] w-full">
         <FlipCard.Front className="h-full">
-          <Card className="h-full overflow-hidden">
-            <View className="justify-between bg-primary p-5" style={{ height: 190 }}>
+          {/* One field of colour, not a coloured band over a white body. The
+              split reads as two cards glued together at this size, and the
+              hierarchy it was drawing is available from one foreground token
+              at four opacities. */}
+          <Card className="h-full justify-between overflow-hidden bg-primary p-5">
+            <View className="gap-4">
               <View className="flex-row items-start justify-between">
-                <View className="rounded-md bg-primary-foreground/15 px-2 py-1">
-                  <Text size="xs" weight="medium" className="text-primary-foreground">
-                    9.1 · Excellent
+                <Badge variant="success">9.1 · Excellent</Badge>
+              </View>
+              <View className="gap-1">
+                <Text size="2xl" weight="semibold" className="text-primary-foreground">
+                  The Wharf House
+                </Text>
+                <View className="flex-row items-center gap-1.5">
+                  <HugeiconsIcon icon={Location01Icon} size={13} color={onPrimary} />
+                  <Text size="sm" className="text-primary-foreground/80">
+                    Old Town · 400m from the harbour
                   </Text>
                 </View>
               </View>
-              <View className="gap-2">
-                <View className="gap-1">
-                  <Text size="2xl" weight="semibold" className="text-primary-foreground">
-                    The Wharf House
-                  </Text>
-                  <View className="flex-row items-center gap-1.5">
-                    <HugeiconsIcon icon={Location01Icon} size={13} color={onPrimary} />
-                    <Text size="sm" className="text-primary-foreground/80">
-                      Old Town · 400m from the harbour
-                    </Text>
-                  </View>
-                </View>
-                <View className="flex-row items-center gap-2">
-                  <Rating value={4.5} readOnly size="sm" />
-                  <Text size="xs" className="text-primary-foreground/60">
-                    128 reviews
-                  </Text>
-                </View>
+              <View className="flex-row items-center gap-2">
+                <Rating value={4.5} readOnly size="sm" />
+                <Text size="xs" className="text-primary-foreground/60">
+                  128 reviews
+                </Text>
               </View>
             </View>
 
-            <View className="flex-1 justify-between p-5">
-              <Text size="sm" muted>
+            <View className="gap-3">
+              <Text size="sm" className="text-primary-foreground/70">
                 Free cancellation until 24 hours before
               </Text>
               <View className="flex-row items-end justify-between">
                 <View className="flex-row items-baseline gap-1.5">
-                  <Text size="2xl" weight="semibold">
+                  <Text size="2xl" weight="semibold" className="text-primary-foreground">
                     $180
                   </Text>
-                  <Text size="sm" muted>
+                  <Text size="sm" className="text-primary-foreground/60">
                     a night
                   </Text>
                 </View>
-                <TurnHint label="Rooms" />
+                <TurnHint label="Rooms" onPrimary />
               </View>
             </View>
           </Card>
@@ -1444,11 +1454,11 @@ function FlipCardProductVersion() {
     <View className="flex-1 justify-center px-5">
       <FlipCard direction="vertical" className="h-[340px] w-full">
         <FlipCard.Front className="h-full">
-          <Card className="h-full overflow-hidden">
-            <View
-              className="items-center justify-center gap-4 bg-inset"
-              style={{ height: 150 }}
-            >
+          {/* The swatches sit on the card's own surface. Boxing them in a
+              3.5%-black band drew a seam across the face without separating
+              anything the spacing does not already separate. */}
+          <Card className="h-full justify-between overflow-hidden p-5">
+            <View className="items-center gap-3 pt-2">
               <View className="flex-row gap-3">
                 {PRODUCT_COLOURS.map((colour, index) => (
                   <View
@@ -1466,7 +1476,7 @@ function FlipCardProductVersion() {
               </Text>
             </View>
 
-            <View className="flex-1 justify-between p-5">
+            <View className="gap-4">
               <View className="flex-row items-start justify-between gap-3">
                 <View className="shrink gap-0.5">
                   <Text size="lg" weight="semibold">
@@ -1476,7 +1486,9 @@ function FlipCardProductVersion() {
                     Organic cotton, boxy fit
                   </Text>
                 </View>
-                <Badge variant="secondary">3 left</Badge>
+                {/* Scarcity, so the badge carries the warning ramp rather than
+                    the neutral one. "3 left" is the reason to decide now. */}
+                <Badge variant="warning">3 left</Badge>
               </View>
               <Text size="sm" muted>
                 Ships in two days
@@ -1633,16 +1645,22 @@ function FlipCardProfileVersion() {
     <View className="flex-1 justify-center px-5">
       <FlipCard className="h-[320px] w-full">
         <FlipCard.Front className="h-full">
-          <Card className="h-full justify-between p-6">
+          {/* A white card with grey type on it is a directory entry with the
+              directory taken away. The face carries the colour and the back
+              carries the detail, which is also the turn this card is for. */}
+          <Card className="h-full justify-between bg-primary p-6">
             <View className="gap-4">
               <Avatar size="xl" fallback="RM" />
-              <View className="gap-1">
-                <Text size="2xl" weight="semibold">
-                  Rosa Marín
-                </Text>
-                <Text size="sm" muted>
-                  Staff Engineer · Platform
-                </Text>
+              <View className="gap-2">
+                <View className="gap-1">
+                  <Text size="2xl" weight="semibold" className="text-primary-foreground">
+                    Rosa Marín
+                  </Text>
+                  <Text size="sm" className="text-primary-foreground/70">
+                    Staff Engineer · Platform
+                  </Text>
+                </View>
+                <Badge variant="success">Available</Badge>
               </View>
             </View>
 
@@ -1651,18 +1669,21 @@ function FlipCardProfileVersion() {
                 {PROFILE_STATS.map((stat, index) => (
                   <View
                     key={stat.label}
-                    className={cn('flex-1 gap-0.5', index > 0 && 'border-l border-border pl-4')}
+                    className={cn(
+                      'flex-1 gap-0.5',
+                      index > 0 && 'border-l border-primary-foreground/20 pl-4'
+                    )}
                   >
-                    <Text size="lg" weight="semibold">
+                    <Text size="lg" weight="semibold" className="text-primary-foreground">
                       {stat.value}
                     </Text>
-                    <Text size="xs" muted>
+                    <Text size="xs" className="text-primary-foreground/60">
                       {stat.label}
                     </Text>
                   </View>
                 ))}
               </View>
-              <TurnHint />
+              <TurnHint onPrimary />
             </View>
           </Card>
         </FlipCard.Front>
