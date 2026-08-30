@@ -289,6 +289,48 @@ weeks behind, not evidence of a bug in the code. **Establish which client the de
 before touching a version.** On this repository that answer was in the first line of the crash
 report the entire time, and three commits were written without reading it.
 
+### A crash log names the client it crashed on, not the one installed now
+
+Refreshing the client is the other half of the fix, so the moment somebody is told to run
+`eas go` the device stops matching the crash report that was just diagnosed. This repository
+has now been broken in both directions by the same mismatch, a day apart: first by moving the
+tree past an old client, then by leaving the tree behind a new one.
+
+**A crash log is evidence about the past.** Its `Version:` line names the build that was
+installed when it faulted. Before pinning to it, list the builds and check nothing newer has
+shipped — TestFlight installs beta updates on its own, so the user need not have done anything
+deliberate for their client to move.
+
+```bash
+# every eas go build for the client, newest first
+mcp__claude_ai_Expo__build_list  appFullName: "@khalid-abdi/expogo"
+
+# then measure the newest one, the same way the simulator tarballs are measured
+curl -sL -o client.ipa "<artifacts.buildUrl>"
+unzip -q client.ipa -d ipa
+strings -a ipa/Payload/MyExpoGo.app/MyExpoGo | grep -oE "react-native@0\.[0-9]+\.[0-9]+" | sort -u
+strings -a ipa/Payload/MyExpoGo.app/MyExpoGo | grep -oE "^(0\.10|4\.5)\.[0-9]+$" | sort -u
+```
+
+The `.ipa` is a zip; the app binary inside carries the same `.pnpm` build paths the simulator
+bundle does. Measured this way, MyExpoGo 1788020007 (2026-08-29) contains react-native 0.86.2,
+worklets 0.10.1 and reanimated 4.5.1 — the Expo Go 57.0.9 profile — where 1785882427
+(2026-08-04) contained 0.86.0, 0.10.0 and 4.5.0.
+
+### A dev server has a mode, and `expo start` does not pick Expo Go
+
+`apps/example` depends on `expo-dev-client` directly, and the CLI reads that as an instruction:
+
+```js
+// resolveOptions.js — a direct expo-dev-client dependency selects dev-client mode
+const isAutoDevClient = args['--dev-client'] == null && args['--go'] == null
+  && hasDirectDevClientDependency(projectRoot);
+```
+
+So plain `npm run example` never targets Expo Go. Use `npm run example:go`. This is worth ruling
+out early — it is free to check and it looks like a version problem — but it was not the cause of
+either crash here, and a wrong theory that fits the timeline still costs a launch to disprove.
+
 ### Read the crash before changing anything
 
 A version mismatch does not raise a JavaScript error, so there is nothing in LogBox and nothing
