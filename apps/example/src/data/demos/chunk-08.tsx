@@ -1165,11 +1165,17 @@ function FlipCardBankDemo() {
   );
 }
 
-/** Top over bottom, for a card that sits in a column of others. */
+/**
+ * Top over bottom, for a card that sits in a column of others.
+ *
+ * The two faces are not styled alike. Identical faces make the turn ambiguous —
+ * a reader cannot tell the card moved from the value merely changing — and one
+ * surface carrying the colour answers that without a caption.
+ */
 function FlipCardVerticalDemo() {
   return (
     <FlipCard direction="vertical" className="h-[140px] w-full">
-      <FlipCard.Front className="h-full items-center justify-center rounded-2xl border border-border bg-card">
+      <FlipCard.Front className="h-full items-center justify-center gap-0.5 rounded-2xl border border-border bg-card">
         <Text size="3xl" weight="bold">
           37°
         </Text>
@@ -1177,11 +1183,11 @@ function FlipCardVerticalDemo() {
           Celsius
         </Text>
       </FlipCard.Front>
-      <FlipCard.Back className="h-full items-center justify-center rounded-2xl border border-border bg-card">
-        <Text size="3xl" weight="bold">
+      <FlipCard.Back className="h-full items-center justify-center gap-0.5 rounded-2xl bg-primary">
+        <Text size="3xl" weight="bold" className="text-primary-foreground">
           99°
         </Text>
-        <Text size="sm" muted>
+        <Text size="sm" className="text-primary-foreground/70">
           Fahrenheit
         </Text>
       </FlipCard.Back>
@@ -1196,11 +1202,21 @@ function FlipCardControlledDemo() {
   return (
     <View className="w-full gap-3">
       <FlipCard flipped={flipped} trigger="none" className="h-[140px] w-full">
-        <FlipCard.Front className="h-full items-center justify-center rounded-2xl border border-border bg-card">
-          <Text weight="medium">The question</Text>
+        <FlipCard.Front className="h-full items-center justify-center gap-1.5 rounded-2xl border border-border bg-card px-6">
+          <Text size="xs" weight="medium" muted>
+            QUESTION
+          </Text>
+          <Text size="lg" weight="medium">
+            Which ocean is the deepest?
+          </Text>
         </FlipCard.Front>
-        <FlipCard.Back className="h-full items-center justify-center rounded-2xl border border-border bg-card">
-          <Text weight="medium">The answer</Text>
+        <FlipCard.Back className="h-full items-center justify-center gap-1.5 rounded-2xl bg-primary px-6">
+          <Text size="xs" weight="medium" className="text-primary-foreground/60">
+            ANSWER
+          </Text>
+          <Text size="lg" weight="medium" className="text-primary-foreground">
+            The Pacific
+          </Text>
         </FlipCard.Back>
       </FlipCard>
       <Button variant="outline" onPress={() => setFlipped((on) => !on)}>
@@ -1212,13 +1228,22 @@ function FlipCardControlledDemo() {
 
 /** Turned with the finger, and settled on whichever face is nearer. */
 function FlipCardDragDemo() {
+  const muted = useTint('--color-muted-foreground');
+  const onPrimary = useTint('--color-primary-foreground');
+
   return (
     <FlipCard trigger="drag" className="h-[140px] w-full">
-      <FlipCard.Front className="h-full items-center justify-center rounded-2xl border border-border bg-card">
-        <Text muted>Drag across it</Text>
+      <FlipCard.Front className="h-full items-center justify-center gap-2 rounded-2xl border border-border bg-card">
+        <HugeiconsIcon icon={RefreshIcon} size={20} color={muted} />
+        <Text size="sm" muted>
+          Drag across it
+        </Text>
       </FlipCard.Front>
-      <FlipCard.Back className="h-full items-center justify-center rounded-2xl border border-border bg-card">
-        <Text>Let go and it settles</Text>
+      <FlipCard.Back className="h-full items-center justify-center gap-2 rounded-2xl bg-primary">
+        <CheckIcon size={20} color={onPrimary} />
+        <Text size="sm" className="text-primary-foreground/80">
+          Let go and it settles
+        </Text>
       </FlipCard.Back>
     </FlipCard>
   );
