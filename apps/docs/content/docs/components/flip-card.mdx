@@ -4,6 +4,14 @@ description: Two faces of one card, and a turn between them.
 status: new
 ---
 
+<PreviewVideo
+  src="/previews/flip-card.mp4"
+  poster="/previews/flip-card-poster.jpg"
+  alt="The FlipCard component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 For content that is genuinely two-sided — a bank card and its security code, a term and its definition, a photograph and what it is of.
 
 **One box, and both faces in it.** State the height on the root and both faces take it; leave it off and the front's own content decides, with the back given whatever that came to. A back with more in it than the front overflows rather than growing the card — a card whose height changed halfway through the turn would move everything under it.
@@ -15,8 +23,8 @@ It is not for progressive disclosure. The back replaces the front rather than ex
 FlipCard ships with the library — no separate install.
 
 ```tsx
-import { FlipCard, Text, Avatar, Badge, Button, Card, Chip, QRCode, Rating, cn } from 'panelui-native';
-import { View, Image } from 'react-native';
+import { FlipCard, Avatar, Badge, Button, Card, CheckIcon, Chip, QRCode, Rating, Text, cn } from 'panelui-native';
+import { Image, View } from 'react-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -60,6 +68,14 @@ The height is on the root, so both faces are handed the same box.
 
 The issuer's mark sits opposite the name, tinted to `--color-primary-foreground` rather than swapped for a light and a dark file: the face is `bg-primary` in every theme, and that is the token which reads against it.
 
+<PreviewVideo
+  src="/previews/flip-card.mp4"
+  poster="/previews/flip-card-poster.jpg"
+  alt="FlipCard — A bank card."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <FlipCard className="h-[200px] w-full">
   <FlipCard.Front className="h-full justify-between rounded-2xl bg-primary p-5">
@@ -100,26 +116,39 @@ Nothing on the front is repeated on the back, and nothing on the back has to be 
 
 **There is no photograph, and no grey rectangle standing in for one.** A placeholder with an icon in the middle reads as an image that failed to load. The coloured band carries the name instead — which is what a photograph would have had text over anyway.
 
+<PreviewVideo
+  src="/previews/flip-card-a-hotel-room.mp4"
+  poster="/previews/flip-card-a-hotel-room-poster.jpg"
+  alt="FlipCard — A hotel room."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
-<FlipCard className="h-[360px] w-full">
+<FlipCard className="h-[340px] w-full">
   <FlipCard.Front className="h-full">
-    <Card className="h-full overflow-hidden">
-      <View className="justify-between bg-primary p-5" style={{ height: 190 }}>
-        <View className="self-start rounded-md bg-primary-foreground/15 px-2 py-1">
-          <Text size="xs" weight="medium" className="text-primary-foreground">9.1 · Excellent</Text>
-        </View>
-        <View className="gap-2">
+    <Card className="h-full justify-between overflow-hidden bg-primary p-5">
+      <View className="gap-4">
+        <Badge
+          variant="success"
+          className="bg-success"
+          labelClassName="text-success-solid-foreground"
+        >
+          9.1 · Excellent
+        </Badge>
+        <View className="gap-1">
           <Text size="2xl" weight="semibold" className="text-primary-foreground">The Wharf House</Text>
-          <Text size="sm" className="text-primary-foreground">Old Town · 400m from the harbour</Text>
-          <Rating value={4.5} readOnly size="sm" />
+          <Text size="sm" className="text-primary-foreground/80">Old Town · 400m from the harbour</Text>
         </View>
+        <Rating value={4.5} readOnly size="sm" />
       </View>
 
-      <View className="flex-1 justify-between p-5">
-        <Text size="sm" muted>Free cancellation until 24 hours before</Text>
+      <View className="gap-3">
+        <View className="border-t border-primary-foreground/15" />
+        <Text size="sm" className="text-primary-foreground/70">Free cancellation until 24 hours before</Text>
         <View className="flex-row items-baseline gap-1.5">
-          <Text size="2xl" weight="semibold">$180</Text>
-          <Text size="sm" muted>a night</Text>
+          <Text size="2xl" weight="semibold" className="text-primary-foreground">$180</Text>
+          <Text size="sm" className="text-primary-foreground/60">a night</Text>
         </View>
       </View>
     </Card>
@@ -159,36 +188,37 @@ The band at the top is the garment's colours rather than a picture of it: real i
 
 `direction="vertical"` because a card in a grid has neighbours either side of it: a horizontal turn sweeps its near edge out over them, and a vertical one stays inside its own column.
 
+<PreviewVideo
+  src="/previews/flip-card-a-product.mp4"
+  poster="/previews/flip-card-a-product-poster.jpg"
+  alt="FlipCard — A product."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <FlipCard direction="vertical" className="h-[340px] w-full">
   <FlipCard.Front className="h-full">
-    <Card className="h-full overflow-hidden">
-      <View className="items-center justify-center gap-4 bg-inset" style={{ height: 150 }}>
-        <View className="flex-row gap-3">
-          {colours.map((colour, index) => (
-            <View
-              key={colour.name}
-              className={cn(
-                'h-11 w-11 rounded-full border',
-                index === 0 ? 'border-foreground' : 'border-border'
-              )}
-              style={{ backgroundColor: colour.swatch }}
-            />
-          ))}
+    <Card className="h-full justify-between overflow-hidden bg-primary p-5">
+      <View className="flex-row items-start justify-between gap-3">
+        <View className="shrink gap-1">
+          <Text size="xs" weight="medium" className="text-primary-foreground/60">Bone · Slate · Moss</Text>
+          <Text size="2xl" weight="semibold" className="text-primary-foreground">Heavyweight Tee</Text>
+          <Text size="sm" className="text-primary-foreground/70">Organic cotton, boxy fit</Text>
         </View>
-        <Text size="xs" muted>Bone · Slate · Moss</Text>
+        <Badge
+          variant="warning"
+          className="bg-warning"
+          labelClassName="text-warning-solid-foreground"
+        >
+          3 left
+        </Badge>
       </View>
 
-      <View className="flex-1 justify-between p-5">
-        <View className="flex-row items-start justify-between gap-3">
-          <View className="shrink gap-0.5">
-            <Text size="lg" weight="semibold">Heavyweight Tee</Text>
-            <Text size="sm" muted>Organic cotton, boxy fit</Text>
-          </View>
-          <Badge variant="secondary">3 left</Badge>
-        </View>
-        <Text size="sm" muted>Ships in two days</Text>
-        <Text size="2xl" weight="semibold">$48</Text>
+      <View className="gap-3">
+        <View className="border-t border-primary-foreground/15" />
+        <Text size="sm" className="text-primary-foreground/70">Ships in two days</Text>
+        <Text size="2xl" weight="semibold" className="text-primary-foreground">$48</Text>
       </View>
     </Card>
   </FlipCard.Front>
@@ -220,6 +250,14 @@ The strongest case after a bank card, and for the same reason: the code really i
 The dashed rule is where a paper ticket tears, and it is doing real work — it separates what you read walking in from what you read looking for your seat, and it says "ticket" before any of the words do.
 
 [QRCode](/docs/components/qr-code) is drawn as a bare `QRCode.Canvas`. Its frame, title and caption would be a second card inside the one already being turned.
+
+<PreviewVideo
+  src="/previews/flip-card-an-event-ticket.mp4"
+  poster="/previews/flip-card-an-event-ticket-poster.jpg"
+  alt="FlipCard — An event ticket."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <FlipCard className="h-[320px] w-full">
@@ -261,15 +299,32 @@ Ranged left rather than centred. A centred avatar over a centred name in a box t
 
 **Size the card for the taller face.** A face is given the front's box and overflows rather than growing it, so a back with more in it than the front is what decides the height.
 
+<PreviewVideo
+  src="/previews/flip-card-a-profile.mp4"
+  poster="/previews/flip-card-a-profile-poster.jpg"
+  alt="FlipCard — A profile."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <FlipCard className="h-[320px] w-full">
   <FlipCard.Front className="h-full">
-    <Card className="h-full justify-between p-6">
+    <Card className="h-full justify-between bg-primary p-6">
       <View className="gap-4">
-        <Avatar size="xl" fallback="RM" />
-        <View className="gap-1">
-          <Text size="2xl" weight="semibold">Rosa Marín</Text>
-          <Text size="sm" muted>Staff Engineer · Platform</Text>
+        <Avatar size="lg" fallback="RM" className="border-primary-foreground/20" />
+        <View className="gap-2">
+          <View className="gap-1">
+            <Text size="2xl" weight="semibold" className="text-primary-foreground">Rosa Marín</Text>
+            <Text size="sm" className="text-primary-foreground/70">Staff Engineer · Platform</Text>
+          </View>
+          <Badge
+            variant="success"
+            className="bg-success"
+            labelClassName="text-success-solid-foreground"
+          >
+            Available
+          </Badge>
         </View>
       </View>
 
@@ -277,10 +332,10 @@ Ranged left rather than centred. A centred avatar over a centred name in a box t
         {stats.map((stat, index) => (
           <View
             key={stat.label}
-            className={cn('flex-1 gap-0.5', index > 0 && 'border-l border-border pl-4')}
+            className={cn('flex-1 gap-0.5', index > 0 && 'border-l border-primary-foreground/20 pl-4')}
           >
-            <Text size="lg" weight="semibold">{stat.value}</Text>
-            <Text size="xs" muted>{stat.label}</Text>
+            <Text size="lg" weight="semibold" className="text-primary-foreground">{stat.value}</Text>
+            <Text size="xs" className="text-primary-foreground/60">{stat.label}</Text>
           </View>
         ))}
       </View>
@@ -312,13 +367,23 @@ Ranged left rather than centred. A centred avatar over a centred name in a box t
 
 It is the right choice when the card sits in a row of others: a horizontal turn sweeps the near edge out over its neighbours, and a vertical one stays inside the card's own column.
 
+<PreviewVideo
+  src="/previews/flip-card-turning-it-the-other-way.mp4"
+  poster="/previews/flip-card-turning-it-the-other-way-poster.jpg"
+  alt="FlipCard — Turning it the other way."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <FlipCard direction="vertical" className="h-[140px]">
-  <FlipCard.Front className="h-full items-center justify-center rounded-2xl bg-card">
-    <Text size="2xl" weight="bold">37°</Text>
+  <FlipCard.Front className="h-full items-center justify-center rounded-2xl border border-border bg-card">
+    <Text size="3xl" weight="bold">37°</Text>
+    <Text size="sm" muted>Celsius</Text>
   </FlipCard.Front>
-  <FlipCard.Back className="h-full items-center justify-center rounded-2xl bg-card">
-    <Text size="2xl" weight="bold">99°F</Text>
+  <FlipCard.Back className="h-full items-center justify-center rounded-2xl bg-primary">
+    <Text size="3xl" weight="bold" className="text-primary-foreground">99°</Text>
+    <Text size="sm" className="text-primary-foreground/70">Fahrenheit</Text>
   </FlipCard.Back>
 </FlipCard>
 ```
@@ -327,19 +392,31 @@ It is the right choice when the card sits in a row of others: a horizontal turn 
 
 Pass `flipped` to hold the state yourself, and `trigger="none"` so the card does not also turn under a tap. Use it when the control that reveals the back is not the card — a button in a toolbar, a row in a list, a switch.
 
+<PreviewVideo
+  src="/previews/flip-card-flipped-from-somewhere-else.mp4"
+  poster="/previews/flip-card-flipped-from-somewhere-else-poster.jpg"
+  alt="FlipCard — Flipped from somewhere else."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [flipped, setFlipped] = useState(false);
 
 <View className="gap-3">
   <FlipCard flipped={flipped} trigger="none" className="h-[140px]">
-    <FlipCard.Front className="h-full items-center justify-center rounded-2xl bg-card">
-      <Text>Front</Text>
+    <FlipCard.Front className="h-full items-center justify-center gap-1.5 rounded-2xl border border-border bg-card px-6">
+      <Text size="xs" weight="medium" muted>QUESTION</Text>
+      <Text size="lg" weight="medium">Which ocean is the deepest?</Text>
     </FlipCard.Front>
-    <FlipCard.Back className="h-full items-center justify-center rounded-2xl bg-card">
-      <Text>Back</Text>
+    <FlipCard.Back className="h-full items-center justify-center gap-1.5 rounded-2xl bg-primary px-6">
+      <Text size="xs" weight="medium" className="text-primary-foreground/60">ANSWER</Text>
+      <Text size="lg" weight="medium" className="text-primary-foreground">The Pacific</Text>
     </FlipCard.Back>
   </FlipCard>
-  <Button onPress={() => setFlipped((on) => !on)}>Turn it over</Button>
+  <Button variant="outline" onPress={() => setFlipped((on) => !on)}>
+    {flipped ? 'Back to the question' : 'Show the answer'}
+  </Button>
 </View>
 ```
 
@@ -349,13 +426,22 @@ const [flipped, setFlipped] = useState(false);
 
 The drag replaces the tap rather than joining it, so the card also takes an `activate` accessibility action — a card that can only be turned by dragging is a card some readers can never see the back of.
 
+<PreviewVideo
+  src="/previews/flip-card-turning-it-with-a-finger.mp4"
+  poster="/previews/flip-card-turning-it-with-a-finger-poster.jpg"
+  alt="FlipCard — Turning it with a finger."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <FlipCard trigger="drag" className="h-[140px]">
-  <FlipCard.Front className="h-full items-center justify-center rounded-2xl bg-card">
-    <Text muted>Drag across</Text>
+  <FlipCard.Front className="h-full items-center justify-center rounded-2xl border border-border bg-card">
+    <Text size="sm" muted>Drag across it</Text>
   </FlipCard.Front>
-  <FlipCard.Back className="h-full items-center justify-center rounded-2xl bg-card">
-    <Text>Let go and it settles</Text>
+  <FlipCard.Back className="h-full items-center justify-center gap-2 rounded-2xl bg-primary">
+    <CheckIcon size={20} color={onPrimary} />
+    <Text size="sm" className="text-primary-foreground/80">Let go and it settles</Text>
   </FlipCard.Back>
 </FlipCard>
 ```
