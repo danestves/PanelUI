@@ -693,6 +693,10 @@ SwiftUI but comes back looking like iOS 18 has not answered it.
 
 - One folder per component: `packages/panelui/src/components/<name>/index.tsx`; export it from `src/index.ts`.
 - `tv()` variant objects at module scope, never inside render.
+- **A new arbitrary Tailwind value needs the dev server to have seen it.** `h-[330px]` in a file
+  a running server started before compiles to nothing — no error, no warning, the element simply
+  loses that property and the layout collapses into whatever the parent gives it. Reuse a value
+  already in the tree, or restart the server after adding one.
 - Every component: `className` passthrough, accessibility role/state wiring, dark-mode via theme tokens (no hardcoded colors — resolve dynamic colors with `useCSSVariable`).
 - Overlays (Dialog, BottomSheet, Select) mount lazily via `Portal` and unmount after exit animations.
 - Compound components via `Object.assign` (e.g. `Card.Header`, `Dialog.Content`).
