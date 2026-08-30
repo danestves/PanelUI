@@ -1367,7 +1367,18 @@ function FlipCardHotelVersion() {
           <Card className="h-full justify-between overflow-hidden bg-primary p-5">
             <View className="gap-4">
               <View className="flex-row items-start justify-between">
-                <Badge variant="success">9.1 · Excellent</Badge>
+                {/* The `subtle` ramps are a tint of the accent computed for a
+                    light surface — 8% green over #262626 is black, and the
+                    matching label is #047857. On a dark face the badge has to
+                    go solid: `bg-success` and its solid foreground are the same
+                    pair in every theme. */}
+                <Badge
+                  variant="success"
+                  className="bg-success"
+                  labelClassName="text-success-solid-foreground"
+                >
+                  9.1 · Excellent
+                </Badge>
               </View>
               <View className="gap-1">
                 <Text size="2xl" weight="semibold" className="text-primary-foreground">
@@ -1482,50 +1493,42 @@ function FlipCardProductVersion() {
     <View className="flex-1 justify-center px-5">
       <FlipCard direction="vertical" className="h-[340px] w-full">
         <FlipCard.Front className="h-full">
-          {/* The swatches sit on the card's own surface. Boxing them in a
-              3.5%-black band drew a seam across the face without separating
-              anything the spacing does not already separate. */}
-          <Card className="h-full justify-between overflow-hidden p-5">
-            <View className="items-center gap-3 pt-2">
-              <View className="flex-row gap-3">
-                {PRODUCT_COLOURS.map((colour, index) => (
-                  <View
-                    key={colour.name}
-                    className={cn(
-                      'h-11 w-11 rounded-full border',
-                      index === 0 ? 'border-foreground' : 'border-border'
-                    )}
-                    style={{ backgroundColor: colour.swatch }}
-                  />
-                ))}
+          {/* The colours are a line of names, not three floating circles. The
+              swatches read as a control you cannot press, and a shop grid does
+              not decide anything with them — the name, the price and how many
+              are left are what it has room for. */}
+          <Card className="h-full justify-between overflow-hidden bg-primary p-5">
+            <View className="flex-row items-start justify-between gap-3">
+              <View className="shrink gap-1">
+                <Text size="xs" weight="medium" className="text-primary-foreground/60">
+                  {PRODUCT_COLOURS.map((colour) => colour.name).join(' · ')}
+                </Text>
+                <Text size="2xl" weight="semibold" className="text-primary-foreground">
+                  Heavyweight Tee
+                </Text>
+                <Text size="sm" className="text-primary-foreground/70">
+                  Organic cotton, boxy fit
+                </Text>
               </View>
-              <Text size="xs" muted>
-                Bone · Slate · Moss
-              </Text>
+              <Badge
+                variant="warning"
+                className="bg-warning"
+                labelClassName="text-warning-solid-foreground"
+              >
+                3 left
+              </Badge>
             </View>
 
-            <View className="gap-4">
-              <View className="flex-row items-start justify-between gap-3">
-                <View className="shrink gap-0.5">
-                  <Text size="lg" weight="semibold">
-                    Heavyweight Tee
-                  </Text>
-                  <Text size="sm" muted>
-                    Organic cotton, boxy fit
-                  </Text>
-                </View>
-                {/* Scarcity, so the badge carries the warning ramp rather than
-                    the neutral one. "3 left" is the reason to decide now. */}
-                <Badge variant="warning">3 left</Badge>
-              </View>
-              <Text size="sm" muted>
+            <View className="gap-3">
+              <View className="border-t border-primary-foreground/15" />
+              <Text size="sm" className="text-primary-foreground/70">
                 Ships in two days
               </Text>
               <View className="flex-row items-end justify-between">
-                <Text size="2xl" weight="semibold">
+                <Text size="2xl" weight="semibold" className="text-primary-foreground">
                   $48
                 </Text>
-                <TurnHint label="Sizes" />
+                <TurnHint label="Sizes" onPrimary />
               </View>
             </View>
           </Card>
@@ -1678,7 +1681,7 @@ function FlipCardProfileVersion() {
               carries the detail, which is also the turn this card is for. */}
           <Card className="h-full justify-between bg-primary p-6">
             <View className="gap-4">
-              <Avatar size="xl" fallback="RM" />
+              <Avatar size="lg" fallback="RM" className="border-primary-foreground/20" />
               <View className="gap-2">
                 <View className="gap-1">
                   <Text size="2xl" weight="semibold" className="text-primary-foreground">
@@ -1688,7 +1691,13 @@ function FlipCardProfileVersion() {
                     Staff Engineer · Platform
                   </Text>
                 </View>
-                <Badge variant="success">Available</Badge>
+                <Badge
+                  variant="success"
+                  className="bg-success"
+                  labelClassName="text-success-solid-foreground"
+                >
+                  Available
+                </Badge>
               </View>
             </View>
 
