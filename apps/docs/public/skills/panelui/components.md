@@ -45,7 +45,7 @@ remember is a guess.
 | `Questionnaire` | One question at a time, with progress, validation and a way back. | `components/questionnaire` |
 | `RadioGroup` | Single-select list of options. | `components/radio-group` |
 | `Rating` | A row of stars to read or set a score. | `components/rating` |
-| `SearchBar` | Search field with a clear button, a Cancel button and a debounced query. | `components/search-bar` |
+| `SearchBar` | Search field with a clear button, a Cancel button and a panel of results. | `components/search-bar` |
 | `Select` | Picker shown in a bottom sheet, expanded in place, or floating over the page. | `components/select` |
 | `Signature` | Sign with a finger, and get the result back out as SVG or PNG. | `components/signature` |
 | `Slider` | Pick a value, or a span, by dragging a thumb along a track. | `components/slider` |

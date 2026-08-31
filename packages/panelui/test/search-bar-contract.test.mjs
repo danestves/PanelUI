@@ -41,7 +41,7 @@ test('a disabled SearchBar rejects clear, cancel, and submit at their boundaries
     assert.match(body.slice(0, 260), /if \(disabled\) return;/);
   }
 
-  const cancel = source.slice(source.indexOf('<AnimatedPressable\n            onLayout'));
+  const cancel = source.slice(source.indexOf('onLayout={handleCancelLayout}'));
   assert.match(cancel.slice(0, 500), /disabled=\{disabled\}/);
   assert.match(cancel.slice(0, 500), /focusable=\{!disabled\}/);
   assert.match(cancel.slice(0, 500), /accessibilityState=\{\{ disabled: !!disabled \}\}/);
@@ -72,10 +72,73 @@ test('the Cancel button is measured once and animated on the UI thread', async (
   assert.match(source, /cancelWidth\.value = event\.nativeEvent\.layout\.width/);
   assert.match(source, /useAnimatedStyle\(\(\) => \(\{\s*width: \(cancelWidth\.value \+ CANCEL_GAP\) \* cancelProgress\.value/);
 
-  // Always mounted, so the first slide has the measurement the tenth has.
-  assert.match(source, /if \(cancel === 'never'\) return field;/);
-
   // Hidden from touch and from assistive technology while it is folded away.
   assert.match(source, /pointerEvents=\{cancelOut \? 'auto' : 'none'\}/);
   assert.match(source, /accessibilityElementsHidden=\{!cancelOut\}/);
+});
+
+test('a bare SearchBar stays a bare field', async () => {
+  const source = await component('search-bar');
+
+  // Nothing beside it and nothing under it: no anchor, no keyboard wrapper, no
+  // row — a box around it is only something for the caller's layout to fight.
+  assert.match(
+    source,
+    /if \(cancel === 'never' && !avoidKeyboard && !hasPanel\) \{/
+  );
+});
+
+test('the results panel opens away from the keyboard and keeps its taps', async () => {
+  const source = await component('search-bar');
+
+  // Upward by default: the space under a focused field belongs to the keyboard.
+  assert.match(source, /panelPlacement = 'top'/);
+  assert.match(source, /bottom: '100%'/);
+
+  // Absolute, so opening the panel never moves the page under the field.
+  assert.match(source, /const PANEL_ABOVE: ViewStyle = \{\s*position: 'absolute'/);
+
+  // Android draws siblings in tree order, so the panel needs both.
+  assert.match(source, /zIndex: 20,\s*elevation: 20,/);
+
+  // Without this the first tap on a row is spent dismissing the keyboard.
+  assert.match(source, /keyboardShouldPersistTaps="handled"/);
+
+  // The panel is capped by the room it actually has, not by a constant.
+  assert.match(source, /const PANEL_MIN_HEIGHT = 160/);
+  assert.match(source, /maxHeight: resolvedMaxHeight/);
+});
+
+test('SearchBar lifts the whole row, behind a component boundary', async () => {
+  const source = await component('search-bar');
+
+  // A flag would call the keyboard hook on every search bar in the app, which
+  // takes Android out of adjustResize for all of them.
+  assert.match(source, /if \(avoidKeyboard\) \{\s*return \(\s*<KeyboardAvoider/);
+  assert.match(source, /active=\{focused\}/);
+  assert.match(source, /mode="lift"/);
+
+  // Input's own keyboard props are dropped: they would move the field and
+  // leave the Cancel button and the panel behind.
+  for (const prop of [
+    "| 'avoidKeyboard'",
+    "| 'keyboardBottomInset'",
+    "| 'keyboardMode'",
+    "| 'keyboardOffset'",
+  ]) {
+    assert.ok(source.includes(prop), `expected InheritedInputProps to omit ${prop}`);
+  }
+});
+
+test('SearchBar exposes the panel parts', async () => {
+  const source = await component('search-bar');
+
+  assert.match(
+    source,
+    /export const SearchBar = Object\.assign\(SearchBarRoot, \{\s*Section: SearchBarSection,\s*Item: SearchBarItem,\s*Status: SearchBarStatus,\s*\}\)/
+  );
+
+  // A row is a wide target; one that shrinks under the finger reads as a card.
+  const item = source.slice(source.indexOf('function SearchBarItem'));
+  assert.match(item.slice(0, 1400), /pressScale=\{1\}/);
 });

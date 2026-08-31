@@ -543,7 +543,15 @@ export {
   type NumberInputProps,
 } from './components/number-input';
 export { OtpInput, type OtpInputProps } from './components/otp-input';
-export { SearchBar, type SearchBarProps } from './components/search-bar';
+export {
+  SearchBar,
+  type SearchBarProps,
+  type SearchBarItemProps,
+  type SearchBarSectionProps,
+  type SearchBarStatusProps,
+  type SearchBarPanelMode,
+  type SearchBarPanelPlacement,
+} from './components/search-bar';
 export {
   Panelside,
   usePanelside,

@@ -370,12 +370,12 @@
   ],
   "search-bar": [
     "SearchBar",
-    "Search field with a clear button, a Cancel button and a debounced query.",
+    "Search field with a clear button, a Cancel button and a panel of results.",
     "react native search bar",
     {
       "addedIn": "0.72.0",
       "category": "forms",
-      "updatedIn": "0.76.0"
+      "updatedIn": "0.87.0"
     }
   ],
   "pagination": [

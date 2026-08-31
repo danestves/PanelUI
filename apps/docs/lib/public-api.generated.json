@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1202,
+    "exports": 1207,
     "values": 318,
-    "types": 884,
+    "types": 889,
     "modules": 147,
     "components": 120,
     "hooks": 13
@@ -3679,6 +3679,26 @@
           },
           {
             "name": "SearchBarProps",
+            "kind": "type"
+          },
+          {
+            "name": "SearchBarItemProps",
+            "kind": "type"
+          },
+          {
+            "name": "SearchBarSectionProps",
+            "kind": "type"
+          },
+          {
+            "name": "SearchBarStatusProps",
+            "kind": "type"
+          },
+          {
+            "name": "SearchBarPanelMode",
+            "kind": "type"
+          },
+          {
+            "name": "SearchBarPanelPlacement",
             "kind": "type"
           }
         ]

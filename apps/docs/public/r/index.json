@@ -1447,13 +1447,15 @@
     "kind": "ui",
     "group": "components",
     "stability": "stable",
-    "description": "Search field with a clear button, a Cancel button and a debounced query.",
+    "description": "Search field with a clear button, a Cancel button and a panel of results.",
     "registryDependencies": [
       "animated-pressable",
       "icons",
       "input",
+      "keyboard-avoider",
       "spinner",
-      "text"
+      "text",
+      "use-keyboard"
     ],
     "docsPath": "components/search-bar"
   },

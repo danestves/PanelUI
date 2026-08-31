@@ -1,12 +1,40 @@
 /**
  * SearchBar — a text field for querying a list, with the two controls a search
- * needs and an ordinary field does not.
+ * needs and an ordinary field does not, and a panel of results that opens out
+ * of the field itself.
  *
  * ```tsx
  * <SearchBar placeholder="Search orders" onSubmit={run} />
  * <SearchBar variant="filled" shape="pill" cancel="focus" />
- * <SearchBar debounce={250} onDebouncedChange={filter} loading={pending} />
+ * <SearchBar avoidKeyboard value={query} onChangeText={setQuery}>
+ *   <SearchBar.Section label="Suggested">
+ *     <SearchBar.Item trailing={<AddButton />} onPress={add}>Claude</SearchBar.Item>
+ *   </SearchBar.Section>
+ * </SearchBar>
  * ```
+ *
+ * ## The results are above the field, and the field is above the keyboard
+ *
+ * A search that is being typed into has a keyboard under it, and a list drawn
+ * below the field is a list drawn behind the keyboard. So `avoidKeyboard`
+ * lifts the field until it sits `keyboardOffset` points clear of the keyboard's
+ * top edge, and the panel opens *upward* out of it into the space that is
+ * actually free.
+ *
+ * That puts the first result nearest the field and the last one furthest away,
+ * which is the order a reader walking away from the caret expects. Pass
+ * `panelPlacement="bottom"` for a search bar in a header, where the space is
+ * the other way round.
+ *
+ * The panel is positioned absolutely rather than laid out in the flow, so
+ * opening it never moves the page underneath — a list that pushes the field it
+ * belongs to is a field that walks away from the finger typing into it.
+ *
+ * ## Touches inside the panel must not close the keyboard
+ *
+ * The panel scrolls with `keyboardShouldPersistTaps="handled"`. Without it the
+ * first tap on a row is spent dismissing the keyboard and the press never
+ * arrives, which reads as a row that ignores every other tap.
  *
  * ## The clear button, and why it is not the platform's
  *
@@ -44,29 +72,43 @@
  * a return key is somebody saying they are done waiting.
  */
 import {
+  Children,
   forwardRef,
+  isValidElement,
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react';
 import {
+  ScrollView,
   View,
+  useWindowDimensions,
   type LayoutChangeEvent,
   type NativeSyntheticEvent,
   type TextInput,
   type TextInputSubmitEditingEventData,
+  type ViewProps,
+  type ViewStyle,
 } from 'react-native';
 import Animated, {
+  FadeIn,
+  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
+import { useKeyboard } from '../../hooks/use-keyboard';
 import { SearchIcon, XIcon } from '../../icons';
-import { AnimatedPressable } from '../../primitives/animated-pressable';
+import {
+  AnimatedPressable,
+  type AnimatedPressableProps,
+} from '../../primitives/animated-pressable';
+import { KeyboardAvoider } from '../../primitives/keyboard-avoider';
 import { Text } from '../../primitives/text';
 import { Input, type InputProps } from '../input';
 import { Spinner } from '../spinner';
@@ -89,10 +131,62 @@ const CANCEL_GAP = 8;
  */
 const CLEAR_HIT_SLOP = 12;
 
+/** The panel's crossfade, matching every other anchored list in the library. */
+const PANEL_IN = 140;
+const PANEL_OUT = 120;
+
+/** Gap left between the panel's far edge and the edge of the screen. */
+const PANEL_EDGE_GAP = 24;
+
+/** Floor for the derived height — below this a list is not worth opening. */
+const PANEL_MIN_HEIGHT = 160;
+
+/*
+ * The panel's geometry, off the class list because two of these five have no
+ * utility and the other three read better beside them.
+ *
+ * `zIndex` *and* `elevation`: Android draws siblings in tree order and takes
+ * its stacking from elevation, so a panel that overlaps the content above the
+ * field would otherwise be painted under it.
+ */
+const PANEL_ABOVE: ViewStyle = {
+  position: 'absolute',
+  bottom: '100%',
+  left: 0,
+  right: 0,
+  zIndex: 20,
+  elevation: 20,
+};
+
+const PANEL_BELOW: ViewStyle = {
+  position: 'absolute',
+  top: '100%',
+  left: 0,
+  right: 0,
+  zIndex: 20,
+  elevation: 20,
+};
+
 const searchBarVariants = tv({
   slots: {
     row: 'w-full flex-row items-center',
+    /*
+     * The box the panel is positioned against — the field alone, so the panel
+     * is the field's width rather than the row's and does not run out under a
+     * Cancel button that is only sometimes there.
+     */
+    anchor: 'relative',
     field: '',
+    /*
+     * The panel and the field are one card: the panel's own bottom edge is the
+     * hairline between them, so the field drops its top border rather than
+     * drawing a second line a pixel below it.
+     */
+    panel: 'overflow-hidden border border-border bg-card p-1.5 shadow-sm',
+    sectionLabel: 'px-3 pb-1 pt-2 text-sm text-muted-foreground',
+    item: 'flex-row items-center gap-3 rounded-lg px-3 py-2.5',
+    itemLabel: 'flex-1 text-base text-foreground',
+    status: 'flex-row items-center justify-center gap-2 px-3 py-8',
     // Clipped, because this is what the Cancel button is revealed out of: the
     // button keeps its measured width and the container's grows past it.
     //
@@ -119,10 +213,24 @@ const searchBarVariants = tv({
       rounded: { field: '' },
       pill: { field: 'rounded-full' },
     },
+    /**
+     * Which edge of the field the panel is welded to. The corners on that edge
+     * go square and its border comes off, so the two read as one card rather
+     * than as a list resting on a field.
+     */
+    attached: {
+      none: {},
+      top: { field: 'rounded-t-none rounded-b-2xl border-t-0', panel: 'rounded-t-2xl' },
+      bottom: { field: 'rounded-b-none rounded-t-2xl border-b-0', panel: 'rounded-b-2xl' },
+    },
+    selected: {
+      true: { item: 'bg-accent' },
+    },
   },
   defaultVariants: {
     size: 'md',
     shape: 'rounded',
+    attached: 'none',
   },
 });
 
@@ -131,21 +239,34 @@ type SearchBarVariantProps = VariantProps<typeof searchBarVariants>;
 /** Glyph sizes per field size — the icon tracks the text, not the box. */
 const ICON_SIZE = { sm: 16, md: 18, lg: 20 } as const;
 
+/** Where the results open. */
+export type SearchBarPanelPlacement = 'top' | 'bottom';
+
+/** When the results are shown. */
+export type SearchBarPanelMode = 'never' | 'focus' | 'always';
+
 /**
  * What SearchBar takes from Input, minus everything it owns itself. The form
  * furniture is dropped along with it: a label and an error line stack above
  * and below the field, and Cancel sits beside the whole stack rather than
  * beside the field it belongs to. Use `Field` for a search that is one answer
  * in a form.
+ *
+ * The keyboard props go too. Input's would move the field and leave the Cancel
+ * button and the panel where they were; SearchBar lifts all three together.
  */
 type InheritedInputProps = Omit<
   InputProps,
+  | 'avoidKeyboard'
   | 'defaultValue'
   | 'description'
   | 'endContent'
   | 'errorMessage'
   | 'interactiveContent'
   | 'isRequired'
+  | 'keyboardBottomInset'
+  | 'keyboardMode'
+  | 'keyboardOffset'
   | 'label'
   | 'multiline'
   | 'onChangeText'
@@ -154,7 +275,9 @@ type InheritedInputProps = Omit<
   | 'value'
 >;
 
-export interface SearchBarProps extends InheritedInputProps, SearchBarVariantProps {
+export interface SearchBarProps
+  extends InheritedInputProps,
+    Omit<SearchBarVariantProps, 'attached' | 'selected'> {
   /**
    * The field's background, from `Input`. `outline` draws its own edge, for a
    * search bar sitting on the page; `filled` drops it, for one inside a card
@@ -202,9 +325,42 @@ export interface SearchBarProps extends InheritedInputProps, SearchBarVariantPro
   loading?: boolean;
   /** The leading glyph, for a search over something with a symbol of its own. */
   icon?: ReactNode;
+  /**
+   * Lift the whole search — field, Cancel button and panel — until it sits
+   * clear of the software keyboard, and put it back on blur. Without it the
+   * field stays where the page left it, which on most screens is behind the
+   * keyboard it just opened.
+   *
+   * Install `react-native-keyboard-controller` for this to behave on Android.
+   *
+   * Do not toggle it at runtime: it changes which component wraps the row, so
+   * the field would remount and lose focus.
+   */
+  avoidKeyboard?: boolean;
+  /** Gap kept between the field's bottom edge and the keyboard. */
+  keyboardOffset?: number;
+  /**
+   * When the results panel is shown. `focus` opens it while the field is being
+   * typed into, `always` keeps it out for a screen that is nothing but the
+   * search, `never` ignores the children entirely.
+   */
+  panel?: SearchBarPanelMode;
+  /**
+   * Which side of the field the panel opens out of. `top` is the default,
+   * because the space under a focused field belongs to the keyboard.
+   */
+  panelPlacement?: SearchBarPanelPlacement;
+  /**
+   * Cap on the panel's height, in points. Derived from the room between the
+   * field and the edge of the screen when it is not given, so a panel never
+   * runs off the top of the display.
+   */
+  panelMaxHeight?: number;
+  /** The panel's contents — `SearchBar.Section`, `.Item` and `.Status`. */
+  children?: ReactNode;
 }
 
-export const SearchBar = forwardRef<TextInput, SearchBarProps>(
+const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
   (
     {
       value: valueProp,
@@ -226,6 +382,12 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(
       className,
       containerClassName,
       disabled,
+      avoidKeyboard = false,
+      keyboardOffset = 12,
+      panel = 'focus',
+      panelPlacement = 'top',
+      panelMaxHeight,
+      children,
       onFocus,
       onBlur,
       onSubmitEditing,
@@ -241,7 +403,27 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(
     const inputRef = useRef<TextInput | null>(null);
     useImperativeHandle(ref, () => inputRef.current as TextInput, []);
 
-    const slots = searchBarVariants({ size, shape });
+    /*
+     * Counted rather than tested for truthiness: `{results.map(…)}` over an
+     * empty array is a child, and a panel that opens on nothing is a card of
+     * padding.
+     */
+    const hasPanel = useMemo(() => {
+      let found = false;
+      Children.forEach(children, (child) => {
+        if (isValidElement(child)) found = true;
+      });
+      return found;
+    }, [children]);
+
+    const panelOpen =
+      !disabled &&
+      panel !== 'never' &&
+      hasPanel &&
+      (panel === 'always' || focused);
+
+    const attached = panelOpen ? panelPlacement : 'none';
+    const slots = searchBarVariants({ size, shape, attached });
 
     const setText = useCallback(
       (next: string) => {
@@ -349,6 +531,62 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(
       [cancelWidth]
     );
 
+    /*
+     * How much room the panel has, in the direction it opens. Measured on the
+     * JS side because it decides a layout constraint rather than a frame of an
+     * animation: a `maxHeight` that changed every frame would re-lay out the
+     * list under the finger scrolling it.
+     */
+    const { height: windowHeight } = useWindowDimensions();
+    const { height: keyboardHeight } = useKeyboard();
+    const anchorRef = useRef<View | null>(null);
+    const [anchorBox, setAnchorBox] = useState<{ top: number; height: number } | null>(
+      null
+    );
+
+    const measureAnchor = useCallback(() => {
+      anchorRef.current?.measureInWindow((_x, y, _width, height) => {
+        setAnchorBox((current) =>
+          current && current.top === y && current.height === height
+            ? current
+            : { top: y, height }
+        );
+      });
+    }, []);
+
+    useEffect(() => {
+      if (!panelOpen) return;
+      measureAnchor();
+    }, [panelOpen, keyboardHeight, measureAnchor]);
+
+    const resolvedMaxHeight = useMemo(() => {
+      if (panelMaxHeight !== undefined) return panelMaxHeight;
+      const fieldHeight = anchorBox?.height ?? 0;
+      /*
+       * While the field is riding the keyboard, where it has come to rest is
+       * computed rather than measured: the lift is a transform applied on the
+       * UI thread, so a measurement taken from JavaScript is a frame behind it
+       * for the whole of the animation.
+       */
+      const fieldTop =
+        avoidKeyboard && keyboardHeight > 0
+          ? windowHeight - keyboardHeight - keyboardOffset - fieldHeight
+          : (anchorBox?.top ?? 0);
+      const room =
+        panelPlacement === 'top'
+          ? fieldTop - PANEL_EDGE_GAP
+          : windowHeight - keyboardHeight - fieldTop - fieldHeight - PANEL_EDGE_GAP;
+      return Math.max(room, PANEL_MIN_HEIGHT);
+    }, [
+      anchorBox,
+      avoidKeyboard,
+      keyboardHeight,
+      keyboardOffset,
+      panelMaxHeight,
+      panelPlacement,
+      windowHeight,
+    ]);
+
     const startContent = (
       /*
        * Decorative, and said so here rather than through Input's
@@ -386,7 +624,7 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(
         size={size}
         disabled={disabled}
         className={slots.field({ className })}
-        containerClassName={cancel === 'never' ? containerClassName : 'flex-1'}
+        containerClassName="w-full"
         startContent={startContent}
         endContent={endContent}
         value={text}
@@ -407,41 +645,237 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(
       />
     );
 
-    if (cancel === 'never') return field;
+    // Nothing beside it and nothing under it: the field is the whole component,
+    // and a wrapper around it would only be a box for the caller's layout to
+    // fight.
+    if (cancel === 'never' && !avoidKeyboard && !hasPanel) {
+      return <View className={containerClassName}>{field}</View>;
+    }
 
-    return (
-      <View className={slots.row({ className: containerClassName })}>
-        {field}
-        <Animated.View
-          style={cancelStyle}
-          className={slots.cancelClip()}
-          pointerEvents={cancelOut ? 'auto' : 'none'}
-          accessibilityElementsHidden={!cancelOut}
-          importantForAccessibility={cancelOut ? 'auto' : 'no-hide-descendants'}
-        >
-          {/*
-           * Absolute, and pinned to the end edge: it keeps its natural width
-           * inside a container whose width is animating, so the clip reveals
-           * it from the edge instead of squeezing the word as it arrives. It
-           * is also what makes the measurement possible at all — a child laid
-           * out against a container of width 0 would otherwise report 0.
-           */}
-          <AnimatedPressable
-            onLayout={handleCancelLayout}
-            onPress={handleCancel}
-            disabled={disabled}
-            focusable={!disabled}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !!disabled }}
-            className={slots.cancelButton()}
+    const anchor = (
+      <View
+        ref={anchorRef}
+        onLayout={panelOpen ? measureAnchor : undefined}
+        className={slots.anchor({ className: cancel === 'never' ? 'w-full' : 'flex-1' })}
+      >
+        {panelOpen ? (
+          <Animated.View
+            entering={FadeIn.duration(PANEL_IN)}
+            exiting={FadeOut.duration(PANEL_OUT)}
+            style={[
+              panelPlacement === 'top' ? PANEL_ABOVE : PANEL_BELOW,
+              { maxHeight: resolvedMaxHeight },
+            ]}
+            className={slots.panel()}
           >
-            <Text className={slots.cancelLabel()}>{cancelLabel}</Text>
-          </AnimatedPressable>
-        </Animated.View>
+            <ScrollView
+              /*
+               * Without this the first tap on a row is spent dismissing the
+               * keyboard and the press never lands, which reads as a list that
+               * ignores every other touch.
+               */
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="none"
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+            >
+              {children}
+            </ScrollView>
+          </Animated.View>
+        ) : null}
+        {field}
       </View>
     );
+
+    const body =
+      cancel === 'never' ? (
+        anchor
+      ) : (
+        <>
+          {anchor}
+          <Animated.View
+            style={cancelStyle}
+            className={slots.cancelClip()}
+            pointerEvents={cancelOut ? 'auto' : 'none'}
+            accessibilityElementsHidden={!cancelOut}
+            importantForAccessibility={cancelOut ? 'auto' : 'no-hide-descendants'}
+          >
+            {/*
+             * Absolute, and pinned to the end edge: it keeps its natural width
+             * inside a container whose width is animating, so the clip reveals
+             * it from the edge instead of squeezing the word as it arrives. It
+             * is also what makes the measurement possible at all — a child laid
+             * out against a container of width 0 would otherwise report 0.
+             */}
+            <AnimatedPressable
+              onLayout={handleCancelLayout}
+              onPress={handleCancel}
+              disabled={disabled}
+              focusable={!disabled}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !!disabled }}
+              className={slots.cancelButton()}
+            >
+              <Text className={slots.cancelLabel()}>{cancelLabel}</Text>
+            </AnimatedPressable>
+          </Animated.View>
+        </>
+      );
+
+    /*
+     * The keyboard hook is behind a component boundary rather than a flag.
+     * Calling it at all has global consequences — without the keyboard
+     * controller installed it falls back to Reanimated's useAnimatedKeyboard,
+     * which switches Android out of adjustResize for the whole app. A search
+     * bar that never asked to avoid the keyboard must not do that to every
+     * other screen.
+     */
+    if (avoidKeyboard) {
+      return (
+        <KeyboardAvoider
+          // Only while *this* field is the one being typed into. Without it
+          // every avoiding field on the screen lifts the moment any field
+          // anywhere is tapped, and since they all aim at the same gap above
+          // the keyboard, they arrive stacked on top of one another.
+          active={focused}
+          mode="lift"
+          offset={keyboardOffset}
+          className={slots.row({ className: containerClassName })}
+        >
+          {body}
+        </KeyboardAvoider>
+      );
+    }
+
+    return <View className={slots.row({ className: containerClassName })}>{body}</View>;
   }
 );
 
-SearchBar.displayName = 'SearchBar';
+SearchBarRoot.displayName = 'SearchBar';
+
+export interface SearchBarSectionProps extends ViewProps {
+  className?: string;
+  /**
+   * The heading over the run of rows — "Suggested", "Results". Announced as a
+   * header, so a screen reader reaching the group is told what it is before
+   * walking into it.
+   */
+  label?: string;
+  children?: ReactNode;
+}
+
+/** A labelled run of rows inside the panel. */
+function SearchBarSection({ className, label, children, ...props }: SearchBarSectionProps) {
+  const { sectionLabel } = searchBarVariants();
+  return (
+    <View {...props} className={className}>
+      {label ? (
+        <Text accessibilityRole="header" className={sectionLabel()}>
+          {label}
+        </Text>
+      ) : null}
+      {children}
+    </View>
+  );
+}
+
+SearchBarSection.displayName = 'SearchBar.Section';
+
+export interface SearchBarItemProps extends Omit<AnimatedPressableProps, 'children'> {
+  className?: string;
+  /** Anything before the label — an avatar, a logo, a status dot. */
+  leading?: ReactNode;
+  /**
+   * Anything after it. A slot rather than a built-in button, because what a
+   * result row offers differs per search: an add, a pin, a count, nothing.
+   */
+  trailing?: ReactNode;
+  /** A second line under the label, for what the label alone cannot say. */
+  description?: string;
+  /** Draws the row as the one the search has settled on. */
+  selected?: boolean;
+  /** The row's label. */
+  children?: ReactNode;
+}
+
+/** One result. */
+function SearchBarItem({
+  className,
+  leading,
+  trailing,
+  description,
+  selected,
+  children,
+  ...props
+}: SearchBarItemProps) {
+  const { item, itemLabel } = searchBarVariants({ selected: !!selected });
+  return (
+    <AnimatedPressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: !!selected, disabled: !!props.disabled }}
+      // A row is a wide target, and a target that shrinks when pressed reads as
+      // a card rather than a line in a list. The dim is the whole feedback.
+      pressScale={1}
+      pressOpacity={0.6}
+      // The rows sit flush against each other, so the points either side of the
+      // gap between two of them would otherwise belong to neither.
+      hitSlop={{ top: 2, bottom: 2 }}
+      {...props}
+      className={item({ className })}
+    >
+      {leading}
+      <View className="flex-1">
+        <Text numberOfLines={1} className={itemLabel()}>
+          {children}
+        </Text>
+        {description ? (
+          <Text size="sm" muted numberOfLines={1}>
+            {description}
+          </Text>
+        ) : null}
+      </View>
+      {trailing}
+    </AnimatedPressable>
+  );
+}
+
+SearchBarItem.displayName = 'SearchBar.Item';
+
+export interface SearchBarStatusProps extends ViewProps {
+  className?: string;
+  /** A spinner beside the line, for a search that is still running. */
+  loading?: boolean;
+  children?: ReactNode;
+}
+
+/**
+ * The one line a panel shows instead of rows — nothing typed yet, a search in
+ * flight, or a query that matched nothing. It is a sentence rather than an
+ * empty box because those three states look identical when they are blank, and
+ * which one it is decides what the person does next.
+ */
+function SearchBarStatus({
+  className,
+  loading = false,
+  children,
+  ...props
+}: SearchBarStatusProps) {
+  const { status } = searchBarVariants();
+  return (
+    <View accessibilityRole="text" {...props} className={status({ className })}>
+      {loading ? <Spinner size="sm" /> : null}
+      <Text size="sm" muted>
+        {children}
+      </Text>
+    </View>
+  );
+}
+
+SearchBarStatus.displayName = 'SearchBar.Status';
+
+export const SearchBar = Object.assign(SearchBarRoot, {
+  Section: SearchBarSection,
+  Item: SearchBarItem,
+  Status: SearchBarStatus,
+});

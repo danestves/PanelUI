@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, Pressable, ScrollView, View } from "react-native";
-import { Avatar, Badge, BellIcon, Button, CalendarIcon, Card, ChevronRightIcon, Frame, GridItem, HexChart, Input, InputGroup, Item, KeyboardAvoider, Label, LineChart, NumberInput, OtpInput, PackageIcon, PencilIcon, PlusSquareIcon, ReceiptIcon, SearchBar, SearchIcon, SendIcon, ShieldCheckIcon, SparklesIcon, Separator, Skeleton, Text, XIcon, Tooltip } from "panelui-native";
+import { Avatar, Badge, BellIcon, Button, CalendarIcon, Card, ChevronRightIcon, Frame, GridItem, HexChart, Input, InputGroup, Item, KeyboardAvoider, Label, LineChart, NumberInput, OtpInput, PackageIcon, PencilIcon, PlusIcon, PlusSquareIcon, ReceiptIcon, SearchBar, SearchIcon, SendIcon, ShieldCheckIcon, SparklesIcon, Separator, Skeleton, Text, XIcon, Tooltip } from "panelui-native";
 import { useCSSVariable } from "uniwind";
 import type { ComponentEntry } from '../component-types';
 
@@ -754,6 +754,147 @@ function SearchBarDebounceDemo() {
   );
 }
 
+/** The companies the picker searches over, with a tint to stand in for a logo. */
+const COMPANIES = [
+  { name: 'Claude', tint: '#d97757' },
+  { name: 'Codex', tint: '#4a6cf7' },
+  { name: 'Lovable', tint: '#f26d5b' },
+  { name: 'Cursor', tint: '#111111' },
+  { name: 'Replit', tint: '#f26207' },
+  { name: 'Vercel', tint: '#2f2f2f' },
+];
+
+function CompanyMark({ name, tint }: { name: string; tint: string }) {
+  return (
+    <View
+      style={{ backgroundColor: tint }}
+      className="h-7 w-7 items-center justify-center rounded-full"
+    >
+      <Text size="xs" weight="bold" className="text-white">
+        {name.slice(0, 1)}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * The whole point of the panel, and the one thing a section between two
+ * dividers cannot show: the field lifts to sit just above the keyboard, and the
+ * results open upward out of it into the space that is actually free.
+ *
+ * Tap the field to see it move. Tap a row's + and the keyboard stays up, which
+ * is what `keyboardShouldPersistTaps` inside the panel buys.
+ */
+function SearchBarPanelDemo() {
+  const insets = useSafeAreaInsets();
+  const [query, setQuery] = useState('');
+  const [ran, setRan] = useState('');
+  const [pending, setPending] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
+
+  const trimmed = ran.trim().toLowerCase();
+  const results = COMPANIES.filter((company) =>
+    company.name.toLowerCase().includes(trimmed)
+  );
+
+  const add = (name: string) => {
+    setPicked((current) => (current.includes(name) ? current : [...current, name]));
+  };
+
+  const AddButton = ({ name }: { name: string }) => (
+    <Pressable
+      hitSlop={12}
+      accessibilityRole="button"
+      accessibilityLabel={`Add ${name}`}
+      onPress={() => add(name)}
+    >
+      <PlusIcon size={18} />
+    </Pressable>
+  );
+
+  return (
+    <View
+      className="flex-1 justify-end gap-4 px-5 pt-4"
+      style={{ paddingBottom: insets.bottom + 24 }}
+    >
+      <ScrollView
+        contentContainerClassName="gap-2"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text size="sm" muted>
+          {picked.length ? 'Your stack' : 'Nothing added yet. Search below.'}
+        </Text>
+        {picked.map((name) => {
+          const company = COMPANIES.find((item) => item.name === name);
+          return (
+            <View key={name} className="flex-row items-center gap-3 py-1.5">
+              <CompanyMark name={name} tint={company?.tint ?? '#737373'} />
+              <Text className="flex-1">{name}</Text>
+            </View>
+          );
+        })}
+      </ScrollView>
+
+      <SearchBar
+        avoidKeyboard
+        variant="filled"
+        cancel="focus"
+        placeholder="Search or enter company"
+        debounce={400}
+        loading={pending}
+        value={query}
+        onChangeText={(next) => {
+          setQuery(next);
+          setPending(next.length > 0 && next !== ran);
+        }}
+        onDebouncedChange={(next) => {
+          setRan(next);
+          setPending(false);
+        }}
+        onCancel={() => {
+          setRan('');
+          setPending(false);
+        }}
+      >
+        {query.length === 0 ? (
+          <SearchBar.Section label="Suggested">
+            {COMPANIES.slice(0, 4).map((company) => (
+              <SearchBar.Item
+                key={company.name}
+                leading={<CompanyMark name={company.name} tint={company.tint} />}
+                trailing={<AddButton name={company.name} />}
+                selected={picked.includes(company.name)}
+                onPress={() => add(company.name)}
+              >
+                {company.name}
+              </SearchBar.Item>
+            ))}
+          </SearchBar.Section>
+        ) : pending ? (
+          <SearchBar.Status loading>Searching …</SearchBar.Status>
+        ) : results.length > 0 ? (
+          <SearchBar.Section label="Results">
+            {results.map((company) => (
+              <SearchBar.Item
+                key={company.name}
+                leading={<CompanyMark name={company.name} tint={company.tint} />}
+                trailing={<AddButton name={company.name} />}
+                selected={picked.includes(company.name)}
+                onPress={() => add(company.name)}
+              >
+                {company.name}
+              </SearchBar.Item>
+            ))}
+          </SearchBar.Section>
+        ) : (
+          <SearchBar.Status>No companies found</SearchBar.Status>
+        )}
+      </SearchBar>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'hex-chart',
@@ -906,8 +1047,16 @@ export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'search-bar',
     name: 'SearchBar',
-    summary: 'Search field with a clear button and a Cancel button',
+    summary: 'Search field with a clear button, a Cancel button and a panel of results',
     demos: [
+      {
+        label: 'Above the keyboard',
+        id: 'above-the-keyboard',
+        fullPage: true,
+        description:
+          'The field lifts clear of the keyboard on focus and the results open upward out of it.',
+        render: () => <SearchBarPanelDemo />,
+      },
       { label: 'Filtering a list', render: () => <SearchBarFilterDemo /> },
       { label: 'Cancel on focus', render: () => <SearchBarCancelDemo /> },
       { label: 'Debounced query', render: () => <SearchBarDebounceDemo /> },
