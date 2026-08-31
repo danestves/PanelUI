@@ -18,7 +18,19 @@ the real API rather than guess it.
 That writes the skills into your project for whichever agent you use — Claude Code, Cursor,
 Copilot, Windsurf and the rest all read the same format. Run it again to update.
 
-Two skills come with it. The one below is about the library; the other is
+### Or, in Claude Code, as a plugin
+
+Two commands, and it brings the MCP server below with it:
+
+```
+/plugin marketplace add panel-ui/PanelUI
+/plugin install panelui
+```
+
+The plugin is versioned with the library, so the props it carries name the release they were read
+from. `/plugin update panelui` moves it on.
+
+Two skills come with either route. The one below is about the library; the other is
 [Logo Maker](/docs/integrations/logo-maker), which designs an app logo and has
 nothing to do with PanelUI beyond being written here.
 
@@ -33,9 +45,26 @@ its dependencies or a `panelui.json` beside it.
     that decides whether the agent should import from `panelui-native` or from
     `@/components/ui/…`. It checks rather than assumes.
   </Card>
-  <Card title="Every component">
-    All 114, by what they are for, with the URL of each one's documentation as markdown. Generated
-    from the same file the docs are, so it cannot name a component that does not exist.
+  <Card title="Every component, with its props">
+    An index of all of them by what they are for, and a file each holding the anatomy, every prop
+    with its type and default, the variants, the compound parts and a worked example. Generated
+    from the library's own TypeScript, so it cannot name a component that does not exist or a prop
+    that never shipped — and the agent reads it from disk rather than fetching it.
+  </Card>
+  <Card title="Setup, and why nothing is styled">
+    The six install steps, and every reason `className` does nothing — a `metro.config.js` in the
+    wrong folder, a `cssEntryFile` pointing at a file that was never edited, two CSS entries, a
+    `@source` path relative to the wrong thing. None of it raises an error, which is why it is
+    written down.
+  </Card>
+  <Card title="Whole screens">
+    A settings screen, a form with validation, a chat transcript, filters in a sheet, a list with
+    swipe actions, a chart in a card, a search that clears the keyboard. The compositions, so an
+    agent reaches for the parts instead of a styled `View`.
+  </Card>
+  <Card title="The hooks and primitives">
+    Every hook, utility and primitive the library exports, with its signature and when to reach
+    for it — including `useCSSVariable`, which is how a colour becomes a value rather than a class.
   </Card>
   <Card title="The rules that are not negotiable">
     Semantic tokens and never a literal colour. `gap-*`, because React Native has no `space-*`.
@@ -123,4 +152,4 @@ With the skill loaded, these do what you would hope:
 - *"Why is nothing styled?"*
 
 The last one is the reason half of this exists. The answer is almost always the CSS entry path in
-`metro.config.js`, and it is written down where the agent can find it.
+`metro.config.js`, and `setup.md` walks the list in the order the causes actually occur.

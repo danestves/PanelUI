@@ -1,0 +1,32 @@
+{
+  "name": "panelui",
+  "description": "Build React Native and Expo UIs with PanelUI. Ships the skill — every component's props, the setup and troubleshooting guide, worked screens — and the MCP server that reads the registry.",
+  "version": "0.86.1",
+  "author": {
+    "name": "Khalid Abdi",
+    "url": "https://github.com/panel-ui"
+  },
+  "homepage": "https://panelui.dev",
+  "repository": "https://github.com/panel-ui/PanelUI",
+  "license": "MIT",
+  "keywords": [
+    "react-native",
+    "expo",
+    "ui",
+    "components",
+    "tailwind",
+    "uniwind",
+    "reanimated",
+    "design-system"
+  ],
+  "mcpServers": {
+    "panelui": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "panelui-cli@latest",
+        "mcp"
+      ]
+    }
+  }
+}

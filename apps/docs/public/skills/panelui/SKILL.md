@@ -5,6 +5,7 @@ license: MIT
 compatibility: Expo SDK 57+ and React Native 0.86, with Uniwind (Tailwind CSS v4 for React Native) and Reanimated. Not for the web — these components are React Native only.
 metadata:
   author: Khalid Abdi
+  version: 0.86.1
 allowed-tools: Bash(npx panelui-cli@latest *), Bash(pnpm dlx panelui-cli@latest *), Bash(bunx panelui-cli@latest *)
 ---
 
@@ -16,6 +17,13 @@ on the UI thread with Reanimated. Pure TypeScript, no native modules, runs in Ex
 > **Run every CLI command with the project's own runner** — `npx panelui-cli@latest`,
 > `pnpm dlx panelui-cli@latest` or `bunx panelui-cli@latest`, matching its `packageManager`.
 > Examples below use `npx`.
+
+## Is anything styled?
+
+If the user says nothing is styled, `className` does nothing, the screen is blank, or Uniwind
+cannot find `--color-background`: **go straight to [setup.md](./setup.md)**. There is no error for
+this and it is a wrong path in `metro.config.js` almost every time. Do not start reading component
+code.
 
 ## First, find out how this project consumes it
 
@@ -33,23 +41,24 @@ or, without MCP, read `package.json` and look for `panelui.json`:
 | A `panelui.json` | Source copied into the repo, owned and editable | `import { Button } from '@/components/ui/button'` |
 | Both | Normal — the package, with one component forked | Whichever the file is |
 
-If neither is there, the project has not installed it: send them to
-`npx create-panelui-app@latest` for a new app, or
-[the installation guide](https://panelui.dev/docs/installation) for an existing one. Do not
-hand-write component source into a project that has not been set up — nothing will be styled,
-and the reason will not be obvious.
+If neither is there, the project has not installed it: `npx create-panelui-app@latest` for a new
+app, or [setup.md](./setup.md) for an existing one. Do not hand-write component source into a
+project that has not been set up — nothing will be styled, and the reason will not be obvious.
 
 ## Principles
 
-1. **Look before you build.** `components.md` lists every one of them, and there are more than a
-   hundred. Search the registry before writing custom UI — a "custom" sheet, picker, chart or
+1. **Look before you build.** [components.md](./components.md) lists every one of them, and there
+   are more than a hundred. Search it before writing custom UI — a "custom" sheet, picker, chart or
    chat transcript is almost always one that exists.
-2. **Compose the parts.** A settings screen is `Frame` + `Frame.Panel` + `Item` rows. A chat is
-   `MessageScroller` + `Message` + `Bubble`. Reach for the compound parts before a `View`.
-3. **Never hardcode a colour.** Every colour is a semantic token — `bg-card`,
+2. **Read the props from this skill, not from memory.** Every component has a file at
+   `components/<slug>.md` with its anatomy, every prop with its type and default, its variants and
+   its parts, generated from the library's TypeScript. Read the one you are about to use. A
+   remembered prop name usually is not right, and nothing here needs a network request.
+3. **Compose the parts.** A settings screen is `Frame` + `Frame.Panel` + `Frame.Row`. A chat is
+   `MessageScroller` + `Message`. [recipes.md](./recipes.md) has those screens written out. Reach
+   for a compound part before a `View`.
+4. **Never hardcode a colour.** Every colour is a semantic token — `bg-card`,
    `text-muted-foreground`, `border-border`. A literal breaks all six themes at once.
-4. **Read the props from the docs, not from memory.** The props tables are generated from the
-   library's TypeScript, so they are right; a remembered prop name usually is not.
 
 ## Critical rules
 
@@ -63,6 +72,8 @@ Each links to a file with wrong/right pairs.
 - **`className` is for layout**, not for restyling a component's colours or type.
 - **`cn()` for conditional classes**, not template-literal ternaries.
 - **Resolve a dynamic colour with `useCSSVariable`**, never by reading a hex out of the theme.
+- **A new arbitrary value needs a restart.** `h-[330px]` in a file a running dev server started
+  before compiles to nothing — no error, no warning, the element silently loses the property.
 
 ### Composition → [rules/composition.md](./rules/composition.md)
 
@@ -108,7 +119,8 @@ in [cli.md](./cli.md); the MCP server and its tools in [mcp.md](./mcp.md).
 
 ## Which component
 
-The full list, with a line on each, is in [components.md](./components.md). The common cases:
+The full list, with a line on each and a link to its reference, is in
+[components.md](./components.md). The common cases:
 
 | Need | Use |
 | --- | --- |
@@ -117,38 +129,33 @@ The full list, with a line on each, is in [components.md](./components.md). The 
 | A modal | `Dialog` |
 | A panel anchored to what opened it | `Popover`, or `Menu` for a list of actions |
 | A value picked from a list | `Select`, or `Combobox` when it needs filtering |
+| A search over something | `SearchBar`, whose results open above the field and above the keyboard |
 | Text in | `Input`, `Textarea`, `InputGroup`, `NumberInput`, `OtpInput`, `TagInput` |
 | A date or a time | `Calendar`, `DatePicker`, `TimePicker`, `DateTimePicker` |
 | Form state and validation | `Form` + `Field` |
 | A list row | `Item`, or `Swipe` when it has actions behind it |
-| A settings screen | `Frame` + `Frame.Panel` + `Item` |
+| A settings screen | `Frame` + `Frame.Panel` + `Frame.Row` |
 | A metric | `Kpi` |
-| A series | `LineChart`, `AreaChart`, `BarChart`, `PieChart`, `RingChart`, and six more |
+| A series | `LineChart`, `AreaChart`, `BarChart`, `PieChart`, `RingChart`, and eleven more |
 | A conversation | `MessageScroller` + `Message`, with `Marker` between turns |
 | Assistant output | `Response`, `Reasoning`, `Sources`, `Task`, `Plan`, `CodeBlock` |
 | Loading | `Skeleton` for layout, `Spinner` or `Loader` for work, `Shimmer` for streaming text |
 | Nothing to show | `EmptyState` |
 | A transient message | `Toast` |
-
-## Docs
-
-Every component's page is available as markdown, which is the fastest way to get the real API:
-
-```
-https://panelui.dev/llms.mdx/components/<slug>     e.g. …/components/bottom-sheet
-https://panelui.dev/llms.mdx/charts/<slug>
-https://panelui.dev/llms.mdx/ai-components/<slug>
-https://panelui.dev/llms.txt                        the index of every page
-```
-
-**Fetch the page before using a component you have not used in this session.** The props tables
-there are generated from the library's TypeScript; anything you remember is a guess.
+| A hook, a utility, a primitive | [hooks.md](./hooks.md) |
 
 ## Detailed references
 
+- [setup.md](./setup.md) — installing it, and every reason nothing is styled
+- [components.md](./components.md) — every component, and a file each with its full API
+- [recipes.md](./recipes.md) — whole screens: settings, form, chat, filters, list, chart, search
+- [hooks.md](./hooks.md) — the hooks, utilities, theme API and primitives
+- [theming.md](./theming.md) — tokens, the three families, radius, `useCSSVariable`
 - [cli.md](./cli.md) — `init`, `add`, `list`, `mcp`, `panelui.json`, the registry
 - [mcp.md](./mcp.md) — the MCP server and its six tools
-- [theming.md](./theming.md) — tokens, the three families, radius, `useCSSVariable`
-- [components.md](./components.md) — every component, generated from the docs
 - [rules/styling.md](./rules/styling.md), [rules/composition.md](./rules/composition.md),
   [rules/animation.md](./rules/animation.md), [rules/native.md](./rules/native.md)
+
+Everything above is in this folder. The documentation is also on the web, as markdown, if a page
+with every example is wanted: `https://panelui.dev/llms.mdx/<group>/<slug>`, indexed at
+`https://panelui.dev/llms.txt`.

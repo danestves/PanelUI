@@ -191,6 +191,37 @@ Tokens are CSS variables and can be overridden in your own `global.css`. See
 `@variant` shape overrides have to use, and **[Fonts](https://panelui.dev/docs/customization/fonts)**
 for pointing the library at a typeface of your own.
 
+## Coding agents
+
+An agent writing React Native in your project has no idea PanelUI is there. It writes a styled
+`View` where there is a `Card`, invents a prop `Button` does not have, and hardcodes `#171717`
+into a screen that has six themes.
+
+The **skill** tells it. In Claude Code it installs as a plugin, and brings the MCP server with it:
+
+```
+/plugin marketplace add panel-ui/PanelUI
+/plugin install panelui
+```
+
+For any other agent — Cursor, Copilot, Windsurf, Codex — the same folder installs with the
+`skills` CLI:
+
+```sh
+npx skills add panel-ui/PanelUI
+```
+
+It carries an index of every component and a file each with the anatomy, every prop with its type
+and default, the variants and the parts, generated from the library's own TypeScript. Alongside
+those: the install steps and **every reason `className` silently does nothing**, worked screens
+for the compositions that come up (settings, form, chat, filters, charts, search), the hooks and
+primitives, and the rules that are not negotiable. It reads from disk, so an agent with no network
+tool is not left guessing.
+
+The skill activates on its own once a project has `panelui-native` in its dependencies or a
+`panelui.json` beside it. Full details, and the URLs everything is served from, at
+**[panelui.dev/docs/skills](https://panelui.dev/docs/skills)**.
+
 ## Example app
 
 An Expo Router showcase with a live demo for every component and a theme picker — used to
