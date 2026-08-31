@@ -57,7 +57,7 @@ npx panelui-cli@latest add pyramid-chart
 - **`PyramidChart.Bar`** — One wing. `side` decides which, and the default colour differs per side so two bars declared with nothing but a key and a side are already told apart.
 - **`PyramidChart.Skeleton`** — Equal stubs either side of the centre, shown while `status="loading"`.
 - **`PyramidChart.XAxis`** — The value labels along the bottom — the same magnitudes twice, either side of a zero in the middle.
-- **`PyramidChart.YAxis`** — The category names, one per row. Reserves its own gutter, at the start or between the wings depending on `labelPlacement`.
+- **`PyramidChart.YAxis`** — The category names, one per row. Reserves its own gutter — between the wings by default, or down the left with `labelPlacement="start"`.
 - **`PyramidChart.Tooltip`** — The drag over the plot, the row it highlights, and the readout that follows it down.
 - **`PyramidChart.Legend`** — A swatch and a name per series.
 
@@ -92,21 +92,20 @@ npx panelui-cli@latest add pyramid-chart
 </Frame>
 ```
 
-### Names between the wings
+### Names down the left
 
-`labelPlacement="center"` moves the category names into a gutter down the middle — the shape a run of age bands is usually drawn in. The gutter is taken off the bars rather than off the edges, so both wings stay the same length as each other.
+`labelPlacement="start"` moves the category names out of the middle gutter and into one down the left. Use it for names too long to sit between the wings; the default keeps them centred, which is the shape a pyramid is usually drawn in and what keeps both wings the same length.
 
 ```tsx
 <PyramidChart
-  data={POPULATION}
-  xDataKey="band"
-  labelPlacement="center"
-  aspectRatio={1}
-  barGap={0.3}
+  data={CHANNELS}
+  xDataKey="name"
+  labelPlacement="start"
+  aspectRatio={1.4}
 >
-  <PyramidChart.Grid columns={2} />
-  <PyramidChart.Bar dataKey="men" side="start" />
-  <PyramidChart.Bar dataKey="women" side="end" colorIndex={5} />
+  <PyramidChart.Grid />
+  <PyramidChart.Bar dataKey="opened" side="start" />
+  <PyramidChart.Bar dataKey="clicked" side="end" colorIndex={5} />
   <PyramidChart.XAxis />
   <PyramidChart.YAxis />
   <PyramidChart.Tooltip />
@@ -168,7 +167,7 @@ return (
 | `animationDuration` | `number` | `700` | Milliseconds for the bars to grow out on mount. |
 | `domainDuration` | `number` | `500` | Milliseconds for the scale to settle after the data changes. |
 | `maxValue` | `number` | — | Fix the far end of the shared scale instead of deriving it. The near end is zero either way — a pyramid measures outward from its centre. |
-| `labelPlacement` | `PyramidChartLabelPlacement` | `'start'` | Where the category names sit: down the left, or between the wings. |
+| `labelPlacement` | `PyramidChartLabelPlacement` | `'center'` | Where the category names sit. `center` puts them in a gutter between the wings, which is the shape a pyramid is usually drawn in and keeps the two wings the same length as each other. `start` puts them down the left, for names too long to sit in a gutter. |
 | `barGap` | `number` | `0.25` | Fraction of each band left empty, `0` to `1`. A fraction rather than a pixel gap so the proportions hold at any height. |
 | `barWidth` | `number` | — | Fixed bar thickness in points. Derived from the band when omitted. |
 | `cornerRadius` | `number` | `4` | Corner radius on the outward end of a bar. |
@@ -254,6 +253,12 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 The far end of the scale is the largest value in either series, with a little headroom. The near end is zero and cannot be moved — a wing cropped at its base is a length that lies. `maxValue` fixes the far end when several charts have to be comparable with each other.
 
 Which side a series is on comes from `side`, not from the sign of its numbers, so a value is a distance outward from the centre. A negative one has no direction left to grow in and is drawn as nothing; it still appears in the readout, so a data error shows up as a gap rather than as a bar pointing the wrong way.
+
+### Where the names go
+
+`labelPlacement="center"`, the default, puts them in a gutter between the wings. The gutter is taken off the bars rather than off the edges, so both wings stay the same length as each other. `"start"` puts them down the left instead, for names too long to sit in the middle.
+
+The value labels along the bottom are held inside the chart: the outermost tick of each wing sits on the plot's own edge, and a label centred there would hang half its width off the side.
 
 ### Drawing
 

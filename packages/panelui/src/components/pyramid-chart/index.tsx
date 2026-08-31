@@ -35,11 +35,11 @@
  *
  * ## Where the category names go
  *
- * `labelPlacement="start"` puts them in a gutter down the left, which is what a
- * comparison of a handful of categories wants. `"center"` puts them in a gutter
- * between the wings — the classic population pyramid — and takes that room off
- * the bars rather than off the edge, so both wings stay the same length as each
- * other.
+ * `labelPlacement="center"`, the default, puts them in a gutter between the
+ * wings — the shape a pyramid is usually drawn in. The gutter is taken off the
+ * bars rather than off the edge, so both wings stay the same length as each
+ * other. `"start"` puts them down the left instead, for names too long to sit
+ * between the wings.
  *
  * ## Every series is one path
  *
@@ -108,6 +108,13 @@ const CENTRE_GUTTER = 72;
 
 /** Width the readout is laid out at, so it can be clamped inside the plot. */
 const LABEL_WIDTH = 132;
+
+/**
+ * Box each value label is centred in. Narrow, because the outermost tick on
+ * each wing sits on the plot's own edge — a box centred there hangs half its
+ * width off the side of the chart, and the number is cropped away.
+ */
+const AXIS_LABEL_WIDTH = 56;
 
 /** Line height of an `xs` label, for centring one on the tick it names. */
 const AXIS_LABEL_HEIGHT = 16;
@@ -207,7 +214,12 @@ export interface PyramidChartProps
    * zero either way — a pyramid measures outward from its centre.
    */
   maxValue?: number;
-  /** Where the category names sit: down the left, or between the wings. */
+  /**
+   * Where the category names sit. `center` puts them in a gutter between the
+   * wings, which is the shape a pyramid is usually drawn in and keeps the two
+   * wings the same length as each other. `start` puts them down the left, for
+   * names too long to sit in a gutter.
+   */
   labelPlacement?: PyramidChartLabelPlacement;
   /**
    * Fraction of each band left empty, `0` to `1`. A fraction rather than a
@@ -266,7 +278,7 @@ const PyramidChartRoot = forwardRef<PyramidChartHandle, PyramidChartProps>(
       animationDuration = 700,
       domainDuration = 500,
       maxValue,
-      labelPlacement = 'start',
+      labelPlacement = 'center',
       barGap = 0.25,
       barWidth,
       cornerRadius = 4,
@@ -891,15 +903,20 @@ function PyramidChartXAxis({ ticks = 2, format, className }: PyramidChartXAxisPr
           size="xs"
           muted
           numberOfLines={1}
-          /*
-           * Backed off by half a fixed box rather than translated by `-50%`,
-           * which is not reliable across React Native versions.
-           */
           style={{
             position: 'absolute',
             bottom: 0,
-            left: label.x - LABEL_WIDTH / 2,
-            width: LABEL_WIDTH,
+            // Centred on its tick, then held inside the chart. The outermost
+            // tick of each wing is on the plot's own edge, so a box centred
+            // there would hang half its width off the side and lose the number.
+            left: Math.max(
+              0,
+              Math.min(
+                label.x - AXIS_LABEL_WIDTH / 2,
+                plot.left + plot.width + PADDING.right - AXIS_LABEL_WIDTH
+              )
+            ),
+            width: AXIS_LABEL_WIDTH,
             textAlign: 'center',
           }}
         >

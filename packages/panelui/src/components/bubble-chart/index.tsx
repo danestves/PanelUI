@@ -130,8 +130,8 @@ const AXIS_LABEL_WIDTH = 56;
 /** Width of the readout that floats by the selected bubble. */
 const LABEL_WIDTH = 132;
 
-/** How far the readout is lifted, to clear the bubble it describes. */
-const LABEL_LIFT = 52;
+/** Gap between the readout and the edge of the bubble it describes. */
+const LABEL_GAP = 10;
 
 /** Line box a bubble's own label is laid out in. */
 const BUBBLE_LABEL_HEIGHT = 16;
@@ -149,7 +149,7 @@ const HIT_RADIUS = 22;
 /** How many colours the ramp cycles through. */
 const PALETTE_SIZE = 5;
 
-type Layer = 'svg' | 'overlay' | 'header';
+type Layer = 'svg' | 'overlay' | 'header' | 'footer';
 
 export type BubbleChartStatus = 'loading' | 'ready';
 
@@ -287,13 +287,16 @@ function partition(children: ReactNode) {
   const svg: ReactNode[] = [];
   const overlay: ReactNode[] = [];
   const header: ReactNode[] = [];
+  const footer: ReactNode[] = [];
   Children.forEach(children, (child, index) => {
     if (!isValidElement(child)) return;
     const layer = (child.type as { layer?: Layer }).layer ?? 'svg';
     const slot = <ChildSlot key={index}>{child}</ChildSlot>;
-    (layer === 'header' ? header : layer === 'overlay' ? overlay : svg).push(slot);
+    const into =
+      layer === 'header' ? header : layer === 'footer' ? footer : layer === 'overlay' ? overlay : svg;
+    into.push(slot);
   });
-  return { svg, overlay, header };
+  return { svg, overlay, header, footer };
 }
 
 function ChildSlot({ children }: { children: ReactNode }) {
@@ -581,7 +584,7 @@ const BubbleChartRoot = forwardRef<BubbleChartHandle, BubbleChartProps>(
       ]
     );
 
-    const { svg, overlay, header } = partition(children);
+    const { svg, overlay, header, footer } = partition(children);
 
     /*
      * Two views, because the header is not part of the plot. `aspectRatio` and
@@ -627,6 +630,7 @@ const BubbleChartRoot = forwardRef<BubbleChartHandle, BubbleChartProps>(
               </>
             ) : null}
           </View>
+          {footer}
         </View>
       </BubbleChartContext.Provider>
     );
@@ -643,14 +647,19 @@ export interface BubbleChartGridProps {
   rows?: number;
   /** Vertical rules up it. Both axes are measured, so both earn lines. */
   columns?: number;
+  /*
+   * Both default to five. A coarse grid draws a handful of large squares that
+   * read as blocks behind the bubbles rather than as reference lines; a finer
+   * one recedes and lets the circles be the thing on the chart.
+   */
   color?: string;
   opacity?: number;
 }
 
 /** Reference lines both ways, so a bubble can be placed against two numbers. */
 function BubbleChartGrid({
-  rows = 3,
-  columns = 3,
+  rows = 5,
+  columns = 5,
   color,
   opacity = 1,
 }: BubbleChartGridProps) {
@@ -1171,16 +1180,18 @@ function BubbleChartTooltip({
   const hit = useMemo(() => {
     const xs: number[] = [];
     const ys: number[] = [];
+    const rs: number[] = [];
     const limits: number[] = [];
     const indices: number[] = [];
     for (const bubble of bubbles) {
       xs.push(xAt(bubble.x, plot, xExtent[0], xExtent[1]));
       ys.push(yOf(bubble.y, plot, yExtent[0], yExtent[1]));
+      rs.push(bubble.r);
       const reach = Math.max(bubble.r, hitRadius);
       limits.push(reach * reach);
       indices.push(bubble.index);
     }
-    return { xs, ys, limits, indices };
+    return { xs, ys, rs, limits, indices };
   }, [bubbles, plot, xExtent, yExtent, hitRadius]);
 
   const select = useMemo(
@@ -1250,8 +1261,23 @@ function BubbleChartTooltip({
       });
   }, [hit, activeIndex, select]);
 
-  // The readout sits above the bubble and is clamped inside the plot, so it
-  // never runs off an edge at an extreme value.
+  /*
+   * The readout's own height, measured rather than assumed. It decides whether
+   * the readout fits above the bubble, and how tall it is depends on whether
+   * the row has a label and a size — a constant would either overlap a
+   * three-line readout or reserve room a one-line one never uses.
+   */
+  const labelHeight = useSharedValue(0);
+
+  /*
+   * Above the bubble, clear of its edge rather than of its centre, and clamped
+   * inside the plot. Lifted by a constant it landed *on* the larger circles —
+   * which are exactly the ones a finger is most likely to be resting on, so the
+   * readout was hidden under the hand that summoned it.
+   *
+   * Where there is no room above, it goes below instead. Sliding it down to the
+   * top edge of the plot would leave it over the bubble again.
+   */
   const labelStyle = useAnimatedStyle(() => {
     const index = activeIndex.value;
     if (index < 0) return { opacity: 0 };
@@ -1259,17 +1285,22 @@ function BubbleChartTooltip({
     if (at < 0) return { opacity: 0 };
     const x = hit.xs[at]!;
     const y = hit.ys[at]!;
+    const r = hit.rs[at]!;
     const half = LABEL_WIDTH / 2;
+    const tall = labelHeight.value;
+
+    const above = y - r - LABEL_GAP - tall;
+    const below = y + r + LABEL_GAP;
+    const top = above >= plot.top ? above : below;
+
     return {
       opacity: 1,
       transform: [
         {
-          translateX: Math.min(
-            plot.left + plot.width - half,
-            Math.max(plot.left + half, x)
-          ) - half,
+          translateX:
+            Math.min(plot.left + plot.width - half, Math.max(plot.left + half, x)) - half,
         },
-        { translateY: Math.max(plot.top, y - LABEL_LIFT) },
+        { translateY: top },
       ],
     };
   });
@@ -1294,6 +1325,9 @@ function BubbleChartTooltip({
           >
             {active ? (
               <View
+                onLayout={(event) => {
+                  labelHeight.value = event.nativeEvent.layout.height;
+                }}
                 className={cn(
                   'rounded-xl border border-border bg-popover px-2.5 py-1.5 shadow-lg',
                   className
@@ -1343,11 +1377,16 @@ export interface BubbleChartLegendProps extends ViewProps {
  * A swatch and a name per bubble, for a chart whose circles are too small to
  * carry their own labels.
  *
+ * Drawn **under** the plot rather than floating in a corner of it. A key that
+ * overlays the drawing area competes with the bubbles for the space they are
+ * plotted in, and on a square chart there is no corner that is reliably empty —
+ * the position of a bubble is the data, so nowhere can be reserved for it.
+ *
  * It lists rows rather than series, because in this chart a row *is* a
  * category. Use it instead of `BubbleChart.Labels`, not beside it — the same
  * names twice is the legend telling the reader what the plot already says.
  */
-function BubbleChartLegend({ className, limit = 6, ...props }: BubbleChartLegendProps) {
+function BubbleChartLegend({ className, limit = 8, ...props }: BubbleChartLegendProps) {
   const { bubbles } = useChart('BubbleChart.Legend');
   const shown = bubbles.filter((bubble) => bubble.label).slice(0, limit);
   if (!shown.length) return null;
@@ -1357,7 +1396,7 @@ function BubbleChartLegend({ className, limit = 6, ...props }: BubbleChartLegend
       {...props}
       style={[{ pointerEvents: 'none' }, props.style]}
       className={cn(
-        'absolute right-2 top-1 flex-row flex-wrap items-center justify-end gap-x-3 gap-y-1',
+        'flex-row flex-wrap items-center justify-center gap-x-3 gap-y-1 pt-3',
         className
       )}
     >
@@ -1376,7 +1415,7 @@ function BubbleChartLegend({ className, limit = 6, ...props }: BubbleChartLegend
   );
 }
 BubbleChartLegend.displayName = 'BubbleChart.Legend';
-BubbleChartLegend.layer = 'overlay' as Layer;
+BubbleChartLegend.layer = 'footer' as Layer;
 
 /* -------------------------------------------------------------------------- */
 /* Header layer                                                               */

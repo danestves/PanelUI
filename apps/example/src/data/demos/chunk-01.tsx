@@ -647,7 +647,7 @@ function PyramidBasicVersion() {
   );
 }
 
-/** Names between the wings, which is what a run of age bands wants. */
+/** More rows, and the shape a population is usually drawn in. */
 function PyramidCentredVersion() {
   return (
     <View className="flex-1 justify-center p-4">
@@ -657,17 +657,11 @@ function PyramidCentredVersion() {
           <Frame.Action>Millions</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
-          <PyramidChart
-            data={POPULATION}
-            xDataKey="band"
-            labelPlacement="center"
-            aspectRatio={1}
-            barGap={0.3}
-          >
+          <PyramidChart data={POPULATION} xDataKey="band" aspectRatio={1} barGap={0.3}>
             <PyramidChart.Header
               className={CHART_HEADER}
               value="65.7m"
-              caption="Bands read outward from the middle"
+              caption="Six bands, read outward from the middle"
               labels={{ men: 'Men', women: 'Women' }}
               legend
             />
@@ -796,7 +790,7 @@ function BubbleLegendVersion() {
             sizeKey="people"
             labelKey="team"
             sizeRange={[8, 22]}
-            aspectRatio={1.2}
+            aspectRatio={1}
           >
             <BubbleChart.Header
               className={CHART_HEADER}
@@ -1208,10 +1202,10 @@ export const ENTRIES: ComponentEntry[] = [
         render: () => <PyramidBasicVersion />,
       },
       {
-        label: 'Names in the middle',
+        label: 'Population',
         id: 'centred',
         fullPage: true,
-        description: 'The classic population pyramid, with the bands between the wings.',
+        description: 'More rows, and the shape a population is usually drawn in.',
         render: () => <PyramidCentredVersion />,
       },
       {

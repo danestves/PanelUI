@@ -181,8 +181,12 @@ const searchBarVariants = tv({
      * The panel and the field are one card: the panel's own bottom edge is the
      * hairline between them, so the field drops its top border rather than
      * drawing a second line a pixel below it.
+     *
+     * `bg-popover`, not `bg-card`: this floats over the page rather than
+     * sitting in it, and a card is one step from the background — close enough
+     * that in dark mode the whole panel dissolves into the screen behind it.
      */
-    panel: 'overflow-hidden border border-border bg-card p-1.5 shadow-sm',
+    panel: 'overflow-hidden border border-border bg-popover p-1.5 shadow-lg',
     sectionLabel: 'px-3 pb-1 pt-2 text-sm text-muted-foreground',
     item: 'flex-row items-center gap-3 rounded-lg px-3 py-2.5',
     itemLabel: 'flex-1 text-base text-foreground',

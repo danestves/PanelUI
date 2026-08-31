@@ -18,7 +18,7 @@ import { BubbleChart } from 'panelui-native';
   <BubbleChart.Skeleton />    {/* while status="loading" */}
   <BubbleChart.XAxis />
   <BubbleChart.YAxis />
-  <BubbleChart.Legend />      {/* instead of Labels, not beside it */}
+  <BubbleChart.Legend />      {/* under the plot, instead of Labels */}
   <BubbleChart.Tooltip />     {/* the drag, and the readout */}
 </BubbleChart>
 ```
@@ -33,7 +33,7 @@ import { BubbleChart } from 'panelui-native';
 - `BubbleChart.XAxis` — The x labels, evenly along the axis, as real text under the plot.
 - `BubbleChart.YAxis` — Value labels down the side, one per grid line. Reserves its own gutter.
 - `BubbleChart.Tooltip` — The touch target, the nearest-bubble selection it drives, and the readout that follows it.
-- `BubbleChart.Legend` — A swatch and a name per bubble, for circles too small to carry their own labels.
+- `BubbleChart.Legend` — A swatch and a name per bubble, drawn under the plot. Use it instead of `BubbleChart.Labels` when the circles are too small to carry their own names.
 
 ### Props
 
@@ -64,9 +64,9 @@ Extends `ViewProps, ChartAccessibilityProps<BubbleChartDatum>`.
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `rows` | `number` | `3` | Horizontal rules across the plot. |
-| `columns` | `number` | `3` | Vertical rules up it. Both axes are measured, so both earn lines. |
-| `color` | `string` | — | — |
+| `rows` | `number` | `5` | Horizontal rules across the plot. |
+| `columns` | `number` | `5` | Vertical rules up it. Both axes are measured, so both earn lines. |
+| `color` | `string` | — | Both default to five. A coarse grid draws a handful of large squares that read as blocks behind the bubbles rather than as reference lines; a finer one recedes and lets the circles be the thing on the chart. |
 | `opacity` | `number` | `1` | — |
 
 #### `BubbleChartBubblesProps`
@@ -182,6 +182,8 @@ Without a `sizeKey` every bubble is drawn at the middle of `sizeRange`, which is
 The ramp cycles by row. Pass `colorKey` to name a colour per row: either a CSS colour, or a number from 1 to 5 selecting a `--color-chart-*` token. `BubbleChart.Bubbles` also takes a single `color` for every circle, which is what a chart with a legend usually wants.
 
 ### Selection
+
+The readout clears the *edge* of the bubble rather than its centre, and drops below it where there is no room above — lifted by a constant it landed on the larger circles, which are exactly the ones a finger is most likely to be resting on.
 
 A touch picks the nearest bubble whose own circle — or the `hitRadius` floor, whichever is larger — reaches the finger. Nearest rather than topmost, because where bubbles overlap the one drawn last is not the one being aimed at.
 

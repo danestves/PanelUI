@@ -754,26 +754,30 @@ function SearchBarDebounceDemo() {
   );
 }
 
-/** The companies the picker searches over, with a tint to stand in for a logo. */
+/**
+ * The companies the picker searches over. The mark is each one's own icon,
+ * fetched by domain — a coloured circle with an initial in it is a placeholder,
+ * and a picker whose whole job is recognising a company should show the thing
+ * being recognised.
+ */
 const COMPANIES = [
-  { name: 'Claude', tint: '#d97757' },
-  { name: 'Codex', tint: '#4a6cf7' },
-  { name: 'Lovable', tint: '#f26d5b' },
-  { name: 'Cursor', tint: '#111111' },
-  { name: 'Replit', tint: '#f26207' },
-  { name: 'Vercel', tint: '#2f2f2f' },
+  { name: 'Claude', domain: 'claude.ai' },
+  { name: 'Codex', domain: 'openai.com' },
+  { name: 'Lovable', domain: 'lovable.dev' },
+  { name: 'Cursor', domain: 'cursor.com' },
+  { name: 'Replit', domain: 'replit.com' },
+  { name: 'Vercel', domain: 'vercel.com' },
+  { name: 'Linear', domain: 'linear.app' },
+  { name: 'Figma', domain: 'figma.com' },
 ];
 
-function CompanyMark({ name, tint }: { name: string; tint: string }) {
+function CompanyMark({ name, domain }: { name: string; domain: string }) {
   return (
-    <View
-      style={{ backgroundColor: tint }}
-      className="h-7 w-7 items-center justify-center rounded-full"
-    >
-      <Text size="xs" weight="bold" className="text-white">
-        {name.slice(0, 1)}
-      </Text>
-    </View>
+    <Avatar
+      size="sm"
+      fallback={name.slice(0, 1)}
+      source={{ uri: `https://www.google.com/s2/favicons?sz=128&domain=${domain}` }}
+    />
   );
 }
 
@@ -829,7 +833,7 @@ function SearchBarPanelDemo() {
           const company = COMPANIES.find((item) => item.name === name);
           return (
             <View key={name} className="flex-row items-center gap-3 py-1.5">
-              <CompanyMark name={name} tint={company?.tint ?? '#737373'} />
+              <CompanyMark name={name} domain={company?.domain ?? 'example.com'} />
               <Text className="flex-1">{name}</Text>
             </View>
           );
@@ -839,7 +843,6 @@ function SearchBarPanelDemo() {
       <SearchBar
         avoidKeyboard
         variant="filled"
-        cancel="focus"
         placeholder="Search or enter company"
         debounce={400}
         loading={pending}
@@ -852,17 +855,13 @@ function SearchBarPanelDemo() {
           setRan(next);
           setPending(false);
         }}
-        onCancel={() => {
-          setRan('');
-          setPending(false);
-        }}
       >
         {query.length === 0 ? (
           <SearchBar.Section label="Suggested">
             {COMPANIES.slice(0, 4).map((company) => (
               <SearchBar.Item
                 key={company.name}
-                leading={<CompanyMark name={company.name} tint={company.tint} />}
+                leading={<CompanyMark name={company.name} domain={company.domain} />}
                 trailing={<AddButton name={company.name} />}
                 selected={picked.includes(company.name)}
                 onPress={() => add(company.name)}
@@ -878,7 +877,7 @@ function SearchBarPanelDemo() {
             {results.map((company) => (
               <SearchBar.Item
                 key={company.name}
-                leading={<CompanyMark name={company.name} tint={company.tint} />}
+                leading={<CompanyMark name={company.name} domain={company.domain} />}
                 trailing={<AddButton name={company.name} />}
                 selected={picked.includes(company.name)}
                 onPress={() => add(company.name)}
