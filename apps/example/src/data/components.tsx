@@ -28,6 +28,10 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   attachment: () =>
     load01().then((module) => module.ENTRIES_BY_SLUG['attachment']),
   badge: () => load01().then((module) => module.ENTRIES_BY_SLUG['badge']),
+  'bubble-chart': () =>
+    load01().then((module) => module.ENTRIES_BY_SLUG['bubble-chart']),
+  'pyramid-chart': () =>
+    load01().then((module) => module.ENTRIES_BY_SLUG['pyramid-chart']),
   'bar-chart': () =>
     load01().then((module) => module.ENTRIES_BY_SLUG['bar-chart']),
   'candlestick-chart': () =>
@@ -219,6 +223,8 @@ export const CHART_SLUGS = [
   'candlestick-chart',
   'heatmap-chart',
   'waterfall-chart',
+  'pyramid-chart',
+  'bubble-chart',
 ] as const;
 
 export async function loadChartShowcase() {

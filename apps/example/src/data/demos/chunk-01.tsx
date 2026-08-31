@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { Accordion, Alert, Attachment, Avatar, AreaChart, Badge, BarChart, Button, CandlestickChart, FileIcon, Frame, ImageIcon, Item, Text, Textarea, XIcon, Tooltip } from "panelui-native";
+import { Accordion, Alert, Attachment, Avatar, AreaChart, Badge, BarChart, BubbleChart, Button, CandlestickChart, PyramidChart, FileIcon, Frame, ImageIcon, Item, Text, Textarea, XIcon, Tooltip } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 /** Stable remote portraits for the Avatar demos. */
@@ -587,6 +587,278 @@ function AreaChartOverlaidVersion() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* PyramidChart                                                               */
+/* -------------------------------------------------------------------------- */
+
+const PENGUINS = [
+  { species: 'Adelie', male: 73, female: 73 },
+  { species: 'Chinstrap', male: 34, female: 34 },
+  { species: 'Gentoo', male: 61, female: 58 },
+];
+
+const POPULATION = [
+  { band: '0–14', men: 9.2, women: 8.8 },
+  { band: '15–29', men: 10.4, women: 10.1 },
+  { band: '30–44', men: 11.8, women: 11.6 },
+  { band: '45–59', men: 10.9, women: 11.2 },
+  { band: '60–74', men: 7.4, women: 8.3 },
+  { band: '75+', men: 3.1, women: 4.9 },
+];
+
+/** The shape the chart is named for: two wings on one scale. */
+function PyramidBasicVersion() {
+  const [active, setActive] = useState<(typeof PENGUINS)[number] | null>(null);
+  const total = PENGUINS.reduce((sum, row) => sum + row.male + row.female, 0);
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Penguins observed</Frame.Title>
+          <Frame.Action>Drag to inspect</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PyramidChart
+            data={PENGUINS}
+            xDataKey="species"
+            aspectRatio={1.4}
+            onActiveIndexChange={(_index, datum) =>
+              setActive(datum as (typeof PENGUINS)[number] | null)
+            }
+          >
+            <PyramidChart.Header
+              className={CHART_HEADER}
+              value={String(active ? active.male + active.female : total)}
+              caption={active ? `${active.species} · both wings` : 'Three species'}
+              labels={{ male: 'Male', female: 'Female' }}
+              legend
+            />
+            <PyramidChart.Grid />
+            <PyramidChart.Bar dataKey="male" side="start" />
+            <PyramidChart.Bar dataKey="female" side="end" colorIndex={5} />
+            <PyramidChart.XAxis />
+            <PyramidChart.YAxis />
+            <PyramidChart.Tooltip />
+          </PyramidChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** Names between the wings, which is what a run of age bands wants. */
+function PyramidCentredVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Population by age</Frame.Title>
+          <Frame.Action>Millions</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PyramidChart
+            data={POPULATION}
+            xDataKey="band"
+            labelPlacement="center"
+            aspectRatio={1}
+            barGap={0.3}
+          >
+            <PyramidChart.Header
+              className={CHART_HEADER}
+              value="65.7m"
+              caption="Bands read outward from the middle"
+              labels={{ men: 'Men', women: 'Women' }}
+              legend
+            />
+            <PyramidChart.Grid columns={2} />
+            <PyramidChart.Bar dataKey="men" side="start" />
+            <PyramidChart.Bar dataKey="women" side="end" colorIndex={5} />
+            <PyramidChart.XAxis />
+            <PyramidChart.YAxis />
+            <PyramidChart.Tooltip />
+          </PyramidChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** Equal stubs either side of the centre, giving way to the real wings. */
+function PyramidLoadingVersion() {
+  const [status, setStatus] = useState<'loading' | 'ready'>('loading');
+
+  useEffect(() => {
+    if (status !== 'loading') return;
+    const timer = setTimeout(() => setStatus('ready'), 1600);
+    return () => clearTimeout(timer);
+  }, [status]);
+
+  return (
+    <View className="flex-1 justify-center gap-4 p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Loading</Frame.Title>
+          <Frame.Action>{status === 'loading' ? 'Fetching…' : 'Ready'}</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <PyramidChart data={PENGUINS} xDataKey="species" status={status} aspectRatio={1.4}>
+            <PyramidChart.Grid />
+            <PyramidChart.Skeleton />
+            <PyramidChart.Bar dataKey="male" side="start" />
+            <PyramidChart.Bar dataKey="female" side="end" colorIndex={5} />
+            <PyramidChart.XAxis />
+            <PyramidChart.YAxis />
+          </PyramidChart>
+        </Frame.Panel>
+      </Frame>
+      <Button variant="outline" onPress={() => setStatus('loading')}>
+        Load again
+      </Button>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* BubbleChart                                                                */
+/* -------------------------------------------------------------------------- */
+
+const TEAMS = [
+  { team: 'A', efficiency: 12, performance: 19, people: 6 },
+  { team: 'B', efficiency: 24, performance: 34, people: 14 },
+  { team: 'C', efficiency: 40, performance: 16, people: 22 },
+  { team: 'D', efficiency: 32, performance: 46, people: 12 },
+  { team: 'E', efficiency: 60, performance: 27, people: 10 },
+  { team: 'F', efficiency: 46, performance: 43, people: 11 },
+  { team: 'G', efficiency: 16, performance: 33, people: 16 },
+  { team: 'H', efficiency: 68, performance: 50, people: 8 },
+];
+
+/** Two axes and an area — three quantities, one of them the size of the circle. */
+function BubbleBasicVersion() {
+  const [active, setActive] = useState<{ label: string; size: number | null } | null>(null);
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Performance vs efficiency</Frame.Title>
+          <Frame.Action>Drag to inspect</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <BubbleChart
+            data={TEAMS}
+            xDataKey="efficiency"
+            yDataKey="performance"
+            sizeKey="people"
+            labelKey="team"
+            aspectRatio={1}
+            onActivePointChange={(point) =>
+              setActive(point ? { label: point.label, size: point.size } : null)
+            }
+          >
+            <BubbleChart.Header
+              className={CHART_HEADER}
+              value={active ? `Team ${active.label}` : '8 teams'}
+              caption={
+                active && active.size !== null
+                  ? `${active.size} people`
+                  : 'Circle area is team size'
+              }
+            />
+            <BubbleChart.Grid />
+            <BubbleChart.Bubbles />
+            <BubbleChart.Labels />
+            <BubbleChart.XAxis />
+            <BubbleChart.YAxis />
+            <BubbleChart.Tooltip />
+          </BubbleChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** One colour and a legend, for circles too small to carry their own names. */
+function BubbleLegendVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>One colour</Frame.Title>
+          <Frame.Action>Named beside, not inside</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <BubbleChart
+            data={TEAMS.slice(0, 5)}
+            xDataKey="efficiency"
+            yDataKey="performance"
+            sizeKey="people"
+            labelKey="team"
+            sizeRange={[8, 22]}
+            aspectRatio={1.2}
+          >
+            <BubbleChart.Header
+              className={CHART_HEADER}
+              value="5 teams"
+              caption="Smaller circles, so the names sit beside them"
+            />
+            <BubbleChart.Grid rows={2} columns={2} />
+            <BubbleChart.Bubbles opacity={0.7} />
+            <BubbleChart.Legend />
+            <BubbleChart.XAxis />
+            <BubbleChart.YAxis />
+            <BubbleChart.Tooltip />
+          </BubbleChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** A still field of muted circles that dissolves as the real ones land. */
+function BubbleLoadingVersion() {
+  const [status, setStatus] = useState<'loading' | 'ready'>('loading');
+
+  useEffect(() => {
+    if (status !== 'loading') return;
+    const timer = setTimeout(() => setStatus('ready'), 1600);
+    return () => clearTimeout(timer);
+  }, [status]);
+
+  return (
+    <View className="flex-1 justify-center gap-4 p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Loading</Frame.Title>
+          <Frame.Action>{status === 'loading' ? 'Fetching…' : 'Ready'}</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <BubbleChart
+            data={TEAMS}
+            xDataKey="efficiency"
+            yDataKey="performance"
+            sizeKey="people"
+            labelKey="team"
+            status={status}
+            aspectRatio={1}
+          >
+            <BubbleChart.Grid />
+            <BubbleChart.Skeleton />
+            <BubbleChart.Bubbles />
+            <BubbleChart.Labels />
+            <BubbleChart.XAxis />
+            <BubbleChart.YAxis />
+          </BubbleChart>
+        </Frame.Panel>
+      </Frame>
+      <Button variant="outline" onPress={() => setStatus('loading')}>
+        Load again
+      </Button>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'accordion',
@@ -890,6 +1162,64 @@ export const ENTRIES: ComponentEntry[] = [
         fullPage: true,
         description: 'Horizontal bars, for category names that need the room.',
         render: () => <BarChartHorizontalVersion />,
+      },
+    ],
+  },
+{
+    slug: 'bubble-chart',
+    name: 'BubbleChart',
+    summary: 'Named circles on two axes, with a third quantity on their area',
+    layout: 'pager',
+    demos: [
+      {
+        label: 'Basic',
+        id: 'basic',
+        fullPage: true,
+        description: 'Two axes and an area, with each circle carrying its own name.',
+        render: () => <BubbleBasicVersion />,
+      },
+      {
+        label: 'Named beside',
+        id: 'legend',
+        fullPage: true,
+        description: 'A legend instead of labels, for circles too small to hold them.',
+        render: () => <BubbleLegendVersion />,
+      },
+      {
+        label: 'Loading',
+        id: 'loading',
+        fullPage: true,
+        description: 'A still field of muted circles that dissolves as the real ones land.',
+        render: () => <BubbleLoadingVersion />,
+      },
+    ],
+  },
+{
+    slug: 'pyramid-chart',
+    name: 'PyramidChart',
+    summary: 'Two series mirrored about a centre, on one shared scale',
+    layout: 'pager',
+    demos: [
+      {
+        label: 'Two wings',
+        id: 'basic',
+        fullPage: true,
+        description: 'Both sides measured on one scale, so their lengths compare.',
+        render: () => <PyramidBasicVersion />,
+      },
+      {
+        label: 'Names in the middle',
+        id: 'centred',
+        fullPage: true,
+        description: 'The classic population pyramid, with the bands between the wings.',
+        render: () => <PyramidCentredVersion />,
+      },
+      {
+        label: 'Loading',
+        id: 'loading',
+        fullPage: true,
+        description: 'Equal stubs either side of the centre, giving way to the real wings.',
+        render: () => <PyramidLoadingVersion />,
       },
     ],
   },

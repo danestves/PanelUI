@@ -11,6 +11,7 @@
     "bar-chart",
     "bottom-sheet",
     "breadcrumb",
+    "bubble-chart",
     "button",
     "button-group",
     "calendar",
@@ -71,6 +72,7 @@
     "post",
     "progress",
     "progress-button",
+    "pyramid-chart",
     "qr-code",
     "questionnaire",
     "radar-chart",
@@ -132,6 +134,10 @@
       "accessibilityMode": "shared-data"
     },
     {
+      "name": "bubble-chart",
+      "accessibilityMode": "shared-data"
+    },
+    {
       "name": "candlestick-chart",
       "accessibilityMode": "shared-data"
     },
@@ -168,6 +174,10 @@
       "accessibilityMode": "interactive-items"
     },
     {
+      "name": "pyramid-chart",
+      "accessibilityMode": "shared-data"
+    },
+    {
       "name": "radar-chart",
       "accessibilityMode": "shared-data"
     },
@@ -189,24 +199,24 @@
     }
   ],
   "counts": {
-    "componentModules": 120,
-    "packageComponentExports": 120,
-    "documentedComponents": 120,
-    "exampleEntries": 120,
+    "componentModules": 122,
+    "packageComponentExports": 122,
+    "documentedComponents": 122,
+    "exampleEntries": 122,
     "registry": {
-      "componentItems": 120,
+      "componentItems": 122,
       "supportItems": 36,
-      "totalItems": 156,
+      "totalItems": 158,
       "byType": {
-        "registry:ui": 135,
+        "registry:ui": 137,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1
       }
     },
     "visualizations": {
-      "total": 16,
-      "sharedData": 9,
+      "total": 18,
+      "sharedData": 11,
       "summaries": 1,
       "interactiveItems": 6
     },

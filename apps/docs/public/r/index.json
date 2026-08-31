@@ -164,6 +164,22 @@
     "docsPath": "components/breadcrumb"
   },
   {
+    "name": "bubble-chart",
+    "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
+    "description": "Named circles on two axes, with a third quantity on their area.",
+    "registryDependencies": [
+      "chart",
+      "chart-accessibility",
+      "cn",
+      "text",
+      "use-skeleton-handoff"
+    ],
+    "docsPath": "charts/bubble-chart"
+  },
+  {
     "name": "button",
     "type": "registry:ui",
     "kind": "ui",
@@ -1250,6 +1266,21 @@
       "text"
     ],
     "docsPath": "components/progress-button"
+  },
+  {
+    "name": "pyramid-chart",
+    "type": "registry:ui",
+    "kind": "chart",
+    "group": "charts",
+    "stability": "stable",
+    "description": "Two series mirrored about a centre, on one shared scale.",
+    "registryDependencies": [
+      "chart",
+      "chart-accessibility",
+      "cn",
+      "text"
+    ],
+    "docsPath": "charts/pyramid-chart"
   },
   {
     "name": "qr-code",

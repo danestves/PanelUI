@@ -1163,5 +1163,27 @@
       "visualization": true,
       "accessibilityMode": "shared-data"
     }
+  ],
+  "bubble-chart": [
+    "BubbleChart",
+    "Named circles on two axes, with a third quantity on their area.",
+    "react native bubble chart",
+    {
+      "addedIn": "0.87.0",
+      "group": "charts",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
+    }
+  ],
+  "pyramid-chart": [
+    "PyramidChart",
+    "Two series mirrored about a centre, on one shared scale.",
+    "react native population pyramid chart",
+    {
+      "addedIn": "0.87.0",
+      "group": "charts",
+      "visualization": true,
+      "accessibilityMode": "shared-data"
+    }
   ]
 }

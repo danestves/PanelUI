@@ -1373,6 +1373,38 @@ const scatterChart = (
   </Chartlet>
 );
 
+const pyramidChart = (
+  <Chartlet>
+    {[
+      [30, 42],
+      [46, 38],
+      [22, 30],
+      [14, 18],
+    ].map(([left, right], i) => (
+      <g key={i} opacity={i === 1 ? 0.8 : 0.4}>
+        <rect x={60 - left} y={6 + i * 14} width={left} height="10" rx="2" fill="currentColor" />
+        <rect x="64" y={6 + i * 14} width={right} height="10" rx="2" fill="currentColor" />
+      </g>
+    ))}
+    <line x1="62" y1="4" x2="62" y2="62" stroke="currentColor" strokeWidth="1" opacity="0.35" />
+  </Chartlet>
+);
+
+const bubbleChart = (
+  <Chartlet>
+    {[
+      [22, 44, 9],
+      [44, 24, 6],
+      [62, 42, 12],
+      [86, 20, 8],
+      [100, 46, 10],
+      [34, 14, 5],
+    ].map(([cx, cy, r], i) => (
+      <circle key={i} cx={cx} cy={cy} r={r} fill="currentColor" opacity={i % 2 ? 0.35 : 0.65} />
+    ))}
+  </Chartlet>
+);
+
 const treemapChart = (
   <Chartlet>
     <rect x="4" y="6" width="58" height="34" rx="3" fill="currentColor" opacity="0.6" />
@@ -2031,6 +2063,8 @@ const THUMBNAILS: Record<string, ReactNode> = {
   'polar-area-chart': polarAreaChart,
   'radar-chart': radarChart,
   'ring-chart': ringChart,
+  'bubble-chart': bubbleChart,
+  'pyramid-chart': pyramidChart,
   'scatter-chart': scatterChart,
   'treemap-chart': treemapChart,
   'waterfall-chart': waterfallChart,

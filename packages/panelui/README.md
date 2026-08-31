@@ -196,7 +196,7 @@ The component subpath is the slug from its documentation URL. The public utiliti
 `color` and `time`; the other foundation leaves are `animated-pressable`, `keyboard-avoider` and
 `scroll-progress` under `panelui-native/primitives/`.
 
-**Prefer the subpath for anything you ship.** The root entry re-exports all 120 components and
+**Prefer the subpath for anything you ship.** The root entry re-exports all 122 components and
 Metro does not tree-shake, so one name from it loads every component and everything they import —
 including the charts' SVG graphs and the map. On a desktop simulator that is invisible. On an
 Android device it is not: the whole library evaluates before your first screen paints, and under
@@ -214,6 +214,7 @@ memory pressure the OS can end the process with nothing in the terminal to expla
 | `BarChart` | Categories compared by length, grouped or stacked |
 | `BottomSheet` | Draggable sheet anchored to the bottom of the screen |
 | `Breadcrumb` | The trail of links back up the hierarchy to the current page |
+| `BubbleChart` | Named circles on two axes, with a third quantity on their area |
 | `Button` | Pressable action with variants, sizes, loading state and icon slots |
 | `ButtonGroup` | Several buttons drawn as one control |
 | `Calendar` | A month of days, for picking one, several, or a range |
@@ -270,6 +271,7 @@ memory pressure the OS can end the process with nothing in the terminal to expla
 | `Popover` | Panel anchored to the element that opened it |
 | `Post` | Social card — author, body, media and the counts underneath |
 | `Progress` | Determinate and indeterminate progress bar |
+| `PyramidChart` | Two series mirrored about a centre, on one shared scale |
 | `QRCode` | A string a camera can read — framed, titled, or folded away behind a button |
 | `Questionnaire` | One question at a time, with progress, validation and a way back |
 | `RadarChart` | Several measures of one thing, drawn as one shape |
@@ -282,7 +284,7 @@ memory pressure the OS can end the process with nothing in the terminal to expla
 | `ScrollCanvas` | Image frame whose contents move as you scroll |
 | `ScrollFade` | Fades the edges of a scroll container |
 | `ScrollText` | Text that resolves word by word as you scroll |
-| `SearchBar` | Search field with a clear button, a Cancel button and a debounced query |
+| `SearchBar` | Search field with a clear button, a Cancel button and a panel of results |
 | `SectionRail` | Floating section navigator for a long screen |
 | `Select` | Picker shown in a bottom sheet, expanded in place, or floating over the page, with an optional filter |
 | `SelectionMode` | Pick several rows out of a list, on a screen or in a sheet |

@@ -1,0 +1,1459 @@
+/**
+ * BubbleChart — one labelled circle per row, on two measured axes, with a third
+ * quantity on each circle's area.
+ *
+ * ```tsx
+ * <BubbleChart data={teams} xDataKey="efficiency" yDataKey="performance"
+ *   sizeKey="headcount" labelKey="team">
+ *   <BubbleChart.Grid />
+ *   <BubbleChart.Bubbles />
+ *   <BubbleChart.Labels />
+ *   <BubbleChart.XAxis />
+ *   <BubbleChart.YAxis />
+ *   <BubbleChart.Tooltip />
+ * </BubbleChart>
+ * ```
+ *
+ * ## When this and not a scatter plot
+ *
+ * `ScatterChart` also maps a third quantity onto point area, through `sizeKey`,
+ * and it is the right component for a *series* of observations: many points of
+ * one colour, where the shape of the cloud is the finding and no single dot
+ * needs a name.
+ *
+ * This one is for a handful of named things. Each row is its own circle with
+ * its own colour and its own label written inside it, so the chart can be read
+ * entity by entity rather than as a distribution. Eight teams, twelve products,
+ * six regions — where the reader wants to find one of them and see where it
+ * sits.
+ *
+ * ## Area, not radius
+ *
+ * `sizeKey` maps to a circle's area. Doubling a radius quadruples the ink, so a
+ * chart that scaled the radius would show a doubled value as four times the
+ * size, and the reader would believe the picture. The scale runs over the whole
+ * data set, so one bubble's size means the same thing as another's.
+ *
+ * ## Labels are text, not SVG
+ *
+ * The names inside the bubbles are React Native `Text` in a layer over the
+ * plot, so they follow the theme's font and the platform's text scaling — SVG
+ * text does neither. A bubble too small to hold its own label is left without
+ * one rather than given an unreadable one; the readout still names it.
+ */
+import {
+  Children,
+  createContext,
+  forwardRef,
+  isValidElement,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { StyleSheet, View, type LayoutChangeEvent, type ViewProps } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useDerivedValue,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
+import Svg, { Circle, G, Line as SvgLine } from 'react-native-svg';
+import { useCSSVariable } from 'uniwind';
+import { useSkeletonHandoff } from '../../hooks/use-skeleton-handoff';
+import {
+  ChartAccessibilityData,
+  type ChartAccessibilityProps,
+} from '../../primitives/chart-accessibility';
+import { Text } from '../../primitives/text';
+import {
+  bubbleRadius,
+  compactNumber,
+  useSeriesColor,
+  xAt,
+  yOf,
+  type Plot,
+} from '../../utils/chart';
+import { cn } from '../../utils/cn';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedG = Animated.createAnimatedComponent(G);
+
+/**
+ * How much of the reveal is spent handing out the bubbles' start times. The
+ * rest is the window each one gets, so the whole field still lands inside the
+ * one duration however many there are.
+ */
+const STAGGER = 0.4;
+
+/** Milliseconds for a bubble to swell as it is selected, and settle as it is not. */
+const SELECT_DURATION = 140;
+
+/**
+ * A bubble arriving: up past its size and back to it.
+ *
+ * A circle that simply grows to its radius reads as the chart still loading
+ * right up to the last frame. The small overshoot is what makes it read as
+ * landing.
+ */
+function landing(t: number): number {
+  'worklet';
+  const back = 1.3;
+  const u = t - 1;
+  return 1 + (back + 1) * u * u * u + back * u * u;
+}
+
+/** Room left around the plot for the axis labels and the outermost bubbles. */
+const PADDING = { top: 18, right: 18, bottom: 22, left: 18 };
+
+/** Left gutter reserved when a `YAxis` is present, for its labels to sit in. */
+const Y_AXIS_WIDTH = 44;
+
+/** Gap between the value labels and the plot they sit beside. */
+const Y_AXIS_GUTTER = 6;
+
+/** Line height of an `xs` label, for centring one on the grid line it names. */
+const AXIS_LABEL_HEIGHT = 16;
+
+/** Box each axis label is centred in, so a long number is ellipsised not shoved. */
+const AXIS_LABEL_WIDTH = 56;
+
+/** Width of the readout that floats by the selected bubble. */
+const LABEL_WIDTH = 132;
+
+/** How far the readout is lifted, to clear the bubble it describes. */
+const LABEL_LIFT = 52;
+
+/** Line box a bubble's own label is laid out in. */
+const BUBBLE_LABEL_HEIGHT = 16;
+
+/**
+ * Smallest radius a bubble may have and still be given its label. Below this
+ * the name is wider than the circle and reads as text lying on the plot rather
+ * than as the bubble's own.
+ */
+const LABEL_MIN_RADIUS = 12;
+
+/** Floor on the touch target, for a chart whose smallest bubbles are tiny. */
+const HIT_RADIUS = 22;
+
+/** How many colours the ramp cycles through. */
+const PALETTE_SIZE = 5;
+
+type Layer = 'svg' | 'overlay' | 'header';
+
+export type BubbleChartStatus = 'loading' | 'ready';
+
+export type BubbleChartDatum = Record<string, string | number | null | undefined>;
+
+/** One bubble, resolved back to the row it came from. */
+export interface BubbleChartPoint {
+  /** Index into `data`. */
+  index: number;
+  x: number;
+  y: number;
+  /** The value behind the area, when `sizeKey` is set. */
+  size: number | null;
+  /** The name written inside the circle, when `labelKey` is set. */
+  label: string;
+  /** The colour it was drawn in. */
+  color: string;
+  datum: BubbleChartDatum;
+}
+
+/** A bubble with its geometry resolved. Shared by every part. */
+interface ResolvedBubble extends BubbleChartPoint {
+  /** Radius in points, off the area scale. */
+  r: number;
+}
+
+interface BubbleChartContextValue {
+  data: BubbleChartDatum[];
+  xDataKey: string;
+  yDataKey: string;
+  labelKey: string | undefined;
+  plot: Plot;
+  status: BubbleChartStatus;
+  bubbles: ResolvedBubble[];
+  xMin: SharedValue<number>;
+  xMax: SharedValue<number>;
+  yMin: SharedValue<number>;
+  yMax: SharedValue<number>;
+  /** The settled domains, for the parts that draw text rather than geometry. */
+  xExtent: [number, number];
+  yExtent: [number, number];
+  /** 0 to 1 as the bubbles grow in. Shared, so they arrive as one chart. */
+  reveal: SharedValue<number>;
+  activeIndex: SharedValue<number>;
+  activeIndexJS: number;
+  setActivePoint: (point: BubbleChartPoint | null) => void;
+}
+
+const BubbleChartContext = createContext<BubbleChartContextValue | null>(null);
+
+function useChart(component: string): BubbleChartContextValue {
+  const context = useContext(BubbleChartContext);
+  if (!context) {
+    throw new Error(`${component} must be used within a <BubbleChart>`);
+  }
+  return context;
+}
+
+/**
+ * The bubble under the finger, for something rendered *inside* the chart. A
+ * readout in the card's header is outside this provider — use
+ * `onActivePointChange` for that.
+ */
+export function useBubbleChart() {
+  const { bubbles, activeIndexJS } = useChart('useBubbleChart');
+  const active = bubbles.find((bubble) => bubble.index === activeIndexJS) ?? null;
+  return { activeIndex: activeIndexJS, activePoint: active };
+}
+
+/**
+ * An extent with a little air around it, and a usable one for the degenerate
+ * cases — no data at all, or every reading identical. A domain of zero width
+ * divides by zero and puts every bubble on the same edge.
+ */
+function padExtent(min: number, max: number): [number, number] {
+  if (min === Infinity) return [0, 1];
+  if (min === max) return [min - 1, max + 1];
+  const pad = (max - min) * 0.08;
+  return [min - pad, max + pad];
+}
+
+export interface BubbleChartProps
+  extends ViewProps,
+    ChartAccessibilityProps<BubbleChartDatum> {
+  className?: string;
+  /** The rows. One bubble each. */
+  data: BubbleChartDatum[];
+  /** Key holding the horizontal value. */
+  xDataKey?: string;
+  /** Key holding the vertical value. */
+  yDataKey?: string;
+  /**
+   * Key holding the third quantity, mapped to each bubble's *area*. Without it
+   * every bubble is drawn at the middle of `sizeRange` and the chart is a
+   * scatter plot with names on it.
+   */
+  sizeKey?: string;
+  /** Key holding the name written inside the circle. */
+  labelKey?: string;
+  /**
+   * Key holding a colour for the row — either a CSS colour or a number from 1
+   * to 5 naming a `--color-chart-*` token. Without it the ramp cycles by row.
+   */
+  colorKey?: string;
+  /** Smallest and largest radius `sizeKey` maps onto, in points. */
+  sizeRange?: [number, number];
+  /**
+   * `loading` shows a still field of muted circles and dissolves it as the real
+   * bubbles grow in. One component throughout, rather than a spinner swapped
+   * for a chart — swapping loses the transition. Add a `BubbleChart.Skeleton`
+   * for something to stand in the plot meanwhile.
+   */
+  status?: BubbleChartStatus;
+  /** Width ÷ height. `1` is the square shape a bubble field reads best in. */
+  aspectRatio?: number;
+  /** Milliseconds for the bubbles to grow in on mount. */
+  animationDuration?: number;
+  /** Milliseconds for the axes to settle after the data changes. */
+  domainDuration?: number;
+  /** Fix the horizontal axis instead of deriving it. */
+  xDomain?: [number, number];
+  /** Fix the vertical axis instead of deriving it. */
+  yDomain?: [number, number];
+  /** The bubble under the finger, and `null` when it lifts. */
+  onActivePointChange?: (point: BubbleChartPoint | null) => void;
+  children?: ReactNode;
+}
+
+/** Imperative handle: re-run the grow-in, for a "replay" control. */
+export interface BubbleChartHandle {
+  replay: () => void;
+}
+
+function partition(children: ReactNode) {
+  const svg: ReactNode[] = [];
+  const overlay: ReactNode[] = [];
+  const header: ReactNode[] = [];
+  Children.forEach(children, (child, index) => {
+    if (!isValidElement(child)) return;
+    const layer = (child.type as { layer?: Layer }).layer ?? 'svg';
+    const slot = <ChildSlot key={index}>{child}</ChildSlot>;
+    (layer === 'header' ? header : layer === 'overlay' ? overlay : svg).push(slot);
+  });
+  return { svg, overlay, header };
+}
+
+function ChildSlot({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}
+
+const BubbleChartRoot = forwardRef<BubbleChartHandle, BubbleChartProps>(
+  function BubbleChartRoot(
+    {
+      className,
+      data,
+      xDataKey = 'x',
+      yDataKey = 'y',
+      sizeKey,
+      labelKey,
+      colorKey,
+      sizeRange = [14, 34],
+      status = 'ready',
+      aspectRatio = 1,
+      animationDuration = 800,
+      domainDuration = 500,
+      xDomain,
+      yDomain,
+      onActivePointChange,
+      accessible,
+      accessibilityLabel,
+      accessibilityHint,
+      accessibilityLabelForDatum,
+      onAccessibilityDatumPress,
+      children,
+      ...props
+    },
+    ref
+  ) {
+    const [size, setSize] = useState({ width: 0, height: 0 });
+    const [activeIndexJS, setActiveIndexJS] = useState(-1);
+
+    const reveal = useSharedValue(0);
+    const xMin = useSharedValue(0);
+    const xMax = useSharedValue(0);
+    const yMin = useSharedValue(0);
+    const yMax = useSharedValue(0);
+    const activeIndex = useSharedValue(-1);
+    const reducedMotion = useReducedMotion();
+
+    /*
+     * The whole ramp, resolved once. Every bubble is its own category here
+     * rather than a member of a series, so the colour is chosen by row index
+     * and there is nothing to register.
+     */
+    const chart1 = useSeriesColor(undefined, 1);
+    const chart2 = useSeriesColor(undefined, 2);
+    const chart3 = useSeriesColor(undefined, 3);
+    const chart4 = useSeriesColor(undefined, 4);
+    const chart5 = useSeriesColor(undefined, 5);
+    const palette = useMemo(
+      () => [chart1, chart2, chart3, chart4, chart5],
+      [chart1, chart2, chart3, chart4, chart5]
+    );
+
+    const hasYAxis = useMemo(() => {
+      let found = false;
+      Children.forEach(children, (child) => {
+        if (isValidElement(child) && (child.type as { axis?: string }).axis === 'y') {
+          found = true;
+        }
+      });
+      return found;
+    }, [children]);
+
+    const pad = { ...PADDING, left: hasYAxis ? Y_AXIS_WIDTH : PADDING.left };
+    const plot: Plot = {
+      left: pad.left,
+      top: pad.top,
+      width: Math.max(size.width - pad.left - pad.right, 0),
+      height: Math.max(size.height - pad.top - pad.bottom, 0),
+    };
+
+    const extents = useMemo(() => {
+      let lowX = Infinity;
+      let highX = -Infinity;
+      let lowY = Infinity;
+      let highY = -Infinity;
+      for (const row of data) {
+        const x = row[xDataKey];
+        const y = row[yDataKey];
+        // A row missing either coordinate is not a bubble at all, and must not
+        // stretch the axes towards an origin it never had.
+        if (typeof x !== 'number' || Number.isNaN(x)) continue;
+        if (typeof y !== 'number' || Number.isNaN(y)) continue;
+        if (x < lowX) lowX = x;
+        if (x > highX) highX = x;
+        if (y < lowY) lowY = y;
+        if (y > highY) highY = y;
+      }
+      return {
+        x: xDomain ?? padExtent(lowX, highX),
+        y: yDomain ?? padExtent(lowY, highY),
+      };
+    }, [data, xDataKey, yDataKey, xDomain, yDomain]);
+
+    /*
+     * The size scale runs over the whole data set, so one bubble's area means
+     * the same thing as another's. Without a `sizeKey` there is nothing to
+     * scale and every bubble takes the middle of the range — which is a
+     * scatter plot with names on it, and an honest one.
+     */
+    const sizeExtent = useMemo<[number, number] | null>(() => {
+      if (!sizeKey) return null;
+      let min = Infinity;
+      let max = -Infinity;
+      for (const row of data) {
+        const value = row[sizeKey];
+        if (typeof value !== 'number' || Number.isNaN(value)) continue;
+        if (value < min) min = value;
+        if (value > max) max = value;
+      }
+      return min === Infinity ? null : [min, max];
+    }, [data, sizeKey]);
+
+    /*
+     * Resolved once, in the root, because four parts need exactly this list and
+     * three of them would otherwise derive it again: the circles, the labels
+     * over them, the hit test under them and the legend beside them all have to
+     * agree about where a bubble is and how big it is.
+     */
+    const bubbles = useMemo<ResolvedBubble[]>(() => {
+      const middle = (sizeRange[0] + sizeRange[1]) / 2;
+      const out: ResolvedBubble[] = [];
+      data.forEach((datum, index) => {
+        const x = datum[xDataKey];
+        const y = datum[yDataKey];
+        if (typeof x !== 'number' || Number.isNaN(x)) return;
+        if (typeof y !== 'number' || Number.isNaN(y)) return;
+
+        const raw = sizeKey ? datum[sizeKey] : undefined;
+        const value = typeof raw === 'number' && !Number.isNaN(raw) ? raw : null;
+        const r =
+          sizeExtent && value !== null
+            ? bubbleRadius(value, sizeExtent, sizeRange)
+            : middle;
+
+        const explicit = colorKey ? datum[colorKey] : undefined;
+        const color =
+          typeof explicit === 'string'
+            ? explicit
+            : typeof explicit === 'number'
+              ? (palette[(Math.round(explicit) - 1 + PALETTE_SIZE) % PALETTE_SIZE] ??
+                palette[0]!)
+              : (palette[index % PALETTE_SIZE] ?? palette[0]!);
+
+        out.push({
+          index,
+          x,
+          y,
+          r,
+          size: value,
+          label: labelKey ? String(datum[labelKey] ?? '') : '',
+          color,
+          datum,
+        });
+      });
+      return out;
+    }, [data, xDataKey, yDataKey, sizeKey, labelKey, colorKey, sizeExtent, sizeRange, palette]);
+
+    const loading = status === 'loading';
+
+    useEffect(() => {
+      if (loading) return;
+      const [x0, x1] = extents.x;
+      const [y0, y1] = extents.y;
+      // The first domain lands without a tween: there is no previous scale to
+      // move from, and animating up from zero reads as the numbers changing.
+      const first =
+        xMin.value === 0 && xMax.value === 0 && yMin.value === 0 && yMax.value === 0;
+      if (first || reducedMotion) {
+        xMin.value = x0;
+        xMax.value = x1;
+        yMin.value = y0;
+        yMax.value = y1;
+        return;
+      }
+      xMin.value = withTiming(x0, { duration: domainDuration });
+      xMax.value = withTiming(x1, { duration: domainDuration });
+      yMin.value = withTiming(y0, { duration: domainDuration });
+      yMax.value = withTiming(y1, { duration: domainDuration });
+    }, [extents, loading, reducedMotion, domainDuration, xMin, xMax, yMin, yMax]);
+
+    const revealed = useRef(false);
+    const playReveal = useMemo(
+      () => () => {
+        if (reducedMotion) {
+          reveal.value = 1;
+          return;
+        }
+        reveal.value = 0;
+        /*
+         * Eased out rather than in and out. Each bubble is given a slice of
+         * this one clock, so an ease that dawdles at the start spends it on the
+         * first few and leaves the rest to arrive in a rush.
+         */
+        reveal.value = withTiming(1, {
+          duration: animationDuration,
+          easing: Easing.out(Easing.cubic),
+        });
+      },
+      [reducedMotion, animationDuration, reveal]
+    );
+
+    useEffect(() => {
+      if (loading) {
+        revealed.current = false;
+        reveal.value = 0;
+        return;
+      }
+      if (revealed.current || plot.width <= 0 || !bubbles.length) return;
+      revealed.current = true;
+      playReveal();
+    }, [loading, plot.width, bubbles.length, playReveal, reveal]);
+
+    useImperativeHandle(ref, () => ({ replay: playReveal }), [playReveal]);
+
+    // One place the selection lands, so the chart's own children and a readout
+    // outside it never disagree about which bubble is active.
+    const setActivePoint = useMemo(
+      () => (point: BubbleChartPoint | null) => {
+        setActiveIndexJS(point ? point.index : -1);
+        onActivePointChange?.(point);
+      },
+      [onActivePointChange]
+    );
+
+    const onLayout = (event: LayoutChangeEvent) => {
+      const { width, height } = event.nativeEvent.layout;
+      setSize((current) =>
+        Math.abs(current.width - width) < 1 && Math.abs(current.height - height) < 1
+          ? current
+          : { width, height }
+      );
+      props.onLayout?.(event);
+    };
+
+    const context = useMemo<BubbleChartContextValue>(
+      () => ({
+        data,
+        xDataKey,
+        yDataKey,
+        labelKey,
+        plot,
+        status,
+        bubbles,
+        xMin,
+        xMax,
+        yMin,
+        yMax,
+        xExtent: extents.x,
+        yExtent: extents.y,
+        reveal,
+        activeIndex,
+        activeIndexJS,
+        setActivePoint,
+      }),
+      // `plot` is rebuilt every render from `size`, so it is compared by value.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [
+        data,
+        xDataKey,
+        yDataKey,
+        labelKey,
+        plot.width,
+        plot.height,
+        plot.left,
+        plot.top,
+        status,
+        bubbles,
+        xMin,
+        xMax,
+        yMin,
+        yMax,
+        extents,
+        reveal,
+        activeIndex,
+        activeIndexJS,
+        setActivePoint,
+      ]
+    );
+
+    const { svg, overlay, header } = partition(children);
+
+    /*
+     * Two views, because the header is not part of the plot. `aspectRatio` and
+     * the layout measurement belong to the drawing area alone — measured on the
+     * outer view they would take in the header too, and the plot would lose as
+     * much height as the readout took while still claiming the shape asked for.
+     */
+    return (
+      <BubbleChartContext.Provider value={context}>
+        <View {...props} style={props.style} className={cn('w-full', className)}>
+          {header}
+          <ChartAccessibilityData
+            chart="Bubble chart"
+            data={data}
+            disabled={accessible === false || loading}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityHint={accessibilityHint}
+            accessibilityLabelForDatum={accessibilityLabelForDatum}
+            onAccessibilityDatumPress={onAccessibilityDatumPress}
+            valueOf={(datum) => {
+              const pairs: [string, unknown][] = [
+                [xDataKey, datum[xDataKey]],
+                [yDataKey, datum[yDataKey]],
+              ];
+              if (labelKey) pairs.unshift([labelKey, datum[labelKey]]);
+              if (sizeKey) pairs.push([sizeKey, datum[sizeKey]]);
+              return pairs;
+            }}
+          />
+          <View
+            onLayout={onLayout}
+            style={{ aspectRatio }}
+            className="w-full"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            {plot.width > 0 ? (
+              <>
+                <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+                  {svg}
+                </Svg>
+                {overlay}
+              </>
+            ) : null}
+          </View>
+        </View>
+      </BubbleChartContext.Provider>
+    );
+  }
+);
+BubbleChartRoot.displayName = 'BubbleChart';
+
+/* -------------------------------------------------------------------------- */
+/* SVG layer                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export interface BubbleChartGridProps {
+  /** Horizontal rules across the plot. */
+  rows?: number;
+  /** Vertical rules up it. Both axes are measured, so both earn lines. */
+  columns?: number;
+  color?: string;
+  opacity?: number;
+}
+
+/** Reference lines both ways, so a bubble can be placed against two numbers. */
+function BubbleChartGrid({
+  rows = 3,
+  columns = 3,
+  color,
+  opacity = 1,
+}: BubbleChartGridProps) {
+  const { plot } = useChart('BubbleChart.Grid');
+  const token = useCSSVariable('--color-border');
+  const stroke = color ?? (typeof token === 'string' ? token : 'rgba(0,0,0,0.1)');
+
+  const horizontals = Array.from({ length: rows + 1 }, (_unused, i) => i / rows);
+  const verticals = Array.from({ length: columns + 1 }, (_unused, i) => i / columns);
+
+  return (
+    <G opacity={opacity}>
+      {horizontals.map((fraction) => (
+        <SvgLine
+          key={`h${fraction}`}
+          x1={plot.left}
+          x2={plot.left + plot.width}
+          y1={plot.top + plot.height * fraction}
+          y2={plot.top + plot.height * fraction}
+          stroke={stroke}
+          strokeWidth={1}
+        />
+      ))}
+      {verticals.map((fraction) => (
+        <SvgLine
+          key={`v${fraction}`}
+          x1={plot.left + plot.width * fraction}
+          x2={plot.left + plot.width * fraction}
+          y1={plot.top}
+          y2={plot.top + plot.height}
+          stroke={stroke}
+          strokeWidth={1}
+        />
+      ))}
+    </G>
+  );
+}
+BubbleChartGrid.displayName = 'BubbleChart.Grid';
+BubbleChartGrid.layer = 'svg' as Layer;
+
+export interface BubbleChartBubblesProps {
+  /**
+   * Fill opacity. Below 1 by default so that overlapping bubbles read as
+   * denser rather than hiding each other — in a crowded corner that overlap
+   * *is* the finding, and opaque circles erase it.
+   */
+  opacity?: number;
+  /** One colour for every bubble, overriding the per-row ramp. */
+  color?: string;
+}
+
+/** The circles. */
+function BubbleChartBubbles({ opacity = 0.9, color }: BubbleChartBubblesProps) {
+  const { bubbles, plot, status, xMin, xMax, yMin, yMax, reveal, activeIndex } =
+    useChart('BubbleChart.Bubbles');
+
+  if (status === 'loading') return null;
+
+  return (
+    <G>
+      {bubbles.map((bubble, order) => (
+        <Bubble
+          key={bubble.index}
+          bubble={bubble}
+          plot={plot}
+          xMin={xMin}
+          xMax={xMax}
+          yMin={yMin}
+          yMax={yMax}
+          fill={color ?? bubble.color}
+          opacity={opacity}
+          activeIndex={activeIndex}
+          reveal={reveal}
+          order={order}
+          total={bubbles.length}
+        />
+      ))}
+    </G>
+  );
+}
+BubbleChartBubbles.displayName = 'BubbleChart.Bubbles';
+BubbleChartBubbles.layer = 'svg' as Layer;
+
+/**
+ * One bubble. Its position follows both domain tweens, so a data change moves
+ * the whole field to the new scale rather than cutting to it.
+ *
+ * It arrives by growing in place, on its own slice of the shared reveal. A wipe
+ * across the plot — which is what the line and area charts do — gives the
+ * reader a direction to read the arrival in, and a field of bubbles has none:
+ * position is the whole message, so a bubble may only ever appear where it
+ * belongs.
+ */
+function Bubble({
+  bubble,
+  plot,
+  xMin,
+  xMax,
+  yMin,
+  yMax,
+  fill,
+  opacity,
+  activeIndex,
+  reveal,
+  order,
+  total,
+}: {
+  bubble: ResolvedBubble;
+  plot: Plot;
+  xMin: SharedValue<number>;
+  xMax: SharedValue<number>;
+  yMin: SharedValue<number>;
+  yMax: SharedValue<number>;
+  fill: string;
+  opacity: number;
+  activeIndex: SharedValue<number>;
+  reveal: SharedValue<number>;
+  order: number;
+  total: number;
+}) {
+  const { index, x, y, r } = bubble;
+
+  /*
+   * The selection, as something that moves. A hard switch made the bubble it
+   * named jump between one frame and the next while every neighbour stayed put,
+   * which reads as a glitch rather than as a response to the finger.
+   */
+  const selected = useDerivedValue(() =>
+    withTiming(activeIndex.value === index ? 1 : 0, { duration: SELECT_DURATION })
+  );
+
+  // Where in the reveal this bubble starts. Spread over `STAGGER`, so the field
+  // settles as a field rather than switching on all at once.
+  const start = total > 1 ? (order / total) * STAGGER : 0;
+
+  const animatedProps = useAnimatedProps(() => {
+    const arrived = Math.max(0, Math.min(1, (reveal.value - start) / (1 - STAGGER)));
+    // The selected bubble swells and goes solid. Both, rather than one: a size
+    // change alone is easy to miss among neighbours, and an opacity change
+    // alone is invisible wherever the circles already overlap.
+    const swell = 1 + 0.12 * selected.value;
+    return {
+      cx: xAt(x, plot, xMin.value, xMax.value),
+      cy: yOf(y, plot, yMin.value, yMax.value),
+      r: r * landing(arrived) * swell,
+      // Ahead of the size, so a bubble is legible by the time it stops moving
+      // rather than fading in for the whole of its arrival.
+      fillOpacity:
+        Math.min(1, arrived * 2) * (opacity + (1 - opacity) * selected.value),
+    };
+  });
+
+  return <AnimatedCircle animatedProps={animatedProps} fill={fill} />;
+}
+
+export interface BubbleChartSkeletonProps {
+  /** How many placeholder circles to scatter. */
+  count?: number;
+  color?: string;
+}
+
+/**
+ * The loading state: a still field of muted circles where the data will be.
+ *
+ * Deliberately still. A shimmer over a field of circles reads as them *moving*,
+ * which is the one thing this chart must never appear to do — position is the
+ * entire message, and a loading state that implies it is changing is a loading
+ * state that lies.
+ *
+ * The layout is deterministic rather than random, so it does not reshuffle on
+ * every render of a component that may re-render several times while waiting.
+ * It dissolves as the real bubbles grow in, and outlives the status change by
+ * exactly that long: cut at the frame the data lands, the placeholder would
+ * disappear before anything had replaced it.
+ */
+function BubbleChartSkeleton({ count = 7, color }: BubbleChartSkeletonProps) {
+  const { plot, status } = useChart('BubbleChart.Skeleton');
+  const token = useCSSVariable('--color-skeleton');
+  const fill = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
+
+  const { mounted, opacity: fade } = useSkeletonHandoff(status === 'loading');
+
+  const circles = useMemo(
+    () =>
+      // Two irrational-ish strides that do not share a factor, so the circles
+      // spread instead of falling into a lattice.
+      Array.from({ length: count }, (_unused, index) => ({
+        key: index,
+        fx: ((index * 0.618) % 1) * 0.84 + 0.08,
+        fy: ((index * 0.379) % 1) * 0.84 + 0.08,
+        r: 16 + ((index * 0.472) % 1) * 12,
+      })),
+    [count]
+  );
+
+  const animatedProps = useAnimatedProps(() => ({ opacity: fade.value }));
+
+  if (!mounted) return null;
+
+  return (
+    <AnimatedG animatedProps={animatedProps}>
+      {circles.map((circle) => (
+        <Circle
+          key={circle.key}
+          cx={plot.left + circle.fx * plot.width}
+          cy={plot.top + circle.fy * plot.height}
+          r={circle.r}
+          fill={fill}
+        />
+      ))}
+    </AnimatedG>
+  );
+}
+BubbleChartSkeleton.displayName = 'BubbleChart.Skeleton';
+BubbleChartSkeleton.layer = 'svg' as Layer;
+
+/* -------------------------------------------------------------------------- */
+/* Overlay layer                                                              */
+/* -------------------------------------------------------------------------- */
+
+export interface BubbleChartLabelsProps {
+  /**
+   * Smallest radius a bubble may have and still be given its label. Below it
+   * the name is wider than the circle it names.
+   */
+  minRadius?: number;
+  /** Turn a bubble into its label. Defaults to the value at `labelKey`. */
+  format?: (point: BubbleChartPoint) => string;
+  className?: string;
+}
+
+/**
+ * The names, written inside the circles.
+ *
+ * Real text over the plot rather than SVG text, so they follow the theme's font
+ * and the platform's text scaling. Each one rides the same domain tweens the
+ * circle under it does, so a label never lags the bubble it belongs to.
+ *
+ * A bubble too small to hold its name is left without one. Shrinking the text
+ * to fit would make it unreadable on exactly the bubbles the reader is
+ * squinting at already; the readout names those instead.
+ */
+function BubbleChartLabels({
+  minRadius = LABEL_MIN_RADIUS,
+  format,
+  className,
+}: BubbleChartLabelsProps) {
+  const { bubbles, plot, status, xMin, xMax, yMin, yMax, reveal } =
+    useChart('BubbleChart.Labels');
+
+  if (status === 'loading') return null;
+
+  return (
+    <View style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      {bubbles
+        .filter((bubble) => bubble.r >= minRadius && (format || bubble.label))
+        .map((bubble, order) => (
+          <BubbleLabel
+            key={bubble.index}
+            bubble={bubble}
+            text={format ? format(bubble) : bubble.label}
+            plot={plot}
+            xMin={xMin}
+            xMax={xMax}
+            yMin={yMin}
+            yMax={yMax}
+            reveal={reveal}
+            order={order}
+            total={bubbles.length}
+            className={className}
+          />
+        ))}
+    </View>
+  );
+}
+BubbleChartLabels.displayName = 'BubbleChart.Labels';
+BubbleChartLabels.layer = 'overlay' as Layer;
+
+function BubbleLabel({
+  bubble,
+  text,
+  plot,
+  xMin,
+  xMax,
+  yMin,
+  yMax,
+  reveal,
+  order,
+  total,
+  className,
+}: {
+  bubble: ResolvedBubble;
+  text: string;
+  plot: Plot;
+  xMin: SharedValue<number>;
+  xMax: SharedValue<number>;
+  yMin: SharedValue<number>;
+  yMax: SharedValue<number>;
+  reveal: SharedValue<number>;
+  order: number;
+  total: number;
+  className?: string;
+}) {
+  const { x, y, r } = bubble;
+  const width = r * 2;
+  const start = total > 1 ? (order / total) * STAGGER : 0;
+
+  const style = useAnimatedStyle(() => {
+    const arrived = Math.max(0, Math.min(1, (reveal.value - start) / (1 - STAGGER)));
+    return {
+      opacity: Math.max(0, arrived * 2 - 1),
+      transform: [
+        { translateX: xAt(x, plot, xMin.value, xMax.value) - width / 2 },
+        { translateY: yOf(y, plot, yMin.value, yMax.value) - BUBBLE_LABEL_HEIGHT / 2 },
+      ],
+    };
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        { position: 'absolute', left: 0, top: 0, width, height: BUBBLE_LABEL_HEIGHT },
+        style,
+      ]}
+    >
+      <Text
+        size="xs"
+        weight="medium"
+        numberOfLines={1}
+        // White on the fill, which is a chart colour in every theme rather than
+        // a surface — so this is the one place a literal is right: the token
+        // that reads on a card would vanish on the bubble.
+        className={cn('text-center text-white', className)}
+      >
+        {text}
+      </Text>
+    </Animated.View>
+  );
+}
+
+export interface BubbleChartXAxisProps {
+  /** How many intervals to divide the axis into. Yields `ticks + 1` labels. */
+  ticks?: number;
+  /** Turn a value into its label. Defaults to a compact number. */
+  format?: (value: number) => string;
+  className?: string;
+}
+
+/**
+ * The x labels, evenly along the axis.
+ *
+ * Evenly spaced, because this axis is a continuous scale rather than a list of
+ * rows. There is no bubble for a label to sit under.
+ */
+function BubbleChartXAxis({ ticks = 2, format, className }: BubbleChartXAxisProps) {
+  const { plot, xExtent } = useChart('BubbleChart.XAxis');
+
+  const labels = useMemo(() => {
+    const [min, max] = xExtent;
+    if (min === 0 && max === 0) return [];
+    return Array.from({ length: ticks + 1 }, (_unused, index) => {
+      const value = min + ((max - min) * index) / ticks;
+      return { key: index, text: format ? format(value) : compactNumber(value) };
+    });
+  }, [xExtent, ticks, format]);
+
+  return (
+    <View
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+      className={cn(className)}
+    >
+      {labels.map((label) => (
+        <Text
+          key={label.key}
+          size="xs"
+          muted
+          numberOfLines={1}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            // Centred on its tick, then held inside the chart. The first and
+            // last ticks sit on the plot's own edges, so a box centred on them
+            // hangs half its width off the side — the clamp slides those two
+            // back in rather than letting the numbers leave the frame.
+            left: Math.max(
+              0,
+              Math.min(
+                plot.left + (plot.width / ticks) * label.key - AXIS_LABEL_WIDTH / 2,
+                plot.left + plot.width + PADDING.right - AXIS_LABEL_WIDTH
+              )
+            ),
+            width: AXIS_LABEL_WIDTH,
+            textAlign: 'center',
+          }}
+        >
+          {label.text}
+        </Text>
+      ))}
+    </View>
+  );
+}
+BubbleChartXAxis.displayName = 'BubbleChart.XAxis';
+BubbleChartXAxis.layer = 'overlay' as Layer;
+
+export interface BubbleChartYAxisProps {
+  /** How many intervals to divide the axis into. Yields `ticks + 1` labels. */
+  ticks?: number;
+  /** Turn a value into its label. Defaults to a compact number. */
+  format?: (value: number) => string;
+  className?: string;
+}
+
+/** Value labels down the side, one per grid line. Reserves its own gutter. */
+function BubbleChartYAxis({ ticks = 2, format, className }: BubbleChartYAxisProps) {
+  const { plot, yExtent } = useChart('BubbleChart.YAxis');
+
+  const labels = useMemo(() => {
+    const [min, max] = yExtent;
+    if (min === 0 && max === 0) return [];
+    return Array.from({ length: ticks + 1 }, (_unused, index) => {
+      const value = max - ((max - min) * index) / ticks;
+      return { key: index, text: format ? format(value) : compactNumber(value) };
+    });
+  }, [yExtent, ticks, format]);
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: 0,
+        // Centred on the grid line each label names: the strip is lifted half a
+        // label and grown by a whole one, so `justify-between` lands the text's
+        // middle on the line rather than its top edge on the first.
+        top: plot.top - AXIS_LABEL_HEIGHT / 2,
+        height: plot.height + AXIS_LABEL_HEIGHT,
+        width: Math.max(plot.left - Y_AXIS_GUTTER, 0),
+      }}
+      className={cn('items-end justify-between', className)}
+    >
+      {labels.map((label) => (
+        <Text key={label.key} size="xs" muted numberOfLines={1}>
+          {label.text}
+        </Text>
+      ))}
+    </View>
+  );
+}
+BubbleChartYAxis.displayName = 'BubbleChart.YAxis';
+BubbleChartYAxis.layer = 'overlay' as Layer;
+// Read by the root, which has to leave room for the labels before it lays the
+// plot out.
+BubbleChartYAxis.axis = 'y' as const;
+
+export interface BubbleChartTooltipProps {
+  /** Float a small readout beside the selected bubble. On by default. */
+  showLabel?: boolean;
+  /** Format the x value for the readout. Defaults to a compact number. */
+  formatX?: (value: number) => string;
+  /** Format the y value for the readout. Defaults to a compact number. */
+  formatY?: (value: number) => string;
+  /** Format the size value for the readout. Defaults to a compact number. */
+  formatSize?: (value: number) => string;
+  /** Floor on the touch target, for a chart whose smallest bubbles are tiny. */
+  hitRadius?: number;
+  className?: string;
+}
+
+/**
+ * The touch target, the selection it drives, and the readout that follows it.
+ *
+ * A touch picks the nearest bubble whose own circle — or the `hitRadius` floor,
+ * whichever is larger — reaches the finger. Nearest rather than topmost,
+ * because where bubbles overlap the one drawn last is not the one being aimed
+ * at.
+ *
+ * The search runs on the UI thread over flat arrays of already-projected
+ * coordinates, and only the *index* of the winner crosses back into JS, and
+ * only when it changes. A drag across the plot therefore costs a handful of
+ * re-renders rather than one per frame.
+ *
+ * Distances are compared squared. The nearest bubble by distance is the nearest
+ * by distance-squared, and a square root per bubble per frame buys nothing.
+ */
+function BubbleChartTooltip({
+  showLabel = true,
+  formatX,
+  formatY,
+  formatSize,
+  hitRadius = HIT_RADIUS,
+  className,
+}: BubbleChartTooltipProps) {
+  const {
+    bubbles,
+    plot,
+    xExtent,
+    yExtent,
+    activeIndex,
+    activeIndexJS,
+    setActivePoint,
+    status,
+  } = useChart('BubbleChart.Tooltip');
+
+  /*
+   * Every bubble, projected once, as parallel arrays.
+   *
+   * Parallel arrays rather than an array of objects because this is read inside
+   * a worklet: Reanimated has to copy whatever the gesture captures across to
+   * the UI thread, and four number arrays cross far more cheaply than a few
+   * hundred small objects.
+   *
+   * Projected against the *settled* extents rather than the tweening shared
+   * values. Hit-testing against a moving scale would mean rebuilding this on
+   * every frame of a domain animation, and a bubble being half a second stale
+   * during a transition is not something a finger can notice.
+   */
+  const hit = useMemo(() => {
+    const xs: number[] = [];
+    const ys: number[] = [];
+    const limits: number[] = [];
+    const indices: number[] = [];
+    for (const bubble of bubbles) {
+      xs.push(xAt(bubble.x, plot, xExtent[0], xExtent[1]));
+      ys.push(yOf(bubble.y, plot, yExtent[0], yExtent[1]));
+      const reach = Math.max(bubble.r, hitRadius);
+      limits.push(reach * reach);
+      indices.push(bubble.index);
+    }
+    return { xs, ys, limits, indices };
+  }, [bubbles, plot, xExtent, yExtent, hitRadius]);
+
+  const select = useMemo(
+    () => (index: number) => {
+      if (index < 0) {
+        setActivePoint(null);
+        return;
+      }
+      setActivePoint(bubbles.find((bubble) => bubble.index === index) ?? null);
+    },
+    [bubbles, setActivePoint]
+  );
+
+  /*
+   * Built in one closure, and everything it captures is a plain array, a number
+   * or a shared value. A worklet may only call another worklet, and the rule is
+   * enforced by crashing rather than by warning — so the resolver is declared
+   * here, next to its callers, rather than as a helper elsewhere in the file
+   * where it would be easy to leave un-workletised.
+   */
+  const pan = useMemo(() => {
+    const xs = hit.xs;
+    const ys = hit.ys;
+    const limits = hit.limits;
+    const indices = hit.indices;
+
+    const resolve = (px: number, py: number) => {
+      'worklet';
+      let bestIndex = -1;
+      let best = Infinity;
+      for (let i = 0; i < xs.length; i += 1) {
+        const dx = xs[i]! - px;
+        const dy = ys[i]! - py;
+        const distance = dx * dx + dy * dy;
+        // Each bubble reaches as far as it is big, so a large one is not
+        // beaten by a small one that happens to be marginally nearer.
+        if (distance <= limits[i]! && distance < best) {
+          best = distance;
+          bestIndex = indices[i]!;
+        }
+      }
+      if (bestIndex === activeIndex.value) return;
+      activeIndex.value = bestIndex;
+      runOnJS(select)(bestIndex);
+    };
+
+    const clear = () => {
+      'worklet';
+      if (activeIndex.value === -1) return;
+      activeIndex.value = -1;
+      runOnJS(select)(-1);
+    };
+
+    return Gesture.Pan()
+      .minDistance(0)
+      .onBegin((event) => {
+        'worklet';
+        resolve(event.x, event.y);
+      })
+      .onUpdate((event) => {
+        'worklet';
+        resolve(event.x, event.y);
+      })
+      .onFinalize(() => {
+        'worklet';
+        clear();
+      });
+  }, [hit, activeIndex, select]);
+
+  // The readout sits above the bubble and is clamped inside the plot, so it
+  // never runs off an edge at an extreme value.
+  const labelStyle = useAnimatedStyle(() => {
+    const index = activeIndex.value;
+    if (index < 0) return { opacity: 0 };
+    const at = hit.indices.indexOf(index);
+    if (at < 0) return { opacity: 0 };
+    const x = hit.xs[at]!;
+    const y = hit.ys[at]!;
+    const half = LABEL_WIDTH / 2;
+    return {
+      opacity: 1,
+      transform: [
+        {
+          translateX: Math.min(
+            plot.left + plot.width - half,
+            Math.max(plot.left + half, x)
+          ) - half,
+        },
+        { translateY: Math.max(plot.top, y - LABEL_LIFT) },
+      ],
+    };
+  });
+
+  const active = bubbles.find((bubble) => bubble.index === activeIndexJS) ?? null;
+  const fmtX = formatX ?? compactNumber;
+  const fmtY = formatY ?? compactNumber;
+  const fmtSize = formatSize ?? compactNumber;
+
+  if (status === 'loading') return null;
+
+  return (
+    <GestureDetector gesture={pan}>
+      <View style={StyleSheet.absoluteFill}>
+        {showLabel ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              { position: 'absolute', left: 0, top: 0, width: LABEL_WIDTH },
+              labelStyle,
+            ]}
+          >
+            {active ? (
+              <View
+                className={cn(
+                  'rounded-xl border border-border bg-popover px-2.5 py-1.5 shadow-lg',
+                  className
+                )}
+              >
+                {active.label ? (
+                  <View className="flex-row items-center gap-1.5">
+                    <View
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: active.color,
+                      }}
+                    />
+                    <Text size="xs" weight="medium" numberOfLines={1}>
+                      {active.label}
+                    </Text>
+                  </View>
+                ) : null}
+                <Text size="xs" muted numberOfLines={1}>
+                  {fmtX(active.x)}, {fmtY(active.y)}
+                </Text>
+                {active.size !== null ? (
+                  <Text size="xs" muted numberOfLines={1}>
+                    {fmtSize(active.size)}
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+          </Animated.View>
+        ) : null}
+      </View>
+    </GestureDetector>
+  );
+}
+BubbleChartTooltip.displayName = 'BubbleChart.Tooltip';
+BubbleChartTooltip.layer = 'overlay' as Layer;
+
+export interface BubbleChartLegendProps extends ViewProps {
+  className?: string;
+  /** Cap on how many bubbles are named. The rest are left to the readout. */
+  limit?: number;
+}
+
+/**
+ * A swatch and a name per bubble, for a chart whose circles are too small to
+ * carry their own labels.
+ *
+ * It lists rows rather than series, because in this chart a row *is* a
+ * category. Use it instead of `BubbleChart.Labels`, not beside it — the same
+ * names twice is the legend telling the reader what the plot already says.
+ */
+function BubbleChartLegend({ className, limit = 6, ...props }: BubbleChartLegendProps) {
+  const { bubbles } = useChart('BubbleChart.Legend');
+  const shown = bubbles.filter((bubble) => bubble.label).slice(0, limit);
+  if (!shown.length) return null;
+
+  return (
+    <View
+      {...props}
+      style={[{ pointerEvents: 'none' }, props.style]}
+      className={cn(
+        'absolute right-2 top-1 flex-row flex-wrap items-center justify-end gap-x-3 gap-y-1',
+        className
+      )}
+    >
+      {shown.map((bubble) => (
+        <View key={bubble.index} className="flex-row items-center gap-1.5">
+          <View
+            style={{ backgroundColor: bubble.color }}
+            className="h-2 w-2 rounded-full"
+          />
+          <Text size="xs" muted>
+            {bubble.label}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+BubbleChartLegend.displayName = 'BubbleChart.Legend';
+BubbleChartLegend.layer = 'overlay' as Layer;
+
+/* -------------------------------------------------------------------------- */
+/* Header layer                                                               */
+/* -------------------------------------------------------------------------- */
+
+export interface BubbleChartHeaderProps extends ViewProps {
+  className?: string;
+  /** Small line above the value — what the chart is of. */
+  title?: string;
+  /** The readout. The largest thing on the card, and the first thing read. */
+  value?: string;
+  /** One muted line under the value — what the area means, usually. */
+  caption?: string;
+  /** Trailing slot — a control, a badge, a range picker. */
+  children?: ReactNode;
+}
+
+/**
+ * The strip above the plot: what the chart is of, what it currently reads, and
+ * what the size of a circle means.
+ *
+ * The caption earns its place here more than on most charts. Two axes and an
+ * area is three quantities, and a reader who is not told what the area is has
+ * no way to work it out from the picture.
+ *
+ * The value is not derived here. A readout that follows the finger belongs to
+ * whoever owns the data — take it from `onActivePointChange` and pass the
+ * formatted string down.
+ */
+function BubbleChartHeader({
+  className,
+  title,
+  value,
+  caption,
+  children,
+  ...props
+}: BubbleChartHeaderProps) {
+  return (
+    <View
+      {...props}
+      className={cn('flex-row items-start justify-between gap-3 pb-3', className)}
+    >
+      <View className="flex-1 gap-0.5">
+        {title ? (
+          <Text size="xs" muted>
+            {title}
+          </Text>
+        ) : null}
+        {value ? (
+          <Text size="xl" weight="bold">
+            {value}
+          </Text>
+        ) : null}
+        {caption ? (
+          <Text size="xs" muted>
+            {caption}
+          </Text>
+        ) : null}
+      </View>
+      {/* Shrinkable, unlike a view's default in React Native. Held rigid, a
+          control takes the width it wants and the caption underneath the value
+          wraps to two lines to make room for it. */}
+      {children ? <View className="shrink pt-1">{children}</View> : null}
+    </View>
+  );
+}
+BubbleChartHeader.displayName = 'BubbleChart.Header';
+BubbleChartHeader.layer = 'header' as Layer;
+
+export const BubbleChart = Object.assign(BubbleChartRoot, {
+  Header: BubbleChartHeader,
+  Grid: BubbleChartGrid,
+  Bubbles: BubbleChartBubbles,
+  Labels: BubbleChartLabels,
+  Skeleton: BubbleChartSkeleton,
+  XAxis: BubbleChartXAxis,
+  YAxis: BubbleChartYAxis,
+  Tooltip: BubbleChartTooltip,
+  Legend: BubbleChartLegend,
+});

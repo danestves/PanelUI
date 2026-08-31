@@ -1,0 +1,43 @@
+{
+  "slug": "bubble-chart",
+  "intro": "One circle per row, placed on two measured axes, with a third quantity on each circle's area and its name written inside it.\n\nIt is for a handful of named things — eight teams, twelve products, six regions — where the reader wants to find one of them and see where it sits. For a *series* of observations, where the shape of the cloud is the finding and no single point needs a name, [ScatterChart](/docs/charts/scatter-chart) does the same area mapping through `sizeKey`.\n\nColours come from the `--color-chart-1` … `--color-chart-5` tokens, cycling by row.",
+  "usage": "<BubbleChart\n  data={teams}\n  xDataKey=\"efficiency\"\n  yDataKey=\"performance\"\n  sizeKey=\"headcount\"\n  labelKey=\"team\"\n>\n  <BubbleChart.Grid />\n  <BubbleChart.Bubbles />\n  <BubbleChart.Labels />\n  <BubbleChart.XAxis />\n  <BubbleChart.YAxis />\n  <BubbleChart.Tooltip />\n</BubbleChart>",
+  "extraImports": [
+    "Frame",
+    "Text"
+  ],
+  "anatomy": "<BubbleChart>\n  <BubbleChart.Grid />        {/* reference lines both ways */}\n  <BubbleChart.Bubbles />     {/* the circles */}\n  <BubbleChart.Labels />      {/* their names, inside them */}\n  <BubbleChart.Skeleton />    {/* while status=\"loading\" */}\n  <BubbleChart.XAxis />\n  <BubbleChart.YAxis />\n  <BubbleChart.Legend />      {/* instead of Labels, not beside it */}\n  <BubbleChart.Tooltip />     {/* the drag, and the readout */}\n</BubbleChart>",
+  "parts": {
+    "Grid": "Reference lines both ways. Both axes are quantities here, so both earn them.",
+    "Bubbles": "The circles. Colour comes from the row unless `color` overrides every one of them.",
+    "Labels": "The names, written inside the circles. A bubble too small to hold its own is left without one rather than given an unreadable one.",
+    "Skeleton": "A still field of muted circles shown while `status=\"loading\"`, dissolving as the real ones grow in.",
+    "XAxis": "The x labels, evenly along the axis, as real text under the plot.",
+    "YAxis": "Value labels down the side, one per grid line. Reserves its own gutter.",
+    "Tooltip": "The touch target, the nearest-bubble selection it drives, and the readout that follows it.",
+    "Legend": "A swatch and a name per bubble, for circles too small to carry their own labels."
+  },
+  "examples": [
+    {
+      "title": "Three quantities on one chart",
+      "description": "Two of them are the axes and the third is the area. Say what the area means in the header — a reader who is not told has no way to work it out from the picture.",
+      "code": "<Frame className=\"w-full\">\n  <Frame.Header>\n    <Frame.Title>Performance vs efficiency</Frame.Title>\n    <Frame.Action>Drag to inspect</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <BubbleChart\n      data={TEAMS}\n      xDataKey=\"efficiency\"\n      yDataKey=\"performance\"\n      sizeKey=\"people\"\n      labelKey=\"team\"\n    >\n      <BubbleChart.Header value=\"8 teams\" caption=\"Circle area is team size\" />\n      <BubbleChart.Grid />\n      <BubbleChart.Bubbles />\n      <BubbleChart.Labels />\n      <BubbleChart.XAxis />\n      <BubbleChart.YAxis />\n      <BubbleChart.Tooltip />\n    </BubbleChart>\n  </Frame.Panel>\n</Frame>"
+    },
+    {
+      "title": "Named beside, not inside",
+      "description": "Smaller circles cannot hold their names. Use `BubbleChart.Legend` instead of `BubbleChart.Labels` — not beside it, since the same names twice is the legend telling the reader what the plot already says.",
+      "code": "<BubbleChart\n  data={TEAMS}\n  xDataKey=\"efficiency\"\n  yDataKey=\"performance\"\n  sizeKey=\"people\"\n  labelKey=\"team\"\n  sizeRange={[8, 22]}\n>\n  <BubbleChart.Grid rows={2} columns={2} />\n  <BubbleChart.Bubbles opacity={0.7} />\n  <BubbleChart.Legend />\n  <BubbleChart.XAxis />\n  <BubbleChart.YAxis />\n  <BubbleChart.Tooltip />\n</BubbleChart>"
+    },
+    {
+      "title": "A readout outside the chart",
+      "description": "`onActivePointChange` hands back the whole bubble — its label, both coordinates and the value behind its area — when the selection changes, so a header or a panel elsewhere on the screen can follow the finger.",
+      "code": "const [active, setActive] = useState(null);\n\nreturn (\n  <BubbleChart\n    data={TEAMS}\n    xDataKey=\"efficiency\"\n    yDataKey=\"performance\"\n    sizeKey=\"people\"\n    labelKey=\"team\"\n    onActivePointChange={setActive}\n  >\n    <BubbleChart.Header\n      value={active ? `Team ${active.label}` : '8 teams'}\n      caption={active ? `${active.size} people` : 'Circle area is team size'}\n    />\n    <BubbleChart.Grid />\n    <BubbleChart.Bubbles />\n    <BubbleChart.Labels />\n    <BubbleChart.Tooltip />\n  </BubbleChart>\n);"
+    },
+    {
+      "title": "Loading",
+      "description": "`status=\"loading\"` shows a still field of muted circles. Still on purpose: a shimmer over them would read as the circles moving, and position is the entire message here.",
+      "code": "<BubbleChart\n  data={TEAMS}\n  xDataKey=\"efficiency\"\n  yDataKey=\"performance\"\n  sizeKey=\"people\"\n  labelKey=\"team\"\n  status={status}\n>\n  <BubbleChart.Grid />\n  <BubbleChart.Skeleton />\n  <BubbleChart.Bubbles />\n  <BubbleChart.Labels />\n  <BubbleChart.XAxis />\n  <BubbleChart.YAxis />\n</BubbleChart>"
+    }
+  ],
+  "notes": "### Area, not radius\n\n`sizeKey` maps to a circle's *area*. Doubling a radius quadruples the ink, so a chart that scaled the radius would show a doubled value as four times the size and the reader would believe the picture. `sizeRange` is the smallest and largest radius the scale runs between, and the scale runs over the whole data set so one bubble's size means the same thing as another's.\n\nWithout a `sizeKey` every bubble is drawn at the middle of `sizeRange`, which is a scatter plot with names on it — and an honest one.\n\n### Colour\n\nThe ramp cycles by row. Pass `colorKey` to name a colour per row: either a CSS colour, or a number from 1 to 5 selecting a `--color-chart-*` token. `BubbleChart.Bubbles` also takes a single `color` for every circle, which is what a chart with a legend usually wants.\n\n### Selection\n\nA touch picks the nearest bubble whose own circle — or the `hitRadius` floor, whichever is larger — reaches the finger. Nearest rather than topmost, because where bubbles overlap the one drawn last is not the one being aimed at.\n\n## Accessible data\n\nThe chart exposes one screen-reader summary and one semantic entry per data row; its SVG circles, axes and labels stay decorative. Set `accessibilityLabel` for the summary, `accessibilityLabelForDatum` to phrase a row in your own words, and `onAccessibilityDatumPress` to make each row activatable. Pass `accessible={false}` to drop the semantic layer entirely."
+}

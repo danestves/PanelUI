@@ -3,6 +3,7 @@
   "pages": [
     "area-chart",
     "bar-chart",
+    "bubble-chart",
     "candlestick-chart",
     "funnel-chart",
     "heatmap-chart",
@@ -12,6 +13,7 @@
     "pie-chart",
     "plot",
     "polar-area-chart",
+    "pyramid-chart",
     "radar-chart",
     "ring-chart",
     "scatter-chart",

@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1207,
-    "values": 318,
-    "types": 889,
-    "modules": 147,
-    "components": 120,
+    "exports": 1239,
+    "values": 322,
+    "types": 917,
+    "modules": 149,
+    "components": 122,
     "hooks": 13
   },
   "groups": {
@@ -416,6 +416,77 @@
           },
           {
             "name": "BreadcrumbEllipsisProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/bubble-chart/index.tsx",
+        "slug": "bubble-chart",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "BubbleChart",
+            "kind": "value"
+          },
+          {
+            "name": "useBubbleChart",
+            "kind": "value"
+          },
+          {
+            "name": "BubbleChartProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartHandle",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartHeaderProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartGridProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartBubblesProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartLabelsProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartSkeletonProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartXAxisProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartYAxisProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartTooltipProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartLegendProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartDatum",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartPoint",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartStatus",
             "kind": "type"
           }
         ]
@@ -3184,6 +3255,77 @@
           },
           {
             "name": "ProgressProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/pyramid-chart/index.tsx",
+        "slug": "pyramid-chart",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "PyramidChart",
+            "kind": "value"
+          },
+          {
+            "name": "usePyramidChart",
+            "kind": "value"
+          },
+          {
+            "name": "PyramidChartProps",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartHandle",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartHeaderProps",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartGridProps",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartBarProps",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartSkeletonProps",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartXAxisProps",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartYAxisProps",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartTooltipProps",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartLegendProps",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartDatum",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartStatus",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartSide",
+            "kind": "type"
+          },
+          {
+            "name": "PyramidChartLabelPlacement",
             "kind": "type"
           }
         ]

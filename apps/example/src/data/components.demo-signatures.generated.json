@@ -42,6 +42,10 @@
       "signature": "2e76c3772f46377342b1dca01677a5295a89f7ca0002c7a6b28212ed2814e4fa"
     },
     {
+      "slug": "bubble-chart",
+      "signature": "57d3df988fd3945391dc968520cb229fd70c0fa345472a8e0f0f8efe54d084aa"
+    },
+    {
       "slug": "button",
       "signature": "71c8343b677d601c8d0a6c2ba9ad7eb34f7982866a2468bcd9f27437ece2ab34"
     },
@@ -282,6 +286,10 @@
       "signature": "0fc69a878a5acdf60db03e5035a81c97a16d401bdc5e3fe6fe6e9876e6cb66ac"
     },
     {
+      "slug": "pyramid-chart",
+      "signature": "20be378ac0acca148e4b0d8a014f85b59820c44ea3773670f96ef8ed31fc2cf7"
+    },
+    {
       "slug": "qr-code",
       "signature": "4091abe544947de3308378e6208fb682ad5a58d2f00f864c16f276b2e0b59bbb"
     },
@@ -331,7 +339,7 @@
     },
     {
       "slug": "search-bar",
-      "signature": "4e169e72ec3e3d8151ba19aff73d723b54436a161509348a4d7e8c9d16303fcf"
+      "signature": "25dbe50e7e066add8a353f8ec8b16f27536764cd098ff436062eb41c681e59fa"
     },
     {
       "slug": "section-rail",

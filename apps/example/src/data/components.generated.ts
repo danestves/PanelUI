@@ -11,6 +11,7 @@ export const COMPONENTS = [
   {"slug":"bar-chart","name":"BarChart","summary":"Categories compared by length, grouped or stacked"},
   {"slug":"bottom-sheet","name":"BottomSheet","summary":"Draggable sheet anchored to the bottom"},
   {"slug":"breadcrumb","name":"Breadcrumb","summary":"The trail back up to the current page"},
+  {"slug":"bubble-chart","name":"BubbleChart","summary":"Named circles on two axes, with a third quantity on their area"},
   {"slug":"button","name":"Button","summary":"Pressable action with variants and loading"},
   {"slug":"button-group","name":"ButtonGroup","summary":"Several buttons drawn as one control"},
   {"slug":"calendar","name":"Calendar","summary":"A month of days, for picking one, several, or a range"},
@@ -71,6 +72,7 @@ export const COMPONENTS = [
   {"slug":"post","name":"Post","summary":"A card carrying something somebody said, and what everyone did about it"},
   {"slug":"progress","name":"Progress","summary":"Determinate and indeterminate progress bar"},
   {"slug":"progress-button","name":"ProgressButton","summary":"Press and hold to confirm, with the wait drawn on the button"},
+  {"slug":"pyramid-chart","name":"PyramidChart","summary":"Two series mirrored about a centre, on one shared scale"},
   {"slug":"qr-code","name":"QRCode","summary":"A string a camera can read"},
   {"slug":"questionnaire","name":"Questionnaire","summary":"One question at a time, with progress and a way back"},
   {"slug":"radar-chart","name":"RadarChart","summary":"Several measures of one thing, on one shape"},
@@ -83,7 +85,7 @@ export const COMPONENTS = [
   {"slug":"scroll-canvas","name":"ScrollCanvas","summary":"Image frame whose contents move as you scroll"},
   {"slug":"scroll-fade","name":"ScrollFade","summary":"Fades the edges of a scroll container"},
   {"slug":"scroll-text","name":"ScrollText","summary":"Text that resolves word by word as you scroll"},
-  {"slug":"search-bar","name":"SearchBar","summary":"Search field with a clear button and a Cancel button"},
+  {"slug":"search-bar","name":"SearchBar","summary":"Search field with a clear button, a Cancel button and a panel of results"},
   {"slug":"section-rail","name":"SectionRail","summary":"Floating section navigator for a long screen"},
   {"slug":"select","name":"Select","summary":"Picker shown in a sheet, in place, or floating over the page"},
   {"slug":"selection-mode","name":"SelectionMode","summary":"Pick several rows out of a list, with a count and a bar of actions"},
@@ -125,4 +127,4 @@ export const COMPONENTS = [
 
 export type ComponentMetadata = (typeof COMPONENTS)[number];
 export const COMPONENT_COUNT = COMPONENTS.length;
-export const CHART_COUNT = 14;
+export const CHART_COUNT = 16;

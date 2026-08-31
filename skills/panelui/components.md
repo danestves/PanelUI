@@ -2,7 +2,7 @@
 
 Generated from the documentation — do not edit by hand.
 
-120 component modules. The **Docs** column is the path under
+122 component modules. The **Docs** column is the path under
 `https://panelui.dev/llms.mdx/`, which returns the page as markdown: anatomy, every prop with
 its type, the variants, and worked examples. Fetch it before using a component you have not used
 in this session — the props tables there are read from the library's TypeScript, and anything you
@@ -116,6 +116,7 @@ remember is a guess.
 | --- | --- | --- |
 | `AreaChart` | Filled bands over time, stacked or overlaid. | `charts/area-chart` |
 | `BarChart` | Categories compared by length, grouped or stacked. | `charts/bar-chart` |
+| `BubbleChart` | Named circles on two axes, with a third quantity on their area. | `charts/bubble-chart` |
 | `CandlestickChart` | Open, high, low and close for a period, drawn as one mark. | `charts/candlestick-chart` |
 | `FunnelChart` | Where a population drained away, one step at a time. | `charts/funnel-chart` |
 | `HeatmapChart` | Contribution grid with a themed colour ramp and a readout. | `charts/heatmap-chart` |
@@ -125,6 +126,7 @@ remember is a guess.
 | `PieChart` | One whole, divided between its parts. | `charts/pie-chart` |
 | `Plot` *(alpha)* | A chart you assemble out of its marks. | `charts/plot` |
 | `PolarAreaChart` | Several readings on one scale, compared as wedges. | `charts/polar-area-chart` |
+| `PyramidChart` | Two series mirrored about a centre, on one shared scale. | `charts/pyramid-chart` |
 | `RadarChart` | Several measures of one thing, drawn as one shape. | `charts/radar-chart` |
 | `RingChart` | Concentric arcs, each measured against its own target. | `charts/ring-chart` |
 | `ScatterChart` | Two quantities against each other, to show how they relate. | `charts/scatter-chart` |

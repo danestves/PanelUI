@@ -1,0 +1,42 @@
+{
+  "slug": "pyramid-chart",
+  "intro": "Two series drawn as mirrored bars either side of a centre line, one row per category.\n\nBoth wings are measured on the same scale, derived from the larger of the two series. That is the whole point of the shape: a bar twice as long as the one facing it means twice as much. Colours come from the `--color-chart-1` … `--color-chart-5` tokens.\n\nFor two series compared side by side rather than back to back, use [BarChart](/docs/charts/bar-chart).",
+  "usage": "<PyramidChart data={penguins} xDataKey=\"species\">\n  <PyramidChart.Grid />\n  <PyramidChart.Bar dataKey=\"male\" side=\"start\" />\n  <PyramidChart.Bar dataKey=\"female\" side=\"end\" colorIndex={5} />\n  <PyramidChart.XAxis />\n  <PyramidChart.YAxis />\n  <PyramidChart.Tooltip />\n</PyramidChart>",
+  "extraImports": [
+    "Frame",
+    "Text"
+  ],
+  "anatomy": "<PyramidChart>\n  <PyramidChart.Grid />                        {/* mirrored lines, and the centre */}\n  <PyramidChart.Bar dataKey=\"…\" side=\"start\" /> {/* the left wing */}\n  <PyramidChart.Bar dataKey=\"…\" side=\"end\" />   {/* the right one */}\n  <PyramidChart.Skeleton />                    {/* while status=\"loading\" */}\n  <PyramidChart.XAxis />                       {/* values, mirrored around zero */}\n  <PyramidChart.YAxis />                       {/* the category names */}\n  <PyramidChart.Legend />\n  <PyramidChart.Tooltip />                     {/* the drag, and the readout */}\n</PyramidChart>",
+  "parts": {
+    "Grid": "Mirrored reference lines, plus the solid line down the middle both wings are measured from.",
+    "Bar": "One wing. `side` decides which, and the default colour differs per side so two bars declared with nothing but a key and a side are already told apart.",
+    "Skeleton": "Equal stubs either side of the centre, shown while `status=\"loading\"`.",
+    "XAxis": "The value labels along the bottom — the same magnitudes twice, either side of a zero in the middle.",
+    "YAxis": "The category names, one per row. Reserves its own gutter, at the start or between the wings depending on `labelPlacement`.",
+    "Tooltip": "The drag over the plot, the row it highlights, and the readout that follows it down.",
+    "Legend": "A swatch and a name per series."
+  },
+  "examples": [
+    {
+      "title": "Two wings on one scale",
+      "description": "`side` puts a series on the left or the right. The scale is shared, so the two halves can be read against each other rather than only each against itself.",
+      "code": "<Frame className=\"w-full\">\n  <Frame.Header>\n    <Frame.Title>Penguins observed</Frame.Title>\n    <Frame.Action>Drag to inspect</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <PyramidChart data={PENGUINS} xDataKey=\"species\" aspectRatio={1.4}>\n      <PyramidChart.Header\n        value=\"334\"\n        caption=\"Three species\"\n        labels={{ male: 'Male', female: 'Female' }}\n        legend\n      />\n      <PyramidChart.Grid />\n      <PyramidChart.Bar dataKey=\"male\" side=\"start\" />\n      <PyramidChart.Bar dataKey=\"female\" side=\"end\" colorIndex={5} />\n      <PyramidChart.XAxis />\n      <PyramidChart.YAxis />\n      <PyramidChart.Tooltip />\n    </PyramidChart>\n  </Frame.Panel>\n</Frame>"
+    },
+    {
+      "title": "Names between the wings",
+      "description": "`labelPlacement=\"center\"` moves the category names into a gutter down the middle — the shape a run of age bands is usually drawn in. The gutter is taken off the bars rather than off the edges, so both wings stay the same length as each other.",
+      "code": "<PyramidChart\n  data={POPULATION}\n  xDataKey=\"band\"\n  labelPlacement=\"center\"\n  aspectRatio={1}\n  barGap={0.3}\n>\n  <PyramidChart.Grid columns={2} />\n  <PyramidChart.Bar dataKey=\"men\" side=\"start\" />\n  <PyramidChart.Bar dataKey=\"women\" side=\"end\" colorIndex={5} />\n  <PyramidChart.XAxis />\n  <PyramidChart.YAxis />\n  <PyramidChart.Tooltip />\n</PyramidChart>"
+    },
+    {
+      "title": "A readout that follows the finger",
+      "description": "`onActiveIndexChange` fires when the row under the finger changes, not on every frame. The header's value is passed in rather than derived, so one header can show a total when nothing is pressed and a row's figures when something is.",
+      "code": "const [active, setActive] = useState(null);\n\nreturn (\n  <PyramidChart\n    data={PENGUINS}\n    xDataKey=\"species\"\n    onActiveIndexChange={(_index, datum) => setActive(datum)}\n  >\n    <PyramidChart.Header\n      value={String(active ? active.male + active.female : 334)}\n      caption={active ? `${active.species} · both wings` : 'Three species'}\n      legend\n    />\n    <PyramidChart.Grid />\n    <PyramidChart.Bar dataKey=\"male\" side=\"start\" />\n    <PyramidChart.Bar dataKey=\"female\" side=\"end\" colorIndex={5} />\n    <PyramidChart.Tooltip />\n  </PyramidChart>\n);"
+    },
+    {
+      "title": "Loading",
+      "description": "`status=\"loading\"` holds the bars at the centre and grows them out into the real ones when it turns `ready`. The placeholder wings are equal on purpose — unequal ones are a distribution the reader cannot tell from the real one until it changes under them.",
+      "code": "<PyramidChart data={PENGUINS} xDataKey=\"species\" status={status}>\n  <PyramidChart.Grid />\n  <PyramidChart.Skeleton />\n  <PyramidChart.Bar dataKey=\"male\" side=\"start\" />\n  <PyramidChart.Bar dataKey=\"female\" side=\"end\" colorIndex={5} />\n  <PyramidChart.XAxis />\n  <PyramidChart.YAxis />\n</PyramidChart>"
+    }
+  ],
+  "notes": "### One scale, and where it comes from\n\nThe far end of the scale is the largest value in either series, with a little headroom. The near end is zero and cannot be moved — a wing cropped at its base is a length that lies. `maxValue` fixes the far end when several charts have to be comparable with each other.\n\nWhich side a series is on comes from `side`, not from the sign of its numbers, so a value is a distance outward from the centre. A negative one has no direction left to grow in and is drawn as nothing; it still appears in the readout, so a data error shows up as a gap rather than as a bar pointing the wrong way.\n\n### Drawing\n\nEach wing is one animated path split in two — the row under the finger, and everything else — so a chart of thirty rows costs two animated props a frame rather than thirty. The corners are rounded on the outward end only, which is why they are drawn as a path rather than with `rx`.\n\nThe axis labels are React Native text over the plot rather than SVG text, so they follow the theme's font and the platform's text scaling.\n\n## Accessible data\n\nThe chart exposes one screen-reader summary and one semantic entry per data row; its SVG paths, axes and markers stay decorative. Set `accessibilityLabel` for the summary, `accessibilityLabelForDatum` to phrase a row in your own words, and `onAccessibilityDatumPress` to make each row activatable. Pass `accessible={false}` to drop the semantic layer entirely."
+}
