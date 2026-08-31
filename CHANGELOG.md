@@ -9,6 +9,62 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.87.0] — 2026-08-31
+
+### Added
+
+- **`PyramidChart`** — two series mirrored about a centre line, one row per category. Both wings
+  are measured on one scale derived from the larger of the two, which is the whole point of the
+  shape: a bar twice as long as the one facing it means twice as much. Which side a series grows
+  into comes from `side` rather than from the sign of its numbers, so a value is a distance
+  outward from the centre. `labelPlacement` puts the category names over each pair of bars, in a
+  gutter between the wings, or down the left.
+- **`BubbleChart`** — one labelled circle per row on two measured axes, with a third quantity on
+  each circle's area and its name written inside it. This is the categorical case: a handful of
+  named things a reader wants to find one of. `ScatterChart.Points` keeps the series case through
+  `sizeKey`, and the two pages point at each other.
+- **`SearchBar` draws its results.** Give it children and it renders a panel welded to the field:
+  `SearchBar.Section` for a labelled run of rows, `SearchBar.Item` with `leading` and `trailing`
+  slots, and `SearchBar.Status` for the line a panel shows instead of rows — nothing typed, a
+  search running, or nothing found. `avoidKeyboard` lifts the field, the Cancel button and the
+  panel together while the field is focused, and `panelPlacement` opens the panel upward by
+  default, into the space that is actually free. Touches inside it keep the keyboard up, so the
+  first tap on a row is a row press rather than a dismissal.
+- **`bubbleRadius`** joins the chart utilities, mapping a value to a circle's *area* rather than
+  its radius — doubling a radius quadruples the ink, and the reader believes it.
+
+### Changed
+
+- **The agent skill carries the API now.** It shipped a list of component names and an instruction
+  to fetch the documentation over HTTP: a round trip per component for an agent that has a network
+  tool, and nothing at all for one that does not. It now generates a file per component from the
+  library's own TypeScript — anatomy, every prop with its type, default and documentation, the
+  variants, the parts and a worked example — plus three new pages: `setup.md` (installing it, and
+  every reason `className` silently does nothing), `hooks.md` and `recipes.md`. It is installable
+  in Claude Code as a plugin, which brings the MCP server with it, and stamps the release its props
+  were read from.
+
+### Fixed
+
+- **Charts round their axes out to numbers a reader can divide in their head.** Padding the data's
+  own span by a fraction ended an axis at 52.7, which is true and which nobody was looking for.
+- **A bubble at the edge of the plot is no longer cropped in half.** A circle is drawn about its
+  centre, so the plot holds back the largest radius at every edge — and the largest bubble is the
+  one carrying the largest value.
+- **A bubble's readout clears the circle it names.** Lifted by a constant it put its own top above
+  the bubble's centre, so its body came back down over the circle and sat under the finger that
+  summoned it.
+- **A pyramid's outermost value labels stay inside the chart.** The last tick of each wing sits on
+  the plot's own edge, and a label centred there hung half its width off the side.
+
+### Docs
+
+- Every component page for `SearchBar`, `PyramidChart` and `BubbleChart`, with the anatomy, the
+  parts and worked examples for each; the example app gains a full-page demo for the search panel
+  and three versions of each chart.
+- The Skills page documents the plugin, and the README has a section on coding agents — it had
+  never mentioned the skill at all.
+
 ## [0.86.1] — 2026-08-30
 
 **No library changes.** `panelui-native` is identical to 0.86.0 — nothing under `src` moved. The
