@@ -647,7 +647,7 @@ function PyramidBasicVersion() {
   );
 }
 
-/** More rows, and the shape a population is usually drawn in. */
+/** More rows, with the names over each pair rather than between them. */
 function PyramidCentredVersion() {
   return (
     <View className="flex-1 justify-center p-4">
@@ -661,7 +661,7 @@ function PyramidCentredVersion() {
             <PyramidChart.Header
               className={CHART_HEADER}
               value="65.7m"
-              caption="Six bands, read outward from the middle"
+              caption="Six bands, read outward from the centre"
               labels={{ men: 'Men', women: 'Women' }}
               legend
             />
@@ -746,7 +746,8 @@ function BubbleBasicVersion() {
             yDataKey="performance"
             sizeKey="people"
             labelKey="team"
-            aspectRatio={1}
+            sizeRange={[12, 26]}
+            aspectRatio={1.4}
             onActivePointChange={(point) =>
               setActive(point ? { label: point.label, size: point.size } : null)
             }
@@ -790,7 +791,7 @@ function BubbleLegendVersion() {
             sizeKey="people"
             labelKey="team"
             sizeRange={[8, 22]}
-            aspectRatio={1}
+            aspectRatio={1.4}
           >
             <BubbleChart.Header
               className={CHART_HEADER}
@@ -834,8 +835,9 @@ function BubbleLoadingVersion() {
             yDataKey="performance"
             sizeKey="people"
             labelKey="team"
+            sizeRange={[12, 26]}
             status={status}
-            aspectRatio={1}
+            aspectRatio={1.4}
           >
             <BubbleChart.Grid />
             <BubbleChart.Skeleton />

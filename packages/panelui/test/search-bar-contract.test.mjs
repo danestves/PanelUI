@@ -93,13 +93,18 @@ test('the results panel opens away from the keyboard and keeps its taps', async 
 
   // Upward by default: the space under a focused field belongs to the keyboard.
   assert.match(source, /panelPlacement = 'top'/);
-  assert.match(source, /bottom: '100%'/);
 
   // Absolute, so opening the panel never moves the page under the field.
-  assert.match(source, /const PANEL_ABOVE: ViewStyle = \{\s*position: 'absolute'/);
+  assert.match(source, /const CARD_ABOVE: ViewStyle = \{ position: 'absolute', bottom: 0/);
 
-  // Android draws siblings in tree order, so the panel needs both.
-  assert.match(source, /zIndex: 20,\s*elevation: 20,/);
+  // One box around the results and the field, so the card has one outline. Two
+  // would disagree: a field with a panel open is a focused field, and its own
+  // edge is the focus ring rather than the border the panel draws.
+  assert.match(source, /panel: 'overflow-hidden rounded-2xl border border-border/);
+  assert.match(source, /top: \{ field: 'rounded-t-none rounded-b-2xl border-0' \}/);
+
+  // Android draws siblings in tree order, so the field's box needs both.
+  assert.match(source, /const RAISED: ViewStyle = \{ zIndex: 20, elevation: 20 \}/);
 
   // Without this the first tap on a row is spent dismissing the keyboard.
   assert.match(source, /keyboardShouldPersistTaps="handled"/);

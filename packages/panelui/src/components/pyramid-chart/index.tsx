@@ -35,11 +35,14 @@
  *
  * ## Where the category names go
  *
- * `labelPlacement="center"`, the default, puts them in a gutter between the
- * wings — the shape a pyramid is usually drawn in. The gutter is taken off the
- * bars rather than off the edge, so both wings stay the same length as each
- * other. `"start"` puts them down the left instead, for names too long to sit
- * between the wings.
+ * `labelPlacement="above"`, the default, gives each row a line of its own over
+ * its pair of bars. That leaves the two wings meeting in the middle with
+ * nothing standing between them, and puts the name where it is read before the
+ * lengths it belongs to rather than beside them.
+ *
+ * `"center"` puts the names in a gutter between the wings instead — taken off
+ * the bars rather than off the edges, so both wings stay equal — and `"start"`
+ * puts them down the left, for a chart with room to spare on that side.
  *
  * ## Every series is one path
  *
@@ -126,6 +129,12 @@ const AXIS_LABEL_HEIGHT = 16;
  */
 const DOMAIN_STEPS = 4;
 
+/**
+ * Height taken off the top of every band for the name sitting over it. An `xs`
+ * line plus the air that keeps it off the bar it belongs to.
+ */
+const LABEL_ROW = 20;
+
 type Layer = 'svg' | 'overlay' | 'header';
 
 export type PyramidChartStatus = 'loading' | 'ready';
@@ -134,7 +143,7 @@ export type PyramidChartStatus = 'loading' | 'ready';
 export type PyramidChartSide = 'start' | 'end';
 
 /** Where the category names sit. */
-export type PyramidChartLabelPlacement = 'start' | 'center';
+export type PyramidChartLabelPlacement = 'above' | 'center' | 'start';
 
 export type PyramidChartDatum = Record<string, string | number | null | undefined>;
 
@@ -149,8 +158,10 @@ interface PyramidChartContextValue {
   xDataKey: string;
   plot: Plot;
   status: PyramidChartStatus;
-  /** Points held back in the middle for the category names. Zero at the start. */
+  /** Points held back in the middle for the category names. Zero otherwise. */
   gutter: number;
+  /** Points taken off the top of every band for a name sitting over it. */
+  labelInset: number;
   labelPlacement: PyramidChartLabelPlacement;
   barGap: number;
   barWidth: number | undefined;
@@ -222,10 +233,10 @@ export interface PyramidChartProps
    */
   maxValue?: number;
   /**
-   * Where the category names sit. `center` puts them in a gutter between the
-   * wings, which is the shape a pyramid is usually drawn in and keeps the two
-   * wings the same length as each other. `start` puts them down the left, for
-   * names too long to sit in a gutter.
+   * Where the category names sit. `above`, the default, gives each row a line
+   * of its own over its pair of bars, so the two wings meet in the middle with
+   * nothing standing between them. `center` puts the names in a gutter between
+   * the wings instead, and `start` down the left edge.
    */
   labelPlacement?: PyramidChartLabelPlacement;
   /**
@@ -285,7 +296,7 @@ const PyramidChartRoot = forwardRef<PyramidChartHandle, PyramidChartProps>(
       animationDuration = 700,
       domainDuration = 500,
       maxValue,
-      labelPlacement = 'center',
+      labelPlacement = 'above',
       barGap = 0.25,
       barWidth,
       cornerRadius = 4,
@@ -342,11 +353,16 @@ const PyramidChartRoot = forwardRef<PyramidChartHandle, PyramidChartProps>(
       return found;
     }, [children]);
 
-    const centred = labelPlacement === 'center';
-    const gutter = hasYAxis && centred ? CENTRE_GUTTER : 0;
+    /*
+     * Three places a name can go, and each takes its room from somewhere
+     * different: `above` off the top of every band, `center` out of the middle
+     * of the plot, `start` off the left edge.
+     */
+    const gutter = hasYAxis && labelPlacement === 'center' ? CENTRE_GUTTER : 0;
+    const labelInset = hasYAxis && labelPlacement === 'above' ? LABEL_ROW : 0;
     const pad = {
       ...PADDING,
-      left: hasYAxis && !centred ? CATEGORY_GUTTER : PADDING.left,
+      left: hasYAxis && labelPlacement === 'start' ? CATEGORY_GUTTER : PADDING.left,
     };
     const plot: Plot = {
       left: pad.left,
@@ -456,6 +472,7 @@ const PyramidChartRoot = forwardRef<PyramidChartHandle, PyramidChartProps>(
         plot,
         status,
         gutter,
+        labelInset,
         labelPlacement,
         barGap,
         barWidth,
@@ -483,6 +500,7 @@ const PyramidChartRoot = forwardRef<PyramidChartHandle, PyramidChartProps>(
         plot.top,
         status,
         gutter,
+        labelInset,
         labelPlacement,
         barGap,
         barWidth,
@@ -678,6 +696,7 @@ function PyramidChartBar({
     plot,
     status,
     gutter,
+    labelInset,
     barGap,
     barWidth,
     cornerRadius: chartRadius,
@@ -719,7 +738,9 @@ function PyramidChartBar({
 
     const { innerStart, innerEnd, wing } = geometry(plot, gutter);
     const band = plot.height / total;
-    const thickness = Math.min(barWidth ?? band * (1 - barGap), band * (1 - barGap));
+    // What is left of a band once the name over it has taken its line.
+    const usable = Math.max(band - labelInset, 0);
+    const thickness = Math.min(barWidth ?? usable * (1 - barGap), usable * (1 - barGap));
 
     const max = domainMax.value || 1;
     const grow = reveal.value;
@@ -748,7 +769,7 @@ function PyramidChartBar({
       if (minBarLength > 0 && shown > 0 && length < minBarLength) length = minBarLength;
       if (length <= 0) continue;
 
-      const lead = plot.top + i * band + (band - thickness) / 2;
+      const lead = plot.top + i * band + labelInset + (usable - thickness) / 2;
       d +=
         side === 'start'
           ? barPath(innerStart - length, lead, length, thickness, radius, towards)
@@ -801,7 +822,7 @@ export interface PyramidChartSkeletonProps {
  * so these say only how many rows there will be and where the centre is.
  */
 function PyramidChartSkeleton({ rows, duration = 1400, color }: PyramidChartSkeletonProps) {
-  const { plot, status, gutter, data, barGap, barWidth, cornerRadius } =
+  const { plot, status, gutter, labelInset, data, barGap, barWidth, cornerRadius } =
     useChart('PyramidChart.Skeleton');
   const token = useCSSVariable('--color-skeleton');
   const base = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
@@ -835,17 +856,18 @@ function PyramidChartSkeleton({ rows, duration = 1400, color }: PyramidChartSkel
     if (plot.width <= 0 || plot.height <= 0) return '';
     const { innerStart, innerEnd, wing } = geometry(plot, gutter);
     const band = plot.height / total;
-    const thickness = Math.min(barWidth ?? band * (1 - barGap), band * (1 - barGap));
+    const usable = Math.max(band - labelInset, 0);
+    const thickness = Math.min(barWidth ?? usable * (1 - barGap), usable * (1 - barGap));
     const length = wing * SKELETON_LENGTH;
 
     let path = '';
     for (let i = 0; i < total; i += 1) {
-      const lead = plot.top + i * band + (band - thickness) / 2;
+      const lead = plot.top + i * band + labelInset + (usable - thickness) / 2;
       path += barPath(innerStart - length, lead, length, thickness, cornerRadius, 'left');
       path += barPath(innerEnd, lead, length, thickness, cornerRadius, 'right');
     }
     return path;
-  }, [plot, gutter, total, barGap, barWidth, cornerRadius]);
+  }, [plot, gutter, labelInset, total, barGap, barWidth, cornerRadius]);
 
   if (!loading || !d) return null;
 
@@ -953,16 +975,54 @@ export interface PyramidChartYAxisProps {
 /**
  * The category names, one per row.
  *
- * One box per band rather than a spaced column: a row owns a *band*, so names
- * spread evenly would be half a band out at the top and bottom.
+ * `above` puts each name on its own line over the pair of bars it belongs to,
+ * which leaves the two wings meeting in the middle — the name is read first and
+ * the bars are then read outward from a centre nothing is standing in.
+ *
+ * One box per band rather than a spaced column, in every placement: a row owns
+ * a *band*, so names spread evenly would be half a band out at the top and
+ * bottom.
  */
 function PyramidChartYAxis({ format, className }: PyramidChartYAxisProps) {
-  const { data, xDataKey, plot, gutter, labelPlacement } = useChart('PyramidChart.YAxis');
+  const { data, xDataKey, plot, gutter, labelInset, labelPlacement } =
+    useChart('PyramidChart.YAxis');
   const { centre } = geometry(plot, gutter);
-  const centred = labelPlacement === 'center';
 
   if (!data.length) return null;
 
+  const label = (datum: PyramidChartDatum, index: number) =>
+    format ? format(datum, index) : String(datum[xDataKey] ?? '');
+
+  if (labelPlacement === 'above') {
+    const band = plot.height / data.length;
+    return (
+      <View
+        pointerEvents="none"
+        style={{ position: 'absolute', inset: 0 }}
+        className={cn(className)}
+      >
+        {data.map((datum, index) => (
+          <View
+            key={index}
+            style={{
+              position: 'absolute',
+              left: plot.left,
+              width: plot.width,
+              top: plot.top + index * band,
+              height: labelInset,
+            }}
+            className="justify-center"
+          >
+            <Text size="xs" muted numberOfLines={1} style={{ textAlign: 'center' }}>
+              {label(datum, index)}
+            </Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  const centred = labelPlacement === 'center';
   return (
     <View
       pointerEvents="none"
@@ -978,7 +1038,7 @@ function PyramidChartYAxis({ format, className }: PyramidChartYAxisProps) {
       {data.map((datum, index) => (
         <View key={index} className="flex-1 justify-center">
           <Text size="xs" muted numberOfLines={1}>
-            {format ? format(datum, index) : String(datum[xDataKey] ?? '')}
+            {label(datum, index)}
           </Text>
         </View>
       ))}

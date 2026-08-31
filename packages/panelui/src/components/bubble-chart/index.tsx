@@ -141,8 +141,13 @@ const BUBBLE_LABEL_HEIGHT = 16;
  * Smallest radius a bubble may have and still be given its label. Below this
  * the name is wider than the circle and reads as text lying on the plot rather
  * than as the bubble's own.
+ *
+ * Ten points, which is a twenty-point circle: enough for the initial or the
+ * short code a bubble chart's labels usually are. Set higher and the smallest
+ * bubble in an ordinary set silently loses its name, which reads as a bug
+ * rather than as a decision.
  */
-const LABEL_MIN_RADIUS = 12;
+const LABEL_MIN_RADIUS = 10;
 
 /** Floor on the touch target, for a chart whose smallest bubbles are tiny. */
 const HIT_RADIUS = 22;
@@ -262,7 +267,10 @@ export interface BubbleChartProps
    * to 5 naming a `--color-chart-*` token. Without it the ramp cycles by row.
    */
   colorKey?: string;
-  /** Smallest and largest radius `sizeKey` maps onto, in points. */
+  /**
+   * Smallest and largest radius `sizeKey` maps onto, in points. The largest is
+   * also what the plot holds back at every edge, so raising it costs room.
+   */
   sizeRange?: [number, number];
   /**
    * `loading` shows a still field of muted circles and dissolves it as the real
@@ -321,7 +329,7 @@ const BubbleChartRoot = forwardRef<BubbleChartHandle, BubbleChartProps>(
       sizeKey,
       labelKey,
       colorKey,
-      sizeRange = [14, 34],
+      sizeRange = [10, 28],
       status = 'ready',
       aspectRatio = 1,
       animationDuration = 800,

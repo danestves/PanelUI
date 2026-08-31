@@ -185,7 +185,7 @@ return (
 | `sizeKey` | `string` | — | Key holding the third quantity, mapped to each bubble's *area*. Without it every bubble is drawn at the middle of `sizeRange` and the chart is a scatter plot with names on it. |
 | `labelKey` | `string` | — | Key holding the name written inside the circle. |
 | `colorKey` | `string` | — | Key holding a colour for the row — either a CSS colour or a number from 1 to 5 naming a `--color-chart-*` token. Without it the ramp cycles by row. |
-| `sizeRange` | `[number, number]` | — | Smallest and largest radius `sizeKey` maps onto, in points. |
+| `sizeRange` | `[number, number]` | — | Smallest and largest radius `sizeKey` maps onto, in points. The largest is also what the plot holds back at every edge, so raising it costs room. |
 | `status` | `BubbleChartStatus` | `'ready'` | `loading` shows a still field of muted circles and dissolves it as the real bubbles grow in. One component throughout, rather than a spinner swapped for a chart — swapping loses the transition. Add a `BubbleChart.Skeleton` for something to stand in the plot meanwhile. |
 | `aspectRatio` | `number` | `1` | Width ÷ height. `1` is the square shape a bubble field reads best in. |
 | `animationDuration` | `number` | `800` | Milliseconds for the bubbles to grow in on mount. |
@@ -221,7 +221,7 @@ return (
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `minRadius` | `number` | `12` | Smallest radius a bubble may have and still be given its label. Below it the name is wider than the circle it names. |
+| `minRadius` | `number` | `10` | Smallest radius a bubble may have and still be given its label. Below it the name is wider than the circle it names. |
 | `format` | `(point: BubbleChartPoint) => string` | — | Turn a bubble into its label. Defaults to the value at `labelKey`. |
 | `className` | `string` | — |  |
 
@@ -274,7 +274,7 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 
 ### Area, not radius
 
-`sizeKey` maps to a circle's *area*. Doubling a radius quadruples the ink, so a chart that scaled the radius would show a doubled value as four times the size and the reader would believe the picture. `sizeRange` is the smallest and largest radius the scale runs between, and the scale runs over the whole data set so one bubble's size means the same thing as another's.
+`sizeKey` maps to a circle's *area*. Doubling a radius quadruples the ink, so a chart that scaled the radius would show a doubled value as four times the size and the reader would believe the picture. `sizeRange` is the smallest and largest radius the scale runs between, and the scale runs over the whole data set so one bubble's size means the same thing as another's. Its upper end is also what the plot holds back at every edge — a circle is drawn about its centre, so without that the bubble carrying the largest value is the one cropped in half.
 
 Without a `sizeKey` every bubble is drawn at the middle of `sizeRange`, which is a scatter plot with names on it — and an honest one.
 

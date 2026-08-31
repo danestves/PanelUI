@@ -85,6 +85,7 @@ import {
 } from 'react';
 import {
   ScrollView,
+  StyleSheet,
   View,
   useWindowDimensions,
   type LayoutChangeEvent,
@@ -142,30 +143,20 @@ const PANEL_EDGE_GAP = 24;
 const PANEL_MIN_HEIGHT = 160;
 
 /*
- * The panel's geometry, off the class list because two of these five have no
- * utility and the other three read better beside them.
- *
- * `zIndex` *and* `elevation`: Android draws siblings in tree order and takes
- * its stacking from elevation, so a panel that overlaps the content above the
- * field would otherwise be painted under it.
+ * The card is pinned to the edge of the field's own slot and grows away from
+ * it, so the field's box is the one thing that never moves.
  */
-const PANEL_ABOVE: ViewStyle = {
-  position: 'absolute',
-  bottom: '100%',
-  left: 0,
-  right: 0,
-  zIndex: 20,
-  elevation: 20,
-};
+const CARD_ABOVE: ViewStyle = { position: 'absolute', bottom: 0, left: 0, right: 0 };
+const CARD_BELOW: ViewStyle = { position: 'absolute', top: 0, left: 0, right: 0 };
 
-const PANEL_BELOW: ViewStyle = {
-  position: 'absolute',
-  top: '100%',
-  left: 0,
-  right: 0,
-  zIndex: 20,
-  elevation: 20,
-};
+/*
+ * `zIndex` *and* `elevation`, on the field's own box rather than on the card:
+ * Android draws siblings in tree order and takes its stacking from elevation,
+ * so a card overlapping the content above the field would otherwise be painted
+ * under it — and putting it here keeps the field painting over the card, which
+ * is what lets the two be one surface.
+ */
+const RAISED: ViewStyle = { zIndex: 20, elevation: 20 };
 
 const searchBarVariants = tv({
   slots: {
@@ -178,15 +169,22 @@ const searchBarVariants = tv({
     anchor: 'relative',
     field: '',
     /*
-     * The panel and the field are one card: the panel's own bottom edge is the
-     * hairline between them, so the field drops its top border rather than
-     * drawing a second line a pixel below it.
+     * One card around the results *and* the field, with the field drawn over
+     * the space kept for it at the bottom.
+     *
+     * It has to be one box because the outline is one outline. Drawn as two —
+     * a bordered panel above a bordered field — the field's edge is the focus
+     * ring, since a field with a panel open is a field being typed into, and
+     * the card ends up with a brighter box welded to a dimmer one.
      *
      * `bg-popover`, not `bg-card`: this floats over the page rather than
      * sitting in it, and a card is one step from the background — close enough
-     * that in dark mode the whole panel dissolves into the screen behind it.
+     * that in dark mode the whole thing dissolves into the screen behind it.
      */
-    panel: 'overflow-hidden border border-border bg-popover p-1.5 shadow-lg',
+    panel: 'overflow-hidden rounded-2xl border border-border bg-popover shadow-lg',
+    panelList: 'p-1.5',
+    /** The hairline between the results and the field. */
+    panelDivider: 'w-full bg-border',
     sectionLabel: 'px-3 pb-1 pt-2 text-sm text-muted-foreground',
     item: 'flex-row items-center gap-3 rounded-lg px-3 py-2.5',
     itemLabel: 'flex-1 text-base text-foreground',
@@ -218,14 +216,14 @@ const searchBarVariants = tv({
       pill: { field: 'rounded-full' },
     },
     /**
-     * Which edge of the field the panel is welded to. The corners on that edge
-     * go square and its border comes off, so the two read as one card rather
-     * than as a list resting on a field.
+     * Which edge of the field the card grows out of. The field's corners on
+     * that edge go square and its border comes off entirely — the card around
+     * both of them is what draws the edge.
      */
     attached: {
       none: {},
-      top: { field: 'rounded-t-none rounded-b-2xl border-t-0', panel: 'rounded-t-2xl' },
-      bottom: { field: 'rounded-b-none rounded-t-2xl border-b-0', panel: 'rounded-b-2xl' },
+      top: { field: 'rounded-t-none rounded-b-2xl border-0' },
+      bottom: { field: 'rounded-b-none rounded-t-2xl border-0' },
     },
     selected: {
       true: { item: 'bg-accent' },
@@ -656,35 +654,57 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
       return <View className={containerClassName}>{field}</View>;
     }
 
+    /*
+     * The results, the hairline and the room the field occupies, in the order
+     * they are stacked. The field itself is drawn over that last piece rather
+     * than inside the card: it has to keep its own place in the layout, and a
+     * text field that moved into an absolutely positioned box on focus would
+     * remount and lose the keyboard it just opened.
+     */
+    const list = (
+      <ScrollView
+        key="list"
+        style={{ maxHeight: resolvedMaxHeight }}
+        /*
+         * Without this the first tap on a row is spent dismissing the keyboard
+         * and the press never lands, which reads as a list that ignores every
+         * other touch.
+         */
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        className={slots.panelList()}
+      >
+        {children}
+      </ScrollView>
+    );
+    const divider = (
+      <View
+        key="divider"
+        style={{ height: StyleSheet.hairlineWidth }}
+        className={slots.panelDivider()}
+      />
+    );
+    const fieldSlot = <View key="slot" style={{ height: anchorBox?.height ?? 0 }} />;
+
     const anchor = (
       <View
         ref={anchorRef}
-        onLayout={panelOpen ? measureAnchor : undefined}
+        onLayout={measureAnchor}
+        style={panelOpen ? RAISED : undefined}
         className={slots.anchor({ className: cancel === 'never' ? 'w-full' : 'flex-1' })}
       >
         {panelOpen ? (
           <Animated.View
             entering={FadeIn.duration(PANEL_IN)}
             exiting={FadeOut.duration(PANEL_OUT)}
-            style={[
-              panelPlacement === 'top' ? PANEL_ABOVE : PANEL_BELOW,
-              { maxHeight: resolvedMaxHeight },
-            ]}
+            style={panelPlacement === 'top' ? CARD_ABOVE : CARD_BELOW}
             className={slots.panel()}
           >
-            <ScrollView
-              /*
-               * Without this the first tap on a row is spent dismissing the
-               * keyboard and the press never lands, which reads as a list that
-               * ignores every other touch.
-               */
-              keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="none"
-              showsVerticalScrollIndicator={false}
-              bounces={false}
-            >
-              {children}
-            </ScrollView>
+            {panelPlacement === 'top'
+              ? [list, divider, fieldSlot]
+              : [fieldSlot, divider, list]}
           </Animated.View>
         ) : null}
         {field}

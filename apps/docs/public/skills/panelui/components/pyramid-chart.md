@@ -30,7 +30,7 @@ import { PyramidChart } from 'panelui-native';
 - `PyramidChart.Bar` — One wing. `side` decides which, and the default colour differs per side so two bars declared with nothing but a key and a side are already told apart.
 - `PyramidChart.Skeleton` — Equal stubs either side of the centre, shown while `status="loading"`.
 - `PyramidChart.XAxis` — The value labels along the bottom — the same magnitudes twice, either side of a zero in the middle.
-- `PyramidChart.YAxis` — The category names, one per row. Reserves its own gutter — between the wings by default, or down the left with `labelPlacement="start"`.
+- `PyramidChart.YAxis` — The category names, one per row. By default each sits on its own line over the pair of bars it belongs to; `labelPlacement` moves them into a gutter between the wings or down the left instead.
 - `PyramidChart.Tooltip` — The drag over the plot, the row it highlights, and the readout that follows it down.
 - `PyramidChart.Legend` — A swatch and a name per series.
 
@@ -50,7 +50,7 @@ Extends `ViewProps, ChartAccessibilityProps<PyramidChartDatum>`.
 | `animationDuration` | `number` | `700` | Milliseconds for the bars to grow out on mount. |
 | `domainDuration` | `number` | `500` | Milliseconds for the scale to settle after the data changes. |
 | `maxValue` | `number` | — | Fix the far end of the shared scale instead of deriving it. The near end is zero either way — a pyramid measures outward from its centre. |
-| `labelPlacement` | `PyramidChartLabelPlacement` | `center` | Where the category names sit. `center` puts them in a gutter between the wings, which is the shape a pyramid is usually drawn in and keeps the two wings the same length as each other. `start` puts them down the left, for names too long to sit in a gutter. |
+| `labelPlacement` | `PyramidChartLabelPlacement` | `above` | Where the category names sit. `above`, the default, gives each row a line of its own over its pair of bars, so the two wings meet in the middle with nothing standing between them. `center` puts the names in a gutter between the wings instead, and `start` down the left edge. |
 | `barGap` | `number` | `0.25` | Fraction of each band left empty, `0` to `1`. A fraction rather than a pixel gap so the proportions hold at any height. |
 | `barWidth` | `number` | — | Fixed bar thickness in points. Derived from the band when omitted. |
 | `cornerRadius` | `number` | `4` | Corner radius on the outward end of a bar. |
@@ -172,7 +172,7 @@ Which side a series is on comes from `side`, not from the sign of its numbers, s
 
 ### Where the names go
 
-`labelPlacement="center"`, the default, puts them in a gutter between the wings. The gutter is taken off the bars rather than off the edges, so both wings stay the same length as each other. `"start"` puts them down the left instead, for names too long to sit in the middle.
+`labelPlacement="above"`, the default, gives each row a line of its own over its pair of bars, so the two wings meet in the middle with nothing standing between them and the name is read before the lengths it belongs to. `"center"` puts the names in a gutter between the wings instead — taken off the bars rather than off the edges, so both wings stay equal — and `"start"` puts them down the left.
 
 The value labels along the bottom are held inside the chart: the outermost tick of each wing sits on the plot's own edge, and a label centred there would hang half its width off the side.
 
