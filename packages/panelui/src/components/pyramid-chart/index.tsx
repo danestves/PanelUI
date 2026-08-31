@@ -85,6 +85,7 @@ import {
   barPath,
   columnValues,
   compactNumber,
+  niceDomain,
   useSeriesColor,
   type Plot,
   type SeriesColorIndex,
@@ -118,6 +119,12 @@ const AXIS_LABEL_WIDTH = 56;
 
 /** Line height of an `xs` label, for centring one on the tick it names. */
 const AXIS_LABEL_HEIGHT = 16;
+
+/**
+ * Steps the value axis is rounded out to. Four rather than the two labels each
+ * wing draws, so the halfway label lands on a round number too.
+ */
+const DOMAIN_STEPS = 4;
 
 type Layer = 'svg' | 'overlay' | 'header';
 
@@ -365,9 +372,17 @@ const PyramidChartRoot = forwardRef<PyramidChartHandle, PyramidChartProps>(
           if (value > max) max = value;
         }
       }
-      // Headroom at the outward end only. The centre is left exactly where it
-      // is: padding it would lift the bars off their own baseline.
-      return max === 0 ? 1 : max * 1.1;
+      /*
+       * Rounded out to a step a reader can divide in their head, rather than
+       * padded by a fraction. A tenth added to 73 ends the axis at 80.3 and
+       * labels the wings 40.2 and 80.3 — numbers that are true and that nobody
+       * was looking for. The centre is left exactly where it is: rounding it
+       * would lift the bars off their own baseline.
+       *
+       * Four steps, not two, so the halfway label the axis draws by default is
+       * a round number as well as the end one.
+       */
+      return max === 0 ? 1 : niceDomain(0, max, DOMAIN_STEPS)[1];
     }, [data, maxValue, seriesKeys]);
 
     const loading = status === 'loading';

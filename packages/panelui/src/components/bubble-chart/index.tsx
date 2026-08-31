@@ -78,6 +78,7 @@ import { Text } from '../../primitives/text';
 import {
   bubbleRadius,
   compactNumber,
+  niceDomain,
   useSeriesColor,
   xAt,
   yOf,
@@ -148,6 +149,9 @@ const HIT_RADIUS = 22;
 
 /** How many colours the ramp cycles through. */
 const PALETTE_SIZE = 5;
+
+/** Steps each axis is rounded out to. Matches the labels an axis draws. */
+const AXIS_STEPS = 2;
 
 type Layer = 'svg' | 'overlay' | 'header' | 'footer';
 
@@ -220,15 +224,19 @@ export function useBubbleChart() {
 }
 
 /**
- * An extent with a little air around it, and a usable one for the degenerate
+ * An extent widened out to round numbers, and a usable one for the degenerate
  * cases — no data at all, or every reading identical. A domain of zero width
  * divides by zero and puts every bubble on the same edge.
+ *
+ * Rounded rather than padded by a fraction: a fraction of the data's own span
+ * ends the axis at 52.7, which is true and which nobody was looking for. Two
+ * steps, matching the labels each axis draws by default, so the middle one is
+ * round as well as the ends.
  */
 function padExtent(min: number, max: number): [number, number] {
   if (min === Infinity) return [0, 1];
   if (min === max) return [min - 1, max + 1];
-  const pad = (max - min) * 0.08;
-  return [min - pad, max + pad];
+  return niceDomain(min, max, AXIS_STEPS);
 }
 
 export interface BubbleChartProps
@@ -367,7 +375,20 @@ const BubbleChartRoot = forwardRef<BubbleChartHandle, BubbleChartProps>(
       return found;
     }, [children]);
 
-    const pad = { ...PADDING, left: hasYAxis ? Y_AXIS_WIDTH : PADDING.left };
+    /*
+     * A circle is drawn about its centre, so every edge of the plot has to hold
+     * back the largest radius or the outermost bubble is cropped by it — and
+     * the largest bubble is the one carrying the largest value, which is the
+     * last one that should be half missing. `sizeRange` is the ceiling, so this
+     * is known before anything is measured.
+     */
+    const reach = sizeRange[1];
+    const pad = {
+      top: Math.max(PADDING.top, reach),
+      right: Math.max(PADDING.right, reach),
+      bottom: Math.max(PADDING.bottom, reach),
+      left: Math.max(hasYAxis ? Y_AXIS_WIDTH : PADDING.left, reach),
+    };
     const plot: Plot = {
       left: pad.left,
       top: pad.top,

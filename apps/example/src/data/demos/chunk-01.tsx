@@ -779,7 +779,7 @@ function BubbleLegendVersion() {
     <View className="flex-1 justify-center p-4">
       <Frame className="w-full">
         <Frame.Header>
-          <Frame.Title>One colour</Frame.Title>
+          <Frame.Title>Smaller circles</Frame.Title>
           <Frame.Action>Named beside, not inside</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
@@ -795,9 +795,9 @@ function BubbleLegendVersion() {
             <BubbleChart.Header
               className={CHART_HEADER}
               value="5 teams"
-              caption="Smaller circles, so the names sit beside them"
+              caption="Too small to hold their own names"
             />
-            <BubbleChart.Grid rows={2} columns={2} />
+            <BubbleChart.Grid />
             <BubbleChart.Bubbles opacity={0.7} />
             <BubbleChart.Legend />
             <BubbleChart.XAxis />
