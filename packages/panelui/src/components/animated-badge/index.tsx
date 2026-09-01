@@ -229,16 +229,6 @@ export const AnimatedBadge = forwardRef<View, AnimatedBadgeProps>(
     const reducedMotion = useReducedMotion();
     const slots = animatedBadgeVariants({ status, size });
 
-    /*
-     * The width spring is for a badge changing, not for one arriving. Left on
-     * from the first frame it animates the pill's *initial* layout, so the
-     * badge slides into place from wherever the layout engine first put it —
-     * which reads as the badge flying in every time a screen opens.
-     */
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => {
-      setMounted(true);
-    }, []);
     const themeColor = useCSSVariable(STATUS_COLOR_VAR[status]);
     const iconColor = typeof themeColor === 'string' ? themeColor : undefined;
     const Icon = STATUS_ICON[status];
@@ -256,6 +246,30 @@ export const AnimatedBadge = forwardRef<View, AnimatedBadgeProps>(
       (typeof children === 'string' || typeof children === 'number'
         ? children
         : status);
+
+    /*
+     * The width spring is for a badge changing, not for one arriving.
+     *
+     * Arming it on mount is not enough, and that is the whole subtlety: the
+     * pill's first *measured* layout lands a frame or two after the first
+     * render — text measures, the row settles — so a spring switched on at
+     * mount still catches that settling and animates it. From the outside the
+     * badge appears, drifts, and stops, on every screen that shows one.
+     *
+     * So it arms on the first real change instead. Nothing has to be guessed
+     * about when layout has finished, because until the status or the word
+     * actually moves there is nothing the spring is for.
+     */
+    const [armed, setArmed] = useState(false);
+    const first = useRef<string | null>(null);
+    useEffect(() => {
+      const key = `${status}\u0000${labelKey}`;
+      if (first.current === null) {
+        first.current = key;
+        return;
+      }
+      if (key !== first.current) setArmed(true);
+    }, [status, labelKey]);
 
     const swell = useSharedValue(0);
     useEffect(() => {
@@ -285,7 +299,7 @@ export const AnimatedBadge = forwardRef<View, AnimatedBadgeProps>(
         // a row of them shoves its neighbours as it changes, and a jump does
         // all of that shoving in one frame.
         layout={
-          reducedMotion || !mounted
+          reducedMotion || !armed
             ? undefined
             : LinearTransition.springify().damping(22)
         }
