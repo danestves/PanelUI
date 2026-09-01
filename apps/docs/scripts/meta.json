@@ -214,7 +214,8 @@
     "react native feedback dialog",
     {
       "addedIn": "0.88.0",
-      "category": "overlays"
+      "category": "overlays",
+      "updatedIn": "0.88.1"
     }
   ],
   "dialog": [

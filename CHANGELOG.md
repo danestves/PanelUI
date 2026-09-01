@@ -9,6 +9,41 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.88.1] — 2026-09-01
+
+### Changed
+
+- **`FeedbackDialog` is now `Feedback`, and the old name is gone.** The rename
+  reaches the component, all nine parts, every exported type and the slug — so
+  `import { FeedbackDialog }` no longer resolves, `FeedbackDialogProps` is
+  `FeedbackProps`, and `panelui-cli add feedback-dialog` is
+  `panelui-cli add feedback`. The documentation page moved with it and the old
+  URL redirects; the registry item did not, so the old CLI name 404s rather
+  than aliasing.
+
+  This is a break under a patch number, which the versioning rule at the top of
+  this file would normally put in a minor. It is here because the name it
+  replaces is two hours old — it shipped in 0.88.0 earlier today and nothing
+  has had time to depend on it. If you took 0.88.0 and used the component,
+  change the import; if you did not, there is nothing to do.
+
+  The "Dialog" was doing no work. Every overlay in the library is a dialog of
+  some kind and none of the others carry it in their name; what distinguishes
+  this one is what it is for.
+
+### Docs
+
+- **Four new `Feedback` versions**, each using the anatomy rather than
+  describing it. *Thanks, then done* swaps the well for a confirmation and
+  collapses the footer to one button — which is what `Submit` handing the
+  message back instead of closing actually buys. *The send that failed* fails
+  the first attempt on purpose and takes the well with the failure, keeping the
+  message for Try again. *Tags over the field* puts a row of chips above the
+  text, since nobody triages free text. *Score first, words second* asks for a
+  rating, then a sentence about it, with Cancel becoming Back.
+- The examples carry wording of their own rather than the title and sample
+  message from the design the component was drawn against.
+
 ## [0.88.0] — 2026-09-01
 
 ### Added
