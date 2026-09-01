@@ -106,8 +106,12 @@ test('the results panel opens away from the keyboard and keeps its taps', async 
   // Android draws siblings in tree order, so the field's box needs both.
   assert.match(source, /const RAISED: ViewStyle = \{ zIndex: 20, elevation: 20 \}/);
 
-  // Without this the first tap on a row is spent dismissing the keyboard.
-  assert.match(source, /keyboardShouldPersistTaps="handled"/);
+  // `always`, not `handled`: everything in the panel that is not itself a
+  // button — the padding, the gaps between rows, a section heading, the whole
+  // of Status — would otherwise spend the first tap dismissing the keyboard,
+  // and a blurred field closes the panel around whatever was pressed.
+  assert.match(source, /keyboardShouldPersistTaps="always"/);
+  assert.doesNotMatch(source, /keyboardShouldPersistTaps="handled"/);
 
   // The panel is capped by the room it actually has, not by a constant.
   assert.match(source, /const PANEL_MIN_HEIGHT = 160/);
@@ -119,7 +123,10 @@ test('SearchBar lifts the whole row, behind a component boundary', async () => {
 
   // A flag would call the keyboard hook on every search bar in the app, which
   // takes Android out of adjustResize for all of them.
-  assert.match(source, /if \(avoidKeyboard\) \{\s*return \(\s*<KeyboardAvoider/);
+  assert.match(
+    source,
+    /if \(avoidKeyboard\) \{\s*return \(\s*<SearchBarContext\.Provider value=\{context\}>\s*<KeyboardAvoider/
+  );
   assert.match(source, /active=\{focused\}/);
   assert.match(source, /mode="lift"/);
 
@@ -140,10 +147,57 @@ test('SearchBar exposes the panel parts', async () => {
 
   assert.match(
     source,
-    /export const SearchBar = Object\.assign\(SearchBarRoot, \{\s*Section: SearchBarSection,\s*Item: SearchBarItem,\s*Status: SearchBarStatus,\s*\}\)/
+    /export const SearchBar = Object\.assign\(SearchBarRoot, \{\s*Section: SearchBarSection,\s*Item: SearchBarItem,\s*Action: SearchBarAction,\s*Token: SearchBarToken,\s*Status: SearchBarStatus,\s*\}\)/
   );
 
   // A row is a wide target; one that shrinks under the finger reads as a card.
   const item = source.slice(source.indexOf('function SearchBarItem'));
   assert.match(item.slice(0, 1400), /pressScale=\{1\}/);
+});
+
+test('a press inside the panel holds the field rather than ending the search', async () => {
+  const source = await component('search-bar');
+
+  // The guard is set before the press is served, not after: the blur it may
+  // cause is what unmounts the row the press is still travelling through.
+  const item = source.slice(source.indexOf('function SearchBarItem'));
+  assert.match(item.slice(0, 1400), /onPressIn=\{\(event\) => \{\s*search\?\.retainFocus\(\);/);
+
+  const action = source.slice(source.indexOf('function SearchBarAction'));
+  assert.match(action.slice(0, 900), /onPressIn=\{\(event\) => \{\s*search\?\.retainFocus\(\);/);
+
+  // A blur arriving under the guard asks for focus back instead of closing.
+  const blur = source.slice(source.indexOf('const handleBlur'));
+  assert.match(blur.slice(0, 400), /if \(guarded\.current\) \{\s*inputRef\.current\?\.focus\(\);\s*return;/);
+
+  // The timer is cleared on unmount, so a press on the way out cannot fire
+  // into a component that has gone.
+  assert.match(source, /if \(guardTimer\.current\) clearTimeout\(guardTimer\.current\)/);
+});
+
+test('the slot the panel keeps for the field is never zero', async () => {
+  const source = await component('search-bar');
+
+  // Measured height, or the field's known height until the measurement lands.
+  // Zero puts the last row under the field, which is painted over the card and
+  // takes the touch — the press then reads as a tap on the input.
+  assert.match(source, /const FIELD_HEIGHT = \{ sm: 40, md: 48, lg: 56 \} as const/);
+  assert.match(source, /height: anchorBox\?\.height \?\? FIELD_HEIGHT\[size\]/);
+});
+
+test('tokens sit inside the field and come off with backspace', async () => {
+  const source = await component('search-bar');
+
+  // In the field's start content, which Input measures into the text's padding
+  // — so the caret starts after the chips however many there are.
+  assert.match(source, /const startContent = tokenRow \? \(/);
+  assert.match(source, /const TOKEN_MAX_SHARE = 0\.6/);
+  assert.match(source, /maxWidth: anchorBox \? anchorBox\.width \* TOKEN_MAX_SHARE : undefined/);
+
+  // Only on an empty field: while there is a query, backspace is editing it.
+  const keyPress = source.slice(source.indexOf('const handleKeyPress'));
+  assert.match(
+    keyPress.slice(0, 500),
+    /event\.nativeEvent\.key === 'Backspace' && text\.length === 0/
+  );
 });

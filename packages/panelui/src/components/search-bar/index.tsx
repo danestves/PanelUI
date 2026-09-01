@@ -32,9 +32,33 @@
  *
  * ## Touches inside the panel must not close the keyboard
  *
- * The panel scrolls with `keyboardShouldPersistTaps="handled"`. Without it the
- * first tap on a row is spent dismissing the keyboard and the press never
- * arrives, which reads as a row that ignores every other tap.
+ * The panel scrolls with `keyboardShouldPersistTaps="always"`, and every press
+ * inside it holds the field's focus open for a moment afterwards. Both are
+ * needed, because a search closes the instant the field blurs and there are
+ * two separate ways for a touch in the panel to blur it.
+ *
+ * `"handled"` only spares presses a child takes responsibility for, which
+ * leaves the panel's own padding, the gaps between rows, a section heading and
+ * the whole of `SearchBar.Status` as live dismiss surfaces — tapping the word
+ * "Searching …" would end the search. `"always"` gives the panel back.
+ *
+ * The focus guard covers the other way: a control inside a row — an add
+ * button, a remove ✕ — takes focus with the press on Android, and returning it
+ * a frame later is not enough on its own, because the blur has already closed
+ * the panel the control was drawn in. So a press in the panel marks the field
+ * as still being used, and a blur arriving under that mark is answered by
+ * asking for focus back rather than by ending the search.
+ *
+ * ## What has already been picked goes in the field
+ *
+ * `tokens` puts the choices made so far inside the field, before the caret, so
+ * the query and what it has produced are one control rather than a control and
+ * a list somewhere above it. `SearchBar.Token` is the chip; backspace on an
+ * empty field fires `onRemoveLastToken`, which is what a token field does
+ * everywhere else.
+ *
+ * They scroll rather than wrap: the field is one line tall, and a row of chips
+ * that grew it would move the caret every time something was picked.
  *
  * ## The clear button, and why it is not the platform's
  *
@@ -73,8 +97,10 @@
  */
 import {
   Children,
+  createContext,
   forwardRef,
   isValidElement,
+  useContext,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -91,6 +117,7 @@ import {
   type LayoutChangeEvent,
   type NativeSyntheticEvent,
   type TextInput,
+  type TextInputKeyPressEventData,
   type TextInputSubmitEditingEventData,
   type ViewProps,
   type ViewStyle,
@@ -141,6 +168,27 @@ const PANEL_EDGE_GAP = 24;
 
 /** Floor for the derived height — below this a list is not worth opening. */
 const PANEL_MIN_HEIGHT = 160;
+
+/**
+ * The field's height per size, matching `Input`'s own `h-10 / h-12 / h-14`.
+ *
+ * It is the fallback for the slot the panel keeps for the field, which is
+ * otherwise the measured height and therefore zero on the frame the panel
+ * first opens. A zero slot puts the card's bottom edge at the field's, so the
+ * last row is drawn underneath the field — which is painted after the card and
+ * takes the touch. The press then reads as a tap on the input.
+ */
+const FIELD_HEIGHT = { sm: 40, md: 48, lg: 56 } as const;
+
+/**
+ * How long a press inside the panel keeps the field's focus. Long enough to
+ * cover the blur Android sends with the press and the re-render that follows
+ * it, short enough that a real dismissal is never held open.
+ */
+const FOCUS_GUARD = 400;
+
+/** Share of the field a row of tokens may take before it starts scrolling. */
+const TOKEN_MAX_SHARE = 0.6;
 
 /*
  * The card is pinned to the edge of the field's own slot and grows away from
@@ -199,12 +247,39 @@ const searchBarVariants = tv({
     cancelButton: 'absolute bottom-0 end-0 top-0 items-center justify-center ps-2',
     cancelLabel: 'font-medium text-primary',
     clear: 'items-center justify-center rounded-full',
+    /*
+     * The chips sit in the field's start content, which `Input` measures and
+     * turns into padding on the text — so the caret starts after them however
+     * many there are, and nothing typed ever runs underneath them.
+     */
+    tokenRow: 'flex-row items-center gap-1.5',
+    token: 'flex-row items-center gap-1 rounded-full bg-accent ps-2 pe-1',
+    tokenLabel: 'text-accent-foreground',
+    tokenRemove: 'items-center justify-center rounded-full',
   },
   variants: {
     size: {
-      sm: { cancelLabel: 'text-[14px]', clear: 'h-6 w-6' },
-      md: { cancelLabel: 'text-[16px]', clear: 'h-6 w-6' },
-      lg: { cancelLabel: 'text-[16px]', clear: 'h-7 w-7' },
+      sm: {
+        cancelLabel: 'text-[14px]',
+        clear: 'h-6 w-6',
+        token: 'h-6',
+        tokenLabel: 'text-[13px]',
+        tokenRemove: 'h-4 w-4',
+      },
+      md: {
+        cancelLabel: 'text-[16px]',
+        clear: 'h-6 w-6',
+        token: 'h-7',
+        tokenLabel: 'text-[14px]',
+        tokenRemove: 'h-5 w-5',
+      },
+      lg: {
+        cancelLabel: 'text-[16px]',
+        clear: 'h-7 w-7',
+        token: 'h-8',
+        tokenLabel: 'text-[15px]',
+        tokenRemove: 'h-5 w-5',
+      },
     },
     /**
      * The field's corner. `pill` is the shape a search field takes when it is
@@ -240,6 +315,19 @@ type SearchBarVariantProps = VariantProps<typeof searchBarVariants>;
 
 /** Glyph sizes per field size — the icon tracks the text, not the box. */
 const ICON_SIZE = { sm: 16, md: 18, lg: 20 } as const;
+
+interface SearchBarContextValue {
+  /** The field's size, so a chip drawn in it matches the text beside it. */
+  size: NonNullable<SearchBarVariantProps['size']>;
+  /**
+   * Marks the field as still in use and asks for focus back. Called by
+   * anything pressable the panel or the field contains, before the press has
+   * had a chance to blur the field and close the search around it.
+   */
+  retainFocus: () => void;
+}
+
+const SearchBarContext = createContext<SearchBarContextValue | null>(null);
 
 /** Where the results open. */
 export type SearchBarPanelPlacement = 'top' | 'bottom';
@@ -358,6 +446,18 @@ export interface SearchBarProps
    * runs off the top of the display.
    */
   panelMaxHeight?: number;
+  /**
+   * What has been picked so far, drawn inside the field before the caret.
+   * `SearchBar.Token` is the chip; anything else that fits on one line works
+   * too. Tokens scroll rather than wrap, so the field stays one line tall.
+   */
+  tokens?: ReactNode;
+  /**
+   * Fires when backspace is pressed in an empty field. Remove the last token
+   * here — it is the gesture every token field answers, and without it the
+   * only way back out of a choice is its own ✕.
+   */
+  onRemoveLastToken?: () => void;
   /** The panel's contents — `SearchBar.Section`, `.Item` and `.Status`. */
   children?: ReactNode;
 }
@@ -389,9 +489,12 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
       panel = 'focus',
       panelPlacement = 'top',
       panelMaxHeight,
+      tokens,
+      onRemoveLastToken,
       children,
       onFocus,
       onBlur,
+      onKeyPress,
       onSubmitEditing,
       ...props
     },
@@ -460,6 +563,33 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
       };
     }, [text, debounce]);
 
+    /*
+     * Set while a press inside the panel or the field is being served. A blur
+     * arriving under it is the press taking focus rather than the search
+     * ending, so it is answered by asking for focus back — the panel is drawn
+     * out of `focused`, and letting it through would close the panel the
+     * pressed control is standing in.
+     */
+    const guarded = useRef(false);
+    const guardTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(
+      () => () => {
+        if (guardTimer.current) clearTimeout(guardTimer.current);
+      },
+      []
+    );
+
+    const retainFocus = useCallback(() => {
+      if (disabled) return;
+      guarded.current = true;
+      if (guardTimer.current) clearTimeout(guardTimer.current);
+      guardTimer.current = setTimeout(() => {
+        guarded.current = false;
+      }, FOCUS_GUARD);
+      inputRef.current?.focus();
+    }, [disabled]);
+
     const handleFocus = useCallback<NonNullable<InputProps['onFocus']>>(
       (event) => {
         setFocused(true);
@@ -470,10 +600,26 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
 
     const handleBlur = useCallback<NonNullable<InputProps['onBlur']>>(
       (event) => {
+        if (guarded.current) {
+          inputRef.current?.focus();
+          return;
+        }
         setFocused(false);
         onBlur?.(event);
       },
       [onBlur]
+    );
+
+    const handleKeyPress = useCallback(
+      (event: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+        // Only on an empty field: while there is a query, backspace is editing
+        // it, and eating a token instead would delete something nobody aimed at.
+        if (event.nativeEvent.key === 'Backspace' && text.length === 0) {
+          onRemoveLastToken?.();
+        }
+        onKeyPress?.(event);
+      },
+      [onKeyPress, onRemoveLastToken, text.length]
     );
 
     const handleSubmit = useCallback(
@@ -542,16 +688,21 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
     const { height: windowHeight } = useWindowDimensions();
     const { height: keyboardHeight } = useKeyboard();
     const anchorRef = useRef<View | null>(null);
-    const [anchorBox, setAnchorBox] = useState<{ top: number; height: number } | null>(
-      null
-    );
+    const [anchorBox, setAnchorBox] = useState<{
+      top: number;
+      height: number;
+      width: number;
+    } | null>(null);
 
     const measureAnchor = useCallback(() => {
-      anchorRef.current?.measureInWindow((_x, y, _width, height) => {
+      anchorRef.current?.measureInWindow((_x, y, width, height) => {
         setAnchorBox((current) =>
-          current && current.top === y && current.height === height
+          current &&
+          current.top === y &&
+          current.height === height &&
+          current.width === width
             ? current
-            : { top: y, height }
+            : { top: y, height, width }
         );
       });
     }, []);
@@ -589,7 +740,7 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
       windowHeight,
     ]);
 
-    const startContent = (
+    const glyph = (
       /*
        * Decorative, and said so here rather than through Input's
        * `interactiveContent` — that flag covers both ends of the field, and
@@ -597,12 +748,43 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
        * touches with it.
        */
       <View
+        key="glyph"
         pointerEvents="none"
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
         {icon ?? <SearchIcon size={ICON_SIZE[size]} />}
       </View>
+    );
+
+    /*
+     * Capped and scrolling rather than wrapping. The field is one line tall, so
+     * a row of chips allowed to grow would move the caret every time something
+     * was picked; and left uncapped it would take the whole field and leave
+     * nowhere to type the next query.
+     */
+    const tokenRow = tokens ? (
+      <ScrollView
+        key="tokens"
+        horizontal
+        keyboardShouldPersistTaps="always"
+        showsHorizontalScrollIndicator={false}
+        style={{
+          maxWidth: anchorBox ? anchorBox.width * TOKEN_MAX_SHARE : undefined,
+        }}
+        contentContainerClassName={slots.tokenRow()}
+      >
+        {tokens}
+      </ScrollView>
+    ) : null;
+
+    const startContent = tokenRow ? (
+      <>
+        {glyph}
+        {tokenRow}
+      </>
+    ) : (
+      glyph
     );
 
     const endContent = loading ? (
@@ -633,6 +815,7 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
         onChangeText={setText}
         onFocus={handleFocus}
         onBlur={handleBlur}
+        onKeyPress={handleKeyPress}
         onSubmitEditing={handleSubmit}
         accessibilityRole="search"
         returnKeyType="search"
@@ -647,11 +830,22 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
       />
     );
 
+    const context = useMemo<SearchBarContextValue>(
+      () => ({ size, retainFocus }),
+      [retainFocus, size]
+    );
+
     // Nothing beside it and nothing under it: the field is the whole component,
     // and a wrapper around it would only be a box for the caller's layout to
     // fight.
     if (cancel === 'never' && !avoidKeyboard && !hasPanel) {
-      return <View className={containerClassName}>{field}</View>;
+      return (
+        <SearchBarContext.Provider value={context}>
+          <View ref={anchorRef} onLayout={measureAnchor} className={containerClassName}>
+            {field}
+          </View>
+        </SearchBarContext.Provider>
+      );
     }
 
     /*
@@ -666,11 +860,12 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
         key="list"
         style={{ maxHeight: resolvedMaxHeight }}
         /*
-         * Without this the first tap on a row is spent dismissing the keyboard
-         * and the press never lands, which reads as a list that ignores every
-         * other touch.
+         * `always`, not `handled`: everything in the panel that is not itself
+         * a button — the padding, the gaps between rows, a section heading,
+         * the whole of `SearchBar.Status` — would otherwise spend the first
+         * tap dismissing the keyboard, which ends the search.
          */
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="always"
         keyboardDismissMode="none"
         showsVerticalScrollIndicator={false}
         bounces={false}
@@ -686,7 +881,9 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
         className={slots.panelDivider()}
       />
     );
-    const fieldSlot = <View key="slot" style={{ height: anchorBox?.height ?? 0 }} />;
+    const fieldSlot = (
+      <View key="slot" style={{ height: anchorBox?.height ?? FIELD_HEIGHT[size] }} />
+    );
 
     const anchor = (
       <View
@@ -757,22 +954,28 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
      */
     if (avoidKeyboard) {
       return (
-        <KeyboardAvoider
-          // Only while *this* field is the one being typed into. Without it
-          // every avoiding field on the screen lifts the moment any field
-          // anywhere is tapped, and since they all aim at the same gap above
-          // the keyboard, they arrive stacked on top of one another.
-          active={focused}
-          mode="lift"
-          offset={keyboardOffset}
-          className={slots.row({ className: containerClassName })}
-        >
-          {body}
-        </KeyboardAvoider>
+        <SearchBarContext.Provider value={context}>
+          <KeyboardAvoider
+            // Only while *this* field is the one being typed into. Without it
+            // every avoiding field on the screen lifts the moment any field
+            // anywhere is tapped, and since they all aim at the same gap above
+            // the keyboard, they arrive stacked on top of one another.
+            active={focused}
+            mode="lift"
+            offset={keyboardOffset}
+            className={slots.row({ className: containerClassName })}
+          >
+            {body}
+          </KeyboardAvoider>
+        </SearchBarContext.Provider>
       );
     }
 
-    return <View className={slots.row({ className: containerClassName })}>{body}</View>;
+    return (
+      <SearchBarContext.Provider value={context}>
+        <View className={slots.row({ className: containerClassName })}>{body}</View>
+      </SearchBarContext.Provider>
+    );
   }
 );
 
@@ -831,13 +1034,24 @@ function SearchBarItem({
   description,
   selected,
   children,
+  onPressIn,
   ...props
 }: SearchBarItemProps) {
   const { item, itemLabel } = searchBarVariants({ selected: !!selected });
+  const search = useContext(SearchBarContext);
   return (
     <AnimatedPressable
       accessibilityRole="button"
       accessibilityState={{ selected: !!selected, disabled: !!props.disabled }}
+      /*
+       * Before the press, not after it: the blur it may cause is what closes
+       * the panel this row is drawn in, and by the time `onPress` runs the row
+       * can already be gone.
+       */
+      onPressIn={(event) => {
+        search?.retainFocus();
+        onPressIn?.(event);
+      }}
       // A row is a wide target, and a target that shrinks when pressed reads as
       // a card rather than a line in a list. The dim is the whole feedback.
       pressScale={1}
@@ -898,8 +1112,97 @@ function SearchBarStatus({
 
 SearchBarStatus.displayName = 'SearchBar.Status';
 
+export interface SearchBarActionProps extends AnimatedPressableProps {
+  className?: string;
+  children?: ReactNode;
+}
+
+/**
+ * A button inside a row — an add, a pin, a remove — for the `trailing` slot.
+ *
+ * It exists rather than being left to a plain `Pressable` because a control
+ * nested inside a row takes the touch itself, so the row above it never sees
+ * the press and cannot hold the field's focus on its behalf. Pressed, this one
+ * ends up blurring the field, and a blurred field closes the panel the button
+ * was standing in — the press lands and the search disappears under it.
+ */
+function SearchBarAction({ className, children, onPressIn, ...props }: SearchBarActionProps) {
+  const search = useContext(SearchBarContext);
+  return (
+    <AnimatedPressable
+      accessibilityRole="button"
+      hitSlop={12}
+      pressScale={1}
+      pressOpacity={0.5}
+      onPressIn={(event) => {
+        search?.retainFocus();
+        onPressIn?.(event);
+      }}
+      {...props}
+      className={className}
+    >
+      {children}
+    </AnimatedPressable>
+  );
+}
+
+SearchBarAction.displayName = 'SearchBar.Action';
+
+export interface SearchBarTokenProps extends ViewProps {
+  className?: string;
+  /** Anything before the label — an avatar, a logo, a status dot. */
+  leading?: ReactNode;
+  /** Fires when the chip's ✕ is pressed. Without it no ✕ is drawn. */
+  onRemove?: () => void;
+  /** How the ✕ announces itself. Defaults to `Remove <label>`. */
+  removeLabel?: string;
+  /** The chip's label. */
+  children?: ReactNode;
+}
+
+/**
+ * One choice already made, drawn inside the field before the caret.
+ *
+ * It sits in the field rather than in a list above it so that the query and
+ * what the query has produced are one control. A search that files its results
+ * somewhere else asks the reader to look in two places to know where they are.
+ */
+function SearchBarToken({
+  className,
+  leading,
+  onRemove,
+  removeLabel,
+  children,
+  ...props
+}: SearchBarTokenProps) {
+  const search = useContext(SearchBarContext);
+  const slots = searchBarVariants({ size: search?.size ?? 'md' });
+  const label = typeof children === 'string' ? children : undefined;
+  return (
+    <View {...props} className={slots.token({ className })}>
+      {leading}
+      <Text numberOfLines={1} className={slots.tokenLabel()}>
+        {children}
+      </Text>
+      {onRemove ? (
+        <SearchBarAction
+          accessibilityLabel={removeLabel ?? (label ? `Remove ${label}` : 'Remove')}
+          onPress={onRemove}
+          className={slots.tokenRemove()}
+        >
+          <XIcon size={12} />
+        </SearchBarAction>
+      ) : null}
+    </View>
+  );
+}
+
+SearchBarToken.displayName = 'SearchBar.Token';
+
 export const SearchBar = Object.assign(SearchBarRoot, {
   Section: SearchBarSection,
   Item: SearchBarItem,
+  Action: SearchBarAction,
+  Token: SearchBarToken,
   Status: SearchBarStatus,
 });

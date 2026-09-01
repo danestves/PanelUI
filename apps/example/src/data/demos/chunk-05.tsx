@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, Pressable, ScrollView, View } from "react-native";
-import { Avatar, Badge, BellIcon, Button, CalendarIcon, Card, ChevronRightIcon, Frame, GridItem, HexChart, Input, InputGroup, Item, KeyboardAvoider, Label, LineChart, NumberInput, OtpInput, PackageIcon, PencilIcon, PlusIcon, PlusSquareIcon, ReceiptIcon, SearchBar, SearchIcon, SendIcon, ShieldCheckIcon, SparklesIcon, Separator, Skeleton, Text, XIcon, Tooltip } from "panelui-native";
+import { Avatar, Badge, BellIcon, Button, CalendarIcon, Card, CheckIcon, ChevronRightIcon, Frame, GridItem, HexChart, Input, InputGroup, Item, KeyboardAvoider, Label, LineChart, NumberInput, OtpInput, PackageIcon, PencilIcon, PlusIcon, PlusSquareIcon, ReceiptIcon, SearchBar, SearchIcon, SendIcon, ShieldCheckIcon, SparklesIcon, Separator, Skeleton, Text, XIcon, Tooltip } from "panelui-native";
 import { useCSSVariable } from "uniwind";
 import type { ComponentEntry } from '../component-types';
 
@@ -771,6 +771,24 @@ const COMPANIES = [
   { name: 'Figma', domain: 'figma.com' },
 ];
 
+/*
+ * Module scope, not inside the screen: declared in the body it would be a new
+ * component *type* on every state change, and every button in the panel would
+ * unmount and remount under the finger halfway through its own press.
+ *
+ * `SearchBar.Action` rather than a plain Pressable, because a control nested
+ * inside a row takes the touch itself — the row never sees it and cannot hold
+ * the field's focus on its behalf, so the press lands and the panel closes
+ * under it.
+ */
+function AddButton({ name, onAdd }: { name: string; onAdd: (name: string) => void }) {
+  return (
+    <SearchBar.Action accessibilityLabel={`Add ${name}`} onPress={() => onAdd(name)}>
+      <PlusIcon size={18} />
+    </SearchBar.Action>
+  );
+}
+
 function CompanyMark({ name, domain }: { name: string; domain: string }) {
   return (
     <Avatar
@@ -804,17 +822,6 @@ function SearchBarPanelDemo() {
   const add = (name: string) => {
     setPicked((current) => (current.includes(name) ? current : [...current, name]));
   };
-
-  const AddButton = ({ name }: { name: string }) => (
-    <Pressable
-      hitSlop={12}
-      accessibilityRole="button"
-      accessibilityLabel={`Add ${name}`}
-      onPress={() => add(name)}
-    >
-      <PlusIcon size={18} />
-    </Pressable>
-  );
 
   return (
     <View
@@ -862,7 +869,7 @@ function SearchBarPanelDemo() {
               <SearchBar.Item
                 key={company.name}
                 leading={<CompanyMark name={company.name} domain={company.domain} />}
-                trailing={<AddButton name={company.name} />}
+                trailing={<AddButton name={company.name} onAdd={add} />}
                 selected={picked.includes(company.name)}
                 onPress={() => add(company.name)}
               >
@@ -878,7 +885,7 @@ function SearchBarPanelDemo() {
               <SearchBar.Item
                 key={company.name}
                 leading={<CompanyMark name={company.name} domain={company.domain} />}
-                trailing={<AddButton name={company.name} />}
+                trailing={<AddButton name={company.name} onAdd={add} />}
                 selected={picked.includes(company.name)}
                 onPress={() => add(company.name)}
               >
@@ -888,6 +895,174 @@ function SearchBarPanelDemo() {
           </SearchBar.Section>
         ) : (
           <SearchBar.Status>No companies found</SearchBar.Status>
+        )}
+      </SearchBar>
+    </View>
+  );
+}
+
+/**
+ * The same lift, with the `+` taken off the rows. The row is the button, and a
+ * tick replaces the plus once something is in the stack — which is the shape to
+ * reach for when adding is the only thing a result can do, since a row that
+ * carries one button has two targets for one action.
+ */
+function SearchBarTapToAddDemo() {
+  const insets = useSafeAreaInsets();
+  const [query, setQuery] = useState('');
+  const [picked, setPicked] = useState<string[]>([]);
+
+  const trimmed = query.trim().toLowerCase();
+  const results = COMPANIES.filter((company) =>
+    company.name.toLowerCase().includes(trimmed)
+  );
+
+  const toggle = (name: string) => {
+    setPicked((current) =>
+      current.includes(name) ? current.filter((item) => item !== name) : [...current, name]
+    );
+  };
+
+  return (
+    <View
+      className="flex-1 justify-end gap-4 px-5 pt-4"
+      style={{ paddingBottom: insets.bottom + 24 }}
+    >
+      <ScrollView
+        contentContainerClassName="gap-2"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text size="sm" muted>
+          {picked.length ? 'Your stack' : 'Tap a result to add it.'}
+        </Text>
+        {picked.map((name) => {
+          const company = COMPANIES.find((item) => item.name === name);
+          return (
+            <View key={name} className="flex-row items-center gap-3 py-1.5">
+              <CompanyMark name={name} domain={company?.domain ?? 'example.com'} />
+              <Text className="flex-1">{name}</Text>
+            </View>
+          );
+        })}
+      </ScrollView>
+
+      <SearchBar
+        avoidKeyboard
+        variant="filled"
+        placeholder="Search or enter company"
+        value={query}
+        onChangeText={setQuery}
+      >
+        {results.length > 0 ? (
+          <SearchBar.Section label={query.length === 0 ? 'Suggested' : 'Results'}>
+            {results.map((company) => (
+              <SearchBar.Item
+                key={company.name}
+                leading={<CompanyMark name={company.name} domain={company.domain} />}
+                trailing={
+                  picked.includes(company.name) ? <CheckIcon size={18} /> : undefined
+                }
+                selected={picked.includes(company.name)}
+                onPress={() => toggle(company.name)}
+              >
+                {company.name}
+              </SearchBar.Item>
+            ))}
+          </SearchBar.Section>
+        ) : (
+          <SearchBar.Status>No companies found</SearchBar.Status>
+        )}
+      </SearchBar>
+    </View>
+  );
+}
+
+/**
+ * Picks land in the field itself, as chips before the caret, so the query and
+ * what it has produced are one control instead of a control and a list
+ * somewhere above it.
+ *
+ * Backspace on an empty field takes the last one back off.
+ */
+function SearchBarTokensDemo() {
+  const insets = useSafeAreaInsets();
+  const [query, setQuery] = useState('');
+  const [picked, setPicked] = useState<string[]>([]);
+
+  const trimmed = query.trim().toLowerCase();
+  const results = COMPANIES.filter(
+    (company) =>
+      !picked.includes(company.name) && company.name.toLowerCase().includes(trimmed)
+  );
+
+  const add = (name: string) => {
+    setPicked((current) => (current.includes(name) ? current : [...current, name]));
+    setQuery('');
+  };
+
+  const remove = (name: string) => {
+    setPicked((current) => current.filter((item) => item !== name));
+  };
+
+  return (
+    <View
+      className="flex-1 justify-end gap-4 px-5 pt-4"
+      style={{ paddingBottom: insets.bottom + 24 }}
+    >
+      <View className="flex-1 justify-end">
+        <Text size="sm" muted>
+          {picked.length
+            ? `${picked.length} in this comparison`
+            : 'Pick a few companies to compare.'}
+        </Text>
+      </View>
+
+      <SearchBar
+        avoidKeyboard
+        variant="filled"
+        placeholder={picked.length ? 'Add another' : 'Search or enter company'}
+        value={query}
+        onChangeText={setQuery}
+        onRemoveLastToken={() => setPicked((current) => current.slice(0, -1))}
+        tokens={picked.map((name) => {
+          const company = COMPANIES.find((item) => item.name === name);
+          return (
+            <SearchBar.Token
+              key={name}
+              leading={
+                <Avatar
+                  size="sm"
+                  className="h-5 w-5"
+                  fallback={name.slice(0, 1)}
+                  source={{
+                    uri: `https://www.google.com/s2/favicons?sz=128&domain=${company?.domain ?? 'example.com'}`,
+                  }}
+                />
+              }
+              onRemove={() => remove(name)}
+            >
+              {name}
+            </SearchBar.Token>
+          );
+        })}
+      >
+        {results.length > 0 ? (
+          <SearchBar.Section label={query.length === 0 ? 'Suggested' : 'Results'}>
+            {results.map((company) => (
+              <SearchBar.Item
+                key={company.name}
+                leading={<CompanyMark name={company.name} domain={company.domain} />}
+                onPress={() => add(company.name)}
+              >
+                {company.name}
+              </SearchBar.Item>
+            ))}
+          </SearchBar.Section>
+        ) : (
+          <SearchBar.Status>
+            {picked.length === COMPANIES.length ? 'That is all of them' : 'No companies found'}
+          </SearchBar.Status>
         )}
       </SearchBar>
     </View>
@@ -1055,6 +1230,22 @@ export const ENTRIES: ComponentEntry[] = [
         description:
           'The field lifts clear of the keyboard on focus and the results open upward out of it.',
         render: () => <SearchBarPanelDemo />,
+      },
+      {
+        label: 'Tap to add',
+        id: 'tap-to-add',
+        fullPage: true,
+        description:
+          'No button on the row: the row is the button, and a tick marks what is already in the stack.',
+        render: () => <SearchBarTapToAddDemo />,
+      },
+      {
+        label: 'Names in the field',
+        id: 'tokens-in-the-field',
+        fullPage: true,
+        description:
+          'Picks become chips inside the field, before the caret. Backspace on an empty field takes the last one back off.',
+        render: () => <SearchBarTokensDemo />,
       },
       { label: 'Filtering a list', render: () => <SearchBarFilterDemo /> },
       { label: 'Cancel on focus', render: () => <SearchBarCancelDemo /> },

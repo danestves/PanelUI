@@ -546,9 +546,11 @@ export { OtpInput, type OtpInputProps } from './components/otp-input';
 export {
   SearchBar,
   type SearchBarProps,
+  type SearchBarActionProps,
   type SearchBarItemProps,
   type SearchBarSectionProps,
   type SearchBarStatusProps,
+  type SearchBarTokenProps,
   type SearchBarPanelMode,
   type SearchBarPanelPlacement,
 } from './components/search-bar';

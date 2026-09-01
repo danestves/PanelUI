@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1239,
+    "exports": 1241,
     "values": 322,
-    "types": 917,
+    "types": 919,
     "modules": 149,
     "components": 122,
     "hooks": 13
@@ -3824,6 +3824,10 @@
             "kind": "type"
           },
           {
+            "name": "SearchBarActionProps",
+            "kind": "type"
+          },
+          {
             "name": "SearchBarItemProps",
             "kind": "type"
           },
@@ -3833,6 +3837,10 @@
           },
           {
             "name": "SearchBarStatusProps",
+            "kind": "type"
+          },
+          {
+            "name": "SearchBarTokenProps",
             "kind": "type"
           },
           {

@@ -11,9 +11,10 @@ import { SearchBar } from 'panelui-native';
 ### Anatomy
 
 ```tsx
-<SearchBar avoidKeyboard>
+<SearchBar avoidKeyboard tokens={picked.map(…)}>
+  <SearchBar.Token onRemove={…}>Claude</SearchBar.Token>   {/* inside the field */}
   <SearchBar.Section label="Suggested">   {/* a labelled run of rows */}
-    <SearchBar.Item leading={…} trailing={…}>…</SearchBar.Item>
+    <SearchBar.Item trailing={<SearchBar.Action …/>}>…</SearchBar.Item>
   </SearchBar.Section>
   <SearchBar.Status loading>Searching …</SearchBar.Status>   {/* instead of rows */}
 </SearchBar>
@@ -30,6 +31,8 @@ import { SearchBar } from 'panelui-native';
 
 - `SearchBar.Section` — A labelled run of rows — "Suggested", "Results". The label is announced as a header, so a screen reader reaching the group is told what it is before walking into it.
 - `SearchBar.Item` — One result. `leading` and `trailing` are slots rather than built-in controls, because what a result row offers differs per search: an add, a pin, a count, nothing.
+- `SearchBar.Action` — A button inside a row — an add, a pin, a remove — for `Item`'s `trailing` slot. Use it rather than a plain `Pressable`: a control nested inside a row takes the touch itself, so the row never sees the press and cannot hold the field's focus on the button's behalf. Without that, the press lands and the panel it was drawn in closes underneath it.
+- `SearchBar.Token` — One choice already made, drawn inside the field before the caret. Pass `onRemove` for the ✕; without it the chip is a label. Tokens go to the root's `tokens` prop, not into the panel.
 - `SearchBar.Status` — The one line a panel shows instead of rows. Use it for all three of nothing typed yet, a search in flight, and a query that matched nothing — those states look identical when the panel is simply blank, and which one it is decides what the person does next.
 
 ### Props
@@ -60,6 +63,8 @@ Extends `InheritedInputProps, Omit<SearchBarVariantProps, 'attached' \| 'selecte
 | `panel` | `SearchBarPanelMode` | `focus` | When the results panel is shown. `focus` opens it while the field is being typed into, `always` keeps it out for a screen that is nothing but the search, `never` ignores the children entirely. |
 | `panelPlacement` | `SearchBarPanelPlacement` | `top` | Which side of the field the panel opens out of. `top` is the default, because the space under a focused field belongs to the keyboard. |
 | `panelMaxHeight` | `number` | — | Cap on the panel's height, in points. Derived from the room between the field and the edge of the screen when it is not given, so a panel never runs off the top of the display. |
+| `tokens` | `ReactNode` | — | What has been picked so far, drawn inside the field before the caret. `SearchBar.Token` is the chip; anything else that fits on one line works too. Tokens scroll rather than wrap, so the field stays one line tall. |
+| `onRemoveLastToken` | `() => void` | — | Fires when backspace is pressed in an empty field. Remove the last token here — it is the gesture every token field answers, and without it the only way back out of a choice is its own ✕. |
 | `children` | `ReactNode` | — | The panel's contents — `SearchBar.Section`, `.Item` and `.Status`. |
 
 #### `SearchBarSectionProps`
@@ -94,6 +99,27 @@ Extends `ViewProps`.
 | `className` | `string` | — | — |
 | `loading` | `boolean` | `false` | A spinner beside the line, for a search that is still running. |
 | `children` | `ReactNode` | — | — |
+
+#### `SearchBarActionProps`
+
+Extends `AnimatedPressableProps`.
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `className` | `string` | — | — |
+| `children` | `ReactNode` | — | — |
+
+#### `SearchBarTokenProps`
+
+Extends `ViewProps`.
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `className` | `string` | — | — |
+| `leading` | `ReactNode` | — | Anything before the label — an avatar, a logo, a status dot. |
+| `onRemove` | `() => void` | — | Fires when the chip's ✕ is pressed. Without it no ✕ is drawn. |
+| `removeLabel` | `string` | — | How the ✕ announces itself. Defaults to `Remove <label>`. |
+| `children` | `ReactNode` | — | The chip's label. |
 
 ### Example — Results above the keyboard
 
@@ -134,7 +160,21 @@ The panel is welded to one edge of the field: `panelPlacement="top"`, the defaul
 
 It is positioned absolutely rather than laid out in the flow, so opening it never moves the page underneath — a list that pushes the field it belongs to is a field that walks away from the finger typing into it. Its height is capped by the room it actually has between the field and the edge of the screen; pass `panelMaxHeight` to cap it lower.
 
-Touches inside the panel do not close the keyboard, because the first tap would otherwise be spent dismissing it and the row press would never arrive.
+### Touches inside the panel
+
+Nothing pressed inside the panel closes the search. The panel keeps the keyboard through every tap, including the ones that land on padding, on the gap between two rows, on a section heading, or on `SearchBar.Status` — a search that ended because somebody tapped the word "Searching …" is a search that ended for no reason.
+
+A press also holds the field's focus open for a moment afterwards. That covers the other way a touch can end a search: a control inside a row takes focus with the press on Android, and the field's blur closes the panel that control is standing in before the press has finished being served.
+
+That second half only works for controls that go through the component. Use `SearchBar.Action` for a button in a row's `trailing` slot rather than a plain `Pressable` — the row cannot hold focus on behalf of something nested inside it, because the nested control takes the touch and the row never sees it.
+
+### What has already been picked
+
+`tokens` puts the choices made so far inside the field, before the caret, so the query and what it has produced are one control. `SearchBar.Token` is the chip; `onRemove` gives it a ✕.
+
+They scroll rather than wrap, and take at most 60% of the field's width. The field is one line tall, and a row of chips allowed to grow it would move the caret every time something was picked.
+
+`onRemoveLastToken` fires on backspace in an empty field — the gesture a token field answers everywhere else. It only fires when the field is empty: while there is a query, backspace is editing it.
 
 `panel="focus"` shows it while the field is being typed into, `"always"` for a screen that is nothing but the search, and `"never"` ignores the children entirely.
 
