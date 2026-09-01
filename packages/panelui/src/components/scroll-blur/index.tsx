@@ -166,13 +166,13 @@ interface ScrollableProps {
 
 export function ScrollBlur({
   className,
-  size = 64,
+  size = 80,
   edges = 'both',
   orientation,
-  layers = 6,
-  intensity = 40,
+  layers = 8,
+  intensity = 56,
   material = 'default',
-  tint = 0.92,
+  tint = 0.95,
   color,
   fadeInDistance = DEFAULT_FADE_IN_DISTANCE,
   enabled = true,
@@ -336,6 +336,9 @@ function Edge({
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
+  /** How opaque the wash gets at the outer edge. Without a blur it is all of it. */
+  const full = blurring ? tint : 1;
+
   const steps = useMemo(
     () =>
       Array.from({ length: layers }, (_unused, index) => {
@@ -349,10 +352,17 @@ function Edge({
         const fraction = (layers - index) / layers;
         return {
           key: index,
-          span: size * fraction * fraction,
-          // The widest layer is the faintest, so the band starts from nothing
-          // instead of stepping up at its inner boundary.
-          opacity: (index + 1) / layers,
+          // Cubed rather than squared: with eight layers a square curve still
+          // leaves the outermost two nearly the same width, and two layers of
+          // the same width are one layer at twice the cost.
+          span: size * fraction * fraction * fraction,
+          /*
+           * The widest layer is the faintest, so the band starts from nothing
+           * instead of stepping up at its inner boundary. Squared, so the
+           * fade-in is gentle where the layers are widest and the eye has the
+           * most room to notice one arriving.
+           */
+          opacity: ((index + 1) / layers) ** 2,
         };
       }),
     [layers, size]
@@ -389,12 +399,29 @@ function Edge({
         it is the whole band, which is the fade this degrades to.
       */}
       {tint > 0 || !blurring ? (
+        /*
+         * Three stops, not two. A straight line from opaque to clear spends
+         * half its length at alphas high enough to read as a flat panel, then
+         * gives out all at once — the band gets an edge of its own, which is
+         * the thing it exists to remove. The middle stop at just over a third
+         * of the full alpha, placed past the halfway point, bends it into the
+         * long tail an edge is supposed to have.
+         */
         <LinearGradient
           colors={
             isStart
-              ? [withAlpha(color, blurring ? tint : 1), withAlpha(color, 0)]
-              : [withAlpha(color, 0), withAlpha(color, blurring ? tint : 1)]
+              ? [
+                  withAlpha(color, full),
+                  withAlpha(color, full * 0.36),
+                  withAlpha(color, 0),
+                ]
+              : [
+                  withAlpha(color, 0),
+                  withAlpha(color, full * 0.36),
+                  withAlpha(color, full),
+                ]
           }
+          locations={isStart ? [0, 0.55, 1] : [0, 0.45, 1]}
           start={{ x: 0, y: 0 }}
           end={horizontal ? { x: 1, y: 0 } : { x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}

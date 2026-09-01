@@ -240,3 +240,31 @@ test('a blur while the keyboard is up is answered, not believed', async () => {
   const cancel = source.slice(source.indexOf('const handleCancel'));
   assert.match(cancel.slice(0, 600), /ending\.current = true;/);
 });
+
+test('the panel never runs to the top of the screen', async () => {
+  const source = await component('search-bar');
+
+  // The room above a lifted field is most of the screen, and a panel that took
+  // all of it stopped reading as something laid over the app.
+  assert.match(source, /const PANEL_MAX_HEIGHT = 320;/);
+  assert.match(source, /const cap = panelMaxHeight \?\? PANEL_MAX_HEIGHT;/);
+  // The smaller of what it is allowed and what it actually has, floored so a
+  // cramped screen still opens something worth reading.
+  assert.match(source, /return Math\.max\(Math\.min\(cap, room\), PANEL_MIN_HEIGHT\);/);
+});
+
+test('the field keeps a constant stacking order', async () => {
+  const source = await component('search-bar');
+
+  /*
+   * React Native implements `zIndex` on iOS by reordering the parent's
+   * subviews, which takes the view out of the hierarchy and puts it back — and
+   * a UITextField removed from the window resigns first responder. Setting it
+   * at the moment the panel opened blurred the field that had just been
+   * focused, which closed the panel again: the keyboard came up and went
+   * straight back down. Bisected on a device; it is why a search could not be
+   * opened at all.
+   */
+  assert.match(source, /style=\{RAISED\}/);
+  assert.doesNotMatch(source, /style=\{panelOpen \? RAISED : undefined\}/);
+});

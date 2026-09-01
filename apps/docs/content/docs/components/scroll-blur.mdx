@@ -148,14 +148,14 @@ Give it the sheet's own surface through `color`. The band fades towards whatever
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
-| `size` | `number` | `64` | Depth of the blurred band in pixels. |
+| `size` | `number` | `80` | Depth of the blurred band in pixels. |
 | `edges` | `'both' \| 'start' \| 'end' \| 'none'` | `'both'` | Which edges blur. |
 | `orientation` | `'horizontal' \| 'vertical'` | — | Scroll axis. Inferred from the child's `horizontal` prop when omitted — pass it explicitly for children that scroll horizontally without that prop (a `FlatList` with `horizontal` set through `contentContainerStyle`, say). |
-| `layers` | `number` | `6` | How many blur views make up the ramp. More is smoother and costs more; the band shows visible steps below four, and past eight nobody can tell. |
-| `intensity` | `number` | `40` | Blur strength at the very edge, 0–100. The layers share it between them. |
+| `layers` | `number` | `8` | How many blur views make up the ramp. More is smoother and costs more; the band shows visible steps below four, and past eight nobody can tell. |
+| `intensity` | `number` | `56` | Blur strength at the very edge, 0–100. The layers share it between them. |
 | `material` | `ScrollBlurTint` | `'default'` | Which way the material tints. Defaults to the app's theme rather than the phone's, so an app running dark on a light phone does not blur light. |
 | `color` | `string` | — | The colour the band fades towards — washed over the blur, and the whole effect where there is no blur to draw. Defaults to the theme's background. Pass the surface the scrollable actually sits on, or the band fades towards a colour that is not there. |
-| `tint` | `number` | `0.92` | How opaque that wash gets at the outer edge, 0 to 1. Lower it to let more of the content show through the far end of the band; `0` leaves the blur bare, along with the seams between its layers. |
+| `tint` | `number` | `0.95` | How opaque that wash gets at the outer edge, 0 to 1. Lower it to let more of the content show through the far end of the band; `0` leaves the blur bare, along with the seams between its layers. |
 | `fadeInDistance` | `number` | `24` | Distance in pixels over which an edge comes in from clear to full. |
 | `enabled` | `boolean` | `true` | Set false to render the child with no bands at all. |
 

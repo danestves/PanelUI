@@ -185,6 +185,20 @@ const PANEL_EDGE_GAP = 24;
 const PANEL_MIN_HEIGHT = 160;
 
 /**
+ * Ceiling for the derived height, in points. About six rows and a heading.
+ *
+ * The room above a lifted field is most of the screen, and a panel that takes
+ * all of it is a full-screen list that happens to have a search box under it —
+ * the page it was opened over stops being visible, so the search stops reading
+ * as something laid over the app. Past this the results scroll, which is what
+ * a long list should do anyway.
+ *
+ * `panelMaxHeight` overrides it for a screen that really is nothing but the
+ * search.
+ */
+const PANEL_MAX_HEIGHT = 320;
+
+/**
  * The field's height per size, matching `Input`'s own `h-10 / h-12 / h-14`.
  *
  * It is the fallback for the slot the panel keeps for the field, which is
@@ -231,6 +245,18 @@ const CARD_BELOW: ViewStyle = { position: 'absolute', top: 0, left: 0, right: 0 
  * so a card overlapping the content above the field would otherwise be painted
  * under it — and putting it here keeps the field painting over the card, which
  * is what lets the two be one surface.
+ *
+ * Applied always, and never toggled. React Native implements `zIndex` on iOS
+ * by reordering the parent's subviews, which takes the view out of the
+ * hierarchy and puts it back — and a `UITextField` removed from the window
+ * resigns first responder. Setting this at the moment the panel opens
+ * therefore blurred the field that had just been focused, which closed the
+ * panel again: the keyboard came up and went straight back down, and the only
+ * way to get a search open was to be quicker than the render.
+ *
+ * A constant stacking order costs nothing while the panel is shut — there is
+ * nothing to stack against — and the elevation draws no shadow, because the
+ * box has no background for Android to cast one from.
  */
 const RAISED: ViewStyle = { zIndex: 20, elevation: 20 };
 
@@ -469,9 +495,13 @@ export interface SearchBarProps
    */
   panelPlacement?: SearchBarPanelPlacement;
   /**
-   * Cap on the panel's height, in points. Derived from the room between the
-   * field and the edge of the screen when it is not given, so a panel never
-   * runs off the top of the display.
+   * Cap on the panel's height, in points.
+   *
+   * The panel takes the smaller of this and the room between the field and the
+   * edge of the screen, so it never runs off the top of the display. Unset, it
+   * is capped at about six rows: the space above a lifted field is most of the
+   * screen, and a panel that takes all of it stops reading as something laid
+   * over the app. Longer lists scroll.
    */
   panelMaxHeight?: number;
   /**
@@ -782,7 +812,6 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
     }, [panelOpen, keyboardHeight, measureAnchor]);
 
     const resolvedMaxHeight = useMemo(() => {
-      if (panelMaxHeight !== undefined) return panelMaxHeight;
       const fieldHeight = anchorBox?.height ?? 0;
       /*
        * While the field is riding the keyboard, where it has come to rest is
@@ -798,7 +827,14 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
         panelPlacement === 'top'
           ? fieldTop - PANEL_EDGE_GAP
           : windowHeight - keyboardHeight - fieldTop - fieldHeight - PANEL_EDGE_GAP;
-      return Math.max(room, PANEL_MIN_HEIGHT);
+      /*
+       * The smaller of what it is allowed and what it actually has, floored so
+       * a cramped screen still opens something worth reading. A caller's cap
+       * is clamped to the room too — a cap taller than the space available is
+       * a panel running off the top of the display.
+       */
+      const cap = panelMaxHeight ?? PANEL_MAX_HEIGHT;
+      return Math.max(Math.min(cap, room), PANEL_MIN_HEIGHT);
     }, [
       anchorBox,
       avoidKeyboard,
@@ -976,7 +1012,7 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
       <View
         ref={anchorRef}
         onLayout={measureAnchor}
-        style={panelOpen ? RAISED : undefined}
+        style={RAISED}
         className={slots.anchor({ className: cancel === 'never' ? 'w-full' : 'flex-1' })}
       >
         {panelOpen ? (
