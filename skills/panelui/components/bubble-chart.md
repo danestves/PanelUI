@@ -80,7 +80,7 @@ Extends `ViewProps, ChartAccessibilityProps<BubbleChartDatum>`.
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `onFit` | `(fit: { slope: number; intercept: number; r: number }) => void` | — | The line's slope and intercept, and how tightly the cloud sits on it, once they have been computed. `r` runs 0 to 1: 1 is every bubble on the line, 0 is a cloud with no direction at all. Given here rather than left for the caller to work out, because the fit is already being computed to draw the line and doing it twice invites the two answers to disagree. |
+| `onFit` | `(fit: { slope: number; intercept: number; r: number }) => void` | — | The line's slope and intercept, and how tightly the cloud sits on it, once they have been computed. `r` runs 0 to 1: 1 is every bubble on the line, 0 is a cloud with no direction at all. Given here rather than left for the caller to work out, because the fit is already being computed to draw the line and doing it twice invites the two answers to disagree. It fires when the numbers change, not on every render that produced the same ones, so putting the fit straight into state is safe. |
 | `color` | `string` | — | — |
 | `strokeWidth` | `number` | `1.5` | — |
 | `dashArray` | `string` | — | Dash pattern. Dashed by default: the line is a reading, not a measurement. |

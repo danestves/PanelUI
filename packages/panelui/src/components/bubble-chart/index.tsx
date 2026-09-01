@@ -790,6 +790,9 @@ export interface BubbleChartTrendProps {
    * Given here rather than left for the caller to work out, because the fit is
    * already being computed to draw the line and doing it twice invites the two
    * answers to disagree.
+   *
+   * It fires when the numbers change, not on every render that produced the
+   * same ones, so putting the fit straight into state is safe.
    */
   onFit?: (fit: { slope: number; intercept: number; r: number }) => void;
   color?: string;
@@ -860,8 +863,30 @@ function BubbleChartTrend({
   useEffect(() => {
     fitRef.current = onFit;
   });
+
+  /*
+   * Reported when the numbers change, not when the object does.
+   *
+   * `bubbles` is rebuilt whenever any of its inputs changes identity, and
+   * `sizeRange={[14, 30]}` written at a call site is a new array every render —
+   * so the fit is a new object every render even when the data has not moved.
+   * Handing that to a caller who puts it in state is a render loop, and the
+   * caller has no way to see that coming.
+   */
+  const reported = useRef<{ slope: number; intercept: number; r: number } | null>(null);
   useEffect(() => {
-    if (fit) fitRef.current?.(fit);
+    if (!fit) return;
+    const last = reported.current;
+    if (
+      last &&
+      last.slope === fit.slope &&
+      last.intercept === fit.intercept &&
+      last.r === fit.r
+    ) {
+      return;
+    }
+    reported.current = fit;
+    fitRef.current?.(fit);
   }, [fit]);
 
   const slope = fit?.slope ?? 0;

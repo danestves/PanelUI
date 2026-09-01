@@ -165,12 +165,14 @@ Position can be read off the axes. Area has no axis, so a reader can see that on
 
 `BubbleChart.SizeKey` is the only part that answers that. The circles nest and share a baseline — three circles in a row are three sizes, three circles inside one another are one scale.
 
+Pick the corner the data leaves free — the key is drawn over the plot, so a corner with bubbles in it puts the scale on top of the thing it is explaining.
+
 ```tsx
 <BubbleChart data={teams} sizeKey="people" sizeRange={[10, 34]} …>
   <BubbleChart.Grid />
   <BubbleChart.Bubbles opacity={0.75} />
   <BubbleChart.Labels />
-  <BubbleChart.SizeKey placement="bottom-right" label="People" />
+  <BubbleChart.SizeKey placement="top-left" label="People" />
   <BubbleChart.XAxis label="Efficiency" />
   <BubbleChart.YAxis label="Performance" />
 </BubbleChart>
@@ -282,7 +284,7 @@ return (
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `onFit` | `(fit: { slope: number; intercept: number; r: number }) => void` | — | The line's slope and intercept, and how tightly the cloud sits on it, once they have been computed. `r` runs 0 to 1: 1 is every bubble on the line, 0 is a cloud with no direction at all. Given here rather than left for the caller to work out, because the fit is already being computed to draw the line and doing it twice invites the two answers to disagree. |
+| `onFit` | `(fit: { slope: number; intercept: number; r: number }) => void` | — | The line's slope and intercept, and how tightly the cloud sits on it, once they have been computed. `r` runs 0 to 1: 1 is every bubble on the line, 0 is a cloud with no direction at all. Given here rather than left for the caller to work out, because the fit is already being computed to draw the line and doing it twice invites the two answers to disagree. It fires when the numbers change, not on every render that produced the same ones, so putting the fit straight into state is safe. |
 | `color` | `string` | — |  |
 | `strokeWidth` | `number` | `1.5` |  |
 | `dashArray` | `string` | — | Dash pattern. Dashed by default: the line is a reading, not a measurement. |

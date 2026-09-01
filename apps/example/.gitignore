@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Written by eas-cli for a remote simulator session. Carries a daemon token.
+.env.eas-simulator

@@ -931,7 +931,7 @@ function BubbleSizeKeyVersion() {
             <BubbleChart.Grid />
             <BubbleChart.Bubbles opacity={0.75} />
             <BubbleChart.Labels />
-            <BubbleChart.SizeKey placement="bottom-right" label="People" />
+            <BubbleChart.SizeKey placement="top-left" label="People" />
             <BubbleChart.XAxis label="Efficiency" />
             <BubbleChart.YAxis label="Performance" />
             <BubbleChart.Tooltip />
@@ -1452,7 +1452,8 @@ export const ENTRIES: ComponentEntry[] = [
         label: 'Population',
         id: 'centred',
         fullPage: true,
-        description: 'More rows, and the shape a population is usually drawn in.',
+        description:
+          'The shape a population is usually drawn in, with the names over each pair.',
         render: () => <PyramidCentredVersion />,
       },
       {

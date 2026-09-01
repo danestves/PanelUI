@@ -38,8 +38,8 @@
     },
     {
       "title": "What the area is worth",
-      "description": "Position can be read off the axes. Area has no axis, so a reader can see that one circle is bigger than another and has no way to know by how much.\n\n`BubbleChart.SizeKey` is the only part that answers that. The circles nest and share a baseline — three circles in a row are three sizes, three circles inside one another are one scale.",
-      "code": "<BubbleChart data={teams} sizeKey=\"people\" sizeRange={[10, 34]} …>\n  <BubbleChart.Grid />\n  <BubbleChart.Bubbles opacity={0.75} />\n  <BubbleChart.Labels />\n  <BubbleChart.SizeKey placement=\"bottom-right\" label=\"People\" />\n  <BubbleChart.XAxis label=\"Efficiency\" />\n  <BubbleChart.YAxis label=\"Performance\" />\n</BubbleChart>"
+      "description": "Position can be read off the axes. Area has no axis, so a reader can see that one circle is bigger than another and has no way to know by how much.\n\n`BubbleChart.SizeKey` is the only part that answers that. The circles nest and share a baseline — three circles in a row are three sizes, three circles inside one another are one scale.\n\nPick the corner the data leaves free — the key is drawn over the plot, so a corner with bubbles in it puts the scale on top of the thing it is explaining.",
+      "code": "<BubbleChart data={teams} sizeKey=\"people\" sizeRange={[10, 34]} …>\n  <BubbleChart.Grid />\n  <BubbleChart.Bubbles opacity={0.75} />\n  <BubbleChart.Labels />\n  <BubbleChart.SizeKey placement=\"top-left\" label=\"People\" />\n  <BubbleChart.XAxis label=\"Efficiency\" />\n  <BubbleChart.YAxis label=\"Performance\" />\n</BubbleChart>"
     },
     {
       "title": "The line through the cloud",
