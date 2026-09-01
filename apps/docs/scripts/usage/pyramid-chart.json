@@ -24,8 +24,8 @@
     },
     {
       "title": "Names between the wings, or down the left",
-      "description": "`labelPlacement` decides where the category names go. The default gives each row a line of its own over its pair of bars. `center` puts them in a gutter between the wings instead — taken off the bars rather than off the edges, so both wings stay equal — and `start` puts them down the left, for a chart with room on that side.",
-      "code": "<PyramidChart\n  data={POPULATION}\n  xDataKey=\"band\"\n  labelPlacement=\"center\"\n  aspectRatio={1}\n  barGap={0.3}\n>\n  <PyramidChart.Grid columns={2} />\n  <PyramidChart.Bar dataKey=\"men\" side=\"start\" />\n  <PyramidChart.Bar dataKey=\"women\" side=\"end\" colorIndex={5} />\n  <PyramidChart.XAxis />\n  <PyramidChart.YAxis />\n  <PyramidChart.Tooltip />\n</PyramidChart>"
+      "description": "`labelPlacement` decides where the category names go. The default gives each row a line of its own over its pair of bars. `center` puts them in a gutter between the wings instead — taken off the bars rather than off the edges, so both wings stay equal — and `start` puts them down the left, for a chart with room on that side.\n\nHeight is the chart's width over `aspectRatio` and has nothing to do with how many rows there are. So a stack that is running past the bottom of the screen is shortened by raising `aspectRatio`, not by dropping rows — dropping rows only makes the bars thicker in a frame exactly as tall as before.",
+      "code": "<PyramidChart\n  data={POPULATION}\n  xDataKey=\"band\"\n  labelPlacement=\"center\"\n  aspectRatio={1.5}\n  barGap={0.3}\n>\n  <PyramidChart.Grid columns={2} />\n  <PyramidChart.Bar dataKey=\"men\" side=\"start\" />\n  <PyramidChart.Bar dataKey=\"women\" side=\"end\" colorIndex={5} />\n  <PyramidChart.XAxis />\n  <PyramidChart.YAxis />\n  <PyramidChart.Tooltip />\n</PyramidChart>"
     },
     {
       "title": "A readout that follows the finger",

@@ -96,12 +96,14 @@ npx panelui-cli@latest add pyramid-chart
 
 `labelPlacement` decides where the category names go. The default gives each row a line of its own over its pair of bars. `center` puts them in a gutter between the wings instead — taken off the bars rather than off the edges, so both wings stay equal — and `start` puts them down the left, for a chart with room on that side.
 
+Height is the chart's width over `aspectRatio` and has nothing to do with how many rows there are. So a stack that is running past the bottom of the screen is shortened by raising `aspectRatio`, not by dropping rows — dropping rows only makes the bars thicker in a frame exactly as tall as before.
+
 ```tsx
 <PyramidChart
   data={POPULATION}
   xDataKey="band"
   labelPlacement="center"
-  aspectRatio={1}
+  aspectRatio={1.5}
   barGap={0.3}
 >
   <PyramidChart.Grid columns={2} />

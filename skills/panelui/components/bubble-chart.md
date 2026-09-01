@@ -13,11 +13,14 @@ import { BubbleChart } from 'panelui-native';
 ```tsx
 <BubbleChart>
   <BubbleChart.Grid />        {/* reference lines both ways */}
+  <BubbleChart.Quadrants />   {/* a crosshair, and a name for each corner */}
+  <BubbleChart.Trend />       {/* the line the cloud fits best */}
   <BubbleChart.Bubbles />     {/* the circles */}
   <BubbleChart.Labels />      {/* their names, inside them */}
+  <BubbleChart.SizeKey />     {/* what an area is worth */}
   <BubbleChart.Skeleton />    {/* while status="loading" */}
-  <BubbleChart.XAxis />
-  <BubbleChart.YAxis />
+  <BubbleChart.XAxis label="Efficiency" />
+  <BubbleChart.YAxis label="Performance" />
   <BubbleChart.Legend />      {/* under the plot, instead of Labels */}
   <BubbleChart.Tooltip />     {/* the drag, and the readout */}
 </BubbleChart>
@@ -26,12 +29,15 @@ import { BubbleChart } from 'panelui-native';
 ### Parts
 
 - `BubbleChart.Header`
-- `BubbleChart.Grid` — Reference lines both ways. Both axes are quantities here, so both earn them.
+- `BubbleChart.Grid` — Reference lines both ways, eight of each. That is twice the four intervals an axis is divided into, so every second line carries a number and the ones between it are halves of a labelled step. `dashArray` changes the pattern; pass `undefined` for solid rules.
+- `BubbleChart.Quadrants` — A crosshair splitting the plot into four, with a word for each corner. It stands at the mean of each axis by default; pass `x` and `y` for a threshold somebody decided rather than one the data produced. The tint marks the two corners a reading usually ends at.
+- `BubbleChart.Trend` — The least-squares line through the cloud, dashed and drawn under the circles because it is a summary of the data rather than data. `onFit` hands back the slope, the intercept and `r` — 1 is every bubble on the line, 0 is a cloud with no direction at all.
 - `BubbleChart.Bubbles` — The circles. Colour comes from the row unless `color` overrides every one of them.
 - `BubbleChart.Labels` — The names, written inside the circles. A bubble too small to hold its own is left without one rather than given an unreadable one.
+- `BubbleChart.SizeKey` — Three nested circles saying what a bubble's area is worth. Area is the one quantity the chart has no axis for, so without this the reader can see that one circle is bigger than another and has no way to know by how much. Needs a `sizeKey` on the chart.
 - `BubbleChart.Skeleton` — A still field of muted circles shown while `status="loading"`, dissolving as the real ones grow in.
-- `BubbleChart.XAxis` — The x labels, evenly along the axis, as real text under the plot.
-- `BubbleChart.YAxis` — Value labels down the side, one per grid line. Reserves its own gutter.
+- `BubbleChart.XAxis` — Value labels along the bottom, evenly spaced because the axis is a continuous scale rather than a list of rows. `label` writes what the axis measures under the numbers, and the chart reserves the room for it.
+- `BubbleChart.YAxis` — Value labels down the side, and the gutter they sit in. `label` writes what the axis measures up the side of it, turned on its side because that is the only way a word fits a gutter sized for numbers.
 - `BubbleChart.Tooltip` — The touch target, the nearest-bubble selection it drives, and the readout that follows it.
 - `BubbleChart.Legend` — A swatch and a name per bubble, drawn under the plot. Use it instead of `BubbleChart.Labels` when the circles are too small to carry their own names.
 
@@ -64,9 +70,20 @@ Extends `ViewProps, ChartAccessibilityProps<BubbleChartDatum>`.
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `rows` | `number` | `5` | Horizontal rules across the plot. |
-| `columns` | `number` | `5` | Vertical rules up it. Both axes are measured, so both earn lines. |
-| `color` | `string` | — | Both default to five. A coarse grid draws a handful of large squares that read as blocks behind the bubbles rather than as reference lines; a finer one recedes and lets the circles be the thing on the chart. |
+| `rows` | `number` | `8` | Horizontal rules across the plot. Eight, which is twice the four intervals an axis is divided into by default, so every second line carries a number and the ones between it are halves of a labelled step rather than an unrelated rhythm. Squares this size recede behind the circles; the coarse grid a smaller number draws reads as blocks laid over the plot. |
+| `columns` | `number` | `8` | Vertical rules up it. Both axes are measured, so both earn lines. |
+| `dashArray` | `string` | — | Dash pattern for the rules. Pass `undefined` for solid ones. |
+| `color` | `string` | — | — |
+| `opacity` | `number` | `1` | — |
+
+#### `BubbleChartTrendProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `onFit` | `(fit: { slope: number; intercept: number; r: number }) => void` | — | The line's slope and intercept, and how tightly the cloud sits on it, once they have been computed. `r` runs 0 to 1: 1 is every bubble on the line, 0 is a cloud with no direction at all. Given here rather than left for the caller to work out, because the fit is already being computed to draw the line and doing it twice invites the two answers to disagree. |
+| `color` | `string` | — | — |
+| `strokeWidth` | `number` | `1.5` | — |
+| `dashArray` | `string` | — | Dash pattern. Dashed by default: the line is a reading, not a measurement. |
 | `opacity` | `number` | `1` | — |
 
 #### `BubbleChartBubblesProps`
@@ -91,20 +108,46 @@ Extends `ViewProps, ChartAccessibilityProps<BubbleChartDatum>`.
 | `format` | `(point: BubbleChartPoint) => string` | — | Turn a bubble into its label. Defaults to the value at `labelKey`. |
 | `className` | `string` | — | — |
 
+#### `BubbleChartQuadrantsProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `x` | `number` | — | Where the vertical rule stands. Defaults to the mean of the x values. |
+| `y` | `number` | — | Where the horizontal rule lies. Defaults to the mean of the y values. |
+| `labels` | `{` | — | A word for each corner, written in the corner it belongs to. |
+| `topLeft` | `string` | — | — |
+| `topRight` | `string` | — | — |
+| `bottomLeft` | `string` | — | — |
+| `bottomRight` | `string` | — | — |
+| `tint` | `boolean` | `true` | Tint the high-high and low-low corners. On by default. |
+| `color` | `string` | — | — |
+| `className` | `string` | — | — |
+
+#### `BubbleChartSizeKeyProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `placement` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `bottom-right` | Which corner of the plot it sits in. |
+| `format` | `(value: number) => string` | — | Turn a value into its label. Defaults to a compact number. |
+| `label` | `string` | — | A word for what the area means — "people", "revenue". |
+| `className` | `string` | — | — |
+
 #### `BubbleChartXAxisProps`
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `ticks` | `number` | — | How many intervals to divide the axis into. Yields `ticks + 1` labels. |
+| `ticks` | `number` | — | How many intervals to divide the axis into. Yields `ticks + 1` labels. Four, and the domain is rounded out to four steps to match, so the numbers come out round. Fewer leaves most of the grid unnamed — a line with nothing beside it is a line the reader has to count their way to. |
 | `format` | `(value: number) => string` | — | Turn a value into its label. Defaults to a compact number. |
+| `label` | `string` | — | What the axis measures, written under the numbers. |
 | `className` | `string` | — | — |
 
 #### `BubbleChartYAxisProps`
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `ticks` | `number` | — | How many intervals to divide the axis into. Yields `ticks + 1` labels. |
+| `ticks` | `number` | — | How many intervals to divide the axis into. Yields `ticks + 1` labels. Four, matching the four steps the domain is rounded out to and every second line of the default grid. |
 | `format` | `(value: number) => string` | — | Turn a value into its label. Defaults to a compact number. |
+| `label` | `string` | — | What the axis measures, written up the side of it. |
 | `className` | `string` | — | — |
 
 #### `BubbleChartTooltipProps`
@@ -176,6 +219,18 @@ Two of them are the axes and the third is the area. Say what the area means in t
 `sizeKey` maps to a circle's *area*. Doubling a radius quadruples the ink, so a chart that scaled the radius would show a doubled value as four times the size and the reader would believe the picture. `sizeRange` is the smallest and largest radius the scale runs between, and the scale runs over the whole data set so one bubble's size means the same thing as another's. Its upper end is also what the plot holds back at every edge — a circle is drawn about its centre, so without that the bubble carrying the largest value is the one cropped in half.
 
 Without a `sizeKey` every bubble is drawn at the middle of `sizeRange`, which is a scatter plot with names on it — and an honest one.
+
+### The grid, and the numbers on it
+
+The grid draws eight rules each way and each axis prints five numbers, so every second gridline carries one. That relationship is the point of both defaults: a number beside every line of a grid fine enough to read against is a column of numbers, and a grid coarse enough for that reads as blocks laid behind the circles.
+
+The domain is rounded out to the same four steps the axes are divided into, so the numbers come out round rather than ending wherever the data happened to end.
+
+`rows`, `columns` and `ticks` all move independently if a chart wants a different rhythm — keep the grid a whole multiple of the ticks, or the numbers stop landing on lines.
+
+### Naming the axes
+
+`label` on `XAxis` and `YAxis` says what each one measures. The chart reserves the room before it lays the plot out, so adding one moves the plot rather than writing over it. The y label is turned on its side, which is the only way a word fits a gutter sized for numbers.
 
 ### Colour
 

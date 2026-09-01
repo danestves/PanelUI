@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1241,
+    "exports": 1244,
     "values": 322,
-    "types": 919,
+    "types": 922,
     "modules": 149,
     "components": 122,
     "hooks": 13
@@ -450,11 +450,23 @@
             "kind": "type"
           },
           {
+            "name": "BubbleChartQuadrantsProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartTrendProps",
+            "kind": "type"
+          },
+          {
             "name": "BubbleChartBubblesProps",
             "kind": "type"
           },
           {
             "name": "BubbleChartLabelsProps",
+            "kind": "type"
+          },
+          {
+            "name": "BubbleChartSizeKeyProps",
             "kind": "type"
           },
           {

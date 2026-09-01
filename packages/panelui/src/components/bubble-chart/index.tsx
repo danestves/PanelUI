@@ -88,6 +88,7 @@ import { cn } from '../../utils/cn';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedG = Animated.createAnimatedComponent(G);
+const AnimatedLine = Animated.createAnimatedComponent(SvgLine);
 
 /**
  * How much of the reveal is spent handing out the bubbles' start times. The
@@ -156,7 +157,22 @@ const HIT_RADIUS = 22;
 const PALETTE_SIZE = 5;
 
 /** Steps each axis is rounded out to. Matches the labels an axis draws. */
-const AXIS_STEPS = 2;
+const AXIS_STEPS = 4;
+
+/** Room under the numbers for an axis's own name, when it is given one. */
+const AXIS_TITLE_HEIGHT = 18;
+
+/** Gap between a quadrant's caption and the corner it is written in. */
+const QUADRANT_LABEL_INSET = 6;
+
+/** Column the size key's values are written in, beside its circles. */
+const SIZE_KEY_LABEL_WIDTH = 44;
+
+/** Gap between the size key's circles and the values naming them. */
+const SIZE_KEY_GAP = 6;
+
+/** Room beside the numbers for the y axis's name, which is turned on its side. */
+const AXIS_TITLE_WIDTH = 18;
 
 type Layer = 'svg' | 'overlay' | 'header' | 'footer';
 
@@ -200,6 +216,10 @@ interface BubbleChartContextValue {
   /** The settled domains, for the parts that draw text rather than geometry. */
   xExtent: [number, number];
   yExtent: [number, number];
+  /** Lowest and highest value behind the areas, or null without a `sizeKey`. */
+  sizeExtent: [number, number] | null;
+  /** The radii those two values map onto. */
+  sizeRange: [number, number];
   /** 0 to 1 as the bubbles grow in. Shared, so they arrive as one chart. */
   reveal: SharedValue<number>;
   activeIndex: SharedValue<number>;
@@ -373,14 +393,28 @@ const BubbleChartRoot = forwardRef<BubbleChartHandle, BubbleChartProps>(
       [chart1, chart2, chart3, chart4, chart5]
     );
 
-    const hasYAxis = useMemo(() => {
-      let found = false;
+    /*
+     * What the axes are going to need before anything has been laid out. The
+     * gutter for the y labels and the strip under the x ones are the plot's
+     * padding, so they have to be known here rather than by the parts that draw
+     * them — a part that reserved its own room would be positioned against a
+     * plot that had already been sized without it.
+     */
+    const axes = useMemo(() => {
+      let y = false;
+      let yTitle = false;
+      let xTitle = false;
       Children.forEach(children, (child) => {
-        if (isValidElement(child) && (child.type as { axis?: string }).axis === 'y') {
-          found = true;
+        if (!isValidElement(child)) return;
+        const axis = (child.type as { axis?: string }).axis;
+        const labelled = Boolean((child.props as { label?: string }).label);
+        if (axis === 'y') {
+          y = true;
+          if (labelled) yTitle = true;
         }
+        if (axis === 'x' && labelled) xTitle = true;
       });
-      return found;
+      return { y, yTitle, xTitle };
     }, [children]);
 
     /*
@@ -394,8 +428,12 @@ const BubbleChartRoot = forwardRef<BubbleChartHandle, BubbleChartProps>(
     const pad = {
       top: Math.max(PADDING.top, reach),
       right: Math.max(PADDING.right, reach),
-      bottom: Math.max(PADDING.bottom, reach),
-      left: Math.max(hasYAxis ? Y_AXIS_WIDTH : PADDING.left, reach),
+      bottom:
+        Math.max(PADDING.bottom, reach) + (axes.xTitle ? AXIS_TITLE_HEIGHT : 0),
+      left: Math.max(
+        axes.y ? Y_AXIS_WIDTH + (axes.yTitle ? AXIS_TITLE_WIDTH : 0) : PADDING.left,
+        reach
+      ),
     };
     const plot: Plot = {
       left: pad.left,
@@ -583,6 +621,8 @@ const BubbleChartRoot = forwardRef<BubbleChartHandle, BubbleChartProps>(
         yMax,
         xExtent: extents.x,
         yExtent: extents.y,
+        sizeExtent,
+        sizeRange,
         reveal,
         activeIndex,
         activeIndexJS,
@@ -606,6 +646,8 @@ const BubbleChartRoot = forwardRef<BubbleChartHandle, BubbleChartProps>(
         yMin,
         yMax,
         extents,
+        sizeExtent,
+        sizeRange,
         reveal,
         activeIndex,
         activeIndexJS,
@@ -672,29 +714,37 @@ BubbleChartRoot.displayName = 'BubbleChart';
 /* -------------------------------------------------------------------------- */
 
 export interface BubbleChartGridProps {
-  /** Horizontal rules across the plot. */
+  /**
+   * Horizontal rules across the plot.
+   *
+   * Eight, which is twice the four intervals an axis is divided into by
+   * default, so every second line carries a number and the ones between it are
+   * halves of a labelled step rather than an unrelated rhythm. Squares this
+   * size recede behind the circles; the coarse grid a smaller number draws
+   * reads as blocks laid over the plot.
+   */
   rows?: number;
   /** Vertical rules up it. Both axes are measured, so both earn lines. */
   columns?: number;
-  /*
-   * Both default to five. A coarse grid draws a handful of large squares that
-   * read as blocks behind the bubbles rather than as reference lines; a finer
-   * one recedes and lets the circles be the thing on the chart.
-   */
+  /** Dash pattern for the rules. Pass `undefined` for solid ones. */
+  dashArray?: string;
   color?: string;
   opacity?: number;
 }
 
 /** Reference lines both ways, so a bubble can be placed against two numbers. */
 function BubbleChartGrid({
-  rows = 5,
-  columns = 5,
+  rows = 8,
+  columns = 8,
+  dashArray = '4,6',
   color,
   opacity = 1,
 }: BubbleChartGridProps) {
   const { plot } = useChart('BubbleChart.Grid');
   const token = useCSSVariable('--color-border');
-  const stroke = color ?? (typeof token === 'string' ? token : 'rgba(0,0,0,0.1)');
+  // The fallback is grey rather than black: it stands in when the theme cannot
+  // be read, and a black hairline is invisible on a dark background.
+  const stroke = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.2)');
 
   const horizontals = Array.from({ length: rows + 1 }, (_unused, i) => i / rows);
   const verticals = Array.from({ length: columns + 1 }, (_unused, i) => i / columns);
@@ -710,6 +760,7 @@ function BubbleChartGrid({
           y2={plot.top + plot.height * fraction}
           stroke={stroke}
           strokeWidth={1}
+          strokeDasharray={dashArray}
         />
       ))}
       {verticals.map((fraction) => (
@@ -721,6 +772,7 @@ function BubbleChartGrid({
           y2={plot.top + plot.height}
           stroke={stroke}
           strokeWidth={1}
+          strokeDasharray={dashArray}
         />
       ))}
     </G>
@@ -728,6 +780,151 @@ function BubbleChartGrid({
 }
 BubbleChartGrid.displayName = 'BubbleChart.Grid';
 BubbleChartGrid.layer = 'svg' as Layer;
+
+export interface BubbleChartTrendProps {
+  /**
+   * The line's slope and intercept, and how tightly the cloud sits on it, once
+   * they have been computed. `r` runs 0 to 1: 1 is every bubble on the line,
+   * 0 is a cloud with no direction at all.
+   *
+   * Given here rather than left for the caller to work out, because the fit is
+   * already being computed to draw the line and doing it twice invites the two
+   * answers to disagree.
+   */
+  onFit?: (fit: { slope: number; intercept: number; r: number }) => void;
+  color?: string;
+  strokeWidth?: number;
+  /** Dash pattern. Dashed by default: the line is a reading, not a measurement. */
+  dashArray?: string;
+  opacity?: number;
+}
+
+/**
+ * The straight line that fits the cloud best, drawn across the plot.
+ *
+ * It is dashed and drawn under the circles, because it is not data — it is a
+ * summary of the data, and a solid rule through the middle of a field of
+ * bubbles reads as a value somebody plotted.
+ *
+ * The fit is least squares on the raw values, so it moves with the data rather
+ * than with the frame: resizing the chart never changes the line's meaning.
+ * Fewer than two bubbles, or every bubble on one vertical, has no line to draw
+ * and none is drawn.
+ */
+function BubbleChartTrend({
+  onFit,
+  color,
+  strokeWidth = 1.5,
+  dashArray = '6,5',
+  opacity = 0.7,
+}: BubbleChartTrendProps) {
+  const { bubbles, plot, status, xMin, xMax, yMin, yMax, reveal } =
+    useChart('BubbleChart.Trend');
+  const token = useCSSVariable('--color-muted-foreground');
+  const stroke = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.8)');
+
+  const fit = useMemo(() => {
+    const n = bubbles.length;
+    if (n < 2) return null;
+    let sumX = 0;
+    let sumY = 0;
+    for (const bubble of bubbles) {
+      sumX += bubble.x;
+      sumY += bubble.y;
+    }
+    const meanX = sumX / n;
+    const meanY = sumY / n;
+    let sxy = 0;
+    let sxx = 0;
+    let syy = 0;
+    for (const bubble of bubbles) {
+      const dx = bubble.x - meanX;
+      const dy = bubble.y - meanY;
+      sxy += dx * dy;
+      sxx += dx * dx;
+      syy += dy * dy;
+    }
+    // Every bubble on one vertical: the best fit is that vertical, which has no
+    // slope and nothing useful to draw.
+    if (sxx === 0) return null;
+    const slope = sxy / sxx;
+    const denominator = Math.sqrt(sxx * syy);
+    return {
+      slope,
+      intercept: meanY - slope * meanX,
+      r: denominator === 0 ? 0 : Math.abs(sxy / denominator),
+    };
+  }, [bubbles]);
+
+  const fitRef = useRef(onFit);
+  useEffect(() => {
+    fitRef.current = onFit;
+  });
+  useEffect(() => {
+    if (fit) fitRef.current?.(fit);
+  }, [fit]);
+
+  const slope = fit?.slope ?? 0;
+  const intercept = fit?.intercept ?? 0;
+
+  const animatedProps = useAnimatedProps(() => {
+    const x0 = xMin.value;
+    const x1 = xMax.value;
+    const lowY = yMin.value;
+    const highY = yMax.value;
+
+    /*
+     * Solved in data space and then clipped there, rather than drawn across the
+     * plot and clipped by the frame: a line that leaves the top of the chart
+     * has to stop where it leaves it, and the x of that point is only knowable
+     * from the equation.
+     */
+    let ax = x0;
+    let bx = x1;
+    if (slope !== 0) {
+      const atLow = (lowY - intercept) / slope;
+      const atHigh = (highY - intercept) / slope;
+      const enter = Math.min(atLow, atHigh);
+      const exit = Math.max(atLow, atHigh);
+      ax = Math.max(ax, enter);
+      bx = Math.min(bx, exit);
+    }
+    if (bx < ax) {
+      // The line never crosses the visible box.
+      return { x1: 0, x2: 0, y1: 0, y2: 0, opacity: 0 };
+    }
+
+    // Drawn out from the middle as the bubbles land, so the line arrives with
+    // the field rather than being there waiting for it.
+    const grown = Math.max(0, Math.min(1, reveal.value));
+    const midpoint = (ax + bx) / 2;
+    const half = ((bx - ax) / 2) * grown;
+
+    const startX = midpoint - half;
+    const endX = midpoint + half;
+    return {
+      x1: xAt(startX, plot, x0, x1),
+      x2: xAt(endX, plot, x0, x1),
+      y1: yOf(intercept + slope * startX, plot, lowY, highY),
+      y2: yOf(intercept + slope * endX, plot, lowY, highY),
+      opacity: opacity * grown,
+    };
+  });
+
+  if (status === 'loading' || !fit) return null;
+
+  return (
+    <AnimatedLine
+      animatedProps={animatedProps}
+      stroke={stroke}
+      strokeWidth={strokeWidth}
+      strokeDasharray={dashArray}
+      strokeLinecap="round"
+    />
+  );
+}
+BubbleChartTrend.displayName = 'BubbleChart.Trend';
+BubbleChartTrend.layer = 'svg' as Layer;
 
 export interface BubbleChartBubblesProps {
   /**
@@ -967,6 +1164,332 @@ function BubbleChartLabels({
 BubbleChartLabels.displayName = 'BubbleChart.Labels';
 BubbleChartLabels.layer = 'overlay' as Layer;
 
+export interface BubbleChartQuadrantsProps {
+  /** Where the vertical rule stands. Defaults to the mean of the x values. */
+  x?: number;
+  /** Where the horizontal rule lies. Defaults to the mean of the y values. */
+  y?: number;
+  /** A word for each corner, written in the corner it belongs to. */
+  labels?: {
+    topLeft?: string;
+    topRight?: string;
+    bottomLeft?: string;
+    bottomRight?: string;
+  };
+  /** Tint the high-high and low-low corners. On by default. */
+  tint?: boolean;
+  color?: string;
+  className?: string;
+}
+
+/**
+ * A crosshair splitting the plot into four, with a name for each corner.
+ *
+ * A field of bubbles is usually read as four groups rather than as a cloud —
+ * which of these is doing well on both counts, which on neither — and without
+ * a divider the reader draws that line by eye, in a different place each time.
+ * Putting it on the chart makes it one line everybody sees.
+ *
+ * It stands at the mean of each axis by default, because that is the split the
+ * data itself argues for. Pass `x` and `y` for a target, a budget or last
+ * year's number — a threshold somebody decided rather than one the data
+ * produced.
+ *
+ * The tint marks the two corners a reading usually ends at. Turn it off where
+ * all four corners matter equally.
+ */
+function BubbleChartQuadrants({
+  x,
+  y,
+  labels,
+  tint = true,
+  color,
+  className,
+}: BubbleChartQuadrantsProps) {
+  const { bubbles, plot, status, xMin, xMax, yMin, yMax } =
+    useChart('BubbleChart.Quadrants');
+  const token = useCSSVariable('--color-muted-foreground');
+  const stroke = color ?? (typeof token === 'string' ? token : 'rgba(128,128,128,0.8)');
+
+  const centre = useMemo(() => {
+    if (!bubbles.length) return null;
+    let sumX = 0;
+    let sumY = 0;
+    for (const bubble of bubbles) {
+      sumX += bubble.x;
+      sumY += bubble.y;
+    }
+    return { x: x ?? sumX / bubbles.length, y: y ?? sumY / bubbles.length };
+  }, [bubbles, x, y]);
+
+  const atX = centre?.x ?? 0;
+  const atY = centre?.y ?? 0;
+
+  const verticalStyle = useAnimatedStyle(() => ({
+    left: xAt(atX, plot, xMin.value, xMax.value),
+  }));
+  const horizontalStyle = useAnimatedStyle(() => ({
+    top: yOf(atY, plot, yMin.value, yMax.value),
+  }));
+  /*
+   * Two rectangles rather than four: the pair that is tinted is the pair the
+   * reader is being pointed at, and shading all four would only be a checked
+   * background.
+   */
+  const highStyle = useAnimatedStyle(() => {
+    const cx = xAt(atX, plot, xMin.value, xMax.value);
+    const cy = yOf(atY, plot, yMin.value, yMax.value);
+    return {
+      left: cx,
+      top: plot.top,
+      width: Math.max(plot.left + plot.width - cx, 0),
+      height: Math.max(cy - plot.top, 0),
+    };
+  });
+  const lowStyle = useAnimatedStyle(() => {
+    const cx = xAt(atX, plot, xMin.value, xMax.value);
+    const cy = yOf(atY, plot, yMin.value, yMax.value);
+    return {
+      left: plot.left,
+      top: cy,
+      width: Math.max(cx - plot.left, 0),
+      height: Math.max(plot.top + plot.height - cy, 0),
+    };
+  });
+
+  if (status === 'loading' || !centre) return null;
+
+  const corner = {
+    position: 'absolute' as const,
+    width: plot.width / 2 - QUADRANT_LABEL_INSET,
+  };
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{ position: 'absolute', inset: 0 }}
+      className={cn(className)}
+    >
+      {tint ? (
+        <>
+          <Animated.View
+            style={[{ position: 'absolute' }, highStyle]}
+            className="bg-foreground/[0.04]"
+          />
+          <Animated.View
+            style={[{ position: 'absolute' }, lowStyle]}
+            className="bg-foreground/[0.04]"
+          />
+        </>
+      ) : null}
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            top: plot.top,
+            height: plot.height,
+            width: 1,
+            backgroundColor: stroke,
+            opacity: 0.4,
+          },
+          verticalStyle,
+        ]}
+      />
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            left: plot.left,
+            width: plot.width,
+            height: 1,
+            backgroundColor: stroke,
+            opacity: 0.4,
+          },
+          horizontalStyle,
+        ]}
+      />
+      {/*
+        Pinned to the plot's corners rather than to the crosshair. A caption
+        names the region, and a region's name belongs at the far end of it —
+        following the rules it would crowd them as the split moved.
+      */}
+      {labels?.topLeft ? (
+        <Text
+          size="xs"
+          muted
+          numberOfLines={1}
+          style={{
+            ...corner,
+            left: plot.left + QUADRANT_LABEL_INSET,
+            top: plot.top + QUADRANT_LABEL_INSET,
+          }}
+        >
+          {labels.topLeft}
+        </Text>
+      ) : null}
+      {labels?.topRight ? (
+        <Text
+          size="xs"
+          muted
+          numberOfLines={1}
+          style={{
+            ...corner,
+            left: plot.left + plot.width / 2,
+            top: plot.top + QUADRANT_LABEL_INSET,
+            textAlign: 'right',
+          }}
+        >
+          {labels.topRight}
+        </Text>
+      ) : null}
+      {labels?.bottomLeft ? (
+        <Text
+          size="xs"
+          muted
+          numberOfLines={1}
+          style={{
+            ...corner,
+            left: plot.left + QUADRANT_LABEL_INSET,
+            top: plot.top + plot.height - QUADRANT_LABEL_INSET - AXIS_LABEL_HEIGHT,
+          }}
+        >
+          {labels.bottomLeft}
+        </Text>
+      ) : null}
+      {labels?.bottomRight ? (
+        <Text
+          size="xs"
+          muted
+          numberOfLines={1}
+          style={{
+            ...corner,
+            left: plot.left + plot.width / 2,
+            top: plot.top + plot.height - QUADRANT_LABEL_INSET - AXIS_LABEL_HEIGHT,
+            textAlign: 'right',
+          }}
+        >
+          {labels.bottomRight}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+BubbleChartQuadrants.displayName = 'BubbleChart.Quadrants';
+BubbleChartQuadrants.layer = 'overlay' as Layer;
+
+export interface BubbleChartSizeKeyProps {
+  /** Which corner of the plot it sits in. */
+  placement?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  /** Turn a value into its label. Defaults to a compact number. */
+  format?: (value: number) => string;
+  /** A word for what the area means — "people", "revenue". */
+  label?: string;
+  className?: string;
+}
+
+/**
+ * Three nested circles saying what a bubble's area is worth.
+ *
+ * A bubble chart's third quantity is the one it cannot state: position can be
+ * read off the axes, but area has no axis, so a reader can see that one circle
+ * is bigger than another and has no way to know by how much. This is the only
+ * part of the chart that answers that.
+ *
+ * Nested and sharing a baseline, which is how a difference in area is compared
+ * — three circles in a row are three sizes, three circles inside one another
+ * are one scale.
+ *
+ * It needs a `sizeKey` on the chart. Without one every bubble is the same size
+ * and there is no scale to key.
+ */
+function BubbleChartSizeKey({
+  placement = 'bottom-right',
+  format,
+  label,
+  className,
+}: BubbleChartSizeKeyProps) {
+  const { plot, status, sizeExtent, sizeRange } = useChart('BubbleChart.SizeKey');
+  const token = useCSSVariable('--color-muted-foreground');
+  const stroke = typeof token === 'string' ? token : 'rgba(128,128,128,0.8)';
+
+  const steps = useMemo(() => {
+    if (!sizeExtent) return null;
+    const [min, max] = sizeExtent;
+    const middle = (min + max) / 2;
+    // Largest first, so the smallest is drawn last and stays visible inside it.
+    return [max, middle, min].map((value) => ({
+      value,
+      r: bubbleRadius(value, sizeExtent, sizeRange),
+    }));
+  }, [sizeExtent, sizeRange]);
+
+  if (status === 'loading' || !steps) return null;
+
+  const outer = steps[0]!.r;
+  const width = outer * 2 + SIZE_KEY_LABEL_WIDTH;
+  const height = outer * 2 + (label ? AXIS_LABEL_HEIGHT : 0);
+  const top = placement.startsWith('top')
+    ? plot.top
+    : plot.top + plot.height - height;
+  const left = placement.endsWith('left')
+    ? plot.left
+    : plot.left + plot.width - width;
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{ position: 'absolute', left, top, width, height }}
+      className={cn(className)}
+    >
+      {label ? (
+        <Text size="xs" muted numberOfLines={1}>
+          {label}
+        </Text>
+      ) : null}
+      <View style={{ height: outer * 2, width }}>
+        {steps.map((step) => (
+          <View
+            key={step.value}
+            style={{
+              position: 'absolute',
+              // Shared bottom edge and shared centre line: the circles nest
+              // rather than stack, so the areas are laid over one another.
+              bottom: 0,
+              left: outer - step.r,
+              width: step.r * 2,
+              height: step.r * 2,
+              borderRadius: step.r,
+              borderWidth: 1,
+              borderColor: stroke,
+              opacity: 0.6,
+            }}
+          />
+        ))}
+        {steps.map((step) => (
+          <Text
+            key={`v${step.value}`}
+            size="xs"
+            muted
+            numberOfLines={1}
+            style={{
+              position: 'absolute',
+              left: outer * 2 + SIZE_KEY_GAP,
+              // Level with the top of the circle it names, which is the only
+              // edge the three do not share.
+              top: outer * 2 - step.r * 2 - AXIS_LABEL_HEIGHT / 2,
+              width: SIZE_KEY_LABEL_WIDTH - SIZE_KEY_GAP,
+            }}
+          >
+            {format ? format(step.value) : compactNumber(step.value)}
+          </Text>
+        ))}
+      </View>
+    </View>
+  );
+}
+BubbleChartSizeKey.displayName = 'BubbleChart.SizeKey';
+BubbleChartSizeKey.layer = 'overlay' as Layer;
+
 function BubbleLabel({
   bubble,
   text,
@@ -1031,10 +1554,18 @@ function BubbleLabel({
 }
 
 export interface BubbleChartXAxisProps {
-  /** How many intervals to divide the axis into. Yields `ticks + 1` labels. */
+  /**
+   * How many intervals to divide the axis into. Yields `ticks + 1` labels.
+   *
+   * Four, and the domain is rounded out to four steps to match, so the numbers
+   * come out round. Fewer leaves most of the grid unnamed — a line with nothing
+   * beside it is a line the reader has to count their way to.
+   */
   ticks?: number;
   /** Turn a value into its label. Defaults to a compact number. */
   format?: (value: number) => string;
+  /** What the axis measures, written under the numbers. */
+  label?: string;
   className?: string;
 }
 
@@ -1044,7 +1575,7 @@ export interface BubbleChartXAxisProps {
  * Evenly spaced, because this axis is a continuous scale rather than a list of
  * rows. There is no bubble for a label to sit under.
  */
-function BubbleChartXAxis({ ticks = 2, format, className }: BubbleChartXAxisProps) {
+function BubbleChartXAxis({ ticks = 4, format, label, className }: BubbleChartXAxisProps) {
   const { plot, xExtent } = useChart('BubbleChart.XAxis');
 
   const labels = useMemo(() => {
@@ -1061,15 +1592,31 @@ function BubbleChartXAxis({ ticks = 2, format, className }: BubbleChartXAxisProp
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
       className={cn(className)}
     >
-      {labels.map((label) => (
+      {label ? (
         <Text
-          key={label.key}
           size="xs"
           muted
           numberOfLines={1}
           style={{
             position: 'absolute',
             bottom: 0,
+            left: plot.left,
+            width: plot.width,
+            textAlign: 'center',
+          }}
+        >
+          {label}
+        </Text>
+      ) : null}
+      {labels.map((tick) => (
+        <Text
+          key={tick.key}
+          size="xs"
+          muted
+          numberOfLines={1}
+          style={{
+            position: 'absolute',
+            bottom: label ? AXIS_TITLE_HEIGHT : 0,
             // Centred on its tick, then held inside the chart. The first and
             // last ticks sit on the plot's own edges, so a box centred on them
             // hangs half its width off the side — the clamp slides those two
@@ -1077,7 +1624,7 @@ function BubbleChartXAxis({ ticks = 2, format, className }: BubbleChartXAxisProp
             left: Math.max(
               0,
               Math.min(
-                plot.left + (plot.width / ticks) * label.key - AXIS_LABEL_WIDTH / 2,
+                plot.left + (plot.width / ticks) * tick.key - AXIS_LABEL_WIDTH / 2,
                 plot.left + plot.width + PADDING.right - AXIS_LABEL_WIDTH
               )
             ),
@@ -1085,7 +1632,7 @@ function BubbleChartXAxis({ ticks = 2, format, className }: BubbleChartXAxisProp
             textAlign: 'center',
           }}
         >
-          {label.text}
+          {tick.text}
         </Text>
       ))}
     </View>
@@ -1093,17 +1640,33 @@ function BubbleChartXAxis({ ticks = 2, format, className }: BubbleChartXAxisProp
 }
 BubbleChartXAxis.displayName = 'BubbleChart.XAxis';
 BubbleChartXAxis.layer = 'overlay' as Layer;
+// Read by the root, which has to leave room under the numbers before it lays
+// the plot out.
+BubbleChartXAxis.axis = 'x' as const;
 
 export interface BubbleChartYAxisProps {
-  /** How many intervals to divide the axis into. Yields `ticks + 1` labels. */
+  /**
+   * How many intervals to divide the axis into. Yields `ticks + 1` labels.
+   *
+   * Four, matching the four steps the domain is rounded out to and every second
+   * line of the default grid.
+   */
   ticks?: number;
   /** Turn a value into its label. Defaults to a compact number. */
   format?: (value: number) => string;
+  /** What the axis measures, written up the side of it. */
+  label?: string;
   className?: string;
 }
 
-/** Value labels down the side, one per grid line. Reserves its own gutter. */
-function BubbleChartYAxis({ ticks = 2, format, className }: BubbleChartYAxisProps) {
+/**
+ * Value labels down the side, evenly over the axis, and the gutter they sit in.
+ *
+ * They land on every second line of the default grid rather than on all of
+ * them: a number beside every line of a grid fine enough to read against is a
+ * column of numbers, and the reader stops seeing the chart.
+ */
+function BubbleChartYAxis({ ticks = 4, format, label, className }: BubbleChartYAxisProps) {
   const { plot, yExtent } = useChart('BubbleChart.YAxis');
 
   const labels = useMemo(() => {
@@ -1115,27 +1678,54 @@ function BubbleChartYAxis({ ticks = 2, format, className }: BubbleChartYAxisProp
     });
   }, [yExtent, ticks, format]);
 
+  const titleWidth = label ? AXIS_TITLE_WIDTH : 0;
+
   return (
-    <View
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        left: 0,
-        // Centred on the grid line each label names: the strip is lifted half a
-        // label and grown by a whole one, so `justify-between` lands the text's
-        // middle on the line rather than its top edge on the first.
-        top: plot.top - AXIS_LABEL_HEIGHT / 2,
-        height: plot.height + AXIS_LABEL_HEIGHT,
-        width: Math.max(plot.left - Y_AXIS_GUTTER, 0),
-      }}
-      className={cn('items-end justify-between', className)}
-    >
-      {labels.map((label) => (
-        <Text key={label.key} size="xs" muted numberOfLines={1}>
-          {label.text}
-        </Text>
-      ))}
-    </View>
+    <>
+      {label ? (
+        /*
+         * Turned on its side, which is the only way a word fits in a gutter
+         * sized for numbers. The box is laid out as tall as the plot and then
+         * rotated about its own centre, so the text runs the length of the axis
+         * it names rather than of whatever it happens to say.
+         */
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: titleWidth / 2 - plot.height / 2,
+            top: plot.top + plot.height / 2 - AXIS_LABEL_HEIGHT / 2,
+            width: plot.height,
+            height: AXIS_LABEL_HEIGHT,
+            transform: [{ rotate: '-90deg' }],
+          }}
+        >
+          <Text size="xs" muted numberOfLines={1} style={{ textAlign: 'center' }}>
+            {label}
+          </Text>
+        </View>
+      ) : null}
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          left: titleWidth,
+          // Centred on the grid line each label names: the strip is lifted half
+          // a label and grown by a whole one, so `justify-between` lands the
+          // text's middle on the line rather than its top edge on the first.
+          top: plot.top - AXIS_LABEL_HEIGHT / 2,
+          height: plot.height + AXIS_LABEL_HEIGHT,
+          width: Math.max(plot.left - Y_AXIS_GUTTER - titleWidth, 0),
+        }}
+        className={cn('items-end justify-between', className)}
+      >
+        {labels.map((tick) => (
+          <Text key={tick.key} size="xs" muted numberOfLines={1}>
+            {tick.text}
+          </Text>
+        ))}
+      </View>
+    </>
   );
 }
 BubbleChartYAxis.displayName = 'BubbleChart.YAxis';
@@ -1517,8 +2107,11 @@ BubbleChartHeader.layer = 'header' as Layer;
 export const BubbleChart = Object.assign(BubbleChartRoot, {
   Header: BubbleChartHeader,
   Grid: BubbleChartGrid,
+  Quadrants: BubbleChartQuadrants,
+  Trend: BubbleChartTrend,
   Bubbles: BubbleChartBubbles,
   Labels: BubbleChartLabels,
+  SizeKey: BubbleChartSizeKey,
   Skeleton: BubbleChartSkeleton,
   XAxis: BubbleChartXAxis,
   YAxis: BubbleChartYAxis,

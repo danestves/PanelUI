@@ -597,13 +597,17 @@ const PENGUINS = [
   { species: 'Gentoo', male: 61, female: 58 },
 ];
 
+/*
+ * Four bands, not six. The chart's height is its width over `aspectRatio` and
+ * has nothing to do with how many rows there are, so a taller stack does not
+ * make it longer — but a shorter one does let the frame come up without the
+ * bars going thin, and at six the panel ran past the bottom of the screen.
+ */
 const POPULATION = [
   { band: '0–14', men: 9.2, women: 8.8 },
   { band: '15–29', men: 10.4, women: 10.1 },
   { band: '30–44', men: 11.8, women: 11.6 },
   { band: '45–59', men: 10.9, women: 11.2 },
-  { band: '60–74', men: 7.4, women: 8.3 },
-  { band: '75+', men: 3.1, women: 4.9 },
 ];
 
 /** The shape the chart is named for: two wings on one scale. */
@@ -647,7 +651,7 @@ function PyramidBasicVersion() {
   );
 }
 
-/** More rows, with the names over each pair rather than between them. */
+/** A shorter frame, with the names over each pair rather than between them. */
 function PyramidCentredVersion() {
   return (
     <View className="flex-1 justify-center p-4">
@@ -657,11 +661,11 @@ function PyramidCentredVersion() {
           <Frame.Action>Millions</Frame.Action>
         </Frame.Header>
         <Frame.Panel>
-          <PyramidChart data={POPULATION} xDataKey="band" aspectRatio={1} barGap={0.3}>
+          <PyramidChart data={POPULATION} xDataKey="band" aspectRatio={1.5} barGap={0.3}>
             <PyramidChart.Header
               className={CHART_HEADER}
-              value="65.7m"
-              caption="Six bands, read outward from the centre"
+              value="42.0m"
+              caption="Four bands, read outward from the centre"
               labels={{ men: 'Men', women: 'Women' }}
               legend
             />
@@ -746,7 +750,7 @@ function BubbleBasicVersion() {
             yDataKey="performance"
             sizeKey="people"
             labelKey="team"
-            sizeRange={[12, 26]}
+            sizeRange={[14, 30]}
             aspectRatio={1.4}
             onActivePointChange={(point) =>
               setActive(point ? { label: point.label, size: point.size } : null)
@@ -835,7 +839,7 @@ function BubbleLoadingVersion() {
             yDataKey="performance"
             sizeKey="people"
             labelKey="team"
-            sizeRange={[12, 26]}
+            sizeRange={[14, 30]}
             status={status}
             aspectRatio={1.4}
           >
@@ -851,6 +855,133 @@ function BubbleLoadingVersion() {
       <Button variant="outline" onPress={() => setStatus('loading')}>
         Load again
       </Button>
+    </View>
+  );
+}
+
+/** The four-way reading a field of bubbles is usually put to. */
+function BubbleQuadrantsVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Where each team sits</Frame.Title>
+          <Frame.Action>Split at the average</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <BubbleChart
+            data={TEAMS}
+            xDataKey="efficiency"
+            yDataKey="performance"
+            sizeKey="people"
+            labelKey="team"
+            sizeRange={[14, 30]}
+            aspectRatio={1.2}
+          >
+            <BubbleChart.Header
+              className={CHART_HEADER}
+              value="8 teams"
+              caption="Both averages, drawn as one line each"
+            />
+            <BubbleChart.Grid />
+            <BubbleChart.Quadrants
+              labels={{
+                topLeft: 'Effective, costly',
+                topRight: 'Doing both',
+                bottomLeft: 'Neither yet',
+                bottomRight: 'Lean, quiet',
+              }}
+            />
+            <BubbleChart.Bubbles />
+            <BubbleChart.Labels />
+            <BubbleChart.XAxis label="Efficiency" />
+            <BubbleChart.YAxis label="Performance" />
+            <BubbleChart.Tooltip />
+          </BubbleChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** The one quantity the chart cannot otherwise state: what the area is worth. */
+function BubbleSizeKeyVersion() {
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Team size, to scale</Frame.Title>
+          <Frame.Action>Area is people</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <BubbleChart
+            data={TEAMS}
+            xDataKey="efficiency"
+            yDataKey="performance"
+            sizeKey="people"
+            labelKey="team"
+            sizeRange={[10, 34]}
+            aspectRatio={1.2}
+          >
+            <BubbleChart.Header
+              className={CHART_HEADER}
+              value="6 to 22"
+              caption="People per team, read off the key"
+            />
+            <BubbleChart.Grid />
+            <BubbleChart.Bubbles opacity={0.75} />
+            <BubbleChart.Labels />
+            <BubbleChart.SizeKey placement="bottom-right" label="People" />
+            <BubbleChart.XAxis label="Efficiency" />
+            <BubbleChart.YAxis label="Performance" />
+            <BubbleChart.Tooltip />
+          </BubbleChart>
+        </Frame.Panel>
+      </Frame>
+    </View>
+  );
+}
+
+/** A line through the cloud, and how tightly the cloud sits on it. */
+function BubbleTrendVersion() {
+  const [fit, setFit] = useState<{ slope: number; r: number } | null>(null);
+
+  return (
+    <View className="flex-1 justify-center p-4">
+      <Frame className="w-full">
+        <Frame.Header>
+          <Frame.Title>Does one buy the other?</Frame.Title>
+          <Frame.Action>Least squares</Frame.Action>
+        </Frame.Header>
+        <Frame.Panel>
+          <BubbleChart
+            data={TEAMS}
+            xDataKey="efficiency"
+            yDataKey="performance"
+            sizeKey="people"
+            labelKey="team"
+            sizeRange={[14, 30]}
+            aspectRatio={1.2}
+          >
+            <BubbleChart.Header
+              className={CHART_HEADER}
+              value={fit ? `r ${fit.r.toFixed(2)}` : '—'}
+              caption={
+                fit && fit.r < 0.3
+                  ? 'Barely a relationship'
+                  : 'How tightly the teams sit on the line'
+              }
+            />
+            <BubbleChart.Grid />
+            <BubbleChart.Trend onFit={(next) => setFit(next)} />
+            <BubbleChart.Bubbles opacity={0.8} />
+            <BubbleChart.Labels />
+            <BubbleChart.XAxis label="Efficiency" />
+            <BubbleChart.YAxis label="Performance" />
+            <BubbleChart.Tooltip />
+          </BubbleChart>
+        </Frame.Panel>
+      </Frame>
     </View>
   );
 }
@@ -1180,6 +1311,30 @@ export const ENTRIES: ComponentEntry[] = [
         fullPage: true,
         description: 'A legend instead of labels, for circles too small to hold them.',
         render: () => <BubbleLegendVersion />,
+      },
+      {
+        label: 'Four quadrants',
+        id: 'quadrants',
+        fullPage: true,
+        description:
+          'A crosshair at the average of each axis, and a name for the corner it makes.',
+        render: () => <BubbleQuadrantsVersion />,
+      },
+      {
+        label: 'What the area means',
+        id: 'size-key',
+        fullPage: true,
+        description:
+          'Three nested circles saying what a bubble is worth. Area is the one quantity the chart has no axis for.',
+        render: () => <BubbleSizeKeyVersion />,
+      },
+      {
+        label: 'The line through it',
+        id: 'trend',
+        fullPage: true,
+        description:
+          'The straight line that fits the cloud best, with how tightly the cloud sits on it.',
+        render: () => <BubbleTrendVersion />,
       },
       {
         label: 'Loading',
