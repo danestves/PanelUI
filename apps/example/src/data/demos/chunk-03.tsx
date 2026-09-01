@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ScrollView, View } from "react-native";
-import { Alert, Badge, BellIcon, BottomSheet, Button, Combobox, Card, CardIcon, CheckIcon, ChevronRightIcon, Chip, Collapsible, type CollapsibleVariant, ColorPicker, DatePicker, DateTimePicker, type DateRange, Dialog, Direction, type DirectionValue, FeedbackDialog, Field, Frame, Input, Item, Label, Message, Progress, Questionnaire, type QuestionnaireAnswers, Rating, SearchIcon, SendIcon, ShieldCheckIcon, Separator, Shimmer, Slider, Surface, Switch, Text, Textarea, ToggleButton, ToggleButtonGroup, useDirection } from "panelui-native";
+import { Badge, BellIcon, BottomSheet, Button, Combobox, Card, CardIcon, CheckIcon, ChevronRightIcon, Chip, Collapsible, type CollapsibleVariant, ColorPicker, DatePicker, DateTimePicker, type DateRange, Dialog, Direction, type DirectionValue, FeedbackDialog, Field, Frame, Input, Item, Label, Message, Progress, Questionnaire, type QuestionnaireAnswers, Rating, SearchIcon, SendIcon, ShieldCheckIcon, Separator, Shimmer, Slider, Surface, Switch, Text, Textarea, ToggleButton, ToggleButtonGroup, XIcon, cn, useDirection } from "panelui-native";
+import { useCSSVariable } from 'uniwind';
 import type { ComponentEntry } from '../component-types';
 
 function DatePickerDemo() {
@@ -1433,6 +1434,44 @@ function FeedbackDialogDraftDemo() {
 }
 
 /**
+ * A whole-well answer: a mark, a line, and what to do about it.
+ *
+ * Shared by the two versions that replace the field rather than annotate it,
+ * because the point of both is that the shell holds still while the thing
+ * inside it changes — and two blocks of different heights would move it.
+ */
+function DialogOutcome({
+  tone,
+  icon,
+  title,
+  children,
+}: {
+  tone: 'success' | 'destructive';
+  icon: ReactNode;
+  title: string;
+  children: string;
+}) {
+  return (
+    <View className="items-center justify-center gap-3 px-2" style={{ minHeight: 200 }}>
+      <View
+        className={cn(
+          'h-14 w-14 items-center justify-center rounded-full',
+          tone === 'success' ? 'bg-success' : 'bg-destructive'
+        )}
+      >
+        {icon}
+      </View>
+      <Text size="lg" weight="semibold">
+        {title}
+      </Text>
+      <Text size="sm" muted className="text-center">
+        {children}
+      </Text>
+    </View>
+  );
+}
+
+/**
  * There has to be something on the other side of the press.
  *
  * `Submit` hands the message back rather than closing, and this is what that
@@ -1443,6 +1482,9 @@ function FeedbackDialogDraftDemo() {
 function FeedbackDialogThanksDemo() {
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
+  // The ink that reads on a solid status fill, rather than a hardcoded white.
+  const token = useCSSVariable('--color-success-solid-foreground');
+  const onSolid = typeof token === 'string' ? token : undefined;
 
   return (
     <View className="items-center gap-4">
@@ -1460,21 +1502,14 @@ function FeedbackDialogThanksDemo() {
         <FeedbackDialog.Content>
           <FeedbackDialog.Panel>
             {sent ? (
-              <View
-                className="items-center justify-center gap-3 px-2"
-                style={{ minHeight: 200 }}
+              <DialogOutcome
+                tone="success"
+                title="Got it"
+                icon={<CheckIcon size={24} color={onSolid} />}
               >
-                <View className="h-14 w-14 items-center justify-center rounded-full bg-success">
-                  <CheckIcon size={24} />
-                </View>
-                <Text size="lg" weight="semibold">
-                  Got it
-                </Text>
-                <Text size="sm" muted className="text-center">
-                  This goes to the people who can fix it. We only write back when
-                  there is something to say.
-                </Text>
-              </View>
+                This goes to the people who can fix it. We only write back when
+                there is something to say.
+              </DialogOutcome>
             ) : (
               <>
                 <FeedbackDialog.Title>What should we fix first?</FeedbackDialog.Title>
@@ -1510,6 +1545,12 @@ function FeedbackDialogThanksDemo() {
  * to say so — and the message is still there to try again with. A dialog that
  * closed on the press would have taken both with it.
  *
+ * The failure takes the well, in the place the confirmation takes on the way
+ * through. A line pinned under the field would be an annotation on the writing;
+ * this is not about the writing, it is what happened to it, and it is the whole
+ * state of the dialog until somebody answers it. The message is held in the
+ * caller's state, so Try again puts it straight back.
+ *
  * The first attempt fails on purpose; the second goes through.
  */
 function FeedbackDialogRetryDemo() {
@@ -1517,6 +1558,8 @@ function FeedbackDialogRetryDemo() {
   const [state, setState] = useState<'idle' | 'sending' | 'failed'>('idle');
   const [attempts, setAttempts] = useState(0);
   const [draft, setDraft] = useState('');
+  const token = useCSSVariable('--color-destructive-solid-foreground');
+  const onSolid = typeof token === 'string' ? token : undefined;
 
   useEffect(() => {
     if (state !== 'sending') return;
@@ -1553,30 +1596,36 @@ function FeedbackDialogRetryDemo() {
         </FeedbackDialog.Trigger>
         <FeedbackDialog.Content dismissible={state !== 'sending'}>
           <FeedbackDialog.Panel>
-            <FeedbackDialog.Title>What went wrong?</FeedbackDialog.Title>
             <FeedbackDialog.Close />
-            <FeedbackDialog.Field
-              editable={state !== 'sending'}
-              placeholder="What were you doing when it happened"
-            />
+            {state === 'failed' ? (
+              <DialogOutcome
+                tone="destructive"
+                title="Could not send"
+                icon={<XIcon size={22} color={onSolid} />}
+              >
+                Your note is still here. Try again when you have a signal.
+              </DialogOutcome>
+            ) : (
+              <>
+                <FeedbackDialog.Title>What went wrong?</FeedbackDialog.Title>
+                <FeedbackDialog.Field
+                  editable={state !== 'sending'}
+                  placeholder="What were you doing when it happened"
+                />
+              </>
+            )}
           </FeedbackDialog.Panel>
 
-          {state === 'failed' ? (
-            /* In the band, under the well: the message it is about is still
-               up there, untouched, and still the thing being sent. */
-            <Alert variant="destructive" className="mt-2">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Title>Could not send</Alert.Title>
-                <Alert.Description>
-                  Your note is safe here. Try again when you have a signal.
-                </Alert.Description>
-              </Alert.Content>
-            </Alert>
-          ) : null}
-
           <FeedbackDialog.Footer>
-            <FeedbackDialog.Cancel />
+            {/* Back to the message rather than out of the dialog: the note is
+                the reason somebody is still here. */}
+            <FeedbackDialog.Cancel
+              onPress={
+                state === 'failed' ? () => setState('idle') : undefined
+              }
+            >
+              {state === 'failed' ? 'Back' : 'Cancel'}
+            </FeedbackDialog.Cancel>
             <FeedbackDialog.Submit
               disabled={state === 'sending' || draft.trim().length === 0}
               onPress={() => setState('sending')}

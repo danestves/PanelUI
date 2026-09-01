@@ -18,7 +18,7 @@ FeedbackDialog ships with the library — no separate install.
 
 ```tsx
 import { FeedbackDialog, Button, Text, CheckIcon, Chip, Rating } from 'panelui-native';
-import { View, Alert } from 'react-native';
+import { View } from 'react-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -158,37 +158,38 @@ const [sent, setSent] = useState(false);
 
 The failure the API is shaped around. Because `Submit` does not close the dialog, a send that fails still has somewhere to say so — and the message is still there to try again with. A dialog that closed on the press would have taken both with it.
 
-The alert goes in the band under the well rather than inside it, so the message it is about stays untouched and stays the thing being sent.
+It takes the well, in the place the confirmation takes on the way through. A line pinned under the field would be an annotation on the writing; this is not about the writing, it is what happened to it, and it is the whole state of the dialog until somebody answers it.
 
-Closing is the caller's, on success. That is the same reason: the dialog cannot know whether the send finished, and one that closed on the press would be gone before it found out.
+Hold the message in your own state and Try again puts it straight back. Cancel becomes Back for the same reason: the note is why somebody is still here.
+
+Closing on success is the caller's too. The dialog cannot know whether the send finished, and one that closed on the press would be gone before it found out.
 
 ```tsx
 const [state, setState] = useState('idle');
 
 <FeedbackDialog.Content dismissible={state !== 'sending'}>
   <FeedbackDialog.Panel>
-    <FeedbackDialog.Title>What went wrong?</FeedbackDialog.Title>
     <FeedbackDialog.Close />
-    <FeedbackDialog.Field
-      editable={state !== 'sending'}
-      placeholder="What were you doing when it happened"
-    />
+    {state === 'failed' ? (
+      <Outcome tone="destructive" title="Could not send">
+        Your note is still here. Try again when you have a signal.
+      </Outcome>
+    ) : (
+      <>
+        <FeedbackDialog.Title>What went wrong?</FeedbackDialog.Title>
+        <FeedbackDialog.Field
+          editable={state !== 'sending'}
+          placeholder="What were you doing when it happened"
+        />
+      </>
+    )}
   </FeedbackDialog.Panel>
-
-  {state === 'failed' ? (
-    <Alert variant="destructive" className="mt-2">
-      <Alert.Indicator />
-      <Alert.Content>
-        <Alert.Title>Could not send</Alert.Title>
-        <Alert.Description>
-          Your note is safe here. Try again when you have a signal.
-        </Alert.Description>
-      </Alert.Content>
-    </Alert>
-  ) : null}
-
   <FeedbackDialog.Footer>
-    <FeedbackDialog.Cancel />
+    <FeedbackDialog.Cancel
+      onPress={state === 'failed' ? () => setState('idle') : undefined}
+    >
+      {state === 'failed' ? 'Back' : 'Cancel'}
+    </FeedbackDialog.Cancel>
     <FeedbackDialog.Submit
       disabled={state === 'sending' || draft.trim().length === 0}
       onPress={() => setState('sending')}
