@@ -1,7 +1,7 @@
 {
   "slug": "feedback-dialog",
   "intro": "A dialog whose body is something to write in, with the two things to do about it in the band around it.\n\nA dialog asking for a sentence has two jobs on screen at once: hold what is being written, and offer the actions. [Dialog](/docs/components/dialog) puts both on one surface, which is right when the body is a line of prose and wrong when it is a field — nothing about a flat panel says \"this is where you type\".\n\nHere the writing surface is a well set into the dialog. The recess is the affordance: it says the field is the page and the rest is the frame, before a word has been read.\n\nFor a confirmation, a warning, or anything whose body is text to be read rather than written, use Dialog.",
-  "usage": "<FeedbackDialog open={open} onOpenChange={setOpen}>\n  <FeedbackDialog.Content>\n    <FeedbackDialog.Panel>\n      <FeedbackDialog.Title>Help us improve, Gabe!</FeedbackDialog.Title>\n      <FeedbackDialog.Close />\n      <FeedbackDialog.Field placeholder=\"Tell us what you think\" />\n    </FeedbackDialog.Panel>\n    <FeedbackDialog.Footer>\n      <FeedbackDialog.Cancel />\n      <FeedbackDialog.Submit onSubmit={send} />\n    </FeedbackDialog.Footer>\n  </FeedbackDialog.Content>\n</FeedbackDialog>",
+  "usage": "<FeedbackDialog open={open} onOpenChange={setOpen}>\n  <FeedbackDialog.Content>\n    <FeedbackDialog.Panel>\n      <FeedbackDialog.Title>What should we fix first?</FeedbackDialog.Title>\n      <FeedbackDialog.Close />\n      <FeedbackDialog.Field placeholder=\"Tell us what got in your way\" />\n    </FeedbackDialog.Panel>\n    <FeedbackDialog.Footer>\n      <FeedbackDialog.Cancel />\n      <FeedbackDialog.Submit onSubmit={send} />\n    </FeedbackDialog.Footer>\n  </FeedbackDialog.Content>\n</FeedbackDialog>",
   "extraImports": [
     "Button"
   ],
@@ -22,7 +22,7 @@
     {
       "title": "Asking for a sentence",
       "description": "The shape the component is for. The dialog holds the message, `Submit` refuses to send an empty one, and Cancel closes without asking again.",
-      "code": "const [open, setOpen] = useState(false);\n\n<FeedbackDialog open={open} onOpenChange={setOpen}>\n  <FeedbackDialog.Trigger>\n    <Button variant=\"outline\">Give feedback</Button>\n  </FeedbackDialog.Trigger>\n  <FeedbackDialog.Content>\n    <FeedbackDialog.Panel>\n      <FeedbackDialog.Title>Help us improve, Gabe!</FeedbackDialog.Title>\n      <FeedbackDialog.Close />\n      <FeedbackDialog.Field placeholder=\"Tell us what you think\" />\n    </FeedbackDialog.Panel>\n    <FeedbackDialog.Footer>\n      <FeedbackDialog.Cancel />\n      <FeedbackDialog.Submit onSubmit={(message) => send(message)} />\n    </FeedbackDialog.Footer>\n  </FeedbackDialog.Content>\n</FeedbackDialog>"
+      "code": "const [open, setOpen] = useState(false);\n\n<FeedbackDialog open={open} onOpenChange={setOpen}>\n  <FeedbackDialog.Trigger>\n    <Button variant=\"outline\">Give feedback</Button>\n  </FeedbackDialog.Trigger>\n  <FeedbackDialog.Content>\n    <FeedbackDialog.Panel>\n      <FeedbackDialog.Title>What should we fix first?</FeedbackDialog.Title>\n      <FeedbackDialog.Close />\n      <FeedbackDialog.Field placeholder=\"Tell us what got in your way\" />\n    </FeedbackDialog.Panel>\n    <FeedbackDialog.Footer>\n      <FeedbackDialog.Cancel />\n      <FeedbackDialog.Submit onSubmit={(message) => send(message)} />\n    </FeedbackDialog.Footer>\n  </FeedbackDialog.Content>\n</FeedbackDialog>"
     },
     {
       "title": "Holding the message yourself",

@@ -136,9 +136,9 @@ const [open, setOpen] = useState(false);
   </FeedbackDialog.Trigger>
   <FeedbackDialog.Content>
     <FeedbackDialog.Panel>
-      <FeedbackDialog.Title>Help us improve, Gabe!</FeedbackDialog.Title>
+      <FeedbackDialog.Title>What should we fix first?</FeedbackDialog.Title>
       <FeedbackDialog.Close />
-      <FeedbackDialog.Field placeholder="Tell us what you think" />
+      <FeedbackDialog.Field placeholder="Tell us what got in your way" />
     </FeedbackDialog.Panel>
     <FeedbackDialog.Footer>
       <FeedbackDialog.Cancel />

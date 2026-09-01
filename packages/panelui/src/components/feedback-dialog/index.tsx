@@ -6,7 +6,7 @@
  * <FeedbackDialog open={open} onOpenChange={setOpen}>
  *   <FeedbackDialog.Content>
  *     <FeedbackDialog.Panel>
- *       <FeedbackDialog.Title>Help us improve, Gabe!</FeedbackDialog.Title>
+ *       <FeedbackDialog.Title>What should we fix first?</FeedbackDialog.Title>
  *       <FeedbackDialog.Close />
  *       <FeedbackDialog.Field value={text} onChangeText={setText} />
  *     </FeedbackDialog.Panel>

@@ -1369,9 +1369,9 @@ function FeedbackDialogDemo() {
         </FeedbackDialog.Trigger>
         <FeedbackDialog.Content>
           <FeedbackDialog.Panel>
-            <FeedbackDialog.Title>Help us improve, Gabe!</FeedbackDialog.Title>
+            <FeedbackDialog.Title>What should we fix first?</FeedbackDialog.Title>
             <FeedbackDialog.Close />
-            <FeedbackDialog.Field placeholder="Tell us what you think" />
+            <FeedbackDialog.Field placeholder="Tell us what got in your way" />
           </FeedbackDialog.Panel>
           <FeedbackDialog.Footer>
             <FeedbackDialog.Cancel />
@@ -1398,7 +1398,7 @@ function FeedbackDialogDemo() {
 function FeedbackDialogDraftDemo() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(
-    'Really liking the app so far, it feels clean and smooth.'
+    'Exporting takes two or three goes before it picks the right folder.'
   );
 
   return (
