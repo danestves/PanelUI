@@ -106,7 +106,7 @@ export function ScrollText({
   const reducedMotion = useReducedMotion();
   const active = enabled && !reducedMotion;
 
-  const { ref, progress } = useRevealProgress({
+  const { ref, onLayout, progress } = useRevealProgress({
     start,
     end,
     progress: external,
@@ -133,7 +133,7 @@ export function ScrollText({
 
   if (asRow) {
     return (
-      <View ref={ref} className="flex-row flex-wrap items-baseline">
+      <View ref={ref} onLayout={onLayout} className="flex-row flex-wrap items-baseline">
         {tokens.map((token, index) => (
           <RisingToken
             key={`${index}-${token}`}
@@ -151,7 +151,7 @@ export function ScrollText({
   }
 
   return (
-    <View ref={ref}>
+    <View ref={ref} onLayout={onLayout}>
       <Text {...textProps} className={className}>
         {tokens.map((token, index) => (
           <InkedToken

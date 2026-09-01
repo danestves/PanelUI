@@ -25,11 +25,13 @@
  * anything above it resizes; every frame is a measurement pass for a value that
  * only changes when the scroller moves.
  */
+import { useCallback, useEffect } from 'react';
 import { useWindowDimensions, type View } from 'react-native';
 import {
   measure,
   useAnimatedRef,
   useDerivedValue,
+  useSharedValue,
   type AnimatedRef,
   type SharedValue,
 } from 'react-native-reanimated';
@@ -58,6 +60,12 @@ export interface UseRevealProgressOptions {
 export interface UseRevealProgressResult {
   /** Attach to the element whose travel drives the effect. */
   ref: AnimatedRef<View>;
+  /**
+   * Attach to the same element. It is what says the element can be measured —
+   * without it the effect still works, at the cost of a warning per frame for
+   * every element that is mounted but not yet laid out.
+   */
+  onLayout: () => void;
   /** `0` before, `1` after, scrubbed between. */
   progress: SharedValue<number>;
 }
@@ -71,6 +79,26 @@ export function useRevealProgress({
   const ref = useAnimatedRef<View>();
   const scroll = useScrollProgress();
   const { height: windowHeight } = useWindowDimensions();
+
+  /*
+   * Whether the element has been laid out at least once and is still mounted.
+   *
+   * `measure` warns when it is handed a view the layout engine has no metrics
+   * for, and the warning is printed before the `null` that would let a caller
+   * notice. A list of these runs its measurement on every scroll frame, so one
+   * element that has mounted but not laid out fills the log on its own — which
+   * is the case the warning itself names, and the one it is least useful for.
+   */
+  const laidOut = useSharedValue(false);
+  const onLayout = useCallback(() => {
+    laidOut.value = true;
+  }, [laidOut]);
+  useEffect(
+    () => () => {
+      laidOut.value = false;
+    },
+    [laidOut]
+  );
 
   const offset = scroll?.offset;
   const viewportValue = scroll?.viewport;
@@ -86,6 +114,7 @@ export function useRevealProgress({
     const viewport = viewportValue?.value || windowHeight;
     const viewportTop = topValue?.value ?? 0;
     if (viewport <= 0 || Number.isNaN(scrolled)) return 0;
+    if (!laidOut.value) return 0;
 
     const frame = measure(ref);
     if (!frame || frame.height <= 0) return 0;
@@ -102,5 +131,5 @@ export function useRevealProgress({
 
   // An external value is passed straight through, so a caller driving the
   // effect by hand never pays for the measurement.
-  return { ref, progress: external ?? derived };
+  return { ref, onLayout, progress: external ?? derived };
 }

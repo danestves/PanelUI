@@ -101,7 +101,7 @@ export function ScrollCanvas({
   const reducedMotion = useReducedMotion();
   const active = enabled && !reducedMotion;
 
-  const { ref, progress } = useRevealProgress({
+  const { ref, onLayout, progress } = useRevealProgress({
     start,
     end,
     progress: external,
@@ -140,6 +140,7 @@ export function ScrollCanvas({
     <View
       {...props}
       ref={ref}
+      onLayout={onLayout}
       style={[{ aspectRatio }, style]}
       className={cn('w-full overflow-hidden rounded-2xl bg-muted', className)}
     >

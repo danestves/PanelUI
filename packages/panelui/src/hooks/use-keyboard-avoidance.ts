@@ -200,6 +200,27 @@ export function useKeyboardAvoidance({
   /** The translation currently applied, in pixels. Zero or negative. */
   const translation = useSharedValue(0);
 
+  /*
+   * Whether the element has been laid out at least once and is still mounted.
+   *
+   * `measure` warns when it is handed a view the layout engine has no metrics
+   * for — every frame between a mount and its first layout, and every frame
+   * after an unmount that the callback has not been stopped for yet. Neither
+   * is a fault, and neither can be answered by the `null` it returns, because
+   * the warning is printed before that null comes back. Running once a frame,
+   * one of these fills the log on its own.
+   *
+   * So the layout pass is what says the view can be measured, and the unmount
+   * is what takes it back.
+   */
+  const laidOut = useSharedValue(false);
+  useEffect(
+    () => () => {
+      laidOut.value = false;
+    },
+    [laidOut]
+  );
+
   // `active` is a plain prop and the worklets below cannot read props, so it is
   // mirrored — written in an effect, because touching a shared value during
   // render is a Reanimated strict-mode violation.
@@ -226,6 +247,7 @@ export function useKeyboardAvoidance({
     'worklet';
     const keyboardHeight = Math.abs(rawHeight.value);
     if (keyboardHeight === 0) return;
+    if (!laidOut.value) return;
 
     const frame = measure(ref);
     if (!frame || frame.height <= 0) return;
@@ -267,12 +289,13 @@ export function useKeyboardAvoidance({
 
   const onLayout = useCallback(
     (_event: LayoutChangeEvent) => {
+      laidOut.value = true;
       // A layout pass while the element is at rest means its slot moved for
       // some reason other than the keyboard. Anything left over from the last
       // lift belongs to the old slot.
       if (!tracking && translation.value !== 0) translation.value = 0;
     },
-    [tracking, translation]
+    [laidOut, tracking, translation]
   );
 
   const animatedStyle = useAnimatedStyle(() => {
