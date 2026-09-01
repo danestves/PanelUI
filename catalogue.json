@@ -34,6 +34,7 @@
     "drawer",
     "empty-state",
     "fab",
+    "feedback-dialog",
     "field",
     "flip-card",
     "flow",
@@ -201,16 +202,16 @@
     }
   ],
   "counts": {
-    "componentModules": 124,
-    "packageComponentExports": 124,
-    "documentedComponents": 124,
-    "exampleEntries": 124,
+    "componentModules": 125,
+    "packageComponentExports": 125,
+    "documentedComponents": 125,
+    "exampleEntries": 125,
     "registry": {
-      "componentItems": 124,
+      "componentItems": 125,
       "supportItems": 36,
-      "totalItems": 160,
+      "totalItems": 161,
       "byType": {
-        "registry:ui": 139,
+        "registry:ui": 140,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1

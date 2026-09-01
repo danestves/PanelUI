@@ -577,6 +577,31 @@ const bottomSheet = (
   </Screen>
 );
 
+/*
+ * The nesting is the whole component, so the thumbnail is the nesting: a well
+ * inside a rounded shell, with the two actions in the band under it.
+ */
+const feedbackDialog = (
+  <Screen>
+    <div className="absolute inset-0 bg-fd-foreground/25" />
+    <div className="absolute inset-x-2.5 top-1/2 -translate-y-1/2 rounded-[10px] bg-fd-muted p-1">
+      <Plate className="gap-1.5 rounded-[7px] p-2">
+        <Bar className="w-14" />
+        <Bar className="w-full" faint />
+        <Bar className="w-10" faint />
+      </Plate>
+      <Row className="mt-1.5 justify-center gap-1.5 px-2">
+        <Fill className="flex h-4 flex-1 items-center justify-center rounded-full">
+          <Bar className="w-3" faint />
+        </Fill>
+        <Accent className="grid h-4 flex-1 place-items-center rounded-full">
+          <AccentBar className="w-3" />
+        </Accent>
+      </Row>
+    </div>
+  </Screen>
+);
+
 const dialog = (
   <Screen>
     <div className="absolute inset-0 bg-fd-foreground/25" />
@@ -2050,6 +2075,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
 
   // Overlays
   'bottom-sheet': bottomSheet,
+  'feedback-dialog': feedbackDialog,
   dialog,
   drawer,
   popover,

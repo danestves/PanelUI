@@ -34,6 +34,7 @@ export const COMPONENTS = [
   {"slug":"drawer","name":"Drawer","summary":"A panel that comes in from an edge of the screen"},
   {"slug":"empty-state","name":"EmptyState","summary":"Placeholder for a view with no content"},
   {"slug":"fab","name":"Fab","summary":"The floating action button, and the dial behind it"},
+  {"slug":"feedback-dialog","name":"FeedbackDialog","summary":"Dialog whose body is a well to write in"},
   {"slug":"field","name":"Field","summary":"Layout and validation-state kit for a form control"},
   {"slug":"flip-card","name":"FlipCard","summary":"Two faces of one card, and a turn between them"},
   {"slug":"flow","name":"Flow","summary":"Pan-and-zoom canvas of draggable nodes joined by animated edges"},

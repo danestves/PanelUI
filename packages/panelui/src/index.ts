@@ -187,6 +187,17 @@ export {
   type DialogContentProps,
 } from './components/dialog';
 export {
+  FeedbackDialog,
+  type FeedbackDialogProps,
+  type FeedbackDialogContentProps,
+  type FeedbackDialogPanelProps,
+  type FeedbackDialogCloseProps,
+  type FeedbackDialogFieldProps,
+  type FeedbackDialogFooterProps,
+  type FeedbackDialogActionProps,
+  type FeedbackDialogSubmitProps,
+} from './components/feedback-dialog';
+export {
   Soundwave,
   type SoundwaveProps,
   type SoundwaveState,

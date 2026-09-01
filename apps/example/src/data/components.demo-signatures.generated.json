@@ -134,6 +134,10 @@
       "signature": "52a0ab4cf207de107ed83b7cc3448080cb76f063debf40ded48fdf077f4a2495"
     },
     {
+      "slug": "feedback-dialog",
+      "signature": "dc2b5d3e904214c11220c861e0df22427abc45986367a25b27ce98070d68a0a6"
+    },
+    {
       "slug": "field",
       "signature": "da9982646b1e29ce5a5cd59e84a0d1544aa076646edaaad80627ece74ab01a2e"
     },

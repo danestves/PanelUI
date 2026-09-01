@@ -208,6 +208,15 @@
       "category": "forms"
     }
   ],
+  "feedback-dialog": [
+    "FeedbackDialog",
+    "Dialog whose body is a well to write in, with the actions in the band around it.",
+    "react native feedback dialog",
+    {
+      "addedIn": "0.88.0",
+      "category": "overlays"
+    }
+  ],
   "dialog": [
     "Dialog",
     "Modal dialog with a backdrop and footer actions.",

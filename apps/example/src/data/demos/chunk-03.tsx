@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { Badge, BellIcon, BottomSheet, Button, Combobox, Card, CardIcon, CheckIcon, ChevronRightIcon, Chip, Collapsible, type CollapsibleVariant, ColorPicker, DatePicker, DateTimePicker, type DateRange, Dialog, Direction, type DirectionValue, Field, Frame, Input, Item, Label, Message, Progress, Questionnaire, type QuestionnaireAnswers, SearchIcon, SendIcon, ShieldCheckIcon, Separator, Shimmer, Slider, Surface, Switch, Text, Textarea, ToggleButton, ToggleButtonGroup, useDirection } from "panelui-native";
+import { Badge, BellIcon, BottomSheet, Button, Combobox, Card, CardIcon, CheckIcon, ChevronRightIcon, Chip, Collapsible, type CollapsibleVariant, ColorPicker, DatePicker, DateTimePicker, type DateRange, Dialog, Direction, type DirectionValue, FeedbackDialog, Field, Frame, Input, Item, Label, Message, Progress, Questionnaire, type QuestionnaireAnswers, SearchIcon, SendIcon, ShieldCheckIcon, Separator, Shimmer, Slider, Surface, Switch, Text, Textarea, ToggleButton, ToggleButtonGroup, useDirection } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 function DatePickerDemo() {
@@ -1351,6 +1351,87 @@ function CollapsibleDisabledDemo() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* FeedbackDialog                                                             */
+/* -------------------------------------------------------------------------- */
+
+/** The shape the component is for: a question, a well to answer it in, and two
+ *  things to do about the answer. */
+function FeedbackDialogDemo() {
+  const [open, setOpen] = useState(false);
+  const [sent, setSent] = useState<string | null>(null);
+
+  return (
+    <View className="items-center gap-4">
+      <FeedbackDialog open={open} onOpenChange={setOpen}>
+        <FeedbackDialog.Trigger>
+          <Button variant="outline">Give feedback</Button>
+        </FeedbackDialog.Trigger>
+        <FeedbackDialog.Content>
+          <FeedbackDialog.Panel>
+            <FeedbackDialog.Title>Help us improve, Gabe!</FeedbackDialog.Title>
+            <FeedbackDialog.Close />
+            <FeedbackDialog.Field placeholder="Tell us what you think" />
+          </FeedbackDialog.Panel>
+          <FeedbackDialog.Footer>
+            <FeedbackDialog.Cancel />
+            <FeedbackDialog.Submit
+              onSubmit={(message) => {
+                setSent(message);
+                setOpen(false);
+              }}
+            />
+          </FeedbackDialog.Footer>
+        </FeedbackDialog.Content>
+      </FeedbackDialog>
+
+      {sent ? (
+        <Text size="sm" muted numberOfLines={2} className="text-center">
+          Sent: {sent}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/** A draft the caller holds, so it survives the dialog being closed. */
+function FeedbackDialogDraftDemo() {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(
+    'Really liking the app so far, it feels clean and smooth.'
+  );
+
+  return (
+    <View className="items-center gap-4">
+      <FeedbackDialog
+        open={open}
+        onOpenChange={setOpen}
+        value={draft}
+        onValueChange={setDraft}
+      >
+        <FeedbackDialog.Trigger>
+          <Button variant="outline">Open the draft</Button>
+        </FeedbackDialog.Trigger>
+        <FeedbackDialog.Content blur>
+          <FeedbackDialog.Panel>
+            <FeedbackDialog.Title>Anything else?</FeedbackDialog.Title>
+            <FeedbackDialog.Close />
+            <FeedbackDialog.Field />
+          </FeedbackDialog.Panel>
+          <FeedbackDialog.Footer>
+            <FeedbackDialog.Cancel />
+            <FeedbackDialog.Submit onSubmit={() => setOpen(false)} />
+          </FeedbackDialog.Footer>
+        </FeedbackDialog.Content>
+      </FeedbackDialog>
+
+      <Text size="sm" muted numberOfLines={3} className="text-center">
+        {draft.length ? draft : 'The draft is empty.'}
+      </Text>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'chip',
@@ -1537,6 +1618,15 @@ export const ENTRIES: ComponentEntry[] = [
       { label: 'In a sheet', render: () => <DateTimePickerSheetDemo /> },
       { label: 'The wheel face', render: () => <DateTimePickerWheelDemo /> },
       { label: 'Booking a slot', render: () => <DateTimePickerSlotDemo /> },
+    ],
+  },
+{
+    slug: 'feedback-dialog',
+    name: 'FeedbackDialog',
+    summary: 'Dialog whose body is a well to write in',
+    demos: [
+      { label: 'Asking for a sentence', render: () => <FeedbackDialogDemo /> },
+      { label: 'A draft you hold', render: () => <FeedbackDialogDraftDemo /> },
     ],
   },
 {

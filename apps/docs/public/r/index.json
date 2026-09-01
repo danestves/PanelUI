@@ -588,6 +588,25 @@
     "docsPath": "components/fab"
   },
   {
+    "name": "feedback-dialog",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Dialog whose body is a well to write in, with the actions in the band around it.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "icons",
+      "keyboard-avoider",
+      "portal",
+      "scrim",
+      "text",
+      "use-back-handler"
+    ],
+    "docsPath": "components/feedback-dialog"
+  },
+  {
     "name": "field",
     "type": "registry:ui",
     "kind": "ui",

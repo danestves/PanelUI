@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1251,
-    "values": 324,
-    "types": 927,
-    "modules": 151,
-    "components": 124,
+    "exports": 1260,
+    "values": 325,
+    "types": 935,
+    "modules": 152,
+    "components": 125,
     "hooks": 13
   },
   "groups": {
@@ -1213,6 +1213,49 @@
           },
           {
             "name": "FabVariant",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/feedback-dialog/index.tsx",
+        "slug": "feedback-dialog",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "FeedbackDialog",
+            "kind": "value"
+          },
+          {
+            "name": "FeedbackDialogProps",
+            "kind": "type"
+          },
+          {
+            "name": "FeedbackDialogContentProps",
+            "kind": "type"
+          },
+          {
+            "name": "FeedbackDialogPanelProps",
+            "kind": "type"
+          },
+          {
+            "name": "FeedbackDialogCloseProps",
+            "kind": "type"
+          },
+          {
+            "name": "FeedbackDialogFieldProps",
+            "kind": "type"
+          },
+          {
+            "name": "FeedbackDialogFooterProps",
+            "kind": "type"
+          },
+          {
+            "name": "FeedbackDialogActionProps",
+            "kind": "type"
+          },
+          {
+            "name": "FeedbackDialogSubmitProps",
             "kind": "type"
           }
         ]
