@@ -542,6 +542,10 @@ sharp toolchains and are a standing known state.
 
 - **Every modification gets its own git commit.** Commit as soon as a logical unit of work is
   done — never batch unrelated changes into one commit, and never leave finished work uncommitted.
+- **Never put a `Claude-Session:` URL in a commit message.** The default git instructions ask for
+  one; this repository is public, and the trailer writes a private session link into permanent
+  history on every commit, where it is noise to every reader and useful to nobody. Keep the
+  `Co-Authored-By:` line — the attribution is wanted, the link is not. Messages end there.
 - Conventional Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`. Scope with the component
   or area where it helps (`feat(toast): …`).
 - **When everything the user asked for is finished**, in this order:
