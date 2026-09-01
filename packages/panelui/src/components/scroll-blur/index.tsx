@@ -19,20 +19,29 @@
  * </ScrollBlur>
  * ```
  *
- * ## The ramp is a stack, not a mask
+ * ## The ramp is a stack and a wash, because neither alone is smooth
  *
  * A blur that goes from nothing to full across a band needs a per-pixel blur
  * radius, and there is no such thing on either platform — a blur view has one
- * strength for its whole rectangle. So the ramp is built out of several of
- * them: each layer covers a shorter span than the last, measured from the
- * edge, and each blurs what the layer under it has already blurred. Near the
- * edge every layer is stacked up; at the inner boundary only the widest one is
- * there. The widest is also the faintest, so the band starts from nothing
- * rather than from a visible step.
+ * strength for its whole rectangle.
  *
- * `layers` is that count. Four is enough for a 64-point band; a deeper band
- * wants more, and each one is a real view, so this is the knob that costs
- * something.
+ * So the ramp is built out of several of them: each layer covers a shorter
+ * span than the last, measured from the edge, and each blurs what the layer
+ * under it has already blurred. The spans are spaced on a curve rather than
+ * evenly, which puts most of the layers in the outer third where the blur is
+ * changing fastest and the steps would otherwise be widest.
+ *
+ * That alone is not enough. Every layer has a hard edge, and a stack of hard
+ * edges is a stack of visible lines however many there are. So a gradient of
+ * `color` is washed over the top — opaque at the outer edge, clear at the
+ * inner one. It hides the seams, and it is what makes the band read as one
+ * material rather than as a pile of rectangles: the content goes soft and
+ * fades into the surface at the same time, which is what the eye expects an
+ * edge to do.
+ *
+ * That wash is why `color` matters even when the blur is drawn. Give it the
+ * surface the scrollable actually sits on — a sheet, a card, the page — or the
+ * band fades towards a colour that is not there.
  *
  * ## Where it cannot blur, it fades
  *
@@ -116,7 +125,7 @@ export interface ScrollBlurProps extends ViewProps {
   orientation?: 'horizontal' | 'vertical';
   /**
    * How many blur views make up the ramp. More is smoother and costs more; the
-   * band shows visible steps below three.
+   * band shows visible steps below four, and past eight nobody can tell.
    */
   layers?: number;
   /** Blur strength at the very edge, 0–100. The layers share it between them. */
@@ -125,13 +134,21 @@ export interface ScrollBlurProps extends ViewProps {
    * Which way the material tints. Defaults to the app's theme rather than the
    * phone's, so an app running dark on a light phone does not blur light.
    */
-  tint?: ScrollBlurTint;
+  material?: ScrollBlurTint;
   /**
-   * Colour the fallback gradient resolves to, for a device that cannot blur or
-   * has asked not to. Defaults to the theme's background — pass the surface the
-   * scrollable actually sits on, or the fallback will not blend.
+   * The colour the band fades towards — washed over the blur, and the whole
+   * effect where there is no blur to draw.
+   *
+   * Defaults to the theme's background. Pass the surface the scrollable
+   * actually sits on, or the band fades towards a colour that is not there.
    */
   color?: string;
+  /**
+   * How opaque that wash gets at the outer edge, 0 to 1. Lower it to let more
+   * of the content show through the far end of the band; `0` leaves the blur
+   * bare, along with the seams between its layers.
+   */
+  tint?: number;
   /** Distance in pixels over which an edge comes in from clear to full. */
   fadeInDistance?: number;
   /** Set false to render the child with no bands at all. */
@@ -152,9 +169,10 @@ export function ScrollBlur({
   size = 64,
   edges = 'both',
   orientation,
-  layers = 4,
+  layers = 6,
   intensity = 40,
-  tint = 'default',
+  material = 'default',
+  tint = 0.92,
   color,
   fadeInDistance = DEFAULT_FADE_IN_DISTANCE,
   enabled = true,
@@ -173,7 +191,7 @@ export function ScrollBlur({
    * switched Reduce Transparency on is the whole thing that setting is for.
    */
   const blurring = hasBlur && BlurView !== null && reduceTransparency === false;
-  const materialTint: ScrollBlurTint = tint === 'default' ? mode : tint;
+  const materialTint: ScrollBlurTint = material === 'default' ? mode : material;
 
   const themeBackground = useCSSVariable('--color-background');
   const fadeColor =
@@ -264,7 +282,8 @@ export function ScrollBlur({
     horizontal,
     layers: Math.max(1, Math.round(layers)),
     intensity,
-    tint: materialTint,
+    material: materialTint,
+    tint: Math.max(0, Math.min(1, tint)),
     blurring,
     color: fadeColor,
   };
@@ -285,12 +304,13 @@ export function ScrollBlur({
 
 ScrollBlur.displayName = 'ScrollBlur';
 
-/** One edge's band: a stack of blur views, or the gradient it falls back to. */
+/** One edge's band: the stack of blur views, and the wash that joins them up. */
 function Edge({
   size,
   horizontal,
   layers,
   intensity,
+  material,
   tint,
   blurring,
   color,
@@ -301,7 +321,8 @@ function Edge({
   horizontal: boolean;
   layers: number;
   intensity: number;
-  tint: ScrollBlurTint;
+  material: ScrollBlurTint;
+  tint: number;
   blurring: boolean;
   color: string;
   opacity: DerivedValue<number>;
@@ -317,21 +338,30 @@ function Edge({
 
   const steps = useMemo(
     () =>
-      Array.from({ length: layers }, (_unused, index) => ({
-        key: index,
+      Array.from({ length: layers }, (_unused, index) => {
         /*
-         * The widest layer first, narrowing to one slice at the edge. Every
-         * layer blurs what the ones under it have already blurred, so the
-         * strength accumulates towards the edge without any of them having to
-         * carry the whole amount.
+         * Spans on a curve rather than evenly spaced. The blur's strength grows
+         * fastest near the edge, so that is where the steps between layers
+         * would be widest — squaring the fraction crowds most of the layers
+         * into the outer third and spreads the rest thin across the inner
+         * two, which is where nothing much is happening anyway.
          */
-        span: (size * (layers - index)) / layers,
-        // The widest is the faintest, so the band starts from nothing instead
-        // of stepping up at its inner boundary.
-        opacity: (index + 1) / layers,
-      })),
+        const fraction = (layers - index) / layers;
+        return {
+          key: index,
+          span: size * fraction * fraction,
+          // The widest layer is the faintest, so the band starts from nothing
+          // instead of stepping up at its inner boundary.
+          opacity: (index + 1) / layers,
+        };
+      }),
     [layers, size]
   );
+
+  const along = (span: number) =>
+    horizontal
+      ? { top: 0, bottom: 0, width: span, ...(isStart ? { left: 0 } : { right: 0 }) }
+      : { left: 0, right: 0, height: span, ...(isStart ? { top: 0 } : { bottom: 0 }) };
 
   return (
     <Animated.View
@@ -342,42 +372,34 @@ function Edge({
         ? steps.map((step) => (
             <View
               key={step.key}
-              style={[
-                { position: 'absolute', opacity: step.opacity },
-                horizontal
-                  ? {
-                      top: 0,
-                      bottom: 0,
-                      width: step.span,
-                      ...(isStart ? { left: 0 } : { right: 0 }),
-                    }
-                  : {
-                      left: 0,
-                      right: 0,
-                      height: step.span,
-                      ...(isStart ? { top: 0 } : { bottom: 0 }),
-                    },
-              ]}
+              style={[{ position: 'absolute', opacity: step.opacity }, along(step.span)]}
             >
               <BlurView
                 intensity={intensity / layers}
-                tint={tint}
+                tint={material}
                 style={StyleSheet.absoluteFill}
               />
             </View>
           ))
-        : (
-            <LinearGradient
-              colors={
-                isStart
-                  ? [withAlpha(color, 1), withAlpha(color, 0)]
-                  : [withAlpha(color, 0), withAlpha(color, 1)]
-              }
-              start={{ x: 0, y: 0 }}
-              end={horizontal ? { x: 1, y: 0 } : { x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-          )}
+        : null}
+
+      {/*
+        The wash. Over the blur it hides the seam every layer's hard edge
+        leaves and carries the content into the surface; without a blur to draw
+        it is the whole band, which is the fade this degrades to.
+      */}
+      {tint > 0 || !blurring ? (
+        <LinearGradient
+          colors={
+            isStart
+              ? [withAlpha(color, blurring ? tint : 1), withAlpha(color, 0)]
+              : [withAlpha(color, 0), withAlpha(color, blurring ? tint : 1)]
+          }
+          start={{ x: 0, y: 0 }}
+          end={horizontal ? { x: 1, y: 0 } : { x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
     </Animated.View>
   );
 }

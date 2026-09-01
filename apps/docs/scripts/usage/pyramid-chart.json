@@ -1,5 +1,12 @@
 {
   "slug": "pyramid-chart",
+  "previewVideo": {
+    "src": "/previews/pyramid-chart.mp4",
+    "poster": "/previews/pyramid-chart-poster.jpg",
+    "alt": "PyramidChart — two series mirrored about a centre, on one shared scale.",
+    "width": 720,
+    "height": 1560
+  },
   "intro": "Two series drawn as mirrored bars either side of a centre line, one row per category.\n\nBoth wings are measured on the same scale, derived from the larger of the two series. That is the whole point of the shape: a bar twice as long as the one facing it means twice as much. Colours come from the `--color-chart-1` … `--color-chart-5` tokens.\n\nFor two series compared side by side rather than back to back, use [BarChart](/docs/charts/bar-chart).",
   "usage": "<PyramidChart data={penguins} xDataKey=\"species\">\n  <PyramidChart.Grid />\n  <PyramidChart.Bar dataKey=\"male\" side=\"start\" />\n  <PyramidChart.Bar dataKey=\"female\" side=\"end\" colorIndex={5} />\n  <PyramidChart.XAxis />\n  <PyramidChart.YAxis />\n  <PyramidChart.Tooltip />\n</PyramidChart>",
   "extraImports": [
@@ -20,12 +27,26 @@
     {
       "title": "Two wings on one scale",
       "description": "`side` puts a series on the left or the right. The scale is shared, so the two halves can be read against each other rather than only each against itself.",
-      "code": "<Frame className=\"w-full\">\n  <Frame.Header>\n    <Frame.Title>Penguins observed</Frame.Title>\n    <Frame.Action>Drag to inspect</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <PyramidChart data={PENGUINS} xDataKey=\"species\" aspectRatio={1.4}>\n      <PyramidChart.Header\n        value=\"334\"\n        caption=\"Three species\"\n        labels={{ male: 'Male', female: 'Female' }}\n        legend\n      />\n      <PyramidChart.Grid />\n      <PyramidChart.Bar dataKey=\"male\" side=\"start\" />\n      <PyramidChart.Bar dataKey=\"female\" side=\"end\" colorIndex={5} />\n      <PyramidChart.XAxis />\n      <PyramidChart.YAxis />\n      <PyramidChart.Tooltip />\n    </PyramidChart>\n  </Frame.Panel>\n</Frame>"
+      "code": "<Frame className=\"w-full\">\n  <Frame.Header>\n    <Frame.Title>Penguins observed</Frame.Title>\n    <Frame.Action>Drag to inspect</Frame.Action>\n  </Frame.Header>\n  <Frame.Panel>\n    <PyramidChart data={PENGUINS} xDataKey=\"species\" aspectRatio={1.4}>\n      <PyramidChart.Header\n        value=\"334\"\n        caption=\"Three species\"\n        labels={{ male: 'Male', female: 'Female' }}\n        legend\n      />\n      <PyramidChart.Grid />\n      <PyramidChart.Bar dataKey=\"male\" side=\"start\" />\n      <PyramidChart.Bar dataKey=\"female\" side=\"end\" colorIndex={5} />\n      <PyramidChart.XAxis />\n      <PyramidChart.YAxis />\n      <PyramidChart.Tooltip />\n    </PyramidChart>\n  </Frame.Panel>\n</Frame>",
+      "previewVideo": {
+        "src": "/previews/pyramid-chart-two-wings.mp4",
+        "poster": "/previews/pyramid-chart-two-wings-poster.jpg",
+        "alt": "PyramidChart — Two wings on one scale.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Names between the wings, or down the left",
       "description": "`labelPlacement` decides where the category names go. The default gives each row a line of its own over its pair of bars. `center` puts them in a gutter between the wings instead — taken off the bars rather than off the edges, so both wings stay equal — and `start` puts them down the left, for a chart with room on that side.\n\nHeight is the chart's width over `aspectRatio` and has nothing to do with how many rows there are. So a stack that is running past the bottom of the screen is shortened by raising `aspectRatio`, not by dropping rows — dropping rows only makes the bars thicker in a frame exactly as tall as before.",
-      "code": "<PyramidChart\n  data={POPULATION}\n  xDataKey=\"band\"\n  labelPlacement=\"center\"\n  aspectRatio={1.5}\n  barGap={0.3}\n>\n  <PyramidChart.Grid columns={2} />\n  <PyramidChart.Bar dataKey=\"men\" side=\"start\" />\n  <PyramidChart.Bar dataKey=\"women\" side=\"end\" colorIndex={5} />\n  <PyramidChart.XAxis />\n  <PyramidChart.YAxis />\n  <PyramidChart.Tooltip />\n</PyramidChart>"
+      "code": "<PyramidChart\n  data={POPULATION}\n  xDataKey=\"band\"\n  labelPlacement=\"center\"\n  aspectRatio={1.5}\n  barGap={0.3}\n>\n  <PyramidChart.Grid columns={2} />\n  <PyramidChart.Bar dataKey=\"men\" side=\"start\" />\n  <PyramidChart.Bar dataKey=\"women\" side=\"end\" colorIndex={5} />\n  <PyramidChart.XAxis />\n  <PyramidChart.YAxis />\n  <PyramidChart.Tooltip />\n</PyramidChart>",
+      "previewVideo": {
+        "src": "/previews/pyramid-chart-population.mp4",
+        "poster": "/previews/pyramid-chart-population-poster.jpg",
+        "alt": "PyramidChart — Names between the wings, or down the left.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "A readout that follows the finger",

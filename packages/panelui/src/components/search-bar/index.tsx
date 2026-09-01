@@ -49,6 +49,21 @@
  * as still being used, and a blur arriving under that mark is answered by
  * asking for focus back rather than by ending the search.
  *
+ * That guard only knows about presses that go through this component's own
+ * parts, and a caller's `Pressable` in a row's `trailing` slot takes the touch
+ * itself. So the panel also waits before believing any blur, and asks the
+ * keyboard: it is still up, because nothing in the panel dismisses it, and a
+ * search whose keyboard is still up has not ended. Focus goes back instead.
+ *
+ * ## The space kept for the field is not a target
+ *
+ * The card is one box around the results *and* the field, so it carries a
+ * spacer where the field sits. That spacer is a plain view drawn over a
+ * focused field, and a touch on a plain view is the platform's cue to dismiss
+ * the keyboard — so winning one blurred the field and closed the panel drawn
+ * out of that focus. Tapping the search box shut the results, which is exactly
+ * backwards. The card and its spacer take no touches at all now.
+ *
  * ## What has already been picked goes in the field
  *
  * `tokens` puts the choices made so far inside the field, before the caret, so
@@ -186,6 +201,19 @@ const FIELD_HEIGHT = { sm: 40, md: 48, lg: 56 } as const;
  * it, short enough that a real dismissal is never held open.
  */
 const FOCUS_GUARD = 400;
+
+/**
+ * How long the panel waits after a blur before believing the search is over.
+ *
+ * The guard above only covers presses that go through this component's own
+ * parts. A caller's own `Pressable` in a row's `trailing` slot takes the touch
+ * itself and this component never hears about it — so the catch-all is the
+ * keyboard: it is still up, because nothing in the panel dismisses it, and a
+ * search whose keyboard is still up has not ended. The pause is long enough
+ * for focus to come back on its own and short enough that a real dismissal
+ * does not leave the panel hanging.
+ */
+const BLUR_GRACE = 220;
 
 /** Share of the field a row of tokens may take before it starts scrolling. */
 const TOKEN_MAX_SHARE = 0.6;
@@ -590,24 +618,57 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
       inputRef.current?.focus();
     }, [disabled]);
 
+    /*
+     * Set while the search is being ended deliberately — Cancel, or a caller
+     * calling `blur()`. Without it the recovery below would fight the very
+     * thing that is trying to close the search.
+     */
+    const ending = useRef(false);
+    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const clearCloseTimer = useCallback(() => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }, []);
+
+    useEffect(() => clearCloseTimer, [clearCloseTimer]);
+
+    // Read inside a timer, so it has to be a ref rather than the render value.
+    const keyboardUp = useRef(false);
+
     const handleFocus = useCallback<NonNullable<InputProps['onFocus']>>(
       (event) => {
+        clearCloseTimer();
+        ending.current = false;
         setFocused(true);
         onFocus?.(event);
       },
-      [onFocus]
+      [clearCloseTimer, onFocus]
     );
 
     const handleBlur = useCallback<NonNullable<InputProps['onBlur']>>(
       (event) => {
+        // The caller asked for the event, so it goes out now rather than at
+        // the end of the pause — this is about what the *panel* believes.
+        onBlur?.(event);
+
         if (guarded.current) {
           inputRef.current?.focus();
           return;
         }
-        setFocused(false);
-        onBlur?.(event);
+
+        clearCloseTimer();
+        closeTimer.current = setTimeout(() => {
+          closeTimer.current = null;
+          if (!ending.current && keyboardUp.current) {
+            // The keyboard never went down, so the search is still on screen
+            // and something inside it has taken the focus. Give it back.
+            inputRef.current?.focus();
+            return;
+          }
+          setFocused(false);
+        }, BLUR_GRACE);
       },
-      [onBlur]
+      [clearCloseTimer, onBlur]
     );
 
     const handleKeyPress = useCallback(
@@ -645,7 +706,12 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
 
     const handleCancel = useCallback(() => {
       if (disabled) return;
+      // Deliberate: the recovery above must not answer this blur by handing
+      // the focus straight back.
+      ending.current = true;
+      guarded.current = false;
       setText('');
+      setFocused(false);
       inputRef.current?.blur();
       onCancel?.();
     }, [disabled, onCancel, setText]);
@@ -687,6 +753,9 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
      */
     const { height: windowHeight } = useWindowDimensions();
     const { height: keyboardHeight } = useKeyboard();
+    useEffect(() => {
+      keyboardUp.current = keyboardHeight > 0;
+    }, [keyboardHeight]);
     const anchorRef = useRef<View | null>(null);
     const [anchorBox, setAnchorBox] = useState<{
       top: number;
@@ -877,12 +946,30 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
     const divider = (
       <View
         key="divider"
+        pointerEvents="none"
         style={{ height: StyleSheet.hairlineWidth }}
         className={slots.panelDivider()}
       />
     );
+    /*
+     * The room the card keeps for the field, and the reason it is inert.
+     *
+     * It is a spacer drawn at exactly the field's position, inside the card and
+     * therefore outside the list's `keyboardShouldPersistTaps`. Any touch it
+     * wins is a touch on a plain view while a field is focused, which is the
+     * platform's cue to dismiss the keyboard — so the field blurs, and the
+     * panel drawn out of that focus closes. From the outside that is "tapping
+     * the search box closes the results", which is exactly backwards.
+     *
+     * It has nothing to be pressed for. `none` puts the touch through to the
+     * field underneath it, where it was aimed.
+     */
     const fieldSlot = (
-      <View key="slot" style={{ height: anchorBox?.height ?? FIELD_HEIGHT[size] }} />
+      <View
+        key="slot"
+        pointerEvents="none"
+        style={{ height: anchorBox?.height ?? FIELD_HEIGHT[size] }}
+      />
     );
 
     const anchor = (
@@ -896,6 +983,10 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
           <Animated.View
             entering={FadeIn.duration(PANEL_IN)}
             exiting={FadeOut.duration(PANEL_OUT)}
+            // `box-none`: the card is a surface, not a target. Only the rows
+            // inside it answer a touch, and the space kept for the field lets
+            // one through to the field.
+            pointerEvents="box-none"
             style={panelPlacement === 'top' ? CARD_ABOVE : CARD_BELOW}
             className={slots.panel()}
           >

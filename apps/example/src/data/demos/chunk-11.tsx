@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Pressable, ScrollView, View } from "react-native";
 import { Alert, Avatar, Badge, BookmarkIcon, BottomSheet, Button, Card, CheckIcon, ChevronLeftIcon, EllipsisIcon, EyeIcon, Frame, HeartIcon, Item, ListChecksIcon, MaximizeIcon, Message, MessageCircleIcon, MessageScroller, Plan, MicIcon, MoonIcon, PackageIcon, PauseIcon, PencilIcon, PlayIcon, Post, type PostVote, Portal, Progress, RepeatIcon, Scrim, SendIcon, ShareNodesIcon, ScrollBlur, ScrollFade, Separator, Signature, type SignatureHandle, Skeleton, Sortable, reorderItems, useSortableItem, Soundwave, Steps, SunIcon, Surface, Task, Text, XIcon, ToggleButton, ToggleButtonGroup, useThemeMode } from "panelui-native";
 import { formatClock, useVoiceRecorder, VoiceControls } from "../../components/voice";
+import { useCSSVariable } from 'uniwind';
 import type { ComponentEntry } from '../component-types';
 
 /** Stable remote portraits for the Avatar demos. */
@@ -1664,6 +1665,9 @@ const FEEDS = [
  */
 function ScrollBlurSheetVersion() {
   const [open, setOpen] = useState(true);
+  // The sheet's surface, so the band fades towards what it is drawn on.
+  const token = useCSSVariable('--color-popover');
+  const surface = typeof token === 'string' ? token : undefined;
 
   return (
     <View className="flex-1 items-center justify-center gap-4 p-6">
@@ -1675,12 +1679,23 @@ function ScrollBlurSheetVersion() {
       </Button>
 
       <BottomSheet open={open} onOpenChange={setOpen}>
-        <BottomSheet.Content size="half" showClose={false}>
-          {/* `edges="start"` only: the bottom of the sheet is an edge the
-              sheet already draws, and two treatments on one edge read as a
-              mistake. */}
-          <ScrollBlur edges="start" size={72} layers={5} className="flex-1">
-            <BottomSheet.Body contentContainerClassName="gap-2 pb-4 pt-16">
+        <BottomSheet.Content size="half" showClose={false} showGrabber={false}>
+          {/*
+            `edges="start"` only: the bottom of the sheet is an edge the sheet
+            already draws, and two treatments on one edge read as a mistake.
+
+            `color` is the sheet's own surface, not the page's. The band fades
+            towards whatever it is given, and the theme background is a
+            different colour from the sheet it would be fading on.
+          */}
+          <ScrollBlur
+            edges="start"
+            size={96}
+            layers={7}
+            color={surface}
+            className="flex-1"
+          >
+            <BottomSheet.Body contentContainerClassName="gap-2 pb-4 pt-20">
               {FEEDS.map(([name, followers]) => (
                 <Item key={name} variant="outline" size="sm">
                   <Item.Media variant="icon">
@@ -1695,10 +1710,14 @@ function ScrollBlurSheetVersion() {
             </BottomSheet.Body>
           </ScrollBlur>
 
-          {/* Over the band, not inside it: the button is the thing in focus. */}
+          {/*
+            Over the band, not inside it: the button is the thing in focus, and
+            the list is what goes soft behind it. The grabber is off because
+            the two would be stacked in the same 20 points of sheet.
+          */}
           <View
             pointerEvents="box-none"
-            className="absolute inset-x-0 top-0 items-center pt-3"
+            className="absolute inset-x-0 top-0 items-center pt-4"
           >
             <Button size="sm" className="rounded-full px-5">
               Follow all

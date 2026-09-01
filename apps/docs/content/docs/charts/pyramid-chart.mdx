@@ -4,6 +4,14 @@ description: Two series mirrored about a centre, on one shared scale.
 status: new
 ---
 
+<PreviewVideo
+  src="/previews/pyramid-chart.mp4"
+  poster="/previews/pyramid-chart-poster.jpg"
+  alt="PyramidChart — two series mirrored about a centre, on one shared scale."
+  width={720}
+  height={1560}
+/>
+
 Two series drawn as mirrored bars either side of a centre line, one row per category.
 
 Both wings are measured on the same scale, derived from the larger of the two series. That is the whole point of the shape: a bar twice as long as the one facing it means twice as much. Colours come from the `--color-chart-1` … `--color-chart-5` tokens.
@@ -67,6 +75,14 @@ npx panelui-cli@latest add pyramid-chart
 
 `side` puts a series on the left or the right. The scale is shared, so the two halves can be read against each other rather than only each against itself.
 
+<PreviewVideo
+  src="/previews/pyramid-chart-two-wings.mp4"
+  poster="/previews/pyramid-chart-two-wings-poster.jpg"
+  alt="PyramidChart — Two wings on one scale."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Frame className="w-full">
   <Frame.Header>
@@ -97,6 +113,14 @@ npx panelui-cli@latest add pyramid-chart
 `labelPlacement` decides where the category names go. The default gives each row a line of its own over its pair of bars. `center` puts them in a gutter between the wings instead — taken off the bars rather than off the edges, so both wings stay equal — and `start` puts them down the left, for a chart with room on that side.
 
 Height is the chart's width over `aspectRatio` and has nothing to do with how many rows there are. So a stack that is running past the bottom of the screen is shortened by raising `aspectRatio`, not by dropping rows — dropping rows only makes the bars thicker in a frame exactly as tall as before.
+
+<PreviewVideo
+  src="/previews/pyramid-chart-population.mp4"
+  poster="/previews/pyramid-chart-population-poster.jpg"
+  alt="PyramidChart — Names between the wings, or down the left."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <PyramidChart

@@ -37,10 +37,11 @@ Extends `ViewProps`.
 | `size` | `number` | `64` | Depth of the blurred band in pixels. |
 | `edges` | `'both' \| 'start' \| 'end' \| 'none'` | `both` | Which edges blur. |
 | `orientation` | `'horizontal' \| 'vertical'` | — | Scroll axis. Inferred from the child's `horizontal` prop when omitted — pass it explicitly for children that scroll horizontally without that prop (a `FlatList` with `horizontal` set through `contentContainerStyle`, say). |
-| `layers` | `number` | `4` | How many blur views make up the ramp. More is smoother and costs more; the band shows visible steps below three. |
+| `layers` | `number` | `6` | How many blur views make up the ramp. More is smoother and costs more; the band shows visible steps below four, and past eight nobody can tell. |
 | `intensity` | `number` | `40` | Blur strength at the very edge, 0–100. The layers share it between them. |
-| `tint` | `ScrollBlurTint` | `default` | Which way the material tints. Defaults to the app's theme rather than the phone's, so an app running dark on a light phone does not blur light. |
-| `color` | `string` | — | Colour the fallback gradient resolves to, for a device that cannot blur or has asked not to. Defaults to the theme's background — pass the surface the scrollable actually sits on, or the fallback will not blend. |
+| `material` | `ScrollBlurTint` | `default` | Which way the material tints. Defaults to the app's theme rather than the phone's, so an app running dark on a light phone does not blur light. |
+| `color` | `string` | — | The colour the band fades towards — washed over the blur, and the whole effect where there is no blur to draw. Defaults to the theme's background. Pass the surface the scrollable actually sits on, or the band fades towards a colour that is not there. |
+| `tint` | `number` | `0.92` | How opaque that wash gets at the outer edge, 0 to 1. Lower it to let more of the content show through the far end of the band; `0` leaves the blur bare, along with the seams between its layers. |
 | `fadeInDistance` | `number` | `24` | Distance in pixels over which an edge comes in from clear to full. |
 | `enabled` | `boolean` | `true` | Set false to render the child with no bands at all. |
 | `children` | `ReactNode` | — | — |
@@ -67,19 +68,21 @@ The rows go soft as they reach the top and bottom of the viewport, and the band 
 
 ### Notes
 
-### The ramp is a stack, not a mask
+### The ramp is a stack and a wash
 
 A blur that goes from nothing to full across a band needs a per-pixel blur radius, and there is no such thing on either platform — a blur view has one strength for its whole rectangle.
 
-So the ramp is built out of several of them. Each layer covers a shorter span than the last, measured from the edge, and each blurs what the layer under it has already blurred. Near the edge every layer is stacked up; at the inner boundary only the widest one is there, and the widest is also the faintest, so the band starts from nothing rather than from a visible step.
+So the ramp is built out of several of them. Each layer covers a shorter span than the last, measured from the edge, and each blurs what the layer under it has already blurred. The spans are spaced on a curve rather than evenly, which puts most of the layers in the outer third where the blur changes fastest and the steps would otherwise be widest.
 
-`layers` is that count. Four is enough for a 64-point band; a deeper band wants more. Each layer is a real native view, so this is the knob that costs something — below three the band shows steps, above six you are paying for a difference nobody can see.
+That alone is not smooth. Every layer has a hard edge, and a stack of hard edges is a stack of visible lines however many there are. So a gradient of `color` is washed over the top — opaque at the outer edge, clear at the inner one. It hides the seams, and it is what makes the band read as one material rather than a pile of rectangles: the content goes soft and fades into the surface at once, which is what the eye expects an edge to do.
 
-### Where it cannot blur, it fades
+`layers` is the count. Six suits a 64-point band; a deeper one wants more. Each layer is a real native view, so this is the knob that costs something — below four the band shows steps, above eight nobody can tell. `tint` is how opaque the wash gets; `0` leaves the blur bare, along with its seams.
 
-`expo-blur` is an optional peer, and Reduce Transparency is a preference that outranks the design. Both cases fall back to a gradient towards `color`.
+### `color` is not just the fallback
 
-So pass `color` whenever the scrollable does not sit on the theme background. It is unused in the blurred case and it is the whole effect in the other one.
+The wash fades towards `color`, so it matters even when the blur is drawn. Pass the surface the scrollable actually sits on — a sheet, a card, the page. Left on the theme background inside a sheet, the band fades towards a colour that is not there.
+
+It is also the whole effect where there is no blur: `expo-blur` is an optional peer, and Reduce Transparency is a preference that outranks the design. Both fall back to the gradient alone.
 
 ### The rest
 
@@ -89,7 +92,7 @@ An edge only blurs once there is content past it, and neither edge blurs when th
 
 **The child becomes a Reanimated animated component.** If you need `onScroll` on it yourself, it has to be an animated handler from `useAnimatedScrollHandler` — a plain function will not run.
 
-`tint` follows the app's theme rather than the phone's, so an app running dark on a light phone does not blur light. Pass `light` or `dark` to fix it.
+`material` follows the app's theme rather than the phone's, so an app running dark on a light phone does not blur light. Pass `light` or `dark` to fix it.
 
 For a flat, known background, [ScrollFade](/docs/components/scroll-fade) is cheaper: one gradient per edge against this component's four native views.
 

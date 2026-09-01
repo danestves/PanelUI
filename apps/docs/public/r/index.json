@@ -58,7 +58,6 @@
     "description": "Status pill whose icon and label roll over when the status changes.",
     "registryDependencies": [
       "icons",
-      "spinner",
       "text"
     ],
     "docsPath": "components/animated-badge"

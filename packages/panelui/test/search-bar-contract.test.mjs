@@ -201,3 +201,42 @@ test('tokens sit inside the field and come off with backspace', async () => {
     /event\.nativeEvent\.key === 'Backspace' && text\.length === 0/
   );
 });
+
+test('nothing the card draws over the field can take a touch', async () => {
+  const source = await component('search-bar');
+
+  /*
+   * The card is one box around the results and the field, so it carries a
+   * spacer where the field sits. A plain view drawn over a focused field is
+   * the platform's cue to dismiss the keyboard, so a touch it wins blurs the
+   * field and closes the panel drawn out of that focus — tapping the search
+   * box shuts the results. This shipped once.
+   */
+  assert.match(
+    source,
+    /const fieldSlot = \(\s*<View\s*key="slot"\s*pointerEvents="none"/
+  );
+  assert.match(source, /key="divider"\s*pointerEvents="none"/);
+
+  // The card is a surface, not a target: only its rows answer a touch.
+  const card = source.slice(source.indexOf('exiting={FadeOut.duration(PANEL_OUT)}'));
+  assert.match(card.slice(0, 600), /pointerEvents="box-none"/);
+});
+
+test('a blur while the keyboard is up is answered, not believed', async () => {
+  const source = await component('search-bar');
+
+  // The guard only covers this component's own parts; a caller's Pressable in
+  // a row takes the touch itself and is never seen. The keyboard is the
+  // catch-all: still up means the search is still on screen.
+  assert.match(source, /const BLUR_GRACE = 220;/);
+  const blur = source.slice(source.indexOf('const handleBlur'));
+  assert.match(
+    blur.slice(0, 1200),
+    /if \(!ending\.current && keyboardUp\.current\) \{\s*\/\/[\s\S]{0,200}inputRef\.current\?\.focus\(\);/
+  );
+
+  // Cancel is deliberate and must not have its focus handed back.
+  const cancel = source.slice(source.indexOf('const handleCancel'));
+  assert.match(cancel.slice(0, 600), /ending\.current = true;/);
+});

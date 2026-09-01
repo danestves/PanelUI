@@ -69,8 +69,8 @@ import {
   InfoIcon,
   XIcon,
 } from '../../icons';
+import { IconColorProvider } from '../../icons';
 import { Text, textChildren } from '../../primitives/text';
-import { Spinner } from '../spinner';
 
 /** How long the pulse takes to swell and settle again, in milliseconds. */
 const PULSE_DURATION = 800;
@@ -98,7 +98,13 @@ const animatedBadgeVariants = tv({
      * in and out, and without this they would be drawn over whatever the badge
      * is sitting next to.
      */
-    root: 'flex-row items-center self-start overflow-hidden rounded-full border',
+    /*
+     * No border. A ring would have to be a colour per status, and there is no
+     * token for one — `border` on its own resolves to `currentColor`, which
+     * comes out black on every pill in every theme. The tinted fill is what
+     * separates the badge from the surface, which is how `Badge` does it too.
+     */
+    root: 'flex-row items-center self-start overflow-hidden rounded-full',
     label: 'font-medium',
     /** The pulse's fill, behind the content and inside the same clip. */
     pulse: 'absolute inset-0',
@@ -108,32 +114,32 @@ const animatedBadgeVariants = tv({
   variants: {
     status: {
       neutral: {
-        root: 'border-border bg-card',
+        root: 'bg-muted',
         label: 'text-muted-foreground',
         pulse: 'bg-muted-foreground',
       },
       info: {
-        root: 'border-info/30 bg-info-subtle',
+        root: 'bg-info-subtle',
         label: 'text-info-foreground',
         pulse: 'bg-info',
       },
       success: {
-        root: 'border-success/30 bg-success-subtle',
+        root: 'bg-success-subtle',
         label: 'text-success-foreground',
         pulse: 'bg-success',
       },
       warning: {
-        root: 'border-warning/30 bg-warning-subtle',
+        root: 'bg-warning-subtle',
         label: 'text-warning-foreground',
         pulse: 'bg-warning',
       },
       danger: {
-        root: 'border-destructive/30 bg-destructive-subtle',
+        root: 'bg-destructive-subtle',
         label: 'text-destructive-foreground',
         pulse: 'bg-destructive',
       },
       loading: {
-        root: 'border-info/30 bg-info-subtle',
+        root: 'bg-info-subtle',
         label: 'text-info-foreground',
         pulse: 'bg-info',
       },
@@ -174,11 +180,8 @@ const STATUS_COLOR_VAR: Record<AnimatedBadgeStatus, string> = {
 /** Glyph sizes per badge size — the icon tracks the text, not the box. */
 const ICON_SIZE: Record<AnimatedBadgeSize, number> = { sm: 12, md: 14 };
 
-/** The spinner is sized by class, since its own steps are 16, 24 and 32. */
-const SPINNER_CLASS: Record<AnimatedBadgeSize, string> = {
-  sm: 'h-3 w-3 border-[1.5px]',
-  md: 'h-3.5 w-3.5 border-[1.5px]',
-};
+/** Milliseconds for one full turn of the loading ring. */
+const SPIN_DURATION = 800;
 
 export interface AnimatedBadgeProps
   extends ViewProps,
@@ -225,6 +228,17 @@ export const AnimatedBadge = forwardRef<View, AnimatedBadgeProps>(
   ) => {
     const reducedMotion = useReducedMotion();
     const slots = animatedBadgeVariants({ status, size });
+
+    /*
+     * The width spring is for a badge changing, not for one arriving. Left on
+     * from the first frame it animates the pill's *initial* layout, so the
+     * badge slides into place from wherever the layout engine first put it —
+     * which reads as the badge flying in every time a screen opens.
+     */
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+      setMounted(true);
+    }, []);
     const themeColor = useCSSVariable(STATUS_COLOR_VAR[status]);
     const iconColor = typeof themeColor === 'string' ? themeColor : undefined;
     const Icon = STATUS_ICON[status];
@@ -270,7 +284,11 @@ export const AnimatedBadge = forwardRef<View, AnimatedBadgeProps>(
         // The pill grows to the new word rather than jumping to it: a badge in
         // a row of them shoves its neighbours as it changes, and a jump does
         // all of that shoving in one frame.
-        layout={reducedMotion ? undefined : LinearTransition.springify().damping(22)}
+        layout={
+          reducedMotion || !mounted
+            ? undefined
+            : LinearTransition.springify().damping(22)
+        }
         accessibilityRole="text"
         accessibilityState={{ busy: status === 'loading' }}
         className={slots.root({ className })}
@@ -286,16 +304,26 @@ export const AnimatedBadge = forwardRef<View, AnimatedBadgeProps>(
 
         {showIcon ? (
           <View className={slots.slot()} style={{ height: ICON_SIZE[size] + 4 }}>
-            <Roll contentKey={status} reducedMotion={reducedMotion} turn>
-              {icon ??
-                (status === 'loading' ? (
-                  <Spinner
-                    className={`${SPINNER_CLASS[size]} border-info/25 border-t-info`}
-                  />
-                ) : (
-                  <Icon size={ICON_SIZE[size]} color={iconColor} />
-                ))}
-            </Roll>
+            {/*
+              A glyph passed in is somebody else's, from any set, and it reads
+              the ambient colour rather than the badge's status. Provided here
+              so `icon` comes out the same colour as the word beside it instead
+              of the icon set's own grey.
+            */}
+            <IconColorProvider color={iconColor}>
+              <Roll contentKey={status} reducedMotion={reducedMotion} turn>
+                {icon ??
+                  (status === 'loading' ? (
+                    <LoadingRing
+                      size={ICON_SIZE[size]}
+                      color={iconColor}
+                      reducedMotion={reducedMotion}
+                    />
+                  ) : (
+                    <Icon size={ICON_SIZE[size]} color={iconColor} />
+                  ))}
+              </Roll>
+            </IconColorProvider>
           </View>
         ) : null}
 
@@ -314,6 +342,60 @@ export const AnimatedBadge = forwardRef<View, AnimatedBadgeProps>(
 );
 
 AnimatedBadge.displayName = 'AnimatedBadge';
+
+/**
+ * The turning ring `loading` draws in place of a glyph.
+ *
+ * Built here rather than borrowed from `Spinner` because this one has to be
+ * the status's colour and the badge's glyph size, and `Spinner` takes both
+ * from classes — a badge overriding them ends up fighting the merge, and an
+ * arbitrary border width that fails to compile leaves a ring with no border at
+ * all, which is an empty hole where the icon should be.
+ *
+ * The track and the arc are two views of the same colour rather than two
+ * colours: the track is the same stroke at low opacity, so there is nothing to
+ * resolve but the one value the label already uses.
+ */
+function LoadingRing({
+  size,
+  color,
+  reducedMotion,
+}: {
+  size: number;
+  color: string | undefined;
+  reducedMotion: boolean;
+}) {
+  const turn = useSharedValue(0);
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    turn.value = withRepeat(
+      withTiming(1, { duration: SPIN_DURATION, easing: Easing.linear }),
+      -1,
+      false
+    );
+  }, [reducedMotion, turn]);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${turn.value * 360}deg` }],
+  }));
+
+  const ring = {
+    position: 'absolute',
+    inset: 0,
+    borderRadius: size / 2,
+    borderWidth: Math.max(1, Math.round(size / 8)),
+  } as const;
+
+  return (
+    <View style={{ width: size, height: size }}>
+      <View style={[ring, { borderColor: color, opacity: 0.25 }]} />
+      <Animated.View
+        style={[ring, { borderColor: 'transparent', borderTopColor: color }, style]}
+      />
+    </View>
+  );
+}
 
 /**
  * One element's turn: the old one out through the top, the new one up from
@@ -378,7 +460,16 @@ function Roll({
   }, [phase]);
 
   useEffect(() => {
-    if (settled) return;
+    if (settled) {
+      /*
+       * Changed and changed back before the roll finished. The swap that would
+       * have brought the element home is never scheduled, so without this it
+       * stays parked outside the badge — an empty slot where the glyph should
+       * be, for as long as the status holds.
+       */
+      if (phase.value !== 0) phase.value = withSpring(0, ROLL_IN);
+      return;
+    }
     if (reducedMotion) {
       setShownKey(incomingKey.current);
       return;
