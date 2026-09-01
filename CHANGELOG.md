@@ -9,6 +9,90 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.88.0] — 2026-09-01
+
+### Added
+
+- **`ScrollBlur`** — blurs the edges of a scroll container, where `ScrollFade` fades them. A fade
+  takes content towards the colour behind the scroller, so it only works where that colour is
+  known and flat; a blur takes it out of focus instead, which is true over a photograph, a
+  gradient or a list of coloured cards. It is also what belongs under something laid *over* a
+  scroller — a button, a header — because the content passing beneath stays legible as shape and
+  colour while losing the detail that would compete with the thing on top. Neither platform has a
+  per-pixel blur radius, so the band is a stack of blur views on a curve with a gradient of
+  `color` washed over the top, which is what hides the seam every hard-edged layer leaves. Needs
+  the optional `expo-blur`; without it, or with Reduce Transparency on, it falls back to the fade.
+- **`AnimatedBadge`** — a status pill whose icon and label roll over when the status changes. A
+  badge that swaps its word between one frame and the next is a badge people miss: the status is
+  the smallest thing on the screen and usually not the thing being looked at, so a change with no
+  movement in it registers as having always said that. One view does the roll rather than two —
+  the content is swapped at the far end of the travel — because in a box this size a pair of
+  mounted elements makes the badge swell around them and collapse again.
+- **`FeedbackDialog`** — a dialog whose body is a well to write in, with the actions in the band
+  around it. `Dialog` puts both on one surface, which is right when the body is a line of prose
+  and wrong when it is a field: nothing about a flat panel says "this is where you type". The
+  recess comes from `--color-inset` over the popover surface, because the surface ladder runs
+  darker in a light theme and lighter in a dark one, and a well has to read the same way in both.
+- **`BubbleChart.Quadrants`**, **`.SizeKey`** and **`.Trend`** — a crosshair at the mean of each
+  axis with a name for each corner; three nested circles saying what a bubble's area is worth,
+  which is the one quantity the chart has no axis for; and the least-squares line through the
+  cloud, handing back the fit through `onFit`.
+- **`BubbleChart.XAxis`** and **`.YAxis`** take a `label` for what the axis measures. The chart
+  reserves the room before it lays the plot out, so adding one moves the plot rather than writing
+  over it.
+- **`SearchBar`** takes `tokens` and `onRemoveLastToken`, with **`SearchBar.Token`** for the chip
+  and **`SearchBar.Action`** for a button in a row's `trailing` slot. Tokens put what has been
+  picked inside the field, before the caret, so the query and what it has produced are one control
+  rather than a control and a list somewhere above it.
+
+### Changed
+
+- **`BubbleChart`** draws eight gridlines each way and prints five numbers per axis, against five
+  squares and three numbers before. Of eleven gridlines only four had anything beside them, so a
+  reader landing on one of the others had to count their way to a value; every second line carries
+  one now, and the domain is rounded to the same four steps so the numbers come out round. The
+  rules are dashed, as ScatterChart's already were.
+- **`SearchBar`**'s results panel is capped at about six rows and scrolls past that. The room above
+  a lifted field is most of the display, and a panel that took all of it was a full-screen list
+  with a search box under it. `panelMaxHeight` overrides, and is clamped to the room as well.
+- **`BottomSheet.Body`** composes a caller's `onScroll` with its own and forwards a ref.
+
+### Fixed
+
+- **`SearchBar` could not be opened at all on iOS.** The field's stacking order was set at the
+  moment the panel opened, and React Native implements `zIndex` there by reordering the parent's
+  subviews — which takes the view out of the hierarchy and puts it back, and a `UITextField`
+  removed from the window resigns first responder. So opening the panel blurred the field that had
+  just been focused, which closed the panel, which took the style away again: the keyboard came up
+  and went straight back down. It is set always now.
+- **`SearchBar`**: the spacer the card keeps for the field is inert, so a tap on the search box no
+  longer dismisses the keyboard; the panel keeps every tap inside it, including on padding, a
+  section heading and `Status`; and a blur while the keyboard is still up is answered by handing
+  the focus back rather than by ending the search.
+- **`BottomSheet.Body`** used to drop a caller's `onScroll`, silently costing the sheet the
+  position report its drag arrangement is built on.
+- **`BubbleChart.Trend`** reported a new fit object on every render, which looped any caller who
+  put it in state. It reports on the numbers now.
+- **`AnimatedBadge`** drew a black ring in every theme, left an empty slot where the loading glyph
+  belongs, took a caller's `icon` in the icon set's grey, and drifted into place on every screen
+  that showed one.
+- **Reanimated no longer warns about `LayoutMetrics`.** `use-keyboard-avoidance` and
+  `use-reveal-progress` measured views the layout engine had no metrics for — every frame between
+  a mount and its first layout, and every frame after an unmount the callback had not been stopped
+  for. `measure` prints that warning before returning the `null` a caller could notice, so the
+  check both already had was too late.
+- **panelui.dev has not built since 0.87.0 was tagged.** The production chain read
+  `apps/docs/scripts/api.json`, which is gitignored, without running the step that writes it — so
+  it passed on a developer's machine and failed on the deploy, leaving the site on 0.86.1 with two
+  documented charts missing. The deploy is the one place nobody is watching: it runs after the tag
+  exists, and the workflow reports success as soon as the hook is accepted.
+
+### Docs
+
+- `PyramidChart` carries its recordings from the device, and its second version is four bands in a
+  shorter frame — height is the chart's width over `aspectRatio` and has nothing to do with the
+  number of rows, which is the knob people reach for first.
+
 ## [0.87.0] — 2026-08-31
 
 ### Added
