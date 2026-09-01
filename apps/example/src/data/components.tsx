@@ -61,8 +61,8 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
     load03().then((module) => module.ENTRIES_BY_SLUG['date-picker']),
   'date-time-picker': () =>
     load03().then((module) => module.ENTRIES_BY_SLUG['date-time-picker']),
-  'feedback-dialog': () =>
-    load03().then((module) => module.ENTRIES_BY_SLUG['feedback-dialog']),
+  'feedback': () =>
+    load03().then((module) => module.ENTRIES_BY_SLUG['feedback']),
   dialog: () => load03().then((module) => module.ENTRIES_BY_SLUG['dialog']),
   direction: () =>
     load03().then((module) => module.ENTRIES_BY_SLUG['direction']),

@@ -587,7 +587,7 @@
     "docsPath": "components/fab"
   },
   {
-    "name": "feedback-dialog",
+    "name": "feedback",
     "type": "registry:ui",
     "kind": "ui",
     "group": "components",
@@ -603,7 +603,7 @@
       "text",
       "use-back-handler"
     ],
-    "docsPath": "components/feedback-dialog"
+    "docsPath": "components/feedback"
   },
   {
     "name": "field",

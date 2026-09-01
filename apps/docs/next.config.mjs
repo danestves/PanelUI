@@ -66,6 +66,13 @@ const config = {
    */
   async redirects() {
     return [
+      // Renamed after 0.88.0 shipped it as FeedbackDialog. The old page is
+      // live and linked, so it keeps a way through to the new one.
+      {
+        source: '/docs/components/feedback-dialog',
+        destination: '/docs/components/feedback',
+        permanent: true,
+      },
       {
         source: '/docs/components/shimmer',
         destination: '/docs/ai-components/shimmer',

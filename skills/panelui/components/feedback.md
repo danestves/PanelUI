@@ -1,47 +1,47 @@
-# FeedbackDialog
+# Feedback
 
 Dialog whose body is a well to write in, with the actions in the band around it.
 
 ```tsx
-import { FeedbackDialog } from 'panelui-native';
+import { Feedback } from 'panelui-native';
 // Copied into the project with the CLI instead:
-// import { FeedbackDialog } from '@/components/ui/feedback-dialog';
+// import { Feedback } from '@/components/ui/feedback';
 ```
 
 ### Anatomy
 
 ```tsx
-<FeedbackDialog>
-  <FeedbackDialog.Trigger>…</FeedbackDialog.Trigger>   {/* opens it */}
-  <FeedbackDialog.Content>            {/* the shell, and the recessed band */}
-    <FeedbackDialog.Panel>           {/* the well */}
-      <FeedbackDialog.Title>…</FeedbackDialog.Title>
-      <FeedbackDialog.Close />       {/* the ✕, in the well's corner */}
-      <FeedbackDialog.Field />       {/* what is being written */}
-    </FeedbackDialog.Panel>
-    <FeedbackDialog.Footer>          {/* in the band, narrower than the well */}
-      <FeedbackDialog.Cancel />
-      <FeedbackDialog.Submit />
-    </FeedbackDialog.Footer>
-  </FeedbackDialog.Content>
-</FeedbackDialog>
+<Feedback>
+  <Feedback.Trigger>…</Feedback.Trigger>   {/* opens it */}
+  <Feedback.Content>            {/* the shell, and the recessed band */}
+    <Feedback.Panel>           {/* the well */}
+      <Feedback.Title>…</Feedback.Title>
+      <Feedback.Close />       {/* the ✕, in the well's corner */}
+      <Feedback.Field />       {/* what is being written */}
+    </Feedback.Panel>
+    <Feedback.Footer>          {/* in the band, narrower than the well */}
+      <Feedback.Cancel />
+      <Feedback.Submit />
+    </Feedback.Footer>
+  </Feedback.Content>
+</Feedback>
 ```
 
 ### Parts
 
-- `FeedbackDialog.Trigger` — Wraps its child and opens the dialog on press. Leave it out for a dialog opened from somewhere else and driven by `open`.
-- `FeedbackDialog.Content` — The shell: the scrim, the recessed band, and the dismiss surface behind it. `dismissible={false}` takes away the tap-outside and the Android back press; `blur` frosts the screen behind instead of dimming it.
-- `FeedbackDialog.Panel` — The well set into the shell. Its corner is the shell's less the shell's padding, so the two curves stay concentric.
-- `FeedbackDialog.Title` — The question. One line, held clear of the ✕.
-- `FeedbackDialog.Close` — The ✕ in the well's corner. Drawn at 22 points with the slop that takes its touch box to 48 — a circle large enough to press comfortably would be taller than the line it sits on.
-- `FeedbackDialog.Field` — What is being written. No border and no background of its own: it is already inside a well, and an outline drawn inside one is two edges making the same point. Grows past `minHeight` as the message does.
-- `FeedbackDialog.Footer` — The action row, held in from the shell's edge. Narrower than the well on purpose — a row running the full width reads as a third edge of the dialog rather than as two things to press.
-- `FeedbackDialog.Cancel` — Discards and closes. Pass `onPress` to do something else first.
-- `FeedbackDialog.Submit` — Sends, through `onSubmit`. Inert while the field is empty, and it does not close the dialog — sending usually has to finish first, and a dialog that closed on the press would take its own error message with it.
+- `Feedback.Trigger` — Wraps its child and opens the dialog on press. Leave it out for a dialog opened from somewhere else and driven by `open`.
+- `Feedback.Content` — The shell: the scrim, the recessed band, and the dismiss surface behind it. `dismissible={false}` takes away the tap-outside and the Android back press; `blur` frosts the screen behind instead of dimming it.
+- `Feedback.Panel` — The well set into the shell. Its corner is the shell's less the shell's padding, so the two curves stay concentric.
+- `Feedback.Title` — The question. One line, held clear of the ✕.
+- `Feedback.Close` — The ✕ in the well's corner. Drawn at 22 points with the slop that takes its touch box to 48 — a circle large enough to press comfortably would be taller than the line it sits on.
+- `Feedback.Field` — What is being written. No border and no background of its own: it is already inside a well, and an outline drawn inside one is two edges making the same point. Grows past `minHeight` as the message does.
+- `Feedback.Footer` — The action row, held in from the shell's edge. Narrower than the well on purpose — a row running the full width reads as a third edge of the dialog rather than as two things to press.
+- `Feedback.Cancel` — Discards and closes. Pass `onPress` to do something else first.
+- `Feedback.Submit` — Sends, through `onSubmit`. Inert while the field is empty, and it does not close the dialog — sending usually has to finish first, and a dialog that closed on the press would take its own error message with it.
 
 ### Props
 
-#### `FeedbackDialogProps`
+#### `FeedbackProps`
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
@@ -53,7 +53,7 @@ import { FeedbackDialog } from 'panelui-native';
 | `defaultValue` | `string` | `` | Starting message for an uncontrolled field. Ignored once `value` is passed. |
 | `onValueChange` | `(value: string) => void` | — | — |
 
-#### `FeedbackDialogContentProps`
+#### `FeedbackContentProps`
 
 Extends `ViewProps`.
 
@@ -64,7 +64,7 @@ Extends `ViewProps`.
 | `blur` | `boolean` | `false` | Frost the screen behind instead of dimming it. Needs `expo-blur`. |
 | `children` | `ReactNode` | `Cancel` | — |
 
-#### `FeedbackDialogPanelProps`
+#### `FeedbackPanelProps`
 
 Extends `ViewProps`.
 
@@ -73,7 +73,7 @@ Extends `ViewProps`.
 | `className` | `string` | — | — |
 | `children` | `ReactNode` | `Cancel` | — |
 
-#### `FeedbackDialogCloseProps`
+#### `FeedbackCloseProps`
 
 Extends `ViewProps`.
 
@@ -83,7 +83,7 @@ Extends `ViewProps`.
 | `label` | `string` | `Close` | How the ✕ announces itself. |
 | `onPress` | `() => void` | — | Runs instead of closing. Call `onOpenChange` yourself if you pass this. |
 
-#### `FeedbackDialogFieldProps`
+#### `FeedbackFieldProps`
 
 Extends `Omit<TextInputProps, 'value' \| 'onChangeText'>`.
 
@@ -94,7 +94,7 @@ Extends `Omit<TextInputProps, 'value' \| 'onChangeText'>`.
 | `onChangeText` | `(value: string) => void` | — | — |
 | `minHeight` | `number` | `200` | Room to write in before the field starts growing. |
 
-#### `FeedbackDialogFooterProps`
+#### `FeedbackFooterProps`
 
 Extends `ViewProps`.
 
@@ -103,7 +103,7 @@ Extends `ViewProps`.
 | `className` | `string` | — | — |
 | `children` | `ReactNode` | `Cancel` | — |
 
-#### `FeedbackDialogActionProps`
+#### `FeedbackActionProps`
 
 Extends `ViewProps`.
 
@@ -115,9 +115,9 @@ Extends `ViewProps`.
 | `onPress` | `() => void` | — | — |
 | `children` | `ReactNode` | `Cancel` | — |
 
-#### `FeedbackDialogSubmitProps`
+#### `FeedbackSubmitProps`
 
-Extends `FeedbackDialogActionProps`.
+Extends `FeedbackActionProps`.
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
@@ -130,22 +130,22 @@ The shape the component is for. The dialog holds the message, `Submit` refuses t
 ```tsx
 const [open, setOpen] = useState(false);
 
-<FeedbackDialog open={open} onOpenChange={setOpen}>
-  <FeedbackDialog.Trigger>
+<Feedback open={open} onOpenChange={setOpen}>
+  <Feedback.Trigger>
     <Button variant="outline">Give feedback</Button>
-  </FeedbackDialog.Trigger>
-  <FeedbackDialog.Content>
-    <FeedbackDialog.Panel>
-      <FeedbackDialog.Title>What should we fix first?</FeedbackDialog.Title>
-      <FeedbackDialog.Close />
-      <FeedbackDialog.Field placeholder="Tell us what got in your way" />
-    </FeedbackDialog.Panel>
-    <FeedbackDialog.Footer>
-      <FeedbackDialog.Cancel />
-      <FeedbackDialog.Submit onSubmit={(message) => send(message)} />
-    </FeedbackDialog.Footer>
-  </FeedbackDialog.Content>
-</FeedbackDialog>
+  </Feedback.Trigger>
+  <Feedback.Content>
+    <Feedback.Panel>
+      <Feedback.Title>What should we fix first?</Feedback.Title>
+      <Feedback.Close />
+      <Feedback.Field placeholder="Tell us what got in your way" />
+    </Feedback.Panel>
+    <Feedback.Footer>
+      <Feedback.Cancel />
+      <Feedback.Submit onSubmit={(message) => send(message)} />
+    </Feedback.Footer>
+  </Feedback.Content>
+</Feedback>
 ```
 
 ### Notes
@@ -180,4 +180,4 @@ That is the reason `Submit` hands the message back instead of closing. Without i
 
 ---
 
-Full page, with every example: https://panelui.dev/docs/components/feedback-dialog
+Full page, with every example: https://panelui.dev/docs/components/feedback

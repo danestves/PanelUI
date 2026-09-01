@@ -64,7 +64,7 @@ There is no need to fetch anything over the network. If you would rather, the sa
 | `BottomSheet` | Draggable sheet anchored to the bottom of the screen. | [bottom-sheet](./components/bottom-sheet.md) |
 | `Dialog` | Modal dialog with a backdrop and footer actions. | [dialog](./components/dialog.md) |
 | `Drawer` | A panel that comes in from an edge of the screen and covers the app until dismissed. | [drawer](./components/drawer.md) |
-| `FeedbackDialog` | Dialog whose body is a well to write in, with the actions in the band around it. | [feedback-dialog](./components/feedback-dialog.md) |
+| `Feedback` | Dialog whose body is a well to write in, with the actions in the band around it. | [feedback](./components/feedback.md) |
 | `Popover` | Panel anchored to the element that opened it. | [popover](./components/popover.md) |
 | `Toast` | Transient notification queue with swipe to dismiss. | [toast](./components/toast.md) |
 | `Tooltip` | A small label that names the control under your finger. | [tooltip](./components/tooltip.md) |

@@ -1,21 +1,21 @@
 /**
- * FeedbackDialog — a dialog whose body is something to write in, and whose
+ * Feedback — a dialog whose body is something to write in, and whose
  * actions sit in a band around it.
  *
  * ```tsx
- * <FeedbackDialog open={open} onOpenChange={setOpen}>
- *   <FeedbackDialog.Content>
- *     <FeedbackDialog.Panel>
- *       <FeedbackDialog.Title>What should we fix first?</FeedbackDialog.Title>
- *       <FeedbackDialog.Close />
- *       <FeedbackDialog.Field value={text} onChangeText={setText} />
- *     </FeedbackDialog.Panel>
- *     <FeedbackDialog.Footer>
- *       <FeedbackDialog.Cancel />
- *       <FeedbackDialog.Submit onPress={send} />
- *     </FeedbackDialog.Footer>
- *   </FeedbackDialog.Content>
- * </FeedbackDialog>
+ * <Feedback open={open} onOpenChange={setOpen}>
+ *   <Feedback.Content>
+ *     <Feedback.Panel>
+ *       <Feedback.Title>What should we fix first?</Feedback.Title>
+ *       <Feedback.Close />
+ *       <Feedback.Field value={text} onChangeText={setText} />
+ *     </Feedback.Panel>
+ *     <Feedback.Footer>
+ *       <Feedback.Cancel />
+ *       <Feedback.Submit onPress={send} />
+ *     </Feedback.Footer>
+ *   </Feedback.Content>
+ * </Feedback>
  * ```
  *
  * ## Why the panel is a panel and not the dialog
@@ -109,7 +109,7 @@ const FIELD_MIN_HEIGHT = 200;
 const CLOSE_SIZE = 22;
 const CLOSE_HIT_SLOP = 13;
 
-const feedbackDialogVariants = tv({
+const feedbackVariants = tv({
   slots: {
     /*
      * The shell is `bg-popover` with an `inset` band laid over it rather than
@@ -148,7 +148,7 @@ const feedbackDialogVariants = tv({
   },
 });
 
-interface FeedbackDialogContextValue {
+interface FeedbackContextValue {
   open: boolean;
   setOpen: (open: boolean) => void;
   /** What is in the field, so Submit can refuse to send nothing. */
@@ -156,17 +156,17 @@ interface FeedbackDialogContextValue {
   setValue: (value: string) => void;
 }
 
-const FeedbackDialogContext = createContext<FeedbackDialogContextValue | null>(null);
+const FeedbackContext = createContext<FeedbackContextValue | null>(null);
 
-function useFeedbackDialog(component: string): FeedbackDialogContextValue {
-  const context = useContext(FeedbackDialogContext);
+function useFeedback(component: string): FeedbackContextValue {
+  const context = useContext(FeedbackContext);
   if (!context) {
-    throw new Error(`${component} must be used within a <FeedbackDialog>`);
+    throw new Error(`${component} must be used within a <Feedback>`);
   }
   return context;
 }
 
-export interface FeedbackDialogProps {
+export interface FeedbackProps {
   children: ReactNode;
   /** Controlled open state. */
   open?: boolean;
@@ -180,7 +180,7 @@ export interface FeedbackDialogProps {
   onValueChange?: (value: string) => void;
 }
 
-function FeedbackDialogRoot({
+function FeedbackRoot({
   children,
   open,
   onOpenChange,
@@ -188,7 +188,7 @@ function FeedbackDialogRoot({
   value,
   defaultValue = '',
   onValueChange,
-}: FeedbackDialogProps) {
+}: FeedbackProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const openControlled = open !== undefined;
   const resolvedOpen = openControlled ? open : internalOpen;
@@ -219,20 +219,20 @@ function FeedbackDialogRoot({
   );
 
   return (
-    <FeedbackDialogContext.Provider value={context}>
+    <FeedbackContext.Provider value={context}>
       {children}
-    </FeedbackDialogContext.Provider>
+    </FeedbackContext.Provider>
   );
 }
-FeedbackDialogRoot.displayName = 'FeedbackDialog';
+FeedbackRoot.displayName = 'Feedback';
 
-interface FeedbackDialogTriggerProps {
+interface FeedbackTriggerProps {
   children: ReactElement<{ onPress?: (...args: unknown[]) => void }>;
 }
 
 /** Wraps its child and opens the dialog on press. */
-function FeedbackDialogTrigger({ children }: FeedbackDialogTriggerProps) {
-  const { setOpen } = useFeedbackDialog('FeedbackDialog.Trigger');
+function FeedbackTrigger({ children }: FeedbackTriggerProps) {
+  const { setOpen } = useFeedback('Feedback.Trigger');
   if (!isValidElement(children)) return children;
   return (
     <Pressable onPress={() => setOpen(true)}>
@@ -240,9 +240,9 @@ function FeedbackDialogTrigger({ children }: FeedbackDialogTriggerProps) {
     </Pressable>
   );
 }
-FeedbackDialogTrigger.displayName = 'FeedbackDialog.Trigger';
+FeedbackTrigger.displayName = 'Feedback.Trigger';
 
-export interface FeedbackDialogContentProps extends ViewProps {
+export interface FeedbackContentProps extends ViewProps {
   className?: string;
   /** Whether tapping outside or pressing back closes it. */
   dismissible?: boolean;
@@ -252,16 +252,16 @@ export interface FeedbackDialogContentProps extends ViewProps {
 }
 
 /** The shell: the recessed band, and everything laid in it. */
-function FeedbackDialogContent({
+function FeedbackContent({
   className,
   dismissible = true,
   blur = false,
   children,
   ...props
-}: FeedbackDialogContentProps) {
-  const context = useFeedbackDialog('FeedbackDialog.Content');
+}: FeedbackContentProps) {
+  const context = useFeedback('Feedback.Content');
   const { open, setOpen } = context;
-  const slots = feedbackDialogVariants();
+  const slots = feedbackVariants();
 
   useBackHandler(open && dismissible, () => setOpen(false));
 
@@ -271,7 +271,7 @@ function FeedbackDialogContent({
     <ModalPortal>
       {/* Portal content mounts under PortalHost, outside this provider's
           subtree — re-provide the context so Close and Submit keep working. */}
-      <FeedbackDialogContext.Provider value={context}>
+      <FeedbackContext.Provider value={context}>
         <Animated.View
           entering={FadeIn.duration(150)}
           exiting={FadeOut.duration(150)}
@@ -303,21 +303,21 @@ function FeedbackDialogContent({
             </Animated.View>
           </KeyboardAvoider>
         </Animated.View>
-      </FeedbackDialogContext.Provider>
+      </FeedbackContext.Provider>
     </ModalPortal>
   );
 }
-FeedbackDialogContent.displayName = 'FeedbackDialog.Content';
+FeedbackContent.displayName = 'Feedback.Content';
 
-export interface FeedbackDialogPanelProps extends ViewProps {
+export interface FeedbackPanelProps extends ViewProps {
   className?: string;
   children?: ReactNode;
 }
 
 /** The well set into the shell: the title, the ✕ and the field. */
-const FeedbackDialogPanel = forwardRef<View, FeedbackDialogPanelProps>(
+const FeedbackPanel = forwardRef<View, FeedbackPanelProps>(
   ({ className, children, ...props }, ref) => {
-    const slots = feedbackDialogVariants();
+    const slots = feedbackVariants();
     return (
       <View
         ref={ref}
@@ -330,17 +330,17 @@ const FeedbackDialogPanel = forwardRef<View, FeedbackDialogPanelProps>(
     );
   }
 );
-FeedbackDialogPanel.displayName = 'FeedbackDialog.Panel';
+FeedbackPanel.displayName = 'Feedback.Panel';
 
-const FeedbackDialogTitle = forwardRef<React.ElementRef<typeof Text>, TextProps>(
+const FeedbackTitle = forwardRef<React.ElementRef<typeof Text>, TextProps>(
   ({ className, ...props }, ref) => {
-    const slots = feedbackDialogVariants();
+    const slots = feedbackVariants();
     return <Text ref={ref} className={slots.title({ className })} {...props} />;
   }
 );
-FeedbackDialogTitle.displayName = 'FeedbackDialog.Title';
+FeedbackTitle.displayName = 'Feedback.Title';
 
-export interface FeedbackDialogCloseProps extends ViewProps {
+export interface FeedbackCloseProps extends ViewProps {
   className?: string;
   /** How the ✕ announces itself. */
   label?: string;
@@ -349,14 +349,14 @@ export interface FeedbackDialogCloseProps extends ViewProps {
 }
 
 /** The ✕ in the panel's corner. */
-function FeedbackDialogClose({
+function FeedbackClose({
   className,
   label = 'Close',
   onPress,
   ...props
-}: FeedbackDialogCloseProps) {
-  const { setOpen } = useFeedbackDialog('FeedbackDialog.Close');
-  const slots = feedbackDialogVariants();
+}: FeedbackCloseProps) {
+  const { setOpen } = useFeedback('Feedback.Close');
+  const slots = feedbackVariants();
   return (
     <AnimatedPressable
       accessibilityRole="button"
@@ -373,9 +373,9 @@ function FeedbackDialogClose({
     </AnimatedPressable>
   );
 }
-FeedbackDialogClose.displayName = 'FeedbackDialog.Close';
+FeedbackClose.displayName = 'Feedback.Close';
 
-export interface FeedbackDialogFieldProps
+export interface FeedbackFieldProps
   extends Omit<TextInputProps, 'value' | 'onChangeText'> {
   className?: string;
   /** The message. Leave unset to let the dialog hold it. */
@@ -395,7 +395,7 @@ export interface FeedbackDialogFieldProps
  * accent there, and a field that overrides it is a field that looks like it
  * belongs to a different phone.
  */
-const FeedbackDialogField = forwardRef<TextInput, FeedbackDialogFieldProps>(
+const FeedbackField = forwardRef<TextInput, FeedbackFieldProps>(
   (
     {
       className,
@@ -408,8 +408,8 @@ const FeedbackDialogField = forwardRef<TextInput, FeedbackDialogFieldProps>(
     },
     ref
   ) => {
-    const dialog = useFeedbackDialog('FeedbackDialog.Field');
-    const slots = feedbackDialogVariants();
+    const dialog = useFeedback('Feedback.Field');
+    const slots = feedbackVariants();
     const text = value ?? dialog.value;
 
     return (
@@ -430,17 +430,17 @@ const FeedbackDialogField = forwardRef<TextInput, FeedbackDialogFieldProps>(
     );
   }
 );
-FeedbackDialogField.displayName = 'FeedbackDialog.Field';
+FeedbackField.displayName = 'Feedback.Field';
 
-export interface FeedbackDialogFooterProps extends ViewProps {
+export interface FeedbackFooterProps extends ViewProps {
   className?: string;
   children?: ReactNode;
 }
 
 /** The action row, in the band under the panel. */
-const FeedbackDialogFooter = forwardRef<View, FeedbackDialogFooterProps>(
+const FeedbackFooter = forwardRef<View, FeedbackFooterProps>(
   ({ className, children, style, ...props }, ref) => {
-    const slots = feedbackDialogVariants();
+    const slots = feedbackVariants();
     return (
       <View
         ref={ref}
@@ -453,9 +453,9 @@ const FeedbackDialogFooter = forwardRef<View, FeedbackDialogFooterProps>(
     );
   }
 );
-FeedbackDialogFooter.displayName = 'FeedbackDialog.Footer';
+FeedbackFooter.displayName = 'Feedback.Footer';
 
-export interface FeedbackDialogActionProps extends ViewProps {
+export interface FeedbackActionProps extends ViewProps {
   className?: string;
   labelClassName?: string;
   disabled?: boolean;
@@ -472,8 +472,8 @@ function Action({
   onPress,
   children,
   ...props
-}: FeedbackDialogActionProps & { tone: 'cancel' | 'submit' }) {
-  const slots = feedbackDialogVariants({ tone, disabled: !!disabled });
+}: FeedbackActionProps & { tone: 'cancel' | 'submit' }) {
+  const slots = feedbackVariants({ tone, disabled: !!disabled });
   return (
     <AnimatedPressable
       accessibilityRole="button"
@@ -493,21 +493,21 @@ function Action({
 }
 
 /** Discards and closes. Give it `onPress` to do something else first. */
-function FeedbackDialogCancel({
+function FeedbackCancel({
   children = 'Cancel',
   onPress,
   ...props
-}: FeedbackDialogActionProps) {
-  const { setOpen } = useFeedbackDialog('FeedbackDialog.Cancel');
+}: FeedbackActionProps) {
+  const { setOpen } = useFeedback('Feedback.Cancel');
   return (
     <Action tone="cancel" onPress={onPress ?? (() => setOpen(false))} {...props}>
       {children}
     </Action>
   );
 }
-FeedbackDialogCancel.displayName = 'FeedbackDialog.Cancel';
+FeedbackCancel.displayName = 'Feedback.Cancel';
 
-export interface FeedbackDialogSubmitProps extends FeedbackDialogActionProps {
+export interface FeedbackSubmitProps extends FeedbackActionProps {
   /**
    * Hand the message to the caller. The dialog does not close itself here —
    * sending usually has to finish first, and a dialog that closed on the press
@@ -517,14 +517,14 @@ export interface FeedbackDialogSubmitProps extends FeedbackDialogActionProps {
 }
 
 /** Sends. Inert while the field is empty. */
-function FeedbackDialogSubmit({
+function FeedbackSubmit({
   children = 'Submit',
   disabled,
   onPress,
   onSubmit,
   ...props
-}: FeedbackDialogSubmitProps) {
-  const { value } = useFeedbackDialog('FeedbackDialog.Submit');
+}: FeedbackSubmitProps) {
+  const { value } = useFeedback('Feedback.Submit');
   // Empty feedback is worse than none: it is sent by somebody who believes
   // they said something.
   const empty = value.trim().length === 0;
@@ -542,16 +542,16 @@ function FeedbackDialogSubmit({
     </Action>
   );
 }
-FeedbackDialogSubmit.displayName = 'FeedbackDialog.Submit';
+FeedbackSubmit.displayName = 'Feedback.Submit';
 
-export const FeedbackDialog = Object.assign(FeedbackDialogRoot, {
-  Trigger: FeedbackDialogTrigger,
-  Content: FeedbackDialogContent,
-  Panel: FeedbackDialogPanel,
-  Title: FeedbackDialogTitle,
-  Close: FeedbackDialogClose,
-  Field: FeedbackDialogField,
-  Footer: FeedbackDialogFooter,
-  Cancel: FeedbackDialogCancel,
-  Submit: FeedbackDialogSubmit,
+export const Feedback = Object.assign(FeedbackRoot, {
+  Trigger: FeedbackTrigger,
+  Content: FeedbackContent,
+  Panel: FeedbackPanel,
+  Title: FeedbackTitle,
+  Close: FeedbackClose,
+  Field: FeedbackField,
+  Footer: FeedbackFooter,
+  Cancel: FeedbackCancel,
+  Submit: FeedbackSubmit,
 });

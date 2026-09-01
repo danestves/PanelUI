@@ -581,7 +581,7 @@ const bottomSheet = (
  * The nesting is the whole component, so the thumbnail is the nesting: a well
  * inside a rounded shell, with the two actions in the band under it.
  */
-const feedbackDialog = (
+const feedback = (
   <Screen>
     <div className="absolute inset-0 bg-fd-foreground/25" />
     <div className="absolute inset-x-2.5 top-1/2 -translate-y-1/2 rounded-[10px] bg-fd-muted p-1">
@@ -2075,7 +2075,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
 
   // Overlays
   'bottom-sheet': bottomSheet,
-  'feedback-dialog': feedbackDialog,
+  'feedback': feedback,
   dialog,
   drawer,
   popover,

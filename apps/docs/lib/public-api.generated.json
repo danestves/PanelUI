@@ -1218,44 +1218,44 @@
         ]
       },
       {
-        "source": "components/feedback-dialog/index.tsx",
-        "slug": "feedback-dialog",
+        "source": "components/feedback/index.tsx",
+        "slug": "feedback",
         "category": "components",
         "symbols": [
           {
-            "name": "FeedbackDialog",
+            "name": "Feedback",
             "kind": "value"
           },
           {
-            "name": "FeedbackDialogProps",
+            "name": "FeedbackProps",
             "kind": "type"
           },
           {
-            "name": "FeedbackDialogContentProps",
+            "name": "FeedbackContentProps",
             "kind": "type"
           },
           {
-            "name": "FeedbackDialogPanelProps",
+            "name": "FeedbackPanelProps",
             "kind": "type"
           },
           {
-            "name": "FeedbackDialogCloseProps",
+            "name": "FeedbackCloseProps",
             "kind": "type"
           },
           {
-            "name": "FeedbackDialogFieldProps",
+            "name": "FeedbackFieldProps",
             "kind": "type"
           },
           {
-            "name": "FeedbackDialogFooterProps",
+            "name": "FeedbackFooterProps",
             "kind": "type"
           },
           {
-            "name": "FeedbackDialogActionProps",
+            "name": "FeedbackActionProps",
             "kind": "type"
           },
           {
-            "name": "FeedbackDialogSubmitProps",
+            "name": "FeedbackSubmitProps",
             "kind": "type"
           }
         ]
