@@ -45,6 +45,15 @@
       "category": "media"
     }
   ],
+  "animated-badge": [
+    "AnimatedBadge",
+    "Status pill whose icon and label roll over when the status changes.",
+    "react native animated badge",
+    {
+      "addedIn": "0.88.0",
+      "category": "feedback"
+    }
+  ],
   "badge": [
     "Badge",
     "Compact status label, dot, or notification count.",

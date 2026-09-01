@@ -1,0 +1,408 @@
+/**
+ * AnimatedBadge — a status pill whose icon and label roll over when the status
+ * changes.
+ *
+ * A badge that swaps its word between one frame and the next is a badge people
+ * miss. The status is the smallest thing on the screen and usually not the
+ * thing being looked at, so a change with no movement in it registers as
+ * having always said that. Rolling the old glyph out and the new one in is
+ * what makes the change itself visible.
+ *
+ * ```tsx
+ * <AnimatedBadge status="loading">Deploying</AnimatedBadge>
+ * <AnimatedBadge status="success">Live</AnimatedBadge>
+ * ```
+ *
+ * ## The roll, and the width
+ *
+ * The outgoing glyph rises out of the pill and fades; the incoming one comes
+ * up from below and settles on a spring, with a slight rotation and scale so
+ * it reads as turning over rather than sliding. Both are clipped to the pill,
+ * which is what keeps the movement inside the badge instead of over whatever
+ * it sits beside.
+ *
+ * The pill's width springs to the new word rather than jumping, because a
+ * badge in a row of them shoves its neighbours as it changes and a jump does
+ * that in one frame. Everything runs on the UI thread.
+ *
+ * ## Which change counts as a change
+ *
+ * The label is keyed on what it says, so `"Queued"` to `"Building"` rolls and
+ * a re-render with the same word does not. Where the label is an element
+ * rather than a string, or where two different states share a word, pass
+ * `contentKey` — the badge cannot tell those apart on its own, and without a
+ * key it either animates on every render or never.
+ *
+ * ## Reduced motion
+ *
+ * With the preference on, every part of this is skipped: the glyph and the
+ * label cut over, the pill resizes immediately, and the pulse does not run.
+ * The badge still says what it says, which is the part that mattered.
+ */
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { View, type ViewProps } from 'react-native';
+import Animated, {
+  Easing,
+  LinearTransition,
+  runOnJS,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { tv, type VariantProps } from 'tailwind-variants';
+import { useCSSVariable } from 'uniwind';
+import {
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  CircleIcon,
+  InfoIcon,
+  XIcon,
+} from '../../icons';
+import { Text, textChildren } from '../../primitives/text';
+import { Spinner } from '../spinner';
+
+/** How long the pulse takes to swell and settle again, in milliseconds. */
+const PULSE_DURATION = 800;
+
+/** The roll's exit: short, because it is over before anyone looks at it. */
+const ROLL_OUT = 180;
+
+/** The roll's entrance. Springy, so the glyph lands rather than arriving. */
+const ROLL_IN = { damping: 18, stiffness: 210, mass: 0.85 } as const;
+
+export type AnimatedBadgeStatus =
+  | 'neutral'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'loading';
+
+export type AnimatedBadgeSize = 'sm' | 'md';
+
+const animatedBadgeVariants = tv({
+  slots: {
+    /*
+     * Clipped, which is the whole mechanism: the glyphs travel a full line box
+     * in and out, and without this they would be drawn over whatever the badge
+     * is sitting next to.
+     */
+    root: 'flex-row items-center self-start overflow-hidden rounded-full border',
+    label: 'font-medium',
+    /** The pulse's fill, behind the content and inside the same clip. */
+    pulse: 'absolute inset-0',
+    /** One clipped column per rolling element, so the two move independently. */
+    slot: 'items-center justify-center overflow-hidden',
+  },
+  variants: {
+    status: {
+      neutral: {
+        root: 'border-border bg-card',
+        label: 'text-muted-foreground',
+        pulse: 'bg-muted-foreground',
+      },
+      info: {
+        root: 'border-info/30 bg-info-subtle',
+        label: 'text-info-foreground',
+        pulse: 'bg-info',
+      },
+      success: {
+        root: 'border-success/30 bg-success-subtle',
+        label: 'text-success-foreground',
+        pulse: 'bg-success',
+      },
+      warning: {
+        root: 'border-warning/30 bg-warning-subtle',
+        label: 'text-warning-foreground',
+        pulse: 'bg-warning',
+      },
+      danger: {
+        root: 'border-destructive/30 bg-destructive-subtle',
+        label: 'text-destructive-foreground',
+        pulse: 'bg-destructive',
+      },
+      loading: {
+        root: 'border-info/30 bg-info-subtle',
+        label: 'text-info-foreground',
+        pulse: 'bg-info',
+      },
+    },
+    size: {
+      sm: { root: 'h-6 gap-1.5 px-2', label: 'text-[11px]' },
+      md: { root: 'h-8 gap-2 px-3', label: 'text-xs' },
+    },
+  },
+  defaultVariants: {
+    status: 'neutral',
+    size: 'md',
+  },
+});
+
+/** The glyph each status carries, when none is passed. */
+const STATUS_ICON: Record<AnimatedBadgeStatus, typeof InfoIcon> = {
+  neutral: CircleIcon,
+  info: InfoIcon,
+  success: CheckCircleIcon,
+  warning: AlertTriangleIcon,
+  danger: XIcon,
+  // Never drawn: `loading` uses the spinner instead, because a still glyph
+  // beside the word "loading" is the one status that has to move.
+  loading: CircleIcon,
+};
+
+/** Which token the glyph is tinted from, so it matches the label beside it. */
+const STATUS_COLOR_VAR: Record<AnimatedBadgeStatus, string> = {
+  neutral: '--color-muted-foreground',
+  info: '--color-info-foreground',
+  success: '--color-success-foreground',
+  warning: '--color-warning-foreground',
+  danger: '--color-destructive-foreground',
+  loading: '--color-info-foreground',
+};
+
+/** Glyph sizes per badge size — the icon tracks the text, not the box. */
+const ICON_SIZE: Record<AnimatedBadgeSize, number> = { sm: 12, md: 14 };
+
+/** The spinner is sized by class, since its own steps are 16, 24 and 32. */
+const SPINNER_CLASS: Record<AnimatedBadgeSize, string> = {
+  sm: 'h-3 w-3 border-[1.5px]',
+  md: 'h-3.5 w-3.5 border-[1.5px]',
+};
+
+export interface AnimatedBadgeProps
+  extends ViewProps,
+    VariantProps<typeof animatedBadgeVariants> {
+  status?: AnimatedBadgeStatus;
+  size?: AnimatedBadgeSize;
+  /** The word. Changing it rolls the old one out and the new one in. */
+  children?: ReactNode;
+  /** A glyph of your own, in place of the status's. */
+  icon?: ReactNode;
+  /** Whether a glyph is drawn at all. */
+  showIcon?: boolean;
+  /**
+   * A slow swell behind the content, for a status that is still happening.
+   * On by default while `status` is `loading`, and off otherwise — pass it
+   * explicitly for a state of your own that is also still running.
+   */
+  pulse?: boolean;
+  /**
+   * What counts as a change, when the label cannot say. The label is keyed on
+   * its own text, so this is only needed where it is an element rather than a
+   * string, or where two states share a word.
+   */
+  contentKey?: string | number;
+  className?: string;
+  labelClassName?: string;
+}
+
+export const AnimatedBadge = forwardRef<View, AnimatedBadgeProps>(
+  (
+    {
+      status = 'neutral',
+      size = 'md',
+      children,
+      icon,
+      showIcon = true,
+      pulse,
+      contentKey,
+      className,
+      labelClassName,
+      ...props
+    },
+    ref
+  ) => {
+    const reducedMotion = useReducedMotion();
+    const slots = animatedBadgeVariants({ status, size });
+    const themeColor = useCSSVariable(STATUS_COLOR_VAR[status]);
+    const iconColor = typeof themeColor === 'string' ? themeColor : undefined;
+    const Icon = STATUS_ICON[status];
+
+    const pulsing = (pulse ?? status === 'loading') && !reducedMotion;
+
+    /*
+     * Keyed on what it says, so a re-render with the same word does not roll.
+     * Falling back to the status rather than to a constant means an element
+     * label at least changes when the state does, which is the common case for
+     * one — a caller with two states sharing a word passes `contentKey`.
+     */
+    const labelKey =
+      contentKey ??
+      (typeof children === 'string' || typeof children === 'number'
+        ? children
+        : status);
+
+    const swell = useSharedValue(0);
+    useEffect(() => {
+      if (!pulsing) {
+        swell.value = withTiming(0, { duration: 200 });
+        return;
+      }
+      swell.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: PULSE_DURATION, easing: Easing.inOut(Easing.quad) }),
+          withTiming(0, { duration: PULSE_DURATION, easing: Easing.inOut(Easing.quad) })
+        ),
+        -1,
+        false
+      );
+    }, [pulsing, swell]);
+
+    const pulseStyle = useAnimatedStyle(() => ({
+      opacity: 0.08 + swell.value * 0.1,
+      transform: [{ scale: 0.96 + swell.value * 0.08 }],
+    }));
+
+    return (
+      <Animated.View
+        ref={ref}
+        // The pill grows to the new word rather than jumping to it: a badge in
+        // a row of them shoves its neighbours as it changes, and a jump does
+        // all of that shoving in one frame.
+        layout={reducedMotion ? undefined : LinearTransition.springify().damping(22)}
+        accessibilityRole="text"
+        accessibilityState={{ busy: status === 'loading' }}
+        className={slots.root({ className })}
+        {...props}
+      >
+        {pulsing ? (
+          <Animated.View
+            pointerEvents="none"
+            className={slots.pulse()}
+            style={pulseStyle}
+          />
+        ) : null}
+
+        {showIcon ? (
+          <View className={slots.slot()} style={{ height: ICON_SIZE[size] + 4 }}>
+            <Roll contentKey={status} reducedMotion={reducedMotion} turn>
+              {icon ??
+                (status === 'loading' ? (
+                  <Spinner
+                    className={`${SPINNER_CLASS[size]} border-info/25 border-t-info`}
+                  />
+                ) : (
+                  <Icon size={ICON_SIZE[size]} color={iconColor} />
+                ))}
+            </Roll>
+          </View>
+        ) : null}
+
+        {children != null ? (
+          <View className={slots.slot()}>
+            <Roll contentKey={labelKey} reducedMotion={reducedMotion}>
+              {textChildren(children, (text) => (
+                <Text className={slots.label({ className: labelClassName })}>{text}</Text>
+              ))}
+            </Roll>
+          </View>
+        ) : null}
+      </Animated.View>
+    );
+  }
+);
+
+AnimatedBadge.displayName = 'AnimatedBadge';
+
+/**
+ * One element's turn: the old one out through the top, the new one up from
+ * below.
+ *
+ * ## Why it is one view rather than two
+ *
+ * The obvious build is to key the element on its content and let the old one
+ * animate out while the new one animates in. It does not work here: for the
+ * length of the transition both are mounted in the same box, and the box
+ * becomes as large as the pair of them — a badge that swells and collapses
+ * around every change.
+ *
+ * So there is one view throughout, and the content is swapped at the far end
+ * of the roll: it travels out carrying the old word, the word is changed while
+ * it is off-screen, and it comes back with the new one. Nothing is ever in the
+ * badge twice.
+ *
+ * The two halves are deliberately not symmetrical. The entrance is what the
+ * reader is meant to follow, so it springs and takes its time; the exit is
+ * only getting out of the way, and an exit that lingers holds the badge empty.
+ *
+ * The travel is a percentage rather than a distance, so a glyph and a word of
+ * different heights each clear their own box by the same amount.
+ */
+function Roll({
+  contentKey,
+  children,
+  reducedMotion,
+  turn = false,
+}: {
+  /** What counts as a change. A new value rolls; the same value does not. */
+  contentKey: string | number;
+  children: ReactNode;
+  reducedMotion: boolean;
+  /** Add a little rotation, for a glyph. A rotating word is a gimmick. */
+  turn?: boolean;
+}) {
+  const [shownKey, setShownKey] = useState(contentKey);
+  const settled = Object.is(shownKey, contentKey);
+
+  /*
+   * What is on screen while the swap is in flight. Held in a ref rather than
+   * state because it is only read at the moment of the swap, and holding it in
+   * state would re-render the badge on every parent render to store an element
+   * nobody is looking at yet.
+   */
+  const outgoing = useRef<ReactNode>(children);
+  const incomingKey = useRef(contentKey);
+  useEffect(() => {
+    incomingKey.current = contentKey;
+    if (settled) outgoing.current = children;
+  });
+
+  // -1 fully below, 0 at rest, +1 fully above.
+  const phase = useSharedValue(0);
+
+  const commit = useCallback(() => {
+    setShownKey(incomingKey.current);
+    phase.value = -1;
+    phase.value = withSpring(0, ROLL_IN);
+  }, [phase]);
+
+  useEffect(() => {
+    if (settled) return;
+    if (reducedMotion) {
+      setShownKey(incomingKey.current);
+      return;
+    }
+    phase.value = withTiming(1, { duration: ROLL_OUT }, (finished) => {
+      'worklet';
+      // Interrupted means another change arrived mid-roll; that change's own
+      // effect owns the swap, and committing here too would swap twice.
+      if (finished) runOnJS(commit)();
+    });
+  }, [contentKey, settled, reducedMotion, commit, phase]);
+
+  const style = useAnimatedStyle(() => {
+    const p = phase.value;
+    const distance = Math.min(Math.abs(p), 1);
+    return {
+      opacity: 1 - distance * 0.9,
+      transform: [
+        { translateY: `${p * -90}%` },
+        { scale: 1 - distance * 0.1 },
+        { rotate: turn ? `${p * 12}deg` : '0deg' },
+      ],
+    };
+  });
+
+  return <Animated.View style={style}>{settled ? children : outgoing.current}</Animated.View>;
+}

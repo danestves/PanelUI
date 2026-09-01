@@ -93,6 +93,12 @@ export {
   type AreaChartDatum,
   type AreaChartStatus,
 } from './components/area-chart';
+export {
+  AnimatedBadge,
+  type AnimatedBadgeProps,
+  type AnimatedBadgeSize,
+  type AnimatedBadgeStatus,
+} from './components/animated-badge';
 export { Badge, type BadgeProps } from './components/badge';
 export {
   BarChart,

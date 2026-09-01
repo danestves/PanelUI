@@ -50,6 +50,20 @@
     "docsPath": "components/alert"
   },
   {
+    "name": "animated-badge",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Status pill whose icon and label roll over when the status changes.",
+    "registryDependencies": [
+      "icons",
+      "spinner",
+      "text"
+    ],
+    "docsPath": "components/animated-badge"
+  },
+  {
     "name": "animated-pressable",
     "type": "registry:ui",
     "kind": "ui",

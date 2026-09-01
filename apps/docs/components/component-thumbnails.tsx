@@ -1486,6 +1486,23 @@ const alert = (
   </Plate>
 );
 
+/*
+ * Mid-roll: the outgoing word on its way up out of the pill and the incoming
+ * one still below the line. A still thumbnail of a badge is a badge.
+ */
+const animatedBadge = (
+  <Stack className="w-40 items-center gap-3">
+    <Row className="items-center gap-2 rounded-full border border-fd-border px-3 py-1.5">
+      <Accent className="h-2.5 w-2.5 rounded-full" />
+      <Bar className="w-12 -translate-y-1 opacity-40" faint />
+    </Row>
+    <Row className="items-center gap-2 rounded-full border border-fd-border px-3 py-1.5">
+      <Accent className="h-2.5 w-2.5 rounded-full" />
+      <Bar className="w-16" faint />
+    </Row>
+  </Stack>
+);
+
 const badge = (
   <Row className="gap-2">
     <Accent className="h-5 w-12 rounded-full" />
@@ -2097,6 +2114,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
 
   // Feedback and status
   alert,
+  'animated-badge': animatedBadge,
   badge,
   'empty-state': emptyState,
   loader,

@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1247,
-    "values": 323,
-    "types": 924,
-    "modules": 150,
-    "components": 123,
+    "exports": 1251,
+    "values": 324,
+    "types": 927,
+    "modules": 151,
+    "components": 124,
     "hooks": 13
   },
   "groups": {
@@ -139,6 +139,29 @@
           },
           {
             "name": "AlertIndicatorProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/animated-badge/index.tsx",
+        "slug": "animated-badge",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "AnimatedBadge",
+            "kind": "value"
+          },
+          {
+            "name": "AnimatedBadgeProps",
+            "kind": "type"
+          },
+          {
+            "name": "AnimatedBadgeSize",
+            "kind": "type"
+          },
+          {
+            "name": "AnimatedBadgeStatus",
             "kind": "type"
           }
         ]

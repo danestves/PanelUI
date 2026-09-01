@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { Accordion, Alert, Attachment, Avatar, AreaChart, Badge, BarChart, BubbleChart, Button, CandlestickChart, PyramidChart, FileIcon, Frame, ImageIcon, Item, Text, Textarea, XIcon, Tooltip } from "panelui-native";
+import { Accordion, Alert, AnimatedBadge, Attachment, Avatar, AreaChart, Badge, SparklesIcon, BarChart, BubbleChart, Button, CandlestickChart, PyramidChart, FileIcon, Frame, ImageIcon, Item, Text, Textarea, XIcon, Tooltip } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 /** Stable remote portraits for the Avatar demos. */
@@ -986,6 +986,61 @@ function BubbleTrendVersion() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* AnimatedBadge                                                              */
+/* -------------------------------------------------------------------------- */
+
+const DEPLOY_STEPS = [
+  { status: 'neutral', label: 'Queued' },
+  { status: 'loading', label: 'Building' },
+  { status: 'loading', label: 'Deploying' },
+  { status: 'success', label: 'Live' },
+] as const;
+
+/** The badge's whole job: a status that changes while somebody is watching. */
+function AnimatedBadgeRunDemo() {
+  const [step, setStep] = useState(0);
+  const current = DEPLOY_STEPS[step]!;
+
+  return (
+    <View className="items-center gap-4">
+      <AnimatedBadge status={current.status}>{current.label}</AnimatedBadge>
+      <View className="flex-row gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={step === 0}
+          onPress={() => setStep((current) => Math.max(0, current - 1))}
+        >
+          Back
+        </Button>
+        <Button
+          size="sm"
+          onPress={() =>
+            setStep((current) => (current + 1) % DEPLOY_STEPS.length)
+          }
+        >
+          {step === DEPLOY_STEPS.length - 1 ? 'Start again' : 'Next'}
+        </Button>
+      </View>
+    </View>
+  );
+}
+
+/** Every status, side by side, so the tints can be told apart. */
+function AnimatedBadgeStatusesDemo() {
+  return (
+    <View className="flex-row flex-wrap items-center justify-center gap-2">
+      <AnimatedBadge status="neutral">Idle</AnimatedBadge>
+      <AnimatedBadge status="info">Reviewing</AnimatedBadge>
+      <AnimatedBadge status="success">Passed</AnimatedBadge>
+      <AnimatedBadge status="warning">Flaky</AnimatedBadge>
+      <AnimatedBadge status="danger">Failed</AnimatedBadge>
+      <AnimatedBadge status="loading">Running</AnimatedBadge>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'accordion',
@@ -1216,6 +1271,41 @@ export const ENTRIES: ComponentEntry[] = [
               </Attachment>
             ))}
           </Attachment.Group>
+        ),
+      },
+    ],
+  },
+{
+    slug: 'animated-badge',
+    name: 'AnimatedBadge',
+    summary: 'Status pill whose icon and label roll over when the status changes',
+    demos: [
+      { label: 'A run of statuses', render: () => <AnimatedBadgeRunDemo /> },
+      { label: 'Every status', render: () => <AnimatedBadgeStatusesDemo /> },
+      {
+        label: 'Sizes',
+        render: () => (
+          <View className="items-center gap-3">
+            <AnimatedBadge size="sm" status="success">
+              Passed
+            </AnimatedBadge>
+            <AnimatedBadge size="md" status="success">
+              Passed
+            </AnimatedBadge>
+          </View>
+        ),
+      },
+      {
+        label: 'Your own glyph',
+        render: () => (
+          <View className="items-center gap-3">
+            <AnimatedBadge status="info" icon={<SparklesIcon size={14} />}>
+              Suggested
+            </AnimatedBadge>
+            <AnimatedBadge status="warning" showIcon={false}>
+              Draft
+            </AnimatedBadge>
+          </View>
         ),
       },
     ],

@@ -4,6 +4,7 @@
     "accordion",
     "ai-input",
     "alert",
+    "animated-badge",
     "area-chart",
     "attachment",
     "avatar",
@@ -200,16 +201,16 @@
     }
   ],
   "counts": {
-    "componentModules": 123,
-    "packageComponentExports": 123,
-    "documentedComponents": 123,
-    "exampleEntries": 123,
+    "componentModules": 124,
+    "packageComponentExports": 124,
+    "documentedComponents": 124,
+    "exampleEntries": 124,
     "registry": {
-      "componentItems": 123,
+      "componentItems": 124,
       "supportItems": 36,
-      "totalItems": 159,
+      "totalItems": 160,
       "byType": {
-        "registry:ui": 138,
+        "registry:ui": 139,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1

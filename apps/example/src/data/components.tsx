@@ -27,6 +27,8 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   avatar: () => load01().then((module) => module.ENTRIES_BY_SLUG['avatar']),
   attachment: () =>
     load01().then((module) => module.ENTRIES_BY_SLUG['attachment']),
+  'animated-badge': () =>
+    load01().then((module) => module.ENTRIES_BY_SLUG['animated-badge']),
   badge: () => load01().then((module) => module.ENTRIES_BY_SLUG['badge']),
   'bubble-chart': () =>
     load01().then((module) => module.ENTRIES_BY_SLUG['bubble-chart']),

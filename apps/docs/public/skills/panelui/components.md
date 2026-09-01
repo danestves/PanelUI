@@ -2,7 +2,7 @@
 
 Generated from the library's own TypeScript — do not edit by hand.
 
-123 component modules. The **Reference** column links to a file in this skill holding that
+124 component modules. The **Reference** column links to a file in this skill holding that
 component's anatomy, every prop with its type and default, its variants, its compound parts and a
 worked example. **Read it before using a component you have not used in this session** — the props
 there are read from the source, and anything you remember is a guess.
@@ -141,6 +141,7 @@ There is no need to fetch anything over the network. If you would rather, the sa
 | Component | What it is | Reference |
 | --- | --- | --- |
 | `Alert` | Status message with a built-in icon. | [alert](./components/alert.md) |
+| `AnimatedBadge` | Status pill whose icon and label roll over when the status changes. | [animated-badge](./components/animated-badge.md) |
 | `Badge` | Compact status label, dot, or notification count. | [badge](./components/badge.md) |
 | `EmptyState` | Placeholder for a list or screen with no content. | [empty-state](./components/empty-state.md) |
 | `Loader` | Nine loading animations behind one variant prop. | [loader](./components/loader.md) |

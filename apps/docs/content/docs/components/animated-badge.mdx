@@ -1,0 +1,188 @@
+---
+title: AnimatedBadge
+description: Status pill whose icon and label roll over when the status changes.
+status: new
+---
+
+A status pill whose icon and label roll over when the status changes.
+
+A badge that swaps its word between one frame and the next is a badge people miss. The status is the smallest thing on the screen and usually not the thing being looked at, so a change with no movement in it registers as having always said that.
+
+Rolling the old glyph out and the new one in is what makes the change itself visible. Everything runs on the UI thread, and every part of it is skipped under reduced motion.
+
+For a label that does not change — a count, a tag, a plain status — use [Badge](/docs/components/badge). This one costs a view and a spring per pill, and it buys nothing where nothing moves.
+
+## Installation
+
+AnimatedBadge ships with the library — no separate install.
+
+```tsx
+import { AnimatedBadge, Button, Item, SparklesIcon } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add animated-badge
+```
+
+## Usage
+
+```tsx
+<AnimatedBadge status={job.status}>{job.label}</AnimatedBadge>
+```
+
+## Examples
+
+### A status that changes
+
+The badge's whole job. Change `status` and the word with it, and the pill rolls over rather than redrawing.
+
+```tsx
+const [state, setState] = useState({ status: 'neutral', label: 'Idle' });
+
+return (
+  <View className="items-center gap-4">
+    <AnimatedBadge status={state.status}>{state.label}</AnimatedBadge>
+    <Button
+      variant="outline"
+      onPress={() => setState({ status: 'loading', label: 'Deploying' })}
+    >
+      Deploy
+    </Button>
+  </View>
+);
+```
+
+### A run of statuses
+
+Queued, building, live. Each step rolls into the last, and the pill grows to the longest word on a spring rather than snapping to it.
+
+```tsx
+const STEPS = [
+  { status: 'neutral', label: 'Queued' },
+  { status: 'loading', label: 'Building' },
+  { status: 'loading', label: 'Deploying' },
+  { status: 'success', label: 'Live' },
+];
+
+<AnimatedBadge status={STEPS[index].status}>{STEPS[index].label}</AnimatedBadge>
+```
+
+### Sizes
+
+`sm` for a badge riding a row of a list, `md` for one standing on its own.
+
+```tsx
+<AnimatedBadge size="sm" status="success">Passed</AnimatedBadge>
+<AnimatedBadge size="md" status="success">Passed</AnimatedBadge>
+```
+
+### Your own glyph
+
+`icon` replaces the status's glyph and still rolls with it. `showIcon={false}` drops it, for a badge that is only a word.
+
+```tsx
+<AnimatedBadge status="info" icon={<SparklesIcon size={14} />}>
+  Suggested
+</AnimatedBadge>
+
+<AnimatedBadge status="warning" showIcon={false}>
+  Draft
+</AnimatedBadge>
+```
+
+### Two states, one word
+
+`contentKey` is what to reach for when the label cannot say whether anything changed — two states that share a word, or a label that is an element rather than a string.
+
+```tsx
+<AnimatedBadge status={status} contentKey={attempt}>
+  Retrying
+</AnimatedBadge>
+```
+
+## Variants
+
+### `status`
+
+- `neutral` *(default)*
+- `info`
+- `success`
+- `warning`
+- `danger`
+- `loading`
+
+```tsx
+<AnimatedBadge status="neutral">…</AnimatedBadge>
+<AnimatedBadge status="info">…</AnimatedBadge>
+<AnimatedBadge status="success">…</AnimatedBadge>
+<AnimatedBadge status="warning">…</AnimatedBadge>
+<AnimatedBadge status="danger">…</AnimatedBadge>
+<AnimatedBadge status="loading">…</AnimatedBadge>
+```
+
+### `size`
+
+- `sm`
+- `md` *(default)*
+
+```tsx
+<AnimatedBadge size="sm">…</AnimatedBadge>
+<AnimatedBadge size="md">…</AnimatedBadge>
+```
+
+## API Reference
+
+### AnimatedBadge
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `status` | `AnimatedBadgeStatus` | `neutral` |  |
+| `size` | `AnimatedBadgeSize` | `md` |  |
+| `icon` | `ReactNode` | — | A glyph of your own, in place of the status's. |
+| `showIcon` | `boolean` | `true` | Whether a glyph is drawn at all. |
+| `pulse` | `boolean` | — | A slow swell behind the content, for a status that is still happening. On by default while `status` is `loading`, and off otherwise — pass it explicitly for a state of your own that is also still running. |
+| `contentKey` | `string \| number` | — | What counts as a change, when the label cannot say. The label is keyed on its own text, so this is only needed where it is an element rather than a string, or where two states share a word. |
+| `className` | `string` | — |  |
+| `labelClassName` | `string` | — |  |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+### Which change counts as a change
+
+The label is keyed on what it says, so `"Queued"` to `"Building"` rolls and a re-render with the same word does not.
+
+Pass `contentKey` where the label is an element rather than a string, or where two different states share a word. The badge cannot tell those apart on its own, and without a key it either animates on every render or never.
+
+### The width
+
+The pill springs to the new word rather than jumping to it. A badge in a row of them shoves its neighbours as it changes, and a jump does all of that shoving in one frame.
+
+### One view, not two
+
+The obvious build is to key the element on its content and let the old one animate out while the new one animates in. That does not work in a box this size: for the length of the transition both are mounted, and the badge swells around the pair of them and collapses again.
+
+So there is one view throughout and the content is swapped at the far end of the roll — out carrying the old word, changed while it is off screen, back with the new one. Nothing is ever in the badge twice.
+
+### Statuses
+
+`neutral`, `info`, `success`, `warning`, `danger` and `loading`, each drawing its own tint, border and glyph from the theme's status tokens.
+
+`loading` spins rather than showing a still glyph, and turns the pulse on: a badge that says something is still happening should look like it. `pulse` takes that swell on or off for a state of your own that is also still running.
+
+Pass `icon` for a glyph of your own — it replaces the status's, and it still rolls. `showIcon={false}` drops it entirely, for a badge that is only a word.
+
+### Reduced motion
+
+With the preference on, the glyph and the label cut over, the pill resizes immediately, and the pulse does not run. The badge still says what it says, which is the part that mattered.
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `AnimatedBadge`
+
+**Types:** `AnimatedBadgeProps`, `AnimatedBadgeSize`, `AnimatedBadgeStatus`
