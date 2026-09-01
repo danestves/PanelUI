@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { Badge, BellIcon, BottomSheet, Button, Combobox, Card, CardIcon, CheckIcon, ChevronRightIcon, Chip, Collapsible, type CollapsibleVariant, ColorPicker, DatePicker, DateTimePicker, type DateRange, Dialog, Direction, type DirectionValue, FeedbackDialog, Field, Frame, Input, Item, Label, Message, Progress, Questionnaire, type QuestionnaireAnswers, SearchIcon, SendIcon, ShieldCheckIcon, Separator, Shimmer, Slider, Surface, Switch, Text, Textarea, ToggleButton, ToggleButtonGroup, useDirection } from "panelui-native";
+import { Alert, Badge, BellIcon, BottomSheet, Button, Combobox, Card, CardIcon, CheckIcon, ChevronRightIcon, Chip, Collapsible, type CollapsibleVariant, ColorPicker, DatePicker, DateTimePicker, type DateRange, Dialog, Direction, type DirectionValue, FeedbackDialog, Field, Frame, Input, Item, Label, Message, Progress, Questionnaire, type QuestionnaireAnswers, Rating, SearchIcon, SendIcon, ShieldCheckIcon, Separator, Shimmer, Slider, Surface, Switch, Text, Textarea, ToggleButton, ToggleButtonGroup, useDirection } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 function DatePickerDemo() {
@@ -1432,6 +1432,330 @@ function FeedbackDialogDraftDemo() {
   );
 }
 
+/**
+ * There has to be something on the other side of the press.
+ *
+ * `Submit` hands the message back rather than closing, and this is what that
+ * buys: the well swaps for a confirmation while the shell holds still, so the
+ * dialog is visibly the same object answering rather than a second one
+ * arriving.
+ */
+function FeedbackDialogThanksDemo() {
+  const [open, setOpen] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  return (
+    <View className="items-center gap-4">
+      <FeedbackDialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          // Opening again starts a new note, not the tail of the last one.
+          if (next) setSent(false);
+        }}
+      >
+        <FeedbackDialog.Trigger>
+          <Button variant="outline">Send a note</Button>
+        </FeedbackDialog.Trigger>
+        <FeedbackDialog.Content>
+          <FeedbackDialog.Panel>
+            {sent ? (
+              <View
+                className="items-center justify-center gap-3 px-2"
+                style={{ minHeight: 200 }}
+              >
+                <View className="h-14 w-14 items-center justify-center rounded-full bg-success">
+                  <CheckIcon size={24} />
+                </View>
+                <Text size="lg" weight="semibold">
+                  Got it
+                </Text>
+                <Text size="sm" muted className="text-center">
+                  This goes to the people who can fix it. We only write back when
+                  there is something to say.
+                </Text>
+              </View>
+            ) : (
+              <>
+                <FeedbackDialog.Title>What should we fix first?</FeedbackDialog.Title>
+                <FeedbackDialog.Close />
+                <FeedbackDialog.Field placeholder="Tell us what got in your way" />
+              </>
+            )}
+          </FeedbackDialog.Panel>
+          <FeedbackDialog.Footer>
+            {sent ? (
+              /* One action, so it takes the whole row and the filled tone —
+                 there is nothing left to choose between. */
+              <FeedbackDialog.Submit disabled={false} onPress={() => setOpen(false)}>
+                Done
+              </FeedbackDialog.Submit>
+            ) : (
+              <>
+                <FeedbackDialog.Cancel />
+                <FeedbackDialog.Submit onSubmit={() => setSent(true)} />
+              </>
+            )}
+          </FeedbackDialog.Footer>
+        </FeedbackDialog.Content>
+      </FeedbackDialog>
+    </View>
+  );
+}
+
+/**
+ * The failure the API is shaped around.
+ *
+ * `Submit` does not close the dialog, so a send that fails still has somewhere
+ * to say so — and the message is still there to try again with. A dialog that
+ * closed on the press would have taken both with it.
+ *
+ * The first attempt fails on purpose; the second goes through.
+ */
+function FeedbackDialogRetryDemo() {
+  const [open, setOpen] = useState(false);
+  const [state, setState] = useState<'idle' | 'sending' | 'failed'>('idle');
+  const [attempts, setAttempts] = useState(0);
+  const [draft, setDraft] = useState('');
+
+  useEffect(() => {
+    if (state !== 'sending') return;
+    const timer = setTimeout(() => {
+      if (attempts === 0) {
+        setAttempts(1);
+        setState('failed');
+        return;
+      }
+      setState('idle');
+      setAttempts(0);
+      setDraft('');
+      setOpen(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [state, attempts]);
+
+  return (
+    <View className="items-center gap-4">
+      <FeedbackDialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (next) {
+            setState('idle');
+            setAttempts(0);
+          }
+        }}
+        value={draft}
+        onValueChange={setDraft}
+      >
+        <FeedbackDialog.Trigger>
+          <Button variant="outline">Report a problem</Button>
+        </FeedbackDialog.Trigger>
+        <FeedbackDialog.Content dismissible={state !== 'sending'}>
+          <FeedbackDialog.Panel>
+            <FeedbackDialog.Title>What went wrong?</FeedbackDialog.Title>
+            <FeedbackDialog.Close />
+            <FeedbackDialog.Field
+              editable={state !== 'sending'}
+              placeholder="What were you doing when it happened"
+            />
+          </FeedbackDialog.Panel>
+
+          {state === 'failed' ? (
+            /* In the band, under the well: the message it is about is still
+               up there, untouched, and still the thing being sent. */
+            <Alert variant="destructive" className="mt-2">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Title>Could not send</Alert.Title>
+                <Alert.Description>
+                  Your note is safe here. Try again when you have a signal.
+                </Alert.Description>
+              </Alert.Content>
+            </Alert>
+          ) : null}
+
+          <FeedbackDialog.Footer>
+            <FeedbackDialog.Cancel />
+            <FeedbackDialog.Submit
+              disabled={state === 'sending' || draft.trim().length === 0}
+              onPress={() => setState('sending')}
+            >
+              {state === 'sending'
+                ? 'Sending…'
+                : state === 'failed'
+                  ? 'Try again'
+                  : 'Submit'}
+            </FeedbackDialog.Submit>
+          </FeedbackDialog.Footer>
+        </FeedbackDialog.Content>
+      </FeedbackDialog>
+    </View>
+  );
+}
+
+const REASONS = ['Too slow', 'Confusing', 'Wrong result', 'Crashed'];
+
+/**
+ * Tags over the field, because nobody triages free text.
+ *
+ * The chips sort the report and the sentence explains it, so either one is
+ * enough to send — which is the point of gating `Submit` on both rather than
+ * on the field alone.
+ */
+function FeedbackDialogTagsDemo() {
+  const [open, setOpen] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [draft, setDraft] = useState('');
+
+  const toggle = (reason: string) =>
+    setTags((current) =>
+      current.includes(reason)
+        ? current.filter((item) => item !== reason)
+        : [...current, reason]
+    );
+
+  return (
+    <View className="items-center gap-4">
+      <FeedbackDialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (next) setTags([]);
+        }}
+        value={draft}
+        onValueChange={setDraft}
+      >
+        <FeedbackDialog.Trigger>
+          <Button variant="outline">Rate this answer</Button>
+        </FeedbackDialog.Trigger>
+        <FeedbackDialog.Content>
+          <FeedbackDialog.Panel>
+            <FeedbackDialog.Title>What went wrong?</FeedbackDialog.Title>
+            <FeedbackDialog.Close />
+            <View className="flex-row flex-wrap gap-2">
+              {REASONS.map((reason) => (
+                <Chip
+                  key={reason}
+                  size="sm"
+                  selected={tags.includes(reason)}
+                  onPress={() => toggle(reason)}
+                >
+                  {reason}
+                </Chip>
+              ))}
+            </View>
+            {/* Shorter, because the chips have already taken the top of the
+                well and a field that kept its full height would push the
+                actions off a small screen. */}
+            <FeedbackDialog.Field
+              minHeight={120}
+              placeholder="Anything else we should know"
+            />
+          </FeedbackDialog.Panel>
+          <FeedbackDialog.Footer>
+            <FeedbackDialog.Cancel />
+            <FeedbackDialog.Submit
+              disabled={tags.length === 0 && draft.trim().length === 0}
+              onSubmit={() => {
+                setDraft('');
+                setOpen(false);
+              }}
+            />
+          </FeedbackDialog.Footer>
+        </FeedbackDialog.Content>
+      </FeedbackDialog>
+    </View>
+  );
+}
+
+/**
+ * A score, then the words for it.
+ *
+ * Asking both at once gets the score and an empty box. Asking for the score
+ * first costs one tap and gives the sentence something to be about — and the
+ * footer is a slot, so Cancel becomes Back for the second half.
+ */
+function FeedbackDialogStepsDemo() {
+  const [open, setOpen] = useState(false);
+  const [score, setScore] = useState(0);
+  const [step, setStep] = useState<0 | 1>(0);
+  const [draft, setDraft] = useState('');
+
+  return (
+    <View className="items-center gap-4">
+      <FeedbackDialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (next) {
+            setStep(0);
+            setScore(0);
+          }
+        }}
+        value={draft}
+        onValueChange={setDraft}
+      >
+        <FeedbackDialog.Trigger>
+          <Button variant="outline">Rate your trip</Button>
+        </FeedbackDialog.Trigger>
+        <FeedbackDialog.Content>
+          <FeedbackDialog.Panel>
+            {/* Outside the step, so there is always a way out of the dialog —
+                the ✕ is not the back button and must not come and go with it. */}
+            <FeedbackDialog.Close />
+            {step === 0 ? (
+              <View className="items-center justify-center gap-4" style={{ minHeight: 200 }}>
+                <FeedbackDialog.Title className="text-center">
+                  How did that go?
+                </FeedbackDialog.Title>
+                <Rating size="lg" value={score} onValueChange={setScore} />
+                <Text size="sm" muted>
+                  {score === 0 ? 'Tap a star' : SCORE_WORDS[score - 1]}
+                </Text>
+              </View>
+            ) : (
+              <>
+                <FeedbackDialog.Title>
+                  {score >= 4 ? 'What worked?' : 'What would have helped?'}
+                </FeedbackDialog.Title>
+                <FeedbackDialog.Field placeholder="In your own words" />
+              </>
+            )}
+          </FeedbackDialog.Panel>
+          <FeedbackDialog.Footer>
+            {step === 0 ? (
+              <>
+                <FeedbackDialog.Cancel />
+                <FeedbackDialog.Submit
+                  disabled={score === 0}
+                  onPress={() => setStep(1)}
+                >
+                  Next
+                </FeedbackDialog.Submit>
+              </>
+            ) : (
+              <>
+                <FeedbackDialog.Cancel onPress={() => setStep(0)}>
+                  Back
+                </FeedbackDialog.Cancel>
+                <FeedbackDialog.Submit
+                  onSubmit={() => {
+                    setDraft('');
+                    setOpen(false);
+                  }}
+                />
+              </>
+            )}
+          </FeedbackDialog.Footer>
+        </FeedbackDialog.Content>
+      </FeedbackDialog>
+    </View>
+  );
+}
+
+const SCORE_WORDS = ['Bad', 'Poor', 'Fine', 'Good', 'Great'];
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'chip',
@@ -1626,6 +1950,10 @@ export const ENTRIES: ComponentEntry[] = [
     summary: 'Dialog whose body is a well to write in',
     demos: [
       { label: 'Asking for a sentence', render: () => <FeedbackDialogDemo /> },
+      { label: 'Thanks, then done', render: () => <FeedbackDialogThanksDemo /> },
+      { label: 'The send that failed', render: () => <FeedbackDialogRetryDemo /> },
+      { label: 'What went wrong', render: () => <FeedbackDialogTagsDemo /> },
+      { label: 'Score first, words second', render: () => <FeedbackDialogStepsDemo /> },
       { label: 'A draft you hold', render: () => <FeedbackDialogDraftDemo /> },
     ],
   },

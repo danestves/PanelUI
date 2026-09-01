@@ -17,7 +17,8 @@ For a confirmation, a warning, or anything whose body is text to be read rather 
 FeedbackDialog ships with the library — no separate install.
 
 ```tsx
-import { FeedbackDialog, Button } from 'panelui-native';
+import { FeedbackDialog, Button, Text, CheckIcon, Chip, Rating } from 'panelui-native';
+import { View, Alert } from 'react-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -100,6 +101,183 @@ const [open, setOpen] = useState(false);
 </FeedbackDialog>
 ```
 
+### Thanks, then done
+
+`Submit` hands the message back rather than closing, and this is what that buys. The well swaps for a confirmation while the shell holds still, so the dialog is visibly the same object answering rather than a second one arriving.
+
+The footer is a slot, so it collapses to one button — with nothing left to choose between, a Cancel beside it would only be a second way to do the same thing.
+
+```tsx
+const [sent, setSent] = useState(false);
+
+<FeedbackDialog
+  open={open}
+  onOpenChange={(next) => {
+    setOpen(next);
+    // Opening again starts a new note, not the tail of the last one.
+    if (next) setSent(false);
+  }}
+>
+  <FeedbackDialog.Content>
+    <FeedbackDialog.Panel>
+      {sent ? (
+        <View className="items-center justify-center gap-3" style={{ minHeight: 200 }}>
+          <View className="h-14 w-14 items-center justify-center rounded-full bg-success">
+            <CheckIcon size={24} />
+          </View>
+          <Text size="lg" weight="semibold">Got it</Text>
+          <Text size="sm" muted className="text-center">
+            This goes to the people who can fix it.
+          </Text>
+        </View>
+      ) : (
+        <>
+          <FeedbackDialog.Title>What should we fix first?</FeedbackDialog.Title>
+          <FeedbackDialog.Close />
+          <FeedbackDialog.Field placeholder="Tell us what got in your way" />
+        </>
+      )}
+    </FeedbackDialog.Panel>
+    <FeedbackDialog.Footer>
+      {sent ? (
+        <FeedbackDialog.Submit disabled={false} onPress={() => setOpen(false)}>
+          Done
+        </FeedbackDialog.Submit>
+      ) : (
+        <>
+          <FeedbackDialog.Cancel />
+          <FeedbackDialog.Submit onSubmit={() => setSent(true)} />
+        </>
+      )}
+    </FeedbackDialog.Footer>
+  </FeedbackDialog.Content>
+</FeedbackDialog>
+```
+
+### The send that failed
+
+The failure the API is shaped around. Because `Submit` does not close the dialog, a send that fails still has somewhere to say so — and the message is still there to try again with. A dialog that closed on the press would have taken both with it.
+
+The alert goes in the band under the well rather than inside it, so the message it is about stays untouched and stays the thing being sent.
+
+Closing is the caller's, on success. That is the same reason: the dialog cannot know whether the send finished, and one that closed on the press would be gone before it found out.
+
+```tsx
+const [state, setState] = useState('idle');
+
+<FeedbackDialog.Content dismissible={state !== 'sending'}>
+  <FeedbackDialog.Panel>
+    <FeedbackDialog.Title>What went wrong?</FeedbackDialog.Title>
+    <FeedbackDialog.Close />
+    <FeedbackDialog.Field
+      editable={state !== 'sending'}
+      placeholder="What were you doing when it happened"
+    />
+  </FeedbackDialog.Panel>
+
+  {state === 'failed' ? (
+    <Alert variant="destructive" className="mt-2">
+      <Alert.Indicator />
+      <Alert.Content>
+        <Alert.Title>Could not send</Alert.Title>
+        <Alert.Description>
+          Your note is safe here. Try again when you have a signal.
+        </Alert.Description>
+      </Alert.Content>
+    </Alert>
+  ) : null}
+
+  <FeedbackDialog.Footer>
+    <FeedbackDialog.Cancel />
+    <FeedbackDialog.Submit
+      disabled={state === 'sending' || draft.trim().length === 0}
+      onPress={() => setState('sending')}
+    >
+      {state === 'sending' ? 'Sending…' : state === 'failed' ? 'Try again' : 'Submit'}
+    </FeedbackDialog.Submit>
+  </FeedbackDialog.Footer>
+</FeedbackDialog.Content>
+```
+
+### Tags over the field
+
+Nobody triages free text. The chips sort the report and the sentence explains it, so either one on its own is enough to send — which is why `Submit` is gated on both rather than on the field alone.
+
+The field is shorter here. The chips have taken the top of the well, and one at full height would push the actions off a small screen.
+
+```tsx
+const REASONS = ['Too slow', 'Confusing', 'Wrong result', 'Crashed'];
+const [tags, setTags] = useState([]);
+
+<FeedbackDialog.Panel>
+  <FeedbackDialog.Title>What went wrong?</FeedbackDialog.Title>
+  <FeedbackDialog.Close />
+  <View className="flex-row flex-wrap gap-2">
+    {REASONS.map((reason) => (
+      <Chip
+        key={reason}
+        size="sm"
+        selected={tags.includes(reason)}
+        onPress={() => toggle(reason)}
+      >
+        {reason}
+      </Chip>
+    ))}
+  </View>
+  <FeedbackDialog.Field minHeight={120} placeholder="Anything else we should know" />
+</FeedbackDialog.Panel>
+<FeedbackDialog.Footer>
+  <FeedbackDialog.Cancel />
+  <FeedbackDialog.Submit
+    disabled={tags.length === 0 && draft.trim().length === 0}
+    onSubmit={send}
+  />
+</FeedbackDialog.Footer>
+```
+
+### Score first, words second
+
+Asking for both at once gets the score and an empty box. Asking for the score first costs one tap and gives the sentence something to be about — and the question can change with the answer, which is the difference between "What worked?" and "What would have helped?".
+
+The footer is a slot, so Cancel becomes Back for the second half. The ✕ stays outside the step: it is not the back button and must not come and go with it.
+
+```tsx
+const [step, setStep] = useState(0);
+const [score, setScore] = useState(0);
+
+<FeedbackDialog.Panel>
+  <FeedbackDialog.Close />
+  {step === 0 ? (
+    <View className="items-center justify-center gap-4" style={{ minHeight: 200 }}>
+      <FeedbackDialog.Title className="text-center">How did that go?</FeedbackDialog.Title>
+      <Rating size="lg" value={score} onValueChange={setScore} />
+    </View>
+  ) : (
+    <>
+      <FeedbackDialog.Title>
+        {score >= 4 ? 'What worked?' : 'What would have helped?'}
+      </FeedbackDialog.Title>
+      <FeedbackDialog.Field placeholder="In your own words" />
+    </>
+  )}
+</FeedbackDialog.Panel>
+<FeedbackDialog.Footer>
+  {step === 0 ? (
+    <>
+      <FeedbackDialog.Cancel />
+      <FeedbackDialog.Submit disabled={score === 0} onPress={() => setStep(1)}>
+        Next
+      </FeedbackDialog.Submit>
+    </>
+  ) : (
+    <>
+      <FeedbackDialog.Cancel onPress={() => setStep(0)}>Back</FeedbackDialog.Cancel>
+      <FeedbackDialog.Submit onSubmit={send} />
+    </>
+  )}
+</FeedbackDialog.Footer>
+```
+
 ### Holding the message yourself
 
 Pass `value` and `onValueChange` for a draft that survives the dialog being closed, or a message checked as it is typed. `Submit` reads the same value either way.
@@ -115,27 +293,6 @@ const [draft, setDraft] = useState('');
 >
   …
 </FeedbackDialog>
-```
-
-### Sending takes a moment
-
-`Submit` does not close the dialog. Sending usually has to finish first, and a dialog that closed on the press would take its own error message with it — so close it yourself when the send lands.
-
-```tsx
-<FeedbackDialog.Submit
-  disabled={sending}
-  onSubmit={async (message) => {
-    setSending(true);
-    try {
-      await send(message);
-      setOpen(false);
-    } finally {
-      setSending(false);
-    }
-  }}
->
-  {sending ? 'Sending…' : 'Submit'}
-</FeedbackDialog.Submit>
 ```
 
 ### Frosting what is behind
@@ -236,6 +393,12 @@ Leave `value` unset and the dialog keeps the message, which is enough for a form
 The dialog lifts clear of the keyboard on focus and settles back when it goes. It lifts by the overlap rather than travelling with the keyboard, because it is centred on the screen rather than pinned to an edge.
 
 The caret is left to the platform. Every system draws its own accent there, and a field that overrides it is a field that looks like it belongs to a different phone.
+
+### The well and the footer are slots
+
+Neither is fixed. The well takes whatever the question needs — a rating, a row of tags, a confirmation — and the footer takes however many actions the step has, so it can collapse to one or swap Cancel for Back. The shell around them does not move while they change, which is what makes a dialog that answers you read as the same object rather than a second one arriving.
+
+That is the reason `Submit` hands the message back instead of closing. Without it there is nothing on the other side of the press: no confirmation, and nowhere for a failed send to say so.
 
 ## Public exports
 

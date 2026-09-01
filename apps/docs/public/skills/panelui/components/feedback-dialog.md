@@ -172,6 +172,12 @@ The dialog lifts clear of the keyboard on focus and settles back when it goes. I
 
 The caret is left to the platform. Every system draws its own accent there, and a field that overrides it is a field that looks like it belongs to a different phone.
 
+### The well and the footer are slots
+
+Neither is fixed. The well takes whatever the question needs — a rating, a row of tags, a confirmation — and the footer takes however many actions the step has, so it can collapse to one or swap Cancel for Back. The shell around them does not move while they change, which is what makes a dialog that answers you read as the same object rather than a second one arriving.
+
+That is the reason `Submit` hands the message back instead of closing. Without it there is nothing on the other side of the press: no confirmation, and nowhere for a failed send to say so.
+
 ---
 
 Full page, with every example: https://panelui.dev/docs/components/feedback-dialog
