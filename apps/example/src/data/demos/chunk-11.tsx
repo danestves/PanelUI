@@ -4,7 +4,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Pressable, ScrollView, View } from "react-native";
-import { Alert, Avatar, Badge, BookmarkIcon, Button, Card, CheckIcon, ChevronLeftIcon, EllipsisIcon, EyeIcon, Frame, HeartIcon, Item, ListChecksIcon, MaximizeIcon, Message, MessageCircleIcon, MessageScroller, Plan, MicIcon, MoonIcon, PackageIcon, PauseIcon, PencilIcon, PlayIcon, Post, type PostVote, Portal, Progress, RepeatIcon, Scrim, SendIcon, ShareNodesIcon, ScrollFade, Separator, Signature, type SignatureHandle, Skeleton, Sortable, reorderItems, useSortableItem, Soundwave, Steps, SunIcon, Surface, Task, Text, XIcon, ToggleButton, ToggleButtonGroup, useThemeMode } from "panelui-native";
+import { Alert, Avatar, Badge, BookmarkIcon, BottomSheet, Button, Card, CheckIcon, ChevronLeftIcon, EllipsisIcon, EyeIcon, Frame, HeartIcon, Item, ListChecksIcon, MaximizeIcon, Message, MessageCircleIcon, MessageScroller, Plan, MicIcon, MoonIcon, PackageIcon, PauseIcon, PencilIcon, PlayIcon, Post, type PostVote, Portal, Progress, RepeatIcon, Scrim, SendIcon, ShareNodesIcon, ScrollBlur, ScrollFade, Separator, Signature, type SignatureHandle, Skeleton, Sortable, reorderItems, useSortableItem, Soundwave, Steps, SunIcon, Surface, Task, Text, XIcon, ToggleButton, ToggleButtonGroup, useThemeMode } from "panelui-native";
 import { formatClock, useVoiceRecorder, VoiceControls } from "../../components/voice";
 import type { ComponentEntry } from '../component-types';
 
@@ -1641,6 +1641,75 @@ function SortableScrollDemo() {
   );
 }
 
+const FEEDS = [
+  ['Ambient Kernel', '12.4k followers'],
+  ['Slow Compile', '8.1k followers'],
+  ['Null Pointer Club', '6.7k followers'],
+  ['Static Types Weekly', '5.2k followers'],
+  ['Render Pass', '4.9k followers'],
+  ['Heap Fragments', '3.3k followers'],
+  ['Tail Call', '2.8k followers'],
+  ['Off By One', '2.1k followers'],
+  ['Late Binding', '1.6k followers'],
+  ['Dangling Ref', '980 followers'],
+];
+
+/**
+ * The case the component exists for: a button floating over a scrolling list.
+ *
+ * A fade cannot do this. The sheet's surface is one colour and the rows are
+ * another, so a gradient towards either one is visible against the other. The
+ * blur band sits between them — the rows stay legible as shape and colour
+ * while losing the detail that would compete with the button.
+ */
+function ScrollBlurSheetVersion() {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <View className="flex-1 items-center justify-center gap-4 p-6">
+      <Text size="sm" muted className="text-center">
+        The list scrolls under the button, and goes soft as it passes behind it.
+      </Text>
+      <Button variant="outline" onPress={() => setOpen(true)}>
+        Open the sheet
+      </Button>
+
+      <BottomSheet open={open} onOpenChange={setOpen}>
+        <BottomSheet.Content size="half" showClose={false}>
+          {/* `edges="start"` only: the bottom of the sheet is an edge the
+              sheet already draws, and two treatments on one edge read as a
+              mistake. */}
+          <ScrollBlur edges="start" size={72} layers={5} className="flex-1">
+            <BottomSheet.Body contentContainerClassName="gap-2 pb-4 pt-16">
+              {FEEDS.map(([name, followers]) => (
+                <Item key={name} variant="outline" size="sm">
+                  <Item.Media variant="icon">
+                    <PackageIcon size={16} />
+                  </Item.Media>
+                  <Item.Content>
+                    <Item.Title>{name}</Item.Title>
+                    <Item.Description>{followers}</Item.Description>
+                  </Item.Content>
+                </Item>
+              ))}
+            </BottomSheet.Body>
+          </ScrollBlur>
+
+          {/* Over the band, not inside it: the button is the thing in focus. */}
+          <View
+            pointerEvents="box-none"
+            className="absolute inset-x-0 top-0 items-center pt-3"
+          >
+            <Button size="sm" className="rounded-full px-5">
+              Follow all
+            </Button>
+          </View>
+        </BottomSheet.Content>
+      </BottomSheet>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'post',
@@ -1759,6 +1828,139 @@ export const ENTRIES: ComponentEntry[] = [
         fullPage: true,
         description: 'A composer that turns into a recorder over a transcript.',
         render: () => <SoundwaveComposerVersion />,
+      },
+    ],
+  },
+{
+    slug: 'scroll-blur',
+    name: 'ScrollBlur',
+    summary: 'Blurs the edges of a scroll container',
+    layout: 'sections',
+    demos: [
+      {
+        label: 'A button over a list',
+        id: 'in-a-bottom-sheet',
+        fullPage: true,
+        description:
+          'A blurred band under a floating button, over a list scrolling inside a bottom sheet.',
+        render: () => <ScrollBlurSheetVersion />,
+      },
+      {
+        label: 'Vertical list',
+        render: () => (
+          // The rows go soft as they reach the top and bottom of the viewport,
+          // and neither band appears until there is something behind it.
+          <ScrollBlur size={64} className="h-72 w-full">
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Item.Group>
+                {FEEDS.map(([name, followers], index) => (
+                  <View key={name}>
+                    {index > 0 ? <Item.Separator /> : null}
+                    <Item size="sm">
+                      <Item.Media variant="icon">
+                        <PackageIcon size={14} />
+                      </Item.Media>
+                      <Item.Content>
+                        <Item.Title>{name}</Item.Title>
+                        <Item.Description>{followers}</Item.Description>
+                      </Item.Content>
+                    </Item>
+                  </View>
+                ))}
+              </Item.Group>
+            </ScrollView>
+          </ScrollBlur>
+        ),
+      },
+      {
+        label: 'Horizontal cards',
+        render: () => (
+          // Orientation is read from the child: `horizontal` moves the bands
+          // to the leading and trailing edges, and nothing else changes.
+          <ScrollBlur size={48} className="w-full">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <Item.Group orientation="horizontal">
+                {[
+                  ['Overlays', 'Dialog, sheet, toast'],
+                  ['Forms', 'Input, select, switch'],
+                  ['Feedback', 'Alert, progress, spinner'],
+                  ['Layout', 'Card, frame, surface'],
+                  ['Motion', 'Shimmer, scroll blur'],
+                  ['Theming', 'Six themes, three families'],
+                ].map(([title, description]) => (
+                  <Item
+                    key={title}
+                    orientation="vertical"
+                    variant="outline"
+                    size="sm"
+                    className="w-44"
+                  >
+                    <Item.Media variant="icon">
+                      <PackageIcon size={16} />
+                    </Item.Media>
+                    <Item.Content>
+                      <Item.Title>{title}</Item.Title>
+                      <Item.Description>{description}</Item.Description>
+                    </Item.Content>
+                  </Item>
+                ))}
+              </Item.Group>
+            </ScrollView>
+          </ScrollBlur>
+        ),
+      },
+      {
+        label: 'One edge',
+        render: () => (
+          <ScrollBlur size={56} edges="end" className="w-full">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <Item.Group orientation="horizontal">
+                {['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven'].map((n) => (
+                  <Item key={n} variant="muted" size="sm" className="w-32">
+                    <Item.Content>
+                      <Item.Title>{n}</Item.Title>
+                    </Item.Content>
+                  </Item>
+                ))}
+              </Item.Group>
+            </ScrollView>
+          </ScrollBlur>
+        ),
+      },
+      {
+        label: 'Tuning the ramp',
+        render: () => (
+          <View className="w-full gap-4">
+            {/* Four steps over a shallow band: smooth. */}
+            <ScrollBlur size={40} layers={4} intensity={30} className="w-full">
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerClassName="gap-2"
+              >
+                {['Shallow', 'Band', 'Four', 'Layers', 'Low', 'Intensity'].map((n) => (
+                  <Badge key={n} variant="secondary">
+                    {n}
+                  </Badge>
+                ))}
+              </ScrollView>
+            </ScrollBlur>
+
+            {/* A deeper band needs more of them, or the same four spread over
+                twice the distance read as four bars. */}
+            <ScrollBlur size={96} layers={6} intensity={60} className="w-full">
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerClassName="gap-2"
+              >
+                {['Deep', 'Band', 'Six', 'Layers', 'Full', 'Intensity'].map((n) => (
+                  <Badge key={n}>{n}</Badge>
+                ))}
+              </ScrollView>
+            </ScrollBlur>
+          </View>
+        ),
       },
     ],
   },

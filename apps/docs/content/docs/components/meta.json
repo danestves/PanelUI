@@ -59,6 +59,7 @@
     "questionnaire",
     "radio-group",
     "rating",
+    "scroll-blur",
     "scroll-canvas",
     "scroll-fade",
     "scroll-text",

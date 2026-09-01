@@ -162,6 +162,8 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   plan: () => load11().then((module) => module.ENTRIES_BY_SLUG['plan']),
   soundwave: () =>
     load11().then((module) => module.ENTRIES_BY_SLUG['soundwave']),
+  'scroll-blur': () =>
+    load11().then((module) => module.ENTRIES_BY_SLUG['scroll-blur']),
   'scroll-fade': () =>
     load11().then((module) => module.ENTRIES_BY_SLUG['scroll-fade']),
   separator: () =>

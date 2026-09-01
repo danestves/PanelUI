@@ -1024,6 +1024,11 @@ export {
   type ScatterChartStatus,
 } from './components/scatter-chart';
 export {
+  ScrollBlur,
+  type ScrollBlurProps,
+  type ScrollBlurTint,
+} from './components/scroll-blur';
+export {
   ScrollFade,
   type ScrollFadeProps,
 } from './components/scroll-fade';

@@ -82,6 +82,7 @@
     "response",
     "ring-chart",
     "scatter-chart",
+    "scroll-blur",
     "scroll-canvas",
     "scroll-fade",
     "scroll-text",
@@ -199,16 +200,16 @@
     }
   ],
   "counts": {
-    "componentModules": 122,
-    "packageComponentExports": 122,
-    "documentedComponents": 122,
-    "exampleEntries": 122,
+    "componentModules": 123,
+    "packageComponentExports": 123,
+    "documentedComponents": 123,
+    "exampleEntries": 123,
     "registry": {
-      "componentItems": 122,
+      "componentItems": 123,
       "supportItems": 36,
-      "totalItems": 158,
+      "totalItems": 159,
       "byType": {
-        "registry:ui": 137,
+        "registry:ui": 138,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1

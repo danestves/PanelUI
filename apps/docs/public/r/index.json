@@ -1428,6 +1428,19 @@
     "registryDependencies": []
   },
   {
+    "name": "scroll-blur",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Blurs the edges of a scroll container.",
+    "registryDependencies": [
+      "scrim",
+      "use-theme"
+    ],
+    "docsPath": "components/scroll-blur"
+  },
+  {
     "name": "scroll-canvas",
     "type": "registry:ui",
     "kind": "ui",

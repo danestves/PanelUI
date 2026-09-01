@@ -1,6 +1,7 @@
 import {
   cloneElement,
   createContext,
+  forwardRef,
   isValidElement,
   useCallback,
   useContext,
@@ -9,6 +10,7 @@ import {
   useRef,
   useState,
   type ComponentProps,
+  type ComponentRef,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -29,6 +31,7 @@ import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
   useAnimatedStyle,
+  useComposedEventHandler,
   useReducedMotion,
   useSharedValue,
   withSpring,
@@ -909,12 +912,10 @@ export interface BottomSheetBodyProps
  * out — pull down on a list at its top and the sheet comes with you, pull
  * down anywhere else and the list scrolls.
  */
-function BottomSheetBody({
-  className,
-  children,
-  onScroll,
-  ...props
-}: BottomSheetBodyProps) {
+const BottomSheetBody = forwardRef<
+  ComponentRef<typeof Animated.ScrollView>,
+  BottomSheetBodyProps
+>(function BottomSheetBody({ className, children, onScroll, ...props }, ref) {
   const surface = useContext(SheetSurfaceContext);
 
   useEffect(() => {
@@ -938,13 +939,27 @@ function BottomSheetBody({
     if (scrollOffset) scrollOffset.value = event.contentOffset.y;
   });
 
+  /*
+   * Composed, not replaced. A caller's `onScroll` arriving after this one used
+   * to take its place, which silently cost the sheet the position report its
+   * whole drag arrangement is built on — the list and the sheet went back to
+   * fighting over every downward swipe, and nothing said why.
+   *
+   * It has to be an animated handler for the same reason this one is.
+   */
+  const composed = useComposedEventHandler([
+    handler,
+    (onScroll as typeof handler | undefined) ?? null,
+  ]);
+
   const body = (
     <Animated.ScrollView
-      onScroll={handler}
+      ref={ref}
       scrollEventThrottle={16}
       showsVerticalScrollIndicator={false}
       className={cn('flex-1', className)}
       {...props}
+      onScroll={composed}
     >
       {textChildren(children)}
     </Animated.ScrollView>
@@ -957,7 +972,7 @@ function BottomSheetBody({
    */
   if (!surface) return body;
   return <GestureDetector gesture={surface.scrollGesture}>{body}</GestureDetector>;
-}
+});
 BottomSheetBody.displayName = 'BottomSheet.Body';
 
 export interface BottomSheetFooterProps extends ViewProps {

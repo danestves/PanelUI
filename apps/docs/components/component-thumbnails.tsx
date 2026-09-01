@@ -920,6 +920,31 @@ const scrollCanvas = (
  * generates the classes it can see in the source, and a class built at runtime
  * is a class that is not in the stylesheet.
  */
+/*
+ * Blurred at both ends rather than faded: the rows stay where they are and go
+ * out of focus, which is the difference between this and ScrollFade and the
+ * only thing the two thumbnails have to say apart from each other.
+ */
+const scrollBlur = (
+  <Stack className="w-40 gap-2">
+    <Row className="gap-2 blur-[2px]">
+      <Bar className="w-full" faint />
+    </Row>
+    <Row className="gap-2 blur-[1px]">
+      <Bar className="w-32" faint />
+    </Row>
+    <Bar className="w-36" faint />
+    <Bar className="w-28" faint />
+    <Bar className="w-36" faint />
+    <Row className="gap-2 blur-[1px]">
+      <Bar className="w-24" faint />
+    </Row>
+    <Row className="gap-2 blur-[2px]">
+      <Bar className="w-32" faint />
+    </Row>
+  </Stack>
+);
+
 const scrollFade = (
   <Stack className="w-40 gap-2 [mask-image:linear-gradient(to_bottom,transparent,black_30%,black_70%,transparent)]">
     <Bar className="w-full" faint />
@@ -2034,6 +2059,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
   'grid-item': gridItem,
   item,
   'scroll-canvas': scrollCanvas,
+  'scroll-blur': scrollBlur,
   'scroll-fade': scrollFade,
   separator,
   'split-view': splitView,

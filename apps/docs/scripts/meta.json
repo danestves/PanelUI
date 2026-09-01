@@ -630,6 +630,15 @@
       "category": "layout"
     }
   ],
+  "scroll-blur": [
+    "ScrollBlur",
+    "Blurs the edges of a scroll container.",
+    "react native scroll blur",
+    {
+      "addedIn": "0.88.0",
+      "category": "layout"
+    }
+  ],
   "scroll-fade": [
     "ScrollFade",
     "Fades the edges of a scroll container.",

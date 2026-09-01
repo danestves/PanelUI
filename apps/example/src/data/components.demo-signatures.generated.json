@@ -326,6 +326,10 @@
       "signature": "6f0e3ba37701165ffe2bb0eeb621f08a52a83e1a505b50aeb9ac8796e8b79701"
     },
     {
+      "slug": "scroll-blur",
+      "signature": "99d0fc7e06dd4df9686e934957cb19f7d8ccba5d3b48f2836b82992d2ebb597a"
+    },
+    {
       "slug": "scroll-canvas",
       "signature": "765795301aa8baaafd5f894007cc8c2e372828010bfd5304ceca649a2adc2555"
     },

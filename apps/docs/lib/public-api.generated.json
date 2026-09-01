@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1244,
-    "values": 322,
-    "types": 922,
-    "modules": 149,
-    "components": 122,
+    "exports": 1247,
+    "values": 323,
+    "types": 924,
+    "modules": 150,
+    "components": 123,
     "hooks": 13
   },
   "groups": {
@@ -3761,6 +3761,25 @@
           },
           {
             "name": "ScatterChartStatus",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/scroll-blur/index.tsx",
+        "slug": "scroll-blur",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "ScrollBlur",
+            "kind": "value"
+          },
+          {
+            "name": "ScrollBlurProps",
+            "kind": "type"
+          },
+          {
+            "name": "ScrollBlurTint",
             "kind": "type"
           }
         ]

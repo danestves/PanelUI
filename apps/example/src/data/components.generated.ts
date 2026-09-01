@@ -82,6 +82,7 @@ export const COMPONENTS = [
   {"slug":"response","name":"Response","summary":"A model's answer, rendered as it arrives"},
   {"slug":"ring-chart","name":"RingChart","summary":"Concentric arcs, each against its own target"},
   {"slug":"scatter-chart","name":"ScatterChart","summary":"Two quantities against each other, to show how they relate"},
+  {"slug":"scroll-blur","name":"ScrollBlur","summary":"Blurs the edges of a scroll container"},
   {"slug":"scroll-canvas","name":"ScrollCanvas","summary":"Image frame whose contents move as you scroll"},
   {"slug":"scroll-fade","name":"ScrollFade","summary":"Fades the edges of a scroll container"},
   {"slug":"scroll-text","name":"ScrollText","summary":"Text that resolves word by word as you scroll"},
