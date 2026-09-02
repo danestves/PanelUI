@@ -9,6 +9,48 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.88.2] — 2026-09-02
+
+### Fixed
+
+- **Keyboard avoidance no longer logs a Reanimated `measure()` warning when its
+  element goes away with the keyboard still up.** `lift` re-measures every
+  frame, and an element inside an overlay that unmounts on close — a `Feedback`
+  dialog is the usual one — left that loop measuring a view that had gone,
+  filling the log with *The view has some undefined, not-yet-computed or
+  meaningless value of `LayoutMetrics` type*. The teardown now runs in a layout
+  effect, and the loop disarms itself the first time a measurement comes back
+  empty. Nothing about the lift itself changed.
+
+- **A disabled `Feedback.Submit` drops its fill instead of dimming it.** A
+  tinted accent pill is still an accent pill: at any opacity it reads as the
+  thing on the dialog to press, so an inert Submit was being pressed and then
+  reported as broken. It now falls back to a tint fainter than Cancel's, so the
+  pair reads as one live action and one dead one.
+
+- **A centred `Feedback.Title` sits on the panel's middle.** The title keeps its
+  clearance for the ✕ on the end only, which is right for a title that starts at
+  the left edge and puts a centred one about 36 points off centre. Mirror it
+  with `ps-9` where you centre the title; the parts table says so now.
+
+### Docs
+
+- **`Feedback`'s last three versions answer instead of closing.** *The send that
+  failed* and *Tags over the field* now swap the well for their own confirmation
+  and collapse the footer to one Done, the way *Thanks, then done* already did —
+  a retry that goes through unacknowledged, or a sorted report ending in
+  nothing, is the shape the component exists to avoid.
+
+- **`Feedback`'s *Score first, words second* asks about the app, and sending
+  opens a store step.** Somebody who has just rated the app is the person most
+  likely to rate it publicly, and that step is the only moment you have them.
+  `APP_STORE_URL` and `PLAY_STORE_URL` are the two lines to replace, and
+  `Platform.select` picks the label and the link. The heading turns on the
+  score, so a low one is not congratulated.
+
+- **Previews on the `Feedback` page**, for the component and each of its six
+  versions.
+
 ## [0.88.1] — 2026-09-01
 
 ### Changed
