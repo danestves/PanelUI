@@ -67,7 +67,7 @@ npx panelui-cli@latest add feedback
 - **`Feedback.Trigger`** — Wraps its child and opens the dialog on press. Leave it out for a dialog opened from somewhere else and driven by `open`.
 - **`Feedback.Content`** — The shell: the scrim, the recessed band, and the dismiss surface behind it. `dismissible={false}` takes away the tap-outside and the Android back press; `blur` frosts the screen behind instead of dimming it.
 - **`Feedback.Panel`** — The well set into the shell. Its corner is the shell's less the shell's padding, so the two curves stay concentric.
-- **`Feedback.Title`** — The question. One line, held clear of the ✕.
+- **`Feedback.Title`** — The question. Held clear of the ✕ by padding on the end, so a title you centre needs `ps-9` to match — centred text in a box inset on one side only sits off the panel's middle.
 - **`Feedback.Close`** — The ✕ in the well's corner. Drawn at 22 points with the slop that takes its touch box to 48 — a circle large enough to press comfortably would be taller than the line it sits on.
 - **`Feedback.Field`** — What is being written. No border and no background of its own: it is already inside a well, and an outline drawn inside one is two edges making the same point. Grows past `minHeight` as the message does.
 - **`Feedback.Footer`** — The action row, held in from the shell's edge. Narrower than the well on purpose — a row running the full width reads as a third edge of the dialog rather than as two things to press.
@@ -300,7 +300,7 @@ const liked = score >= 4;
   {step === 2 ? null : <Feedback.Close />}
   {step === 0 ? (
     <View className="items-center justify-center gap-4" style={{ minHeight: 200 }}>
-      <Feedback.Title className="text-center">How are you finding the app?</Feedback.Title>
+      <Feedback.Title className="ps-9 text-center">How are you finding the app?</Feedback.Title>
       <Rating size="lg" value={score} onValueChange={setScore} />
     </View>
   ) : step === 1 ? (

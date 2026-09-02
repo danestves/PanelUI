@@ -1842,7 +1842,10 @@ function FeedbackStepsDemo() {
             {step === 2 ? null : <Feedback.Close />}
             {step === 0 ? (
               <View className="items-center justify-center gap-4" style={{ minHeight: 200 }}>
-                <Feedback.Title className="text-center">
+                {/* `ps-9` mirrors the clearance the title already keeps on
+                    the end for the ✕. Centred text in a box inset on one side
+                    only is centred off the panel's actual middle. */}
+                <Feedback.Title className="ps-9 text-center">
                   How are you finding the app?
                 </Feedback.Title>
                 <Rating size="lg" value={score} onValueChange={setScore} />
