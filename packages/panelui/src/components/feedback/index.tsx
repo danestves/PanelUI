@@ -44,6 +44,9 @@
  * `Submit` disables itself while the field is empty. A dialog that accepts an
  * empty answer produces empty feedback, and the person who sent it believes
  * they said something.
+ *
+ * Disabled, it drops the fill instead of dimming it. A tinted accent pill
+ * still reads as the thing to press, whatever its opacity.
  */
 import {
   createContext,
@@ -143,9 +146,31 @@ const feedbackVariants = tv({
       },
     },
     disabled: {
-      true: { action: 'opacity-[0.45]' },
+      true: {},
     },
   },
+  compoundVariants: [
+    /*
+     * A disabled Submit loses its fill rather than dimming it.
+     *
+     * A tinted accent pill is still an accent pill: at any opacity it reads as
+     * the thing on the dialog to press, so an inert one gets pressed and then
+     * gets reported as broken. Dropping the fill is what makes the state
+     * legible before the press.
+     *
+     * The tint is fainter than Cancel's own on purpose. Matched fills would
+     * read as two Cancels rather than as one live action and one dead one.
+     */
+    {
+      tone: 'submit',
+      disabled: true,
+      class: {
+        action: 'bg-foreground/[0.04]',
+        actionLabel: 'font-medium text-muted-foreground/50',
+      },
+    },
+    { tone: 'cancel', disabled: true, class: { action: 'opacity-[0.45]' } },
+  ],
 });
 
 interface FeedbackContextValue {
