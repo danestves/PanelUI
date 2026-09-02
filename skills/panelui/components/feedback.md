@@ -27,6 +27,11 @@ import { Feedback } from 'panelui-native';
 </Feedback>
 ```
 
+### Variants
+
+- **tone** — `cancel`, `submit`
+- **disabled** — `true`
+
 ### Parts
 
 - `Feedback.Trigger` — Wraps its child and opens the dialog on press. Leave it out for a dialog opened from somewhere else and driven by `open`.
@@ -153,6 +158,8 @@ const [open, setOpen] = useState(false);
 ### The two actions are equal, and one of them is not
 
 Cancel and Submit take the same width, because they are the same size of decision — this is a sentence somebody wrote, not a deletion. What separates them is weight: Submit is filled in the foreground colour and Cancel is a tint of it.
+
+Disabled, Submit drops the fill rather than dimming it. A tinted accent pill still reads as the thing to press at any opacity, so an inert one gets pressed and then gets reported as broken. The tint it falls back to is fainter than Cancel's, so the pair reads as one live action and one dead one rather than as two Cancels.
 
 ### Where the recess comes from
 

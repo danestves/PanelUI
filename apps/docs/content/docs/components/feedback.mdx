@@ -17,8 +17,8 @@ For a confirmation, a warning, or anything whose body is text to be read rather 
 Feedback ships with the library — no separate install.
 
 ```tsx
-import { Feedback, Button, Text, CheckIcon, Chip, Rating } from 'panelui-native';
-import { View } from 'react-native';
+import { Feedback, Button, Text, CheckIcon, StarIcon, Chip, Rating } from 'panelui-native';
+import { View, Linking, Platform } from 'react-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -160,17 +160,21 @@ The failure the API is shaped around. Because `Submit` does not close the dialog
 
 It takes the well, in the place the confirmation takes on the way through. A line pinned under the field would be an annotation on the writing; this is not about the writing, it is what happened to it, and it is the whole state of the dialog until somebody answers it.
 
-Hold the message in your own state and Try again puts it straight back. Cancel becomes Back for the same reason: the note is why somebody is still here.
+The send that works takes the same well. Closing on success would leave the retry unacknowledged, so the last state is a confirmation with one action, and the ✕ goes with it — a ✕ beside a single Done is two ways off the same screen.
 
-Closing on success is the caller's too. The dialog cannot know whether the send finished, and one that closed on the press would be gone before it found out.
+Hold the message in your own state and Try again puts it straight back. Cancel becomes Back for the same reason: the note is why somebody is still here.
 
 ```tsx
 const [state, setState] = useState('idle');
 
 <Feedback.Content dismissible={state !== 'sending'}>
   <Feedback.Panel>
-    <Feedback.Close />
-    {state === 'failed' ? (
+    {state === 'sent' ? null : <Feedback.Close />}
+    {state === 'sent' ? (
+      <Outcome tone="success" title="Sent">
+        It went through on the second try. Nothing left to do here.
+      </Outcome>
+    ) : state === 'failed' ? (
       <Outcome tone="destructive" title="Could not send">
         Your note is still here. Try again when you have a signal.
       </Outcome>
@@ -185,17 +189,25 @@ const [state, setState] = useState('idle');
     )}
   </Feedback.Panel>
   <Feedback.Footer>
-    <Feedback.Cancel
-      onPress={state === 'failed' ? () => setState('idle') : undefined}
-    >
-      {state === 'failed' ? 'Back' : 'Cancel'}
-    </Feedback.Cancel>
-    <Feedback.Submit
-      disabled={state === 'sending' || draft.trim().length === 0}
-      onPress={() => setState('sending')}
-    >
-      {state === 'sending' ? 'Sending…' : state === 'failed' ? 'Try again' : 'Submit'}
-    </Feedback.Submit>
+    {state === 'sent' ? (
+      <Feedback.Submit disabled={false} onPress={() => setOpen(false)}>
+        Done
+      </Feedback.Submit>
+    ) : (
+      <>
+        <Feedback.Cancel
+          onPress={state === 'failed' ? () => setState('idle') : undefined}
+        >
+          {state === 'failed' ? 'Back' : 'Cancel'}
+        </Feedback.Cancel>
+        <Feedback.Submit
+          disabled={state === 'sending' || draft.trim().length === 0}
+          onPress={() => setState('sending')}
+        >
+          {state === 'sending' ? 'Sending…' : state === 'failed' ? 'Try again' : 'Submit'}
+        </Feedback.Submit>
+      </>
+    )}
   </Feedback.Footer>
 </Feedback.Content>
 ```
@@ -206,60 +218,104 @@ Nobody triages free text. The chips sort the report and the sentence explains it
 
 The field is shorter here. The chips have taken the top of the well, and one at full height would push the actions off a small screen.
 
+Sending swaps the well for a confirmation rather than closing, and the confirmation says what the chips bought: a report that has been sorted goes somewhere specific, and that is worth one line.
+
 ```tsx
 const REASONS = ['Too slow', 'Confusing', 'Wrong result', 'Crashed'];
 const [tags, setTags] = useState([]);
+const [sent, setSent] = useState(false);
 
 <Feedback.Panel>
-  <Feedback.Title>What went wrong?</Feedback.Title>
-  <Feedback.Close />
-  <View className="flex-row flex-wrap gap-2">
-    {REASONS.map((reason) => (
-      <Chip
-        key={reason}
-        size="sm"
-        selected={tags.includes(reason)}
-        onPress={() => toggle(reason)}
-      >
-        {reason}
-      </Chip>
-    ))}
-  </View>
-  <Feedback.Field minHeight={120} placeholder="Anything else we should know" />
+  {sent ? (
+    <Outcome tone="success" title="Filed">
+      We sort these by what you picked, so it lands with the people who own
+      that part.
+    </Outcome>
+  ) : (
+    <>
+      <Feedback.Title>What went wrong?</Feedback.Title>
+      <Feedback.Close />
+      <View className="flex-row flex-wrap gap-2">
+        {REASONS.map((reason) => (
+          <Chip
+            key={reason}
+            size="sm"
+            selected={tags.includes(reason)}
+            onPress={() => toggle(reason)}
+          >
+            {reason}
+          </Chip>
+        ))}
+      </View>
+      <Feedback.Field minHeight={120} placeholder="Anything else we should know" />
+    </>
+  )}
 </Feedback.Panel>
 <Feedback.Footer>
-  <Feedback.Cancel />
-  <Feedback.Submit
-    disabled={tags.length === 0 && draft.trim().length === 0}
-    onSubmit={send}
-  />
+  {sent ? (
+    <Feedback.Submit disabled={false} onPress={() => setOpen(false)}>
+      Done
+    </Feedback.Submit>
+  ) : (
+    <>
+      <Feedback.Cancel />
+      <Feedback.Submit
+        disabled={tags.length === 0 && draft.trim().length === 0}
+        onSubmit={() => {
+          setDraft('');
+          setSent(true);
+        }}
+      />
+    </>
+  )}
 </Feedback.Footer>
 ```
 
 ### Score first, words second
 
-Asking for both at once gets the score and an empty box. Asking for the score first costs one tap and gives the sentence something to be about — and the question can change with the answer, which is the difference between "What worked?" and "What would have helped?".
+Asking for both at once gets the score and an empty box. Asking for the score first costs one tap and gives the sentence something to be about — and the question can change with the answer, which is the difference between "What do you like most?" and "What would have helped?".
 
 The footer is a slot, so Cancel becomes Back for the second half. The ✕ stays outside the step: it is not the back button and must not come and go with it.
 
+Sending opens a third step instead of closing, and that is where the store goes. Somebody who has just rated the app is the person most likely to rate it publicly, and this is the only moment you have them. The heading turns on the score so a low one is not congratulated, and the store button stays either way — a rating is worth asking for even when the answer was three stars.
+
+`APP_STORE_URL` and `PLAY_STORE_URL` are the two lines to replace. The iOS one is the product URL with `?action=write-review` on it, which opens straight on the review sheet; the Android one is the Play listing for the package name. `Platform.select` picks the pair once, at module scope — the platform does not change under a running app.
+
 ```tsx
+/** Replace both before shipping. */
+const APP_STORE_URL = 'https://apps.apple.com/app/id000000000?action=write-review';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.example.app';
+
+const STORE = Platform.select({
+  ios: { label: 'App Store', url: APP_STORE_URL },
+  android: { label: 'Google Play', url: PLAY_STORE_URL },
+  default: { label: 'Rate the app', url: APP_STORE_URL },
+});
+
 const [step, setStep] = useState(0);
 const [score, setScore] = useState(0);
+const liked = score >= 4;
 
 <Feedback.Panel>
-  <Feedback.Close />
+  {step === 2 ? null : <Feedback.Close />}
   {step === 0 ? (
     <View className="items-center justify-center gap-4" style={{ minHeight: 200 }}>
-      <Feedback.Title className="text-center">How did that go?</Feedback.Title>
+      <Feedback.Title className="text-center">How are you finding the app?</Feedback.Title>
       <Rating size="lg" value={score} onValueChange={setScore} />
     </View>
-  ) : (
+  ) : step === 1 ? (
     <>
       <Feedback.Title>
-        {score >= 4 ? 'What worked?' : 'What would have helped?'}
+        {liked ? 'What do you like most?' : 'What would have helped?'}
       </Feedback.Title>
       <Feedback.Field placeholder="In your own words" />
     </>
+  ) : (
+    <Outcome tone="success" title={liked ? 'Glad you like it' : "Thanks — we'll fix it"}>
+      {liked
+        ? 'A rating on the store is how other people find it. It takes a moment.'
+        : 'This goes straight to the team. A rating still helps, if you have one in you.'}
+    </Outcome>
   )}
 </Feedback.Panel>
 <Feedback.Footer>
@@ -270,10 +326,20 @@ const [score, setScore] = useState(0);
         Next
       </Feedback.Submit>
     </>
-  ) : (
+  ) : step === 1 ? (
     <>
       <Feedback.Cancel onPress={() => setStep(0)}>Back</Feedback.Cancel>
-      <Feedback.Submit onSubmit={send} />
+      <Feedback.Submit onSubmit={() => setStep(2)} />
+    </>
+  ) : (
+    <>
+      <Feedback.Cancel>Done</Feedback.Cancel>
+      <Feedback.Submit
+        disabled={false}
+        onPress={() => void Linking.openURL(STORE.url).catch(() => {})}
+      >
+        {STORE.label}
+      </Feedback.Submit>
     </>
   )}
 </Feedback.Footer>
@@ -302,6 +368,18 @@ const [draft, setDraft] = useState('');
 
 ```tsx
 <Feedback.Content blur>…</Feedback.Content>
+```
+
+## Variants
+
+### `tone`
+
+- `cancel`
+- `submit`
+
+```tsx
+<Feedback tone="cancel">…</Feedback>
+<Feedback tone="submit">…</Feedback>
 ```
 
 ## API Reference
@@ -376,6 +454,8 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 ### The two actions are equal, and one of them is not
 
 Cancel and Submit take the same width, because they are the same size of decision — this is a sentence somebody wrote, not a deletion. What separates them is weight: Submit is filled in the foreground colour and Cancel is a tint of it.
+
+Disabled, Submit drops the fill rather than dimming it. A tinted accent pill still reads as the thing to press at any opacity, so an inert one gets pressed and then gets reported as broken. The tint it falls back to is fainter than Cancel's, so the pair reads as one live action and one dead one rather than as two Cancels.
 
 ### Where the recess comes from
 
