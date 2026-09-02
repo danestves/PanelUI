@@ -1,6 +1,13 @@
 {
   "slug": "feedback",
   "intro": "A dialog whose body is something to write in, with the two things to do about it in the band around it.\n\nA dialog asking for a sentence has two jobs on screen at once: hold what is being written, and offer the actions. [Dialog](/docs/components/dialog) puts both on one surface, which is right when the body is a line of prose and wrong when it is a field — nothing about a flat panel says \"this is where you type\".\n\nHere the writing surface is a well set into the dialog. The recess is the affordance: it says the field is the page and the rest is the frame, before a word has been read.\n\nFor a confirmation, a warning, or anything whose body is text to be read rather than written, use Dialog.",
+  "previewVideo": {
+    "src": "/previews/feedback.mp4",
+    "poster": "/previews/feedback-poster.jpg",
+    "alt": "The Feedback component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  },
   "usage": "<Feedback open={open} onOpenChange={setOpen}>\n  <Feedback.Content>\n    <Feedback.Panel>\n      <Feedback.Title>What should we fix first?</Feedback.Title>\n      <Feedback.Close />\n      <Feedback.Field placeholder=\"Tell us what got in your way\" />\n    </Feedback.Panel>\n    <Feedback.Footer>\n      <Feedback.Cancel />\n      <Feedback.Submit onSubmit={send} />\n    </Feedback.Footer>\n  </Feedback.Content>\n</Feedback>",
   "extraImports": [
     "Button",
@@ -30,31 +37,73 @@
     {
       "title": "Asking for a sentence",
       "description": "The shape the component is for. The dialog holds the message, `Submit` refuses to send an empty one, and Cancel closes without asking again.",
+      "previewVideo": {
+        "src": "/previews/feedback-asking-for-a-sentence.mp4",
+        "poster": "/previews/feedback-asking-for-a-sentence-poster.jpg",
+        "alt": "Feedback — Asking for a sentence.",
+        "width": 720,
+        "height": 1560
+      },
       "code": "const [open, setOpen] = useState(false);\n\n<Feedback open={open} onOpenChange={setOpen}>\n  <Feedback.Trigger>\n    <Button variant=\"outline\">Give feedback</Button>\n  </Feedback.Trigger>\n  <Feedback.Content>\n    <Feedback.Panel>\n      <Feedback.Title>What should we fix first?</Feedback.Title>\n      <Feedback.Close />\n      <Feedback.Field placeholder=\"Tell us what got in your way\" />\n    </Feedback.Panel>\n    <Feedback.Footer>\n      <Feedback.Cancel />\n      <Feedback.Submit onSubmit={(message) => send(message)} />\n    </Feedback.Footer>\n  </Feedback.Content>\n</Feedback>"
     },
     {
       "title": "Thanks, then done",
       "description": "`Submit` hands the message back rather than closing, and this is what that buys. The well swaps for a confirmation while the shell holds still, so the dialog is visibly the same object answering rather than a second one arriving.\n\nThe footer is a slot, so it collapses to one button — with nothing left to choose between, a Cancel beside it would only be a second way to do the same thing.",
+      "previewVideo": {
+        "src": "/previews/feedback-thanks-then-done.mp4",
+        "poster": "/previews/feedback-thanks-then-done-poster.jpg",
+        "alt": "Feedback — Thanks, then done.",
+        "width": 720,
+        "height": 1560
+      },
       "code": "const [sent, setSent] = useState(false);\n\n<Feedback\n  open={open}\n  onOpenChange={(next) => {\n    setOpen(next);\n    // Opening again starts a new note, not the tail of the last one.\n    if (next) setSent(false);\n  }}\n>\n  <Feedback.Content>\n    <Feedback.Panel>\n      {sent ? (\n        <View className=\"items-center justify-center gap-3\" style={{ minHeight: 200 }}>\n          <View className=\"h-14 w-14 items-center justify-center rounded-full bg-success\">\n            <CheckIcon size={24} />\n          </View>\n          <Text size=\"lg\" weight=\"semibold\">Got it</Text>\n          <Text size=\"sm\" muted className=\"text-center\">\n            This goes to the people who can fix it.\n          </Text>\n        </View>\n      ) : (\n        <>\n          <Feedback.Title>What should we fix first?</Feedback.Title>\n          <Feedback.Close />\n          <Feedback.Field placeholder=\"Tell us what got in your way\" />\n        </>\n      )}\n    </Feedback.Panel>\n    <Feedback.Footer>\n      {sent ? (\n        <Feedback.Submit disabled={false} onPress={() => setOpen(false)}>\n          Done\n        </Feedback.Submit>\n      ) : (\n        <>\n          <Feedback.Cancel />\n          <Feedback.Submit onSubmit={() => setSent(true)} />\n        </>\n      )}\n    </Feedback.Footer>\n  </Feedback.Content>\n</Feedback>"
     },
     {
       "title": "The send that failed",
       "description": "The failure the API is shaped around. Because `Submit` does not close the dialog, a send that fails still has somewhere to say so — and the message is still there to try again with. A dialog that closed on the press would have taken both with it.\n\nIt takes the well, in the place the confirmation takes on the way through. A line pinned under the field would be an annotation on the writing; this is not about the writing, it is what happened to it, and it is the whole state of the dialog until somebody answers it.\n\nThe send that works takes the same well. Closing on success would leave the retry unacknowledged, so the last state is a confirmation with one action, and the ✕ goes with it — a ✕ beside a single Done is two ways off the same screen.\n\nHold the message in your own state and Try again puts it straight back. Cancel becomes Back for the same reason: the note is why somebody is still here.",
+      "previewVideo": {
+        "src": "/previews/feedback-the-send-that-failed.mp4",
+        "poster": "/previews/feedback-the-send-that-failed-poster.jpg",
+        "alt": "Feedback — The send that failed.",
+        "width": 720,
+        "height": 1560
+      },
       "code": "const [state, setState] = useState('idle');\n\n<Feedback.Content dismissible={state !== 'sending'}>\n  <Feedback.Panel>\n    {state === 'sent' ? null : <Feedback.Close />}\n    {state === 'sent' ? (\n      <Outcome tone=\"success\" title=\"Sent\">\n        It went through on the second try. Nothing left to do here.\n      </Outcome>\n    ) : state === 'failed' ? (\n      <Outcome tone=\"destructive\" title=\"Could not send\">\n        Your note is still here. Try again when you have a signal.\n      </Outcome>\n    ) : (\n      <>\n        <Feedback.Title>What went wrong?</Feedback.Title>\n        <Feedback.Field\n          editable={state !== 'sending'}\n          placeholder=\"What were you doing when it happened\"\n        />\n      </>\n    )}\n  </Feedback.Panel>\n  <Feedback.Footer>\n    {state === 'sent' ? (\n      <Feedback.Submit disabled={false} onPress={() => setOpen(false)}>\n        Done\n      </Feedback.Submit>\n    ) : (\n      <>\n        <Feedback.Cancel\n          onPress={state === 'failed' ? () => setState('idle') : undefined}\n        >\n          {state === 'failed' ? 'Back' : 'Cancel'}\n        </Feedback.Cancel>\n        <Feedback.Submit\n          disabled={state === 'sending' || draft.trim().length === 0}\n          onPress={() => setState('sending')}\n        >\n          {state === 'sending' ? 'Sending…' : state === 'failed' ? 'Try again' : 'Submit'}\n        </Feedback.Submit>\n      </>\n    )}\n  </Feedback.Footer>\n</Feedback.Content>"
     },
     {
       "title": "Tags over the field",
       "description": "Nobody triages free text. The chips sort the report and the sentence explains it, so either one on its own is enough to send — which is why `Submit` is gated on both rather than on the field alone.\n\nThe field is shorter here. The chips have taken the top of the well, and one at full height would push the actions off a small screen.\n\nSending swaps the well for a confirmation rather than closing, and the confirmation says what the chips bought: a report that has been sorted goes somewhere specific, and that is worth one line.",
+      "previewVideo": {
+        "src": "/previews/feedback-tags-over-the-field.mp4",
+        "poster": "/previews/feedback-tags-over-the-field-poster.jpg",
+        "alt": "Feedback — Tags over the field.",
+        "width": 720,
+        "height": 1560
+      },
       "code": "const REASONS = ['Too slow', 'Confusing', 'Wrong result', 'Crashed'];\nconst [tags, setTags] = useState([]);\nconst [sent, setSent] = useState(false);\n\n<Feedback.Panel>\n  {sent ? (\n    <Outcome tone=\"success\" title=\"Filed\">\n      We sort these by what you picked, so it lands with the people who own\n      that part.\n    </Outcome>\n  ) : (\n    <>\n      <Feedback.Title>What went wrong?</Feedback.Title>\n      <Feedback.Close />\n      <View className=\"flex-row flex-wrap gap-2\">\n        {REASONS.map((reason) => (\n          <Chip\n            key={reason}\n            size=\"sm\"\n            selected={tags.includes(reason)}\n            onPress={() => toggle(reason)}\n          >\n            {reason}\n          </Chip>\n        ))}\n      </View>\n      <Feedback.Field minHeight={120} placeholder=\"Anything else we should know\" />\n    </>\n  )}\n</Feedback.Panel>\n<Feedback.Footer>\n  {sent ? (\n    <Feedback.Submit disabled={false} onPress={() => setOpen(false)}>\n      Done\n    </Feedback.Submit>\n  ) : (\n    <>\n      <Feedback.Cancel />\n      <Feedback.Submit\n        disabled={tags.length === 0 && draft.trim().length === 0}\n        onSubmit={() => {\n          setDraft('');\n          setSent(true);\n        }}\n      />\n    </>\n  )}\n</Feedback.Footer>"
     },
     {
       "title": "Score first, words second",
       "description": "Asking for both at once gets the score and an empty box. Asking for the score first costs one tap and gives the sentence something to be about — and the question can change with the answer, which is the difference between \"What do you like most?\" and \"What would have helped?\".\n\nThe footer is a slot, so Cancel becomes Back for the second half. The ✕ stays outside the step: it is not the back button and must not come and go with it.\n\nSending opens a third step instead of closing, and that is where the store goes. Somebody who has just rated the app is the person most likely to rate it publicly, and this is the only moment you have them. The heading turns on the score so a low one is not congratulated, and the store button stays either way — a rating is worth asking for even when the answer was three stars.\n\n`APP_STORE_URL` and `PLAY_STORE_URL` are the two lines to replace. The iOS one is the product URL with `?action=write-review` on it, which opens straight on the review sheet; the Android one is the Play listing for the package name. `Platform.select` picks the pair once, at module scope — the platform does not change under a running app.",
+      "previewVideo": {
+        "src": "/previews/feedback-score-first-words-second.mp4",
+        "poster": "/previews/feedback-score-first-words-second-poster.jpg",
+        "alt": "Feedback — Score first, words second.",
+        "width": 720,
+        "height": 1560
+      },
       "code": "/** Replace both before shipping. */\nconst APP_STORE_URL = 'https://apps.apple.com/app/id000000000?action=write-review';\nconst PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.example.app';\n\nconst STORE = Platform.select({\n  ios: { label: 'App Store', url: APP_STORE_URL },\n  android: { label: 'Google Play', url: PLAY_STORE_URL },\n  default: { label: 'Rate the app', url: APP_STORE_URL },\n});\n\nconst [step, setStep] = useState(0);\nconst [score, setScore] = useState(0);\nconst liked = score >= 4;\n\n<Feedback.Panel>\n  {step === 2 ? null : <Feedback.Close />}\n  {step === 0 ? (\n    <View className=\"items-center justify-center gap-4\" style={{ minHeight: 200 }}>\n      <Feedback.Title className=\"ps-9 text-center\">How are you finding the app?</Feedback.Title>\n      <Rating size=\"lg\" value={score} onValueChange={setScore} />\n    </View>\n  ) : step === 1 ? (\n    <>\n      <Feedback.Title>\n        {liked ? 'What do you like most?' : 'What would have helped?'}\n      </Feedback.Title>\n      <Feedback.Field placeholder=\"In your own words\" />\n    </>\n  ) : (\n    <Outcome tone=\"success\" title={liked ? 'Glad you like it' : \"Thanks — we'll fix it\"}>\n      {liked\n        ? 'A rating on the store is how other people find it. It takes a moment.'\n        : 'This goes straight to the team. A rating still helps, if you have one in you.'}\n    </Outcome>\n  )}\n</Feedback.Panel>\n<Feedback.Footer>\n  {step === 0 ? (\n    <>\n      <Feedback.Cancel />\n      <Feedback.Submit disabled={score === 0} onPress={() => setStep(1)}>\n        Next\n      </Feedback.Submit>\n    </>\n  ) : step === 1 ? (\n    <>\n      <Feedback.Cancel onPress={() => setStep(0)}>Back</Feedback.Cancel>\n      <Feedback.Submit onSubmit={() => setStep(2)} />\n    </>\n  ) : (\n    <>\n      <Feedback.Cancel>Done</Feedback.Cancel>\n      <Feedback.Submit\n        disabled={false}\n        onPress={() => void Linking.openURL(STORE.url).catch(() => {})}\n      >\n        {STORE.label}\n      </Feedback.Submit>\n    </>\n  )}\n</Feedback.Footer>"
     },
     {
       "title": "Holding the message yourself",
       "description": "Pass `value` and `onValueChange` for a draft that survives the dialog being closed, or a message checked as it is typed. `Submit` reads the same value either way.",
+      "previewVideo": {
+        "src": "/previews/feedback-holding-the-message-yourself.mp4",
+        "poster": "/previews/feedback-holding-the-message-yourself-poster.jpg",
+        "alt": "Feedback — Holding the message yourself.",
+        "width": 720,
+        "height": 1560
+      },
       "code": "const [draft, setDraft] = useState('');\n\n<Feedback\n  open={open}\n  onOpenChange={setOpen}\n  value={draft}\n  onValueChange={setDraft}\n>\n  …\n</Feedback>"
     },
     {

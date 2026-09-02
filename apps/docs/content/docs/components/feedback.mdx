@@ -4,6 +4,14 @@ description: Dialog whose body is a well to write in, with the actions in the ba
 status: new
 ---
 
+<PreviewVideo
+  src="/previews/feedback.mp4"
+  poster="/previews/feedback-poster.jpg"
+  alt="The Feedback component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 A dialog whose body is something to write in, with the two things to do about it in the band around it.
 
 A dialog asking for a sentence has two jobs on screen at once: hold what is being written, and offer the actions. [Dialog](/docs/components/dialog) puts both on one surface, which is right when the body is a line of prose and wrong when it is a field — nothing about a flat panel says "this is where you type".
@@ -80,6 +88,14 @@ npx panelui-cli@latest add feedback
 
 The shape the component is for. The dialog holds the message, `Submit` refuses to send an empty one, and Cancel closes without asking again.
 
+<PreviewVideo
+  src="/previews/feedback-asking-for-a-sentence.mp4"
+  poster="/previews/feedback-asking-for-a-sentence-poster.jpg"
+  alt="Feedback — Asking for a sentence."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [open, setOpen] = useState(false);
 
@@ -106,6 +122,14 @@ const [open, setOpen] = useState(false);
 `Submit` hands the message back rather than closing, and this is what that buys. The well swaps for a confirmation while the shell holds still, so the dialog is visibly the same object answering rather than a second one arriving.
 
 The footer is a slot, so it collapses to one button — with nothing left to choose between, a Cancel beside it would only be a second way to do the same thing.
+
+<PreviewVideo
+  src="/previews/feedback-thanks-then-done.mp4"
+  poster="/previews/feedback-thanks-then-done-poster.jpg"
+  alt="Feedback — Thanks, then done."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const [sent, setSent] = useState(false);
@@ -164,6 +188,14 @@ The send that works takes the same well. Closing on success would leave the retr
 
 Hold the message in your own state and Try again puts it straight back. Cancel becomes Back for the same reason: the note is why somebody is still here.
 
+<PreviewVideo
+  src="/previews/feedback-the-send-that-failed.mp4"
+  poster="/previews/feedback-the-send-that-failed-poster.jpg"
+  alt="Feedback — The send that failed."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [state, setState] = useState('idle');
 
@@ -219,6 +251,14 @@ Nobody triages free text. The chips sort the report and the sentence explains it
 The field is shorter here. The chips have taken the top of the well, and one at full height would push the actions off a small screen.
 
 Sending swaps the well for a confirmation rather than closing, and the confirmation says what the chips bought: a report that has been sorted goes somewhere specific, and that is worth one line.
+
+<PreviewVideo
+  src="/previews/feedback-tags-over-the-field.mp4"
+  poster="/previews/feedback-tags-over-the-field-poster.jpg"
+  alt="Feedback — Tags over the field."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const REASONS = ['Too slow', 'Confusing', 'Wrong result', 'Crashed'];
@@ -280,6 +320,14 @@ The footer is a slot, so Cancel becomes Back for the second half. The ✕ stays 
 Sending opens a third step instead of closing, and that is where the store goes. Somebody who has just rated the app is the person most likely to rate it publicly, and this is the only moment you have them. The heading turns on the score so a low one is not congratulated, and the store button stays either way — a rating is worth asking for even when the answer was three stars.
 
 `APP_STORE_URL` and `PLAY_STORE_URL` are the two lines to replace. The iOS one is the product URL with `?action=write-review` on it, which opens straight on the review sheet; the Android one is the Play listing for the package name. `Platform.select` picks the pair once, at module scope — the platform does not change under a running app.
+
+<PreviewVideo
+  src="/previews/feedback-score-first-words-second.mp4"
+  poster="/previews/feedback-score-first-words-second-poster.jpg"
+  alt="Feedback — Score first, words second."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 /** Replace both before shipping. */
@@ -348,6 +396,14 @@ const liked = score >= 4;
 ### Holding the message yourself
 
 Pass `value` and `onValueChange` for a draft that survives the dialog being closed, or a message checked as it is typed. `Submit` reads the same value either way.
+
+<PreviewVideo
+  src="/previews/feedback-holding-the-message-yourself.mp4"
+  poster="/previews/feedback-holding-the-message-yourself-poster.jpg"
+  alt="Feedback — Holding the message yourself."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 const [draft, setDraft] = useState('');
