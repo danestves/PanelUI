@@ -44,7 +44,7 @@
  * </Animated.View>
  * ```
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import {
   TurboModuleRegistry,
   useWindowDimensions,
@@ -201,7 +201,8 @@ export function useKeyboardAvoidance({
   const translation = useSharedValue(0);
 
   /*
-   * Whether the element has been laid out at least once and is still mounted.
+   * Whether the element can be measured: laid out at least once, and still
+   * mounted.
    *
    * `measure` warns when it is handed a view the layout engine has no metrics
    * for — every frame between a mount and its first layout, and every frame
@@ -210,11 +211,26 @@ export function useKeyboardAvoidance({
    * the warning is printed before that null comes back. Running once a frame,
    * one of these fills the log on its own.
    *
-   * So the layout pass is what says the view can be measured, and the unmount
-   * is what takes it back.
+   * The layout pass arms it. Two things disarm it, because one is not enough:
+   *
+   * - the teardown, in a *layout* effect. A plain effect's cleanup is written
+   *   from the JS thread after the commit, which is one or more frames after
+   *   the view it is protecting has gone — long enough for the loop to measure
+   *   a detached view and log. This is the case an overlay hits every time:
+   *   a dialog whose content unmounts on close takes the element with it while
+   *   the keyboard is still on its way down.
+   * - the worklet itself, whenever a measurement comes back null. That write
+   *   belongs to the UI thread, so it lands whatever order the teardown
+   *   arrives in, and a view that has gone costs one warning rather than one
+   *   per frame.
+   *
+   * A disarm that was only a race is put back by the next layout pass, or by
+   * the keyboard opening again — `everLaidOut` is what makes the second one
+   * safe, since arming before the first layout is the other half of the bug.
    */
   const laidOut = useSharedValue(false);
-  useEffect(
+  const everLaidOut = useSharedValue(false);
+  useLayoutEffect(
     () => () => {
       laidOut.value = false;
     },
@@ -250,7 +266,11 @@ export function useKeyboardAvoidance({
     if (!laidOut.value) return;
 
     const frame = measure(ref);
-    if (!frame || frame.height <= 0) return;
+    if (!frame) {
+      laidOut.value = false;
+      return;
+    }
+    if (frame.height <= 0) return;
 
     const restingBottom = frame.pageY + frame.height - translation.value;
     const keyboardTop = screenHeight - keyboardHeight;
@@ -272,6 +292,10 @@ export function useKeyboardAvoidance({
       if (shouldTrack === wasTracking) return;
       runOnJS(setTracking)(shouldTrack);
 
+      // A keyboard opening is the other place the guard is put back, for the
+      // element that was disarmed by a measurement that raced a re-layout.
+      if (shouldTrack && everLaidOut.value) laidOut.value = true;
+
       // Moving straight from one field to another never closes the keyboard,
       // so the field being left has nothing to follow back down — it is sent
       // home explicitly, or it stays hanging where the keyboard left it.
@@ -282,7 +306,7 @@ export function useKeyboardAvoidance({
   );
 
   const { setActive } = track;
-  useEffect(() => {
+  useLayoutEffect(() => {
     setActive(tracking && mode === 'lift');
     return () => setActive(false);
   }, [tracking, mode, setActive]);
@@ -290,12 +314,13 @@ export function useKeyboardAvoidance({
   const onLayout = useCallback(
     (_event: LayoutChangeEvent) => {
       laidOut.value = true;
+      everLaidOut.value = true;
       // A layout pass while the element is at rest means its slot moved for
       // some reason other than the keyboard. Anything left over from the last
       // lift belongs to the old slot.
       if (!tracking && translation.value !== 0) translation.value = 0;
     },
-    [laidOut, tracking, translation]
+    [everLaidOut, laidOut, tracking, translation]
   );
 
   const animatedStyle = useAnimatedStyle(() => {
