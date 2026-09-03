@@ -16,12 +16,59 @@
     {
       "title": "Thresholds that fall",
       "description": "A battery gets worse as it drops. Same prop, written the other way up — which direction is bad is yours to say.",
-      "code": "<Meter\n  value={charge}\n  label=\"Battery\"\n  showValueLabel\n  thresholds={[\n    { from: 0, color: 'destructive' },\n    { from: 20, color: 'warning' },\n    { from: 50, color: 'success' },\n  ]}\n/>"
+      "code": "<Meter\n  value={charge}\n  label=\"Battery\"\n  showValueLabel\n  thresholds={[\n    { from: 0, color: 'destructive' },\n    { from: 20, color: 'warning' },\n    { from: 50, color: 'success' },\n  ]}\n/>",
+      "previewVideo": {
+        "src": "/previews/meter.mp4",
+        "poster": "/previews/meter-poster.jpg",
+        "alt": "Meter — Thresholds that fall.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Counted, not measured",
       "description": "Four blocks say “three out of four” where a bar says “about seventy percent”, and a password is not seventy percent strong. Pair `segments` with a `valueLabel` word rather than a number.",
-      "code": "<Meter\n  value={strength}\n  maxValue={4}\n  segments={4}\n  label=\"Password strength\"\n  showValueLabel\n  valueLabel={['Too short', 'Weak', 'Fair', 'Good', 'Strong'][strength]}\n  thresholds={[\n    { from: 0, color: 'destructive' },\n    { from: 2, color: 'warning' },\n    { from: 3, color: 'success' },\n  ]}\n/>"
+      "code": "<Meter\n  value={strength}\n  maxValue={4}\n  segments={4}\n  label=\"Password strength\"\n  showValueLabel\n  valueLabel={['Too short', 'Weak', 'Fair', 'Good', 'Strong'][strength]}\n  thresholds={[\n    { from: 0, color: 'destructive' },\n    { from: 2, color: 'warning' },\n    { from: 3, color: 'success' },\n  ]}\n/>",
+      "previewVideo": {
+        "src": "/previews/meter-counted-not-measured.mp4",
+        "poster": "/previews/meter-counted-not-measured-poster.jpg",
+        "alt": "Meter — Counted, not measured.",
+        "width": 720,
+        "height": 1560
+      }
+    },
+    {
+      "title": "A segment per unit",
+      "description": "`segments` does not have to be a scale of its own. Set it to the number of things being counted and each block is one of them.\n\nGive the reading a `valueLabel` where the count is the point — three of five bars, not sixty percent. Ten of anything is enough for a proportion to mean something, so the second one keeps its percentage.",
+      "code": "<Meter\n  value={3}\n  maxValue={5}\n  segments={5}\n  label=\"Signal\"\n  showValueLabel\n  valueLabel=\"3 of 5 bars\"\n  color=\"info\"\n/>\n\n<Meter\n  value={7}\n  maxValue={10}\n  segments={10}\n  label=\"Questions right\"\n  showValueLabel\n  size=\"lg\"\n  color=\"success\"\n/>",
+      "preview": {
+        "src": "/previews/meter-a-segment-per-unit.jpg",
+        "alt": "Meter — A segment per unit.",
+        "width": 1179,
+        "height": 366
+      }
+    },
+    {
+      "title": "Colours",
+      "description": "`color` sets the fill, and the track behind it is the same colour held back — so a meter carries its own contrast on whatever surface it is laid on.\n\nThis is for a reading whose meaning does not move with the value: a category, a brand, one series among several. Where the meaning does move with it, use `thresholds` and let the colour be read off the value.",
+      "code": "<Meter value={60} color=\"primary\" />\n<Meter value={60} color=\"success\" />\n<Meter value={60} color=\"warning\" />\n<Meter value={60} color=\"destructive\" />\n<Meter value={60} color=\"info\" />\n<Meter value={60} color=\"muted\" />",
+      "preview": {
+        "src": "/previews/meter-colours.jpg",
+        "alt": "Meter — Colours.",
+        "width": 1179,
+        "height": 547
+      }
+    },
+    {
+      "title": "Sizes",
+      "description": "Three track heights. `sm` for a meter riding a row of a list, `lg` where the reading is the thing on the screen.",
+      "code": "<Meter value={60} size=\"sm\" accessibilityLabel=\"Small\" />\n<Meter value={60} size=\"md\" accessibilityLabel=\"Medium\" />\n<Meter value={60} size=\"lg\" accessibilityLabel=\"Large\" />",
+      "preview": {
+        "src": "/previews/meter-sizes.jpg",
+        "alt": "Meter — Sizes.",
+        "width": 1179,
+        "height": 305
+      }
     },
     {
       "title": "Without a caption",
@@ -33,5 +80,12 @@
     "color": "<Meter value={60} color=\"primary\" />\n<Meter value={60} color=\"success\" />\n<Meter value={60} color=\"warning\" />\n<Meter value={60} color=\"destructive\" />\n<Meter value={60} color=\"info\" />\n<Meter value={60} color=\"muted\" />",
     "size": "<Meter value={60} size=\"sm\" />\n<Meter value={60} size=\"md\" />\n<Meter value={60} size=\"lg\" />"
   },
-  "notes": "`from` on a threshold is in the same units as `value`, not a percentage of the range \u2014 a threshold on a 0\u20138 GB meter is written in gigabytes. The highest finite one the value has reached wins, so the order you list them in does not matter. Below all of them, the `color` prop applies.\n\nValues outside the scale clamp to its ends; NaN reads at the floor and infinities at the corresponding end. Non-finite bounds use the documented 0 and 100 defaults; an inverted or empty scale collapses at its finite floor and reads as empty. This keeps layout, animation, and native accessibility values finite and ordered.\n\nAny reading above the floor lights at least one segment. Rounding down would leave the first quarter of a four-block meter dark, and \u201ca little\u201d looking like \u201cnone\u201d is the reading a meter can least afford to get wrong.\n\nSegments are all or nothing; a partly-filled block is not drawn. Fractional counts round down, counts above 100 clamp to 100, and invalid, non-positive, or sub-one counts use the continuous bar. If the value does not divide into whole blocks, use the continuous bar instead.\n\nThe fill is animated on the UI thread, so a value change costs one render and nothing per frame. Under the platform's reduce-motion setting it lands on the value rather than springing to it, and segments light without a fade. Motion, thresholds and segments never change the spoken value.\n\n`valueLabel` is spoken whether or not it is drawn, so it can replace a number with clearer words such as \u201cStrong\u201d. Pair it with `showValueLabel` to draw it too; drawing it does not create another accessibility stop. `accessibilityLabel` overrides the visible `label` as the spoken name. Without either one the platform has no honest name to announce, so always provide one. Value updates refresh the node when rendered but are not live-region announcements, and this read-only meter does not expose adjustable actions."
+  "notes": "`from` on a threshold is in the same units as `value`, not a percentage of the range — a threshold on a 0–8 GB meter is written in gigabytes. The highest finite one the value has reached wins, so the order you list them in does not matter. Below all of them, the `color` prop applies.\n\nValues outside the scale clamp to its ends; NaN reads at the floor and infinities at the corresponding end. Non-finite bounds use the documented 0 and 100 defaults; an inverted or empty scale collapses at its finite floor and reads as empty. This keeps layout, animation, and native accessibility values finite and ordered.\n\nAny reading above the floor lights at least one segment. Rounding down would leave the first quarter of a four-block meter dark, and “a little” looking like “none” is the reading a meter can least afford to get wrong.\n\nSegments are all or nothing; a partly-filled block is not drawn. Fractional counts round down, counts above 100 clamp to 100, and invalid, non-positive, or sub-one counts use the continuous bar. If the value does not divide into whole blocks, use the continuous bar instead.\n\nThe fill is animated on the UI thread, so a value change costs one render and nothing per frame. Under the platform's reduce-motion setting it lands on the value rather than springing to it, and segments light without a fade. Motion, thresholds and segments never change the spoken value.\n\n`valueLabel` is spoken whether or not it is drawn, so it can replace a number with clearer words such as “Strong”. Pair it with `showValueLabel` to draw it too; drawing it does not create another accessibility stop. `accessibilityLabel` overrides the visible `label` as the spoken name. Without either one the platform has no honest name to announce, so always provide one. Value updates refresh the node when rendered but are not live-region announcements, and this read-only meter does not expose adjustable actions.",
+  "previewVideo": {
+    "src": "/previews/meter.mp4",
+    "poster": "/previews/meter-poster.jpg",
+    "alt": "The Meter component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  }
 }

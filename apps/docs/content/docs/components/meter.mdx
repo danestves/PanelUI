@@ -3,6 +3,14 @@ title: Meter
 description: A measurement on a fixed scale, coloured by where it falls.
 ---
 
+<PreviewVideo
+  src="/previews/meter.mp4"
+  poster="/previews/meter-poster.jpg"
+  alt="The Meter component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 A measurement on a fixed scale: disk used, battery left, a test score, a password's strength.
 
 It is not a progress bar. A meter is a reading that sits where it sits and may go back down; progress moves towards an end that finishing is the point of. For work completing, use [Progress](/docs/components/progress).
@@ -68,6 +76,14 @@ A disk filling up gets worse as it rises, so the colours rise with it. The highe
 
 A battery gets worse as it drops. Same prop, written the other way up — which direction is bad is yours to say.
 
+<PreviewVideo
+  src="/previews/meter.mp4"
+  poster="/previews/meter-poster.jpg"
+  alt="Meter — Thresholds that fall."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Meter
   value={charge}
@@ -85,6 +101,14 @@ A battery gets worse as it drops. Same prop, written the other way up — which 
 
 Four blocks say “three out of four” where a bar says “about seventy percent”, and a password is not seventy percent strong. Pair `segments` with a `valueLabel` word rather than a number.
 
+<PreviewVideo
+  src="/previews/meter-counted-not-measured.mp4"
+  poster="/previews/meter-counted-not-measured-poster.jpg"
+  alt="Meter — Counted, not measured."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Meter
   value={strength}
@@ -99,6 +123,80 @@ Four blocks say “three out of four” where a bar says “about seventy percen
     { from: 3, color: 'success' },
   ]}
 />
+```
+
+### A segment per unit
+
+`segments` does not have to be a scale of its own. Set it to the number of things being counted and each block is one of them.
+
+Give the reading a `valueLabel` where the count is the point — three of five bars, not sixty percent. Ten of anything is enough for a proportion to mean something, so the second one keeps its percentage.
+
+<Preview
+  src="/previews/meter-a-segment-per-unit.jpg"
+  alt="Meter — A segment per unit."
+  width={1179}
+  height={366}
+/>
+
+```tsx
+<Meter
+  value={3}
+  maxValue={5}
+  segments={5}
+  label="Signal"
+  showValueLabel
+  valueLabel="3 of 5 bars"
+  color="info"
+/>
+
+<Meter
+  value={7}
+  maxValue={10}
+  segments={10}
+  label="Questions right"
+  showValueLabel
+  size="lg"
+  color="success"
+/>
+```
+
+### Colours
+
+`color` sets the fill, and the track behind it is the same colour held back — so a meter carries its own contrast on whatever surface it is laid on.
+
+This is for a reading whose meaning does not move with the value: a category, a brand, one series among several. Where the meaning does move with it, use `thresholds` and let the colour be read off the value.
+
+<Preview
+  src="/previews/meter-colours.jpg"
+  alt="Meter — Colours."
+  width={1179}
+  height={547}
+/>
+
+```tsx
+<Meter value={60} color="primary" />
+<Meter value={60} color="success" />
+<Meter value={60} color="warning" />
+<Meter value={60} color="destructive" />
+<Meter value={60} color="info" />
+<Meter value={60} color="muted" />
+```
+
+### Sizes
+
+Three track heights. `sm` for a meter riding a row of a list, `lg` where the reading is the thing on the screen.
+
+<Preview
+  src="/previews/meter-sizes.jpg"
+  alt="Meter — Sizes."
+  width={1179}
+  height={305}
+/>
+
+```tsx
+<Meter value={60} size="sm" accessibilityLabel="Small" />
+<Meter value={60} size="md" accessibilityLabel="Medium" />
+<Meter value={60} size="lg" accessibilityLabel="Large" />
 ```
 
 ### Without a caption

@@ -13,22 +13,50 @@
     {
       "title": "One value, filled in from either end",
       "description": "`onValueChange` fires on every change to either half, not on Done — Done closes the panel, it does not decide anything the caller has not already been told.\n\nThe halves can be filled in either order. A day picked first takes the top of the current hour until the time is touched; a time picked first means **today**, because a time is not a `Date` without a day and the day the reader is looking at is the only defensible guess. The alternative — emitting nothing until both halves have been touched — is a form that silently does nothing when you use it in the order it did not expect.",
-      "code": "const [when, setWhen] = useState<Date>();\n\n<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  placeholder=\"Pick a date and time\"\n/>"
+      "code": "const [when, setWhen] = useState<Date>();\n\n<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  placeholder=\"Pick a date and time\"\n/>",
+      "previewVideo": {
+        "src": "/previews/date-time-picker.mp4",
+        "poster": "/previews/date-time-picker-poster.jpg",
+        "alt": "DateTimePicker — One value, filled in from either end.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Where the panel goes",
       "description": "`popover` anchors it to the trigger and is the default. `bottom-sheet` is usually the better answer on a phone: a calendar and a scale stacked is a tall panel, and a sheet has the height to give it. `dialog` is for when the appointment *is* the decision on the screen. `inline` renders the panel bare, for composing into a Frame or a form.",
-      "code": "<DateTimePicker presentation=\"bottom-sheet\" />\n\n<DateTimePicker presentation=\"dialog\" />\n\n{/* Bare, inside something of your own. */}\n<Frame>\n  <Frame.Header><Frame.Title>Book a fitting</Frame.Title></Frame.Header>\n  <Frame.Panel>\n    <View className=\"p-3\">\n      <DateTimePicker presentation=\"inline\" value={when} onValueChange={setWhen} />\n    </View>\n  </Frame.Panel>\n</Frame>"
+      "code": "<DateTimePicker presentation=\"bottom-sheet\" />\n\n<DateTimePicker presentation=\"dialog\" />\n\n{/* Bare, inside something of your own. */}\n<Frame>\n  <Frame.Header><Frame.Title>Book a fitting</Frame.Title></Frame.Header>\n  <Frame.Panel>\n    <View className=\"p-3\">\n      <DateTimePicker presentation=\"inline\" value={when} onValueChange={setWhen} />\n    </View>\n  </Frame.Panel>\n</Frame>",
+      "previewVideo": {
+        "src": "/previews/date-time-picker-where-the-panel-goes.mp4",
+        "poster": "/previews/date-time-picker-where-the-panel-goes-poster.jpg",
+        "alt": "DateTimePicker — Where the panel goes.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Which face the time is picked on",
       "description": "`ruler` by default rather than the wheel. Under a month grid the panel is already tall, and the wheel is five rows of it; the ruler is one readout over a scale, reads at arm's length, and is the one face that fits under a calendar without the whole thing needing to scroll.\n\nWhere the exact minute matters more than the height, the other two faces are a prop away and produce the same value.",
-      "code": "{/* The default. */}\n<DateTimePicker layout=\"ruler\" />\n\n{/* Any minute in the day, two flicks away. */}\n<DateTimePicker layout=\"wheel\" minuteStep={5} hourCycle={24} />\n\n{/* A face beside a list of slots. */}\n<DateTimePicker layout=\"clock\" minuteStep={30} />"
+      "code": "{/* The default. */}\n<DateTimePicker layout=\"ruler\" />\n\n{/* Any minute in the day, two flicks away. */}\n<DateTimePicker layout=\"wheel\" minuteStep={5} hourCycle={24} />\n\n{/* A face beside a list of slots. */}\n<DateTimePicker layout=\"clock\" minuteStep={30} />",
+      "previewVideo": {
+        "src": "/previews/date-time-picker-which-face-the-time-is-picked-on.mp4",
+        "poster": "/previews/date-time-picker-which-face-the-time-is-picked-on-poster.jpg",
+        "alt": "DateTimePicker — Which face the time is picked on.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Bounding it on both axes",
       "description": "`minDate` and `maxDate` bound the calendar; `minTime` and `maxTime` bound the time of day, and `minuteStep` decides how finely it can be landed on. A picker that offers a slot nobody can be given is a picker that has to reject it afterwards, which is the same rejection arriving later and less usefully.\n\nThe bounds are independent, so this reads as \"any day in the next three weeks, between nine and half past five\" — which is what opening hours are.",
-      "code": "<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  minDate={today}\n  maxDate={threeWeeksOut}\n  minTime={{ hour: 9, minute: 0 }}\n  maxTime={{ hour: 17, minute: 30 }}\n  minuteStep={30}\n/>"
+      "code": "<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  minDate={today}\n  maxDate={threeWeeksOut}\n  minTime={{ hour: 9, minute: 0 }}\n  maxTime={{ hour: 17, minute: 30 }}\n  minuteStep={30}\n/>",
+      "previewVideo": {
+        "src": "/previews/date-time-picker-bounding-it-on-both-axes.mp4",
+        "poster": "/previews/date-time-picker-bounding-it-on-both-axes-poster.jpg",
+        "alt": "DateTimePicker — Bounding it on both axes.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "A trigger of your own",
@@ -41,5 +69,12 @@
       "code": "<DateTimePicker\n  value={when}\n  onValueChange={setWhen}\n  timeLabel=\"Arrives at\"\n/>"
     }
   ],
-  "notes": "### It does not close on the date\n\n[DatePicker](/docs/components/date-picker) closes as soon as a single day is tapped, because at that point there is nothing left to say. Here there is: the day is half the value, and closing on it would hide the other half at the moment it became relevant.\n\nSo the panel stays until Done — in every presentation, including the popover, which is the one place `DatePicker` has no Done button at all. Tapping outside still dismisses it, but that is how a popover is *abandoned*, and something has to say when both halves are settled.\n\n### Disabled applies to the whole panel\n\n`disabled` prevents changes from both the calendar and the time control, including `presentation=\"inline\"` and a controlled panel that remains open while disabled. It does not merely disable the default trigger.\n\n### The panel is a fixed width\n\nThat is what lets the two halves line up. A month grid and a time scale that each measured themselves would be two boxes of slightly different widths stacked on each other, and the seam shows at any size. The hairline between them is a hairline rather than a gap for the same reason: space alone reads as two controls that happen to be near each other.\n\n### The value is a `Date`, the time is not\n\nThe component's value is one `Date` carrying both halves, because that is what a caller stores and sends. Inside, and in `minTime` / `maxTime`, a time of day is `{ hour, minute }` on a 24-hour clock — a `Date` cannot hold a time without also holding a day, and the two conversions that forces on every caller are where the daylight-saving bugs live. `hourCycle` decides whether a meridiem is shown; it does not change what is stored.\n\n### When two fields are still the right answer\n\nIf the day and the time are genuinely separate decisions — a recurring event's day-of-week and its time, a filter with an optional time — keep them apart. This component is for the case where one moment is being chosen and half of it is not an answer.\n\n### The time is written once, not twice\n\nThe panel takes the ruler's own readout off (`readout=\"none\"` on the TimePicker inside it) and states the time in the row above the scale instead. A month caption is 16pt and a date is 14pt; the ruler's readout on its own is 36pt, and left in place it would be the largest thing in the panel standing for the smaller half of the value. The row is the same fact at a size that sits under the date rather than over it."
+  "notes": "### It does not close on the date\n\n[DatePicker](/docs/components/date-picker) closes as soon as a single day is tapped, because at that point there is nothing left to say. Here there is: the day is half the value, and closing on it would hide the other half at the moment it became relevant.\n\nSo the panel stays until Done — in every presentation, including the popover, which is the one place `DatePicker` has no Done button at all. Tapping outside still dismisses it, but that is how a popover is *abandoned*, and something has to say when both halves are settled.\n\n### Disabled applies to the whole panel\n\n`disabled` prevents changes from both the calendar and the time control, including `presentation=\"inline\"` and a controlled panel that remains open while disabled. It does not merely disable the default trigger.\n\n### The panel is a fixed width\n\nThat is what lets the two halves line up. A month grid and a time scale that each measured themselves would be two boxes of slightly different widths stacked on each other, and the seam shows at any size. The hairline between them is a hairline rather than a gap for the same reason: space alone reads as two controls that happen to be near each other.\n\n### The value is a `Date`, the time is not\n\nThe component's value is one `Date` carrying both halves, because that is what a caller stores and sends. Inside, and in `minTime` / `maxTime`, a time of day is `{ hour, minute }` on a 24-hour clock — a `Date` cannot hold a time without also holding a day, and the two conversions that forces on every caller are where the daylight-saving bugs live. `hourCycle` decides whether a meridiem is shown; it does not change what is stored.\n\n### When two fields are still the right answer\n\nIf the day and the time are genuinely separate decisions — a recurring event's day-of-week and its time, a filter with an optional time — keep them apart. This component is for the case where one moment is being chosen and half of it is not an answer.\n\n### The time is written once, not twice\n\nThe panel takes the ruler's own readout off (`readout=\"none\"` on the TimePicker inside it) and states the time in the row above the scale instead. A month caption is 16pt and a date is 14pt; the ruler's readout on its own is 36pt, and left in place it would be the largest thing in the panel standing for the smaller half of the value. The row is the same fact at a size that sits under the date rather than over it.",
+  "previewVideo": {
+    "src": "/previews/date-time-picker.mp4",
+    "poster": "/previews/date-time-picker-poster.jpg",
+    "alt": "The DateTimePicker component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  }
 }

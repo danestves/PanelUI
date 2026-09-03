@@ -3,6 +3,14 @@ title: SearchBar
 description: Search field with a clear button, a Cancel button and a panel of results.
 ---
 
+<PreviewVideo
+  src="/previews/search-bar.mp4"
+  poster="/previews/search-bar-poster.jpg"
+  alt="The SearchBar component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 A text field for querying a list, with the two controls a search needs and an ordinary field does not: a clear button inside the field, and a Cancel button beside it.
 
 Give it children and it draws the results too — a panel welded to the field, opening upward by default so the list does not land under the keyboard. With no children it is the field alone, and you render the results yourself.
@@ -121,6 +129,14 @@ Three of them, and they are not interchangeable: nothing has been typed, the sea
 
 The field is controlled, so `onChangeText` fires on every keystroke and the list narrows as fast as the typing does. Use this shape when the data is already in memory and you would rather show it on the page than in a panel.
 
+<PreviewVideo
+  src="/previews/search-bar-filtering-a-list.mp4"
+  poster="/previews/search-bar-filtering-a-list-poster.jpg"
+  alt="SearchBar — Filtering a list."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const [query, setQuery] = useState('');
 const results = PRODUCTS.filter((item) =>
@@ -145,6 +161,14 @@ return (
 
 `cancel="focus"` slides a Cancel button in while the field is being edited and folds it away again once it is not, so the row is only as wide as the search when nobody is searching. Pressing it empties the query, drops focus and calls `onCancel`.
 
+<PreviewVideo
+  src="/previews/search-bar-cancel-on-focus.mp4"
+  poster="/previews/search-bar-cancel-on-focus-poster.jpg"
+  alt="SearchBar — Cancel on focus."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <SearchBar
   variant="filled"
@@ -161,6 +185,14 @@ return (
 
 `debounce` holds `onDebouncedChange` until typing pauses, so a network search runs once per pause instead of once per letter. `onChangeText` still fires on every keystroke — a controlled field that lags its own input is unusable. Pressing the return key flushes the pause immediately.
 
+<PreviewVideo
+  src="/previews/search-bar-a-query-that-costs-something.mp4"
+  poster="/previews/search-bar-a-query-that-costs-something-poster.jpg"
+  alt="SearchBar — A query that costs something."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <SearchBar
   placeholder="Search the catalogue"
@@ -176,6 +208,13 @@ return (
 
 `shape="pill"` is the shape a search field takes when it is chrome — above a list, in a header. `rounded` is the one it takes inside a form beside other fields.
 
+<Preview
+  src="/previews/search-bar-sizes-and-shapes.jpg"
+  alt="SearchBar — Sizes and shapes."
+  width={1179}
+  height={854}
+/>
+
 ```tsx
 <View className="w-full gap-5">
   <SearchBar size="sm" placeholder="Small" />
@@ -190,6 +229,14 @@ return (
 ### Above the keyboard
 
 The field lifts clear of the keyboard on focus and the results open upward out of it. Adding a company from a row leaves the keyboard up, so the next search starts where the last one ended.
+
+<PreviewVideo
+  src="/previews/search-bar.mp4"
+  poster="/previews/search-bar-poster.jpg"
+  alt="SearchBar — Above the keyboard."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <View className="flex-1 justify-end px-5">
@@ -237,6 +284,14 @@ Reach for this shape when adding is the only thing a result can do: a row carryi
 
 `panelMaxHeight` is here because every company matches an empty query. Left at the default the panel opens at its full height and covers the page it is searching.
 
+<PreviewVideo
+  src="/previews/search-bar-tap-to-add.mp4"
+  poster="/previews/search-bar-tap-to-add-poster.jpg"
+  alt="SearchBar — Tap to add."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <SearchBar
   avoidKeyboard
@@ -267,6 +322,14 @@ Reach for this shape when adding is the only thing a result can do: a row carryi
 Picks become chips inside the field, before the caret, so the query and what it has produced are one control rather than a control and a list somewhere above it.
 
 They scroll rather than wrap, because the field is one line tall and a row of chips allowed to grow it would move the caret every time something was picked. `onRemoveLastToken` fires on backspace in an empty field.
+
+<PreviewVideo
+  src="/previews/search-bar-names-in-the-field.mp4"
+  poster="/previews/search-bar-names-in-the-field-poster.jpg"
+  alt="SearchBar — Names in the field."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <SearchBar

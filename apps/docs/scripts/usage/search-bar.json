@@ -36,40 +36,95 @@
     {
       "title": "Filtering a list",
       "description": "The field is controlled, so `onChangeText` fires on every keystroke and the list narrows as fast as the typing does. Use this shape when the data is already in memory and you would rather show it on the page than in a panel.",
-      "code": "const [query, setQuery] = useState('');\nconst results = PRODUCTS.filter((item) =>\n  item.toLowerCase().includes(query.trim().toLowerCase())\n);\n\nreturn (\n  <View className=\"w-full gap-4\">\n    <SearchBar\n      placeholder=\"Search products\"\n      value={query}\n      onChangeText={setQuery}\n    />\n    {results.map((item) => (\n      <Text key={item} size=\"sm\">{item}</Text>\n    ))}\n  </View>\n);"
+      "code": "const [query, setQuery] = useState('');\nconst results = PRODUCTS.filter((item) =>\n  item.toLowerCase().includes(query.trim().toLowerCase())\n);\n\nreturn (\n  <View className=\"w-full gap-4\">\n    <SearchBar\n      placeholder=\"Search products\"\n      value={query}\n      onChangeText={setQuery}\n    />\n    {results.map((item) => (\n      <Text key={item} size=\"sm\">{item}</Text>\n    ))}\n  </View>\n);",
+      "previewVideo": {
+        "src": "/previews/search-bar-filtering-a-list.mp4",
+        "poster": "/previews/search-bar-filtering-a-list-poster.jpg",
+        "alt": "SearchBar — Filtering a list.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Cancel on focus",
       "description": "`cancel=\"focus\"` slides a Cancel button in while the field is being edited and folds it away again once it is not, so the row is only as wide as the search when nobody is searching. Pressing it empties the query, drops focus and calls `onCancel`.",
-      "code": "<SearchBar\n  variant=\"filled\"\n  shape=\"pill\"\n  cancel=\"focus\"\n  placeholder=\"Search messages\"\n  value={query}\n  onChangeText={setQuery}\n  onCancel={() => setSearching(false)}\n/>"
+      "code": "<SearchBar\n  variant=\"filled\"\n  shape=\"pill\"\n  cancel=\"focus\"\n  placeholder=\"Search messages\"\n  value={query}\n  onChangeText={setQuery}\n  onCancel={() => setSearching(false)}\n/>",
+      "previewVideo": {
+        "src": "/previews/search-bar-cancel-on-focus.mp4",
+        "poster": "/previews/search-bar-cancel-on-focus-poster.jpg",
+        "alt": "SearchBar — Cancel on focus.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "A query that costs something",
       "description": "`debounce` holds `onDebouncedChange` until typing pauses, so a network search runs once per pause instead of once per letter. `onChangeText` still fires on every keystroke — a controlled field that lags its own input is unusable. Pressing the return key flushes the pause immediately.",
-      "code": "<SearchBar\n  placeholder=\"Search the catalogue\"\n  debounce={400}\n  loading={pending}\n  value={query}\n  onChangeText={setQuery}\n  onDebouncedChange={(next) => search(next)}\n/>"
+      "code": "<SearchBar\n  placeholder=\"Search the catalogue\"\n  debounce={400}\n  loading={pending}\n  value={query}\n  onChangeText={setQuery}\n  onDebouncedChange={(next) => search(next)}\n/>",
+      "previewVideo": {
+        "src": "/previews/search-bar-a-query-that-costs-something.mp4",
+        "poster": "/previews/search-bar-a-query-that-costs-something-poster.jpg",
+        "alt": "SearchBar — A query that costs something.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Sizes and shapes",
       "description": "`shape=\"pill\"` is the shape a search field takes when it is chrome — above a list, in a header. `rounded` is the one it takes inside a form beside other fields.",
-      "code": "<View className=\"w-full gap-5\">\n  <SearchBar size=\"sm\" placeholder=\"Small\" />\n  <SearchBar size=\"md\" variant=\"filled\" placeholder=\"Medium, filled\" />\n  <SearchBar size=\"lg\" shape=\"pill\" placeholder=\"Large, pill\" />\n  <SearchBar placeholder=\"Disabled\" defaultValue=\"Last query\" disabled />\n</View>"
+      "code": "<View className=\"w-full gap-5\">\n  <SearchBar size=\"sm\" placeholder=\"Small\" />\n  <SearchBar size=\"md\" variant=\"filled\" placeholder=\"Medium, filled\" />\n  <SearchBar size=\"lg\" shape=\"pill\" placeholder=\"Large, pill\" />\n  <SearchBar placeholder=\"Disabled\" defaultValue=\"Last query\" disabled />\n</View>",
+      "preview": {
+        "src": "/previews/search-bar-sizes-and-shapes.jpg",
+        "alt": "SearchBar — Sizes and shapes.",
+        "width": 1179,
+        "height": 854
+      }
     }
   ],
   "versions": [
     {
       "title": "Above the keyboard",
       "description": "The field lifts clear of the keyboard on focus and the results open upward out of it. Adding a company from a row leaves the keyboard up, so the next search starts where the last one ended.",
-      "code": "<View className=\"flex-1 justify-end px-5\">\n  <ScrollView>{/* what has been picked so far */}</ScrollView>\n\n  <SearchBar\n    avoidKeyboard\n    variant=\"filled\"\n    placeholder=\"Search or enter company\"\n    debounce={400}\n    loading={pending}\n    value={query}\n    onChangeText={setQuery}\n    onDebouncedChange={setRan}\n  >\n    <SearchBar.Section label=\"Results\">\n      {results.map((company) => (\n        <SearchBar.Item\n          key={company.name}\n          leading={<Avatar size=\"sm\" fallback={company.name[0]} />}\n          trailing={\n            <SearchBar.Action\n              accessibilityLabel={`Add ${company.name}`}\n              onPress={() => add(company.name)}\n            >\n              <PlusIcon size={18} />\n            </SearchBar.Action>\n          }\n          selected={picked.includes(company.name)}\n          onPress={() => add(company.name)}\n        >\n          {company.name}\n        </SearchBar.Item>\n      ))}\n    </SearchBar.Section>\n  </SearchBar>\n</View>"
+      "code": "<View className=\"flex-1 justify-end px-5\">\n  <ScrollView>{/* what has been picked so far */}</ScrollView>\n\n  <SearchBar\n    avoidKeyboard\n    variant=\"filled\"\n    placeholder=\"Search or enter company\"\n    debounce={400}\n    loading={pending}\n    value={query}\n    onChangeText={setQuery}\n    onDebouncedChange={setRan}\n  >\n    <SearchBar.Section label=\"Results\">\n      {results.map((company) => (\n        <SearchBar.Item\n          key={company.name}\n          leading={<Avatar size=\"sm\" fallback={company.name[0]} />}\n          trailing={\n            <SearchBar.Action\n              accessibilityLabel={`Add ${company.name}`}\n              onPress={() => add(company.name)}\n            >\n              <PlusIcon size={18} />\n            </SearchBar.Action>\n          }\n          selected={picked.includes(company.name)}\n          onPress={() => add(company.name)}\n        >\n          {company.name}\n        </SearchBar.Item>\n      ))}\n    </SearchBar.Section>\n  </SearchBar>\n</View>",
+      "previewVideo": {
+        "src": "/previews/search-bar.mp4",
+        "poster": "/previews/search-bar-poster.jpg",
+        "alt": "SearchBar — Above the keyboard.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Tap to add",
       "description": "No button on the row. The row is the button, and a tick replaces it once the result is in the stack.\n\nReach for this shape when adding is the only thing a result can do: a row carrying one button gives one action two targets, and the smaller of the two is the one people miss.\n\n`panelMaxHeight` is here because every company matches an empty query. Left at the default the panel opens at its full height and covers the page it is searching.",
-      "code": "<SearchBar\n  avoidKeyboard\n  variant=\"filled\"\n  placeholder=\"Search or enter company\"\n  panelMaxHeight={248}\n  value={query}\n  onChangeText={setQuery}\n>\n  <SearchBar.Section label=\"Results\">\n    {results.map((company) => (\n      <SearchBar.Item\n        key={company.name}\n        leading={<Avatar size=\"sm\" fallback={company.name[0]} />}\n        trailing={picked.includes(company.name) ? <CheckIcon size={18} /> : undefined}\n        selected={picked.includes(company.name)}\n        onPress={() => toggle(company.name)}\n      >\n        {company.name}\n      </SearchBar.Item>\n    ))}\n  </SearchBar.Section>\n</SearchBar>"
+      "code": "<SearchBar\n  avoidKeyboard\n  variant=\"filled\"\n  placeholder=\"Search or enter company\"\n  panelMaxHeight={248}\n  value={query}\n  onChangeText={setQuery}\n>\n  <SearchBar.Section label=\"Results\">\n    {results.map((company) => (\n      <SearchBar.Item\n        key={company.name}\n        leading={<Avatar size=\"sm\" fallback={company.name[0]} />}\n        trailing={picked.includes(company.name) ? <CheckIcon size={18} /> : undefined}\n        selected={picked.includes(company.name)}\n        onPress={() => toggle(company.name)}\n      >\n        {company.name}\n      </SearchBar.Item>\n    ))}\n  </SearchBar.Section>\n</SearchBar>",
+      "previewVideo": {
+        "src": "/previews/search-bar-tap-to-add.mp4",
+        "poster": "/previews/search-bar-tap-to-add-poster.jpg",
+        "alt": "SearchBar — Tap to add.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Names in the field",
       "description": "Picks become chips inside the field, before the caret, so the query and what it has produced are one control rather than a control and a list somewhere above it.\n\nThey scroll rather than wrap, because the field is one line tall and a row of chips allowed to grow it would move the caret every time something was picked. `onRemoveLastToken` fires on backspace in an empty field.",
-      "code": "<SearchBar\n  avoidKeyboard\n  variant=\"filled\"\n  placeholder={picked.length ? 'Add another' : 'Search or enter company'}\n  value={query}\n  onChangeText={setQuery}\n  onRemoveLastToken={() => setPicked((current) => current.slice(0, -1))}\n  tokens={picked.map((name) => (\n    <SearchBar.Token\n      key={name}\n      leading={<Avatar size=\"sm\" className=\"h-5 w-5\" fallback={name[0]} />}\n      onRemove={() => remove(name)}\n    >\n      {name}\n    </SearchBar.Token>\n  ))}\n>\n  <SearchBar.Section label=\"Results\">\n    {results.map((company) => (\n      <SearchBar.Item key={company.name} onPress={() => add(company.name)}>\n        {company.name}\n      </SearchBar.Item>\n    ))}\n  </SearchBar.Section>\n</SearchBar>"
+      "code": "<SearchBar\n  avoidKeyboard\n  variant=\"filled\"\n  placeholder={picked.length ? 'Add another' : 'Search or enter company'}\n  value={query}\n  onChangeText={setQuery}\n  onRemoveLastToken={() => setPicked((current) => current.slice(0, -1))}\n  tokens={picked.map((name) => (\n    <SearchBar.Token\n      key={name}\n      leading={<Avatar size=\"sm\" className=\"h-5 w-5\" fallback={name[0]} />}\n      onRemove={() => remove(name)}\n    >\n      {name}\n    </SearchBar.Token>\n  ))}\n>\n  <SearchBar.Section label=\"Results\">\n    {results.map((company) => (\n      <SearchBar.Item key={company.name} onPress={() => add(company.name)}>\n        {company.name}\n      </SearchBar.Item>\n    ))}\n  </SearchBar.Section>\n</SearchBar>",
+      "previewVideo": {
+        "src": "/previews/search-bar-names-in-the-field.mp4",
+        "poster": "/previews/search-bar-names-in-the-field-poster.jpg",
+        "alt": "SearchBar — Names in the field.",
+        "width": 720,
+        "height": 1560
+      }
     }
   ],
-  "notes": "### Where the panel opens, and why\n\nThe panel is welded to one edge of the field: `panelPlacement=\"top\"`, the default, puts it above, and `\"bottom\"` below. Above is the default because the space under a focused field belongs to the keyboard, and it also puts the first result nearest the caret.\n\nIt is positioned absolutely rather than laid out in the flow, so opening it never moves the page underneath — a list that pushes the field it belongs to is a field that walks away from the finger typing into it. Its height is capped by the room it actually has between the field and the edge of the screen; pass `panelMaxHeight` to cap it lower.\n\n### Touches inside the panel\n\nNothing pressed inside the panel closes the search. The panel keeps the keyboard through every tap, including the ones that land on padding, on the gap between two rows, on a section heading, or on `SearchBar.Status` — a search that ended because somebody tapped the word \"Searching …\" is a search that ended for no reason.\n\nA press also holds the field's focus open for a moment afterwards. That covers the other way a touch can end a search: a control inside a row takes focus with the press on Android, and the field's blur closes the panel that control is standing in before the press has finished being served.\n\nThat second half only works for controls that go through the component. Use `SearchBar.Action` for a button in a row's `trailing` slot rather than a plain `Pressable` — the row cannot hold focus on behalf of something nested inside it, because the nested control takes the touch and the row never sees it.\n\n### What has already been picked\n\n`tokens` puts the choices made so far inside the field, before the caret, so the query and what it has produced are one control. `SearchBar.Token` is the chip; `onRemove` gives it a ✕.\n\nThey scroll rather than wrap, and take at most 60% of the field's width. The field is one line tall, and a row of chips allowed to grow it would move the caret every time something was picked.\n\n`onRemoveLastToken` fires on backspace in an empty field — the gesture a token field answers everywhere else. It only fires when the field is empty: while there is a query, backspace is editing it.\n\n`panel=\"focus\"` shows it while the field is being typed into, `\"always\"` for a screen that is nothing but the search, and `\"never\"` ignores the children entirely.\n\n### Getting clear of the keyboard\n\n`avoidKeyboard` moves the field, the Cancel button and the panel together, and only while this field is the one being edited. Install `react-native-keyboard-controller` for it to behave on Android — see [useKeyboardAvoidance](/docs/hooks/use-keyboard-avoidance).\n\nDo not toggle it at runtime. It changes which component wraps the row, so the field would remount and lose focus mid-search.\n\n### The rest\n\nWhen `disabled`, the field, clear button, Cancel button, panel and submit boundary are all inert. Cancel remains visible when `cancel=\"always\"`, but leaves the focus order and cannot clear, blur, or call `onCancel`.\n\nThe clear button is drawn by the component rather than left to the platform's `clearButtonMode`, which exists on iOS only, cannot be labelled for a screen reader and cannot be swapped for a spinner. Clearing keeps the keyboard up, because emptying a query is usually the start of the next one; Cancel is the control that ends the search.\n\nThe glyph is 24 points and its touch box is 48, made up with slop rather than with size — a 48-point circle inside a 40-point field would either overflow it or force every search bar in the app to be as tall as the largest one.\n\n`loading` replaces the clear button rather than joining it, since the two would otherwise collide at exactly the moment a query is both non-empty and running.\n\nFor a search with a label, a description and an error line, use `Field` around an `Input`. SearchBar drops that furniture on purpose: Cancel sits beside the field, and a label stacked above the field would leave it centred against the whole stack.\n\nFor a field that picks one value out of a list rather than running a search, use [Combobox](/docs/components/combobox).\n\nSubmitting cancels any pending debounce timer before immediately delivering the current query, so `onDebouncedChange` runs once for that submission rather than once now and again when the old pause expires. Non-positive or non-finite debounce values use the immediate path and never allocate a timer."
+  "notes": "### Where the panel opens, and why\n\nThe panel is welded to one edge of the field: `panelPlacement=\"top\"`, the default, puts it above, and `\"bottom\"` below. Above is the default because the space under a focused field belongs to the keyboard, and it also puts the first result nearest the caret.\n\nIt is positioned absolutely rather than laid out in the flow, so opening it never moves the page underneath — a list that pushes the field it belongs to is a field that walks away from the finger typing into it. Its height is capped by the room it actually has between the field and the edge of the screen; pass `panelMaxHeight` to cap it lower.\n\n### Touches inside the panel\n\nNothing pressed inside the panel closes the search. The panel keeps the keyboard through every tap, including the ones that land on padding, on the gap between two rows, on a section heading, or on `SearchBar.Status` — a search that ended because somebody tapped the word \"Searching …\" is a search that ended for no reason.\n\nA press also holds the field's focus open for a moment afterwards. That covers the other way a touch can end a search: a control inside a row takes focus with the press on Android, and the field's blur closes the panel that control is standing in before the press has finished being served.\n\nThat second half only works for controls that go through the component. Use `SearchBar.Action` for a button in a row's `trailing` slot rather than a plain `Pressable` — the row cannot hold focus on behalf of something nested inside it, because the nested control takes the touch and the row never sees it.\n\n### What has already been picked\n\n`tokens` puts the choices made so far inside the field, before the caret, so the query and what it has produced are one control. `SearchBar.Token` is the chip; `onRemove` gives it a ✕.\n\nThey scroll rather than wrap, and take at most 60% of the field's width. The field is one line tall, and a row of chips allowed to grow it would move the caret every time something was picked.\n\n`onRemoveLastToken` fires on backspace in an empty field — the gesture a token field answers everywhere else. It only fires when the field is empty: while there is a query, backspace is editing it.\n\n`panel=\"focus\"` shows it while the field is being typed into, `\"always\"` for a screen that is nothing but the search, and `\"never\"` ignores the children entirely.\n\n### Getting clear of the keyboard\n\n`avoidKeyboard` moves the field, the Cancel button and the panel together, and only while this field is the one being edited. Install `react-native-keyboard-controller` for it to behave on Android — see [useKeyboardAvoidance](/docs/hooks/use-keyboard-avoidance).\n\nDo not toggle it at runtime. It changes which component wraps the row, so the field would remount and lose focus mid-search.\n\n### The rest\n\nWhen `disabled`, the field, clear button, Cancel button, panel and submit boundary are all inert. Cancel remains visible when `cancel=\"always\"`, but leaves the focus order and cannot clear, blur, or call `onCancel`.\n\nThe clear button is drawn by the component rather than left to the platform's `clearButtonMode`, which exists on iOS only, cannot be labelled for a screen reader and cannot be swapped for a spinner. Clearing keeps the keyboard up, because emptying a query is usually the start of the next one; Cancel is the control that ends the search.\n\nThe glyph is 24 points and its touch box is 48, made up with slop rather than with size — a 48-point circle inside a 40-point field would either overflow it or force every search bar in the app to be as tall as the largest one.\n\n`loading` replaces the clear button rather than joining it, since the two would otherwise collide at exactly the moment a query is both non-empty and running.\n\nFor a search with a label, a description and an error line, use `Field` around an `Input`. SearchBar drops that furniture on purpose: Cancel sits beside the field, and a label stacked above the field would leave it centred against the whole stack.\n\nFor a field that picks one value out of a list rather than running a search, use [Combobox](/docs/components/combobox).\n\nSubmitting cancels any pending debounce timer before immediately delivering the current query, so `onDebouncedChange` runs once for that submission rather than once now and again when the old pause expires. Non-positive or non-finite debounce values use the immediate path and never allocate a timer.",
+  "previewVideo": {
+    "src": "/previews/search-bar.mp4",
+    "poster": "/previews/search-bar-poster.jpg",
+    "alt": "The SearchBar component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  }
 }

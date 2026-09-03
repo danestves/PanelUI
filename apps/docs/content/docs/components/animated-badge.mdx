@@ -4,6 +4,14 @@ description: Status pill whose icon and label roll over when the status changes.
 status: new
 ---
 
+<PreviewVideo
+  src="/previews/animated-badge.mp4"
+  poster="/previews/animated-badge-poster.jpg"
+  alt="The AnimatedBadge component, running in the example app."
+  width={720}
+  height={1560}
+/>
+
 A status pill whose icon and label roll over when the status changes.
 
 A badge that swaps its word between one frame and the next is a badge people miss. The status is the smallest thing on the screen and usually not the thing being looked at, so a change with no movement in it registers as having always said that.
@@ -58,6 +66,14 @@ return (
 
 Queued, building, live. Each step rolls into the last, and the pill grows to the longest word on a spring rather than snapping to it.
 
+<PreviewVideo
+  src="/previews/animated-badge-a-run-of-statuses.mp4"
+  poster="/previews/animated-badge-a-run-of-statuses-poster.jpg"
+  alt="AnimatedBadge — A run of statuses."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 const STEPS = [
   { status: 'neutral', label: 'Queued' },
@@ -69,9 +85,63 @@ const STEPS = [
 <AnimatedBadge status={STEPS[index].status}>{STEPS[index].label}</AnimatedBadge>
 ```
 
+### Every status
+
+The six statuses side by side, each walking a run of its own.
+
+One timer, and one badge per tick. Six pills springing to a new width on the same frame reflow a wrapping row under itself, and the badges on the second line cross the ones on the first on their way to a new place.
+
+<PreviewVideo
+  src="/previews/animated-badge-every-status.mp4"
+  poster="/previews/animated-badge-every-status-poster.jpg"
+  alt="AnimatedBadge — Every status."
+  width={720}
+  height={1560}
+/>
+
+```tsx
+const RUNS = [
+  [{ status: 'neutral', label: 'Idle' }, { status: 'loading', label: 'Queued' }],
+  [{ status: 'info', label: 'Reviewing' }, { status: 'success', label: 'Approved' }],
+  [{ status: 'warning', label: 'Slow' }, { status: 'danger', label: 'Timed out' }],
+  // …one run per status
+];
+
+const [steps, setSteps] = useState(() => RUNS.map(() => 0));
+
+useEffect(() => {
+  let cursor = 0;
+  const id = setInterval(() => {
+    setSteps((current) =>
+      current.map((step, index) => (index === cursor ? step + 1 : step))
+    );
+    cursor = (cursor + 1) % RUNS.length;
+  }, 900);
+  return () => clearInterval(id);
+}, []);
+
+<View className="flex-row flex-wrap items-center justify-center gap-2">
+  {RUNS.map((run, index) => {
+    const step = run[steps[index] % run.length];
+    return (
+      <AnimatedBadge key={index} status={step.status}>
+        {step.label}
+      </AnimatedBadge>
+    );
+  })}
+</View>
+```
+
 ### Sizes
 
 `sm` for a badge riding a row of a list, `md` for one standing on its own.
+
+<Preview
+  src="/previews/animated-badge-sizes.jpg"
+  alt="AnimatedBadge — Sizes."
+  width={1179}
+  height={283}
+/>
 
 ```tsx
 <AnimatedBadge size="sm" status="success">Passed</AnimatedBadge>
@@ -81,6 +151,13 @@ const STEPS = [
 ### Your own glyph
 
 `icon` replaces the status's glyph and still rolls with it. `showIcon={false}` drops it, for a badge that is only a word.
+
+<Preview
+  src="/previews/animated-badge-your-own-glyph.jpg"
+  alt="AnimatedBadge — Your own glyph."
+  width={1179}
+  height={299}
+/>
 
 ```tsx
 <AnimatedBadge status="info" icon={<SparklesIcon size={14} />}>
@@ -111,6 +188,14 @@ Badges set in a line of prose, carrying the figures the sentence is about. A cou
 Pass `animateLayout={false}` for a badge in text. The words around it are placed by the text engine and simply appear where they now belong, so a badge that animates its position slides across a line that has already finished moving.
 
 Build the line out of words rather than out of a string. A `View` nested inside a `Text` is laid out inconsistently across platforms — on Android it does not join the line at all — so put every word in its own `Text`, make the badges its siblings, and let a wrapping row break between them.
+
+<PreviewVideo
+  src="/previews/animated-badge.mp4"
+  poster="/previews/animated-badge-poster.jpg"
+  alt="AnimatedBadge — A sentence with badges in it."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <View className="flex-row flex-wrap items-center gap-x-1.5 gap-y-2">
@@ -148,6 +233,14 @@ The same shape as a written report, with every figure carried by a badge. Load a
 The badge is keyed on what it says, so only the figures that actually changed animate.
 
 Punctuation goes in an ungapped row with the badge it follows. Left as a sibling it is one more item in a spaced row, and the full stop drifts a word away from the figure it belongs to.
+
+<PreviewVideo
+  src="/previews/animated-badge-a-summary-that-rewrites-itself.mp4"
+  poster="/previews/animated-badge-a-summary-that-rewrites-itself-poster.jpg"
+  alt="AnimatedBadge — A summary that rewrites itself."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Card>
