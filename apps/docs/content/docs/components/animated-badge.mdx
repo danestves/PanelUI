@@ -17,7 +17,7 @@ For a label that does not change — a count, a tag, a plain status — use [Bad
 AnimatedBadge ships with the library — no separate install.
 
 ```tsx
-import { AnimatedBadge, Button, Item, SparklesIcon } from 'panelui-native';
+import { AnimatedBadge, Avatar, Button, Card, CalendarIcon, DownloadIcon, Item, ListChecksIcon, ReceiptIcon, RepeatIcon, SparklesIcon } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -100,6 +100,67 @@ const STEPS = [
 <AnimatedBadge status={status} contentKey={attempt}>
   Retrying
 </AnimatedBadge>
+```
+
+## Versions
+
+### A sentence with badges in it
+
+Badges set in a line of prose, carrying the figures the sentence is about. A count that changes turns over where it stands, so the reader sees which number moved instead of being handed a rewritten paragraph.
+
+Build the line out of words rather than out of a string. A `View` nested inside a `Text` is laid out inconsistently across platforms — on Android it does not join the line at all — so put every word in its own `Text`, make the badges its siblings, and let a wrapping row break between them.
+
+```tsx
+<View className="flex-row flex-wrap items-center gap-x-1.5 gap-y-2">
+  {'Good morning,'.split(' ').map((word) => (
+    <Text key={word} size="xl" muted>{word}</Text>
+  ))}
+  <Avatar size="sm" className="h-6 w-6" source={{ uri: photo }} fallback="AK" />
+  <Text size="xl" weight="semibold">Alexey.</Text>
+  <Text size="xl" muted>You</Text>
+  <Text size="xl" muted>have</Text>
+
+  <AnimatedBadge size="sm" status="info" icon={<CalendarIcon size={12} />}>
+    {`${day.meetings} meetings`}
+  </AnimatedBadge>
+  <Text size="xl" muted>and</Text>
+  <AnimatedBadge size="sm" status="success" icon={<ListChecksIcon size={12} />}>
+    {`${day.tasks} tasks`}
+  </AnimatedBadge>
+  <Text size="xl" muted>today.</Text>
+</View>
+```
+
+### A summary that rewrites itself
+
+The same shape as a written report, with every figure carried by a badge. Load a different period and each number rolls in place while the words around it stay put.
+
+The badge is keyed on what it says, so only the figures that actually changed animate.
+
+```tsx
+<Card>
+  <Card.Content className="gap-5 p-5">
+    <AnimatedBadge size="sm" status="neutral" icon={<SparklesIcon size={12} />}>
+      Summary
+    </AnimatedBadge>
+
+    <View className="flex-row flex-wrap items-center gap-x-1.5 gap-y-2">
+      <Text size="lg" muted>You</Text>
+      <Text size="lg" muted>have</Text>
+      <Text size="lg" muted>had</Text>
+      <AnimatedBadge size="sm" status="info" icon={<DownloadIcon size={12} />}>
+        {report.downloads}
+      </AnimatedBadge>
+      <Text size="lg" muted>downloads</Text>
+      <Text size="lg" muted>and</Text>
+      <AnimatedBadge size="sm" status="success" icon={<ReceiptIcon size={12} />}>
+        {report.revenue}
+      </AnimatedBadge>
+      <Text size="lg" muted>in</Text>
+      <Text size="lg" muted>revenue.</Text>
+    </View>
+  </Card.Content>
+</Card>
 ```
 
 ## Variants

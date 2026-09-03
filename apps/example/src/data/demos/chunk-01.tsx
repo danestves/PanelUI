@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { View } from "react-native";
-import { Accordion, Alert, AnimatedBadge, Attachment, Avatar, AreaChart, Badge, SparklesIcon, BarChart, BubbleChart, Button, CandlestickChart, PyramidChart, FileIcon, Frame, ImageIcon, Item, Text, Textarea, XIcon, Tooltip } from "panelui-native";
+import { Accordion, Alert, AnimatedBadge, Attachment, Avatar, AreaChart, Badge, SparklesIcon, BarChart, BubbleChart, Button, CalendarIcon, CandlestickChart, Card, CardIcon, DownloadIcon, GlobeIcon, ListChecksIcon, PyramidChart, ReceiptIcon, RepeatIcon, FileIcon, Frame, ImageIcon, Item, Text, Textarea, XIcon, Tooltip } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 /** Stable remote portraits for the Avatar demos. */
@@ -1111,6 +1111,167 @@ function AnimatedBadgeStatusesDemo() {
   );
 }
 
+/* -------------------------------------------------------------------------- *
+ * AnimatedBadge — badges inside a sentence
+ * -------------------------------------------------------------------------- */
+
+/**
+ * A paragraph that badges are part of, rather than a paragraph with badges
+ * underneath it.
+ *
+ * The sentence is built out of words rather than out of strings. A `<View>`
+ * nested inside a `<Text>` is laid out inconsistently between the two
+ * platforms — on Android it does not take part in the line at all — so the
+ * paragraph is turned inside out: every word is its own `<Text>`, the badges
+ * are its siblings, and a wrapping row breaks the line between them. That is
+ * what lets a badge sit mid-sentence and the text carry on around it.
+ *
+ * The gap is the space between words, so nothing adds one of its own.
+ */
+function Sentence({ children }: { children: ReactNode }) {
+  return (
+    <View className="flex-row flex-wrap items-center gap-x-1.5 gap-y-2">
+      {children}
+    </View>
+  );
+}
+
+/** One `<Text>` per word, so the row above has something to break between. */
+function Words({
+  children,
+  size = 'xl',
+  muted = false,
+  weight,
+}: {
+  children: string;
+  size?: 'base' | 'lg' | 'xl' | '2xl';
+  muted?: boolean;
+  weight?: 'normal' | 'medium' | 'semibold';
+}) {
+  return (
+    <>
+      {children.split(' ').map((word, index) => (
+        <Text key={index} size={size} muted={muted} weight={weight}>
+          {word}
+        </Text>
+      ))}
+    </>
+  );
+}
+
+/** Three days of a calendar, so the counts have somewhere to roll to. */
+const DAYS = [
+  { meetings: 3, tasks: 2, habits: 1, free: 'after 4 pm' },
+  { meetings: 5, tasks: 7, habits: 2, free: 'after 6 pm' },
+  { meetings: 1, tasks: 4, habits: 3, free: 'all afternoon' },
+] as const;
+
+/** A plural that reads, rather than a count with an s bolted to it. */
+const plural = (count: number, word: string) =>
+  `${count} ${word}${count === 1 ? '' : 's'}`;
+
+function AnimatedBadgeSentenceVersion() {
+  const [index, setIndex] = useState(0);
+  const day = DAYS[index]!;
+
+  return (
+    <View className="flex-1 justify-center gap-8 px-6">
+      <Sentence>
+        <Words muted>Good morning,</Words>
+        <Avatar size="sm" className="h-6 w-6" source={{ uri: AVATARS[0] }} fallback="AK" />
+        <Words weight="semibold">Alexey.</Words>
+        <Words muted>You have</Words>
+        <AnimatedBadge size="sm" status="info" icon={<CalendarIcon size={12} />}>
+          {plural(day.meetings, 'meeting')}
+        </AnimatedBadge>
+        <Words muted>,</Words>
+        <AnimatedBadge size="sm" status="success" icon={<ListChecksIcon size={12} />}>
+          {plural(day.tasks, 'task')}
+        </AnimatedBadge>
+        <Words muted>and</Words>
+        <AnimatedBadge size="sm" status="warning" icon={<RepeatIcon size={12} />}>
+          {plural(day.habits, 'habit')}
+        </AnimatedBadge>
+        <Words muted>today. You are mostly free</Words>
+        <Words weight="semibold">{`${day.free}.`}</Words>
+      </Sentence>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="self-start"
+        onPress={() => setIndex((current) => (current + 1) % DAYS.length)}
+      >
+        Another day
+      </Button>
+    </View>
+  );
+}
+
+/** Two reports, so every figure in the paragraph has a second value. */
+const REPORTS = [
+  { downloads: '1.1K', revenue: 'US$119.15', country: 'India', share: '22%', subs: '41' },
+  { downloads: '2.4K', revenue: 'US$287.40', country: 'Brazil', share: '31%', subs: '68' },
+] as const;
+
+/**
+ * The same shape as a written summary, with the figures carried by badges.
+ *
+ * Every number in the paragraph is a badge, so the sentence can be re-read
+ * against new data and each figure turns over where it stands. Nothing moves
+ * except the values, which is the point: a report that redraws itself is one
+ * nobody can tell has changed.
+ */
+function AnimatedBadgeSummaryVersion() {
+  const [index, setIndex] = useState(0);
+  const report = REPORTS[index]!;
+
+  return (
+    <View className="flex-1 justify-center gap-6 px-6">
+      <Card>
+        <Card.Content className="gap-5 p-5">
+          <AnimatedBadge size="sm" status="neutral" icon={<SparklesIcon size={12} />}>
+            Summary
+          </AnimatedBadge>
+
+          <Sentence>
+            <Words size="lg" muted>You have had</Words>
+            <AnimatedBadge size="sm" status="info" icon={<DownloadIcon size={12} />}>
+              {report.downloads}
+            </AnimatedBadge>
+            <Words size="lg" muted>downloads and</Words>
+            <AnimatedBadge size="sm" status="success" icon={<ReceiptIcon size={12} />}>
+              {report.revenue}
+            </AnimatedBadge>
+            <Words size="lg" muted>in revenue over the last 365 days. Most of it came from</Words>
+            <AnimatedBadge size="sm" status="warning" icon={<GlobeIcon size={12} />}>
+              {report.country}
+            </AnimatedBadge>
+            <Words size="lg" muted>at</Words>
+            <AnimatedBadge size="sm" status="info" icon={<DownloadIcon size={12} />}>
+              {report.share}
+            </AnimatedBadge>
+            <Words size="lg" muted>of downloads. You also billed</Words>
+            <AnimatedBadge size="sm" status="neutral" icon={<CardIcon size={12} />}>
+              {report.subs}
+            </AnimatedBadge>
+            <Words size="lg" muted>subscriptions.</Words>
+          </Sentence>
+        </Card.Content>
+      </Card>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="self-start"
+        onPress={() => setIndex((current) => (current + 1) % REPORTS.length)}
+      >
+        Last year
+      </Button>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
 {
     slug: 'accordion',
@@ -1350,6 +1511,22 @@ export const ENTRIES: ComponentEntry[] = [
     name: 'AnimatedBadge',
     summary: 'Status pill whose icon and label roll over when the status changes',
     demos: [
+      {
+        label: 'A sentence with badges in it',
+        id: 'in-a-sentence',
+        fullPage: true,
+        description:
+          'Badges set in a line of prose, carrying the figures the sentence is about.',
+        render: () => <AnimatedBadgeSentenceVersion />,
+      },
+      {
+        label: 'A summary that rewrites itself',
+        id: 'in-a-summary',
+        fullPage: true,
+        description:
+          'Every number in the paragraph is a badge, so a new report turns each one over where it stands.',
+        render: () => <AnimatedBadgeSummaryVersion />,
+      },
       { label: 'A run of statuses', render: () => <AnimatedBadgeRunDemo /> },
       { label: 'Every status', render: () => <AnimatedBadgeStatusesDemo /> },
       {
