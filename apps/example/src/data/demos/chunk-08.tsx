@@ -774,6 +774,11 @@ const SELECTION_PEOPLE = [
   { id: 'p5', name: 'Priya Raman', handle: '@priya' },
 ];
 
+/*
+ * Twelve rather than six, because six fit on the row and a strip that does not
+ * scroll demonstrates nothing that a grid would not have done better. It also
+ * gives "All" and the count in the header something to be about.
+ */
 const SELECTION_COLORS = [
   { id: 'c1', name: 'Lilac', hex: '#a78bfa' },
   { id: 'c2', name: 'Sky', hex: '#38bdf8' },
@@ -781,6 +786,12 @@ const SELECTION_COLORS = [
   { id: 'c4', name: 'Amber', hex: '#fbbf24' },
   { id: 'c5', name: 'Coral', hex: '#fb7185' },
   { id: 'c6', name: 'Slate', hex: '#94a3b8' },
+  { id: 'c7', name: 'Indigo', hex: '#818cf8' },
+  { id: 'c8', name: 'Teal', hex: '#2dd4bf' },
+  { id: 'c9', name: 'Lime', hex: '#a3e635' },
+  { id: 'c10', name: 'Rose', hex: '#f472b6' },
+  { id: 'c11', name: 'Rust', hex: '#f97316' },
+  { id: 'c12', name: 'Stone', hex: '#d6d3d1' },
 ];
 
 function SelectionModeDemo() {

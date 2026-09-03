@@ -134,7 +134,7 @@ const selectionVariants = tv({
     header: 'h-14 flex-row items-center gap-3 border-b border-border px-4',
     title: 'flex-1 text-center text-base font-semibold text-foreground',
     close: 'h-10 w-10 items-center justify-center rounded-full bg-muted',
-    group: 'overflow-hidden rounded-2xl bg-card',
+    group: 'overflow-hidden rounded-2xl',
     ring: 'rounded-full border-2 border-transparent p-0.5',
     bar: 'flex-row items-stretch',
     action: 'flex-1 items-center justify-center gap-1.5 px-2 py-3',
@@ -163,6 +163,23 @@ const selectionVariants = tv({
       true: { action: 'opacity-[0.44]' },
     },
     /**
+     * The group's surface, which depends on what is behind it.
+     *
+     * `card` is a step *down* from the background on a screen, which is what a
+     * grouped list wants there. A sheet is already `popover`, and popover sits
+     * above card in every dark theme — so the same card inside a sheet is
+     * darker than the sheet around it and reads as a hole rather than a raised
+     * set of rows.
+     *
+     * `muted` is an alpha tint, so it steps up from whatever it is drawn on and
+     * is correct against either. It is only used in the sheet because the
+     * screen's card is right where it is.
+     */
+    surface: {
+      screen: { group: 'bg-card' },
+      sheet: { group: 'bg-muted' },
+    },
+    /**
      * Flush to the bottom edge, or lifted off it.
      *
      * `bar` is the platform shape — full width against the edge, a hairline
@@ -177,6 +194,7 @@ const selectionVariants = tv({
   },
   defaultVariants: {
     placement: 'bar',
+    surface: 'screen',
   },
 });
 
@@ -665,7 +683,10 @@ function SelectionModeGroup({
   ...props
 }: SelectionModeGroupProps) {
   const items = Children.toArray(children).filter(Boolean);
-  const slots = selectionVariants({});
+  // A sheet's own surface already sits above a card's, so which fill the group
+  // takes depends on where it is. Every other part reads the context too.
+  const { sheet } = useSelectionMode();
+  const slots = selectionVariants({ surface: sheet ? 'sheet' : 'screen' });
 
   /**
    * The caption, and the wrapper that carries it. A group with no `label` is
@@ -1133,7 +1154,13 @@ function SelectionModeSheet({
          * screen but in the wrong branch of the tree.
          */}
         <SelectionModeContext.Provider value={context}>
-          <BottomSheet.Header>
+          {/*
+           * `pe-0` gives the trailing edge back. `BottomSheet.Header` reserves
+           * room there for the close button, and this sheet draws none — left
+           * alone, the reserved 48 points push the centred title off the middle
+           * of the sheet and hold "All" that far in from the corner.
+           */}
+          <BottomSheet.Header className="pe-0">
             {/* The sheet already draws the rule and the padding. */}
             <SelectionModeHeader
               title={title}

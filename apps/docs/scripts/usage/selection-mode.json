@@ -17,7 +17,7 @@
     "SelectionMode.Bar": "The actions, floating over the bottom of the list.",
     "SelectionMode.Action": "One action, handed the selection when pressed.",
     "SelectionMode.Sheet": "The whole selection in a bottom sheet. Picking from the moment it opens, with the bar lifted into the sheet's footer wherever it is written. Opens full-height by default, because a picker spends a header and a footer before it draws a single row; pass `size=\"half\"` for two or three choices.",
-    "SelectionMode.Group": "A rounded card holding a run of items, with hairlines between them. `columns` lays them out as a grid instead, and `horizontal` as one sideways-scrolling strip — a strip costs one row whatever the count, where a grid claims as many as it needs. `label` puts a caption on the leading edge, which is also what a screen reader announces the group by."
+    "SelectionMode.Group": "A rounded card holding a run of items, with hairlines between them. `columns` lays them out as a grid instead, and `horizontal` as one sideways-scrolling strip — a strip costs one row whatever the count, where a grid claims as many as it needs. `label` puts a caption on the leading edge, which is also what a screen reader announces the group by. The card's fill follows what is behind it: a step down from the screen, a step up from a sheet, which are opposite directions and the same intent."
   },
   "partNotes": "Every part except the root reads the selection from context, so they all throw outside a `SelectionMode` rather than rendering something inert. `useSelectionMode()` is the same context, for a header or a count of your own.",
   "examples": [

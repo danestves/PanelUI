@@ -40,6 +40,7 @@ import { SelectionMode } from 'panelui-native';
 - **compact** — `true`
 - **destructive** — `true`
 - **disabled** — `true`
+- **surface** — `screen` *(default)*, `sheet`
 - **placement** — `bar` *(default)*, `floating`
 
 ### Parts
