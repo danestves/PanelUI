@@ -1049,9 +1049,14 @@ function AnimatedBadgeRunDemo() {
  * Rolling them makes the point the component exists for: the glyph and the
  * word turn over inside a pill that grows to the new word.
  *
- * One timer for all six. Each run starts on a different status, so the first
- * frame is still one badge per tint and the demo has not stopped being the
- * chart of them it was.
+ * One timer, one badge per tick. Six pills springing to new widths on the same
+ * frame is a row that reflows under itself — the ones on the second line cross
+ * the ones on the first on their way to a new place. Turning them over in
+ * sequence keeps every change to one pill and its neighbours, which is what a
+ * badge in a real row does.
+ *
+ * Each run starts on a different status, so the first frame is still one badge
+ * per tint and the demo has not stopped being the chart of them it was.
  */
 const STATUS_RUNS = [
   [
@@ -1086,21 +1091,27 @@ const STATUS_RUNS = [
   ],
 ] as const;
 
-/** How long each badge holds a status before turning over, in milliseconds. */
-const STATUS_HOLD = 1600;
+/** How long before the next badge turns over, in milliseconds. */
+const STATUS_HOLD = 900;
 
 function AnimatedBadgeStatusesDemo() {
-  const [tick, setTick] = useState(0);
+  const [steps, setSteps] = useState(() => STATUS_RUNS.map(() => 0));
 
   useEffect(() => {
-    const id = setInterval(() => setTick((current) => current + 1), STATUS_HOLD);
+    let cursor = 0;
+    const id = setInterval(() => {
+      setSteps((current) =>
+        current.map((step, index) => (index === cursor ? step + 1 : step))
+      );
+      cursor = (cursor + 1) % STATUS_RUNS.length;
+    }, STATUS_HOLD);
     return () => clearInterval(id);
   }, []);
 
   return (
     <View className="flex-row flex-wrap items-center justify-center gap-2">
       {STATUS_RUNS.map((run, index) => {
-        const step = run[tick % run.length]!;
+        const step = run[steps[index]! % run.length]!;
         return (
           <AnimatedBadge key={index} status={step.status}>
             {step.label}
@@ -1181,10 +1192,17 @@ function AnimatedBadgeSentenceVersion() {
         <Avatar size="sm" className="h-6 w-6" source={{ uri: AVATARS[0] }} fallback="AK" />
         <Words weight="semibold">Alexey.</Words>
         <Words muted>You have</Words>
-        <AnimatedBadge size="sm" status="info" icon={<CalendarIcon size={12} />}>
-          {plural(day.meetings, 'meeting')}
-        </AnimatedBadge>
-        <Words muted>,</Words>
+        {/*
+          Badge and comma in a row of their own, so the punctuation sits against
+          the pill. Left as siblings they are two items in a gapped row, and the
+          comma floats a word-space away from what it belongs to.
+        */}
+        <View className="flex-row items-center">
+          <AnimatedBadge size="sm" status="info" icon={<CalendarIcon size={12} />}>
+            {plural(day.meetings, 'meeting')}
+          </AnimatedBadge>
+          <Words muted>,</Words>
+        </View>
         <AnimatedBadge size="sm" status="success" icon={<ListChecksIcon size={12} />}>
           {plural(day.tasks, 'task')}
         </AnimatedBadge>
