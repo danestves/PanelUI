@@ -127,11 +127,11 @@ import {
 import {
   ScrollView,
   StyleSheet,
+  TextInput,
   View,
   useWindowDimensions,
   type LayoutChangeEvent,
   type NativeSyntheticEvent,
-  type TextInput,
   type TextInputKeyPressEventData,
   type TextInputSubmitEditingEventData,
   type ViewProps,
@@ -698,9 +698,24 @@ const SearchBarRoot = forwardRef<TextInput, SearchBarProps>(
         clearCloseTimer();
         closeTimer.current = setTimeout(() => {
           closeTimer.current = null;
-          if (!ending.current && keyboardUp.current) {
-            // The keyboard never went down, so the search is still on screen
-            // and something inside it has taken the focus. Give it back.
+          /*
+           * A keyboard that never went down is not on its own proof that the
+           * focus is still inside this search.
+           *
+           * Put two search bars on one screen and they hand the keyboard
+           * between them: the first blurs, the keyboard stays up because the
+           * second now has it, and the first takes it straight back — then the
+           * second does the same, and both draw themselves as the field being
+           * typed into. A screen showing sizes or variants is four of them in a
+           * column, so this is the arrangement, not a corner case.
+           *
+           * So ask who actually holds it. Another field means somebody moved
+           * on deliberately; a focus that has landed nowhere is one of this
+           * search's own buttons taking it, which is what the recovery is for.
+           */
+          const holder = TextInput.State.currentlyFocusedInput();
+          const elsewhere = holder != null && holder !== inputRef.current;
+          if (!ending.current && keyboardUp.current && !elsewhere) {
             inputRef.current?.focus();
             return;
           }

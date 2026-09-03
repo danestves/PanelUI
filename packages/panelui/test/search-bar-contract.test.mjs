@@ -232,8 +232,24 @@ test('a blur while the keyboard is up is answered, not believed', async () => {
   assert.match(source, /const BLUR_GRACE = 220;/);
   const blur = source.slice(source.indexOf('const handleBlur'));
   assert.match(
-    blur.slice(0, 1200),
-    /if \(!ending\.current && keyboardUp\.current\) \{\s*\/\/[\s\S]{0,200}inputRef\.current\?\.focus\(\);/
+    blur.slice(0, 2000),
+    /if \(!ending\.current && keyboardUp\.current && !elsewhere\) \{\s*inputRef\.current\?\.focus\(\);/
+  );
+
+  /*
+   * And it asks who holds the focus before taking it back. Two search bars on
+   * one screen hand the keyboard between them: the first blurs, the keyboard
+   * stays up because the second now has it, and without this each takes it
+   * straight back off the other — both drawing themselves as the field being
+   * typed into. A screen of sizes or variants is four of them in a column.
+   */
+  assert.match(
+    blur.slice(0, 2000),
+    /TextInput\.State\.currentlyFocusedInput\(\)/
+  );
+  assert.match(
+    blur.slice(0, 2000),
+    /holder != null && holder !== inputRef\.current/
   );
 
   // Cancel is deliberate and must not have its focus handed back.
