@@ -51,7 +51,8 @@
     "react native animated badge",
     {
       "addedIn": "0.88.0",
-      "category": "feedback"
+      "category": "feedback",
+      "updatedIn": "0.89.0"
     }
   ],
   "badge": [

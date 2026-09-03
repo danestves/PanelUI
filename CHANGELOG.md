@@ -9,6 +9,54 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.89.0] — 2026-09-03
+
+### Added
+
+- **`AnimatedBadge` takes `animateLayout`.** Off, the pill stops springing to its
+  new size and position. The spring is what a badge standing on its own wants —
+  growing to a longer word in one frame shoves whatever is beside it — but a
+  badge set inside a line of text needs the opposite: the words around it are
+  placed by the text engine and simply appear where they now belong, so a badge
+  animating its position slides across a sentence that has already finished
+  moving.
+
+### Fixed
+
+- **Two `SearchBar`s on one screen no longer take the focus off each other.** A
+  blur while the keyboard was still up was read as "something inside this search
+  took the focus" and answered by taking it back — right when a button in the
+  panel stole it, wrong when the thief was a second field, because the keyboard
+  never goes down and each bar grabs it back off the other. Both then drew
+  themselves as the field being typed into. The recovery now asks who actually
+  holds the focus.
+- **A selected row in the `SearchBar` panel no longer runs into the row below
+  it.** Stacked flush, its fill met the next row's edge and the two read as one
+  block with a coloured top half; a row's rounded corners only show when there
+  is background either side of them to round against.
+- **`Avatar` no longer shows the photo's corners through the circle.** The root
+  clips to its outer radius while the image inside sat within the border and
+  kept square corners a border-width further in, so a sliver of the picture
+  showed at each of the four diagonals.
+- **`SelectionMode.Group` matches the surface it is drawn on.** In a sheet it
+  was a `card` on a `popover`, and popover sits above card in every dark theme —
+  so the group came out darker than the sheet around it and read as a hole. It
+  takes a `muted` tint there, which steps up from whichever surface is behind it.
+- **A `SelectionMode.Sheet`'s title is centred and its "All" reaches the
+  corner.** The sheet header reserved 48 points for a close button it does not
+  draw, which pushed both inwards.
+
+### Docs
+
+- **A sponsors page at [panelui.dev/sponsors](https://panelui.dev/sponsors)**,
+  listing the companies backing the library and how to join them.
+- **The GitHub link in the navigation is a plain link rather than a button**, and
+  its star count sits beside the mark instead of under it.
+- **`AnimatedBadge` has two new versions** showing badges set in a line of prose,
+  where the figures roll in place and the words around them stay put.
+- **`SelectionMode`'s palette version offers twelve swatches**, so the strip is
+  worth scrolling.
+
 ## [0.88.2] — 2026-09-02
 
 ### Fixed
