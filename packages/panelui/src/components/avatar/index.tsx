@@ -27,7 +27,16 @@ import { avatarSourceIdentity } from './avatar-source';
 const avatarVariants = tv({
   slots: {
     root: 'items-center justify-center overflow-hidden rounded-full border border-border bg-muted',
-    image: 'absolute inset-0 h-full w-full',
+    /*
+     * Rounded itself, not only clipped by the circle around it.
+     *
+     * The root carries a hairline border, and an absolutely positioned child
+     * is laid out inside it — so the parent clips to the *outer* radius while
+     * the image keeps square corners a border-width further in. What shows is
+     * a sliver of the photo's corner at each of the four diagonals, which
+     * reads as the picture being bent out of the circle.
+     */
+    image: 'absolute inset-0 h-full w-full rounded-full',
     fallback: 'font-medium text-muted-foreground',
   },
   variants: {
