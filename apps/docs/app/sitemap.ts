@@ -79,6 +79,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 1,
     },
+    /*
+     * Hand-written, because it is not under `content/docs` and so is not in the
+     * page tree the rest of this is derived from. Monthly: the list on it moves
+     * when a sponsor arrives, which is not weekly.
+     */
+    {
+      url: absoluteUrl('/sponsors'),
+      lastModified: fallback,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
     ...pages,
   ];
 }

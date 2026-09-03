@@ -185,6 +185,7 @@ export const homeOptions: BaseLayoutProps = {
   ...baseOptions,
   links: [
     docsLink,
+    { type: 'main', text: 'Sponsors', url: '/sponsors', active: 'nested-url' },
     githubHomeLink,
     githubMenuLink,
     getStartedLink,

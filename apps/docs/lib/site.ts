@@ -43,6 +43,14 @@ export const site = {
   /** Where the library is written about as it is being built. */
   x: 'https://x.com/KhalidDevLog',
   /**
+   * Where the sponsors page sends somebody who wants to fund the work.
+   *
+   * The handle is the one in `.github/FUNDING.yml`, which is what puts the
+   * Sponsor button on the repository. Changing one without the other gives a
+   * project two funding destinations, so change both.
+   */
+  sponsors: 'https://github.com/sponsors/Khalidabdi1',
+  /**
    * Google Analytics measurement ID. Not a secret — it ships in the page
    * source either way — but it lives here so a fork or a preview deploy can
    * point at its own property instead of reporting into this one.
