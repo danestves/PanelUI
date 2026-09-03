@@ -11,6 +11,17 @@ import {
 const docs = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file) => fs.readFileSync(path.join(docs, file), 'utf8');
 
+/**
+ * Whitespace collapsed, so these assertions are about the destinations rather
+ * than about how the file is laid out.
+ *
+ * They were exact source excerpts, indentation included, which meant lifting a
+ * link out of the array it was written in — same type, same url, same text —
+ * failed a test whose subject had not changed. What has to hold is that the
+ * destination is still in the layout config, not which column it starts in.
+ */
+const flat = (source) => source.replace(/\s+/g, ' ');
+
 test('layout prefetch policy covers every repeated route and preserves overrides', () => {
   assert.deepEqual([...REPEATED_LAYOUT_ROUTES], ['/', '/docs', '/docs/components']);
 
@@ -54,7 +65,7 @@ test('every repeated layout instance uses the shared policy', () => {
   ];
 
   for (const [name, file, source] of instances) {
-    assert.ok(read(file).includes(source), `${name} must remain covered`);
+    assert.ok(flat(read(file)).includes(flat(source)), `${name} must remain covered`);
   }
 
   assert.match(read('app/layout.tsx'), /components=\{\{ Link: LayoutLink \}\}/);
