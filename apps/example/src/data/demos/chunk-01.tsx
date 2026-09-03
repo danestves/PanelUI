@@ -1003,8 +1003,22 @@ function AnimatedBadgeRunDemo() {
   const current = DEPLOY_STEPS[step]!;
 
   return (
-    <View className="items-center gap-4">
-      <AnimatedBadge status={current.status}>{current.label}</AnimatedBadge>
+    /*
+     * `w-full`, and the badge centred by a row of its own.
+     *
+     * The badge sets `self-start`, which wins over a parent's `items-center` —
+     * so it hugs the leading edge of whatever column it is in. That column used
+     * to be as wide as its widest child, which is the button row, and the row
+     * grows when Next becomes Start again. The badge did not move; the edge it
+     * was pinned to did, on the one step people were watching it for.
+     *
+     * `justify-center` on a row is the way to centre it: `alignSelf` is the
+     * cross axis there, so the badge's own start alignment no longer has a say.
+     */
+    <View className="w-full items-center gap-4">
+      <View className="w-full flex-row justify-center">
+        <AnimatedBadge status={current.status}>{current.label}</AnimatedBadge>
+      </View>
       <View className="flex-row gap-2">
         <Button
           variant="outline"
@@ -1027,16 +1041,72 @@ function AnimatedBadgeRunDemo() {
   );
 }
 
-/** Every status, side by side, so the tints can be told apart. */
+/**
+ * Every status, each badge walking its own run of them.
+ *
+ * Side by side and standing still, six badges show what the six tints look
+ * like and nothing else — which is the one thing a screenshot already does.
+ * Rolling them makes the point the component exists for: the glyph and the
+ * word turn over inside a pill that grows to the new word.
+ *
+ * One timer for all six. Each run starts on a different status, so the first
+ * frame is still one badge per tint and the demo has not stopped being the
+ * chart of them it was.
+ */
+const STATUS_RUNS = [
+  [
+    { status: 'neutral', label: 'Idle' },
+    { status: 'loading', label: 'Queued' },
+    { status: 'success', label: 'Done' },
+  ],
+  [
+    { status: 'info', label: 'Reviewing' },
+    { status: 'success', label: 'Approved' },
+    { status: 'neutral', label: 'Merged' },
+  ],
+  [
+    { status: 'success', label: 'Passed' },
+    { status: 'warning', label: 'Flaky' },
+    { status: 'loading', label: 'Rerunning' },
+  ],
+  [
+    { status: 'warning', label: 'Slow' },
+    { status: 'danger', label: 'Timed out' },
+    { status: 'success', label: 'Recovered' },
+  ],
+  [
+    { status: 'danger', label: 'Failed' },
+    { status: 'loading', label: 'Retrying' },
+    { status: 'success', label: 'Fixed' },
+  ],
+  [
+    { status: 'loading', label: 'Running' },
+    { status: 'info', label: 'Reporting' },
+    { status: 'neutral', label: 'Archived' },
+  ],
+] as const;
+
+/** How long each badge holds a status before turning over, in milliseconds. */
+const STATUS_HOLD = 1600;
+
 function AnimatedBadgeStatusesDemo() {
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((current) => current + 1), STATUS_HOLD);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <View className="flex-row flex-wrap items-center justify-center gap-2">
-      <AnimatedBadge status="neutral">Idle</AnimatedBadge>
-      <AnimatedBadge status="info">Reviewing</AnimatedBadge>
-      <AnimatedBadge status="success">Passed</AnimatedBadge>
-      <AnimatedBadge status="warning">Flaky</AnimatedBadge>
-      <AnimatedBadge status="danger">Failed</AnimatedBadge>
-      <AnimatedBadge status="loading">Running</AnimatedBadge>
+      {STATUS_RUNS.map((run, index) => {
+        const step = run[tick % run.length]!;
+        return (
+          <AnimatedBadge key={index} status={step.status}>
+            {step.label}
+          </AnimatedBadge>
+        );
+      })}
     </View>
   );
 }
