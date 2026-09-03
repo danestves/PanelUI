@@ -951,6 +951,11 @@ function SearchBarTapToAddDemo() {
         avoidKeyboard
         variant="filled"
         placeholder="Search or enter company"
+        // Every company matches an empty query, so the panel would open at its
+        // full height and run to the top of the screen — at which point the
+        // page it is searching is no longer visible behind it. Five rows and a
+        // heading; the rest scrolls.
+        panelMaxHeight={248}
         value={query}
         onChangeText={setQuery}
       >

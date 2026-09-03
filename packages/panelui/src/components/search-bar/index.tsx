@@ -287,6 +287,15 @@ const searchBarVariants = tv({
     panelList: 'p-1.5',
     /** The hairline between the results and the field. */
     panelDivider: 'w-full bg-border',
+    /*
+     * A gap between the rows, because a selected one is drawn as a filled
+     * shape. Stacked flush, its fill runs into the row underneath and the two
+     * read as one block with a coloured top half — a row's rounded corners are
+     * only visible when there is background either side of them to round
+     * against. Two points separates the fills and still reads as a list rather
+     * than a set of cards.
+     */
+    section: 'gap-0.5',
     sectionLabel: 'px-3 pb-1 pt-2 text-sm text-muted-foreground',
     item: 'flex-row items-center gap-3 rounded-lg px-3 py-2.5',
     itemLabel: 'flex-1 text-base text-foreground',
@@ -1121,9 +1130,9 @@ export interface SearchBarSectionProps extends ViewProps {
 
 /** A labelled run of rows inside the panel. */
 function SearchBarSection({ className, label, children, ...props }: SearchBarSectionProps) {
-  const { sectionLabel } = searchBarVariants();
+  const { section, sectionLabel } = searchBarVariants();
   return (
-    <View {...props} className={className}>
+    <View {...props} className={section({ className })}>
       {label ? (
         <Text accessibilityRole="header" className={sectionLabel()}>
           {label}
@@ -1183,8 +1192,9 @@ function SearchBarItem({
       // a card rather than a line in a list. The dim is the whole feedback.
       pressScale={1}
       pressOpacity={0.6}
-      // The rows sit flush against each other, so the points either side of the
-      // gap between two of them would otherwise belong to neither.
+      // The two points of gap the section leaves between rows belong to
+      // neither of them otherwise, and a dead line across a list of targets is
+      // a tap that does nothing.
       hitSlop={{ top: 2, bottom: 2 }}
       {...props}
       className={item({ className })}

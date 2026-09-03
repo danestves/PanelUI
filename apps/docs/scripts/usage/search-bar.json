@@ -62,8 +62,8 @@
     },
     {
       "title": "Tap to add",
-      "description": "No button on the row. The row is the button, and a tick replaces it once the result is in the stack.\n\nReach for this shape when adding is the only thing a result can do: a row carrying one button gives one action two targets, and the smaller of the two is the one people miss.",
-      "code": "<SearchBar\n  avoidKeyboard\n  variant=\"filled\"\n  placeholder=\"Search or enter company\"\n  value={query}\n  onChangeText={setQuery}\n>\n  <SearchBar.Section label=\"Results\">\n    {results.map((company) => (\n      <SearchBar.Item\n        key={company.name}\n        leading={<Avatar size=\"sm\" fallback={company.name[0]} />}\n        trailing={picked.includes(company.name) ? <CheckIcon size={18} /> : undefined}\n        selected={picked.includes(company.name)}\n        onPress={() => toggle(company.name)}\n      >\n        {company.name}\n      </SearchBar.Item>\n    ))}\n  </SearchBar.Section>\n</SearchBar>"
+      "description": "No button on the row. The row is the button, and a tick replaces it once the result is in the stack.\n\nReach for this shape when adding is the only thing a result can do: a row carrying one button gives one action two targets, and the smaller of the two is the one people miss.\n\n`panelMaxHeight` is here because every company matches an empty query. Left at the default the panel opens at its full height and covers the page it is searching.",
+      "code": "<SearchBar\n  avoidKeyboard\n  variant=\"filled\"\n  placeholder=\"Search or enter company\"\n  panelMaxHeight={248}\n  value={query}\n  onChangeText={setQuery}\n>\n  <SearchBar.Section label=\"Results\">\n    {results.map((company) => (\n      <SearchBar.Item\n        key={company.name}\n        leading={<Avatar size=\"sm\" fallback={company.name[0]} />}\n        trailing={picked.includes(company.name) ? <CheckIcon size={18} /> : undefined}\n        selected={picked.includes(company.name)}\n        onPress={() => toggle(company.name)}\n      >\n        {company.name}\n      </SearchBar.Item>\n    ))}\n  </SearchBar.Section>\n</SearchBar>"
     },
     {
       "title": "Names in the field",
