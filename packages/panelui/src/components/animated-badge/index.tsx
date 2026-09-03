@@ -25,6 +25,11 @@
  * badge in a row of them shoves its neighbours as it changes and a jump does
  * that in one frame. Everything runs on the UI thread.
  *
+ * That spring covers position as well as width, so a badge set inside a
+ * paragraph slides across a line the text engine has already finished laying
+ * out. Pass `animateLayout={false}` there: the figure still rolls, and the
+ * pill stays where the sentence puts it.
+ *
  * ## Which change counts as a change
  *
  * The label is keyed on what it says, so `"Queued"` to `"Building"` rolls and
@@ -206,6 +211,20 @@ export interface AnimatedBadgeProps
    * string, or where two states share a word.
    */
   contentKey?: string | number;
+  /**
+   * Whether the pill springs to its new size, and to its new place when what
+   * is around it moves.
+   *
+   * On by default, which is what a badge standing on its own wants: growing to
+   * a longer word in one frame shoves whatever is beside it.
+   *
+   * Turn it off for a badge set in a line of text. The animation covers
+   * position as well as size, and the words around it are placed by the text
+   * engine and simply appear where they now belong — so an animating badge
+   * slides across a sentence that has already finished moving, which reads as
+   * the badge coming loose from the line rather than as the figure changing.
+   */
+  animateLayout?: boolean;
   className?: string;
   labelClassName?: string;
 }
@@ -220,6 +239,7 @@ export const AnimatedBadge = forwardRef<View, AnimatedBadgeProps>(
       showIcon = true,
       pulse,
       contentKey,
+      animateLayout = true,
       className,
       labelClassName,
       ...props
@@ -297,9 +317,11 @@ export const AnimatedBadge = forwardRef<View, AnimatedBadgeProps>(
         ref={ref}
         // The pill grows to the new word rather than jumping to it: a badge in
         // a row of them shoves its neighbours as it changes, and a jump does
-        // all of that shoving in one frame.
+        // all of that shoving in one frame. `animateLayout={false}` turns it
+        // off for a badge inside a paragraph, where the text around it does not
+        // animate and a sliding pill is the only thing still moving.
         layout={
-          reducedMotion || !armed
+          reducedMotion || !armed || !animateLayout
             ? undefined
             : LinearTransition.springify().damping(22)
         }

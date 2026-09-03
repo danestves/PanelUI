@@ -17,7 +17,7 @@ For a label that does not change — a count, a tag, a plain status — use [Bad
 AnimatedBadge ships with the library — no separate install.
 
 ```tsx
-import { AnimatedBadge, Avatar, Button, Card, CalendarIcon, DownloadIcon, Item, ListChecksIcon, ReceiptIcon, RepeatIcon, SparklesIcon } from 'panelui-native';
+import { AnimatedBadge, Avatar, Button, Card, ClockIcon, ListChecksIcon, PackageIcon, PencilIcon, SparklesIcon } from 'panelui-native';
 ```
 
 Or copy the source into your project, to own and edit it:
@@ -108,56 +108,73 @@ const STEPS = [
 
 Badges set in a line of prose, carrying the figures the sentence is about. A count that changes turns over where it stands, so the reader sees which number moved instead of being handed a rewritten paragraph.
 
+Pass `animateLayout={false}` for a badge in text. The words around it are placed by the text engine and simply appear where they now belong, so a badge that animates its position slides across a line that has already finished moving.
+
 Build the line out of words rather than out of a string. A `View` nested inside a `Text` is laid out inconsistently across platforms — on Android it does not join the line at all — so put every word in its own `Text`, make the badges its siblings, and let a wrapping row break between them.
 
 ```tsx
 <View className="flex-row flex-wrap items-center gap-x-1.5 gap-y-2">
-  {'Good morning,'.split(' ').map((word) => (
-    <Text key={word} size="xl" muted>{word}</Text>
-  ))}
-  <Avatar size="sm" className="h-6 w-6" source={{ uri: photo }} fallback="AK" />
-  <Text size="xl" weight="semibold">Alexey.</Text>
-  <Text size="xl" muted>You</Text>
-  <Text size="xl" muted>have</Text>
+  <Text size="xl" muted>Morning,</Text>
+  <Avatar size="sm" className="h-6 w-6" source={{ uri: avatar }} fallback="KA" />
+  <Text size="xl" weight="semibold">Khalid.</Text>
+  <Text size="xl" muted>Waiting</Text>
+  <Text size="xl" muted>on</Text>
+  <Text size="xl" muted>you:</Text>
 
-  <AnimatedBadge size="sm" status="info" icon={<CalendarIcon size={12} />}>
-    {`${day.meetings} meetings`}
+  <AnimatedBadge
+    size="sm"
+    status="info"
+    animateLayout={false}
+    icon={<PencilIcon size={12} />}
+  >
+    {`${day.reviews} reviews`}
   </AnimatedBadge>
   <Text size="xl" muted>and</Text>
-  <AnimatedBadge size="sm" status="success" icon={<ListChecksIcon size={12} />}>
-    {`${day.tasks} tasks`}
+  <AnimatedBadge
+    size="sm"
+    status="success"
+    animateLayout={false}
+    icon={<PackageIcon size={12} />}
+  >
+    {`${day.releases} releases`}
   </AnimatedBadge>
-  <Text size="xl" muted>today.</Text>
 </View>
 ```
 
 ### A summary that rewrites itself
 
-The same shape as a written report, with every figure carried by a badge. Load a different period and each number rolls in place while the words around it stay put.
+The same shape as a written report, with every figure carried by a badge. Load a different week and each number rolls in place while the words around it stay put.
 
 The badge is keyed on what it says, so only the figures that actually changed animate.
+
+Punctuation goes in an ungapped row with the badge it follows. Left as a sibling it is one more item in a spaced row, and the full stop drifts a word away from the figure it belongs to.
 
 ```tsx
 <Card>
   <Card.Content className="gap-5 p-5">
-    <AnimatedBadge size="sm" status="neutral" icon={<SparklesIcon size={12} />}>
+    <AnimatedBadge size="sm" status="neutral" animateLayout={false} icon={<SparklesIcon size={12} />}>
       Summary
     </AnimatedBadge>
 
     <View className="flex-row flex-wrap items-center gap-x-1.5 gap-y-2">
-      <Text size="lg" muted>You</Text>
-      <Text size="lg" muted>have</Text>
-      <Text size="lg" muted>had</Text>
-      <AnimatedBadge size="sm" status="info" icon={<DownloadIcon size={12} />}>
-        {report.downloads}
+      <Text size="lg" muted>The</Text>
+      <Text size="lg" muted>last</Text>
+      <Text size="lg" muted>thirty</Text>
+      <Text size="lg" muted>builds</Text>
+      <Text size="lg" muted>averaged</Text>
+      <View className="flex-row items-center">
+        <AnimatedBadge size="sm" status="info" animateLayout={false} icon={<ClockIcon size={12} />}>
+          {week.average}
+        </AnimatedBadge>
+        <Text size="lg" muted>.</Text>
+      </View>
+      <AnimatedBadge size="sm" status="success" animateLayout={false}>
+        {week.passed}
       </AnimatedBadge>
-      <Text size="lg" muted>downloads</Text>
       <Text size="lg" muted>and</Text>
-      <AnimatedBadge size="sm" status="success" icon={<ReceiptIcon size={12} />}>
-        {report.revenue}
+      <AnimatedBadge size="sm" status="warning" animateLayout={false}>
+        {week.flaky}
       </AnimatedBadge>
-      <Text size="lg" muted>in</Text>
-      <Text size="lg" muted>revenue.</Text>
     </View>
   </Card.Content>
 </Card>
@@ -205,6 +222,7 @@ The badge is keyed on what it says, so only the figures that actually changed an
 | `showIcon` | `boolean` | `true` | Whether a glyph is drawn at all. |
 | `pulse` | `boolean` | — | A slow swell behind the content, for a status that is still happening. On by default while `status` is `loading`, and off otherwise — pass it explicitly for a state of your own that is also still running. |
 | `contentKey` | `string \| number` | — | What counts as a change, when the label cannot say. The label is keyed on its own text, so this is only needed where it is an element rather than a string, or where two states share a word. |
+| `animateLayout` | `boolean` | `true` | Whether the pill springs to its new size, and to its new place when what is around it moves. On by default, which is what a badge standing on its own wants: growing to a longer word in one frame shoves whatever is beside it. Turn it off for a badge set in a line of text. The animation covers position as well as size, and the words around it are placed by the text engine and simply appear where they now belong — so an animating badge slides across a sentence that has already finished moving, which reads as the badge coming loose from the line rather than as the figure changing. |
 | `className` | `string` | — |  |
 | `labelClassName` | `string` | — |  |
 
@@ -241,6 +259,12 @@ Pass `icon` for a glyph of your own — it replaces the status's, and it still r
 ### Reduced motion
 
 With the preference on, the glyph and the label cut over, the pill resizes immediately, and the pulse does not run. The badge still says what it says, which is the part that mattered.
+
+### A badge inside a paragraph
+
+`animateLayout={false}` stops the pill springing to its new size and place.
+
+The spring is right for a badge standing on its own — growing to a longer word in one frame shoves whatever is beside it. It is wrong inside a line of text: the words around a badge are placed by the text engine and appear where they now belong, so a badge that animates its position slides across a sentence that has already finished moving. The figure still rolls; only the pill stops travelling.
 
 ## Public exports
 

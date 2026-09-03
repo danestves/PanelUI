@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { View } from "react-native";
-import { Accordion, Alert, AnimatedBadge, Attachment, Avatar, AreaChart, Badge, SparklesIcon, BarChart, BubbleChart, Button, CalendarIcon, CandlestickChart, Card, CardIcon, DownloadIcon, GlobeIcon, ListChecksIcon, PyramidChart, ReceiptIcon, RepeatIcon, FileIcon, Frame, ImageIcon, Item, Text, Textarea, XIcon, Tooltip } from "panelui-native";
+import { Accordion, Alert, AnimatedBadge, Attachment, Avatar, AreaChart, Badge, SparklesIcon, BarChart, BubbleChart, Button, CandlestickChart, Card, ClockIcon, ListChecksIcon, PackageIcon, PencilIcon, PyramidChart, FileIcon, Frame, ImageIcon, Item, Text, Textarea, XIcon, Tooltip } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 /** Stable remote portraits for the Avatar demos. */
@@ -1147,6 +1147,31 @@ function Sentence({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * A badge and the punctuation that follows it, in a row of their own.
+ *
+ * The sentence is a gapped row, so a comma or a full stop left as a sibling is
+ * spaced like a word and drifts away from the figure it belongs to.
+ */
+function BadgeThen({
+  mark,
+  size = 'xl',
+  children,
+}: {
+  mark: string;
+  size?: 'base' | 'lg' | 'xl' | '2xl';
+  children: ReactNode;
+}) {
+  return (
+    <View className="flex-row items-center">
+      {children}
+      <Text size={size} muted>
+        {mark}
+      </Text>
+    </View>
+  );
+}
+
 /** One `<Text>` per word, so the row above has something to break between. */
 function Words({
   children,
@@ -1170,11 +1195,14 @@ function Words({
   );
 }
 
-/** Three days of a calendar, so the counts have somewhere to roll to. */
+/** The author's own mark, so the greeting is addressed to somebody real. */
+const GITHUB_AVATAR = 'https://github.com/Khalidabdi1.png?size=200';
+
+/** Three days of a queue, so the counts have somewhere to roll to. */
 const DAYS = [
-  { meetings: 3, tasks: 2, habits: 1, free: 'after 4 pm' },
-  { meetings: 5, tasks: 7, habits: 2, free: 'after 6 pm' },
-  { meetings: 1, tasks: 4, habits: 3, free: 'all afternoon' },
+  { reviews: 3, issues: 2, releases: 1, due: 'before Thursday' },
+  { reviews: 5, issues: 7, releases: 2, due: 'before Monday' },
+  { reviews: 1, issues: 4, releases: 3, due: 'until the next sprint' },
 ] as const;
 
 /** A plural that reads, rather than a count with an s bolted to it. */
@@ -1188,30 +1216,46 @@ function AnimatedBadgeSentenceVersion() {
   return (
     <View className="flex-1 justify-center gap-8 px-6">
       <Sentence>
-        <Words muted>Good morning,</Words>
-        <Avatar size="sm" className="h-6 w-6" source={{ uri: AVATARS[0] }} fallback="AK" />
-        <Words weight="semibold">Alexey.</Words>
-        <Words muted>You have</Words>
-        {/*
-          Badge and comma in a row of their own, so the punctuation sits against
-          the pill. Left as siblings they are two items in a gapped row, and the
-          comma floats a word-space away from what it belongs to.
-        */}
-        <View className="flex-row items-center">
-          <AnimatedBadge size="sm" status="info" icon={<CalendarIcon size={12} />}>
-            {plural(day.meetings, 'meeting')}
+        <Words muted>Morning,</Words>
+        <Avatar
+          size="sm"
+          className="h-6 w-6"
+          source={{ uri: GITHUB_AVATAR }}
+          fallback="KA"
+        />
+        <Words weight="semibold">Khalid.</Words>
+        <Words muted>Waiting on you:</Words>
+        <BadgeThen mark=",">
+          <AnimatedBadge
+            size="sm"
+            status="info"
+            animateLayout={false}
+            icon={<PencilIcon size={12} />}
+          >
+            {plural(day.reviews, 'review')}
           </AnimatedBadge>
-          <Words muted>,</Words>
-        </View>
-        <AnimatedBadge size="sm" status="success" icon={<ListChecksIcon size={12} />}>
-          {plural(day.tasks, 'task')}
+        </BadgeThen>
+        <AnimatedBadge
+          size="sm"
+          status="warning"
+          animateLayout={false}
+          icon={<ListChecksIcon size={12} />}
+        >
+          {plural(day.issues, 'issue')}
         </AnimatedBadge>
         <Words muted>and</Words>
-        <AnimatedBadge size="sm" status="warning" icon={<RepeatIcon size={12} />}>
-          {plural(day.habits, 'habit')}
-        </AnimatedBadge>
-        <Words muted>today. You are mostly free</Words>
-        <Words weight="semibold">{`${day.free}.`}</Words>
+        <BadgeThen mark=".">
+          <AnimatedBadge
+            size="sm"
+            status="success"
+            animateLayout={false}
+            icon={<PackageIcon size={12} />}
+          >
+            {plural(day.releases, 'release')}
+          </AnimatedBadge>
+        </BadgeThen>
+        <Words muted>Nothing else is due</Words>
+        <Words weight="semibold">{`${day.due}.`}</Words>
       </Sentence>
 
       <Button
@@ -1226,54 +1270,92 @@ function AnimatedBadgeSentenceVersion() {
   );
 }
 
-/** Two reports, so every figure in the paragraph has a second value. */
-const REPORTS = [
-  { downloads: '1.1K', revenue: 'US$119.15', country: 'India', share: '22%', subs: '41' },
-  { downloads: '2.4K', revenue: 'US$287.40', country: 'Brazil', share: '31%', subs: '68' },
+/** Two weeks of builds, so every figure in the paragraph has a second value. */
+const BUILD_WEEKS = [
+  {
+    average: '4m 12s',
+    passed: '27 passed',
+    flaky: '2 flaky',
+    failed: '1 failed',
+    slowest: '1m 48s',
+  },
+  {
+    average: '3m 05s',
+    passed: '29 passed',
+    flaky: '1 flaky',
+    failed: '0 failed',
+    slowest: '1m 12s',
+  },
 ] as const;
 
 /**
- * The same shape as a written summary, with the figures carried by badges.
+ * The same shape as a written report, with the figures carried by badges.
  *
  * Every number in the paragraph is a badge, so the sentence can be re-read
- * against new data and each figure turns over where it stands. Nothing moves
- * except the values, which is the point: a report that redraws itself is one
- * nobody can tell has changed.
+ * against a new week and each figure turns over where it stands. Nothing else
+ * moves, which is the point: a report that redraws itself is one nobody can
+ * tell has changed.
  */
 function AnimatedBadgeSummaryVersion() {
   const [index, setIndex] = useState(0);
-  const report = REPORTS[index]!;
+  const week = BUILD_WEEKS[index]!;
 
   return (
     <View className="flex-1 justify-center gap-6 px-6">
       <Card>
         <Card.Content className="gap-5 p-5">
-          <AnimatedBadge size="sm" status="neutral" icon={<SparklesIcon size={12} />}>
+          <AnimatedBadge
+            size="sm"
+            status="neutral"
+            animateLayout={false}
+            icon={<SparklesIcon size={12} />}
+          >
             Summary
           </AnimatedBadge>
 
           <Sentence>
-            <Words size="lg" muted>You have had</Words>
-            <AnimatedBadge size="sm" status="info" icon={<DownloadIcon size={12} />}>
-              {report.downloads}
+            <Words size="lg" muted>
+              The last thirty builds averaged
+            </Words>
+            <BadgeThen mark="." size="lg">
+              <AnimatedBadge
+                size="sm"
+                status="info"
+                animateLayout={false}
+                icon={<ClockIcon size={12} />}
+              >
+                {week.average}
+              </AnimatedBadge>
+            </BadgeThen>
+            <BadgeThen mark="," size="lg">
+              <AnimatedBadge size="sm" status="success" animateLayout={false}>
+                {week.passed}
+              </AnimatedBadge>
+            </BadgeThen>
+            <AnimatedBadge size="sm" status="warning" animateLayout={false}>
+              {week.flaky}
             </AnimatedBadge>
-            <Words size="lg" muted>downloads and</Words>
-            <AnimatedBadge size="sm" status="success" icon={<ReceiptIcon size={12} />}>
-              {report.revenue}
-            </AnimatedBadge>
-            <Words size="lg" muted>in revenue over the last 365 days. Most of it came from</Words>
-            <AnimatedBadge size="sm" status="warning" icon={<GlobeIcon size={12} />}>
-              {report.country}
-            </AnimatedBadge>
-            <Words size="lg" muted>at</Words>
-            <AnimatedBadge size="sm" status="info" icon={<DownloadIcon size={12} />}>
-              {report.share}
-            </AnimatedBadge>
-            <Words size="lg" muted>of downloads. You also billed</Words>
-            <AnimatedBadge size="sm" status="neutral" icon={<CardIcon size={12} />}>
-              {report.subs}
-            </AnimatedBadge>
-            <Words size="lg" muted>subscriptions.</Words>
+            <Words size="lg" muted>
+              and
+            </Words>
+            <BadgeThen mark="." size="lg">
+              <AnimatedBadge size="sm" status="danger" animateLayout={false}>
+                {week.failed}
+              </AnimatedBadge>
+            </BadgeThen>
+            <Words size="lg" muted>
+              Bundling is still the slowest step, at
+            </Words>
+            <BadgeThen mark="." size="lg">
+              <AnimatedBadge
+                size="sm"
+                status="neutral"
+                animateLayout={false}
+                icon={<PackageIcon size={12} />}
+              >
+                {week.slowest}
+              </AnimatedBadge>
+            </BadgeThen>
           </Sentence>
         </Card.Content>
       </Card>
@@ -1282,9 +1364,9 @@ function AnimatedBadgeSummaryVersion() {
         variant="outline"
         size="sm"
         className="self-start"
-        onPress={() => setIndex((current) => (current + 1) % REPORTS.length)}
+        onPress={() => setIndex((current) => (current + 1) % BUILD_WEEKS.length)}
       >
-        Last year
+        Last week
       </Button>
     </View>
   );

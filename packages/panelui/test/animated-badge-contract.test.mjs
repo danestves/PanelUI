@@ -19,8 +19,22 @@ test('the width spring is armed by a change, not by mounting', () => {
    */
   assert.match(source, /const \[armed, setArmed\] = useState\(false\)/);
   assert.match(source, /if \(key !== first\.current\) setArmed\(true\)/);
-  assert.match(source, /reducedMotion \|\| !armed\s*\?\s*undefined/);
+  assert.match(source, /reducedMotion \|\| !armed \|\| !animateLayout\s*\?\s*undefined/);
   assert.doesNotMatch(source, /!mounted\s*\?\s*undefined/);
+});
+
+test('the layout spring can be turned off, and is on until it is', () => {
+  /*
+   * The spring covers position as well as width, so a badge set inside a
+   * paragraph slides across a line the text engine has already finished laying
+   * out — the figure changes and the pill comes loose from the sentence.
+   *
+   * Off by opting out, not by opting in: a badge standing on its own is the
+   * common case, and there the spring is what stops it shoving its neighbours
+   * in a single frame.
+   */
+  assert.match(source, /animateLayout\?: boolean;/);
+  assert.match(source, /animateLayout = true,/);
 });
 
 test('the pill draws no ring', () => {
