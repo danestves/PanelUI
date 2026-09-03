@@ -236,11 +236,14 @@ No button on the row. The row is the button, and a tick replaces it once the res
 
 Reach for this shape when adding is the only thing a result can do: a row carrying one button gives one action two targets, and the smaller of the two is the one people miss.
 
+`panelMaxHeight` is here because every company matches an empty query. Left at the default the panel opens at its full height and covers the page it is searching.
+
 ```tsx
 <SearchBar
   avoidKeyboard
   variant="filled"
   placeholder="Search or enter company"
+  panelMaxHeight={248}
   value={query}
   onChangeText={setQuery}
 >
