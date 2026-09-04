@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1267,
+    "exports": 1268,
     "values": 326,
-    "types": 941,
+    "types": 942,
     "modules": 153,
     "components": 126,
     "hooks": 13
@@ -1213,6 +1213,10 @@
           },
           {
             "name": "FabVariant",
+            "kind": "type"
+          },
+          {
+            "name": "FabGroupLayout",
             "kind": "type"
           }
         ]

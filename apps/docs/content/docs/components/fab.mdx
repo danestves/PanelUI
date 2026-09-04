@@ -53,6 +53,11 @@ npx panelui-cli@latest add fab
   <Fab.Action icon={…} label="…" onPress={…} />
   <Fab.Action icon={…} label="…" onPress={…} />
 </Fab.Group>
+
+{/* or a menu */}
+<Fab.Group layout="menu" icon={…} accessibilityLabel="…">
+  <Fab.Action icon={…} label="…" onPress={…} />
+</Fab.Group>
 ```
 
 `Fab.Action` only works inside a `Fab.Group` — it reads the dial's open progress to know when its own turn to unfold is, and throws outside one rather than rendering something that would never animate.
@@ -104,6 +109,21 @@ Opening drops a scrim over the screen. Not for looks: an open dial is modal — 
 
 ```tsx
 <Fab.Group icon={<PlusIcon size={24} />} accessibilityLabel="Add something" blur>
+  <Fab.Action icon={<ImageIcon size={18} />} label="Photo" onPress={addPhoto} />
+  <Fab.Action icon={<PaperclipIcon size={18} />} label="Attachment" onPress={attach} />
+  <Fab.Action icon={<MicIcon size={18} />} label="Voice note" onPress={record} />
+  <Fab.Action icon={<TrashIcon size={18} />} label="Empty drafts" destructive onPress={empty} />
+</Fab.Group>
+```
+
+### A menu
+
+`layout="menu"` unfolds one panel of rows out of the button instead of a column of buttons — the shape the platform's own menus take. Each row is its label with the glyph after it, and the panel springs out of the corner the trigger sits in, so it reads as the button opening rather than a sheet arriving.
+
+With `glass` the panel is one piece of the material and the rows are content on it. Without it the panel is the same surface a popover is. Everything else is the dial's: the scrim, the close on press, the back button.
+
+```tsx
+<Fab.Group layout="menu" glass icon={<PlusIcon size={24} />} accessibilityLabel="Add something" blur>
   <Fab.Action icon={<ImageIcon size={18} />} label="Photo" onPress={addPhoto} />
   <Fab.Action icon={<PaperclipIcon size={18} />} label="Attachment" onPress={attach} />
   <Fab.Action icon={<MicIcon size={18} />} label="Voice note" onPress={record} />
@@ -286,6 +306,19 @@ A dial in the platform material over the list. Needs iOS 26 — anywhere else it
 </Fab.Group>
 ```
 
+### A menu
+
+One panel of rows springing out of the button, in the material.
+
+```tsx
+<Fab.Group layout="menu" glass icon={<PlusIcon size={24} />} accessibilityLabel="Add something" blur>
+  <Fab.Action icon={<ImageIcon size={18} />} label="Photo" onPress={addPhoto} />
+  <Fab.Action icon={<PaperclipIcon size={18} />} label="Attachment" onPress={attach} />
+  <Fab.Action icon={<MicIcon size={18} />} label="Voice note" onPress={record} />
+  <Fab.Action icon={<TrashIcon size={18} />} label="Empty drafts" destructive onPress={empty} />
+</Fab.Group>
+```
+
 ## Variants
 
 ### `size`
@@ -360,6 +393,7 @@ A dial in the platform material over the list. Needs iOS 26 — anywhere else it
 | `onOpenChange` | `(open: boolean) => void` | — |  |
 | `placement` | `FabPlacement` | `'bottom-right'` | Which corner of the *screen* the whole dial parks in. |
 | `offset` | `number` | `16` | Distance from the screen's edges, in points. Add your safe-area inset. |
+| `layout` | `FabGroupLayout` | `'dial'` | What opens out of the trigger. `dial`, the default, is a column of round buttons with their labels beside them. `menu` is one panel of rows — a label with its glyph after it — that springs out of the trigger's corner, the way the platform's own menus do. |
 | `size` | `FabSize` | `md` |  |
 | `variant` | `FabVariant` | `primary` |  |
 | `disabled` | `boolean` | `false` |  |
@@ -379,7 +413,7 @@ A dial in the platform material over the list. Needs iOS 26 — anywhere else it
 | `onPress` | `() => void` | — |  |
 | `disabled` | `boolean` | `false` |  |
 | `destructive` | `boolean` | — | Draws it in the destructive colour, for the one that removes something. |
-| `labelClassName` | `string` | — | Extra classes for the label chip. |
+| `labelClassName` | `string` | — | Extra classes for the label — the chip in a dial, the row's text in a menu. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
 
@@ -388,6 +422,12 @@ Every part also accepts the underlying React Native props (`ViewProps` or `TextP
 ### Give it a label
 
 `accessibilityLabel` is not optional in practice. An icon-only button reads out as nothing, and the plus that is obvious to someone looking at it says nothing to someone who is not. `Fab.Action` takes its label from `label`, so it is already covered.
+
+### Dial or menu
+
+`layout` on `Fab.Group` decides what opens. `dial`, the default, is the column of round buttons with labels beside them. `menu` is one panel of rows that grows out of the trigger's corner. A dial reads as a handful of buttons and suits three or four glyphs that stand on their own; a menu reads as a list and suits actions that need their words.
+
+The menu panel scales in rather than fading in. The material cannot be faded — at zero it stops drawing — and a panel growing out of the button is what says the button opened.
 
 ### Write a group in the screen's root container
 
@@ -431,4 +471,4 @@ A disabled glass button dims its glyph and label rather than the material. A fad
 
 **Values:** `Fab`
 
-**Types:** `FabProps`, `FabGroupProps`, `FabActionProps`, `FabPlacement`, `FabSize`, `FabVariant`
+**Types:** `FabProps`, `FabGroupProps`, `FabActionProps`, `FabPlacement`, `FabSize`, `FabVariant`, `FabGroupLayout`

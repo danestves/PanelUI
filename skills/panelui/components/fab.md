@@ -19,6 +19,11 @@ import { Fab } from 'panelui-native';
   <Fab.Action icon={…} label="…" onPress={…} />
   <Fab.Action icon={…} label="…" onPress={…} />
 </Fab.Group>
+
+{/* or a menu */}
+<Fab.Group layout="menu" icon={…} accessibilityLabel="…">
+  <Fab.Action icon={…} label="…" onPress={…} />
+</Fab.Group>
 ```
 
 ### Variants
@@ -31,8 +36,8 @@ import { Fab } from 'panelui-native';
 
 ### Parts
 
-- `Fab.Group` — A trigger with actions behind it — the speed dial. It owns the open state, the scrim, and the quarter turn the trigger takes while it is open.
-- `Fab.Action` — One choice in an open dial: a smaller round button with its label beside it. Pressing one closes the dial and then runs the action.
+- `Fab.Group` — A trigger with actions behind it. It owns the open state, the scrim, and the quarter turn the trigger takes while it is open. `layout` decides what the actions become: a speed dial of round buttons, or one panel of rows.
+- `Fab.Action` — One choice behind the trigger. In a dial it is a smaller round button with its label beside it; in a menu it is a row, the label first and the glyph after it. Pressing one closes the group and then runs the action.
 
 ### Props
 
@@ -68,6 +73,7 @@ Extends `Omit<ViewProps, 'children'>`.
 | `onOpenChange` | `(open: boolean) => void` | — | — |
 | `placement` | `FabPlacement` | `bottom-right` | Which corner of the *screen* the whole dial parks in. |
 | `offset` | `number` | `16` | Distance from the screen's edges, in points. Add your safe-area inset. |
+| `layout` | `FabGroupLayout` | `dial` | What opens out of the trigger. `dial`, the default, is a column of round buttons with their labels beside them. `menu` is one panel of rows — a label with its glyph after it — that springs out of the trigger's corner, the way the platform's own menus do. |
 | `size` | `FabSize` | `md` | — |
 | `variant` | `FabVariant` | `primary` | — |
 | `disabled` | `boolean` | `false` | — |
@@ -89,7 +95,7 @@ Extends `Omit<ViewProps, 'children'>`.
 | `onPress` | `() => void` | — | — |
 | `disabled` | `boolean` | `false` | — |
 | `destructive` | `boolean` | — | Draws it in the destructive colour, for the one that removes something. |
-| `labelClassName` | `string` | — | Extra classes for the label chip. |
+| `labelClassName` | `string` | — | Extra classes for the label — the chip in a dial, the row's text in a menu. |
 
 ### Example — Over a list
 
@@ -116,6 +122,12 @@ The case it exists for. `placement` pins it to a corner against the nearest posi
 ### Give it a label
 
 `accessibilityLabel` is not optional in practice. An icon-only button reads out as nothing, and the plus that is obvious to someone looking at it says nothing to someone who is not. `Fab.Action` takes its label from `label`, so it is already covered.
+
+### Dial or menu
+
+`layout` on `Fab.Group` decides what opens. `dial`, the default, is the column of round buttons with labels beside them. `menu` is one panel of rows that grows out of the trigger's corner. A dial reads as a handful of buttons and suits three or four glyphs that stand on their own; a menu reads as a list and suits actions that need their words.
+
+The menu panel scales in rather than fading in. The material cannot be faded — at zero it stops drawing — and a panel growing out of the button is what says the button opened.
 
 ### Write a group in the screen's root container
 
