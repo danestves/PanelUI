@@ -1101,6 +1101,24 @@ function FabSizesDemo() {
 
       <View className="gap-2">
         <Text size="xs" muted>
+          Liquid Glass — needs iOS 26
+        </Text>
+        <View className="flex-row flex-wrap items-center gap-4">
+          <Fab glass icon={<PlusIcon size={20} />} accessibilityLabel="Primary" />
+          <Fab glass variant="secondary" icon={<StarIcon size={20} />} accessibilityLabel="Secondary" />
+          <Fab glass variant="surface" icon={<SearchIcon size={20} />} accessibilityLabel="Surface" />
+          <Fab glass variant="destructive" icon={<TrashIcon size={20} />} accessibilityLabel="Delete" />
+          <Fab glass extended icon={<SendIcon size={18} />} size="sm" variant="surface">
+            Send
+          </Fab>
+          <Fab glass extended icon={<PlusIcon size={18} />} size="sm" disabled>
+            Add
+          </Fab>
+        </View>
+      </View>
+
+      <View className="gap-2">
+        <Text size="xs" muted>
           Extended, and disabled
         </Text>
         <View className="flex-row flex-wrap items-center gap-3">
