@@ -115,7 +115,7 @@ Opening drops a scrim over the screen. Not for looks: an open dial is modal — 
 
 `glass` draws the button in the material iOS 26 uses for its own floating controls, in place of the variant's fill. A button floating over a list is what the material is for: the rows refract through it as they scroll under, and it lifts its own edge, so the shadow goes with the fill.
 
-Every variant takes the plain material, with its glyph in the foreground colour. A tint would only dim it: a primary colour on the glass turns it back into a fill, and a monochrome one greys it. `destructive` keeps a translucent red, because that colour carries meaning. On a `Fab.Group` the flag covers the trigger and every action.
+Every variant takes the plain material, with its glyph in the foreground colour. A tint would only dim it: a primary colour on the glass turns it back into a fill, and a monochrome one greys it. `destructive` keeps a translucent red, because that colour carries meaning. Pressed, the material swells and brightens under the finger the way the platform's own glass controls do, in place of the usual press scale. On a `Fab.Group` the flag covers the trigger and every action.
 
 It needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android, on web, or with Reduce Transparency on, the flag does nothing and the button keeps its ordinary fill — so it is safe to write once for every platform.
 
@@ -346,7 +346,7 @@ A dial in the platform material over the list. Needs iOS 26 — anywhere else it
 | `style` | `ViewProps['style']` | — | Placement-aware view style. Press-state styling belongs in `className`. |
 | `disabled` | `boolean` | `false` |  |
 | `haptics` | `boolean` | `false` | A tick on press. Off by default — needs the optional `expo-haptics`, and is silent without it. |
-| `glass` | `boolean` | `false` | Draw it in Liquid Glass — the material iOS 26 uses for its own floating controls — instead of the variant's fill. Every variant takes the plain material with its glyph in the foreground colour; `destructive` keeps a translucent red. Needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android, on web, or with Reduce Transparency on, it does nothing and the button keeps its ordinary fill. |
+| `glass` | `boolean` | `false` | Draw it in Liquid Glass — the material iOS 26 uses for its own floating controls — instead of the variant's fill. Every variant takes the plain material with its glyph in the foreground colour; `destructive` keeps a translucent red. Pressed, the material swells and brightens the way the platform's own glass controls do. Needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android, on web, or with Reduce Transparency on, it does nothing and the button keeps its ordinary fill. |
 | `accessibilityLabel` | `string` | — | Required for an icon-only button. A lone glyph reads out as nothing. |
 
 ### Fab.Group

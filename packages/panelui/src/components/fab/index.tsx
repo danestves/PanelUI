@@ -59,8 +59,10 @@
  * foreground colour, because a tint is a dimmer: measured over content, a
  * primary colour laid on the glass turns it back into a fill and a monochrome
  * one only greys it. `destructive` is the exception, and keeps a translucent
- * red — that colour carries meaning. The material exists on iOS 26 and above
- * with the optional `expo-glass-effect` installed. Everywhere else — older iOS,
+ * red — that colour carries meaning. Pressed, it answers the way the platform's
+ * own glass controls do: the material swells and brightens under the finger,
+ * in place of this component's press scale. The material exists on iOS 26 and
+ * above with the optional `expo-glass-effect` installed. Everywhere else — older iOS,
  * Android, web, Reduce Transparency on — the flag is inert and the button keeps
  * its ordinary fill, so nothing has to be written twice.
  *
@@ -284,7 +286,8 @@ export interface FabProps
    * Draw it in Liquid Glass — the material iOS 26 uses for its own floating
    * controls — instead of the variant's fill. Every variant takes the plain
    * material with its glyph in the foreground colour; `destructive` keeps a
-   * translucent red.
+   * translucent red. Pressed, the material swells and brightens the way the
+   * platform's own glass controls do.
    *
    * Needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android,
    * on web, or with Reduce Transparency on, it does nothing and the button
@@ -347,40 +350,55 @@ const FabRoot = forwardRef<View, FabProps>(
       [haptics, onPress]
     );
 
+    const pressable = (
+      <AnimatedPressable
+        ref={ref}
+        {...props}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isDisabled }}
+        disabled={isDisabled}
+        onPress={handlePress}
+        // The platform animates the glass under a touch; a second scale on
+        // top of it would fight it.
+        pressScale={material ? 1 : undefined}
+        className={material ? 'h-full w-full items-center justify-center' : root({ className })}
+        style={material ? undefined : [placement ? anchor(placement, offset) : null, style]}
+      >
+        <View className={content()}>
+          {icon}
+          {extended && children ? (
+            <Text className={label({ className: material && !tintVar ? 'text-foreground' : undefined })}>
+              {children}
+            </Text>
+          ) : null}
+        </View>
+      </AnimatedPressable>
+    );
+
+    /*
+     * Drawn in glass, the material is the box and the pressable fills it. The
+     * platform only tracks a touch that lands inside the glass view, and
+     * tracking it is what makes the button swell and glow under the finger,
+     * so the pressable has to be inside rather than under it. It rounds
+     * itself to the button's own radius: the material clipped by a rounded
+     * parent loses its lit edge.
+     */
     return (
       <IconColorProvider color={contentColor}>
-        <AnimatedPressable
-          ref={ref}
-          {...props}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: isDisabled }}
-          disabled={isDisabled}
-          onPress={handlePress}
-          className={root({ className })}
-          style={[placement ? anchor(placement, offset) : null, style]}
-        >
-          {material ? (
-            // A layer under the content rather than the box itself, so the
-            // touch target, the anchor and the press scale stay on the
-            // pressable. It rounds itself to the button's own radius: the
-            // material clipped by a rounded parent loses its lit edge.
-            <Glass
-              variant="regular"
-              tint={tint}
-              radius={SIZE_PX[size ?? 'md'] / 2}
-              pointerEvents="none"
-              style={StyleSheet.absoluteFill}
-            />
-          ) : null}
-          <View className={content()}>
-            {icon}
-            {extended && children ? (
-              <Text className={label({ className: material && !tintVar ? 'text-foreground' : undefined })}>
-                {children}
-              </Text>
-            ) : null}
-          </View>
-        </AnimatedPressable>
+        {material ? (
+          <Glass
+            interactive
+            variant="regular"
+            tint={tint}
+            radius={SIZE_PX[size ?? 'md'] / 2}
+            className={root({ className })}
+            style={[placement ? anchor(placement, offset) : null, style]}
+          >
+            {pressable}
+          </Glass>
+        ) : (
+          pressable
+        )}
       </IconColorProvider>
     );
   }
