@@ -151,16 +151,20 @@ const DEFAULT_OFFSET = 16;
  */
 const OPEN_SPRING = { damping: 15, stiffness: 170, mass: 0.9 } as const;
 
+/** How far behind the action above starts, as a share of the dial's opening. */
+const STAGGER = 0.08;
+
 /** How far an action starts below its resting place, in points. */
 const ACTION_TRAVEL = 12;
 
 /**
- * How a glass dial's action starts: this small, sitting on the trigger, and
- * merging with it while the two are within this distance. Shorter than the
+ * How a glass dial's action starts: nothing, sitting on the trigger, and
+ * merging with it while the two are within this distance. Scale, not
+ * opacity — the material survives a zero scale and not a zero opacity. Shorter than the
  * dial's gaps, so pieces at rest stay separate and only overlapping ones
  * flow together.
  */
-const RISE_FROM_SCALE = 0.4;
+const RISE_FROM_SCALE = 0;
 const DIAL_BLEND = 6;
 
 /** How far into an action's arrival its label grows out of it, and from how far aside. */
@@ -876,9 +880,11 @@ function FabMenu({
  */
 function slotProgress(progress: number, count: number, index: number): number {
   'worklet';
-  const steps = Math.max(1, count);
-  const from = (count - 1 - index) / (steps + 1);
-  const to = from + 1 / (steps + 1) + 0.35;
+  // A short lag per action rather than a full turn each: the actions leave
+  // the trigger nearly together and settle nearly together, so a later one
+  // does not rise through a slot an earlier one is already sitting in.
+  const from = (count - 1 - index) * STAGGER;
+  const to = from + 1 - STAGGER * Math.max(0, count - 1);
   // The spring's overshoot past its target is passed on to every action, so
   // a button arrives with a little bounce rather than stopping dead. It is
   // added on top of the clamped window rather than read through it: a window
