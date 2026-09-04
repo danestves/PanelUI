@@ -48,13 +48,20 @@
         "poster": "/previews/fab-a-menu-poster.jpg",
         "alt": "Fab — A menu.",
         "width": 720,
-        "height": 1566
+        "height": 1560
       }
     },
     {
       "title": "A native menu",
       "description": "`layout=\"native\"` hands the menu to the platform: a SwiftUI menu on iOS, a Compose dropdown on Android. The trigger stays a `Fab` — it is passed to the platform as the thing you press — so the button keeps its variant, its size and its glass, and only the menu is the system's.\n\nThe rows are drawn by the platform, so `className` and the theme tokens do not reach them. A row takes `label` and, on iOS, `systemImage` — an SF Symbol name, because SwiftUI names its symbols rather than taking a view for one. `destructive` and `disabled` cross over. On Android the `icon` element is used instead, hosted at a fixed size.\n\n`blur` still applies. The scrim behind the menu is ours, so the page recedes the way it does behind the dial and the panel, and the menu reads as belonging to the screen it opened on.\n\nWhere the menu sits is the platform's decision and cannot be set: iOS lifts it clear of the button, Android draws its dropdown over the anchor. The open state is the platform's too, so `open` and `onOpenChange` do nothing on iOS; Android's menu is controlled and honours both.\n\nIt needs the optional `@expo/ui`. Without it, and on the web, this falls back to `layout=\"menu\"` — so a working fallback and a missing package look the same, and the package is worth checking before the code is.",
-      "code": "<Fab.Group layout=\"native\" glass blur icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\">\n  <Fab.Action systemImage=\"photo\" label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action systemImage=\"paperclip\" label=\"Attachment\" onPress={attach} />\n  <Fab.Action systemImage=\"mic\" label=\"Voice note\" onPress={record} />\n  <Fab.Action systemImage=\"trash\" label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
+      "code": "<Fab.Group layout=\"native\" glass blur icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\">\n  <Fab.Action systemImage=\"photo\" label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action systemImage=\"paperclip\" label=\"Attachment\" onPress={attach} />\n  <Fab.Action systemImage=\"mic\" label=\"Voice note\" onPress={record} />\n  <Fab.Action systemImage=\"trash\" label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>",
+      "previewVideo": {
+        "src": "/previews/fab-a-native-menu.mp4",
+        "poster": "/previews/fab-a-native-menu-poster.jpg",
+        "alt": "Fab — A native menu.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Liquid Glass",
@@ -65,13 +72,24 @@
         "poster": "/previews/fab-liquid-glass-poster.jpg",
         "alt": "Fab — Liquid Glass.",
         "width": 720,
-        "height": 1566
+        "height": 1560
       }
     },
     {
       "title": "In the flow instead of over it",
       "description": "Leave `placement` out and it is an ordinary round button where you put it — for a screen that already has somewhere for it to sit, and for laying several out side by side.",
       "code": "<View className=\"flex-row items-center gap-4\">\n  <Fab icon={<PlusIcon size={20} />} accessibilityLabel=\"Add\" />\n  <Fab variant=\"surface\" icon={<SearchIcon size={20} />} accessibilityLabel=\"Search\" />\n  <Fab variant=\"destructive\" icon={<TrashIcon size={20} />} accessibilityLabel=\"Delete\" />\n</View>"
+    },
+    {
+      "title": "Sizes and variants",
+      "description": "Every size and variant together, with the same set drawn in the material below them and the extended forms under that.\n\n`size` is `sm`, `md` or `lg` — 44, 56 and 64 points. `variant` is `primary`, `secondary`, `surface` or `destructive`. Under `glass` each one drops its fill for the material and keeps its glyph colour, which is why the destructive one is a red glyph rather than a red button.\n\nAn extended button is as wide as its label, in the material as anywhere else.",
+      "code": "<Fab size=\"sm\" icon={<PlusIcon size={18} />} accessibilityLabel=\"Add\" />\n<Fab size=\"md\" icon={<PlusIcon size={24} />} accessibilityLabel=\"Add\" />\n<Fab size=\"lg\" icon={<PlusIcon size={28} />} accessibilityLabel=\"Add\" />\n\n<Fab variant=\"secondary\" icon={<StarIcon size={20} />} accessibilityLabel=\"Favourite\" />\n<Fab variant=\"surface\" icon={<SearchIcon size={20} />} accessibilityLabel=\"Search\" />\n<Fab variant=\"destructive\" icon={<TrashIcon size={20} />} accessibilityLabel=\"Delete\" />\n\n<Fab glass icon={<PlusIcon size={20} />} accessibilityLabel=\"Add\" />\n<Fab glass variant=\"destructive\" icon={<TrashIcon size={20} />} accessibilityLabel=\"Delete\" />\n<Fab glass extended size=\"sm\" icon={<SendIcon size={18} />}>Send</Fab>",
+      "preview": {
+        "src": "/previews/fab-sizes-and-variants.jpg",
+        "alt": "Fab — every size and variant, filled and in the material.",
+        "width": 1179,
+        "height": 1646
+      }
     },
     {
       "title": "The three sizes",
@@ -143,7 +161,7 @@
         "poster": "/previews/fab-liquid-glass-poster.jpg",
         "alt": "Fab — Liquid Glass.",
         "width": 720,
-        "height": 1566
+        "height": 1560
       }
     },
     {
@@ -155,7 +173,7 @@
         "poster": "/previews/fab-a-menu-poster.jpg",
         "alt": "Fab — A menu.",
         "width": 720,
-        "height": 1566
+        "height": 1560
       }
     },
     {
@@ -167,13 +185,20 @@
         "poster": "/previews/fab-a-menu-with-wells-poster.jpg",
         "alt": "Fab — A menu, with wells.",
         "width": 720,
-        "height": 1566
+        "height": 1560
       }
     },
     {
       "title": "A native menu",
       "description": "The platform's own menu, drawn by SwiftUI on iOS and Jetpack Compose on Android, over a page the scrim frosts. Without `@expo/ui` it is the panel instead.",
-      "code": "<Fab.Group layout=\"native\" glass blur icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\">\n  <Fab.Action systemImage=\"photo\" label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action systemImage=\"paperclip\" label=\"Attachment\" onPress={attach} />\n  <Fab.Action systemImage=\"mic\" label=\"Voice note\" onPress={record} />\n  <Fab.Action systemImage=\"trash\" label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
+      "code": "<Fab.Group layout=\"native\" glass blur icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\">\n  <Fab.Action systemImage=\"photo\" label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action systemImage=\"paperclip\" label=\"Attachment\" onPress={attach} />\n  <Fab.Action systemImage=\"mic\" label=\"Voice note\" onPress={record} />\n  <Fab.Action systemImage=\"trash\" label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>",
+      "previewVideo": {
+        "src": "/previews/fab-a-native-menu.mp4",
+        "poster": "/previews/fab-a-native-menu-poster.jpg",
+        "alt": "Fab — A native menu.",
+        "width": 720,
+        "height": 1560
+      }
     }
   ],
   "previewVideo": {

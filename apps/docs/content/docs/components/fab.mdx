@@ -129,7 +129,7 @@ With `glass` the panel is one piece of the material and the rows are content on 
   poster="/previews/fab-a-menu-poster.jpg"
   alt="Fab — A menu."
   width={720}
-  height={1566}
+  height={1560}
 />
 
 ```tsx
@@ -159,6 +159,14 @@ Where the menu sits is the platform's decision and cannot be set: iOS lifts it c
 
 It needs the optional `@expo/ui`. Without it, and on the web, this falls back to `layout="menu"` — so a working fallback and a missing package look the same, and the package is worth checking before the code is.
 
+<PreviewVideo
+  src="/previews/fab-a-native-menu.mp4"
+  poster="/previews/fab-a-native-menu-poster.jpg"
+  alt="Fab — A native menu."
+  width={720}
+  height={1560}
+/>
+
 ```tsx
 <Fab.Group layout="native" glass blur icon={<PlusIcon size={24} />} accessibilityLabel="Add something">
   <Fab.Action systemImage="photo" label="Photo" onPress={addPhoto} />
@@ -181,7 +189,7 @@ It needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android, on
   poster="/previews/fab-liquid-glass-poster.jpg"
   alt="Fab — Liquid Glass."
   width={720}
-  height={1566}
+  height={1560}
 />
 
 ```tsx
@@ -209,6 +217,35 @@ Leave `placement` out and it is an ordinary round button where you put it — fo
   <Fab variant="surface" icon={<SearchIcon size={20} />} accessibilityLabel="Search" />
   <Fab variant="destructive" icon={<TrashIcon size={20} />} accessibilityLabel="Delete" />
 </View>
+```
+
+### Sizes and variants
+
+Every size and variant together, with the same set drawn in the material below them and the extended forms under that.
+
+`size` is `sm`, `md` or `lg` — 44, 56 and 64 points. `variant` is `primary`, `secondary`, `surface` or `destructive`. Under `glass` each one drops its fill for the material and keeps its glyph colour, which is why the destructive one is a red glyph rather than a red button.
+
+An extended button is as wide as its label, in the material as anywhere else.
+
+<Preview
+  src="/previews/fab-sizes-and-variants.jpg"
+  alt="Fab — every size and variant, filled and in the material."
+  width={1179}
+  height={1646}
+/>
+
+```tsx
+<Fab size="sm" icon={<PlusIcon size={18} />} accessibilityLabel="Add" />
+<Fab size="md" icon={<PlusIcon size={24} />} accessibilityLabel="Add" />
+<Fab size="lg" icon={<PlusIcon size={28} />} accessibilityLabel="Add" />
+
+<Fab variant="secondary" icon={<StarIcon size={20} />} accessibilityLabel="Favourite" />
+<Fab variant="surface" icon={<SearchIcon size={20} />} accessibilityLabel="Search" />
+<Fab variant="destructive" icon={<TrashIcon size={20} />} accessibilityLabel="Delete" />
+
+<Fab glass icon={<PlusIcon size={20} />} accessibilityLabel="Add" />
+<Fab glass variant="destructive" icon={<TrashIcon size={20} />} accessibilityLabel="Delete" />
+<Fab glass extended size="sm" icon={<SendIcon size={18} />}>Send</Fab>
 ```
 
 ### The three sizes
@@ -331,7 +368,7 @@ A dial in the platform material over the list. Needs iOS 26 — anywhere else it
   poster="/previews/fab-liquid-glass-poster.jpg"
   alt="Fab — Liquid Glass."
   width={720}
-  height={1566}
+  height={1560}
 />
 
 ```tsx
@@ -352,7 +389,7 @@ One panel of rows springing out of the button, in the material.
   poster="/previews/fab-a-menu-poster.jpg"
   alt="Fab — A menu."
   width={720}
-  height={1566}
+  height={1560}
 />
 
 ```tsx
@@ -373,7 +410,7 @@ The same menu in the wells appearance: the glyph leads in a tinted well and each
   poster="/previews/fab-a-menu-with-wells-poster.jpg"
   alt="Fab — A menu, with wells."
   width={720}
-  height={1566}
+  height={1560}
 />
 
 ```tsx
@@ -388,6 +425,14 @@ The same menu in the wells appearance: the glyph leads in a tinted well and each
 ### A native menu
 
 The platform's own menu, drawn by SwiftUI on iOS and Jetpack Compose on Android, over a page the scrim frosts. Without `@expo/ui` it is the panel instead.
+
+<PreviewVideo
+  src="/previews/fab-a-native-menu.mp4"
+  poster="/previews/fab-a-native-menu-poster.jpg"
+  alt="Fab — A native menu."
+  width={720}
+  height={1560}
+/>
 
 ```tsx
 <Fab.Group layout="native" glass blur icon={<PlusIcon size={24} />} accessibilityLabel="Add something">
