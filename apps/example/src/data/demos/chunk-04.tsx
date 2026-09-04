@@ -1020,7 +1020,13 @@ function FabPlacementsDemo() {
  * demo with filled buttons — a working flag and a missing floor look
  * identical, and the description says which.
  */
-function FabGlassDemo({ layout = 'dial' }: { layout?: 'dial' | 'menu' }) {
+function FabGlassDemo({
+  layout = 'dial',
+  appearance = 'platform',
+}: {
+  layout?: 'dial' | 'menu';
+  appearance?: 'platform' | 'wells';
+}) {
   const { toast } = useToast();
 
   const pick = (what: string, destructive = false) =>
@@ -1048,6 +1054,7 @@ function FabGlassDemo({ layout = 'dial' }: { layout?: 'dial' | 'menu' }) {
       <Fab.Group
         glass
         layout={layout}
+        appearance={appearance}
         icon={<PlusIcon size={24} />}
         accessibilityLabel="Add something"
         placement="bottom-right"
@@ -1961,6 +1968,14 @@ export const ENTRIES: ComponentEntry[] = [
         description:
           'One panel of rows springing out of the button, in the material — the shape the platform\'s own menus take.',
         render: () => <FabGlassDemo layout="menu" />,
+      },
+      {
+        label: 'A menu, with wells',
+        id: 'menu-wells',
+        fullPage: true,
+        description:
+          'The same menu in the wells appearance: the glyph leads in a tinted well and each row is its own pill.',
+        render: () => <FabGlassDemo layout="menu" appearance="wells" />,
       },
       { label: 'Sizes and variants', render: () => <FabSizesDemo /> },
     ],
