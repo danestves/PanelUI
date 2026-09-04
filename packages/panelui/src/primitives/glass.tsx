@@ -46,7 +46,7 @@
  * rendering at all, and it does not come back when the opacity does. Move it,
  * or unmount it; never animate it out.
  */
-import type { ComponentType, ReactNode } from 'react';
+import { forwardRef, type ComponentType, type ReactNode } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import { useThemeMode } from '../theme/use-theme';
 import { cn } from '../utils/cn';
@@ -96,22 +96,34 @@ interface GlassViewProps {
  * cheaper than a try/catch on every render, and there is no answer that can
  * change while the process is alive.
  */
-const GlassView: ComponentType<GlassViewProps> | null = (() => {
-  if (Platform.OS !== 'ios') return null;
+interface GlassContainerViewProps extends ViewProps {
+  spacing?: number;
+  ref?: React.Ref<View>;
+}
+
+const { GlassView, GlassContainerView } = (() => {
+  const none = { GlassView: null, GlassContainerView: null };
+  if (Platform.OS !== 'ios') return none;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('expo-glass-effect');
     if (typeof mod?.isGlassEffectAPIAvailable === 'function' && !mod.isGlassEffectAPIAvailable()) {
-      return null;
+      return none;
     }
     if (typeof mod?.isLiquidGlassAvailable === 'function' && !mod.isLiquidGlassAvailable()) {
-      return null;
+      return none;
     }
-    return (mod?.GlassView as ComponentType<GlassViewProps>) ?? null;
+    return {
+      GlassView: (mod?.GlassView as ComponentType<GlassViewProps>) ?? null,
+      GlassContainerView: (mod?.GlassContainer as ComponentType<GlassContainerViewProps>) ?? null,
+    };
   } catch {
-    return null;
+    return none;
   }
-})();
+})() as {
+  GlassView: ComponentType<GlassViewProps> | null;
+  GlassContainerView: ComponentType<GlassContainerViewProps> | null;
+};
 
 /**
  * True when the real material can be drawn — for a caller that wants to know
@@ -216,3 +228,44 @@ export function Glass({
 }
 
 Glass.displayName = 'Glass';
+
+export interface GlassContainerProps extends ViewProps {
+  /**
+   * How close two pieces of glass have to be before they merge, in points.
+   * Inside it their edges flow into one another; a piece moving past
+   * another blends with it and pulls free as it leaves.
+   */
+  spacing?: number;
+  className?: string;
+}
+
+/**
+ * Lets the glass inside it merge.
+ *
+ * On its own each piece of the material is a separate object with its own
+ * lit edge. Inside a container, pieces within `spacing` of each other flow
+ * together — which is what makes a button that opens into other buttons look
+ * like one thing dividing rather than several things arriving. A plain view
+ * wherever the material is not drawn, so it can be written unconditionally.
+ */
+export const GlassContainer = forwardRef<View, GlassContainerProps>(
+  ({ spacing, className, style, children, ...props }, ref) => {
+    const material = useGlassMaterial();
+    if (material && GlassContainerView) {
+      // The native container is not a styled view, so the classes go on a
+      // view inside it and only the positional style stays on the outside.
+      return (
+        <GlassContainerView ref={ref} spacing={spacing} style={style} {...props}>
+          <View className={className}>{children}</View>
+        </GlassContainerView>
+      );
+    }
+    return (
+      <View ref={ref} className={className} style={style} {...props}>
+        {children}
+      </View>
+    );
+  }
+);
+
+GlassContainer.displayName = 'GlassContainer';
