@@ -37,7 +37,7 @@ import { Fab } from 'panelui-native';
 ### Parts
 
 - `Fab.Group` — A trigger with actions behind it. It owns the open state, the scrim, and the quarter turn the trigger takes while it is open. `layout` decides what the actions become: a speed dial of round buttons, or one panel of rows.
-- `Fab.Action` — One choice behind the trigger. In a dial it is a smaller round button with its label beside it; in a menu it is a row, the label first and the glyph after it. Pressing one closes the group and then runs the action.
+- `Fab.Action` — One choice behind the trigger. In a dial it is a smaller round button with its label beside it; in a menu it is a row, a label with its glyph on the side the appearance puts it. Pressing one closes the group and then runs the action.
 
 ### Props
 
@@ -73,7 +73,7 @@ Extends `Omit<ViewProps, 'children'>`.
 | `onOpenChange` | `(open: boolean) => void` | — | — |
 | `placement` | `FabPlacement` | `bottom-right` | Which corner of the *screen* the whole dial parks in. |
 | `offset` | `number` | `16` | Distance from the screen's edges, in points. Add your safe-area inset. |
-| `layout` | `FabGroupLayout` | `dial` | What opens out of the trigger. `dial`, the default, is a column of round buttons with their labels beside them. `menu` is one panel of rows — a label with its glyph after it — that springs out of the trigger's corner, the way the platform's own menus do. |
+| `layout` | `FabGroupLayout` | `dial` | What opens out of the trigger. `dial`, the default, is a column of round buttons with their labels beside them. `menu` is one panel of rows — a label with its glyph, on the side the appearance puts it — that springs out of the trigger's corner, the way the platform's own menus do. |
 | `appearance` | `FabMenuAppearance` | `platform` | How a menu is drawn. `platform`, the default, is the shape the platform's own menus take: a hairline between rows and the glyph after the label. `wells` is tighter, with the glyph leading in a tinted well and each row its own pill — a menu the app designed rather than the system. Menu layout only. |
 | `iconPlacement` | `FabMenuIconPlacement` | — | Which side of a menu row the glyph sits on. Each appearance has its own default. |
 | `menuWidth` | `number` | — | The menu panel's width in points. Each appearance has its own default. |

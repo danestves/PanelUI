@@ -14,7 +14,7 @@
   "anatomy": "{/* on its own */}\n<Fab icon={…} accessibilityLabel=\"…\" onPress={…} />\n\n{/* or with a dial behind it */}\n<Fab.Group icon={…} accessibilityLabel=\"…\">\n  <Fab.Action icon={…} label=\"…\" onPress={…} />\n  <Fab.Action icon={…} label=\"…\" onPress={…} />\n</Fab.Group>\n\n{/* or a menu */}\n<Fab.Group layout=\"menu\" icon={…} accessibilityLabel=\"…\">\n  <Fab.Action icon={…} label=\"…\" onPress={…} />\n</Fab.Group>",
   "parts": {
     "Group": "A trigger with actions behind it. It owns the open state, the scrim, and the quarter turn the trigger takes while it is open. `layout` decides what the actions become: a speed dial of round buttons, or one panel of rows.",
-    "Action": "One choice behind the trigger. In a dial it is a smaller round button with its label beside it; in a menu it is a row, the label first and the glyph after it. Pressing one closes the group and then runs the action."
+    "Action": "One choice behind the trigger. In a dial it is a smaller round button with its label beside it; in a menu it is a row, a label with its glyph on the side the appearance puts it. Pressing one closes the group and then runs the action."
   },
   "partNotes": "`Fab.Action` only works inside a `Fab.Group` — it reads the dial's open progress to know when its own turn to unfold is, and throws outside one rather than rendering something that would never animate.",
   "examples": [

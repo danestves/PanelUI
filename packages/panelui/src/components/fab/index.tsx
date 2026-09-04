@@ -55,7 +55,8 @@
  *
  * `layout="menu"` unfolds one panel of rows out of the button instead of a
  * column of buttons — the shape the platform's own menus take. Each row is a
- * label with its glyph after it, and the panel springs out of the corner the
+ * label with its glyph, on the side the appearance puts it or `iconPlacement`
+ * says, and the panel springs out of the corner the
  * trigger sits in, so it reads as the button opening rather than a sheet
  * arriving. Drawn in glass, the panel is one piece of the material; the rows
  * are content on it.
@@ -112,11 +113,18 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  type GestureResponderEvent,
+  type ViewProps,
+} from 'react-native';
 import Animated, {
   Easing,
   Extrapolation,
   interpolate,
+  runOnJS,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -408,6 +416,7 @@ const FabRoot = forwardRef<View, FabProps>(
       glass = false,
       onPress,
       style,
+      accessibilityState,
       ...props
     },
     ref
@@ -443,7 +452,9 @@ const FabRoot = forwardRef<View, FabProps>(
         ref={ref}
         {...props}
         accessibilityRole="button"
-        accessibilityState={{ disabled: isDisabled }}
+        // Whatever the caller says about the button — a group's trigger says
+        // whether it is expanded — with the disabled state kept authoritative.
+        accessibilityState={{ ...accessibilityState, disabled: isDisabled }}
         disabled={isDisabled}
         onPress={handlePress}
         // The platform animates the glass under a touch; a second scale on
@@ -506,7 +517,7 @@ FabRoot.displayName = 'Fab';
  * -------------------------------------------------------------------------- */
 
 /** Whatever was written as a dial child, and the one prop a slot reaches for. */
-type PressableChild = ReactElement<{ onPress?: () => void }>;
+type PressableChild = ReactElement<{ onPress?: (event: GestureResponderEvent) => void }>;
 
 /** What opens out of the trigger: a column of buttons, or one panel of rows. */
 export type FabGroupLayout = 'dial' | 'menu';
@@ -552,8 +563,8 @@ export interface FabGroupProps extends Omit<ViewProps, 'children'> {
   /**
    * What opens out of the trigger. `dial`, the default, is a column of round
    * buttons with their labels beside them. `menu` is one panel of rows — a
-   * label with its glyph after it — that springs out of the trigger's corner,
-   * the way the platform's own menus do.
+   * label with its glyph, on the side the appearance puts it — that springs
+   * out of the trigger's corner, the way the platform's own menus do.
    */
   layout?: FabGroupLayout;
   /**
@@ -642,6 +653,10 @@ const FabGroup = forwardRef<View, FabGroupProps>(
   ) => {
     const [internalOpen, setInternalOpen] = useState(false);
     const open = openProp ?? internalOpen;
+    // Asked for *and* drawable, decided once here so the trigger, the actions
+    // and their motion all agree; where the material cannot be drawn the flag
+    // is inert everywhere rather than in the trigger alone.
+    const material = useGlassMaterial() && glass;
 
     const setOpen = useCallback(
       (next: boolean) => {
@@ -671,7 +686,30 @@ const FabGroup = forwardRef<View, FabGroupProps>(
      * driving every row, and there is no chain of JavaScript timeouts to get
      * out of step with itself when the dial is closed halfway through opening.
      */
-    const progress = useDerivedValue<number>(() => withSpring(open ? 1 : 0, OPEN_SPRING), [open]);
+    /*
+     * The actions stay mounted while the spring runs back down, so closing is
+     * the opening in reverse rather than a cut. `closing` is set the moment
+     * `open` drops and cleared by the spring when it comes to rest; the
+     * mounted-only-while-open rule below still holds once it has.
+     */
+    const [closing, setClosing] = useState(false);
+    // Noted during render rather than in an effect: an effect lands a frame
+    // after the render that dropped `open`, and that frame would have no
+    // actions in it — a blink, and a remount of the material mid-flight.
+    const [wasOpen, setWasOpen] = useState(open);
+    if (wasOpen !== open) {
+      setWasOpen(open);
+      if (!open) setClosing(true);
+    }
+    const settle = useCallback(() => setClosing(false), []);
+    const progress = useDerivedValue<number>(
+      () =>
+        withSpring(open ? 1 : 0, OPEN_SPRING, (finished) => {
+          if (finished && !open) runOnJS(settle)();
+        }),
+      [open, settle]
+    );
+    const present = open || closing;
 
     const rotation = useAnimatedStyle(() => ({
       transform: [
@@ -686,14 +724,14 @@ const FabGroup = forwardRef<View, FabGroupProps>(
         progress,
         count: actionCount,
         size,
-        glass,
+        glass: material,
         layout,
         appearance,
         iconPlacement: iconPlacement ?? MENU_METRICS[appearance].icon,
         rowClassName,
         close,
       }),
-      [progress, actionCount, size, glass, layout, appearance, iconPlacement, rowClassName, close]
+      [progress, actionCount, size, material, layout, appearance, iconPlacement, rowClassName, close]
     );
 
     const toggle = useCallback(() => {
@@ -705,7 +743,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
     // standing over the screen underneath.
     useBackHandler(open, close);
 
-    const Group = glass && layout === 'dial' ? GlassContainer : View;
+    const Group = material && layout === 'dial' ? GlassContainer : View;
 
     /*
      * Two absolutely positioned siblings, scrim first, both in the group's own
@@ -746,20 +784,21 @@ const FabGroup = forwardRef<View, FabGroupProps>(
               one blob with the trigger until they rise clear of it. */}
           <Group
             ref={ref}
-            spacing={glass && layout === 'dial' ? DIAL_BLEND : undefined}
+            spacing={material && layout === 'dial' ? DIAL_BLEND : undefined}
             className={cn(layout === 'menu' ? GROUP_ALIGN[placement] : 'items-end', 'gap-3', className)}
             style={[anchor(placement, offset), style]}
             {...props}
           >
-            {/* Mounted only while open: a column of actions kept alive behind
-                the trigger would still be in the accessibility tree, and a
-                screen reader would walk into four buttons nobody can see. */}
-            {open && layout === 'menu' ? (
+            {/* Mounted only while open, and while closing: a column of
+                actions kept alive behind the trigger would still be in the
+                accessibility tree, and a screen reader would walk into four
+                buttons nobody can see. */}
+            {present && layout === 'menu' ? (
               <FabMenu
                 open={open}
                 placement={placement}
                 size={size}
-                glass={glass}
+                glass={material}
                 appearance={appearance}
                 width={menuWidth}
                 radius={menuRadius}
@@ -768,7 +807,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
                 {actions}
               </FabMenu>
             ) : null}
-            {open && layout === 'dial'
+            {present && layout === 'dial'
               ? actions.map((action, index) => (
                   <FabActionSlot key={index} index={index}>
                     {action}
@@ -936,9 +975,9 @@ function FabActionSlot({
   const { onPress } = children.props;
   const child = onPress
     ? cloneElement(children, {
-        onPress: () => {
+        onPress: (event: GestureResponderEvent) => {
           close();
-          onPress();
+          onPress(event);
         },
       })
     : children;
