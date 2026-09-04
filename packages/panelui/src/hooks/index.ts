@@ -37,6 +37,7 @@ export {
 } from './use-skeleton-handoff';
 export {
   useScrollSections,
+  type ScrollSectionsPosition,
   type UseScrollSectionsOptions,
   type UseScrollSectionsResult,
 } from './use-scroll-sections';
