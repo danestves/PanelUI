@@ -947,7 +947,14 @@ const FAB_NOTES = [
 ];
 
 /** A list with something floating over it, which is the case the component is for. */
-function FabListDemo() {
+/**
+ * `glass` puts the button in the platform's material over the list it floats
+ * on, which is where the material earns its place: the rows refract through it
+ * as they scroll under. It only exists on iOS 26 with `expo-glass-effect`, so
+ * below that this demo is the plain list demo with a filled button — a working
+ * flag and a missing floor look identical, and the description says which.
+ */
+function FabListDemo({ glass = false }: { glass?: boolean }) {
   const { toast } = useToast();
 
   return (
@@ -973,6 +980,7 @@ function FabListDemo() {
         icon={<PlusIcon size={24} />}
         accessibilityLabel="New note"
         haptics
+        glass={glass}
         onPress={() => toast.show({ variant: 'success', label: 'New note', duration: 1800 })}
       />
     </View>
@@ -1859,6 +1867,14 @@ export const ENTRIES: ComponentEntry[] = [
         fullPage: true,
         description: 'The extended form, in each of the three corners it can take.',
         render: () => <FabPlacementsDemo />,
+      },
+      {
+        label: 'Liquid Glass',
+        id: 'glass',
+        fullPage: true,
+        description:
+          'The same list, with the button in the platform material — needs iOS 26. Anywhere else it is the filled one.',
+        render: () => <FabListDemo glass />,
       },
       { label: 'Sizes and variants', render: () => <FabSizesDemo /> },
     ],

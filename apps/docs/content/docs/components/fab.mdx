@@ -111,6 +111,29 @@ Opening drops a scrim over the screen. Not for looks: an open dial is modal — 
 </Fab.Group>
 ```
 
+### Liquid Glass
+
+`glass` draws the button in the material iOS 26 uses for its own floating controls, in place of the variant's fill. A button floating over a list is what the material is for: the rows refract through it as they scroll under, and it lifts its own edge, so the shadow goes with the fill.
+
+`primary` and `destructive` tint the material with their colour, so the action a screen leads with is still the one that stands out; `secondary` and `surface` take it plain. On a `Fab.Group` the flag covers the trigger and every action.
+
+It needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android, on web, or with Reduce Transparency on, the flag does nothing and the button keeps its ordinary fill — so it is safe to write once for every platform.
+
+```tsx
+<Fab
+  glass
+  placement="bottom-right"
+  icon={<PlusIcon size={24} />}
+  accessibilityLabel="New note"
+  onPress={compose}
+/>
+
+<Fab.Group glass icon={<PlusIcon size={24} />} accessibilityLabel="Add">
+  <Fab.Action icon={<ImageIcon size={18} />} label="Photo" onPress={addPhoto} />
+  <Fab.Action icon={<TrashIcon size={18} />} label="Empty drafts" destructive onPress={empty} />
+</Fab.Group>
+```
+
 ### In the flow instead of over it
 
 Leave `placement` out and it is an ordinary round button where you put it — for a screen that already has somewhere for it to sit, and for laying several out side by side.
@@ -234,6 +257,21 @@ The extended form, in each of the three corners it can take.
 {/* placement is 'bottom-left' | 'bottom-center' | 'bottom-right' */}
 ```
 
+### Liquid Glass
+
+The list again, with the button in the platform material. Needs iOS 26 — anywhere else it is the filled one.
+
+```tsx
+<Fab
+  glass
+  placement="bottom-right"
+  icon={<PlusIcon size={24} />}
+  accessibilityLabel="New note"
+  haptics
+  onPress={compose}
+/>
+```
+
 ## Variants
 
 ### `size`
@@ -272,6 +310,14 @@ The extended form, in each of the three corners it can take.
 <Fab variant="destructive">…</Fab>
 ```
 
+### `glass`
+
+- `true`
+
+```tsx
+<Fab glass="true">…</Fab>
+```
+
 ## API Reference
 
 ### Fab
@@ -286,6 +332,7 @@ The extended form, in each of the three corners it can take.
 | `style` | `ViewProps['style']` | — | Placement-aware view style. Press-state styling belongs in `className`. |
 | `disabled` | `boolean` | `false` |  |
 | `haptics` | `boolean` | `false` | A tick on press. Off by default — needs the optional `expo-haptics`, and is silent without it. |
+| `glass` | `boolean` | `false` | Draw it in Liquid Glass — the material iOS 26 uses for its own floating controls — instead of the variant's fill. `primary` and `destructive` tint the material with their colour; the other variants take it plain. Needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android, on web, or with Reduce Transparency on, it does nothing and the button keeps its ordinary fill. |
 | `accessibilityLabel` | `string` | — | Required for an icon-only button. A lone glyph reads out as nothing. |
 
 ### Fab.Group
@@ -303,6 +350,7 @@ The extended form, in each of the three corners it can take.
 | `variant` | `FabVariant` | `primary` |  |
 | `disabled` | `boolean` | `false` |  |
 | `haptics` | `boolean` | `false` |  |
+| `glass` | `boolean` | `false` | Draw the trigger and its actions in Liquid Glass. The same flag as on `Fab`, with the same floor: iOS 26 and `expo-glass-effect`, inert elsewhere. |
 | `blur` | `boolean` | `false` | Frost the screen behind the open dial instead of dimming it. |
 | `accessibilityLabel` | `string` | — | Required — the trigger is a lone glyph until it is opened. |
 | `rotateOnOpen` | `boolean` | `true` | Turn the trigger's glyph a quarter circle while the dial is open. On by default, and it is doing real work when the glyph is a plus: the same mark becomes a cross, which says "this closes now" without a second icon that has to be swapped in. Turn it off for a glyph that means something at one angle only. |
@@ -352,6 +400,12 @@ The whole dial runs off a single shared value, and each action works out its own
 ### The trigger turns rather than swapping
 
 `rotateOnOpen` gives the glyph a quarter circle while the dial is up. That is doing real work when the glyph is a plus: the same mark becomes a cross, so the button says *this closes now* without a second icon to swap in. Turn it off for a glyph that means something at one angle only.
+
+### Glass is a material, not a colour
+
+`glass` is inert where the material cannot be drawn, and it cannot be drawn below iOS 26, on Android, on web, without `expo-glass-effect`, or with Reduce Transparency on. Nothing is faked there: a hand-drawn approximation of a system material is a near-miss on the one platform that has the real thing, and an iOS look pasted onto Android. The button keeps its variant's fill instead.
+
+A disabled glass button dims its glyph and label rather than the material. A faded material stops being one.
 
 ### Press behavior composes with the button
 

@@ -27,6 +27,7 @@ import { Fab } from 'panelui-native';
 - **extended** — `true`, `false` *(default)*
 - **variant** — `primary` *(default)*, `secondary`, `surface`, `destructive`
 - **disabled** — `true`
+- **glass** — `true`
 
 ### Parts
 
@@ -50,6 +51,7 @@ Extends `Omit<AnimatedPressableProps, 'children' \| 'style' \| 'disabled'>, Omit
 | `style` | `ViewProps['style']` | — | Placement-aware view style. Press-state styling belongs in `className`. |
 | `disabled` | `boolean` | `false` | — |
 | `haptics` | `boolean` | `false` | A tick on press. Off by default — needs the optional `expo-haptics`, and is silent without it. |
+| `glass` | `boolean` | `false` | Draw it in Liquid Glass — the material iOS 26 uses for its own floating controls — instead of the variant's fill. `primary` and `destructive` tint the material with their colour; the other variants take it plain. Needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android, on web, or with Reduce Transparency on, it does nothing and the button keeps its ordinary fill. |
 | `accessibilityLabel` | `string` | — | Required for an icon-only button. A lone glyph reads out as nothing. |
 
 #### `FabGroupProps`
@@ -70,6 +72,7 @@ Extends `Omit<ViewProps, 'children'>`.
 | `variant` | `FabVariant` | `primary` | — |
 | `disabled` | `boolean` | `false` | — |
 | `haptics` | `boolean` | `false` | — |
+| `glass` | `boolean` | `false` | Draw the trigger and its actions in Liquid Glass. The same flag as on `Fab`, with the same floor: iOS 26 and `expo-glass-effect`, inert elsewhere. |
 | `blur` | `boolean` | `false` | Frost the screen behind the open dial instead of dimming it. |
 | `accessibilityLabel` | `string` | — | Required — the trigger is a lone glyph until it is opened. |
 | `rotateOnOpen` | `boolean` | `true` | Turn the trigger's glyph a quarter circle while the dial is open. On by default, and it is doing real work when the glyph is a plus: the same mark becomes a cross, which says "this closes now" without a second icon that has to be swapped in. Turn it off for a glyph that means something at one angle only. |
@@ -139,6 +142,12 @@ The whole dial runs off a single shared value, and each action works out its own
 ### The trigger turns rather than swapping
 
 `rotateOnOpen` gives the glyph a quarter circle while the dial is up. That is doing real work when the glyph is a plus: the same mark becomes a cross, so the button says *this closes now* without a second icon to swap in. Turn it off for a glyph that means something at one angle only.
+
+### Glass is a material, not a colour
+
+`glass` is inert where the material cannot be drawn, and it cannot be drawn below iOS 26, on Android, on web, without `expo-glass-effect`, or with Reduce Transparency on. Nothing is faked there: a hand-drawn approximation of a system material is a near-miss on the one platform that has the real thing, and an iOS look pasted onto Android. The button keeps its variant's fill instead.
+
+A disabled glass button dims its glyph and label rather than the material. A faded material stops being one.
 
 ### Press behavior composes with the button
 

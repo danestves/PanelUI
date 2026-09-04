@@ -44,6 +44,24 @@
  * instead of a menu appearing. Every action carries its label beside it, because
  * a column of unlabelled circles is a quiz.
  *
+ * ## Glass
+ *
+ * ```tsx
+ * <Fab glass icon={<PlusIcon size={24} />} accessibilityLabel="New note" />
+ * ```
+ *
+ * `glass` draws the button in the material iOS 26 uses for its own floating
+ * controls, in place of the variant's fill. A control floating over content is
+ * exactly what that material is for: it refracts what scrolls under it rather
+ * than covering it, and lifts its own edge, so the shadow goes too.
+ *
+ * `primary` and `destructive` tint the material with their colour, so the one
+ * action a screen leads with stays the one that stands out; `secondary` and
+ * `surface` take the plain material. The material exists on iOS 26 and above
+ * with the optional `expo-glass-effect` installed. Everywhere else — older iOS,
+ * Android, web, Reduce Transparency on — the flag is inert and the button keeps
+ * its ordinary fill, so nothing has to be written twice.
+ *
  * Opening also drops a scrim over the screen. Not for looks: an open dial is
  * modal — the next tap either picks something or closes it — and a scrim is what
  * says so, as well as what catches the tap that closes it.
@@ -89,6 +107,7 @@ import {
   AnimatedPressable,
   type AnimatedPressableProps,
 } from '../../primitives/animated-pressable';
+import { Glass, useGlassMaterial } from '../../primitives/glass';
 import { Scrim } from '../../primitives/scrim';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
@@ -110,9 +129,13 @@ const ACTION_TRAVEL = 12;
 /** A quarter turn on the trigger while the dial is open — a plus becomes a cross. */
 const OPEN_ROTATION = 45;
 
+/** The diameter of each size, in points — the radius the material rounds itself to. */
+const SIZE_PX = { sm: 44, md: 56, lg: 64 } as const;
+
 const fabVariants = tv({
   slots: {
-    root: 'flex-row items-center justify-center gap-2 rounded-full bg-primary shadow-lg',
+    root: 'items-center justify-center rounded-full bg-primary shadow-lg',
+    content: 'flex-row items-center justify-center gap-2',
     label: 'font-medium text-primary-foreground',
   },
   variants: {
@@ -140,8 +163,17 @@ const fabVariants = tv({
     disabled: {
       true: { root: 'opacity-[0.64] shadow-none' },
     },
+    /* The material replaces the fill, the border and the shadow: it draws its
+       own edge, and a shadow under a translucent surface is a smudge behind it.
+       Only set when the material is really being drawn — see `useGlassMaterial`. */
+    glass: {
+      true: { root: 'border-0 bg-transparent shadow-none' },
+    },
   },
   compoundVariants: [
+    /* A faded material stops being one, so a disabled glass button dims what
+       sits on the material rather than the material itself. */
+    { glass: true, disabled: true, class: { root: 'opacity-100', content: 'opacity-[0.64]' } },
     { extended: true, size: 'sm', class: { root: 'px-4' } },
     { extended: true, size: 'md', class: { root: 'px-5' } },
     { extended: true, size: 'lg', class: { root: 'px-6' } },
@@ -153,6 +185,7 @@ const fabVariants = tv({
     size: 'md',
     variant: 'primary',
     extended: false,
+    glass: false,
   },
 });
 
@@ -169,6 +202,22 @@ const CONTENT_COLOR_VAR: Record<FabVariant, string> = {
   destructive: '--color-destructive-solid-foreground',
   secondary: '--color-secondary-foreground',
   surface: '--color-foreground',
+};
+
+/**
+ * What tints the glass, per variant.
+ *
+ * The filled variants keep their colour as a tint, so a primary button is still
+ * the accent-coloured one when it is glass. The quiet ones take the plain
+ * material, and their content reads in the ordinary foreground: the material
+ * is neither light nor dark, and a secondary foreground chosen for a secondary
+ * fill has no fill to be chosen for.
+ */
+const GLASS_TINT_VAR: Record<FabVariant, string | null> = {
+  primary: '--color-primary',
+  destructive: '--color-destructive',
+  secondary: null,
+  surface: null,
 };
 
 /** Where a floating button parks itself, given its offset. */
@@ -214,6 +263,16 @@ export interface FabProps
    * is silent without it.
    */
   haptics?: boolean;
+  /**
+   * Draw it in Liquid Glass — the material iOS 26 uses for its own floating
+   * controls — instead of the variant's fill. `primary` and `destructive` tint
+   * the material with their colour; the other variants take it plain.
+   *
+   * Needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android,
+   * on web, or with Reduce Transparency on, it does nothing and the button
+   * keeps its ordinary fill.
+   */
+  glass?: boolean;
   /** Required for an icon-only button. A lone glyph reads out as nothing. */
   accessibilityLabel?: string;
 }
@@ -231,6 +290,7 @@ const FabRoot = forwardRef<View, FabProps>(
       variant,
       disabled = false,
       haptics = false,
+      glass = false,
       onPress,
       style,
       ...props
@@ -238,16 +298,28 @@ const FabRoot = forwardRef<View, FabProps>(
     ref
   ) => {
     const isDisabled = Boolean(disabled);
-    const { root, label } = fabVariants({
+    // Asked for *and* drawable. Where the material cannot be drawn the flag
+    // changes nothing, so the fill, border and shadow all stay.
+    const material = useGlassMaterial() && glass;
+    const resolvedVariant = variant ?? 'primary';
+    const tintVar = GLASS_TINT_VAR[resolvedVariant];
+    const { root, content, label } = fabVariants({
       size,
       variant,
       extended: extended && !!children,
       disabled: isDisabled,
+      glass: material,
     });
 
-    const themed = useCSSVariable(CONTENT_COLOR_VAR[variant ?? 'primary']);
-    const contentColor =
-      typeof themed === 'string' ? themed : undefined;
+    // Over the plain material the content reads in the ordinary foreground;
+    // over a tinted one, or an ordinary fill, in the variant's own.
+    const themed = useCSSVariable(
+      material && !tintVar ? '--color-foreground' : CONTENT_COLOR_VAR[resolvedVariant]
+    );
+    const contentColor = typeof themed === 'string' ? themed : undefined;
+    // Resolved unconditionally: a hook cannot come and go with a prop.
+    const themedTint = useCSSVariable(tintVar ?? '--color-primary');
+    const tint = tintVar && typeof themedTint === 'string' ? themedTint : undefined;
 
     const handlePress = useCallback<NonNullable<AnimatedPressableProps['onPress']>>(
       (event) => {
@@ -269,10 +341,27 @@ const FabRoot = forwardRef<View, FabProps>(
           className={root({ className })}
           style={[placement ? anchor(placement, offset) : null, style]}
         >
-          {icon}
-          {extended && children ? (
-            <Text className={label()}>{children}</Text>
+          {material ? (
+            // A layer under the content rather than the box itself, so the
+            // touch target, the anchor and the press scale stay on the
+            // pressable. It rounds itself to the button's own radius: the
+            // material clipped by a rounded parent loses its lit edge.
+            <Glass
+              variant="regular"
+              tint={tint}
+              radius={SIZE_PX[size ?? 'md'] / 2}
+              pointerEvents="none"
+              style={StyleSheet.absoluteFill}
+            />
           ) : null}
+          <View className={content()}>
+            {icon}
+            {extended && children ? (
+              <Text className={label({ className: material && !tintVar ? 'text-foreground' : undefined })}>
+                {children}
+              </Text>
+            ) : null}
+          </View>
         </AnimatedPressable>
       </IconColorProvider>
     );
@@ -293,6 +382,8 @@ interface FabGroupContextValue {
   progress: SharedValue<number>;
   count: number;
   size: FabSize;
+  /** The trigger's material, which the actions unfold in too. */
+  glass: boolean;
   close: () => void;
 }
 
@@ -323,6 +414,12 @@ export interface FabGroupProps extends Omit<ViewProps, 'children'> {
   variant?: FabVariant;
   disabled?: boolean;
   haptics?: boolean;
+  /**
+   * Draw the trigger and its actions in Liquid Glass. The same flag as on
+   * `Fab`, with the same floor: iOS 26 and `expo-glass-effect`, inert
+   * elsewhere.
+   */
+  glass?: boolean;
   /** Frost the screen behind the open dial instead of dimming it. */
   blur?: boolean;
   /** Required — the trigger is a lone glyph until it is opened. */
@@ -362,6 +459,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
       variant,
       disabled = false,
       haptics = false,
+      glass = false,
       blur = false,
       rotateOnOpen = true,
       accessibilityLabel,
@@ -415,8 +513,8 @@ const FabGroup = forwardRef<View, FabGroupProps>(
     const close = useCallback(() => setOpen(false), [setOpen]);
 
     const context = useMemo<FabGroupContextValue>(
-      () => ({ progress, count: actionCount, size, close }),
-      [progress, actionCount, size, close]
+      () => ({ progress, count: actionCount, size, glass, close }),
+      [progress, actionCount, size, glass, close]
     );
 
     const toggle = useCallback(() => {
@@ -492,6 +590,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
               size={size}
               variant={variant}
               disabled={disabled}
+              glass={glass}
               accessibilityLabel={accessibilityLabel}
               accessibilityState={{ disabled, expanded: open }}
               onPress={toggle}
@@ -583,7 +682,7 @@ const FabAction = forwardRef<View, FabActionProps>(
     { className, icon, label, onPress, disabled = false, destructive = false, labelClassName, ...props },
     ref
   ) => {
-    const { size, close } = useFabGroup('Fab.Action');
+    const { size, glass, close } = useFabGroup('Fab.Action');
 
     const handlePress = useCallback(() => {
       close();
@@ -607,6 +706,7 @@ const FabAction = forwardRef<View, FabActionProps>(
           size={size === 'lg' ? 'md' : 'sm'}
           variant={destructive ? 'destructive' : 'surface'}
           disabled={disabled}
+          glass={glass}
           accessibilityLabel={label}
           onPress={handlePress}
           className={className}
