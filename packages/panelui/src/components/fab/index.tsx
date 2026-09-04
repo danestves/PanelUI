@@ -107,7 +107,6 @@ import {
   isValidElement,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactElement,
@@ -127,7 +126,6 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useDerivedValue,
-  useSharedValue,
   withSpring,
   type SharedValue,
 } from 'react-native-reanimated';
@@ -217,9 +215,8 @@ const MENU_METRICS: Record<FabMenuAppearance, MenuMetrics> = {
   wells: { width: 224, radius: 22, row: 48, hairline: 0, padding: 6, icon: 'leading' },
 };
 
-/** How small the menu starts, and the spring that grows it out of the trigger. */
+/** How small the menu starts before the dial's spring grows it out of the trigger. */
 const MENU_FROM_SCALE = 0.3;
-const MENU_SPRING = { damping: 18, stiffness: 260, mass: 0.6 } as const;
 
 /** The gap between the panel and the trigger — the group's `gap-3`. */
 const GROUP_GAP = 12;
@@ -1074,7 +1071,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
                 buttons nobody can see. */}
             {present && resolvedLayout === 'menu' ? (
               <FabMenu
-                open={open}
+                progress={progress}
                 placement={placement}
                 size={size}
                 glass={material}
@@ -1132,7 +1129,7 @@ FabGroup.displayName = 'Fab.Group';
  * nearest the trigger first.
  */
 function FabMenu({
-  open,
+  progress,
   placement,
   size,
   glass,
@@ -1142,7 +1139,8 @@ function FabMenu({
   className,
   children,
 }: {
-  open: boolean;
+  /** The dial's own 0-to-1, so the panel and its unmount cannot disagree. */
+  progress: SharedValue<number>;
   placement: FabPlacement;
   size: FabSize;
   glass: boolean;
@@ -1156,14 +1154,21 @@ function FabMenu({
   const width = widthProp ?? metrics.width;
   const radius = radiusProp ?? metrics.radius;
 
-  // Starts collapsed on the trigger and springs open from there; a derived
-  // value would begin wherever the spring's first frame lands.
-  const pop = useSharedValue(0);
-  useEffect(() => {
-    pop.value = withSpring(open ? 1 : 0, MENU_SPRING);
-  }, [open, pop]);
+  /*
+   * The panel rides the group's own spring rather than one of its own.
+   *
+   * It used to run a second, faster spring, and closing raced it against the
+   * one that decides when the panel unmounts: the panel reached its collapsed
+   * scale early and then sat there, a small box above the trigger, until the
+   * slower spring came to rest and took it away. One value cannot race
+   * itself, so the panel is gone exactly when the dial says it is.
+   *
+   * Scale and not opacity, for the same reason the dial's actions are: the
+   * material survives a zero scale and does not come back from a zero
+   * opacity.
+   */
   const style = useAnimatedStyle(() => ({
-    transform: [{ scale: interpolate(pop.value, [0, 1], [MENU_FROM_SCALE, 1]) }],
+    transform: [{ scale: interpolate(progress.value, [0, 1], [MENU_FROM_SCALE, 1]) }],
   }));
 
   return (
