@@ -190,7 +190,14 @@ export function Glass({
 
   return (
     <View
-      className={cn('overflow-hidden', material ? null : fallbackClassName, className)}
+      // An interactive material swells past its box under a touch, and a clip
+      // at the box's edge cuts the swell into a hard ring. It rounds itself,
+      // so nothing needs clipping there.
+      className={cn(
+        material && interactive ? null : 'overflow-hidden',
+        material ? null : fallbackClassName,
+        className
+      )}
       style={[shape, style]}
       {...props}
     >
