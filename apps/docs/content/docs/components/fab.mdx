@@ -124,6 +124,14 @@ Opening drops a scrim over the screen. Not for looks: an open dial is modal — 
 
 With `glass` the panel is one piece of the material and the rows are content on it. Without it the panel is the same surface a popover is. Everything else is the dial's: the scrim, the close on press, the back button.
 
+<PreviewVideo
+  src="/previews/fab-a-menu.mp4"
+  poster="/previews/fab-a-menu-poster.jpg"
+  alt="Fab — A menu."
+  width={720}
+  height={1566}
+/>
+
 ```tsx
 <Fab.Group layout="menu" glass icon={<PlusIcon size={24} />} accessibilityLabel="Add something" blur>
   <Fab.Action icon={<ImageIcon size={18} />} label="Photo" onPress={addPhoto} />
@@ -318,6 +326,14 @@ A dial in the platform material over the list. Needs iOS 26 — anywhere else it
 
 One panel of rows springing out of the button, in the material.
 
+<PreviewVideo
+  src="/previews/fab-a-menu.mp4"
+  poster="/previews/fab-a-menu-poster.jpg"
+  alt="Fab — A menu."
+  width={720}
+  height={1566}
+/>
+
 ```tsx
 <Fab.Group layout="menu" glass icon={<PlusIcon size={24} />} accessibilityLabel="Add something" blur>
   <Fab.Action icon={<ImageIcon size={18} />} label="Photo" onPress={addPhoto} />
@@ -330,6 +346,14 @@ One panel of rows springing out of the button, in the material.
 ### A menu, with wells
 
 The same menu in the wells appearance: the glyph leads in a tinted well and each row is its own pill.
+
+<PreviewVideo
+  src="/previews/fab-a-menu-with-wells.mp4"
+  poster="/previews/fab-a-menu-with-wells-poster.jpg"
+  alt="Fab — A menu, with wells."
+  width={720}
+  height={1566}
+/>
 
 ```tsx
 <Fab.Group layout="menu" appearance="wells" glass icon={<PlusIcon size={24} />} accessibilityLabel="Add something" blur>

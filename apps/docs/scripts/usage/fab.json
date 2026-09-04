@@ -42,7 +42,14 @@
     {
       "title": "A menu",
       "description": "`layout=\"menu\"` unfolds one panel of rows out of the button instead of a column of buttons — the shape the platform's own menus take. Each row is its label with a glyph, and the panel springs out of the corner the trigger sits in, so it reads as the button opening rather than a sheet arriving.\n\n`appearance` picks the drawing. `platform`, the default, is the system's: a hairline between rows and the glyph after the label. `wells` is tighter, with the glyph leading in a tinted well and each row its own pill — a menu the app designed rather than the system. `iconPlacement`, `menuWidth`, `menuRadius`, `menuClassName` and `rowClassName` adjust either.\n\nWith `glass` the panel is one piece of the material and the rows are content on it. Without it the panel is the same surface a popover is. Everything else is the dial's: the scrim, the close on press, the back button.",
-      "code": "<Fab.Group layout=\"menu\" glass icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>\n\n{/* the app's own shape */}\n<Fab.Group layout=\"menu\" appearance=\"wells\" glass icon={<PlusIcon size={24} />} accessibilityLabel=\"Add\">\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
+      "code": "<Fab.Group layout=\"menu\" glass icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>\n\n{/* the app's own shape */}\n<Fab.Group layout=\"menu\" appearance=\"wells\" glass icon={<PlusIcon size={24} />} accessibilityLabel=\"Add\">\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>",
+      "previewVideo": {
+        "src": "/previews/fab-a-menu.mp4",
+        "poster": "/previews/fab-a-menu-poster.jpg",
+        "alt": "Fab — A menu.",
+        "width": 720,
+        "height": 1566
+      }
     },
     {
       "title": "Liquid Glass",
@@ -137,12 +144,26 @@
     {
       "title": "A menu",
       "description": "One panel of rows springing out of the button, in the material.",
-      "code": "<Fab.Group layout=\"menu\" glass icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
+      "code": "<Fab.Group layout=\"menu\" glass icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>",
+      "previewVideo": {
+        "src": "/previews/fab-a-menu.mp4",
+        "poster": "/previews/fab-a-menu-poster.jpg",
+        "alt": "Fab — A menu.",
+        "width": 720,
+        "height": 1566
+      }
     },
     {
       "title": "A menu, with wells",
       "description": "The same menu in the wells appearance: the glyph leads in a tinted well and each row is its own pill.",
-      "code": "<Fab.Group layout=\"menu\" appearance=\"wells\" glass icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
+      "code": "<Fab.Group layout=\"menu\" appearance=\"wells\" glass icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>",
+      "previewVideo": {
+        "src": "/previews/fab-a-menu-with-wells.mp4",
+        "poster": "/previews/fab-a-menu-with-wells-poster.jpg",
+        "alt": "Fab — A menu, with wells.",
+        "width": 720,
+        "height": 1566
+      }
     }
   ],
   "previewVideo": {
