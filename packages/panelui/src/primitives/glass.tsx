@@ -200,7 +200,7 @@ export function Glass({
           tintColor={tint}
           isInteractive={interactive}
           colorScheme={mode}
-          pointerEvents={interactive ? 'box-none' : 'none'}
+          pointerEvents={interactive ? 'auto' : 'none'}
           style={[StyleSheet.absoluteFill, shape]}
         >
           {interactive ? children : null}
