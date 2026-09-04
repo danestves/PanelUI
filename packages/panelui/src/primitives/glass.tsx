@@ -36,6 +36,10 @@
  * its own corners — clipping a square one to a rounded parent throws away the
  * lit edge that makes it read as glass.
  *
+ * `interactive` is the one exception to the layer: the platform only animates
+ * the glass under a touch it can see, so with it on the children are hosted
+ * inside the material. Reach for it when the glass *is* the button.
+ *
  * ## Do not fade it
  *
  * Setting `opacity` to `0` on the material or on anything above it stops it
@@ -74,6 +78,7 @@ function shapeOf(radius: GlassRadius | undefined) {
 interface GlassViewProps {
   glassEffectStyle?: GlassVariant | 'none';
   tintColor?: string;
+  isInteractive?: boolean;
   colorScheme?: 'auto' | 'light' | 'dark';
   style?: StyleProp<ViewStyle>;
   pointerEvents?: ViewProps['pointerEvents'];
@@ -144,6 +149,16 @@ export interface GlassProps extends ViewProps {
    * to a rounded parent throws away the lit edge that makes it read as glass.
    */
   radius?: GlassRadius;
+  /**
+   * Let the material answer touch the way the platform's own controls do:
+   * it brightens and swells under the finger and the highlight follows it.
+   *
+   * For a material that *is* a button. The platform only tracks touches that
+   * land inside the glass view, so with this on the content is hosted inside
+   * the material rather than above it — a pressable written as a child still
+   * gets its press, and the glass reacts to the same touch.
+   */
+  interactive?: boolean;
   /** Applied only when the material cannot be drawn. Give it a real surface. */
   fallbackClassName?: string;
   className?: string;
@@ -153,6 +168,7 @@ export function Glass({
   variant = 'regular',
   tint,
   radius,
+  interactive = false,
   fallbackClassName = 'bg-card',
   className,
   children,
@@ -182,12 +198,15 @@ export function Glass({
         <GlassView
           glassEffectStyle={variant}
           tintColor={tint}
+          isInteractive={interactive}
           colorScheme={mode}
-          pointerEvents="none"
+          pointerEvents={interactive ? 'box-none' : 'none'}
           style={[StyleSheet.absoluteFill, shape]}
-        />
+        >
+          {interactive ? children : null}
+        </GlassView>
       ) : null}
-      {children}
+      {material && interactive ? null : children}
     </View>
   );
 }
