@@ -71,11 +71,11 @@
  * exactly what that material is for: it refracts what scrolls under it rather
  * than covering it, and lifts its own edge, so the shadow goes too.
  *
- * Every variant takes the plain material and reads its glyph in the ordinary
- * foreground colour, because a tint is a dimmer: measured over content, a
- * primary colour laid on the glass turns it back into a fill and a monochrome
- * one only greys it. `destructive` is the exception, and keeps a translucent
- * red — that colour carries meaning. Pressed, it answers the way the platform's
+ * Every variant takes the plain material, because a tint is a dimmer: measured
+ * over content, a colour laid on the glass turns it back into a fill and a
+ * monochrome one only greys it. The glyph reads in the ordinary foreground
+ * colour, and in red on `destructive` — the colour that carries meaning goes
+ * on the glyph, where it stays legible. Pressed, it answers the way the platform's
  * own glass controls do: the material swells and brightens under the finger,
  * in place of this component's press scale. The material exists on iOS 26 and
  * above with the optional `expo-glass-effect` installed. Everywhere else — older iOS,
@@ -134,7 +134,6 @@ import { Glass, useGlassMaterial } from '../../primitives/glass';
 import { Scrim } from '../../primitives/scrim';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
-import { hsvToCss, parseColor } from '../../utils/color';
 import { selectionTick } from '../../utils/haptics';
 
 /** Which corner the button sits in. */
@@ -297,34 +296,20 @@ const CONTENT_COLOR_VAR: Record<FabVariant, string> = {
 };
 
 /**
- * What tints the glass, per variant — and only destructive does.
+ * The token each variant's glyph reads in over the glass.
  *
- * A tint is a dimmer on the material. At full strength it is a fill with a lit
- * edge, and a monochrome primary at any strength only greys the glass without
- * saying "primary". So the material is left plain, and every variant's glyph
- * reads in the ordinary foreground colour: the material is neither light nor
- * dark, and a foreground chosen for a fill has no fill to be chosen for. Red
- * is kept because it means something, and translucent so the glass survives.
+ * The material is never tinted: a tint is a dimmer, and at any strength it
+ * turns the glass back into a fill or greys it. So the glass is neither light
+ * nor dark and the glyph reads in the ordinary foreground — except on
+ * `destructive`, where the colour that carries meaning goes on the glyph
+ * instead, the way a menu's destructive row is red text on the same panel.
  */
-const GLASS_TINT_VAR: Record<FabVariant, string | null> = {
-  primary: null,
+const GLASS_CONTENT_COLOR_VAR: Record<FabVariant, string> = {
+  primary: '--color-foreground',
   destructive: '--color-destructive',
-  secondary: null,
-  surface: null,
+  secondary: '--color-foreground',
+  surface: '--color-foreground',
 };
-
-/**
- * How much of the tint the material takes. Measured over colour, the band
- * from a half to seven tenths keeps the colour recognisable and the content
- * under it visible; this sits inside it.
- */
-const GLASS_TINT_ALPHA = 0.6;
-
-/** The token's colour, translucent enough for the glass to stay glass. */
-function glassTint(color: string): string | undefined {
-  const parsed = parseColor(color);
-  return parsed ? hsvToCss(parsed.h, parsed.s, parsed.v, GLASS_TINT_ALPHA) : undefined;
-}
 
 /** Where a floating button parks itself, given its offset. */
 function anchor(placement: FabPlacement, offset: number) {
@@ -372,8 +357,8 @@ export interface FabProps
   /**
    * Draw it in Liquid Glass — the material iOS 26 uses for its own floating
    * controls — instead of the variant's fill. Every variant takes the plain
-   * material with its glyph in the foreground colour; `destructive` keeps a
-   * translucent red. Pressed, the material swells and brightens the way the
+   * material, with its glyph in the foreground colour and in red on
+   * `destructive`. Pressed, the material swells and brightens the way the
    * platform's own glass controls do.
    *
    * Needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android,
@@ -410,7 +395,6 @@ const FabRoot = forwardRef<View, FabProps>(
     // changes nothing, so the fill, border and shadow all stay.
     const material = useGlassMaterial() && glass;
     const resolvedVariant = variant ?? 'primary';
-    const tintVar = GLASS_TINT_VAR[resolvedVariant];
     const { root, content, label } = fabVariants({
       size,
       variant,
@@ -419,15 +403,10 @@ const FabRoot = forwardRef<View, FabProps>(
       glass: material,
     });
 
-    // Over the plain material the content reads in the ordinary foreground;
-    // over a tinted one, or an ordinary fill, in the variant's own.
     const themed = useCSSVariable(
-      material && !tintVar ? '--color-foreground' : CONTENT_COLOR_VAR[resolvedVariant]
+      (material ? GLASS_CONTENT_COLOR_VAR : CONTENT_COLOR_VAR)[resolvedVariant]
     );
     const contentColor = typeof themed === 'string' ? themed : undefined;
-    // Resolved unconditionally: a hook cannot come and go with a prop.
-    const themedTint = useCSSVariable(tintVar ?? '--color-destructive');
-    const tint = tintVar && typeof themedTint === 'string' ? glassTint(themedTint) : undefined;
 
     const handlePress = useCallback<NonNullable<AnimatedPressableProps['onPress']>>(
       (event) => {
@@ -454,7 +433,15 @@ const FabRoot = forwardRef<View, FabProps>(
         <View className={content()}>
           {icon}
           {extended && children ? (
-            <Text className={label({ className: material && !tintVar ? 'text-foreground' : undefined })}>
+            <Text
+              className={label({
+                className: material
+                  ? resolvedVariant === 'destructive'
+                    ? 'text-destructive'
+                    : 'text-foreground'
+                  : undefined,
+              })}
+            >
               {children}
             </Text>
           ) : null}
@@ -476,7 +463,6 @@ const FabRoot = forwardRef<View, FabProps>(
           <Glass
             interactive
             variant="regular"
-            tint={tint}
             radius={SIZE_PX[size ?? 'md'] / 2}
             className={root({ className })}
             style={[placement ? anchor(placement, offset) : null, style]}
