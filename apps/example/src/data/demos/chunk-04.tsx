@@ -1020,7 +1020,7 @@ function FabPlacementsDemo() {
  * demo with filled buttons — a working flag and a missing floor look
  * identical, and the description says which.
  */
-function FabGlassDemo() {
+function FabGlassDemo({ layout = 'dial' }: { layout?: 'dial' | 'menu' }) {
   const { toast } = useToast();
 
   const pick = (what: string, destructive = false) =>
@@ -1047,6 +1047,7 @@ function FabGlassDemo() {
 
       <Fab.Group
         glass
+        layout={layout}
         icon={<PlusIcon size={24} />}
         accessibilityLabel="Add something"
         placement="bottom-right"
@@ -1952,6 +1953,14 @@ export const ENTRIES: ComponentEntry[] = [
         description:
           'A dial in the platform material over the list — needs iOS 26. Anywhere else it is the filled one.',
         render: () => <FabGlassDemo />,
+      },
+      {
+        label: 'A menu',
+        id: 'menu',
+        fullPage: true,
+        description:
+          'One panel of rows springing out of the button, in the material — the shape the platform\'s own menus take.',
+        render: () => <FabGlassDemo layout="menu" />,
       },
       { label: 'Sizes and variants', render: () => <FabSizesDemo /> },
     ],
