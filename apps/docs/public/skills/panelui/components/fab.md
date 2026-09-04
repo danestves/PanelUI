@@ -74,6 +74,12 @@ Extends `Omit<ViewProps, 'children'>`.
 | `placement` | `FabPlacement` | `bottom-right` | Which corner of the *screen* the whole dial parks in. |
 | `offset` | `number` | `16` | Distance from the screen's edges, in points. Add your safe-area inset. |
 | `layout` | `FabGroupLayout` | `dial` | What opens out of the trigger. `dial`, the default, is a column of round buttons with their labels beside them. `menu` is one panel of rows — a label with its glyph after it — that springs out of the trigger's corner, the way the platform's own menus do. |
+| `appearance` | `FabMenuAppearance` | `platform` | How a menu is drawn. `platform`, the default, is the shape the platform's own menus take: a hairline between rows and the glyph after the label. `wells` is tighter, with the glyph leading in a tinted well and each row its own pill — a menu the app designed rather than the system. Menu layout only. |
+| `iconPlacement` | `FabMenuIconPlacement` | — | Which side of a menu row the glyph sits on. Each appearance has its own default. |
+| `menuWidth` | `number` | — | The menu panel's width in points. Each appearance has its own default. |
+| `menuRadius` | `number` | — | The menu panel's corner radius in points. Each appearance has its own default. |
+| `menuClassName` | `string` | — | Extra classes for the menu panel. |
+| `rowClassName` | `string` | — | Extra classes for every menu row. A row's own `className` comes after. |
 | `size` | `FabSize` | `md` | — |
 | `variant` | `FabVariant` | `primary` | — |
 | `disabled` | `boolean` | `false` | — |
@@ -126,6 +132,8 @@ The case it exists for. `placement` pins it to a corner against the nearest posi
 ### Dial or menu
 
 `layout` on `Fab.Group` decides what opens. `dial`, the default, is the column of round buttons with labels beside them. `menu` is one panel of rows that grows out of the trigger's corner. A dial reads as a handful of buttons and suits three or four glyphs that stand on their own; a menu reads as a list and suits actions that need their words.
+
+A menu has two appearances. `platform` is the system's own shape; `wells` leads with the glyph in a tinted well and makes each row a pill. Either takes `iconPlacement`, `menuWidth`, `menuRadius`, `menuClassName` and `rowClassName`, and a row's own `className` and `labelClassName` come after those.
 
 The menu panel scales in rather than fading in. The material cannot be faded — at zero it stops drawing — and a panel growing out of the button is what says the button opened.
 

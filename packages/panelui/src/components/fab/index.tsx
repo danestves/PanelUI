@@ -153,18 +153,38 @@ const ACTION_TRAVEL = 12;
 /** A quarter turn on the trigger while the dial is open — a plus becomes a cross. */
 const OPEN_ROTATION = 45;
 
-/** The menu panel: as wide as the platform's own, and rounded like it. */
-const MENU_WIDTH = 250;
-const MENU_RADIUS = 26;
+/** How the menu is drawn: the platform's own shape, or rows with a glyph well. */
+export type FabMenuAppearance = 'platform' | 'wells';
+
+/** Which side of a menu row the glyph sits on. */
+export type FabMenuIconPlacement = 'leading' | 'trailing';
+
+/**
+ * The metrics of each appearance, in points. Fixed rather than measured so
+ * the panel's height — and with it the point it grows from — is known on the
+ * first frame.
+ */
+interface MenuMetrics {
+  width: number;
+  radius: number;
+  row: number;
+  hairline: number;
+  padding: number;
+  icon: FabMenuIconPlacement;
+}
+
+const MENU_METRICS: Record<FabMenuAppearance, MenuMetrics> = {
+  /* As wide and as round as the platform's own menus, with the glyph after
+     the label and a hairline between rows, the way they draw it. */
+  platform: { width: 250, radius: 26, row: 44, hairline: 1, padding: 6, icon: 'trailing' },
+  /* Tighter, with the glyph leading in a tinted well and each row its own
+     pill — the shape of a menu an app designed rather than the system. */
+  wells: { width: 224, radius: 22, row: 48, hairline: 0, padding: 6, icon: 'leading' },
+};
 
 /** How small the menu starts, and the spring that grows it out of the trigger. */
 const MENU_FROM_SCALE = 0.3;
 const MENU_SPRING = { damping: 18, stiffness: 260, mass: 0.6 } as const;
-
-/** The menu's row metrics, in points: a row, the hairline above one, the panel's padding. */
-const MENU_ROW = 44;
-const MENU_HAIRLINE = 1;
-const MENU_PADDING = 6;
 
 /** The gap between the panel and the trigger — the group's `gap-3`. */
 const GROUP_GAP = 12;
@@ -176,17 +196,22 @@ const GROUP_GAP = 12;
  * Not the panel's corner. The panel sits a gap above the trigger, and a panel
  * scaling from its own corner grows out of thin air just above the button.
  * Scaling about the trigger's centre — below the panel, and in from its
- * edge by half a button — is what makes it come out of the button. The rows
- * have fixed heights, so the origin can be computed rather than measured,
- * and is right on the first frame.
+ * edge by half a button — is what makes it come out of the button.
  */
-function menuOrigin(placement: FabPlacement, count: number, size: FabSize): [number, number, number] {
-  const height = MENU_PADDING * 2 + MENU_ROW * count + MENU_HAIRLINE * Math.max(0, count - 1);
+function menuOrigin(
+  placement: FabPlacement,
+  metrics: MenuMetrics,
+  width: number,
+  count: number,
+  size: FabSize
+): [number, number, number] {
+  const height =
+    metrics.padding * 2 + metrics.row * count + metrics.hairline * Math.max(0, count - 1);
   const half = SIZE_PX[size] / 2;
   const y = height + GROUP_GAP + half;
   if (placement === 'bottom-left') return [half, y, 0];
-  if (placement === 'bottom-center') return [MENU_WIDTH / 2, y, 0];
-  return [MENU_WIDTH - half, y, 0];
+  if (placement === 'bottom-center') return [width / 2, y, 0];
+  return [width - half, y, 0];
 }
 
 /** How the group lines its parts up under each placement. */
@@ -486,6 +511,10 @@ interface FabGroupContextValue {
   /** The trigger's material, which the actions unfold in too. */
   glass: boolean;
   layout: FabGroupLayout;
+  /** The menu's appearance and where its rows put the glyph. */
+  appearance: FabMenuAppearance;
+  iconPlacement: FabMenuIconPlacement;
+  rowClassName?: string;
   close: () => void;
 }
 
@@ -519,6 +548,25 @@ export interface FabGroupProps extends Omit<ViewProps, 'children'> {
    * the way the platform's own menus do.
    */
   layout?: FabGroupLayout;
+  /**
+   * How a menu is drawn. `platform`, the default, is the shape the platform's
+   * own menus take: a hairline between rows and the glyph after the label.
+   * `wells` is tighter, with the glyph leading in a tinted well and each row
+   * its own pill — a menu the app designed rather than the system.
+   *
+   * Menu layout only.
+   */
+  appearance?: FabMenuAppearance;
+  /** Which side of a menu row the glyph sits on. Each appearance has its own default. */
+  iconPlacement?: FabMenuIconPlacement;
+  /** The menu panel's width in points. Each appearance has its own default. */
+  menuWidth?: number;
+  /** The menu panel's corner radius in points. Each appearance has its own default. */
+  menuRadius?: number;
+  /** Extra classes for the menu panel. */
+  menuClassName?: string;
+  /** Extra classes for every menu row. A row's own `className` comes after. */
+  rowClassName?: string;
   size?: FabSize;
   variant?: FabVariant;
   disabled?: boolean;
@@ -565,6 +613,12 @@ const FabGroup = forwardRef<View, FabGroupProps>(
       placement = 'bottom-right',
       offset = DEFAULT_OFFSET,
       layout = 'dial',
+      appearance = 'platform',
+      iconPlacement,
+      menuWidth,
+      menuRadius,
+      menuClassName,
+      rowClassName,
       size = 'md',
       variant,
       disabled = false,
@@ -623,8 +677,18 @@ const FabGroup = forwardRef<View, FabGroupProps>(
     const close = useCallback(() => setOpen(false), [setOpen]);
 
     const context = useMemo<FabGroupContextValue>(
-      () => ({ progress, count: actionCount, size, glass, layout, close }),
-      [progress, actionCount, size, glass, layout, close]
+      () => ({
+        progress,
+        count: actionCount,
+        size,
+        glass,
+        layout,
+        appearance,
+        iconPlacement: iconPlacement ?? MENU_METRICS[appearance].icon,
+        rowClassName,
+        close,
+      }),
+      [progress, actionCount, size, glass, layout, appearance, iconPlacement, rowClassName, close]
     );
 
     const toggle = useCallback(() => {
@@ -681,7 +745,16 @@ const FabGroup = forwardRef<View, FabGroupProps>(
                 the trigger would still be in the accessibility tree, and a
                 screen reader would walk into four buttons nobody can see. */}
             {open && layout === 'menu' ? (
-              <FabMenu open={open} placement={placement} size={size} glass={glass}>
+              <FabMenu
+                open={open}
+                placement={placement}
+                size={size}
+                glass={glass}
+                appearance={appearance}
+                width={menuWidth}
+                radius={menuRadius}
+                className={menuClassName}
+              >
                 {actions}
               </FabMenu>
             ) : null}
@@ -735,14 +808,26 @@ function FabMenu({
   placement,
   size,
   glass,
+  appearance,
+  width: widthProp,
+  radius: radiusProp,
+  className,
   children,
 }: {
   open: boolean;
   placement: FabPlacement;
   size: FabSize;
   glass: boolean;
+  appearance: FabMenuAppearance;
+  width?: number;
+  radius?: number;
+  className?: string;
   children: PressableChild[];
 }) {
+  const metrics = MENU_METRICS[appearance];
+  const width = widthProp ?? metrics.width;
+  const radius = radiusProp ?? metrics.radius;
+
   // Starts collapsed on the trigger and springs open from there; a derived
   // value would begin wherever the spring's first frame lands.
   const pop = useSharedValue(0);
@@ -755,17 +840,20 @@ function FabMenu({
 
   return (
     <Animated.View
-      style={[style, { transformOrigin: menuOrigin(placement, children.length, size) }]}
+      style={[
+        style,
+        { transformOrigin: menuOrigin(placement, metrics, width, children.length, size) },
+      ]}
     >
       <Glass
-        radius={MENU_RADIUS}
+        radius={radius}
         // Without the material the panel is the same surface a popover is.
         fallbackClassName="border border-border bg-popover shadow-lg"
-        className={cn('py-1.5', glass ? null : 'shadow-lg')}
-        style={{ width: MENU_WIDTH }}
+        className={cn(appearance === 'wells' ? 'p-1.5' : 'py-1.5', glass ? null : 'shadow-lg', className)}
+        style={{ width }}
       >
         {children.map((action, index) => (
-          <FabActionSlot key={index} index={index} separator={index > 0}>
+          <FabActionSlot key={index} index={index} separator={metrics.hairline > 0 && index > 0}>
             {action}
           </FabActionSlot>
         ))}
@@ -864,7 +952,9 @@ const FabAction = forwardRef<View, FabActionProps>(
     { className, icon, label, onPress, disabled = false, destructive = false, labelClassName, ...props },
     ref
   ) => {
-    const { size, glass, layout, close } = useFabGroup('Fab.Action');
+    const { size, glass, layout, appearance, iconPlacement, rowClassName, close } =
+      useFabGroup('Fab.Action');
+    const [pressed, setPressed] = useState(false);
 
     const handlePress = useCallback(() => {
       close();
@@ -875,12 +965,25 @@ const FabAction = forwardRef<View, FabActionProps>(
     const rowColor = typeof themedRow === 'string' ? themedRow : undefined;
 
     /*
-     * In a menu the action is a row on the panel: the label leads and the
-     * glyph follows it, which is the order the platform's own menus use. The
-     * press dims the row's content rather than scaling it — a row that shrinks
-     * inside a panel that does not looks detached from it.
+     * In a menu the action is a row on the panel. The press tints the row
+     * rather than scaling it — a row that shrinks inside a panel that does
+     * not looks detached from it — and the tint is React state rather than a
+     * worklet because it is a colour toggle, not a curve.
      */
     if (layout === 'menu') {
+      const wells = appearance === 'wells';
+      const glyph = wells ? (
+        <View
+          className={cn(
+            'h-8 w-8 items-center justify-center rounded-full',
+            destructive ? 'bg-destructive/15' : 'bg-foreground/10'
+          )}
+        >
+          {icon}
+        </View>
+      ) : (
+        icon
+      );
       return (
         <IconColorProvider color={rowColor}>
           <AnimatedPressable
@@ -889,22 +992,29 @@ const FabAction = forwardRef<View, FabActionProps>(
             accessibilityState={{ disabled }}
             disabled={disabled}
             onPress={handlePress}
+            onPressIn={() => setPressed(true)}
+            onPressOut={() => setPressed(false)}
             pressScale={1}
-            pressOpacity={0.5}
             className={cn(
-              'h-11 flex-row items-center justify-between gap-3 px-4',
+              'flex-row items-center gap-3',
+              wells ? 'h-12 rounded-2xl px-2' : 'h-11 px-4',
+              iconPlacement === 'trailing' ? 'justify-between' : null,
+              pressed && 'bg-foreground/10',
               disabled && 'opacity-40',
+              rowClassName,
               className
             )}
             {...props}
           >
+            {iconPlacement === 'leading' ? glyph : null}
             <Text
-              className={cn(destructive ? 'text-destructive' : 'text-foreground', labelClassName)}
+              size={wells ? 'base' : 'lg'}
+              className={cn('shrink', destructive ? 'text-destructive' : 'text-foreground', labelClassName)}
               numberOfLines={1}
             >
               {label}
             </Text>
-            {icon}
+            {iconPlacement === 'trailing' ? glyph : null}
           </AnimatedPressable>
         </IconColorProvider>
       );

@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1268,
+    "exports": 1270,
     "values": 326,
-    "types": 942,
+    "types": 944,
     "modules": 153,
     "components": 126,
     "hooks": 13
@@ -1217,6 +1217,14 @@
           },
           {
             "name": "FabGroupLayout",
+            "kind": "type"
+          },
+          {
+            "name": "FabMenuAppearance",
+            "kind": "type"
+          },
+          {
+            "name": "FabMenuIconPlacement",
             "kind": "type"
           }
         ]

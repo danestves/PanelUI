@@ -219,6 +219,8 @@ export {
   type FabSize,
   type FabVariant,
   type FabGroupLayout,
+  type FabMenuAppearance,
+  type FabMenuIconPlacement,
 } from './components/fab';
 export {
   Flow,
