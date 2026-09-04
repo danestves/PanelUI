@@ -106,6 +106,7 @@ import {
   isValidElement,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactElement,
@@ -116,6 +117,7 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
   useDerivedValue,
+  useSharedValue,
   withSpring,
   withTiming,
   type SharedValue,
@@ -156,15 +158,36 @@ const MENU_WIDTH = 250;
 const MENU_RADIUS = 26;
 
 /** How small the menu starts, and the spring that grows it out of the trigger. */
-const MENU_FROM_SCALE = 0.5;
+const MENU_FROM_SCALE = 0.3;
 const MENU_SPRING = { damping: 18, stiffness: 260, mass: 0.6 } as const;
 
-/** Which of the group's corners the menu grows from, per placement. */
-const MENU_ORIGIN: Record<FabPlacement, string> = {
-  'bottom-right': 'bottom right',
-  'bottom-center': 'bottom center',
-  'bottom-left': 'bottom left',
-};
+/** The menu's row metrics, in points: a row, the hairline above one, the panel's padding. */
+const MENU_ROW = 44;
+const MENU_HAIRLINE = 1;
+const MENU_PADDING = 6;
+
+/** The gap between the panel and the trigger — the group's `gap-3`. */
+const GROUP_GAP = 12;
+
+/**
+ * Where the menu grows from: the centre of the trigger, in the panel's own
+ * coordinates.
+ *
+ * Not the panel's corner. The panel sits a gap above the trigger, and a panel
+ * scaling from its own corner grows out of thin air just above the button.
+ * Scaling about the trigger's centre — below the panel, and in from its
+ * edge by half a button — is what makes it come out of the button. The rows
+ * have fixed heights, so the origin can be computed rather than measured,
+ * and is right on the first frame.
+ */
+function menuOrigin(placement: FabPlacement, count: number, size: FabSize): [number, number, number] {
+  const height = MENU_PADDING * 2 + MENU_ROW * count + MENU_HAIRLINE * Math.max(0, count - 1);
+  const half = SIZE_PX[size] / 2;
+  const y = height + GROUP_GAP + half;
+  if (placement === 'bottom-left') return [half, y, 0];
+  if (placement === 'bottom-center') return [MENU_WIDTH / 2, y, 0];
+  return [MENU_WIDTH - half, y, 0];
+}
 
 /** How the group lines its parts up under each placement. */
 const GROUP_ALIGN: Record<FabPlacement, string> = {
@@ -658,7 +681,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
                 the trigger would still be in the accessibility tree, and a
                 screen reader would walk into four buttons nobody can see. */}
             {open && layout === 'menu' ? (
-              <FabMenu open={open} placement={placement} glass={glass}>
+              <FabMenu open={open} placement={placement} size={size} glass={glass}>
                 {actions}
               </FabMenu>
             ) : null}
@@ -710,21 +733,30 @@ FabGroup.displayName = 'Fab.Group';
 function FabMenu({
   open,
   placement,
+  size,
   glass,
   children,
 }: {
   open: boolean;
   placement: FabPlacement;
+  size: FabSize;
   glass: boolean;
   children: PressableChild[];
 }) {
-  const pop = useDerivedValue(() => withSpring(open ? 1 : 0, MENU_SPRING), [open]);
+  // Starts collapsed on the trigger and springs open from there; a derived
+  // value would begin wherever the spring's first frame lands.
+  const pop = useSharedValue(0);
+  useEffect(() => {
+    pop.value = withSpring(open ? 1 : 0, MENU_SPRING);
+  }, [open, pop]);
   const style = useAnimatedStyle(() => ({
     transform: [{ scale: interpolate(pop.value, [0, 1], [MENU_FROM_SCALE, 1]) }],
   }));
 
   return (
-    <Animated.View style={[style, { transformOrigin: MENU_ORIGIN[placement] }]}>
+    <Animated.View
+      style={[style, { transformOrigin: menuOrigin(placement, children.length, size) }]}
+    >
       <Glass
         radius={MENU_RADIUS}
         // Without the material the panel is the same surface a popover is.
