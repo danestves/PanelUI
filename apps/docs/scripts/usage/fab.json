@@ -119,8 +119,8 @@
     },
     {
       "title": "Liquid Glass",
-      "description": "The list again, with the button in the platform material. Needs iOS 26 — anywhere else it is the filled one.",
-      "code": "<Fab\n  glass\n  placement=\"bottom-right\"\n  icon={<PlusIcon size={24} />}\n  accessibilityLabel=\"New note\"\n  haptics\n  onPress={compose}\n/>",
+      "description": "A dial in the platform material over the list. Needs iOS 26 — anywhere else it is the filled one.",
+      "code": "<Fab.Group glass icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\" blur>\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<PaperclipIcon size={18} />} label=\"Attachment\" onPress={attach} />\n  <Fab.Action icon={<MicIcon size={18} />} label=\"Voice note\" onPress={record} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>",
       "previewVideo": {
         "src": "/previews/fab-liquid-glass.mp4",
         "poster": "/previews/fab-liquid-glass-poster.jpg",
