@@ -9,6 +9,41 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.90.0] — 2026-09-04
+
+### Added
+
+- **`SectionProgress`** — a pill that floats over a long screen carrying two
+  readings: a ring filled to the scroll position, and the title of the section
+  being read. Pressing it opens the list of sections and jumps to any of them.
+  The two answer different questions and neither is enough alone — a percentage
+  says how much is left, a section name says what is being read.
+
+  It draws nothing on the first screen and stays once it has arrived, because a
+  label that came and went with the scroll direction is one the reader has to
+  catch rather than read. Open, the list and the pill are a single bordered
+  card: the pill's row is the end of the card rather than a control sitting
+  under a panel of its own.
+
+  An `Item` may carry a `color`, and the active section's colour is taken by
+  the ring, the label and a wash across the pill, crossfading between sections
+  — a second, peripheral signal for a screen whose parts already mean something
+  in colour.
+
+- **`useScrollSections` publishes the scroll position, as `scroll`.** The hook
+  already received the offset, the viewport and the content height in the event
+  it handles and threw all three away after picking a section out of them, so
+  anything wanting to draw how far through a page the reader is had to add a
+  second scroll listener to recover them. They are shared values, and they are
+  written before the jump guard rather than after it: a programmatic jump is
+  real travel, so the position keeps moving through it while the section stays
+  where the reader put it.
+
+### Docs
+
+- Recordings of `SectionProgress` on the page: the default pill, a colour per
+  section, and the top-anchored placement.
+
 ## [0.89.0] — 2026-09-03
 
 ### Added
