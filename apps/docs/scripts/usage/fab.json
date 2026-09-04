@@ -52,6 +52,11 @@
       }
     },
     {
+      "title": "A native menu",
+      "description": "`layout=\"native\"` hands the menu to the platform: a SwiftUI menu on iOS, a Compose dropdown on Android. The trigger stays a `Fab` — it is passed to the platform as the thing you press — so the button keeps its variant, its size and its glass, and only the menu is the system's.\n\nThe rows are drawn by the platform, so `className` and the theme tokens do not reach them. A row takes `label` and, on iOS, `systemImage` — an SF Symbol name, because SwiftUI names its symbols rather than taking a view for one. `destructive` and `disabled` cross over. On Android the `icon` element is used instead, hosted at a fixed size.\n\n`blur` still applies. The scrim behind the menu is ours, so the page recedes the way it does behind the dial and the panel, and the menu reads as belonging to the screen it opened on.\n\nWhere the menu sits is the platform's decision and cannot be set: iOS lifts it clear of the button, Android draws its dropdown over the anchor. The open state is the platform's too, so `open` and `onOpenChange` do nothing on iOS; Android's menu is controlled and honours both.\n\nIt needs the optional `@expo/ui`. Without it, and on the web, this falls back to `layout=\"menu\"` — so a working fallback and a missing package look the same, and the package is worth checking before the code is.",
+      "code": "<Fab.Group layout=\"native\" glass blur icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\">\n  <Fab.Action systemImage=\"photo\" label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action systemImage=\"paperclip\" label=\"Attachment\" onPress={attach} />\n  <Fab.Action systemImage=\"mic\" label=\"Voice note\" onPress={record} />\n  <Fab.Action systemImage=\"trash\" label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
+    },
+    {
       "title": "Liquid Glass",
       "description": "`glass` draws the button in the material iOS 26 uses for its own floating controls, in place of the variant's fill. A button floating over a list is what the material is for: the rows refract through it as they scroll under, and it lifts its own edge, so the shadow goes with the fill.\n\nEvery variant takes the plain material, with its glyph in the foreground colour and in red on `destructive`. A tint would only dim the glass: a colour laid on it turns it back into a fill, and a monochrome one greys it, so the colour that carries meaning goes on the glyph instead. Pressed, the material swells and brightens under the finger the way the platform's own glass controls do, in place of the usual press scale. On a `Fab.Group` the flag covers the trigger and every action.\n\nIt needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android, on web, or with Reduce Transparency on, the flag does nothing and the button keeps its ordinary fill — so it is safe to write once for every platform.",
       "code": "<Fab\n  glass\n  placement=\"bottom-right\"\n  icon={<PlusIcon size={24} />}\n  accessibilityLabel=\"New note\"\n  onPress={compose}\n/>\n\n<Fab.Group glass icon={<PlusIcon size={24} />} accessibilityLabel=\"Add\">\n  <Fab.Action icon={<ImageIcon size={18} />} label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action icon={<TrashIcon size={18} />} label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>",
@@ -164,6 +169,11 @@
         "width": 720,
         "height": 1566
       }
+    },
+    {
+      "title": "A native menu",
+      "description": "The platform's own menu, drawn by SwiftUI on iOS and Jetpack Compose on Android, over a page the scrim frosts. Without `@expo/ui` it is the panel instead.",
+      "code": "<Fab.Group layout=\"native\" glass blur icon={<PlusIcon size={24} />} accessibilityLabel=\"Add something\">\n  <Fab.Action systemImage=\"photo\" label=\"Photo\" onPress={addPhoto} />\n  <Fab.Action systemImage=\"paperclip\" label=\"Attachment\" onPress={attach} />\n  <Fab.Action systemImage=\"mic\" label=\"Voice note\" onPress={record} />\n  <Fab.Action systemImage=\"trash\" label=\"Empty drafts\" destructive onPress={empty} />\n</Fab.Group>"
     }
   ],
   "previewVideo": {

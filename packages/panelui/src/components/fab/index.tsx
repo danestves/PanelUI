@@ -136,6 +136,12 @@ import { useCSSVariable } from 'uniwind';
 import { IconColorProvider } from '../../icons';
 import { useBackHandler } from '../../hooks/use-back-handler';
 import {
+  NativeHost,
+  getComposeMenu,
+  getSwiftUIMenu,
+  getSwiftUIModifiers,
+} from '../../native';
+import {
   AnimatedPressable,
   type AnimatedPressableProps,
 } from '../../primitives/animated-pressable';
@@ -519,8 +525,21 @@ FabRoot.displayName = 'Fab';
 /** Whatever was written as a dial child, and the one prop a slot reaches for. */
 type PressableChild = ReactElement<{ onPress?: (event: GestureResponderEvent) => void }>;
 
-/** What opens out of the trigger: a column of buttons, or one panel of rows. */
-export type FabGroupLayout = 'dial' | 'menu';
+/**
+ * What opens out of the trigger: a column of buttons, one panel of rows, or
+ * the platform's own menu.
+ */
+export type FabGroupLayout = 'dial' | 'menu' | 'native';
+
+/**
+ * How big a hosted glyph is drawn in a platform menu row, in points.
+ *
+ * Stated rather than measured because it has to be: anything of ours inside
+ * the native tree needs a definite size on both axes above it, and an icon
+ * whose box the platform is left to work out is the crash this library has
+ * already paid for twice.
+ */
+const NATIVE_ROW_ICON = 24;
 
 interface FabGroupContextValue {
   /** 0 closed, 1 open. Every action reads it and its own index off it. */
@@ -565,6 +584,20 @@ export interface FabGroupProps extends Omit<ViewProps, 'children'> {
    * buttons with their labels beside them. `menu` is one panel of rows — a
    * label with its glyph, on the side the appearance puts it — that springs
    * out of the trigger's corner, the way the platform's own menus do.
+   * `native` hands the menu to the platform: SwiftUI on iOS, Jetpack Compose
+   * on Android.
+   *
+   * A native menu is drawn by the platform, so `className` and the theme
+   * tokens do not reach it, and the rows take `label` and `systemImage` rather
+   * than an `icon` element. `blur` still applies: the scrim behind the menu is
+   * ours, so the page recedes the way it does behind the dial and the panel.
+   *
+   * On iOS the platform owns the menu's open state, so `open` and
+   * `onOpenChange` do nothing there. Android's menu is controlled and honours
+   * both.
+   *
+   * Where the platform menu cannot be drawn — on the web, or without
+   * `@expo/ui` installed — this falls back to `menu`.
    */
   layout?: FabGroupLayout;
   /**
@@ -679,6 +712,19 @@ const FabGroup = forwardRef<View, FabGroupProps>(
     const actionCount = actions.length;
 
     /*
+     * The platform's menu, when one was asked for and the toolkit is there.
+     *
+     * Resolved before anything below reads `layout`, because a native menu
+     * that cannot be drawn is not an error — it falls back to the panel, and
+     * every decision after this one has to be made against the layout that is
+     * really being drawn rather than the one that was requested.
+     */
+    const swiftMenu = layout === 'native' ? getSwiftUIMenu() : null;
+    const composeMenu = layout === 'native' && !swiftMenu ? getComposeMenu() : null;
+    const resolvedLayout: FabGroupLayout =
+      layout === 'native' && !swiftMenu && !composeMenu ? 'menu' : layout;
+
+    /*
      * One shared value for the whole dial rather than one per action.
      *
      * The stagger is a function of the action's index, applied on the UI
@@ -725,13 +771,13 @@ const FabGroup = forwardRef<View, FabGroupProps>(
         count: actionCount,
         size,
         glass: material,
-        layout,
+        layout: resolvedLayout,
         appearance,
         iconPlacement: iconPlacement ?? MENU_METRICS[appearance].icon,
         rowClassName,
         close,
       }),
-      [progress, actionCount, size, material, layout, appearance, iconPlacement, rowClassName, close]
+      [progress, actionCount, size, material, resolvedLayout, appearance, iconPlacement, rowClassName, close]
     );
 
     const toggle = useCallback(() => {
@@ -743,7 +789,236 @@ const FabGroup = forwardRef<View, FabGroupProps>(
     // standing over the screen underneath.
     useBackHandler(open, close);
 
-    const Group = material && layout === 'dial' ? GlassContainer : View;
+    const themedDestructive = useCSSVariable('--color-destructive');
+
+    const Group = material && resolvedLayout === 'dial' ? GlassContainer : View;
+
+    /*
+     * The trigger as the platform hosts it.
+     *
+     * Sized here rather than left to the platform, on both axes where both are
+     * known. An axis handed to `matchContents` is written back to for good, and
+     * a hosted view with nothing definite above it is the crash this library
+     * has already paid for twice — so a circle states its diameter, and only an
+     * extended button's width, which is its label's, is the platform's to
+     * measure.
+     */
+    const triggerSize = SIZE_PX[size];
+    const triggerExtended = !!label;
+    const triggerFrame = triggerExtended
+      ? { height: triggerSize }
+      : { width: triggerSize, height: triggerSize };
+
+    const nativeTrigger = (
+      <View
+        // On iOS the menu owns the tap: a pressable in front of it would eat
+        // the touch and the menu would never open. Android's is controlled, so
+        // there the button is what opens it.
+        pointerEvents={swiftMenu ? 'none' : 'auto'}
+        style={triggerFrame}
+      >
+        <FabRoot
+          icon={icon}
+          extended={triggerExtended}
+          size={size}
+          variant={variant}
+          disabled={disabled}
+          glass={glass}
+          accessibilityLabel={accessibilityLabel}
+          accessibilityState={{ disabled, expanded: open }}
+          onPress={composeMenu ? toggle : undefined}
+        >
+          {label}
+        </FabRoot>
+      </View>
+    );
+
+    /*
+     * The screen behind an open platform menu, frosted the way it is behind
+     * the dial and the panel — the page is what recedes, and a native menu
+     * over an untouched page reads as a control belonging to something else.
+     *
+     * It closes on a tap, which is the safety net rather than the mechanism.
+     * The platform dismisses its own menu from its own window, so this never
+     * sees that tap and never competes for it; what it catches is the next
+     * one. Menu content is not promised an `onDisappear`, and a frosted page
+     * with no way back would be worse than no scrim at all.
+     */
+    const nativeScrim = open ? (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Close"
+        onPress={close}
+        style={StyleSheet.absoluteFill}
+      >
+        <Scrim blur={blur} dimClassName="bg-black/32" />
+      </Pressable>
+    ) : null;
+
+    /*
+     * SwiftUI's menu. The trigger goes through the `label` slot, which takes a
+     * view as readily as a string — so the button stays ours and only the menu
+     * is the platform's.
+     *
+     * The open state is not passed and cannot be: SwiftUI owns it. `open` and
+     * `onOpenChange` are inert on this path, which is stated on the prop.
+     */
+    if (swiftMenu) {
+      const { Host, RNHostView, Menu, Button } = swiftMenu;
+      const swiftModifiers = getSwiftUIModifiers();
+
+      /*
+       * What each row carries beyond its label.
+       *
+       * The first one also carries the menu's open state. SwiftUI's menu owns
+       * that state and reports nothing about it, but it builds its content
+       * only when it presents it — so the first row appearing is the menu
+       * appearing, and that is what puts the screen behind it under the
+       * scrim.
+       */
+      const itemModifiers = (item: Partial<FabActionProps>, index: number) => {
+        const list: unknown[] = [];
+        if (item.disabled && swiftModifiers?.disabled) {
+          list.push(swiftModifiers.disabled(true));
+        }
+        if (index === 0 && swiftModifiers?.onAppear) {
+          list.push(swiftModifiers.onAppear(() => setOpen(true)));
+        }
+        /*
+         * Every row carries the teardown, not just the first.
+         *
+         * The one that reports the menu opening is enough to raise the scrim,
+         * but taking it down cannot rest on a single view: whichever row
+         * SwiftUI tears down first has to be able to say so, or a menu
+         * dismissed from anywhere else leaves the page frosted behind it.
+         */
+        if (swiftModifiers?.onDisappear) {
+          list.push(swiftModifiers.onDisappear(() => setOpen(false)));
+        }
+        return list.length > 0 ? list : undefined;
+      };
+
+      return (
+        <>
+          {nativeScrim}
+          <NativeHost
+            host={Host}
+            matchContents={triggerExtended ? { horizontal: true } : false}
+            ignoreSafeArea="keyboard"
+            style={[anchor(placement, offset), triggerFrame, style]}
+            {...props}
+          >
+            <Menu label={<RNHostView matchContents>{nativeTrigger}</RNHostView>}>
+              {actions.map((action, index) => {
+                const item = action.props as Partial<FabActionProps>;
+                return (
+                  <Button
+                    key={index}
+                    label={item.label ?? ''}
+                    systemImage={item.systemImage}
+                    role={item.destructive ? 'destructive' : 'default'}
+                    // Picking a row closes the menu, so the scrim has to come
+                    // down with it rather than waiting to be told the content
+                    // went away.
+                    onPress={
+                      item.disabled
+                        ? undefined
+                        : () => {
+                            close();
+                            item.onPress?.();
+                          }
+                    }
+                    modifiers={itemModifiers(item, index)}
+                  />
+                );
+              })}
+            </Menu>
+          </NativeHost>
+        </>
+      );
+    }
+
+    /*
+     * Compose's dropdown menu — the same instruction, a different control.
+     *
+     * This one takes the open state rather than owning it, so the group's own
+     * state drives it and `open`/`onOpenChange` work here. Its rows take a text
+     * slot rather than a label prop, and a glyph of ours goes in the leading
+     * slot at a stated size.
+     */
+    if (composeMenu) {
+      const {
+        Host,
+        RNHostView,
+        Text: ComposeText,
+        DropdownMenu,
+        DropdownMenuItem,
+      } = composeMenu;
+      const destructiveColor =
+        typeof themedDestructive === 'string' ? themedDestructive : undefined;
+
+      return (
+        <>
+          {nativeScrim}
+          <NativeHost
+            host={Host}
+            matchContents={triggerExtended ? { horizontal: true } : false}
+            ignoreSafeArea="keyboard"
+            style={[anchor(placement, offset), triggerFrame, style]}
+            {...props}
+          >
+            <DropdownMenu expanded={open} onDismissRequest={close}>
+              <DropdownMenu.Trigger>
+                <RNHostView matchContents>{nativeTrigger}</RNHostView>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Items>
+                {actions.map((action, index) => {
+                  const item = action.props as Partial<FabActionProps>;
+                  return (
+                    <DropdownMenuItem
+                      key={index}
+                      enabled={!item.disabled}
+                      elementColors={
+                        item.destructive && destructiveColor
+                          ? { textColor: destructiveColor }
+                          : undefined
+                      }
+                      onClick={() => {
+                        close();
+                        item.onPress?.();
+                      }}
+                    >
+                      {item.icon ? (
+                        <DropdownMenuItem.LeadingIcon>
+                          <RNHostView
+                            matchContents
+                            style={{ width: NATIVE_ROW_ICON, height: NATIVE_ROW_ICON }}
+                          >
+                            <View
+                              style={{
+                                width: NATIVE_ROW_ICON,
+                                height: NATIVE_ROW_ICON,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {item.icon}
+                            </View>
+                          </RNHostView>
+                        </DropdownMenuItem.LeadingIcon>
+                      ) : null}
+                      <DropdownMenuItem.Text>
+                        <ComposeText>{item.label ?? ''}</ComposeText>
+                      </DropdownMenuItem.Text>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenu.Items>
+            </DropdownMenu>
+          </NativeHost>
+        </>
+      );
+    }
 
     /*
      * Two absolutely positioned siblings, scrim first, both in the group's own
@@ -784,8 +1059,12 @@ const FabGroup = forwardRef<View, FabGroupProps>(
               one blob with the trigger until they rise clear of it. */}
           <Group
             ref={ref}
-            spacing={material && layout === 'dial' ? DIAL_BLEND : undefined}
-            className={cn(layout === 'menu' ? GROUP_ALIGN[placement] : 'items-end', 'gap-3', className)}
+            spacing={material && resolvedLayout === 'dial' ? DIAL_BLEND : undefined}
+            className={cn(
+              resolvedLayout === 'menu' ? GROUP_ALIGN[placement] : 'items-end',
+              'gap-3',
+              className
+            )}
             style={[anchor(placement, offset), style]}
             {...props}
           >
@@ -793,7 +1072,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
                 actions kept alive behind the trigger would still be in the
                 accessibility tree, and a screen reader would walk into four
                 buttons nobody can see. */}
-            {present && layout === 'menu' ? (
+            {present && resolvedLayout === 'menu' ? (
               <FabMenu
                 open={open}
                 placement={placement}
@@ -807,7 +1086,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
                 {actions}
               </FabMenu>
             ) : null}
-            {present && layout === 'dial'
+            {present && resolvedLayout === 'dial'
               ? actions.map((action, index) => (
                   <FabActionSlot key={index} index={index}>
                     {action}
@@ -1017,6 +1296,14 @@ export interface FabActionProps extends Omit<ViewProps, 'children'> {
   className?: string;
   /** The glyph. */
   icon?: ReactNode;
+  /**
+   * The glyph for a native menu row, as an SF Symbol name.
+   *
+   * `layout="native"` only, and iOS only — SwiftUI names its symbols rather
+   * than taking a view for them, so `icon` cannot cross over. Ignored
+   * everywhere else, so a group can carry both and be right on either path.
+   */
+  systemImage?: string;
   /** What it does, beside the glyph. A column of unlabelled circles is a quiz. */
   label?: string;
   onPress?: () => void;
@@ -1040,7 +1327,18 @@ export interface FabActionProps extends Omit<ViewProps, 'children'> {
  */
 const FabAction = forwardRef<View, FabActionProps>(
   (
-    { className, icon, label, onPress, disabled = false, destructive = false, labelClassName, ...props },
+    {
+      className,
+      icon,
+      // Read off the element by a native group, never rendered here.
+      systemImage: _systemImage,
+      label,
+      onPress,
+      disabled = false,
+      destructive = false,
+      labelClassName,
+      ...props
+    },
     ref
   ) => {
     const { progress, count, size, glass, layout, appearance, iconPlacement, rowClassName, close } =

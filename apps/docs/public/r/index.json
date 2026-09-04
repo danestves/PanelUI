@@ -581,6 +581,7 @@
       "glass",
       "haptics",
       "icons",
+      "native",
       "scrim",
       "text",
       "use-back-handler"

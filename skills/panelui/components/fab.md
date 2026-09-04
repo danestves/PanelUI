@@ -73,7 +73,7 @@ Extends `Omit<ViewProps, 'children'>`.
 | `onOpenChange` | `(open: boolean) => void` | — | — |
 | `placement` | `FabPlacement` | `bottom-right` | Which corner of the *screen* the whole dial parks in. |
 | `offset` | `number` | `16` | Distance from the screen's edges, in points. Add your safe-area inset. |
-| `layout` | `FabGroupLayout` | `dial` | What opens out of the trigger. `dial`, the default, is a column of round buttons with their labels beside them. `menu` is one panel of rows — a label with its glyph, on the side the appearance puts it — that springs out of the trigger's corner, the way the platform's own menus do. |
+| `layout` | `FabGroupLayout` | `dial` | What opens out of the trigger. `dial`, the default, is a column of round buttons with their labels beside them. `menu` is one panel of rows — a label with its glyph, on the side the appearance puts it — that springs out of the trigger's corner, the way the platform's own menus do. `native` hands the menu to the platform: SwiftUI on iOS, Jetpack Compose on Android. A native menu is drawn by the platform, so `className` and the theme tokens do not reach it, and the rows take `label` and `systemImage` rather than an `icon` element. `blur` still applies: the scrim behind the menu is ours, so the page recedes the way it does behind the dial and the panel. On iOS the platform owns the menu's open state, so `open` and `onOpenChange` do nothing there. Android's menu is controlled and honours both. Where the platform menu cannot be drawn — on the web, or without `@expo/ui` installed — this falls back to `menu`. |
 | `appearance` | `FabMenuAppearance` | `platform` | How a menu is drawn. `platform`, the default, is the shape the platform's own menus take: a hairline between rows and the glyph after the label. `wells` is tighter, with the glyph leading in a tinted well and each row its own pill — a menu the app designed rather than the system. Menu layout only. |
 | `iconPlacement` | `FabMenuIconPlacement` | — | Which side of a menu row the glyph sits on. Each appearance has its own default. |
 | `menuWidth` | `number` | — | The menu panel's width in points. Each appearance has its own default. |
@@ -97,10 +97,11 @@ Extends `Omit<ViewProps, 'children'>`.
 | --- | --- | --- | --- |
 | `className` | `string` | — | — |
 | `icon` | `ReactNode` | — | The glyph. |
+| `systemImage` | `string` | — | The glyph for a native menu row, as an SF Symbol name. `layout="native"` only, and iOS only — SwiftUI names its symbols rather than taking a view for them, so `icon` cannot cross over. Ignored everywhere else, so a group can carry both and be right on either path. |
 | `label` | `string` | — | What it does, beside the glyph. A column of unlabelled circles is a quiz. |
 | `onPress` | `() => void` | — | — |
 | `disabled` | `boolean` | `false` | — |
-| `destructive` | `boolean` | — | Draws it in the destructive colour, for the one that removes something. |
+| `destructive` | `boolean` | `false` | Draws it in the destructive colour, for the one that removes something. |
 | `labelClassName` | `string` | — | Extra classes for the label — the chip in a dial, the row's text in a menu. |
 
 ### Example — Over a list

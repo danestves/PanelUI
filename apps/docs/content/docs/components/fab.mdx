@@ -147,6 +147,27 @@ With `glass` the panel is one piece of the material and the rows are content on 
 </Fab.Group>
 ```
 
+### A native menu
+
+`layout="native"` hands the menu to the platform: a SwiftUI menu on iOS, a Compose dropdown on Android. The trigger stays a `Fab` — it is passed to the platform as the thing you press — so the button keeps its variant, its size and its glass, and only the menu is the system's.
+
+The rows are drawn by the platform, so `className` and the theme tokens do not reach them. A row takes `label` and, on iOS, `systemImage` — an SF Symbol name, because SwiftUI names its symbols rather than taking a view for one. `destructive` and `disabled` cross over. On Android the `icon` element is used instead, hosted at a fixed size.
+
+`blur` still applies. The scrim behind the menu is ours, so the page recedes the way it does behind the dial and the panel, and the menu reads as belonging to the screen it opened on.
+
+Where the menu sits is the platform's decision and cannot be set: iOS lifts it clear of the button, Android draws its dropdown over the anchor. The open state is the platform's too, so `open` and `onOpenChange` do nothing on iOS; Android's menu is controlled and honours both.
+
+It needs the optional `@expo/ui`. Without it, and on the web, this falls back to `layout="menu"` — so a working fallback and a missing package look the same, and the package is worth checking before the code is.
+
+```tsx
+<Fab.Group layout="native" glass blur icon={<PlusIcon size={24} />} accessibilityLabel="Add something">
+  <Fab.Action systemImage="photo" label="Photo" onPress={addPhoto} />
+  <Fab.Action systemImage="paperclip" label="Attachment" onPress={attach} />
+  <Fab.Action systemImage="mic" label="Voice note" onPress={record} />
+  <Fab.Action systemImage="trash" label="Empty drafts" destructive onPress={empty} />
+</Fab.Group>
+```
+
 ### Liquid Glass
 
 `glass` draws the button in the material iOS 26 uses for its own floating controls, in place of the variant's fill. A button floating over a list is what the material is for: the rows refract through it as they scroll under, and it lifts its own edge, so the shadow goes with the fill.
@@ -364,6 +385,19 @@ The same menu in the wells appearance: the glyph leads in a tinted well and each
 </Fab.Group>
 ```
 
+### A native menu
+
+The platform's own menu, drawn by SwiftUI on iOS and Jetpack Compose on Android, over a page the scrim frosts. Without `@expo/ui` it is the panel instead.
+
+```tsx
+<Fab.Group layout="native" glass blur icon={<PlusIcon size={24} />} accessibilityLabel="Add something">
+  <Fab.Action systemImage="photo" label="Photo" onPress={addPhoto} />
+  <Fab.Action systemImage="paperclip" label="Attachment" onPress={attach} />
+  <Fab.Action systemImage="mic" label="Voice note" onPress={record} />
+  <Fab.Action systemImage="trash" label="Empty drafts" destructive onPress={empty} />
+</Fab.Group>
+```
+
 ## Variants
 
 ### `size`
@@ -438,7 +472,7 @@ The same menu in the wells appearance: the glyph leads in a tinted well and each
 | `onOpenChange` | `(open: boolean) => void` | — |  |
 | `placement` | `FabPlacement` | `'bottom-right'` | Which corner of the *screen* the whole dial parks in. |
 | `offset` | `number` | `16` | Distance from the screen's edges, in points. Add your safe-area inset. |
-| `layout` | `FabGroupLayout` | `'dial'` | What opens out of the trigger. `dial`, the default, is a column of round buttons with their labels beside them. `menu` is one panel of rows — a label with its glyph, on the side the appearance puts it — that springs out of the trigger's corner, the way the platform's own menus do. |
+| `layout` | `FabGroupLayout` | `'dial'` | What opens out of the trigger. `dial`, the default, is a column of round buttons with their labels beside them. `menu` is one panel of rows — a label with its glyph, on the side the appearance puts it — that springs out of the trigger's corner, the way the platform's own menus do. `native` hands the menu to the platform: SwiftUI on iOS, Jetpack Compose on Android. A native menu is drawn by the platform, so `className` and the theme tokens do not reach it, and the rows take `label` and `systemImage` rather than an `icon` element. `blur` still applies: the scrim behind the menu is ours, so the page recedes the way it does behind the dial and the panel. On iOS the platform owns the menu's open state, so `open` and `onOpenChange` do nothing there. Android's menu is controlled and honours both. Where the platform menu cannot be drawn — on the web, or without `@expo/ui` installed — this falls back to `menu`. |
 | `appearance` | `FabMenuAppearance` | `'platform'` | How a menu is drawn. `platform`, the default, is the shape the platform's own menus take: a hairline between rows and the glyph after the label. `wells` is tighter, with the glyph leading in a tinted well and each row its own pill — a menu the app designed rather than the system. Menu layout only. |
 | `iconPlacement` | `FabMenuIconPlacement` | — | Which side of a menu row the glyph sits on. Each appearance has its own default. |
 | `menuWidth` | `number` | — | The menu panel's width in points. Each appearance has its own default. |
@@ -460,10 +494,11 @@ The same menu in the wells appearance: the glyph leads in a tinted well and each
 | --- | --- | --- | --- |
 | `className` | `string` | — |  |
 | `icon` | `ReactNode` | — | The glyph. |
+| `systemImage` | `string` | — | The glyph for a native menu row, as an SF Symbol name. `layout="native"` only, and iOS only — SwiftUI names its symbols rather than taking a view for them, so `icon` cannot cross over. Ignored everywhere else, so a group can carry both and be right on either path. |
 | `label` | `string` | — | What it does, beside the glyph. A column of unlabelled circles is a quiz. |
 | `onPress` | `() => void` | — |  |
 | `disabled` | `boolean` | `false` |  |
-| `destructive` | `boolean` | — | Draws it in the destructive colour, for the one that removes something. |
+| `destructive` | `boolean` | `false` | Draws it in the destructive colour, for the one that removes something. |
 | `labelClassName` | `string` | — | Extra classes for the label — the chip in a dial, the row's text in a menu. |
 
 Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.

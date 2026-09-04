@@ -1024,7 +1024,7 @@ function FabGlassDemo({
   layout = 'dial',
   appearance = 'platform',
 }: {
-  layout?: 'dial' | 'menu';
+  layout?: 'dial' | 'menu' | 'native';
   appearance?: 'platform' | 'wells';
 }) {
   const { toast } = useToast();
@@ -1063,21 +1063,25 @@ function FabGlassDemo({
       >
         <Fab.Action
           icon={<ImageIcon size={18} />}
+          systemImage="photo"
           label="Photo"
           onPress={() => pick('Photo added')}
         />
         <Fab.Action
           icon={<PaperclipIcon size={18} />}
+          systemImage="paperclip"
           label="Attachment"
           onPress={() => pick('Attachment added')}
         />
         <Fab.Action
           icon={<MicIcon size={18} />}
+          systemImage="mic"
           label="Voice note"
           onPress={() => pick('Recording')}
         />
         <Fab.Action
           icon={<TrashIcon size={18} />}
+          systemImage="trash"
           label="Empty drafts"
           destructive
           onPress={() => pick('Drafts emptied', true)}
@@ -1976,6 +1980,14 @@ export const ENTRIES: ComponentEntry[] = [
         description:
           'The same menu in the wells appearance: the glyph leads in a tinted well and each row is its own pill.',
         render: () => <FabGlassDemo layout="menu" appearance="wells" />,
+      },
+      {
+        label: 'A native menu',
+        id: 'native-menu',
+        fullPage: true,
+        description:
+          "The platform's own menu, drawn by SwiftUI or Jetpack Compose, over a page the scrim frosts.",
+        render: () => <FabGlassDemo layout="native" />,
       },
       { label: 'Sizes and variants', render: () => <FabSizesDemo /> },
     ],
