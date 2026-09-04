@@ -476,9 +476,11 @@ The Android back button closes an open dial too, rather than popping the screen 
 
 Not hidden. A column kept alive behind the trigger would still be in the accessibility tree, and a screen reader would walk into four buttons nobody can see.
 
-### One timing, not one per action
+### One spring, not one per action
 
-The whole dial runs off a single shared value, and each action works out its own share of it on the UI thread from its index. There is no chain of timeouts to fall out of step with itself when the dial is closed halfway through opening — closing runs the same value back down, and every action follows it.
+The whole dial runs off a single spring, and each action works out its own share of it on the UI thread from its index — the stagger is where each one reads the spring, not a delay. There is no chain of timeouts to fall out of step with itself when the dial is closed halfway through opening; closing runs the same value back down, and every action follows it. The spring overshoots a little and settles, so buttons arrive rather than stop.
+
+A glass dial's actions rise out of the trigger, small, and grow into their slots, with each label growing out of its button once it is most of the way there. Inside the group the pieces of glass merge while they overlap, so the trigger reads as dividing into its actions rather than the actions arriving from elsewhere. Nothing fades: the material stops drawing at zero opacity and does not come back.
 
 ### The trigger turns rather than swapping
 

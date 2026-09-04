@@ -114,12 +114,13 @@ import {
 } from 'react';
 import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
 import Animated, {
+  Easing,
+  Extrapolation,
   interpolate,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
   withSpring,
-  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import { tv, type VariantProps } from 'tailwind-variants';
@@ -130,7 +131,7 @@ import {
   AnimatedPressable,
   type AnimatedPressableProps,
 } from '../../primitives/animated-pressable';
-import { Glass, useGlassMaterial } from '../../primitives/glass';
+import { Glass, GlassContainer, useGlassMaterial } from '../../primitives/glass';
 import { Scrim } from '../../primitives/scrim';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
@@ -142,12 +143,29 @@ export type FabPlacement = 'bottom-right' | 'bottom-center' | 'bottom-left';
 /** How far from the edges a floating button sits, in points. */
 const DEFAULT_OFFSET = 16;
 
-/** How long the dial takes to open, and how much each action lags the one above it. */
-const OPEN_DURATION = 220;
-const STAGGER = 45;
+/**
+ * The spring the dial opens on. Underdamped enough to overshoot a little and
+ * settle, which is what makes buttons read as arriving rather than being
+ * placed; the stagger between actions comes from where each one reads the
+ * spring, not from a delay.
+ */
+const OPEN_SPRING = { damping: 15, stiffness: 170, mass: 0.9 } as const;
 
 /** How far an action starts below its resting place, in points. */
 const ACTION_TRAVEL = 12;
+
+/**
+ * How a glass dial's action starts: this small, sitting on the trigger, and
+ * merging with it while the two are within this distance. Shorter than the
+ * dial's gaps, so pieces at rest stay separate and only overlapping ones
+ * flow together.
+ */
+const RISE_FROM_SCALE = 0.4;
+const DIAL_BLEND = 6;
+
+/** How far into an action's arrival its label grows out of it, and from how far aside. */
+const LABEL_AFTER = 0.45;
+const LABEL_TRAVEL = 16;
 
 /** A quarter turn on the trigger while the dial is open — a plus becomes a cross. */
 const OPEN_ROTATION = 45;
@@ -649,10 +667,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
      * driving every row, and there is no chain of JavaScript timeouts to get
      * out of step with itself when the dial is closed halfway through opening.
      */
-    const progress = useDerivedValue<number>(
-      () => withTiming(open ? 1 : 0, { duration: OPEN_DURATION + STAGGER * actionCount }),
-      [open, actionCount]
-    );
+    const progress = useDerivedValue<number>(() => withSpring(open ? 1 : 0, OPEN_SPRING), [open]);
 
     const rotation = useAnimatedStyle(() => ({
       transform: [
@@ -685,6 +700,8 @@ const FabGroup = forwardRef<View, FabGroupProps>(
     // An open dial owns the back button: back should shut it, not leave it
     // standing over the screen underneath.
     useBackHandler(open, close);
+
+    const Group = glass && layout === 'dial' ? GlassContainer : View;
 
     /*
      * Two absolutely positioned siblings, scrim first, both in the group's own
@@ -721,8 +738,11 @@ const FabGroup = forwardRef<View, FabGroupProps>(
         ) : null}
 
         <FabGroupContext.Provider value={context}>
-          <View
+          {/* A glass dial's pieces merge while they overlap — the actions are
+              one blob with the trigger until they rise clear of it. */}
+          <Group
             ref={ref}
+            spacing={glass && layout === 'dial' ? DIAL_BLEND : undefined}
             className={cn(layout === 'menu' ? GROUP_ALIGN[placement] : 'items-end', 'gap-3', className)}
             style={[anchor(placement, offset), style]}
             {...props}
@@ -771,7 +791,7 @@ const FabGroup = forwardRef<View, FabGroupProps>(
             >
               {label}
             </FabRoot>
-          </View>
+          </Group>
         </FabGroupContext.Provider>
       </>
     );
@@ -849,6 +869,35 @@ function FabMenu({
 }
 
 /**
+ * How far along its own arrival an action is, from the dial's one progress.
+ *
+ * The stagger runs bottom-up: the action nearest the trigger arrives first,
+ * which is the order a hand travelling away from the button meets them in.
+ */
+function slotProgress(progress: number, count: number, index: number): number {
+  'worklet';
+  const steps = Math.max(1, count);
+  const from = (count - 1 - index) / (steps + 1);
+  const to = from + 1 / (steps + 1) + 0.35;
+  // The spring's overshoot past its target is passed on to every action, so
+  // a button arrives with a little bounce rather than stopping dead. It is
+  // added on top of the clamped window rather than read through it: a window
+  // that ends before the dial's does would otherwise leave its action past
+  // its slot for good.
+  const within = interpolate(progress, [from, Math.min(1, to)], [0, 1], Extrapolation.CLAMP);
+  return within + Math.max(0, progress - 1);
+}
+
+/** The same progress, decelerating into 1 and never past it — for size and opacity. */
+function settled(t: number): number {
+  'worklet';
+  return Easing.out(Easing.cubic)(Math.min(1, Math.max(0, t)));
+}
+
+/** Which slot an action is in — what it needs to know to animate itself. */
+const FabSlotContext = createContext<number>(0);
+
+/**
  * One action's slot in the unfolding.
  *
  * The stagger runs bottom-up: the action nearest the trigger arrives first,
@@ -892,26 +941,26 @@ function FabActionSlot({
    * A glass action never fades. The material stops drawing under an ancestor
    * at zero opacity and does not come back when the opacity does, so a fade
    * from zero is a button that sometimes never appears — whichever ones got
-   * their first frame at zero. Glass arrives by travel and scale instead; a
-   * plain action keeps its fade, which reads better on a flat surface.
+   * their first frame at zero. A glass dial's action animates its own parts
+   * instead, rising out of the trigger; see `Fab.Action`. The slot only
+   * fades a plain action, where it reads better on a flat surface.
    */
   const style = useAnimatedStyle(() => {
-    const steps = Math.max(1, count);
-    const from = (count - 1 - index) / (steps + 1);
-    const to = from + 1 / (steps + 1) + 0.35;
-    const t = interpolate(progress.value, [from, Math.min(1, to)], [0, 1], 'clamp');
-    const translateY = interpolate(t, [0, 1], [ACTION_TRAVEL, 0]);
-    if (material) {
-      return { transform: [{ translateY }, { scale: interpolate(t, [0, 1], [0.6, 1]) }] };
-    }
-    return { opacity: t, transform: [{ translateY }] };
+    if (material) return {};
+    const t = slotProgress(progress.value, count, index);
+    return {
+      opacity: settled(t),
+      transform: [{ translateY: interpolate(t, [0, 1], [ACTION_TRAVEL, 0]) }],
+    };
   });
 
   return (
-    <Animated.View style={style}>
-      {separator ? <View className="mx-4 h-px bg-border" /> : null}
-      {child}
-    </Animated.View>
+    <FabSlotContext.Provider value={index}>
+      <Animated.View style={style}>
+        {separator ? <View className="mx-4 h-px bg-border" /> : null}
+        {child}
+      </Animated.View>
+    </FabSlotContext.Provider>
   );
 }
 
@@ -949,9 +998,50 @@ const FabAction = forwardRef<View, FabActionProps>(
     { className, icon, label, onPress, disabled = false, destructive = false, labelClassName, ...props },
     ref
   ) => {
-    const { size, glass, layout, appearance, iconPlacement, rowClassName, close } =
+    const { progress, count, size, glass, layout, appearance, iconPlacement, rowClassName, close } =
       useFabGroup('Fab.Action');
+    const index = useContext(FabSlotContext);
     const [pressed, setPressed] = useState(false);
+
+    /*
+     * A glass dial's action rises out of the trigger.
+     *
+     * It starts small and sitting on the button, and springs up to its slot
+     * on the dial's stagger; inside the group's glass container the two
+     * materials are one blob until it pulls free. The distance is known from
+     * the fixed sizes, so nothing is measured. The label follows once the
+     * button is most of the way there, sliding in from the button's side —
+     * it is glass too, so it moves rather than fades.
+     */
+    const actionSize: FabSize = size === 'lg' ? 'md' : 'sm';
+    const rise =
+      (count - 1 - index) * (SIZE_PX[actionSize] + GROUP_GAP) +
+      GROUP_GAP +
+      SIZE_PX[size] / 2 +
+      SIZE_PX[actionSize] / 2;
+    // Travel follows the spring, overshoot and all; size settles without it.
+    const buttonStyle = useAnimatedStyle(() => {
+      const t = slotProgress(progress.value, count, index);
+      return {
+        transform: [
+          { translateY: interpolate(t, [0, 1], [rise, 0]) },
+          { scale: interpolate(settled(t), [0, 1], [RISE_FROM_SCALE, 1]) },
+        ],
+      };
+    });
+    const chipStyle = useAnimatedStyle(() => {
+      const t = slotProgress(progress.value, count, index);
+      // Rides up with its button, then grows out of it once the button is
+      // most of the way to its slot.
+      const late = settled(interpolate(t, [LABEL_AFTER, 1], [0, 1], 'clamp'));
+      return {
+        transform: [
+          { translateY: interpolate(t, [0, 1], [rise, 0]) },
+          { translateX: interpolate(late, [0, 1], [LABEL_TRAVEL, 0]) },
+          { scale: interpolate(late, [0, 1], [RISE_FROM_SCALE, 1]) },
+        ],
+      };
+    });
 
     const handlePress = useCallback(() => {
       close();
@@ -1023,11 +1113,13 @@ const FabAction = forwardRef<View, FabActionProps>(
           // glass dial is glass all the way across and not glass with paper
           // labels. Without the material it is the popover surface it was.
           glass ? (
-            <Glass radius={8} fallbackClassName="bg-popover shadow-sm" className="px-2.5 py-1">
-              <Text size="sm" className={cn('text-foreground', labelClassName)}>
-                {label}
-              </Text>
-            </Glass>
+            <Animated.View style={chipStyle}>
+              <Glass radius={8} fallbackClassName="bg-popover shadow-sm" className="px-2.5 py-1">
+                <Text size="sm" className={cn('text-foreground', labelClassName)}>
+                  {label}
+                </Text>
+              </Glass>
+            </Animated.View>
           ) : (
             <View className="rounded-lg bg-popover px-2.5 py-1 shadow-sm">
               <Text size="sm" className={cn('text-foreground', labelClassName)}>
@@ -1036,19 +1128,21 @@ const FabAction = forwardRef<View, FabActionProps>(
             </View>
           )
         ) : null}
-        <FabRoot
-          ref={ref}
-          icon={icon}
-          // A step down from the trigger, so the trigger stays the one that
-          // leads even while the dial it opened is on screen.
-          size={size === 'lg' ? 'md' : 'sm'}
-          variant={destructive ? 'destructive' : 'surface'}
-          disabled={disabled}
-          glass={glass}
-          accessibilityLabel={label}
-          onPress={handlePress}
-          className={className}
-        />
+        <Animated.View style={glass ? buttonStyle : undefined}>
+          <FabRoot
+            ref={ref}
+            icon={icon}
+            // A step down from the trigger, so the trigger stays the one that
+            // leads even while the dial it opened is on screen.
+            size={actionSize}
+            variant={destructive ? 'destructive' : 'surface'}
+            disabled={disabled}
+            glass={glass}
+            accessibilityLabel={label}
+            onPress={handlePress}
+            className={className}
+          />
+        </Animated.View>
       </View>
     );
   }
