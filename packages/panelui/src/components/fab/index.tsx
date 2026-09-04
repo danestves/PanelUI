@@ -1022,11 +1022,22 @@ const FabAction = forwardRef<View, FabActionProps>(
     return (
       <View className="flex-row items-center justify-end gap-3" {...props}>
         {label ? (
-          <View className="rounded-lg bg-popover px-2.5 py-1 shadow-sm">
-            <Text size="sm" className={cn('text-foreground', labelClassName)}>
-              {label}
-            </Text>
-          </View>
+          // The chip is in the same material as the button beside it, so a
+          // glass dial is glass all the way across and not glass with paper
+          // labels. Without the material it is the popover surface it was.
+          glass ? (
+            <Glass radius={8} fallbackClassName="bg-popover shadow-sm" className="px-2.5 py-1">
+              <Text size="sm" className={cn('text-foreground', labelClassName)}>
+                {label}
+              </Text>
+            </Glass>
+          ) : (
+            <View className="rounded-lg bg-popover px-2.5 py-1 shadow-sm">
+              <Text size="sm" className={cn('text-foreground', labelClassName)}>
+                {label}
+              </Text>
+            </View>
+          )
         ) : null}
         <FabRoot
           ref={ref}
