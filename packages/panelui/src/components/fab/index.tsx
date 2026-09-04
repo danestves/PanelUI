@@ -1008,7 +1008,6 @@ const FabAction = forwardRef<View, FabActionProps>(
           >
             {iconPlacement === 'leading' ? glyph : null}
             <Text
-              size={wells ? 'base' : 'lg'}
               className={cn('shrink', destructive ? 'text-destructive' : 'text-foreground', labelClassName)}
               numberOfLines={1}
             >
