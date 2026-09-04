@@ -864,7 +864,10 @@ function FabActionSlot({
   separator?: boolean;
   children: PressableChild;
 }) {
-  const { progress, count, close } = useFabGroup('Fab.Action');
+  const { progress, count, glass, layout, close } = useFabGroup('Fab.Action');
+  // A menu's rows are content on one panel, not glass of their own, so they
+  // may fade; a dial's actions are each their own material.
+  const material = glass && layout === 'dial';
 
   /*
    * Whatever is in the slot closes the dial when it is pressed.
@@ -885,15 +888,23 @@ function FabActionSlot({
       })
     : children;
 
+  /*
+   * A glass action never fades. The material stops drawing under an ancestor
+   * at zero opacity and does not come back when the opacity does, so a fade
+   * from zero is a button that sometimes never appears — whichever ones got
+   * their first frame at zero. Glass arrives by travel and scale instead; a
+   * plain action keeps its fade, which reads better on a flat surface.
+   */
   const style = useAnimatedStyle(() => {
     const steps = Math.max(1, count);
     const from = (count - 1 - index) / (steps + 1);
     const to = from + 1 / (steps + 1) + 0.35;
     const t = interpolate(progress.value, [from, Math.min(1, to)], [0, 1], 'clamp');
-    return {
-      opacity: t,
-      transform: [{ translateY: interpolate(t, [0, 1], [ACTION_TRAVEL, 0]) }],
-    };
+    const translateY = interpolate(t, [0, 1], [ACTION_TRAVEL, 0]);
+    if (material) {
+      return { transform: [{ translateY }, { scale: interpolate(t, [0, 1], [0.6, 1]) }] };
+    }
+    return { opacity: t, transform: [{ translateY }] };
   });
 
   return (
