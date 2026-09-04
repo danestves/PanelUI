@@ -85,9 +85,18 @@ interface GlassViewProps {
   children?: ReactNode;
 }
 
+interface GlassContainerViewProps extends ViewProps {
+  spacing?: number;
+  ref?: React.Ref<View>;
+}
+
+interface GlassModule {
+  GlassView: ComponentType<GlassViewProps>;
+  GlassContainer: ComponentType<GlassContainerViewProps>;
+}
+
 /**
- * `expo-glass-effect`'s GlassView, or null when the material cannot be drawn
- * here.
+ * `expo-glass-effect`, or null when the material cannot be drawn here.
  *
  * Resolved once at module load, behind three gates that all have to pass. The
  * package is optional, so the require can fail; the API is missing from some
@@ -96,34 +105,25 @@ interface GlassViewProps {
  * cheaper than a try/catch on every render, and there is no answer that can
  * change while the process is alive.
  */
-interface GlassContainerViewProps extends ViewProps {
-  spacing?: number;
-  ref?: React.Ref<View>;
-}
-
-const { GlassView, GlassContainerView } = (() => {
-  const none = { GlassView: null, GlassContainerView: null };
-  if (Platform.OS !== 'ios') return none;
+const glassModule: GlassModule | null = (() => {
+  if (Platform.OS !== 'ios') return null;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('expo-glass-effect');
     if (typeof mod?.isGlassEffectAPIAvailable === 'function' && !mod.isGlassEffectAPIAvailable()) {
-      return none;
+      return null;
     }
     if (typeof mod?.isLiquidGlassAvailable === 'function' && !mod.isLiquidGlassAvailable()) {
-      return none;
+      return null;
     }
-    return {
-      GlassView: (mod?.GlassView as ComponentType<GlassViewProps>) ?? null,
-      GlassContainerView: (mod?.GlassContainer as ComponentType<GlassContainerViewProps>) ?? null,
-    };
+    return mod?.GlassView ? (mod as GlassModule) : null;
   } catch {
-    return none;
+    return null;
   }
-})() as {
-  GlassView: ComponentType<GlassViewProps> | null;
-  GlassContainerView: ComponentType<GlassContainerViewProps> | null;
-};
+})();
+
+const GlassView = glassModule?.GlassView ?? null;
+const GlassContainerView = glassModule?.GlassContainer ?? null;
 
 /**
  * True when the real material can be drawn — for a caller that wants to know
