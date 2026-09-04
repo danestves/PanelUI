@@ -215,8 +215,20 @@ const MENU_METRICS: Record<FabMenuAppearance, MenuMetrics> = {
   wells: { width: 224, radius: 22, row: 48, hairline: 0, padding: 6, icon: 'leading' },
 };
 
-/** How small the menu starts before the dial's spring grows it out of the trigger. */
+/**
+ * How small the menu is once it has left the trigger, and how far into the
+ * dial's spring it gets there.
+ *
+ * A closed panel has to be *nothing*, not something small. Resting at a
+ * fraction of its size leaves a box above the trigger for as long as the
+ * spring takes to satisfy its completion threshold — which is most of a
+ * second, and is not a frame anyone would call an animation. So zero is where
+ * it starts and ends, and the pop to `MENU_FROM_SCALE` happens over the first
+ * sliver of the spring: the panel still reads as coming out of the button at a
+ * size rather than growing from a point.
+ */
 const MENU_FROM_SCALE = 0.3;
+const MENU_POP_AT = 0.06;
 
 /** The gap between the panel and the trigger — the group's `gap-3`. */
 const GROUP_GAP = 12;
@@ -1168,7 +1180,16 @@ function FabMenu({
    * opacity.
    */
   const style = useAnimatedStyle(() => ({
-    transform: [{ scale: interpolate(progress.value, [0, 1], [MENU_FROM_SCALE, 1]) }],
+    transform: [
+      {
+        scale: interpolate(
+          progress.value,
+          [0, MENU_POP_AT, 1],
+          [0, MENU_FROM_SCALE, 1],
+          Extrapolation.CLAMP
+        ),
+      },
+    ],
   }));
 
   return (
