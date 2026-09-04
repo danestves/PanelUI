@@ -37,8 +37,9 @@
  * lit edge that makes it read as glass.
  *
  * `interactive` is the one exception to the layer: the platform only animates
- * the glass under a touch it can see, so with it on the children are hosted
- * inside the material. Reach for it when the glass *is* the button.
+ * the glass under a touch it can see, so with it on the material is the box
+ * and the children are hosted inside it, in normal flow. Reach for it when
+ * the glass *is* the button.
  *
  * ## Do not fade it
  *
@@ -75,13 +76,12 @@ function shapeOf(radius: GlassRadius | undefined) {
   };
 }
 
-interface GlassViewProps {
+interface GlassViewProps extends ViewProps {
   glassEffectStyle?: GlassVariant | 'none';
   tintColor?: string;
   isInteractive?: boolean;
   colorScheme?: 'auto' | 'light' | 'dark';
   style?: StyleProp<ViewStyle>;
-  pointerEvents?: ViewProps['pointerEvents'];
   children?: ReactNode;
 }
 
@@ -200,13 +200,33 @@ export function Glass({
   const material = useGlassMaterial();
   const shape = shapeOf(radius);
 
+  /*
+   * Interactive, the material is the box rather than a layer in it. The
+   * platform only tracks a touch that lands inside the glass view, so the
+   * content has to be hosted in it — and hosted in normal flow, so that a
+   * box sized by its content still is. A layer pinned to the box's edges
+   * could not size it, and a button as wide as its label would collapse to
+   * its minimum. The classes go on a view inside, because the native view is
+   * not a styled one; only the positional style stays on the outside.
+   */
+  if (material && GlassView && interactive) {
+    return (
+      <GlassView
+        glassEffectStyle={variant}
+        tintColor={tint}
+        isInteractive
+        colorScheme={mode}
+        style={[shape, style]}
+        {...props}
+      >
+        <View className={className}>{children}</View>
+      </GlassView>
+    );
+  }
+
   return (
     <View
-      className={cn(
-        material && interactive ? null : 'overflow-hidden',
-        material ? null : fallbackClassName,
-        className
-      )}
+      className={cn('overflow-hidden', material ? null : fallbackClassName, className)}
       style={[shape, style]}
       {...props}
     >
@@ -214,15 +234,12 @@ export function Glass({
         <GlassView
           glassEffectStyle={variant}
           tintColor={tint}
-          isInteractive={interactive}
           colorScheme={mode}
-          pointerEvents={interactive ? 'auto' : 'none'}
+          pointerEvents="none"
           style={[StyleSheet.absoluteFill, shape]}
-        >
-          {interactive ? children : null}
-        </GlassView>
+        />
       ) : null}
-      {material && interactive ? null : children}
+      {children}
     </View>
   );
 }
