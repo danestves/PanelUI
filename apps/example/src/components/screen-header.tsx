@@ -11,7 +11,14 @@ import { useThemeMode } from 'panelui-native/theme';
 
 const CIRCLE = 'h-11 w-11 items-center justify-center rounded-full border border-border bg-surface';
 
-function CircleButton({
+/**
+ * The app's round control: a bordered circle on a surface.
+ *
+ * Exported because a full-bleed demo has no header to put one in and still
+ * needs a way back — and a bare glyph over scrolling content is not a control
+ * anyone can find. The circle is what makes it one.
+ */
+export function CircleButton({
   onPress,
   label,
   children,

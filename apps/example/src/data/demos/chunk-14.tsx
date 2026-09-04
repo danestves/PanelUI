@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScrollView, View, type LayoutChangeEvent } from "react-native";
-import { Avatar, Badge, BookmarkIcon, BellIcon, Button, Card, Frame, PlusIcon, SearchIcon, SectionProgress, type SectionProgressColor, type SectionProgressPlacement, Skeleton, SplitView, Splitter, Switch, Text, Tooltip, Tour, Typography, WaterfallChart, type WaterfallDatum, waterfallSteps, useScrollSections } from "panelui-native";
+import { Avatar, Badge, BookmarkIcon, BellIcon, Button, Card, ChevronLeftIcon, Frame, PlusIcon, SearchIcon, SectionProgress, type SectionProgressColor, type SectionProgressPlacement, Skeleton, SplitView, Splitter, Switch, Text, Tooltip, Tour, Typography, WaterfallChart, type WaterfallDatum, waterfallSteps, useScrollSections } from "panelui-native";
+import { CircleButton } from "../../components/screen-header";
 import { PanelsideActionsBlock, PanelsideAssistantBlock, PanelsideChatBlock, PanelsideCurveBlock, PanelsideDockedBlock, PanelsideNativeBlock, PanelsideNavigateBlock, PanelsideOverlayBlock } from "../../components/panelside-blocks";
 import type { ComponentEntry } from '../component-types';
 
@@ -54,6 +56,12 @@ const PROGRESS_SECTIONS: { id: string; label: string; color?: SectionProgressCol
  * One hook owns the scroll: it picks the section *and* publishes the position
  * the ring is filled from, so the two readings cannot disagree about where the
  * page is.
+ *
+ * Full-bleed, and it has to be: the pill anchors itself to the screen's own
+ * edges and clears the safe area from there. Inside a screen with a header
+ * above it, "the top" is wherever that header ended and the inset is counted
+ * twice — which puts a top-anchored pill somewhere down the middle. So this
+ * takes the whole screen and draws its own way back.
  */
 function SectionProgressVersion({
   placement,
@@ -65,14 +73,17 @@ function SectionProgressVersion({
   haptics?: boolean;
 }) {
   const sections = useScrollSections({ ids: PROGRESS_SECTIONS.map((section) => section.id) });
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   return (
     <View className="flex-1">
       <ScrollView
         ref={sections.ref}
         {...sections.scrollProps}
-        // Room at the end for the pill, which floats over the content.
-        contentContainerStyle={{ paddingBottom: 140 }}
+        // Room at both ends for the pill, which floats over the content, and
+        // for the way back.
+        contentContainerStyle={{ paddingTop: insets.top + 44, paddingBottom: 140 }}
       >
         {PROGRESS_SECTIONS.map((section) => (
           <View
@@ -109,6 +120,18 @@ function SectionProgressVersion({
           </SectionProgress.Item>
         ))}
       </SectionProgress>
+
+      {/* The way out. A full-bleed demo has no header and no back-swipe —
+          iOS claims that edge for popping the stack and wins — so the exit is
+          this block's to draw. The app's own circular control, not a bare
+          glyph: this sits over moving content, and an icon with nothing under
+          it is invisible against half of what scrolls past. At the start edge,
+          clear of a centred pill. */}
+      <View className="absolute start-4" style={{ top: insets.top + 4 }}>
+        <CircleButton onPress={() => router.back()} label="Go back">
+          <ChevronLeftIcon size={20} />
+        </CircleButton>
+      </View>
     </View>
   );
 }
@@ -799,6 +822,7 @@ export const ENTRIES: ComponentEntry[] = [
         label: 'Bottom centre',
         id: 'bottom-center',
         fullPage: true,
+        fullBleed: true,
         description:
           'The default. Nothing on the first screen; scroll and it arrives, then stays. Press it for the list.',
         render: () => <SectionProgressVersion />,
@@ -807,17 +831,19 @@ export const ENTRIES: ComponentEntry[] = [
         label: 'A colour per section',
         id: 'tinted',
         fullPage: true,
+        fullBleed: true,
         description:
           'Each section brings its own colour to the ring, the label and the wash across the pill. Haptics on.',
         render: () => <SectionProgressVersion tinted haptics />,
       },
       {
         label: 'Anchored to the top',
-        id: 'top-left',
+        id: 'top-center',
         fullPage: true,
+        fullBleed: true,
         description:
-          'The same pill in the top-left corner, where it reads as a header rather than as something over the end of the page.',
-        render: () => <SectionProgressVersion placement="top-left" />,
+          'The same pill centred on the top edge, where it reads as a header rather than as something over the end of the page. The list opens downward out of it.',
+        render: () => <SectionProgressVersion placement="top-center" />,
       },
     ],
   },

@@ -1545,7 +1545,6 @@
     "registryDependencies": [
       "cn",
       "haptics",
-      "portal",
       "scroll-progress",
       "text",
       "use-back-handler"

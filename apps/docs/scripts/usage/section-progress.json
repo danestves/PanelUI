@@ -1,12 +1,24 @@
 {
   "slug": "section-progress",
+  "previewVideo": {
+    "src": "/previews/section-progress.mp4",
+    "poster": "/previews/section-progress-poster.jpg",
+    "alt": "The SectionProgress component, running in the example app.",
+    "width": 720,
+    "height": 1560
+  },
   "intro": "A pill that floats over a long screen carrying two readings: a ring filled to how far down the page the reader is, and the title of the section they are in. Pressing it opens the list of sections and jumps to any of them.\n\nThe two answer different questions. A percentage says how much is left; a section name says what is being read. Either alone leaves the other open — 60% of an unfamiliar page means nothing in particular, and a heading with no sense of depth is a position without a scale.\n\nIt draws nothing on the first screen. Past `revealAt` it fades in and stays for the rest of the scroll; it does not hide again on the way back up, because a label that comes and goes with the scroll direction is one the reader has to catch rather than read.\n\nFor a position indicator that gives up no content width, use [SectionRail](/docs/components/section-rail) — a column of short bars against one edge. For moving between panels of content rather than places on one screen, use [Tabs](/docs/components/tabs).",
   "usage": "<SectionProgress\n  scroll={sections.scroll}\n  value={sections.active}\n  onValueChange={sections.scrollTo}\n>\n  <SectionProgress.Item value=\"intro\">Introduction</SectionProgress.Item>\n  <SectionProgress.Item value=\"setup\">Setup</SectionProgress.Item>\n</SectionProgress>",
   "anatomy": "<SectionProgress>\n  <SectionProgress.Item value=\"…\">…</SectionProgress.Item>\n</SectionProgress>",
   "parts": {
-    "Item": "One section. It is a row in the expanded panel, and its children are what the collapsed pill shows while that section is the one being read — so the title is written once and serves both."
+    "Item": "One section. It is a row in the card the pill opens into, and its children are what the collapsed pill shows while that section is the one being read — so the title is written once and serves both."
   },
-  "extraImports": ["useScrollSections", "ScrollView", "View", "Text"],
+  "extraImports": [
+    "useScrollSections",
+    "ScrollView",
+    "View",
+    "Text"
+  ],
   "examples": [
     {
       "title": "Driving it from a scroll position",
@@ -38,18 +50,39 @@
     {
       "title": "Bottom centre",
       "description": "The default: centred on the bottom edge, over a long article. It appears once the reader has moved past the first screen.",
-      "code": "<SectionProgress\n  scroll={sections.scroll}\n  value={sections.active}\n  onValueChange={sections.scrollTo}\n>\n  {/* …items… */}\n</SectionProgress>"
+      "code": "<SectionProgress\n  scroll={sections.scroll}\n  value={sections.active}\n  onValueChange={sections.scrollTo}\n>\n  {/* …items… */}\n</SectionProgress>",
+      "previewVideo": {
+        "src": "/previews/section-progress.mp4",
+        "poster": "/previews/section-progress-poster.jpg",
+        "alt": "SectionProgress — Bottom centre.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "A colour per section",
       "description": "The same screen with a colour on each section. The ring, the label and the pill's wash cross into the new colour as each heading passes the reading line.",
-      "code": "<SectionProgress\n  haptics\n  scroll={sections.scroll}\n  value={sections.active}\n  onValueChange={sections.scrollTo}\n>\n  <SectionProgress.Item value=\"intro\" color=\"primary\">Introduction</SectionProgress.Item>\n  <SectionProgress.Item value=\"install\" color=\"info\">Installation</SectionProgress.Item>\n  {/* …items… */}\n</SectionProgress>"
+      "code": "<SectionProgress\n  haptics\n  scroll={sections.scroll}\n  value={sections.active}\n  onValueChange={sections.scrollTo}\n>\n  <SectionProgress.Item value=\"intro\" color=\"primary\">Introduction</SectionProgress.Item>\n  <SectionProgress.Item value=\"install\" color=\"info\">Installation</SectionProgress.Item>\n  {/* …items… */}\n</SectionProgress>",
+      "previewVideo": {
+        "src": "/previews/section-progress-a-colour-per-section.mp4",
+        "poster": "/previews/section-progress-a-colour-per-section-poster.jpg",
+        "alt": "SectionProgress — A colour per section.",
+        "width": 720,
+        "height": 1560
+      }
     },
     {
       "title": "Anchored to the top",
-      "description": "The same pill against the top-left corner, where it reads as a header rather than as something floating over the end of the page.",
-      "code": "<SectionProgress\n  placement=\"top-left\"\n  scroll={sections.scroll}\n  value={sections.active}\n  onValueChange={sections.scrollTo}\n>\n  {/* …items… */}\n</SectionProgress>"
+      "description": "The same pill centred on the top edge, where it reads as a header rather than as something floating over the end of the page. The list opens downward out of it.",
+      "code": "<SectionProgress\n  placement=\"top-center\"\n  scroll={sections.scroll}\n  value={sections.active}\n  onValueChange={sections.scrollTo}\n>\n  {/* …items… */}\n</SectionProgress>",
+      "previewVideo": {
+        "src": "/previews/section-progress-anchored-to-the-top.mp4",
+        "poster": "/previews/section-progress-anchored-to-the-top-poster.jpg",
+        "alt": "SectionProgress — Anchored to the top.",
+        "width": 720,
+        "height": 1560
+      }
     }
   ],
-  "notes": "The pill and its panel float above the screen's content, so leave room for them at the end of the scroll: `contentContainerStyle={{ paddingBottom: 96 }}` keeps the last paragraph clear of the pill.\n\nThe ring is filled from a value that arrives on the JavaScript thread at the scroll handler's throttle, and eased towards on the UI thread. It therefore trails the scroll by a fraction of a second and settles when the scroll does, which is what keeps it a glide rather than a series of steps.\n\nOne instance per scroll surface. A second pill over the same screen would report the same number twice and cover the first."
+  "notes": "Open, the list and the pill are one bordered card rather than a panel above a button: the pill's row is the end of the card, and the card carries the only border, background and shadow in the control.\n\nIt floats above the screen's content, so leave room at the end of the scroll: `contentContainerStyle={{ paddingBottom: 96 }}` keeps the last paragraph clear of the pill.\n\nThe list opens to about six rows and scrolls past that, so a screen with twenty sections gets a list rather than a column the height of the screen.\n\nThe ring is filled from a value that arrives on the JavaScript thread at the scroll handler's throttle, and eased towards on the UI thread. It therefore trails the scroll by a fraction of a second and settles when the scroll does, which is what keeps it a glide rather than a series of steps.\n\nOne instance per scroll surface. A second pill over the same screen would report the same number twice and cover the first."
 }

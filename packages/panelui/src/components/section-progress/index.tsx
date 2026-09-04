@@ -34,6 +34,17 @@
  * up. A label that comes and goes with the scroll direction is one the reader
  * has to catch rather than read.
  *
+ * ## One surface, not a card above a button
+ *
+ * Open, the list and the pill are a single bordered box: the pill's row is the
+ * end of the card rather than a control sitting under a panel of its own. Two
+ * boxes would draw two outlines a few points apart, and the pill would read as
+ * something the list had landed on top of rather than as the thing it grew
+ * out of.
+ *
+ * The card is the only thing carrying a border, a background and a shadow.
+ * Everything inside it is a row.
+ *
  * ## The section, and the colour it brings
  *
  * An `Item` may carry a `color`, and the active one's colour is taken by the
@@ -53,10 +64,9 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Pressable, ScrollView, View, type ViewProps } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, type ViewProps } from 'react-native';
 import Animated, {
   FadeIn,
-  FadeOut,
   interpolate,
   interpolateColor,
   runOnJS,
@@ -72,7 +82,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, G } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { useBackHandler } from '../../hooks/use-back-handler';
-import { Portal } from '../../primitives/portal';
 import { useScrollProgress } from '../../primitives/scroll-progress';
 import { Text, textChildren } from '../../primitives/text';
 import { cn } from '../../utils/cn';
@@ -102,20 +111,36 @@ const REVEAL_RISE = 10;
  * start being felt again. Only reached when the scroll had nowhere to go.
  */
 const JUMP_TIMEOUT = 900;
-/** Panel width: a floor so one short section still reads, and a cap so long
-    titles wrap instead of pushing the panel across the screen. */
-const PANEL_MIN_WIDTH = 180;
-const PANEL_MAX_WIDTH = '78%' as const;
+/** List width: a floor so one short section still reads, and a cap so long
+    titles wrap instead of pushing the card across the screen. */
+const LIST_MIN_WIDTH = 180;
+const LIST_MAX_WIDTH = '86%' as const;
 /**
- * The pill's own height, and the gap the panel leaves above or below it.
+ * How tall the list may grow before it scrolls: about six rows.
  *
- * Measured from what it is built out of — the ring, the padding either side of
- * it and the border — rather than measured at runtime, because the panel is
- * positioned in the same frame it mounts in and a measurement pass would place
- * it over the pill for that frame.
+ * A cap, and a `flexGrow: 0` beside it, because a `ScrollView` carries
+ * `flexGrow: 1` in its own base style — inside a card whose height comes from
+ * its contents, that is a list which fills every point the screen will give it
+ * and a card stretched from edge to edge behind six rows.
  */
-const PILL_HEIGHT = RING_SIZE + 12 + 2;
-const PANEL_GAP = 10;
+const LIST_MAX_HEIGHT = 260;
+/**
+ * The collapsed pill's height, from what it is built out of: the ring and the
+ * padding either side of it.
+ *
+ * Halved, it is the closed corner radius — and it is a number rather than a
+ * `rounded-full` because a radius of 9999 on a bordered shape draws a border
+ * that thickens through the curve at each end and thins along the straight
+ * top and bottom. A radius that is exactly half the height curves once.
+ */
+const PILL_HEIGHT = RING_SIZE + 12;
+/** The card's radius once it has opened into a list. */
+const CARD_RADIUS = 20;
+/** How long the corner takes to round off into a card, and the list to arrive. */
+const EXPAND_DURATION = 220;
+const LIST_FADE = 160;
+/** The border the card draws, and the radius the wash inside it takes. */
+const CARD_BORDER = 1;
 
 export type SectionProgressPlacement =
   | 'top-left'
@@ -437,8 +462,28 @@ function SectionProgressRoot({
   const tintStyle = useAnimatedStyle(() => ({
     color: interpolateColor(crossfade.value, [0, 1], [fade.from, fade.to]),
   }));
+  /*
+   * The corner, from a pill to a card.
+   *
+   * A number rather than `rounded-full`, because a radius far larger than the
+   * shape draws a border that thickens through each curved end and thins along
+   * the straight edges between them. Exactly half the height curves once, and
+   * the hairline stays one weight the whole way round.
+   */
+  const expanded = useSharedValue(open ? 1 : 0);
+  useEffect(() => {
+    const to = open ? 1 : 0;
+    expanded.value = reduceMotion ? to : withTiming(to, { duration: EXPAND_DURATION });
+  }, [open, reduceMotion, expanded]);
+
+  const cardStyle = useAnimatedStyle(() => ({
+    borderRadius: interpolate(expanded.value, [0, 1], [PILL_HEIGHT / 2, CARD_RADIUS]),
+  }));
   const washStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(crossfade.value, [0, 1], [fade.from, fade.to]),
+    // One point tighter than the card's, since it sits inside the border.
+    borderRadius:
+      interpolate(expanded.value, [0, 1], [PILL_HEIGHT / 2, CARD_RADIUS]) - CARD_BORDER,
   }));
 
   /* ------------------------------------------------------------------ *
@@ -518,136 +563,198 @@ function SectionProgressRoot({
     [active?.value, handleValueChange, close, tint]
   );
 
-  const vertical = placement.startsWith('top')
-    ? { top: insets.top + offset }
-    : { bottom: insets.bottom + offset };
+  /*
+   * Where the card sits, as padding on a full-screen overlay rather than as a
+   * position on the card itself.
+   *
+   * The overlay is what the dismiss layer needs: a press anywhere outside the
+   * card has to put the list away, and "anywhere" is the whole screen. It
+   * takes no touches of its own, so everything under it still scrolls.
+   */
+  const atTop = placement.startsWith('top');
 
   return (
     <SectionProgressContext.Provider value={context}>
-      <Animated.View
-        /*
-         * `box-none`, not `none`: the pill takes touches, the strip of empty
-         * space it sits in does not — a full-width bar across the bottom of
-         * the screen with ordinary pointer events swallows every scroll that
-         * starts under it.
-         */
+      <View
         pointerEvents={revealed ? 'box-none' : 'none'}
         style={[
-          revealStyle,
+          StyleSheet.absoluteFill,
           {
-            position: 'absolute',
-            left: insets.left + offset,
-            right: insets.right + offset,
-            ...vertical,
+            paddingTop: insets.top + offset,
+            paddingBottom: insets.bottom + offset,
+            paddingLeft: insets.left + offset,
+            paddingRight: insets.right + offset,
+            justifyContent: atTop ? 'flex-start' : 'flex-end',
           },
         ]}
         className={cn(ALIGNMENT[placement], className)}
         {...props}
       >
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={
-            activeLabel ? `${label}. ${activeLabel}. ${percent}% read.` : label
-          }
-          accessibilityState={{ expanded: open }}
-          onPress={() => setOpen(!open)}
-          hitSlop={8}
-          className="flex-row items-center gap-2.5 overflow-hidden rounded-full border border-border bg-popover py-1.5 pe-4 ps-2 shadow-lg"
-        >
-          {/* The wash, under everything: the section's colour at a strength
-              that tints the pill without making the label sit on it. */}
-          <Animated.View
-            pointerEvents="none"
-            style={[washStyle, { opacity: 0.1 }]}
-            className="absolute inset-0"
-          />
-
-          <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Svg width={RING_SIZE} height={RING_SIZE}>
-              <G>
-                <Circle
-                  cx={centre}
-                  cy={centre}
-                  r={radius}
-                  stroke={track}
-                  strokeWidth={RING_STROKE}
-                  fill="none"
-                />
-                <AnimatedCircle
-                  animatedProps={ringProps}
-                  cx={centre}
-                  cy={centre}
-                  r={radius}
-                  strokeWidth={RING_STROKE}
-                  strokeLinecap="round"
-                  fill="none"
-                  transform={rotate}
-                />
-              </G>
-            </Svg>
-          </View>
-
-          <Animated.Text
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            style={tintStyle}
-            className="text-sm font-medium"
-            numberOfLines={1}
-          >
-            {active?.label}
-          </Animated.Text>
-        </Pressable>
-      </Animated.View>
-
-      {open && revealed ? (
-        <Portal>
-          {/* A press anywhere else puts it away. */}
+        {open ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Close"
             onPress={close}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            /* Outside the card's padding, so it covers the screen rather than
+               the space left inside the insets. */
+            style={{
+              position: 'absolute',
+              top: -(insets.top + offset),
+              bottom: -(insets.bottom + offset),
+              left: -(insets.left + offset),
+              right: -(insets.right + offset),
+            }}
           />
-          <SectionProgressContext.Provider value={context}>
-            <Animated.View
-              entering={FadeIn.duration(140)}
-              exiting={FadeOut.duration(120)}
-              pointerEvents="box-none"
-              style={{
-                position: 'absolute',
-                left: insets.left + offset,
-                right: insets.right + offset,
-                // Clear of the pill, so the panel opens out of it rather than
-                // over the thing that was pressed.
-                ...(placement.startsWith('top')
-                  ? { top: insets.top + offset + PILL_HEIGHT + PANEL_GAP }
-                  : { bottom: insets.bottom + offset + PILL_HEIGHT + PANEL_GAP }),
-              }}
-              className={ALIGNMENT[placement]}
+        ) : null}
+
+        {/*
+          * One box around the list and the pill.
+          *
+          * It carries the border, the background and the shadow; everything
+          * inside it is a row. Drawn as two boxes the pill would read as a
+          * control the list had landed on rather than as the thing the list
+          * grew out of — and two outlines a few points apart is the seam that
+          * makes a floating control look assembled.
+          */}
+        <Animated.View
+          /*
+           * No layout animation on this box, deliberately.
+           *
+           * A layout animation here animates every change of its size, and the
+           * size changes on every change of section: the label is a different
+           * word and the pill is a different width. What that draws is the
+           * surface arriving at the old width and closing in on the new word
+           * over a few hundred milliseconds — a band of empty card down each
+           * side of the label, once per section, on a control whose entire job
+           * is to be glanced at.
+           *
+           * The width belongs to the word, so it changes with the word. Only
+           * the opening is animated, and it is animated by the parts that
+           * open: the corner rounds off through `cardStyle`, and the list
+           * fades in over it.
+           */
+          style={[
+            revealStyle,
+            cardStyle,
+            {
+              borderWidth: CARD_BORDER,
+              minWidth: open ? LIST_MIN_WIDTH : undefined,
+              maxWidth: LIST_MAX_WIDTH,
+            },
+          ]}
+          className="border-border bg-popover shadow-lg"
+        >
+          {/* The section's colour, washed across the whole card. Inset by the
+              border rather than over it, and rounded one point tighter, so the
+              outline stays a single even hairline through the curves. */}
+          <Animated.View
+            pointerEvents="none"
+            style={[washStyle, StyleSheet.absoluteFill, { opacity: 0.09 }]}
+          />
+
+          {open && !atTop ? (
+            <SectionProgressList reduceMotion={reduceMotion}>{children}</SectionProgressList>
+          ) : null}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              activeLabel ? `${label}. ${activeLabel}. ${percent}% read.` : label
+            }
+            accessibilityState={{ expanded: open }}
+            onPress={() => setOpen(!open)}
+            className="flex-row items-center gap-2.5 py-1.5 pe-4 ps-2"
+          >
+            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <Svg width={RING_SIZE} height={RING_SIZE}>
+                <G>
+                  <Circle
+                    cx={centre}
+                    cy={centre}
+                    r={radius}
+                    stroke={track}
+                    strokeWidth={RING_STROKE}
+                    fill="none"
+                  />
+                  <AnimatedCircle
+                    animatedProps={ringProps}
+                    cx={centre}
+                    cy={centre}
+                    r={radius}
+                    strokeWidth={RING_STROKE}
+                    strokeLinecap="round"
+                    fill="none"
+                    transform={rotate}
+                  />
+                </G>
+              </Svg>
+            </View>
+
+            <Animated.Text
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={tintStyle}
+              // No `flex-1`: the card is sized by its contents, and a flex
+              // child inside an auto-width row takes a basis of zero — which
+              // is a label of no width at all.
+              className="text-sm font-medium"
+              numberOfLines={1}
             >
-              <SectionProgressPanel>{children}</SectionProgressPanel>
-            </Animated.View>
-          </SectionProgressContext.Provider>
-        </Portal>
-      ) : null}
+              {active?.label}
+            </Animated.Text>
+          </Pressable>
+
+          {open && atTop ? (
+            <SectionProgressList reduceMotion={reduceMotion}>{children}</SectionProgressList>
+          ) : null}
+        </Animated.View>
+      </View>
     </SectionProgressContext.Provider>
   );
 }
 
-/** The list of sections, on the surface it opens onto. */
-function SectionProgressPanel({ children }: { children: ReactNode }) {
+/**
+ * The sections.
+ *
+ * No rule between the list and the pill's row. The rows are already separated
+ * from the row below by their own gap and by the fill on the active one, and a
+ * hairline across a card this small draws a second edge a few points inside
+ * the one the card already has.
+ *
+ * It fades in and is gone on close, with no exit animation. An exiting
+ * animation keeps the view mounted as a snapshot while the card re-lays-out
+ * around it — the card shrinks to the pill under a list that is still on
+ * screen, so the control shifts and settles back over the following frames.
+ * Closing is one change, in one frame.
+ */
+function SectionProgressList({
+  children,
+  reduceMotion,
+}: {
+  children: ReactNode;
+  reduceMotion: boolean;
+}) {
   return (
-    <View
+    <Animated.View
+      entering={reduceMotion ? undefined : FadeIn.duration(LIST_FADE)}
       accessibilityRole="menu"
-      style={{ minWidth: PANEL_MIN_WIDTH, maxWidth: PANEL_MAX_WIDTH }}
-      className="gap-0.5 rounded-2xl border border-border bg-popover p-1.5 shadow-lg"
     >
-      <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        // The list is as tall as its rows, up to six of them. Both halves are
+        // needed: `flexGrow: 0` to undo the ScrollView's own base style, and
+        // the cap so a screen with twenty sections still opens a list rather
+        // than a full-height column.
+        style={{ flexGrow: 0, maxHeight: LIST_MAX_HEIGHT }}
+        contentContainerClassName="gap-0.5 p-1.5"
+      >
         {textChildren(children)}
       </ScrollView>
-    </View>
+    </Animated.View>
   );
 }
+
 
 export interface SectionProgressItemProps {
   className?: string;

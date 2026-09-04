@@ -18,7 +18,7 @@ import { SectionProgress } from 'panelui-native';
 
 ### Parts
 
-- `SectionProgress.Item` — One section. It is a row in the expanded panel, and its children are what the collapsed pill shows while that section is the one being read — so the title is written once and serves both.
+- `SectionProgress.Item` — One section. It is a row in the card the pill opens into, and its children are what the collapsed pill shows while that section is the one being read — so the title is written once and serves both.
 
 ### Props
 
@@ -86,7 +86,11 @@ const sections = useScrollSections({ ids: SECTIONS.map((s) => s.id) });
 
 ### Notes
 
-The pill and its panel float above the screen's content, so leave room for them at the end of the scroll: `contentContainerStyle={{ paddingBottom: 96 }}` keeps the last paragraph clear of the pill.
+Open, the list and the pill are one bordered card rather than a panel above a button: the pill's row is the end of the card, and the card carries the only border, background and shadow in the control.
+
+It floats above the screen's content, so leave room at the end of the scroll: `contentContainerStyle={{ paddingBottom: 96 }}` keeps the last paragraph clear of the pill.
+
+The list opens to about six rows and scrolls past that, so a screen with twenty sections gets a list rather than a column the height of the screen.
 
 The ring is filled from a value that arrives on the JavaScript thread at the scroll handler's throttle, and eased towards on the UI thread. It therefore trails the scroll by a fraction of a second and settles when the scroll does, which is what keeps it a glide rather than a series of steps.
 
