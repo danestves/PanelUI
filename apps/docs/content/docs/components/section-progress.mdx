@@ -1,0 +1,247 @@
+---
+title: SectionProgress
+description: Floating pill with a scroll ring and the section being read.
+status: new
+---
+
+A pill that floats over a long screen carrying two readings: a ring filled to how far down the page the reader is, and the title of the section they are in. Pressing it opens the list of sections and jumps to any of them.
+
+The two answer different questions. A percentage says how much is left; a section name says what is being read. Either alone leaves the other open — 60% of an unfamiliar page means nothing in particular, and a heading with no sense of depth is a position without a scale.
+
+It draws nothing on the first screen. Past `revealAt` it fades in and stays for the rest of the scroll; it does not hide again on the way back up, because a label that comes and goes with the scroll direction is one the reader has to catch rather than read.
+
+For a position indicator that gives up no content width, use [SectionRail](/docs/components/section-rail) — a column of short bars against one edge. For moving between panels of content rather than places on one screen, use [Tabs](/docs/components/tabs).
+
+## Installation
+
+SectionProgress ships with the library — no separate install.
+
+```tsx
+import { SectionProgress, useScrollSections, Text } from 'panelui-native';
+import { ScrollView, View } from 'react-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add section-progress
+```
+
+## Usage
+
+```tsx
+<SectionProgress
+  scroll={sections.scroll}
+  value={sections.active}
+  onValueChange={sections.scrollTo}
+>
+  <SectionProgress.Item value="intro">Introduction</SectionProgress.Item>
+  <SectionProgress.Item value="setup">Setup</SectionProgress.Item>
+</SectionProgress>
+```
+
+## Composition
+
+```tsx
+<SectionProgress>
+  <SectionProgress.Item value="…">…</SectionProgress.Item>
+</SectionProgress>
+```
+
+- **`SectionProgress.Item`** — One section. It is a row in the expanded panel, and its children are what the collapsed pill shows while that section is the one being read — so the title is written once and serves both.
+
+## Examples
+
+### Driving it from a scroll position
+
+The pill watches nothing itself — it takes a `value` and a `scroll`. [useScrollSections](/docs/hooks/use-scroll-sections) supplies both from one handler: it records where each section landed, picks the one being read, publishes the scroll position the ring is filled from, and hands back a `scrollTo` that is the shape `onValueChange` wants.
+
+One handler for both is the point. The ring and the label have to agree about where the page is, and two listeners reading the same scroll at different moments do not.
+
+```tsx
+const sections = useScrollSections({ ids: SECTIONS.map((s) => s.id) });
+
+<ScrollView ref={sections.ref} {...sections.scrollProps}>
+  {SECTIONS.map((section) => (
+    <View key={section.id} onLayout={sections.measure(section.id)}>
+      <Text size="2xl" weight="semibold">{section.label}</Text>
+      {/* …section body… */}
+    </View>
+  ))}
+</ScrollView>
+
+<SectionProgress
+  scroll={sections.scroll}
+  value={sections.active}
+  onValueChange={sections.scrollTo}
+>
+  {SECTIONS.map((section) => (
+    <SectionProgress.Item key={section.id} value={section.id}>
+      {section.label}
+    </SectionProgress.Item>
+  ))}
+</SectionProgress>
+```
+
+### A colour per section
+
+An `Item` may carry a `color`, and the active one's colour is taken by the ring, the label and a wash across the pill, crossfading as the reader moves between sections. It makes the pill a second signal that can be read without the words — useful on a screen whose sections already mean something in colour, like a status or a severity.
+
+Sections that declare no colour take the foreground, so colouring some and not others is a valid arrangement rather than a half-finished one.
+
+```tsx
+<SectionProgress scroll={sections.scroll} value={sections.active} onValueChange={sections.scrollTo}>
+  <SectionProgress.Item value="overview">Overview</SectionProgress.Item>
+  <SectionProgress.Item value="healthy" color="success">Healthy</SectionProgress.Item>
+  <SectionProgress.Item value="degraded" color="warning">Degraded</SectionProgress.Item>
+  <SectionProgress.Item value="failing" color="danger">Failing</SectionProgress.Item>
+</SectionProgress>
+```
+
+### Where it sits, and when it arrives
+
+`placement` puts the pill in any corner or centred on either edge; `offset` is its distance from the safe area. `revealAt` is how far the reader must scroll before it appears, in points — `0` shows it from the first frame, for a screen where it is part of the furniture rather than something that arrives.
+
+```tsx
+<SectionProgress
+  placement="top-right"
+  offset={12}
+  revealAt={0}
+  scroll={sections.scroll}
+  value={sections.active}
+  onValueChange={sections.scrollTo}
+>
+  {/* …items… */}
+</SectionProgress>
+```
+
+### A tick for every section
+
+`haptics` fires a selection tick whenever the section changes, whether it was scrolled to or chosen from the panel — so the depth of a long screen can be felt without watching the pill.
+
+Nothing between a tap in the panel and its arrival counts as a change. A jump passes every section on the way, and ticking for each of them would turn one deliberate choice into three or four.
+
+```tsx
+<SectionProgress
+  haptics
+  scroll={sections.scroll}
+  value={sections.active}
+  onValueChange={sections.scrollTo}
+>
+  {/* …items… */}
+</SectionProgress>
+```
+
+### Driving the ring by hand
+
+`progress` fills the ring from a value of your own between 0 and 1, and nothing is derived. For a screen whose progress is not its scroll position — steps completed, files uploaded — while the label still names the part being read.
+
+```tsx
+const uploaded = useSharedValue(0);
+
+<SectionProgress
+  progress={uploaded}
+  revealAt={0}
+  value={stage}
+  onValueChange={setStage}
+>
+  <SectionProgress.Item value="pick">Choose files</SectionProgress.Item>
+  <SectionProgress.Item value="upload">Uploading</SectionProgress.Item>
+  <SectionProgress.Item value="done" color="success">Finished</SectionProgress.Item>
+</SectionProgress>
+```
+
+## Versions
+
+### Bottom centre
+
+The default: centred on the bottom edge, over a long article. It appears once the reader has moved past the first screen.
+
+```tsx
+<SectionProgress
+  scroll={sections.scroll}
+  value={sections.active}
+  onValueChange={sections.scrollTo}
+>
+  {/* …items… */}
+</SectionProgress>
+```
+
+### A colour per section
+
+The same screen with a colour on each section. The ring, the label and the pill's wash cross into the new colour as each heading passes the reading line.
+
+```tsx
+<SectionProgress
+  haptics
+  scroll={sections.scroll}
+  value={sections.active}
+  onValueChange={sections.scrollTo}
+>
+  <SectionProgress.Item value="intro" color="primary">Introduction</SectionProgress.Item>
+  <SectionProgress.Item value="install" color="info">Installation</SectionProgress.Item>
+  {/* …items… */}
+</SectionProgress>
+```
+
+### Anchored to the top
+
+The same pill against the top-left corner, where it reads as a header rather than as something floating over the end of the page.
+
+```tsx
+<SectionProgress
+  placement="top-left"
+  scroll={sections.scroll}
+  value={sections.active}
+  onValueChange={sections.scrollTo}
+>
+  {/* …items… */}
+</SectionProgress>
+```
+
+## API Reference
+
+### SectionProgress
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `scroll` | `SectionProgressScroll` | — | The scroll position the ring is filled from. `useScrollSections` returns one as `scroll`; without it the component falls back to the nearest `ScrollProgress`, and with neither the ring stays empty. |
+| `progress` | `SharedValue<number> \| number` | — | Fill the ring from a value of your own, between 0 and 1. Nothing is derived when this is passed. |
+| `value` | `string` | — | Active section id. Controlled — usually driven by a scroll handler. |
+| `defaultValue` | `string` | — | Starting section when uncontrolled. |
+| `onValueChange` | `(value: string) => void` | — | Fires when a section is chosen from the panel. Scroll there. |
+| `open` | `boolean` | — | Controlled expansion of the panel. |
+| `defaultOpen` | `boolean` | `false` | Whether the panel starts open when uncontrolled. |
+| `onOpenChange` | `(open: boolean) => void` | — | Fires when the panel opens or closes, however it was done. |
+| `placement` | `SectionProgressPlacement` | `'bottom-center'` | Which corner or edge the pill floats in. |
+| `offset` | `number` | `16` | Gap between the pill and the edge of the safe area. |
+| `revealAt` | `number` | `64` | How far the reader must scroll, in points, before the pill appears. `0` shows it from the first frame. It never hides again. |
+| `haptics` | `boolean` | `false` | Tick under the finger on every change of section, however it was made. Nothing between a tap in the panel and its arrival counts as a change. Needs the optional `expo-haptics` package; without it this does nothing. |
+| `label` | `string` | `'Sections'` | What the pill is called to a screen reader. The section being read and the percentage are announced after it, so this names the control rather than describing the state. |
+
+### SectionProgress.Item
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `value` | `string` | — | Section this row jumps to. Matches the root's `value`. |
+| `color` | `SectionProgressColor` | — | The colour this section brings to the pill. Left out, the section takes the foreground colour like every other. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+The pill and its panel float above the screen's content, so leave room for them at the end of the scroll: `contentContainerStyle={{ paddingBottom: 96 }}` keeps the last paragraph clear of the pill.
+
+The ring is filled from a value that arrives on the JavaScript thread at the scroll handler's throttle, and eased towards on the UI thread. It therefore trails the scroll by a fraction of a second and settles when the scroll does, which is what keeps it a glide rather than a series of steps.
+
+One instance per scroll surface. A second pill over the same screen would report the same number twice and cover the first.
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `SectionProgress`
+
+**Types:** `SectionProgressProps`, `SectionProgressItemProps`, `SectionProgressPlacement`, `SectionProgressColor`, `SectionProgressScroll`

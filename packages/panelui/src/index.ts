@@ -387,6 +387,14 @@ export {
   type SectionRailAlign,
 } from './components/section-rail';
 export {
+  SectionProgress,
+  type SectionProgressProps,
+  type SectionProgressItemProps,
+  type SectionProgressPlacement,
+  type SectionProgressColor,
+  type SectionProgressScroll,
+} from './components/section-progress';
+export {
   Tabs,
   type TabsProps,
   type TabsListProps,

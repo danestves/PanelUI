@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1260,
-    "values": 325,
-    "types": 935,
-    "modules": 152,
-    "components": 125,
+    "exports": 1267,
+    "values": 326,
+    "types": 941,
+    "modules": 153,
+    "components": 126,
     "hooks": 13
   },
   "groups": {
@@ -3951,6 +3951,37 @@
         ]
       },
       {
+        "source": "components/section-progress/index.tsx",
+        "slug": "section-progress",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "SectionProgress",
+            "kind": "value"
+          },
+          {
+            "name": "SectionProgressProps",
+            "kind": "type"
+          },
+          {
+            "name": "SectionProgressItemProps",
+            "kind": "type"
+          },
+          {
+            "name": "SectionProgressPlacement",
+            "kind": "type"
+          },
+          {
+            "name": "SectionProgressColor",
+            "kind": "type"
+          },
+          {
+            "name": "SectionProgressScroll",
+            "kind": "type"
+          }
+        ]
+      },
+      {
         "source": "components/section-rail/index.tsx",
         "slug": "section-rail",
         "category": "components",
@@ -5398,6 +5429,10 @@
           {
             "name": "useScrollSections",
             "kind": "value"
+          },
+          {
+            "name": "ScrollSectionsPosition",
+            "kind": "type"
           },
           {
             "name": "UseScrollSectionsOptions",

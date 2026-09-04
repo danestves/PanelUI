@@ -1,13 +1,117 @@
 import { useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScrollView, View, type LayoutChangeEvent } from "react-native";
-import { Avatar, Badge, BookmarkIcon, BellIcon, Button, Card, Frame, PlusIcon, SearchIcon, Skeleton, SplitView, Splitter, Switch, Text, Tooltip, Tour, Typography, WaterfallChart, type WaterfallDatum, waterfallSteps } from "panelui-native";
+import { Avatar, Badge, BookmarkIcon, BellIcon, Button, Card, Frame, PlusIcon, SearchIcon, SectionProgress, type SectionProgressColor, type SectionProgressPlacement, Skeleton, SplitView, Splitter, Switch, Text, Tooltip, Tour, Typography, WaterfallChart, type WaterfallDatum, waterfallSteps, useScrollSections } from "panelui-native";
 import { PanelsideActionsBlock, PanelsideAssistantBlock, PanelsideChatBlock, PanelsideCurveBlock, PanelsideDockedBlock, PanelsideNativeBlock, PanelsideNavigateBlock, PanelsideOverlayBlock } from "../../components/panelside-blocks";
 import type { ComponentEntry } from '../component-types';
 
 /** Two series side by side, which is what a bar chart is for. */
 /** Padding the header needs to line up inside a `Frame.Panel`, which has none. */
 const CHART_HEADER = 'px-4 pt-3.5';
+
+const PROGRESS_SECTIONS: { id: string; label: string; color?: SectionProgressColor; body: string }[] = [
+  {
+    id: 'intro',
+    label: 'Introduction',
+    color: 'primary',
+    body: 'Scroll on, and the pill appears at the bottom of the screen carrying two readings: how far down the page you are, and which part of it you are reading.',
+  },
+  {
+    id: 'install',
+    label: 'Installation',
+    color: 'info',
+    body: 'The ring is filled from the scroll position and the label is the section you are in. Press the pill to open the list and jump anywhere in it.',
+  },
+  {
+    id: 'theming',
+    label: 'Theming',
+    color: 'success',
+    body: 'Each section here declares a colour, so the ring, the label and the wash across the pill change as you cross into it.',
+  },
+  {
+    id: 'motion',
+    label: 'Motion',
+    color: 'warning',
+    body: 'The ring eases towards each new position rather than snapping to it, so a scroll reads as a glide instead of a series of steps.',
+  },
+  {
+    id: 'native',
+    label: 'Native controls',
+    color: 'danger',
+    body: 'The label changes when a heading passes a reading line a little way down the screen, so the section you have just scrolled past still counts as the one you are in.',
+  },
+  {
+    id: 'faq',
+    label: 'Frequently asked',
+    body: 'The last section is a special case: its top may never reach the reading line because the page runs out first, so reaching the bottom counts as being in it.',
+  },
+];
+
+/**
+ * Shared body for the scrolling demos — only the pill's placement and whether
+ * the sections carry colours differ.
+ *
+ * One hook owns the scroll: it picks the section *and* publishes the position
+ * the ring is filled from, so the two readings cannot disagree about where the
+ * page is.
+ */
+function SectionProgressVersion({
+  placement,
+  tinted,
+  haptics,
+}: {
+  placement?: SectionProgressPlacement;
+  tinted?: boolean;
+  haptics?: boolean;
+}) {
+  const sections = useScrollSections({ ids: PROGRESS_SECTIONS.map((section) => section.id) });
+
+  return (
+    <View className="flex-1">
+      <ScrollView
+        ref={sections.ref}
+        {...sections.scrollProps}
+        // Room at the end for the pill, which floats over the content.
+        contentContainerStyle={{ paddingBottom: 140 }}
+      >
+        {PROGRESS_SECTIONS.map((section) => (
+          <View
+            key={section.id}
+            onLayout={sections.measure(section.id)}
+            className="gap-3 px-6 py-10"
+          >
+            <Text size="2xl" weight="semibold">
+              {section.label}
+            </Text>
+            <Text size="sm" muted>
+              {section.body}
+            </Text>
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+          </View>
+        ))}
+      </ScrollView>
+
+      <SectionProgress
+        placement={placement}
+        haptics={haptics}
+        scroll={sections.scroll}
+        value={sections.active}
+        onValueChange={sections.scrollTo}
+      >
+        {PROGRESS_SECTIONS.map((section) => (
+          <SectionProgress.Item
+            key={section.id}
+            value={section.id}
+            color={tinted ? section.color : undefined}
+          >
+            {section.label}
+          </SectionProgress.Item>
+        ))}
+      </SectionProgress>
+    </View>
+  );
+}
 
 /* -------------------------------------------------------------------------- */
 /* Catalogue                                                                  */
@@ -686,6 +790,37 @@ function SplitViewControlledDemo() {
 }
 
 export const ENTRIES: ComponentEntry[] = [
+{
+    slug: 'section-progress',
+    name: 'SectionProgress',
+    summary: 'Floating pill with a scroll ring and the section being read',
+    demos: [
+      {
+        label: 'Bottom centre',
+        id: 'bottom-center',
+        fullPage: true,
+        description:
+          'The default. Nothing on the first screen; scroll and it arrives, then stays. Press it for the list.',
+        render: () => <SectionProgressVersion />,
+      },
+      {
+        label: 'A colour per section',
+        id: 'tinted',
+        fullPage: true,
+        description:
+          'Each section brings its own colour to the ring, the label and the wash across the pill. Haptics on.',
+        render: () => <SectionProgressVersion tinted haptics />,
+      },
+      {
+        label: 'Anchored to the top',
+        id: 'top-left',
+        fullPage: true,
+        description:
+          'The same pill in the top-left corner, where it reads as a header rather than as something over the end of the page.',
+        render: () => <SectionProgressVersion placement="top-left" />,
+      },
+    ],
+  },
 {
     slug: 'typography',
     name: 'Typography',

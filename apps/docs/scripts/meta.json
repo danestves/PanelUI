@@ -704,6 +704,15 @@
       "category": "navigation"
     }
   ],
+  "section-progress": [
+    "SectionProgress",
+    "Floating pill with a scroll ring and the section being read.",
+    "react native scroll progress indicator",
+    {
+      "addedIn": "0.90.0",
+      "category": "navigation"
+    }
+  ],
   "select": [
     "Select",
     "Picker shown in a bottom sheet, expanded in place, or floating over the page.",

@@ -719,6 +719,22 @@ const sectionRail = (
   </div>
 );
 
+const sectionProgress = (
+  <Stack className="w-44 items-center gap-3">
+    <Stack className="w-full gap-2">
+      <Bar className="w-full" faint />
+      <Bar className="w-24" faint />
+      <Bar className="w-full" faint />
+      <Bar className="w-16" faint />
+    </Stack>
+    {/* The pill: a ring part-filled, and the section it names. */}
+    <Plate className="h-7 flex-row items-center gap-2 rounded-full px-2.5">
+      <div className="size-3.5 rounded-full border-2 border-fd-muted-foreground/25 border-l-fd-primary border-t-fd-primary" />
+      <Bar className="w-12" />
+    </Plate>
+  </Stack>
+);
+
 const sortable = (
   <Stack className="w-40">
     <Plate className="h-8 flex-row items-center gap-2 px-2">
@@ -2086,6 +2102,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
   breadcrumb,
   pagination,
   'section-rail': sectionRail,
+  'section-progress': sectionProgress,
   sortable,
   steps,
   tabs,

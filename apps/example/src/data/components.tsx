@@ -178,6 +178,8 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   sortable: () => load11().then((module) => module.ENTRIES_BY_SLUG['sortable']),
   slider: () => load12().then((module) => module.ENTRIES_BY_SLUG['slider']),
   spinner: () => load12().then((module) => module.ENTRIES_BY_SLUG['spinner']),
+  'section-progress': () =>
+    load14().then((module) => module.ENTRIES_BY_SLUG['section-progress']),
   splitter: () => load14().then((module) => module.ENTRIES_BY_SLUG['splitter']),
   'split-view': () =>
     load14().then((module) => module.ENTRIES_BY_SLUG['split-view']),

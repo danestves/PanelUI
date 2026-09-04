@@ -1536,6 +1536,23 @@
     "docsPath": "components/search-bar"
   },
   {
+    "name": "section-progress",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Floating pill with a scroll ring and the section being read.",
+    "registryDependencies": [
+      "cn",
+      "haptics",
+      "portal",
+      "scroll-progress",
+      "text",
+      "use-back-handler"
+    ],
+    "docsPath": "components/section-progress"
+  },
+  {
     "name": "section-rail",
     "type": "registry:ui",
     "kind": "ui",

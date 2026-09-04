@@ -89,6 +89,7 @@ export const COMPONENTS = [
   {"slug":"scroll-fade","name":"ScrollFade","summary":"Fades the edges of a scroll container"},
   {"slug":"scroll-text","name":"ScrollText","summary":"Text that resolves word by word as you scroll"},
   {"slug":"search-bar","name":"SearchBar","summary":"Search field with a clear button, a Cancel button and a panel of results"},
+  {"slug":"section-progress","name":"SectionProgress","summary":"Floating pill with a scroll ring and the section being read"},
   {"slug":"section-rail","name":"SectionRail","summary":"Floating section navigator for a long screen"},
   {"slug":"select","name":"Select","summary":"Picker shown in a sheet, in place, or floating over the page"},
   {"slug":"selection-mode","name":"SelectionMode","summary":"Pick several rows out of a list, with a count and a bar of actions"},
