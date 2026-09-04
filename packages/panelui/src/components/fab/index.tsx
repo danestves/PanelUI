@@ -55,9 +55,11 @@
  * exactly what that material is for: it refracts what scrolls under it rather
  * than covering it, and lifts its own edge, so the shadow goes too.
  *
- * `primary` and `destructive` tint the material with their colour, so the one
- * action a screen leads with stays the one that stands out; `secondary` and
- * `surface` take the plain material. The material exists on iOS 26 and above
+ * Every variant takes the plain material and reads its glyph in the ordinary
+ * foreground colour, because a tint is a dimmer: measured over content, a
+ * primary colour laid on the glass turns it back into a fill and a monochrome
+ * one only greys it. `destructive` is the exception, and keeps a translucent
+ * red — that colour carries meaning. The material exists on iOS 26 and above
  * with the optional `expo-glass-effect` installed. Everywhere else — older iOS,
  * Android, web, Reduce Transparency on — the flag is inert and the button keeps
  * its ordinary fill, so nothing has to be written twice.
@@ -111,6 +113,7 @@ import { Glass, useGlassMaterial } from '../../primitives/glass';
 import { Scrim } from '../../primitives/scrim';
 import { Text } from '../../primitives/text';
 import { cn } from '../../utils/cn';
+import { hsvToCss, parseColor } from '../../utils/color';
 import { selectionTick } from '../../utils/haptics';
 
 /** Which corner the button sits in. */
@@ -205,20 +208,34 @@ const CONTENT_COLOR_VAR: Record<FabVariant, string> = {
 };
 
 /**
- * What tints the glass, per variant.
+ * What tints the glass, per variant — and only destructive does.
  *
- * The filled variants keep their colour as a tint, so a primary button is still
- * the accent-coloured one when it is glass. The quiet ones take the plain
- * material, and their content reads in the ordinary foreground: the material
- * is neither light nor dark, and a secondary foreground chosen for a secondary
- * fill has no fill to be chosen for.
+ * A tint is a dimmer on the material. At full strength it is a fill with a lit
+ * edge, and a monochrome primary at any strength only greys the glass without
+ * saying "primary". So the material is left plain, and every variant's glyph
+ * reads in the ordinary foreground colour: the material is neither light nor
+ * dark, and a foreground chosen for a fill has no fill to be chosen for. Red
+ * is kept because it means something, and translucent so the glass survives.
  */
 const GLASS_TINT_VAR: Record<FabVariant, string | null> = {
-  primary: '--color-primary',
+  primary: null,
   destructive: '--color-destructive',
   secondary: null,
   surface: null,
 };
+
+/**
+ * How much of the tint the material takes. Measured over colour, the band
+ * from a half to seven tenths keeps the colour recognisable and the content
+ * under it visible; this sits inside it.
+ */
+const GLASS_TINT_ALPHA = 0.6;
+
+/** The token's colour, translucent enough for the glass to stay glass. */
+function glassTint(color: string): string | undefined {
+  const parsed = parseColor(color);
+  return parsed ? hsvToCss(parsed.h, parsed.s, parsed.v, GLASS_TINT_ALPHA) : undefined;
+}
 
 /** Where a floating button parks itself, given its offset. */
 function anchor(placement: FabPlacement, offset: number) {
@@ -265,8 +282,9 @@ export interface FabProps
   haptics?: boolean;
   /**
    * Draw it in Liquid Glass — the material iOS 26 uses for its own floating
-   * controls — instead of the variant's fill. `primary` and `destructive` tint
-   * the material with their colour; the other variants take it plain.
+   * controls — instead of the variant's fill. Every variant takes the plain
+   * material with its glyph in the foreground colour; `destructive` keeps a
+   * translucent red.
    *
    * Needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android,
    * on web, or with Reduce Transparency on, it does nothing and the button
@@ -318,8 +336,8 @@ const FabRoot = forwardRef<View, FabProps>(
     );
     const contentColor = typeof themed === 'string' ? themed : undefined;
     // Resolved unconditionally: a hook cannot come and go with a prop.
-    const themedTint = useCSSVariable(tintVar ?? '--color-primary');
-    const tint = tintVar && typeof themedTint === 'string' ? themedTint : undefined;
+    const themedTint = useCSSVariable(tintVar ?? '--color-destructive');
+    const tint = tintVar && typeof themedTint === 'string' ? glassTint(themedTint) : undefined;
 
     const handlePress = useCallback<NonNullable<AnimatedPressableProps['onPress']>>(
       (event) => {

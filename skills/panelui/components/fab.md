@@ -51,7 +51,7 @@ Extends `Omit<AnimatedPressableProps, 'children' \| 'style' \| 'disabled'>, Omit
 | `style` | `ViewProps['style']` | — | Placement-aware view style. Press-state styling belongs in `className`. |
 | `disabled` | `boolean` | `false` | — |
 | `haptics` | `boolean` | `false` | A tick on press. Off by default — needs the optional `expo-haptics`, and is silent without it. |
-| `glass` | `boolean` | `false` | Draw it in Liquid Glass — the material iOS 26 uses for its own floating controls — instead of the variant's fill. `primary` and `destructive` tint the material with their colour; the other variants take it plain. Needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android, on web, or with Reduce Transparency on, it does nothing and the button keeps its ordinary fill. |
+| `glass` | `boolean` | `false` | Draw it in Liquid Glass — the material iOS 26 uses for its own floating controls — instead of the variant's fill. Every variant takes the plain material with its glyph in the foreground colour; `destructive` keeps a translucent red. Needs iOS 26 and the optional `expo-glass-effect`. Below that, on Android, on web, or with Reduce Transparency on, it does nothing and the button keeps its ordinary fill. |
 | `accessibilityLabel` | `string` | — | Required for an icon-only button. A lone glyph reads out as nothing. |
 
 #### `FabGroupProps`

@@ -578,6 +578,7 @@
     "registryDependencies": [
       "animated-pressable",
       "cn",
+      "color",
       "glass",
       "haptics",
       "icons",
