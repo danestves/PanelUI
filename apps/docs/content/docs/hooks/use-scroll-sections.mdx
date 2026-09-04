@@ -4,9 +4,10 @@ description: Track which section of a scroll view is being read.
 ---
 
 Records where each section of a scroll view sits, reports which one is being
-read, and scrolls back to any of them. Built for [SectionRail](/docs/components/section-rail),
-but it has nothing to do with the rail — anything that needs to follow a long
-page can use it.
+read, publishes the scroll position, and scrolls back to any of them. Built for
+[SectionRail](/docs/components/section-rail) and
+[SectionProgress](/docs/components/section-progress), but it has nothing to do
+with either — anything that needs to follow a long page can use it.
 
 ```tsx
 import { SectionRail, useScrollSections } from 'panelui-native';
@@ -81,6 +82,34 @@ with which to get there, so there is nothing else it could reasonably be.
 
 `endThreshold` (24px) is how close to the bottom counts as at it.
 
+## The scroll position
+
+The same handler already receives everything a percentage is made of — how far
+the scroller has moved, how tall its viewport is, how tall its content is — so
+it publishes all three as `scroll`, and nothing needs a second scroll listener
+to draw progress.
+
+They are shared values, written from the scroll handler on the JavaScript
+thread. Read them on the UI thread and ease towards each new value rather than
+jumping to it; they arrive at the handler's throttle, not once a frame.
+
+```tsx
+<SectionProgress
+  scroll={sections.scroll}
+  value={sections.active}
+  onValueChange={sections.scrollTo}
+>
+  {SECTIONS.map((s) => (
+    <SectionProgress.Item key={s.id} value={s.id}>{s.label}</SectionProgress.Item>
+  ))}
+</SectionProgress>
+```
+
+The position keeps moving during a `scrollTo`, while the section does not. A
+jump is real travel and a progress ring should follow it; the section it lands
+on is the one the reader chose, and reporting each heading the animation passes
+through would be reporting places nobody went.
+
 ## Scrolling back
 
 `scrollTo` takes a section id and animates to it, which is exactly the shape a
@@ -114,7 +143,8 @@ const sections = useScrollSections({ ids, scrollPadding: 64 });
 | --- | --- | --- |
 | `ref` | `RefObject<ScrollView>` | Attach to the ScrollView, so `scrollTo` has something to drive. |
 | `active` | `string \| undefined` | The section being read. |
-| `scrollProps` | `object` | Spread onto the ScrollView — the scroll handler and its throttle. |
+| `scroll` | `{ offset, viewport, content }` | The scroll position, as shared values, for drawing how far through the page the reader is. |
+| `scrollProps` | `object` | Spread onto the ScrollView — the scroll handler, the layout and content-size callbacks, and the throttle. |
 | `measure` | `(id) => (event) => void` | `onLayout` for a section wrapper: `onLayout={measure(id)}`. |
 | `scrollTo` | `(id) => void` | Scroll a section to the top. |
 
