@@ -115,6 +115,21 @@ const GlassView: ComponentType<GlassViewProps> | null = (() => {
  */
 export const hasGlass = GlassView !== null;
 
+/**
+ * Whether the material will actually be drawn right now: the API is present
+ * *and* the user has not switched Reduce Transparency on.
+ *
+ * For a component that changes shape around the material — dropping a fill, a
+ * border or a shadow the glass replaces — so that it makes the same decision
+ * `Glass` makes and never strips the fill while leaving nothing behind it.
+ */
+export function useGlassMaterial(): boolean {
+  const reduceTransparency = useReduceTransparency();
+  // Not knowing yet counts as "do not draw it": the material arriving a frame
+  // late is invisible, and one flashing at somebody who opted out is not.
+  return hasGlass && reduceTransparency === false;
+}
+
 export interface GlassProps extends ViewProps {
   /**
    * How much of what is behind shows through. `regular` is the everyday
@@ -144,7 +159,6 @@ export function Glass({
   style,
   ...props
 }: GlassProps) {
-  const reduceTransparency = useReduceTransparency();
   /*
    * Which appearance the material is drawn in, from the app's theme rather
    * than the phone's.
@@ -155,9 +169,7 @@ export function Glass({
    * appearance never moved.
    */
   const { mode } = useThemeMode();
-  // Not knowing yet counts as "do not draw it": the material arriving a frame
-  // late is invisible, and one flashing at somebody who opted out is not.
-  const material = GlassView !== null && reduceTransparency === false;
+  const material = useGlassMaterial();
   const shape = shapeOf(radius);
 
   return (
