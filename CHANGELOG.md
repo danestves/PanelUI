@@ -9,6 +9,37 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.110.0] — 2026-10-14
+
+### Added
+
+- **AvatarCropper** — frame a photo under a fixed outline and get what it covers back as an
+  image, for a profile picture. Drag, pinch and two-finger turn all work at once, and
+  `AvatarCropper.Rotate` and `AvatarCropper.Reset` give the same moves as buttons. The photo
+  always covers the outline: let go past an edge, or zoom out too far, and it springs back.
+  - `shape` is `circle` (the default, as `Avatar` draws it), `squircle` or `square`. The image
+    written out is square for every shape.
+  - `crop({ size, format, compress })` writes the image through the optional
+    `expo-image-manipulator`. The photo is redrawn upright first, so a camera photo that stores
+    its orientation as a flag comes out the right way up.
+  - `getCrop()` returns the rectangle the outline covers, in the photo's pixels, with no
+    optional package — for an app that crops on its server.
+  - `pickAvatarImage({ from: 'library' | 'camera' })` gets the photo through the optional
+    `expo-image-picker`, resolves `null` when the user cancels, and throws when camera
+    permission is refused.
+  - Screen readers can zoom and rotate through the canvas's actions.
+- **`RotateSquareIcon`** — a square with an arrow turning round it, for turning an image rather
+  than refreshing.
+
+### Fixed
+
+- **An app without `react-native-keyboard-controller` failed to bundle.** The package is an
+  optional peer, but the provider's `require` of it sat inside an `if` within its `try`, and
+  Metro only lets a missing package through when the `require` is directly in the `try` block.
+  A project scaffolded with `create panelui-app` stopped at `Unable to resolve
+  "react-native-keyboard-controller"`. It now bundles without the package and falls back as
+  documented. Every optional peer is now checked against that rule in CI.
+
 ## [0.109.0] — 2026-10-11
 
 ### Added
