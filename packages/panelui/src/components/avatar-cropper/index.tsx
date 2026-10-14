@@ -51,6 +51,7 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
   type Ref,
@@ -81,6 +82,7 @@ import { Button, type ButtonProps } from '../button';
 import {
   IDENTITY,
   baseSize,
+  coversMask,
   maskPath,
   nextQuarterTurn,
   normalizeDegrees,
@@ -89,6 +91,7 @@ import {
   settle,
   sourceCrop,
   zoomAbout,
+  type CropBounds,
   type CropFrame,
   type CropShape,
   type CropState,
@@ -160,6 +163,17 @@ function loadPicker(): PickerModule | null {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('expo-image-picker') as PickerModule;
+  } catch {
+    return null;
+  }
+}
+
+/** `react-native-view-shot`'s capture function, or null when it is not installed. */
+function loadCapture(): ((view: unknown, options: unknown) => Promise<string>) | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('react-native-view-shot');
+    return (mod?.captureRef as (view: unknown, options: unknown) => Promise<string>) ?? null;
   } catch {
     return null;
   }
@@ -237,7 +251,11 @@ export interface AvatarCropOptions {
    * pixels than this is written at its own size rather than scaled up.
    */
   size?: number;
-  /** Default `'jpeg'`. Use `'png'` to keep transparency out of the question entirely. */
+  /**
+   * Default `'jpeg'`, or `'png'` when `background` is `'transparent'` so the
+   * transparency survives. A crop with a background is written as PNG or
+   * JPEG, so `'webp'` is written as PNG there.
+   */
   format?: 'jpeg' | 'png' | 'webp';
   /** Quality, 0–1, for JPEG and WebP. Default 0.9. */
   compress?: number;
@@ -249,13 +267,16 @@ export interface AvatarCropperHandle {
    * every shape; draw it in a round `Avatar` to show it as a circle.
    *
    * Needs the optional `expo-image-manipulator`, and throws if it is not
-   * installed — use `getCrop()` then.
+   * installed — use `getCrop()` then. A crop with part of `background` in it
+   * (only possible with `cover` off) is drawn and captured instead, and needs
+   * the optional `react-native-view-shot`.
    */
   crop(options?: AvatarCropOptions): Promise<AvatarCropResult>;
   /**
    * The rectangle the mask covers, in the source's pixels, after turning the
    * source by `rotation` degrees clockwise. Null until the photo has been
-   * measured and laid out.
+   * measured and laid out. With `cover` off it can reach past the turned
+   * image's edges; whatever lies outside is `background`.
    */
   getCrop(): SourceCrop | null;
   /** Turn a quarter clockwise, or a quarter back with `-1`. */
@@ -274,6 +295,26 @@ export interface AvatarCropperProps extends ViewProps {
   shape?: CropShape;
   /** How far the photo can be zoomed past filling the mask. Default 5. */
   maxZoom?: number;
+  /**
+   * Keep the photo covering the whole outline. Default true: let go past an
+   * edge, or zoom out too far, and it springs back to fill it.
+   *
+   * Set it to false to let the photo be zoomed out smaller than the outline,
+   * down to `minZoom`. The space around it is filled with `background`, on
+   * screen and in the image `crop()` writes.
+   */
+  cover?: boolean;
+  /**
+   * With `cover` off, how small the photo can get: its long side as a
+   * fraction of the outline's width. Default 0.5.
+   */
+  minZoom?: number;
+  /**
+   * What fills the outline around a photo smaller than it, with `cover` off.
+   * Any colour React Native accepts, or `'transparent'` — written out as PNG
+   * so it stays transparent. Default: the theme's background colour.
+   */
+  background?: string;
   /** Space between the mask and the canvas's shorter side, in points. Default 24. */
   inset?: number;
   className?: string;
@@ -283,7 +324,11 @@ export interface AvatarCropperProps extends ViewProps {
 
 interface CropperContextValue {
   shape: CropShape;
-  maxZoom: number;
+  bounds: CropBounds;
+  /** The resolved fill around a photo smaller than the outline. */
+  fill: string;
+  /** A crop being drawn for capture, while `crop()` is waiting on it. */
+  stage: ExportJob | null;
   inset: number;
   source: AvatarCropperSource;
   /** The source's upright size, once known. */
@@ -322,6 +367,9 @@ function AvatarCropperRoot(
     source,
     shape = 'circle',
     maxZoom = 5,
+    cover = true,
+    minZoom = 0.5,
+    background,
     inset = 24,
     className,
     children,
@@ -336,6 +384,14 @@ function AvatarCropperRoot(
   const [canvas, setCanvasState] = useState<Size | null>(null);
   const [measured, setMeasured] = useState<Size | null>(null);
   const [summary, setSummary] = useState(describe(IDENTITY));
+  const [stage, setStage] = useState<ExportJob | null>(null);
+  const backgroundToken = useCSSVariable('--color-background');
+  const fill =
+    background ?? (typeof backgroundToken === 'string' ? backgroundToken : '#ffffff');
+  const bounds = useMemo<CropBounds>(
+    () => ({ shape, maxZoom, cover, minZoom }),
+    [shape, maxZoom, cover, minZoom]
+  );
 
   const { uri, width, height } = source;
   const sourceSize =
@@ -388,7 +444,7 @@ function AvatarCropperRoot(
   const animateTo = useCallback(
     (target: CropState, timed: boolean) => {
       if (!frame) return;
-      const next = settle(target, shape, frame, maxZoom);
+      const next = settle(target, bounds, frame);
       const run = (value: number) =>
         timed ? withTiming(value, { duration: TURN_DURATION }) : withSpring(value, SETTLE_SPRING);
       x.value = run(next.x);
@@ -397,7 +453,7 @@ function AvatarCropperRoot(
       rotation.value = run(next.rotation);
       setSummary(describe(next));
     },
-    [frame, shape, maxZoom, x, y, scale, rotation]
+    [frame, bounds, x, y, scale, rotation]
   );
 
   const settleNow = useCallback(() => animateTo(read(), false), [animateTo, read]);
@@ -424,10 +480,16 @@ function AvatarCropperRoot(
     [animateTo, read]
   );
 
+  const settled = useCallback(
+    (): CropState | null => (frame ? settle(read(), bounds, frame) : null),
+    [frame, bounds, read]
+  );
+
   const getCrop = useCallback((): SourceCrop | null => {
-    if (!frame || !sourceSize) return null;
-    return sourceCrop(settle(read(), shape, frame, maxZoom), frame, sourceSize);
-  }, [frame, sourceSize, read, shape, maxZoom]);
+    const state = settled();
+    if (!state || !frame || !sourceSize) return null;
+    return sourceCrop(state, frame, sourceSize, coversMask(state, shape, frame));
+  }, [settled, frame, sourceSize, shape]);
 
   useImperativeHandle(
     ref,
@@ -435,17 +497,52 @@ function AvatarCropperRoot(
       getCrop,
       rotate,
       reset,
-      async crop({ size = 1024, format = 'jpeg', compress = 0.9 } = {}) {
+      async crop({ size = 1024, format, compress = 0.9 } = {}) {
+        const state = settled();
+        const rect = getCrop();
+        if (!state || !frame || !rect || !sourceSize) {
+          throw new Error('AvatarCropper.crop: the photo has not been measured and laid out yet.');
+        }
+        const transparent = fill === 'transparent';
+        const output = format ?? (transparent ? 'png' : 'jpeg');
+        const side = Math.min(size, rect.width);
+
+        if (!coversMask(state, shape, frame)) {
+          // Part of the outline is background, which the manipulator cannot
+          // paint on a phone. Draw the crop as the screen does, off to one
+          // side, and capture that instead.
+          const capture = loadCapture();
+          if (!capture) {
+            throw new Error(
+              'AvatarCropper.crop: a photo smaller than the outline is written with ' +
+                'react-native-view-shot. Install it with: npx expo install react-native-view-shot'
+            );
+          }
+          return new Promise<AvatarCropResult>((resolve, reject) => {
+            setStage({
+              state,
+              side,
+              format: output === 'jpeg' ? 'jpg' : 'png',
+              compress,
+              capture,
+              resolve: (result) => {
+                setStage(null);
+                resolve(result);
+              },
+              reject: (error) => {
+                setStage(null);
+                reject(error);
+              },
+            });
+          });
+        }
+
         const manipulator = loadManipulator()?.ImageManipulator;
         if (!manipulator) {
           throw new Error(
             'AvatarCropper.crop needs expo-image-manipulator. Install it with: ' +
               'npx expo install expo-image-manipulator — or use getCrop() to crop elsewhere.'
           );
-        }
-        const rect = getCrop();
-        if (!rect || !sourceSize) {
-          throw new Error('AvatarCropper.crop: the photo has not been measured and laid out yet.');
         }
         // Redraw upright first. The turn and the cut both read raw pixels,
         // and a camera photo often keeps its orientation in a flag instead.
@@ -457,17 +554,19 @@ function AvatarCropperRoot(
           width: rect.width,
           height: rect.height,
         });
-        if (size < rect.width) context.resize({ width: size, height: size });
+        if (side < rect.width) context.resize({ width: side, height: side });
         const rendered = await context.renderAsync();
-        return rendered.saveAsync({ format, compress });
+        return rendered.saveAsync({ format: output, compress });
       },
     }),
-    [getCrop, rotate, reset, sourceSize, uri]
+    [getCrop, settled, rotate, reset, sourceSize, uri, frame, shape, fill]
   );
 
   const value: CropperContextValue = {
     shape,
-    maxZoom,
+    bounds,
+    fill,
+    stage,
     inset,
     source,
     sourceSize,
@@ -499,6 +598,106 @@ const AvatarCropperForwarded = forwardRef<AvatarCropperHandle, AvatarCropperProp
 );
 AvatarCropperForwarded.displayName = 'AvatarCropper';
 
+interface ExportJob {
+  state: CropState;
+  /** Side of the image to write, in pixels. */
+  side: number;
+  format: 'png' | 'jpg';
+  compress: number;
+  capture: (view: unknown, options: unknown) => Promise<string>;
+  resolve: (result: AvatarCropResult) => void;
+  reject: (error: unknown) => void;
+}
+
+/**
+ * The crop drawn on its own, for capture: a square of the background with the
+ * photo placed in it exactly as the canvas places it under the outline.
+ *
+ * It sits directly under the outline, at the outline's size, beneath the
+ * canvas's own drawing of the same thing — so it is never seen, whatever
+ * surrounds the cropper. The capture reads the view's own drawing, not what is
+ * on screen above it, and scales it to the size asked for.
+ */
+function ExportStage({
+  job,
+  frame,
+  uri,
+  fill,
+  left,
+  top,
+}: {
+  job: ExportJob;
+  frame: CropFrame;
+  uri: string;
+  fill: string;
+  left: number;
+  top: number;
+}) {
+  const ref = useRef<View>(null);
+  const started = useRef(false);
+  const side = frame.mask;
+  const { width, height } = frame.image;
+  const { state } = job;
+
+  const capture = () => {
+    if (started.current) return;
+    started.current = true;
+    job
+      .capture(ref.current, {
+        format: job.format,
+        quality: job.compress,
+        result: 'tmpfile',
+        width: job.side,
+        height: job.side,
+      })
+      .then((uri) => job.resolve({ uri, width: job.side, height: job.side }))
+      .catch(job.reject);
+  };
+
+  return (
+    <View
+      ref={ref}
+      collapsable={false}
+      pointerEvents="none"
+      importantForAccessibility="no-hide-descendants"
+      accessibilityElementsHidden
+      style={{
+        position: 'absolute',
+        left,
+        top,
+        width: side,
+        height: side,
+        overflow: 'hidden',
+        backgroundColor: fill,
+      }}
+    >
+      <View
+        style={{
+          position: 'absolute',
+          left: (side - width) / 2,
+          top: (side - height) / 2,
+          width,
+          height,
+          transform: [
+            { translateX: state.x },
+            { translateY: state.y },
+            { rotate: `${state.rotation}deg` },
+            { scale: state.scale },
+          ],
+        }}
+      >
+        <Image
+          source={{ uri }}
+          style={{ width, height }}
+          resizeMode="cover"
+          onLoad={() => requestAnimationFrame(capture)}
+          onError={() => job.reject(new Error('AvatarCropper.crop: the photo failed to load.'))}
+        />
+      </View>
+    </View>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Canvas
 // ---------------------------------------------------------------------------
@@ -522,7 +721,9 @@ function AvatarCropperCanvas({
 }: AvatarCropperCanvasProps) {
   const {
     shape,
-    maxZoom,
+    bounds,
+    fill,
+    stage,
     source,
     frame,
     canvas,
@@ -552,7 +753,7 @@ function AvatarCropperCanvas({
 
   const shown = useDerivedValue((): CropState => {
     const raw = { x: x.value, y: y.value, scale: scale.value, rotation: rotation.value };
-    return frame ? present(raw, shape, frame, maxZoom) : raw;
+    return frame ? present(raw, bounds, frame) : raw;
   });
 
   const imageStyle = useAnimatedStyle(() => ({
@@ -584,8 +785,12 @@ function AvatarCropperCanvas({
     const bound = (state: CropState) => {
       'worklet';
       if (!frame) return state;
-      const lowest = 1 / OVERSHOOT / 2;
-      const next = { ...state, scale: Math.min(Math.max(state.scale, lowest), maxZoom * OVERSHOOT) };
+      // A guard against running away, not a bound: `present` does the bounding.
+      const lowest = 0.05;
+      const next = {
+        ...state,
+        scale: Math.min(Math.max(state.scale, lowest), bounds.maxZoom * OVERSHOOT),
+      };
       const limit = Math.max(image.width, image.height) * next.scale;
       next.x = Math.min(Math.max(next.x, -limit), limit);
       next.y = Math.min(Math.max(next.y, -limit), limit);
@@ -656,7 +861,7 @@ function AvatarCropperCanvas({
       });
 
     return Gesture.Simultaneous(pan, pinch, turn);
-  }, [active, x, y, scale, rotation, settleNow, frame, image.width, image.height, maxZoom, W, H]);
+  }, [active, x, y, scale, rotation, settleNow, frame, image.width, image.height, bounds, W, H]);
 
   const onAccessibilityAction = useCallback(
     (event: AccessibilityActionEvent) => {
@@ -704,6 +909,29 @@ function AvatarCropperCanvas({
         onAccessibilityAction={onAccessibilityAction}
         {...props}
       >
+        {stage && frame && W > 0 ? (
+          <ExportStage
+            job={stage}
+            frame={frame}
+            uri={source.uri}
+            fill={fill}
+            left={(W - mask) / 2}
+            top={(H - mask) / 2}
+          />
+        ) : null}
+        {!bounds.cover && frame && W > 0 && fill !== 'transparent' ? (
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left: (W - mask) / 2,
+              top: (H - mask) / 2,
+              width: mask,
+              height: mask,
+              backgroundColor: fill,
+            }}
+          />
+        ) : null}
         {frame && W > 0 ? (
           <Animated.View
             pointerEvents="none"

@@ -6,7 +6,7 @@
     "width": 1206,
     "height": 1305
   },
-  "intro": "Use it for a profile photo: the user drags, pinches and turns a photo under a fixed outline, and `crop()` writes what is inside the outline to a new square image. `pickAvatarImage()` gets the photo from the library or the camera first.\n\nThe photo always covers the outline. Let go past an edge, or zoom out too far, and it springs back to the nearest position that fills it.\n\nWriting the image needs the optional `expo-image-manipulator`, and picking a photo needs the optional `expo-image-picker`. Both run in Expo Go.\n\nWithout the manipulator, `getCrop()` still returns the rectangle the outline covers, in the photo's pixels, for an app that crops on its server. To show a photo without editing it, use [Avatar](/docs/components/avatar). To let the user look at one full screen, use [ImageViewer](/docs/components/image-viewer).",
+  "intro": "Use it for a profile photo: the user drags, pinches and turns a photo under a fixed outline, and `crop()` writes what is inside the outline to a new square image. `pickAvatarImage()` gets the photo from the library or the camera first.\n\nBy default the photo always covers the outline. Let go past an edge, or zoom out too far, and it springs back to the nearest position that fills it. Set `cover={false}` to let the photo be zoomed out smaller than the outline; `background` fills the space around it.\n\nWriting the image needs the optional `expo-image-manipulator`, and picking a photo needs the optional `expo-image-picker`. A crop with background in it is drawn and captured instead, which needs the optional `react-native-view-shot`. All three run in Expo Go.\n\nWithout the manipulator, `getCrop()` still returns the rectangle the outline covers, in the photo's pixels, for an app that crops on its server. To show a photo without editing it, use [Avatar](/docs/components/avatar). To let the user look at one full screen, use [ImageViewer](/docs/components/image-viewer).",
   "usage": "const cropper = useRef<AvatarCropperHandle>(null);\n\n<AvatarCropper ref={cropper} source={photo}>\n  <AvatarCropper.Canvas />\n  <View className=\"flex-row justify-between p-4\">\n    <AvatarCropper.Reset />\n    <AvatarCropper.Rotate />\n  </View>\n</AvatarCropper>\n\nconst { uri } = await cropper.current!.crop({ size: 512 });",
   "extraImports": [
     "Avatar",
@@ -39,6 +39,17 @@
       }
     },
     {
+      "title": "Zooming out past the outline",
+      "description": "With `cover={false}` the photo can shrink until its long side is `minZoom` of the outline's width. `background` fills the gap on screen and in the written image. Pass `'transparent'` to keep it empty; the image is then written as PNG.",
+      "code": "<AvatarCropper\n  ref={cropper}\n  source={photo}\n  cover={false}\n  background=\"#ffffff\"\n/>\n\n<AvatarCropper source={photo} cover={false} minZoom={0.3} background=\"transparent\" />",
+      "preview": {
+        "src": "/previews/avatar-cropper-zooming-out-past-the-outline.jpg",
+        "alt": "A portrait zoomed out smaller than a circular outline, with white filling the circle around it, and the cropped image beside the Crop button.",
+        "width": 1206,
+        "height": 1460
+      }
+    },
+    {
       "title": "Cropping on a server",
       "description": "`getCrop()` needs no optional package. Turn the original by `rotation` degrees clockwise, then cut the rectangle out of the result.",
       "code": "const crop = cropper.current?.getCrop();\n// { originX: 812, originY: 340, width: 1500, height: 1500,\n//   rotation: 90, canvas: { width: 3000, height: 4000 } }\n\nawait upload(photo.uri, crop);"
@@ -62,5 +73,5 @@
       }
     }
   ],
-  "notes": "Two fingers move, zoom and turn the photo at once. Zooming and turning happen about the point between the fingers.\n\nA square or squircle outline needs more zoom at an angle than a circle does, because its corners reach further. The minimum zoom follows the angle.\n\nScreen readers can zoom and rotate with the canvas's actions, and hear the current zoom and angle as its value.\n\nThe photo is redrawn upright before it is turned and cut, so a camera photo that stores its orientation as a flag comes out the right way up.\n\nTaking a photo in a development build needs the camera permission strings from `expo-image-picker`'s config plugin. Expo Go has them already."
+  "notes": "Two fingers move, zoom and turn the photo at once. Zooming and turning happen about the point between the fingers.\n\nA square or squircle outline needs more zoom at an angle than a circle does, because its corners reach further. The minimum zoom follows the angle.\n\nScreen readers can zoom and rotate with the canvas's actions, and hear the current zoom and angle as its value.\n\nThe photo is redrawn upright before it is turned and cut, so a camera photo that stores its orientation as a flag comes out the right way up.\n\nTaking a photo in a development build needs the camera permission strings from `expo-image-picker`'s config plugin. Expo Go has them already.\n\nWith `cover` off, a photo larger than the outline still behaves as it does with `cover` on: the outline has to stay on the photo. Only a photo smaller than the outline is kept inside it instead, with `background` around it.\n\nWhen the outline is fully on the photo, `crop()` cuts the photo's own pixels. When part of it is background, it draws the crop at the outline's on-screen size and captures that, scaled to `size`, so that image is limited to about the screen's resolution."
 }

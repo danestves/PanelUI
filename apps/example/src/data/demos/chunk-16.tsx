@@ -1495,6 +1495,58 @@ function AvatarCropperShapesDemo() {
   );
 }
 
+const FILLS = { theme: undefined, white: '#ffffff', black: '#000000' } as const;
+
+/**
+ * Zooming out past the outline, with what fills the gap chosen above it and
+ * the written image beside the button, so the two can be compared.
+ */
+function AvatarCropperZoomOutDemo() {
+  const cropper = useRef<AvatarCropperHandle>(null);
+  const [fill, setFill] = useState<keyof typeof FILLS>('theme');
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const crop = async () => {
+    setError(null);
+    try {
+      const written = await cropper.current?.crop({ size: 512 });
+      if (written) setResult(written.uri);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    }
+  };
+
+  return (
+    <View className="w-full gap-3">
+      <Tabs value={fill} defaultValue={fill} onValueChange={(value) => setFill(value as keyof typeof FILLS)}>
+        <Tabs.List>
+          <Tabs.Trigger value="theme">Theme</Tabs.Trigger>
+          <Tabs.Trigger value="white">White</Tabs.Trigger>
+          <Tabs.Trigger value="black">Black</Tabs.Trigger>
+        </Tabs.List>
+      </Tabs>
+      <View className="h-80 w-full overflow-hidden rounded-2xl border border-border">
+        <AvatarCropper ref={cropper} source={PORTRAIT} cover={false} background={FILLS[fill]}>
+          <AvatarCropper.Canvas />
+          <CropperControls />
+        </AvatarCropper>
+      </View>
+      <View className="flex-row items-center gap-3">
+        <Button variant="secondary" onPress={crop}>
+          Crop
+        </Button>
+        <Avatar size="lg" source={result ? { uri: result } : undefined} fallback="KA" />
+        {error ? (
+          <Text size="sm" className="flex-1 text-destructive">
+            {error}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 /**
  * The flow the cropper exists for: a profile with a photo, the two ways to
  * replace it, and the cropper taking over the screen in between.
@@ -1814,6 +1866,7 @@ export const ENTRIES: ComponentEntry[] = [
       },
       { label: 'Drag, pinch and turn', render: () => <AvatarCropperBasicDemo /> },
       { label: 'Shapes', render: () => <AvatarCropperShapesDemo /> },
+      { label: 'Zooming out past the outline', render: () => <AvatarCropperZoomOutDemo /> },
     ],
   },
 ];
