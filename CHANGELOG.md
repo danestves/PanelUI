@@ -9,6 +9,23 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.111.0] — 2026-10-14
+
+### Added
+
+- **AvatarCropper** — the photo can be zoomed out smaller than the outline. Until now it always
+  had to cover the outline, which left no way to keep the whole of a wide photo, or a logo with
+  margins, in a round avatar.
+  - `cover` (default `true`) keeps the old behaviour. Set it to `false` to let the photo shrink.
+  - `minZoom` (default `0.5`) is how small it can get: its long side as a fraction of the
+    outline's width.
+  - `background` fills the space around a smaller photo, on screen and in the image `crop()`
+    writes. It takes any colour or `'transparent'`, which is written as PNG, and defaults to the
+    theme's background colour.
+  - A crop with background in it needs the optional `react-native-view-shot`, because the image
+    manipulator cannot pad an image on a phone. It is captured at the outline's on-screen
+    resolution. A crop that is all photo still cuts the photo's own pixels.
+
 ## [0.110.0] — 2026-10-14
 
 ### Added

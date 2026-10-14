@@ -51,6 +51,7 @@
     "react native avatar image crop",
     {
       "addedIn": "0.110.0",
+      "updatedIn": "0.111.0",
       "category": "media"
     }
   ],
