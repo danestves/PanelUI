@@ -29,7 +29,7 @@ const PUBLISHED = [
   'MenuIcon', 'MessageCircleIcon', 'MicIcon', 'MinusIcon', 'MoonIcon',
   'PackageIcon', 'PaperclipIcon', 'PauseIcon', 'PencilIcon', 'PlayIcon',
   'PlusIcon', 'PlusSquareIcon', 'QuoteIcon', 'ReceiptIcon', 'RepeatIcon',
-  'RotateCcwIcon', 'RotateCwIcon', 'SearchIcon', 'SendArrowIcon', 'SendIcon',
+  'RotateCcwIcon', 'RotateCwIcon', 'RotateSquareIcon', 'SearchIcon', 'SendArrowIcon', 'SendIcon',
   'ShareNodesIcon', 'ShieldAlertIcon', 'ShieldCheckIcon', 'SparklesIcon', 'StarIcon',
   'SunIcon', 'TicketIcon', 'TrashIcon', 'UnlockIcon', 'XIcon',
 ];

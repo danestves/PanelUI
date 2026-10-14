@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScrollView, View } from "react-native";
-import { AIInput, Avatar, Badge, Button, Card, Compare, Countdown, OtpInput, Frame, Leaderboard, type LeaderboardEntry, Tabs, Message, MessageScroller, Rating, Response, SankeyChart, type SankeyLink, type SankeyNode, Support, Text, BugIcon, CardIcon, ChevronLeftIcon, HeadsetIcon, LockIcon, MailIcon, MessageCircleIcon, PaperclipIcon, SparklesIcon } from "panelui-native";
+import { AIInput, Avatar, AvatarCropper, type AvatarCropperHandle, type AvatarCropperShape, type AvatarCropperSource, pickAvatarImage, CameraIcon, ImageIcon, Badge, Button, Card, Compare, Countdown, OtpInput, Frame, Leaderboard, type LeaderboardEntry, Tabs, Message, MessageScroller, Rating, Response, SankeyChart, type SankeyLink, type SankeyNode, Support, Text, BugIcon, CardIcon, ChevronLeftIcon, HeadsetIcon, LockIcon, MailIcon, MessageCircleIcon, PaperclipIcon, SparklesIcon } from "panelui-native";
 import type { ComponentEntry } from '../component-types';
 
 /* -------------------------------------------------------------------------- */
@@ -1448,6 +1448,147 @@ function CountdownLabelsDemo() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* AvatarCropper                                                              */
+/* -------------------------------------------------------------------------- */
+
+/** The maintainer's own GitHub picture, at the largest size GitHub serves. */
+const PORTRAIT: AvatarCropperSource = {
+  uri: 'https://avatars.githubusercontent.com/u/127331761?v=4&s=1024',
+};
+
+function CropperControls() {
+  return (
+    <View className="flex-row items-center justify-between px-3 py-2">
+      <AvatarCropper.Reset />
+      <AvatarCropper.Rotate />
+    </View>
+  );
+}
+
+function AvatarCropperBasicDemo() {
+  return (
+    <View className="h-96 w-full overflow-hidden rounded-2xl border border-border">
+      <AvatarCropper source={PORTRAIT}>
+        <AvatarCropper.Canvas />
+        <CropperControls />
+      </AvatarCropper>
+    </View>
+  );
+}
+
+function AvatarCropperShapesDemo() {
+  const [shape, setShape] = useState<AvatarCropperShape>('squircle');
+  return (
+    <View className="w-full gap-3">
+      <Tabs value={shape} defaultValue={shape} onValueChange={(value) => setShape(value as AvatarCropperShape)}>
+        <Tabs.List>
+          <Tabs.Trigger value="circle">Circle</Tabs.Trigger>
+          <Tabs.Trigger value="squircle">Squircle</Tabs.Trigger>
+          <Tabs.Trigger value="square">Square</Tabs.Trigger>
+        </Tabs.List>
+      </Tabs>
+      <View className="h-80 w-full overflow-hidden rounded-2xl border border-border">
+        <AvatarCropper source={PORTRAIT} shape={shape} />
+      </View>
+    </View>
+  );
+}
+
+/**
+ * The flow the cropper exists for: a profile with a photo, the two ways to
+ * replace it, and the cropper taking over the screen in between.
+ */
+function AvatarCropperProfileVersion() {
+  const insets = useSafeAreaInsets();
+  const cropper = useRef<AvatarCropperHandle>(null);
+  const [photo, setPhoto] = useState<AvatarCropperSource | null>(null);
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const pick = async (from: 'library' | 'camera') => {
+    setError(null);
+    try {
+      const picked = await pickAvatarImage({ from });
+      if (picked) setPhoto(picked);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    }
+  };
+
+  const done = async () => {
+    setSaving(true);
+    try {
+      const result = await cropper.current?.crop({ size: 512 });
+      if (result) setAvatar(result.uri);
+      setPhoto(null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (photo) {
+    return (
+      <View className="flex-1 bg-background">
+        <View className="flex-row items-center justify-between px-2 pb-2">
+          <Button variant="ghost" size="sm" onPress={() => setPhoto(null)}>
+            Cancel
+          </Button>
+          <Text weight="semibold">Move and scale</Text>
+          <Button size="sm" loading={saving} onPress={done}>
+            Done
+          </Button>
+        </View>
+        <AvatarCropper ref={cropper} source={photo}>
+          <AvatarCropper.Canvas />
+          <View
+            className="flex-row items-center justify-between px-4 pt-2"
+            style={{ paddingBottom: insets.bottom + 8 }}
+          >
+            <AvatarCropper.Reset />
+            <AvatarCropper.Rotate />
+          </View>
+        </AvatarCropper>
+      </View>
+    );
+  }
+
+  return (
+    <View className="flex-1 bg-background px-6" style={{ paddingBottom: insets.bottom + 8 }}>
+      <View className="flex-1 items-center justify-center gap-6">
+        <Avatar size="xl" source={avatar ? { uri: avatar } : undefined} fallback="KA" />
+        <View className="items-center gap-1">
+          <Text size="lg" weight="semibold">Khalid Abdi</Text>
+          <Text size="sm" muted className="text-center">
+            {avatar ? 'Looking good.' : 'Add a photo so your team knows who you are.'}
+          </Text>
+        </View>
+        <View className="w-full gap-2">
+          <Button variant="secondary" onPress={() => pick('library')}>
+            <ImageIcon size={18} />
+            Choose photo
+          </Button>
+          <Button variant="secondary" onPress={() => pick('camera')}>
+            <CameraIcon size={18} />
+            Take photo
+          </Button>
+          <Button variant="ghost" onPress={() => setPhoto(PORTRAIT)}>
+            Try it with a sample photo
+          </Button>
+        </View>
+        {error ? (
+          <Text size="sm" className="text-center text-destructive">
+            {error}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 export const ENTRIES: ComponentEntry[] = [
   {
     slug: 'sankey-chart',
@@ -1656,6 +1797,23 @@ export const ENTRIES: ComponentEntry[] = [
       },
       { label: 'Sizes and units', render: () => <CountdownSizesDemo /> },
       { label: 'Translated labels', render: () => <CountdownLabelsDemo /> },
+    ],
+  },
+  {
+    slug: 'avatar-cropper',
+    name: 'AvatarCropper',
+    summary: 'Frame a photo under a circle, and get that circle back as an image',
+    demos: [
+      {
+        label: 'Change photo',
+        id: 'profile',
+        fullPage: true,
+        description:
+          'Choose a photo or take one, frame it, and see it land in the avatar. The sample photo works without a camera.',
+        render: () => <AvatarCropperProfileVersion />,
+      },
+      { label: 'Drag, pinch and turn', render: () => <AvatarCropperBasicDemo /> },
+      { label: 'Shapes', render: () => <AvatarCropperShapesDemo /> },
     ],
   },
 ];

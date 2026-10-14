@@ -113,6 +113,7 @@ import HgQuoteDownIcon from '@hugeicons/core-free-icons/QuoteDownIcon';
 import HgReceiptIcon from '@hugeicons/core-free-icons/ReceiptIcon';
 import HgRefreshCcwIcon from '@hugeicons/core-free-icons/RefreshCcwIcon';
 import HgRefreshCwIcon from '@hugeicons/core-free-icons/RefreshCwIcon';
+import HgRotateCwSquareIcon from '@hugeicons/core-free-icons/RotateCwSquareIcon';
 import HgRepeatIcon from '@hugeicons/core-free-icons/RepeatIcon';
 import HgSearch01Icon from '@hugeicons/core-free-icons/Search01Icon';
 import HgSent02Icon from '@hugeicons/core-free-icons/Sent02Icon';
@@ -379,6 +380,8 @@ export const SendArrowIcon = icon(HgSent02Icon, {
 export const TrashIcon = icon(HgDelete02Icon, { size: 16, color: '#737373' });
 export const RotateCcwIcon = icon(HgRefreshCcwIcon, { size: 16, color: '#737373' });
 export const RotateCwIcon = icon(HgRefreshCwIcon, { size: 16, color: '#737373' });
+/** A square with an arrow turning round it — turn an image, rather than refresh. */
+export const RotateSquareIcon = icon(HgRotateCwSquareIcon, { size: 16, color: '#737373' });
 export const RepeatIcon = icon(HgRepeatIcon, { size: 16, color: '#737373' });
 export const PlusSquareIcon = icon(HgPlusSignSquareIcon, { size: 16, color: '#737373' });
 export const EyeIcon = icon(HgEyeIcon, { size: 16, color: '#737373' });

@@ -145,6 +145,8 @@
     "expo-file-system": ">=17.0.0",
     "expo-glass-effect": ">=57.0.0",
     "expo-haptics": ">=13.0.0",
+    "expo-image-manipulator": ">=13.0.0",
+    "expo-image-picker": ">=16.0.0",
     "expo-linear-gradient": ">=13.0.0",
     "expo-location": ">=18.0.0",
     "react": "*",
@@ -207,6 +209,12 @@
       "optional": true
     },
     "expo-haptics": {
+      "optional": true
+    },
+    "expo-image-manipulator": {
+      "optional": true
+    },
+    "expo-image-picker": {
       "optional": true
     },
     "expo-location": {

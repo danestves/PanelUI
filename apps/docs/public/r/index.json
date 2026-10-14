@@ -137,6 +137,20 @@
     "docsPath": "components/avatar"
   },
   {
+    "name": "avatar-cropper",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Frame a photo under a circle, and get that circle back as an image.",
+    "registryDependencies": [
+      "button",
+      "cn",
+      "icons"
+    ],
+    "docsPath": "components/avatar-cropper"
+  },
+  {
     "name": "badge",
     "type": "registry:ui",
     "kind": "ui",

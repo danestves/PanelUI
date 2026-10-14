@@ -38,6 +38,8 @@ const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   'area-chart': () =>
     load01().then((module) => module.ENTRIES_BY_SLUG['area-chart']),
   avatar: () => load01().then((module) => module.ENTRIES_BY_SLUG['avatar']),
+  'avatar-cropper': () =>
+    load16().then((module) => module.ENTRIES_BY_SLUG['avatar-cropper']),
   attachment: () =>
     load01().then((module) => module.ENTRIES_BY_SLUG['attachment']),
   'animated-badge': () =>

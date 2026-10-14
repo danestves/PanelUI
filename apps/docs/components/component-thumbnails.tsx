@@ -1873,6 +1873,30 @@ const avatar = (
 );
 
 /*
+ * The silhouette is the outline over a photo: the circle stays clear and the
+ * rest of the picture is dimmed, which is what makes it a cropper rather than
+ * a picture with a ring on it. Done is the one action, so it carries the
+ * accent.
+ */
+const avatarCropper = (
+  <Screen>
+    <div className="flex items-center justify-between px-2 pt-2">
+      <Bar className="w-6" faint />
+      <Accent className="h-3 w-7 rounded-full" />
+    </div>
+    <div className="relative mx-2 mt-2 h-[72px] overflow-hidden rounded-[3px]">
+      <Fill className="absolute inset-0 rounded-none" />
+      <div className="absolute left-1/2 top-1/2 size-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-fd-foreground/70 shadow-[0_0_0_60px_color-mix(in_oklab,var(--color-fd-background)_55%,transparent)]" />
+      <Glyph icon={UserRoundIcon} className="absolute left-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2" />
+    </div>
+    <div className="flex items-center justify-between px-2 pt-2">
+      <Bar className="w-7" faint />
+      <Fill className="size-4 rounded-[4px]" />
+    </div>
+  </Screen>
+);
+
+/*
  * Cut at both edges rather than faded at them. A fade has to match the ground
  * it fades into, and the ground here is a translucent tone over a card — so
  * the gradient was always a shade out. A chip running off the edge says the
@@ -2416,6 +2440,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
   // Media and motion
   attachment,
   avatar,
+  'avatar-cropper': avatarCropper,
   'circular-text': circularText,
   'flip-card': flipCard,
   marquee,

@@ -8,6 +8,7 @@
     "area-chart",
     "attachment",
     "avatar",
+    "avatar-cropper",
     "badge",
     "bar-chart",
     "bottom-sheet",
@@ -227,17 +228,17 @@
     }
   ],
   "counts": {
-    "componentModules": 138,
-    "packageComponentExports": 138,
-    "documentedComponents": 138,
-    "exampleEntries": 138,
+    "componentModules": 139,
+    "packageComponentExports": 139,
+    "documentedComponents": 139,
+    "exampleEntries": 139,
     "registry": {
-      "componentItems": 138,
+      "componentItems": 139,
       "blockItems": 4,
       "supportItems": 36,
-      "totalItems": 178,
+      "totalItems": 179,
       "byType": {
-        "registry:ui": 153,
+        "registry:ui": 154,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1,

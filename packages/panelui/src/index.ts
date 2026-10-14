@@ -76,6 +76,22 @@ export {
   type AvatarGroupProps,
 } from './components/avatar';
 export {
+  AvatarCropper,
+  hasAvatarCropperExport,
+  pickAvatarImage,
+  type AvatarCrop,
+  type AvatarCropOptions,
+  type AvatarCropResult,
+  type AvatarCropperCanvasProps,
+  type AvatarCropperHandle,
+  type AvatarCropperProps,
+  type AvatarCropperResetProps,
+  type AvatarCropperRotateProps,
+  type AvatarCropperShape,
+  type AvatarCropperSource,
+  type PickAvatarImageOptions,
+} from './components/avatar-cropper';
+export {
   Attachment,
   type AttachmentProps,
   type AttachmentGroupProps,

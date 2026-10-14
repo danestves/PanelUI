@@ -8,6 +8,7 @@ export const COMPONENTS = [
   {"slug":"area-chart","name":"AreaChart","summary":"Filled bands over time, stacked or overlaid"},
   {"slug":"attachment","name":"Attachment","summary":"File row with upload states, built on Item"},
   {"slug":"avatar","name":"Avatar","summary":"User image with initials fallback"},
+  {"slug":"avatar-cropper","name":"AvatarCropper","summary":"Frame a photo under a circle, and get that circle back as an image"},
   {"slug":"badge","name":"Badge","summary":"Compact status label"},
   {"slug":"bar-chart","name":"BarChart","summary":"Categories compared by length, grouped or stacked"},
   {"slug":"bottom-sheet","name":"BottomSheet","summary":"Draggable sheet anchored to the bottom"},

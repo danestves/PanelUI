@@ -39,6 +39,8 @@ const OPTIONAL = new Set([
   'expo-file-system',
   'expo-glass-effect',
   'expo-haptics',
+  'expo-image-manipulator',
+  'expo-image-picker',
   'expo-location',
   'react-native-keyboard-controller',
   'react-native-view-shot',

@@ -1,0 +1,66 @@
+{
+  "slug": "avatar-cropper",
+  "preview": {
+    "src": "/previews/avatar-cropper.jpg",
+    "alt": "A portrait under a circular outline, with the area outside the circle dimmed, and Reset and Rotate controls underneath.",
+    "width": 1206,
+    "height": 1305
+  },
+  "intro": "Use it for a profile photo: the user drags, pinches and turns a photo under a fixed outline, and `crop()` writes what is inside the outline to a new square image. `pickAvatarImage()` gets the photo from the library or the camera first.\n\nThe photo always covers the outline. Let go past an edge, or zoom out too far, and it springs back to the nearest position that fills it.\n\nWriting the image needs the optional `expo-image-manipulator`, and picking a photo needs the optional `expo-image-picker`. Both run in Expo Go.\n\nWithout the manipulator, `getCrop()` still returns the rectangle the outline covers, in the photo's pixels, for an app that crops on its server. To show a photo without editing it, use [Avatar](/docs/components/avatar). To let the user look at one full screen, use [ImageViewer](/docs/components/image-viewer).",
+  "usage": "const cropper = useRef<AvatarCropperHandle>(null);\n\n<AvatarCropper ref={cropper} source={photo}>\n  <AvatarCropper.Canvas />\n  <View className=\"flex-row justify-between p-4\">\n    <AvatarCropper.Reset />\n    <AvatarCropper.Rotate />\n  </View>\n</AvatarCropper>\n\nconst { uri } = await cropper.current!.crop({ size: 512 });",
+  "extraImports": [
+    "Avatar",
+    "Button",
+    "pickAvatarImage",
+    "type AvatarCropperHandle",
+    "type AvatarCropperSource"
+  ],
+  "parts": {
+    "Canvas": "The photo under its outline, and the surface the gestures land on. It fills the space it is given. Leave the root's children out and it is rendered on its own.",
+    "Rotate": "An icon button that turns the photo a quarter turn about the middle of the outline. `direction=\"counterclockwise\"` turns it the other way.",
+    "Reset": "A text button that puts the photo back centred, unzoomed and upright."
+  },
+  "anatomy": "<AvatarCropper ref={cropper} source={photo}>\n  <AvatarCropper.Canvas />\n  <AvatarCropper.Reset />\n  <AvatarCropper.Rotate />\n</AvatarCropper>",
+  "examples": [
+    {
+      "title": "Pick, crop, show",
+      "description": "`pickAvatarImage()` resolves `null` when the user cancels. It throws when camera permission is refused, so the app can say why nothing happened.",
+      "code": "const cropper = useRef<AvatarCropperHandle>(null);\nconst [photo, setPhoto] = useState<AvatarCropperSource | null>(null);\nconst [avatar, setAvatar] = useState<string | null>(null);\n\nconst choose = async () => setPhoto(await pickAvatarImage({ from: 'library' }));\n\nconst done = async () => {\n  const result = await cropper.current?.crop({ size: 512 });\n  if (result) setAvatar(result.uri);\n  setPhoto(null);\n};\n\n{photo ? (\n  <AvatarCropper ref={cropper} source={photo}>\n    <AvatarCropper.Canvas />\n    <Button onPress={done}>Done</Button>\n  </AvatarCropper>\n) : (\n  <>\n    <Avatar size=\"xl\" source={avatar ? { uri: avatar } : undefined} fallback=\"KA\" />\n    <Button onPress={choose}>Choose photo</Button>\n  </>\n)}"
+    },
+    {
+      "title": "Shapes",
+      "description": "Match the outline to where the photo will be shown. The written image is square for every shape, so the screen that draws it decides its corners.",
+      "code": "<AvatarCropper source={photo} shape=\"circle\" />\n<AvatarCropper source={photo} shape=\"squircle\" />\n<AvatarCropper source={photo} shape=\"square\" />",
+      "preview": {
+        "src": "/previews/avatar-cropper-shapes.jpg",
+        "alt": "The same portrait under a squircle outline, with Circle, Squircle and Square tabs above it.",
+        "width": 1206,
+        "height": 1285
+      }
+    },
+    {
+      "title": "Cropping on a server",
+      "description": "`getCrop()` needs no optional package. Turn the original by `rotation` degrees clockwise, then cut the rectangle out of the result.",
+      "code": "const crop = cropper.current?.getCrop();\n// { originX: 812, originY: 340, width: 1500, height: 1500,\n//   rotation: 90, canvas: { width: 3000, height: 4000 } }\n\nawait upload(photo.uri, crop);"
+    },
+    {
+      "title": "Size and format",
+      "description": "`size` is the side of the written image, in pixels. A crop with fewer pixels than that is written at its own size rather than scaled up.",
+      "code": "await cropper.current?.crop({ size: 256, format: 'png' });\nawait cropper.current?.crop({ size: 1024, format: 'jpeg', compress: 0.8 });"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Change photo",
+      "description": "A profile with the two ways to replace its photo. The cropper takes over the screen between choosing a photo and seeing it in the avatar.",
+      "code": "if (photo) {\n  return (\n    <AvatarCropper ref={cropper} source={photo}>\n      <AvatarCropper.Canvas />\n      <View className=\"flex-row justify-between px-4\">\n        <AvatarCropper.Reset />\n        <AvatarCropper.Rotate />\n      </View>\n    </AvatarCropper>\n  );\n}",
+      "preview": {
+        "src": "/previews/avatar-cropper-change-photo.jpg",
+        "alt": "A full-screen crop with Cancel, Move and scale, and Done across the top, the portrait under a circle, and Reset and Rotate along the bottom.",
+        "width": 1206,
+        "height": 2622
+      }
+    }
+  ],
+  "notes": "Two fingers move, zoom and turn the photo at once. Zooming and turning happen about the point between the fingers.\n\nA square or squircle outline needs more zoom at an angle than a circle does, because its corners reach further. The minimum zoom follows the angle.\n\nScreen readers can zoom and rotate with the canvas's actions, and hear the current zoom and angle as its value.\n\nThe photo is redrawn upright before it is turned and cut, so a camera photo that stores its orientation as a flag comes out the right way up.\n\nTaking a photo in a development build needs the camera permission strings from `expo-image-picker`'s config plugin. Expo Go has them already."
+}

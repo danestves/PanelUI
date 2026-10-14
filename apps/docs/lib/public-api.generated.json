@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1427,
-    "values": 356,
-    "types": 1071,
-    "modules": 165,
-    "components": 138,
+    "exports": 1441,
+    "values": 359,
+    "types": 1082,
+    "modules": 166,
+    "components": 139,
     "hooks": 13
   },
   "groups": {
@@ -268,6 +268,69 @@
           },
           {
             "name": "AttachmentState",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/avatar-cropper/index.tsx",
+        "slug": "avatar-cropper",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "AvatarCropper",
+            "kind": "value"
+          },
+          {
+            "name": "hasAvatarCropperExport",
+            "kind": "value"
+          },
+          {
+            "name": "pickAvatarImage",
+            "kind": "value"
+          },
+          {
+            "name": "AvatarCrop",
+            "kind": "type"
+          },
+          {
+            "name": "AvatarCropOptions",
+            "kind": "type"
+          },
+          {
+            "name": "AvatarCropResult",
+            "kind": "type"
+          },
+          {
+            "name": "AvatarCropperCanvasProps",
+            "kind": "type"
+          },
+          {
+            "name": "AvatarCropperHandle",
+            "kind": "type"
+          },
+          {
+            "name": "AvatarCropperProps",
+            "kind": "type"
+          },
+          {
+            "name": "AvatarCropperResetProps",
+            "kind": "type"
+          },
+          {
+            "name": "AvatarCropperRotateProps",
+            "kind": "type"
+          },
+          {
+            "name": "AvatarCropperShape",
+            "kind": "type"
+          },
+          {
+            "name": "AvatarCropperSource",
+            "kind": "type"
+          },
+          {
+            "name": "PickAvatarImageOptions",
             "kind": "type"
           }
         ]

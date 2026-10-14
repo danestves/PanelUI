@@ -45,6 +45,15 @@
       "category": "media"
     }
   ],
+  "avatar-cropper": [
+    "AvatarCropper",
+    "Frame a photo under a circle, and get that circle back as an image.",
+    "react native avatar image crop",
+    {
+      "addedIn": "0.110.0",
+      "category": "media"
+    }
+  ],
   "animated-badge": [
     "AnimatedBadge",
     "Status pill whose icon and label roll over when the status changes.",
