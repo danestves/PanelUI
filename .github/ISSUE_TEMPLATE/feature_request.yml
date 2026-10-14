@@ -25,6 +25,18 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: library
+    attributes:
+      label: Which PanelUI is this about?
+      description: PanelUI ships for React Native apps and for the web, as two separate packages.
+      options:
+        - The app library (panelui-native, React Native / Expo)
+        - The web library (panelui-web)
+        - Both
+    validations:
+      required: true
+
   - type: textarea
     id: problem
     attributes:
