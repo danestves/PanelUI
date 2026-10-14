@@ -53,23 +53,33 @@ function KeyboardPassthrough({ children }: KeyboardHostProps) {
 
 let keyboardProvider: ComponentType<KeyboardHostProps> | undefined;
 
-function resolveKeyboardProvider(): ComponentType<KeyboardHostProps> {
-  if (keyboardProvider) return keyboardProvider;
-
-  let resolved: ComponentType<KeyboardHostProps> = KeyboardPassthrough;
+/**
+ * The controller's provider, or undefined when it cannot be used.
+ *
+ * The `require` has to stay a statement directly inside the `try` block, with
+ * the native check as an early return above it rather than an `if` around it.
+ * Metro resolves every literal `require` when it bundles, and it only lets a
+ * missing package through when the call sits directly in a `try` block — one
+ * `if` deeper and it is a hard dependency, so an app without the controller
+ * fails to build before this `catch` could ever run.
+ * `test/optional-requires.test.mjs` holds every optional peer to that.
+ */
+function loadKeyboardProvider(): ComponentType<KeyboardHostProps> | undefined {
   try {
-    if (TurboModuleRegistry.get('KeyboardController') !== null) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const controller = require('react-native-keyboard-controller');
-      resolved = controller?.KeyboardProvider ?? KeyboardPassthrough;
-    }
+    if (TurboModuleRegistry.get('KeyboardController') === null) return undefined;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const controller = require('react-native-keyboard-controller');
+    return controller?.KeyboardProvider;
   } catch {
     // Not installed, or installed without its native half. Either way the
     // pass-through is the answer.
+    return undefined;
   }
+}
 
-  keyboardProvider = resolved;
-  return resolved;
+function resolveKeyboardProvider(): ComponentType<KeyboardHostProps> {
+  if (!keyboardProvider) keyboardProvider = loadKeyboardProvider() ?? KeyboardPassthrough;
+  return keyboardProvider;
 }
 
 export interface PanelUIProviderProps {
