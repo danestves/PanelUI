@@ -9,6 +9,31 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.112.0] — 2026-10-15
+
+### Added
+
+- **FileUpload** — pick documents, choose or take photos, and run their uploads from one
+  component. Before this, an app wired up the document picker, the image picker, validation,
+  progress, cancel and retry itself on every screen that took files.
+  - `sources` offers the document picker, the photo library and the camera. With more than one,
+    the trigger opens a sheet to choose from.
+  - `accept`, `maxSize`, `minSize`, `maxFiles` and `validate` turn files away before they are
+    added. `onReject` receives each file with its reason and a message that can be shown.
+  - `upload` is the app's own function. It gets an `AbortSignal` and an `onProgress` callback,
+    and FileUpload runs `concurrency` of them at a time. Each file's status lives in `value`, so
+    a form can tell whether everything has finished. The component never makes a request
+    itself, so any backend or storage provider works.
+  - `image` resizes and compresses photos before they are added, and `crop` opens the system's
+    crop editor for a single photo.
+  - Parts: `Trigger`, `Dropzone`, `List` (Attachment rows with cancel, retry and remove),
+    `Item`, and `Grid` (photo tiles with an add tile, progress rings and the full-screen
+    viewer). `useFileUpload()` returns the files and the actions for anything drawn by hand.
+  - Each source needs its Expo module only when it is offered. `files` needs the new optional
+    peer `expo-document-picker`, and `camera` and `library` need `expo-image-picker`. Resizing
+    needs `expo-image-manipulator`. All three run in Expo Go.
+- `UploadIcon` and `VideoIcon`.
+
 ## [0.111.0] — 2026-10-14
 
 ### Added
