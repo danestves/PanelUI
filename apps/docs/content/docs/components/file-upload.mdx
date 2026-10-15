@@ -4,6 +4,14 @@ description: Pick files and photos, check them, and run their uploads.
 status: new
 ---
 
+<PreviewVideo
+  src="/previews/file-upload.mp4"
+  poster="/previews/file-upload-poster.jpg"
+  alt="A claim form with a dashed dropzone over four files. Two upload at a time, one fails with Connection lost, and pressing retry sends it again until all four are uploaded."
+  width={720}
+  height={1566}
+/>
+
 Use it wherever a screen takes files: documents for a form, photos for a listing, a profile picture, attachments in a message. It opens the document picker, the photo library or the camera, checks each file against `accept`, `maxSize` and `maxFiles`, and runs the uploads with progress, cancel and retry.
 
 The upload itself is yours. Pass `upload`, a function that sends one file and resolves when the server has it; it receives an `AbortSignal` and an `onProgress` callback. FileUpload runs `concurrency` of them at a time and keeps each file's status in `value`. Without `upload`, files are only picked.
@@ -158,6 +166,14 @@ function SendButton() {
 
 A dropzone over a list of rows. Two files upload at a time while the rest wait, and one drops its connection so the retry can be tried.
 
+<PreviewVideo
+  src="/previews/file-upload.mp4"
+  poster="/previews/file-upload-poster.jpg"
+  alt="A claim form with a dashed dropzone over four files. Two upload at a time, one fails with Connection lost, and pressing retry sends it again until all four are uploaded."
+  width={720}
+  height={1566}
+/>
+
 ```tsx
 <FileUpload
   value={files}
@@ -180,6 +196,14 @@ A dropzone over a list of rows. Two files upload at a time while the rest wait, 
 
 A grid led by an add tile that counts against the limit, with the first photo marked as the cover. Tap a photo to see it full screen.
 
+<PreviewVideo
+  src="/previews/file-upload-listing-photos.mp4"
+  poster="/previews/file-upload-listing-photos-poster.jpg"
+  alt="A photo grid led by an Add photos tile counting 4 of 8. Two new photos upload behind progress rings, a failed one is retried, and the cover photo opens full screen."
+  width={720}
+  height={1566}
+/>
+
 ```tsx
 <FileUpload
   sources={['camera', 'library']}
@@ -196,6 +220,14 @@ A grid led by an add tile that counts against the limit, with the first photo ma
 ### Profile photo
 
 One photo, cropped square. Without `multiple` a new photo replaces the old one, and the camera badge and the button open the same choice.
+
+<PreviewVideo
+  src="/previews/file-upload-profile-photo.mp4"
+  poster="/previews/file-upload-profile-photo-poster.jpg"
+  alt="A round profile photo uploading with a percentage over it. Change photo opens a sheet with Take photo and Choose from library, and Remove photo leaves the initials."
+  width={720}
+  height={1566}
+/>
 
 ```tsx
 function ProfilePhoto() {
@@ -225,6 +257,14 @@ function ProfilePhoto() {
 ### Message attachments
 
 A paperclip in a composer. Each attachment uploads in a strip of cards above the field.
+
+<PreviewVideo
+  src="/previews/file-upload-message-attachments.mp4"
+  poster="/previews/file-upload-message-attachments-poster.jpg"
+  alt="A chat with two attachments uploading in a strip above the message field. The paperclip opens a sheet with Take photo, Choose from library and Browse files."
+  width={720}
+  height={1566}
+/>
 
 ```tsx
 <FileUpload sources={['camera', 'library', 'files']} multiple maxFiles={10} upload={uploadFile}>

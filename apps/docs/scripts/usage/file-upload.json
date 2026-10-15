@@ -1,5 +1,12 @@
 {
   "slug": "file-upload",
+  "previewVideo": {
+    "src": "/previews/file-upload.mp4",
+    "poster": "/previews/file-upload-poster.jpg",
+    "alt": "A claim form with a dashed dropzone over four files. Two upload at a time, one fails with Connection lost, and pressing retry sends it again until all four are uploaded.",
+    "width": 720,
+    "height": 1566
+  },
   "intro": "Use it wherever a screen takes files: documents for a form, photos for a listing, a profile picture, attachments in a message. It opens the document picker, the photo library or the camera, checks each file against `accept`, `maxSize` and `maxFiles`, and runs the uploads with progress, cancel and retry.\n\nThe upload itself is yours. Pass `upload`, a function that sends one file and resolves when the server has it; it receives an `AbortSignal` and an `onProgress` callback. FileUpload runs `concurrency` of them at a time and keeps each file's status in `value`. Without `upload`, files are only picked.\n\nEach source needs its Expo module only when it is offered: `files` needs the optional `expo-document-picker`, and `camera` and `library` need the optional `expo-image-picker`. Resizing photos with `image.maxWidth` needs the optional `expo-image-manipulator`. All three run in Expo Go.\n\nTo show a file that is already uploaded, use [Attachment](/docs/components/attachment), which draws these rows. To let somebody frame a photo by hand before it is used, use [AvatarCropper](/docs/components/avatar-cropper).",
   "usage": "const [files, setFiles] = useState<FileUploadFile[]>([]);\n\n<FileUpload\n  value={files}\n  onValueChange={setFiles}\n  sources={['camera', 'library', 'files']}\n  accept={['application/pdf', 'image/*']}\n  multiple\n  maxFiles={5}\n  maxSize={10 * 1024 * 1024}\n  upload={uploadFile}\n>\n  <FileUpload.Dropzone />\n  <FileUpload.List />\n</FileUpload>",
   "extraImports": [
@@ -51,22 +58,50 @@
     {
       "title": "Claim documents",
       "description": "A dropzone over a list of rows. Two files upload at a time while the rest wait, and one drops its connection so the retry can be tried.",
-      "code": "<FileUpload\n  value={files}\n  onValueChange={setFiles}\n  sources={['camera', 'library', 'files']}\n  accept={['application/pdf', 'image/*']}\n  multiple\n  maxFiles={6}\n  maxSize={10 * 1024 * 1024}\n  upload={uploadFile}\n  concurrency={2}\n>\n  <FileUpload.Dropzone title=\"Add documents or photos\" />\n  <FileUpload.List />\n  <SubmitButton />\n</FileUpload>"
+      "code": "<FileUpload\n  value={files}\n  onValueChange={setFiles}\n  sources={['camera', 'library', 'files']}\n  accept={['application/pdf', 'image/*']}\n  multiple\n  maxFiles={6}\n  maxSize={10 * 1024 * 1024}\n  upload={uploadFile}\n  concurrency={2}\n>\n  <FileUpload.Dropzone title=\"Add documents or photos\" />\n  <FileUpload.List />\n  <SubmitButton />\n</FileUpload>",
+      "previewVideo": {
+        "src": "/previews/file-upload.mp4",
+        "poster": "/previews/file-upload-poster.jpg",
+        "alt": "A claim form with a dashed dropzone over four files. Two upload at a time, one fails with Connection lost, and pressing retry sends it again until all four are uploaded.",
+        "width": 720,
+        "height": 1566
+      }
     },
     {
       "title": "Listing photos",
       "description": "A grid led by an add tile that counts against the limit, with the first photo marked as the cover. Tap a photo to see it full screen.",
-      "code": "<FileUpload\n  sources={['camera', 'library']}\n  accept={['image/*']}\n  multiple\n  maxFiles={8}\n  image={{ maxWidth: 1600, quality: 0.85 }}\n  upload={uploadFile}\n>\n  <FileUpload.Grid columns={3} cover placeholders />\n</FileUpload>"
+      "code": "<FileUpload\n  sources={['camera', 'library']}\n  accept={['image/*']}\n  multiple\n  maxFiles={8}\n  image={{ maxWidth: 1600, quality: 0.85 }}\n  upload={uploadFile}\n>\n  <FileUpload.Grid columns={3} cover placeholders />\n</FileUpload>",
+      "previewVideo": {
+        "src": "/previews/file-upload-listing-photos.mp4",
+        "poster": "/previews/file-upload-listing-photos-poster.jpg",
+        "alt": "A photo grid led by an Add photos tile counting 4 of 8. Two new photos upload behind progress rings, a failed one is retried, and the cover photo opens full screen.",
+        "width": 720,
+        "height": 1566
+      }
     },
     {
       "title": "Profile photo",
       "description": "One photo, cropped square. Without `multiple` a new photo replaces the old one, and the camera badge and the button open the same choice.",
-      "code": "function ProfilePhoto() {\n  const { files, remove } = useFileUpload();\n  const photo = files[0];\n  return (\n    <>\n      <Avatar size=\"xl\" source={photo ? { uri: photo.uri } : undefined} fallback=\"KA\" />\n      <FileUpload.Trigger>\n        <Button variant=\"secondary\">Change photo</Button>\n      </FileUpload.Trigger>\n      {photo ? <Button variant=\"ghost\" onPress={() => remove(photo.id)}>Remove photo</Button> : null}\n    </>\n  );\n}\n\n<FileUpload\n  sources={['camera', 'library']}\n  accept={['image/*']}\n  image={{ maxWidth: 1024, crop: { aspect: [1, 1] } }}\n  upload={uploadFile}\n>\n  <ProfilePhoto />\n</FileUpload>"
+      "code": "function ProfilePhoto() {\n  const { files, remove } = useFileUpload();\n  const photo = files[0];\n  return (\n    <>\n      <Avatar size=\"xl\" source={photo ? { uri: photo.uri } : undefined} fallback=\"KA\" />\n      <FileUpload.Trigger>\n        <Button variant=\"secondary\">Change photo</Button>\n      </FileUpload.Trigger>\n      {photo ? <Button variant=\"ghost\" onPress={() => remove(photo.id)}>Remove photo</Button> : null}\n    </>\n  );\n}\n\n<FileUpload\n  sources={['camera', 'library']}\n  accept={['image/*']}\n  image={{ maxWidth: 1024, crop: { aspect: [1, 1] } }}\n  upload={uploadFile}\n>\n  <ProfilePhoto />\n</FileUpload>",
+      "previewVideo": {
+        "src": "/previews/file-upload-profile-photo.mp4",
+        "poster": "/previews/file-upload-profile-photo-poster.jpg",
+        "alt": "A round profile photo uploading with a percentage over it. Change photo opens a sheet with Take photo and Choose from library, and Remove photo leaves the initials.",
+        "width": 720,
+        "height": 1566
+      }
     },
     {
       "title": "Message attachments",
       "description": "A paperclip in a composer. Each attachment uploads in a strip of cards above the field.",
-      "code": "<FileUpload sources={['camera', 'library', 'files']} multiple maxFiles={10} upload={uploadFile}>\n  <FileUpload.List horizontal size=\"sm\" />\n  <View className=\"flex-row items-center gap-2\">\n    <FileUpload.Trigger>\n      <Button variant=\"ghost\" size=\"sm\" accessibilityLabel=\"Attach\">\n        <PaperclipIcon size={20} />\n      </Button>\n    </FileUpload.Trigger>\n    <Input placeholder=\"Message\" containerClassName=\"flex-1\" />\n  </View>\n</FileUpload>"
+      "code": "<FileUpload sources={['camera', 'library', 'files']} multiple maxFiles={10} upload={uploadFile}>\n  <FileUpload.List horizontal size=\"sm\" />\n  <View className=\"flex-row items-center gap-2\">\n    <FileUpload.Trigger>\n      <Button variant=\"ghost\" size=\"sm\" accessibilityLabel=\"Attach\">\n        <PaperclipIcon size={20} />\n      </Button>\n    </FileUpload.Trigger>\n    <Input placeholder=\"Message\" containerClassName=\"flex-1\" />\n  </View>\n</FileUpload>",
+      "previewVideo": {
+        "src": "/previews/file-upload-message-attachments.mp4",
+        "poster": "/previews/file-upload-message-attachments-poster.jpg",
+        "alt": "A chat with two attachments uploading in a strip above the message field. The paperclip opens a sheet with Take photo, Choose from library and Browse files.",
+        "width": 720,
+        "height": 1566
+      }
     }
   ],
   "notes": "Without `multiple` the list holds one file, and picking again replaces it. With `multiple`, `maxFiles` limits the list and each picker is asked for no more than the slots that are left.\n\nA file's `status` is `idle`, `queued`, `uploading`, `processing`, `done`, `error` or `canceled`. Call `setProcessing()` from the handler once the bytes are sent and the server is still working, and the row says so. Progress reports are batched to one update per frame.\n\nCancel aborts the handler's `signal` and keeps the file as `canceled`, so it can be retried. Remove aborts it and drops the file.\n\n`maxSize` is checked against the size the picker reports. A photo resized through `image` has no reported size, so it passes.\n\nA source that cannot return an allowed file is left out of the chooser — the camera when `accept` has no image type, for instance.\n\nA missing module or a refused camera permission is passed to `onError` as an `Error` whose message says what to do. Taking photos in a development build needs the camera permission strings from `expo-image-picker`'s config plugin. Expo Go has them already.\n\nRejected files are announced to screen readers. Each row's label reads the file's name and status, and every action is labelled with the file it acts on."
