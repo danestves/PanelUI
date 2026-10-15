@@ -18,6 +18,7 @@ import {
   PlusIcon,
   SearchIcon,
   StarIcon,
+  UploadIcon,
   UserRoundIcon,
   XIcon,
 } from 'lucide-react';
@@ -1847,6 +1848,26 @@ const attachment = (
   </Plate>
 );
 
+const fileUpload = (
+  <Stack className="w-48 gap-1.5">
+    <div className="grid h-14 place-items-center rounded-lg border border-dashed border-fd-muted-foreground/40">
+      <Glyph icon={UploadIcon} className="size-4" />
+    </div>
+    <Plate className="flex-row items-center gap-2.5 p-2">
+      <Fill className="grid size-7 shrink-0 place-items-center rounded-md">
+        <Glyph icon={FileIcon} className="size-3.5" />
+      </Fill>
+      <Stack className="flex-1 gap-1.5">
+        <Bar className="w-16" />
+        <div className="h-1 w-full overflow-hidden rounded-full bg-fd-muted-foreground/15">
+          <Accent className="h-full w-3/5 rounded-full" />
+        </div>
+      </Stack>
+      <Glyph icon={XIcon} className="size-3" />
+    </Plate>
+  </Stack>
+);
+
 const avatar = (
   <Row className="gap-3">
     <div className="relative">
@@ -2442,6 +2463,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
   avatar,
   'avatar-cropper': avatarCropper,
   'circular-text': circularText,
+  'file-upload': fileUpload,
   'flip-card': flipCard,
   marquee,
   message,

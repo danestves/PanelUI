@@ -300,6 +300,15 @@
       "category": "forms"
     }
   ],
+  "file-upload": [
+    "FileUpload",
+    "Pick files and photos, check them, and run their uploads.",
+    "react native file upload image picker",
+    {
+      "addedIn": "0.112.0",
+      "category": "forms"
+    }
+  ],
   "flip-card": [
     "FlipCard",
     "Two faces of one card, and a turn between them.",

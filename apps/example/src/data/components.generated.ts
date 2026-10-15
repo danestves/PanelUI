@@ -40,6 +40,7 @@ export const COMPONENTS = [
   {"slug":"fab","name":"Fab","summary":"The floating action button, and the dial behind it"},
   {"slug":"feedback","name":"Feedback","summary":"Dialog whose body is a well to write in"},
   {"slug":"field","name":"Field","summary":"Layout and validation-state kit for a form control"},
+  {"slug":"file-upload","name":"FileUpload","summary":"Pick files and photos, check them, and run their uploads"},
   {"slug":"flip-card","name":"FlipCard","summary":"Two faces of one card, and a turn between them"},
   {"slug":"flow","name":"Flow","summary":"Pan-and-zoom canvas of draggable nodes joined by animated edges"},
   {"slug":"form","name":"Form","summary":"Form state with no form library underneath"},

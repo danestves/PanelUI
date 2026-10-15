@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1441,
-    "values": 359,
-    "types": 1082,
-    "modules": 166,
-    "components": 139,
+    "exports": 1463,
+    "values": 367,
+    "types": 1096,
+    "modules": 167,
+    "components": 140,
     "hooks": 13
   },
   "groups": {
@@ -1519,6 +1519,93 @@
           },
           {
             "name": "FieldTitleProps",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/file-upload/index.tsx",
+        "slug": "file-upload",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "FileUpload",
+            "kind": "value"
+          },
+          {
+            "name": "describeFileStatus",
+            "kind": "value"
+          },
+          {
+            "name": "describeFileUploadRules",
+            "kind": "value"
+          },
+          {
+            "name": "formatFileSize",
+            "kind": "value"
+          },
+          {
+            "name": "hasFileUploadSource",
+            "kind": "value"
+          },
+          {
+            "name": "useFileUpload",
+            "kind": "value"
+          },
+          {
+            "name": "FileUploadDropzoneProps",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadFile",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadGridProps",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadHandler",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadHandlerContext",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadImageOptions",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadItemProps",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadKind",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadListProps",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadProps",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadRejection",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadSource",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadStatus",
+            "kind": "type"
+          },
+          {
+            "name": "FileUploadTriggerProps",
             "kind": "type"
           }
         ]
@@ -6924,6 +7011,14 @@
           },
           {
             "name": "UnlockIcon",
+            "kind": "value"
+          },
+          {
+            "name": "UploadIcon",
+            "kind": "value"
+          },
+          {
+            "name": "VideoIcon",
             "kind": "value"
           },
           {

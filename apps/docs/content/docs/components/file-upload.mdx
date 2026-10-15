@@ -1,0 +1,337 @@
+---
+title: FileUpload
+description: Pick files and photos, check them, and run their uploads.
+status: new
+---
+
+Use it wherever a screen takes files: documents for a form, photos for a listing, a profile picture, attachments in a message. It opens the document picker, the photo library or the camera, checks each file against `accept`, `maxSize` and `maxFiles`, and runs the uploads with progress, cancel and retry.
+
+The upload itself is yours. Pass `upload`, a function that sends one file and resolves when the server has it; it receives an `AbortSignal` and an `onProgress` callback. FileUpload runs `concurrency` of them at a time and keeps each file's status in `value`. Without `upload`, files are only picked.
+
+Each source needs its Expo module only when it is offered: `files` needs the optional `expo-document-picker`, and `camera` and `library` need the optional `expo-image-picker`. Resizing photos with `image.maxWidth` needs the optional `expo-image-manipulator`. All three run in Expo Go.
+
+To show a file that is already uploaded, use [Attachment](/docs/components/attachment), which draws these rows. To let somebody frame a photo by hand before it is used, use [AvatarCropper](/docs/components/avatar-cropper).
+
+## Installation
+
+FileUpload ships with the library — no separate install.
+
+```tsx
+import { FileUpload, Avatar, Button, Input, PaperclipIcon, Text, useFileUpload, type FileUploadFile, type FileUploadHandler } from 'panelui-native';
+```
+
+Or copy the source into your project, to own and edit it:
+
+```bash
+npx panelui-cli@latest add file-upload
+```
+
+## Usage
+
+```tsx
+const [files, setFiles] = useState<FileUploadFile[]>([]);
+
+<FileUpload
+  value={files}
+  onValueChange={setFiles}
+  sources={['camera', 'library', 'files']}
+  accept={['application/pdf', 'image/*']}
+  multiple
+  maxFiles={5}
+  maxSize={10 * 1024 * 1024}
+  upload={uploadFile}
+>
+  <FileUpload.Dropzone />
+  <FileUpload.List />
+</FileUpload>
+```
+
+## Composition
+
+```tsx
+<FileUpload upload={uploadFile}>
+  <FileUpload.Trigger>
+    <Button>Add files</Button>
+  </FileUpload.Trigger>
+  <FileUpload.Dropzone />
+  <FileUpload.List />
+  <FileUpload.Grid />
+</FileUpload>
+```
+
+- **`FileUpload.Trigger`** — Wraps one pressable — a Button, an icon button — and makes it add files. With one source the press opens that picker; with several it opens a sheet listing them. It disables its child once `maxFiles` is reached.
+- **`FileUpload.Dropzone`** — A dashed area that adds files when pressed. The line under its title is written from `accept`, `maxSize` and `maxFiles`, and is replaced by the reason when a picked file is turned away.
+- **`FileUpload.List`** — Every file as an Attachment row: a thumbnail or type icon, the name, a status line, and cancel, retry or remove depending on the state. `horizontal` lays the files out as a strip of small cards, for a message composer.
+- **`FileUpload.Item`** — One of those rows, for a list you lay out yourself. Pass the `file`.
+- **`FileUpload.Grid`** — Photos as square tiles, led by a tile that adds more and counts against `maxFiles`. Tapping a photo opens it full screen. `cover` marks the first one, `placeholders` draws the empty slots, and `horizontal` makes it a strip.
+
+## Examples
+
+### Writing the upload handler
+
+Resolve when the server has the file and throw when it does not; the error's message is shown on the row. Pass `signal` on, so cancel and remove stop the request. `fetch` reports no upload progress, so use `XMLHttpRequest` or your storage SDK when the bar matters.
+
+```tsx
+const uploadFile: FileUploadHandler = (file, { signal, onProgress }) =>
+  new Promise((resolve, reject) => {
+    const body = new FormData();
+    body.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as any);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.example.com/uploads');
+    xhr.upload.onprogress = (event) => onProgress(event.loaded / event.total);
+    xhr.onload = () =>
+      xhr.status < 300 ? resolve(JSON.parse(xhr.response)) : reject(new Error('The server refused the file.'));
+    xhr.onerror = () => reject(new Error('Connection lost. Tap retry.'));
+    signal.addEventListener('abort', () => xhr.abort());
+    xhr.send(body);
+  });
+```
+
+### Rules and rejections
+
+A file is checked for its type, then its size, then `validate`, then whether there is room left. Turned-away files go to `onReject` with a reason and a sentence you can show; the Dropzone shows the first one itself.
+
+```tsx
+<FileUpload
+  sources={['files']}
+  accept={['application/pdf']}
+  multiple
+  maxFiles={3}
+  maxSize={2 * 1024 * 1024}
+  validate={(file) => (file.name.startsWith('draft') ? 'Drafts cannot be submitted.' : null)}
+  onReject={(rejections) => track('rejected', rejections.map((r) => r.reason))}
+>
+  <FileUpload.Dropzone title="Upload invoices" />
+  <FileUpload.List />
+</FileUpload>
+```
+
+### Preparing photos
+
+`image.maxWidth` and `image.maxHeight` scale a large photo down before it is added, and `quality` sets its JPEG compression. `crop` opens the system's crop editor after a single photo is chosen or taken; iOS always crops it square.
+
+```tsx
+<FileUpload
+  sources={['camera', 'library']}
+  accept={['image/*']}
+  image={{ maxWidth: 1024, quality: 0.85, crop: { aspect: [1, 1] } }}
+  upload={uploadFile}
+>
+  <FileUpload.Trigger>
+    <Button>Change photo</Button>
+  </FileUpload.Trigger>
+</FileUpload>
+```
+
+### Drawing it yourself
+
+`useFileUpload()` returns the files and the actions — `pick`, `remove`, `cancel`, `retry`, `upload` and `clear` — for anything the parts do not cover, such as a submit button that waits for every upload.
+
+```tsx
+function SubmitButton() {
+  const { files } = useFileUpload();
+  const waiting = files.some((file) => file.status !== 'done');
+  return <Button disabled={files.length === 0 || waiting}>Submit claim</Button>;
+}
+```
+
+### Uploading later
+
+With `autoUpload={false}` picked files stay `idle` until `upload()` queues them, for a form that sends everything when it is submitted.
+
+```tsx
+function SendButton() {
+  const { upload } = useFileUpload();
+  return <Button onPress={() => upload()}>Send</Button>;
+}
+
+<FileUpload multiple upload={uploadFile} autoUpload={false}>
+  <FileUpload.List />
+  <SendButton />
+</FileUpload>
+```
+
+## Versions
+
+### Claim documents
+
+A dropzone over a list of rows. Two files upload at a time while the rest wait, and one drops its connection so the retry can be tried.
+
+```tsx
+<FileUpload
+  value={files}
+  onValueChange={setFiles}
+  sources={['camera', 'library', 'files']}
+  accept={['application/pdf', 'image/*']}
+  multiple
+  maxFiles={6}
+  maxSize={10 * 1024 * 1024}
+  upload={uploadFile}
+  concurrency={2}
+>
+  <FileUpload.Dropzone title="Add documents or photos" />
+  <FileUpload.List />
+  <SubmitButton />
+</FileUpload>
+```
+
+### Listing photos
+
+A grid led by an add tile that counts against the limit, with the first photo marked as the cover. Tap a photo to see it full screen.
+
+```tsx
+<FileUpload
+  sources={['camera', 'library']}
+  accept={['image/*']}
+  multiple
+  maxFiles={8}
+  image={{ maxWidth: 1600, quality: 0.85 }}
+  upload={uploadFile}
+>
+  <FileUpload.Grid columns={3} cover placeholders />
+</FileUpload>
+```
+
+### Profile photo
+
+One photo, cropped square. Without `multiple` a new photo replaces the old one, and the camera badge and the button open the same choice.
+
+```tsx
+function ProfilePhoto() {
+  const { files, remove } = useFileUpload();
+  const photo = files[0];
+  return (
+    <>
+      <Avatar size="xl" source={photo ? { uri: photo.uri } : undefined} fallback="KA" />
+      <FileUpload.Trigger>
+        <Button variant="secondary">Change photo</Button>
+      </FileUpload.Trigger>
+      {photo ? <Button variant="ghost" onPress={() => remove(photo.id)}>Remove photo</Button> : null}
+    </>
+  );
+}
+
+<FileUpload
+  sources={['camera', 'library']}
+  accept={['image/*']}
+  image={{ maxWidth: 1024, crop: { aspect: [1, 1] } }}
+  upload={uploadFile}
+>
+  <ProfilePhoto />
+</FileUpload>
+```
+
+### Message attachments
+
+A paperclip in a composer. Each attachment uploads in a strip of cards above the field.
+
+```tsx
+<FileUpload sources={['camera', 'library', 'files']} multiple maxFiles={10} upload={uploadFile}>
+  <FileUpload.List horizontal size="sm" />
+  <View className="flex-row items-center gap-2">
+    <FileUpload.Trigger>
+      <Button variant="ghost" size="sm" accessibilityLabel="Attach">
+        <PaperclipIcon size={20} />
+      </Button>
+    </FileUpload.Trigger>
+    <Input placeholder="Message" containerClassName="flex-1" />
+  </View>
+</FileUpload>
+```
+
+## API Reference
+
+### FileUpload
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `FileUploadFile[]` | — | The files, controlled. |
+| `defaultValue` | `FileUploadFile[]` | `[]` | The files to start with, uncontrolled. |
+| `onValueChange` | `(files: FileUploadFile[]) => void` | — | Called with the new list whenever a file is added, changes state or is removed. |
+| `sources` | `FileUploadSource[]` | `['library', 'files']` | Where files can come from, in the order the chooser lists them. One source opens its picker straight away; more than one opens a sheet to choose from. Default `['library', 'files']`. |
+| `accept` | `string[]` | — | Allowed types: MIME types (`application/pdf`), families (`image/*`) or extensions (`.pdf`). Everything when left out. |
+| `multiple` | `boolean` | `false` | Let the list hold more than one file. Without it the list holds one, and picking again replaces it — the shape of a profile photo or a single attachment field. |
+| `maxFiles` | `number` | — | How many files the list can hold, with `multiple`. Pickers are limited to what is left, and the add controls disable once it is reached. |
+| `maxSize` | `number` | — | Largest allowed file, in bytes. Checked against the size the picker reports, after any resize; a file whose size is unknown passes. |
+| `minSize` | `number` | — | Smallest allowed file, in bytes. |
+| `validate` | `(file: FileUploadFile) => string \| null \| undefined` | — | An app-specific rule. Return a message to turn the file away. |
+| `onReject` | `(rejections: FileUploadRejection[]) => void` | — | Called with the files that were picked and turned away, and why. |
+| `onError` | `(error: Error) => void` | — | Called when a picker cannot open — a missing module or a refused permission. |
+| `image` | `FileUploadImageOptions` | — | Resize, compress or crop photos before they are added. |
+| `upload` | `FileUploadHandler` | — | Sends one file. Without it files are only picked, and stay `idle`. |
+| `concurrency` | `number` | `2` | How many uploads run at once. Default 2. |
+| `autoUpload` | `boolean` | `true` | Queue files for upload as soon as they are added. Default true. Turn it off to send them later with `useFileUpload().upload()`. |
+| `onUploadComplete` | `(file: FileUploadFile) => void` | — | Called once per file when its upload resolves. |
+| `sourceLabels` | `Partial<Record<FileUploadSource, string>>` | — | Labels for the sources in the chooser. |
+| `disabled` | `boolean` | `false` | Nothing can be added, removed or retried. |
+| `invalid` | `boolean` | `false` | Draw the dropzone in its error state, for a form that failed validation. |
+
+### FileUpload.Dropzone
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `title` | `ReactNode` | — | Headline. Default "Choose files", or "Choose a file" for a single file. |
+| `description` | `ReactNode` | — | The line under it. Written from `accept`, `maxSize` and `maxFiles` when left out. |
+| `icon` | `ReactNode` | — | Replaces the upload glyph in the badge. |
+
+### FileUpload.Item
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `file` | `FileUploadFile` | — |  |
+| `className` | `string` | — |  |
+| `size` | `'default' \| 'sm'` | — | Row density. |
+| `nameLength` | `number` | — | Longest name shown before it is shortened from the middle, keeping the extension. Default 36. |
+
+### FileUpload.List
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `horizontal` | `boolean` | `false` | Lay the files out as one scrolling strip of fixed-width rows, for a message composer. |
+| `size` | `'default' \| 'sm'` | — | Row density. |
+| `renderItem` | `(file: FileUploadFile) => ReactNode` | — | Draw a row yourself. `FileUpload.Item` is the default. |
+| `empty` | `ReactNode` | — | Shown when the list is empty. Nothing by default. |
+
+### FileUpload.Grid
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+| `columns` | `number` | `3` | Tiles per row. Default 3. Ignored when `horizontal`. |
+| `horizontal` | `boolean` | `false` | Lay the tiles out as one scrolling strip. |
+| `tileSize` | `number` | `88` | Tile size in points, for a horizontal strip. Default 88. |
+| `gap` | `number` | `8` | Space between tiles, in points. Default 8. |
+| `radius` | `number` | `12` | Corner radius of a tile, in points. Default 12. |
+| `cover` | `boolean` | `false` | Mark the first photo as the cover. |
+| `placeholders` | `boolean` | `false` | Draw empty slots for the rest of `maxFiles`, so the limit can be seen. |
+| `addLabel` | `string` | — | Label of the add tile. Default "Add photo" or "Add photos". |
+| `hideAdd` | `boolean` | `false` | Leave the add tile out — for a grid with its own Trigger elsewhere. |
+
+Every part also accepts the underlying React Native props (`ViewProps` or `TextProps`) and a `className` for Tailwind utilities.
+
+## Notes
+
+Without `multiple` the list holds one file, and picking again replaces it. With `multiple`, `maxFiles` limits the list and each picker is asked for no more than the slots that are left.
+
+A file's `status` is `idle`, `queued`, `uploading`, `processing`, `done`, `error` or `canceled`. Call `setProcessing()` from the handler once the bytes are sent and the server is still working, and the row says so. Progress reports are batched to one update per frame.
+
+Cancel aborts the handler's `signal` and keeps the file as `canceled`, so it can be retried. Remove aborts it and drops the file.
+
+`maxSize` is checked against the size the picker reports. A photo resized through `image` has no reported size, so it passes.
+
+A source that cannot return an allowed file is left out of the chooser — the camera when `accept` has no image type, for instance.
+
+A missing module or a refused camera permission is passed to `onError` as an `Error` whose message says what to do. Taking photos in a development build needs the camera permission strings from `expo-image-picker`'s config plugin. Expo Go has them already.
+
+Rejected files are announced to screen readers. Each row's label reads the file's name and status, and every action is labelled with the file it acts on.
+
+## Public exports
+
+{/* Generated by scripts/build-api-reference.mjs. Do not edit. */}
+
+**Values:** `FileUpload`, `describeFileStatus`, `describeFileUploadRules`, `formatFileSize`, `hasFileUploadSource`, `useFileUpload`
+
+**Types:** `FileUploadDropzoneProps`, `FileUploadFile`, `FileUploadGridProps`, `FileUploadHandler`, `FileUploadHandlerContext`, `FileUploadImageOptions`, `FileUploadItemProps`, `FileUploadKind`, `FileUploadListProps`, `FileUploadProps`, `FileUploadRejection`, `FileUploadSource`, `FileUploadStatus`, `FileUploadTriggerProps`

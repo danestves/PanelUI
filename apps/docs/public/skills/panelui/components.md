@@ -2,7 +2,7 @@
 
 Generated from the library's own TypeScript — do not edit by hand.
 
-139 component modules. The **Reference** column links to a file in this skill holding that
+140 component modules. The **Reference** column links to a file in this skill holding that
 component's anatomy, every prop with its type and default, its variants, its compound parts and a
 worked example. **Read it before using a component you have not used in this session** — the props
 there are read from the source, and anything you remember is a guess.
@@ -38,6 +38,7 @@ There is no need to fetch anything over the network. If you would rather, the sa
 | `DatePicker` | A calendar behind a button. | [date-picker](./components/date-picker.md) |
 | `DateTimePicker` | A day and a time of day, picked in one panel. | [date-time-picker](./components/date-time-picker.md) |
 | `Field` | Layout and validation-state kit a form control composes into. | [field](./components/field.md) |
+| `FileUpload` | Pick files and photos, check them, and run their uploads. | [file-upload](./components/file-upload.md) |
 | `Form` | Form state — values, validation and submission — with no form library underneath. | [form](./components/form.md) |
 | `Input` | Text field with label, description and error message. | [input](./components/input.md) |
 | `InputGroup` | Input with leading and trailing decorators. | [input-group](./components/input-group.md) |

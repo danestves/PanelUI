@@ -31,7 +31,7 @@ const PUBLISHED = [
   'PlusIcon', 'PlusSquareIcon', 'QuoteIcon', 'ReceiptIcon', 'RepeatIcon',
   'RotateCcwIcon', 'RotateCwIcon', 'RotateSquareIcon', 'SearchIcon', 'SendArrowIcon', 'SendIcon',
   'ShareNodesIcon', 'ShieldAlertIcon', 'ShieldCheckIcon', 'SparklesIcon', 'StarIcon',
-  'SunIcon', 'TicketIcon', 'TrashIcon', 'UnlockIcon', 'XIcon',
+  'SunIcon', 'TicketIcon', 'TrashIcon', 'UnlockIcon', 'UploadIcon', 'VideoIcon', 'XIcon',
 ];
 
 /** Every icon the module exports, however it is drawn. */

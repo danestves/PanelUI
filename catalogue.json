@@ -40,6 +40,7 @@
     "fab",
     "feedback",
     "field",
+    "file-upload",
     "flip-card",
     "flow",
     "form",
@@ -228,17 +229,17 @@
     }
   ],
   "counts": {
-    "componentModules": 139,
-    "packageComponentExports": 139,
-    "documentedComponents": 139,
-    "exampleEntries": 139,
+    "componentModules": 140,
+    "packageComponentExports": 140,
+    "documentedComponents": 140,
+    "exampleEntries": 140,
     "registry": {
-      "componentItems": 139,
+      "componentItems": 140,
       "blockItems": 4,
       "supportItems": 36,
-      "totalItems": 179,
+      "totalItems": 180,
       "byType": {
-        "registry:ui": 154,
+        "registry:ui": 155,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1,

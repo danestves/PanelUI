@@ -1,0 +1,73 @@
+{
+  "slug": "file-upload",
+  "intro": "Use it wherever a screen takes files: documents for a form, photos for a listing, a profile picture, attachments in a message. It opens the document picker, the photo library or the camera, checks each file against `accept`, `maxSize` and `maxFiles`, and runs the uploads with progress, cancel and retry.\n\nThe upload itself is yours. Pass `upload`, a function that sends one file and resolves when the server has it; it receives an `AbortSignal` and an `onProgress` callback. FileUpload runs `concurrency` of them at a time and keeps each file's status in `value`. Without `upload`, files are only picked.\n\nEach source needs its Expo module only when it is offered: `files` needs the optional `expo-document-picker`, and `camera` and `library` need the optional `expo-image-picker`. Resizing photos with `image.maxWidth` needs the optional `expo-image-manipulator`. All three run in Expo Go.\n\nTo show a file that is already uploaded, use [Attachment](/docs/components/attachment), which draws these rows. To let somebody frame a photo by hand before it is used, use [AvatarCropper](/docs/components/avatar-cropper).",
+  "usage": "const [files, setFiles] = useState<FileUploadFile[]>([]);\n\n<FileUpload\n  value={files}\n  onValueChange={setFiles}\n  sources={['camera', 'library', 'files']}\n  accept={['application/pdf', 'image/*']}\n  multiple\n  maxFiles={5}\n  maxSize={10 * 1024 * 1024}\n  upload={uploadFile}\n>\n  <FileUpload.Dropzone />\n  <FileUpload.List />\n</FileUpload>",
+  "extraImports": [
+    "Avatar",
+    "Button",
+    "Input",
+    "PaperclipIcon",
+    "Text",
+    "useFileUpload",
+    "type FileUploadFile",
+    "type FileUploadHandler"
+  ],
+  "parts": {
+    "Trigger": "Wraps one pressable — a Button, an icon button — and makes it add files. With one source the press opens that picker; with several it opens a sheet listing them. It disables its child once `maxFiles` is reached.",
+    "Dropzone": "A dashed area that adds files when pressed. The line under its title is written from `accept`, `maxSize` and `maxFiles`, and is replaced by the reason when a picked file is turned away.",
+    "List": "Every file as an Attachment row: a thumbnail or type icon, the name, a status line, and cancel, retry or remove depending on the state. `horizontal` lays the files out as a strip of small cards, for a message composer.",
+    "Item": "One of those rows, for a list you lay out yourself. Pass the `file`.",
+    "Grid": "Photos as square tiles, led by a tile that adds more and counts against `maxFiles`. Tapping a photo opens it full screen. `cover` marks the first one, `placeholders` draws the empty slots, and `horizontal` makes it a strip."
+  },
+  "anatomy": "<FileUpload upload={uploadFile}>\n  <FileUpload.Trigger>\n    <Button>Add files</Button>\n  </FileUpload.Trigger>\n  <FileUpload.Dropzone />\n  <FileUpload.List />\n  <FileUpload.Grid />\n</FileUpload>",
+  "examples": [
+    {
+      "title": "Writing the upload handler",
+      "description": "Resolve when the server has the file and throw when it does not; the error's message is shown on the row. Pass `signal` on, so cancel and remove stop the request. `fetch` reports no upload progress, so use `XMLHttpRequest` or your storage SDK when the bar matters.",
+      "code": "const uploadFile: FileUploadHandler = (file, { signal, onProgress }) =>\n  new Promise((resolve, reject) => {\n    const body = new FormData();\n    body.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as any);\n\n    const xhr = new XMLHttpRequest();\n    xhr.open('POST', 'https://api.example.com/uploads');\n    xhr.upload.onprogress = (event) => onProgress(event.loaded / event.total);\n    xhr.onload = () =>\n      xhr.status < 300 ? resolve(JSON.parse(xhr.response)) : reject(new Error('The server refused the file.'));\n    xhr.onerror = () => reject(new Error('Connection lost. Tap retry.'));\n    signal.addEventListener('abort', () => xhr.abort());\n    xhr.send(body);\n  });"
+    },
+    {
+      "title": "Rules and rejections",
+      "description": "A file is checked for its type, then its size, then `validate`, then whether there is room left. Turned-away files go to `onReject` with a reason and a sentence you can show; the Dropzone shows the first one itself.",
+      "code": "<FileUpload\n  sources={['files']}\n  accept={['application/pdf']}\n  multiple\n  maxFiles={3}\n  maxSize={2 * 1024 * 1024}\n  validate={(file) => (file.name.startsWith('draft') ? 'Drafts cannot be submitted.' : null)}\n  onReject={(rejections) => track('rejected', rejections.map((r) => r.reason))}\n>\n  <FileUpload.Dropzone title=\"Upload invoices\" />\n  <FileUpload.List />\n</FileUpload>"
+    },
+    {
+      "title": "Preparing photos",
+      "description": "`image.maxWidth` and `image.maxHeight` scale a large photo down before it is added, and `quality` sets its JPEG compression. `crop` opens the system's crop editor after a single photo is chosen or taken; iOS always crops it square.",
+      "code": "<FileUpload\n  sources={['camera', 'library']}\n  accept={['image/*']}\n  image={{ maxWidth: 1024, quality: 0.85, crop: { aspect: [1, 1] } }}\n  upload={uploadFile}\n>\n  <FileUpload.Trigger>\n    <Button>Change photo</Button>\n  </FileUpload.Trigger>\n</FileUpload>"
+    },
+    {
+      "title": "Drawing it yourself",
+      "description": "`useFileUpload()` returns the files and the actions — `pick`, `remove`, `cancel`, `retry`, `upload` and `clear` — for anything the parts do not cover, such as a submit button that waits for every upload.",
+      "code": "function SubmitButton() {\n  const { files } = useFileUpload();\n  const waiting = files.some((file) => file.status !== 'done');\n  return <Button disabled={files.length === 0 || waiting}>Submit claim</Button>;\n}"
+    },
+    {
+      "title": "Uploading later",
+      "description": "With `autoUpload={false}` picked files stay `idle` until `upload()` queues them, for a form that sends everything when it is submitted.",
+      "code": "function SendButton() {\n  const { upload } = useFileUpload();\n  return <Button onPress={() => upload()}>Send</Button>;\n}\n\n<FileUpload multiple upload={uploadFile} autoUpload={false}>\n  <FileUpload.List />\n  <SendButton />\n</FileUpload>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Claim documents",
+      "description": "A dropzone over a list of rows. Two files upload at a time while the rest wait, and one drops its connection so the retry can be tried.",
+      "code": "<FileUpload\n  value={files}\n  onValueChange={setFiles}\n  sources={['camera', 'library', 'files']}\n  accept={['application/pdf', 'image/*']}\n  multiple\n  maxFiles={6}\n  maxSize={10 * 1024 * 1024}\n  upload={uploadFile}\n  concurrency={2}\n>\n  <FileUpload.Dropzone title=\"Add documents or photos\" />\n  <FileUpload.List />\n  <SubmitButton />\n</FileUpload>"
+    },
+    {
+      "title": "Listing photos",
+      "description": "A grid led by an add tile that counts against the limit, with the first photo marked as the cover. Tap a photo to see it full screen.",
+      "code": "<FileUpload\n  sources={['camera', 'library']}\n  accept={['image/*']}\n  multiple\n  maxFiles={8}\n  image={{ maxWidth: 1600, quality: 0.85 }}\n  upload={uploadFile}\n>\n  <FileUpload.Grid columns={3} cover placeholders />\n</FileUpload>"
+    },
+    {
+      "title": "Profile photo",
+      "description": "One photo, cropped square. Without `multiple` a new photo replaces the old one, and the camera badge and the button open the same choice.",
+      "code": "function ProfilePhoto() {\n  const { files, remove } = useFileUpload();\n  const photo = files[0];\n  return (\n    <>\n      <Avatar size=\"xl\" source={photo ? { uri: photo.uri } : undefined} fallback=\"KA\" />\n      <FileUpload.Trigger>\n        <Button variant=\"secondary\">Change photo</Button>\n      </FileUpload.Trigger>\n      {photo ? <Button variant=\"ghost\" onPress={() => remove(photo.id)}>Remove photo</Button> : null}\n    </>\n  );\n}\n\n<FileUpload\n  sources={['camera', 'library']}\n  accept={['image/*']}\n  image={{ maxWidth: 1024, crop: { aspect: [1, 1] } }}\n  upload={uploadFile}\n>\n  <ProfilePhoto />\n</FileUpload>"
+    },
+    {
+      "title": "Message attachments",
+      "description": "A paperclip in a composer. Each attachment uploads in a strip of cards above the field.",
+      "code": "<FileUpload sources={['camera', 'library', 'files']} multiple maxFiles={10} upload={uploadFile}>\n  <FileUpload.List horizontal size=\"sm\" />\n  <View className=\"flex-row items-center gap-2\">\n    <FileUpload.Trigger>\n      <Button variant=\"ghost\" size=\"sm\" accessibilityLabel=\"Attach\">\n        <PaperclipIcon size={20} />\n      </Button>\n    </FileUpload.Trigger>\n    <Input placeholder=\"Message\" containerClassName=\"flex-1\" />\n  </View>\n</FileUpload>"
+    }
+  ],
+  "notes": "Without `multiple` the list holds one file, and picking again replaces it. With `multiple`, `maxFiles` limits the list and each picker is asked for no more than the slots that are left.\n\nA file's `status` is `idle`, `queued`, `uploading`, `processing`, `done`, `error` or `canceled`. Call `setProcessing()` from the handler once the bytes are sent and the server is still working, and the row says so. Progress reports are batched to one update per frame.\n\nCancel aborts the handler's `signal` and keeps the file as `canceled`, so it can be retried. Remove aborts it and drops the file.\n\n`maxSize` is checked against the size the picker reports. A photo resized through `image` has no reported size, so it passes.\n\nA source that cannot return an allowed file is left out of the chooser — the camera when `accept` has no image type, for instance.\n\nA missing module or a refused camera permission is passed to `onError` as an `Error` whose message says what to do. Taking photos in a development build needs the camera permission strings from `expo-image-picker`'s config plugin. Expo Go has them already.\n\nRejected files are announced to screen readers. Each row's label reads the file's name and status, and every action is labelled with the file it acts on."
+}

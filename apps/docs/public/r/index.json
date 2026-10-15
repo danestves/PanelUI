@@ -723,6 +723,26 @@
     "docsPath": "components/field"
   },
   {
+    "name": "file-upload",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "Pick files and photos, check them, and run their uploads.",
+    "registryDependencies": [
+      "animated-pressable",
+      "attachment",
+      "cn",
+      "controllable-state",
+      "field",
+      "icons",
+      "image-viewer",
+      "menu",
+      "text"
+    ],
+    "docsPath": "components/file-upload"
+  },
+  {
     "name": "finite-chart",
     "type": "registry:ui",
     "kind": "ui",

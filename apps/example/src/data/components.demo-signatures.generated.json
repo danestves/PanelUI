@@ -158,6 +158,10 @@
       "signature": "da9982646b1e29ce5a5cd59e84a0d1544aa076646edaaad80627ece74ab01a2e"
     },
     {
+      "slug": "file-upload",
+      "signature": "9f52fe841b1399ee598cef683f2bab3efb90999f86d51a8ec23e5453ccc60488"
+    },
+    {
       "slug": "flip-card",
       "signature": "38cddce2acf4d418ffc7cfd6794c2ba77ed10e2fdce8a4bc7b11e0754c96eb1f"
     },
