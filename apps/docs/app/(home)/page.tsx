@@ -223,27 +223,36 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="flex flex-col items-center gap-6 px-6 py-24 text-center">
-        <Badge variant="secondary">{COMPONENT_COUNT} components · MIT · Expo SDK 57+</Badge>
+        <Badge
+          variant="secondary"
+          className="gap-1.5"
+          render={<Link href="/docs/web/components/sheet" />}
+        >
+          <span className="font-medium text-foreground">New</span>
+          <span aria-hidden className="h-3 w-px bg-border" />
+          FileUpload, and Sheet for the web
+          <ArrowRightIcon className="size-3" />
+        </Badge>
         <h1 className="max-w-3xl font-heading text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-          Native-feeling UI. Zero native code.
+          Beautiful components for your app and your website
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground text-balance">
-          Tailwind-styled components for Expo that run in Expo Go, and now{' '}
+          Accessible, animated and styled with Tailwind: for Expo, with zero native code, and for{' '}
           <Link href="/docs/web" className="text-foreground underline underline-offset-4">
-            on the web
-          </Link>{' '}
-          too.
+            the web
+          </Link>
+          . Install the package or copy the code, then make it your own.
         </p>
 
         <CopyInstall command={INSTALL} />
 
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button render={<Link href="/docs" />}>
-            Get started
+            Get Started
             <ArrowRightIcon />
           </Button>
-          <Button variant="outline" render={<Link href={site.repo} />}>
-            View on GitHub
+          <Button variant="outline" render={<Link href="/docs/components" />}>
+            Browse Components
           </Button>
         </div>
       </section>
