@@ -54,7 +54,7 @@ in one coherent visual language, with light and dark themes out of the box.
 Pure TypeScript with no native modules, so it runs in **Expo Go** with no `prebuild`, no Xcode and
 no Android Studio.
 
-**New: PanelUI for the web.** [`panelui-web`](#panelui-for-the-web) is a collection of eleven
+**New: PanelUI for the web.** [`panelui-web`](#panelui-for-the-web) is a collection of fourteen
 components for React on the web, in the same visual language and drawn in your project's own
 theme: a board of cards you drag, a canvas of nodes and edges, a globe, KPI cards and more.
 
@@ -183,7 +183,7 @@ Plus the primitives: `PanelUIProvider`, `Portal`, `AnimatedPressable`, `useTheme
 
 `panelui-web` is a separate collection for React on the web: Next.js, Vite, React Router, or
 anything else that runs React 18 or newer with Tailwind CSS v4. It is not a port of the components
-above. It is eleven of its own, styled with Tailwind on the tokens a shadcn project already
+above. It is fourteen of its own, styled with Tailwind on the tokens a shadcn project already
 defines, so they take your colours and radius in light and dark.
 
 Copy a component's source into your project with the shadcn CLI. It lands in
@@ -216,9 +216,11 @@ import { RollingNumber } from 'panelui-web/rolling-number';
 - **Planet** — the world as dots on a globe you can turn, with markers pinned to it
 - **Day Grid**, **Bar Picker**, **Range Meter**, **KPI**, **Rolling Number** — figures, to read and
   to pick from
+- **Sheet** — a panel that rises from any edge, floating clear of it, and stacks over another
+- **Card**, **Frame** — the surfaces the rest of a page sits on
 - **Command Dock**, **Feedback**, **Tilt Card** — asking, answering and showing
 
-KPI and Flow have the same parts and props as the app library's, so a screen written for one reads
+KPI, Flow, Card and Frame have the same parts and props as the app library's, so a screen written for one reads
 the same in the other. Every component runs live in the docs, with its source under it, at
 **[panelui.dev/docs/web](https://panelui.dev/docs/web)**.
 
