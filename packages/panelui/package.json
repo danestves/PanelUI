@@ -142,6 +142,7 @@
     "@react-native-masked-view/masked-view": ">=0.3.0",
     "expo-blur": ">=13.0.0",
     "expo-clipboard": ">=7.0.0",
+    "expo-document-picker": ">=13.0.0",
     "expo-file-system": ">=17.0.0",
     "expo-glass-effect": ">=57.0.0",
     "expo-haptics": ">=13.0.0",
@@ -200,6 +201,9 @@
       "optional": true
     },
     "expo-clipboard": {
+      "optional": true
+    },
+    "expo-document-picker": {
       "optional": true
     },
     "expo-file-system": {

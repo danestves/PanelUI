@@ -36,6 +36,7 @@ const OPTIONAL = new Set([
   '@maplibre/maplibre-react-native',
   'expo-blur',
   'expo-clipboard',
+  'expo-document-picker',
   'expo-file-system',
   'expo-glass-effect',
   'expo-haptics',
