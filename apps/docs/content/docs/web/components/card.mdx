@@ -1,0 +1,340 @@
+---
+title: Card
+description: A surface that holds one thing, with a heading, an action beside it and a footer.
+status: new
+---
+
+<ComponentPreview name="card/form" height={460}>
+
+```tsx lineNumbers
+import { Button } from '@/components/ui/button';
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/panelui/card';
+
+export default function CardForm() {
+  return (
+    <Card as="section" className="w-full max-w-sm">
+      <Card.Header>
+        <Card.Title>Create a workspace</Card.Title>
+        <Card.Description>Start on the free plan and invite your team later.</Card.Description>
+        <Card.Action>
+          <Button variant="link" className="px-0">
+            Sign in
+          </Button>
+        </Card.Action>
+      </Card.Header>
+      <Card.Content>
+        <form id="create-workspace" className="flex flex-col gap-5">
+          <Field>
+            <FieldLabel>Work email</FieldLabel>
+            <Input type="email" placeholder="you@company.com" required />
+          </Field>
+          <Field>
+            <FieldLabel>Workspace name</FieldLabel>
+            <Input placeholder="Northwind Studio" required />
+            <FieldDescription>You can change it at any time.</FieldDescription>
+          </Field>
+        </form>
+      </Card.Content>
+      <Card.Footer variant="panel" className="flex-col gap-2">
+        <Button type="submit" form="create-workspace" className="w-full">
+          Create workspace
+        </Button>
+        <Button variant="outline" className="w-full">
+          Continue with Google
+        </Button>
+      </Card.Footer>
+    </Card>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it to hold one thing on a page: a plan, a setting, a summary, an item in a grid. It is a bordered surface with a header, a body and a footer, and the header keeps a place in its top trailing corner for a control that belongs to the whole card.
+
+The padding lives on the parts, not on the card. A picture that should reach the card's edges goes straight inside it with `overflow-hidden` on the card.
+
+It has no state and no event handlers of its own, so it renders as a server component.
+
+For a list of rows under a title, use [Frame](/docs/web/components/frame).
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/card.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/card` instead of `@/components/panelui/card`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/card.tsx`:
+
+<RegistrySource name="card" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Card } from "@/components/panelui/card"
+```
+
+```tsx
+<Card>
+  <Card.Header>
+    <Card.Title>Create a workspace</Card.Title>
+    <Card.Description>Start on the free plan and invite your team later.</Card.Description>
+    <Card.Action>
+      <Button variant="link">Sign in</Button>
+    </Card.Action>
+  </Card.Header>
+  <Card.Content>
+    <Field>
+      <FieldLabel>Work email</FieldLabel>
+      <Input type="email" />
+    </Field>
+  </Card.Content>
+  <Card.Footer variant="panel">
+    <Button>Create workspace</Button>
+  </Card.Footer>
+</Card>
+```
+
+## Composition
+
+```tsx
+<Card>
+  <Card.Header>
+    <Card.Title />
+    <Card.Description />
+    <Card.Action />
+  </Card.Header>
+  <Card.Content />
+  <Card.Footer />
+</Card>
+```
+
+- **`Card.Header`** — The title, the line under it, and the action. It switches to two columns when there is an action.
+- **`Card.Title`** — What the card is about. An `h3` by default; `as` picks another level to fit the page.
+- **`Card.Description`** — A line under the title.
+- **`Card.Action`** — A control for the whole card, held in the header's top trailing corner whatever order it is written in.
+- **`Card.Content`** — The body. It starts with top padding of its own when the card has no header.
+- **`Card.Footer`** — The row at the bottom. `variant="panel"` makes it a darker band set into the card, for actions.
+
+## Examples
+
+### Sizes
+
+`size="sm"` tightens the padding and the title, for a card in a dense grid.
+
+<ComponentPreview name="card/sizes" height={220}>
+
+```tsx lineNumbers
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/panelui/card';
+
+function Report({ size }: { size: 'default' | 'sm' }) {
+  return (
+    <Card size={size} className="w-full max-w-64">
+      <Card.Header>
+        <Card.Title>Weekly report</Card.Title>
+        <Card.Description>Sent every Monday at 09:00</Card.Description>
+      </Card.Header>
+      <Card.Content className="flex gap-1.5">
+        <Badge variant="secondary">Revenue</Badge>
+        <Badge variant="secondary">Churn</Badge>
+      </Card.Content>
+    </Card>
+  );
+}
+
+export default function CardSizes() {
+  return (
+    <div className="flex w-full flex-wrap items-start justify-center gap-4">
+      <Report size="default" />
+      <Report size="sm" />
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Footers
+
+A `plain` footer continues the card. A `panel` footer is a band set into its bottom, which reads as what you do with the card rather than more of what it says.
+
+<ComponentPreview name="card/footer" height={300}>
+
+```tsx lineNumbers
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/panelui/card';
+
+export default function CardFooterVariants() {
+  return (
+    <div className="flex w-full flex-wrap items-stretch justify-center gap-4">
+      <Card className="w-full max-w-72">
+        <Card.Header>
+          <Card.Title>Invite a teammate</Card.Title>
+          <Card.Description>They join as a member.</Card.Description>
+        </Card.Header>
+        <Card.Content>
+          <Input type="email" placeholder="name@northwind.studio" aria-label="Email" />
+        </Card.Content>
+        <Card.Footer>
+          <Button className="w-full">Send invite</Button>
+        </Card.Footer>
+      </Card>
+      <Card className="w-full max-w-72">
+        <Card.Header>
+          <Card.Title>Delete workspace</Card.Title>
+          <Card.Description>Projects and files go with it. This cannot be undone.</Card.Description>
+        </Card.Header>
+        <Card.Footer variant="panel" className="justify-end">
+          <Button variant="ghost">Cancel</Button>
+          <Button variant="destructive">Delete</Button>
+        </Card.Footer>
+      </Card>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Image
+
+A picture placed first in the card reaches its edges. Give the card `overflow-hidden` so the picture takes its top corners; the parts after it keep their own padding.
+
+<ComponentPreview name="card/image" height={480}>
+
+```tsx lineNumbers
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/panelui/card';
+
+export default function CardImage() {
+  return (
+    // `overflow-hidden` is all the picture needs: the padding is on the parts.
+    <Card as="article" className="w-full max-w-xs overflow-hidden">
+      <img
+        src="https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?auto=format&fit=crop&w=720&q=70"
+        alt="A silver rangefinder camera on a table beside a stack of prints"
+        className="aspect-[4/3] w-full object-cover"
+      />
+      <Card.Header>
+        <Card.Title>Silver rangefinder, 23 mm lens</Card.Title>
+        <Card.Description>Used for one season · Lisbon</Card.Description>
+        <Card.Action>
+          <Badge variant="secondary">£640</Badge>
+        </Card.Action>
+      </Card.Header>
+      <Card.Footer>
+        <Button className="w-full">Message the seller</Button>
+      </Card.Footer>
+    </Card>
+  );
+}
+```
+
+</ComponentPreview>
+
+### In a list
+
+`as="li"` puts the card in a list, and `Card.Title`'s `as` sets the heading level to fit the page around it.
+
+<ComponentPreview name="card/list" height={200}>
+
+```tsx lineNumbers
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/panelui/card';
+
+const PROJECTS = [
+  { name: 'Checkout redesign', team: 'Payments', status: 'In review', tone: 'info' as const },
+  { name: 'Onboarding emails', team: 'Growth', status: 'Shipped', tone: 'success' as const },
+  { name: 'Search ranking', team: 'Discovery', status: 'Blocked', tone: 'warning' as const },
+];
+
+export default function CardList() {
+  return (
+    <ul className="grid w-full max-w-2xl gap-3 sm:grid-cols-3">
+      {PROJECTS.map((project) => (
+        <Card as="li" size="sm" key={project.name}>
+          <Card.Header>
+            <Card.Title as="h4">{project.name}</Card.Title>
+            <Card.Description>{project.team}</Card.Description>
+          </Card.Header>
+          <Card.Content>
+            <Badge variant={project.tone}>{project.status}</Badge>
+          </Card.Content>
+        </Card>
+      ))}
+    </ul>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Card
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `size` | `'default' \| 'sm'` | — | `sm` tightens the padding and the title, for a card in a dense grid. Default `default`. |
+| `as` | `'div' \| 'article' \| 'section' \| 'li'` | — | The element to render. `article` for a card that stands on its own, `li` for one in a list, `section` for one that groups a part of a page. |
+
+### Card.Title
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `'h2' \| 'h3' \| 'h4' \| 'div'` | — | The heading level, to fit the page around the card. Default `h3`. |
+
+### Card.Footer
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `'plain' \| 'panel'` | — | `plain` continues the card. `panel` is a darker band set into its bottom, for actions. Default `plain`. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+`as` on the card renders it as a `div`, `article`, `section` or `li`. Use `article` for a card that makes sense on its own and `li` inside a list.
+
+`Card.Title` is a heading so the page outline includes it. Set its level with `as`, from `h2` to `h4`, or `div` for a card that should stay out of the outline.

@@ -1,0 +1,444 @@
+---
+title: Frame
+description: A panel of rows set into a tray, with the tray's top strip carrying the title.
+status: new
+---
+
+<ComponentPreview name="frame/deploys" height={340}>
+
+```tsx lineNumbers
+import { GitBranchIcon, RocketIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Frame } from '@/components/panelui/frame';
+
+const DEPLOYS = [
+  { ref: 'main · a41c2e9', where: 'Production · 2 minutes ago', status: 'Ready', tone: 'success' as const, prod: true },
+  { ref: 'feature/sheet · 7d02b11', where: 'Preview · 9 minutes ago', status: 'Building', tone: 'info' as const, prod: false },
+  { ref: 'main · e5c90af', where: 'Production · 3 hours ago', status: 'Failed', tone: 'error' as const, prod: true },
+  { ref: 'docs/hero · 19bf3a4', where: 'Preview · 5 hours ago', status: 'Ready', tone: 'success' as const, prod: false },
+];
+
+export default function FrameDeploys() {
+  return (
+    <Frame className="w-full max-w-md">
+      <Frame.Header>
+        <Frame.Title>Deploys</Frame.Title>
+        <Frame.Action>Last 24 hours</Frame.Action>
+      </Frame.Header>
+      <Frame.Panel>
+        {DEPLOYS.map((deploy) => (
+          <Frame.Row key={deploy.ref}>
+            <Frame.Media className="size-9 rounded-lg bg-muted text-muted-foreground">
+              {deploy.prod ? <RocketIcon className="size-4" /> : <GitBranchIcon className="size-4" />}
+            </Frame.Media>
+            <Frame.Content>
+              <Frame.Title as="p">{deploy.ref}</Frame.Title>
+              <Frame.Description>{deploy.where}</Frame.Description>
+            </Frame.Content>
+            <Frame.Actions>
+              <Badge variant={deploy.tone}>{deploy.status}</Badge>
+            </Frame.Actions>
+          </Frame.Row>
+        ))}
+      </Frame.Panel>
+    </Frame>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it for a widget that is a list of rows under a title: deploys, settings, activity, service status. A panel of rows sits in a tray, and the tray's strip along the top carries the title, so the header needs no rule or background of its own.
+
+`band` holds a bordered card in a thin muted band, for a widget that shows one figure or chart rather than a list. `inset` floats the panel in a recessed band and gives `Frame.Footer` a place for actions. `plain` drops the tray, for a frame inside a card or another container that already draws an edge.
+
+It has no state of its own and renders as a server component. A row with `href` is a link and one with `onClick` is a button.
+
+For a single surface with a heading and a body, use [Card](/docs/web/components/card).
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/frame.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/frame` instead of `@/components/panelui/frame`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/frame.tsx`:
+
+<RegistrySource name="frame" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Frame } from "@/components/panelui/frame"
+```
+
+```tsx
+<Frame>
+  <Frame.Header>
+    <Frame.Title>Deploys</Frame.Title>
+    <Frame.Action>Last 24 hours</Frame.Action>
+  </Frame.Header>
+  <Frame.Panel>
+    <Frame.Row>
+      <Frame.Media><RocketIcon /></Frame.Media>
+      <Frame.Content>
+        <Frame.Title as="p">main · a41c2e9</Frame.Title>
+        <Frame.Description>Production · 2 minutes ago</Frame.Description>
+      </Frame.Content>
+      <Frame.Actions><Badge>Ready</Badge></Frame.Actions>
+    </Frame.Row>
+  </Frame.Panel>
+</Frame>
+```
+
+## Composition
+
+```tsx
+<Frame>
+  <Frame.Header>
+    <Frame.Title />
+    <Frame.Description />
+    <Frame.Action />
+  </Frame.Header>
+  <Frame.Panel>
+    <Frame.Section>
+      <Frame.Row>
+        <Frame.Media />
+        <Frame.Content>
+          <Frame.Title />
+          <Frame.Description />
+        </Frame.Content>
+        <Frame.Actions />
+      </Frame.Row>
+    </Frame.Section>
+  </Frame.Panel>
+  <Frame.Footer />
+</Frame>
+```
+
+- **`Frame.Header`** — The strip above the panel: a title, an optional description, and `Frame.Action` on the trailing side.
+- **`Frame.Title`** — A quiet caption in the header. Inside `Frame.Content` it is the row's subject instead: full colour, and cut to one line. Use `as="p"` there.
+- **`Frame.Description`** — A line under a title, in the header or in a row.
+- **`Frame.Action`** — The header's trailing side: a short status, a link, a small button.
+- **`Frame.Panel`** — The card the rows sit on. It draws the hairline between its children.
+- **`Frame.Row`** — One line of the panel. `href` makes it a link, `onClick` a button, and `chevron` marks one that leads somewhere.
+- **`Frame.Media`** — A row's leading icon or avatar. It keeps its size.
+- **`Frame.Content`** — The middle of a row. It takes the space left and can shrink past its content, so a long line truncates instead of pushing the actions off the edge.
+- **`Frame.Actions`** — A row's trailing side: a badge, a value, a switch. It keeps its size.
+- **`Frame.Section`** — A titled group of rows, for a panel holding more than one.
+- **`Frame.Footer`** — The strip below the panel. Under `inset` its children become equal-width pills.
+
+## Examples
+
+### Band
+
+`variant="band"` holds a bordered card in a thin muted band whose top strip names what is inside. It suits a widget with one thing to show: here a [KPI](/docs/web/components/kpi) and its chart.
+
+<ComponentPreview name="frame/band" height={330}>
+
+```tsx lineNumbers
+import { Kpi } from '@/components/panelui/kpi';
+import { Frame } from '@/components/panelui/frame';
+
+const SIGNUPS = [62, 71, 58, 80, 77, 94, 88, 91, 103, 98, 112, 107, 121, 126];
+
+export default function FrameBand() {
+  return (
+    <Frame variant="band" className="w-full max-w-sm">
+      <Frame.Header>
+        <Frame.Title>Sign-ups</Frame.Title>
+        <Frame.Action>Last 14 days</Frame.Action>
+      </Frame.Header>
+      <Frame.Panel className="p-5">
+        <Kpi>
+          <Kpi.Header>
+            <Kpi.Title>New workspaces</Kpi.Title>
+            <Kpi.Actions>
+              <Kpi.Trend value={18.4} variant="badge" />
+            </Kpi.Actions>
+          </Kpi.Header>
+          <Kpi.Value>1,288</Kpi.Value>
+          <Kpi.Chart data={SIGNUPS} color="primary" filled height={64} />
+        </Kpi>
+      </Frame.Panel>
+    </Frame>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Inset
+
+The panel floats in a recessed band, and the band below it holds the footer's actions as equal pills.
+
+<ComponentPreview name="frame/inset" height={320}>
+
+```tsx lineNumbers
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Frame } from '@/components/panelui/frame';
+
+export default function FrameInset() {
+  return (
+    <Frame variant="inset" className="w-full max-w-sm">
+      <Frame.Header>
+        <Frame.Title>Backups</Frame.Title>
+        <Frame.Action>Last run 02:00</Frame.Action>
+      </Frame.Header>
+      <Frame.Panel>
+        <Frame.Row>
+          <Frame.Content>
+            <Frame.Title as="p">Back up every night</Frame.Title>
+            <Frame.Description>At 02:00, while nobody is working</Frame.Description>
+          </Frame.Content>
+          <Frame.Actions>
+            <Switch defaultChecked aria-label="Back up every night" />
+          </Frame.Actions>
+        </Frame.Row>
+        <Frame.Row>
+          <Frame.Content>
+            <Frame.Title as="p">Keep copies for</Frame.Title>
+            <Frame.Description>Older ones are removed</Frame.Description>
+          </Frame.Content>
+          <Frame.Actions className="text-sm text-muted-foreground">30 days</Frame.Actions>
+        </Frame.Row>
+      </Frame.Panel>
+      <Frame.Footer>
+        <Button variant="outline">Restore</Button>
+        <Button>Back up now</Button>
+      </Frame.Footer>
+    </Frame>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Rows that lead somewhere
+
+Give a row `href` and it is a link with hover and focus states. `chevron` adds the trailing arrow.
+
+<ComponentPreview name="frame/links" height={330}>
+
+```tsx lineNumbers
+import { BellIcon, CreditCardIcon, KeyRoundIcon, UserRoundIcon } from 'lucide-react';
+import { Frame } from '@/components/panelui/frame';
+
+const PAGES = [
+  { title: 'Profile', description: 'Name, photo and time zone', Icon: UserRoundIcon },
+  { title: 'Notifications', description: 'Email and push', Icon: BellIcon },
+  { title: 'Security', description: 'Passkeys and sessions', Icon: KeyRoundIcon },
+  { title: 'Billing', description: 'Plan and invoices', Icon: CreditCardIcon },
+];
+
+export default function FrameLinks() {
+  return (
+    <Frame className="w-full max-w-sm">
+      <Frame.Header>
+        <Frame.Title>Account</Frame.Title>
+      </Frame.Header>
+      <Frame.Panel>
+        {PAGES.map(({ title, description, Icon }) => (
+          <Frame.Row key={title} href="#" chevron>
+            <Frame.Media className="text-muted-foreground">
+              <Icon className="size-4" />
+            </Frame.Media>
+            <Frame.Content>
+              <Frame.Title as="p">{title}</Frame.Title>
+              <Frame.Description>{description}</Frame.Description>
+            </Frame.Content>
+          </Frame.Row>
+        ))}
+      </Frame.Panel>
+    </Frame>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Sections
+
+`Frame.Section` groups rows under a small heading, and divides its own rows the way the panel does.
+
+<ComponentPreview name="frame/sections" height={360}>
+
+```tsx lineNumbers
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Frame } from '@/components/panelui/frame';
+
+const DAYS = [
+  {
+    day: 'Today',
+    events: [
+      { who: 'IF', text: 'Ife commented on Checkout redesign', when: '10:42' },
+      { who: 'TM', text: 'Tomás moved Search ranking to Blocked', when: '09:15' },
+    ],
+  },
+  {
+    day: 'Yesterday',
+    events: [
+      { who: 'HK', text: 'Hana shipped Onboarding emails', when: '17:30' },
+      { who: 'NH', text: 'Noor invited Pavel to Payments', when: '11:02' },
+    ],
+  },
+];
+
+export default function FrameSections() {
+  return (
+    <Frame className="w-full max-w-md">
+      <Frame.Header>
+        <Frame.Title>Activity</Frame.Title>
+        <Frame.Action>All projects</Frame.Action>
+      </Frame.Header>
+      <Frame.Panel>
+        {DAYS.map(({ day, events }) => (
+          <Frame.Section key={day} title={day}>
+            {events.map((event) => (
+              <Frame.Row key={event.text}>
+                <Frame.Media>
+                  <Avatar className="size-8">
+                    <AvatarFallback className="text-xs">{event.who}</AvatarFallback>
+                  </Avatar>
+                </Frame.Media>
+                <Frame.Content>
+                  <Frame.Title as="p">{event.text}</Frame.Title>
+                </Frame.Content>
+                <Frame.Actions className="text-sm text-muted-foreground tabular-nums">{event.when}</Frame.Actions>
+              </Frame.Row>
+            ))}
+          </Frame.Section>
+        ))}
+      </Frame.Panel>
+    </Frame>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Inside a card
+
+`plain` drops the tray, so a frame inside a card has one edge rather than two. Hold it 8px off the card's edge and give the panel the card's radius less that gap.
+
+<ComponentPreview name="frame/plain" height={320}>
+
+```tsx lineNumbers
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/panelui/card';
+import { Frame } from '@/components/panelui/frame';
+
+const SERVICES = [
+  { name: 'API', region: 'Frankfurt', status: 'Operational' },
+  { name: 'Dashboard', region: 'Frankfurt', status: 'Operational' },
+  { name: 'Webhooks', region: 'Dublin', status: 'Degraded' },
+];
+
+export default function FramePlain() {
+  return (
+    <Card size="sm" className="w-full max-w-sm">
+      <Card.Header>
+        <Card.Title>System status</Card.Title>
+        <Card.Description>Checked a minute ago</Card.Description>
+      </Card.Header>
+      {/* Held 8px off the card's edge, at the card's radius less that gap. */}
+      <Card.Content className="px-2 pb-2">
+        <Frame variant="plain">
+          <Frame.Panel className="rounded-lg shadow-none">
+            {SERVICES.map((service) => (
+              <Frame.Row key={service.name} className="py-2.5">
+                <Frame.Content>
+                  <Frame.Title as="p">{service.name}</Frame.Title>
+                  <Frame.Description>{service.region}</Frame.Description>
+                </Frame.Content>
+                <Frame.Actions>
+                  <Badge variant={service.status === 'Operational' ? 'success' : 'warning'}>{service.status}</Badge>
+                </Frame.Actions>
+              </Frame.Row>
+            ))}
+          </Frame.Panel>
+        </Frame>
+      </Card.Content>
+    </Card>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Frame
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `FrameVariant` | `default` | `default` sets the panel in a tray. `band` holds a bordered card in a thin muted band, for a widget showing one figure or chart. `inset` floats the panel in a recessed band and gives `Frame.Footer` somewhere to sit. `plain` drops the shell, for a frame inside a container that already draws its own edge. |
+
+### Frame.Title
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `'h2' \| 'h3' \| 'h4' \| 'p'` | — | The heading level in a header. Default `h3`; a row title is always a `p`. |
+
+### Frame.Row
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `href` | `string` | — | Make the row a link to this address. |
+| `target` | `string` | — | Where a link row opens, as on an `<a>`. |
+| `rel` | `string` | — | The relationship of a link row's target, as on an `<a>`. |
+| `onClick` | `MouseEventHandler<HTMLElement>` | — | Make the row a button that calls this. Ignored when `href` is set. |
+| `chevron` | `boolean` | — | A trailing chevron, for a row that leads somewhere. |
+
+### Frame.Section
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `title` | `ReactNode` | — | The heading over the section's rows. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+The panel draws a hairline between each of its children, so rows never need to know whether they come first.
+
+Under `band` and `inset` the panel's corners are the shell's less the band, so the two curves stay concentric.
+
+The variant reaches the parts through a data attribute and CSS rather than React context, which is what keeps the frame a server component.

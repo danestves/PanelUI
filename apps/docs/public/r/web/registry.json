@@ -33,6 +33,23 @@
       ]
     },
     {
+      "name": "card",
+      "type": "registry:component",
+      "title": "Card",
+      "description": "A surface that holds one thing, with a heading, an action beside it and a footer.",
+      "dependencies": [
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "components/panelui/card.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/card.tsx"
+        }
+      ]
+    },
+    {
       "name": "command-dock",
       "type": "registry:component",
       "title": "Command Dock",
@@ -127,6 +144,23 @@
           "path": "components/panelui/flow/flow-paths.ts",
           "type": "registry:component",
           "target": "@components/panelui/flow/flow-paths.ts"
+        }
+      ]
+    },
+    {
+      "name": "frame",
+      "type": "registry:component",
+      "title": "Frame",
+      "description": "A panel of rows set into a tray, with the tray's top strip carrying the title.",
+      "dependencies": [
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "components/panelui/frame.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/frame.tsx"
         }
       ]
     },
@@ -266,6 +300,24 @@
           "path": "components/panelui/rolling-number.tsx",
           "type": "registry:component",
           "target": "@components/panelui/rolling-number.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sheet",
+      "type": "registry:component",
+      "title": "Sheet",
+      "description": "A panel that rises from an edge of the screen, floating clear of it, and leaves with a swipe.",
+      "dependencies": [
+        "@base-ui/react",
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "components/panelui/sheet.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/sheet.tsx"
         }
       ]
     },

@@ -5,9 +5,12 @@ Generated from the collection's source. Read a component's own file before using
 ## Overlays
 
 - [Command Dock](components/command-dock.md) — A small button that opens into a field, with the answer arriving under it a row at a time.
+- [Sheet](components/sheet.md) — A panel that rises from an edge of the screen, floating clear of it, and leaves with a swipe.
 
 ## Layout and structure
 
+- [Card](components/card.md) — A surface that holds one thing, with a heading, an action beside it and a footer.
+- [Frame](components/frame.md) — A panel of rows set into a tray, with the tray's top strip carrying the title.
 - [Lane Board](components/lane-board.md) — Lanes of cards that can be dragged within a lane and from one lane to another.
 - [Tilt Card](components/tilt-card.md) — A card that leans towards the pointer, with layers inside it that move by their depth.
 

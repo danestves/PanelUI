@@ -1,0 +1,45 @@
+{
+  "slug": "card",
+  "demo": "form",
+  "demoOptions": {
+    "height": 460
+  },
+  "intro": "Use it to hold one thing on a page: a plan, a setting, a summary, an item in a grid. It is a bordered surface with a header, a body and a footer, and the header keeps a place in its top trailing corner for a control that belongs to the whole card.\n\nThe padding lives on the parts, not on the card. A picture that should reach the card's edges goes straight inside it with `overflow-hidden` on the card.\n\nIt has no state and no event handlers of its own, so it renders as a server component.\n\nFor a list of rows under a title, use [Frame](/docs/web/components/frame).",
+  "usage": "<Card>\n  <Card.Header>\n    <Card.Title>Create a workspace</Card.Title>\n    <Card.Description>Start on the free plan and invite your team later.</Card.Description>\n    <Card.Action>\n      <Button variant=\"link\">Sign in</Button>\n    </Card.Action>\n  </Card.Header>\n  <Card.Content>\n    <Field>\n      <FieldLabel>Work email</FieldLabel>\n      <Input type=\"email\" />\n    </Field>\n  </Card.Content>\n  <Card.Footer variant=\"panel\">\n    <Button>Create workspace</Button>\n  </Card.Footer>\n</Card>",
+  "anatomy": "<Card>\n  <Card.Header>\n    <Card.Title />\n    <Card.Description />\n    <Card.Action />\n  </Card.Header>\n  <Card.Content />\n  <Card.Footer />\n</Card>",
+  "parts": {
+    "Header": "The title, the line under it, and the action. It switches to two columns when there is an action.",
+    "Title": "What the card is about. An `h3` by default; `as` picks another level to fit the page.",
+    "Description": "A line under the title.",
+    "Action": "A control for the whole card, held in the header's top trailing corner whatever order it is written in.",
+    "Content": "The body. It starts with top padding of its own when the card has no header.",
+    "Footer": "The row at the bottom. `variant=\"panel\"` makes it a darker band set into the card, for actions."
+  },
+  "examples": [
+    {
+      "title": "Sizes",
+      "description": "`size=\"sm\"` tightens the padding and the title, for a card in a dense grid.",
+      "demo": "sizes",
+      "height": 220
+    },
+    {
+      "title": "Footers",
+      "description": "A `plain` footer continues the card. A `panel` footer is a band set into its bottom, which reads as what you do with the card rather than more of what it says.",
+      "demo": "footer",
+      "height": 300
+    },
+    {
+      "title": "Image",
+      "description": "A picture placed first in the card reaches its edges. Give the card `overflow-hidden` so the picture takes its top corners; the parts after it keep their own padding.",
+      "demo": "image",
+      "height": 480
+    },
+    {
+      "title": "In a list",
+      "description": "`as=\"li\"` puts the card in a list, and `Card.Title`'s `as` sets the heading level to fit the page around it.",
+      "demo": "list",
+      "height": 200
+    }
+  ],
+  "notes": "`as` on the card renders it as a `div`, `article`, `section` or `li`. Use `article` for a card that makes sense on its own and `li` inside a list.\n\n`Card.Title` is a heading so the page outline includes it. Set its level with `as`, from `h2` to `h4`, or `div` for a card that should stay out of the outline."
+}

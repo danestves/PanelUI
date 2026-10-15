@@ -106,5 +106,32 @@
       "category": "overlays",
       "title": "Command Dock"
     }
+  ],
+  "sheet": [
+    "Sheet",
+    "A panel that rises from an edge of the screen, floating clear of it, and leaves with a swipe.",
+    "react sheet bottom sheet drawer ios component",
+    {
+      "addedIn": "0.2.0",
+      "category": "overlays"
+    }
+  ],
+  "card": [
+    "Card",
+    "A surface that holds one thing, with a heading, an action beside it and a footer.",
+    "react card component header footer",
+    {
+      "addedIn": "0.2.0",
+      "category": "layout"
+    }
+  ],
+  "frame": [
+    "Frame",
+    "A panel of rows set into a tray, with the tray's top strip carrying the title.",
+    "react frame widget panel rows component",
+    {
+      "addedIn": "0.2.0",
+      "category": "layout"
+    }
   ]
 }

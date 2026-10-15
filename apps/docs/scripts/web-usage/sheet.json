@@ -1,0 +1,48 @@
+{
+  "slug": "sheet",
+  "demo": "event",
+  "demoOptions": {
+    "height": 180
+  },
+  "intro": "Use it for a task that belongs to the page but should not leave it: answering an invitation, editing a profile, changing a setting. It rises from an edge, stands a few pixels clear of every side with its corners rounded, and goes back with a swipe, the Escape key or a click outside.\n\nA sheet that needs the whole height can meet the edges instead: set `size=\"full\"` or `detached={false}`.\n\nOpen a sheet from inside another and the first one steps back behind it. Wrap the app in `Sheet.Stage` and the page steps back too.\n\nFor a decision that needs an answer before anything else, use a dialog. For one question with a written answer, use [Feedback](/docs/web/components/feedback).",
+  "usage": "<Sheet>\n  <Sheet.Trigger render={<Button />}>Edit profile</Sheet.Trigger>\n  <Sheet.Content>\n    <Sheet.Header title=\"Edit profile\" description=\"Shown on your public page.\" />\n    <Sheet.Body>\n      <Field>\n        <FieldLabel>Name</FieldLabel>\n        <Input defaultValue=\"Noor Haddad\" />\n      </Field>\n    </Sheet.Body>\n    <Sheet.Footer>\n      <Sheet.Close render={<Button />}>Save changes</Sheet.Close>\n      <Sheet.Close render={<Button variant=\"ghost\" />}>Cancel</Sheet.Close>\n    </Sheet.Footer>\n  </Sheet.Content>\n</Sheet>",
+  "anatomy": "<Sheet.Stage>\n  <Sheet>\n    <Sheet.Trigger />\n    <Sheet.Content>\n      <Sheet.Header>\n        <Sheet.Title />\n        <Sheet.Description />\n      </Sheet.Header>\n      <Sheet.Body />\n      <Sheet.Footer>\n        <Sheet.Close />\n      </Sheet.Footer>\n    </Sheet.Content>\n  </Sheet>\n</Sheet.Stage>",
+  "parts": {
+    "Trigger": "What opens the sheet. A plain button, or your own through `render`.",
+    "Content": "The sheet and the backdrop behind it. It draws the grabber on a top or bottom sheet and the round close button; `showGrabber` and `showClose` turn them off. `inline` draws it in the page instead of over it.",
+    "Header": "The title and a line under it, as `title` and `description` or as `Title` and `Description` children. It leaves room for the close button on the same line.",
+    "Title": "The sheet's name. It is also what a screen reader announces when the sheet opens.",
+    "Description": "A sentence under the title, read out after it.",
+    "Body": "The part that scrolls. The header and footer stay where they are while it moves.",
+    "Footer": "The actions, stacked full width.",
+    "Close": "Closes the sheet, even when `dismissible` is off. Give it `render` to make your own button close it.",
+    "Stage": "Wraps the page. While a sheet inside it is open, the page steps back slightly and rounds its corners. Set `--stage-radius` to the radius of what it sits in, less the gap, so the two corners are concentric."
+  },
+  "examples": [
+    {
+      "title": "From any edge",
+      "description": "`side` sets the edge the sheet rises from and is swiped back to. Side sheets run the full height, still clear of the edges.",
+      "demo": "sides",
+      "height": 160
+    },
+    {
+      "title": "A sheet from a sheet",
+      "description": "Put a second `Sheet` inside the first one's content. It slides over from the same edge, and the first one steps back: a little smaller, pushed inward, and faded. Only the first sheet darkens the page.",
+      "demo": "nested",
+      "height": 160
+    },
+    {
+      "title": "A sheet from a sheet, from any edge",
+      "description": "Stacking works from every side. The sheet behind is pushed inward from its own edge, so a strip of it still shows.",
+      "demo": "nested-sides",
+      "height": 160
+    },
+    {
+      "title": "The page steps back",
+      "description": "Everything inside `Sheet.Stage` steps back slightly while a sheet is open, so the sheet sits on a layer above the page. Here the stage sits in a frame with 32px corners, so `--stage-radius` is 26px.",
+      "demo": "stage",
+      "height": 420
+    }
+  ],
+  "notes": "Swiping follows the pointer, and a quick flick toward the edge closes the sheet even when it has not moved far.\n\n`dismissible={false}` keeps a click outside, Escape and a swipe from closing it. Only `Sheet.Close` and your own `open` state close it then.\n\n`size` applies to top and bottom sheets. Side sheets always run the full height.\n\nFocus moves into the sheet when it opens and returns to the trigger when it closes. The page behind cannot be scrolled or focused while it is open.\n\nWith reduced motion turned on, the sheet appears and disappears without sliding."
+}

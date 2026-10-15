@@ -3,15 +3,18 @@
   "pages": [
     "!index",
     "bar-picker",
+    "card",
     "command-dock",
     "day-grid",
     "feedback",
     "flow",
+    "frame",
     "kpi",
     "lane-board",
     "planet",
     "range-meter",
     "rolling-number",
+    "sheet",
     "tilt-card"
   ]
 }
