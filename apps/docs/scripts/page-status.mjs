@@ -64,6 +64,32 @@ function isRecent(version, mark, current) {
   return minor - thenMinor < BADGE_FOR_MINORS[mark];
 }
 
+/** `x.y.z`, the only shape `addedIn` and `updatedIn` are compared as. */
+const VERSION = /^\d+\.\d+\.\d+$/;
+
+/**
+ * Turn a mistyped mark into a failed generation rather than a wrong sidebar.
+ *
+ * Both failures are silent otherwise. `"0.2"` or `"v0.2.0"` splits into numbers
+ * that compare as something, so the dot lands on the wrong releases with nothing
+ * to say why; and an `updatedIn` older than its `addedIn` can never show, because
+ * the "new" window covers it, which reads as the field being ignored.
+ */
+function checkMarks({ addedIn, updatedIn }, label) {
+  for (const [key, value] of [['addedIn', addedIn], ['updatedIn', updatedIn]]) {
+    if (value !== undefined && !VERSION.test(String(value))) {
+      throw new Error(`${label}: ${key} "${value}" is not a version — write it as x.y.z.`);
+    }
+  }
+  if (addedIn && updatedIn) {
+    const [a, b] = [addedIn, updatedIn].map((v) => v.split('.').map(Number));
+    const older = a[0] !== b[0] ? b[0] < a[0] : a[1] !== b[1] ? b[1] < a[1] : b[2] < a[2];
+    if (older) {
+      throw new Error(`${label}: updatedIn ${updatedIn} is older than addedIn ${addedIn}.`);
+    }
+  }
+}
+
 /**
  * Which dot a component gets, if any.
  *
@@ -72,7 +98,9 @@ function isRecent(version, mark, current) {
  * `updatedIn` is bumped by hand when a component's API changes, and forgetting
  * to clear it costs nothing — it clears itself at the next release.
  */
-export function statusOf({ alpha, beta, addedIn, updatedIn }, current = libVersion) {
+export function statusOf(options, current = libVersion, label = 'page') {
+  checkMarks(options, label);
+  const { alpha, beta, addedIn, updatedIn } = options;
   // `alpha` and `beta` win and never expire: they state how settled the API
   // is, not which release it landed in, so they come off the page when someone
   // decides it has settled and not a version sooner. Alpha outranks beta so a

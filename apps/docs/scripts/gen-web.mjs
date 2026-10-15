@@ -175,7 +175,7 @@ for (const slug of slugs) {
   if (!c) throw new Error(`gen-web: no source found for ${slug}`);
   const item = buildItem(slug);
 
-  const status = statusOf(optionsOf(entry), webVersion);
+  const status = statusOf(optionsOf(entry), webVersion, `web-meta.json ${slug}`);
   const frontmatter = [
     '---',
     `title: ${yamlScalar(titleOf(entry))}`,

@@ -191,6 +191,15 @@ Never hand-write a `status` field into an MDX file — it is generated, and the 
 `docs:generate` will drop it. The whole point of deriving it is that nobody has to remember to
 take the badge off.
 
+**The web collection works the same way, on its own clock.** `apps/docs/scripts/web-meta.json`
+takes the same `addedIn`, `updatedIn`, `alpha` and `beta` keys, and `gen-web.mjs` measures them
+against `packages/web/package.json` rather than the library — a component in web 0.1.0 is new
+through web 0.3.0 however far the library has moved. Set `addedIn` to the web version about to
+ship, and `updatedIn` after the web version bump. Blocks (`blocks.json`) use the library's clock.
+All three go through `statusOf()` in `scripts/page-status.mjs`, which throws on a version that is
+not `x.y.z` and on an `updatedIn` older than its `addedIn`; `test/page-status.test.mjs` pins the
+windows.
+
 ### Full-screen demos go behind a version row
 
 A component whose demo needs the whole screen — a chat transcript, a scroller, an editor — is

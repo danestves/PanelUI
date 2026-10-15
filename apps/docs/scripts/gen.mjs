@@ -223,7 +223,7 @@ for (const [slug, entry] of Object.entries(meta)) {
       ? previewVideoTag(u.previewVideo)
       : '';
 
-  const status = statusOf(options);
+  const status = statusOf(options, undefined, `meta.json ${slug}`);
 
   /*
    * The alpha and beta marks, said on the page as well as in the sidebar.

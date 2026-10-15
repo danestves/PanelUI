@@ -74,7 +74,7 @@ for (const [slug, entry] of Object.entries(blocks)) {
   const [file] = item.files;
   if (file.content.includes('```')) throw new Error(`${slug}: source contains a code fence`);
   const component = exportedBlock(slug, file.content);
-  const status = statusOf(options);
+  const status = statusOf(options, undefined, `blocks.json ${slug}`);
   const target = file.path.replace(/^ui\//, 'components/ui/');
 
   const sections = [
