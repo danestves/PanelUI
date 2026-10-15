@@ -358,6 +358,9 @@ A clear bug report is how most fixes here start. Thank you to everyone who took 
   <a href="https://github.com/aibohphobia1" title="@aibohphobia1"><img src="https://github.com/aibohphobia1.png?size=112" width="56" height="56" alt="@aibohphobia1" /></a>
   <a href="https://github.com/Valharault" title="@Valharault"><img src="https://github.com/Valharault.png?size=112" width="56" height="56" alt="@Valharault" /></a>
   <a href="https://github.com/Pok09" title="@Pok09"><img src="https://github.com/Pok09.png?size=112" width="56" height="56" alt="@Pok09" /></a>
+  <a href="https://github.com/Cyberistic" title="@Cyberistic"><img src="https://github.com/Cyberistic.png?size=112" width="56" height="56" alt="@Cyberistic" /></a>
+  <a href="https://github.com/aymkopi" title="@aymkopi"><img src="https://github.com/aymkopi.png?size=112" width="56" height="56" alt="@aymkopi" /></a>
+  <a href="https://github.com/techzealot" title="@techzealot"><img src="https://github.com/techzealot.png?size=112" width="56" height="56" alt="@techzealot" /></a>
 </p>
 
 ## License
