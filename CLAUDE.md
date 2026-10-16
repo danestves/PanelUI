@@ -758,3 +758,23 @@ SwiftUI but comes back looking like iOS 18 has not answered it.
 - Every component: `className` passthrough, accessibility role/state wiring, dark-mode via theme tokens (no hardcoded colors — resolve dynamic colors with `useCSSVariable`).
 - Overlays (Dialog, BottomSheet, Select) mount lazily via `Portal` and unmount after exit animations.
 - Compound components via `Object.assign` (e.g. `Card.Header`, `Dialog.Content`).
+- **Compose with parts, never with styled elements.** Code a reader copies (a web demo in
+  `apps/docs/components/web-demos`, a `usage` or `anatomy` string, a block, an example screen)
+  builds a component from its dotted parts: `Frame.Header`, `CommandDock.Row`, `Stat.Value`. It
+  never hand-builds one from a `div`, `h3`, `p` or `span` carrying the classes a part has. The
+  reader copies the markup, not the component, and a hand-built header drifts from the real one the
+  first time either changes. Six web demos once hand-built Frame's `band` shell, written before
+  Frame existed, and they had already drifted from it by two pixels.
+  - Before writing a styled element, look for the part: in the component itself, in Frame, Card
+    and Stat, and in the docs' `@/components/ui`.
+  - If the anatomy has no part, add the part to the library first: a slot in the module-scope
+    `tv()`, `data-slot`, a `displayName` of `'Name.Part'`, the `Object.assign` *and* the named
+    export, `src/index.ts`, and the page's `anatomy` and `parts` in `web-usage/<slug>.json`. Then
+    use it.
+  - Plain elements are for layout around a component (a column putting a widget above its
+    buttons, a grid of cards), for drawn illustrations, and for page text reporting a demo's state
+    ("Chosen: …"). Never for titles, values, labels, headers, rows or surfaces.
+  - `className` on a part is for layout: width, position, gap, margin. Restyling a part's colour
+    or type at the call site means the part is missing a variant.
+  - Moving a demo onto parts must not move a pixel. Snapshot every preview's computed styles and
+    boxes before the change, in light and dark, and diff them after.
