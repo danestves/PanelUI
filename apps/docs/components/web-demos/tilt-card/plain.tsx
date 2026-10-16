@@ -1,17 +1,20 @@
 'use client';
 
 import { TiltCard } from 'panelui-web/tilt-card';
+import { Stat } from 'panelui-web/stat';
 
 export default function TiltCardPlain() {
   return (
     <TiltCard tilt={12} glare={false} className="w-full max-w-xs" cardClassName="p-5">
-      <p className="text-sm text-muted-foreground">Team plan</p>
-      <p className="mt-1 text-3xl font-bold tracking-tight">
-        €12 <span className="text-sm font-medium text-muted-foreground">a seat, monthly</span>
-      </p>
-      <p className="mt-3 text-sm text-muted-foreground">
+      <Stat.Content>
+        <Stat.Label>Team plan</Stat.Label>
+        <Stat.Value size="md">
+          €12 <Stat.Unit className="ms-0">a seat, monthly</Stat.Unit>
+        </Stat.Value>
+      </Stat.Content>
+      <TiltCard.Description className="mt-3">
         Shared notebooks, version history for a year, and single sign-on.
-      </p>
+      </TiltCard.Description>
     </TiltCard>
   );
 }

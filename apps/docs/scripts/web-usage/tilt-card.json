@@ -5,10 +5,12 @@
     "height": 440
   },
   "intro": "Use it where a card is there to be looked at more than read: a feature on a landing page, a plan, something collectable. The card leans a few degrees towards the pointer and a soft light sits under it. Layers inside the card are lifted off it and move against it as it leans, which gives a flat drawing a front and a back.\n\nThe lean is decoration. It does nothing on a touch screen and holds still under reduced motion, so anything the card has to say goes in its contents.\n\nFor cards in a dense grid that someone works through, such as a list of records, use a plain card. A screen where everything leans is tiring to use.",
-  "usage": "<TiltCard color=\"info\" cardClassName=\"p-5\">\n  <TiltCard.Layer depth={24}>{figure}</TiltCard.Layer>\n  <TiltCard.Layer depth={8}>\n    <h3>Sync</h3>\n  </TiltCard.Layer>\n</TiltCard>",
-  "anatomy": "<TiltCard>\n  <TiltCard.Layer depth={…}>…</TiltCard.Layer>\n</TiltCard>",
+  "usage": "<TiltCard color=\"info\" cardClassName=\"p-5\">\n  <TiltCard.Layer depth={24}>{figure}</TiltCard.Layer>\n  <TiltCard.Layer depth={8}>\n    <TiltCard.Title>Sync</TiltCard.Title>\n    <TiltCard.Description>Changes reach your other devices in seconds.</TiltCard.Description>\n  </TiltCard.Layer>\n</TiltCard>",
+  "anatomy": "<TiltCard>\n  <TiltCard.Layer depth={…}>…</TiltCard.Layer>\n  <TiltCard.Layer depth={…}>\n    <TiltCard.Title />\n    <TiltCard.Description />\n  </TiltCard.Layer>\n</TiltCard>",
   "parts": {
-    "Layer": "Something lifted off the card by `depth`, in pixels. The further out, the further it moves as the card leans."
+    "Layer": "Something lifted off the card by `depth`, in pixels. The further out, the further it moves as the card leans.",
+    "Title": "What the card is about. A heading, `h3` unless `as` says otherwise.",
+    "Description": "A line or two of body text under the title."
   },
   "examples": [
     {

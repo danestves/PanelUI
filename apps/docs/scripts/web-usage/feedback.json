@@ -6,7 +6,7 @@
   },
   "intro": "Use it to ask for a sentence: what went wrong, what to fix first, why somebody gave the score they did. It is a dialog whose body is a place to write, with Cancel and Submit in the band around it.\n\n`Submit` cannot be pressed while the field is empty, and it does not close the dialog. You close it once the message has been sent, so a send that fails still has somewhere to say so.\n\nFor a yes-or-no confirmation use a plain dialog. For a form with several fields, build the form.",
   "usage": "<Feedback>\n  <Feedback.Trigger>Send feedback</Feedback.Trigger>\n  <Feedback.Content>\n    <Feedback.Panel>\n      <Feedback.Title>What should we fix first?</Feedback.Title>\n      <Feedback.Close />\n      <Feedback.Field placeholder=\"Tell us what got in your way\" />\n    </Feedback.Panel>\n    <Feedback.Footer>\n      <Feedback.Cancel />\n      <Feedback.Submit onSubmit={(message) => send(message)} />\n    </Feedback.Footer>\n  </Feedback.Content>\n</Feedback>",
-  "anatomy": "<Feedback>\n  <Feedback.Trigger />\n  <Feedback.Content>\n    <Feedback.Panel>\n      <Feedback.Title />\n      <Feedback.Close />\n      <Feedback.Field />\n    </Feedback.Panel>\n    <Feedback.Footer>\n      <Feedback.Cancel />\n      <Feedback.Submit />\n    </Feedback.Footer>\n  </Feedback.Content>\n</Feedback>",
+  "anatomy": "<Feedback>\n  <Feedback.Trigger />\n  <Feedback.Content>\n    <Feedback.Panel>\n      <Feedback.Title />\n      <Feedback.Close />\n      <Feedback.Rating />\n      <Feedback.Field />\n      <Feedback.Description />\n      <Feedback.Message />\n    </Feedback.Panel>\n    <Feedback.Footer>\n      <Feedback.Cancel />\n      <Feedback.Submit />\n    </Feedback.Footer>\n  </Feedback.Content>\n</Feedback>",
   "parts": {
     "Trigger": "What opens the dialog. A plain button, or your own through `render`.",
     "Content": "The shell: the darker band and everything set in it. `inline` draws it in the page instead of over it.",
@@ -14,6 +14,9 @@
     "Title": "The question. In a dialog it is also the dialog's accessible name.",
     "Close": "The ✕ in the corner of the panel.",
     "Field": "The text area. It has no border of its own, because it is already inside a well.",
+    "Rating": "A row of round buttons, one per score from 1 to `max`, with `startLabel` and `endLabel` under the ends. `onValueChange` is called with the score pressed. Use it as the first step and ask for the words once a score is in; give it the field's `minHeight` so the dialog keeps its size between the two.",
+    "Description": "Body text in place of the field, such as a thank-you once the message has gone. In a dialog it is also the dialog's description.",
+    "Message": "A short line under the field. `muted`, the default, is read out politely as it changes: how much is left to write. `tone=\"destructive\"` is for a failure and is announced at once.",
     "Footer": "The row the two actions sit in.",
     "Cancel": "Closes the dialog. Call `preventDefault` in `onClick` to do something else, such as going back a step.",
     "Submit": "Calls `onSubmit` with the message. Disabled while the field is empty unless you pass `disabled` yourself."

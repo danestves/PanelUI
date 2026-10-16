@@ -20,7 +20,7 @@
     "Progress": "A bar towards a target, with a label and the percentage over it.",
     "Footer": "A quiet line under everything.",
     "Separator": "A rule between two parts of one card.",
-    "Group": "Several metrics as one panel, side by side or stacked, with a rule between each and the next."
+    "Group": "Several metrics as one panel, side by side or stacked, with a rule between each and the next. `surface` draws it as a card of its own."
   },
   "examples": [
     {

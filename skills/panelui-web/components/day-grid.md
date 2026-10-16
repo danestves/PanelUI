@@ -32,11 +32,20 @@ const days: DayCell[] = [
 ## Parts
 
 ```tsx
+<DayGrid.Weekdays />
 <DayGrid cells={…} />
 <DayGrid.Legend />
+<DayGrid.Caption>
+  <DayGrid.Title />
+  <DayGrid.Description />
+</DayGrid.Caption>
 ```
 
 - `DayGrid.Legend` — The five sizes in a row, quietest to busiest, with a word at each end. It is a sibling of the grid, so place it wherever the layout wants it and give it the same `color`.
+- `DayGrid.Weekdays` — The days of the week down the side of a grid that runs a week to a column (`rows={7}`). Put it in a row with the grid. `labels` sets the names, an empty string for a row left unnamed; the default names every other day.
+- `DayGrid.Caption` — What the picked day holds, written out beside the grid. It is read out politely each time the pick changes.
+- `DayGrid.Title` — The picked day's figure, such as "17 merged".
+- `DayGrid.Description` — The picked day's date, quieter, under its figure.
 
 ## Props
 
@@ -63,9 +72,15 @@ Every part also takes the props of the element it renders, and a `className`.
 | `less` | `ReactNode` | `'Less'` | The word at the quiet end of the scale. |
 | `more` | `ReactNode` | `'More'` | The word at the busy end of the scale. |
 
+#### `DayGridWeekdaysProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `labels` | `string[]` | — | The name written beside each row, first row first. An empty string leaves a row unnamed. Default Monday to Sunday with every other name left out. |
+
 ## In a Server Component
 
-`DayGrid` is a client component. A Server Component cannot read `DayGrid.Legend` off the import, so import each part by name: `DayGridLegend`.
+`DayGrid` is a client component. A Server Component cannot read `DayGrid.Legend` off the import, so import each part by name: `DayGridLegend`, `DayGridWeekdays`, `DayGridCaption`, `DayGridTitle`, `DayGridDescription`.
 
 ## Notes
 
@@ -107,6 +122,8 @@ When the days are buttons, Tab moves to the selected day, or the first. The arro
 'use client';
 
 import { DayGrid, type DayCell, type DayLevel } from '@/components/panelui/day-grid';
+import { Frame } from '@/components/panelui/frame';
+import { Stat } from '@/components/panelui/stat';
 
 /** Words written on each of the last 112 days, oldest first, starting on a Monday. */
 const WORDS = [
@@ -134,51 +151,37 @@ const CELLS: DayCell[] = WORDS.map((words, index) => {
   };
 });
 
-const WEEKDAYS = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'];
-
 export default function DayGridWriting() {
   const total = WORDS.reduce((sum, words) => sum + words, 0);
   const written = WORDS.filter((words) => words > 0).length;
 
   return (
-    // A frame: a band that names what is inside, round a panel that holds it.
-    <div className="w-full max-w-2xl rounded-3xl bg-muted p-1.5">
-      <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-        <h3 className="text-sm font-medium">Words written</h3>
-        <p className="text-sm text-muted-foreground">Last 16 weeks</p>
-      </div>
+    <Frame variant="band" className="w-full max-w-2xl">
+      <Frame.Header>
+        <Frame.Title>Words written</Frame.Title>
+        <Frame.Action>Last 16 weeks</Frame.Action>
+      </Frame.Header>
 
-      <div className="flex flex-col gap-4 rounded-[1.125rem] border bg-card p-5 text-card-foreground shadow-xs">
-        <div className="flex items-end justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <p className="text-sm text-muted-foreground">In total</p>
-            <p className="text-4xl font-bold leading-none tracking-tight">
-              {total.toLocaleString('en-GB')}
-            </p>
-          </div>
-          <p className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+      <Frame.Panel className="gap-4 p-5">
+        <Stat>
+          <Stat.Content>
+            <Stat.Label>In total</Stat.Label>
+            <Stat.Value>{total.toLocaleString('en-GB')}</Stat.Value>
+          </Stat.Content>
+          <Stat.Badge>
             {written} of {WORDS.length} days
-          </p>
-        </div>
+          </Stat.Badge>
+        </Stat>
 
         {/* A week to a column: `rows` runs the days downwards. */}
         <div className="flex gap-2">
-          <div
-            aria-hidden="true"
-            className="grid grid-rows-7 gap-1 text-xs leading-none text-muted-foreground"
-          >
-            {WEEKDAYS.map((day, index) => (
-              <span key={index} className="flex items-center">
-                {day}
-              </span>
-            ))}
-          </div>
+          <DayGrid.Weekdays />
           <DayGrid cells={CELLS} rows={7} color="success" label="Words written" />
         </div>
 
         <DayGrid.Legend color="success" className="self-end" />
-      </div>
-    </div>
+      </Frame.Panel>
+    </Frame>
   );
 }
 ```

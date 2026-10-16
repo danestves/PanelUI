@@ -12,7 +12,7 @@
     "Title": "A quiet caption in the header. Inside `Frame.Content` it is the row's subject instead: full colour, and cut to one line. Use `as=\"p\"` there.",
     "Description": "A line under a title, in the header or in a row.",
     "Action": "The header's trailing side: a short status, a link, a small button.",
-    "Panel": "The card the rows sit on. It draws the hairline between its children.",
+    "Panel": "The card the rows sit on. It draws the hairline between its children, except under `band`, where it holds one figure and draws none.",
     "Row": "One line of the panel. `href` makes it a link, `onClick` a button, and `chevron` marks one that leads somewhere.",
     "Media": "A row's leading icon or avatar. It keeps its size.",
     "Content": "The middle of a row. It takes the space left and can shrink past its content, so a long line truncates instead of pushing the actions off the edge.",

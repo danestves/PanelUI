@@ -11,6 +11,8 @@ status: new
 
 import { useState } from 'react';
 import { RangeMeter, type RangeMeterColor } from '@/components/panelui/range-meter';
+import { Frame } from '@/components/panelui/frame';
+import { Stat } from '@/components/panelui/stat';
 
 const FASTEST = 80;
 const SLOWEST = 600;
@@ -28,26 +30,23 @@ export default function RangeMeterResponseTime() {
   const [time, setTime] = useState(240);
 
   return (
-    // A frame: a band that names what is inside, round a panel that holds it.
-    <div className="w-full max-w-sm rounded-3xl bg-muted p-1.5">
-      <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-        <h3 className="text-sm font-medium">Checkout page</h3>
-        <p className="text-sm text-muted-foreground">Budget {BUDGET} ms</p>
-      </div>
+    <Frame variant="band" className="w-full max-w-sm">
+      <Frame.Header>
+        <Frame.Title>Checkout page</Frame.Title>
+        <Frame.Action>Budget {BUDGET} ms</Frame.Action>
+      </Frame.Header>
 
-      <div className="flex flex-col gap-4 rounded-[1.125rem] border bg-card p-5 text-card-foreground shadow-xs">
-        <div className="flex items-end justify-between gap-4" aria-live="polite">
-          <div className="flex flex-col gap-1">
-            <p className="text-sm text-muted-foreground">Response time</p>
-            <p className="text-4xl font-bold leading-none tracking-tight">
+      <Frame.Panel className="gap-4 p-5">
+        <Stat aria-live="polite">
+          <Stat.Content>
+            <Stat.Label>Response time</Stat.Label>
+            <Stat.Value>
               {time}
-              <span className="ms-1.5 text-base font-medium text-muted-foreground">ms</span>
-            </p>
-          </div>
-          <p className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-            {verdictOf(time)}
-          </p>
-        </div>
+              <Stat.Unit>ms</Stat.Unit>
+            </Stat.Value>
+          </Stat.Content>
+          <Stat.Badge>{verdictOf(time)}</Stat.Badge>
+        </Stat>
 
         <div className="flex flex-col gap-2">
           <RangeMeter
@@ -61,13 +60,10 @@ export default function RangeMeterResponseTime() {
             label="Response time"
             valueText={`${time} milliseconds`}
           />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{FASTEST} ms</span>
-            <span>{SLOWEST} ms</span>
-          </div>
+          <RangeMeter.Scale start={`${FASTEST} ms`} end={`${SLOWEST} ms`} />
         </div>
-      </div>
-    </div>
+      </Frame.Panel>
+    </Frame>
   );
 }
 ```
@@ -133,6 +129,7 @@ import { RangeMeter } from "@/components/panelui/range-meter"
 ```
 
 ```tsx
+<RangeMeter.Label>Response time</RangeMeter.Label>
 <RangeMeter
   min={80}
   max={600}
@@ -141,7 +138,19 @@ import { RangeMeter } from "@/components/panelui/range-meter"
   onValueChange={setTime}
   marker={300}
 />
+<RangeMeter.Scale start="80 ms" end="600 ms" />
 ```
+
+## Composition
+
+```tsx
+<RangeMeter.Label />
+<RangeMeter value={…} />
+<RangeMeter.Scale start="…" end="…" />
+```
+
+- **`RangeMeter.Label`** — The meter's name, written over it. The meter's own `label` prop is what a screen reader says; this is the visible name.
+- **`RangeMeter.Scale`** — What the two ends of the ruler stand for, at either side under it: `start` and `end`.
 
 ## Examples
 
@@ -168,7 +177,7 @@ export default function RangeMeterReadings() {
     <div className="flex w-full max-w-sm flex-col gap-5">
       {READINGS.map((reading) => (
         <div key={reading.name} className="flex flex-col">
-          <span className="text-sm font-medium">{reading.name}</span>
+          <RangeMeter.Label>{reading.name}</RangeMeter.Label>
           <RangeMeter
             value={reading.used}
             color={reading.color}
@@ -215,10 +224,7 @@ export default function RangeMeterBrightness() {
       >
         <SunIcon />
       </RangeMeter>
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>Dim</span>
-        <span>Bright</span>
-      </div>
+      <RangeMeter.Scale start="Dim" end="Bright" />
     </div>
   );
 }
@@ -243,6 +249,13 @@ export default function RangeMeterBrightness() {
 | `formatValue` | `(value: number) => ReactNode` | — | Writes the number in the tag. Defaults to the value as it is. |
 | `label` | `string` | `'Reading'` | What a screen reader calls it. |
 | `valueText` | `string` | — | What a screen reader says for the value: "240 milliseconds". |
+
+### RangeMeter.Scale
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `start` | `ReactNode` | — | The word or figure at the low end. |
+| `end` | `ReactNode` | — | The word or figure at the high end. |
 
 Every part also takes the props of the element it renders, and a `className`.
 
@@ -279,3 +292,11 @@ Left and down lower the value by one step, right and up raise it. Page Up and Pa
 ### Screen readers
 
 Pass `label` to name the reading and `valueText` to say the value with its unit, such as "240 milliseconds".
+
+### Server Components
+
+`RangeMeter` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `RangeMeter.Label` off the import, so each part is also exported by name: `RangeMeterLabel` is `RangeMeter.Label`, and so on for the others.
+
+```tsx
+import { RangeMeter, RangeMeterLabel, RangeMeterScale } from "@/components/panelui/range-meter"
+```

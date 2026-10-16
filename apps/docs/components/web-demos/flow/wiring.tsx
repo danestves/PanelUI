@@ -82,9 +82,10 @@ export default function FlowWiring() {
             key={node.id}
             id={node.id}
             position={wide ? node.across : node.down}
-            className="px-4 py-3"
           >
-            <p className="whitespace-nowrap text-sm font-medium">{node.name}</p>
+            <Flow.NodeContent>
+              <Flow.NodeTitle className="whitespace-nowrap">{node.name}</Flow.NodeTitle>
+            </Flow.NodeContent>
             <Flow.Handle position={into} />
             <Flow.Handle position={out} />
           </Flow.Node>

@@ -9,14 +9,15 @@
   ],
   "intro": "Use it for things that move through a few stages: changes going into a release, tasks, orders. Each stage is a lane with its cards and a count, and a card is dragged to another place in its lane or into another lane.\n\nThe board does not keep the cards. You give it the lanes and it tells you what they should become when a card is set down, so the order on screen is always the order in your state.\n\nThe board has a fixed height. A lane with more cards than fit scrolls on its own, and on a narrow screen the lanes scroll sideways. For one list that only needs reordering, a sortable list is the simpler thing.",
   "usage": "const [lanes, setLanes] = useState<LaneBoardLane<Change>[]>([\n  { id: 'building', title: 'Building', cards: [{ id: 'REL-224', title: 'Faster search' }] },\n  { id: 'shipped', title: 'Shipped', cards: [] },\n])\n\n<LaneBoard\n  lanes={lanes}\n  onLanesChange={setLanes}\n  renderCard={(change) => (\n    <>\n      <LaneBoard.Title>{change.title}</LaneBoard.Title>\n      <LaneBoard.Code>{change.id}</LaneBoard.Code>\n    </>\n  )}\n/>",
-  "anatomy": "<LaneBoard\n  lanes={…}\n  renderCard={(card) => (\n    <>\n      <LaneBoard.Title />\n      <LaneBoard.Code />\n      <LaneBoard.Row>\n        <LaneBoard.Steps />\n        <LaneBoard.Meta />\n      </LaneBoard.Row>\n    </>\n  )}\n/>",
+  "anatomy": "<LaneBoard\n  lanes={…}\n  renderCard={(card) => (\n    <>\n      <LaneBoard.Row>\n        <LaneBoard.Title />\n        <LaneBoard.Avatar />\n      </LaneBoard.Row>\n      <LaneBoard.Code />\n      <LaneBoard.Row>\n        <LaneBoard.Steps />\n        <LaneBoard.Meta />\n      </LaneBoard.Row>\n    </>\n  )}\n/>",
   "parts": {
     "Title": "A card's name.",
     "Code": "A card's reference, in a fixed-width face so a column of them lines up.",
-    "Row": "The last line of a card, with something at each end.",
+    "Row": "A line of a card with something at each end. It is the last line unless you move it up, as with a title and an avatar.",
     "Steps": "How far along a card is: a row of dashes with `value` of `max` lit, in the theme colour named by `color`.",
     "Tag": "A word in a pill, for a card's state.",
-    "Meta": "A short figure at the end of the row: a time, a count."
+    "Meta": "A short figure at the end of the row: a time, a count.",
+    "Avatar": "Who a card belongs to, as initials in a small circle."
   },
   "examples": [
     {

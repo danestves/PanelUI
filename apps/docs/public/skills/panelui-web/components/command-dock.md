@@ -25,7 +25,10 @@ It holds one field and a short list. For a conversation that goes back and forth
     <CommandDock.Input placeholder="Try: pricing" />
     <CommandDock.Results>
       {found.map((note) => (
-        <CommandDock.Row key={note.id}>{note.title}</CommandDock.Row>
+        <CommandDock.Row key={note.id}>
+          <CommandDock.RowTitle>{note.title}</CommandDock.RowTitle>
+          <CommandDock.RowMeta>{note.where}</CommandDock.RowMeta>
+        </CommandDock.Row>
       ))}
     </CommandDock.Results>
   </CommandDock.Panel>
@@ -40,7 +43,10 @@ It holds one field and a short list. For a conversation that goes back and forth
   <CommandDock.Panel>
     <CommandDock.Input />
     <CommandDock.Results>
-      <CommandDock.Row />
+      <CommandDock.Row>
+        <CommandDock.RowTitle />
+        <CommandDock.RowMeta />
+      </CommandDock.Row>
       <CommandDock.Status />
     </CommandDock.Results>
   </CommandDock.Panel>
@@ -52,6 +58,8 @@ It holds one field and a short list. For a conversation that goes back and forth
 - `CommandDock.Input` — The field, with a send button. Enter sends too.
 - `CommandDock.Results` — Where the rows go. It takes no room until there is a row or the dock is busy.
 - `CommandDock.Row` — One row of the answer. It slides in when it is added, and `onSelect` makes it a button.
+- `CommandDock.RowTitle` — What the row is. It takes the width the row has spare and is cut to one line.
+- `CommandDock.RowMeta` — Something short at the end of the row, quieter than the title: a date, a place. It keeps its width.
 - `CommandDock.Status` — Three dots and a few words, for while an answer is on its way.
 
 ## Props
@@ -91,7 +99,7 @@ Every part also takes the props of the element it renders, and a `className`.
 
 ## In a Server Component
 
-`CommandDock` is a client component. A Server Component cannot read `CommandDock.Trigger` off the import, so import each part by name: `CommandDockTrigger`, `CommandDockPanel`, `CommandDockInput`, `CommandDockResults`, `CommandDockRow`, `CommandDockStatus`.
+`CommandDock` is a client component. A Server Component cannot read `CommandDock.Trigger` off the import, so import each part by name: `CommandDockTrigger`, `CommandDockPanel`, `CommandDockInput`, `CommandDockResults`, `CommandDockRow`, `CommandDockRowTitle`, `CommandDockRowMeta`, `CommandDockStatus`.
 
 ## Notes
 
@@ -170,8 +178,8 @@ export default function CommandDockFind() {
           {found.map((note) => (
             <CommandDock.Row key={note.title}>
               <FileTextIcon />
-              <span className="min-w-0 flex-1 truncate font-medium">{note.title}</span>
-              <span className="shrink-0 text-muted-foreground">{note.where}</span>
+              <CommandDock.RowTitle>{note.title}</CommandDock.RowTitle>
+              <CommandDock.RowMeta>{note.where}</CommandDock.RowMeta>
             </CommandDock.Row>
           ))}
           {busy ? <CommandDock.Status>Reading the notes</CommandDock.Status> : null}

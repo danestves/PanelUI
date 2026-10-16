@@ -7,7 +7,10 @@
  * ```tsx
  * <TiltCard>
  *   <TiltCard.Layer depth={24}>…a figure…</TiltCard.Layer>
- *   <TiltCard.Layer depth={8}>…its caption…</TiltCard.Layer>
+ *   <TiltCard.Layer depth={8}>
+ *     <TiltCard.Title>Versions</TiltCard.Title>
+ *     <TiltCard.Description>Every save is kept.</TiltCard.Description>
+ *   </TiltCard.Layer>
  * </TiltCard>
  * ```
  *
@@ -53,6 +56,8 @@ const tiltCardVariants = tv({
     // The light is the card's colour, soft and wide, centred on the pointer.
     glare:
       'pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(18rem_circle_at_var(--pu-gx,50%)_var(--pu-gy,50%),color-mix(in_oklab,var(--pu-color)_16%,transparent),transparent_70%)] opacity-0 transition-opacity duration-300 group-data-[tilting]/tilt:opacity-100',
+    title: 'text-base font-semibold',
+    description: 'text-sm text-muted-foreground',
     layer:
       'transition-transform duration-500 ease-out [transform:translate3d(calc(var(--pu-px,0)*var(--pu-depth)*1px),calc(var(--pu-py,0)*var(--pu-depth)*1px),calc(var(--pu-depth)*1px))] group-data-[tilting]/tilt:duration-100 motion-reduce:[transform:none]',
   },
@@ -162,10 +167,33 @@ function TiltCardLayer({ depth = 16, className, style, ...props }: TiltCardLayer
 }
 TiltCardLayer.displayName = 'TiltCard.Layer';
 
+export interface TiltCardTitleProps extends ComponentProps<'h3'> {
+  /** The heading level, to fit the page around the card. Default `h3`. */
+  as?: 'h2' | 'h3' | 'h4' | 'p';
+}
+
+/** What the card is about. */
+function TiltCardTitle({ as: Tag = 'h3', className, ...props }: TiltCardTitleProps) {
+  return <Tag data-slot="tilt-card-title" className={tiltCardVariants().title({ className })} {...props} />;
+}
+TiltCardTitle.displayName = 'TiltCard.Title';
+
+export interface TiltCardDescriptionProps extends ComponentProps<'p'> {}
+
+/** A line or two of body text, under the title. */
+function TiltCardDescription({ className, ...props }: TiltCardDescriptionProps) {
+  return (
+    <p data-slot="tilt-card-description" className={tiltCardVariants().description({ className })} {...props} />
+  );
+}
+TiltCardDescription.displayName = 'TiltCard.Description';
+
 export const TiltCard = Object.assign(TiltCardRoot, {
   Layer: TiltCardLayer,
+  Title: TiltCardTitle,
+  Description: TiltCardDescription,
 });
 
 /* By name as well, for a Server Component, which cannot dot into a client
    module. */
-export { TiltCardLayer };
+export { TiltCardLayer, TiltCardTitle, TiltCardDescription };

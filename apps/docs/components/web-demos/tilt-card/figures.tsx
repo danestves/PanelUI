@@ -60,8 +60,8 @@ export default function TiltCardFigures() {
         <TiltCard key={card.title} color={card.color} cardClassName="flex h-full flex-col gap-6 p-5">
           <div className="flex h-32 items-center justify-center">{card.figure}</div>
           <TiltCard.Layer depth={10} className="flex flex-col gap-1">
-            <h3 className="text-base font-semibold">{card.title}</h3>
-            <p className="text-sm text-muted-foreground">{card.body}</p>
+            <TiltCard.Title>{card.title}</TiltCard.Title>
+            <TiltCard.Description>{card.body}</TiltCard.Description>
           </TiltCard.Layer>
         </TiltCard>
       ))}

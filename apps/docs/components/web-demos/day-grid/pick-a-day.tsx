@@ -35,12 +35,10 @@ export default function DayGridPickADay() {
         onValueChange={setDay}
         label="Pull requests merged"
       />
-      <div className="flex flex-col gap-0.5" aria-live="polite">
-        <p className="text-sm font-medium">
-          {day === null ? 'Pick a day' : `${MERGED[day]} merged`}
-        </p>
-        <p className="text-sm text-muted-foreground">{day === null ? '\u00a0' : dateOf(day)}</p>
-      </div>
+      <DayGrid.Caption>
+        <DayGrid.Title>{day === null ? 'Pick a day' : `${MERGED[day]} merged`}</DayGrid.Title>
+        <DayGrid.Description>{day === null ? '\u00a0' : dateOf(day)}</DayGrid.Description>
+      </DayGrid.Caption>
     </div>
   );
 }

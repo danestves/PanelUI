@@ -9,9 +9,13 @@
   ],
   "intro": "Use it to show how much happened on each day of a period: words written, commits pushed, minutes practised. Each day is a dot that grows with the amount, from a speck for an empty day to a full disc for the busiest, and the days can run along rows or down columns.\n\nIt shows a pattern, not a figure. Nobody can read a count off the size of a dot, so put the number that matters beside the grid, and give each day a `label`: it is shown in a tag when the pointer is over that day.\n\nFor values over two dimensions that are not days, such as hour against weekday, use a table or a chart with axes.",
   "usage": "const days: DayCell[] = [\n  { level: 0, label: '1 Sep, nothing written' },\n  { level: 2, label: '2 Sep, 880 words' },\n  { level: 4, label: '3 Sep, 2,210 words' },\n]\n\n<DayGrid cells={days} columns={7} />\n<DayGrid.Legend />",
-  "anatomy": "<DayGrid cells={…} />\n<DayGrid.Legend />",
+  "anatomy": "<DayGrid.Weekdays />\n<DayGrid cells={…} />\n<DayGrid.Legend />\n<DayGrid.Caption>\n  <DayGrid.Title />\n  <DayGrid.Description />\n</DayGrid.Caption>",
   "parts": {
-    "Legend": "The five sizes in a row, quietest to busiest, with a word at each end. It is a sibling of the grid, so place it wherever the layout wants it and give it the same `color`."
+    "Legend": "The five sizes in a row, quietest to busiest, with a word at each end. It is a sibling of the grid, so place it wherever the layout wants it and give it the same `color`.",
+    "Weekdays": "The days of the week down the side of a grid that runs a week to a column (`rows={7}`). Put it in a row with the grid. `labels` sets the names, an empty string for a row left unnamed; the default names every other day.",
+    "Caption": "What the picked day holds, written out beside the grid. It is read out politely each time the pick changes.",
+    "Title": "The picked day's figure, such as \"17 merged\".",
+    "Description": "The picked day's date, quieter, under its figure."
   },
   "examples": [
     {

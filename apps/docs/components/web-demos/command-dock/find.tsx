@@ -42,8 +42,8 @@ export default function CommandDockFind() {
           {found.map((note) => (
             <CommandDock.Row key={note.title}>
               <FileTextIcon />
-              <span className="min-w-0 flex-1 truncate font-medium">{note.title}</span>
-              <span className="shrink-0 text-muted-foreground">{note.where}</span>
+              <CommandDock.RowTitle>{note.title}</CommandDock.RowTitle>
+              <CommandDock.RowMeta>{note.where}</CommandDock.RowMeta>
             </CommandDock.Row>
           ))}
           {busy ? <CommandDock.Status>Reading the notes</CommandDock.Status> : null}

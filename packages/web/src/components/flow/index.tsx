@@ -6,7 +6,12 @@
  * ```tsx
  * <Flow>
  *   <Flow.Background variant="dots" />
- *   <Flow.Node id="source" position={{ x: 24, y: 40 }}>…</Flow.Node>
+ *   <Flow.Node id="source" position={{ x: 24, y: 40 }}>
+ *     <Flow.NodeContent>
+ *       <Flow.NodeTitle>Source</Flow.NodeTitle>
+ *       <Flow.NodeDescription>main</Flow.NodeDescription>
+ *     </Flow.NodeContent>
+ *   </Flow.Node>
  *   <Flow.Node id="build" position={{ x: 24, y: 200 }}>…</Flow.Node>
  *   <Flow.Edge from="source" to="build" dashed animated arrow />
  *   <Flow.Controls />
@@ -114,6 +119,17 @@ const flowVariants = tv({
       'absolute left-0 top-0 cursor-grab rounded-3xl border border-dashed bg-muted/40 p-3 pt-8 outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing',
     groupLabel:
       'absolute start-4 top-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground',
+    // What goes inside a node. The padding is on the parts, so a header can
+    // draw its rule from edge to edge.
+    nodeHeader: 'flex items-center justify-between gap-3 border-b px-4 py-2.5',
+    // Inside a group item the item already has its padding.
+    nodeContent: 'px-4 py-3 in-data-[slot=flow-group-item]:p-0',
+    nodeTitle: 'text-sm font-medium',
+    nodeDescription: 'text-sm text-muted-foreground in-data-[slot=flow-group-item]:text-xs',
+    nodeBadge:
+      'rounded-full bg-[color-mix(in_oklab,var(--pu-color)_14%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--pu-color)]',
+    groupItem:
+      'flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5 [&_svg]:size-4 [&_svg]:text-muted-foreground',
     handle:
       'absolute z-20 size-3 -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-background bg-muted-foreground outline-none transition-[scale,background-color] hover:scale-150 hover:bg-foreground focus-visible:ring-2 focus-visible:ring-ring',
     edge: 'pointer-events-none absolute left-0 top-0 size-px overflow-visible text-[var(--pu-color)]',
@@ -125,13 +141,16 @@ const flowVariants = tv({
   },
   variants: {
     color: {
-      primary: { edge: '[--pu-color:var(--primary)]' },
-      info: { edge: '[--pu-color:var(--info)]' },
-      success: { edge: '[--pu-color:var(--success)]' },
-      warning: { edge: '[--pu-color:var(--warning)]' },
-      destructive: { edge: '[--pu-color:var(--destructive)]' },
+      primary: { edge: '[--pu-color:var(--primary)]', nodeBadge: '[--pu-color:var(--primary)]' },
+      info: { edge: '[--pu-color:var(--info)]', nodeBadge: '[--pu-color:var(--info)]' },
+      success: { edge: '[--pu-color:var(--success)]', nodeBadge: '[--pu-color:var(--success)]' },
+      warning: { edge: '[--pu-color:var(--warning)]', nodeBadge: '[--pu-color:var(--warning)]' },
+      destructive: { edge: '[--pu-color:var(--destructive)]', nodeBadge: '[--pu-color:var(--destructive)]' },
       // The colour of a hairline that is meant to be seen but not looked at.
-      muted: { edge: '[--pu-color:var(--muted-foreground)]' },
+      muted: {
+        edge: '[--pu-color:var(--muted-foreground)]',
+        nodeBadge: 'bg-muted text-muted-foreground',
+      },
     },
     selected: { true: { node: 'z-20 ring-2 ring-ring' } },
     position: {
@@ -743,7 +762,7 @@ function useMovable({
   };
 }
 
-/** A box on the graph. Whatever is inside it is yours. */
+/** A box on the graph. Fill it with the node parts below, or with anything of your own. */
 function FlowNode({
   id,
   position,
@@ -821,6 +840,68 @@ function FlowGroup({
   );
 }
 FlowGroup.displayName = 'Flow.Group';
+
+/* -------------------------------------------------------------------------- */
+/* What goes in a node                                                        */
+/* -------------------------------------------------------------------------- */
+
+export interface FlowNodeHeaderProps extends ComponentProps<'div'> {}
+
+/** A strip across the top of a node, ruled off from the rest: a step number and a state. */
+function FlowNodeHeader({ className, ...props }: FlowNodeHeaderProps) {
+  return <div data-slot="flow-node-header" className={flowVariants().nodeHeader({ className })} {...props} />;
+}
+FlowNodeHeader.displayName = 'Flow.NodeHeader';
+
+export interface FlowNodeContentProps extends ComponentProps<'div'> {}
+
+/** The body of a node, with the node's padding: a title over a description. */
+function FlowNodeContent({ className, ...props }: FlowNodeContentProps) {
+  return <div data-slot="flow-node-content" className={flowVariants().nodeContent({ className })} {...props} />;
+}
+FlowNodeContent.displayName = 'Flow.NodeContent';
+
+export interface FlowNodeTitleProps extends ComponentProps<'p'> {}
+
+/** What the node is. */
+function FlowNodeTitle({ className, ...props }: FlowNodeTitleProps) {
+  return <p data-slot="flow-node-title" className={flowVariants().nodeTitle({ className })} {...props} />;
+}
+FlowNodeTitle.displayName = 'Flow.NodeTitle';
+
+export interface FlowNodeDescriptionProps extends ComponentProps<'p'> {}
+
+/** A quieter line about the node. Smaller inside a `Flow.GroupItem`. */
+function FlowNodeDescription({ className, ...props }: FlowNodeDescriptionProps) {
+  return (
+    <p data-slot="flow-node-description" className={flowVariants().nodeDescription({ className })} {...props} />
+  );
+}
+FlowNodeDescription.displayName = 'Flow.NodeDescription';
+
+export interface FlowNodeBadgeProps extends Omit<ComponentProps<'span'>, 'color'> {
+  /** Which of the theme's roles it is tinted with. `muted` is grey. Default `muted`. */
+  color?: FlowColor | 'muted';
+}
+
+/** A word in a pill, for a node's state: done, now, waiting. */
+function FlowNodeBadge({ color = 'muted', className, ...props }: FlowNodeBadgeProps) {
+  return (
+    <span data-slot="flow-node-badge" className={flowVariants({ color }).nodeBadge({ className })} {...props} />
+  );
+}
+FlowNodeBadge.displayName = 'Flow.NodeBadge';
+
+export interface FlowGroupItemProps extends ComponentProps<'div'> {}
+
+/**
+ * One thing inside a `Flow.Group` that is not a node of its own: an icon
+ * beside a `Flow.NodeContent`. It moves with the group and edges cannot join it.
+ */
+function FlowGroupItem({ className, ...props }: FlowGroupItemProps) {
+  return <div data-slot="flow-group-item" className={flowVariants().groupItem({ className })} {...props} />;
+}
+FlowGroupItem.displayName = 'Flow.GroupItem';
 
 /* -------------------------------------------------------------------------- */
 /* Handle                                                                     */
@@ -1139,11 +1220,31 @@ export const Flow = Object.assign(FlowRoot, {
   Handle: FlowHandle,
   Edge: FlowEdge,
   Group: FlowGroup,
+  GroupItem: FlowGroupItem,
+  NodeHeader: FlowNodeHeader,
+  NodeContent: FlowNodeContent,
+  NodeTitle: FlowNodeTitle,
+  NodeDescription: FlowNodeDescription,
+  NodeBadge: FlowNodeBadge,
   Controls: FlowControls,
   MiniMap: FlowMiniMap,
 });
 
 /* By name as well, for a Server Component, which cannot dot into a client
    module. */
-export { FlowBackground, FlowNode, FlowHandle, FlowEdge, FlowGroup, FlowControls, FlowMiniMap };
+export {
+  FlowBackground,
+  FlowNode,
+  FlowHandle,
+  FlowEdge,
+  FlowGroup,
+  FlowGroupItem,
+  FlowNodeHeader,
+  FlowNodeContent,
+  FlowNodeTitle,
+  FlowNodeDescription,
+  FlowNodeBadge,
+  FlowControls,
+  FlowMiniMap,
+};
 export type { FlowSide, FlowRect, FlowPoint };

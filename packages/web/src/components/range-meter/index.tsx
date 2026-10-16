@@ -5,7 +5,9 @@
  * ruler of ticks that rises under the value.
  *
  * ```tsx
+ * <RangeMeter.Label>Response time</RangeMeter.Label>
  * <RangeMeter min={80} max={600} value={time} onValueChange={setTime} marker={300} />
+ * <RangeMeter.Scale start="80 ms" end="600 ms" />
  * ```
  *
  * ## The ruler swells where the reading is
@@ -56,6 +58,9 @@ const rangeMeterVariants = tv({
     tick: 'w-[3px] rounded-full transition-[height,background-color,opacity,box-shadow] duration-200 ease-out motion-reduce:transition-none',
     marker:
       'pointer-events-none absolute -bottom-2.5 size-1.5 -translate-x-1/2 rotate-45 rounded-[1px] bg-foreground rtl:translate-x-1/2',
+    // Siblings of the meter, written beside it rather than inside it.
+    label: 'text-sm font-medium',
+    scale: 'flex justify-between text-xs text-muted-foreground',
     tag: 'pointer-events-none absolute top-0 flex h-7 items-center gap-1 whitespace-nowrap rounded-full bg-[var(--pu-color)] px-2.5 text-xs font-semibold tabular-nums text-[var(--pu-on-color)] shadow-[0_6px_18px_-4px_color-mix(in_oklab,var(--pu-color)_70%,transparent)] transition-[background-color,box-shadow,scale] duration-200 motion-reduce:transition-none [&_svg]:size-3.5 [&_svg]:shrink-0',
   },
   variants: {
@@ -130,7 +135,7 @@ const SPREAD = 2.6;
 /** A resting tick's height, as a share of the ruler's. */
 const REST = 0.34;
 
-export function RangeMeter({
+function RangeMeterRoot({
   min = 0,
   max = 100,
   value,
@@ -279,4 +284,42 @@ export function RangeMeter({
     </div>
   );
 }
-RangeMeter.displayName = 'RangeMeter';
+RangeMeterRoot.displayName = 'RangeMeter';
+
+export interface RangeMeterLabelProps extends ComponentProps<'p'> {}
+
+/**
+ * The meter's name, written over it. The meter's own `label` is what a screen
+ * reader says; this is what everyone else reads.
+ */
+function RangeMeterLabel({ className, ...props }: RangeMeterLabelProps) {
+  return <p data-slot="range-meter-label" className={rangeMeterVariants().label({ className })} {...props} />;
+}
+RangeMeterLabel.displayName = 'RangeMeter.Label';
+
+export interface RangeMeterScaleProps extends Omit<ComponentProps<'div'>, 'children'> {
+  /** The word or figure at the low end. */
+  start: ReactNode;
+  /** The word or figure at the high end. */
+  end: ReactNode;
+}
+
+/** What the two ends of the ruler stand for, written under it at either side. */
+function RangeMeterScale({ start, end, className, ...props }: RangeMeterScaleProps) {
+  return (
+    <div data-slot="range-meter-scale" className={rangeMeterVariants().scale({ className })} {...props}>
+      <span>{start}</span>
+      <span>{end}</span>
+    </div>
+  );
+}
+RangeMeterScale.displayName = 'RangeMeter.Scale';
+
+export const RangeMeter = Object.assign(RangeMeterRoot, {
+  Label: RangeMeterLabel,
+  Scale: RangeMeterScale,
+});
+
+/* By name as well, for a Server Component, which cannot dot into a client
+   module. */
+export { RangeMeterLabel, RangeMeterScale };

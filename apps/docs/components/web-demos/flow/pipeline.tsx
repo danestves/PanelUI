@@ -14,11 +14,7 @@ const STAGES = [
   { id: 'publish', name: 'Publish', detail: 'Site and newsletter' },
 ];
 
-const TAG = {
-  done: 'bg-[color-mix(in_oklab,var(--success)_14%,transparent)] text-(--success)',
-  live: 'bg-[color-mix(in_oklab,var(--info)_14%,transparent)] text-(--info)',
-  waiting: 'bg-muted text-muted-foreground',
-};
+const TAG = { done: 'success', live: 'info', waiting: 'muted' } as const;
 
 /**
  * Whether the canvas has room to lay the graph out across. It is the canvas
@@ -73,16 +69,16 @@ export default function FlowPipeline() {
               position={place(index)}
               className={wide ? 'w-52' : 'w-44'}
             >
-              <div className="flex items-center justify-between gap-3 border-b px-4 py-2.5">
-                <span className="text-sm text-muted-foreground">Stage {index + 1}</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TAG[state]}`}>
+              <Flow.NodeHeader>
+                <Flow.NodeDescription>Stage {index + 1}</Flow.NodeDescription>
+                <Flow.NodeBadge color={TAG[state]}>
                   {state === 'done' ? 'Done' : state === 'live' ? 'Now' : 'Waiting'}
-                </span>
-              </div>
-              <div className="px-4 py-3">
-                <p className="text-sm font-medium">{stage.name}</p>
-                <p className="truncate text-sm text-muted-foreground">{stage.detail}</p>
-              </div>
+                </Flow.NodeBadge>
+              </Flow.NodeHeader>
+              <Flow.NodeContent>
+                <Flow.NodeTitle>{stage.name}</Flow.NodeTitle>
+                <Flow.NodeDescription className="truncate">{stage.detail}</Flow.NodeDescription>
+              </Flow.NodeContent>
             </Flow.Node>
           );
         })}

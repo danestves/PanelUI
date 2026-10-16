@@ -1,16 +1,16 @@
 import { BanknoteIcon, TargetIcon } from 'lucide-react';
 import { Kpi } from 'panelui-web/kpi';
+import { Frame } from 'panelui-web/frame';
 
 export default function KpiTargets() {
   return (
-    // A frame: a band that names what is inside, round a panel that holds it.
-    <div className="w-full max-w-md rounded-3xl bg-muted p-1.5">
-      <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-        <h3 className="text-sm font-medium">Targets</h3>
-        <p className="text-sm text-muted-foreground">This quarter</p>
-      </div>
+    <Frame variant="band" className="w-full max-w-md">
+      <Frame.Header>
+        <Frame.Title>Targets</Frame.Title>
+        <Frame.Action>This quarter</Frame.Action>
+      </Frame.Header>
 
-      <div className="rounded-[1.125rem] border bg-card p-5 text-card-foreground shadow-xs">
+      <Frame.Panel className="p-5">
         <Kpi.Group orientation="vertical">
           <Kpi>
             <Kpi.Header>
@@ -46,7 +46,7 @@ export default function KpiTargets() {
             />
           </Kpi>
         </Kpi.Group>
-      </div>
-    </div>
+      </Frame.Panel>
+    </Frame>
   );
 }

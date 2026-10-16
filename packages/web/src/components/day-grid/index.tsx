@@ -69,6 +69,13 @@ const dayGridVariants = tv({
     dot: 'block size-full rounded-full [scale:calc(var(--pu-size)*(1+var(--pu-lens,0)*0.5)*var(--pu-in,1))] transition-[scale,box-shadow] duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none',
     tag: 'pointer-events-none absolute z-20 whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-xs font-medium text-background shadow-lg',
     legend: 'flex items-center gap-1.5 text-xs text-muted-foreground',
+    // One row per day, matching the grid's own rows, so each name sits level with its days.
+    weekdays: 'grid gap-1 text-xs leading-none text-muted-foreground',
+    weekday: 'flex items-center',
+    // The picked day, written out under the grid.
+    caption: 'flex flex-col gap-0.5',
+    title: 'text-sm font-medium',
+    description: 'text-sm text-muted-foreground',
     swatch: 'flex size-4 items-center justify-center',
   },
   variants: {
@@ -402,10 +409,88 @@ function DayGridLegend({
 }
 DayGridLegend.displayName = 'DayGrid.Legend';
 
+export interface DayGridWeekdaysProps extends Omit<ComponentProps<'div'>, 'children'> {
+  /**
+   * The name written beside each row, first row first. An empty string leaves
+   * a row unnamed. Default Monday to Sunday with every other name left out.
+   */
+  labels?: string[];
+}
+
+/**
+ * The days of the week down the side of a grid that runs a week to a column.
+ * Put it beside the grid, in a row with it. Hidden from screen readers, which
+ * are given each day's own label.
+ */
+function DayGridWeekdays({
+  labels = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'],
+  className,
+  style,
+  ...props
+}: DayGridWeekdaysProps) {
+  const slots = dayGridVariants();
+  return (
+    <div
+      aria-hidden="true"
+      data-slot="day-grid-weekdays"
+      className={slots.weekdays({ className })}
+      style={{ gridTemplateRows: `repeat(${labels.length}, minmax(0, 1fr))`, ...style }}
+      {...props}
+    >
+      {labels.map((day, index) => (
+        <span key={index} className={slots.weekday()}>
+          {day}
+        </span>
+      ))}
+    </div>
+  );
+}
+DayGridWeekdays.displayName = 'DayGrid.Weekdays';
+
+export interface DayGridCaptionProps extends ComponentProps<'div'> {}
+
+/**
+ * What the picked day holds, written out beside the grid: a `DayGrid.Title`
+ * over a `DayGrid.Description`. Read out politely each time the pick changes.
+ */
+function DayGridCaption({ className, ...props }: DayGridCaptionProps) {
+  return (
+    <div
+      aria-live="polite"
+      data-slot="day-grid-caption"
+      className={dayGridVariants().caption({ className })}
+      {...props}
+    />
+  );
+}
+DayGridCaption.displayName = 'DayGrid.Caption';
+
+export interface DayGridTitleProps extends ComponentProps<'p'> {}
+
+/** The picked day's figure: "17 merged". */
+function DayGridTitle({ className, ...props }: DayGridTitleProps) {
+  return <p data-slot="day-grid-title" className={dayGridVariants().title({ className })} {...props} />;
+}
+DayGridTitle.displayName = 'DayGrid.Title';
+
+export interface DayGridDescriptionProps extends ComponentProps<'p'> {}
+
+/** The picked day's date, quieter, under its figure. */
+function DayGridDescription({ className, ...props }: DayGridDescriptionProps) {
+  return (
+    <p data-slot="day-grid-description" className={dayGridVariants().description({ className })} {...props} />
+  );
+}
+DayGridDescription.displayName = 'DayGrid.Description';
+
 export const DayGrid = Object.assign(DayGridRoot, {
   Legend: DayGridLegend,
+  Weekdays: DayGridWeekdays,
+  Caption: DayGridCaption,
+  Title: DayGridTitle,
+  Description: DayGridDescription,
 });
 
 /* By name as well, for a Server Component, which cannot dot into a client
    module. */
-export { DayGridLegend };
+export { DayGridLegend, DayGridWeekdays, DayGridCaption, DayGridTitle, DayGridDescription };

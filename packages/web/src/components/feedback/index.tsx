@@ -103,6 +103,15 @@ const feedbackVariants = tv({
     scrollbar:
       'my-1 -me-3.5 flex w-1.5 opacity-0 transition-opacity delay-300 data-hovering:opacity-100 data-hovering:delay-0 data-hovering:duration-100 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-100',
     thumb: 'relative flex-1 rounded-full bg-foreground/20',
+    // Body text in the well, set like what is written in the field.
+    description: 'text-[17px] leading-6 text-muted-foreground',
+    // A line under the field: how much is left to write, or what went wrong.
+    message: 'text-sm tabular-nums',
+    rating: 'flex flex-col justify-center gap-3',
+    ratingScores: 'flex justify-between gap-2',
+    ratingScore:
+      'flex size-12 cursor-pointer items-center justify-center rounded-full bg-foreground/10 text-lg font-semibold transition-colors hover:bg-primary hover:text-primary-foreground',
+    ratingEnds: 'flex justify-between text-sm text-muted-foreground',
     // Held in from the shell's edge further than the panel is. A row the full
     // width would read as a third edge of the dialog, not as two buttons.
     footer: 'flex items-center gap-3.5 px-[18px] pb-2.5 pt-4',
@@ -121,6 +130,10 @@ const feedbackVariants = tv({
     },
     disabled: {
       true: { action: 'cursor-not-allowed active:scale-100' },
+    },
+    messageTone: {
+      muted: { message: 'text-muted-foreground' },
+      destructive: { message: 'text-destructive' },
     },
   },
   compoundVariants: [
@@ -446,6 +459,100 @@ function FeedbackField({
 }
 FeedbackField.displayName = 'Feedback.Field';
 
+export interface FeedbackDescriptionProps extends ComponentProps<'p'> {}
+
+/**
+ * Body text in the panel, in place of the field: a thank-you once the message
+ * has gone. In a dialog it is also what the dialog is described as.
+ */
+function FeedbackDescription({ className, ...props }: FeedbackDescriptionProps) {
+  const { inline } = useFeedback('Feedback.Description');
+  const slots = feedbackVariants();
+  if (inline) return <p className={slots.description({ className })} {...props} />;
+  return <Dialog.Description className={slots.description({ className })} {...props} />;
+}
+FeedbackDescription.displayName = 'Feedback.Description';
+
+export interface FeedbackMessageProps extends ComponentProps<'p'> {
+  /**
+   * `muted` for a running note, read out politely as it changes: how much is
+   * left to write. `destructive` for a failure, announced at once. Default
+   * `muted`.
+   */
+  tone?: 'muted' | 'destructive';
+}
+
+/** A short line under the field. Figures in it keep their width as they change. */
+function FeedbackMessage({ tone = 'muted', className, ...props }: FeedbackMessageProps) {
+  const slots = feedbackVariants({ messageTone: tone });
+  return (
+    <p
+      role={tone === 'destructive' ? 'alert' : undefined}
+      aria-live={tone === 'destructive' ? undefined : 'polite'}
+      className={slots.message({ className })}
+      {...props}
+    />
+  );
+}
+FeedbackMessage.displayName = 'Feedback.Message';
+
+export interface FeedbackRatingProps extends Omit<ComponentProps<'div'>, 'children'> {
+  /** The highest score. The scores run from 1 to this. Default 5. */
+  max?: number;
+  /** Called with the score that was pressed. */
+  onValueChange?: (value: number) => void;
+  /** The word under the lowest score. */
+  startLabel?: ReactNode;
+  /** The word under the highest score. */
+  endLabel?: ReactNode;
+  /**
+   * The least height it takes, in pixels. Match the field's `minHeight` on the
+   * step that follows, so the dialog keeps its size between the two.
+   */
+  minHeight?: number;
+}
+
+/**
+ * A row of round buttons, one per score, with a word under each end. Use it
+ * as the first step of a dialog, and ask for the words once a score is in.
+ */
+function FeedbackRating({
+  max = 5,
+  onValueChange,
+  startLabel,
+  endLabel,
+  minHeight,
+  className,
+  style,
+  ...props
+}: FeedbackRatingProps) {
+  const slots = feedbackVariants();
+  return (
+    <div className={slots.rating({ className })} style={{ minHeight, ...style }} {...props}>
+      <div className={slots.ratingScores()}>
+        {Array.from({ length: max }, (_, index) => index + 1).map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-label={`${value} out of ${max}`}
+            onClick={() => onValueChange?.(value)}
+            className={slots.ratingScore()}
+          >
+            {value}
+          </button>
+        ))}
+      </div>
+      {startLabel !== undefined || endLabel !== undefined ? (
+        <div className={slots.ratingEnds()}>
+          <span>{startLabel}</span>
+          <span>{endLabel}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+FeedbackRating.displayName = 'Feedback.Rating';
+
 export interface FeedbackFooterProps extends ComponentProps<'div'> {}
 
 /** The action row, in the band under the panel. */
@@ -535,6 +642,9 @@ export const Feedback = Object.assign(FeedbackRoot, {
   Title: FeedbackTitle,
   Close: FeedbackClose,
   Field: FeedbackField,
+  Description: FeedbackDescription,
+  Message: FeedbackMessage,
+  Rating: FeedbackRating,
   Footer: FeedbackFooter,
   Cancel: FeedbackCancel,
   Submit: FeedbackSubmit,
@@ -549,6 +659,9 @@ export {
   FeedbackTitle,
   FeedbackClose,
   FeedbackField,
+  FeedbackDescription,
+  FeedbackMessage,
+  FeedbackRating,
   FeedbackFooter,
   FeedbackCancel,
   FeedbackSubmit,

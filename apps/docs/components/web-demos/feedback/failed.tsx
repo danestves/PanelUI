@@ -42,9 +42,9 @@ export default function FeedbackFailed() {
           <Feedback.Close />
           <Feedback.Field minHeight={160} placeholder="What were you doing when it happened?" />
           {status === 'failed' ? (
-            <p role="alert" className="text-sm text-destructive">
+            <Feedback.Message tone="destructive">
               That did not send. Your message is still here.
-            </p>
+            </Feedback.Message>
           ) : null}
         </Feedback.Panel>
         <Feedback.Footer>

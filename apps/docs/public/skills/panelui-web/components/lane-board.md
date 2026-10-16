@@ -43,7 +43,10 @@ const [lanes, setLanes] = useState<LaneBoardLane<Change>[]>([
   lanes={…}
   renderCard={(card) => (
     <>
-      <LaneBoard.Title />
+      <LaneBoard.Row>
+        <LaneBoard.Title />
+        <LaneBoard.Avatar />
+      </LaneBoard.Row>
       <LaneBoard.Code />
       <LaneBoard.Row>
         <LaneBoard.Steps />
@@ -56,10 +59,11 @@ const [lanes, setLanes] = useState<LaneBoardLane<Change>[]>([
 
 - `LaneBoard.Title` — A card's name.
 - `LaneBoard.Code` — A card's reference, in a fixed-width face so a column of them lines up.
-- `LaneBoard.Row` — The last line of a card, with something at each end.
+- `LaneBoard.Row` — A line of a card with something at each end. It is the last line unless you move it up, as with a title and an avatar.
 - `LaneBoard.Steps` — How far along a card is: a row of dashes with `value` of `max` lit, in the theme colour named by `color`.
 - `LaneBoard.Tag` — A word in a pill, for a card's state.
 - `LaneBoard.Meta` — A short figure at the end of the row: a time, a count.
+- `LaneBoard.Avatar` — Who a card belongs to, as initials in a small circle.
 
 ## Props
 
@@ -96,7 +100,7 @@ Every part also takes the props of the element it renders, and a `className`.
 
 ## In a Server Component
 
-`LaneBoard` is a client component. A Server Component cannot read `LaneBoard.Title` off the import, so import each part by name: `LaneBoardTitle`, `LaneBoardCode`, `LaneBoardRow`, `LaneBoardSteps`, `LaneBoardTag`, `LaneBoardMeta`.
+`LaneBoard` is a client component. A Server Component cannot read `LaneBoard.Title` off the import, so import each part by name: `LaneBoardTitle`, `LaneBoardCode`, `LaneBoardRow`, `LaneBoardSteps`, `LaneBoardTag`, `LaneBoardMeta`, `LaneBoardAvatar`.
 
 ## Notes
 

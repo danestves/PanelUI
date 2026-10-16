@@ -322,6 +322,23 @@
       ]
     },
     {
+      "name": "stat",
+      "type": "registry:component",
+      "title": "Stat",
+      "description": "One figure written large, with a label over it, a unit after it and a badge beside it.",
+      "dependencies": [
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "components/panelui/stat.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/stat.tsx"
+        }
+      ]
+    },
+    {
       "name": "tilt-card",
       "type": "registry:component",
       "title": "Tilt Card",

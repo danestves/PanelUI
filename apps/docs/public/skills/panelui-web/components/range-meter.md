@@ -19,6 +19,7 @@ It needs about 12rem of width for the rise to read as one. In a tighter space, o
 ## Usage
 
 ```tsx
+<RangeMeter.Label>Response time</RangeMeter.Label>
 <RangeMeter
   min={80}
   max={600}
@@ -27,7 +28,19 @@ It needs about 12rem of width for the rise to read as one. In a tighter space, o
   onValueChange={setTime}
   marker={300}
 />
+<RangeMeter.Scale start="80 ms" end="600 ms" />
 ```
+
+## Parts
+
+```tsx
+<RangeMeter.Label />
+<RangeMeter value={…} />
+<RangeMeter.Scale start="…" end="…" />
+```
+
+- `RangeMeter.Label` — The meter's name, written over it. The meter's own `label` prop is what a screen reader says; this is the visible name.
+- `RangeMeter.Scale` — What the two ends of the ruler stand for, at either side under it: `start` and `end`.
 
 ## Props
 
@@ -48,6 +61,17 @@ Every part also takes the props of the element it renders, and a `className`.
 | `formatValue` | `(value: number) => ReactNode` | — | Writes the number in the tag. Defaults to the value as it is. |
 | `label` | `string` | `'Reading'` | What a screen reader calls it. |
 | `valueText` | `string` | — | What a screen reader says for the value: "240 milliseconds". |
+
+#### `RangeMeterScaleProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `start` | `ReactNode` | **required** | The word or figure at the low end. |
+| `end` | `ReactNode` | **required** | The word or figure at the high end. |
+
+## In a Server Component
+
+`RangeMeter` is a client component. A Server Component cannot read `RangeMeter.Label` off the import, so import each part by name: `RangeMeterLabel`, `RangeMeterScale`.
 
 ## Notes
 
@@ -90,6 +114,8 @@ Pass `label` to name the reading and `valueText` to say the value with its unit,
 
 import { useState } from 'react';
 import { RangeMeter, type RangeMeterColor } from '@/components/panelui/range-meter';
+import { Frame } from '@/components/panelui/frame';
+import { Stat } from '@/components/panelui/stat';
 
 const FASTEST = 80;
 const SLOWEST = 600;
@@ -107,26 +133,23 @@ export default function RangeMeterResponseTime() {
   const [time, setTime] = useState(240);
 
   return (
-    // A frame: a band that names what is inside, round a panel that holds it.
-    <div className="w-full max-w-sm rounded-3xl bg-muted p-1.5">
-      <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-        <h3 className="text-sm font-medium">Checkout page</h3>
-        <p className="text-sm text-muted-foreground">Budget {BUDGET} ms</p>
-      </div>
+    <Frame variant="band" className="w-full max-w-sm">
+      <Frame.Header>
+        <Frame.Title>Checkout page</Frame.Title>
+        <Frame.Action>Budget {BUDGET} ms</Frame.Action>
+      </Frame.Header>
 
-      <div className="flex flex-col gap-4 rounded-[1.125rem] border bg-card p-5 text-card-foreground shadow-xs">
-        <div className="flex items-end justify-between gap-4" aria-live="polite">
-          <div className="flex flex-col gap-1">
-            <p className="text-sm text-muted-foreground">Response time</p>
-            <p className="text-4xl font-bold leading-none tracking-tight">
+      <Frame.Panel className="gap-4 p-5">
+        <Stat aria-live="polite">
+          <Stat.Content>
+            <Stat.Label>Response time</Stat.Label>
+            <Stat.Value>
               {time}
-              <span className="ms-1.5 text-base font-medium text-muted-foreground">ms</span>
-            </p>
-          </div>
-          <p className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-            {verdictOf(time)}
-          </p>
-        </div>
+              <Stat.Unit>ms</Stat.Unit>
+            </Stat.Value>
+          </Stat.Content>
+          <Stat.Badge>{verdictOf(time)}</Stat.Badge>
+        </Stat>
 
         <div className="flex flex-col gap-2">
           <RangeMeter
@@ -140,13 +163,10 @@ export default function RangeMeterResponseTime() {
             label="Response time"
             valueText={`${time} milliseconds`}
           />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{FASTEST} ms</span>
-            <span>{SLOWEST} ms</span>
-          </div>
+          <RangeMeter.Scale start={`${FASTEST} ms`} end={`${SLOWEST} ms`} />
         </div>
-      </div>
-    </div>
+      </Frame.Panel>
+    </Frame>
   );
 }
 ```

@@ -134,6 +134,8 @@ const laneBoardVariants = tv({
     step: 'h-1 w-4 rounded-full',
     tag: 'inline-flex items-center rounded-full border border-[color-mix(in_oklab,var(--pu-color)_35%,var(--card))] bg-[color-mix(in_oklab,var(--pu-color)_14%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--pu-color)]',
     meta: 'font-mono text-sm tabular-nums text-foreground',
+    avatar:
+      'flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[0.625rem] font-semibold text-muted-foreground',
   },
   variants: {
     color: {
@@ -910,6 +912,14 @@ function LaneBoardMeta({ className, ...props }: LaneBoardMetaProps) {
 }
 LaneBoardMeta.displayName = 'LaneBoard.Meta';
 
+export interface LaneBoardAvatarProps extends ComponentProps<'span'> {}
+
+/** Who a card belongs to, as initials in a small circle. */
+function LaneBoardAvatar({ className, ...props }: LaneBoardAvatarProps) {
+  return <span data-slot="lane-board-avatar" className={laneBoardVariants().avatar({ className })} {...props} />;
+}
+LaneBoardAvatar.displayName = 'LaneBoard.Avatar';
+
 export const LaneBoard = Object.assign(LaneBoardRoot, {
   Title: LaneBoardTitle,
   Code: LaneBoardCode,
@@ -917,8 +927,17 @@ export const LaneBoard = Object.assign(LaneBoardRoot, {
   Steps: LaneBoardSteps,
   Tag: LaneBoardTag,
   Meta: LaneBoardMeta,
+  Avatar: LaneBoardAvatar,
 });
 
 /* By name as well, for a Server Component, which cannot dot into a client
    module. */
-export { LaneBoardTitle, LaneBoardCode, LaneBoardRow, LaneBoardSteps, LaneBoardTag, LaneBoardMeta };
+export {
+  LaneBoardTitle,
+  LaneBoardCode,
+  LaneBoardRow,
+  LaneBoardSteps,
+  LaneBoardTag,
+  LaneBoardMeta,
+  LaneBoardAvatar,
+};

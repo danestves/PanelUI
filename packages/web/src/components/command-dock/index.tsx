@@ -10,7 +10,12 @@
  *   <CommandDock.Panel>
  *     <CommandDock.Input placeholder="What do you want to find?" />
  *     <CommandDock.Results>
- *       {rows.map((row) => <CommandDock.Row key={row.id}>{row.text}</CommandDock.Row>)}
+ *       {rows.map((row) => (
+ *         <CommandDock.Row key={row.id}>
+ *           <CommandDock.RowTitle>{row.title}</CommandDock.RowTitle>
+ *           <CommandDock.RowMeta>{row.where}</CommandDock.RowMeta>
+ *         </CommandDock.Row>
+ *       ))}
  *     </CommandDock.Results>
  *   </CommandDock.Panel>
  * </CommandDock>
@@ -81,6 +86,9 @@ const commandDockVariants = tv({
     resultsClip: 'min-h-0 overflow-hidden',
     resultsInner: 'flex flex-col gap-0.5 border-t p-1.5',
     row: 'flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm transition-[opacity,translate] duration-300 ease-out starting:translate-y-1.5 starting:opacity-0 motion-reduce:transition-none [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground',
+    // A row's subject takes the room and truncates; its meta keeps its width.
+    rowTitle: 'min-w-0 flex-1 truncate font-medium',
+    rowMeta: 'shrink-0 text-muted-foreground',
     status: 'flex items-center gap-2 px-2.5 py-2 text-sm text-muted-foreground',
     dots: 'flex gap-1',
     dot: 'size-1 animate-pulse rounded-full bg-muted-foreground',
@@ -404,6 +412,26 @@ function CommandDockRow({ className, onSelect, children, ...props }: CommandDock
 }
 CommandDockRow.displayName = 'CommandDock.Row';
 
+export interface CommandDockRowTitleProps extends ComponentProps<'span'> {}
+
+/** What a row is, in a line that takes the row's spare width and truncates. */
+function CommandDockRowTitle({ className, ...props }: CommandDockRowTitleProps) {
+  return (
+    <span data-slot="command-dock-row-title" className={commandDockVariants().rowTitle({ className })} {...props} />
+  );
+}
+CommandDockRowTitle.displayName = 'CommandDock.RowTitle';
+
+export interface CommandDockRowMetaProps extends ComponentProps<'span'> {}
+
+/** Something short at the end of a row, quieter than its title: a date, a place. */
+function CommandDockRowMeta({ className, ...props }: CommandDockRowMetaProps) {
+  return (
+    <span data-slot="command-dock-row-meta" className={commandDockVariants().rowMeta({ className })} {...props} />
+  );
+}
+CommandDockRowMeta.displayName = 'CommandDock.RowMeta';
+
 export interface CommandDockStatusProps extends ComponentProps<'div'> {
   children?: ReactNode;
 }
@@ -430,6 +458,8 @@ export const CommandDock = Object.assign(CommandDockRoot, {
   Input: CommandDockInput,
   Results: CommandDockResults,
   Row: CommandDockRow,
+  RowTitle: CommandDockRowTitle,
+  RowMeta: CommandDockRowMeta,
   Status: CommandDockStatus,
 });
 
@@ -441,5 +471,7 @@ export {
   CommandDockInput,
   CommandDockResults,
   CommandDockRow,
+  CommandDockRowTitle,
+  CommandDockRowMeta,
   CommandDockStatus,
 };

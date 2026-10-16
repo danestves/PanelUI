@@ -5,7 +5,12 @@
     "height": 420
   },
   "intro": "Use it for one reading on a known scale where the position matters as much as the number: a response time between the fastest and the slowest, a level between empty and full. The scale is a ruler of ticks that rises where the reading is, with the number in a tag above the rise.\n\nWith `onValueChange` it is a slider that can be dragged. Without it, the same drawing is a meter that only shows a value.\n\nIt needs about 12rem of width for the rise to read as one. In a tighter space, or for a reading that needs no number, use a progress bar.",
-  "usage": "<RangeMeter\n  min={80}\n  max={600}\n  step={10}\n  value={time}\n  onValueChange={setTime}\n  marker={300}\n/>",
+  "usage": "<RangeMeter.Label>Response time</RangeMeter.Label>\n<RangeMeter\n  min={80}\n  max={600}\n  step={10}\n  value={time}\n  onValueChange={setTime}\n  marker={300}\n/>\n<RangeMeter.Scale start=\"80 ms\" end=\"600 ms\" />",
+  "anatomy": "<RangeMeter.Label />\n<RangeMeter value={…} />\n<RangeMeter.Scale start=\"…\" end=\"…\" />",
+  "parts": {
+    "Label": "The meter's name, written over it. The meter's own `label` prop is what a screen reader says; this is the visible name.",
+    "Scale": "What the two ends of the ruler stand for, at either side under it: `start` and `end`."
+  },
   "examples": [
     {
       "title": "A reading that cannot be changed",

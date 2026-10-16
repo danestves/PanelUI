@@ -11,6 +11,8 @@ status: new
 
 import { useRef, useState } from 'react';
 import { Planet, type PlanetHandle, type PlanetMarkerColor } from '@/components/panelui/planet';
+import { Frame } from '@/components/panelui/frame';
+import { Stat } from '@/components/panelui/stat';
 
 type Health = 'healthy' | 'slow' | 'down';
 
@@ -32,13 +34,6 @@ const COLOUR: Record<Health, PlanetMarkerColor> = {
   healthy: 'success',
   slow: 'warning',
   down: 'destructive',
-};
-
-/** The same three colours for the dots in the list. */
-const DOT: Record<Health, string> = {
-  healthy: 'bg-(--success)',
-  slow: 'bg-(--warning)',
-  down: 'bg-destructive',
 };
 
 const SAYS: Record<Health, string> = {
@@ -63,17 +58,14 @@ export default function PlanetRegions() {
   };
 
   return (
-    // A frame: a band that names what is inside, round a panel that holds it.
-    <div className="w-full max-w-2xl rounded-3xl bg-muted p-1.5">
-      <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-        <h3 className="text-sm font-medium">Regions</h3>
-        <p className="text-sm text-muted-foreground">
-          {healthy} of {REGIONS.length} healthy
-        </p>
-      </div>
+    <Frame variant="band" className="w-full max-w-2xl">
+      <Frame.Header>
+        <Frame.Title>Regions</Frame.Title>
+        <Frame.Action>{healthy} of {REGIONS.length} healthy</Frame.Action>
+      </Frame.Header>
 
       {/* The globe beside the list on a wide screen, over it on a narrow one. */}
-      <div className="grid gap-5 rounded-[1.125rem] border bg-card p-5 text-card-foreground shadow-xs sm:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] sm:items-center">
+      <Frame.Panel className="grid gap-5 p-5 sm:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] sm:items-center">
         <Planet ref={planet} defaultRotation={[103.82, 4]} className="mx-auto max-w-64 gap-3">
           <Planet.Globe label="Regions" color="info">
             {REGIONS.map((entry) => (
@@ -94,37 +86,32 @@ export default function PlanetRegions() {
         </Planet>
 
         <div className="flex min-w-0 flex-col gap-3">
-          <div className="flex items-end justify-between gap-4" aria-live="polite">
-            <div className="flex flex-col gap-1">
-              <p className="text-sm text-muted-foreground">{region.city}</p>
-              <p className="text-sm font-medium">{SAYS[region.health]}</p>
-            </div>
-            <p className="text-3xl font-bold leading-none tracking-tight">
+          <Stat aria-live="polite">
+            <Stat.Content>
+              <Stat.Label>{region.city}</Stat.Label>
+              <Stat.Description>{SAYS[region.health]}</Stat.Description>
+            </Stat.Content>
+            <Stat.Value size="md">
               {region.ms === null ? '\u2014' : region.ms}
-              {region.ms === null ? null : (
-                <span className="ms-1 text-sm font-medium text-muted-foreground">ms</span>
-              )}
-            </p>
-          </div>
+              {region.ms === null ? null : <Stat.Unit>ms</Stat.Unit>}
+            </Stat.Value>
+          </Stat>
 
-          <ul className="grid grid-cols-2 gap-1 border-t pt-3">
+          <Planet.List>
             {REGIONS.map((entry) => (
-              <li key={entry.city}>
-                <button
-                  type="button"
-                  aria-pressed={entry.city === picked}
-                  onClick={() => pick(entry.city)}
-                  className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-start text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring aria-pressed:bg-muted aria-pressed:text-foreground"
-                >
-                  <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${DOT[entry.health]}`} />
-                  <span className="truncate">{entry.city}</span>
-                </button>
-              </li>
+              <Planet.ListItem
+                key={entry.city}
+                color={COLOUR[entry.health]}
+                selected={entry.city === picked}
+                onClick={() => pick(entry.city)}
+              >
+                {entry.city}
+              </Planet.ListItem>
             ))}
-          </ul>
+          </Planet.List>
         </div>
-      </div>
-    </div>
+      </Frame.Panel>
+    </Frame>
   );
 }
 ```
@@ -208,11 +195,16 @@ import { Planet } from "@/components/panelui/planet"
   </Planet.Globe>
   <Planet.Controls />
 </Planet>
+<Planet.List>
+  <Planet.ListItem />
+</Planet.List>
 ```
 
 - **`Planet.Globe`** — The sphere and its dots, with a soft light round its edge in the theme colour named by `color`. Markers go inside it.
 - **`Planet.Marker`** — An element pinned to a latitude and longitude. Without children it is a dot in the theme colour named by `color`; with children they are drawn at the point, in a circle ringed in that colour. `label` and `count` go in a tag above it, `pulse` spreads a fading ring from it, and `onClick` makes it a button.
 - **`Planet.Controls`** — Two buttons joined in one group that turn the globe by `step` degrees. Children are a caption between them.
+- **`Planet.List`** — The places on the globe again, as a list in two columns, for picking one by name. Put it beside or under the globe and turn the globe to whatever is picked.
+- **`Planet.ListItem`** — One place: a dot in the theme colour named by `color`, then its name. It is a button; `selected` marks the one that is picked.
 
 ## Examples
 
@@ -413,6 +405,13 @@ export default function PlanetFlyTo() {
 | --- | --- | --- | --- |
 | `step` | `number` | — | Degrees of longitude one press turns the globe. |
 
+### Planet.ListItem
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `color` | `PlanetMarkerColor` | `'primary'` | The colour of the dot before the name. Match it to the place's marker. |
+| `selected` | `boolean` | `false` | Draws the row as the one that has been picked. |
+
 Every part also takes the props of the element it renders, and a `className`.
 
 ## Notes
@@ -462,5 +461,5 @@ The outlines are Natural Earth's 1:110m land polygons, which are in the public d
 `Planet` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Planet.Globe` off the import, so each part is also exported by name: `PlanetGlobe` is `Planet.Globe`, and so on for the others.
 
 ```tsx
-import { Planet, PlanetGlobe, PlanetMarker, PlanetControls } from "@/components/panelui/planet"
+import { Planet, PlanetGlobe, PlanetMarker, PlanetControls, PlanetList, PlanetListItem } from "@/components/panelui/planet"
 ```

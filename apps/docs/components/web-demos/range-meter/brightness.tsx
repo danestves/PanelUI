@@ -21,10 +21,7 @@ export default function RangeMeterBrightness() {
       >
         <SunIcon />
       </RangeMeter>
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>Dim</span>
-        <span>Bright</span>
-      </div>
+      <RangeMeter.Scale start="Dim" end="Bright" />
     </div>
   );
 }

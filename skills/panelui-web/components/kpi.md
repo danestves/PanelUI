@@ -59,7 +59,7 @@ For a chart someone needs to read values from, use a chart with an axis. For one
 - `Kpi.Progress` — A bar towards a target, with a label and the percentage over it.
 - `Kpi.Footer` — A quiet line under everything.
 - `Kpi.Separator` — A rule between two parts of one card.
-- `Kpi.Group` — Several metrics as one panel, side by side or stacked, with a rule between each and the next.
+- `Kpi.Group` — Several metrics as one panel, side by side or stacked, with a rule between each and the next. `surface` draws it as a card of its own.
 
 ## Props
 
@@ -120,6 +120,7 @@ Every part also takes the props of the element it renders, and a `className`.
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `orientation` | `'horizontal' \| 'vertical'` | — | Side by side with upright rules, or stacked with level ones. |
+| `surface` | `boolean` | — | Draws the group as a card of its own, for a group not already inside one. |
 
 ## Notes
 
@@ -155,6 +156,7 @@ KPI holds no state, so it is not a client module. It can be rendered from a Serv
 
 ```tsx
 import { Kpi } from '@/components/panelui/kpi';
+import { Frame } from '@/components/panelui/frame';
 
 /** Each figure over the last thirty days, oldest first. */
 const SUBSCRIBERS = [152, 154, 153, 157, 161, 160, 164, 169, 168, 172, 176, 175, 179, 182];
@@ -163,14 +165,13 @@ const OPENS = [41, 42, 44, 43, 45, 44, 46, 45, 47, 46, 46, 48, 47, 47];
 
 export default function KpiOverview() {
   return (
-    // A frame: a band that names what is inside, round a panel that holds it.
-    <div className="w-full max-w-md rounded-3xl bg-muted p-1.5">
-      <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-        <h3 className="text-sm font-medium">Newsletter</h3>
-        <p className="text-sm text-muted-foreground">Last 30 days</p>
-      </div>
+    <Frame variant="band" className="w-full max-w-md">
+      <Frame.Header>
+        <Frame.Title>Newsletter</Frame.Title>
+        <Frame.Action>Last 30 days</Frame.Action>
+      </Frame.Header>
 
-      <div className="rounded-[1.125rem] border bg-card p-5 text-card-foreground shadow-xs">
+      <Frame.Panel className="p-5">
         <Kpi.Group orientation="vertical">
           <Kpi>
             <Kpi.Content layout="inline">
@@ -203,8 +204,8 @@ export default function KpiOverview() {
             </Kpi.Content>
           </Kpi>
         </Kpi.Group>
-      </div>
-    </div>
+      </Frame.Panel>
+    </Frame>
   );
 }
 ```

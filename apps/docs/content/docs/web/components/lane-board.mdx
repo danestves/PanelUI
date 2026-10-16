@@ -172,7 +172,10 @@ const [lanes, setLanes] = useState<LaneBoardLane<Change>[]>([
   lanes={…}
   renderCard={(card) => (
     <>
-      <LaneBoard.Title />
+      <LaneBoard.Row>
+        <LaneBoard.Title />
+        <LaneBoard.Avatar />
+      </LaneBoard.Row>
       <LaneBoard.Code />
       <LaneBoard.Row>
         <LaneBoard.Steps />
@@ -185,10 +188,11 @@ const [lanes, setLanes] = useState<LaneBoardLane<Change>[]>([
 
 - **`LaneBoard.Title`** — A card's name.
 - **`LaneBoard.Code`** — A card's reference, in a fixed-width face so a column of them lines up.
-- **`LaneBoard.Row`** — The last line of a card, with something at each end.
+- **`LaneBoard.Row`** — A line of a card with something at each end. It is the last line unless you move it up, as with a title and an avatar.
 - **`LaneBoard.Steps`** — How far along a card is: a row of dashes with `value` of `max` lit, in the theme colour named by `color`.
 - **`LaneBoard.Tag`** — A word in a pill, for a card's state.
 - **`LaneBoard.Meta`** — A short figure at the end of the row: a time, a count.
+- **`LaneBoard.Avatar`** — Who a card belongs to, as initials in a small circle.
 
 ## Examples
 
@@ -286,14 +290,12 @@ export default function LaneBoardSprint() {
       cardName={(ticket) => ticket.title}
       renderCard={(ticket) => (
         <>
-          <div className="flex items-start justify-between gap-3">
+          <LaneBoard.Row className="mt-0 items-start">
             <LaneBoard.Title className="whitespace-normal text-sm leading-snug">
               {ticket.title}
             </LaneBoard.Title>
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[0.625rem] font-semibold text-muted-foreground">
-              {ticket.owner}
-            </span>
-          </div>
+            <LaneBoard.Avatar>{ticket.owner}</LaneBoard.Avatar>
+          </LaneBoard.Row>
           <LaneBoard.Code className="text-xs">{ticket.id}</LaneBoard.Code>
           <LaneBoard.Row>
             <LaneBoard.Tag color={TONE[ticket.priority]}>{ticket.priority}</LaneBoard.Tag>
@@ -481,5 +483,5 @@ Cards slide to their new places as one is carried over them, and a card that is 
 `LaneBoard` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `LaneBoard.Title` off the import, so each part is also exported by name: `LaneBoardTitle` is `LaneBoard.Title`, and so on for the others.
 
 ```tsx
-import { LaneBoard, LaneBoardTitle, LaneBoardCode, LaneBoardRow, LaneBoardSteps, LaneBoardTag, LaneBoardMeta } from "@/components/panelui/lane-board"
+import { LaneBoard, LaneBoardTitle, LaneBoardCode, LaneBoardRow, LaneBoardSteps, LaneBoardTag, LaneBoardMeta, LaneBoardAvatar } from "@/components/panelui/lane-board"
 ```

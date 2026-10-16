@@ -69,8 +69,8 @@ export default function TiltCardFigures() {
         <TiltCard key={card.title} color={card.color} cardClassName="flex h-full flex-col gap-6 p-5">
           <div className="flex h-32 items-center justify-center">{card.figure}</div>
           <TiltCard.Layer depth={10} className="flex flex-col gap-1">
-            <h3 className="text-base font-semibold">{card.title}</h3>
-            <p className="text-sm text-muted-foreground">{card.body}</p>
+            <TiltCard.Title>{card.title}</TiltCard.Title>
+            <TiltCard.Description>{card.body}</TiltCard.Description>
           </TiltCard.Layer>
         </TiltCard>
       ))}
@@ -143,7 +143,8 @@ import { TiltCard } from "@/components/panelui/tilt-card"
 <TiltCard color="info" cardClassName="p-5">
   <TiltCard.Layer depth={24}>{figure}</TiltCard.Layer>
   <TiltCard.Layer depth={8}>
-    <h3>Sync</h3>
+    <TiltCard.Title>Sync</TiltCard.Title>
+    <TiltCard.Description>Changes reach your other devices in seconds.</TiltCard.Description>
   </TiltCard.Layer>
 </TiltCard>
 ```
@@ -153,10 +154,16 @@ import { TiltCard } from "@/components/panelui/tilt-card"
 ```tsx
 <TiltCard>
   <TiltCard.Layer depth={…}>…</TiltCard.Layer>
+  <TiltCard.Layer depth={…}>
+    <TiltCard.Title />
+    <TiltCard.Description />
+  </TiltCard.Layer>
 </TiltCard>
 ```
 
 - **`TiltCard.Layer`** — Something lifted off the card by `depth`, in pixels. The further out, the further it moves as the card leans.
+- **`TiltCard.Title`** — What the card is about. A heading, `h3` unless `as` says otherwise.
+- **`TiltCard.Description`** — A line or two of body text under the title.
 
 ## Examples
 
@@ -170,17 +177,20 @@ A card with nothing but its contents still leans. `tilt` is how far, in degrees,
 'use client';
 
 import { TiltCard } from '@/components/panelui/tilt-card';
+import { Stat } from '@/components/panelui/stat';
 
 export default function TiltCardPlain() {
   return (
     <TiltCard tilt={12} glare={false} className="w-full max-w-xs" cardClassName="p-5">
-      <p className="text-sm text-muted-foreground">Team plan</p>
-      <p className="mt-1 text-3xl font-bold tracking-tight">
-        €12 <span className="text-sm font-medium text-muted-foreground">a seat, monthly</span>
-      </p>
-      <p className="mt-3 text-sm text-muted-foreground">
+      <Stat.Content>
+        <Stat.Label>Team plan</Stat.Label>
+        <Stat.Value size="md">
+          €12 <Stat.Unit className="ms-0">a seat, monthly</Stat.Unit>
+        </Stat.Value>
+      </Stat.Content>
+      <TiltCard.Description className="mt-3">
         Shared notebooks, version history for a year, and single sign-on.
-      </p>
+      </TiltCard.Description>
     </TiltCard>
   );
 }
@@ -204,6 +214,12 @@ export default function TiltCardPlain() {
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `depth` | `number` | — | How far off the card it is lifted, in pixels. Further out moves further as the card leans. |
+
+### TiltCard.Title
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `'h2' \| 'h3' \| 'h4' \| 'p'` | — | The heading level, to fit the page around the card. Default `h3`. |
 
 Every part also takes the props of the element it renders, and a `className`.
 
@@ -233,8 +249,8 @@ The card does not lean under a finger, and does not lean at all for anyone who h
 
 ### Server Components
 
-`TiltCard` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `TiltCard.Layer` off the import, so each part is also exported by name: `TiltCardLayer` is `TiltCard.Layer`.
+`TiltCard` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `TiltCard.Layer` off the import, so each part is also exported by name: `TiltCardLayer` is `TiltCard.Layer`, and so on for the others.
 
 ```tsx
-import { TiltCard, TiltCardLayer } from "@/components/panelui/tilt-card"
+import { TiltCard, TiltCardLayer, TiltCardTitle, TiltCardDescription } from "@/components/panelui/tilt-card"
 ```

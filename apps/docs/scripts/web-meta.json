@@ -133,5 +133,14 @@
       "addedIn": "0.2.0",
       "category": "layout"
     }
+  ],
+  "stat": [
+    "Stat",
+    "One figure written large, with a label over it, a unit after it and a badge beside it.",
+    "react stat statistic number figure readout component",
+    {
+      "addedIn": "0.3.0",
+      "category": "data"
+    }
   ]
 }

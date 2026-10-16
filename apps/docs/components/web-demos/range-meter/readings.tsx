@@ -14,7 +14,7 @@ export default function RangeMeterReadings() {
     <div className="flex w-full max-w-sm flex-col gap-5">
       {READINGS.map((reading) => (
         <div key={reading.name} className="flex flex-col">
-          <span className="text-sm font-medium">{reading.name}</span>
+          <RangeMeter.Label>{reading.name}</RangeMeter.Label>
           <RangeMeter
             value={reading.used}
             color={reading.color}

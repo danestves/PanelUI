@@ -24,9 +24,9 @@ export default function FeedbackDraft() {
             <Feedback.Title>What would you change?</Feedback.Title>
             <Feedback.Close />
             <Feedback.Field autoFocus minHeight={160} placeholder="One thing is plenty" />
-            <p className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
+            <Feedback.Message>
               {written < ENOUGH ? `${ENOUGH - written} more characters` : 'Ready to send'}
-            </p>
+            </Feedback.Message>
           </Feedback.Panel>
           <Feedback.Footer>
             <Feedback.Cancel>Keep for later</Feedback.Cancel>

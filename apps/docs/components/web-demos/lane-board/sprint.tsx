@@ -85,14 +85,12 @@ export default function LaneBoardSprint() {
       cardName={(ticket) => ticket.title}
       renderCard={(ticket) => (
         <>
-          <div className="flex items-start justify-between gap-3">
+          <LaneBoard.Row className="mt-0 items-start">
             <LaneBoard.Title className="whitespace-normal text-sm leading-snug">
               {ticket.title}
             </LaneBoard.Title>
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[0.625rem] font-semibold text-muted-foreground">
-              {ticket.owner}
-            </span>
-          </div>
+            <LaneBoard.Avatar>{ticket.owner}</LaneBoard.Avatar>
+          </LaneBoard.Row>
           <LaneBoard.Code className="text-xs">{ticket.id}</LaneBoard.Code>
           <LaneBoard.Row>
             <LaneBoard.Tag color={TONE[ticket.priority]}>{ticket.priority}</LaneBoard.Tag>

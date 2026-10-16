@@ -6,14 +6,16 @@
     "align": "start"
   },
   "intro": "Use it for one question a reader can ask from wherever they are: search these notes, find an action, ask an assistant. It is a small button that opens into a field, and the answer arrives under the field a row at a time.\n\nIt runs nothing itself. `onSubmit` is handed what was typed and the rows are whatever you render, so it works the same over a search, a model or a list you already have.\n\nIt holds one field and a short list. For a conversation that goes back and forth, use a chat interface, and for a list long enough to scroll, a full search page.",
-  "usage": "<CommandDock onSubmit={find} busy={busy}>\n  <CommandDock.Trigger>Search the notes</CommandDock.Trigger>\n  <CommandDock.Panel>\n    <CommandDock.Input placeholder=\"Try: pricing\" />\n    <CommandDock.Results>\n      {found.map((note) => (\n        <CommandDock.Row key={note.id}>{note.title}</CommandDock.Row>\n      ))}\n    </CommandDock.Results>\n  </CommandDock.Panel>\n</CommandDock>",
-  "anatomy": "<CommandDock>\n  <CommandDock.Trigger />\n  <CommandDock.Panel>\n    <CommandDock.Input />\n    <CommandDock.Results>\n      <CommandDock.Row />\n      <CommandDock.Status />\n    </CommandDock.Results>\n  </CommandDock.Panel>\n</CommandDock>",
+  "usage": "<CommandDock onSubmit={find} busy={busy}>\n  <CommandDock.Trigger>Search the notes</CommandDock.Trigger>\n  <CommandDock.Panel>\n    <CommandDock.Input placeholder=\"Try: pricing\" />\n    <CommandDock.Results>\n      {found.map((note) => (\n        <CommandDock.Row key={note.id}>\n          <CommandDock.RowTitle>{note.title}</CommandDock.RowTitle>\n          <CommandDock.RowMeta>{note.where}</CommandDock.RowMeta>\n        </CommandDock.Row>\n      ))}\n    </CommandDock.Results>\n  </CommandDock.Panel>\n</CommandDock>",
+  "anatomy": "<CommandDock>\n  <CommandDock.Trigger />\n  <CommandDock.Panel>\n    <CommandDock.Input />\n    <CommandDock.Results>\n      <CommandDock.Row>\n        <CommandDock.RowTitle />\n        <CommandDock.RowMeta />\n      </CommandDock.Row>\n      <CommandDock.Status />\n    </CommandDock.Results>\n  </CommandDock.Panel>\n</CommandDock>",
   "parts": {
     "Trigger": "The closed form: a button with your label that opens the dock.",
     "Panel": "The open form. It stays in the page while closed, folded away and inert, so opening and closing can both be seen.",
     "Input": "The field, with a send button. Enter sends too.",
     "Results": "Where the rows go. It takes no room until there is a row or the dock is busy.",
     "Row": "One row of the answer. It slides in when it is added, and `onSelect` makes it a button.",
+    "RowTitle": "What the row is. It takes the width the row has spare and is cut to one line.",
+    "RowMeta": "Something short at the end of the row, quieter than the title: a date, a place. It keeps its width.",
     "Status": "Three dots and a few words, for while an answer is on its way."
   },
   "examples": [

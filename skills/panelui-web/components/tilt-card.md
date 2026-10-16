@@ -22,7 +22,8 @@ For cards in a dense grid that someone works through, such as a list of records,
 <TiltCard color="info" cardClassName="p-5">
   <TiltCard.Layer depth={24}>{figure}</TiltCard.Layer>
   <TiltCard.Layer depth={8}>
-    <h3>Sync</h3>
+    <TiltCard.Title>Sync</TiltCard.Title>
+    <TiltCard.Description>Changes reach your other devices in seconds.</TiltCard.Description>
   </TiltCard.Layer>
 </TiltCard>
 ```
@@ -32,10 +33,16 @@ For cards in a dense grid that someone works through, such as a list of records,
 ```tsx
 <TiltCard>
   <TiltCard.Layer depth={…}>…</TiltCard.Layer>
+  <TiltCard.Layer depth={…}>
+    <TiltCard.Title />
+    <TiltCard.Description />
+  </TiltCard.Layer>
 </TiltCard>
 ```
 
 - `TiltCard.Layer` — Something lifted off the card by `depth`, in pixels. The further out, the further it moves as the card leans.
+- `TiltCard.Title` — What the card is about. A heading, `h3` unless `as` says otherwise.
+- `TiltCard.Description` — A line or two of body text under the title.
 
 ## Props
 
@@ -56,9 +63,15 @@ Every part also takes the props of the element it renders, and a `className`.
 | --- | --- | --- | --- |
 | `depth` | `number` | — | How far off the card it is lifted, in pixels. Further out moves further as the card leans. |
 
+#### `TiltCardTitleProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `as` | `'h2' \| 'h3' \| 'h4' \| 'p'` | — | The heading level, to fit the page around the card. Default `h3`. |
+
 ## In a Server Component
 
-`TiltCard` is a client component. A Server Component cannot read `TiltCard.Layer` off the import, so import each part by name: `TiltCardLayer`.
+`TiltCard` is a client component. A Server Component cannot read `TiltCard.Layer` off the import, so import each part by name: `TiltCardLayer`, `TiltCardTitle`, `TiltCardDescription`.
 
 ## Notes
 
@@ -149,8 +162,8 @@ export default function TiltCardFigures() {
         <TiltCard key={card.title} color={card.color} cardClassName="flex h-full flex-col gap-6 p-5">
           <div className="flex h-32 items-center justify-center">{card.figure}</div>
           <TiltCard.Layer depth={10} className="flex flex-col gap-1">
-            <h3 className="text-base font-semibold">{card.title}</h3>
-            <p className="text-sm text-muted-foreground">{card.body}</p>
+            <TiltCard.Title>{card.title}</TiltCard.Title>
+            <TiltCard.Description>{card.body}</TiltCard.Description>
           </TiltCard.Layer>
         </TiltCard>
       ))}

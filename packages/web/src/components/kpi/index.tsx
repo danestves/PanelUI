@@ -78,7 +78,10 @@ const kpiVariants = tv({
   },
   variants: {
     surface: {
-      true: { root: 'rounded-3xl border bg-card p-5 text-card-foreground' },
+      true: {
+        root: 'rounded-3xl border bg-card p-5 text-card-foreground',
+        group: 'rounded-3xl border bg-card p-5 text-card-foreground',
+      },
     },
     color: {
       primary: { chart: '[--pu-color:var(--primary)]', progress: '[--pu-color:var(--primary)]' },
@@ -470,11 +473,13 @@ KpiSeparator.displayName = 'Kpi.Separator';
 export interface KpiGroupProps extends ComponentProps<'div'> {
   /** Side by side with upright rules, or stacked with level ones. */
   orientation?: 'horizontal' | 'vertical';
+  /** Draws the group as a card of its own, for a group not already inside one. */
+  surface?: boolean;
 }
 
 /** Several metrics as one panel, with a rule between each and the next. */
-function KpiGroup({ orientation = 'horizontal', className, ...props }: KpiGroupProps) {
-  return <div className={kpiVariants({ orientation }).group({ className })} {...props} />;
+function KpiGroup({ orientation = 'horizontal', surface = false, className, ...props }: KpiGroupProps) {
+  return <div className={kpiVariants({ orientation, surface }).group({ className })} {...props} />;
 }
 KpiGroup.displayName = 'Kpi.Group';
 

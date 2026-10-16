@@ -21,10 +21,10 @@ export default function FeedbackInThePage() {
           {sent ? (
             <>
               <Feedback.Title>Thank you</Feedback.Title>
-              <p className="min-h-[200px] text-[17px] leading-6 text-muted-foreground">
+              <Feedback.Description className="min-h-[200px]">
                 We read every message. If yours needs a reply, you will have one
                 within a working day.
-              </p>
+              </Feedback.Description>
             </>
           ) : (
             <>

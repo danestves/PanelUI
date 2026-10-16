@@ -44,7 +44,10 @@ For a yes-or-no confirmation use a plain dialog. For a form with several fields,
     <Feedback.Panel>
       <Feedback.Title />
       <Feedback.Close />
+      <Feedback.Rating />
       <Feedback.Field />
+      <Feedback.Description />
+      <Feedback.Message />
     </Feedback.Panel>
     <Feedback.Footer>
       <Feedback.Cancel />
@@ -60,6 +63,9 @@ For a yes-or-no confirmation use a plain dialog. For a form with several fields,
 - `Feedback.Title` — The question. In a dialog it is also the dialog's accessible name.
 - `Feedback.Close` — The ✕ in the corner of the panel.
 - `Feedback.Field` — The text area. It has no border of its own, because it is already inside a well.
+- `Feedback.Rating` — A row of round buttons, one per score from 1 to `max`, with `startLabel` and `endLabel` under the ends. `onValueChange` is called with the score pressed. Use it as the first step and ask for the words once a score is in; give it the field's `minHeight` so the dialog keeps its size between the two.
+- `Feedback.Description` — Body text in place of the field, such as a thank-you once the message has gone. In a dialog it is also the dialog's description.
+- `Feedback.Message` — A short line under the field. `muted`, the default, is read out politely as it changes: how much is left to write. `tone="destructive"` is for a failure and is announced at once.
 - `Feedback.Footer` — The row the two actions sit in.
 - `Feedback.Cancel` — Closes the dialog. Call `preventDefault` in `onClick` to do something else, such as going back a step.
 - `Feedback.Submit` — Calls `onSubmit` with the message. Disabled while the field is empty unless you pass `disabled` yourself.
@@ -108,6 +114,22 @@ Every part also takes the props of the element it renders, and a `className`.
 | `minHeight` | `number` | `200` | Room to write in, in pixels, before the field starts to grow. |
 | `maxHeight` | `number` | `360` | How tall the field may grow, in pixels, before the area round it scrolls. |
 
+#### `FeedbackMessageProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `tone` | `'muted' \| 'destructive'` | — | `muted` for a running note, read out politely as it changes: how much is left to write. `destructive` for a failure, announced at once. Default `muted`. |
+
+#### `FeedbackRatingProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `max` | `number` | `5` | The highest score. The scores run from 1 to this. Default 5. |
+| `onValueChange` | `(value: number) => void` | — | Called with the score that was pressed. |
+| `startLabel` | `ReactNode` | — | The word under the lowest score. |
+| `endLabel` | `ReactNode` | — | The word under the highest score. |
+| `minHeight` | `number` | — | The least height it takes, in pixels. Match the field's `minHeight` on the step that follows, so the dialog keeps its size between the two. |
+
 #### `FeedbackSubmitProps`
 
 | Prop | Type | Default | What it does |
@@ -116,7 +138,7 @@ Every part also takes the props of the element it renders, and a `className`.
 
 ## In a Server Component
 
-`Feedback` is a client component. A Server Component cannot read `Feedback.Trigger` off the import, so import each part by name: `FeedbackTrigger`, `FeedbackContent`, `FeedbackPanel`, `FeedbackTitle`, `FeedbackClose`, `FeedbackField`, `FeedbackFooter`, `FeedbackCancel`, `FeedbackSubmit`.
+`Feedback` is a client component. A Server Component cannot read `Feedback.Trigger` off the import, so import each part by name: `FeedbackTrigger`, `FeedbackContent`, `FeedbackPanel`, `FeedbackTitle`, `FeedbackClose`, `FeedbackField`, `FeedbackDescription`, `FeedbackMessage`, `FeedbackRating`, `FeedbackFooter`, `FeedbackCancel`, `FeedbackSubmit`.
 
 ## Notes
 
@@ -166,10 +188,10 @@ export default function FeedbackInThePage() {
           {sent ? (
             <>
               <Feedback.Title>Thank you</Feedback.Title>
-              <p className="min-h-[200px] text-[17px] leading-6 text-muted-foreground">
+              <Feedback.Description className="min-h-[200px]">
                 We read every message. If yours needs a reply, you will have one
                 within a working day.
-              </p>
+              </Feedback.Description>
             </>
           ) : (
             <>

@@ -103,6 +103,12 @@ const planetVariants = tv({
     control:
       'inline-flex size-9 cursor-pointer items-center justify-center text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground active:bg-muted',
     caption: 'flex items-center px-3 text-sm font-medium',
+    // The places on the globe again, as a list beside it, ruled off from what is above.
+    list: 'grid grid-cols-2 gap-1 border-t pt-3',
+    listItem:
+      'flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-start text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring aria-pressed:bg-muted aria-pressed:text-foreground',
+    listDot: 'size-2 shrink-0 rounded-full bg-[var(--pu-color)]',
+    listName: 'truncate',
   },
   variants: {
     /** The colour of the light at the globe's edge. */
@@ -122,11 +128,11 @@ const planetVariants = tv({
       },
     },
     color: {
-      primary: { marker: '[--pu-color:var(--primary)]' },
-      info: { marker: '[--pu-color:var(--info)]' },
-      success: { marker: '[--pu-color:var(--success)]' },
-      warning: { marker: '[--pu-color:var(--warning)]' },
-      destructive: { marker: '[--pu-color:var(--destructive)]' },
+      primary: { marker: '[--pu-color:var(--primary)]', listDot: '[--pu-color:var(--primary)]' },
+      info: { marker: '[--pu-color:var(--info)]', listDot: '[--pu-color:var(--info)]' },
+      success: { marker: '[--pu-color:var(--success)]', listDot: '[--pu-color:var(--success)]' },
+      warning: { marker: '[--pu-color:var(--warning)]', listDot: '[--pu-color:var(--warning)]' },
+      destructive: { marker: '[--pu-color:var(--destructive)]', listDot: '[--pu-color:var(--destructive)]' },
     },
   },
   defaultVariants: { color: 'primary', glow: 'primary' },
@@ -1007,10 +1013,54 @@ function PlanetControls({ step = 60, className, children, ...props }: PlanetCont
 }
 PlanetControls.displayName = 'Planet.Controls';
 
+/* -------------------------------------------------------------------------- */
+/* The list                                                                   */
+/* -------------------------------------------------------------------------- */
+
+export interface PlanetListProps extends ComponentProps<'ul'> {}
+
+/**
+ * The places on the globe as a list, in two columns, for picking one by name.
+ * Put it beside or under the globe and turn the globe to whatever is picked.
+ */
+function PlanetList({ className, ...props }: PlanetListProps) {
+  return <ul data-slot="planet-list" className={planetVariants().list({ className })} {...props} />;
+}
+PlanetList.displayName = 'Planet.List';
+
+export interface PlanetListItemProps extends Omit<ComponentProps<'button'>, 'color'> {
+  /** The colour of the dot before the name. Match it to the place's marker. */
+  color?: PlanetMarkerColor;
+  /** Draws the row as the one that has been picked. */
+  selected?: boolean;
+}
+
+/** One place in `Planet.List`: a dot in its marker's colour, and its name. A button. */
+function PlanetListItem({
+  color = 'primary',
+  selected = false,
+  className,
+  children,
+  ...props
+}: PlanetListItemProps) {
+  const slots = planetVariants({ color });
+  return (
+    <li data-slot="planet-list-item">
+      <button type="button" aria-pressed={selected} className={slots.listItem({ className })} {...props}>
+        <span aria-hidden="true" className={slots.listDot()} />
+        <span className={slots.listName()}>{children}</span>
+      </button>
+    </li>
+  );
+}
+PlanetListItem.displayName = 'Planet.ListItem';
+
 export const Planet = Object.assign(PlanetRoot, {
   Globe: PlanetGlobe,
   Marker: PlanetMarker,
   Controls: PlanetControls,
+  List: PlanetList,
+  ListItem: PlanetListItem,
 });
 
 /*
@@ -1020,4 +1070,4 @@ export const Planet = Object.assign(PlanetRoot, {
  * Server Component writes `<PlanetGlobe>`; anywhere else the dotted form is
  * the same thing.
  */
-export { PlanetGlobe, PlanetMarker, PlanetControls };
+export { PlanetGlobe, PlanetMarker, PlanetControls, PlanetList, PlanetListItem };

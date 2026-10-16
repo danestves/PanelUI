@@ -21,8 +21,17 @@ It lays nothing out for you. Every node is given a position, so for a graph whos
 ```tsx
 <Flow fitViewOnMount>
   <Flow.Background />
-  <Flow.Node id="draft" position={{ x: 40, y: 20 }}>Draft</Flow.Node>
-  <Flow.Node id="edit" position={{ x: 40, y: 150 }}>Edit</Flow.Node>
+  <Flow.Node id="draft" position={{ x: 40, y: 20 }}>
+    <Flow.NodeContent>
+      <Flow.NodeTitle>Draft</Flow.NodeTitle>
+    </Flow.NodeContent>
+  </Flow.Node>
+  <Flow.Node id="edit" position={{ x: 40, y: 150 }}>
+    <Flow.NodeContent>
+      <Flow.NodeTitle>Edit</Flow.NodeTitle>
+      <Flow.NodeDescription>Two rounds</Flow.NodeDescription>
+    </Flow.NodeContent>
+  </Flow.Node>
   <Flow.Edge from="draft" to="edit" arrow />
   <Flow.Controls />
 </Flow>
@@ -34,10 +43,21 @@ It lays nothing out for you. Every node is given a position, so for a graph whos
 <Flow>
   <Flow.Background />
   <Flow.Node id="…" position={…}>
-    …
+    <Flow.NodeHeader>
+      <Flow.NodeDescription />
+      <Flow.NodeBadge />
+    </Flow.NodeHeader>
+    <Flow.NodeContent>
+      <Flow.NodeTitle />
+      <Flow.NodeDescription />
+    </Flow.NodeContent>
     <Flow.Handle />
   </Flow.Node>
-  <Flow.Group id="…" position={…} />
+  <Flow.Group id="…" position={…}>
+    <Flow.GroupItem>
+      <Flow.NodeContent />
+    </Flow.GroupItem>
+  </Flow.Group>
   <Flow.Edge from="…" to="…" />
   <Flow.Controls />
   <Flow.MiniMap />
@@ -45,10 +65,16 @@ It lays nothing out for you. Every node is given a position, so for a graph whos
 ```
 
 - `Flow.Background` — The pattern behind the graph: dots, lines or crosses. It moves and scales with the graph.
-- `Flow.Node` — A box on the graph. `id` is what edges call it, `position` is where it starts, and its children are yours.
+- `Flow.Node` — A box on the graph. `id` is what edges call it and `position` is where it starts. Fill it with the node parts below, or with anything of your own.
+- `Flow.NodeHeader` — A strip across the top of a node, ruled off from the rest, with something at each end: a step number and a `Flow.NodeBadge`.
+- `Flow.NodeContent` — The body of a node, carrying the node's padding. Inside a `Flow.GroupItem` it has none, because the item has its own.
+- `Flow.NodeTitle` — What the node is.
+- `Flow.NodeDescription` — A quieter line about the node. It is smaller inside a `Flow.GroupItem`.
+- `Flow.NodeBadge` — A word in a pill for the node's state, tinted with the theme colour named by `color`. `muted` is grey, and the default.
 - `Flow.Handle` — A dot on a node's edge that a connection can be drawn from or dropped on. Give it an `id` to join an edge to it by name.
 - `Flow.Edge` — A line from one node to another: a curve, a routed line or a straight one, optionally dashed, marching and with an arrowhead.
 - `Flow.Group` — A dashed box with a label, round things that belong together. It is dragged as one and an edge can be joined to it.
+- `Flow.GroupItem` — One thing inside a group that is not a node of its own: an icon beside a `Flow.NodeContent`. It moves with the group, and edges cannot join it.
 - `Flow.Controls` — Buttons to zoom, fit everything in view and lock the canvas.
 - `Flow.MiniMap` — The whole graph, small, with the part in view marked on it.
 
@@ -100,6 +126,12 @@ Every part also takes the props of the element it renders, and a `className`.
 | --- | --- | --- | --- |
 | `label` | `ReactNode` | — | Written in the corner of the group. |
 
+#### `FlowNodeBadgeProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `color` | `FlowColor \| 'muted'` | — | Which of the theme's roles it is tinted with. `muted` is grey. Default `muted`. |
+
 #### `FlowHandleProps`
 
 | Prop | Type | Default | What it does |
@@ -146,7 +178,7 @@ Every part also takes the props of the element it renders, and a `className`.
 
 ## In a Server Component
 
-`Flow` is a client component. A Server Component cannot read `Flow.Background` off the import, so import each part by name: `FlowBackground`, `FlowNode`, `FlowHandle`, `FlowEdge`, `FlowGroup`, `FlowControls`, `FlowMiniMap`.
+`Flow` is a client component. A Server Component cannot read `Flow.Background` off the import, so import each part by name: `FlowBackground`, `FlowNode`, `FlowHandle`, `FlowEdge`, `FlowGroup`, `FlowGroupItem`, `FlowNodeHeader`, `FlowNodeContent`, `FlowNodeTitle`, `FlowNodeDescription`, `FlowNodeBadge`, `FlowControls`, `FlowMiniMap`.
 
 ## Notes
 
@@ -207,11 +239,7 @@ const STAGES = [
   { id: 'publish', name: 'Publish', detail: 'Site and newsletter' },
 ];
 
-const TAG = {
-  done: 'bg-[color-mix(in_oklab,var(--success)_14%,transparent)] text-(--success)',
-  live: 'bg-[color-mix(in_oklab,var(--info)_14%,transparent)] text-(--info)',
-  waiting: 'bg-muted text-muted-foreground',
-};
+const TAG = { done: 'success', live: 'info', waiting: 'muted' } as const;
 
 /**
  * Whether the canvas has room to lay the graph out across. It is the canvas
@@ -266,16 +294,16 @@ export default function FlowPipeline() {
               position={place(index)}
               className={wide ? 'w-52' : 'w-44'}
             >
-              <div className="flex items-center justify-between gap-3 border-b px-4 py-2.5">
-                <span className="text-sm text-muted-foreground">Stage {index + 1}</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TAG[state]}`}>
+              <Flow.NodeHeader>
+                <Flow.NodeDescription>Stage {index + 1}</Flow.NodeDescription>
+                <Flow.NodeBadge color={TAG[state]}>
                   {state === 'done' ? 'Done' : state === 'live' ? 'Now' : 'Waiting'}
-                </span>
-              </div>
-              <div className="px-4 py-3">
-                <p className="text-sm font-medium">{stage.name}</p>
-                <p className="truncate text-sm text-muted-foreground">{stage.detail}</p>
-              </div>
+                </Flow.NodeBadge>
+              </Flow.NodeHeader>
+              <Flow.NodeContent>
+                <Flow.NodeTitle>{stage.name}</Flow.NodeTitle>
+                <Flow.NodeDescription className="truncate">{stage.detail}</Flow.NodeDescription>
+              </Flow.NodeContent>
             </Flow.Node>
           );
         })}

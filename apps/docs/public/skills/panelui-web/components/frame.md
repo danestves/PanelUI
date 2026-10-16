@@ -68,7 +68,7 @@ For a single surface with a heading and a body, use [Card](/docs/web/components/
 - `Frame.Title` — A quiet caption in the header. Inside `Frame.Content` it is the row's subject instead: full colour, and cut to one line. Use `as="p"` there.
 - `Frame.Description` — A line under a title, in the header or in a row.
 - `Frame.Action` — The header's trailing side: a short status, a link, a small button.
-- `Frame.Panel` — The card the rows sit on. It draws the hairline between its children.
+- `Frame.Panel` — The card the rows sit on. It draws the hairline between its children, except under `band`, where it holds one figure and draws none.
 - `Frame.Row` — One line of the panel. `href` makes it a link, `onClick` a button, and `chevron` marks one that leads somewhere.
 - `Frame.Media` — A row's leading icon or avatar. It keeps its size.
 - `Frame.Content` — The middle of a row. It takes the space left and can shrink past its content, so a long line truncates instead of pushing the actions off the edge.
@@ -84,7 +84,7 @@ Every part also takes the props of the element it renders, and a `className`.
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `variant` | `FrameVariant` | `default` | `default` sets the panel in a tray. `band` holds a bordered card in a thin muted band, for a widget showing one figure or chart. `inset` floats the panel in a recessed band and gives `Frame.Footer` somewhere to sit. `plain` drops the shell, for a frame inside a container that already draws its own edge. |
+| `variant` | `FrameVariant` | `default` | `default` sets the panel in a tray. `band` holds a bordered card in a thin muted band, for a widget showing one figure or chart, and its panel draws no rule between its children. `inset` floats the panel in a recessed band and gives `Frame.Footer` somewhere to sit. `plain` drops the shell, for a frame inside a container that already draws its own edge. |
 
 #### `FrameTitleProps`
 

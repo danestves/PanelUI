@@ -15,6 +15,7 @@
     "range-meter",
     "rolling-number",
     "sheet",
+    "stat",
     "tilt-card"
   ]
 }

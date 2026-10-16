@@ -44,8 +44,9 @@
  * ## Rows divide themselves
  *
  * The panel draws the hairline between its children, so no row has to know
- * whether it is first. A row with `href` is a link and one with `onClick` is a
- * button, each with the hover and focus a pressable row should have, and
+ * whether it is first. Under `band` it draws none: a figure and its chart are
+ * one thing, not two rows. A row with `href` is a link and one with `onClick`
+ * is a button, each with the hover and focus a pressable row should have, and
  * `chevron` marks one that leads somewhere.
  *
  * ## It renders on the server
@@ -65,8 +66,11 @@ const frameVariants = tv({
   slots: {
     root: 'group/frame flex flex-col text-foreground',
     header: [
-      'grid grid-cols-[minmax(0,1fr)] items-center gap-x-3 gap-y-0.5 px-4 pt-2.5 pb-3',
+      'grid grid-cols-[minmax(0,1fr)] items-center gap-x-3 px-4 pt-2.5 pb-3',
       'has-data-[slot=frame-action]:grid-cols-[minmax(0,1fr)_auto]',
+      // The action spans two rows, so with no description the second is empty
+      // and a gap under the title would only add height.
+      'has-data-[slot=frame-description]:gap-y-0.5',
       'group-data-[variant=inset]/frame:px-3 group-data-[variant=inset]/frame:pt-1 group-data-[variant=inset]/frame:pb-2.5',
       'group-data-[variant=plain]/frame:px-1',
       'group-data-[variant=band]/frame:px-3.5 group-data-[variant=band]/frame:py-2.5',
@@ -88,6 +92,8 @@ const frameVariants = tv({
     // The panel's shape follows the root's variant, read from its data attribute.
     panel: [
       'flex flex-col divide-y overflow-hidden bg-card text-card-foreground',
+      // A band holds one figure, not a list of rows, so nothing in it is ruled off.
+      'group-data-[variant=band]/frame:divide-y-0',
       'group-data-[variant=default]/frame:rounded-t-2xl group-data-[variant=default]/frame:border-t',
       'group-data-[variant=plain]/frame:rounded-3xl group-data-[variant=plain]/frame:border group-data-[variant=plain]/frame:shadow-xs',
       'group-data-[variant=inset]/frame:rounded-[30px] group-data-[variant=inset]/frame:bg-popover group-data-[variant=inset]/frame:text-popover-foreground group-data-[variant=inset]/frame:shadow-xs',
@@ -144,7 +150,8 @@ export type FrameVariant = 'default' | 'band' | 'inset' | 'plain';
 export interface FrameProps extends ComponentProps<'div'> {
   /**
    * `default` sets the panel in a tray. `band` holds a bordered card in a
-   * thin muted band, for a widget showing one figure or chart. `inset` floats
+   * thin muted band, for a widget showing one figure or chart, and its panel
+   * draws no rule between its children. `inset` floats
    * the panel in a recessed band and gives `Frame.Footer` somewhere to sit.
    * `plain` drops the shell, for a frame inside a container that already draws
    * its own edge.
@@ -200,7 +207,7 @@ FrameAction.displayName = 'Frame.Action';
 
 export interface FramePanelProps extends ComponentProps<'div'> {}
 
-/** The card the rows sit on. It draws the hairline between its children. */
+/** The card the rows sit on. It draws the hairline between its children, except under `band`. */
 function FramePanel({ className, ...props }: FramePanelProps) {
   return <div data-slot="frame-panel" className={frameVariants().panel({ className })} {...props} />;
 }

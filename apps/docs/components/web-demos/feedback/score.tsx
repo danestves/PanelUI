@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Feedback } from 'panelui-web/feedback';
 
-const SCORES = [1, 2, 3, 4, 5];
-
 export default function FeedbackScore() {
   const [open, setOpen] = useState(false);
   const [score, setScore] = useState<number | null>(null);
@@ -29,25 +27,12 @@ export default function FeedbackScore() {
             <Feedback.Panel>
               <Feedback.Title>How is the new editor?</Feedback.Title>
               <Feedback.Close />
-              <div className="flex min-h-[120px] flex-col justify-center gap-3">
-                <div className="flex justify-between gap-2">
-                  {SCORES.map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      aria-label={`${value} out of 5`}
-                      onClick={() => setScore(value)}
-                      className="flex size-12 cursor-pointer items-center justify-center rounded-full bg-foreground/10 text-lg font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
-                    >
-                      {value}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Worse</span>
-                  <span>Much better</span>
-                </div>
-              </div>
+              <Feedback.Rating
+                minHeight={120}
+                onValueChange={setScore}
+                startLabel="Worse"
+                endLabel="Much better"
+              />
             </Feedback.Panel>
             <Feedback.Footer>
               <Feedback.Cancel>Not now</Feedback.Cancel>

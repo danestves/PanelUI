@@ -11,6 +11,7 @@ status: new
 
 import { useEffect, useState } from 'react';
 import { RollingNumber } from '@/components/panelui/rolling-number';
+import { Stat } from '@/components/panelui/stat';
 
 /** Jobs waiting in a queue, read every couple of seconds. */
 const WAITING = [312, 298, 305, 341, 327, 289];
@@ -26,10 +27,10 @@ export default function RollingNumberQueue() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-muted-foreground">Jobs waiting</span>
+    <Stat.Content>
+      <Stat.Label weight="medium">Jobs waiting</Stat.Label>
       <RollingNumber value={WAITING[reading]} className="text-6xl font-bold tracking-tight" />
-    </div>
+    </Stat.Content>
   );
 }
 ```
@@ -112,20 +113,21 @@ import { RollingNumber } from "@/components/panelui/rolling-number"
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RollingNumber } from '@/components/panelui/rolling-number';
+import { Stat } from '@/components/panelui/stat';
 
 export default function RollingNumberCurrency() {
   const [total, setTotal] = useState(1864.5);
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <div className="flex flex-col items-center gap-1">
-        <span className="text-sm font-medium text-muted-foreground">Trip budget left</span>
+      <Stat.Content className="items-center">
+        <Stat.Label weight="medium">Trip budget left</Stat.Label>
         <RollingNumber
           value={total}
           format={{ style: 'currency', currency: 'EUR' }}
           className="text-4xl font-bold tracking-tight"
         />
-      </div>
+      </Stat.Content>
       <div className="flex flex-wrap justify-center gap-2">
         <Button variant="outline" size="sm" onClick={() => setTotal((value) => value - 72.4)}>
           Book a train
@@ -153,6 +155,7 @@ Three figures in three notations, changed together. Compact notation keeps a lar
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RollingNumber } from '@/components/panelui/rolling-number';
+import { Stat } from '@/components/panelui/stat';
 
 /** Three weeks after a launch. */
 const WEEKS = [
@@ -167,37 +170,33 @@ export default function RollingNumberFormats() {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <dl className="grid grid-cols-3 gap-8 text-center">
-        <div className="flex flex-col gap-1">
-          <dt className="text-sm font-medium text-muted-foreground">Downloads</dt>
-          <dd className="text-2xl font-bold">
-            <RollingNumber value={downloads} />
-          </dd>
-        </div>
-        <div className="flex flex-col gap-1">
-          <dt className="text-sm font-medium text-muted-foreground">Trial to paid</dt>
-          <dd className="text-2xl font-bold">
-            <RollingNumber
-              value={paid}
-              format={{ style: 'percent', minimumFractionDigits: 1 }}
-            />
-          </dd>
-        </div>
-        <div className="flex flex-col gap-1">
-          <dt className="text-sm font-medium text-muted-foreground">Sales</dt>
-          <dd className="text-2xl font-bold">
-            <RollingNumber
-              value={sales}
-              format={{
-                style: 'currency',
-                currency: 'USD',
-                notation: 'compact',
-                maximumFractionDigits: 1,
-              }}
-            />
-          </dd>
-        </div>
-      </dl>
+      <div className="grid grid-cols-3 gap-8 text-center">
+        <Stat.Content className="items-center">
+          <Stat.Label weight="medium">Downloads</Stat.Label>
+          <RollingNumber value={downloads} className="text-2xl font-bold" />
+        </Stat.Content>
+        <Stat.Content className="items-center">
+          <Stat.Label weight="medium">Trial to paid</Stat.Label>
+          <RollingNumber
+            value={paid}
+            format={{ style: 'percent', minimumFractionDigits: 1 }}
+            className="text-2xl font-bold"
+          />
+        </Stat.Content>
+        <Stat.Content className="items-center">
+          <Stat.Label weight="medium">Sales</Stat.Label>
+          <RollingNumber
+            value={sales}
+            format={{
+              style: 'currency',
+              currency: 'USD',
+              notation: 'compact',
+              maximumFractionDigits: 1,
+            }}
+            className="text-2xl font-bold"
+          />
+        </Stat.Content>
+      </div>
       <Button
         variant="outline"
         size="sm"

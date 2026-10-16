@@ -13,13 +13,13 @@ import { Flow } from 'panelui-web/flow';
 
 function Service({ icon, name, detail }: { icon: ReactNode; name: string; detail: string }) {
   return (
-    <div className="flex w-48 items-center gap-3 rounded-xl border bg-card px-3 py-2.5 [&_svg]:size-4 [&_svg]:text-muted-foreground">
+    <Flow.GroupItem className="w-48">
       {icon}
-      <div>
-        <p className="text-sm font-medium">{name}</p>
-        <p className="text-xs text-muted-foreground">{detail}</p>
-      </div>
-    </div>
+      <Flow.NodeContent>
+        <Flow.NodeTitle>{name}</Flow.NodeTitle>
+        <Flow.NodeDescription>{detail}</Flow.NodeDescription>
+      </Flow.NodeContent>
+    </Flow.GroupItem>
   );
 }
 
