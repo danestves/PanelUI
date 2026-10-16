@@ -18,6 +18,6 @@
     "type": "skill-md",
     "description": "Build React web UIs with PanelUI's web collection — adding its components from the shadcn registry or from npm, colouring them from the theme, and composing them into framed panels. Applies when working in a React project that has shadcn/ui set up with a @panelui registry or has panelui-web installed, when the user mentions PanelUI on the web, or when they ask for a dotted globe, a KPI card, a kanban board, a node graph, an activity grid or a feedback dialog in React.",
     "path": "/skills/panelui-web/SKILL.md",
-    "digest": "sha256:9a83ca440dd3b8fb76cbf1ea7b4e23307aa56931d661a78c8017c2e43de4f622"
+    "digest": "sha256:67582979ee7e1f209a4c973f4f18f992735daade3fd46e909273a78bbff463c8"
   }
 ]

@@ -15,7 +15,8 @@
     "react globe component dotted world map markers",
     {
       "addedIn": "0.1.0",
-      "category": "data"
+      "category": "data",
+      "updatedIn": "0.3.0"
     }
   ],
   "feedback": [
@@ -24,7 +25,8 @@
     "react feedback dialog form component",
     {
       "addedIn": "0.1.0",
-      "category": "feedback"
+      "category": "feedback",
+      "updatedIn": "0.3.0"
     }
   ],
   "day-grid": [
@@ -34,7 +36,8 @@
     {
       "addedIn": "0.1.0",
       "category": "data",
-      "title": "Day Grid"
+      "title": "Day Grid",
+      "updatedIn": "0.3.0"
     }
   ],
   "range-meter": [
@@ -44,7 +47,8 @@
     {
       "addedIn": "0.1.0",
       "category": "data",
-      "title": "Range Meter"
+      "title": "Range Meter",
+      "updatedIn": "0.3.0"
     }
   ],
   "bar-picker": [
@@ -64,7 +68,8 @@
     {
       "addedIn": "0.1.0",
       "category": "data",
-      "title": "KPI"
+      "title": "KPI",
+      "updatedIn": "0.3.0"
     }
   ],
   "lane-board": [
@@ -74,7 +79,8 @@
     {
       "addedIn": "0.1.0",
       "category": "layout",
-      "title": "Lane Board"
+      "title": "Lane Board",
+      "updatedIn": "0.3.0"
     }
   ],
   "flow": [
@@ -84,7 +90,8 @@
     {
       "addedIn": "0.1.0",
       "category": "data",
-      "title": "Flow"
+      "title": "Flow",
+      "updatedIn": "0.3.0"
     }
   ],
   "tilt-card": [
@@ -94,7 +101,8 @@
     {
       "addedIn": "0.1.0",
       "category": "layout",
-      "title": "Tilt Card"
+      "title": "Tilt Card",
+      "updatedIn": "0.3.0"
     }
   ],
   "command-dock": [
@@ -104,7 +112,8 @@
     {
       "addedIn": "0.1.0",
       "category": "overlays",
-      "title": "Command Dock"
+      "title": "Command Dock",
+      "updatedIn": "0.3.0"
     }
   ],
   "sheet": [
@@ -131,7 +140,8 @@
     "react frame widget panel rows component",
     {
       "addedIn": "0.2.0",
-      "category": "layout"
+      "category": "layout",
+      "updatedIn": "0.3.0"
     }
   ],
   "stat": [
