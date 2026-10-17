@@ -173,6 +173,13 @@ export interface ButtonProps
   extends Omit<AnimatedPressableProps, 'children' | 'disabled'>,
     Omit<ButtonVariantProps, 'disabled'> {
   children?: ReactNode;
+  /**
+   * Block presses and dim the button to 64% opacity. Screen readers hear it as
+   * dimmed.
+   *
+   * To dim it by a different amount, pass an opacity class while it is
+   * disabled: `className={disabled ? 'opacity-50' : undefined}`.
+   */
   disabled?: boolean;
   /**
    * Show a spinner and block presses while an action is in flight. Screen
