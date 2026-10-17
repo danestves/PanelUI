@@ -9,6 +9,17 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.112.1] — 2026-10-17
+
+### Fixed
+
+- A disabled control now looks disabled. The press animation shared by Button and the other
+  pressable components wrote an opacity of 1 on every render, and it was applied after the
+  `className` styles, so it overrode every opacity class on the control. A disabled Button stayed
+  at full opacity, and an opacity class passed in `className` had no effect either. It now
+  writes an opacity only for a control that fades when pressed, and that fade starts from the
+  control's own opacity instead of from 1.
+
 ## [0.112.0] — 2026-10-15
 
 ### Added
