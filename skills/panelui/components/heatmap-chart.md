@@ -85,7 +85,7 @@ Extends `ViewProps, ChartAccessibilityProps<HeatmapCell>`.
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `className` | `string` | — | — |
-| `width` | `number` | `26` | Width reserved for the labels. The grid is sized around it. |
+| `width` | `number` | — | Width reserved for the labels. The grid is sized around it. Defaults to 26, and widens with the system text size so a larger weekday does not wrap. |
 | `tickFilter` | `'all' \| 'odd' \| 'even'` | `odd` | Which rows get a label. Every other row is the usual choice. |
 | `labelFormat` | `'initial' \| 'full'` | `full` | `initial` is the single letter; `full` is the abbreviated name. |
 | `labels` | `string[]` | — | Row labels, top to bottom. Overrides the weekday names — for a grid whose rows are not days. |

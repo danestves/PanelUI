@@ -48,7 +48,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent, type ViewProps } from 'react-native';
+import {
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type LayoutChangeEvent,
+  type ViewProps,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -92,6 +98,20 @@ function isToken(value: string | undefined): value is string {
 
 /** Room left for the weekday labels when the y-axis does not ask for its own. */
 const DEFAULT_AXIS_WIDTH = 26;
+
+/** Height of the month row at the default text size: one line of `xs` text. */
+const X_AXIS_HEIGHT = 16;
+
+/**
+ * How much larger than default the axis labels are drawn, from 1 up to the
+ * axis cap. The heatmap's gutters are only just wide enough for a weekday at
+ * the default size, so they grow by the same factor or a larger label wraps
+ * and runs into the cells. Below the default size they stay put.
+ */
+function useAxisLabelScale() {
+  const { fontScale } = useWindowDimensions();
+  return Math.min(Math.max(fontScale, 1), CHART_AXIS_MAX_FONT_SCALE);
+}
 
 /**
  * Height assumed for the readout when placing it above a cell. It is a single
@@ -436,9 +456,12 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
     (typeof emptyToken === 'string' ? emptyToken : 'rgba(128,128,128,0.16)');
 
   const parts = useMemo(() => splitParts(children), [children]);
+  const labelScale = useAxisLabelScale();
   // The y-axis is laid out beside the grid rather than over it, so its width
   // has to come out of the grid's before the cells are sized.
-  const axisWidth = parts.y ? (parts.y.props.width ?? DEFAULT_AXIS_WIDTH) : 0;
+  const axisWidth = parts.y
+    ? (parts.y.props.width ?? Math.ceil(DEFAULT_AXIS_WIDTH * labelScale))
+    : 0;
 
   const grid = useMemo<Grid>(() => {
     const count = data.length;
@@ -840,6 +863,7 @@ export interface HeatmapXAxisProps {
 function HeatmapXAxis({ className, formatLabel, labels: given }: HeatmapXAxisProps) {
   const { data, grid } = useHeatmap('HeatmapChart.XAxis');
   const step = grid.size + grid.gap;
+  const scale = useAxisLabelScale();
 
   const labels = useMemo(() => {
     if (given) {
@@ -869,7 +893,10 @@ function HeatmapXAxis({ className, formatLabel, labels: given }: HeatmapXAxisPro
   }, [data, formatLabel, given]);
 
   return (
-    <View className={cn('h-4', className)} style={{ width: grid.width }}>
+    <View
+      className={cn('h-4', className)}
+      style={[{ width: grid.width }, scale > 1 && { height: Math.ceil(X_AXIS_HEIGHT * scale) }]}
+    >
       {labels.map(({ column, label }) => (
         <Text
           key={`${column}-${label}`}
@@ -889,7 +916,10 @@ HeatmapXAxis.slot = 'x-axis' as Slot;
 
 export interface HeatmapYAxisProps {
   className?: string;
-  /** Width reserved for the labels. The grid is sized around it. */
+  /**
+   * Width reserved for the labels. The grid is sized around it. Defaults to 26,
+   * and widens with the system text size so a larger weekday does not wrap.
+   */
   width?: number;
   /** Which rows get a label. Every other row is the usual choice. */
   tickFilter?: 'all' | 'odd' | 'even';
@@ -905,13 +935,15 @@ export interface HeatmapYAxisProps {
 /** Weekday labels down the left of the grid. */
 function HeatmapYAxis({
   className,
-  width = DEFAULT_AXIS_WIDTH,
+  width: widthProp,
   tickFilter = 'odd',
   labelFormat = 'full',
   labels,
 }: HeatmapYAxisProps) {
   const { grid, weekStartDay } = useHeatmap('HeatmapChart.YAxis');
   const step = grid.size + grid.gap;
+  const scale = useAxisLabelScale();
+  const width = widthProp ?? Math.ceil(DEFAULT_AXIS_WIDTH * scale);
 
   return (
     <View className={className} style={{ width, height: grid.height }}>
@@ -927,10 +959,11 @@ function HeatmapYAxis({
             key={row}
             size="xs"
             muted
+            numberOfLines={1}
             className="absolute"
             // Centred on the cell rather than aligned to its top edge, so a
             // label reads as belonging to the row it sits beside.
-            style={{ top: row * step + grid.size / 2 - 7 }}
+            style={{ top: row * step + grid.size / 2 - 7 * scale }}
             maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
           >
             {labels
