@@ -71,6 +71,7 @@ import Svg, { Circle, G, Line as SvgLine } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { useSkeletonHandoff } from '../../hooks/use-skeleton-handoff';
 import {
+  CHART_AXIS_MAX_FONT_SCALE,
   ChartAccessibilityData,
   type ChartAccessibilityProps,
 } from '../../primitives/chart-accessibility';
@@ -1649,6 +1650,7 @@ function BubbleChartXAxis({ ticks = 4, format, label, className }: BubbleChartXA
             width: plot.width,
             textAlign: 'center',
           }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {label}
         </Text>
@@ -1676,6 +1678,7 @@ function BubbleChartXAxis({ ticks = 4, format, label, className }: BubbleChartXA
             width: AXIS_LABEL_WIDTH,
             textAlign: 'center',
           }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {tick.text}
         </Text>
@@ -1745,7 +1748,13 @@ function BubbleChartYAxis({ ticks = 4, format, label, className }: BubbleChartYA
             transform: [{ rotate: '-90deg' }],
           }}
         >
-          <Text size="xs" muted numberOfLines={1} style={{ textAlign: 'center' }}>
+          <Text
+            size="xs"
+            muted
+            numberOfLines={1}
+            style={{ textAlign: 'center' }}
+            maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
+          >
             {label}
           </Text>
         </View>
@@ -1765,7 +1774,13 @@ function BubbleChartYAxis({ ticks = 4, format, label, className }: BubbleChartYA
         className={cn('items-end justify-between', className)}
       >
         {labels.map((tick) => (
-          <Text key={tick.key} size="xs" muted numberOfLines={1}>
+          <Text
+            key={tick.key}
+            size="xs"
+            muted
+            numberOfLines={1}
+            maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
+          >
             {tick.text}
           </Text>
         ))}

@@ -65,7 +65,11 @@ import Animated, {
 import Svg, { Defs, G, Line as SvgLine, LinearGradient, Path, Stop } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
-import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
+import {
+  CHART_AXIS_MAX_FONT_SCALE,
+  ChartAccessibilityData,
+  type ChartAccessibilityProps,
+} from '../../primitives/chart-accessibility';
 import {
   bandOf,
   barPath,
@@ -980,6 +984,7 @@ function BarChartXAxis({ ticks, format, className }: BarChartXAxisProps) {
             width: bandWidth,
             textAlign: 'center',
           }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {label.text}
         </Text>
@@ -1053,7 +1058,7 @@ function BarChartYAxis({ ticks = 4, format, className }: BarChartYAxisProps) {
           key={label.key}
           className={horizontal ? 'flex-1 justify-center' : undefined}
         >
-          <Text size="xs" muted numberOfLines={1}>
+          <Text size="xs" muted numberOfLines={1} maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}>
             {label.text}
           </Text>
         </View>

@@ -80,7 +80,11 @@ import Svg, {
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
-import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
+import {
+  CHART_AXIS_MAX_FONT_SCALE,
+  ChartAccessibilityData,
+  type ChartAccessibilityProps,
+} from '../../primitives/chart-accessibility';
 import {
   areaPath,
   columnValues,
@@ -870,6 +874,7 @@ function LineChartXAxis({ ticks = 4, format, className }: LineChartXAxisProps) {
             width: POINT_LABEL_WIDTH,
             textAlign: 'center',
           }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {label.text}
         </Text>
@@ -930,7 +935,13 @@ function LineChartYAxis({ ticks = 4, format, className }: LineChartYAxisProps) {
       className={cn('items-end justify-between', className)}
     >
       {labels.map((label) => (
-        <Text key={label.key} size="xs" muted numberOfLines={1}>
+        <Text
+          key={label.key}
+          size="xs"
+          muted
+          numberOfLines={1}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
+        >
           {label.text}
         </Text>
       ))}

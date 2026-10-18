@@ -96,7 +96,11 @@ import Svg, {
   Rect,
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
-import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
+import {
+  CHART_AXIS_MAX_FONT_SCALE,
+  ChartAccessibilityData,
+  type ChartAccessibilityProps,
+} from '../../primitives/chart-accessibility';
 import { Text } from '../../primitives/text';
 import { finiteChartNumber } from '../../primitives/finite-chart';
 import {
@@ -1371,6 +1375,7 @@ function PlotXAxis({ ticks = 4, format, className }: PlotXAxisProps) {
               width: POINT_LABEL_WIDTH,
               textAlign: 'center',
             }}
+            maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
           >
             {label.text}
           </Text>
@@ -1429,7 +1434,13 @@ function PlotYAxis({ ticks = 4, format, className }: PlotYAxisProps) {
       className={cn('items-end justify-between', className)}
     >
       {labels.map((label) => (
-        <Text key={label.key} size="xs" muted numberOfLines={1}>
+        <Text
+          key={label.key}
+          size="xs"
+          muted
+          numberOfLines={1}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
+        >
           {label.text}
         </Text>
       ))}

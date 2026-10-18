@@ -66,7 +66,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, G, Line as SvgLine, LinearGradient, Path, Stop } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
-import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
+import {
+  CHART_AXIS_MAX_FONT_SCALE,
+  ChartAccessibilityData,
+  type ChartAccessibilityProps,
+} from '../../primitives/chart-accessibility';
 import { Text } from '../../primitives/text';
 import {
   finiteChartDomain,
@@ -1142,6 +1146,7 @@ function WaterfallChartXAxis({ ticks, format, className }: WaterfallChartXAxisPr
             width: bandWidth,
             textAlign: 'center',
           }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {label.text}
         </Text>
@@ -1209,7 +1214,7 @@ function WaterfallChartYAxis({ ticks = 4, format, className }: WaterfallChartYAx
     >
       {labels.map((label) => (
         <View key={label.key} className={horizontal ? 'flex-1 justify-center' : undefined}>
-          <Text size="xs" muted numberOfLines={1}>
+          <Text size="xs" muted numberOfLines={1} maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}>
             {label.text}
           </Text>
         </View>

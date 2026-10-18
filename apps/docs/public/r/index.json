@@ -1061,6 +1061,7 @@
     "description": "A reading that keeps arriving, against a window that keeps moving.",
     "registryDependencies": [
       "chart",
+      "chart-accessibility",
       "cn",
       "text"
     ],

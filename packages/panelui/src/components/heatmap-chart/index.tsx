@@ -62,7 +62,11 @@ import Animated, {
 import Svg, { G, Line as SvgLine, Rect } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
-import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
+import {
+  CHART_AXIS_MAX_FONT_SCALE,
+  ChartAccessibilityData,
+  type ChartAccessibilityProps,
+} from '../../primitives/chart-accessibility';
 import { cn } from '../../utils/cn';
 import { normalizeWeekStart, startOfDay } from '../../utils/date';
 
@@ -873,6 +877,7 @@ function HeatmapXAxis({ className, formatLabel, labels: given }: HeatmapXAxisPro
           muted
           className="absolute"
           style={{ left: column * step }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {label}
         </Text>
@@ -926,6 +931,7 @@ function HeatmapYAxis({
             // Centred on the cell rather than aligned to its top edge, so a
             // label reads as belonging to the row it sits beside.
             style={{ top: row * step + grid.size / 2 - 7 }}
+            maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
           >
             {labels
               ? name

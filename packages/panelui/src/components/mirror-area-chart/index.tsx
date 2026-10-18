@@ -64,7 +64,11 @@ import Svg, {
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
-import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
+import {
+  CHART_AXIS_MAX_FONT_SCALE,
+  ChartAccessibilityData,
+  type ChartAccessibilityProps,
+} from '../../primitives/chart-accessibility';
 import { finiteChartDomain } from '../../primitives/finite-chart';
 import {
   colorStop,
@@ -934,6 +938,7 @@ function MirrorAreaChartXAxis({ ticks = 4, format, className }: MirrorAreaChartX
             width: POINT_LABEL_WIDTH,
             textAlign: 'center',
           }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {label.text}
         </Text>
@@ -984,6 +989,7 @@ function MirrorAreaChartYAxis({ formatTop, formatBottom, className }: MirrorArea
             width,
             textAlign: 'right',
           }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {label.text}
         </Text>

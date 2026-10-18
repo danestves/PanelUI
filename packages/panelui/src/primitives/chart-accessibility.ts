@@ -1,5 +1,13 @@
 import { createElement } from 'react';
 
+/**
+ * The largest text scale a chart's axis labels follow: iOS's biggest size before
+ * the accessibility range. Axis labels sit in fixed-width gutters at fixed
+ * steps, so past this they overlap each other or clip. Screen readers still get
+ * every value through the chart's accessibility data.
+ */
+export const CHART_AXIS_MAX_FONT_SCALE = 1.353;
+
 export interface ChartAccessibilityProps<Datum> {
   /** Spoken summary. Defaults to the chart family and number of data entries. */
   accessibilityLabel?: string;

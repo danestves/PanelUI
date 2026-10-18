@@ -68,7 +68,11 @@ import Animated, {
 import Svg, { Defs, G, Line as SvgLine, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
-import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
+import {
+  CHART_AXIS_MAX_FONT_SCALE,
+  ChartAccessibilityData,
+  type ChartAccessibilityProps,
+} from '../../primitives/chart-accessibility';
 import { useControllableState } from '../../primitives/controllable-state';
 import { finiteChartNumber } from '../../primitives/finite-chart';
 import {
@@ -997,6 +1001,7 @@ function BumpChartXAxis({ ticks = 4, format, className }: BumpChartXAxisProps) {
             width: POINT_LABEL_WIDTH,
             textAlign: 'center',
           }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {label.text}
         </Text>
@@ -1030,7 +1035,13 @@ function BumpChartYAxis({ format, className }: BumpChartYAxisProps) {
       className={cn(rows <= 1 ? 'items-end justify-center' : 'items-end justify-between', className)}
     >
       {Array.from({ length: rows }, (_unused, index) => (
-        <Text key={index} size="xs" muted numberOfLines={1}>
+        <Text
+          key={index}
+          size="xs"
+          muted
+          numberOfLines={1}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
+        >
           {format ? format(index + 1) : `#${index + 1}`}
         </Text>
       ))}

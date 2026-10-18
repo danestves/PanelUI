@@ -93,6 +93,7 @@ import Svg, {
   Line as SvgLine,
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
+import { CHART_AXIS_MAX_FONT_SCALE } from '../../primitives/chart-accessibility';
 import { Text } from '../../primitives/text';
 import {
   compactNumber,
@@ -1027,7 +1028,12 @@ function LiveLineChartXAxis({ ticks = 4, formatTick, className }: LiveLineChartX
             }}
             className={cn('items-center', className)}
           >
-            <Text size="xs" muted numberOfLines={1}>
+            <Text
+              size="xs"
+              muted
+              numberOfLines={1}
+              maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
+            >
               {format(seconds * (1 - fraction))}
             </Text>
           </View>
@@ -1082,7 +1088,12 @@ function LiveLineChartYAxis({ ticks = 4, formatValue, className }: LiveLineChart
             }}
             className={cn('items-end', className)}
           >
-            <Text size="xs" muted numberOfLines={1}>
+            <Text
+              size="xs"
+              muted
+              numberOfLines={1}
+              maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
+            >
               {format(max - (max - min) * fraction)}
             </Text>
           </View>

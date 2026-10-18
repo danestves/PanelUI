@@ -80,6 +80,7 @@ import Animated, {
 import Svg, { Defs, G, Line as SvgLine, LinearGradient, Path, Stop } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import {
+  CHART_AXIS_MAX_FONT_SCALE,
   ChartAccessibilityData,
   type ChartAccessibilityProps,
 } from '../../primitives/chart-accessibility';
@@ -956,6 +957,7 @@ function PyramidChartXAxis({ ticks = 2, format, className }: PyramidChartXAxisPr
             width: AXIS_LABEL_WIDTH,
             textAlign: 'center',
           }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {label.text}
         </Text>
@@ -1013,7 +1015,13 @@ function PyramidChartYAxis({ format, className }: PyramidChartYAxisProps) {
             }}
             className="justify-center"
           >
-            <Text size="xs" muted numberOfLines={1} style={{ textAlign: 'center' }}>
+            <Text
+              size="xs"
+              muted
+              numberOfLines={1}
+              style={{ textAlign: 'center' }}
+              maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
+            >
               {label(datum, index)}
             </Text>
           </View>
@@ -1037,7 +1045,7 @@ function PyramidChartYAxis({ format, className }: PyramidChartYAxisProps) {
     >
       {data.map((datum, index) => (
         <View key={index} className="flex-1 justify-center">
-          <Text size="xs" muted numberOfLines={1}>
+          <Text size="xs" muted numberOfLines={1} maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}>
             {label(datum, index)}
           </Text>
         </View>

@@ -70,7 +70,11 @@ import Animated, {
 import Svg, { G, Line as SvgLine, Path } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '../../primitives/text';
-import { ChartAccessibilityData, type ChartAccessibilityProps } from '../../primitives/chart-accessibility';
+import {
+  CHART_AXIS_MAX_FONT_SCALE,
+  ChartAccessibilityData,
+  type ChartAccessibilityProps,
+} from '../../primitives/chart-accessibility';
 import { bandOf, compactNumber, yOf, type Plot } from '../../utils/chart';
 import { cn } from '../../utils/cn';
 
@@ -1009,6 +1013,7 @@ function CandlestickChartXAxis({
             width: LABEL_BOX,
             textAlign: 'center',
           }}
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
         >
           {label.text}
         </Text>
@@ -1067,7 +1072,14 @@ function CandlestickChartYAxis({
       className={cn(className)}
     >
       {labels.map((label) => (
-        <Text key={label.key} size="xs" muted numberOfLines={1} className="text-right">
+        <Text
+          key={label.key}
+          size="xs"
+          muted
+          numberOfLines={1}
+          className="text-right"
+          maxFontSizeMultiplier={CHART_AXIS_MAX_FONT_SCALE}
+        >
           {label.text}
         </Text>
       ))}
