@@ -71,7 +71,9 @@ test('reviewed provider, theme and foundation leaves have exact conditions', () 
     provider: 'providers/panel-ui-provider.tsx',
     theme: 'theme/use-theme.ts',
     'primitives/animated-pressable': 'primitives/animated-pressable.tsx',
+    'primitives/glass': 'primitives/glass.tsx',
     'primitives/keyboard-avoider': 'primitives/keyboard-avoider.tsx',
+    'primitives/portal': 'primitives/portal.tsx',
     'primitives/scrim': 'primitives/scrim.tsx',
     'primitives/scroll-progress': 'primitives/scroll-progress.tsx',
   };

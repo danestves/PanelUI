@@ -47,10 +47,20 @@
       "react-native": "./src/primitives/animated-pressable.tsx",
       "default": "./lib/module/primitives/animated-pressable.js"
     },
+    "./primitives/glass": {
+      "types": "./lib/typescript/src/primitives/glass.d.ts",
+      "react-native": "./src/primitives/glass.tsx",
+      "default": "./lib/module/primitives/glass.js"
+    },
     "./primitives/keyboard-avoider": {
       "types": "./lib/typescript/src/primitives/keyboard-avoider.d.ts",
       "react-native": "./src/primitives/keyboard-avoider.tsx",
       "default": "./lib/module/primitives/keyboard-avoider.js"
+    },
+    "./primitives/portal": {
+      "types": "./lib/typescript/src/primitives/portal.d.ts",
+      "react-native": "./src/primitives/portal.tsx",
+      "default": "./lib/module/primitives/portal.js"
     },
     "./primitives/scrim": {
       "types": "./lib/typescript/src/primitives/scrim.d.ts",

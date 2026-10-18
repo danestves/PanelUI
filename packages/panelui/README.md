@@ -193,8 +193,8 @@ import { Scrim } from 'panelui-native/primitives/scrim';
 ```
 
 The component subpath is the slug from its documentation URL. The public utilities are `cn`,
-`color` and `time`; the other foundation leaves are `animated-pressable`, `keyboard-avoider` and
-`scroll-progress` under `panelui-native/primitives/`.
+`color` and `time`; the other foundation leaves are `animated-pressable`, `glass`,
+`keyboard-avoider`, `portal` and `scroll-progress` under `panelui-native/primitives/`.
 
 **Prefer the subpath for anything you ship.** The root entry re-exports all 122 components and
 Metro does not tree-shake, so one name from it loads every component and everything they import —
